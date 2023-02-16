@@ -145,9 +145,8 @@ def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
             else:
                 partial_path_file_patterns.append(f'test*{partial_path}*.py')
         matches = []
-        for testpath in TESTPATHS_DEFAULT:
-            walk_from = pathlib.Path(sympy_dir(), testpath)
-            for path, dirs, files in os.walk(str(walk_from), topdown=True):
+        for testpath in valid_testpaths_default:
+            for path, dirs, files in os.walk(testpath, topdown=True):
                 zipped = zip(partial_paths, partial_path_file_patterns)
                 for (partial_path, partial_path_file) in zipped:
                     if fnmatch(path, f'*{partial_path}*'):
@@ -158,6 +157,12 @@ def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
                             if fnmatch(file, partial_path_file):
                                 matches.append(str(pathlib.Path(path, file)))
         return matches
+
+    valid_testpaths_default = []
+    for testpath in TESTPATHS_DEFAULT:
+        absolute_testpath = pathlib.Path(sympy_dir(), testpath)
+        if absolute_testpath.exists():
+            valid_testpaths_default.append(str(absolute_testpath))
 
     if paths:
         full_paths = []
@@ -171,8 +176,7 @@ def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
         args.extend(full_paths)
         args.extend(matched_paths)
     else:
-        for testpath in TESTPATHS_DEFAULT:
-            args.append(str(pathlib.Path(sympy_dir(), testpath)))
+        args.extend(valid_testpaths_default)
     return args
 
 
