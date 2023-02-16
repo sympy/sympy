@@ -80,7 +80,9 @@ class System(_Methods):
     We first need to import some functions and create some of our variables.
 
     >>> from sympy import symbols, simplify
-    >>> from sympy.physics.mechanics import *
+    >>> from sympy.physics.mechanics import (
+    ...     mechanics_printing, dynamicsymbols, RigidBody, Particle,
+    ...     ReferenceFrame, System, PrismaticJoint, PinJoint)
     >>> mechanics_printing(pretty_print=False)
     >>> g, l = symbols('g l')
     >>> F = dynamicsymbols('F')
