@@ -4,21 +4,22 @@
 Joints Framework in Physics/Mechanics
 =====================================
 
-:mod:`sympy.physics.mechanics` provides a joints framework. This system consists
-of two parts. The first are the :obj:`joints<sympy.physics.mechanics.joint>`
-themselves, which are used to create connections between
-:class:`bodies<sympy.physics.mechanics.body.Body>`. The second part is the
-:class:`~.JointsMethod`, which is used to form the equations of motion. Both of
-these parts are doing what we can call "book-keeping": keeping track of the
-relationships between :class:`bodies<sympy.physics.mechanics.body.Body>`.
+:mod:`sympy.physics.mechanics` provides a joints framework. The
+:obj:`joints<sympy.physics.mechanics.joint>` themselves are used  been are used
+to define connections between bodies (:class:`~.Particle`,
+:class:`~.RigidBody`). This has been implemented such that it works well in
+combination with :class:`~.System` when forming the equations of motion. The
+main responsibility of the :obj:`joints<sympy.physics.mechanics.joint>` is to
+establish the kinematic relationships and do what we call "book-keeping" of
+single :obj:`joints<sympy.physics.mechanics.joint>`. The word "book-keeping" in
+this context means keeping track of the relationships that of that joint.
 
 Joints in Physics/Mechanics
 ===========================
 
-The general task of the :mod:`joints<sympy.physics.mechanics.joint>` is creating
-kinematic relationships between
-:class:`bodies<sympy.physics.mechanics.body.Body>`. A joint is generally
-described as shown in the image below.
+:mod:`joints<sympy.physics.mechanics.joint>` is create kinematic relationships
+between bodies (:class:`~.Particle`, :class:`~.RigidBody`). The general
+description of a joint is generally is shown in the image below.
 
 .. image:: api/joint_explanation.svg
    :align: center
@@ -68,8 +69,8 @@ body's frame. ::
    >>> from sympy.physics.mechanics import *
    >>> mechanics_printing(pretty_print=False)
    >>> q, u = dynamicsymbols('q, u')
-   >>> parent = Body('parent')
-   >>> child = Body('child')
+   >>> parent = RigidBody('parent')
+   >>> child = RigidBody('child')
    >>> joint = PinJoint(
    ...     'hinge', parent, child, coordinates=q, speeds=u,
    ...     parent_point=3 * parent.frame.x,
@@ -88,11 +89,12 @@ body's frame. ::
    >>> child.masscenter.vel(parent.frame)
    3*u*child_frame.y
 
-JointsMethod in Physics/Mechanics
-=================================
-After defining the entire system you can use the :class:`~.JointsMethod` to
-parse the system and form the equations of motion. In this process the
-:class:`~.JointsMethod` only does the "book-keeping" of the joints. It uses
+System in Physics/Mechanics
+===========================
+After defining the entire system you can use the :class:`~.System` to do a more
+general "book-keeping
+keep track of all the objects like joints and form the equations of motion. In
+this process the :class:`~.JointsMethod` only does the "book-keeping" of the joints. It uses
 another method, like the :class:`~.KanesMethod`, as its backend for forming the
 equations of motion.
 
