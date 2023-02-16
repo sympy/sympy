@@ -1465,7 +1465,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         .. [1] https://onlinelibrary.wiley.com/doi/pdf/10.1002/9780470316887.app1
-        .. [2] https://web.archive.org/web/20220207000124/http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
+        .. [2] http://www.columbia.edu/~ww2040/6711F12/lect1023big.pdf
         """
         states, A, B, C = self.decompose()
         O = zeros(A.shape[0], C.shape[1])
