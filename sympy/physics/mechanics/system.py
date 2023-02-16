@@ -636,7 +636,6 @@ class System(_Methods):
         Example
         =======
 
-        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import RigidBody, System
         >>> system = System()
         >>> rb = RigidBody('rb')
@@ -675,7 +674,6 @@ class System(_Methods):
         Examples
         ========
 
-        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import RigidBody, System
         >>> system = System()
         >>> rb = RigidBody('rb')
@@ -942,8 +940,7 @@ class System(_Methods):
         # Save some data in variables
         n_hc = self.holonomic_constraints.shape[0]
         n_nhc = self.nonholonomic_constraints.shape[0]
-        n_q_ind, n_q_dep = self.q_ind.shape[0], self.q_dep.shape[0]
-        n_u_ind, n_u_dep = self.u_ind.shape[0], self.u_dep.shape[0]
+        n_q_dep, n_u_dep = self.q_dep.shape[0], self.u_dep.shape[0]
         q_set, u_set = set(self.q), set(self.u)
         n_q, n_u = len(q_set), len(u_set)
         # Check number of holonomic constraints

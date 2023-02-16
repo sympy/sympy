@@ -219,12 +219,12 @@ def test_add_loads():
     system.remove_load(rb2.masscenter)
     system.apply_torque(rb1, N.x, rb2)
     assert system.loads == ((A, A.x), (N, N.x), (A, -N.x))
-    system.apply_force(p1, A.x)
-    assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc1, A.x))
+    system.apply_force(p2, A.x)
+    assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
     raises(ValueError, lambda: system.add_loads((N, N.x, N.y)))
     with raises(TypeError):
         system.loads = (N, N.x)
-    assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc1, A.x))
+    assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
     system.clear_loads()
     assert system.loads == tuple()
 
