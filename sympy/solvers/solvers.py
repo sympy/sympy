@@ -271,7 +271,7 @@ def checksol(f, symbol, sol=None, **flags):
             if not f.is_Boolean:
                 return
         else:
-            f = f.rewrite(Add, evaluate=False)
+            f = f.rewrite(Add, evaluate=False, deep=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -945,7 +945,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = fi.rewrite(Add, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False, deep=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
