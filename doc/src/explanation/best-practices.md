@@ -379,12 +379,81 @@ There are many disadvantages to using strings:
 
 ### Exact Rational Numbers vs. Floats
 
+If a number is known to be exactly equal to some quantity, avoid defining it
+as a floating-point number.
+
+For example,
+
+**Don't**
+
+```py
+>>> expression = x**2 + 0.5*x + 1
+```
+
+**Do**
+
+```py
+>>> expression = x**2 + x/2 + 1
+```
+
+One should also take care to avoid writing `integer/integer` where both
+integers are explicit integers. This is because Python will evaluate this to a floating-point value before SymPy is able to parse it.
+
+**Don't**
+
+```py
+>>> x + 2/7 # The exact value of 2/7 is lost
+x + 0.2857142857142857
+```
+
+In this case, use {class}`~.Rational` to create a rational number, or use
+`S()` shorthand if you want to save on typing.
+
+**Do**
+
+```py
+>>> from sympy import Rational, S
+>>> x + Rational(2, 7)
+x + 2/7
+>>> x + S(2)/7 # Equivalently
+x + 2/7
+```
+
+This also applies to non-rational values which can be represented exactly. For
+example, one should avoid using `math.pi` and prefer `sympy.pi`, since the
+former is a numerical approximation to $\pi$ and the latter is exactly $\pi$
+(see also [](best-practices-separate-sympy-and-non-sympy) below; in general,
+one should avoid importing `math` when using SymPy).
+
+*Don't**
+
+```py
+>>> import math
+>>> import sympy
+>>> math.pi
+3.141592653589793
+>>> sympy.sin(math.pi)
+1.22464679914735e-16
+```
+
+**Do**
+
+```py
+>>> sympy.pi
+pi
+>>> sympy.sin(sympy.pi)
+0
+```
+
+Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\pi$.
+
 ### Avoid `simplify()`
 
 (best-practices-dont-hardcode-symbol-names)=
 ### Don't Hardcode Symbol Names in Functions
 
-### Separate Symbolic and Non-symbolic Code
+(best-practices-separate-sympy-and-non-sympy)=
+### Separate SymPy and non-SymPy Numerical Code
 
 ## Custom SymPy Objects
 
