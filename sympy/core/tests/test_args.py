@@ -5194,6 +5194,14 @@ def test_sympy__tensor__array__expressions__array_expressions__ArraySum():
     assert _test_args(ArraySum(A*sin(a), (a, 1, b)))
 
 
+def test_sympy__tensor__array__expressions__einsum_sympy__Einsum():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol
+    from sympy.tensor.array.expressions.einsum_sympy import Einsum
+    A = ArraySymbol("A", (4, 3))
+    ei = Einsum("ab->a", A)
+    assert _test_args(ei)
+
+
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))
