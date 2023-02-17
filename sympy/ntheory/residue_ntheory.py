@@ -21,6 +21,12 @@ def n_order(a, n):
     The order of ``a`` modulo ``n`` is the smallest integer
     ``k`` such that ``a**k`` leaves a remainder of 1 with ``n``.
 
+    Parameters
+    ==========
+
+    a : integer
+    n : integer, n > 1. a and n should be relatively prime
+
     Examples
     ========
 
@@ -32,29 +38,33 @@ def n_order(a, n):
     """
     from collections import defaultdict
     a, n = as_int(a), as_int(n)
+    if n <= 1:
+        raise ValueError("n should be an integer greater than 1")
+    a = a % n
+    # Trivial
+    if a == 1:
+        return 1
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
+    # We want to calculate
+    # order = totient(n), factors = factorint(order)
     factors = defaultdict(int)
-    f = factorint(n)
-    for px, kx in f.items():
+    for px, kx in factorint(n).items():
         if kx > 1:
             factors[px] += kx - 1
-        fpx = factorint(px - 1)
-        for py, ky in fpx.items():
+        for py, ky in factorint(px - 1).items():
             factors[py] += ky
-    group_order = 1
-    for px, kx in factors.items():
-        group_order *= px**kx
     order = 1
-    if a > n:
-        a = a % n
+    for px, kx in factors.items():
+        order *= px**kx
+    # Now the `order` is the order of the group.
+    # The order of `a` divides the order of the group.
     for p, e in factors.items():
-        exponent = group_order
-        for f in range(e + 1):
-            if pow(a, exponent, n) != 1:
-                order *= p ** (e - f + 1)
+        for _ in range(e):
+            if pow(a, order // p, n) == 1:
+                order //= p
+            else:
                 break
-            exponent = exponent // p
     return order
 
 
