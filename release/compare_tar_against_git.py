@@ -33,6 +33,7 @@ git_whitelist = {
     '.gitignore',
     '.mailmap',
     # CI
+    '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/workflows/runtests.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
@@ -56,8 +57,6 @@ git_whitelist = {
     'banner.svg',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
-    # Pull request template
-    'PULL_REQUEST_TEMPLATE.md',
     # Contributing guide
     'CONTRIBUTING.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
