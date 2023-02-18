@@ -1020,7 +1020,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         .. [1] https://web.archive.org/web/20220207032113/https://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
         .. [2] https://cecas.clemson.edu/~shierd/Shier/markov.pdf
-        .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
+        .. [3] https://ujcontent.uj.ac.za/esploro/outputs/graduate/Markov-chains--a-graph-theoretical/999849107691#file-0
         .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
         """
         n = self.number_of_states

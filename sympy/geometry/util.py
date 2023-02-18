@@ -406,7 +406,7 @@ def convex_hull(*args, polygon=True):
     .. [2] Andrew's Monotone Chain Algorithm
       (A.M. Andrew,
       "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-      http://geomalgorithms.com/a10-_hull-1.html
+      https://web.archive.org/web/20210511015444/http://geomalgorithms.com/a10-_hull-1.html
 
     """
     from .line import Segment

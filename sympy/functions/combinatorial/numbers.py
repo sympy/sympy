@@ -1259,7 +1259,7 @@ class catalan(Function):
     .. [1] https://en.wikipedia.org/wiki/Catalan_number
     .. [2] https://mathworld.wolfram.com/CatalanNumber.html
     .. [3] https://functions.wolfram.com/GammaBetaErf/CatalanNumber/
-    .. [4] https://geometer.org/mathcircles/catalan.pdf
+    .. [4] http://geometer.org/mathcircles/catalan.pdf
 
     """
 
