@@ -139,15 +139,37 @@ class Point:
         >>> p3.z_cord
         17
         """
-        Q = self
+        Q = Point(self.x_cord, self.z_cord, self.a_24, self.mod)
         R = self.double()
         for i in bin(k)[3:]:
+            q_plus = Q.x_cord + Q.z_cord
+            q_minus = Q.x_cord - Q.z_cord
+            r_plus = R.x_cord + R.z_cord
+            r_minus = R.x_cord - R.z_cord
+            u = r_minus*q_plus % self.mod
+            v = r_plus*q_minus % self.mod
+            add = u + v
+            subt = u - v
             if  i  == '1':
-                Q = R.add(Q, self)
-                R = R.double()
+                # We want to calculate
+                # Q, R = R.add(Q, self), R.double()
+                u2 = pow(r_plus, 2, self.mod)
+                v2 = pow(r_minus, 2, self.mod)
+                diff = u2 - v2
+                Q.x_cord = self.z_cord * add * add % self.mod
+                Q.z_cord = self.x_cord * subt * subt % self.mod
+                R.x_cord = u2*v2 % self.mod
+                R.z_cord = diff*(v2 + self.a_24*diff) % self.mod
             else:
-                R = Q.add(R, self)
-                Q = Q.double()
+                # We want to calculate
+                # Q, R = Q.double(), Q.add(R, self)
+                u2 = pow(q_plus, 2, self.mod)
+                v2 = pow(q_minus, 2, self.mod)
+                diff = u2 - v2
+                R.x_cord = self.z_cord * add * add % self.mod
+                R.z_cord = self.x_cord * subt * subt % self.mod
+                Q.x_cord = u2*v2 % self.mod
+                Q.z_cord = diff*(v2 + self.a_24*diff) % self.mod
         return Q
 
 
