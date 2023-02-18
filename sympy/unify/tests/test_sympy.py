@@ -132,14 +132,14 @@ def test_FiniteSet_complex():
     expr = FiniteSet(Basic(S(1), x), y, Basic(x, z))
     pattern = FiniteSet(a, Basic(x, b))
     variables = a, b
-    expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
-                      {b: z, a: FiniteSet(y, Basic(S(1), x))}])
+    expected = ({b: 1, a: FiniteSet(y, Basic(x, z))},
+                      {b: z, a: FiniteSet(y, Basic(S(1), x))})
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
 
 def test_and():
     variables = x, y
-    expected = tuple([{x: z > 0, y: n < 3}])
+    expected = ({x: z > 0, y: n < 3},)
     assert iterdicteq(unify((z>0) & (n<3), And(x, y), variables=variables),
                       expected)
 

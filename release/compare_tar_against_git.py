@@ -188,7 +188,7 @@ def compare_tar_against_git(tarname, gitroot):
 
     See the bottom of the file for the whitelists.
     """
-    git_lsfiles = set(i.strip() for i in run('git', 'ls-files', cwd=gitroot))
+    git_lsfiles = {i.strip() for i in run('git', 'ls-files', cwd=gitroot)}
     tar_output_orig = set(run('tar', 'tf', tarname))
     tar_output = set()
     for file in tar_output_orig:

@@ -464,7 +464,7 @@ def test_numpy_matrix():
     inp = numpy.zeros((17, 3))
     assert numpy.all(f_dot1(inp) == 0)
 
-    strict_kw = dict(allow_unknown_functions=False, inline=True, fully_qualified_modules=False)
+    strict_kw = {"allow_unknown_functions": False, "inline": True, "fully_qualified_modules": False}
     p2 = NumPyPrinter(dict(user_functions={'dot': 'dot'}, **strict_kw))
     f_dot2 = lambdify(x, x_dot_mtx, printer=p2)
     assert numpy.all(f_dot2(inp) == 0)

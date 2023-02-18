@@ -1409,7 +1409,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y), (x, z), (y, z)]
                     xy_coeff = True
                     x_coeff = True
-                    var1_mul_var2 = map(lambda a: a[0]*a[1], var_mul)
+                    var1_mul_var2 = (a[0]*a[1] for a in var_mul)
                     # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
                     # `xy_coeff` => True and do_permute_sign => False.
                     # Means no permuted solution.
@@ -1437,7 +1437,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y)]
                     xy_coeff = True
                     x_coeff = True
-                    var1_mul_var2 = map(lambda x: x[0]*x[1], var_mul)
+                    var1_mul_var2 = (x[0]*x[1] for x in var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
                             coeff = c[v1_mul_v2]
@@ -1559,7 +1559,7 @@ def merge_solution(var, var_t, solution):
 
     for val, symb in zip(sol, var):
         if check_assumptions(val, **symb.assumptions0) is False:
-            return tuple()
+            return ()
 
     return tuple(sol)
 

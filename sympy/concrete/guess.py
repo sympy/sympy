@@ -465,8 +465,8 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
               r.append(ri)
         if r:
             for i in range(k-1, -1, -1):
-                r = list(map(lambda v: g[i][0]
-                      * myprod(v, (symb[i+1], 1, symb[i]-1)), r))
+                r = [g[i][0]
+                      * myprod(v, (symb[i+1], 1, symb[i]-1)) for v in r]
             if not all: return r
             res += r
         l = [Rational(l[i+1], l[i]) for i in range(N-k-1)]

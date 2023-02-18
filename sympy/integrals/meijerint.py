@@ -657,7 +657,7 @@ def _condsimp(cond, first=True):
         (Ne(p, 2) & (cos(Abs(arg(p)))*Abs(p) > 2), Abs(p) > 2),  # 13
         ((Abs(arg(p)) < pi/2) & (cos(Abs(arg(p)))*sqrt(Abs(p**2)) > 1), p**2 > 1),  # 14
     ]
-    cond = cond.func(*list(map(lambda _: _condsimp(_, first), cond.args)))
+    cond = cond.func(*[_condsimp(_, first) for _ in cond.args])
     change = True
     while change:
         change = False

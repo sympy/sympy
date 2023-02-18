@@ -1496,7 +1496,7 @@ def eval_sum_residue(f, i_a_b):
         return residue_factor
 
     # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - set([i]):
+    if f.free_symbols - {i}:
         return None
 
     if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):

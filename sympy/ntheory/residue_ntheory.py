@@ -258,7 +258,7 @@ def sqrt_mod(a, p, all_roots=False):
     [7, 9, 23, 25]
     """
     if all_roots:
-        return sorted(list(sqrt_mod_iter(a, p)))
+        return sorted(sqrt_mod_iter(a, p))
     try:
         p = abs(as_int(p))
         it = sqrt_mod_iter(a, p)

@@ -1399,8 +1399,8 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
-                arg, *args, **kwargs), self.parameters))
+            result += '(%s)' % ', '.join((printer._print(
+                arg, *args, **kwargs) for arg in self.parameters))
         return result
 
 value_const = Attribute('value_const')
