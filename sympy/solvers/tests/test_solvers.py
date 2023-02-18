@@ -375,12 +375,13 @@ def test_issue_21004():
     f_diff = f.diff(x)
     assert solve(f_diff, x) == []
 
+
 def test_issue_24650():
     x = symbols('x')
     r = solve(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0))
     assert r == [0]
     r = checksol(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0), x, sol=0)
-    assert r == True
+    assert r is True
 
 
 def test_linear_system():
