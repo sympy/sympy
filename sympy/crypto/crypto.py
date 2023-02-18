@@ -1742,7 +1742,7 @@ def rsa_public_key(*args, **kwargs):
 
     .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+    .. [3] https://link.springer.com/content/pdf/10.1007/BFb0055738.pdf
 
     .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
@@ -1864,7 +1864,7 @@ def rsa_private_key(*args, **kwargs):
 
     .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+    .. [3] https://link.springer.com/content/pdf/10.1007/BFb0055738.pdf
 
     .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
