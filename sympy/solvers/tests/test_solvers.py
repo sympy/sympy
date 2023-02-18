@@ -1725,8 +1725,8 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
-    pqt = dict(quick=True, particular=True)
-    pqf = dict(quick=False, particular=True)
+    pqt = {"quick": True, "particular": True}
+    pqf = {"quick": False, "particular": True}
     assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
     assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):

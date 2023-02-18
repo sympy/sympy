@@ -713,7 +713,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         sign = (-1) ** (pivot_pos % 2)
 
         # we want every row but the pivot row and every column
-        rows = list(i for i in range(mat.rows) if i != pivot_pos)
+        rows = [i for i in range(mat.rows) if i != pivot_pos]
         cols = list(range(mat.cols))
         tmp_mat = mat.extract(rows, cols)
 

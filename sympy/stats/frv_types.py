@@ -698,7 +698,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         if self.k.is_Symbol:
             return Density(self)
         d = {1: Rational(1, self.k)}
-        d.update(dict((i, Rational(1, i*(i - 1))) for i in range(2, self.k + 1)))
+        d.update({i: Rational(1, i*(i - 1)) for i in range(2, self.k + 1)})
         return d
 
     def pmf(self, x):

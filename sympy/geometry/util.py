@@ -507,7 +507,7 @@ def farthest_points(*args):
     """
 
     def rotatingCalipers(Points):
-        U, L = convex_hull(*Points, **dict(polygon=False))
+        U, L = convex_hull(*Points, **{"polygon": False})
 
         if L is None:
             if isinstance(U, Point):

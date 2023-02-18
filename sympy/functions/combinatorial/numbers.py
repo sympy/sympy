@@ -175,7 +175,7 @@ directly instead.
     @staticmethod
     def find_first_n_carmichaels(n):
         i = 1
-        carmichaels = list()
+        carmichaels = []
 
         while len(carmichaels) < n:
             if carmichael.is_carmichael(i):
@@ -2386,7 +2386,7 @@ class motzkin(Function):
     @staticmethod
     def find_motzkin_numbers_in_range(x, y):
         if 0 <= x <= y:
-            motzkins = list()
+            motzkins = []
             if x <= 1 <= y:
                 motzkins.append(1)
             tn1 = 1

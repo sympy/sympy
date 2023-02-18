@@ -90,7 +90,7 @@ def vfree_group(symbols):
 
 def _parse_symbols(symbols):
     if not symbols:
-        return tuple()
+        return ()
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, (Expr, FreeGroupElement)):
@@ -363,7 +363,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def is_identity(self):
-        if self.array_form == tuple():
+        if self.array_form == ():
             return True
         else:
             return False

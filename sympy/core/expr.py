@@ -2042,7 +2042,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has(*deps):
-                return self, tuple()
+                return self, ()
         return S.One, (self,)
 
     def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
@@ -2078,7 +2078,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has_free(*deps):
-                return self, tuple()
+                return self, ()
         return S.Zero, (self,)
 
     def primitive(self):

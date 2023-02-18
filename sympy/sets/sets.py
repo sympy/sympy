@@ -2600,7 +2600,7 @@ def simplify_intersection(args):
                 other = Intersection(*other_sets)
                 return Union(*(Intersection(arg, other) for arg in s.args))
             else:
-                return Union(*[arg for arg in s.args])
+                return Union(*list(s.args))
 
     for s in args:
         if s.is_Complement:

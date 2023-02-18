@@ -149,7 +149,7 @@ def check_and_join(phrase, symbols=None, filter=None):
     rv = ''.join(''.join(phrase))
     if symbols is not None:
         symbols = check_and_join(symbols)
-        missing = ''.join(list(sorted(set(rv) - set(symbols))))
+        missing = ''.join(sorted(set(rv) - set(symbols)))
         if missing:
             if not filter:
                 raise ValueError(

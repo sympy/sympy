@@ -72,7 +72,7 @@ We recommend using ``conda`` to create a virtual environment:
 
 .. code-block:: bash
 
-    $ conda create -n sympy-dev python=3 mpmath flake8
+    $ conda create -n sympy-dev python=3 mpmath flake8 flake8-comprehensions
 
 You now have a environment that you can use for testing your development copy of SymPy. For example, clone your SymPy fork from Github:
 

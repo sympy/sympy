@@ -998,8 +998,8 @@ class Series(SISOLinearTimeInvariant):
             if not self.var == other.var:
                 raise ValueError("All the transfer functions should use the same complex variable "
                     "of the Laplace transform.")
-            self_arg_list = set(list(self.args))
-            other_arg_list = set(list(other.args[1].args))
+            self_arg_list = set(self.args)
+            other_arg_list = set(other.args[1].args)
             res = list(self_arg_list ^ other_arg_list)
             if len(res) == 0:
                 return Feedback(self, other.args[0])

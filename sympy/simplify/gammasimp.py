@@ -330,7 +330,7 @@ def _gammasimp(expr, as_comb):
                 # look for runs in Rationals for each resid
                 keys = sorted(rats, key=default_sort_key)
                 for resid in keys:
-                    coeffs = list(sorted(rats[resid]))
+                    coeffs = sorted(rats[resid])
                     new = []
                     while True:
                         run = _run(coeffs)

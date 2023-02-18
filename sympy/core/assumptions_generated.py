@@ -37,18 +37,15 @@ defined_facts = [
 ] # defined_facts
 
 
-full_implications = dict( [
-    # Implications of algebraic = True:
-    (('algebraic', True), set( (
+full_implications = { ('algebraic', True): {
         ('commutative', True),
         ('complex', True),
         ('finite', True),
         ('infinite', False),
         ('transcendental', False),
-       ) ),
-     ),
+       },
     # Implications of algebraic = False:
-    (('algebraic', False), set( (
+    ('algebraic', False): {
         ('composite', False),
         ('even', False),
         ('integer', False),
@@ -56,23 +53,17 @@ full_implications = dict( [
         ('prime', False),
         ('rational', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of antihermitian = True:
-    (('antihermitian', True), set( (
-       ) ),
-     ),
+    ('antihermitian', True): set( ),
     # Implications of antihermitian = False:
-    (('antihermitian', False), set( (
+    ('antihermitian', False): {
         ('imaginary', False),
-       ) ),
-     ),
+       },
     # Implications of commutative = True:
-    (('commutative', True), set( (
-       ) ),
-     ),
+    ('commutative', True): set( ),
     # Implications of commutative = False:
-    (('commutative', False), set( (
+    ('commutative', False): {
         ('algebraic', False),
         ('complex', False),
         ('composite', False),
@@ -98,17 +89,15 @@ full_implications = dict( [
         ('real', False),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of complex = True:
-    (('complex', True), set( (
+    ('complex', True): {
         ('commutative', True),
         ('finite', True),
         ('infinite', False),
-       ) ),
-     ),
+       },
     # Implications of complex = False:
-    (('complex', False), set( (
+    ('complex', False): {
         ('algebraic', False),
         ('composite', False),
         ('even', False),
@@ -126,10 +115,9 @@ full_implications = dict( [
         ('real', False),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of composite = True:
-    (('composite', True), set( (
+    ('composite', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -156,14 +144,11 @@ full_implications = dict( [
         ('real', True),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of composite = False:
-    (('composite', False), set( (
-       ) ),
-     ),
+    ('composite', False): set( ),
     # Implications of even = True:
-    (('even', True), set( (
+    ('even', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -179,15 +164,13 @@ full_implications = dict( [
         ('rational', True),
         ('real', True),
         ('transcendental', False),
-       ) ),
-     ),
+       },
     # Implications of even = False:
-    (('even', False), set( (
+    ('even', False): {
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_negative = True:
-    (('extended_negative', True), set( (
+    ('extended_negative', True): {
         ('commutative', True),
         ('composite', False),
         ('extended_nonnegative', False),
@@ -200,34 +183,30 @@ full_implications = dict( [
         ('positive', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_negative = False:
-    (('extended_negative', False), set( (
+    ('extended_negative', False): {
         ('negative', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonnegative = True:
-    (('extended_nonnegative', True), set( (
+    ('extended_nonnegative', True): {
         ('commutative', True),
         ('extended_negative', False),
         ('extended_real', True),
         ('imaginary', False),
         ('negative', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonnegative = False:
-    (('extended_nonnegative', False), set( (
+    ('extended_nonnegative', False): {
         ('composite', False),
         ('extended_positive', False),
         ('nonnegative', False),
         ('positive', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonpositive = True:
-    (('extended_nonpositive', True), set( (
+    ('extended_nonpositive', True): {
         ('commutative', True),
         ('composite', False),
         ('extended_positive', False),
@@ -235,26 +214,23 @@ full_implications = dict( [
         ('imaginary', False),
         ('positive', False),
         ('prime', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonpositive = False:
-    (('extended_nonpositive', False), set( (
+    ('extended_nonpositive', False): {
         ('extended_negative', False),
         ('negative', False),
         ('nonpositive', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonzero = True:
-    (('extended_nonzero', True), set( (
+    ('extended_nonzero', True): {
         ('commutative', True),
         ('extended_real', True),
         ('imaginary', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_nonzero = False:
-    (('extended_nonzero', False), set( (
+    ('extended_nonzero', False): {
         ('composite', False),
         ('extended_negative', False),
         ('extended_positive', False),
@@ -262,10 +238,9 @@ full_implications = dict( [
         ('nonzero', False),
         ('positive', False),
         ('prime', False),
-       ) ),
-     ),
+       },
     # Implications of extended_positive = True:
-    (('extended_positive', True), set( (
+    ('extended_positive', True): {
         ('commutative', True),
         ('extended_negative', False),
         ('extended_nonnegative', True),
@@ -276,23 +251,20 @@ full_implications = dict( [
         ('negative', False),
         ('nonpositive', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of extended_positive = False:
-    (('extended_positive', False), set( (
+    ('extended_positive', False): {
         ('composite', False),
         ('positive', False),
         ('prime', False),
-       ) ),
-     ),
+       },
     # Implications of extended_real = True:
-    (('extended_real', True), set( (
+    ('extended_real', True): {
         ('commutative', True),
         ('imaginary', False),
-       ) ),
-     ),
+       },
     # Implications of extended_real = False:
-    (('extended_real', False), set( (
+    ('extended_real', False): {
         ('composite', False),
         ('even', False),
         ('extended_negative', False),
@@ -313,15 +285,13 @@ full_implications = dict( [
         ('rational', False),
         ('real', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of finite = True:
-    (('finite', True), set( (
+    ('finite', True): {
         ('infinite', False),
-       ) ),
-     ),
+       },
     # Implications of finite = False:
-    (('finite', False), set( (
+    ('finite', False): {
         ('algebraic', False),
         ('complex', False),
         ('composite', False),
@@ -341,14 +311,11 @@ full_implications = dict( [
         ('real', False),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of hermitian = True:
-    (('hermitian', True), set( (
-       ) ),
-     ),
+    ('hermitian', True): set( ),
     # Implications of hermitian = False:
-    (('hermitian', False), set( (
+    ('hermitian', False): {
         ('composite', False),
         ('even', False),
         ('integer', False),
@@ -363,10 +330,9 @@ full_implications = dict( [
         ('rational', False),
         ('real', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of imaginary = True:
-    (('imaginary', True), set( (
+    ('imaginary', True): {
         ('antihermitian', True),
         ('commutative', True),
         ('complex', True),
@@ -393,14 +359,11 @@ full_implications = dict( [
         ('rational', False),
         ('real', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of imaginary = False:
-    (('imaginary', False), set( (
-       ) ),
-     ),
+    ('imaginary', False): set( ),
     # Implications of infinite = True:
-    (('infinite', True), set( (
+    ('infinite', True): {
         ('algebraic', False),
         ('complex', False),
         ('composite', False),
@@ -420,15 +383,13 @@ full_implications = dict( [
         ('real', False),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of infinite = False:
-    (('infinite', False), set( (
+    ('infinite', False): {
         ('finite', True),
-       ) ),
-     ),
+       },
     # Implications of integer = True:
-    (('integer', True), set( (
+    ('integer', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -442,19 +403,17 @@ full_implications = dict( [
         ('rational', True),
         ('real', True),
         ('transcendental', False),
-       ) ),
-     ),
+       },
     # Implications of integer = False:
-    (('integer', False), set( (
+    ('integer', False): {
         ('composite', False),
         ('even', False),
         ('odd', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of irrational = True:
-    (('irrational', True), set( (
+    ('irrational', True): {
         ('commutative', True),
         ('complex', True),
         ('composite', False),
@@ -473,14 +432,11 @@ full_implications = dict( [
         ('rational', False),
         ('real', True),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of irrational = False:
-    (('irrational', False), set( (
-       ) ),
-     ),
+    ('irrational', False): set( ),
     # Implications of negative = True:
-    (('negative', True), set( (
+    ('negative', True): {
         ('commutative', True),
         ('complex', True),
         ('composite', False),
@@ -501,14 +457,11 @@ full_implications = dict( [
         ('prime', False),
         ('real', True),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of negative = False:
-    (('negative', False), set( (
-       ) ),
-     ),
+    ('negative', False): set( ),
     # Implications of noninteger = True:
-    (('noninteger', True), set( (
+    ('noninteger', True): {
         ('commutative', True),
         ('composite', False),
         ('even', False),
@@ -519,14 +472,11 @@ full_implications = dict( [
         ('odd', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of noninteger = False:
-    (('noninteger', False), set( (
-       ) ),
-     ),
+    ('noninteger', False): set( ),
     # Implications of nonnegative = True:
-    (('nonnegative', True), set( (
+    ('nonnegative', True): {
         ('commutative', True),
         ('complex', True),
         ('extended_negative', False),
@@ -538,18 +488,16 @@ full_implications = dict( [
         ('infinite', False),
         ('negative', False),
         ('real', True),
-       ) ),
-     ),
+       },
     # Implications of nonnegative = False:
-    (('nonnegative', False), set( (
+    ('nonnegative', False): {
         ('composite', False),
         ('positive', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of nonpositive = True:
-    (('nonpositive', True), set( (
+    ('nonpositive', True): {
         ('commutative', True),
         ('complex', True),
         ('composite', False),
@@ -563,16 +511,14 @@ full_implications = dict( [
         ('positive', False),
         ('prime', False),
         ('real', True),
-       ) ),
-     ),
+       },
     # Implications of nonpositive = False:
-    (('nonpositive', False), set( (
+    ('nonpositive', False): {
         ('negative', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of nonzero = True:
-    (('nonzero', True), set( (
+    ('nonzero', True): {
         ('commutative', True),
         ('complex', True),
         ('extended_nonzero', True),
@@ -583,18 +529,16 @@ full_implications = dict( [
         ('infinite', False),
         ('real', True),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of nonzero = False:
-    (('nonzero', False), set( (
+    ('nonzero', False): {
         ('composite', False),
         ('negative', False),
         ('positive', False),
         ('prime', False),
-       ) ),
-     ),
+       },
     # Implications of odd = True:
-    (('odd', True), set( (
+    ('odd', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -613,14 +557,11 @@ full_implications = dict( [
         ('real', True),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of odd = False:
-    (('odd', False), set( (
-       ) ),
-     ),
+    ('odd', False): set( ),
     # Implications of positive = True:
-    (('positive', True), set( (
+    ('positive', True): {
         ('commutative', True),
         ('complex', True),
         ('extended_negative', False),
@@ -639,16 +580,14 @@ full_implications = dict( [
         ('nonzero', True),
         ('real', True),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of positive = False:
-    (('positive', False), set( (
+    ('positive', False): {
         ('composite', False),
         ('prime', False),
-       ) ),
-     ),
+       },
     # Implications of prime = True:
-    (('prime', True), set( (
+    ('prime', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -675,14 +614,11 @@ full_implications = dict( [
         ('real', True),
         ('transcendental', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of prime = False:
-    (('prime', False), set( (
-       ) ),
-     ),
+    ('prime', False): set( ),
     # Implications of rational = True:
-    (('rational', True), set( (
+    ('rational', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -694,20 +630,18 @@ full_implications = dict( [
         ('irrational', False),
         ('real', True),
         ('transcendental', False),
-       ) ),
-     ),
+       },
     # Implications of rational = False:
-    (('rational', False), set( (
+    ('rational', False): {
         ('composite', False),
         ('even', False),
         ('integer', False),
         ('odd', False),
         ('prime', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of real = True:
-    (('real', True), set( (
+    ('real', True): {
         ('commutative', True),
         ('complex', True),
         ('extended_real', True),
@@ -715,10 +649,9 @@ full_implications = dict( [
         ('hermitian', True),
         ('imaginary', False),
         ('infinite', False),
-       ) ),
-     ),
+       },
     # Implications of real = False:
-    (('real', False), set( (
+    ('real', False): {
         ('composite', False),
         ('even', False),
         ('integer', False),
@@ -732,10 +665,9 @@ full_implications = dict( [
         ('prime', False),
         ('rational', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of transcendental = True:
-    (('transcendental', True), set( (
+    ('transcendental', True): {
         ('algebraic', False),
         ('commutative', True),
         ('complex', True),
@@ -748,14 +680,11 @@ full_implications = dict( [
         ('prime', False),
         ('rational', False),
         ('zero', False),
-       ) ),
-     ),
+       },
     # Implications of transcendental = False:
-    (('transcendental', False), set( (
-       ) ),
-     ),
+    ('transcendental', False): set( ),
     # Implications of zero = True:
-    (('zero', True), set( (
+    ('zero', True): {
         ('algebraic', True),
         ('commutative', True),
         ('complex', True),
@@ -784,13 +713,9 @@ full_implications = dict( [
         ('rational', True),
         ('real', True),
         ('transcendental', False),
-       ) ),
-     ),
+       },
     # Implications of zero = False:
-    (('zero', False), set( (
-       ) ),
-     ),
- ] ) # full_implications
+    ('zero', False): set( ), } # full_implications
 
 
 prereq = {
