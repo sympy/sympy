@@ -1370,6 +1370,7 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 debugf('      rule: %s o---o %s', (s_dom, t_dom))
                 debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
+
     return None
 
 
