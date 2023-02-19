@@ -80,7 +80,7 @@ def test_DiscreteMarkovChain():
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
-    raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    raises(TypeError, lambda: DiscreteMarkovChain("Y", {1: 1}))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
 
