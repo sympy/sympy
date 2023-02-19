@@ -59,8 +59,9 @@ class logaddexp(Function):
     def _eval_evalf(self, *args, **kwargs):
         return self.rewrite(log).evalf(*args, **kwargs)
 
-    def _eval_simplify(self, *args, **kwargs):
-        a, b = (x.simplify(**kwargs) for x in self.args)
+    def _eval_simplify(self, a, b, **kwargs):
+        a = a.simplify(**kwargs)
+        b = b.simplify(**kwargs)
         candidate = _logaddexp(a, b)
         if candidate != _logaddexp(a, b, evaluate=False):
             return candidate
@@ -101,8 +102,9 @@ class logaddexp2(Function):
     def _eval_evalf(self, *args, **kwargs):
         return self.rewrite(log).evalf(*args, **kwargs)
 
-    def _eval_simplify(self, *args, **kwargs):
-        a, b = (x.simplify(**kwargs).factor() for x in self.args)
+    def _eval_simplify(self, a, b, **kwargs):
+        a = a.simplify(**kwargs).factor()
+        b = b.simplify(**kwargs).factor()
         candidate = _logaddexp2(a, b)
         if candidate != _logaddexp2(a, b, evaluate=False):
             return candidate
