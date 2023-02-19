@@ -2503,7 +2503,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if isinstance(x, list):
                 replacements = list(x)
             elif isinstance(x, dict):
-                replacements = sorted(list(x.items()), key=lambda k: gens_map[k[0]])
+                replacements = sorted(x.items(), key=lambda k: gens_map[k[0]])
             else:
                 raise ValueError("expected a generator, value pair a sequence of such pairs")
 
