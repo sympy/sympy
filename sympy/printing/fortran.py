@@ -387,7 +387,7 @@ class FCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         return self._get_statement("{0} = {0} {1} {2}".format(
-            *(self._print(arg) for arg in [lhs_code, expr.binop, rhs_code])))
+            self._print(lhs_code), self._print(expr.binop), self._print(rhs_code)))
 
     def _print_sum_(self, sm):
         params = self._print(sm.array)

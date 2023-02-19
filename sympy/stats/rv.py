@@ -1446,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, seed=seed, **kwargs))
-    result = Add(*list(samples)) / numsamples
+    result = Add(*samples) / numsamples
 
     if evalf:
         return result.evalf()
