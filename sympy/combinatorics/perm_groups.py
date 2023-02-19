@@ -4586,7 +4586,7 @@ class PermutationGroup(Basic):
         return C.sylow_subgroup(p)
 
     def _block_verify(self, L, alpha):
-        delta = sorted(list(self.orbit(alpha)))
+        delta = sorted(self.orbit(alpha))
         # p[i] will be the number of the block
         # delta[i] belongs to
         p = [-1]*len(delta)

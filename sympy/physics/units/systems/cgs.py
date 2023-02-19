@@ -11,18 +11,18 @@ One = S.One
 
 dimsys_cgs = dimsys_length_weight_time.extend(
     [],
-    new_dim_deps=dict(
+    new_dim_deps={
         # Dimensional dependencies for derived dimensions
-        impedance=dict(time=1, length=-1),
-        conductance=dict(time=-1, length=1),
-        capacitance=dict(length=1),
-        inductance=dict(time=2, length=-1),
-        charge=dict(mass=S.Half, length=S(3)/2, time=-1),
-        current=dict(mass=One/2, length=3*One/2, time=-2),
-        voltage=dict(length=-One/2, mass=One/2, time=-1),
-        magnetic_density=dict(length=-One/2, mass=One/2, time=-1),
-        magnetic_flux=dict(length=3*One/2, mass=One/2, time=-1),
-    )
+        "impedance": {"time": 1, "length": -1},
+        "conductance": {"time": -1, "length": 1},
+        "capacitance": {"length": 1},
+        "inductance": {"time": 2, "length": -1},
+        "charge": {"mass": S.Half, "length": S(3)/2, "time": -1},
+        "current": {"mass": One/2, "length": 3*One/2, "time": -2},
+        "voltage": {"length": -One/2, "mass": One/2, "time": -1},
+        "magnetic_density": {"length": -One/2, "mass": One/2, "time": -1},
+        "magnetic_flux": {"length": 3*One/2, "mass": One/2, "time": -1},
+    }
 )
 
 cgs_gauss = UnitSystem(

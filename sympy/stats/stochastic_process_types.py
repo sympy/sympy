@@ -485,7 +485,7 @@ class MarkovProcess(StochasticProcess):
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
         if not isinstance(trans_probs.shape[0], Symbol):
-            state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
+            state_index = FiniteSet(*range(trans_probs.shape[0]))
         return state_index
 
     @cacheit
@@ -687,7 +687,7 @@ class MarkovProcess(StochasticProcess):
             return S.One - self.probability(expr, given_condition, evaluate, **kwargs)
 
         if isinstance(condition, And):
-            compute_later, state2cond, conds = [], dict(), condition.args
+            compute_later, state2cond, conds = [], {}, condition.args
             for expr in conds:
                 if isinstance(expr, Relational):
                     ris = list(expr.atoms(RandomIndexedSymbol))[0]
@@ -945,7 +945,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         state_space, trans_probs = MarkovProcess._sanity_checks(state_space, trans_probs)
 
         obj = Basic.__new__(cls, sym, state_space, trans_probs) # type: ignore
-        indices = dict()
+        indices = {}
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj._state_index):
                 indices[state] = index
@@ -1256,7 +1256,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         b[0, 0] = 1
 
         soln = list(linsolve((a, b)))[0]
-        return ImmutableMatrix([[sol for sol in soln]])
+        return ImmutableMatrix([soln])
 
     def fixed_row_vector(self):
         """
@@ -1577,7 +1577,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         sym = _symbol_converter(sym)
         state_space, gen_mat = MarkovProcess._sanity_checks(state_space, gen_mat)
         obj = Basic.__new__(cls, sym, state_space, gen_mat)
-        indices = dict()
+        indices = {}
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj.state_space):
                 indices[state] = index
@@ -1612,7 +1612,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         eqs = (wm*gen_mat).tolist()[0]
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
-        return ImmutableMatrix([[sol for sol in soln]])
+        return ImmutableMatrix([soln])
 
 
 class BernoulliProcess(DiscreteTimeStochasticProcess):

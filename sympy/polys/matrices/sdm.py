@@ -1211,7 +1211,7 @@ def sdm_irref(A):
     # All done!
     pivots = sorted(reduced_pivots | nonreduced_pivots)
     pivot2row = {p: n for n, p in enumerate(pivots)}
-    nonzero_columns = {c: set(pivot2row[p] for p in s) for c, s in nonzero_columns.items()}
+    nonzero_columns = {c: {pivot2row[p] for p in s} for c, s in nonzero_columns.items()}
     rows = [pivot_row_map[i] for i in pivots]
     rref = dict(enumerate(rows))
     return rref, pivots, nonzero_columns

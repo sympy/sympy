@@ -1100,12 +1100,12 @@ def point_sort(poly, normal=None, clockwise=True):
     order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n,
-                        sum(map(lambda vertex: vertex.z, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n,
+                        sum((vertex.z for vertex in pts)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1273,8 +1273,8 @@ def plot_polytope(poly):
     """
     from sympy.plotting.plot import Plot, List2DSeries
 
-    xl = list(map(lambda vertex: vertex.x, poly.vertices))
-    yl = list(map(lambda vertex: vertex.y, poly.vertices))
+    xl = [vertex.x for vertex in poly.vertices]
+    yl = [vertex.y for vertex in poly.vertices]
 
     xl.append(poly.vertices[0].x)  # Closing the polygon
     yl.append(poly.vertices[0].y)

@@ -188,7 +188,7 @@ def _row_structure_symbolic_cholesky(M):
                 Lrow[k].append(j)
                 j = parent[j]
 
-        Lrow[k] = list(sorted(set(Lrow[k])))
+        Lrow[k] = sorted(set(Lrow[k]))
 
     return Lrow
 
@@ -1348,7 +1348,7 @@ def _QRdecomposition_optional(M, normalize=True):
     dps = _get_intermediate_simp(expand_mul, expand_mul)
 
     A = M.as_mutable()
-    ranked = list()
+    ranked = []
 
     Q = A
     R = A.zeros(A.cols)

@@ -183,7 +183,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     else:
         rv = (m, sorted([(f,
                           tuple([M] + list(smoothness(f + m))))
-                         for f, M in [i for i in facs.items()]],
+                         for f, M in list(facs.items())],
                         key=lambda x: (x[1][k], x[0])))
 
     if visual is False or (visual is not True) and (type(n) in [int, Mul]):
@@ -2579,7 +2579,7 @@ def is_amicable(m, n):
     """
     if m == n:
         return False
-    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    a, b = (divisor_sigma(i) for i in (m, n))
     return a == b == (m + n)
 
 

@@ -1711,7 +1711,7 @@ class Derivative(Expr):
                 return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
-        newargs = list(x._subs(old, new) for x in args)
+        newargs = [x._subs(old, new) for x in args]
         if args[0] == old:
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
@@ -3317,7 +3317,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.matrices.matrices import MatrixBase
 
-    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 
     if isinstance(expr, MatrixBase):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
@@ -3326,7 +3326,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
-                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                args = [tuple((nfloat(i, **kw) for i in a))
                     for a in expr.items()]
             else:
                 args = [(k, nfloat(v, **kw)) for k, v in expr.items()]
