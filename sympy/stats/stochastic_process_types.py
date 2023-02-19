@@ -1256,7 +1256,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         b[0, 0] = 1
 
         soln = list(linsolve((a, b)))[0]
-        return ImmutableMatrix([list(soln)])
+        return ImmutableMatrix([soln])
 
     def fixed_row_vector(self):
         """
@@ -1612,7 +1612,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         eqs = (wm*gen_mat).tolist()[0]
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
-        return ImmutableMatrix([list(soln)])
+        return ImmutableMatrix([soln])
 
 
 class BernoulliProcess(DiscreteTimeStochasticProcess):
