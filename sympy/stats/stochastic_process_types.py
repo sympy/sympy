@@ -485,7 +485,7 @@ class MarkovProcess(StochasticProcess):
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
         if not isinstance(trans_probs.shape[0], Symbol):
-            state_index = FiniteSet(*list(range(trans_probs.shape[0])))
+            state_index = FiniteSet(*range(trans_probs.shape[0]))
         return state_index
 
     @cacheit
