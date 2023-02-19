@@ -3604,7 +3604,7 @@ class LaTeXParser ( Parser ):
 
     def sempred(self, localctx:RuleContext, ruleIndex:int, predIndex:int):
         if self._predicates == None:
-            self._predicates = {}
+            self._predicates = dict()
         self._predicates[1] = self.relation_sempred
         self._predicates[4] = self.additive_sempred
         self._predicates[5] = self.mp_sempred
