@@ -1,6 +1,6 @@
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
-select = ["E", "F"]
+select = ["C4", "E", "F"]
 
 # Ignore rules that currently fail on the SymPy codebase
 ignore = [
@@ -32,6 +32,8 @@ ignore = [
 
 # Exclude paths currently excluded in the flake8 configuration
 exclude = [
+    "sympy/assumptions/*generated.py",
+    "sympy/core/*_generated.py",
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",
