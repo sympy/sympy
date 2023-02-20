@@ -516,17 +516,17 @@ from the polys module, e.g.
 
 All of these matrix subclasses were broken in different ways and the
 introduction of {class}`~.DomainMatrix`
-([#20780](https://github.com/sympy/sympy/issues/20780),
-[#20759](https://github.com/sympy/sympy/issues/20759),
-[#20621](https://github.com/sympy/sympy/issues/20621),
-[#19882](https://github.com/sympy/sympy/issues/19882),
-[#18844](https://github.com/sympy/sympy/issues/18844)) provides a better
+([#20780](https://github.com/sympy/sympy/pull/20780),
+[#20759](https://github.com/sympy/sympy/pull/20759),
+[#20621](https://github.com/sympy/sympy/pull/20621),
+[#19882](https://github.com/sympy/sympy/pull/19882),
+[#18844](https://github.com/sympy/sympy/pull/18844)) provides a better
 solution for all cases. Previous PRs have removed the dependence of these
 other use cases on Matrix
-([#21441](https://github.com/sympy/sympy/issues/21441),
-[#21427](https://github.com/sympy/sympy/issues/21427),
-[#21402](https://github.com/sympy/sympy/issues/21402)) and now
-[#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
+([#21441](https://github.com/sympy/sympy/pull/21441),
+[#21427](https://github.com/sympy/sympy/pull/21427),
+[#21402](https://github.com/sympy/sympy/pull/21402)) and now
+[#21496](https://github.com/sympy/sympy/pull/21496) has deprecated having
 non-`Expr` in a `Matrix`.
 
 This change makes it possible to improve the internals of the Matrix class but
@@ -540,7 +540,7 @@ just printing support then perhaps `TableForm` can be used.
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
 issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
-list](http://groups.google.com/group/sympy) so we can discuss it.
+list](https://groups.google.com/g/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects

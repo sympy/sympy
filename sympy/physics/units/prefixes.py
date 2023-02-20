@@ -175,7 +175,7 @@ zepto = Prefix('zepto', 'z', -21)
 yocto = Prefix('yocto', 'y', -24)
 
 
-# http://physics.nist.gov/cuu/Units/prefixes.html
+# https://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
     'Y': yotta,
     'Z': zetta,
@@ -208,7 +208,7 @@ pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
 
 
-# http://physics.nist.gov/cuu/Units/binary.html
+# https://physics.nist.gov/cuu/Units/binary.html
 BIN_PREFIXES = {
     'Ki': kibi,
     'Mi': mebi,

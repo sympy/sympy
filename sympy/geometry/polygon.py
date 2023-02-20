@@ -1113,7 +1113,7 @@ class Polygon(GeometrySet):
         ==========================
 
         Method:
-        [1] http://cgm.cs.mcgill.ca/~orm/mind2p.html
+        [1] https://web.archive.org/web/20150509035744/http://cgm.cs.mcgill.ca/~orm/mind2p.html
         Uses rotating calipers:
         [2] https://en.wikipedia.org/wiki/Rotating_calipers
         and antipodal points:
@@ -2639,8 +2639,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Exradius.html
-        .. [2] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Exradius.html
+        .. [2] https://mathworld.wolfram.com/Excircles.html
 
         """
 
@@ -2690,7 +2690,7 @@ class Triangle(Polygon):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/Excircles.html
+        .. [1] https://mathworld.wolfram.com/Excircles.html
 
         """
 

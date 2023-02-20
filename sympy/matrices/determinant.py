@@ -510,7 +510,7 @@ def _per(M):
     ==========
 
     .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
-    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_(mathematics)
+    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_%28mathematics%29
     .. [3] https://reference.wolfram.com/language/ref/Permanent.html
     .. [4] Permanent of a rectangular matrix : https://arxiv.org/pdf/0904.3251.pdf
     """

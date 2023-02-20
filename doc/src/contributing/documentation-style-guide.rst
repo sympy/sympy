@@ -26,8 +26,8 @@ The SymPy documentation found at `docs.sympy.org
 <https://docs.sympy.org/latest/index.html>`_ is generated from docstrings in the
 source code and dedicated narrative documentation files in the `doc/src
 directory <https://github.com/sympy/sympy/tree/master/doc/src>`_. Both are
-written in `reStructuredText <http://docutils.sourceforge.net/rst.html>`_ format
-extended by `Sphinx <http://www.sphinx-doc.org/en/master/>`_.
+written in `reStructuredText <https://docutils.sourceforge.io/rst.html>`_ format
+extended by `Sphinx <https://www.sphinx-doc.org/en/master/>`_.
 
 The documentation contained in the `doc/src directory
 <https://github.com/sympy/sympy/tree/master/doc/src>`_ and the docstrings
@@ -41,10 +41,10 @@ The following lists the processing tools:
 * reStructuredText: Narrative documentation files and documentation strings
   embedded in Python code follow the reStructuredText format. Advanced features
   not described in this document can be found at
-  http://docutils.sourceforge.net/rst.html.
+  https://docutils.sourceforge.io/rst.html.
 
 * Sphinx: Sphinx includes additional default features for the
-  reStructuredText specification that are described at: http://www.sphinx-doc.org/.
+  reStructuredText specification that are described at: https://www.sphinx-doc.org/en/master.
 
 * Sphinx extensions included with Sphinx that we enable:
 
@@ -68,7 +68,7 @@ The following lists the processing tools:
 * Sphinx extensions that are not included with Sphinx that we enable:
 
   * ``numpydoc``: Processes docstrings written in the "numpydoc" format, see
-    https://numpydoc.readthedocs.io. We recommend the subset of numpydoc
+    https://numpydoc.readthedocs.io/en/stable/. We recommend the subset of numpydoc
     formatting features in this document. (Note that we currently use an older
     modified fork of numpydoc, which is included in the SymPy source code.)
   * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
@@ -93,7 +93,7 @@ Types of Documentation
 
 There are four main locations where SymPy’s documentation can be found:
 
-**SymPy Website** https://sympy.org
+**SymPy Website** https://www.sympy.org/
 
 The SymPy website’s primary function is to advertise the software to users and
 developers. It also serves as an initial location to point viewers to other
@@ -117,7 +117,7 @@ This is the main place where users go to learn how to use SymPy. It contains a
 tutorial for SymPy as well as technical documentation for all of the modules.
 The source files are hosted in the main SymPy repository in the `doc directory
 <https://github.com/sympy/sympy/tree/master/doc>`_ at and are built using the
-`Sphinx site generator <http://www.sphinx-doc.org/en/master/>`_ and uploaded
+`Sphinx site generator <https://www.sphinx-doc.org/en/master/>`_ and uploaded
 to the docs.sympy.org site automatically. There are two primary types of pages
 that are generated from different source files in the docs directory:
 

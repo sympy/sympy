@@ -76,7 +76,7 @@ known_functions_C99 = dict(known_functions_C89, **{
 })
 
 # These are the core reserved words in the C language. Taken from:
-# http://en.cppreference.com/w/c/keyword
+# https://en.cppreference.com/w/c/keyword
 
 reserved_words = [
     'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',

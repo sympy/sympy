@@ -196,7 +196,7 @@ def DiscreteUniform(name, items):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Discrete_uniform_distribution
-    .. [2] http://mathworld.wolfram.com/DiscreteUniformDistribution.html
+    .. [2] https://mathworld.wolfram.com/DiscreteUniformDistribution.html
 
     """
     return rv(name, DiscreteUniformDistribution, *items)
@@ -335,7 +335,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bernoulli_distribution
-    .. [2] http://mathworld.wolfram.com/BernoulliDistribution.html
+    .. [2] https://mathworld.wolfram.com/BernoulliDistribution.html
 
     """
 
@@ -474,7 +474,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BinomialDistribution.html
 
     """
 
@@ -548,7 +548,7 @@ def BetaBinomial(name, n, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BetaBinomialDistribution.html
 
     """
 
@@ -624,7 +624,7 @@ def Hypergeometric(name, N, m, n):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hypergeometric_distribution
-    .. [2] http://mathworld.wolfram.com/HypergeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/HypergeometricDistribution.html
 
     """
     return rv(name, HypergeometricDistribution, N, m, n)
@@ -753,7 +753,7 @@ def IdealSoliton(name, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Ideal_distribution
-    .. [2] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     """
     return rv(name, IdealSolitonDistribution, k)
@@ -863,8 +863,8 @@ def RobustSoliton(name, k, delta, c):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
-    .. [2] http://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
-    .. [3] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
+    .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     '''
     return rv(name, RobustSolitonDistribution, k, delta, c)
