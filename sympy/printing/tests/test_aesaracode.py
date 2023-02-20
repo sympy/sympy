@@ -30,6 +30,8 @@ if aesara:
     from aesara.tensor.elemwise import Elemwise, DimShuffle
     from aesara.tensor.math import Dot
 
+    aesara_version = tuple(getattr(aesara, '__version__').split('.'))
+
     xt, yt, zt = [aet.scalar(name, 'floatX') for name in 'xyz']
     Xt, Yt, Zt = [aet.tensor('floatX', (False, False), name=n) for n in 'XYZ']
 else:
@@ -264,8 +266,13 @@ def test_MatAdd():
 
 
 def test_Rationals():
-    assert theq(aesara_code_(sy.Integer(2) / 3), aet.true_divide(2, 3))
-    assert theq(aesara_code_(S.Half), aet.true_divide(1, 2))
+    # `true_divide` replaced `true_div` in Aesara 2.8.11 to match NumPy
+    if aesara_version >= ('2', '8', '11'):
+        true_divide = aet.true_divide
+    else:
+        true_divide = aet.true_div
+    assert theq(aesara_code_(sy.Integer(2) / 3), true_divide(2, 3))
+    assert theq(aesara_code_(S.Half), true_divide(1, 2))
 
 def test_Integers():
     assert aesara_code_(sy.Integer(3)) == 3
