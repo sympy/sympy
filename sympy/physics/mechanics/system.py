@@ -16,6 +16,17 @@ from functools import wraps
 __all__ = ['System', 'SymbolicSystem']
 
 
+def _reset_eom_method(method):
+    """Decorator to reset the eom_method if a property is changed."""
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self._eom_method = None
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class System(_Methods):
     """Class to define a system and form the equations of motion.
 
@@ -228,16 +239,6 @@ class System(_Methods):
         system = cls(origin=newtonian.masscenter, frame=newtonian.frame)
         system.add_bodies(newtonian)
         return system
-
-    @staticmethod
-    def _reset_eom_method(method):
-        """Decorator to reset the eom_method if a property is changed."""
-        @wraps(method)
-        def wrapper(self, *args, **kwargs):
-            self._eom_method = None
-            return method(self, *args, **kwargs)
-
-        return wrapper
 
     @property
     def origin(self):
