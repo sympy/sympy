@@ -17,6 +17,13 @@ if aesara:
     from aesara.tensor.elemwise import Elemwise
     from aesara.tensor.elemwise import DimShuffle
 
+    # `true_divide` replaced `true_div` in Aesara 2.8.11 (released 2023) to
+    # match NumPy
+    # XXX: Remove this when not needed to support older versions.
+    true_divide = getattr(aet, 'true_divide', None)
+    if true_divide is None:
+        true_divide = aet.true_div
+
     mapping = {
             sympy.Add: aet.add,
             sympy.Mul: aet.mul,
@@ -240,11 +247,6 @@ class AesaraPrinter(Printer):
         return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        # `true_divide` replaced `true_div` in Aesara 2.8.11 to match NumPy
-        if aesara_version >= ('2', '8', '11'):
-            true_divide = aet.true_divide
-        else:
-            true_divide = aet.true_div
         return true_divide(self._print(expr.p, **kwargs),
                            self._print(expr.q, **kwargs))
 
