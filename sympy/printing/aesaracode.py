@@ -76,8 +76,6 @@ if aesara:
             sympy.Transpose: DimShuffle((False, False), [1, 0]),
     }
 
-    aesara_version = tuple(getattr(aesara, '__version__').split('.'))
-
 
 class AesaraPrinter(Printer):
     """ Code printer which creates Aesara symbolic expression graphs.
