@@ -373,12 +373,13 @@ def test_validate_system_kanes():
 
 def test_validate_system_lagrange():
     # Create a correct full featured system
-    qj1, qj2, qj3, q1, q2, q3, u = dynamicsymbols('qj1:4 q1:4 u')
+    qj1, qj2, qj3, q1, q2, q3, q4, u = dynamicsymbols('qj1:4 q1:5 u')
     qj1d, qj2d, qj3d, q1d, q2d, q3d = dynamicsymbols('qj1:4 q1:4', 1)
-    rb1, rb2, rb3, rb4 = symbols('rb1:5', cls=RigidBody)
+    rb1, rb2, rb3, rb4, rb5 = symbols('rb1:6', cls=RigidBody)
     J1 = PinJoint('J1', rb1, rb2, qj1, qj1d)
     J2 = PrismaticJoint('J2', rb2, rb3, qj2, qj2d)
     J3 = PinJoint('J3', rb3, rb4, qj3, qj3d)
+    Ju = PinJoint('Ju', rb4, rb5, q4, u)
     system = System()
     system.add_joints(J1, J2, J3)
     system.add_coordinates(q1, q2, q3, independent=[True, True, False])
@@ -413,6 +414,12 @@ def test_validate_system_lagrange():
     raises(ValueError, lambda: system.validate_system(LagrangesMethod))
     system.u_ind = []
     system.u_dep = u
+    raises(ValueError, lambda: system.validate_system(LagrangesMethod))
+    # Test joint that uses generalized speeds
+    system.u_dep = []
+    system.add_joints(Ju)
+    raises(ValueError, lambda: system.validate_system(LagrangesMethod))
+    system.u_ind = []
     raises(ValueError, lambda: system.validate_system(LagrangesMethod))
 
 

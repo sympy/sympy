@@ -5,21 +5,21 @@ Joints Framework in Physics/Mechanics
 =====================================
 
 :mod:`sympy.physics.mechanics` provides a joints framework. The
-:obj:`joints<sympy.physics.mechanics.joint>` themselves are used  been are used
+:obj:`joint<sympy.physics.mechanics.joint>` objects themselves are used are used
 to define connections between bodies (:class:`~.Particle`,
 :class:`~.RigidBody`). This has been implemented such that it works well in
 combination with :class:`~.System` when forming the equations of motion. The
 main responsibility of the :obj:`joints<sympy.physics.mechanics.joint>` is to
-establish the kinematic relationships and do what we call "book-keeping" of
-single :obj:`joints<sympy.physics.mechanics.joint>`. The word "book-keeping" in
-this context means keeping track of the relationships that of that joint.
+establish the kinematic relationships and do "book-keeping" for individual
+:obj:`joint<sympy.physics.mechanics.joint>` objects. In this context,
+"book-keeping" means keeping track of the relationships that of that joint.
 
 Joints in Physics/Mechanics
 ===========================
 
-:mod:`joints<sympy.physics.mechanics.joint>` is create kinematic relationships
-between bodies (:class:`~.Particle`, :class:`~.RigidBody`). The general
-description of a joint is generally is shown in the image below.
+:mod:`Joints<sympy.physics.mechanics.joint>` are used to create kinematic
+relationships between bodies (:class:`~.Particle`, :class:`~.RigidBody`). The
+general description of a joint is shown in the image below.
 
 .. image:: api/joint_explanation.svg
    :align: center
@@ -91,18 +91,18 @@ body's frame. ::
 
 System in Physics/Mechanics
 ===========================
-After defining the entire system you can use the :class:`~.System` to do a more
-general "book-keeping
-keep track of all the objects like joints and form the equations of motion. In
-this process the :class:`~.JointsMethod` only does the "book-keeping" of the joints. It uses
-another method, like the :class:`~.KanesMethod`, as its backend for forming the
-equations of motion.
+After defining the entire system, you can use the :class:`~.System` to do a more
+general "book-keeping" that will keep track of all the system's components (e.g.
+joints) and form the equations of motion. :class:`~.System` uses another method,
+like the :class:`~.KanesMethod`, as its backend for forming the equations of
+motion.
 
 In the code below we form the equations of motion of the single
 :class:`~.PinJoint` shown previously. ::
 
-   >>> method = JointsMethod(parent, joint)
-   >>> method.form_eoms()
+   >>> system = System.from_newtonian(parent)
+   >>> system.add_joints(joint)
+   >>> system.form_eoms()
    Matrix([[-(child_izz + 9*child_mass)*u']])
-   >>> type(method.method)  # The method working in the backend
+   >>> type(system.eom_method)  # The method working in the backend
    <class 'sympy.physics.mechanics.kane.KanesMethod'>

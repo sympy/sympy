@@ -5,7 +5,7 @@ System in Physics/Mechanics
 ===========================
 
 :mod:`sympy.physics.mechanics` provides a :class:`~.System` class. In a
-:class:`~.System` instance you store information of the model, e.g. bodies,
+:class:`~.System` instance you store information about the model, e.g. bodies,
 joints, constraints, etc. With all relations of the :class:`~.System` being
 defined it can form the equations of motion using a backend of your choosing.
 In general :class:`~.System` has been designed to be compatible with third party
@@ -16,7 +16,7 @@ Usage example
 
 :class:`~.System` requires at least an inertial frame and global origin on
 initialization. If those are not provided, then they will be created for you. An
-instance of :class:`~System` can be created as follows:
+instance of :class:`~.System` can be created as follows:
 
    >>> from sympy.physics.mechanics import *
    >>> mechanics_printing(pretty_print=False)
@@ -24,7 +24,7 @@ instance of :class:`~System` can be created as follows:
    >>> O = Point('O')
    >>> system = System(O, N)
 
-Another option is to formulate the :class:`~System` with respect to a Newtonian
+Another option is to formulate the :class:`~.System` with respect to a Newtonian
 body. This can be done as follows:
 
    >>> ceiling = RigidBody('ceiling')
@@ -56,7 +56,7 @@ pendulum:
    >>> [body.name for body in system.bodies]
    ['ceiling', 'link1', 'link2']
 
-For more information of the joints checkout the joints documentation.
+For more information of the joints check out the joints documentation.
 Constraints can be added in the following way. The constraint below restricts
 the tip of the ``link2`` to only move along the ``y-axis`` of the ``ceiling``
 frame.
@@ -66,10 +66,10 @@ frame.
    >>> system.holonomic_constraints
    Matrix([[-l1*cos(q_hinge1) - l2*(-sin(q_hinge1)*sin(q_hinge2) + cos(q_hinge1)*cos(q_hinge2))]])
 
-Note that the corresponding velocity constraint is by default added as
-well. However you will still have to choose which generalized coordinates and
-speeds become dependent. This can also be seen when using the
-:obj:`~System.validate_system` method:
+Note that the corresponding velocity constraint is added by default as well.
+However you will still have to choose which generalized coordinates and speeds
+become dependent. This can also be seen when using the
+:obj:`~.System.validate_system` method:
 
    >>> try:
    ...     system.validate_system()
@@ -87,7 +87,7 @@ This can be done by manually specifying which should become dependent.
    >>> system.u_ind = u_hinge1
    >>> system.u_dep = u_hinge2
 
-Now the :obj:`~System.validate_system` method does not give any errors, we can
+Now the :obj:`~.System.validate_system` method does not give any errors, we can
 form the equations of motion.
 
    >>> system.validate_system()

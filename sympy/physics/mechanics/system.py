@@ -12,6 +12,7 @@ from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.kane import KanesMethod
 from sympy.physics.mechanics.lagrange import LagrangesMethod
+from functools import wraps
 
 __all__ = ['System', 'SymbolicSystem']
 
@@ -87,8 +88,9 @@ class System(_Methods):
     >>> g, l = symbols('g l')
     >>> F = dynamicsymbols('F')
 
-    Create bodies. A frame is also attached to the particle, as it will be
-    useful to locate the pin joint of the pendulum with respect to the particle.
+    The next step is to create bodies. It is also useful to create a frame for
+    locating the particle with respect to the pin joint later on, as a particle
+    does not have a body-fixed frame.
 
     >>> rail = RigidBody('rail')
     >>> cart = RigidBody('cart')
@@ -141,9 +143,9 @@ class System(_Methods):
     >>> system.loads
     ((rail_masscenter, - g*rail_mass*rail_frame.y), (cart_masscenter, - cart_mass*g*rail_frame.y), (bob_masscenter, - bob_mass*g*rail_frame.y), (cart_masscenter, F*rail_frame.x))
 
-    With the entire system being defined, we can now form the equations of
-    motion. Before forming the equations of motion, one can also run some checks
-    to check for possible errors.
+    With the entire system defined, we can now form the equations of motion.
+    Before forming the equations of motion, one can also run some checks to
+    check for possible errors.
 
     >>> system.validate_system()
     >>> system.form_eoms()
@@ -159,13 +161,12 @@ class System(_Methods):
     [bob_mass*l*u_pin**2*sin(q_pin) + F],
     [          -bob_mass*g*l*sin(q_pin)]])
 
-    The complexity of the above example can be increased if we add a holonomic
-    constraint, to prevent the particle from moving in the horizontal (x)
-    direction. This can be done by adding a holonomic constraint. After, which
-    we should also redefine what our (in)dependent generalized coordinates and
-    speeds are. Note that the bakcend for forming the equations of motion is
-    resetted automatically, because the system properties are changed in this
-    process.
+    The complexity of the above example can be increased if we add a constraint
+    to prevent the particle from moving in the horizontal (x) direction. This
+    can be done by adding a holonomic constraint. After which we should also
+    redefine what our (in)dependent generalized coordinates and speeds are. Note
+    that the bakcend for forming the equations of motion is reset automatically
+    because the system properties are changed in this process.
 
     >>> type(system.eom_method)
     <class 'sympy.physics.mechanics.kane.KanesMethod'>
@@ -199,12 +200,12 @@ class System(_Methods):
         if origin is None:
             origin = Point('inertial_origin')
         elif not isinstance(origin, Point):
-            raise TypeError('Origin must be and instance of Point.')
+            raise TypeError('Origin must be an instance of Point.')
         self._origin = origin
         if frame is None:
             frame = ReferenceFrame('inertial_frame')
         elif not isinstance(frame, ReferenceFrame):
-            raise TypeError('Frame must be and instance of ReferenceFrame.')
+            raise TypeError('Frame must be an instance of ReferenceFrame.')
         self._frame = frame
         self._origin.set_vel(self._frame, 0)
         self._q_ind = Matrix(1, 0, []).T
@@ -221,10 +222,10 @@ class System(_Methods):
 
     @classmethod
     def from_newtonian(cls, newtonian):
-        """Constructs the system with respect to a newtonian body."""
+        """Constructs the system with respect to a Newtonian body."""
         if isinstance(newtonian, Particle):
             raise ValueError('A Particle has no frame so cannot act as '
-                             'newtonian.')
+                             'the Newtonian.')
         system = cls(origin=newtonian.masscenter, frame=newtonian.frame)
         system.add_bodies(newtonian)
         return system
@@ -232,7 +233,7 @@ class System(_Methods):
     @staticmethod
     def _reset_eom_method(method):
         """Decorator to reset the eom_method if a property is changed."""
-
+        @wraps(method)
         def wrapper(self, *args, **kwargs):
             self._eom_method = None
             return method(self, *args, **kwargs)
@@ -393,8 +394,7 @@ class System(_Methods):
         """Simple helper to convert objects that should be added to a list."""
         if not iterable(lst):  # Only one object
             return [lst]
-        else:
-            return list(lst[:])  # converts Matrix and tuple to flattened list
+        return list(lst[:])  # converts Matrix and tuple to flattened list
 
     @staticmethod
     def _check_objects(objects, obj_lst, expected_type, obj_name, type_name):
@@ -410,7 +410,7 @@ class System(_Methods):
             else:
                 seen.add(obj)
         if wrong_types:
-            raise TypeError(f'{obj_name} {wrong_types} are no {type_name}.')
+            raise TypeError(f'{obj_name} {wrong_types} are not {type_name}.')
         if duplicates:
             raise ValueError(f'{obj_name} {duplicates} have already been added '
                              f'to the system.')
@@ -689,7 +689,6 @@ class System(_Methods):
         if isinstance(location, BodyBase):
             removed_loads = []
             removed_loads.append(self.remove_load(location.masscenter))
-
             removed_loads.append(self.remove_load(location.frame))
             return removed_loads if removed_loads else None
         for i, ld in enumerate(self._loads):
@@ -729,7 +728,7 @@ class System(_Methods):
         For the generalized coordinates, generalized speeds and bodies it is
         checked whether they are already known by the system instance. If they
         are, then they are not added. The kinematical differential equations are
-        however always added to the system, so do not also add those manually on
+        however always added to the system, so do not also add those manually
         beforehand.
 
         """
@@ -791,7 +790,7 @@ class System(_Methods):
                 return joint
 
     def _form_eoms(self):
-        self.form_eoms()
+        return self.form_eoms()
 
     def form_eoms(self, eom_method=KanesMethod):
         """Form the equations of motion of the system.
@@ -885,21 +884,38 @@ class System(_Methods):
             LagrangesMethod's rhs function.
 
         """
-
         return self.eom_method.rhs(inv_method=inv_method)
 
     @property
     def mass_matrix(self):
-        """The mass matrix of the system.
-        Mass matrix $M$ and forcing vector $f$ give $M \dot{u} = f$."""
+        r"""The mass matrix of the system.
+
+        Explanation
+        ===========
+
+        The mass matrix $M_d$ and the forcing vector $f_d$ of a system describe
+        the systems dynamics according to the following equations:
+        $$M_d \dot{u} = f_d$$
+        where $\dot{u}$ is the derivative of the generalized speeds.
+
+        """
         return self.eom_method.mass_matrix
 
     @property
     def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
+        r"""The mass matrix of the system, augmented by the kinematic
         differential equations in explicit or implicit form.
-        The full mass matrix $M$ combined with the full forcing vector $f$ give
-        $M \dot{x} = f$, where $x$ is the state vector stacking $q$ and $u$."""
+
+        Explanation
+        ===========
+
+        The full mass matrix $M_m$ and the full forcing vector $f_m$ of a system
+        describe the dynamics and kinematics according to the following
+        equation:
+        $$M_m \dot{x} = f_m$$
+        where $x$ is the state vector stacking $q$ and $u$.
+
+        """
         return self.eom_method.mass_matrix_full
 
     @property
@@ -916,6 +932,29 @@ class System(_Methods):
     def validate_system(self, eom_method=KanesMethod, check_duplicates=False):
         """Validates the system using some basic checks.
 
+        Explanation
+        ===========
+
+        This methods validates the system based on the following checks:
+
+        - The number of dependent generalized coordinates should match the
+          number of holonomic constraints.
+        - All generalized coordinates defined by the joints should also be known
+          to the system.
+        - If ``KanesMethod`` is used as a ``eom_method``:
+            - All generalized speeds and kdes defined by the joints should also
+              be known to the system.
+            - The number of dependent generalized speeds should match the number
+              of velocity constraints.
+            - The number of generalized coordinates should be smaller or equal
+              to the number of generalized speeds.
+            - The number of generalized coordinates should match the number of
+              kinematical differential equations.
+        - If ``LagrangesMethod`` is used as ``eom_method``:
+            - There should not be any generalized speeds that are not
+              derivatives of the generalized coordinates (this includes the
+              generalized speeds defined by the joints).
+
         Parameters
         ==========
 
@@ -931,9 +970,10 @@ class System(_Methods):
         Notes
         =====
 
-        This method is not backwards compatible as it may improve over time. The
-        method can become both more and less strict in certain areas. However a
-        well-defined system should always pass all these tests.
+        This method is not guaranteed to be backwards compatible as it may
+        improve over time. The method can become both more and less strict in
+        certain areas. However a well-defined system should always pass all
+        these tests.
 
         """
         msgs = []
@@ -975,14 +1015,17 @@ class System(_Methods):
                             f'velocity constraints {n_hc + n_nhc}.')
             if n_q > n_u:
                 msgs.append(f'The number of generalized coordinates {n_q} '
-                            f'should be smaller equal to the number of '
+                            f'should be smaller or equal to the number of '
                             f'generalized speeds {n_u}.')
             if n_u != n_kdes:
                 msgs.append(f'The number of generalized speeds {n_u} should be '
                             f'equal to the number of kinematical differential '
-                            f'constraints {n_kdes}.')
+                            f'equations {n_kdes}.')
         elif issubclass(eom_method, LagrangesMethod):
             not_qdots = set(self.u).difference(self.q.diff(dynamicsymbols._t))
+            for joint in self.joints:
+                not_qdots.update(set(
+                    joint.speeds).difference(self.q.diff(dynamicsymbols._t)))
             if not_qdots:
                 msgs.append(f'The generalized speeds {not_qdots} are not '
                             f'supported by this method. Only derivatives of the'

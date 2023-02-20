@@ -3,7 +3,7 @@ Multi Degree of Freedom Holonomic System
 =========================================
 
 In this example we demonstrate the use of the functionality provided in
-:mod:`sympy.physics.mechanics` for deriving the equations of motion (EOM) of a
+:mod:`sympy.physics.mechanics` for deriving the equations of motion (EOMs) of a
 holonomic system that includes both particles and rigid bodies with contributing
 forces and torques, some of which are specified forces and torques. The system
 is shown below:
@@ -13,12 +13,12 @@ is shown below:
 
 The system will be modeled using ``System``. First we need to create the
 ``dynamicsymbols`` needed to describe the system as shown in the above diagram.
-In this case, the generalized coordinates :math:`q_1` represent lateral distance
-of block from wall, :math:`q_2` represents angle of the compound pendulum from
-vertical, :math:`q_3`  represents angle of the simple pendulum from the compound
-pendulum. The generalized speeds :math:`u_1` represents lateral speed of block,
-:math:`u_2` represents lateral speed of compound pendulum and :math:`u_3`
-represents angular speed of C relative to B.
+In this case, the generalized coordinate :math:`q_1` represents lateral distance
+of block from wall, :math:`q_2` represents the angle of the compound pendulum
+from vertical, and :math:`q_3` represents the angle of the simple pendulum from
+the compound pendulum. The generalized speed :math:`u_1` represents lateral
+speed of block, :math:`u_2` represents the lateral speed of the compound
+pendulum, and :math:`u_3` represents the angular speed of C relative to B.
 
 We also create some ``symbols`` to represent the length and mass of the
 pendulum, as well as gravity and others. ::
@@ -29,7 +29,7 @@ pendulum, as well as gravity and others. ::
    >>> l, k, c, g, kT = symbols('l, k, c, g, kT')
    >>> ma, mb, mc, IBzz = symbols('ma, mb, mc, IBzz')
 
-Next, we create the bodies and an system for book-keeping.
+Next, we create the bodies and a system for book-keeping.
 
    >>> wall = RigidBody('N')
    >>> system = System.from_newtonian(wall)
@@ -40,25 +40,25 @@ Next, we create the bodies and an system for book-keeping.
    >>> simple_pend = Particle('C', mass=mc)
 
 Now we can connect the bodies using joints to establish the kinematics.
-Particles do not have frames from themselves, therefore we can either create a
-frame on beforehand or reuse a frame from the previous joint. After creating the
-joints we can add them to the system. ::
-
+Particles do not have frames themselves. Therefore we can either create a frame
+beforehand or reuse a frame from the previous joint. After creating the joints
+we can add them to the system. ::
 
    >>> slider = PrismaticJoint('J1', wall, block, coordinates=q1, speeds=u1)
    >>> rev1 = PinJoint('J2', block, compound_pend, coordinates=q2, speeds=u2,
    ...                 parent_interframe=slider.child_interframe,
    ...                 joint_axis=wall.z, child_point=l*2/3*compound_pend.y)
-   >>> frame = ReferenceFrame('C_frame')
+   >>> C_frame = ReferenceFrame('C_frame')
    >>> rev2 = PinJoint('J3', compound_pend, simple_pend, coordinates=q3, speeds=u3,
    ...                 joint_axis=compound_pend.z, parent_point=-l/3*compound_pend.y,
-   ...                 child_interframe=frame, child_point=l*frame.y)
+   ...                 child_interframe=C_frame, child_point=l*C_frame.y)
    >>> system.add_joints(slider, rev1, rev2)
 
-Now we can apply loads (forces and torques) to the bodies, gravity acts on all
-bodies, a linear spring and damper act on block and wall, a rotational linear
-spring acts on C relative to B specified torque T acts on compound_pend and
-block, specified force F acts on block. ::
+Now we can apply loads (forces and torques) to the bodies: gravity acts on all
+bodies, a linear spring and damper act on the block and the wall, a rotational
+linear spring acts between the compound_pend and the simple_pend, a specified
+torque T acts on the compound_pend and the block, and a specified force F acts
+on the block. ::
 
     >>> F, T = dynamicsymbols('F, T')
     >>> system.apply_gravity(-g * wall.y)
@@ -66,10 +66,10 @@ block, specified force F acts on block. ::
     >>> system.apply_force(block, -k*q1*wall.x, wall)
     >>> system.apply_force(block, -c*u1*wall.x, wall)
     >>> system.apply_torque(compound_pend, T * compound_pend.z, slider.child_interframe)
-    >>> system.apply_torque(frame, -kT*q3*compound_pend.z, compound_pend)
+    >>> system.apply_torque(C_frame, -kT*q3*compound_pend.z, compound_pend)
 
 With the problem setup, the equations of motion can be generated using the
-``System`` class with KanesMethod in backend. ::
+``System`` class with :class:`~.KanesMethod` in the backend. ::
 
     >>> system.form_eoms()
     Matrix([
