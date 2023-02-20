@@ -495,7 +495,8 @@ def test_cart_pendulum_kanes():
     upd_expected = ((-g * mp * sin(qp) + l * mc * sin(2 * qp) * up ** 2 / 2 -
                      l * mp * sin(2 * qp) * up ** 2 / 2 - F * cos(qp)) /
                     (l * (mc * cos(qp) ** 2 + mp * sin(qp) ** 2)))
-    upd_sol = solve(system.form_eoms().xreplace(subs), up.diff(t))[up.diff(t)]
+    upd_sol = tuple(solve(system.form_eoms().xreplace(subs),
+                          up.diff(t)).values())[0]
     assert simplify(upd_sol - upd_expected) == 0
     assert isinstance(system.eom_method, KanesMethod)
 

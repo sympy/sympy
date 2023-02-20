@@ -1,5 +1,4 @@
-from sympy.core.backend import (eye, zeros, ImmutableMatrix as Matrix)
-from sympy.core.expr import Expr
+from sympy.core.backend import (eye, zeros, Basic, ImmutableMatrix as Matrix)
 from sympy.core.containers import OrderedSet
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
@@ -444,8 +443,8 @@ class System(_Methods):
         """Helper to parse expressions like constraints."""
         old_expressions = old_expressions[:]
         new_expressions = list(new_expressions)  # Converts a possible tuple
-        System._check_objects(new_expressions, old_expressions, Expr,
-                              name, 'expression')
+        System._check_objects(new_expressions, old_expressions, Basic,
+                              name, 'expressions')
         for expr in new_expressions:
             if expr == 0:
                 raise ValueError(f'Parsed {name} are zero.')
