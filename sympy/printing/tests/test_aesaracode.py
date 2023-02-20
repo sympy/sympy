@@ -264,8 +264,8 @@ def test_MatAdd():
 
 
 def test_Rationals():
-    assert theq(aesara_code_(sy.Integer(2) / 3), aet.true_div(2, 3))
-    assert theq(aesara_code_(S.Half), aet.true_div(1, 2))
+    assert theq(aesara_code_(sy.Integer(2) / 3), aet.true_divide(2, 3))
+    assert theq(aesara_code_(S.Half), aet.true_divide(1, 2))
 
 def test_Integers():
     assert aesara_code_(sy.Integer(3)) == 3
