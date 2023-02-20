@@ -238,8 +238,8 @@ class AesaraPrinter(Printer):
         return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        return aet.true_div(self._print(expr.p, **kwargs),
-                            self._print(expr.q, **kwargs))
+        return aet.true_divide(self._print(expr.p, **kwargs),
+                               self._print(expr.q, **kwargs))
 
     def _print_Integer(self, expr, **kwargs):
         return expr.p
