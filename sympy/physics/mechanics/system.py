@@ -165,7 +165,7 @@ class System(_Methods):
     to prevent the particle from moving in the horizontal (x) direction. This
     can be done by adding a holonomic constraint. After which we should also
     redefine what our (in)dependent generalized coordinates and speeds are. Note
-    that the bakcend for forming the equations of motion is reset automatically
+    that the backend for forming the equations of motion is reset automatically
     because the system properties are changed in this process.
 
     >>> type(system.eom_method)
@@ -910,9 +910,9 @@ class System(_Methods):
         ===========
 
         The mass matrix $M_d$ and the forcing vector $f_d$ of a system describe
-        the systems dynamics according to the following equations:
+        the system's dynamics according to the following equations:
         $$M_d \dot{u} = f_d$$
-        where $\dot{u}$ is the derivative of the generalized speeds.
+        where $\dot{u}$ is the time derivative of the generalized speeds.
 
         """
         return self.eom_method.mass_matrix
@@ -951,20 +951,20 @@ class System(_Methods):
         Explanation
         ===========
 
-        This methods validates the system based on the following checks:
+        This method validates the system based on the following checks:
 
-        - The number of dependent generalized coordinates should match the
+        - The number of dependent generalized coordinates should equal the
           number of holonomic constraints.
         - All generalized coordinates defined by the joints should also be known
           to the system.
         - If ``KanesMethod`` is used as a ``eom_method``:
-            - All generalized speeds and kdes defined by the joints should also
-              be known to the system.
-            - The number of dependent generalized speeds should match the number
+            - All generalized speeds and kinematic differential equations
+              defined by the joints should also be known to the system.
+            - The number of dependent generalized speeds should equal the number
               of velocity constraints.
-            - The number of generalized coordinates should be smaller or equal
+            - The number of generalized coordinates should be less than or equal
               to the number of generalized speeds.
-            - The number of generalized coordinates should match the number of
+            - The number of generalized coordinates should equal the number of
               kinematical differential equations.
         - If ``LagrangesMethod`` is used as ``eom_method``:
             - There should not be any generalized speeds that are not
@@ -1031,7 +1031,7 @@ class System(_Methods):
                             f'velocity constraints {n_hc + n_nhc}.')
             if n_q > n_u:
                 msgs.append(f'The number of generalized coordinates {n_q} '
-                            f'should be smaller or equal to the number of '
+                            f'should be less than or equal to the number of '
                             f'generalized speeds {n_u}.')
             if n_u != n_kdes:
                 msgs.append(f'The number of generalized speeds {n_u} should be '

@@ -13,12 +13,13 @@ is shown below:
 
 The system will be modeled using ``System``. First we need to create the
 ``dynamicsymbols`` needed to describe the system as shown in the above diagram.
-In this case, the generalized coordinate :math:`q_1` represents lateral distance
-of block from wall, :math:`q_2` represents the angle of the compound pendulum
-from vertical, and :math:`q_3` represents the angle of the simple pendulum from
-the compound pendulum. The generalized speed :math:`u_1` represents lateral
-speed of the block, :math:`u_2` represents the lateral speed of the compound
-pendulum, and :math:`u_3` represents the angular speed of C relative to B.
+In this case, the generalized coordinate :math:`q_1` represents the lateral
+distance of the block from the wall, :math:`q_2` represents the angle of the
+compound pendulum from the vertical, and :math:`q_3` represents the angle of
+the simple pendulum relative to the compound pendulum. The generalized speed
+:math:`u_1` represents the lateral speed of the block, :math:`u_2` represents
+the lateral speed of the compound pendulum, and :math:`u_3` represents the
+angular velocity of the simple pendulum relative to the compound pendulum.
 
 We also create some ``symbols`` to represent the length and mass of the
 pendulum, as well as gravity and others. ::
@@ -29,7 +30,7 @@ pendulum, as well as gravity and others. ::
    >>> l, k, c, g, kT = symbols('l, k, c, g, kT')
    >>> ma, mb, mc, IBzz = symbols('ma, mb, mc, IBzz')
 
-Next, we create the bodies and a system for book-keeping.
+Next, we create the bodies and a system to do the book-keeping.
 
    >>> wall = RigidBody('N')
    >>> system = System.from_newtonian(wall)
