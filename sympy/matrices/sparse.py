@@ -326,7 +326,7 @@ class SparseRepMatrix(RepMatrix):
 
         sympy.matrices.sparse.SparseMatrix.row_list
         """
-        return [tuple(k + (self[k],)) for k in sorted(list(self.todok().keys()), key=lambda k: list(reversed(k)))]
+        return [tuple(k + (self[k],)) for k in sorted(self.todok().keys(), key=lambda k: list(reversed(k)))]
 
     def nnz(self):
         """Returns the number of non-zero elements in Matrix."""

@@ -35,7 +35,7 @@ Q = MatrixSymbol("Q", 3, 3)
 x, y, z, t = symbols("x y z t")
 
 if tf is not None:
-    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    llo = [list(range(i, i+3)) for i in range(0, 9, 3)]
     m3x3 = tf.constant(llo)
     m3x3sympy = Matrix(llo)
 

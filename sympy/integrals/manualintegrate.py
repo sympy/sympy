@@ -1079,7 +1079,7 @@ def nested_pow_rule(integral: IntegralInfo):
             if not terms:
                 return S.One, S.Zero
             results = [_get_base_exp(term) for term in terms]
-            bases = set(b for b, _ in results)
+            bases = {b for b, _ in results}
             bases.discard(S.One)
             if len(bases) == 1:
                 return bases.pop(), Add(*(e for _, e in results))

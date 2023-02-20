@@ -373,7 +373,7 @@ class IntegerPartition(Basic):
             integer, partition = partition, integer
         if isinstance(partition, (dict, Dict)):
             _ = []
-            for k, v in sorted(list(partition.items()), reverse=True):
+            for k, v in sorted(partition.items(), reverse=True):
                 if not v:
                     continue
                 k, v = as_int(k), as_int(v)

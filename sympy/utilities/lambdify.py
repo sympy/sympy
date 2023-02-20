@@ -173,7 +173,6 @@ def _import(module, reload=False):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
-
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
@@ -469,7 +468,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       ``implemented_function`` and user defined subclasses of Function. If
       specified, numexpr may be the only option in modules. The official list
       of numexpr functions can be found at:
-      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
+      https://numexpr.readthedocs.io/projects/NumExpr3/en/latest/user_guide.html#supported-functions
 
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
@@ -777,7 +776,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {} # type: tDict[str, Any]
+    namespace = {}
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -850,7 +849,7 @@ or tuple for the function arguments.
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -882,7 +881,7 @@ or tuple for the function arguments.
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {} # type: tDict[str, Any]
+    funclocals = {}
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1

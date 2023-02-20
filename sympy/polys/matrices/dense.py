@@ -34,55 +34,62 @@ the elements of the matrix:
     [[1, 0, -1], [0, 1, 2]]
 
 """
+from __future__ import annotations
 from operator import mul
-
 from .exceptions import (
     DMShapeError,
     DMNonInvertibleMatrixError,
     DMNonSquareMatrixError,
-    )
+)
+from typing import Sequence, TypeVar
+from sympy.polys.matrices._typing import RingElement
 
 
-def ddm_transpose(a):
+T = TypeVar('T')
+R = TypeVar('R', bound=RingElement)
+
+
+def ddm_transpose(matrix: Sequence[Sequence[T]]) -> list[list[T]]:
     """matrix transpose"""
-    aT = list(map(list, zip(*a)))
-    return aT
+    return list(map(list, zip(*matrix)))
 
 
-def ddm_iadd(a, b):
+def ddm_iadd(a: list[list[R]], b: Sequence[Sequence[R]]) -> None:
     """a += b"""
     for ai, bi in zip(a, b):
         for j, bij in enumerate(bi):
             ai[j] += bij
 
 
-def ddm_isub(a, b):
+def ddm_isub(a: list[list[R]], b: Sequence[Sequence[R]]) -> None:
     """a -= b"""
     for ai, bi in zip(a, b):
         for j, bij in enumerate(bi):
             ai[j] -= bij
 
 
-def ddm_ineg(a):
+def ddm_ineg(a: list[list[R]]) -> None:
     """a  <--  -a"""
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = -aij
 
 
-def ddm_imul(a, b):
+def ddm_imul(a: list[list[R]], b: R) -> None:
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = aij * b
 
 
-def ddm_irmul(a, b):
+def ddm_irmul(a: list[list[R]], b: R) -> None:
     for ai in a:
         for j, aij in enumerate(ai):
             ai[j] = b * aij
 
 
-def ddm_imatmul(a, b, c):
+def ddm_imatmul(
+    a: list[list[R]], b: Sequence[Sequence[R]], c: Sequence[Sequence[R]]
+) -> None:
     """a += b @ c"""
     cT = list(zip(*c))
 

@@ -226,7 +226,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
-            map(lambda arg: self._print(arg), expr.args)))
+            (self._print(arg) for arg in expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
@@ -427,6 +427,15 @@ class SciPyPrinter(NumPyPrinter):
                 self._print(e.args[0]),
                 limit_str)
 
+    def _print_Si(self, expr):
+        return "{}({})[0]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
+
+    def _print_Ci(self, expr):
+        return "{}({})[1]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
 
 for func in _scipy_known_functions:
     setattr(SciPyPrinter, f'_print_{func}', _print_known_func)

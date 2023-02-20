@@ -171,8 +171,13 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
@@ -242,7 +247,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):
@@ -258,7 +263,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 
@@ -743,7 +748,7 @@ class _LeftRightArgs:
     """
 
     def __init__(self, lines, higher=S.One):
-        self._lines = [i for i in lines]
+        self._lines = list(lines)
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._first_line_index = 0
@@ -797,7 +802,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i for i in data]
+        data = list(data)
         return data
 
     def matrix_form(self):

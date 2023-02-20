@@ -1124,7 +1124,7 @@ class appellf1(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Appell_series
-    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+    .. [2] https://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
     """
 
