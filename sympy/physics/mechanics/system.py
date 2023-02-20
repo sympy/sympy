@@ -308,26 +308,16 @@ class System(_Methods):
         """Matrix of the independent generalized coordinates."""
         return self._q_ind
 
-    @property
-    def q_dep(self):
-        """Matrix of the dependent generalized coordinates."""
-        return self._q_dep
-
-    @property
-    def u_ind(self):
-        """Matrix of the independent generalized speeds."""
-        return self._u_ind
-
-    @property
-    def u_dep(self):
-        """Matrix of the dependent generalized speeds."""
-        return self._u_dep
-
     @q_ind.setter
     @_reset_eom_method
     def q_ind(self, q_ind):
         self._q_ind, self._q_dep = self._parse_coordinates(
             self._objects_to_list(q_ind), True, [], self.q_dep, True)
+
+    @property
+    def q_dep(self):
+        """Matrix of the dependent generalized coordinates."""
+        return self._q_dep
 
     @q_dep.setter
     @_reset_eom_method
@@ -335,11 +325,21 @@ class System(_Methods):
         self._q_ind, self._q_dep = self._parse_coordinates(
             self._objects_to_list(q_dep), False, self.q_ind, [], True)
 
+    @property
+    def u_ind(self):
+        """Matrix of the independent generalized speeds."""
+        return self._u_ind
+
     @u_ind.setter
     @_reset_eom_method
     def u_ind(self, u_ind):
         self._u_ind, self._u_dep = self._parse_coordinates(
             self._objects_to_list(u_ind), True, [], self.u_dep, False)
+
+    @property
+    def u_dep(self):
+        """Matrix of the dependent generalized speeds."""
+        return self._u_dep
 
     @u_dep.setter
     @_reset_eom_method

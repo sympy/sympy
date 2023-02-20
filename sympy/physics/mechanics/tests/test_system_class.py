@@ -7,7 +7,7 @@ from sympy.physics.mechanics import (
     PinJoint, KanesMethod, Point, Torque, Force, LagrangesMethod)
 from sympy.testing.pytest import raises
 
-t = dynamicsymbols._t
+t = dynamicsymbols._t # type: ignore
 
 
 def test_system_init():
