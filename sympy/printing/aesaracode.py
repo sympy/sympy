@@ -69,6 +69,8 @@ if aesara:
             sympy.Transpose: DimShuffle((False, False), [1, 0]),
     }
 
+    aesara_version = tuple(getattr(aesara, '__version__').split('.'))
+
 
 class AesaraPrinter(Printer):
     """ Code printer which creates Aesara symbolic expression graphs.
@@ -238,8 +240,13 @@ class AesaraPrinter(Printer):
         return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        return aet.true_divide(self._print(expr.p, **kwargs),
-                               self._print(expr.q, **kwargs))
+        # `true_divide` replaced `true_div` in Aesara 2.8.11 to match NumPy
+        if aesara_version >= ('2', '8', '11'):
+            true_divide = aet.true_divide
+        else:
+            true_divide = aet.true_div
+        return true_divide(self._print(expr.p, **kwargs),
+                           self._print(expr.q, **kwargs))
 
     def _print_Integer(self, expr, **kwargs):
         return expr.p
