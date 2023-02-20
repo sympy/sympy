@@ -30,7 +30,7 @@ if aesara:
     from aesara.tensor.elemwise import Elemwise, DimShuffle
     from aesara.tensor.math import Dot
 
-    from sympy.printing.aesara_code import true_divide
+    from sympy.printing.aesaracode import true_divide
 
     xt, yt, zt = [aet.scalar(name, 'floatX') for name in 'xyz']
     Xt, Yt, Zt = [aet.tensor('floatX', (False, False), name=n) for n in 'XYZ']
