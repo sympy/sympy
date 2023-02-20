@@ -10,6 +10,9 @@ from sympy.core.assumptions import (assumptions, check_assumptions,
     failing_assumptions, common_assumptions, _generate_assumption_rules,
     _load_pre_generated_assumption_rules)
 from sympy.core.facts import InconsistentAssumptions
+from sympy.core.random import seed
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.perm_groups import PermutationGroup
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -1026,7 +1029,7 @@ def test_sanitize_assumptions():
         assert x.is_positive is False
         assert cls('', real=True, positive=None).is_positive is None
         raises(ValueError, lambda: cls('', commutative=None))
-    raises(ValueError, lambda: Symbol._sanitize(dict(commutative=None)))
+    raises(ValueError, lambda: Symbol._sanitize({"commutative": None}))
 
 
 def test_special_assumptions():
@@ -1211,7 +1214,7 @@ def test_issue_21651():
 
 
 def test_assumptions_copy():
-    assert assumptions(Symbol('x'), dict(commutative=True)
+    assert assumptions(Symbol('x'), {"commutative": True}
         ) == {'commutative': True}
     assert assumptions(Symbol('x'), ['integer']) == {}
     assert assumptions(Symbol('x'), ['commutative']
@@ -1301,3 +1304,18 @@ def test_pre_generated_assumption_rules_are_valid():
     pre_generated_assumptions =_load_pre_generated_assumption_rules()
     generated_assumptions =_generate_assumption_rules()
     assert pre_generated_assumptions._to_python() == generated_assumptions._to_python(), "pre-generated assumptions are invalid, see sympy.core.assumptions._generate_assumption_rules"
+
+
+def test_ask_shuffle():
+    grp = PermutationGroup(Permutation(1, 0, 2), Permutation(2, 1, 3))
+
+    seed(123)
+    first = grp.random()
+    seed(123)
+    simplify(I)
+    second = grp.random()
+    seed(123)
+    simplify(-I)
+    third = grp.random()
+
+    assert first == second == third

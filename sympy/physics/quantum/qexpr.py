@@ -280,7 +280,7 @@ class QExpr(Expr):
         Handles the printing of any unique identifying contents of a QExpr to
         print as its contents, such as any variables or quantum numbers. The
         default is to print the label, which is almost always the args. This
-        should not include printing of any brackets or parenteses.
+        should not include printing of any brackets or parentheses.
         """
         return self._print_label(printer, *args)
 

@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8 pytest
+      - run: pip install mpmath flake8 flake8-comprehensions pytest
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -164,7 +164,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy-3.8']
+        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -177,33 +177,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       # Install the non-Python dependencies
-      - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
+      - run: sudo apt-get update
+      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
       - run: python -m pip install --upgrade pip wheel setuptools
-
-      # Use various libs from git for Python 3.11
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/cython/cython@master
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/scipy/scipy@main
-
-      # SciPy 1.9.0 and 1.9.1 fail to compile under PyPy:
-      #
-      # https://github.com/FFY00/meson-python/issues/121
-      - if: ${{ matrix.python-version == 'pypy-3.8' }}
-        run: pip install 'scipy<1.9.0'
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
                          aesara wurlitzer autowrap pytest                     \
                          'antlr4-python3-runtime==4.11.*'
 
-      # These are not available for pypy
-      - if: ${{ matrix.python-version != 'pypy-3.8' }}
-        run: pip install gmpy2 jax jaxlib
+      # Not available in pypy or cpython 3.11 (yet).
+      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
+        run: pip install llvmlite numba
 
-      # These are not available for pypy and cannot be installed in 3.11 (yet)
-      - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba pymc
+      # These are not available for pypy
+      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
+        run: pip install gmpy2 jax jaxlib symengine pymc
 
       # Test external imports
       - run: bin/test_external_imports.py

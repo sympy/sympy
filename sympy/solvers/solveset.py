@@ -833,6 +833,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                            ) and gen.base.is_Rational:
+                        result = FiniteSet(*[expand_log(i) for i in result])
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
@@ -1570,7 +1573,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
             Ne(a_base, 0),
             Ne(b_base, 0))
 
-    L, R = map(lambda i: expand_log(log(i), force=True), (a, -b))
+    L, R = (expand_log(log(i), force=True) for i in (a, -b))
     solutions = _solveset(L - R, symbol, domain)
 
     return ConditionSet(symbol, conditions, solutions)
@@ -2910,9 +2913,9 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     Solves the `system` using substitution method. It is used in
-     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
-     equation(s) is non polynomial equation.
+    Solves the `system` using substitution method. It is used in
+    :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
+    equation(s) is non polynomial equation.
 
     Parameters
     ==========
@@ -3455,7 +3458,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
     if isinstance(soln, FiniteSet):
-        _soln = FiniteSet(*[tuple((s,)) for s in soln])
+        _soln = FiniteSet(*[(s,) for s in soln])
         return _soln
     else:
         return FiniteSet(tuple(FiniteSet(soln)))

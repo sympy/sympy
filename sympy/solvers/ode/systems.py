@@ -938,7 +938,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     n = A.rows
 
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
-    Cvect = Matrix(list(Dummy() for _ in range(n)))
+    Cvect = Matrix([Dummy() for _ in range(n)])
 
     if b is None and any(type == typ for typ in ["type2", "type4", "type6"]):
         b = zeros(n, 1)

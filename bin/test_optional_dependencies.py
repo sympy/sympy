@@ -56,9 +56,6 @@ test_list = [
     # antlr, lfortran, clang
     'sympy/parsing/',
 
-    # matchpy
-    '*rubi*',
-
     # codegen
     'sympy/codegen/',
     'sympy/utilities/tests/test_codegen',
@@ -111,9 +108,6 @@ doctest_list = [
 
     # antlr, lfortran, clang
     'sympy/parsing/',
-
-    # matchpy
-    '*rubi*',
 
     # codegen
     'sympy/codegen/',

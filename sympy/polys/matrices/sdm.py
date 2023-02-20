@@ -12,6 +12,8 @@ from sympy.utilities.iterables import _strongly_connected_components
 from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 
 from .ddm import DDM
+from .lll import ddm_lll, ddm_lll_transform
+from sympy.polys.domains import QQ
 
 
 class SDM(dict):
@@ -851,6 +853,13 @@ class SDM(dict):
         """
         return all(i >= j for i, row in self.items() for j in row)
 
+    def lll(A, delta=QQ(3, 4)):
+        return A.from_ddm(ddm_lll(A.to_ddm(), delta=delta))
+
+    def lll_transform(A, delta=QQ(3, 4)):
+        reduced, transform = ddm_lll_transform(A.to_ddm(), delta=delta)
+        return A.from_ddm(reduced), A.from_ddm(transform)
+
 
 def binop_dict(A, B, fab, fa, fb):
     Anz, Bnz = set(A), set(B)
@@ -1202,7 +1211,7 @@ def sdm_irref(A):
     # All done!
     pivots = sorted(reduced_pivots | nonreduced_pivots)
     pivot2row = {p: n for n, p in enumerate(pivots)}
-    nonzero_columns = {c: set(pivot2row[p] for p in s) for c, s in nonzero_columns.items()}
+    nonzero_columns = {c: {pivot2row[p] for p in s} for c, s in nonzero_columns.items()}
     rows = [pivot_row_map[i] for i in pivots]
     rref = dict(enumerate(rows))
     return rref, pivots, nonzero_columns

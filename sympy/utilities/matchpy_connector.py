@@ -257,7 +257,7 @@ class Replacer:
         return eval(lambda_str, locals())
 
     def _get_custom_constraint(self, constraint_expr: Expr, condition_template: str) -> Callable[..., Expr]:
-        wilds = list(map(lambda x: x.name, constraint_expr.atoms(_WildAbstract)))
+        wilds = [x.name for x in constraint_expr.atoms(_WildAbstract)]
         lambdaargs = ', '.join(wilds)
         fullexpr = _get_srepr(constraint_expr)
         condition = condition_template.format(fullexpr)
@@ -273,7 +273,7 @@ class Replacer:
     def add(self, expr: Expr, result: Expr, conditions_true: List[Expr] = [], conditions_nonfalse: List[Expr] = []) -> None:
         expr = _sympify(expr)
         result = _sympify(result)
-        lambda_str = f"lambda {', '.join(map(lambda x: x.name, expr.atoms(_WildAbstract)))}: {_get_srepr(result)}"
+        lambda_str = f"lambda {', '.join((x.name for x in expr.atoms(_WildAbstract)))}: {_get_srepr(result)}"
         lambda_expr = self._get_lambda(lambda_str)
         constraints = self._common_constraint[:]
         constraint_conditions_true = [

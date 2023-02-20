@@ -303,8 +303,8 @@ def deprecated(message, *, deprecated_since_version,
     sympy.testing.pytest.warns_deprecated_sympy
 
     '''
-    decorator_kwargs = dict(deprecated_since_version=deprecated_since_version,
-               active_deprecations_target=active_deprecations_target)
+    decorator_kwargs = {"deprecated_since_version": deprecated_since_version,
+               "active_deprecations_target": active_deprecations_target}
     def deprecated_decorator(wrapped):
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):

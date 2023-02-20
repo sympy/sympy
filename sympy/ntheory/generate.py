@@ -729,7 +729,7 @@ def primerange(a, b=None):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Prime_number
-        .. [2] http://primes.utm.edu/notes/gaps.html
+        .. [2] https://primes.utm.edu/notes/gaps.html
     """
     if b is None:
         a, b = 2, a

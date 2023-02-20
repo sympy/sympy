@@ -10,7 +10,7 @@ from .c import C89CodePrinter, C99CodePrinter
 # from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import cxxcode # noqa:F401
 
-# from http://en.cppreference.com/w/cpp/keyword
+# from https://en.cppreference.com/w/cpp/keyword
 reserved = {
     'C++98': [
         'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor', 'bool', 'break',
@@ -53,7 +53,7 @@ _math_functions = {
     }
 }
 
-# from http://en.cppreference.com/w/cpp/header/cmath
+# from https://en.cppreference.com/w/cpp/header/cmath
 for k in ('Abs', 'exp', 'log', 'log10', 'sqrt', 'sin', 'cos', 'tan',  # 'Pow'
           'asin', 'acos', 'atan', 'atan2', 'sinh', 'cosh', 'tanh', 'floor'):
     _math_functions['C++98'][k] = k.lower()

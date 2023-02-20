@@ -91,7 +91,7 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         PolificationFailed, OptionError, FlagError, minpoly,
         minimal_polynomial, primitive_element, field_isomorphism,
         to_number_field, isolate, round_two, prime_decomp, prime_valuation,
-        itermonomials, Monomial, lex, grlex,
+        galois_group, itermonomials, Monomial, lex, grlex,
         grevlex, ilex, igrlex, igrevlex, CRootOf, rootof, RootOf,
         ComplexRootOf, RootSum, roots, Domain, FiniteField, IntegerRing,
         RationalField, RealField, ComplexField, PythonFiniteField,
@@ -192,7 +192,8 @@ from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         Adjoint, hadamard_product, HadamardProduct, HadamardPower,
         Determinant, det, diagonalize_vector, DiagMatrix, DiagonalMatrix,
         DiagonalOf, trace, DotProduct, kronecker_product, KroneckerProduct,
-        PermutationMatrix, MatrixPermute, Permanent, per)
+        PermutationMatrix, MatrixPermute, Permanent, per, rot_ccw_axis1,
+        rot_ccw_axis2, rot_ccw_axis3, rot_givens)
 
 from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         Segment2D, Ray2D, Line3D, Segment3D, Ray3D, Plane, Ellipse, Circle,
@@ -203,7 +204,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
 from .utilities import (flatten, group, take, subsets, variations,
         numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
         sift, topological_sort, unflatten, has_dups, has_variety, reshape,
-        rotations, filldedent, lambdify, source,
+        rotations, filldedent, lambdify,
         threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
@@ -307,7 +308,7 @@ __all__ = [
     'PolificationFailed', 'OptionError', 'FlagError', 'minpoly',
     'minimal_polynomial', 'primitive_element', 'field_isomorphism',
     'to_number_field', 'isolate', 'round_two', 'prime_decomp',
-    'prime_valuation', 'itermonomials', 'Monomial', 'lex', 'grlex',
+    'prime_valuation', 'galois_group', 'itermonomials', 'Monomial', 'lex', 'grlex',
     'grevlex', 'ilex', 'igrlex', 'igrevlex', 'CRootOf', 'rootof', 'RootOf',
     'ComplexRootOf', 'RootSum', 'roots', 'Domain', 'FiniteField',
     'IntegerRing', 'RationalField', 'RealField', 'ComplexField',
@@ -427,7 +428,8 @@ __all__ = [
     'HadamardPower', 'Determinant', 'det', 'diagonalize_vector', 'DiagMatrix',
     'DiagonalMatrix', 'DiagonalOf', 'trace', 'DotProduct',
     'kronecker_product', 'KroneckerProduct', 'PermutationMatrix',
-    'MatrixPermute', 'Permanent', 'per',
+    'MatrixPermute', 'Permanent', 'per', 'rot_ccw_axis1', 'rot_ccw_axis2',
+    'rot_ccw_axis3', 'rot_givens',
 
     # sympy.geometry
     'Point', 'Point2D', 'Point3D', 'Line', 'Ray', 'Segment', 'Line2D',
@@ -440,7 +442,7 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'rotations', 'filldedent', 'lambdify', 'threaded', 'xthreaded',
     'public', 'memoize_property', 'timed',
 
     # sympy.integrals
