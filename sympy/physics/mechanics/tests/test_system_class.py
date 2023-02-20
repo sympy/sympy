@@ -215,8 +215,9 @@ def test_add_loads():
     system.apply_force(rb1, N.x, rb2)
     assert system.loads == ((A, A.x), (rb1.masscenter, N.x),
                             (rb2.masscenter, -N.x))
-    system.remove_load(rb1.masscenter)
-    system.remove_load(rb2.masscenter)
+    assert system.remove_load(rb1.masscenter) == ((rb1.masscenter, N.x),)
+    assert system.remove_load(rb2.masscenter) == ((rb2.masscenter, -N.x),)
+    assert system.remove_load(rb2.masscenter) == tuple()
     system.apply_torque(rb1, N.x, rb2)
     assert system.loads == ((A, A.x), (N, N.x), (A, -N.x))
     system.apply_force(p2, A.x)
@@ -227,6 +228,32 @@ def test_add_loads():
     assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
     system.clear_loads()
     assert system.loads == tuple()
+
+
+def test_remove_load():
+    system = System()
+    N = ReferenceFrame('N')
+    pnt = Point('pnt')
+    rb = RigidBody('rb')
+    p = Particle('p')
+    system.add_loads((rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
+                     (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+                     (N, N.z))
+    assert system.loads == ((rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
+                            (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+                            (N, N.z))
+    assert system.remove_load(rb) == ((rb.masscenter, N.x), (rb.frame, N.x))
+    assert system.loads == ((pnt, N.z), (p.masscenter, N.z), (pnt, N.x),
+                            (N, N.x), (N, N.y), (N, N.z))
+    assert system.remove_load(p) == ((p.masscenter, N.z),)
+    assert system.loads == ((pnt, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+                            (N, N.z))
+    assert system.remove_load(pnt) == ((pnt, N.z), (pnt, N.x))
+    assert system.loads == ((N, N.x), (N, N.y), (N, N.z))
+    assert system.remove_load(pnt) == tuple()
+    assert system.remove_load(N) == ((N, N.x), (N, N.y), (N, N.z))
+    assert system.loads == tuple()
+    assert system.remove_load(N) == tuple()
 
 
 def test_add_joints():

@@ -590,7 +590,7 @@ class System(_Methods):
         >>> rb = RigidBody('rb')
         >>> system.apply_force(rb.masscenter, - rb.mass * g * system.z)
         >>> system.loads
-        [Force(point=rb_masscenter, g*rb_mass*inertial_frame.z)]
+        ((rb_masscenter, - g*rb_mass*inertial_frame.z),)
 
         To further demonstrate the use of ``apply_force`` attribute, consider
         two bodies connected by a spring. For ease the bodies centers of mass
@@ -602,8 +602,9 @@ class System(_Methods):
         >>> rb2 = RigidBody('rb2')
         >>> rb2.masscenter.set_pos(rb1.masscenter, x * system.x)
         >>> spring_force = x * rb1.masscenter.pos_from(rb2.masscenter)
-        >>> system.apply_force(spring_force, rb1, rb2)
+        >>> system.apply_force(rb1, spring_force, rb2)
         >>> system.loads
+        ((rb_masscenter, - g*rb_mass*inertial_frame.z), (rb1_masscenter, - x(t)**2*inertial_frame.x), (rb2_masscenter, x(t)**2*inertial_frame.x))
 
         """
         self._loads.append(Force(point, force))
@@ -641,7 +642,7 @@ class System(_Methods):
         >>> rb = RigidBody('rb')
         >>> system.apply_torque(rb.frame, -system.z)
         >>> system.loads
-        [Torque(frame=rb_frame, -inertial_frame.z)]
+        ((rb_frame, - inertial_frame.z),)
 
         To further demonstrate the use, let us consider two bodies such that
         a torque ``T`` is acting on one body, and ``-T`` on the other.
@@ -653,6 +654,7 @@ class System(_Methods):
         >>> T = v * system.y  # Torque
         >>> system.apply_torque(rb1, T, rb2)
         >>> system.loads
+         ((rb_frame, - inertial_frame.z), (rb1_frame, v(t)*inertial_frame.y), (rb2_frame, - v(t)*inertial_frame.y))
 
         """
         self._loads.append(Torque(frame, torque))
@@ -671,6 +673,12 @@ class System(_Methods):
             provided then the loads acting upon its center of mass and
             associated frame are removed.
 
+        Returns
+        =======
+
+        tuple of Force and Torque
+            The removed loads.
+
         Examples
         ========
 
@@ -680,20 +688,28 @@ class System(_Methods):
         >>> system.apply_force(rb, system.x)
         >>> system.apply_torque(rb, system.z)
         >>> system.loads
-        [(B_masscenter, B_frame.x), (P, B_frame.y)]
+        ((rb_masscenter, inertial_frame.x), (rb_frame, inertial_frame.z))
         >>> system.remove_load(rb.masscenter)
+        ((rb_masscenter, inertial_frame.x),)
         >>> system.loads
-        [(B_masscenter, B_frame.x)]
+        ((rb_frame, inertial_frame.z),)
 
         """
         if isinstance(location, BodyBase):
             removed_loads = []
-            removed_loads.append(self.remove_load(location.masscenter))
-            removed_loads.append(self.remove_load(location.frame))
-            return removed_loads if removed_loads else None
-        for i, ld in enumerate(self._loads):
+            removed_loads.extend(self.remove_load(location.masscenter))
+            if hasattr(location, 'frame'):  # Particle has no frame
+                removed_loads.extend(self.remove_load(location.frame))
+            return tuple(removed_loads)
+        removed_loads = []
+        updated_loads_list = []
+        for ld in self._loads:
             if ld.location == location:
-                return self._loads.pop(i)
+                removed_loads.append(ld)
+            else:
+                updated_loads_list.append(ld)
+        self._loads = updated_loads_list
+        return tuple(removed_loads)
 
     @_reset_eom_method
     def clear_loads(self):
