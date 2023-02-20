@@ -5,12 +5,12 @@ Joints Framework in Physics/Mechanics
 =====================================
 
 :mod:`sympy.physics.mechanics` provides a joints framework. The
-:obj:`joint<sympy.physics.mechanics.joint>` objects themselves are used are used
-to define connections between bodies (:class:`~.Particle`,
-:class:`~.RigidBody`). This has been implemented such that it works well in
-combination with :class:`~.System` when forming the equations of motion. The
-main responsibility of the :obj:`joints<sympy.physics.mechanics.joint>` is to
-establish the kinematic relationships and do "book-keeping" for individual
+:obj:`joint<sympy.physics.mechanics.joint>` objects themselves are used to
+define connections between bodies (:class:`~.Particle`, :class:`~.RigidBody`).
+This has been implemented such that it works well in combination with
+:class:`~.System` when forming the equations of motion. The main responsibility
+of the :obj:`joints<sympy.physics.mechanics.joint>` is to establish the
+kinematic relationships and do "book-keeping" for individual
 :obj:`joint<sympy.physics.mechanics.joint>` objects. In this context,
 "book-keeping" means keeping track of the relationships that of that joint.
 
@@ -91,7 +91,7 @@ body's frame. ::
 
 System in Physics/Mechanics
 ===========================
-After defining the entire system, you can use the :class:`~.System` to do a more
+After defining the entire system, you can use :class:`~.System` to do a more
 general "book-keeping" that will keep track of all the system's components (e.g.
 joints) and form the equations of motion. :class:`~.System` uses another method,
 like the :class:`~.KanesMethod`, as its backend for forming the equations of

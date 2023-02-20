@@ -7,9 +7,9 @@ System in Physics/Mechanics
 :mod:`sympy.physics.mechanics` provides a :class:`~.System` class. In a
 :class:`~.System` instance you store information about the model, e.g. bodies,
 joints, constraints, etc. With all relations of the :class:`~.System` being
-defined it can form the equations of motion using a backend of your choosing.
-In general :class:`~.System` has been designed to be compatible with third party
-libraries, like `PyDy`.
+defined it can form the equations of motion using a backend of your choosing,
+e.g. :class:`~.KanesMethod`. In general :class:`~.System` has been designed to
+be compatible with third party libraries.
 
 Usage example
 =============
