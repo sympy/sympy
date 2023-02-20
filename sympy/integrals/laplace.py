@@ -1327,7 +1327,15 @@ def _inverse_laplace_build_rules():
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
         (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
-        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3), S.true, same, 1)
+        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3),
+         S.true, same, 1),
+        # The next two rules must be there in that order. For the second
+        # one, the condition would be a != 0 or, respectively, to take the
+        # limit a -> 0 after the transform if a == 0. It is much simpler if
+        # the case a == 0 has its own rule.
+        (1/(s**b), t**(b - 1)/gamma(b), S.true, same, 1),
+        (1/(s*(s+a)**b), lowergamma(b, a*t)/(a**b*gamma(b)),
+          S.true, same, 1)
     ]
     return _ILT_rules, s, t
 
@@ -1416,7 +1424,10 @@ def _inverse_laplace_time_diff(F, s, t, plane):
         debugf('      ma:   %s', (ma1,))
         r, c = _inverse_laplace_transform(ma1[g], s, t, plane)
         r = r.replace(Heaviside(t), 1)
-        return diff(r, t, ma1[n]), c
+        if r.has(InverseLaplaceTransform):
+            return diff(r, t, ma1[n]), c
+        else:
+            return Heaviside(t)*diff(r, t, ma1[n]), c
     return None
 
 
