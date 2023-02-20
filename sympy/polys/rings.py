@@ -2441,6 +2441,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         sympy.polys.polyfuncs.symmetrize
 
+        References
+        ==========
+
+        .. [1] Lauer, E. Algorithms for symmetrical polynomials, Proc. 1976
+            ACM Symp. on Symbolic and Algebraic Computing, NY 242-247.
+            https://dl.acm.org/doi/pdf/10.1145/800205.806342
+
         """
         f = self.copy()
         ring = f.ring
