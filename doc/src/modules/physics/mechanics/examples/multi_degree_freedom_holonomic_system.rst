@@ -18,7 +18,7 @@ distance of the block from the wall, :math:`q_2` represents the angle of the
 compound pendulum from the vertical, and :math:`q_3` represents the angle of
 the simple pendulum relative to the compound pendulum. The generalized speed
 :math:`u_1` represents the lateral speed of the block, :math:`u_2` represents
-the lateral speed of the compound pendulum, and :math:`u_3` represents the
+the angular velocity of the compound pendulum, and :math:`u_3` represents the
 angular velocity of the simple pendulum relative to the compound pendulum.
 
 We also create some ``symbols`` to represent the length and mass of the
