@@ -74,3 +74,4 @@ if exit_code != pytest.ExitCode.OK:
 else:
     print(f'pytest finished with exit code {exit_code}')
 `)
+console.log('`pyodide.runPython` completed successfully')
