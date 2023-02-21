@@ -1400,6 +1400,11 @@ def _too_large_for_docstring(expr, limit):
     """Decide whether an ``Expr`` is too large to be fully rendered in a
     ``lambdify`` docstring.
 
+    This is a fast alternative to ``count_ops``, which can become prohibitively
+    slow for large expressions, because in this instance we only care whether
+    ``limit`` is exceeded rather than counting the exact number of nodes in the
+    expression.
+
     Parameters
     ==========
     expr : ``Expr``, (nested) ``list`` of ``Expr``, or ``Matrix``
