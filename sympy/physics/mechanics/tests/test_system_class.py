@@ -21,9 +21,9 @@ def test_system_init():
     assert system.u_dep[:] == []
     assert system.u[:] == []
     assert system.kdes[:] == []
-    assert system.loads == tuple()
-    assert system.bodies == tuple()
-    assert system.joints == tuple()
+    assert system.loads == ()
+    assert system.bodies == ()
+    assert system.joints == ()
     assert system.holonomic_constraints[:] == []
     assert system.nonholonomic_constraints[:] == []
     assert system.eom_method is None
@@ -191,7 +191,7 @@ def test_add_bodies():
     system.add_bodies(p2)
     assert system.bodies == (rb1, p1, p2)
     system.bodies = []
-    assert system.bodies == tuple()
+    assert system.bodies == ()
     system.bodies = p2
     assert system.bodies == (p2,)
     symb = symbols('symb')
@@ -217,7 +217,7 @@ def test_add_loads():
                             (rb2.masscenter, -N.x))
     assert system.remove_load(rb1.masscenter) == ((rb1.masscenter, N.x),)
     assert system.remove_load(rb2.masscenter) == ((rb2.masscenter, -N.x),)
-    assert system.remove_load(rb2.masscenter) == tuple()
+    assert system.remove_load(rb2.masscenter) == ()
     system.apply_torque(rb1, N.x, rb2)
     assert system.loads == ((A, A.x), (N, N.x), (A, -N.x))
     system.apply_force(p2, A.x)
@@ -227,7 +227,7 @@ def test_add_loads():
         system.loads = (N, N.x)
     assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
     system.clear_loads()
-    assert system.loads == tuple()
+    assert system.loads == ()
 
 
 def test_remove_load():
@@ -250,10 +250,10 @@ def test_remove_load():
                             (N, N.z))
     assert system.remove_load(pnt) == ((pnt, N.z), (pnt, N.x))
     assert system.loads == ((N, N.x), (N, N.y), (N, N.z))
-    assert system.remove_load(pnt) == tuple()
+    assert system.remove_load(pnt) == ()
     assert system.remove_load(N) == ((N, N.x), (N, N.y), (N, N.z))
-    assert system.loads == tuple()
-    assert system.remove_load(N) == tuple()
+    assert system.loads == ()
+    assert system.remove_load(N) == ()
 
 
 def test_add_joints():
