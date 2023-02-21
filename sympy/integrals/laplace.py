@@ -1539,9 +1539,9 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True
             pass
         elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass
-        elif (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane)) is not None:
-            pass
         elif (r := _inverse_laplace_expand(f, s_, t_, plane)) is not None:
+            pass
+        elif (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane)) is not None:
             pass
         elif any(undef.has(s_) for undef in f.atoms(AppliedUndef)):
             # If there are undefined functions f(t) then integration is
