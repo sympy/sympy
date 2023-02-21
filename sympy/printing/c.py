@@ -18,6 +18,7 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S
+from sympy.core.numbers import equal_valued
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
@@ -75,7 +76,7 @@ known_functions_C99 = dict(known_functions_C89, **{
 })
 
 # These are the core reserved words in the C language. Taken from:
-# http://en.cppreference.com/w/c/keyword
+# https://en.cppreference.com/w/c/keyword
 
 reserved_words = [
     'auto', 'break', 'case', 'char', 'const', 'continue', 'default', 'do',
@@ -281,10 +282,10 @@ class C89CodePrinter(CodePrinter):
             return self._print_Function(expr)
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             literal_suffix = self._get_literal_suffix(real)
             return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5:
+        elif equal_valued(expr.exp, 0.5):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':
             return '%scbrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
@@ -321,7 +322,7 @@ class C89CodePrinter(CodePrinter):
         if strides is None or isinstance(strides, str):
             dims = expr.shape
             shift = S.One
-            temp = tuple()
+            temp = ()
             if strides == 'C' or strides is None:
                 traversal = reversed(range(expr.rank))
                 indices = indices[::-1]
@@ -543,8 +544,7 @@ class C89CodePrinter(CodePrinter):
         if elem.strides == None: # Must be "== None", cannot be "is None"
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 raise ValueError("Expected strides when offset is given")
-            idxs = ']['.join(map(lambda arg: self._print(arg),
-                                 elem.indices))
+            idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
             global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
@@ -571,15 +571,13 @@ class C89CodePrinter(CodePrinter):
     def _print_Print(self, expr):
         return 'printf({fmt}, {pargs})'.format(
             fmt=self._print(expr.format_string),
-            pargs=', '.join(map(lambda arg: self._print(arg), expr.print_args))
+            pargs=', '.join((self._print(arg) for arg in expr.print_args))
         )
 
     def _print_FunctionPrototype(self, expr):
-        pars = ', '.join(map(lambda arg: self._print(Declaration(arg)),
-                             expr.parameters))
+        pars = ', '.join((self._print(Declaration(arg)) for arg in expr.parameters))
         return "%s %s(%s)" % (
-            tuple(map(lambda arg: self._print(arg),
-                      (expr.return_type, expr.name))) + (pars,)
+            tuple((self._print(arg) for arg in (expr.return_type, expr.name))) + (pars,)
         )
 
     def _print_FunctionDefinition(self, expr):
@@ -591,7 +589,7 @@ class C89CodePrinter(CodePrinter):
         return 'return %s' % self._print(arg)
 
     def _print_CommaOperator(self, expr):
-        return '(%s)' % ', '.join(map(lambda arg: self._print(arg), expr.args))
+        return '(%s)' % ', '.join((self._print(arg) for arg in expr.args))
 
     def _print_Label(self, expr):
         if expr.body == none:
@@ -620,10 +618,10 @@ class C89CodePrinter(CodePrinter):
         return '(%s)--' % self._print(arg)
 
     def _print_struct(self, expr):
-        return "%(keyword)s %(name)s {\n%(lines)s}" % dict(
-            keyword=expr.__class__.__name__, name=expr.name, lines=';\n'.join(
+        return "%(keyword)s %(name)s {\n%(lines)s}" % {
+            "keyword": expr.__class__.__name__, "name": expr.name, "lines": ';\n'.join(
                 [self._print(decl) for decl in expr.declarations] + [''])
-        )
+        }
 
     def _print_BreakToken(self, _):
         return 'break'
@@ -700,7 +698,7 @@ class C99CodePrinter(C89CodePrinter):
                     paren_pile
                 )
         else:
-            args = ', '.join(map(lambda arg: self._print(arg), expr.args))
+            args = ', '.join((self._print(arg) for arg in expr.args))
         return '{ns}{name}{suffix}({args})'.format(
             ns=self._ns,
             name=known,

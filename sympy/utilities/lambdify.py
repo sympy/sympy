@@ -468,7 +468,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       ``implemented_function`` and user defined subclasses of Function. If
       specified, numexpr may be the only option in modules. The official list
       of numexpr functions can be found at:
-      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
+      https://numexpr.readthedocs.io/projects/NumExpr3/en/latest/user_guide.html#supported-functions
 
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases

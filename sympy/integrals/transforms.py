@@ -188,7 +188,7 @@ class IntegralTransform(Function):
             try:
                 extra = self._collapse_extra(extra)
                 if iterable(extra):
-                    return tuple([res]) + tuple(extra)
+                    return (res,) + tuple(extra)
                 else:
                     return (res, extra)
             except IntegralTransformError:

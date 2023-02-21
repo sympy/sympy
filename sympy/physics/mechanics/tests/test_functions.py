@@ -205,6 +205,8 @@ def test_validate_coordinates():
     _validate_coordinates([q1, q2, q3], [u1, u2, u2], check_duplicates=False)
     raises(ValueError, lambda: _validate_coordinates(
         [q1, q2, q3], [u1, u2, u2], check_duplicates=True))
+    raises(ValueError, lambda: _validate_coordinates(
+        [q1, q2, q3], [q1, u2, u3], check_duplicates=True))
     # Test is_dynamicsymbols
     _validate_coordinates([q1 + q2, q3], is_dynamicsymbols=False)
     raises(ValueError, lambda: _validate_coordinates([q1 + q2, q3]))

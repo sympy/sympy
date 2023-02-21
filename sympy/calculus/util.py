@@ -4,6 +4,7 @@ from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
@@ -480,9 +481,8 @@ def periodicity(f, symbol, check=False):
 
     elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction) or coeff != 1:
+        if isinstance(g, TrigonometricFunction) or not equal_valued(coeff, 1):
             period = periodicity(g, symbol)
-
         else:
             period = _periodicity(g.args, symbol)
 
@@ -601,10 +601,8 @@ def lcim(numbers):
     """
     result = None
     if all(num.is_irrational for num in numbers):
-        factorized_nums = list(map(lambda num: num.factor(), numbers))
-        factors_num = list(
-            map(lambda num: num.as_coeff_Mul(),
-                factorized_nums))
+        factorized_nums = [num.factor() for num in numbers]
+        factors_num = [num.as_coeff_Mul() for num in factorized_nums]
         term = factors_num[0][1]
         if all(factor == term for coeff, factor in factors_num):
             common_term = term

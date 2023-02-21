@@ -102,9 +102,9 @@ class gamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/GammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/GammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma/
 
     """
 
@@ -268,9 +268,9 @@ class lowergamma(Function):
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
 
     """
 
@@ -453,9 +453,9 @@ class uppergamma(Function):
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
     .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
 
     """
@@ -660,9 +660,9 @@ class polygamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Polygamma_function
-    .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
-    .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/PolygammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma/
+    .. [4] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     .. [5] O. Espinosa and V. Moll, "A generalized polygamma function",
            *Integral Transforms and Special Functions* (2004), 101-115.
 
@@ -967,9 +967,9 @@ class loggamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/LogGammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/LogGamma/
 
     """
     @classmethod
@@ -1101,8 +1101,8 @@ class digamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Digamma_function
-    .. [2] http://mathworld.wolfram.com/DigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/DigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):
@@ -1195,8 +1195,8 @@ class trigamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigamma_function
-    .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/TrigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):

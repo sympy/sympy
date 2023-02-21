@@ -104,8 +104,23 @@ Now they should be imported from ``sympy.physics.mechanics``:
 
 ## Version 1.12
 
+(managedproperties)=
+### The ``ManagedProperties`` metaclass
+
+The ``ManagedProperties`` metaclass was previously the metaclass for ``Basic``.
+Now ``Basic`` does not use metaclasses and so its metaclass is just ``type``.
+Any code that previously subclassed ``Basic`` and wanted to do anything with
+metaclasses would have needed to subclass ``ManagedProperties`` to make the
+relevant metaclass. The only relevant method of ``ManagedProperties`` has been
+moved to ``Basic.__init_subclass__``. Since ``ManagedProperties`` is not used
+as the metaclass for ``Basic`` any more and no longer does anything useful it
+should be possible for such code to just subclass ``type`` instead for any
+metaclass.
+
+
 (deprecated-mechanics-joint-coordinate-format)=
 ### New Joint coordinate format
+
 The format, i.e. type and auto generated name, of the generalized coordinates
 and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
 has changed. The data type has changed from ``list`` to ``Matrix``, which is the
@@ -529,17 +544,17 @@ from the polys module, e.g.
 
 All of these matrix subclasses were broken in different ways and the
 introduction of {class}`~.DomainMatrix`
-([#20780](https://github.com/sympy/sympy/issues/20780),
-[#20759](https://github.com/sympy/sympy/issues/20759),
-[#20621](https://github.com/sympy/sympy/issues/20621),
-[#19882](https://github.com/sympy/sympy/issues/19882),
-[#18844](https://github.com/sympy/sympy/issues/18844)) provides a better
+([#20780](https://github.com/sympy/sympy/pull/20780),
+[#20759](https://github.com/sympy/sympy/pull/20759),
+[#20621](https://github.com/sympy/sympy/pull/20621),
+[#19882](https://github.com/sympy/sympy/pull/19882),
+[#18844](https://github.com/sympy/sympy/pull/18844)) provides a better
 solution for all cases. Previous PRs have removed the dependence of these
 other use cases on Matrix
-([#21441](https://github.com/sympy/sympy/issues/21441),
-[#21427](https://github.com/sympy/sympy/issues/21427),
-[#21402](https://github.com/sympy/sympy/issues/21402)) and now
-[#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
+([#21441](https://github.com/sympy/sympy/pull/21441),
+[#21427](https://github.com/sympy/sympy/pull/21427),
+[#21402](https://github.com/sympy/sympy/pull/21402)) and now
+[#21496](https://github.com/sympy/sympy/pull/21496) has deprecated having
 non-`Expr` in a `Matrix`.
 
 This change makes it possible to improve the internals of the Matrix class but
@@ -553,7 +568,7 @@ just printing support then perhaps `TableForm` can be used.
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
 issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
-list](http://groups.google.com/group/sympy) so we can discuss it.
+list](https://groups.google.com/g/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects
