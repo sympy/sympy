@@ -483,6 +483,12 @@ def test_inverse_laplace_transform():
     assert ILT(exp(2*s), s, t) == InverseLaplaceTransform(exp(2*s), s, t, None)
     r = Symbol('r', real=True)
     assert ILT(exp(r*s), s, t) == InverseLaplaceTransform(exp(r*s), s, t, None)
+    # Rules for testing whether Heaviside(t) is treated properly in diff rule
+    assert ILT(s**2/(a**2 + s**2), s, t) == (
+        -a*sin(a*t)*Heaviside(t) + DiracDelta(t))
+    assert ILT(s**2*(f(s) + 1/(a**2 + s**2)), s, t) == (
+        -a*sin(a*t)*Heaviside(t) + DiracDelta(t) +
+        Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 2)))
     # Rules from the previous test_inverse_laplace_transform_delta_cond():
     assert ILT(exp(r*s), s, t, noconds=False) ==\
         (InverseLaplaceTransform(exp(r*s), s, t, None), True)
