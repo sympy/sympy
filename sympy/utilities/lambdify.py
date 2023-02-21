@@ -180,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False, docstring_limit=100):
+             dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -364,7 +364,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         instead of the expression. When a strictly positive ``int``, if the
         number of nodes in the expression exceeds ``docstring_limit`` an
         ellipsis is rendered in the docstring, otherwise a string representation
-        of the expression is rendered as normal.
+        of the expression is rendered as normal. The default is ``1000``.
 
     Examples
     ========
