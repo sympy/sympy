@@ -910,9 +910,14 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
-    if len(expr_str) > 78:
-        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    if _too_large_for_docstring(expr, docstring_limit):
+        expr_str = 'EXPRESSION REDACTED DUE TO LENGTH'
+        src_str = 'SOURCE CODE REDACTED DUE TO LENGTH'
+    else:
+        expr_str = str(expr)
+        if len(expr_str) > 78:
+            expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+        src_str = funcstr
     func.__doc__ = (
         "Created with lambdify. Signature:\n\n"
         "{sig}\n\n"
@@ -922,7 +927,7 @@ or tuple for the function arguments.
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
+        ).format(sig=sig, expr=expr_str, src=src_str, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
