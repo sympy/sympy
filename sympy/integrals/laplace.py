@@ -38,7 +38,8 @@ from sympy.utilities.misc import debug, debugf
 
 def _simplifyconds(expr, s, a):
     r"""
-    Naively simplify some conditions occurring in ``expr``, given that `\operatorname{Re}(s) > a`.
+    Naively simplify some conditions occurring in ``expr``,
+    given that `\operatorname{Re}(s) > a`.
 
     Examples
     ========
@@ -90,9 +91,9 @@ def _simplifyconds(expr, s, a):
         if n is None:
             return None
         try:
-            if n > 0 and (Abs(ex1) <= Abs(a)**n) == True:
+            if n > 0 and (Abs(ex1) <= Abs(a)**n) == S.true:
                 return False
-            if n < 0 and (Abs(ex1) >= Abs(a)**n) == True:
+            if n < 0 and (Abs(ex1) >= Abs(a)**n) == S.true:
                 return True
         except TypeError:
             pass
@@ -194,12 +195,15 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
                 m = d.match(p - cos(w1*Abs(arg(s*w5))*w2)*Abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        cos(p - Abs(periodic_argument(s**w1*w5, q))*w2)*Abs(s**w3)**w4 < 0)
+                        cos(p - Abs(periodic_argument(s**w1*w5, q))*w2) *
+                        Abs(s**w3)**w4 < 0)
                 if not m:
                     m = d.match(
-                        p - cos(Abs(periodic_argument(polar_lift(s)**w1*w5, q))*w2
-                                )*Abs(s**w3)**w4 < 0)
-                if m and all(m[wild].is_positive for wild in [w1, w2, w3, w4, w5]):
+                        p - cos(
+                            Abs(periodic_argument(polar_lift(s)**w1*w5, q))*w2
+                            )*Abs(s**w3)**w4 < 0)
+                if m and all(m[wild].is_positive for wild in [
+                        w1, w2, w3, w4, w5]):
                     d = re(s) > m[p]
                 d_ = d.replace(
                     re, lambda x: x.expand().as_real_imag()[0]).subs(re(s), t)
@@ -225,10 +229,10 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
         return a, aux.canonical if aux.is_Relational else aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds2 = [x for x in conds if x[1] !=
+    conds2 = [x for x in conds if x[1] is not
               False and x[0] is not S.NegativeInfinity]
     if not conds2:
-        conds2 = [x for x in conds if x[1] != False]
+        conds2 = [x for x in conds if x[1] is not False]
     conds = list(ordered(conds2))
 
     def cnt(expr):
@@ -301,9 +305,11 @@ def _laplace_build_rules():
         (a, a/s,
          S.true, S.Zero, dco),  # 4.2.1
         (DiracDelta(a*t-b), exp(-s*b/a)/Abs(a),
-         Or(And(a > 0, b >= 0), And(a < 0, b <= 0)), S.NegativeInfinity, dco),  # Not in Bateman54
+         Or(And(a > 0, b >= 0), And(a < 0, b <= 0)),
+         S.NegativeInfinity, dco),  # Not in Bateman54
         (DiracDelta(a*t-b), S(0),
-         Or(And(a < 0, b >= 0), And(a > 0, b <= 0)), S.NegativeInfinity, dco),  # Not in Bateman54
+         Or(And(a < 0, b >= 0), And(a > 0, b <= 0)),
+         S.NegativeInfinity, dco),  # Not in Bateman54
         (Heaviside(a*t-b), exp(-s*b/a)/s,
          And(a > 0, b > 0), S.Zero, dco),  # 4.4.1
         (Heaviside(a*t-b), (1-exp(-s*b/a))/s,
@@ -339,11 +345,13 @@ def _laplace_build_rules():
          re(n) > -1, re(a), dco),  # 4.5.3
         (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
          re(a) > 0, S.Zero, dco),  # 4.5.21
-        (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
+        (t*exp(-a*t**2),
+         1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
          re(a) > 0, S.Zero, dco),  # 4.5.22
         (exp(-a/t), 2*sqrt(a/s)*besselk(1, 2*sqrt(a*s)),
          re(a) >= 0, S.Zero, dco),  # 4.5.25
-        (sqrt(t)*exp(-a/t), S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
+        (sqrt(t)*exp(-a/t),
+         S(1)/2*sqrt(pi/s**3)*(1+2*sqrt(a*s))*exp(-2*sqrt(a*s)),
          re(a) >= 0, S.Zero, dco),  # 4.5.26
         (exp(-a/t)/sqrt(t), sqrt(pi/s)*exp(-2*sqrt(a*s)),
          re(a) >= 0, S.Zero, dco),  # 4.5.27
@@ -376,7 +384,8 @@ def _laplace_build_rules():
          S.true, Abs(im(omega)), dco),  # 4.7.16
         (sin(omega*t)**2/t, log(1+4*omega**2/s**2)/4,
          S.true, 2*Abs(im(omega)), dco),  # 4.7.17
-        (sin(omega*t)**2/t**2, omega*atan(2*omega/s)-s*log(1+4*omega**2/s**2)/4,
+        (sin(omega*t)**2/t**2,
+         omega*atan(2*omega/s)-s*log(1+4*omega**2/s**2)/4,
          S.true, 2*Abs(im(omega)), dco),  # 4.7.20
         (sin(2*sqrt(a*t)), sqrt(pi*a)/s/sqrt(s)*exp(-a/s),
          S.true, S.Zero, dco),  # 4.7.32
@@ -454,7 +463,8 @@ def _laplace_build_rules():
          S.true, S.Zero, dco),  # 4.14.25
         (t**(b)*besselj(n, 2*sqrt(a*t)), a**(n/2)*s**(-n-1)*exp(-a/s),
          And(re(n) > -1, Eq(b, n*S.Half)), S.Zero, dco),  # 4.14.30
-        (besselj(0, a*sqrt(t**2+b*t)), exp(b*s-b*sqrt(s**2+a**2))/sqrt(s**2+a**2),
+        (besselj(0, a*sqrt(t**2+b*t)),
+         exp(b*s-b*sqrt(s**2+a**2))/sqrt(s**2+a**2),
          Abs(arg(b)) < pi, Abs(im(a)), dco),  # 4.15.19
         (besseli(n, a*t), a**n/(sqrt(s**2-a**2)*(s+sqrt(s**2-a**2))**n),
          re(n) > -1, Abs(re(a)), dco),  # 4.16.1
@@ -527,7 +537,7 @@ def _laplace_rule_heaviside(f, t, s):
         if ma2 and ma2[a].is_negative:
             debug('_laplace_apply_prog_rules match:')
             debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-            debug('      rule: Heaviside factor with negative time shift (4.1.4)')
+            debug('      rule: Heaviside factor, negative time shift (4.1.4)')
             r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
             return (r, pr, cr)
     return None
@@ -586,10 +596,11 @@ def _laplace_rule_delta(f, t, s):
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
             ro = roots(ma1[y], t)
-            if not roots is {} and set(ro.values()) == {1}:
+            if roots is not {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
-                r = Add(*[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
-                          for x in list(ro.keys()) if im(x) == 0 and re(x) >= 0])
+                r = Add(
+                    *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
+                      for x in list(ro.keys()) if im(x) == 0 and re(x) >= 0])
                 return (r, S.NegativeInfinity, S.true)
     return None
 
@@ -975,7 +986,7 @@ def _laplace_apply_simple_rules(f, t, s):
                 # This may happen if the time function has imaginary
                 # numbers in it. Then we give up.
                 continue
-            if c == True:
+            if c == S.true:
                 debug('_laplace_apply_simple_rules match:')
                 debugf('      f:     %s', (f,))
                 debugf('      rule:  %s o---o %s', (t_dom, s_dom))
@@ -1009,8 +1020,8 @@ def _laplace_transform(fn, t_, s_, simplify=True):
             # unlikely to do anything useful so we skip it and given an
             # unevaluated LaplaceTransform.
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
-        elif (r := _laplace_transform_integration(ft, t_, s_,
-                                                  simplify=simplify)) is not None:
+        elif (r := _laplace_transform_integration(
+                ft, t_, s_, simplify=simplify)) is not None:
             pass
         else:
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
@@ -1060,7 +1071,7 @@ class LaplaceTransform(IntegralTransform):
             planes.append(plane)
         cond = And(*conds)
         plane = Max(*planes)
-        if cond == False:
+        if cond is False:
             raise IntegralTransformError(
                 'Laplace', None, 'No combined convergence.')
         return plane, cond
@@ -1126,7 +1137,9 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     At present, it is only done if `f(t)` contains ``DiracDelta``, in which
     case the Laplace transform is computed implicitly as
 
-    .. math :: F(s) = \lim_{\tau\to 0^{-}} \int_{\tau}^\infty e^{-st} f(t) \mathrm{d}t
+    .. math ::
+        F(s) = \lim_{\tau\to 0^{-}} \int_{\tau}^\infty e^{-st}
+        f(t) \mathrm{d}t
 
     by applying rules.
 
@@ -1182,6 +1195,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
         conds = not hints.get('noconds', False)
 
         if conds and legacy_matrix:
+            adt = "deprecated-laplace-transform-matrix"
             sympy_deprecation_warning(
                 """
 Calling laplace_transform() on a Matrix with noconds=False (the default) is
@@ -1189,12 +1203,13 @@ deprecated. Either noconds=True or use legacy_matrix=False to get the new
 behavior.
                 """,
                 deprecated_since_version="1.9",
-                active_deprecations_target="deprecated-laplace-transform-matrix",
+                active_deprecations_target=adt,
             )
             # Temporarily disable the deprecation warning for non-Expr objects
             # in Matrix
             with ignore_warnings(SymPyDeprecationWarning):
-                return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+                return f.applyfunc(
+                    lambda fij: laplace_transform(fij, t, s, **hints))
         else:
             elements_trans = [laplace_transform(
                 fij, t, s, **hints) for fij in f]
@@ -1219,7 +1234,7 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
     from sympy.integrals.transforms import inverse_mellin_transform
 
     # There are two strategies we can try:
-    # 1) Use inverse mellin transforms - related by a simple change of variables.
+    # 1) Use inverse mellin transform, related by a simple change of variables.
     # 2) Use the inversion integral.
 
     t = Dummy('t', real=True)
@@ -1240,8 +1255,9 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
         F = F.apart(s)
 
     if F.is_Add:
-        f = Add(*[_inverse_laplace_transform_integration(X, s, t, plane, simplify)
-                  for X in F.args])
+        f = Add(
+            *[_inverse_laplace_transform_integration(X, s, t, plane, simplify)
+              for X in F.args])
         return _simplify(f.subs(t, t_), simplify), True
 
     try:
@@ -1514,8 +1530,8 @@ def _inverse_laplace_rational(fn, s, t, plane, simplify):
                     r = l*exp(-a*t)*cos(b2*t) + (m-a*l)/bs*exp(-a*t)*sin(bs*t)
             terms_t.append(Heaviside(t)*r)
         else:
-            ft, cond = _inverse_laplace_transform(fn, s, t, plane,
-                                                  simplify=True, dorational=False)
+            ft, cond = _inverse_laplace_transform(
+                fn, s, t, plane, simplify=True, dorational=False)
             terms_t.append(ft)
             conditions.append(cond)
 
@@ -1526,7 +1542,8 @@ def _inverse_laplace_rational(fn, s, t, plane, simplify):
     return result, And(*conditions)
 
 
-def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True):
+def _inverse_laplace_transform(
+        fn, s_, t_, plane, simplify=True, dorational=True):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
     known rules recursively.  If everything else fails, it tries to integrate.
@@ -1539,22 +1556,28 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
-        if (dorational and term.is_rational_function(s_) and
-                (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None):
+        if (
+                dorational and term.is_rational_function(s_) and
+                (
+                    r := _inverse_laplace_rational(
+                        f, s_, t_, plane, simplify)) is not None):
             pass
         elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass
         elif (r := _inverse_laplace_expand(f, s_, t_, plane)) is not None:
             pass
-        elif (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane)) is not None:
+        elif (
+                (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane))
+                is not None):
             pass
         elif any(undef.has(s_) for undef in f.atoms(AppliedUndef)):
             # If there are undefined functions f(t) then integration is
             # unlikely to do anything useful so we skip it and given an
             # unevaluated LaplaceTransform.
             r = (InverseLaplaceTransform(f, s_, t_, plane), S.true)
-        elif (r := _inverse_laplace_transform_integration(f, s_, t_, plane,
-                                                          simplify=simplify)) is not None:
+        elif (
+                r := _inverse_laplace_transform_integration(
+                    f, s_, t_, plane, simplify=simplify)) is not None:
             pass
         else:
             r = (InverseLaplaceTransform(f, s_, t_, plane), S.true)
@@ -1597,13 +1620,15 @@ class InverseLaplaceTransform(IntegralTransform):
         return plane
 
     def _compute_transform(self, F, s, t, **hints):
-        return _inverse_laplace_transform_integration(F, s, t,
-                                                      self.fundamental_plane, **hints)
+        return _inverse_laplace_transform_integration(
+            F, s, t, self.fundamental_plane, **hints)
 
     def _as_integral(self, F, s, t):
         c = self.__class__._c
-        return Integral(exp(s*t)*F, (s, c - S.ImaginaryUnit*S.Infinity,
-                                     c + S.ImaginaryUnit*S.Infinity))/(2*S.Pi*S.ImaginaryUnit)
+        return (
+            Integral(exp(s*t)*F, (s, c - S.ImaginaryUnit*S.Infinity,
+                                  c + S.ImaginaryUnit*S.Infinity)) /
+            (2*S.Pi*S.ImaginaryUnit))
 
     def doit(self, **hints):
         """
@@ -1642,7 +1667,9 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
-    .. math :: f(t) = \frac{1}{2\pi i} \int_{c-i\infty}^{c+i\infty} e^{st} F(s) \mathrm{d}s,
+    .. math ::
+        f(t) = \frac{1}{2\pi i} \int_{c-i\infty}^{c+i\infty} e^{st}
+        F(s) \mathrm{d}s,
 
     for `c` so large that `F(s)` has no singularites in the
     half-plane `\operatorname{Re}(s) > c-\epsilon`.
@@ -1682,7 +1709,8 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     hankel_transform, inverse_hankel_transform
     """
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
-        return F.applyfunc(lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
+        return F.applyfunc(
+            lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
     return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
 
 
