@@ -1719,3 +1719,46 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+
+class LambdifyDocstringTestCase:
+    SIGNATURE = None
+    EXPR = None
+    SRC = None
+
+    def __init__(self, docstring_limit, expected_redacted):
+        self.docstring_limit = docstring_limit
+        self.expected_redacted = expected_redacted
+
+    @property
+    def expected_expr(self):
+        expr_redacted_msg = 'EXPRESSION REDACTED DUE TO LENGTH'
+        return self.EXPR if not self.expected_redacted else expr_redacted_msg
+
+    @property
+    def expected_src(self):
+        src_redacted_msg = 'SOURCE CODE REDACTED DUE TO LENGTH'
+        return self.SRC if not self.expected_redacted else src_redacted_msg
+
+    @property
+    def expected_docstring(self):
+        expected_docstring = (
+            f'Created with lambdify. Signature:\n\n'
+            f'func({self.SIGNATURE})\n\n'
+            f'Expression:\n\n'
+            f'{self.expected_expr}\n\n'
+            f'Source code:\n\n'
+            f'{self.expected_src}\n\n'
+            f'Imported modules:\n\n'
+        )
+        return expected_docstring
+
+    def __len__(self):
+        return len(self.expected_docstring)
+
+    def __repr__(self):
+        return (
+            f'{self.__class__.__name__}('
+            f'docstring_limit={self.docstring_limit}, '
+            f'expected_redacted={self.expected_redacted})'
+        )
