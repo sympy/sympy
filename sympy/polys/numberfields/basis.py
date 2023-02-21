@@ -4,7 +4,6 @@ from sympy.polys.polytools import Poly
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
-from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import public
 from .modules import ModuleEndomorphism, ModuleHomomorphism, PowerBasis
 from .utilities import extract_fundamental_discriminant
