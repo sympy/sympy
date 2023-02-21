@@ -350,6 +350,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
         the user may pass a function matching the ``cse`` signature.
 
+    docstring_limit : int or None
+        When lambdifying large expressions, a significant proportion of the time
+        spent inside ``lambdify`` is spent producing a string representation of
+        the expression for use in the automatically generated docstring of the
+        returned function. For expressions containing hundreds or more nodes the
+        resulting docstring often becomes so long and dense that it is difficult
+        to read. To reduce the runtime of lambdify, the rendering of the full
+        expression inside the docstring can be disabled.
+
+        When ``None``, the full expression is rendered in the docstring. When
+        ``0`` or a negative ``int``, an ellipsis is rendering in the docstring
+        instead of the expression. When a strictly positive ``int``, if the
+        number of nodes in the expression exceeds ``docstring_limit`` an
+        ellipsis is rendered in the docstring, otherwise a string representation
+        of the expression is rendered as normal.
 
     Examples
     ========
