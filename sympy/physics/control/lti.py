@@ -41,7 +41,6 @@ def bilinear(tf, sample_per):
         H(z) is obtained from the continuous transfer function H(s)
         by substituting s(z) = 2/T * (z-1)/(z+1) into H(s), where T is the
         sample period.
-        H(z) corresponds to the difference equation of the trapezoidal scheme.
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
         as [a, b], [c, d].
 
@@ -85,7 +84,6 @@ def backward_diff(tf, sample_per):
         H(z) is obtained from the continuous transfer function H(s)
         by substituting s(z) =  (z-1)/(T*z) into H(s), where T is the
         sample period.
-        H(z) corresponds to the difference equation of the backward difference scheme.
         Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
         as [a, b], [c, d].
 
