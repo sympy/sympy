@@ -228,10 +228,10 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
         return a, aux.canonical if aux.is_Relational else aux
 
     conds = [process_conds(c) for c in disjuncts(cond)]
-    conds2 = [x for x in conds if x[1] is not
-              False and x[0] is not S.NegativeInfinity]
+    conds2 = [x for x in conds if x[1] !=
+              S.false and x[0] is not S.NegativeInfinity]
     if not conds2:
-        conds2 = [x for x in conds if x[1] is not False]
+        conds2 = [x for x in conds if x[1] != S.false]
     conds = list(ordered(conds2))
 
     def cnt(expr):
@@ -1070,7 +1070,7 @@ class LaplaceTransform(IntegralTransform):
             planes.append(plane)
         cond = And(*conds)
         plane = Max(*planes)
-        if cond is False:
+        if cond == S.false:
             raise IntegralTransformError(
                 "Laplace", None, "No combined convergence.")
         return plane, cond
@@ -1383,7 +1383,7 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 c = check.xreplace(ma)
             except TypeError:
                 continue
-            if c is S.true:
+            if c == S.true:
                 debug("_inverse_laplace_apply_simple_rules match:")
                 debugf("      f:    %s", (f,))
                 debugf("      rule: %s o---o %s", (s_dom, t_dom))
