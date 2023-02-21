@@ -1,5 +1,5 @@
 from sympy.core.backend import (Matrix, _simplify_matrix, zeros, sin, cos, eye,
-                                symbols)
+                                symbols, sympify)
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import (
@@ -482,7 +482,7 @@ def test_cart_pendulum_kanes():
             == zeros(2, 1))
 
     system.add_holonomic_constraints(
-        bob.masscenter.pos_from(rail.masscenter).dot(system.x))
+        sympify(bob.masscenter.pos_from(rail.masscenter).dot(system.x)))
     assert system.eom_method is None
     system.q_ind, system.q_dep = qp, qc
     system.u_ind, system.u_dep = up, uc
@@ -550,7 +550,7 @@ def test_cart_pendulum_lagrange():
             == zeros(2, 1))
 
     system.add_holonomic_constraints(
-        bob.masscenter.pos_from(rail.masscenter).dot(system.x))
+        sympify(bob.masscenter.pos_from(rail.masscenter).dot(system.x)))
     assert system.eom_method is None
     system.q_ind, system.q_dep = qp, qc
 
