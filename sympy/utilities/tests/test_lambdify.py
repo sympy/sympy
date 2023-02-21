@@ -1798,13 +1798,13 @@ def test_lambdify_docstring_size_limit_nested_expr():
     class ExprListTestCase(LambdifyDocstringTestCase):
         SIGNATURE = 'x, y, z'
         EXPR = (
-            '[x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z + '
-            '3*x*z**2 +...'
+            '[x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z '
+            '+ 3*x*z**2 +...'
         )
         SRC = (
             'def _lambdifygenerated(x, y, z):\n'
-            '    return [x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 + '
-            '6*x*y*z + 3*x*z**2 + y**3 + 3*y**2*z + 3*y*z**2 + z**3]\n'
+            '    return [x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 '
+            '+ 6*x*y*z + 3*x*z**2 + y**3 + 3*y**2*z + 3*y*z**2 + z**3]\n'
         )
 
     x, y, z = symbols('x, y, z')
@@ -1832,14 +1832,14 @@ def test_lambdify_docstring_size_limit_matrix():
     class MatrixTestCase(LambdifyDocstringTestCase):
         SIGNATURE = 'x, y, z'
         EXPR = (
-            'Matrix([[0, x], [x + y + z, x**3 + 3*x**2*y + 3*x**2*z + '
-            '3*x*y**2 + 6*x*y*z...'
+            'Matrix([[0, x], [x + y + z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 '
+            '+ 6*x*y*z...'
         )
         SRC = (
             'def _lambdifygenerated(x, y, z):\n'
-            '    return ImmutableDenseMatrix([[0, x], [x + y + z, x**3 + '
-            '3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z + 3*x*z**2 + y**3 + '
-            '3*y**2*z + 3*y*z**2 + z**3]])\n'
+            '    return ImmutableDenseMatrix([[0, x], [x + y + z, x**3 '
+            '+ 3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z + 3*x*z**2 + y**3 '
+            '+ 3*y**2*z + 3*y*z**2 + z**3]])\n'
         )
 
     x, y, z = symbols('x, y, z')
