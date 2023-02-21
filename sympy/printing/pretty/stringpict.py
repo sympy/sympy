@@ -308,7 +308,7 @@ class stringPict:
             except AttributeError:
                 # windows curses doesn't implement setupterm or tigetnum
                 # code below from
-                # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440694
+                # https://code.activestate.com/recipes/440694/
                 from ctypes import windll, create_string_buffer
                 # stdin handle is -10
                 # stdout handle is -11

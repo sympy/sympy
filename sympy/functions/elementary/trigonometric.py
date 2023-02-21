@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import Rational, pi, Integer, Float
+from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
 from sympy.core.relational import Ne, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
@@ -218,7 +218,7 @@ def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
                     m = 2**p
                     cm = c*m
                     i = int(cm)
-                    if i == cm:
+                    if equal_valued(i, cm):
                         c = Rational(i, m)
                         cx = c*x
                 else:
@@ -282,9 +282,9 @@ class sin(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sin
-    .. [4] http://mathworld.wolfram.com/TrigonometryAngles.html
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Sin
+    .. [4] https://mathworld.wolfram.com/TrigonometryAngles.html
 
     """
 
@@ -504,7 +504,7 @@ class sin(TrigonometricFunction):
             if n.is_Integer:  # n will be positive because of .eval
                 # canonicalization
 
-                # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
+                # See https://mathworld.wolfram.com/Multiple-AngleFormulas.html
                 if n.is_odd:
                     return S.NegativeOne**((n - 1)/2)*chebyshevt(n, sin(x))
                 else:
@@ -589,8 +589,8 @@ class cos(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Cos
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Cos
 
     """
 
@@ -942,8 +942,8 @@ class tan(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Tan
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Tan
 
     """
 
@@ -1278,8 +1278,8 @@ class cot(TrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Cot
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Cot
 
     """
 
@@ -1709,8 +1709,8 @@ class sec(ReciprocalTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Sec
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Sec
 
     """
 
@@ -1755,7 +1755,7 @@ class sec(ReciprocalTrigonometricFunction):
     @cacheit
     def taylor_term(n, x, *previous_terms):
         # Reference Formula:
-        # http://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
+        # https://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1810,8 +1810,8 @@ class csc(ReciprocalTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.14
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/Csc
+    .. [2] https://dlmf.nist.gov/4.14
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/Csc
 
     """
 
@@ -2123,8 +2123,8 @@ class asin(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSin
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSin
 
     """
 
@@ -2354,8 +2354,8 @@ class acos(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCos
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCos
 
     """
 
@@ -2577,8 +2577,8 @@ class atan(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan
 
     """
 
@@ -2795,8 +2795,8 @@ class acot(InverseTrigonometricFunction):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/4.23
-    .. [2] http://functions.wolfram.com/ElementaryFunctions/ArcCot
+    .. [1] https://dlmf.nist.gov/4.23
+    .. [2] https://functions.wolfram.com/ElementaryFunctions/ArcCot
 
     """
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
@@ -3028,9 +3028,9 @@ class asec(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSec
-    .. [4] http://reference.wolfram.com/language/ref/ArcSec.html
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSec
+    .. [4] https://reference.wolfram.com/language/ref/ArcSec.html
 
     """
 
@@ -3230,8 +3230,8 @@ class acsc(InverseTrigonometricFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
-    .. [2] http://dlmf.nist.gov/4.23
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsc
+    .. [2] https://dlmf.nist.gov/4.23
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCsc
 
     """
 
@@ -3491,7 +3491,7 @@ class atan2(InverseTrigonometricFunction):
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
     .. [2] https://en.wikipedia.org/wiki/Atan2
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan2
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcTan2
 
     """
 

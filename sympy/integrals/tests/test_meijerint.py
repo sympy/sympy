@@ -342,7 +342,7 @@ def test_lookup_table():
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
-    for _, l in sorted(table.items()):
+    for _, l in table.items():
         for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
             for ai in list(formula.free_symbols) + [z_dummy]:
@@ -661,7 +661,7 @@ def test_messy():
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
     ans = fourier_transform(besselj(1, x)/x, x, s, noconds=False)
-    assert tuple([ans[0].factor(deep=True).expand(), ans[1]]) == \
+    assert (ans[0].factor(deep=True).expand(), ans[1]) == \
         (Piecewise((0, (s > 1/(2*pi)) | (s < -1/(2*pi))),
                    (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)

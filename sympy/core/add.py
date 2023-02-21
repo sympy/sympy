@@ -8,7 +8,7 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd
+from .numbers import ilcm, igcd, equal_valued
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
@@ -495,7 +495,7 @@ class Add(Expr, AssocOp):
                 for i in c:
                     if abs(i) >= big:
                         big = abs(i)
-                if big > 0 and big != 1:
+                if big > 0 and not equal_valued(big, 1):
                     from sympy.functions.elementary.complexes import sign
                     bigs = (big, -big)
                     c = [sign(i) if i in bigs else i/big for i in c]
@@ -1025,9 +1025,9 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=False,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": False,
+                "factor": False}
             old = old.expand(**logflags)
         expr = expand_mul(old)
 

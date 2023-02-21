@@ -376,6 +376,14 @@ def test_issue_21004():
     assert solve(f_diff, x) == []
 
 
+def test_issue_24650():
+    x = symbols('x')
+    r = solve(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0))
+    assert r == [0]
+    r = checksol(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0), x, sol=0)
+    assert r is True
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -1013,6 +1021,48 @@ def _test_issue_5335_float():
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+
+
+def _make_example_24609():
+    D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
+    Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
+    x = symbols("x", real=True, positive=True)
+    eq = (
+        2**(S(2)/3)*pi**(S(2)/3)*D_c*(S(231361)/10000 + pi**2/x**2)
+        /(6*V**(S(2)/3)*x**(S(1)/3))
+      - 2**(S(2)/3)*pi**(S(8)/3)*D_c/(2*V**(S(2)/3)*x**(S(7)/3))
+    )
+    expected = 100*sqrt(2)*pi/481
+    return eq, expected, x
+
+
+def test_issue_24609():
+    # https://github.com/sympy/sympy/issues/24609
+    eq, expected, x = _make_example_24609()
+    assert solve(eq, x, simplify=True) == [expected]
+    [solapprox] = solve(eq.n(), x)
+    assert abs(solapprox - expected.n()) < 1e-14
+
+
+@XFAIL
+def test_issue_24609_xfail():
+    #
+    # This returns 5 solutions when it should be 1 (with x positive).
+    # Simplification reveals all solutions to be equivalent. It is expected
+    # that solve without simplify=True returns duplicate solutions in some
+    # cases but the core of this equation is a simple quadratic that can easily
+    # be solved without introducing any redundant solutions:
+    #
+    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
+    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
+    #
+    eq, expected, x = _make_example_24609()
+    assert len(solve(eq, x)) == [expected]
+    #
+    # We do not want to pass this test just by using simplify so if the above
+    # passes then uncomment the additional test below:
+    #
+    # assert len(solve(eq, x, simplify=False)) == 1
 
 
 def test_polysys():
@@ -1675,8 +1725,8 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
-    pqt = dict(quick=True, particular=True)
-    pqf = dict(quick=False, particular=True)
+    pqt = {"quick": True, "particular": True}
+    pqf = {"quick": False, "particular": True}
     assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
     assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):

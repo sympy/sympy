@@ -77,7 +77,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    .. [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  https://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -444,7 +444,7 @@ def is_extra_strong_lucas_prp(n):
     References
     ==========
     - "Frobenius Pseudoprimes", Jon Grantham, 2000.
-      http://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
+      https://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
     - OEIS A217719: Extra Strong Lucas Pseudoprimes
       https://oeis.org/A217719
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime

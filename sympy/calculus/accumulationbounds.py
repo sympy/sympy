@@ -172,7 +172,7 @@ class AccumulationBounds(Expr):
 
     .. [1] https://en.wikipedia.org/wiki/Interval_arithmetic
 
-    .. [2] http://fab.cba.mit.edu/classes/S62.12/docs/Hickey_interval.pdf
+    .. [2] https://fab.cba.mit.edu/classes/S62.12/docs/Hickey_interval.pdf
 
     Notes
     =====

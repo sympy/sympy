@@ -331,11 +331,11 @@ def _laplace_build_rules():
     (t**n/(t+a), a**n*gamma(n+1)*lowergamma(-n,a*s),
      And(n>-1, Abs(arg(a))<pi), S.Zero, dco), # 4.3.7
     (exp(a*t-tau), exp(-tau)/(s-a),
-     S.true, a, dco), # 4.5.1
+     S.true, re(a), dco), # 4.5.1
     (t*exp(a*t-tau), exp(-tau)/(s-a)**2,
-     S.true, a, dco), # 4.5.2
+     S.true, re(a), dco), # 4.5.2
     (t**n*exp(a*t), gamma(n+1)/(s-a)**(n+1),
-     re(n)>-1, a, dco), # 4.5.3
+     re(n)>-1, re(a), dco), # 4.5.3
     (exp(-a*t**2), sqrt(pi/4/a)*exp(s**2/4/a)*erfc(s/sqrt(4*a)),
      re(a)>0, S.Zero, dco), # 4.5.21
     (t*exp(-a*t**2), 1/(2*a)-2/sqrt(pi)/(4*a)**(S(3)/2)*s*erfc(s/sqrt(4*a)),
@@ -593,46 +593,242 @@ def _laplace_rule_delta(f, t, s):
     return None
 
 
-def _laplace_rule_trig(f, t, s, doit=True, **hints):
+def _laplace_trig_split(fn):
     """
-    This function covers trigonometric factors. All of the rules have a
-    similar form: ``trig(y)*z`` is matched, and then two copies of the Laplace
-    transform of `z` are shifted in the s Domain and added with a weight.
-
-    The parameters in the tuples are (fm, nu, s1, s2, sd):
-      fm: Function to match
-      nu: Number of the rule, for debug purposes
-      s1: weight of the sum, 'I' for sin and '1' for all others
-      s2: sign of the second copy of the Laplace transform of z
-      sd: shift direction; shift along real or imaginary axis if `1` or `I`
-
-    The convergence plane is changed only if a frequency shift is done along
-    the real axis.
+    Helper function for `_laplace_rule_trig`.  This function returns two terms
+    `f` and `g`.  `f` contains all product terms with sin, cos, sinh, cosh in
+    them; `g` contains everything else.
     """
-    # These rules follow from Bateman54, 4.1.5 and Euler's formulas
+    trigs = [S.One]
+    other = [S.One]
+    for term in Mul.make_args(fn):
+        if term.has(sin, cos, sinh, cosh, exp):
+            trigs.append(term)
+        else:
+            other.append(term)
+    f = Mul(*trigs)
+    g = Mul(*other)
+    return f, g
 
-    a = Wild('a', exclude=[t])
-    y = Wild('y')
-    z = Wild('z')
-    trigrules = [(sinh(y), '1.6',  1, -1, 1), (cosh(y), '1.7', 1, 1, 1),
-                 (sin(y),  '1.8', -I, -1, I), (cos(y),  '1.9', 1, 1, I)]
-    for trigrule in trigrules:
-        fm, nu, s1, s2, sd = trigrule
-        ma1 = f.match(z*fm)
-        if ma1:
-            ma2 = ma1[y].collect(t).match(a*t)
-            if ma2:
-                debug('_laplace_apply_rules match:')
-                debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-                debugf('      rule: multiply with %s (%s)', (fm.func, nu))
-                r, pr, cr = _laplace_transform(ma1[z], t, s, simplify=False)
-                if sd==1:
-                    cp_shift = Abs(re(ma2[a]))
+
+def _laplace_trig_expsum(f, t):
+    """
+    Helper function for `_laplace_rule_trig`.  This function expects the `f`
+    from `_laplace_trig_split`.  It returns two lists `xm` and `xn`.  `xm` is
+    a list of dictionaries with keys `k` and `a` representing a function
+    `k*exp(a*t)`.  `xn` is a list of all terms that cannot be brought into
+    that form, which may happen, e.g., when a trigonometric function has
+    another function in its argument.
+    """
+    m = Wild('m')
+    p = Wild('p', exclude=[t])
+    xm = []
+    xn = []
+
+    x1 = f.rewrite(exp).expand()
+
+    for term in Add.make_args(x1):
+        if not term.has(t):
+            xm.append({'k': term, 'a': 0, re: 0, im: 0})
+            continue
+        term = term.powsimp(combine='exp')
+        if (r := term.match(p*exp(m))) is not None:
+            if (mp := r[m].as_poly(t)) is not None:
+                mc = mp.all_coeffs()
+                if len(mc) == 2:
+                    xm.append({
+                        'k': r[p]*exp(mc[1]), 'a': mc[0],
+                        re: re(mc[0]), im: im(mc[0])})
                 else:
-                    cp_shift = Abs(im(ma2[a]))
-                return ((s1*(r.subs(s, s-sd*ma2[a])+\
-                             s2*r.subs(s, s+sd*ma2[a])))/2, pr+cp_shift, cr)
-    return None
+                    xn.append(term)
+            else:
+                xn.append(term)
+        else:
+            xn.append(term)
+    return xm, xn
+
+
+def _laplace_trig_ltex(xm, t, s):
+    """
+    Helper function for `_laplace_rule_trig`.  This function takes the list of
+    exponentials `xm` from `_laplace_trig_expsum` and simplifies complex
+    conjugate and real symmetric poles.  It returns the result as a sum and
+    the convergence plane.
+    """
+    results = []
+    planes = []
+
+    def _simpc(coeffs):
+        nc = coeffs.copy()
+        for k in range(len(nc)):
+            ri = nc[k].as_real_imag()
+            if ri[0].has(im):
+                nc[k] = nc[k].rewrite(cos)
+            else:
+                nc[k] = (ri[0] + I*ri[1]).rewrite(cos)
+        return nc
+
+    def _quadpole(t1, k1, k2, k3, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
+        nc = [
+            k0 + k1 + k2 + k3,
+            a*(k0 + k1 - k2 - k3) - 2*I*a_i*k1 + 2*I*a_i*k2,
+            (
+                a**2*(-k0 - k1 - k2 - k3) +
+                a*(4*I*a_i*k0 + 4*I*a_i*k3) +
+                4*a_i**2*k0 + 4*a_i**2*k3),
+            (
+                a**3*(-k0 - k1 + k2 + k3) +
+                a**2*(4*I*a_i*k0 + 2*I*a_i*k1 - 2*I*a_i*k2 - 4*I*a_i*k3) +
+                a*(4*a_i**2*k0 - 4*a_i**2*k3))
+            ]
+        dc = [
+            S.One, S.Zero, 2*a_i**2 - 2*a_r**2,
+            S.Zero, a_i**4 + 2*a_i**2*a_r**2 + a_r**4]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        quadpole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _ccpole(t1, k1, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
+        nc = [k0 + k1, -a*k0 - a*k1 + 2*I*a_i*k0]
+        dc = [S.One, -2*a_r, a_i**2 + a_r**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        ccpole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _rspole(t1, k2, s):
+        a, k0, a_r, a_i = t1['a'], t1['k'], t1[re], t1[im]
+        nc = [k0 + k2, a*k0 - a*k2 - 2*I*a_i*k0]
+        dc = [S.One, -2*I*a_i, -a_i**2 - a_r**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        rspole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _sypole(t1, k3, s):
+        a, k0 = t1['a'], t1['k']
+        nc = [k0 + k3, a*(k0 - k3)]
+        dc = [S.One, S.Zero, -a**2]
+        n = Add(
+            *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
+        d = Add(
+            *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
+        debugf('        sypole: (%s) / (%s)', (n, d))
+        return n/d
+
+    def _simplepole(t1, s):
+        a, k0 = t1['a'], t1['k']
+        n = k0
+        d = s - a
+        debugf('        simplepole: (%s) / (%s)', (n, d))
+        return n/d
+
+    while len(xm) > 0:
+        t1 = xm.pop()
+        i_imagsym = None
+        i_realsym = None
+        i_pointsym = None
+        # The following code checks all remaining poles. If t1 is a pole at
+        # a+b*I, then we check for a-b*I, -a+b*I, and -a-b*I, and
+        # assign the respective indices to i_imagsym, i_realsym, i_pointsym.
+        # -a-b*I / i_pointsym only applies if both a and b are != 0.
+        for i in range(len(xm)):
+            real_eq = t1[re] == xm[i][re]
+            realsym = t1[re] == -xm[i][re]
+            imag_eq = t1[im] == xm[i][im]
+            imagsym = t1[im] == -xm[i][im]
+            if realsym and imagsym and t1[re] != 0 and t1[im] != 0:
+                i_pointsym = i
+            elif realsym and imag_eq and t1[re] != 0:
+                i_realsym = i
+            elif real_eq and imagsym and t1[im] != 0:
+                i_imagsym = i
+
+        # The next part looks for four possible pole constellations:
+        # quad:   a+b*I, a-b*I, -a+b*I, -a-b*I
+        # cc:     a+b*I, a-b*I (a may be zero)
+        # quad:   a+b*I, -a+b*I (b may be zero)
+        # point:  a+b*I, -a-b*I (a!=0 and b!=0 is needed, but that has been
+        #                        asserted when finding i_pointsym above.)
+        # If none apply, then t1 is a simple pole.
+        if (
+                i_imagsym is not None and i_realsym is not None
+                and i_pointsym is not None):
+            results.append(
+                _quadpole(t1,
+                          xm[i_imagsym]['k'], xm[i_realsym]['k'],
+                          xm[i_pointsym]['k'], s))
+            planes.append(Abs(re(t1['a'])))
+            # The three additional poles have now been used; to pop them
+            # easily we have to do it from the back.
+            indices_to_pop = [i_imagsym, i_realsym, i_pointsym]
+            indices_to_pop.sort(reverse=True)
+            for i in indices_to_pop:
+                xm.pop(i)
+        elif i_imagsym is not None:
+            results.append(_ccpole(t1, xm[i_imagsym]['k'], s))
+            planes.append(t1[re])
+            xm.pop(i_imagsym)
+        elif i_realsym is not None:
+            results.append(_rspole(t1, xm[i_realsym]['k'], s))
+            planes.append(Abs(t1[re]))
+            xm.pop(i_realsym)
+        elif i_pointsym is not None:
+            results.append(_sypole(t1, xm[i_pointsym]['k'], s))
+            planes.append(Abs(t1[re]))
+            xm.pop(i_pointsym)
+        else:
+            results.append(_simplepole(t1, s))
+            planes.append(t1[re])
+
+    return Add(*results), Max(*planes)
+
+
+def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
+    """
+    This rule covers trigonometric factors by splitting everything into a
+    sum of exponential functions and collecting complex conjugate poles and
+    real symmetric poles.
+    """
+    t = Dummy('t', real=True)
+
+    if not fn.has(sin, cos, sinh, cosh):
+        return None
+
+    debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
+
+    f, g = _laplace_trig_split(fn.subs(t_, t))
+    debugf('    f = %s\n    g = %s', (f, g))
+
+    xm, xn = _laplace_trig_expsum(f, t)
+    debugf('    xm = %s\n    xn = %s', (xm, xn))
+
+    if len(xn) > 0:
+        # not implemented yet
+        debug('    --> xn is not empty; giving up.')
+        return None
+
+    if not g.has(t):
+        r, p = _laplace_trig_ltex(xm, t, s)
+        return g*r, p, S.true
+    else:
+        # Just transform `g` and make frequency-shifted copies
+        planes = []
+        results = []
+        G, G_plane, G_cond = _laplace_transform(g, t, s)
+        for x1 in xm:
+            results.append(x1['k']*G.subs(s, s-x1['a']))
+            planes.append(G_plane+re(x1['a']))
+    return Add(*results).subs(t, t_), Max(*planes), G_cond
 
 
 def _laplace_rule_diff(f, t, s, doit=True, **hints):
@@ -960,7 +1156,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(t**a, t, s)
     (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
-    (s/(a + s), -a, True)
+    (s/(a + s), -re(a), True)
 
     References
     ==========
@@ -1054,12 +1250,11 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
     if f is None:
         f = meijerint_inversion(F, s, t)
         if f is None:
-            raise IntegralTransformError('Inverse Laplace', f, '')
+            return None
         if f.is_Piecewise:
             f, cond = f.args[0]
             if f.has(Integral):
-                raise IntegralTransformError('Inverse Laplace', f,
-                                     'inversion integral of unrecognised form.')
+                return None
         else:
             cond = S.true
         f = f.replace(Piecewise, pw_simp)
@@ -1132,7 +1327,15 @@ def _inverse_laplace_build_rules():
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
         (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c>0, same, 1),
-        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3), S.true, same, 1)
+        (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3),
+         S.true, same, 1),
+        # The next two rules must be there in that order. For the second
+        # one, the condition would be a != 0 or, respectively, to take the
+        # limit a -> 0 after the transform if a == 0. It is much simpler if
+        # the case a == 0 has its own rule.
+        (1/(s**b), t**(b - 1)/gamma(b), S.true, same, 1),
+        (1/(s*(s+a)**b), lowergamma(b, a*t)/(a**b*gamma(b)),
+          S.true, same, 1)
     ]
     return _ILT_rules, s, t
 
@@ -1161,12 +1364,13 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 c = check.xreplace(ma)
             except TypeError:
                 continue
-            if c:
+            if c is S.true:
                 debug('_inverse_laplace_apply_simple_rules match:')
                 debugf('      f:    %s', (f,))
                 debugf('      rule: %s o---o %s', (s_dom, t_dom))
                 debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
+
     return None
 
 
@@ -1220,7 +1424,10 @@ def _inverse_laplace_time_diff(F, s, t, plane):
         debugf('      ma:   %s', (ma1,))
         r, c = _inverse_laplace_transform(ma1[g], s, t, plane)
         r = r.replace(Heaviside(t), 1)
-        return diff(r, t, ma1[n]), c
+        if r.has(InverseLaplaceTransform):
+            return diff(r, t, ma1[n]), c
+        else:
+            return Heaviside(t)*diff(r, t, ma1[n]), c
     return None
 
 
@@ -1327,8 +1534,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, simplify=True, dorational=True
 
     for term in terms:
         k, f = term.as_independent(s_, as_Add=False)
-        if dorational and term.is_rational_function(s_) and \
-            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None:
+        if (dorational and term.is_rational_function(s_) and \
+            (r := _inverse_laplace_rational(f, s_, t_, plane, simplify)) is not None):
             pass
         elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
             pass

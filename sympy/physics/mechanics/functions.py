@@ -677,12 +677,22 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
         speeds = [speeds]
 
     if check_duplicates:  # Check for duplicates
-        if len(coordinates) != len(set(coordinates)):
-            raise ValueError('Duplicate generalized coordinates found, all '
-                             'generalized coordinates should be unique.')
-        if len(speeds) != len(set(speeds)):
-            raise ValueError('Duplicate generalized speeds found, all '
-                             'generalized speeds should be unique.')
+        seen = set()
+        coord_duplicates = {x for x in coordinates if x in seen or seen.add(x)}
+        seen = set()
+        speed_duplicates = {x for x in speeds if x in seen or seen.add(x)}
+        overlap = set(coordinates).intersection(speeds)
+        if coord_duplicates:
+            raise ValueError(f'The generalized coordinates {coord_duplicates} '
+                             f'are duplicated, all generalized coordinates '
+                             f'should be unique.')
+        if speed_duplicates:
+            raise ValueError(f'The generalized speeds {speed_duplicates} are '
+                             f'duplicated, all generalized speeds should be '
+                             f'unique.')
+        if overlap:
+            raise ValueError(f'{overlap} are defined as both generalized '
+                             f'coordinates and generalized speeds.')
     if is_dynamicsymbols:  # Check whether all coordinates are dynamicsymbols
         for coordinate in coordinates:
             if not (isinstance(coordinate, (AppliedUndef, Derivative)) and

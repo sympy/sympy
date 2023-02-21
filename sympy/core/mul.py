@@ -1711,7 +1711,7 @@ class Mul(Expr, AssocOp):
                 noncommutatives come back as a list [(b**e, Rational)]
             """
 
-            (c, nc) = (defaultdict(int), list())
+            (c, nc) = (defaultdict(int), [])
             for a in Mul.make_args(eq):
                 a = powdenest(a)
                 (b, e) = base_exp(a)

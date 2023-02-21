@@ -1043,7 +1043,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     References
     ==========
 
-    .. [1] http://docs.scipy.org/doc/numpy/reference/ufuncs.html
+    .. [1] https://numpy.org/doc/stable/reference/ufuncs.html
 
     Examples
     ========

@@ -56,7 +56,7 @@ def pyglet_viewer(fname, fmt):
         from pyglet.window import key
         from pyglet.image.codecs import ImageDecodeException
     except ImportError:
-        raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
+        raise ImportError("pyglet is required for preview.\n visit https://pyglet.org/")
 
     try:
         img = image.load(fname)

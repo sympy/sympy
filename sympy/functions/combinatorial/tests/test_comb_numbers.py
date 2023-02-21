@@ -213,7 +213,7 @@ def test_harmonic():
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
     assert harmonic(n, 1) == harmonic(n)
-    assert harmonic(1, n).evalf() == harmonic(1, n)
+    assert harmonic(1, n) == 1
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1

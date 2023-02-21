@@ -102,6 +102,19 @@ It is available through ``tensorproduct(...)``:
 >>> tensorproduct(A, B)
 [[x, 2*x, 3*x, 4*x], [y, 2*y, 3*y, 4*y], [z, 2*z, 3*z, 4*z], [t, 2*t, 3*t, 4*t]]
 
+In case you don't want to evaluate the tensor product immediately, you can use
+``ArrayTensorProduct``, which creates an unevaluated tensor product expression:
+
+>>> from sympy.tensor.array.expressions import ArrayTensorProduct
+>>> ArrayTensorProduct(A, B)
+ArrayTensorProduct([x, y, z, t], [1, 2, 3, 4])
+
+Calling ``.as_explicit()`` on ``ArrayTensorProduct`` is equivalent to just calling
+``tensorproduct(...)``:
+
+>>> ArrayTensorProduct(A, B).as_explicit()
+[[x, 2*x, 3*x, 4*x], [y, 2*y, 3*y, 4*y], [z, 2*z, 3*z, 4*z], [t, 2*t, 3*t, 4*t]]
+
 Tensor product between a rank-1 array and a matrix creates a rank-3 array:
 
 >>> from sympy import eye
@@ -130,6 +143,16 @@ The matrix trace is equivalent to the contraction of a rank-2 array:
 `A_{m,n} \implies \sum_k A_{k,k}`
 
 >>> tensorcontraction(C, (0, 1))
+t + x
+
+To create an expression representing a tensor contraction that does not get
+evaluated immediately, use ``ArrayContraction``, which is equivalent to
+``tensorcontraction(...)`` if it is followed by ``.as_explicit()``:
+
+>>> from sympy.tensor.array.expressions import ArrayContraction
+>>> ArrayContraction(C, (0, 1))
+ArrayContraction([[x, y], [z, t]], (0, 1))
+>>> ArrayContraction(C, (0, 1)).as_explicit()
 t + x
 
 Matrix product is equivalent to a tensor product of two rank-2 arrays, followed

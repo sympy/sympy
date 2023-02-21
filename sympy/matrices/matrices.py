@@ -757,7 +757,7 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self) -> MatrixKind:
-        elem_kinds = set(e.kind for e in self.flat())
+        elem_kinds = {e.kind for e in self.flat()}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:

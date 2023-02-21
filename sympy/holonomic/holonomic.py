@@ -4,7 +4,8 @@ various operations on them.
 """
 
 from sympy.core import Add, Mul, Pow
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I, pi
+from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
+        equal_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -1289,7 +1290,7 @@ class HolonomicFunction:
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
-        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [2] https://www3.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 
@@ -1481,7 +1482,7 @@ class HolonomicFunction:
             rootstoconsider = []
             for i in ordered(self.y0.keys()):
                 for j in ordered(indicialroots.keys()):
-                    if j == i:
+                    if equal_valued(j, i):
                         rootstoconsider.append(i)
 
         elif allpos and allint:
@@ -1715,7 +1716,7 @@ class HolonomicFunction:
             seq.append(K.new(j.rep))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
-        sol = [i for i in recurrence.u0]
+        sol = list(recurrence.u0)
 
         if l + 1 >= n:
             pass
@@ -2635,7 +2636,7 @@ def _extend_y0(Holonomic, n):
         if len(y0) > a:
             y1 = [y0[i] for i in range(a)]
         else:
-            y1 = [i for i  in y0]
+            y1 = list(y0)
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):
