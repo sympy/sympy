@@ -100,7 +100,7 @@ def _simplifyconds(expr, s, a):
 
     def replie(x, y):
         """ simplify x < y """
-        if not ((x.is_positive or isinstance(x, Abs))
+        if (not (x.is_positive or isinstance(x, Abs))
                 or not (y.is_positive or isinstance(y, Abs))):
             return (x < y)
         r = bigger(x, y)
