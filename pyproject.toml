@@ -1,6 +1,10 @@
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
-select = ["C4", "E", "F"]
+select = [
+    "C4",
+    "E",
+    "F",
+]
 
 # Ignore rules that currently fail on the SymPy codebase
 ignore = [
