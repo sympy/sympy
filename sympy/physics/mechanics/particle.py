@@ -1,5 +1,4 @@
 from sympy.core.backend import sympify
-from sympy.physics.vector import Point
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
