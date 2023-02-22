@@ -69,7 +69,7 @@ on the block. ::
     >>> system.apply_torque(compound_pend, T * compound_pend.z, slider.child_interframe)
     >>> system.apply_torque(C_frame, -kT*q3*compound_pend.z, compound_pend)
 
-With the problem setup, the equations of motion can be generated using the
+With the problem set up, the equations of motion can be generated using the
 ``System`` class with :class:`~.KanesMethod` in the backend. ::
 
     >>> system.form_eoms()

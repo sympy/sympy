@@ -56,7 +56,7 @@ pendulum:
    >>> [body.name for body in system.bodies]
    ['ceiling', 'link1', 'link2']
 
-For more information of the joints check out the joints documentation.
+For more information about joints check out the joints documentation.
 Constraints can be added in the following way. The constraint below restricts
 the tip of the ``link2`` to only move along the ``y-axis`` of the ``ceiling``
 frame.
