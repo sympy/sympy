@@ -1037,6 +1037,8 @@ def test_issue_23543():
     assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
 
 def test_issue_11004():
+
+
     def f(n):
         return sqrt(2*pi*n) * (n/E)**n
 
@@ -1050,8 +1052,13 @@ def test_issue_11004():
     half = Float('0.5', 4)
     z = log(p(n, k) / p(n, k + 1)).expand(force=True)
     r = simplify(z.subs(n, N).n(4))
-    assert r == (half*k*log(k) - half*k*log(k + 1) + half*log(N) - half*log(k + 1) + Float(0.9189224, 4))
-
+    assert r == (
+        half*k*log(k)
+        - half*k*log(k + 1)
+        + half*log(N)
+        - half*log(k + 1)
+        + Float(0.9189224, 4)
+    )
 
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
