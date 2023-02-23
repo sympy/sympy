@@ -28,6 +28,7 @@ sympy@googlegroups.com and ask for help.
 import sys
 import os
 import subprocess
+from pathlib import Path
 
 from setuptools import setup, Command
 from setuptools.command.sdist import sdist
@@ -304,6 +305,8 @@ if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',
+          long_description=(Path(__file__).parent / 'README.md').read_text(),
+          long_description_content_type='text/markdown',
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
           license='BSD',
