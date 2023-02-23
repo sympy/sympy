@@ -33,15 +33,15 @@ jobs:
             | Redirected With Found | $redirectFoundNum |
             | Total Errors/Warnings | $totalWarnings |
 
-            ## List of Broken and Redirected Links
+            ## List of Broken and Redirected Links ($totalWarnings)
             Displaying output of "make linkcheck"
-            ### Broken Links
+            ### Broken Links ($brokenNum)
             $(grep broken doc/_build/linkcheck/output.txt -n)
 
-            ### Links that were 'redirected permanently'
+            ### Links that were 'redirected permanently' ($redirectPermaNum)
             $(grep 'redirected permanently' doc/_build/linkcheck/output.txt -n)
 
-            ### Links that were 'redirected with Found'
+            ### Links that were 'redirected with Found' ($redirectFoundNum)
             $(grep 'redirected with Found' doc/_build/linkcheck/output.txt -n)
           " >> $GITHUB_STEP_SUMMARY
       - name: Print Summary URL
