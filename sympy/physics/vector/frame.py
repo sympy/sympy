@@ -762,6 +762,23 @@ class ReferenceFrame:
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
+    def orient_from_dcm(self, parentframe, dcm):
+        """Orient this frame from a direction cosine matrix.
+
+        Parameters
+        ==========
+
+        parentframe : ReferenceFrame
+            Reference frame from which the direction cosine matrix was computed.
+        dcm : Matrix
+            Direction cosine matrix that specifies the relative rotation
+            between the two reference frames.
+
+        """
+
+        dcm_inv = Matrix(dcm).transpose()
+        self.orient_explicit(parentframe, dcm_inv)
+
     def _rot(self, axis, angle):
         """DCM for simple axis 1,2,or 3 rotations."""
         if axis == 1:

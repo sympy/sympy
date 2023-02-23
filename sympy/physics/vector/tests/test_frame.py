@@ -454,6 +454,20 @@ def test_orient_explicit():
     A.orient_explicit(B, eye(3))
     assert A.dcm(B) == Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
+def test_orient_from_dcm_issue_24764():
+    cxx, cyy, czz = dynamicsymbols('c_{xx}, c_{yy}, c_{zz}')
+    cxy, cxz, cyx = dynamicsymbols('c_{xy}, c_{xz}, c_{yx}')
+    cyz, czx, czy = dynamicsymbols('c_{yz}, c_{zx}, c_{zy}')
+    B_C_A = Matrix([[cxx, cxy, cxz],
+                    [cyx, cyy, cyz],
+                    [czx, czy, czz]])
+    A = ReferenceFrame('A')
+    B = ReferenceFrame('B')
+    B.orient_from_dcm(A, B_C_A)
+    assert B.dcm(A) == Matrix([[c_{xx}(t), c_{yx}(t), c_{zx}(t)],
+                                [c_{xy}(t), c_{yy}(t), c_{zy}(t)],
+                                [c_{xz}(t), c_{yz}(t), c_{zz}(t)]])
+
 def test_orient_axis():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
