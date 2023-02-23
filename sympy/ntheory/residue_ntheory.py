@@ -8,7 +8,7 @@ from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
-from .factor_ import factorint, trailing, totient, multiplicity
+from .factor_ import factorint, trailing, totient, multiplicity, perfect_power
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint
 
@@ -173,6 +173,12 @@ def is_primitive_root(a, p):
 
         a**totient(p) cong 1 mod(p)
 
+    Parameters
+    ==========
+
+    a : integer
+    p : integer, p > 1. a and p should be relatively prime
+
     Examples
     ========
 
@@ -188,11 +194,36 @@ def is_primitive_root(a, p):
 
     """
     a, p = as_int(a), as_int(p)
+    if p <= 1:
+        raise ValueError("p should be an integer greater than 1")
+    a = a % p
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    if a > p:
-        a = a % p
-    return n_order(a, p) == totient(p)
+    # Primitive root of p exist only for
+    # p = 2, 4, q**e, 2*q**e (q is odd prime)
+    if p == 2:
+        # 1 is a primitive root of 2
+        return True
+    elif p == 4:
+        return a == 3
+    t = trailing(p)
+    if t > 1:
+        return False
+    q = p >> t
+    if isprime(q):
+        group_order = q - 1
+        factors = set(factorint(q - 1).keys())
+    else:
+        m = perfect_power(q)
+        if not m:
+            return False
+        q, e = m
+        if not isprime(q):
+            return False
+        group_order = q**(e - 1)*(q - 1)
+        factors = set(factorint(q - 1).keys())
+        factors.add(q)
+    return all(pow(a, group_order // prime, p) != 1 for prime in factors)
 
 
 def _sqrt_mod_tonelli_shanks(a, p):
