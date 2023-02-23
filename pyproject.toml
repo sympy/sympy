@@ -1,3 +1,26 @@
+[tool.pytest.ini]
+# Only run tests under the sympy/ directory. Otherwise pytest will attempt to
+# collect tests from e.g. the bin/ directory as well.
+testpaths = [
+    "sympy",
+    "doc/src",
+]
+
+# Normalise output of doctests.
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL",
+    "ELLIPSIS",
+]
+
+norecursedirs = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+markers = [
+    "nocache_fail",
+]
+
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 select = [
