@@ -7,31 +7,31 @@ from sympy.testing.pytest import slow
 from sympy.core.numbers import I
 
 def test_euler_pseudoprimes():
-    assert is_euler_pseudoprime(9, 1) == True
-    assert is_euler_pseudoprime(341, 2) == False
-    assert is_euler_pseudoprime(121, 3) == True
-    assert is_euler_pseudoprime(341, 4) == True
-    assert is_euler_pseudoprime(217, 5) == False
-    assert is_euler_pseudoprime(185, 6) == False
-    assert is_euler_pseudoprime(55, 111) == True
-    assert is_euler_pseudoprime(115, 114) == True
-    assert is_euler_pseudoprime(49, 117) == True
-    assert is_euler_pseudoprime(85, 84) == True
-    assert is_euler_pseudoprime(87, 88) == True
-    assert is_euler_pseudoprime(49, 128) == True
-    assert is_euler_pseudoprime(39, 77) == True
-    assert is_euler_pseudoprime(9881, 30) == True
-    assert is_euler_pseudoprime(8841, 29) == False
-    assert is_euler_pseudoprime(8421, 29) == False
-    assert is_euler_pseudoprime(9997, 19) == True
+    assert is_euler_pseudoprime(9, 1) is True
+    assert is_euler_pseudoprime(341, 2) is False
+    assert is_euler_pseudoprime(121, 3) is True
+    assert is_euler_pseudoprime(341, 4) is True
+    assert is_euler_pseudoprime(217, 5) is False
+    assert is_euler_pseudoprime(185, 6) is False
+    assert is_euler_pseudoprime(55, 111) is True
+    assert is_euler_pseudoprime(115, 114) is True
+    assert is_euler_pseudoprime(49, 117) is True
+    assert is_euler_pseudoprime(85, 84) is True
+    assert is_euler_pseudoprime(87, 88) is True
+    assert is_euler_pseudoprime(49, 128) is True
+    assert is_euler_pseudoprime(39, 77) is True
+    assert is_euler_pseudoprime(9881, 30) is True
+    assert is_euler_pseudoprime(8841, 29) is False
+    assert is_euler_pseudoprime(8421, 29) is False
+    assert is_euler_pseudoprime(9997, 19) is True
 
 def test_is_extra_strong_lucas_prp():
-    assert is_extra_strong_lucas_prp(4) == False
-    assert is_extra_strong_lucas_prp(989) == True
-    assert is_extra_strong_lucas_prp(10877) == True
-    assert is_extra_strong_lucas_prp(9) == False
-    assert is_extra_strong_lucas_prp(16) == False
-    assert is_extra_strong_lucas_prp(169) == False
+    assert is_extra_strong_lucas_prp(4) is False
+    assert is_extra_strong_lucas_prp(989) is True
+    assert is_extra_strong_lucas_prp(10877) is True
+    assert is_extra_strong_lucas_prp(9) is False
+    assert is_extra_strong_lucas_prp(16) is False
+    assert is_extra_strong_lucas_prp(169) is False
 
 @slow
 def test_prps():

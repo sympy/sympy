@@ -812,13 +812,13 @@ def test_solve_inequalities():
     assert solve(Eq(x < 1, False)) == (S.One <= x) & (x < oo)
     assert solve(Eq(x < 1, True)) == (-oo < x) & (x < 1)
 
-    assert solve(Eq(False, x)) == False
+    assert solve(Eq(False, x)) is False
     assert solve(Eq(0, x)) == [0]
-    assert solve(Eq(True, x)) == True
+    assert solve(Eq(True, x)) is True
     assert solve(Eq(1, x)) == [1]
-    assert solve(Eq(False, ~x)) == True
-    assert solve(Eq(True, ~x)) == False
-    assert solve(Ne(True, x)) == False
+    assert solve(Eq(False, ~x)) is True
+    assert solve(Eq(True, ~x)) is False
+    assert solve(Ne(True, x)) is False
     assert solve(Ne(1, x)) == (x > -oo) & (x < oo) & Ne(x, 1)
 
 
@@ -1407,7 +1407,7 @@ def test_checksol():
     eq = r - x**2 - y**2
     dict_var_soln = {y: - sqrt(r) / sqrt(tan(t)**2 + 1),
         x: -sqrt(r)*tan(t)/sqrt(tan(t)**2 + 1)}
-    assert checksol(eq, dict_var_soln) == True
+    assert checksol(eq, dict_var_soln) is True
     assert checksol(Eq(x, False), {x: False}) is True
     assert checksol(Ne(x, False), {x: False}) is False
     assert checksol(Eq(x < 1, True), {x: 0}) is True

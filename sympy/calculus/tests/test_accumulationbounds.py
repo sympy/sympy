@@ -18,7 +18,7 @@ def test_AccumBounds():
     assert B(1, 2).args == (1, 2)
     assert B(1, 2).delta is S.One
     assert B(1, 2).mid == Rational(3, 2)
-    assert B(1, 3).is_real == True
+    assert B(1, 3).is_real is True
 
     assert B(1, 1) is S.One
 

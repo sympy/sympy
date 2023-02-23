@@ -47,9 +47,9 @@ def test_lattice_make_args():
 
 def test_issue_14025():
     a, b, c, d = symbols('a,b,c,d', commutative=False)
-    assert Mul(a, b, c).has(c*b) == False
-    assert Mul(a, b, c).has(b*c) == True
-    assert Mul(a, b, c, d).has(b*c*d) == True
+    assert Mul(a, b, c).has(c*b) is False
+    assert Mul(a, b, c).has(b*c) is True
+    assert Mul(a, b, c, d).has(b*c*d) is True
 
 
 def test_AssocOp_flatten():

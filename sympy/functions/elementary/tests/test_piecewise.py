@@ -1221,7 +1221,7 @@ def test_issue_10258():
     # 10258
     c = Piecewise((1, x < 0), (2, True)) < 3
     assert c != True
-    assert piecewise_fold(c) == True
+    assert piecewise_fold(c) is True
 
 
 def test_issue_10087():
@@ -1598,9 +1598,9 @@ def test_piecewise__eval_is_meromorphic():
     x = symbols('x', real=True)
     f = Piecewise((1, x < 0), (sqrt(1 - x), True))
     assert f.is_meromorphic(x, I) is None
-    assert f.is_meromorphic(x, -1) == True
-    assert f.is_meromorphic(x, 0) == None
-    assert f.is_meromorphic(x, 1) == False
-    assert f.is_meromorphic(x, 2) == True
-    assert f.is_meromorphic(x, Symbol('a')) == None
-    assert f.is_meromorphic(x, Symbol('a', real=True)) == None
+    assert f.is_meromorphic(x, -1) is True
+    assert f.is_meromorphic(x, 0) is None
+    assert f.is_meromorphic(x, 1) is False
+    assert f.is_meromorphic(x, 2) is True
+    assert f.is_meromorphic(x, Symbol('a')) is None
+    assert f.is_meromorphic(x, Symbol('a', real=True)) is None

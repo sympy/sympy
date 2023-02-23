@@ -139,8 +139,8 @@ def test_DiscreteMarkovChain():
     Y2 = DiscreteMarkovChain('Y', trans_probs=TO2)
     Y3 = DiscreteMarkovChain('Y', trans_probs=TO3)
     assert Y3.fundamental_matrix() == ImmutableMatrix([[176, 81, -132], [36, 141, -52], [-44, -39, 208]])/125
-    assert Y2.is_absorbing_chain() == True
-    assert Y3.is_absorbing_chain() == False
+    assert Y2.is_absorbing_chain() is True
+    assert Y3.is_absorbing_chain() is False
     assert Y2.canonical_form() == ([0, 1, 2], TO2)
     assert Y3.canonical_form() == ([0, 1, 2], TO3)
     assert Y2.decompose() == ([0, 1, 2], TO2[0:1, 0:1], TO2[1:3, 0:1], TO2[1:3, 1:3])
@@ -149,11 +149,11 @@ def test_DiscreteMarkovChain():
     Y4 = DiscreteMarkovChain('Y', trans_probs=TO4)
     w = ImmutableMatrix([[Rational(11, 39), Rational(16, 39), Rational(4, 13)]])
     assert Y4.limiting_distribution == w
-    assert Y4.is_regular() == True
-    assert Y4.is_ergodic() == True
+    assert Y4.is_regular() is True
+    assert Y4.is_ergodic() is True
     TS1 = MatrixSymbol('T', 3, 3)
     Y5 = DiscreteMarkovChain('Y', trans_probs=TS1)
-    assert Y5.limiting_distribution(w, TO4).doit() == True
+    assert Y5.limiting_distribution(w, TO4).doit() is True
     assert Y5.stationary_distribution(condition_set=True).subs(TS1, TO4).contains(w).doit() == S.true
     TO6 = Matrix([[S.One, 0, 0, 0, 0],[S.Half, 0, S.Half, 0, 0],[0, S.Half, 0, S.Half, 0], [0, 0, S.Half, 0, S.Half], [0, 0, 0, 0, 1]])
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
@@ -163,7 +163,7 @@ def test_DiscreteMarkovChain():
         Y6.absorbing_probabilites()
     TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
-    assert Y7.is_absorbing_chain() == False
+    assert Y7.is_absorbing_chain() is False
     assert Y7.fundamental_matrix() == ImmutableMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)],
                                                             [Rational(2, 25), Rational(21, 25), Rational(2, 25)],
                                                             [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
@@ -175,8 +175,8 @@ def test_DiscreteMarkovChain():
     assert X.communication_classes() == []
     assert X.canonical_form() == ([], Matrix([[]]))
     assert X.decompose() == ([], Matrix([[]]), Matrix([[]]), Matrix([[]]))
-    assert X.is_regular() == False
-    assert X.is_ergodic() == False
+    assert X.is_regular() is False
+    assert X.is_ergodic() is False
 
     # test communication_class
     # see https://drive.google.com/drive/folders/1HbxLlwwn2b3U8Lj7eb_ASIUb5vYaNIjg?usp=sharing

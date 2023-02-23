@@ -37,7 +37,7 @@ def rel_check(a, b):
     for do in range(len({type(a), type(b)})):
         if S.NaN in (a, b):
             v = [(a == b), (a != b)]
-            assert len(set(v)) == 1 and v[0] == False
+            assert len(set(v)) == 1 and v[0] is False
             assert not (a != b) and not (a == b)
             assert raises(TypeError, lambda: a < b)
             assert raises(TypeError, lambda: a <= b)
@@ -810,17 +810,17 @@ def test_equals():
     w, x, y, z = symbols('w:z')
     f = Function('f')
     assert Eq(x, 1).equals(Eq(x*(y + 1) - x*y - x + 1, x))
-    assert Eq(x, y).equals(x < y, True) == False
+    assert Eq(x, y).equals(x < y, True) is False
     assert Eq(x, f(1)).equals(Eq(x, f(2)), True) == f(1) - f(2)
     assert Eq(f(1), y).equals(Eq(f(2), y), True) == f(1) - f(2)
     assert Eq(x, f(1)).equals(Eq(f(2), x), True) == f(1) - f(2)
     assert Eq(f(1), x).equals(Eq(x, f(2)), True) == f(1) - f(2)
-    assert Eq(w, x).equals(Eq(y, z), True) == False
+    assert Eq(w, x).equals(Eq(y, z), True) is False
     assert Eq(f(1), f(2)).equals(Eq(f(3), f(4)), True) == f(1) - f(3)
-    assert (x < y).equals(y > x, True) == True
-    assert (x < y).equals(y >= x, True) == False
-    assert (x < y).equals(z < y, True) == False
-    assert (x < y).equals(x < z, True) == False
+    assert (x < y).equals(y > x, True) is True
+    assert (x < y).equals(y >= x, True) is False
+    assert (x < y).equals(z < y, True) is False
+    assert (x < y).equals(x < z, True) is False
     assert (x < f(1)).equals(x < f(2), True) == f(1) - f(2)
     assert (f(1) < x).equals(f(2) < x, True) == f(1) - f(2)
 
@@ -857,13 +857,13 @@ def test_canonical():
 @XFAIL
 def test_issue_8444_nonworkingtests():
     x = symbols('x', real=True)
-    assert (x <= oo) == (x >= -oo) == True
+    assert (x <= oo) == (x >= -oo) is True
 
     x = symbols('x')
     assert x >= floor(x)
-    assert (x < floor(x)) == False
+    assert (x < floor(x)) is False
     assert x <= ceiling(x)
-    assert (x > ceiling(x)) == False
+    assert (x > ceiling(x)) is False
 
 
 def test_issue_8444_workingtests():
@@ -873,8 +873,8 @@ def test_issue_8444_workingtests():
     assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
     assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
     i = symbols('i', integer=True)
-    assert (i > floor(i)) == False
-    assert (i < ceiling(i)) == False
+    assert (i > floor(i)) is False
+    assert (i < ceiling(i)) is False
 
 
 def test_issue_10304():
@@ -952,10 +952,10 @@ def test_issue_10401():
 
 
 def test_issue_10633():
-    assert Eq(True, False) == False
-    assert Eq(False, True) == False
-    assert Eq(True, True) == True
-    assert Eq(False, False) == True
+    assert Eq(True, False) is False
+    assert Eq(False, True) is False
+    assert Eq(True, True) is True
+    assert Eq(False, False) is True
 
 
 def test_issue_10927():
@@ -1038,7 +1038,7 @@ def test_Equality_rewrite_as_Add():
 
 def test_issue_15847():
     a = Ne(x*(x+y), x**2 + x*y)
-    assert simplify(a) == False
+    assert simplify(a) is False
 
 
 def test_negated_property():
@@ -1145,10 +1145,10 @@ def test_polynomial_relation_simplification():
 def test_multivariate_linear_function_simplification():
     assert Ge(x + y, x - y).simplify() == Ge(y, 0)
     assert Le(-x + y, -x - y).simplify() == Le(y, 0)
-    assert Eq(2*x + y, 2*x + y - 3).simplify() == False
-    assert (2*x + y > 2*x + y - 3).simplify() == True
-    assert (2*x + y < 2*x + y - 3).simplify() == False
-    assert (2*x + y < 2*x + y + 3).simplify() == True
+    assert Eq(2*x + y, 2*x + y - 3).simplify() is False
+    assert (2*x + y > 2*x + y - 3).simplify() is True
+    assert (2*x + y < 2*x + y - 3).simplify() is False
+    assert (2*x + y < 2*x + y + 3).simplify() is True
     a, b, c, d, e, f, g = symbols('a b c d e f g')
     assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
 

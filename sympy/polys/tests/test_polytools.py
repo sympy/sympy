@@ -3088,13 +3088,13 @@ def test_cancel():
         Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
 
     f = -(-2*x - 4*y + 0.005*(z - y)**2)/((z - y)*(-z + y + 2))
-    assert cancel(f).is_Mul == True
+    assert cancel(f).is_Mul is True
 
     P = tanh(x - 3.0)
     Q = tanh(x + 3.0)
     f = ((-2*P**2 + 2)*(-P**2 + 1)*Q**2/2 + (-2*P**2 + 2)*(-2*Q**2 + 2)*P*Q - (-2*P**2 + 2)*P**2*Q**2 + (-2*Q**2 + 2)*(-Q**2 + 1)*P**2/2 - (-2*Q**2 + 2)*P**2*Q**2)/(2*sqrt(P**2*Q**2 + 0.0001)) \
       + (-(-2*P**2 + 2)*P*Q**2/2 - (-2*Q**2 + 2)*P**2*Q/2)*((-2*P**2 + 2)*P*Q**2/2 + (-2*Q**2 + 2)*P**2*Q/2)/(2*(P**2*Q**2 + 0.0001)**Rational(3, 2))
-    assert cancel(f).is_Mul == True
+    assert cancel(f).is_Mul is True
 
     # issue 7022
     A = Symbol('A', commutative=False)

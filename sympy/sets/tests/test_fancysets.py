@@ -43,8 +43,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
-    assert N.is_open == False
-    assert N.is_closed == True
+    assert N.is_open is False
+    assert N.is_closed is True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -87,8 +87,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
-    assert Z.is_open == False
-    assert Z.is_closed == True
+    assert Z.is_open is False
+    assert Z.is_closed is True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -407,7 +407,7 @@ def test_Range_symbolic():
     raises(ValueError, lambda: len(sr))
     raises(ValueError, lambda: sr.size)
     # bool
-    assert bool(Range(0)) == False
+    assert bool(Range(0)) is False
     assert bool(xr)
     assert bool(ir)
     assert bool(ipr)
@@ -470,14 +470,14 @@ def test_Range_symbolic():
     assert Range(5).contains(i) == And(i >= 0, i <= 4)
     assert Range(1).contains(i) == Eq(i, 0)
     assert Range(-oo, 5, 1).contains(i) == (i <= 4)
-    assert Range(-oo, oo).contains(i) == True
+    assert Range(-oo, oo).contains(i) is True
     assert Range(0, 8, 2).contains(i) == Contains(i, Range(0, 8, 2))
     assert Range(0, 8, 2).contains(e) == And(e >= 0, e <= 6)
     assert Range(0, 8, 2).contains(2*i) == And(2*i >= 0, 2*i <= 6)
-    assert Range(0, 8, 2).contains(o) == False
-    assert Range(1, 9, 2).contains(e) == False
+    assert Range(0, 8, 2).contains(o) is False
+    assert Range(1, 9, 2).contains(e) is False
     assert Range(1, 9, 2).contains(o) == And(o >= 1, o <= 7)
-    assert Range(8, 0, -2).contains(o) == False
+    assert Range(8, 0, -2).contains(o) is False
     assert Range(9, 1, -2).contains(o) == And(o >= 3, o <= 9)
     assert Range(-oo, 8, 2).contains(i) == Contains(i, Range(-oo, 8, 2))
 
@@ -671,7 +671,7 @@ def test_Complex():
     assert S.Complexes.intersect(S.Reals) == S.Reals
     assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
-    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
+    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) is False
     assert str(S.Complexes) == "Complexes"
     assert repr(S.Complexes) == "Complexes"
 
@@ -882,9 +882,9 @@ def test_ComplexRegion_contains():
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
     assert c1.contains(x) == Contains(x, c1, evaluate=False)
-    assert c1.contains(r) == False
+    assert c1.contains(r) is False
     assert c2.contains(x) == Contains(x, c2, evaluate=False)
-    assert c2.contains(r) == False
+    assert c2.contains(r) is False
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
@@ -907,13 +907,13 @@ def test_ComplexRegion_contains():
     r2 = Interval(0, 3)
     theta2 = Interval(pi, 2*pi, left_open=True)
     c4 = ComplexRegion(r2*theta2, polar=True)
-    assert c4.contains(0) == True
-    assert c4.contains(2 + I) == False
-    assert c4.contains(-2 + I) == False
-    assert c4.contains(-2 - I) == True
-    assert c4.contains(2 - I) == True
-    assert c4.contains(-2) == False
-    assert c4.contains(2) == True
+    assert c4.contains(0) is True
+    assert c4.contains(2 + I) is False
+    assert c4.contains(-2 + I) is False
+    assert c4.contains(-2 - I) is True
+    assert c4.contains(2 - I) is True
+    assert c4.contains(-2) is False
+    assert c4.contains(2) is True
     assert c4.contains(x) == Contains(x, c4, evaluate=False)
     assert c4.contains(3/(1 + r**2)) == Contains(
         3/(1 + r**2), c4, evaluate=False)  # is in fact True
@@ -1162,20 +1162,20 @@ def test_issue_11732():
     finiteset1234 = FiniteSet(1, 2, 3, 4)
     pointComplex = Tuple(1, 5)
 
-    assert (interval12 in S.Naturals) == False
-    assert (interval12 in S.Naturals0) == False
-    assert (interval12 in S.Integers) == False
-    assert (interval12 in S.Complexes) == False
+    assert (interval12 in S.Naturals) is False
+    assert (interval12 in S.Naturals0) is False
+    assert (interval12 in S.Integers) is False
+    assert (interval12 in S.Complexes) is False
 
-    assert (finiteset1234 in S.Naturals) == False
-    assert (finiteset1234 in S.Naturals0) == False
-    assert (finiteset1234 in S.Integers) == False
-    assert (finiteset1234 in S.Complexes) == False
+    assert (finiteset1234 in S.Naturals) is False
+    assert (finiteset1234 in S.Naturals0) is False
+    assert (finiteset1234 in S.Integers) is False
+    assert (finiteset1234 in S.Complexes) is False
 
-    assert (pointComplex in S.Naturals) == False
-    assert (pointComplex in S.Naturals0) == False
-    assert (pointComplex in S.Integers) == False
-    assert (pointComplex in S.Complexes) == True
+    assert (pointComplex in S.Naturals) is False
+    assert (pointComplex in S.Naturals0) is False
+    assert (pointComplex in S.Integers) is False
+    assert (pointComplex in S.Complexes) is True
 
 
 def test_issue_11730():
@@ -1271,8 +1271,8 @@ def test_Rationals():
     # issue #18134:
     assert S.Rationals.boundary == S.Reals
     assert S.Rationals.closure == S.Reals
-    assert S.Rationals.is_open == False
-    assert S.Rationals.is_closed == False
+    assert S.Rationals.is_open is False
+    assert S.Rationals.is_closed is False
 
 
 def test_NZQRC_unions():

@@ -205,8 +205,8 @@ def test_dummy_eq():
     I = S.Integers
     c = C(x, x < 1, I)
     assert c.dummy_eq(C(y, y < 1, I))
-    assert c.dummy_eq(1) == False
-    assert c.dummy_eq(C(x, x < 1, S.Reals)) == False
+    assert c.dummy_eq(1) is False
+    assert c.dummy_eq(C(x, x < 1, S.Reals)) is False
 
     c1 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals**2)
     c2 = ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals**2)

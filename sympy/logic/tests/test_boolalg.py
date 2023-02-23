@@ -344,8 +344,8 @@ def test_simplification_boolalg():
 
     # check working of simplify
     assert simplify((A & B) | (A & C)) == And(A, Or(B, C))
-    assert simplify(And(x, Not(x))) == False
-    assert simplify(Or(x, Not(x))) == True
+    assert simplify(And(x, Not(x))) is False
+    assert simplify(Or(x, Not(x))) is True
     assert simplify(And(Eq(x, 0), Eq(x, y))) == And(Eq(x, 0), Eq(y, 0))
     assert And(Eq(x - 1, 0), Eq(x, y)).simplify() == And(Eq(x, 1), Eq(y, 1))
     assert And(Ne(x - 1, 0), Ne(x, y)).simplify() == And(Ne(x, 1), Ne(x, y))
@@ -354,7 +354,7 @@ def test_simplification_boolalg():
         ) == And(Eq(x, 1), Eq(y, -1), Eq(z, 2))
     assert And(Eq(x - 1, 0), Eq(x + 2, 3)).simplify() == Eq(x, 1)
     assert And(Ne(x - 1, 0), Ne(x + 2, 3)).simplify() == Ne(x, 1)
-    assert And(Eq(x - 1, 0), Eq(x + 2, 2)).simplify() == False
+    assert And(Eq(x - 1, 0), Eq(x + 2, 2)).simplify() is False
     assert And(Ne(x - 1, 0), Ne(x + 2, 2)).simplify(
         ) == And(Ne(x, 1), Ne(x, 0))
 
@@ -376,12 +376,12 @@ def test_bool_map():
     function2 = SOPform([a, b, c], [[1, 0, 1], [1, 0, 0]])
     assert bool_map(function1, function2) == \
         (function1, {y: a, z: b})
-    assert bool_map(Xor(x, y), ~Xor(x, y)) == False
+    assert bool_map(Xor(x, y), ~Xor(x, y)) is False
     assert bool_map(And(x, y), Or(x, y)) is None
     assert bool_map(And(x, y), And(x, y, z)) is None
     # issue 16179
-    assert bool_map(Xor(x, y, z), ~Xor(x, y, z)) == False
-    assert bool_map(Xor(a, x, y, z), ~Xor(a, x, y, z)) == False
+    assert bool_map(Xor(x, y, z), ~Xor(x, y, z)) is False
+    assert bool_map(Xor(a, x, y, z), ~Xor(a, x, y, z)) is False
 
 
 def test_bool_symbol():
@@ -399,10 +399,10 @@ def test_bool_symbol():
 def test_is_boolean():
     assert isinstance(True, Boolean) is False
     assert isinstance(true, Boolean) is True
-    assert 1 == True
+    assert 1 is True
     assert 1 != true
     assert (1 == true) is False
-    assert 0 == False
+    assert 0 is False
     assert 0 != false
     assert (0 == false) is False
     assert true.is_Boolean is True
@@ -494,7 +494,7 @@ def test_to_anf():
     assert to_anf(Or(x, y)) == Xor(x, y, And(x, y))
     assert to_anf(Or(Implies(x, y), And(x, y), y)) == \
             Xor(x, True, x & y, remove_true=False)
-    assert to_anf(Or(Nand(x, y), Nor(x, y), Xnor(x, y), Implies(x, y))) == True
+    assert to_anf(Or(Nand(x, y), Nor(x, y), Xnor(x, y), Implies(x, y))) is True
     assert to_anf(Or(x, Not(y), Nor(x,z), And(x, y), Nand(y, z))) == \
             Xor(True, And(y, z), And(x, y, z), remove_true=False)
     assert to_anf(Xor(x, y)) == Xor(x, y)
@@ -713,16 +713,16 @@ def test_is_literal():
 def test_operators():
     # Mostly test __and__, __rand__, and so on
     assert True & A == A & True == A
-    assert False & A == A & False == False
+    assert False & A == A & False is False
     assert A & B == And(A, B)
-    assert True | A == A | True == True
+    assert True | A == A | True is True
     assert False | A == A | False == A
     assert A | B == Or(A, B)
     assert ~A == Not(A)
     assert True >> A == A << True == A
-    assert False >> A == A << False == True
-    assert A >> True == True << A == True
-    assert A >> False == False << A == ~A
+    assert False >> A == A << False is True
+    assert A >> True is True << A is True
+    assert A >> False is False << A == ~A
     assert A >> B == B << A == Implies(A, B)
     assert True ^ A == A ^ True == ~A
     assert False ^ A == A ^ False == A
@@ -736,11 +736,11 @@ def test_true_false():
     assert false is not False
     assert true
     assert not false
-    assert true == True
-    assert false == False
-    assert not (true == False)
-    assert not (false == True)
-    assert not (true == false)
+    assert true is True
+    assert false is False
+    assert not (true is False)
+    assert not (false is True)
+    assert not (true is False)
 
     assert hash(true) == hash(True)
     assert hash(false) == hash(False)
@@ -897,22 +897,22 @@ def test_all_or_nothing():
     if v.func is And:
         assert len(v.args) == len(args) - args.count(S.true)
     else:
-        assert v == True
+        assert v is True
     v = Or(*args)
     if v.func is Or:
         assert len(v.args) == 2
     else:
-        assert v == True
+        assert v is True
 
 
 def test_canonical_atoms():
-    assert true.canonical == true
-    assert false.canonical == false
+    assert true.canonical is True
+    assert false.canonical is False
 
 
 def test_negated_atoms():
-    assert true.negated == false
-    assert false.negated == true
+    assert true.negated is False
+    assert false.negated is True
 
 
 def test_issue_8777():
@@ -987,8 +987,8 @@ def test_expand_relational():
 
 
 def test_issue_12717():
-    assert S.true.is_Atom == True
-    assert S.false.is_Atom == True
+    assert S.true.is_Atom is True
+    assert S.false.is_Atom is True
 
 
 def test_as_Boolean():
@@ -1216,8 +1216,8 @@ def test_anf_coeffs():
 
 def test_ANFform():
     x, y = symbols('x,y')
-    assert ANFform([x], [1, 1]) == True
-    assert ANFform([x], [0, 0]) == False
+    assert ANFform([x], [1, 1]) is True
+    assert ANFform([x], [0, 0]) is False
     assert ANFform([x], [1, 0]) == Xor(x, True, remove_true=False)
     assert ANFform([x, y], [1, 1, 1, 0]) == \
         Xor(True, And(x, y), remove_true=False)

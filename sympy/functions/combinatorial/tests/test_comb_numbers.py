@@ -36,7 +36,7 @@ def test_carmichael():
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(-2, 2))
     raises(ValueError, lambda: carmichael.find_carmichael_numbers_in_range(22, 2))
     with warns_deprecated_sympy():
-        assert carmichael.is_prime(2821) == False
+        assert carmichael.is_prime(2821) is False
 
 
 def test_bernoulli():
@@ -784,9 +784,9 @@ def test_issue_8601():
 
 
 def test_motzkin():
-    assert motzkin.is_motzkin(4) == True
-    assert motzkin.is_motzkin(9) == True
-    assert motzkin.is_motzkin(10) == False
+    assert motzkin.is_motzkin(4) is True
+    assert motzkin.is_motzkin(9) is True
+    assert motzkin.is_motzkin(10) is False
     assert motzkin.find_motzkin_numbers_in_range(10,200) == [21, 51, 127]
     assert motzkin.find_motzkin_numbers_in_range(10,400) == [21, 51, 127, 323]
     assert motzkin.find_motzkin_numbers_in_range(10,1600) == [21, 51, 127, 323, 835]

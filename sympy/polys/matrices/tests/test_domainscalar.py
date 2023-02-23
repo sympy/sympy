@@ -135,13 +135,13 @@ def test_DomainScalar_eq():
 
 def test_DomainScalar_isZero():
     A = DomainScalar(ZZ(0), ZZ)
-    assert A.is_zero() == True
+    assert A.is_zero() is True
     B = DomainScalar(ZZ(1), ZZ)
-    assert B.is_zero() == False
+    assert B.is_zero() is False
 
 
 def test_DomainScalar_isOne():
     A = DomainScalar(ZZ(1), ZZ)
-    assert A.is_one() == True
+    assert A.is_one() is True
     B = DomainScalar(ZZ(0), ZZ)
-    assert B.is_one() == False
+    assert B.is_one() is False

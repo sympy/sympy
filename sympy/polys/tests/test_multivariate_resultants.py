@@ -106,11 +106,11 @@ def test_KSY_precondition():
                  [0, 1],
                  [0, 0]])
 
-    assert dixon.KSY_precondition(m1) == False
-    assert dixon.KSY_precondition(m2) == True
-    assert dixon.KSY_precondition(m3) == True
-    assert dixon.KSY_precondition(m4) == False
-    assert dixon.KSY_precondition(m5) == True
+    assert dixon.KSY_precondition(m1) is False
+    assert dixon.KSY_precondition(m2) is True
+    assert dixon.KSY_precondition(m3) is True
+    assert dixon.KSY_precondition(m4) is False
+    assert dixon.KSY_precondition(m5) is True
 
 def test_delete_zero_rows_and_columns():
     """Tests method for deleting rows and columns containing only zeros."""

@@ -47,8 +47,8 @@ def test_invertible_fullrank():
 
 
 def test_invertible_BlockMatrix():
-    assert ask(Q.invertible(BlockMatrix([Identity(3)]))) == True
-    assert ask(Q.invertible(BlockMatrix([ZeroMatrix(3, 3)]))) == False
+    assert ask(Q.invertible(BlockMatrix([Identity(3)]))) is True
+    assert ask(Q.invertible(BlockMatrix([ZeroMatrix(3, 3)]))) is False
 
     X = Matrix([[1, 2, 3], [3, 5, 4]])
     Y = Matrix([[4, 2, 7], [2, 3, 5]])
@@ -56,28 +56,28 @@ def test_invertible_BlockMatrix():
     assert ask(Q.invertible(BlockMatrix([
         [Matrix.ones(3, 3), Y.T],
         [X, Matrix.eye(2)],
-    ]))) == True
+    ]))) is True
     # non-invertible B block
     assert ask(Q.invertible(BlockMatrix([
         [Y.T, Matrix.ones(3, 3)],
         [Matrix.eye(2), X],
-    ]))) == True
+    ]))) is True
     # non-invertible C block
     assert ask(Q.invertible(BlockMatrix([
         [X, Matrix.eye(2)],
         [Matrix.ones(3, 3), Y.T],
-    ]))) == True
+    ]))) is True
     # non-invertible D block
     assert ask(Q.invertible(BlockMatrix([
         [Matrix.eye(2), X],
         [Y.T, Matrix.ones(3, 3)],
-    ]))) == True
+    ]))) is True
 
 
 def test_invertible_BlockDiagMatrix():
-    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), Identity(5)))) == True
-    assert ask(Q.invertible(BlockDiagMatrix(ZeroMatrix(3, 3), Identity(5)))) == False
-    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), OneMatrix(5, 5)))) == False
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), Identity(5)))) is True
+    assert ask(Q.invertible(BlockDiagMatrix(ZeroMatrix(3, 3), Identity(5)))) is False
+    assert ask(Q.invertible(BlockDiagMatrix(Identity(3), OneMatrix(5, 5)))) is False
 
 
 def test_symmetric():
@@ -133,7 +133,7 @@ def test_fullrank():
     assert ask(Q.fullrank(ZeroMatrix(3, 3))) is False
     assert ask(Q.fullrank(OneMatrix(1, 1))) is True
     assert ask(Q.fullrank(OneMatrix(3, 3))) is False
-    assert ask(Q.invertible(X), ~Q.fullrank(X)) == False
+    assert ask(Q.invertible(X), ~Q.fullrank(X)) is False
 
 
 def test_positive_definite():

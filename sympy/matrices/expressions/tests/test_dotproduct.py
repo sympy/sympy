@@ -29,7 +29,7 @@ def test_dotproduct_symbolic():
     B = MatrixSymbol('B', 3, 1)
 
     dot = DotProduct(A, B)
-    assert dot.is_scalar == True
+    assert dot.is_scalar is True
     assert unchanged(Mul, 2, dot)
     # XXX Fix forced evaluation for arithmetics with matrix expressions
     assert dot * A == (A[0, 0]*B[0, 0] + A[1, 0]*B[1, 0] + A[2, 0]*B[2, 0])*A

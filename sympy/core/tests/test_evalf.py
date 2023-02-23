@@ -525,10 +525,10 @@ def test_issue_8821_highprec_from_str():
 
 def test_issue_8853():
     p = Symbol('x', even=True, positive=True)
-    assert floor(-p - S.Half).is_even == False
-    assert floor(-p + S.Half).is_even == True
-    assert ceiling(p - S.Half).is_even == True
-    assert ceiling(p + S.Half).is_even == False
+    assert floor(-p - S.Half).is_even is False
+    assert floor(-p + S.Half).is_even is True
+    assert ceiling(p - S.Half).is_even is True
+    assert ceiling(p + S.Half).is_even is False
 
     assert get_integer_part(S.Half, -1, {}, True) == (0, 0)
     assert get_integer_part(S.Half, 1, {}, True) == (1, 0)
