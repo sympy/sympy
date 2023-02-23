@@ -49,6 +49,7 @@ git_whitelist = {
     '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    '.flake8',
     'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
