@@ -1,9 +1,9 @@
-name: "Check for Broken Links"
-on: [push, pull_request]
+# ---- Check for Broken/Redirected URL Links and provide a list of them in the Summary Tab ---- #
+name: "Check for Broken/Redirected Links"
+
+on: [push, pull_request, workflow_dispatch]
+
 jobs:
-
-# --------------------------- check for broken Url links ---------------------- #
-
   check-broken-urls:
     runs-on: ubuntu-20.04
     steps:
@@ -34,12 +34,12 @@ jobs:
             | Total Errors/Warnings | $totalWarnings |
 
             ## List of Broken and Redirected Links
-
+            Displaying output of "make linkcheck"
             ### Broken Links
             $(grep broken doc/_build/linkcheck/output.txt -n)
 
             ### Links that were 'redirected permanently'
-            $(grep broken doc/_build/linkcheck/output.txt -n)
+            $(grep 'redirected permanently' doc/_build/linkcheck/output.txt -n)
 
             ### Links that were 'redirected with Found'
             $(grep 'redirected with Found' doc/_build/linkcheck/output.txt -n)
