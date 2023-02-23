@@ -201,11 +201,9 @@ def is_primitive_root(a, p):
         raise ValueError("The two numbers should be relatively prime")
     # Primitive root of p exist only for
     # p = 2, 4, q**e, 2*q**e (q is odd prime)
-    if p == 2:
-        # 1 is a primitive root of 2
-        return True
-    elif p == 4:
-        return a == 3
+    if p <= 4:
+        # The primitive root is only p-1.
+        return a == p - 1
     t = trailing(p)
     if t > 1:
         return False
