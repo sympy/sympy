@@ -399,10 +399,10 @@ def test_bool_symbol():
 def test_is_boolean():
     assert isinstance(True, Boolean) is False
     assert isinstance(true, Boolean) is True
-    assert 1 is True
+    assert 1 == True
     assert 1 != true
     assert (1 == true) is False
-    assert 0 is False
+    assert 0 == False
     assert 0 != false
     assert (0 == false) is False
     assert true.is_Boolean is True

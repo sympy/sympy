@@ -1847,10 +1847,10 @@ def test_Catalan_rewrite():
 
 
 def test_bool_eq():
-    assert 0 is False
+    assert 0 == False
     assert S(0) is False
     assert S(0) != S.false
-    assert 1 is True
+    assert 1 == True
     assert S.One is True
     assert S.One != S.true
 
