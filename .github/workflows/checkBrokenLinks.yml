@@ -34,7 +34,7 @@ jobs:
             | Total Errors/Warnings | $totalWarnings |
 
             ## List of Broken and Redirected Links ($totalWarnings)
-            Displaying output of "make linkcheck"
+            Displaying output of 'make linkcheck'
             ### Broken Links ($brokenNum)
             $(grep broken doc/_build/linkcheck/output.txt -n)
 
