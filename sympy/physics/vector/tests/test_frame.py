@@ -464,10 +464,9 @@ def test_orient_from_dcm_issue_24764():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
     B.orient_from_dcm(A, B_C_A)
-    assert B.dcm(A) == Matrix([[c_{xx}(t), c_{yx}(t), c_{zx}(t)],
-                                [c_{xy}(t), c_{yy}(t), c_{zy}(t)],
-                                [c_{xz}(t), c_{yz}(t), c_{zz}(t)]])
-
+    assert B.dcm(A) ==Matrix([[cxx, cxy, cxz],
+                               [cyx, cyy, cyz],
+                               [czx, czy, czz]])
 def test_orient_axis():
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
