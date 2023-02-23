@@ -20,14 +20,27 @@ jobs:
         continue-on-error: true
       - name: Saving summary of build results
         run: |
-          echo "# Broken and Redirected Links" >> $GITHUB_STEP_SUMMARY
-          echo "## Broken Links" >> $GITHUB_STEP_SUMMARY
+          brokenNum=$(grep broken doc/_build/linkcheck/output.txt -c)
+          redirectPermaNum=$(grep 'redirected permanently' doc/_build/linkcheck/output.txt -c)
+          redirectFoundNum=$(grep 'redirected with Found' doc/_build/linkcheck/output.txt -c)
+          totalWarnings=$(wc doc/_build/linkcheck/output.txt -l | cut -d ' ' -f 1)
+          echo "
+            # Summary
+            | Links Error Type | Number of Links |
+            | :-- | :--: |
+            | Broken Links | $brokenNum |
+            | Redirected Permanently | $redirectPermaNum |
+            | Redirected With Found | $redirectFoundNum |
+            | Total Errors/Warnings | $totalWarnings |
+          " >> $GITHUB_STEP_SUMMARY
+          echo "## List of Broken and Redirected Links" >> $GITHUB_STEP_SUMMARY
+          echo "### Broken Links" >> $GITHUB_STEP_SUMMARY
           grep broken doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-          echo "## Links that were 'redirected permanently'" >> $GITHUB_STEP_SUMMARY
+          echo "### Links that were 'redirected permanently'" >> $GITHUB_STEP_SUMMARY
           grep 'redirected permanently' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-          echo "## Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
+          echo "### Links that were 'redirected with Found'" >> $GITHUB_STEP_SUMMARY
           grep 'redirected with Found' doc/_build/linkcheck/output.txt >> $GITHUB_STEP_SUMMARY
-      - name: Log Summary URL
+      - name: Print Summary URL
         run: |
           GITHUB_WORKFLOW_URL=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
           echo "Check log summary here:- $GITHUB_WORKFLOW_URL"
