@@ -1086,11 +1086,11 @@ class LaplaceTransform(IntegralTransform):
         Standard hints are the following:
         - ``noconds``:  if True, do not return convergence conditions. The
         default setting is `True`.
-        - ``simplify``: if True, it simplifies the final result. This is the
-        default behaviour
+        - ``simplify``: if True, it simplifies the final result. The
+        default setting is `False`.
         """
         _noconds = hints.get('noconds', True)
-        _simplify = hints.get('simplify', True)
+        _simplify = hints.get('simplify', False)
 
         debugf('[LT doit] (%s, %s, %s)', (self.function,
                                           self.function_variable,
@@ -1168,8 +1168,8 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
     >>> laplace_transform(t**a, t, s)
-    (s**(-a - 1)*gamma(a + 1), 0, re(a) > -1)
-    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
+    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
     (s/(a + s), -re(a), True)
 
     References
@@ -1188,7 +1188,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     """
 
     _noconds = hints.get('noconds', False)
-    _simplify = hints.get('simplify', True)
+    _simplify = hints.get('simplify', False)
 
     if isinstance(f, MatrixBase) and hasattr(f, 'applyfunc'):
 
@@ -1642,11 +1642,11 @@ class InverseLaplaceTransform(IntegralTransform):
         Standard hints are the following:
         - ``noconds``:  if True, do not return convergence conditions. The
         default setting is `True`.
-        - ``simplify``: if True, it simplifies the final result. This is the
-        default behaviour
+        - ``simplify``: if True, it simplifies the final result. The
+        default setting is `False`.
         """
         _noconds = hints.get('noconds', True)
-        _simplify = hints.get('simplify', True)
+        _simplify = hints.get('simplify', False)
 
         debugf('[ILT doit] (%s, %s, %s)', (self.function,
                                            self.function_variable,
