@@ -76,3 +76,53 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
+
+# Global mypy settings:
+[tool.mypy]
+warn_unused_configs = true
+exclude = [
+    "sympy/parsing/autolev/test-examples",
+]
+
+# Per module settings:
+[[tool.mypy.overrides]]
+module = [
+    "sympy.parsing.latex._antlr.*",
+    "sympy.parsing.autolev._antlr.*",
+    "sympy.benchmarks.*",
+    "sympy.plotting.pygletplot.*",
+]
+ignore_errors = true
+
+# Third-party untyped code:
+[[tool.mypy.overrides]]
+module = [
+    "antlr4.*",
+    "Cython.*",
+    "gmpy.*",
+    "gmpy2.*",
+    "IPython.*",
+    "lxml.*",
+    "matchpy.*",
+    "matplotlib.*",
+    "mpmath.*",
+    "numpy.*",
+    "PIL.*",
+    "pycosat.*",
+    "pyglet.*",
+    "pymc.*",
+    "pymc3.*",
+    "python-sat.*",
+    "pytest.*",
+    "_pytest.*",
+    "sage.*",
+    "scipy.*",
+    "symengine.*",
+    "aesara.*",
+    "xml.*",
+    "pydy.*",
+    "theano.*",
+    "multiset.*",
+    "pysat.*",
+]
+ignore_missing_imports = true
