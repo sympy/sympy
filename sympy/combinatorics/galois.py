@@ -27,7 +27,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from enum import Enum
 import itertools
-
+from typing import Union
 from sympy.combinatorics.named_groups import (
     SymmetricGroup, AlternatingGroup, CyclicGroup, DihedralGroup,
     set_symmetric_group_properties, set_alternating_group_properties,
@@ -103,10 +103,10 @@ class S6TransitiveSubgroups(Enum):
     S6 = "S6"
 
 
-TransitiveSubgroups = (
-    S1TransitiveSubgroups | S2TransitiveSubgroups | S3TransitiveSubgroups |
-    S4TransitiveSubgroups | S5TransitiveSubgroups | S6TransitiveSubgroups
-)
+TransitiveSubgroups = Union[
+    S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups,
+    S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups
+]
 
 
 @cacheit
