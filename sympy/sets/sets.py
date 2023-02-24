@@ -1298,10 +1298,10 @@ class Union(Set, LatticeOp):
     def zero(self):
         return S.UniversalSet
 
-    def __new__(cls, *args , evaluate=global_parameters.evaluate):
-        
-
+    def __new__(cls, *args , evaluate=None):     
         # flatten inputs to merge intersections and iterables
+        if evaluate==None:
+            evaluate=global_parameters.evaluate
         args = _sympify(args)
 
         # Reduce sets using known rules
