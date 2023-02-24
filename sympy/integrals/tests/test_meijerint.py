@@ -159,7 +159,7 @@ def test_meijerint():
     sigma, mu = symbols('sigma mu', positive=True)
     i, c = meijerint_definite(exp(-((x - mu)/(2*sigma))**2), x, 0, oo)
     assert simplify(i) == sqrt(pi)*sigma*(2 - erfc(mu/(2*sigma)))
-    assert c is True
+    assert c == True
 
     i, _ = meijerint_definite(exp(-mu*x)*exp(sigma*x), x, 0, oo)
     # TODO it would be nice to test the condition
