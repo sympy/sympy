@@ -6,7 +6,7 @@ from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff)
 from sympy.core.mul import Mul, prod
-from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -22,10 +22,10 @@ from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
-    _simplify, IntegralTransform, IntegralTransformError)
+    it_simplify, IntegralTransform, IntegralTransformError)
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.matrices.matrices import MatrixBase
-from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.matrices.linsolve import lin_eq2dict
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
@@ -96,7 +96,7 @@ def _simplifyconds(expr, s, a):
             if n < 0 and (Abs(ex1) >= Abs(a)**n) == S.true:
                 return True
         except TypeError:
-            pass
+            return None
 
     def replie(x, y):
         """ simplify x < y """
@@ -118,6 +118,7 @@ def _simplifyconds(expr, s, a):
         if ex in (True, False):
             return bool(ex)
         return ex.replace(*args)
+
     from sympy.simplify.radsimp import collect_abs
     expr = collect_abs(expr)
     expr = repl(expr, Lt, replie)
@@ -131,7 +132,7 @@ def expand_dirac_delta(expr):
     Expand an expression involving DiractDelta to get it as a linear
     combination of DiracDelta functions.
     """
-    return _lin_eq2dict(expr, expr.atoms(DiracDelta))
+    return lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 
 def _laplace_transform_integration(f, t, s_, simplify=True):
@@ -151,7 +152,7 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
     debugf('[LT _l_t_i ]     integrated: %s', (F, ))
 
     if not F.has(Integral):
-        return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
+        return it_simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
 
     if not F.is_Piecewise:
         debug('[LT _l_t_i ]     not piecewise.')
@@ -249,7 +250,7 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
     if simplify:
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
-    return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
+    return it_simplify(F.subs(s, s_), simplify), sbs(a), canonical(sbs(aux))
 
 
 def _laplace_deep_collect(f, t):
@@ -644,15 +645,14 @@ def _laplace_trig_expsum(f, t):
             xm.append({'k': term, 'a': 0, re: 0, im: 0})
             continue
         term = term.powsimp(combine='exp')
-        if (r := term.match(p*exp(m))) is not None:
-            if (mp := r[m].as_poly(t)) is not None:
-                mc = mp.all_coeffs()
-                if len(mc) == 2:
-                    xm.append({
-                        'k': r[p]*exp(mc[1]), 'a': mc[0],
-                        re: re(mc[0]), im: im(mc[0])})
-                else:
-                    xn.append(term)
+        if (
+                (r := term.match(p*exp(m))) is not None
+                and (mp := r[m].as_poly(t)) is not None):
+            mc = mp.all_coeffs()
+            if len(mc) == 2:
+                xm.append({
+                    'k': r[p]*exp(mc[1]), 'a': mc[0],
+                    re: re(mc[0]), im: im(mc[0])})
             else:
                 xn.append(term)
         else:
@@ -825,7 +825,7 @@ def _laplace_rule_trig(fn, t_, s, doit=True, **hints):
     debugf('    xm = %s\n    xn = %s', (xm, xn))
 
     if len(xn) > 0:
-        # not implemented yet
+        # TODO not implemented yet, but also not important
         debug('    --> xn is not empty; giving up.')
         return None
 
@@ -908,11 +908,10 @@ def _laplace_rule_sdiff(f, t, s, doit=True, **hints):
                 if r_.has(LaplaceTransform):
                     for k in range(N-1):
                         deri.append((-1)**(k+1)*Derivative(r_, s, k+1))
-                else:
-                    if d1:
-                        deri.append(d1)
-                        for k in range(N-2):
-                            deri.append(-diff(deri[-1], s))
+                elif d1:
+                    deri.append(d1)
+                    for k in range(N-2):
+                        deri.append(-diff(deri[-1], s))
                 if d1:
                     r = Add(*[pc[N-n-1]*deri[n] for n in range(N)])
                     return (r, p_, c_)
@@ -996,7 +995,7 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def _laplace_transform(fn, t_, s_, simplify=True):
+def _laplace_transform(fn, t_, s_, simplify=False):
     """
     Front-end function of the Laplace transform. It tries to apply all known
     rules recursively, and if everything else fails, it tries to integrate.
@@ -1009,11 +1008,10 @@ def _laplace_transform(fn, t_, s_, simplify=True):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
-        if (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None:
-            pass
-        elif (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None:
-            pass
-        elif (r := _laplace_expand(ft, t_, s_)) is not None:
+        if (
+                (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
+                (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
+                (r := _laplace_expand(ft, t_, s_)) is not None):
             pass
         elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
             # If there are undefined functions f(t) then integration is
@@ -1062,19 +1060,6 @@ class LaplaceTransform(IntegralTransform):
 
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
-
-    def _collapse_extra(self, extra):
-        conds = []
-        planes = []
-        for plane, cond in extra:
-            conds.append(cond)
-            planes.append(plane)
-        cond = And(*conds)
-        plane = Max(*planes)
-        if cond == S.false:
-            raise IntegralTransformError(
-                'Laplace', None, 'No combined convergence.')
-        return plane, cond
 
     def doit(self, **hints):
         """
@@ -1241,7 +1226,6 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
 
     def pw_simp(*args):
         """ Simplify a piecewise expression from hyperexpand. """
-        # XXX we break modularity here!
         if len(args) != 3:
             return Piecewise(*args)
         arg = args[2].args[0].argument
@@ -1259,13 +1243,14 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
         f = Add(
             *[_inverse_laplace_transform_integration(X, s, t, plane, simplify)
               for X in F.args])
-        return _simplify(f.subs(t, t_), simplify), True
+        return it_simplify(f.subs(t, t_), simplify), True
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, S.Infinity),
                                            needeval=True, noconds=False)
     except IntegralTransformError:
         f = None
+
     if f is None:
         f = meijerint_inversion(F, s, t)
         if f is None:
@@ -1305,10 +1290,7 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
 
     f = f.replace(exp, simp_exp)
 
-    # TODO it would be nice to fix cosh and sinh ... simplify messes these
-    #      exponentials up
-
-    return _simplify(f.subs(t, t_), simplify), cond
+    return it_simplify(f.subs(t, t_), simplify), cond
 
 
 def _complete_the_square_in_denom(f, s):
@@ -1560,15 +1542,12 @@ def _inverse_laplace_transform(
         k, f = term.as_independent(s_, as_Add=False)
         if (
                 dorational and term.is_rational_function(s_) and
-                (
-                    r := _inverse_laplace_rational(
-                        f, s_, t_, plane, simplify)) is not None):
-            pass
-        elif (r := _inverse_laplace_apply_simple_rules(f, s_, t_)) is not None:
-            pass
-        elif (r := _inverse_laplace_expand(f, s_, t_, plane)) is not None:
-            pass
-        elif (
+                (r := _inverse_laplace_rational(f, s_, t_, plane, simplify))
+                is not None or
+                (r := _inverse_laplace_apply_simple_rules(f, s_, t_))
+                is not None or
+                (r := _inverse_laplace_expand(f, s_, t_, plane))
+                is not None or
                 (r := _inverse_laplace_apply_prog_rules(f, s_, t_, plane))
                 is not None):
             pass
