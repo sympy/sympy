@@ -9,7 +9,6 @@ series and the master branch will become `1.13.dev`.
 1.  Make an issue to track the release. Link back to this issue from all PRs
     and issues related to the release. Use the OP to make a todo list. The
     release issue for 1.12 is here:
-
     https://github.com/sympy/sympy/issues/24601
 
 2.  Announce the start of the release process on the mailing list.
@@ -53,7 +52,6 @@ series and the master branch will become `1.13.dev`.
     release note go missing.
 
     Example from releasing SymPy 1.12:
-
     https://github.com/sympy/sympy/pull/24774
 
 7.  Create the release notes page for 1.13. The release notes are automatically
@@ -114,25 +112,46 @@ series and the master branch will become `1.13.dev`.
     2.  Create the release branch and push to the main repo:
     ```console
     $ git fetch upstream
-    $ git branch upstream/master 1.11
-    $ git push upstream 1.11
+    $ git checkout upstream/master
+    $ git checkout -b 1.12
+    $ bin/mailmap_check.py  # Last check that AUTHORS and .mailmap are good.
+    $ git push upstream 1.12
     ```
     3.  Merge the version update PR to the master branch. This needs to happen
         after creating the release branch so that no PRs are merged in between
         the release branch being created and the master branch version being
         updated (the bot might post the release note to the wrong page).
 
+    If during the above you find that there are new .mailmap entries then
+    create a new PR to update AUTHORS, delete the local 1.12 branch (without
+    pishing to upstream) and go back to the first step). During this time any
+    PRs that are merged will have their release notes go the 1.13 release notes
+    page and you will need to move them over manually.
+
 9.  Create a PR to update the versions on the release branch. This needs to
-    update the same places. In the benchmarks in
-    `.github/workflows/runtests.yml` and `asv.conf.actions.json` the master
-    branch should be replaced with the release branch `1.11`.
+    update the same places.
+
+    1. `sympy/release.py`
+    2. `.github/workflows/release.yml`
+    3. `.github/workflows/runtests.yml`
+    4. `asv.conf.actions.json`
+
+    In `runtests.yml` and `asv.conv.actions.json` the master branch should be
+    replaced with the release branch (`1.12`).
 
 10. Make a new PR to update the SymPy versions used for comparions in the
     benchmarks job in CI and also maybe to update Python versions used for
-    running the tests.  These files need to be updated:
+    running the tests. These files need to be updated:
 
     1. `.github/workflows/runtests.yml`
     2. `asv.conf.actions.json`
+
+    We do this here rather than in the previous version bump PR because we
+    needed to create the release branch before merging the changes for `asv`
+    which will refer to the 1.12 release branch for benchmark comparisons.
+
+    Example from releasing SymPy 1.12:
+    https://github.com/sympy/sympy/pull/24776
 
 11. Explain release process on mailing list and in release issue
 
