@@ -122,7 +122,7 @@ class GeometryEntity(Basic, EvalfMixin):
         """Test inequality of two geometrical entities."""
         return not self == o
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args):
         # Points are sequences, but they should not
         # be converted to Tuples, so use this detection function instead.
         def is_seq_and_not_point(a):
