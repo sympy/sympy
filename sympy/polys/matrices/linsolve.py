@@ -181,9 +181,6 @@ def lin_eq2dict(a, symset):
 
     The values in the dictionary will be non-zero.
 
-    li_eq2dict is a public function because it is used in integrals/laplace.py
-    and in solvers/ode/single.py
-
     Examples
     ========
 
