@@ -2,7 +2,7 @@
 
 from sympy.combinatorics.galois import (
     S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups,
-    find_transitive_subgroups_of_S6,
+    find_transitive_subgroups_of_S6, get_perm_group
 )
 from sympy.combinatorics.homomorphisms import is_isomorphic
 from sympy.combinatorics.named_groups import (
@@ -11,7 +11,7 @@ from sympy.combinatorics.named_groups import (
 
 
 def test_four_group():
-    G = S4TransitiveSubgroups.V.get_perm_group()
+    G = get_perm_group(S4TransitiveSubgroups.V)
     A4 = AlternatingGroup(4)
     assert G.is_subgroup(A4)
     assert G.degree == 4
@@ -21,7 +21,7 @@ def test_four_group():
 
 
 def test_M20():
-    G = S5TransitiveSubgroups.M20.get_perm_group()
+    G = get_perm_group(S5TransitiveSubgroups.M20)
     S5 = SymmetricGroup(5)
     A5 = AlternatingGroup(5)
     assert G.is_subgroup(S5)
@@ -41,7 +41,7 @@ if INCLUDE_SEARCH_REPS:
 
 
 def get_versions_of_S6_subgroup(name):
-    vers = [name.get_perm_group()]
+    vers = [get_perm_group(name)]
     if INCLUDE_SEARCH_REPS:
         vers.append(S6_randomized[name])
     return vers

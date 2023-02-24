@@ -11,7 +11,7 @@ class, and then have to do extra work to determine which group it is, by
 checking various properties.
 
 Names are instances of ``Enum`` classes defined in this module. With a name in
-hand, the name's ``get_perm_group`` method can then be used to retrieve a
+hand, ``get_perm_group`` function can then be used to retrieve a
 :py:class:`~.PermutationGroup`.
 
 The names used for groups in this module are taken from [1].
@@ -22,8 +22,9 @@ References
 .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory*.
 
 """
-
+from __future__ import annotations
 from collections import defaultdict
+from collections.abc import Callable
 from enum import Enum
 import itertools
 
@@ -33,6 +34,7 @@ from sympy.combinatorics.named_groups import (
 )
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
+from sympy.core.cache import cacheit
 
 
 class S1TransitiveSubgroups(Enum):
@@ -41,18 +43,12 @@ class S1TransitiveSubgroups(Enum):
     """
     S1 = "S1"
 
-    def get_perm_group(self):
-        return SymmetricGroup(1)
-
 
 class S2TransitiveSubgroups(Enum):
     """
     Names for the transitive subgroups of S2.
     """
     S2 = "S2"
-
-    def get_perm_group(self):
-        return SymmetricGroup(2)
 
 
 class S3TransitiveSubgroups(Enum):
@@ -61,12 +57,6 @@ class S3TransitiveSubgroups(Enum):
     """
     A3 = "A3"
     S3 = "S3"
-
-    def get_perm_group(self):
-        if self == self.A3:
-            return AlternatingGroup(3)
-        elif self == self.S3:
-            return SymmetricGroup(3)
 
 
 class S4TransitiveSubgroups(Enum):
@@ -79,18 +69,6 @@ class S4TransitiveSubgroups(Enum):
     A4 = "A4"
     S4 = "S4"
 
-    def get_perm_group(self):
-        if self == self.C4:
-            return CyclicGroup(4)
-        elif self == self.V:
-            return four_group()
-        elif self == self.D4:
-            return DihedralGroup(4)
-        elif self == self.A4:
-            return AlternatingGroup(4)
-        elif self == self.S4:
-            return SymmetricGroup(4)
-
 
 class S5TransitiveSubgroups(Enum):
     """
@@ -101,18 +79,6 @@ class S5TransitiveSubgroups(Enum):
     M20 = "M20"
     A5 = "A5"
     S5 = "S5"
-
-    def get_perm_group(self):
-        if self == self.C5:
-            return CyclicGroup(5)
-        elif self == self.D5:
-            return DihedralGroup(5)
-        elif self == self.M20:
-            return M20()
-        elif self == self.A5:
-            return AlternatingGroup(5)
-        elif self == self.S5:
-            return SymmetricGroup(5)
 
 
 class S6TransitiveSubgroups(Enum):
@@ -136,39 +102,56 @@ class S6TransitiveSubgroups(Enum):
     A6 = "A6"
     S6 = "S6"
 
-    def get_perm_group(self):
-        if self == self.C6:
-            return CyclicGroup(6)
-        elif self == self.S3:
-            return S3_in_S6()
-        elif self == self.D6:
-            return DihedralGroup(6)
-        elif self == self.A4:
-            return A4_in_S6()
-        elif self == self.G18:
-            return G18()
-        elif self == self.A4xC2:
-            return A4xC2()
-        elif self == self.S4m:
-            return S4m()
-        elif self == self.S4p:
-            return S4p()
-        elif self == self.G36m:
-            return G36m()
-        elif self == self.G36p:
-            return G36p()
-        elif self == self.S4xC2:
-            return S4xC2()
-        elif self == self.PSL2F5:
-            return PSL2F5()
-        elif self == self.G72:
-            return G72()
-        elif self == self.PGL2F5:
-            return PGL2F5()
-        elif self == self.A6:
-            return AlternatingGroup(6)
-        elif self == self.S6:
-            return SymmetricGroup(6)
+
+TransitiveSubgroups = (
+    S1TransitiveSubgroups | S2TransitiveSubgroups | S3TransitiveSubgroups |
+    S4TransitiveSubgroups | S5TransitiveSubgroups | S6TransitiveSubgroups
+)
+
+
+@cacheit
+def get_perm_group_table() -> dict[TransitiveSubgroups, Callable[[], PermutationGroup]]:
+    r"""Get the permutation group table for transitive subgroup names."""
+    return {
+        S1TransitiveSubgroups.S1: lambda: SymmetricGroup(1),
+        S2TransitiveSubgroups.S2: lambda: SymmetricGroup(2),
+        S3TransitiveSubgroups.A3: lambda: AlternatingGroup(3),
+        S3TransitiveSubgroups.S3: lambda: SymmetricGroup(3),
+
+        S4TransitiveSubgroups.C4: lambda: CyclicGroup(4),
+        S4TransitiveSubgroups.V: lambda: four_group(),
+        S4TransitiveSubgroups.D4: lambda: DihedralGroup(4),
+        S4TransitiveSubgroups.A4: lambda: AlternatingGroup(4),
+        S4TransitiveSubgroups.S4: lambda: SymmetricGroup(4),
+
+        S5TransitiveSubgroups.C5: lambda: CyclicGroup(5),
+        S5TransitiveSubgroups.D5: lambda: DihedralGroup(5),
+        S5TransitiveSubgroups.M20: lambda: M20(),
+        S5TransitiveSubgroups.A5: lambda: AlternatingGroup(5),
+        S5TransitiveSubgroups.S5: lambda: SymmetricGroup(5),
+
+        S6TransitiveSubgroups.C6: lambda: CyclicGroup(6),
+        S6TransitiveSubgroups.S3: lambda: S3_in_S6(),
+        S6TransitiveSubgroups.D6: lambda: DihedralGroup(6),
+        S6TransitiveSubgroups.A4: lambda: A4_in_S6(),
+        S6TransitiveSubgroups.G18: lambda: G18(),
+        S6TransitiveSubgroups.A4xC2: lambda: A4xC2(),
+        S6TransitiveSubgroups.S4m: lambda: S4m(),
+        S6TransitiveSubgroups.S4p: lambda: S4p(),
+        S6TransitiveSubgroups.G36m: lambda: G36m(),
+        S6TransitiveSubgroups.G36p: lambda: G36p(),
+        S6TransitiveSubgroups.S4xC2: lambda: S4xC2(),
+        S6TransitiveSubgroups.PSL2F5: lambda: PSL2F5(),
+        S6TransitiveSubgroups.G72: lambda: G72(),
+        S6TransitiveSubgroups.PGL2F5: lambda: PGL2F5(),
+        S6TransitiveSubgroups.A6: lambda: AlternatingGroup(6),
+        S6TransitiveSubgroups.S6: lambda: SymmetricGroup(6),
+    }
+
+
+def get_perm_group(name: TransitiveSubgroups) -> PermutationGroup:
+    r"""Get the permutation group from the transitive subgroup names."""
+    return get_perm_group_table()[name]()
 
 
 def four_group():

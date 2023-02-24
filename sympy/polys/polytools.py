@@ -3960,7 +3960,8 @@ class Poly(Basic):
         else:
             g, _ = f.make_monic_over_integers_by_scaling_roots()
             name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
-        G = name if by_name else name.get_perm_group()
+        from sympy.combinatorics.galois import get_perm_group
+        G = name if by_name else get_perm_group(name)
         return G, alt
 
     @property

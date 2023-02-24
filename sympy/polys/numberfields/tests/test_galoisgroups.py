@@ -4,6 +4,7 @@ from sympy.abc import x
 from sympy.combinatorics.galois import (
     S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups,
     S4TransitiveSubgroups, S5TransitiveSubgroups, S6TransitiveSubgroups,
+    get_perm_group
 )
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.numberfields.galoisgroups import (
@@ -111,7 +112,7 @@ def test_galois_group_not_by_name():
     for deg in range(1, 7):
         T, G_name, _ = test_polys_by_deg[deg][0]
         G, _ = galois_group(T)
-        assert G == G_name.get_perm_group()
+        assert G == get_perm_group(G_name)
 
 
 def test_galois_group_not_monic_over_ZZ():

@@ -546,10 +546,11 @@ def galois_group(f, *gens, by_name=False, max_tries=30, randomize=False, **args)
     >>> print(G_name)
     S4TransitiveSubgroups.V
 
-    The group itself can then be obtained by calling the name's
-    ``get_perm_group()`` method:
+    The group itself can then be obtained by calling ``get_perm_group()``
+    function:
 
-    >>> G_name.get_perm_group()
+    >>> from sympy.combinatorics.galois import get_perm_group
+    >>> get_perm_group(G_name)
     PermutationGroup([
     (0 1)(2 3),
     (0 2)(1 3)])
