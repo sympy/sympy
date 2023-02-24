@@ -1,152 +1,151 @@
-**NOTE: The release script is currently in the process of moving from
-Vagrant/fabric to Docker/rever. The fabfile.py is left here for reference, but
-all release processes should be done with release.sh and rever.xsh.**
+Release instructions
+--------------------
 
-# Release
+Here we will describe the process of releasing version 1.12. At the start of
+the release process the master branch records version `1.12.dev` and the
+previous release was `1.11`. We will make a branch for the `1.12.*` release
+series and the master branch will become `1.13.dev`.
 
-First, make sure that you have done the following things
+1.  Make an issue to track the release. Link back to this issue from all PRs
+    and issues related to the release. Use the OP to make a todo list. The
+    release issue for 1.12 is here:
 
-- Create a release branch. Usually this branch is the same name as the release
-  (e.g., "0.7.3"), although no naming convention is enforced on it.
+    https://github.com/sympy/sympy/issues/24601
 
-- Change the version in the release branch in sympy/release.py. If you want to
-  do a release candidate, change it to a [PEP
-  440](https://www.python.org/dev/peps/pep-0440) compliant version like
-  0.7.3rc1. Note that setuptools normalizes versions like 0.7.3.rc1 to
-  0.7.3rc1, so there will be errors if you do not use the latter form.
+2.  Announce the start of the release process on the mailing list.
 
-- Change the version in master. This way, any additional changes made in master
-  will be shown as coming from the right place. The master release should be
-  e.g. `0.7.4.dev`, see [PEP 440](https://www.python.org/dev/peps/pep-0440) for
-  rules about development version numbers. Note that this version number should
-  the next projected version plus the `.dev`.
+3.  Clean up release blocker issues, especially regressions.
 
-- Push the release branch up to origin, and make a pull request for it against
-  master.
+4.  Defer any issues that cannot be fixed for the current release.
 
-- Create the release notes page for the new release on the wiki. See
-  https://github.com/sympy/sympy-bot/issues/26. The easiest way to do this is
-  to copy the old release notes to a new page and remove all the changes, and
-  update the version number. The formatting on the release notes page is
-  important as otherwise the bot will fail, so it is best to do it this way.
+5.  Update the AUTHORS file on the master branch *before* creating the release
+    branch so that the update applies to both branches.
 
-It is important to create a new branch because that lets master continue as
-normal. The release script will automatically checkout the release branch from
-origin, which is why you need to push it (it determines what the release
-branch by just looking at what branch you have checked out locally, so make
-sure you are on the release branch when you release). It is important to
-change the version number because it uses that in naming the tarballs it
-creates.
+    1. Make sure you fully fetch the upstream master branch.
+    2. Run `bin/mailmap_check.py`.
+    3. Check for duplicates and fix the `.mailmap` file.
+    4. Run `bin/mailmap_check.py --update-authors`.
+    5. Open the PR and potentially use it to ask contributors to clarify what
+       name they want to have recorded by `@`-tagging them in the PR.
+    6. Check to see if any names in the AUTHORS file look like obvious
+       duplicates and fix the .mailmap. Make sure to notify the authors and
+       comment on the associated PR to make it clear that .mailmap has not been
+       correctly edited.
+    7. Most likely the AUTHORS file will not need to be updated on the release
+       branch but if anyone does submit a PR to the release branch who hasn't
+       submitted any previous PRs to SymPy then this will need to be done again
+       on the release branch and ported to master as well.
 
-Next, make sure you have Docker installed.
+    Only merge this PR just *before* creating the release branch (see below).
 
-**TODO: Fix the release script to pull sympy/sympy-release from Dockerhub.**
+    Example from releasing SymPy 1.12:
+    https://github.com/sympy/sympy/pull/24775
 
-Once you have done these things, execute:
+6.  Create a separate PR to update the version on the master branch from
+    1.12.dev to 1.13.dev. The versions should be updated in:
 
-    ./release.sh <BRANCH> <VERSION>
+    1. `sympy/release.py`
+    2. `.github/workflows/release.yml`
+    3. `doc/src/active-deprecations`
 
-where `<BRANCH>` is the release branch (e.g., `0.7.3`), and `<VERSION>` is the
-release version (e.g., `0.7.3rc1`).
+    Don't merge the PR before creating the release notes page for 1.12 because
+    once the PR is merged any new PRs that are merged to master will have their
+    release note go missing.
 
-On Linux, you may need to use `sudo` to execute this.
+    Example from releasing SymPy 1.12:
 
-This will run all the release scripts. If they are successful, they will
-create release tarballs and put them all into a new "release-VERSION"
-directory of the current directory. Most likely they will fail the first time,
-in which case you will need to investigate why and fix things (e.g., update
-authors, run tests, update whitelists in `rever.xsh`, fix setup.py). The whole
-script can take about an hour or so to run (depending on how long the tests
-take). Every time you re-run the script, it pulls from the branch and runs
-everything from scratch.
+    https://github.com/sympy/sympy/pull/24774
 
-At the end it will print two things, the list of authors, and the sha256 sums.
-Copy the list of authors into the release notes. You should verify that the
-sha256 sums of the release files are the same as what are printed.
+7.  Create the release notes page for 1.13. The release notes are automatically
+    updated by the SymPy release notes bot after each PR is merged so it is
+    important that the name and structure of the file is exactly correct. The
+    release note page needs to exist before updating the version on the master
+    branch.
 
-# Tagging the release
+    The release notes for 1.12 can be seen here:
 
-Once you have made the final release files that you plan to upload, be sure
-that everything is committed, and that the most recent git HEAD is indeed the
-same one that was used to build the files (you can always run the release
-script again if you are not sure). Then tag the release with the command
+    https://github.com/sympy/sympy/wiki/Release-Notes-for-1.12
 
-    git tag sympy-VERSION -a
+    The title of the page should be `Release Notes for 1.13`.
 
-where you should replace `VERSION` with the version (which should be `x.y.z`,
-or `x.y.zrcn` for the `n`th release candidate. It is very important to follow
-the tag naming conventions.  The `-a` will cause it to prompt for a tag commit
-message. Just write something like "SymPy VERSION release".
+    Use this template but change the versions of SymPy and check that the
+    listed Python versions are up to date with what is tested in CI:
 
-Then, push up the tag, with
+    ```markdown
+    These are the release notes for SymPy 1.13. You can also find release notes for
+    [[previous versions|https://github.com/sympy/sympy/wiki/Release-Notes]].
 
-    git push origin sympy-VERSION
+    SymPy 1.12 has not been released yet.
 
-Note, once a tag is pushed, that's it. It can't be changed. If you need to
-change the tag, you must bump the release number.  So double check that
-everything is right before pushing.
+    This version of SymPy has been tested on Python 3.8, 3.9, 3.10, 3.11, and
+    PyPy. See our [Python version support
+    policy](https://github.com/sympy/sympy/wiki/Python-version-support-policy) for
+    more information on when we plan to drop support for older Python versions.
 
-# Uploading
+    Install SymPy with
 
-**WARNING: This stuff does not fully work yet. Some development on `rever.xsh`
-may be required.**
+        pip install -U sympy
 
-Before you release, you need to push the tag up, as described above.
+    or if you use Anaconda
 
-Release candidates should be uploaded to GitHub only.
+        conda install sympy
 
-    rever VERSION -a GitHub_release
+    ## Highlights
 
-This will create the release on GitHub for the tag, and upload the files to
-it.  Do not upload release candidates to PyPI, as `pip` and `easy_install`
-will pick them up if you do.
+    There are many changes in 1.12 (see below).
 
-This will prompt you for a username and password the first time you call it.
-After that, it will prompt you to generate a token file.  If you don't save
-the token to a file, you will need to pass it in as an argument. Releasing is
-only supported via OAuth, so using a token is required.
+    ## Backwards compatibility breaks and deprecations
 
-You (obviously) need push access to create a GitHub release.
 
-For final releases, you should upload to both GitHub and PyPI. The command
+    ## Changes
 
-    rever VERSION -a upload
 
-will do both of these (**TODO: This function has not been translated from the
-fabfile yet**).  You will need admin access to the SymPy PyPI project.
+    ## Authors
+    ```
+    Also add a link to the release notes page here:
+    https://github.com/sympy/sympy/wiki/Release-Notes
 
-Note that if either of these commands fails for some reason, you will very
-likely need to go into the web interface and clean some things up before you
-can upload again.
+8.  Create the release branch. These 3 steps need to happen immediately one
+    after another in this order:
 
-# Updating websites
+    1.  Merge the update to the AUTHORS file and check that no new authors have
+        appeared since the PR was opened. There should be no output from
+        `bin/mailmap_check.py` on the master branch after merging this.
+    2.  Create the release branch and push to the main repo:
+    ```console
+    $ git fetch upstream
+    $ git branch upstream/master 1.11
+    $ git push upstream 1.11
+    ```
+    3.  Merge the version update PR to the master branch. This needs to happen
+        after creating the release branch so that no PRs are merged in between
+        the release branch being created and the master branch version being
+        updated (the bot might post the release note to the wrong page).
 
-You should now update the websites. Only do this for final releases. The command
+9.  Create a PR to update the versions on the release branch. This needs to
+    update the same places. In the benchmarks in
+    `.github/workflows/runtests.yml` and `asv.conf.actions.json` the master
+    branch should be replaced with the release branch `1.11`.
 
-    rever VERSION -a update_websites
+10. Make a new PR to update the SymPy versions used for comparions in the
+    benchmarks job in CI and also maybe to update Python versions used for
+    running the tests.  These files need to be updated:
 
-will update docs.sympy.org and sympy.org (**TODO: This isn't fully translated
-from the fabfile yet.**).  You will need to have local clones
-of these repos, and push access to them (obviously).  **Note, this command
-will commit and push the changes automatically.**
+    1. `.github/workflows/runtests.yml`
+    2. `asv.conf.actions.json`
 
-The other website that needs to be updated is SymPy Live. You should make this
-as a pull request to the Live repo.
+11. Explain release process on mailing list and in release issue
 
-# Updating the Dockerfile
+    From this point on any new PRs merged to master will not go into the
+    release by default. To go into the release they need to be backported to
+    the release 1.11 branch. This should mostly be only bugfixes with a
+    priority for any bug that is a regression introduced since the last release
+    or in the last release.
 
-If you change the Dockerfile, you will need to run
-
-    docker build -f Dockerfile . -t sympy/sympy-release
-
-Once you have it working, push the changes up to Dockerhub
-
-    docker push sympy/sympy-release
-
-You'll need access to the sympy org, ask Aaron or Ondřej if you need it.
-
-It is usually not necessary to rebuild the Docker container. The container
-first pulls the latest version of the release branch before running rever
-(see `pull_and_run_rever.sh`), so unless you modify that script, or change the
-packages that are installed in the container, it should not be necessary to
-rebuild it.
+    Various issues and PRs will have been marked with the 1.11 milestone
+    implying that they are release blockers. Many of them will not really be
+    release blockers though (i.e. they are not really things that can't just
+    wait until the next release). Contributors should hurry up and finish any
+    PRs that they want in the release but if they don't then the release
+    manager can defer anything that is not a real blocker or just remove the
+    milestone.
