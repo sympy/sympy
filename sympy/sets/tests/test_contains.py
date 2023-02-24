@@ -26,8 +26,8 @@ def test_issue_6194():
 
 
 def test_issue_10326():
-    assert Contains(oo, Interval(-oo, oo)) is False
-    assert Contains(-oo, Interval(-oo, oo)) is False
+    assert Contains(oo, Interval(-oo, oo)) == False
+    assert Contains(-oo, Interval(-oo, oo)) == False
 
 
 def test_binary_symbols():

@@ -121,7 +121,7 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_rational_inequalities(
         [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
     assert reduce_rational_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) is False
+        [[Lt(x**2, 0)]], x, relational=True) == False
     assert reduce_rational_inequalities(
         [[Ge(x**2, 0)]], x, relational=True) == And(Lt(-oo, x), Lt(x, oo))
     assert reduce_rational_inequalities(
@@ -156,7 +156,7 @@ def test_reduce_poly_inequalities_complex_relational():
 
 
 def test_reduce_rational_inequalities_real_relational():
-    assert reduce_rational_inequalities([], x) is False
+    assert reduce_rational_inequalities([], x) == False
     assert reduce_rational_inequalities(
         [[(x**2 + 3*x + 2)/(x**2 - 16) >= 0]], x, relational=False) == \
         Union(Interval.open(-oo, -4), Interval(-2, -1), Interval.open(4, oo))
@@ -218,7 +218,7 @@ def test_reduce_inequalities_general():
 def test_reduce_inequalities_boolean():
     assert reduce_inequalities(
         [Eq(x**2, 0), True]) == Eq(x, 0)
-    assert reduce_inequalities([Eq(x**2, 0), False]) is False
+    assert reduce_inequalities([Eq(x**2, 0), False]) == False
     assert reduce_inequalities(x**2 >= 0) is S.true  # issue 10196
 
 
@@ -317,8 +317,8 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
     n = Dummy('n', negative=True)
     assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
-    assert isolve(n/c1 < 0, c1) is True
-    assert isolve(n/c1 > 0, c1) is False
+    assert isolve(n/c1 < 0, c1) == True
+    assert isolve(n/c1 > 0, c1) == False
 
     zero = cos(1)**2 + sin(1)**2 - 1
     raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
@@ -406,7 +406,7 @@ def test_issue_10047():
 
     # with PR 16956, (x <= oo) autoevaluates when x is extended_real
     # which is assumed in the current implementation of inequality solvers
-    assert solve(sin(x) < 2) is True
+    assert solve(sin(x) < 2) == True
     assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 

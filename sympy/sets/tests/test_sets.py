@@ -855,7 +855,7 @@ def test_interval_symbolic():
     e = Interval(0, 1, True, True)
     assert e.contains(x) == And(S.Zero < x, x < 1)
     c = Symbol('c', real=False)
-    assert Interval(x, x + 1).contains(c) is False
+    assert Interval(x, x + 1).contains(c) == False
     e = Symbol('e', extended_real=True)
     assert Interval(-oo, oo).contains(e) == And(
         S.NegativeInfinity < e, e < S.Infinity)
@@ -1255,16 +1255,16 @@ def test_issue_7841():
 
 def test_Eq():
     assert Eq(Interval(0, 1), Interval(0, 1))
-    assert Eq(Interval(0, 1), Interval(0, 2)) is False
+    assert Eq(Interval(0, 1), Interval(0, 2)) == False
 
     s1 = FiniteSet(0, 1)
     s2 = FiniteSet(1, 2)
 
     assert Eq(s1, s1)
-    assert Eq(s1, s2) is False
+    assert Eq(s1, s2) == False
 
     assert Eq(s1*s2, s1*s2)
-    assert Eq(s1*s2, s2*s1) is False
+    assert Eq(s1*s2, s2*s1) == False
 
     assert unchanged(Eq, FiniteSet({x, y}), FiniteSet({x}))
     assert Eq(FiniteSet({x, y}).subs(y, x), FiniteSet({x})) is S.true

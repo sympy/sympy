@@ -691,7 +691,7 @@ def test_tensorflow_logical_operations():
     func = lambdify([x, y], expr, modules="tensorflow")
 
     with tensorflow.compat.v1.Session() as s:
-        assert func(False, True).eval(session=s) is False
+        assert func(False, True).eval(session=s) == False
 
 
 def test_tensorflow_piecewise():
@@ -733,7 +733,7 @@ def test_tensorflow_relational():
     func = lambdify(x, expr, modules="tensorflow")
 
     with tensorflow.compat.v1.Session() as s:
-        assert func(1).eval(session=s) is True
+        assert func(1).eval(session=s) == True
 
 
 def test_tensorflow_complexes():

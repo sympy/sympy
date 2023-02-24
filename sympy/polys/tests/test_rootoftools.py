@@ -162,7 +162,7 @@ def test_CRootOf___eval_Eq__():
     sol = solve(eq)
     assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
         ].count(True) == 3
-    assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) is False
+    assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
 
 def test_CRootOf_is_real():

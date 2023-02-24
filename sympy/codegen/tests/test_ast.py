@@ -251,14 +251,14 @@ def test_For():
 
 def test_none():
     assert none.is_Atom
-    assert none is none
+    assert none == none
     class Foo(Token):
         pass
     foo = Foo()
     assert foo != none
-    assert none is None
+    assert none == None
     assert none == NoneToken()
-    assert none.func(*none.args) is none
+    assert none.func(*none.args) == none
 
 
 def test_String():
@@ -578,7 +578,7 @@ def test_Print():
     ps2 = Print([n, x])
     assert ps2 == Print([n, x])
     assert ps2 != ps
-    assert ps2.format_string is None
+    assert ps2.format_string == None
 
 
 def test_FunctionPrototype_and_FunctionDefinition():

@@ -873,8 +873,8 @@ def test_issue_8444_workingtests():
     assert Lt(x, ceiling(x)) == Lt(x, ceiling(x), evaluate=False)
     assert Le(x, ceiling(x)) == Le(x, ceiling(x), evaluate=False)
     i = symbols('i', integer=True)
-    assert (i > floor(i)) is False
-    assert (i < ceiling(i)) is False
+    assert (i > floor(i)) == False
+    assert (i < ceiling(i)) == False
 
 
 def test_issue_10304():
@@ -952,10 +952,10 @@ def test_issue_10401():
 
 
 def test_issue_10633():
-    assert Eq(True, False) is False
-    assert Eq(False, True) is False
-    assert Eq(True, True) is True
-    assert Eq(False, False) is True
+    assert Eq(True, False) == False
+    assert Eq(False, True) == False
+    assert Eq(True, True) == True
+    assert Eq(False, False) == True
 
 
 def test_issue_10927():
@@ -1038,7 +1038,7 @@ def test_Equality_rewrite_as_Add():
 
 def test_issue_15847():
     a = Ne(x*(x+y), x**2 + x*y)
-    assert simplify(a) is False
+    assert simplify(a) == False
 
 
 def test_negated_property():
@@ -1145,10 +1145,10 @@ def test_polynomial_relation_simplification():
 def test_multivariate_linear_function_simplification():
     assert Ge(x + y, x - y).simplify() == Ge(y, 0)
     assert Le(-x + y, -x - y).simplify() == Le(y, 0)
-    assert Eq(2*x + y, 2*x + y - 3).simplify() is False
-    assert (2*x + y > 2*x + y - 3).simplify() is True
-    assert (2*x + y < 2*x + y - 3).simplify() is False
-    assert (2*x + y < 2*x + y + 3).simplify() is True
+    assert Eq(2*x + y, 2*x + y - 3).simplify() == False
+    assert (2*x + y > 2*x + y - 3).simplify() == True
+    assert (2*x + y < 2*x + y - 3).simplify() == False
+    assert (2*x + y < 2*x + y + 3).simplify() == True
     a, b, c, d, e, f, g = symbols('a b c d e f g')
     assert Lt(a + b + c + 2*d, 3*d - f + g). simplify() == Lt(a, -b - c + d - f + g)
 

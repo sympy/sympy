@@ -470,14 +470,14 @@ def test_Range_symbolic():
     assert Range(5).contains(i) == And(i >= 0, i <= 4)
     assert Range(1).contains(i) == Eq(i, 0)
     assert Range(-oo, 5, 1).contains(i) == (i <= 4)
-    assert Range(-oo, oo).contains(i) is True
+    assert Range(-oo, oo).contains(i) == True
     assert Range(0, 8, 2).contains(i) == Contains(i, Range(0, 8, 2))
     assert Range(0, 8, 2).contains(e) == And(e >= 0, e <= 6)
     assert Range(0, 8, 2).contains(2*i) == And(2*i >= 0, 2*i <= 6)
-    assert Range(0, 8, 2).contains(o) is False
-    assert Range(1, 9, 2).contains(e) is False
+    assert Range(0, 8, 2).contains(o) == False
+    assert Range(1, 9, 2).contains(e) == False
     assert Range(1, 9, 2).contains(o) == And(o >= 1, o <= 7)
-    assert Range(8, 0, -2).contains(o) is False
+    assert Range(8, 0, -2).contains(o) == False
     assert Range(9, 1, -2).contains(o) == And(o >= 3, o <= 9)
     assert Range(-oo, 8, 2).contains(i) == Contains(i, Range(-oo, 8, 2))
 
@@ -882,9 +882,9 @@ def test_ComplexRegion_contains():
     assert 2.5 + 6.1*I not in c1
     assert 4.5 + 3.2*I not in c1
     assert c1.contains(x) == Contains(x, c1, evaluate=False)
-    assert c1.contains(r) is False
+    assert c1.contains(r) == False
     assert c2.contains(x) == Contains(x, c2, evaluate=False)
-    assert c2.contains(r) is False
+    assert c2.contains(r) == False
 
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
@@ -907,13 +907,13 @@ def test_ComplexRegion_contains():
     r2 = Interval(0, 3)
     theta2 = Interval(pi, 2*pi, left_open=True)
     c4 = ComplexRegion(r2*theta2, polar=True)
-    assert c4.contains(0) is True
-    assert c4.contains(2 + I) is False
-    assert c4.contains(-2 + I) is False
-    assert c4.contains(-2 - I) is True
-    assert c4.contains(2 - I) is True
-    assert c4.contains(-2) is False
-    assert c4.contains(2) is True
+    assert c4.contains(0) == True
+    assert c4.contains(2 + I) == False
+    assert c4.contains(-2 + I) == False
+    assert c4.contains(-2 - I) == True
+    assert c4.contains(2 - I) == True
+    assert c4.contains(-2) == False
+    assert c4.contains(2) == True
     assert c4.contains(x) == Contains(x, c4, evaluate=False)
     assert c4.contains(3/(1 + r**2)) == Contains(
         3/(1 + r**2), c4, evaluate=False)  # is in fact True

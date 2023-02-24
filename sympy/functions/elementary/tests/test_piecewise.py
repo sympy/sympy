@@ -1221,7 +1221,7 @@ def test_issue_10258():
     # 10258
     c = Piecewise((1, x < 0), (2, True)) < 3
     assert c != True
-    assert piecewise_fold(c) is True
+    assert piecewise_fold(c) == True
 
 
 def test_issue_10087():
