@@ -34,7 +34,7 @@ def _nontrivBool(side):
 # from .. import Expr
 
 
-def _canonical(cond):
+def canonical(cond):
     # return a condition in which all relationals are canonical
     reps = {r: r.canonical for r in cond.atoms(Relational)}
     return cond.xreplace(reps)
@@ -42,7 +42,7 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
-def _canonical_coeff(rel):
+def canonical_coeff(rel):
     # return -2*x + 1 < 0 as x > 1/2
     # XXX make this part of Relational.canonical?
     rel = rel.canonical
