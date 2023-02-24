@@ -24,7 +24,7 @@ from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
-from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.matrices.linsolve import lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
 from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
     get_sol_2F1_hypergeometric, match_2nd_hypergeometric
@@ -191,7 +191,7 @@ class SingleODEProblem:
         x = func.args[0]
         symset = {Derivative(f(x), x, i) for i in range(order+1)}
         try:
-            rhs, lhs_terms = _lin_eq2dict(eq, symset)
+            rhs, lhs_terms = lin_eq2dict(eq, symset)
         except PolyNonlinearError:
             return None
 

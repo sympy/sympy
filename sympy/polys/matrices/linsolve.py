@@ -46,7 +46,6 @@ from sympy.utilities.misc import filldedent
 
 
 def _linsolve(eqs, syms):
-
     """Solve a linear system of equations.
 
     Examples
@@ -154,8 +153,8 @@ def _linear_eq_to_dict(eqs, syms):
     symset = set(syms)
     for i, e in enumerate(eqs):
         if e.is_Equality:
-            coeff, terms = _lin_eq2dict(e.lhs, symset)
-            cR, tR = _lin_eq2dict(e.rhs, symset)
+            coeff, terms = lin_eq2dict(e.lhs, symset)
+            cR, tR = lin_eq2dict(e.rhs, symset)
             # there were no nonlinear errors so now
             # cancellation is allowed
             coeff -= cR
@@ -168,13 +167,13 @@ def _linear_eq_to_dict(eqs, syms):
             terms = {k: v for k, v in terms.items() if v}
             c, d = coeff, terms
         else:
-            c, d = _lin_eq2dict(e, symset)
+            c, d = lin_eq2dict(e, symset)
         coeffs.append(d)
         ind.append(c)
     return coeffs, ind
 
 
-def _lin_eq2dict(a, symset):
+def lin_eq2dict(a, symset):
     """return (c, d) where c is the sym-independent part of ``a`` and
     ``d`` is an efficiently calculated dictionary mapping symbols to
     their coefficients. A PolyNonlinearError is raised if non-linearity
@@ -182,12 +181,15 @@ def _lin_eq2dict(a, symset):
 
     The values in the dictionary will be non-zero.
 
+    li_eq2dict is a public function because it is used in integrals/laplace.py
+    and in solvers/ode/single.py
+
     Examples
     ========
 
-    >>> from sympy.polys.matrices.linsolve import _lin_eq2dict
+    >>> from sympy.polys.matrices.linsolve import lin_eq2dict
     >>> from sympy.abc import x, y
-    >>> _lin_eq2dict(x + 2*y + 3, {x, y})
+    >>> lin_eq2dict(x + 2*y + 3, {x, y})
     (3, {x: 1, y: 2})
     """
     if a in symset:
@@ -196,7 +198,7 @@ def _lin_eq2dict(a, symset):
         terms_list = defaultdict(list)
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = lin_eq2dict(ai, symset)
             coeff_list.append(ci)
             for mij, cij in ti.items():
                 terms_list[mij].append(cij)
@@ -207,7 +209,7 @@ def _lin_eq2dict(a, symset):
         terms = terms_coeff = None
         coeff_list = []
         for ai in a.args:
-            ci, ti = _lin_eq2dict(ai, symset)
+            ci, ti = lin_eq2dict(ai, symset)
             if not ti:
                 coeff_list.append(ci)
             elif terms is None:
@@ -223,7 +225,7 @@ def _lin_eq2dict(a, symset):
             return coeff, {}
         else:
             terms = {sym: coeff * c for sym, c in terms.items()}
-            return  coeff * terms_coeff, terms
+            return coeff * terms_coeff, terms
     elif not a.has_xfree(symset):
         return a, {}
     else:

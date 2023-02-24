@@ -3,7 +3,7 @@ from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
-    _canonical, _canonical_coeff)
+    canonical, canonical_coeff)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
@@ -928,7 +928,7 @@ class Piecewise(Function):
         last, _ = args[i]  # ignore all past ith arg
         for a, c in reversed(args[:i]):
             last = ITE(c, a, last)
-        return _canonical(last)
+        return canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
         from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -1236,7 +1236,7 @@ def _piecewise_collapse_arguments(_args):
     current_cond = set()  # the conditions up to a given e, c pair
     for expr, cond in _args:
         cond = cond.replace(
-            lambda _: _.is_Relational, _canonical_coeff)
+            lambda _: _.is_Relational, canonical_coeff)
         # Check here if expr is a Piecewise and collapse if one of
         # the conds in expr matches cond. This allows the collapsing
         # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).

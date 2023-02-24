@@ -3096,7 +3096,7 @@ def _apply_patternbased_simplification(rv, patterns, measure,
         three terms.
 
     """
-    from sympy.core.relational import Relational, _canonical
+    from sympy.core.relational import Relational, canonical
 
     if replacementvalue is None and dominatingvalue is not None:
         replacementvalue = dominatingvalue
@@ -3118,7 +3118,7 @@ def _apply_patternbased_simplification(rv, patterns, measure,
     Rel = _apply_patternbased_twoterm_simplification(Rel, patterns,
                     rv.func, dominatingvalue, replacementvalue, measure)
 
-    rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
+    rv = rv.func(*([canonical(i) for i in ordered(Rel)]
                  + nonRel + nonRealRel))
     return rv
 

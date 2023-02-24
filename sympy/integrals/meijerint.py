@@ -40,7 +40,7 @@ from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
 from sympy.core.numbers import ilcm, Rational, pi
-from sympy.core.relational import Eq, Ne, _canonical_coeff
+from sympy.core.relational import Eq, Ne, canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol
 from sympy.core.sympify import sympify
@@ -619,7 +619,7 @@ def _condsimp(cond, first=True):
     x <= y
     """
     if first:
-        cond = cond.replace(lambda _: _.is_Relational, _canonical_coeff)
+        cond = cond.replace(lambda _: _.is_Relational, canonical_coeff)
         first = False
     if not isinstance(cond, BooleanFunction):
         return cond
