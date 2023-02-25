@@ -6,7 +6,7 @@ from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff)
 from sympy.core.mul import Mul, prod
-from sympy.core.relational import canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -22,10 +22,10 @@ from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
-    it_simplify, IntegralTransform, IntegralTransformError)
+    _simplify, IntegralTransform, IntegralTransformError)
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.matrices.matrices import MatrixBase
-from sympy.polys.matrices.linsolve import lin_eq2dict
+from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
@@ -132,7 +132,7 @@ def expand_dirac_delta(expr):
     Expand an expression involving DiractDelta to get it as a linear
     combination of DiracDelta functions.
     """
-    return lin_eq2dict(expr, expr.atoms(DiracDelta))
+    return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 
 def _laplace_transform_integration(f, t, s_, simplify=True):
@@ -152,7 +152,7 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
     debugf('[LT _l_t_i ]     integrated: %s', (F, ))
 
     if not F.has(Integral):
-        return it_simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
+        return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
 
     if not F.is_Piecewise:
         debug('[LT _l_t_i ]     not piecewise.')
@@ -250,7 +250,7 @@ def _laplace_transform_integration(f, t, s_, simplify=True):
     if simplify:
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
-    return it_simplify(F.subs(s, s_), simplify), sbs(a), canonical(sbs(aux))
+    return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
 
 def _laplace_deep_collect(f, t):
@@ -267,7 +267,7 @@ def _laplace_deep_collect(f, t):
     else:
         args = [_laplace_deep_collect(arg, t) for arg in args]
         if func.is_Add:
-            return func(*args).collect(t)
+            return func(*args).expand().collect(t)
         else:
             return func(*args)
 
@@ -633,7 +633,8 @@ def _laplace_trig_expsum(f, t):
     that form, which may happen, e.g., when a trigonometric function has
     another function in its argument.
     """
-    m = Wild('m')
+    c1 = Wild('c1', exclude=[t])
+    c0 = Wild('c0', exclude=[t])
     p = Wild('p', exclude=[t])
     xm = []
     xn = []
@@ -644,17 +645,12 @@ def _laplace_trig_expsum(f, t):
         if not term.has(t):
             xm.append({'k': term, 'a': 0, re: 0, im: 0})
             continue
-        term = term.powsimp(combine='exp')
-        if (
-                (r := term.match(p*exp(m))) is not None
-                and (mp := r[m].as_poly(t)) is not None):
-            mc = mp.all_coeffs()
-            if len(mc) == 2:
-                xm.append({
-                    'k': r[p]*exp(mc[1]), 'a': mc[0],
-                    re: re(mc[0]), im: im(mc[0])})
-            else:
-                xn.append(term)
+        term = _laplace_deep_collect(term.powsimp(combine='exp'), t)
+
+        if (r := term.match(p*exp(c1*t+c0))) is not None:
+            xm.append({
+                'k': r[p]*exp(r[c0]), 'a': r[c1],
+                re: re(r[c1]), im: im(r[c1])})
         else:
             xn.append(term)
     return xm, xn
@@ -1243,7 +1239,7 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
         f = Add(
             *[_inverse_laplace_transform_integration(X, s, t, plane, simplify)
               for X in F.args])
-        return it_simplify(f.subs(t, t_), simplify), True
+        return _simplify(f.subs(t, t_), simplify), True
 
     try:
         f, cond = inverse_mellin_transform(F, s, exp(-t), (None, S.Infinity),
@@ -1290,7 +1286,7 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, simplify=True):
 
     f = f.replace(exp, simp_exp)
 
-    return it_simplify(f.subs(t, t_), simplify), cond
+    return _simplify(f.subs(t, t_), simplify), cond
 
 
 def _complete_the_square_in_denom(f, s):
