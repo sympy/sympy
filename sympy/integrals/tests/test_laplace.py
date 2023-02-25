@@ -432,7 +432,7 @@ def test_inverse_laplace_transform():
     assert (ILT(b*s/(b**2 + (a + s)**2), s, t) ==
             b*(-a*exp(-a*t)*sin(b*t)/b + exp(-a*t)*cos(b*t))*Heaviside(t))
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(-a + t)
-    assert ILT(exp(-a*s)/(b + s), s, t) == exp(b*(a - t))*Heaviside(-a + t)
+    assert ILT(exp(-a*s)/(b + s), s, t) == exp(-b*(-a + t))*Heaviside(-a + t)
     assert (ILT((b + s)/(a**2 + (b + s)**2), s, t) ==
             exp(-b*t)*cos(a*t)*Heaviside(t))
     assert (ILT(exp(-a*s)/s**b, s, t) ==
