@@ -213,7 +213,7 @@ class IntegralTransform(Function):
         return self.as_integral
 
 
-def it_simplify(expr, doit):
+def _simplify(expr, doit):
     if doit:
         from sympy.simplify import simplify
         from sympy.simplify.powsimp import powdenest
@@ -268,7 +268,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
     F = integrator(x**(s - 1) * f, x)
 
     if not F.has(Integral):
-        return it_simplify(F.subs(s, s_), simplify), (S.NegativeInfinity, S.Infinity), S.true
+        return _simplify(F.subs(s, s_), simplify), (S.NegativeInfinity, S.Infinity), S.true
 
     if not F.is_Piecewise:  # XXX can this work if integration gives continuous result now?
         raise IntegralTransformError('Mellin', f, 'could not compute integral')
@@ -325,7 +325,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         raise IntegralTransformError('Mellin', f, 'no convergence found')
 
     a, b, aux = conds[0]
-    return it_simplify(F.subs(s, s_), simplify), (a, b), aux
+    return _simplify(F.subs(s, s_), simplify), (a, b), aux
 
 
 class MellinTransform(IntegralTransform):
@@ -945,7 +945,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     F = integrate(a*f*exp(b*S.ImaginaryUnit*x*k), (x, S.NegativeInfinity, S.Infinity))
 
     if not F.has(Integral):
-        return it_simplify(F, simplify), S.true
+        return _simplify(F, simplify), S.true
 
     integral_f = integrate(f, (x, S.NegativeInfinity, S.Infinity))
     if integral_f in (S.NegativeInfinity, S.Infinity, S.NaN) or integral_f.has(Integral):
@@ -958,7 +958,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     if F.has(Integral):
         raise IntegralTransformError(name, f, 'integral in unexpected form')
 
-    return it_simplify(F, simplify), cond
+    return _simplify(F, simplify), cond
 
 
 class FourierTypeTransform(IntegralTransform):
@@ -1122,7 +1122,7 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
     F = integrate(a*f*K(b*x*k), (x, S.Zero, S.Infinity))
 
     if not F.has(Integral):
-        return it_simplify(F, simplify), S.true
+        return _simplify(F, simplify), S.true
 
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
@@ -1131,7 +1131,7 @@ def _sine_cosine_transform(f, x, k, a, b, K, name, simplify=True):
     if F.has(Integral):
         raise IntegralTransformError(name, f, 'integral in unexpected form')
 
-    return it_simplify(F, simplify), cond
+    return _simplify(F, simplify), cond
 
 
 class SineCosineTypeTransform(IntegralTransform):
@@ -1413,7 +1413,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
     F = integrate(f*besselj(nu, k*r)*r, (r, S.Zero, S.Infinity))
 
     if not F.has(Integral):
-        return it_simplify(F, simplify), S.true
+        return _simplify(F, simplify), S.true
 
     if not F.is_Piecewise:
         raise IntegralTransformError(name, f, 'could not compute integral')
@@ -1422,7 +1422,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
     if F.has(Integral):
         raise IntegralTransformError(name, f, 'integral in unexpected form')
 
-    return it_simplify(F, simplify), cond
+    return _simplify(F, simplify), cond
 
 
 class HankelTypeTransform(IntegralTransform):
