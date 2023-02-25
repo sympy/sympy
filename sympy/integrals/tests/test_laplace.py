@@ -1,6 +1,7 @@
 from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform,
-    LaplaceTransform, InverseLaplaceTransform)
+    LaplaceTransform, InverseLaplaceTransform,
+    _laplace_deep_collect)
 from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
@@ -32,6 +33,11 @@ def test_laplace_transform():
     f = Function('f')
     g = Function('g')
 
+    # Test helper functions
+    assert (
+        _laplace_deep_collect(exp((t+a)*(t+b)) +
+                              besselj(2, exp((t+a)*(t+b)-t**2)), t) ==
+        exp(a*b + t**2 + t*(a + b)) + besselj(2, exp(a*b + t*(a + b))))
     # Test whether `noconds=True` in `doit`:
     assert (2*LaplaceTransform(exp(t), t, s) - 1).doit() == -1 + 2/(s - 1)
     assert (LT(a*t+t**2+t**(S(5)/2), t, s) ==

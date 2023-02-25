@@ -2,6 +2,7 @@
 from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff)
@@ -260,16 +261,13 @@ def _laplace_deep_collect(f, t):
     anything like `f(w*t-1*t-c)` will be written as `f((w-1)*t-c)` such that
     it can match `f(a*t+b)`.
     """
-    func = f.func
-    args = list(f.args)
-    if len(f.args) == 0:
+    if not isinstance(f, Expr):
         return f
-    else:
-        args = [_laplace_deep_collect(arg, t) for arg in args]
-        if func.is_Add:
-            return func(*args).expand().collect(t)
-        else:
-            return func(*args)
+    if (p := f.as_poly(t)) is not None:
+        return p.as_expr()
+    func = f.func
+    args = [_laplace_deep_collect(arg, t) for arg in f.args]
+    return func(*args)
 
 
 @cacheit
