@@ -1729,7 +1729,7 @@ class Expr(Basic, EvalfMixin):
         For nonzero `self`, the returned tuple (i, d) has the
         following interpretation:
 
-        * i will has no variable that appears in deps
+        * i will have no variable that appears in deps
         * d will either have terms that contain variables that are in deps, or
           be equal to 0 (when self is an Add) or 1 (when self is a Mul)
         * if self is an Add then self = i + d
@@ -3115,13 +3115,11 @@ class Expr(Basic, EvalfMixin):
 
     def aseries(self, x=None, n=6, bound=0, hir=False):
         """Asymptotic Series expansion of self.
+
         This is equivalent to ``self.series(x, oo, n)``.
 
         Parameters
         ==========
-
-        self : Expression
-               The expression whose series is to be expanded.
 
         x : Symbol
             It is the variable of the expression to be calculated.
@@ -3130,14 +3128,14 @@ class Expr(Basic, EvalfMixin):
             The value used to represent the order in terms of ``x**n``,
             up to which the series is to be expanded.
 
-        hir : Boolean
-              Set this parameter to be True to produce hierarchical series.
-              It stops the recursion at an early level and may provide nicer
-              and more useful results.
-
         bound : Value, Integer
                 Use the ``bound`` parameter to give limit on rewriting
                 coefficients in its normalised form.
+
+        hir : bool
+              Set this parameter to be True to produce hierarchical series.
+              It stops the recursion at an early level and may provide nicer
+              and more useful results.
 
         Examples
         ========
@@ -3162,6 +3160,7 @@ class Expr(Basic, EvalfMixin):
         exp(exp(x)/x**2)*exp(exp(x)/x)*exp(-exp(x) + exp(x)/(1 - 1/x) - exp(x)/x - exp(x)/x**2)*exp(exp(x))
 
         For rational expressions this method may return original expression without the Order term.
+
         >>> (1/x).aseries(x, n=8)
         1/x
 
@@ -3431,6 +3430,8 @@ class Expr(Basic, EvalfMixin):
     def compute_leading_term(self, x, logx=None):
         """Deprecated function to compute the leading term of a series.
 
+        .. deprecated:: 1.12
+
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
@@ -3508,7 +3509,11 @@ class Expr(Basic, EvalfMixin):
         return self
 
     def as_coeff_exponent(self, x) -> tuple[Expr, Expr]:
-        """ ``c*x**e -> c,e`` where x can be any symbolic expression.
+        """Return the constants after rewriting on exponent form.
+
+        The result is a tuple (*c*, *e*) where the expression is rewritten on the form
+
+        .. math:: c x^e
         """
         from sympy.simplify.radsimp import collect
         s = collect(self, x)
@@ -3521,7 +3526,7 @@ class Expr(Basic, EvalfMixin):
 
     def leadterm(self, x, logx=None, cdir=0):
         """
-        Returns the leading term a*x**b as a tuple (a, b).
+        Returns the leading term $a x^b$ as a tuple (a, b).
 
         Examples
         ========

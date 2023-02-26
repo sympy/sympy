@@ -2396,7 +2396,7 @@ def SOPform(variables, minterms, dontcares=None):
     >>> SOPform([w, x, y, z], minterms, dontcares)
     (w & y & z) | (~w & ~y) | (x & z & ~w)
 
-    See also
+    See Also
     ========
 
     POSform
@@ -2477,7 +2477,7 @@ def POSform(variables, minterms, dontcares=None):
     >>> POSform([w, x, y, z], minterms, dontcares)
     (w | x) & (y | ~w) & (z | ~y)
 
-    See also
+    See Also
     ========
 
     SOPform
@@ -2761,7 +2761,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     Parameters
     ==========
 
-    expr : Boolean
+    expr : Boolean expression
 
     form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
         If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
@@ -3516,8 +3516,8 @@ def gateinputcount(expr):
     int
         Number of gate inputs
 
-    Note
-    ====
+    Notes
+    =====
 
     Not all Boolean functions count as gate here, only those that are
     considered to be standard gates. These are: :py:class:`~.And`,
