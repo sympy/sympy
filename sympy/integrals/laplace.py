@@ -989,6 +989,23 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
+def _laplace_deep_replace(f, t, fdict):
+    """
+    This is an internal helper function that traverses through the epression
+    tree of `f(t)`. It replaces `LaplaceTransform(y(t), t, s)` by `Y(s)` for
+    any `s` if `fdict` contains a correspondence `{y: Y}`.
+    """
+    _s = Wild('s')
+    if not isinstance(f, Expr) or not f.has(LaplaceTransform):
+        return f
+    for y, Y in fdict.items():
+        if (m := f.match(LaplaceTransform(y(t), t, _s))) is not None:
+            return Y(m[_s])
+    func = f.func
+    args = [_laplace_deep_replace(arg, t, fdict) for arg in f.args]
+    return func(*args)
+
+
 def _laplace_transform(fn, t_, s_, *, simplify):
     """
     Front-end function of the Laplace transform. It tries to apply all known
@@ -1087,7 +1104,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, fdict={}, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1126,6 +1143,10 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     function returns expressions containing unevaluated
     :class:`LaplaceTransform` objects.
 
+    A dictionary `fdict` with correspondences between the time and
+    frequency domain can be given; e.g., for `fdict={y: Y}`, `Y(s+a)` will be
+    returned instead of `LaplaceTransform(y(t), t, s+a)`.
+
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If
     ``noconds=True``, only `F` will be returned (i.e. not ``cond``, and also
@@ -1142,7 +1163,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, exp, laplace_transform
+    >>> from sympy import DiracDelta, exp, laplace_transform, diff, Function
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
@@ -1150,6 +1171,12 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
     (s/(a + s), -re(a), True)
+    >>> y = Function("y")
+    >>> Y = Function("Y")
+    >>> z = Function("z")
+    >>> Z = Function("Z")
+    >>> laplace_transform(diff(y(t), t, 1) + z(t), t, s, fdict={y: Y, z: Z})
+    (s*Y(s) + Z(s) - y(0), -oo, True)
 
     References
     ==========
@@ -1199,12 +1226,16 @@ behavior.
             else:
                 return type(f)(*f.shape, elements_trans)
 
-    LT = LaplaceTransform(f, t, s).doit(noconds=False, simplify=_simplify)
+    LT, p, c = LaplaceTransform(f, t, s).doit(noconds=False,
+                                              simplify=_simplify)
+
+    if fdict is not {}:
+        LT = _laplace_deep_replace(LT, t, fdict)
 
     if not _noconds:
-        return LT
+        return LT, p, c
     else:
-        return LT[0]
+        return LT
 
 
 def _inverse_laplace_transform_integration(F, s, t_, plane, *, simplify):

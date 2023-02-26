@@ -31,6 +31,7 @@ def test_laplace_transform():
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
     f = Function('f')
+    F = Function('F')
     g = Function('g')
 
     # Test helper functions
@@ -285,6 +286,9 @@ def test_laplace_transform():
             LaplaceTransform(f(t), t, s)/2 -
             LaplaceTransform(f(t), t, -2*I*a + s)*exp(2*I*b)/4 -
             LaplaceTransform(f(t), t, 2*I*a + s)*exp(-2*I*b)/4)) == 0
+    assert (LT(sin(a*t+b)**2*f(t), t, s, fdict={f: F}, noconds=True) ==
+            F(s)/2 - F(-2*I*a + s)*exp(2*I*b)/4 -
+            F(2*I*a + s)*exp(-2*I*b)/4)
     L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s)
     assert plane == b
     assert (
