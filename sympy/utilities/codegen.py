@@ -297,7 +297,7 @@ class Variable:
             When not given, the data type will be guessed based on the
             assumptions on the symbol argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, the argument is interpreted as an array, where this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
@@ -315,7 +315,7 @@ class Variable:
                             "instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
             raise TypeError(
-                "The dimension argument must be a sequence of tuples")
+                "The dimensions argument must be a sequence of tuples")
 
         self._name = name
         self._datatype = {
@@ -419,7 +419,7 @@ class OutputArgument(Argument, ResultBase):
             When not given, the data type will be guessed based on the
             assumptions on the symbol argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, the argument is interpreted as an array, where this
             sequence of tuples specifies (lower, upper) bounds for each
             index of the array.
@@ -491,7 +491,7 @@ class Result(Variable, ResultBase):
             When not given, the data type will be guessed based on the
             assumptions on the expr argument.
 
-        dimension : sequence containing tupes, optional
+        dimensions : sequence containing tuples, optional
             If present, this variable is interpreted as an array,
             where this sequence of tuples specifies (lower, upper)
             bounds for each index of the array.
@@ -1991,7 +1991,7 @@ def get_code_generator(language, project=None, standard=None, printer = None):
 
 def codegen(name_expr, language=None, prefix=None, project="project",
             to_files=False, header=True, empty=True, argument_sequence=None,
-            global_vars=None, standard=None, code_gen=None, printer = None):
+            global_vars=None, standard=None, code_gen=None, printer=None):
     """Generate source code for expressions in a given language.
 
     Parameters
@@ -2042,10 +2042,13 @@ def codegen(name_expr, language=None, prefix=None, project="project",
         Sequence of global variables used by the routine.  Variables
         listed here will not show up as function arguments.
 
-    standard : string
+    standard : string, optional
 
-    code_gen : CodeGen instance
+    code_gen : CodeGen instance, optional
         An instance of a CodeGen subclass. Overrides ``language``.
+
+    printer : Printer instance, optional
+        An instance of a Printer subclass.
 
     Examples
     ========
