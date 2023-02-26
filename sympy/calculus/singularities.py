@@ -21,6 +21,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import filldedent
 
 
@@ -109,9 +110,20 @@ def singularities(expression, symbol, domain=None):
 ###########################################################################
 
 
+@deprecated(
+    "monotonicity_helper is considered a private function, use the direct"
+    " function for checking instead", deprecated_since_version="1.13",
+    active_deprecations_target="monotonicity-helper"
+)
 def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     """
     Helper function for functions checking function monotonicity.
+
+    .. deprecated:: 1.13
+
+    It returns a boolean indicating whether the interval in which
+    the function's derivative satisfies given predicate is a superset
+    of the given interval.
 
     Parameters
     ==========
@@ -128,14 +140,43 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
 
+    Returns
+    =======
+
+    bool
+        True if ``predicate`` is true for all the derivatives when ``symbol``
+        is varied in ``range``, False otherwise.
+
+    """
+    return _monotonicity_helper(expression, predicate, interval=interval, symbol=symbol)
+
+def _monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+    """
+    Helper function for functions checking function monotonicity.
+
     It returns a boolean indicating whether the interval in which
     the function's derivative satisfies given predicate is a superset
     of the given interval.
 
+    Parameters
+    ==========
+
+    expression : Expr
+        The target function which is being checked
+    predicate : function
+        The property being tested for. The function takes in an integer
+        and returns a boolean. The integer input is the derivative and
+        the boolean result should be true if the property is being held,
+        and false otherwise.
+    interval : Set, optional
+        The range of values in which we are testing, defaults to all reals.
+    symbol : Symbol, optional
+        The symbol present in expression which gets varied over the given range.
+
     Returns
     =======
 
-    Boolean
+    bool
         True if ``predicate`` is true for all the derivatives when ``symbol``
         is varied in ``range``, False otherwise.
 
@@ -176,7 +217,7 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     Returns
     =======
 
-    Boolean
+    bool
         True if ``expression`` is increasing (either strictly increasing or
         constant) in the given ``interval``, False otherwise.
 
@@ -198,7 +239,7 @@ def is_increasing(expression, interval=S.Reals, symbol=None):
     True
 
     """
-    return monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
+    return _monotonicity_helper(expression, lambda x: x >= 0, interval, symbol)
 
 
 def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
@@ -219,7 +260,7 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     Returns
     =======
 
-    Boolean
+    bool
         True if ``expression`` is strictly increasing in the given ``interval``,
         False otherwise.
 
@@ -241,7 +282,7 @@ def is_strictly_increasing(expression, interval=S.Reals, symbol=None):
     False
 
     """
-    return monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
+    return _monotonicity_helper(expression, lambda x: x > 0, interval, symbol)
 
 
 def is_decreasing(expression, interval=S.Reals, symbol=None):
@@ -262,7 +303,7 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     Returns
     =======
 
-    Boolean
+    bool
         True if ``expression`` is decreasing (either strictly decreasing or
         constant) in the given ``interval``, False otherwise.
 
@@ -288,7 +329,7 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     False
 
     """
-    return monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
+    return _monotonicity_helper(expression, lambda x: x <= 0, interval, symbol)
 
 
 def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
@@ -309,7 +350,7 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     Returns
     =======
 
-    Boolean
+    bool
         True if ``expression`` is strictly decreasing in the given ``interval``,
         False otherwise.
 
@@ -331,7 +372,7 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     False
 
     """
-    return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
+    return _monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
 def is_monotonic(expression, interval=S.Reals, symbol=None):
@@ -352,7 +393,7 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     Returns
     =======
 
-    Boolean
+    bool
         True if ``expression`` is monotonic in the given ``interval``,
         False otherwise.
 

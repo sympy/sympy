@@ -9,10 +9,11 @@ from sympy.calculus.singularities import (
     is_strictly_increasing,
     is_decreasing,
     is_strictly_decreasing,
-    is_monotonic
+    is_monotonic,
+    monotonicity_helper
 )
 from sympy.sets import Interval, FiniteSet
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.abc import x, y
 
 
@@ -101,3 +102,7 @@ def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
     assert is_increasing(expr, Interval(1,2), x)
+
+def test_monotonicity_helper_is_deprecated():
+    with warns_deprecated_sympy():
+        monotonicity_helper(1, lambda x: x >= 0)
