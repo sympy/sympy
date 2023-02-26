@@ -1557,6 +1557,25 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
     return result, And(*conditions)
 
 
+def _inverse_laplace_deep_replace(f, s, fdict):
+    """
+    This is an internal helper function that traverses through the epression
+    tree of `f(s)`. It replaces `InverseLaplaceTransform(Y(s), s, t)` by
+    `y(t)` for any `t` if `fdict` contains a correspondence `{Y: y}`.
+    """
+    _p = Wild('p')
+    _t = Wild('t')
+    if not isinstance(f, Expr) or not f.has(InverseLaplaceTransform):
+        return f
+    for Y, y in fdict.items():
+        if (m := f.match(
+                InverseLaplaceTransform(Y(s), s, _t, _p))) is not None:
+            return y(m[_t])
+    func = f.func
+    args = [_inverse_laplace_deep_replace(arg, s, fdict) for arg in f.args]
+    return func(*args)
+
+
 def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
@@ -1676,7 +1695,7 @@ class InverseLaplaceTransform(IntegralTransform):
             return r
 
 
-def inverse_laplace_transform(F, s, t, plane=None, **hints):
+def inverse_laplace_transform(F, s, t, plane=None, fdict={}, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
@@ -1700,6 +1719,10 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     If the integral cannot be computed in closed form, this function returns
     an unevaluated :class:`InverseLaplaceTransform` object.
 
+    A dictionary `fdict` with correspondences between the frequency and
+    time domain can be given; e.g., for `fdict={Y: y}`, `y(t)` will be
+    returned instead of `InverseLaplaceTransform(Y(s), s, t)`.
+
     Note that this function will always assume `t` to be real,
     regardless of the SymPy assumption on `t`.
 
@@ -1709,11 +1732,15 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     Examples
     ========
 
-    >>> from sympy import inverse_laplace_transform, exp, Symbol
+    >>> from sympy import inverse_laplace_transform, exp, Symbol, Function
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
     Heaviside(-a + t)
+    >>> y = Function("y")
+    >>> Y = Function("Y")
+    >>> inverse_laplace_transform(Y(s), s, t, fdict={Y: y})
+    y(t)
 
     See Also
     ========
@@ -1721,10 +1748,24 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     laplace_transform
     hankel_transform, inverse_hankel_transform
     """
+    _noconds = hints.get('noconds', True)
+    _simplify = hints.get('simplify', False)
+
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(
-            lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
-    return InverseLaplaceTransform(F, s, t, plane).doit(**hints)
+            lambda Fij: inverse_laplace_transform(
+                Fij, s, t, plane, fdict=fdict, **hints))
+
+    r, c = InverseLaplaceTransform(F, s, t, plane).doit(
+        noconds=False, simplify=_simplify)
+
+    if fdict is not {}:
+        r = _inverse_laplace_deep_replace(r, s, fdict)
+
+    if _noconds:
+        return r
+    else:
+        return r, c
 
 
 def _fast_inverse_laplace(e, s, t):

@@ -412,12 +412,14 @@ def test_inverse_laplace_transform():
     n, r = symbols('n, r', real=True)
     t, z = symbols('t z')
     f = Function('f')
+    F = Function('f')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
 
     assert ILT(1, s, t) == DiracDelta(t)
     assert ILT(1/s, s, t) == Heaviside(t)
+    assert ILT(F(s), s, t, fdict={F: f}) == f(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
     assert (ILT(s/(a + s)**3, s, t, simplify=True) ==
