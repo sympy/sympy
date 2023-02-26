@@ -787,7 +787,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         coefficient matrix.
         The default value is "auto" which will let the solver decide the correct type of
         the system passed.
-    doit : Boolean
+    doit : bool
         Evaluate the solution if True, default value is False
     tau: Expression
         Used to substitute for the value of `t` after we get the solution of the system.
@@ -1118,7 +1118,7 @@ def _is_commutative_anti_derivative(A, t):
     Returns
     =======
 
-    Matrix, Boolean
+    Matrix, bool
 
     """
     B = integrate(A, t)
@@ -1349,7 +1349,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         List of dependent variables
     t: Symbol
         Independent variable of the equations in eqs
-    is_canon: Boolean
+    is_canon: bool
         If True, then this function will not try to get the
         system in canonical form. Default value is False
 
@@ -2007,11 +2007,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
         Independent variable in the system of ODEs
     ics : Dict or None
         Set of initial boundary/conditions for the system of ODEs
-    doit : Boolean
+    doit : bool
         Evaluate the solutions if True. Default value is True. Can be
         set to false if the integral evaluation takes too much time and/or
         is not required.
-    simplify: Boolean
+    simplify: bool
         Simplify the solutions for the systems. Default value is True.
         Can be set to false if simplification takes too much time and/or
         is not required.

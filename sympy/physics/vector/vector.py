@@ -20,7 +20,7 @@ class Vector(Printable, EvalfMixin):
     Attributes
     ==========
 
-    simp : Boolean
+    simp : bool
         Let certain methods use trigsimp on their outputs
 
     """
