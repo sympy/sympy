@@ -424,10 +424,10 @@ class PlotGrid:
         Parameters
         ==========
 
-        nrows :
+        nrows : int
             The number of rows that should be in the grid of the
             required subplot.
-        ncolumns :
+        ncolumns : int
             The number of columns that should be in the grid
             of the required subplot.
 
@@ -2087,14 +2087,17 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     Default range may change in the future if a more advanced default range
     detection algorithm is implemented.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    expr_x : Expression representing the function along x.
+    expr_x
+        Expression representing the function along x.
 
-    expr_y : Expression representing the function along y.
+    expr_y
+        Expression representing the function along y.
 
-    expr_z : Expression representing the function along z.
+    expr_z
+        Expression representing the function along z.
 
     range : (:class:`~.Symbol`, float, float)
         A 3-tuple denoting the range of the parameter variable, e.g., (u, 0, 5).
@@ -2218,10 +2221,11 @@ def plot3d(*args, show=True, **kwargs):
     Default range may change in the future if a more advanced default range
     detection algorithm is implemented.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    expr : Expression representing the function along x.
+    expr
+        Expression representing the function along x.
 
     range_x : (:class:`~.Symbol`, float, float)
         A 3-tuple denoting the range of the x variable, e.g. (x, 0, 5).
@@ -2353,14 +2357,17 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     Default range may change in the future if a more advanced default range
     detection algorithm is implemented.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    expr_x : Expression representing the function along ``x``.
+    expr_x
+        Expression representing the function along ``x``.
 
-    expr_y : Expression representing the function along ``y``.
+    expr_y
+        Expression representing the function along ``y``.
 
-    expr_z : Expression representing the function along ``z``.
+    expr_z
+        Expression representing the function along ``z``.
 
     range_u : (:class:`~.Symbol`, float, float)
         A 3-tuple denoting the range of the u variable, e.g. (u, 0, 5).
@@ -2472,10 +2479,11 @@ def plot_contour(*args, show=True, **kwargs):
     Default range may change in the future if a more advanced default range
     detection algorithm is implemented.
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
-    expr : Expression representing the function along x.
+    expr
+        Expression representing the function along x.
 
     range_x : (:class:`Symbol`, float, float)
         A 3-tuple denoting the range of the x variable, e.g. (x, 0, 5).

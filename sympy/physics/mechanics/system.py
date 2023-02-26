@@ -171,8 +171,8 @@ class SymbolicSystem:
         by (point of application, force vector) and torques are given by
         (reference frame acted upon, torque vector).
 
-    Example
-    =======
+    Examples
+    ========
 
     As a simple example, the dynamics of a simple pendulum will be input into a
     SymbolicSystem object manually. First some imports will be needed and then

@@ -244,8 +244,8 @@ class Body(RigidBody, Particle):  # type: ignore
             The point on other body on which equal and opposite
             force is applied. By default masscenter of other body.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body, Point, dynamicsymbols
@@ -342,8 +342,8 @@ class Body(RigidBody, Particle):  # type: ignore
             Second body on which equal and opposite torque
             is to be applied.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Body, dynamicsymbols
@@ -414,8 +414,8 @@ class Body(RigidBody, Particle):  # type: ignore
         """
         Clears the Body's loads list.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body
         >>> B = Body('B')
@@ -444,8 +444,8 @@ class Body(RigidBody, Particle):  # type: ignore
             If about is None, then the torque about
             self's frame is removed.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body, Point
         >>> B = Body('B')
@@ -485,8 +485,8 @@ class Body(RigidBody, Particle):  # type: ignore
         body: Body or ReferenceFrame
             The rigid body or reference frame to calculate the velocity in.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')
@@ -516,8 +516,8 @@ class Body(RigidBody, Particle):  # type: ignore
         body: Body or ReferenceFrame
             The rigid body or reference frame to calculate the angular velocity in.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body, ReferenceFrame
         >>> A = Body('A')
@@ -548,8 +548,8 @@ class Body(RigidBody, Particle):  # type: ignore
         body: Body or ReferenceFrame
             The rigid body or reference frame to calculate the dcm.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')
@@ -593,8 +593,8 @@ class Body(RigidBody, Particle):  # type: ignore
             The inertia dyadic of the rigid body expressed about the provided
             point.
 
-        Example
-        =======
+        Examples
+        ========
 
         >>> from sympy.physics.mechanics import Body
         >>> A = Body('A')

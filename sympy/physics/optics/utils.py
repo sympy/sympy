@@ -654,8 +654,8 @@ def hyperfocal_distance(f, N, c):
     c: sympifiable
         Circle of Confusion (CoC) of a given image format.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.optics import hyperfocal_distance
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
@@ -683,8 +683,8 @@ def transverse_magnification(si, so):
     si: sympifiable
         Lens-image distance.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.optics import transverse_magnification
     >>> transverse_magnification(30, 15)
