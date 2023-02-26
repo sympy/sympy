@@ -2631,7 +2631,9 @@ class Expr(Basic, EvalfMixin):
         >>> cancel(b).is_polynomial(y)
         True
 
-        See also .is_rational_function()
+        See Also
+        ========
+        is_rational_function
 
         """
         if syms:
@@ -2699,7 +2701,10 @@ class Expr(Basic, EvalfMixin):
         >>> factor(a).is_rational_function(y)
         True
 
-        See also is_algebraic_expr().
+        See Also
+        ========
+
+        is_algebraic_expr
 
         """
         if syms:
@@ -3306,7 +3311,11 @@ class Expr(Basic, EvalfMixin):
         example), but you do not know how many you should ask for in nseries()
         using the "n" parameter.
 
-        See also nseries().
+        See Also
+        ========
+
+        nseries
+
         """
         return self.series(x, x0, n=None, dir=dir, logx=logx, cdir=cdir)
 
@@ -3363,8 +3372,6 @@ class Expr(Basic, EvalfMixin):
         wrapper to series which will try harder to return the correct
         number of terms.
 
-        See also lseries().
-
         Examples
         ========
 
@@ -3397,6 +3404,11 @@ class Expr(Basic, EvalfMixin):
         x**y
         >>> e.nseries(x, 0, 2, logx=logx)
         exp(logx*y)
+
+        See also
+        ========
+
+        lseries
 
         """
         if x and x not in self.free_symbols:
@@ -3558,20 +3570,21 @@ class Expr(Basic, EvalfMixin):
     def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,
             full=False):
         """
-        Compute formal power power series of self.
+        Compute formal power series of self.
 
-        See the docstring of the :func:`fps` function in sympy.series.formal for
-        more information.
+        See the docstring of the :func:`~sympy.series.formal.fps` function in
+        :mod:`sympy.series.formal` for more information.
         """
         from sympy.series.formal import fps
 
         return fps(self, x, x0, dir, hyper, order, rational, full)
 
     def fourier_series(self, limits=None):
-        """Compute fourier sine/cosine series of self.
+        """
+        Compute Fourier sine/cosine series of self.
 
-        See the docstring of the :func:`fourier_series` in sympy.series.fourier
-        for more information.
+        See the docstring of the :func:`~sympy.series.fourier.fourier_series`
+        in :mod:`sympy.series.fourier` for more information.
         """
         from sympy.series.fourier import fourier_series
 
@@ -3632,8 +3645,8 @@ class Expr(Basic, EvalfMixin):
         """
         Expand an expression using hints.
 
-        See the docstring of the expand() function in sympy.core.function for
-        more information.
+        See the docstring of the :func:`~sympy.core.function.expand` function in
+        :mod:`sympy.core.function` for more information.
 
         """
         from sympy.simplify.radsimp import fraction
@@ -3721,72 +3734,114 @@ class Expr(Basic, EvalfMixin):
     ###########################################################################
 
     def integrate(self, *args, **kwargs):
-        """See the integrate function in sympy.integrals"""
+        """
+        See the :func:`~sympy.integrals.integrals.integrate` function in
+        :mod:`sympy.integrals`.
+        """
         from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def nsimplify(self, constants=(), tolerance=None, full=False):
-        """See the nsimplify function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.simplify.nsimplify` function in
+        :mod:`sympy.simplify.simplify`.
+        """
         from sympy.simplify.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
 
     def separate(self, deep=False, force=False):
-        """See the separate function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.simplify.separatevars` function in
+        :mod:`sympy.simplify.simplify`.
+        """
         from .function import expand_power_base
         return expand_power_base(self, deep=deep, force=force)
 
     def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
-        """See the collect function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.radsimp.collect` function in
+        :mod:`sympy.simplify.radsimp`.
+        """
         from sympy.simplify.radsimp import collect
         return collect(self, syms, func, evaluate, exact, distribute_order_term)
 
     def together(self, *args, **kwargs):
-        """See the together function in sympy.polys"""
+        """
+        See the :func:`~sympy.polys.rationaltools.together` function in
+        :mod:`sympy.polys.rationaltools`.
+        """
         from sympy.polys.rationaltools import together
         return together(self, *args, **kwargs)
 
     def apart(self, x=None, **args):
-        """See the apart function in sympy.polys"""
+        """
+        See the :func:`~sympy.polys.partfrac.apart` function in
+        :mod:`sympy.polys.partfrac`.
+        """
         from sympy.polys.partfrac import apart
         return apart(self, x, **args)
 
     def ratsimp(self):
-        """See the ratsimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.ratsimp.ratsimp` function in
+        :mod:`sympy.simplify.ratsimp`.
+        """
         from sympy.simplify.ratsimp import ratsimp
         return ratsimp(self)
 
     def trigsimp(self, **args):
-        """See the trigsimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.trigsimp.trigsimp` function in
+        :mod:`sympy.simplify.trigsimp`.
+        """
         from sympy.simplify.trigsimp import trigsimp
         return trigsimp(self, **args)
 
     def radsimp(self, **kwargs):
-        """See the radsimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.radsimp.radsimp` function in
+        :mod:`sympy.simplify.radsimp`.
+        """
         from sympy.simplify.radsimp import radsimp
         return radsimp(self, **kwargs)
 
     def powsimp(self, *args, **kwargs):
-        """See the powsimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.powsimp.powsimp` function in
+        :mod:`sympy.simplify.powsimp`.
+        """
         from sympy.simplify.powsimp import powsimp
         return powsimp(self, *args, **kwargs)
 
     def combsimp(self):
-        """See the combsimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.combsimp.combsimp` function in
+        :mod:`sympy.simplify.combsimp`.
+        """
         from sympy.simplify.combsimp import combsimp
         return combsimp(self)
 
     def gammasimp(self):
-        """See the gammasimp function in sympy.simplify"""
+        """
+        See the :func:`~sympy.simplify.gammasimp.gammasimp` function in
+        :mod:`sympy.simplify.gammasimp`.
+        """
         from sympy.simplify.gammasimp import gammasimp
         return gammasimp(self)
 
     def factor(self, *gens, **args):
-        """See the factor() function in sympy.polys.polytools"""
+        """
+        See the :func:`~sympy.polys.polytools.factor` function in
+        :mod:`sympy.polys.polytools`.
+        """
         from sympy.polys.polytools import factor
         return factor(self, *gens, **args)
 
     def cancel(self, *gens, **args):
-        """See the cancel function in sympy.polys"""
+        """
+        See the :func:`~sympy.polys.polytools.cancel` function in
+        :mod:`sympy.polys.polytools`.
+        """
         from sympy.polys.polytools import cancel
         return cancel(self, *gens, **args)
 
