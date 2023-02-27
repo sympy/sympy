@@ -4,12 +4,12 @@ from sympy.testing.pytest import raises
 
 
 def test_digits():
-    assert all([digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
-                for n in range(20)])
-    assert all([digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
-                for n in range(20)])
-    assert all([digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
-                for n in range(20)])
+    assert all(digits(n, 2)[1:] == [int(d) for d in format(n, 'b')]
+                for n in range(20))
+    assert all(digits(n, 8)[1:] == [int(d) for d in format(n, 'o')]
+                for n in range(20))
+    assert all(digits(n, 16)[1:] == [int(d, 16) for d in format(n, 'x')]
+                for n in range(20))
     assert digits(2345, 34) == [34, 2, 0, 33]
     assert digits(384753, 71) == [71, 1, 5, 23, 4]
     assert digits(93409, 10) == [10, 9, 3, 4, 0, 9]
