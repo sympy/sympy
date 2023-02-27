@@ -11,8 +11,9 @@ from sympy.codegen.ast import (
 
 """ This module collects functions for constructing ASTs representing algorithms. """
 
-def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
-                   itermax=None, counter=None):
+def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False,
+                   itermax=None, counter=None, delta_fn=lambda e, x: -e/e.diff(x),
+                   cse=False):
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
 
     Explanation
@@ -29,6 +30,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         With respect to, i.e. what is the variable.
     atol : number or expr
         Absolute tolerance (stopping criterion)
+    rtol : number of expr
+        Relative tolerance (stopping criterion)
     delta : Symbol
         Will be a ``Dummy`` if ``None``.
     debug : bool
@@ -37,6 +40,11 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         Maximum number of iterations.
     counter : Symbol
         Will be a ``Dummy`` if ``None``.
+    delta_fn: Callable[Expr, [Expr, Symbol]]
+        computes the step, default is newtons method. For e.g. Halley's method
+        use delta_fn=lambda e, x: -2*e*e.diff(x)/(2*e.diff(x)**2 - e*e.diff(x, 2))
+    cse: bool
+        Perform common sub-expression elimination on delta expression
 
     Examples
     ========
@@ -65,12 +73,19 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         Wrapper = lambda x: x
         name_d = delta.name
 
-    delta_expr = -expr/expr.diff(wrt)
-    whl_bdy = [Assignment(delta, delta_expr), AddAugmentedAssignment(wrt, delta)]
+    delta_expr = delta_fn(expr, wrt)
+    if cse:
+        from sympy.simplify.cse_main import cse
+        cses, (red,) = cse([delta_expr.factor()])
+        whl_bdy = [Assignment(dum, sub_e) for dum, sub_e in cses]
+        whl_bdy += [Assignment(delta, red)]
+    else:
+        whl_bdy = [Assignment(delta, delta_expr)]
+    whl_bdy += [AddAugmentedAssignment(wrt, delta)]
     if debug:
         prnt = Print([wrt, delta], r"{}=%12.5g {}=%12.5g\n".format(wrt.name, name_d))
-        whl_bdy = [whl_bdy[0], prnt] + whl_bdy[1:]
-    req = Gt(Abs(delta), atol)
+        whl_bdy = whl_bdy[:-1] + [prnt, whl_bdy[-1]]
+    req = Gt(Abs(delta), atol + rtol*Abs(wrt))
     declars = [Declaration(Variable(delta, type=real, value=oo))]
     if itermax is not None:
         counter = counter or Dummy(integer=True)
@@ -80,6 +95,8 @@ def newtons_method(expr, wrt, atol=1e-12, delta=None, debug=False,
         req = And(req, Lt(counter, itermax))
     whl = While(req, CodeBlock(*whl_bdy))
     blck = declars + [whl]
+    if debug:
+        blck.append(Print([wrt], r"{}=%12.5g\n".format(wrt.name)))
     return Wrapper(CodeBlock(*blck))
 
 
