@@ -1,7 +1,8 @@
 from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform,
     LaplaceTransform, InverseLaplaceTransform,
-    _laplace_deep_collect)
+    _laplace_deep_collect, laplace_correspondence,
+    laplace_initial_conds)
 from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
@@ -33,12 +34,18 @@ def test_laplace_transform():
     f = Function('f')
     F = Function('F')
     g = Function('g')
+    y = Function('y')
+    Y = Function('Y')
 
     # Test helper functions
     assert (
         _laplace_deep_collect(exp((t+a)*(t+b)) +
                               besselj(2, exp((t+a)*(t+b)-t**2)), t) ==
         exp(a*b + t**2 + t*(a + b)) + besselj(2, exp(a*b + t*(a + b))))
+    L = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
+    L = laplace_correspondence(L, t, s, {y: Y})
+    L = laplace_initial_conds(L, t, {y: [2, 4, 8, 16, 32]})
+    assert L == s**3*Y(s) - 2*s**2 - 4*s - 8
     # Test whether `noconds=True` in `doit`:
     assert (2*LaplaceTransform(exp(t), t, s) - 1).doit() == -1 + 2/(s - 1)
     assert (LT(a*t+t**2+t**(S(5)/2), t, s) ==
@@ -286,9 +293,11 @@ def test_laplace_transform():
             LaplaceTransform(f(t), t, s)/2 -
             LaplaceTransform(f(t), t, -2*I*a + s)*exp(2*I*b)/4 -
             LaplaceTransform(f(t), t, 2*I*a + s)*exp(-2*I*b)/4)) == 0
-    assert (LT(sin(a*t+b)**2*f(t), t, s, fdict={f: F}, noconds=True) ==
-            F(s)/2 - F(-2*I*a + s)*exp(2*I*b)/4 -
-            F(2*I*a + s)*exp(-2*I*b)/4)
+    L = LT(sin(a*t+b)**2*f(t), t, s, noconds=True)
+    assert (
+        laplace_correspondence(L, t, s, {f: F}) ==
+        F(s)/2 - F(-2*I*a + s)*exp(2*I*b)/4 -
+        F(2*I*a + s)*exp(-2*I*b)/4)
     L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s)
     assert plane == b
     assert (
@@ -419,7 +428,8 @@ def test_inverse_laplace_transform():
 
     assert ILT(1, s, t) == DiracDelta(t)
     assert ILT(1/s, s, t) == Heaviside(t)
-    assert ILT(F(s), s, t, fdict={F: f}) == f(t)
+    L = ILT(F(s), s, t)
+    assert laplace_correspondence(L, t, s, {f: F}) == f(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
     assert (ILT(s/(a + s)**3, s, t, simplify=True) ==

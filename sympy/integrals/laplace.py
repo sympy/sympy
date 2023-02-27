@@ -5,7 +5,7 @@ from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
-    Lambda, WildFunction, diff)
+    Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
 from sympy.core.sorting import ordered
@@ -989,21 +989,82 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def _laplace_deep_replace(f, t, fdict):
+def laplace_correspondence(f, t, s, fdict):
     """
-    This is an internal helper function that traverses through the epression
-    tree of `f(t)`. It replaces `LaplaceTransform(y(t), t, s)` by `Y(s)` for
-    any `s` if `fdict` contains a correspondence `{y: Y}`.
+    This helper function takes a function `f` that is the result of a
+    `laplace_transform` or an `inverse_laplace_transform`.  It replaces all
+    unevaluated `LaplaceTransform(y(t), t, s)` by `Y(s)` for any `s` and
+    all `InverseLaplaceTransform(Y(s), s, t)` by `y(t)` for any `t` if
+    `fdict` contains a correspondence `{y: Y}`.
+
+    Examples
+    ========
+
+    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy.abc import t, s, a
+    >>> y = Function("y")
+    >>> Y = Function("Y")
+    >>> z = Function("z")
+    >>> Z = Function("Z")
+    >>> f = laplace_transform(diff(y(t), t, 1) + z(t), t, s, noconds=True)
+    >>> laplace_correspondence(f, t, s, {y: Y, z: Z})
+    s*Y(s) + Z(s) - y(0)
+    >>> f = inverse_laplace_transform(Y(s), s, t)
+    >>> laplace_correspondence(f, t, s, {y: Y})
+    y(t)
     """
-    _s = Wild('s')
-    if not isinstance(f, Expr) or not f.has(LaplaceTransform):
+    _p = Wild('_p')
+    _s = Wild('_s')
+    _t = Wild('_t')
+    if (
+            not isinstance(f, Expr)
+            or (not f.has(LaplaceTransform)
+                and not f.has(InverseLaplaceTransform))):
         return f
     for y, Y in fdict.items():
-        if (m := f.match(LaplaceTransform(y(t), t, _s))) is not None:
+        if (
+                (m := f.match(LaplaceTransform(y(t), t, _s)))
+                is not None):
             return Y(m[_s])
+        if (
+                (m := f.match(InverseLaplaceTransform(Y(s), s, _t, _p)))
+                is not None):
+            return y(m[_t])
     func = f.func
-    args = [_laplace_deep_replace(arg, t, fdict) for arg in f.args]
+    args = [laplace_correspondence(arg, t, s, fdict) for arg in f.args]
     return func(*args)
+
+
+def laplace_initial_conds(f, t, fdict):
+    """
+    This helper function takes a function `f` that is the result of a
+    `laplace_transform`.  It takes an fdict of the form `y: [1, 4, 2]`, where
+    the values in the list are the initial value, the initial slope, the
+    initia second derivative, etc., of the function `y(t)` and replaces all
+    unevaluated initial conditions.
+
+    Examples
+    ========
+
+    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy.abc import t, s, a
+    >>> y = Function("y")
+    >>> Y = Function("Y")
+    >>> f = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
+    >>> g = laplace_correspondence(f, t, s, {y: Y})
+    >>> laplace_initial_conds(g, t, {y: [2, 4, 8, 16, 32]})
+    s**3*Y(s) - 2*s**2 - 4*s - 8
+    """
+    for y, ic in fdict.items():
+        if len(ic) >= 0:
+            for k in range(len(ic)):
+                if k == 0:
+                    f = f.replace(y(0), ic[0])
+                elif k == 1:
+                    f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
+                else:
+                    f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
+    return f
 
 
 def _laplace_transform(fn, t_, s_, *, simplify):
@@ -1104,7 +1165,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, fdict={}, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -1143,10 +1204,6 @@ def laplace_transform(f, t, s, legacy_matrix=True, fdict={}, **hints):
     function returns expressions containing unevaluated
     :class:`LaplaceTransform` objects.
 
-    A dictionary `fdict` with correspondences between the time and
-    frequency domain can be given; e.g., for `fdict={y: Y}`, `Y(s+a)` will be
-    returned instead of `LaplaceTransform(y(t), t, s+a)`.
-
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`. If
     ``noconds=True``, only `F` will be returned (i.e. not ``cond``, and also
@@ -1163,7 +1220,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, fdict={}, **hints):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, exp, laplace_transform, diff, Function
+    >>> from sympy import DiracDelta, exp, laplace_transform
     >>> from sympy.abc import t, s, a
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
@@ -1171,12 +1228,6 @@ def laplace_transform(f, t, s, legacy_matrix=True, fdict={}, **hints):
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
     (s/(a + s), -re(a), True)
-    >>> y = Function("y")
-    >>> Y = Function("Y")
-    >>> z = Function("z")
-    >>> Z = Function("Z")
-    >>> laplace_transform(diff(y(t), t, 1) + z(t), t, s, fdict={y: Y, z: Z})
-    (s*Y(s) + Z(s) - y(0), -oo, True)
 
     References
     ==========
@@ -1228,9 +1279,6 @@ behavior.
 
     LT, p, c = LaplaceTransform(f, t, s).doit(noconds=False,
                                               simplify=_simplify)
-
-    if fdict is not {}:
-        LT = _laplace_deep_replace(LT, t, fdict)
 
     if not _noconds:
         return LT, p, c
@@ -1557,25 +1605,6 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
     return result, And(*conditions)
 
 
-def _inverse_laplace_deep_replace(f, s, fdict):
-    """
-    This is an internal helper function that traverses through the epression
-    tree of `f(s)`. It replaces `InverseLaplaceTransform(Y(s), s, t)` by
-    `y(t)` for any `t` if `fdict` contains a correspondence `{Y: y}`.
-    """
-    _p = Wild('p')
-    _t = Wild('t')
-    if not isinstance(f, Expr) or not f.has(InverseLaplaceTransform):
-        return f
-    for Y, y in fdict.items():
-        if (m := f.match(
-                InverseLaplaceTransform(Y(s), s, _t, _p))) is not None:
-            return y(m[_t])
-    func = f.func
-    args = [_inverse_laplace_deep_replace(arg, s, fdict) for arg in f.args]
-    return func(*args)
-
-
 def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
@@ -1695,7 +1724,7 @@ class InverseLaplaceTransform(IntegralTransform):
             return r
 
 
-def inverse_laplace_transform(F, s, t, plane=None, fdict={}, **hints):
+def inverse_laplace_transform(F, s, t, plane=None, **hints):
     r"""
     Compute the inverse Laplace transform of `F(s)`, defined as
 
@@ -1719,10 +1748,6 @@ def inverse_laplace_transform(F, s, t, plane=None, fdict={}, **hints):
     If the integral cannot be computed in closed form, this function returns
     an unevaluated :class:`InverseLaplaceTransform` object.
 
-    A dictionary `fdict` with correspondences between the frequency and
-    time domain can be given; e.g., for `fdict={Y: y}`, `y(t)` will be
-    returned instead of `InverseLaplaceTransform(Y(s), s, t)`.
-
     Note that this function will always assume `t` to be real,
     regardless of the SymPy assumption on `t`.
 
@@ -1732,15 +1757,11 @@ def inverse_laplace_transform(F, s, t, plane=None, fdict={}, **hints):
     Examples
     ========
 
-    >>> from sympy import inverse_laplace_transform, exp, Symbol, Function
+    >>> from sympy import inverse_laplace_transform, exp, Symbol
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
     Heaviside(-a + t)
-    >>> y = Function("y")
-    >>> Y = Function("Y")
-    >>> inverse_laplace_transform(Y(s), s, t, fdict={Y: y})
-    y(t)
 
     See Also
     ========
@@ -1753,14 +1774,10 @@ def inverse_laplace_transform(F, s, t, plane=None, fdict={}, **hints):
 
     if isinstance(F, MatrixBase) and hasattr(F, 'applyfunc'):
         return F.applyfunc(
-            lambda Fij: inverse_laplace_transform(
-                Fij, s, t, plane, fdict=fdict, **hints))
+            lambda Fij: inverse_laplace_transform(Fij, s, t, plane, **hints))
 
     r, c = InverseLaplaceTransform(F, s, t, plane).doit(
         noconds=False, simplify=_simplify)
-
-    if fdict is not {}:
-        r = _inverse_laplace_deep_replace(r, s, fdict)
 
     if _noconds:
         return r
