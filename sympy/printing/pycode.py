@@ -41,6 +41,7 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',
     'ln': 'log',
@@ -52,7 +53,7 @@ _known_functions_math = {
     'Sqrt': 'sqrt',
     'tan': 'tan',
     'tanh': 'tanh'
-}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
+}  # Not used from ``math``: [copysign isclose isfinite isinf ldexp frexp pow modf
 # radians trunc fmod fsum gcd degrees fabs]
 _known_constants_math = {
     'Exp1': 'e',
@@ -309,6 +310,14 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_Return(self, ret):
         arg, = ret.args
         return 'return %s' % self._print(arg)
+
+    def _print_Raise(self, rs):
+        arg, = rs.args
+        return 'raise %s' % self._print(arg)
+
+    def _print_RuntimeError_(self, re):
+        message, = re.args
+        return "RuntimeError(%s)" % self._print(message)
 
     def _print_Print(self, prnt):
         print_args = ', '.join((self._print(arg) for arg in prnt.print_args))

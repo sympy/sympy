@@ -1,7 +1,8 @@
 import tempfile
-import sympy as sp
-from sympy.codegen.ast import Assignment
+from sympy import log, Symbol, symbols, Min, Max, sqrt
+from sympy.codegen.ast import Assignment, Raise, RuntimeError_
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
+from sympy.codegen.cfunctions import expm1
 from sympy.codegen.fnodes import bind_C
 from sympy.codegen.futils import render_as_module as f_module
 from sympy.codegen.pyutils import render_as_module as py_module
@@ -126,3 +127,39 @@ x=     0.86548 d_x= -3.1022e-06
 x=     0.86547 d_x= -9.3421e-12
 x=     0.86547 d_x=  3.6902e-17
 """  # try to run tests with LC_ALL=C if this assertion fails
+
+
+def test_newtons_method_function__rtol_cse_nan():
+    a, b, c, N_geo, N_tot = symbols('a b c N_geo N_tot', real=True, nonnegative=True)
+    i = Symbol('i', integer=True, nonnegative=True)
+    N_ari = N_tot - N_geo - 1
+    delta_ari = (c-b)/N_ari
+    ln_delta_geo = log(b) + log(-expm1((log(a)-log(b))/N_geo))
+    eqb_log = ln_delta_geo - log(delta_ari)
+
+    def _clamp(low, expr, high):
+        return Min(Max(low, expr), high)
+
+    meth_kw = {
+        'clamped_newton': dict(delta_fn=lambda e, x: _clamp(
+            (sqrt(a*x)-x)*0.99,
+            -e/e.diff(x),
+            (sqrt(c*x)-x)*0.99
+        )),
+        'halley': dict(delta_fn=lambda e, x: (-2*(e*e.diff(x))/(2*e.diff(x)**2 - e*e.diff(x, 2)))),
+        'halley_alt': dict(delta_fn=lambda e, x: (-e/e.diff(x)/(1-e/e.diff(x)*e.diff(x,2)/2/e.diff(x)))),
+    }
+    args = eqb_log, b
+    kwargs = dict(
+        params=(b, a, c, N_geo, N_tot), itermax=60, debug=True, cse=False,
+        counter=i, atol=1e-100, rtol=1e-13,
+        handle_nan=Raise(RuntimeError_("encountered NaN."))
+    )
+    func = {k: newtons_method_function(*args, func_name=f"{k}_b", **dict(kwargs, **kw)) for k, kw in meth_kw.items()}
+    py_mod = {k: py_module(v) for k, v in func.items()}
+    namespace = {}
+    root_find_b = {}
+    for k, v in py_mod.items():
+        ns = namespace[k] = dict()
+        exec(v, ns, ns)
+        root_find_b[k] = ns[f'{k}_b']

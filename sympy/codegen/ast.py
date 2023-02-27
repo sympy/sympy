@@ -1736,7 +1736,7 @@ class Print(Token):
     >>> from sympy.codegen.ast import Print
     >>> from sympy import pycode
     >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
-    print("coordinate: %12.5g %12.5g" % (x, y))
+    print("coordinate: %12.5g %12.5g" % (x, y), end="")
 
     """
 
@@ -1890,3 +1890,17 @@ class FunctionCall(Token, Expr):
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class Raise(Token):
+    """ Prints as 'raise ...' in Python, 'throw ...' in C++"""
+    __slots__ = _fields = ('exception',)
+
+
+class RuntimeError_(Token):
+    """ Represents 'std::runtime_error' in C++ and 'RuntimeError' in Python.
+
+    Note that the latter is uncommon, and you might want to use e.g. ValueError.
+    """
+    __slots__ = _fields = ('message',)
+    _construct_message = String
