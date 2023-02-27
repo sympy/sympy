@@ -5,15 +5,16 @@ from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import And
 from sympy.codegen.ast import (
-    Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
+    Assignment, AddAugmentedAssignment, break_, CodeBlock, Declaration, FunctionDefinition,
     Print, Return, Scope, While, Variable, Pointer, real
 )
+from sympy.codegen.cfunctions import isnan
 
 """ This module collects functions for constructing ASTs representing algorithms. """
 
 def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False,
                    itermax=None, counter=None, delta_fn=lambda e, x: -e/e.diff(x),
-                   cse=False):
+                   cse=False, handle_nan=None):
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
 
     Explanation
@@ -28,9 +29,9 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
     expr : expression
     wrt : Symbol
         With respect to, i.e. what is the variable.
-    atol : number or expr
+    atol : number or expression
         Absolute tolerance (stopping criterion)
-    rtol : number of expr
+    rtol : number or expression
         Relative tolerance (stopping criterion)
     delta : Symbol
         Will be a ``Dummy`` if ``None``.
@@ -40,11 +41,13 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
         Maximum number of iterations.
     counter : Symbol
         Will be a ``Dummy`` if ``None``.
-    delta_fn: Callable[Expr, [Expr, Symbol]]
+    delta_fn: Callable[[Expr, Symbol], Expr]
         computes the step, default is newtons method. For e.g. Halley's method
         use delta_fn=lambda e, x: -2*e*e.diff(x)/(2*e.diff(x)**2 - e*e.diff(x, 2))
     cse: bool
         Perform common sub-expression elimination on delta expression
+    handle_nan:
+        How to handle occurrence of not-a-number (NaN).
 
     Examples
     ========
@@ -81,6 +84,8 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
         whl_bdy += [Assignment(delta, red)]
     else:
         whl_bdy = [Assignment(delta, delta_expr)]
+    if handle_nan is not None:
+        whl_bdy += [While(isnan(delta), CodeBlock(handle_nan, break_))]
     whl_bdy += [AddAugmentedAssignment(wrt, delta)]
     if debug:
         prnt = Print([wrt, delta], r"{}=%12.5g {}=%12.5g\n".format(wrt.name, name_d))
