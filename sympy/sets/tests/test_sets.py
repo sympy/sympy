@@ -1702,3 +1702,8 @@ def test_issue_20379():
 def test_finiteset_simplify():
     S = FiniteSet(1, cos(1)**2 + sin(1)**2)
     assert S.simplify() == {1}
+
+def test_intersection_infinite_imagesets():
+    sin_zeros = solveset(sin(t))
+    interval = Interval(-10, 10)
+    assert interval & sin_zeros == Union(ImageSet(Lambda(_n, 2*_n*pi - 3*pi), Range(0, oo, 1)), ImageSet(Lambda(_n, 2*_n*pi - 2*pi), Range(0, oo, 1)))
