@@ -377,7 +377,7 @@ def _(self, other):
 
             range_set = S.EmptySet
 
-            if all(i.is_real or i.is_infinite  for i in (new_sup, new_inf)):
+            if all(i.is_extended_real for i in (new_sup, new_inf)):
                 # this assumes continuity of underlying function
                 # however fixes the case when it is decreasing
                 if new_inf > new_sup:
