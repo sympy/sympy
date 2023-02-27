@@ -318,6 +318,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
+        print_args += ', end=""'  # to match e.g. CCodePrinter which req. '\n'
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
