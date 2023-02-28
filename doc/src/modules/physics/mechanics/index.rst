@@ -80,6 +80,7 @@ Guide to Mechanics
    masses.rst
    kane.rst
    lagrange.rst
+   system.rst
    joints.rst
    symsystem.rst
    linearize.rst
