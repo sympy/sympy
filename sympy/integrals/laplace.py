@@ -1233,6 +1233,30 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t), t, s, simplify=True)
     (s/(a + s), -re(a), True)
 
+    There are also helper functions that make it easy to solve differential
+    equations by Laplace transform. For example, to solve 
+
+    .. math :: m x''(t) + d x'(t) + k x(t) = 0
+
+    with initial value `0` and initial derivative `v`:
+
+    >>> from sympy import Function, laplace_correspondence, diff, solve
+    >>> from sympy import laplace_initial_conds, inverse_laplace_transform
+    >>> from sympy.abc import d, k, m, v
+    >>> x = Function('x')
+    >>> X = Function('X')
+    >>> f = m*diff(x(t), t, 2) + d*diff(x(t), t) + k*x(t)
+    >>> F = laplace_transform(f, t, s, noconds=True)
+    >>> F = laplace_correspondence(F, {x: X})
+    >>> F = laplace_initial_conds(F, t, {x: [0, v]})
+    >>> F
+    d*s*X(s) + k*X(s) + m*(s**2*X(s) - v)
+    >>> Xs = solve(F, X(s))[0]
+    >>> Xs
+    m*v/(d*s + k + m*s**2)
+    >>> inverse_laplace_transform(Xs, s, t)
+    2*v*exp(-d*t/(2*m))*sin(t*sqrt((-d**2 + 4*k*m)/m**2)/2)*Heaviside(t)/sqrt((-d**2 + 4*k*m)/m**2)
+
     References
     ==========
 
