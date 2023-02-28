@@ -779,7 +779,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
             return x == sorted(x)
 
         # Check if expression is a trace:
-        if all(map_ind_to_inds[j] == len(v) and j >= 0 for j in k) and all(j >= 0 for j in k):
+        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
             # This is a trace
             make_trace = True
             first_element = v[0].element
@@ -886,7 +886,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
         # Check that all identity matrices have at least one free index
         # (otherwise they would be contractions to some other elements)
-        if any(None not in i.indices for i in identity_matrices):
+        if any([None not in i.indices for i in identity_matrices]):
             continue
         # Mark the identity matrices for removal:
         for i in identity_matrices:
