@@ -43,7 +43,7 @@ def test_laplace_transform():
                               besselj(2, exp((t+a)*(t+b)-t**2)), t) ==
         exp(a*b + t**2 + t*(a + b)) + besselj(2, exp(a*b + t*(a + b))))
     L = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
-    L = laplace_correspondence(L, t, s, {y: Y})
+    L = laplace_correspondence(L, {y: Y})
     L = laplace_initial_conds(L, t, {y: [2, 4, 8, 16, 32]})
     assert L == s**3*Y(s) - 2*s**2 - 4*s - 8
     # Test whether `noconds=True` in `doit`:
@@ -295,7 +295,7 @@ def test_laplace_transform():
             LaplaceTransform(f(t), t, 2*I*a + s)*exp(-2*I*b)/4)) == 0
     L = LT(sin(a*t+b)**2*f(t), t, s, noconds=True)
     assert (
-        laplace_correspondence(L, t, s, {f: F}) ==
+        laplace_correspondence(L, {f: F}) ==
         F(s)/2 - F(-2*I*a + s)*exp(2*I*b)/4 -
         F(2*I*a + s)*exp(-2*I*b)/4)
     L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s)
@@ -421,7 +421,7 @@ def test_inverse_laplace_transform():
     n, r = symbols('n, r', real=True)
     t, z = symbols('t z')
     f = Function('f')
-    F = Function('f')
+    F = Function('F')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
@@ -429,7 +429,7 @@ def test_inverse_laplace_transform():
     assert ILT(1, s, t) == DiracDelta(t)
     assert ILT(1/s, s, t) == Heaviside(t)
     L = ILT(F(s), s, t)
-    assert laplace_correspondence(L, t, s, {f: F}) == f(t)
+    assert laplace_correspondence(L, {f: F}) == f(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
     assert (ILT(s/(a + s)**3, s, t, simplify=True) ==

@@ -989,7 +989,7 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def laplace_correspondence(f, t, s, fdict):
+def laplace_correspondence(f, fdict):
     """
     This helper function takes a function `f` that is the result of a
     `laplace_transform` or an `inverse_laplace_transform`.  It replaces all
@@ -1000,22 +1000,23 @@ def laplace_correspondence(f, t, s, fdict):
     Examples
     ========
 
-    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy import laplace_transform, diff, Function, laplace_correspondence
     >>> from sympy.abc import t, s, a
     >>> y = Function("y")
     >>> Y = Function("Y")
     >>> z = Function("z")
     >>> Z = Function("Z")
     >>> f = laplace_transform(diff(y(t), t, 1) + z(t), t, s, noconds=True)
-    >>> laplace_correspondence(f, t, s, {y: Y, z: Z})
+    >>> laplace_correspondence(f, {y: Y, z: Z})
     s*Y(s) + Z(s) - y(0)
     >>> f = inverse_laplace_transform(Y(s), s, t)
-    >>> laplace_correspondence(f, t, s, {y: Y})
+    >>> laplace_correspondence(f, {y: Y})
     y(t)
     """
-    _p = Wild('_p')
-    _s = Wild('_s')
-    _t = Wild('_t')
+    p = Wild('p')
+    s = Wild('s')
+    t = Wild('t')
+    a = Wild('a')
     if (
             not isinstance(f, Expr)
             or (not f.has(LaplaceTransform)
@@ -1023,15 +1024,16 @@ def laplace_correspondence(f, t, s, fdict):
         return f
     for y, Y in fdict.items():
         if (
-                (m := f.match(LaplaceTransform(y(t), t, _s)))
-                is not None):
-            return Y(m[_s])
+                (m := f.match(LaplaceTransform(y(a), t, s))) is not None
+                and m[a] == m[t]):
+            return Y(m[s])
         if (
-                (m := f.match(InverseLaplaceTransform(Y(s), s, _t, _p)))
-                is not None):
-            return y(m[_t])
+                (m := f.match(InverseLaplaceTransform(Y(a), s, t, p)))
+                is not None
+                and m[a] == m[s]):
+            return y(m[t])
     func = f.func
-    args = [laplace_correspondence(arg, t, s, fdict) for arg in f.args]
+    args = [laplace_correspondence(arg, fdict) for arg in f.args]
     return func(*args)
 
 
@@ -1046,12 +1048,12 @@ def laplace_initial_conds(f, t, fdict):
     Examples
     ========
 
-    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy import laplace_transform, diff, Function, laplace_correspondence, laplace_initial_conds
     >>> from sympy.abc import t, s, a
     >>> y = Function("y")
     >>> Y = Function("Y")
     >>> f = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
-    >>> g = laplace_correspondence(f, t, s, {y: Y})
+    >>> g = laplace_correspondence(f, {y: Y})
     >>> laplace_initial_conds(g, t, {y: [2, 4, 8, 16, 32]})
     s**3*Y(s) - 2*s**2 - 4*s - 8
     """
