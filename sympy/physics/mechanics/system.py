@@ -66,7 +66,7 @@ class System(_Methods):
     u_dep : Matrix
         Matrix of the dependent generalized speeds.
     kdes : Matrix
-        Matrix of the kinematical differential equations.
+        Matrix of the kinematic differential equations.
     bodies : tuple of BodyBase subclasses
         Tuple of all bodies that make up the system.
     joints : tuple of Joint
@@ -127,7 +127,7 @@ class System(_Methods):
     PinJoint: pin  parent: cart  child: bob)
 
     While adding the joints, the associated generalized coordinates, generalized
-    speeds, kinematical differential equations and bodies are also added to the
+    speeds, kinematic differential equations and bodies are also added to the
     system.
 
     >>> system.q
@@ -349,7 +349,7 @@ class System(_Methods):
 
     @property
     def kdes(self):
-        """Kinematical differential equations, which describe the coupling
+        """Kinematic differential equations, which describe the coupling
         between the generalized coordinates and the generalized speeds."""
         return self._kdes
 
@@ -358,7 +358,7 @@ class System(_Methods):
     def kdes(self, kdes):
         kdes = System._objects_to_list(kdes)
         self._kdes = self._parse_expressions(
-            kdes, [], 'kinematical differential equations')
+            kdes, [], 'kinematic differential equations')
 
     @property
     def eom_method(self):
@@ -494,17 +494,17 @@ class System(_Methods):
 
     @_reset_eom_method
     def add_kdes(self, *kdes):
-        """Add kinematical differential equation(s) to the system.
+        """Add kinematic differential equation(s) to the system.
 
         Parameters
         ==========
 
         *kdes : Expr
-            One or more kinematical differential equations.
+            One or more kinematic differential equations.
 
         """
         self._kdes = self._parse_expressions(
-            kdes, self.kdes, 'kinematical differential equations',
+            kdes, self.kdes, 'kinematic differential equations',
             check_negatives=True)
 
     @_reset_eom_method
@@ -738,7 +738,7 @@ class System(_Methods):
 
         This methods adds one or more joints to the system including its
         associated objects, i.e. generalized coordinates, generalized speeds,
-        kinematical differential equations and the bodies.
+        kinematic differential equations and the bodies.
 
         Parameters
         ==========
@@ -751,7 +751,7 @@ class System(_Methods):
 
         For the generalized coordinates, generalized speeds and bodies it is
         checked whether they are already known by the system instance. If they
-        are, then they are not added. The kinematical differential equations are
+        are, then they are not added. The kinematic differential equations are
         however always added to the system, so do not also add those manually
         beforehand.
 
@@ -973,7 +973,7 @@ class System(_Methods):
             - The number of generalized coordinates should be less than or equal
               to the number of generalized speeds.
             - The number of generalized coordinates should equal the number of
-              kinematical differential equations.
+              kinematic differential equations.
         - If ``LagrangesMethod`` is used as ``eom_method``:
             - There should not be any generalized speeds that are not
               derivatives of the generalized coordinates (this includes the
@@ -1031,7 +1031,7 @@ class System(_Methods):
                 msgs.append(f'The generalized speeds {missing_u} used in '
                             f'joints are not added to the system.')
             if missing_kdes:
-                msgs.append(f'The kinematical differential equations '
+                msgs.append(f'The kinematic differential equations '
                             f'{missing_kdes} used in joints are not added to '
                             f'the system.')
             if n_u_dep != n_hc + n_nhc:
@@ -1044,7 +1044,7 @@ class System(_Methods):
                             f'generalized speeds {n_u}.')
             if n_u != n_kdes:
                 msgs.append(f'The number of generalized speeds {n_u} should be '
-                            f'equal to the number of kinematical differential '
+                            f'equal to the number of kinematic differential '
                             f'equations {n_kdes}.')
         elif issubclass(eom_method, LagrangesMethod):
             not_qdots = set(self.u).difference(self.q.diff(dynamicsymbols._t))
@@ -1106,7 +1106,7 @@ class SymbolicSystem:
     F_3 : right hand side of the dynamical equations in implicit form
     M_2 : mass matrix of the combined equations in implicit form
     M_3 : mass matrix of the dynamical equations in implicit form
-    G : right hand side of the kinematical differential equations
+    G : right hand side of the kinematic differential equations
 
         Parameters
         ==========
@@ -1136,7 +1136,7 @@ class SymbolicSystem:
             assumed.
 
         coordinate_derivatives : Matrix, optional
-            The right hand side of the kinematical equations in explicit form.
+            The right hand side of the kinematic equations in explicit form.
             If given it will be assumed that the equations of motion are being
             entered in form [3].
 
@@ -1206,7 +1206,7 @@ class SymbolicSystem:
         This is the M matrix in form [2] of the equations of motion.
         This matrix contains a block diagonal structure where the top
         left block (the first rows) represent the matrix in the
-        implicit form of the kinematical equations and the bottom right
+        implicit form of the kinematic equations and the bottom right
         block (the last rows) represent the matrix in the implicit form
         of the dynamical equations.
 
@@ -1222,7 +1222,7 @@ class SymbolicSystem:
         motion in explicit form (form [1] from above).
 
     kin_explicit_rhs : Matrix, shape(m, 1)
-        This is the right hand side of the explicit form of the kinematical
+        This is the right hand side of the explicit form of the kinematic
         equations of motion as can be seen in form [3] (the G matrix).
 
     output_eqns : Dictionary
@@ -1369,7 +1369,7 @@ class SymbolicSystem:
     @property
     def dyn_implicit_mat(self):
         """Returns the matrix, M, corresponding to the dynamic equations in
-        implicit form, M x' = F, where the kinematical equations are not
+        implicit form, M x' = F, where the kinematic equations are not
         included"""
         if self._dyn_implicit_mat is None:
             raise AttributeError("dyn_implicit_mat is not specified for "
@@ -1380,7 +1380,7 @@ class SymbolicSystem:
     @property
     def dyn_implicit_rhs(self):
         """Returns the column matrix, F, corresponding to the dynamic equations
-        in implicit form, M x' = F, where the kinematical equations are not
+        in implicit form, M x' = F, where the kinematic equations are not
         included"""
         if self._dyn_implicit_rhs is None:
             raise AttributeError("dyn_implicit_rhs is not specified for "
@@ -1391,7 +1391,7 @@ class SymbolicSystem:
     @property
     def comb_implicit_mat(self):
         """Returns the matrix, M, corresponding to the equations of motion in
-        implicit form (form [2]), M x' = F, where the kinematical equations are
+        implicit form (form [2]), M x' = F, where the kinematic equations are
         included"""
         if self._comb_implicit_mat is None:
             if self._dyn_implicit_mat is not None:
@@ -1412,7 +1412,7 @@ class SymbolicSystem:
     @property
     def comb_implicit_rhs(self):
         """Returns the column matrix, F, corresponding to the equations of
-        motion in implicit form (form [2]), M x' = F, where the kinematical
+        motion in implicit form (form [2]), M x' = F, where the kinematic
         equations are included"""
         if self._comb_implicit_rhs is None:
             if self._dyn_implicit_rhs is not None:
@@ -1445,7 +1445,7 @@ class SymbolicSystem:
     @property
     def comb_explicit_rhs(self):
         """Returns the right hand side of the equations of motion in explicit
-        form, x' = F, where the kinematical equations are included"""
+        form, x' = F, where the kinematic equations are included"""
         if self._comb_explicit_rhs is None:
             raise AttributeError("Please run .combute_explicit_form before "
                                  "attempting to access comb_explicit_rhs.")
@@ -1454,7 +1454,7 @@ class SymbolicSystem:
 
     @property
     def kin_explicit_rhs(self):
-        """Returns the right hand side of the kinematical equations in explicit
+        """Returns the right hand side of the kinematic equations in explicit
         form, q' = G"""
         if self._kin_explicit_rhs is None:
             raise AttributeError("kin_explicit_rhs is not specified for "
