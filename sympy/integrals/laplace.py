@@ -1000,7 +1000,8 @@ def laplace_correspondence(f, fdict):
     Examples
     ========
 
-    >>> from sympy import laplace_transform, diff, Function, laplace_correspondence
+    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy import laplace_correspondence, inverse_laplace_transform
     >>> from sympy.abc import t, s
     >>> y = Function("y")
     >>> Y = Function("Y")
@@ -1048,7 +1049,8 @@ def laplace_initial_conds(f, t, fdict):
     Examples
     ========
 
-    >>> from sympy import laplace_transform, diff, Function, laplace_correspondence, laplace_initial_conds
+    >>> from sympy import laplace_transform, diff, Function
+    >>> from sympy import laplace_correspondence, laplace_initial_conds
     >>> from sympy.abc import t, s
     >>> y = Function("y")
     >>> Y = Function("Y")
