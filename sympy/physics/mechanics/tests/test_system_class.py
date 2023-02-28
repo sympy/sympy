@@ -124,9 +124,6 @@ def test_add_kdes():
     assert system.kdes == Matrix([q1d - u1])
     system.add_kdes(q2d + q3d - u2, q3d - q2d + u3)
     assert system.kdes == Matrix([q1d - u1, q2d + q3d - u2, q3d - q2d + u3])
-    system.add_kdes(u1 - q1d)  # It should not recognize these
-    assert system.kdes == Matrix([q1d - u1, q2d + q3d - u2, q3d - q2d + u3,
-                                  u1 - q1d])
     # Test kdes setter
     system.kdes = q1d - u1
     assert system.kdes == Matrix([q1d - u1])
@@ -138,7 +135,8 @@ def test_add_kdes():
     system.add_kdes(q1d - u1)
     assert system.kdes == Matrix([q1d - u1])
     # Test whether errors are raised
-    raises(ValueError, lambda: system.add_kdes(q1d - u1))
+    raises(ValueError, lambda: system.add_kdes(q1d - u1))  # Duplicate
+    raises(ValueError, lambda: system.add_kdes(-(q1d - u1)))  # Negative
     raises(TypeError, lambda: system.add_kdes([q3d - u3]))
     raises(ValueError, lambda: system.add_kdes(q1d - q1d))
     with raises(ValueError):
@@ -172,6 +170,7 @@ def test_add_constraints():
     assert system.holonomic_constraints == Matrix([q3 - q1])
     # Test whether errors are raised
     raises(ValueError, lambda: system.add_holonomic_constraints(q3 - q1))
+    raises(ValueError, lambda: system.add_holonomic_constraints(-(q3 - q1)))
     raises(TypeError, lambda: system.add_holonomic_constraints([q3 - q2]))
     raises(ValueError, lambda: system.add_holonomic_constraints(q1 - q1))
     with raises(ValueError):
@@ -279,20 +278,21 @@ def test_add_joints():
     assert system.q_ind == Matrix([q1, q3])
     assert system.u_ind == Matrix([u1, u3])
     assert system.kdes == Matrix([u1 - q1.diff(t), u3 - q3.diff(t)])
+    system.add_kdes(-(u2 - q2.diff(t)))
     system.add_joints(J2)
     assert system.joints == (J1, J3, J2)
     assert system.bodies == (rb1, rb2, rb4, rb3)
     assert system.q_ind == Matrix([q1, q3, q2])
     assert system.u_ind == Matrix([u1, u3, u2])
     assert system.kdes == Matrix([u1 - q1.diff(t), u3 - q3.diff(t),
-                                  u2 - q2.diff(t)])
+                                  -(u2 - q2.diff(t))])
     system.add_joints(J_lag)
     assert system.joints == (J1, J3, J2, J_lag)
     assert system.bodies == (rb1, rb2, rb4, rb3, rb5)
     assert system.q_ind == Matrix([q1, q3, q2, q4])
     assert system.u_ind == Matrix([u1, u3, u2, q4.diff(t)])
     assert system.kdes == Matrix([u1 - q1.diff(t), u3 - q3.diff(t),
-                                  u2 - q2.diff(t)])
+                                  -(u2 - q2.diff(t))])
     assert system.q_dep[:] == []
     assert system.u_dep[:] == []
     raises(ValueError, lambda: system.add_joints(J2))
@@ -357,9 +357,12 @@ def test_validate_system_kanes():
     system.validate_system()
     system.kdes = kdes[1:]
     raises(ValueError, lambda: system.validate_system())
-    # Test missing holonomic constraint
+    # Test negative joint kdes
     system.q_ind = q_ind
     system.u_ind = u_ind
+    system.kdes = [-kdes[0]] + kdes[1:]
+    system.validate_system()
+    # Test missing holonomic constraint
     system.kdes = kdes
     system.validate_system()
     system.holonomic_constraints = []
