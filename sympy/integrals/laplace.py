@@ -1234,7 +1234,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     (s/(a + s), -re(a), True)
 
     There are also helper functions that make it easy to solve differential
-    equations by Laplace transform. For example, to solve 
+    equations by Laplace transform. For example, to solve
 
     .. math :: m x''(t) + d x'(t) + k x(t) = 0
 
