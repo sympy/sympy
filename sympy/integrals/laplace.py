@@ -1043,7 +1043,7 @@ def laplace_initial_conds(f, t, fdict):
     This helper function takes a function `f` that is the result of a
     ``laplace_transform``.  It takes an fdict of the form ``y: [1, 4, 2]``,
     where the values in the list are the initial value, the initial slope, the
-    initia second derivative, etc., of the function `y(t)` and replaces all
+    initial second derivative, etc., of the function `y(t)`, and replaces all
     unevaluated initial conditions.
 
     Examples
