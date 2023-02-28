@@ -440,12 +440,17 @@ class System(_Methods):
                 Matrix(1, len(coords_dep), coords_dep).T)
 
     @staticmethod
-    def _parse_expressions(new_expressions, old_expressions, name):
+    def _parse_expressions(new_expressions, old_expressions, name,
+                           check_negatives=False):
         """Helper to parse expressions like constraints."""
         old_expressions = old_expressions[:]
         new_expressions = list(new_expressions)  # Converts a possible tuple
-        System._check_objects(new_expressions, old_expressions, Basic,
-                              name, 'expressions')
+        if check_negatives:
+            check_exprs = old_expressions + [-expr for expr in old_expressions]
+        else:
+            check_exprs = old_expressions
+        System._check_objects(new_expressions, check_exprs, Basic, name,
+                              'expressions')
         for expr in new_expressions:
             if expr == 0:
                 raise ValueError(f'Parsed {name} are zero.')
@@ -499,7 +504,8 @@ class System(_Methods):
 
         """
         self._kdes = self._parse_expressions(
-            kdes, self.kdes, 'kinematical differential equations')
+            kdes, self.kdes, 'kinematical differential equations',
+            check_negatives=True)
 
     @_reset_eom_method
     def add_holonomic_constraints(self, *constraints):
@@ -513,7 +519,8 @@ class System(_Methods):
 
         """
         self._hol_coneqs = self._parse_expressions(
-            constraints, self._hol_coneqs, 'holonomic constraints')
+            constraints, self._hol_coneqs, 'holonomic constraints',
+            check_negatives=True)
 
     @_reset_eom_method
     def add_nonholonomic_constraints(self, *constraints):
@@ -527,7 +534,8 @@ class System(_Methods):
 
         """
         self._nonhol_coneqs = self._parse_expressions(
-            constraints, self._nonhol_coneqs, 'nonholonomic constraints')
+            constraints, self._nonhol_coneqs, 'nonholonomic constraints',
+            check_negatives=True)
 
     @_reset_eom_method
     def add_bodies(self, *bodies):
@@ -758,7 +766,7 @@ class System(_Methods):
             bodies.update((joint.parent, joint.child))
         coordinates = coordinates.difference(self.q)
         speeds = speeds.difference(self.u)
-        kdes = kdes.difference(self.kdes)
+        kdes = kdes.difference(self.kdes[:] + (-self.kdes)[:])
         bodies = bodies.difference(self.bodies)
         self.add_coordinates(*tuple(coordinates))
         self.add_speeds(*tuple(speeds))
@@ -1017,7 +1025,8 @@ class System(_Methods):
             missing_kdes, missing_u = set(), set()
             for joint in self.joints:
                 missing_u.update(set(joint.speeds).difference(u_set))
-                missing_kdes.update(set(joint.kdes).difference(self.kdes))
+                missing_kdes.update(set(joint.kdes).difference(
+                    self.kdes[:] + (-self.kdes)[:]))
             if missing_u:
                 msgs.append(f'The generalized speeds {missing_u} used in '
                             f'joints are not added to the system.')
