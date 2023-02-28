@@ -992,10 +992,10 @@ def _laplace_apply_simple_rules(f, t, s):
 def laplace_correspondence(f, fdict):
     """
     This helper function takes a function `f` that is the result of a
-    `laplace_transform` or an `inverse_laplace_transform`.  It replaces all
-    unevaluated `LaplaceTransform(y(t), t, s)` by `Y(s)` for any `s` and
-    all `InverseLaplaceTransform(Y(s), s, t)` by `y(t)` for any `t` if
-    `fdict` contains a correspondence `{y: Y}`.
+    ``laplace_transform`` or an ``inverse_laplace_transform``.  It replaces all
+    unevaluated ``LaplaceTransform(y(t), t, s)`` by `Y(s)` for any `s` and
+    all ``InverseLaplaceTransform(Y(s), s, t)`` by `y(t)` for any `t` if
+    ``fdict`` contains a correspondence ``{y: Y}``.
 
     Examples
     ========
@@ -1041,8 +1041,8 @@ def laplace_correspondence(f, fdict):
 def laplace_initial_conds(f, t, fdict):
     """
     This helper function takes a function `f` that is the result of a
-    `laplace_transform`.  It takes an fdict of the form `y: [1, 4, 2]`, where
-    the values in the list are the initial value, the initial slope, the
+    ``laplace_transform``.  It takes an fdict of the form ``y: [1, 4, 2]``,
+    where the values in the list are the initial value, the initial slope, the
     initia second derivative, etc., of the function `y(t)` and replaces all
     unevaluated initial conditions.
 
