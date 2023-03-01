@@ -1,4 +1,4 @@
-[tool.pytest.ini]
+[tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow'"
 
