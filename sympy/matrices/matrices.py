@@ -1262,7 +1262,6 @@ class MatrixBase(MatrixDeprecated,
                 (self[2] * b[0] - self[0] * b[2]),
                 (self[0] * b[1] - self[1] * b[0])))
 
-    @property
     def hat(self):
         r"""
         Return the skew-symmetric matrix representing the cross product,
@@ -1292,11 +1291,10 @@ class MatrixBase(MatrixDeprecated,
                  z,  0, -x,
                 -y,  x,  0))
 
-    @property
     def vee(self):
         r"""
         Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
-        so that ``self * b`` is equivalent to  ``self.vee.cross(b)``.
+        so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
 
         Parameters
         ==========
