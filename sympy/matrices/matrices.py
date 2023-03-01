@@ -1313,7 +1313,7 @@ class MatrixBase(MatrixDeprecated,
         if not (self.shape == (3, 3)):
             raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
                              str(self.shape))
-        elif self.T != -self:
+        elif not self.is_anti_symmetric():
             raise ValueError("Matrix is not skew-symmetric")
         else:
             return self._new(3, 1, (
