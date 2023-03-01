@@ -106,7 +106,8 @@ class TestUpdateArgsWithPaths:
     def test_multiple_paths_from_non_root(paths: List[str], expected_paths: List[str]):
         """Multiple partial paths are matched correctly."""
         args = update_args_with_paths(paths=paths, keywords=None, args=[])
-        for arg, expected in zip(sorted(args), expected_paths, strict=True):
+        assert len(args) == len(expected_paths)
+        for arg, expected in zip(sorted(args), expected_paths):
             assert expected in arg
 
     @staticmethod
@@ -126,7 +127,8 @@ class TestUpdateArgsWithPaths:
         keywords = ('bicycle', )
         args = update_args_with_paths(paths=paths, keywords=keywords, args=[])
         expected_args = ['sympy/physics/mechanics/tests/test_kane3.py::test_bicycle']
-        for arg, expected in zip(sorted(args), expected_args, strict=True):
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
             assert expected in arg
 
     @staticmethod
@@ -145,7 +147,8 @@ class TestUpdateArgsWithPaths:
         keywords = ('3538', )
         args = update_args_with_paths(paths=paths, keywords=keywords, args=[])
         expected_args = ['sympy/core/tests/test_sympify.py::test_issue_3538']
-        for arg, expected in zip(sorted(args), expected_args, strict=True):
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
             assert expected in arg
 
     @staticmethod
@@ -157,7 +160,8 @@ class TestUpdateArgsWithPaths:
             'sympy/core/tests/test_sympify.py::test_issue_3538',
             'sympy/physics/mechanics/tests/test_kane3.py::test_bicycle',
         ]
-        for arg, expected in zip(sorted(args), expected_args, strict=True):
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
             assert expected in arg
 
     @staticmethod
@@ -169,5 +173,6 @@ class TestUpdateArgsWithPaths:
             'sympy/integrals/tests/test_heurisch.py::test_heurisch_symbolic_coeffs_1130',
             'sympy/utilities/tests/test_lambdify.py::test_python_div_zero_issue_11306',
         ]
-        for arg, expected in zip(sorted(args), expected_args, strict=True):
+        assert len(args) == len(expected_args)
+        for arg, expected in zip(sorted(args), expected_args):
             assert expected in arg
