@@ -2548,6 +2548,12 @@ def test_cross():
     raises(ShapeError, lambda:
         Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
+def test_hat_vee():
+    v1 = Matrix([x, y, z])
+    v2 = Matrix([a, b, c])
+    assert v1.hat * v2 == v1.cross(v2)
+    assert v1.hat.T == -v1.hat
+    assert v1.hat.vee == v1
 
 def test_hash():
     for cls in classes[-2:]:
