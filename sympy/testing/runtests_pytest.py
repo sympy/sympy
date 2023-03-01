@@ -27,7 +27,7 @@ import os
 import pathlib
 import re
 from fnmatch import fnmatch
-from typing import List
+from typing import List, Optional, Tuple
 
 try:
     import pytest
@@ -106,7 +106,11 @@ def update_args_with_rootdir(args: List[str]) -> List[str]:
     return args
 
 
-def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
+def update_args_with_paths(
+    paths: List[str],
+    keywords: Optional[Tuple[str]],
+    args: List[str],
+) -> List[str]:
     """Appends valid paths and flags to the args `list` passed to `pytest.main`.
 
     The are three different types of "path" that a user may pass to the `paths`
@@ -158,12 +162,36 @@ def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
                                 matches.append(str(pathlib.Path(path, file)))
         return matches
 
+    def is_tests_file(filepath: str) -> bool:
+        path = pathlib.Path(filepath)
+        if not path.is_file():
+            return False
+        if not path.parts[-1].startswith('test_'):
+            return False
+        if not path.suffix == '.py':
+            return False
+        return True
+
+    def find_tests_matching_keywords(keywords, filepath):
+        matches = []
+        with open(filepath, encoding='utf-8') as tests_file:
+            source = tests_file.read()
+            for line in source.splitlines():
+                if line.lstrip().startswith('def '):
+                    for kw in keywords:
+                        if line.lower().find(kw.lower()) != -1:
+                            test_name = line.split(' ')[1].split('(')[0]
+                            full_test_path = filepath + '::' + test_name
+                            matches.append(full_test_path)
+        return matches
+
     valid_testpaths_default = []
     for testpath in TESTPATHS_DEFAULT:
         absolute_testpath = pathlib.Path(sympy_dir(), testpath)
         if absolute_testpath.exists():
             valid_testpaths_default.append(str(absolute_testpath))
 
+    candidate_paths = []
     if paths:
         full_paths = []
         partial_paths = []
@@ -173,10 +201,30 @@ def update_args_with_paths(paths: List[str], args: List[str]) -> List[str]:
             else:
                 partial_paths.append(path)
         matched_paths = find_paths_matching_partial(partial_paths)
-        args.extend(full_paths)
-        args.extend(matched_paths)
+        candidate_paths.extend(full_paths)
+        candidate_paths.extend(matched_paths)
     else:
-        args.extend(valid_testpaths_default)
+        candidate_paths.extend(valid_testpaths_default)
+
+    if keywords is not None:
+        matches = []
+        for path in candidate_paths:
+            if is_tests_file(path):
+                test_matches = find_tests_matching_keywords(keywords, path)
+                matches.extend(test_matches)
+            else:
+                for root, dirnames, filenames in os.walk(path):
+                    for filename in filenames:
+                        absolute_filepath = str(pathlib.Path(root, filename))
+                        if is_tests_file(absolute_filepath):
+                            test_matches = find_tests_matching_keywords(
+                                keywords,
+                                absolute_filepath,
+                            )
+                            matches.extend(test_matches)
+        args.extend(matches)
+    else:
+        args.extend(candidate_paths)
     return args
 
 
@@ -348,9 +396,6 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     if tb := kwargs.get('tb'):
         args.extend(['--tb', tb])
 
-    if kw := kwargs.get('kw'):
-        args.extend(['-k', str(kw)])
-
     if kwargs.get('pdb'):
         args.append('--pdb')
 
@@ -417,7 +462,12 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             raise ModuleNotFoundError(msg)
         args.append('--store-durations')
 
-    args = update_args_with_paths(paths, args)
+    if (keywords := kwargs.get('kw')) is not None:
+        keywords = tuple(str(kw) for kw in keywords)
+    else:
+        keywords = ()
+
+    args = update_args_with_paths(paths, keywords, args)
     exit_code = pytest.main(args)
     return exit_code
 
