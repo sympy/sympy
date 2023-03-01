@@ -513,7 +513,8 @@ def opt_cse(exprs, order='canonical'):
 
         if not isinstance(expr, MatrixExpr) and expr.could_extract_minus_sign():
             # XXX -expr does not always work rigorously for some expressions
-            # Issue https://github.com/sympy/sympy/issues/24818
+            # containing UnevaluatedExpr.
+            # https://github.com/sympy/sympy/issues/24818
             if isinstance(expr, Add):
                 neg_expr = Add(*(-i for i in expr.args))
             else:
