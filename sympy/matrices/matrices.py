@@ -1267,10 +1267,6 @@ class MatrixBase(MatrixDeprecated,
         Return the skew-symmetric matrix representing the cross product,
         so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
 
-        Parameters
-        ==========
-            b : 3x1 Matrix
-
         See Also
         ========
 
@@ -1295,10 +1291,6 @@ class MatrixBase(MatrixDeprecated,
         r"""
         Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
         so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
-
-        Parameters
-        ==========
-            b : 3x3 Skew-symmetric Matrix
 
         See Also
         ========
