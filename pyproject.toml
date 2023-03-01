@@ -1,6 +1,6 @@
 [tool.pytest.ini]
 # Don't run the tests marked as slow by default.
-addopts = -m 'not slow'
+addopts = "-m 'not slow'"
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
