@@ -206,7 +206,7 @@ def update_args_with_paths(
     else:
         candidate_paths.extend(valid_testpaths_default)
 
-    if keywords is not None:
+    if keywords is not None and keywords != ():
         matches = []
         for path in candidate_paths:
             if is_tests_file(path):
@@ -225,6 +225,7 @@ def update_args_with_paths(
         args.extend(matches)
     else:
         args.extend(candidate_paths)
+
     return args
 
 
