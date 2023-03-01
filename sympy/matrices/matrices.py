@@ -1242,6 +1242,8 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         dot
+        hat
+        vee
         multiply
         multiply_elementwise
         """
@@ -1259,6 +1261,67 @@ class MatrixBase(MatrixDeprecated,
                 (self[1] * b[2] - self[2] * b[1]),
                 (self[2] * b[0] - self[0] * b[2]),
                 (self[0] * b[1] - self[1] * b[0])))
+
+    @property
+    def hat(self):
+        r"""
+        Return the skew-symmetric matrix representing the cross product,
+        so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
+
+        Parameters
+        ==========
+            b : 3x1 Matrix
+
+        See Also
+        ========
+
+        dot
+        cross
+        vee
+        multiply
+        multiply_elementwise
+        """
+
+        if not (self.shape == (3, 1)):
+            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
+                             str(self.shape))
+        else:
+            x, y, z = self
+            return self._new(3, 3, (
+                 0, -z,  y,
+                 z,  0, -x,
+                -y,  x,  0))
+
+    @property
+    def vee(self):
+        r"""
+        Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
+        so that ``self * b`` is equivalent to  ``self.vee.cross(b)``.
+
+        Parameters
+        ==========
+            b : 3x3 Skew-symmetric Matrix
+
+        See Also
+        ========
+
+        dot
+        cross
+        hat
+        multiply
+        multiply_elementwise
+        """
+
+        if not (self.shape == (3, 3)):
+            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
+                             str(self.shape))
+        elif self.T != -self:
+            raise ValueError("Matrix is not skew-symmetric")
+        else:
+            return self._new(3, 1, (
+                 self[2, 1],
+                 self[0, 2],
+                 self[1, 0]))
 
     @property
     def D(self):
