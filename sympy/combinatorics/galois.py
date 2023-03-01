@@ -63,9 +63,9 @@ class S3TransitiveSubgroups(Enum):
     S3 = "S3"
 
     def get_perm_group(self):
-        if self == self.A3:
+        if self == S3TransitiveSubgroups.A3:
             return AlternatingGroup(3)
-        elif self == self.S3:
+        elif self == S3TransitiveSubgroups.S3:
             return SymmetricGroup(3)
 
 
@@ -80,15 +80,15 @@ class S4TransitiveSubgroups(Enum):
     S4 = "S4"
 
     def get_perm_group(self):
-        if self == self.C4:
+        if self == S4TransitiveSubgroups.C4:
             return CyclicGroup(4)
-        elif self == self.V:
+        elif self == S4TransitiveSubgroups.V:
             return four_group()
-        elif self == self.D4:
+        elif self == S4TransitiveSubgroups.D4:
             return DihedralGroup(4)
-        elif self == self.A4:
+        elif self == S4TransitiveSubgroups.A4:
             return AlternatingGroup(4)
-        elif self == self.S4:
+        elif self == S4TransitiveSubgroups.S4:
             return SymmetricGroup(4)
 
 
@@ -103,15 +103,15 @@ class S5TransitiveSubgroups(Enum):
     S5 = "S5"
 
     def get_perm_group(self):
-        if self == self.C5:
+        if self == S5TransitiveSubgroups.C5:
             return CyclicGroup(5)
-        elif self == self.D5:
+        elif self == S5TransitiveSubgroups.D5:
             return DihedralGroup(5)
-        elif self == self.M20:
+        elif self == S5TransitiveSubgroups.M20:
             return M20()
-        elif self == self.A5:
+        elif self == S5TransitiveSubgroups.A5:
             return AlternatingGroup(5)
-        elif self == self.S5:
+        elif self == S5TransitiveSubgroups.S5:
             return SymmetricGroup(5)
 
 
@@ -137,37 +137,37 @@ class S6TransitiveSubgroups(Enum):
     S6 = "S6"
 
     def get_perm_group(self):
-        if self == self.C6:
+        if self == S6TransitiveSubgroups.C6:
             return CyclicGroup(6)
-        elif self == self.S3:
+        elif self == S6TransitiveSubgroups.S3:
             return S3_in_S6()
-        elif self == self.D6:
+        elif self == S6TransitiveSubgroups.D6:
             return DihedralGroup(6)
-        elif self == self.A4:
+        elif self == S6TransitiveSubgroups.A4:
             return A4_in_S6()
-        elif self == self.G18:
+        elif self == S6TransitiveSubgroups.G18:
             return G18()
-        elif self == self.A4xC2:
+        elif self == S6TransitiveSubgroups.A4xC2:
             return A4xC2()
-        elif self == self.S4m:
+        elif self == S6TransitiveSubgroups.S4m:
             return S4m()
-        elif self == self.S4p:
+        elif self == S6TransitiveSubgroups.S4p:
             return S4p()
-        elif self == self.G36m:
+        elif self == S6TransitiveSubgroups.G36m:
             return G36m()
-        elif self == self.G36p:
+        elif self == S6TransitiveSubgroups.G36p:
             return G36p()
-        elif self == self.S4xC2:
+        elif self == S6TransitiveSubgroups.S4xC2:
             return S4xC2()
-        elif self == self.PSL2F5:
+        elif self == S6TransitiveSubgroups.PSL2F5:
             return PSL2F5()
-        elif self == self.G72:
+        elif self == S6TransitiveSubgroups.G72:
             return G72()
-        elif self == self.PGL2F5:
+        elif self == S6TransitiveSubgroups.PGL2F5:
             return PGL2F5()
-        elif self == self.A6:
+        elif self == S6TransitiveSubgroups.A6:
             return AlternatingGroup(6)
-        elif self == self.S6:
+        elif self == S6TransitiveSubgroups.S6:
             return SymmetricGroup(6)
 
 
