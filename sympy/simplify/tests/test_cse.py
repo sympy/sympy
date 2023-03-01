@@ -545,7 +545,8 @@ def test_cse_unevaluated():
     elif ue == -xp1:
         assert red == (-1 + x0) / (1 + x0)
     else:
-        raise ValueError("Unexpected common subexpression found")
+        msg = f'Expected common subexpression {xp1} or {-xp1}, instead got {ue}'
+        raise ValueError(msg)
 
 
 def test_cse__performance():
