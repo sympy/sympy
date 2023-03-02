@@ -1068,7 +1068,7 @@ def laplace_initial_conds(f, t, fdict, /):
         Dictionary containing a list of initial conditions for every
         function, e.g., ``{y: [0, 1, 2], x: y: [3, 4, 5]}``. The order
         of derivatives is ascending, so `0`, `1`, `2` are `y(0)`, `y'(0)`,
-        and `y''(0)`m respectively.
+        and `y''(0)`, respectively.
 
     Examples
     ========
