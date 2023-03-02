@@ -204,8 +204,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
 _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
-    """
-    The class inherits from two other classes, AtomicExpr and Boolean. 
+    """The class inherits from two other classes, AtomicExpr and Boolean. 
     The Symbol class assumes that the mathematical operation of multiplication is commutative by default. 
     This assumption can be overridden in the constructor.
     The class has one attribute, is_comparable, which is set to False.
