@@ -9,6 +9,7 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant,TransferFunction
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+
 from sympy import Matrix,solve,Wild,symbols,shape
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
@@ -991,6 +992,7 @@ def pade_approximate_time_delay(system,order=2):
     Examples
     ========
     >>> from sympy.abc import s
+    >>> from sympy import Symbol,pprint,exp
     >>> from sympy.physics.control.lti import TransferFunction
     >>> T = Symbol('T')
     >>> tf1 = TransferFunction(exp(-T*s),1,s)
