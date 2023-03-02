@@ -1277,7 +1277,7 @@ class MatrixBase(MatrixDeprecated,
         multiply_elementwise
         """
 
-        if not (self.shape == (3, 1)):
+        if self.shape != (3, 1):
             raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
                              str(self.shape))
         else:
@@ -1302,7 +1302,7 @@ class MatrixBase(MatrixDeprecated,
         multiply_elementwise
         """
 
-        if not (self.shape == (3, 3)):
+        if self.shape != (3, 3):
             raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
                              str(self.shape))
         elif not self.is_anti_symmetric():
