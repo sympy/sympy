@@ -59,17 +59,17 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     frame : ReferenceFrame
         The frame the inertia is defined in
-    ixx : Sympifyable
+    ixx : sympifiable
         the xx element in the inertia dyadic
-    iyy : Sympifyable
+    iyy : sympifiable
         the yy element in the inertia dyadic
-    izz : Sympifyable
+    izz : sympifiable
         the zz element in the inertia dyadic
-    ixy : Sympifyable
+    ixy : sympifiable
         the xy element in the inertia dyadic
-    iyz : Sympifyable
+    iyz : sympifiable
         the yz element in the inertia dyadic
-    izx : Sympifyable
+    izx : sympifiable
         the zx element in the inertia dyadic
 
     Examples
@@ -108,7 +108,7 @@ def inertia_of_point_mass(mass, pos_vec, frame):
     Parameters
     ==========
 
-    mass : Sympifyable
+    mass : sympifiable
         Mass of the point mass
     pos_vec : Vector
         Position from point O to point mass

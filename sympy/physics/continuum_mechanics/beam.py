@@ -129,15 +129,15 @@ class Beam:
         Parameters
         ==========
 
-        length : Sympifyable
+        length : sympifiable
             A Symbol or value representing the Beam's length.
 
-        elastic_modulus : Sympifyable
+        elastic_modulus : sympifiable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material. It can
             also be a continuous function of position along the beam.
 
-        second_moment : Sympifyable or Geometry object
+        second_moment : sympifiable or Geometry object
             Describes the cross-section of the beam via a SymPy expression
             representing the Beam's second moment of area. It is a geometrical
             property of an area which reflects how its points are distributed
@@ -411,7 +411,7 @@ class Beam:
 
         Parameters
         ==========
-        loc : Sympifyable
+        loc : sympifiable
             Location of point at which support is applied.
         type : String
             Determines type of Beam support applied. To apply support structure
@@ -472,7 +472,7 @@ class Beam:
 
         Parameters
         ==========
-        value : Sympifyable
+        value : sympifiable
             The value inserted should have the units [Force/(Distance**(n+1)]
             where n is the order of applied load.
             Units for applied loads:
@@ -484,7 +484,7 @@ class Beam:
                - For parabolic ramp loads, unit = kN/m/m/m
                - ... so on.
 
-        start : Sympifyable
+        start : sympifiable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
         order : Integer
@@ -497,7 +497,7 @@ class Beam:
                - For parabolic ramp loads, order = 2
                - ... so on.
 
-        end : Sympifyable, optional
+        end : sympifiable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
 
@@ -542,9 +542,9 @@ class Beam:
 
         Parameters
         ==========
-        value : Sympifyable
+        value : sympifiable
             The magnitude of an applied load.
-        start : Sympifyable
+        start : sympifiable
             The starting point of the applied load. For point moments and
             point forces this is the location of application.
         order : Integer
@@ -555,7 +555,7 @@ class Beam:
             - For ramp loads, order=1
             - For parabolic ramp loads, order=2
             - ... so on.
-        end : Sympifyable, optional
+        end : sympifiable, optional
             An optional argument that can be used if the load has an end point
             within the length of the beam.
 
@@ -2390,20 +2390,20 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-        length : Sympifyable
+        length : sympifiable
             A Symbol or value representing the Beam's length.
-        elastic_modulus : Sympifyable
+        elastic_modulus : sympifiable
             A SymPy expression representing the Beam's Modulus of Elasticity.
             It is a measure of the stiffness of the Beam material.
-        shear_modulus : Sympifyable
+        shear_modulus : sympifiable
             A SymPy expression representing the Beam's Modulus of rigidity.
             It is a measure of rigidity of the Beam material.
-        second_moment : Sympifyable or list
+        second_moment : sympifiable or list
             A list of two elements having SymPy expression representing the
             Beam's Second moment of area. First value represent Second moment
             across y-axis and second across z-axis.
             Single SymPy expression can be passed if both values are same
-        area : Sympifyable
+        area : sympifiable
             A SymPy expression representing the Beam's cross-sectional area
             in a plane perpendicular to length of the Beam.
         variable : Symbol, optional
@@ -2527,7 +2527,7 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-        value : Sympifyable
+        value : sympifiable
             The magnitude of an applied load.
         dir : String
             Axis along which load is applied.
@@ -2565,7 +2565,7 @@ class Beam3D(Beam):
 
         Parameters
         ==========
-        value : Sympifyable
+        value : sympifiable
             The magnitude of an applied moment.
         dir : String
             Axis along which moment is applied.

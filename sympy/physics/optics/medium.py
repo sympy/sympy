@@ -39,13 +39,13 @@ class Medium(Basic):
     name: string
         The display name of the Medium.
 
-    permittivity: Sympifyable
+    permittivity: sympifiable
         Electric permittivity of the space.
 
-    permeability: Sympifyable
+    permeability: sympifiable
         Magnetic permeability of the space.
 
-    n: Sympifyable
+    n: sympifiable
         Index of refraction of the medium.
 
 

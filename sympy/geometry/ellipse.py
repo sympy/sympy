@@ -1433,7 +1433,7 @@ class Ellipse(GeometrySet):
         Parameters
         ==========
 
-        point : Point, two-tuple of sympifyable objects, or None(default=None)
+        point : Point, two-tuple of sympifiable objects, or None(default=None)
             point is the point at which section modulus is to be found.
             If "point=None" section modulus will be calculated for the
             point farthest from the centroidal axis of the ellipse.

@@ -108,7 +108,7 @@ class Dyadic(Printable, EvalfMixin):
         return ol
 
     def __truediv__(self, other):
-        """Divides the Dyadic by a sympifyable expression. """
+        """Divides the Dyadic by a sympifiable expression. """
         return self.__mul__(1 / other)
 
     def __eq__(self, other):
@@ -128,12 +128,12 @@ class Dyadic(Printable, EvalfMixin):
         return set(self.args) == set(other.args)
 
     def __mul__(self, other):
-        """Multiplies the Dyadic by a sympifyable expression.
+        """Multiplies the Dyadic by a sympifiable expression.
 
         Parameters
         ==========
 
-        other : Sympafiable
+        other : sympifiable
             The scalar to multiply this Dyadic with
 
         Examples
