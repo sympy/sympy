@@ -989,13 +989,24 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
-def laplace_correspondence(f, fdict):
+def laplace_correspondence(f, fdict, /):
     """
     This helper function takes a function `f` that is the result of a
     ``laplace_transform`` or an ``inverse_laplace_transform``.  It replaces all
     unevaluated ``LaplaceTransform(y(t), t, s)`` by `Y(s)` for any `s` and
     all ``InverseLaplaceTransform(Y(s), s, t)`` by `y(t)` for any `t` if
     ``fdict`` contains a correspondence ``{y: Y}``.
+
+    Parameters
+    ==========
+
+    f : sympy expression
+        Expression nevaluated ``LaplaceTransform`` or ``LaplaceTransform``
+        objects.
+    fdict : dictionary
+        Dictionary containing one or more function correspondences,
+        e.g., ``{x: X, y: Y}`` meaning that ``X`` and ``Y`` are the
+        Laplace transforms of ``x`` and ``y``, respectively.
 
     Examples
     ========
@@ -1038,13 +1049,26 @@ def laplace_correspondence(f, fdict):
     return func(*args)
 
 
-def laplace_initial_conds(f, t, fdict):
+def laplace_initial_conds(f, t, fdict, /):
     """
     This helper function takes a function `f` that is the result of a
-    ``laplace_transform``.  It takes an fdict of the form ``y: [1, 4, 2]``,
+    ``laplace_transform``.  It takes an fdict of the form ``{y: [1, 4, 2]}``,
     where the values in the list are the initial value, the initial slope, the
     initial second derivative, etc., of the function `y(t)`, and replaces all
     unevaluated initial conditions.
+
+    Parameters
+    ==========
+
+    f : sympy expression
+        Expression containing initial conditions of unevaluated functions.
+    t : sympy expression
+        Variable for which the initial conditions are to be applied.
+    fdict : dictionary
+        Dictionary containing a list of initial conditions for every
+        function, e.g., ``{y: [0, 1, 2], x: y: [3, 4, 5]}``. The order
+        of derivatives is ascending, so `0`, `1`, `2` are `y(0)`, `y'(0)`,
+        and `y''(0)`m respectively.
 
     Examples
     ========
