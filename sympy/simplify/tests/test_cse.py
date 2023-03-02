@@ -5,6 +5,7 @@ from operator import add
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
@@ -533,6 +534,20 @@ def test_cse_ignore_issue_15002():
     substs, reduced = cse(l, ignore=(x,))
     rl = [e.subs(reversed(substs)) for e in reduced]
     assert rl == l
+
+
+def test_cse_unevaluated():
+    xp1 = UnevaluatedExpr(x + 1)
+    # This used to cause RecursionError
+    [(x0, ue)], [red] = cse([(-1 - xp1) / (1 - xp1)])
+    if ue == xp1:
+        assert red == (-1 - x0) / (1 - x0)
+    elif ue == -xp1:
+        assert red == (-1 + x0) / (1 + x0)
+    else:
+        msg = f'Expected common subexpression {xp1} or {-xp1}, instead got {ue}'
+        assert False, msg
+
 
 def test_cse__performance():
     nexprs, nterms = 3, 20
