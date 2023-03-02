@@ -3038,7 +3038,7 @@ def test_issue_18208():
 
     # gauss_jordan_solve
     gj_solve, new_vars = A.gauss_jordan_solve(b)
-    gj_solve = [i for i in gj_solve]
+    gj_solve = list(gj_solve)
 
     gj_expected = linsolve_expected.subs(zip([x3, x7, y7, y9, y11], new_vars))
 

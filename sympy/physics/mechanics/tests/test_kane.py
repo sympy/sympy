@@ -101,7 +101,7 @@ def test_two_dof():
     assert KM.mass_matrix_kin == Matrix([[S(1)/2, 0], [0, 2]])
 
     # Check that whether using implicit or explicit kinematics the RHS
-    # equations are consisten with the matrix form
+    # equations are consistent with the matrix form
     for explicit_kinematics in [False, True]:
         KM.explicit_kinematics = explicit_kinematics
         assert simplify(KM.rhs() -

@@ -33,6 +33,7 @@ git_whitelist = {
     '.gitignore',
     '.mailmap',
     # CI
+    '.github/PULL_REQUEST_TEMPLATE.md',
     '.github/workflows/runtests.yml',
     '.github/workflows/ci-sage.yml',
     '.github/workflows/comment-on-pr.yml',
@@ -48,16 +49,14 @@ git_whitelist = {
     '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    '.flake8',
     'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
-    'pytest.ini',
     'MANIFEST.in',
     'banner.svg',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
-    # Pull request template
-    'PULL_REQUEST_TEMPLATE.md',
     # Contributing guide
     'CONTRIBUTING.md',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
@@ -189,7 +188,7 @@ def compare_tar_against_git(tarname, gitroot):
 
     See the bottom of the file for the whitelists.
     """
-    git_lsfiles = set(i.strip() for i in run('git', 'ls-files', cwd=gitroot))
+    git_lsfiles = {i.strip() for i in run('git', 'ls-files', cwd=gitroot)}
     tar_output_orig = set(run('tar', 'tf', tarname))
     tar_output = set()
     for file in tar_output_orig:

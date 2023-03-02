@@ -2,31 +2,6 @@
 This module adds several functions for interactive source code inspection.
 """
 
-from sympy.utilities.decorator import deprecated
-
-import inspect
-
-@deprecated(
-    """
-    The source() function is deprecated. Use inspect.getsource() instead, or
-    if you are in IPython or Jupyter, the ?? feature.
-    """,
-    deprecated_since_version="1.3",
-    active_deprecations_target="deprecated-source",
-)
-def source(object):
-    """
-    Prints the source code of a given object.
-
-    .. deprecated:: 1.3
-
-       The ``source()`` function is deprecated. Use ``inspect.getsource()`` or
-       ``??`` in IPython/Jupyter instead.
-
-    """
-    print('In file: %s' % inspect.getsourcefile(object))
-    print(inspect.getsource(object))
-
 
 def get_class(lookup_view):
     """

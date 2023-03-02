@@ -21,14 +21,12 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
-from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, MatrixKind)
+    ShapeError, MatrixKind, a2idx)
 
 from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
@@ -68,7 +66,7 @@ from .inverse import (
 
 
 class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify)
+    """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples
     ========
@@ -586,39 +584,6 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def _legacy_array_dot(self, b):
-        """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
-        """
-        from .dense import Matrix
-
-        if not isinstance(b, MatrixBase):
-            if is_sequence(b):
-                if len(b) != self.cols and len(b) != self.rows:
-                    raise ShapeError(
-                        "Dimensions incorrect for dot product: %s, %s" % (
-                            self.shape, len(b)))
-                return self.dot(Matrix(b))
-            else:
-                raise TypeError(
-                    "`b` must be an ordered iterable or Matrix, not %s." %
-                    type(b))
-
-        mat = self
-        if mat.cols == b.rows:
-            if b.cols != 1:
-                mat = mat.T
-                b = b.T
-            prod = flatten((mat * b).tolist())
-            return prod
-        if mat.cols == b.cols:
-            return mat.dot(b.T)
-        elif mat.rows == b.rows:
-            return mat.T.dot(b)
-        else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
-                self.shape, b.shape))
-
-
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
 
@@ -706,7 +671,7 @@ class MatrixDeprecated(MatrixCommon):
         return _det_bareiss(self)
 
     def det_LU_decomposition(self):
-        """Compute matrix determinant using LU decomposition
+        """Compute matrix determinant using LU decomposition.
 
 
         Note that this method fails if the LU decomposition itself
@@ -792,7 +757,7 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self) -> MatrixKind:
-        elem_kinds = set(e.kind for e in self.flat())
+        elem_kinds = {e.kind for e in self.flat()}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -1217,7 +1182,7 @@ class MatrixBase(MatrixDeprecated,
             return
 
     def add(self, b):
-        """Return self + b """
+        """Return self + b."""
         return self + b
 
     def condition_number(self):
@@ -1404,18 +1369,13 @@ class MatrixBase(MatrixDeprecated,
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
 
+        if (1 not in self.shape) or (1 not in b.shape):
+            raise ShapeError
+        if len(self) != len(b):
+            raise ShapeError(
+                "Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+
         mat = self
-        if (1 not in mat.shape) or (1 not in b.shape) :
-            sympy_deprecation_warning(
-                """
-                Using the dot method to multiply non-row/column vectors is
-                deprecated. Use * or @ to perform matrix multiplication.
-                """,
-                deprecated_since_version="1.2",
-                active_deprecations_target="deprecated-matrix-dot-non-vector")
-            return mat._legacy_array_dot(b)
-        if len(mat) != len(b):
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
         if mat.shape != (1, n):
             mat = mat.reshape(1, n)
@@ -1446,7 +1406,9 @@ class MatrixBase(MatrixDeprecated,
         return (mat * b)[0]
 
     def dual(self):
-        """Returns the dual of a matrix, which is:
+        """Returns the dual of a matrix.
+
+        A dual of a matrix is:
 
         ``(1/2)*levicivita(i, j, k, l)*M(k, l)`` summed over indices `k` and `l`
 
@@ -1619,8 +1581,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     def exp(self):
-
-        """Return the exponential of a square matrix
+        """Return the exponential of a square matrix.
 
         Examples
         ========
@@ -1694,7 +1655,7 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def log(self, simplify=cancel):
-        """Return the logarithm of a square matrix
+        """Return the logarithm of a square matrix.
 
         Parameters
         ==========
@@ -1814,8 +1775,6 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
-        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
-
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
             if not self.rows:
@@ -1823,7 +1782,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            rlo = a2idx_(keys[0], self.rows)
+            rlo = a2idx(keys[0], self.rows)
             rhi = rlo + 1
         if jslice:
             if not self.cols:
@@ -1831,7 +1790,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            clo = a2idx_(keys[1], self.cols)
+            clo = a2idx(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
 
@@ -1845,17 +1804,15 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
-        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
-
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
-            return [a2idx_(i, n) if not isinstance(i, slice) else i
+            return [a2idx(i, n) if not isinstance(i, slice) else i
                     for i, n in zip(key, self.shape)]
         elif isinstance(key, slice):
             return key.indices(len(self))[:2]
         else:
-            return divmod(a2idx_(key, len(self)), self.cols)
+            return divmod(a2idx(key, len(self)), self.cols)
 
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
@@ -1898,6 +1855,7 @@ class MatrixBase(MatrixDeprecated,
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
+
         In the simplest case this is the geometric size of the vector
         Other norms can be specified by the ord parameter
 
@@ -2273,28 +2231,3 @@ class MatrixBase(MatrixDeprecated,
         _strongly_connected_components.__doc__
     strongly_connected_components_decomposition.__doc__ = \
         _strongly_connected_components_decomposition.__doc__
-
-
-@deprecated(
-    """
-    sympy.matrices.matrices.classof is deprecated. Use
-    sympy.matrices.common.classof instead.
-    """,
-    deprecated_since_version="1.3",
-    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
-)
-def classof(A, B):
-    from sympy.matrices.common import classof as classof_
-    return classof_(A, B)
-
-@deprecated(
-    """
-    sympy.matrices.matrices.a2idx is deprecated. Use
-    sympy.matrices.common.a2idx instead.
-    """,
-    deprecated_since_version="1.3",
-    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
-)
-def a2idx(j, n=None):
-    from sympy.matrices.common import a2idx as a2idx_
-    return a2idx_(j, n)

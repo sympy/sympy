@@ -22,7 +22,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import Abs, re, im
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
@@ -121,7 +120,7 @@ class MatrixShaping(MatrixRequired):
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices))
+                         [mat[i] for i in indices])
 
     def _eval_get_diag_blocks(self):
         sub_blocks = []
@@ -557,7 +556,8 @@ class MatrixShaping(MatrixRequired):
 
         See Also
         ========
-        diag - to create a diagonal matrix
+
+        diag
         """
         rv = []
         k = as_int(k)
@@ -799,7 +799,7 @@ class MatrixSpecial(MatrixRequired):
         return cls._new(rows, cols, vals, copy=False)
 
     @classmethod
-    def _eval_jordan_block(cls, rows, cols, eigenvalue, band='upper'):
+    def _eval_jordan_block(cls, size: int, eigenvalue, band='upper'):
         if band == 'lower':
             def entry(i, j):
                 if i == j:
@@ -814,7 +814,7 @@ class MatrixSpecial(MatrixRequired):
                 elif i + 1 == j:
                     return cls.one
                 return cls.zero
-        return cls._new(rows, cols, entry)
+        return cls._new(size, size, entry)
 
     @classmethod
     def _eval_ones(cls, rows, cols):
@@ -833,8 +833,8 @@ class MatrixSpecial(MatrixRequired):
 
         D = cls._new(2*n + 1, 2*n + 1, entry)
 
-        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
-        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+        wminus = cls.diag(list(range(-n, n + 1)), unpack=True) + D + D.T
+        wplus = abs(cls.diag(list(range(-n, n + 1)), unpack=True)) + D + D.T
 
         return wminus, wplus
 
@@ -925,10 +925,10 @@ class MatrixSpecial(MatrixRequired):
         See Also
         ========
         eye
-        diagonal - to extract a diagonal
+        diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
-        .sparsetools.banded - to create multi-diagonal matrices
+        .sparsetools.banded
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
@@ -984,8 +984,8 @@ class MatrixSpecial(MatrixRequired):
     def eye(kls, rows, cols=None, **kwargs):
         """Returns an identity matrix.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1031,15 +1031,6 @@ class MatrixSpecial(MatrixRequired):
 
             If it is not specified, the class type where the method is
             being executed on will be returned.
-
-        rows, cols : Integer, optional
-            Specifies the shape of the Jordan block matrix. See Notes
-            section for the details of how these key works.
-
-            .. deprecated:: 1.4
-                The rows and cols parameters are deprecated and will be
-                removed in a future version.
-
 
         Returns
         =======
@@ -1087,68 +1078,12 @@ class MatrixSpecial(MatrixRequired):
         [0, 0, x, 1],
         [0, 0, 0, x]])
 
-        Notes
-        =====
-
-        .. deprecated:: 1.4
-            This feature is deprecated and will be removed in a future
-            version.
-
-        The keyword arguments ``size``, ``rows``, ``cols`` relates to
-        the Jordan block size specifications.
-
-        If you want to create a square Jordan block, specify either
-        one of the three arguments.
-
-        If you want to create a rectangular Jordan block, specify
-        ``rows`` and ``cols`` individually.
-
-        +--------------------------------+---------------------+
-        |        Arguments Given         |     Matrix Shape    |
-        +----------+----------+----------+----------+----------+
-        |   size   |   rows   |   cols   |   rows   |   cols   |
-        +==========+==========+==========+==========+==========+
-        |   size   |         Any         |   size   |   size   |
-        +----------+----------+----------+----------+----------+
-        |          |        None         |     ValueError      |
-        |          +----------+----------+----------+----------+
-        |   None   |   rows   |   None   |   rows   |   rows   |
-        |          +----------+----------+----------+----------+
-        |          |   None   |   cols   |   cols   |   cols   |
-        +          +----------+----------+----------+----------+
-        |          |   rows   |   cols   |   rows   |   cols   |
-        +----------+----------+----------+----------+----------+
-
         References
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
-        if 'rows' in kwargs or 'cols' in kwargs:
-            msg = """
-                The 'rows' and 'cols' keywords to Matrix.jordan_block() are
-                deprecated. Use the 'size' parameter instead.
-                """
-            if 'rows' in kwargs and 'cols' in kwargs:
-                msg += f"""\
-                To get a non-square Jordan block matrix use a more generic
-                banded matrix constructor, like
-
-                def entry(i, j):
-                    if i == j:
-                        return eigenvalue
-                    elif {"i + 1 == j" if band == 'upper' else "j + 1 == i"}:
-                        return 1
-                    return 0
-
-                Matrix({kwargs['rows']}, {kwargs['cols']}, entry)
-                """
-            sympy_deprecation_warning(msg, deprecated_since_version="1.4",
-                active_deprecations_target="deprecated-matrix-jordan_block-rows-cols")
-
         klass = kwargs.pop('cls', kls)
-        rows = kwargs.pop('rows', None)
-        cols = kwargs.pop('cols', None)
 
         eigenval = kwargs.get('eigenval', None)
         if eigenvalue is None and eigenval is None:
@@ -1161,26 +1096,18 @@ class MatrixSpecial(MatrixRequired):
             if eigenval is not None:
                 eigenvalue = eigenval
 
-        if (size, rows, cols) == (None, None, None):
+        if size is None:
             raise ValueError("Must supply a matrix size")
 
-        if size is not None:
-            rows, cols = size, size
-        elif rows is not None and cols is None:
-            cols = rows
-        elif cols is not None and rows is None:
-            rows = cols
-
-        rows, cols = as_int(rows), as_int(cols)
-
-        return klass._eval_jordan_block(rows, cols, eigenvalue, band)
+        size = as_int(size)
+        return klass._eval_jordan_block(size, eigenvalue, band)
 
     @classmethod
     def ones(kls, rows, cols=None, **kwargs):
         """Returns a matrix of ones.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1200,8 +1127,8 @@ class MatrixSpecial(MatrixRequired):
     def zeros(kls, rows, cols=None, **kwargs):
         """Returns a matrix of zeros.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -2523,7 +2450,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
-        """returns the elements on and above the kth diagonal of a matrix.
+        """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
 
@@ -2562,7 +2489,7 @@ class MatrixOperations(MatrixRequired):
 
 
     def lower_triangular(self, k=0):
-        """returns the elements on and below the kth diagonal of a matrix.
+        """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
 
@@ -3042,7 +2969,7 @@ class _MinimalMatrix:
     def __init__(self, rows, cols=None, mat=None, copy=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
+            mat = [mat(i, j) for i in range(rows) for j in range(cols)]
         if cols is None and mat is None:
             mat = rows
         rows, cols = getattr(mat, 'shape', (rows, cols))
@@ -3092,7 +3019,7 @@ class _MinimalMatrix:
                 indices = (i * self.cols + j for i in rowsList for j in
                            colsList)
                 return self._new(len(rowsList), len(colsList),
-                                 list(self.mat[i] for i in indices))
+                                 [self.mat[i] for i in indices])
 
             # if the key is a tuple of ints, change
             # it to an array index

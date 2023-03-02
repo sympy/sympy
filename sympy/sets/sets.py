@@ -1689,7 +1689,7 @@ class Complement(Set):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/ComplementSet.html
+    .. [1] https://mathworld.wolfram.com/ComplementSet.html
     """
 
     is_Complement = True
@@ -2600,7 +2600,7 @@ def simplify_intersection(args):
                 other = Intersection(*other_sets)
                 return Union(*(Intersection(arg, other) for arg in s.args))
             else:
-                return Union(*[arg for arg in s.args])
+                return Union(*s.args)
 
     for s in args:
         if s.is_Complement:

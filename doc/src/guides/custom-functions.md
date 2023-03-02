@@ -1339,8 +1339,8 @@ expression separately.
 
 `as_real_imag(self, deep=True, **hints)` should return a 2-tuple containing
 the real part and imaginary part of the function. That is
-`expr.as_real_imag()` returns `(re(expr), im(expr))`, where `expr == re(expr)
-+ im(expr)*I`, and `re(expr)` and `im(expr)` are real.
+`expr.as_real_imag()` returns `(re(expr), im(expr))`, where
+`expr == re(expr) + im(expr)*I`, and `re(expr)` and `im(expr)` are real.
 
 If `deep=True`, it should recursively call `as_real_imag(deep=True, **hints)`
 on its arguments. As with [`doit()`](custom-functions-doit) and [the

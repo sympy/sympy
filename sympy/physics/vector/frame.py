@@ -76,7 +76,7 @@ class CoordinateSym(Symbol):
         return not self == other
 
     def __hash__(self):
-        return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
+        return (self._id[0].__hash__(), self._id[1]).__hash__()
 
 
 class ReferenceFrame:
