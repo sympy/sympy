@@ -1278,22 +1278,12 @@ def _eval_sum_hyper(f, i, a):
     if hs is None:
         return None
 
-    if isinstance(hs, Float):
-        from sympy.simplify.simplify import nsimplify
-        hs = nsimplify(hs)
-    if hs.args:
-        for arg in hs.args:
-            if isinstance(arg, Float):
-                from sympy.simplify.simplify import nsimplify
-                hs = nsimplify(hs)
-                break
-
     from sympy.simplify.combsimp import combsimp
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.simplify.radsimp import fraction
     numer, denom = fraction(factor(hs))
-    top, topl = numer.as_coeff_mul(i)
-    bot, botl = denom.as_coeff_mul(i)
+    top, topl = numer.as_coeff_mul(i,rational=False)
+    bot, botl = denom.as_coeff_mul(i,rational=False)
     ab = [top, bot]
     factors = [topl, botl]
     params = [[], []]
