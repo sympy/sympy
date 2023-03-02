@@ -1001,8 +1001,8 @@ def laplace_correspondence(f, fdict, /):
     ==========
 
     f : sympy expression
-        Expression nevaluated ``LaplaceTransform`` or ``LaplaceTransform``
-        objects.
+        Expression containing unevaluated ``LaplaceTransform`` or
+        ``LaplaceTransform`` objects.
     fdict : dictionary
         Dictionary containing one or more function correspondences,
         e.g., ``{x: X, y: Y}`` meaning that ``X`` and ``Y`` are the
