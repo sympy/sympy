@@ -1375,11 +1375,6 @@ class MatrixBase(MatrixDeprecated,
         [                      0],
         [Derivative(theta(t), t)]])
 
-
-
-
-
-
         See Also
         ========
 
