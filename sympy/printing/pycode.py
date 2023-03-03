@@ -757,10 +757,6 @@ _not_in_arb = ['besseli', 'besselj', 'besselk', 'bessely', 'beta',
 _in_arb = [(k, v) for k, v in _known_functions_mpmath.items() if k not in _not_in_arb]
 
 _known_functions_arb = dict(_in_arb, **{
-    'besseli': 'bessel_i',
-    'besselj': 'bessel_j',
-    'besselk': 'bessel_k',
-    'bessely': 'bessel_y',
     'sign': 'sgn',
     'factorial': 'fac',
     'fresnelc': 'fresnel_c',
@@ -798,6 +794,21 @@ class ArbPrinter(PythonCodePrinter):
 
     def _print_Float(self, arg):
         return 'arb("%s")' % str(arg)
+
+    def _bessel_x(self, x, b):
+        return "{}.bessel_{}({})".format(self._print(b.args[1]), x, self._print(b.args[0]))
+
+    def _print_besseli(self, b):
+        return self._bessel_x('i', b)
+
+    def _print_besselj(self, b):
+        return self._bessel_x('j', b)
+
+    def _print_besselk(self, b):
+        return self._bessel_x('k', b)
+
+    def _print_bessely(self, b):
+        return self._bessel_x('y', b)
 
 
 for k in ArbPrinter._kf:

@@ -1738,6 +1738,10 @@ def test_lambdify_arb():
     a2 = f2(flint.arb("0.1"))
     assert math.isclose(float(a2), math.exp(0.1) - math.pi)
 
+    f3 = lambdify([x], besselj(1, x), modules='arb')
+    a3 = f3(flint.arb(5))
+    assert math.isclose(float(a3), float(mpmath.besselj(1, 5)))
+
 def test_lambdify_acb():
     if not flint:
         skip("flint not installed.")
