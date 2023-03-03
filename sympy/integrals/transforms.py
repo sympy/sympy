@@ -1584,5 +1584,7 @@ import sympy.integrals.laplace as _laplace
 
 LaplaceTransform = _laplace.LaplaceTransform
 laplace_transform = _laplace.laplace_transform
+laplace_correspondence = _laplace.laplace_correspondence
+laplace_initial_conds = _laplace.laplace_initial_conds
 InverseLaplaceTransform = _laplace.InverseLaplaceTransform
 inverse_laplace_transform = _laplace.inverse_laplace_transform
