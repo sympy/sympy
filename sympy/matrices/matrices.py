@@ -1267,6 +1267,36 @@ class MatrixBase(MatrixDeprecated,
         Return the skew-symmetric matrix representing the cross product,
         so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
 
+        Examples
+        ========
+
+        Calling `hat` creates a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> a = Matrix([1, 2, 3])
+        >>> a.hat()
+        Matrix([
+        [ 0, -3,  2],
+        [ 3,  0, -1],
+        [-2,  1,  0]])
+
+        Multiplying it with another Matrix calculates the cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> a.hat() * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        Which is equivalent to calling the `cross` method:
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
         See Also
         ========
 
@@ -1291,6 +1321,64 @@ class MatrixBase(MatrixDeprecated,
         r"""
         Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
         so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
+
+        Examples
+        ========
+
+        Calling `vee` creates a vector from a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
+        >>> a = A.vee()
+        >>> a
+        Matrix([
+        [1],
+        [2],
+        [3]])
+
+        Calculating the matrix product of the original matrix with a vector
+        is equivalent to a cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> A * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        `vee` can also be used to retrieve angular velocity expressions.
+        Defining a rotation matrix:
+
+        >>> from sympy import rot_ccw_axis3, trigsimp
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> theta = dynamicsymbols('theta')
+        >>> R = rot_ccw_axis3(theta)
+        >>> R
+        Matrix([
+        [cos(theta(t)), -sin(theta(t)), 0],
+        [sin(theta(t)),  cos(theta(t)), 0],
+        [            0,              0, 1]])
+
+        We can retrive the angular velocity:
+
+        >>> Omega = R.T * R.diff()
+        >>> Omega = trigsimp(Omega)
+        >>> Omega.vee()
+        Matrix([
+        [                      0],
+        [                      0],
+        [Derivative(theta(t), t)]])
+
+
+
+
+
 
         See Also
         ========
