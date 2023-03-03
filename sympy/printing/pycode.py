@@ -811,3 +811,36 @@ def _print_known_const_call(self, expr):
 
 for k in ArbPrinter._kc:
     setattr(ArbPrinter, '_print_%s' % k, _print_known_const_call)
+
+
+_known_functions_acb = {  # TODO: make this list exhaustive
+    'sqrt': 'sqrt',
+    'cbrt': 'cbrt',
+}
+
+_known_constants_acb = {  # TODO: make this list exhaustive
+    'Pi': 'pi',
+}
+
+class AcbPrinter(PythonCodePrinter):
+    """
+    Code printer for acb (arbitrary precision complex ball arithmetic).
+    """
+    printmethod = "_acbcode"
+
+    language = "Python with flint.acb"
+
+    _kf = dict(chain(
+        _known_functions.items(),
+        [(k, 'acb.' + v) for k, v in _known_functions_acb.items()]
+    ))
+    _kc = {k: 'acb.'+v for k, v in _known_constants_acb.items()}
+
+    def _print_Integer(self, arg):
+        return "acb(%d)" % arg
+
+    def _print_Float(self, arg):
+        return 'acb("%s")' % str(arg)
+
+    def _print_ImaginaryUnit(self, expr):
+        return 'acb(0, 1)'

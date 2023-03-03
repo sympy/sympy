@@ -1,4 +1,5 @@
 from itertools import product
+import cmath
 import math
 import inspect
 
@@ -1736,6 +1737,17 @@ def test_lambdify_arb():
     f2 = lambdify([x], exp(x) - pi, modules='arb')
     a2 = f2(flint.arb("0.1"))
     assert math.isclose(float(a2), math.exp(0.1) - math.pi)
+
+def test_lambdify_acb():
+    if not flint:
+        skip("flint not installed.")
+
+    f1 = lambdify([x, y], sqrt(x+y), modules='acb')
+    a1 = f1(flint.acb(1, 0), flint.acb(0, 1))
+    a1_lo = float(flint.acb.abs_lower(a1))
+    a1_hi = float(flint.acb.abs_upper(a1))
+    assert cmath.isclose(a1_lo, math.sqrt(math.sqrt(2)))  # a very lax test...
+    assert cmath.isclose(a1_hi, math.sqrt(math.sqrt(2)))
 
 
 class LambdifyDocstringTestCase:

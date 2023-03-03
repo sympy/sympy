@@ -26,6 +26,7 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
+ACB_DEFAULT: dict[str, Any] = {}
 ARB_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -41,6 +42,7 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 MATH = MATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
+ACB = ACB_DEFAULT.copy()
 ARB = ARB_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
@@ -90,6 +92,9 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
+ACB_TRANSLATIONS: dict[str, str]  = {
+    'sqrt': 'acb.sqrt'
+}
 ARB_TRANSLATIONS: dict[str, str]  = {
 }
 
@@ -108,6 +113,7 @@ NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
+    "acb": (ACB, ACB_DEFAULT, ACB_TRANSLATIONS, ("from flint import acb",)),
     "arb": (ARB, ARB_DEFAULT, ARB_TRANSLATIONS, ("from flint import arb",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
@@ -128,7 +134,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow", "jax", "arb".
+    "mpmath", "numpy", "sympy", "tensorflow", "jax", "acb", "arb".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -167,7 +173,11 @@ def _import(module, reload=False):
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
-        namespace[sympyname] = namespace[translation]
+        if '.' in translation:
+            a, *b = translation.split('.')
+            namespace[sympyname] = getattr(namespace[a], '.'.join(b))
+        else:
+            namespace[sympyname] = namespace[translation]
 
     # For computing the modulus of a SymPy expression we use the builtin abs
     # function, instead of the previously used fabs function for all
@@ -824,6 +834,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+        elif _module_present('acb', namespaces):
+            from sympy.printing.pycode import AcbPrinter as Printer # type: ignore
         elif _module_present('arb', namespaces):
             from sympy.printing.pycode import ArbPrinter as Printer # type: ignore
         elif _module_present('sympy', namespaces):
