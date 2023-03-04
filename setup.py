@@ -6,12 +6,12 @@ python mechanism for installing packages.
 For the easiest installation just type the command (you'll probably need
 root privileges for that):
 
-    python setup.py install
+    pip install .
 
 This will install the library in the default location. For instructions on
-how to customize the install procedure read the output of:
+how to customize the installation procedure read the output of:
 
-    python setup.py --help install
+    pip install --help
 
 In addition, there are some other commands:
 
