@@ -2173,6 +2173,7 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
+    raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
 @slow

@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath flake8 flake8-comprehensions ruff
 
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy
 
@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -96,7 +96,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -111,7 +111,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -127,7 +127,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
@@ -161,8 +161,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: python -m pip install --upgrade pip
+      - run: pip install build
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
-      - run: python3 setup.py bdist_wheel
+      - run: python -m build --wheel
       - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
@@ -177,6 +182,13 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
         experimental: [false]
+        #
+        # For now we do not test optional dependencies with 3.12 because as of
+        # 3.12.a.5 it is not possible to pip install numpy. Building numpy,
+        # scipy etc from source is overkill for sympy CI. It is probably not
+        # possible to install builds of most of the other optional dependencies
+        # either (especially since many depend on numpy).
+        #
         # Maybe use this to add 3.12 when the time comes:
         #include:
         #  - python-version: '3.12.0-alpha - 3.12'
@@ -224,7 +236,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy scipy tensorflow
       # Test modules that can use tensorflow
@@ -240,7 +252,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy symengine
       # Test modules that can use tensorflow
@@ -258,7 +270,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -273,7 +285,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --slow --timeout=595 --split=2/2
@@ -288,7 +300,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -313,7 +325,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -338,7 +350,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -364,7 +376,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -404,8 +416,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - run: python setup.py sdist
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
@@ -421,7 +434,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
@@ -434,7 +447,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.11
+      - run: git fetch upstream 1.12
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -446,8 +459,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the

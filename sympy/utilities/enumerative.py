@@ -668,7 +668,7 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-         part
+        part
             part to be decremented (topmost part on the stack)
 
         ub

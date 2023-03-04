@@ -1,12 +1,12 @@
-from sympy.core.backend import sympify
+from sympy.core.backend import sympify, Symbol
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
-
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['RigidBody']
 
 
-class RigidBody:
+class RigidBody(BodyBase):
     """An idealized rigid body.
 
     Explanation
@@ -51,21 +51,29 @@ class RigidBody:
 
     """
 
-    def __init__(self, name, masscenter, frame, mass, inertia):
-        if not isinstance(name, str):
-            raise TypeError('Supply a valid name.')
-        self._name = name
-        self.masscenter = masscenter
-        self.mass = mass
+    def __init__(self, name, masscenter=None, frame=None, mass=None,
+                 inertia=None):
+        # circular import issue (will soon be removed)
+        from sympy.physics.mechanics.functions import inertia as inertia_f
+        super().__init__(name, masscenter, mass)
+        if frame is None:
+            frame = ReferenceFrame(f'{name}_frame')
         self.frame = frame
+        if inertia is None:
+            ixx = Symbol(f'{name}_ixx')
+            iyy = Symbol(f'{name}_iyy')
+            izz = Symbol(f'{name}_izz')
+            izx = Symbol(f'{name}_izx')
+            ixy = Symbol(f'{name}_ixy')
+            iyz = Symbol(f'{name}_iyz')
+            inertia = (inertia_f(frame, ixx, iyy, izz, ixy, iyz, izx),
+                       self.masscenter)
         self.inertia = inertia
-        self.potential_energy = 0
-
-    def __str__(self):
-        return self._name
 
     def __repr__(self):
-        return self.__str__()
+        return (f'{self.__class__.__name__}({repr(self.name)}, masscenter='
+                f'{repr(self.masscenter)}, frame={repr(self.frame)}, mass='
+                f'{repr(self.mass)}), inertia={repr(self.inertia)}))')
 
     @property
     def frame(self):
@@ -79,24 +87,19 @@ class RigidBody:
         self._frame = F
 
     @property
-    def masscenter(self):
-        """The body's center of mass."""
-        return self._masscenter
-
-    @masscenter.setter
-    def masscenter(self, p):
-        if not isinstance(p, Point):
-            raise TypeError("RigidBody center of mass must be a Point object.")
-        self._masscenter = p
+    def x(self):
+        """The basis Vector for the body, in the x direction. """
+        return self.frame.x
 
     @property
-    def mass(self):
-        """The body's mass."""
-        return self._mass
+    def y(self):
+        """The basis Vector for the body, in the y direction. """
+        return self.frame.y
 
-    @mass.setter
-    def mass(self, m):
-        self._mass = sympify(m)
+    @property
+    def z(self):
+        """The basis Vector for the body, in the z direction. """
+        return self.frame.z
 
     @property
     def inertia(self):
@@ -273,57 +276,6 @@ class RigidBody:
             self.masscenter.vel(frame)) / sympify(2))
 
         return rotational_KE + translational_KE
-
-    @property
-    def potential_energy(self):
-        """The potential energy of the RigidBody.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import RigidBody, Point, outer, ReferenceFrame
-        >>> from sympy import symbols
-        >>> M, g, h = symbols('M g h')
-        >>> b = ReferenceFrame('b')
-        >>> P = Point('P')
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.potential_energy = M * g * h
-        >>> B.potential_energy
-        M*g*h
-
-        """
-
-        return self._pe
-
-    @potential_energy.setter
-    def potential_energy(self, scalar):
-        """Used to set the potential energy of this RigidBody.
-
-        Parameters
-        ==========
-
-        scalar: Sympifyable
-            The potential energy (a scalar) of the RigidBody.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import Point, outer
-        >>> from sympy.physics.mechanics import RigidBody, ReferenceFrame
-        >>> from sympy import symbols
-        >>> b = ReferenceFrame('b')
-        >>> M, g, h = symbols('M g h')
-        >>> P = Point('P')
-        >>> I = outer (b.x, b.x)
-        >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, b, M, Inertia_tuple)
-        >>> B.potential_energy = M * g * h
-
-        """
-
-        self._pe = sympify(scalar)
 
     def set_potential_energy(self, scalar):
         sympy_deprecation_warning(

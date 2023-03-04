@@ -1,6 +1,8 @@
 from sympy.integrals.laplace import (
     laplace_transform, inverse_laplace_transform,
-    LaplaceTransform, InverseLaplaceTransform)
+    LaplaceTransform, InverseLaplaceTransform,
+    _laplace_deep_collect, laplace_correspondence,
+    laplace_initial_conds)
 from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
@@ -30,8 +32,20 @@ def test_laplace_transform():
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
     f = Function('f')
+    F = Function('F')
     g = Function('g')
+    y = Function('y')
+    Y = Function('Y')
 
+    # Test helper functions
+    assert (
+        _laplace_deep_collect(exp((t+a)*(t+b)) +
+                              besselj(2, exp((t+a)*(t+b)-t**2)), t) ==
+        exp(a*b + t**2 + t*(a + b)) + besselj(2, exp(a*b + t*(a + b))))
+    L = laplace_transform(diff(y(t), t, 3), t, s, noconds=True)
+    L = laplace_correspondence(L, {y: Y})
+    L = laplace_initial_conds(L, t, {y: [2, 4, 8, 16, 32]})
+    assert L == s**3*Y(s) - 2*s**2 - 4*s - 8
     # Test whether `noconds=True` in `doit`:
     assert (2*LaplaceTransform(exp(t), t, s) - 1).doit() == -1 + 2/(s - 1)
     assert (LT(a*t+t**2+t**(S(5)/2), t, s) ==
@@ -94,6 +108,8 @@ def test_laplace_transform():
             (8*sqrt(2)*(1/s)**(S(5)/2)*besselk(5, 2*sqrt(2)*sqrt(s)),
              0, True))
     assert LT(sinh(a*t), t, s) == (a/(-a**2 + s**2), a, True)
+    assert (LT(b*sinh(a*t)**2, t, s) ==
+            (2*a**2*b/(-4*a**2*s + s**3), 2*a, True))
     assert (LT(b*sinh(a*t)**2, t, s, simplify=True) ==
             (2*a**2*b/(s*(-4*a**2 + s**2)), 2*a, True))
     # The following line confirms that issue #21202 is solved
@@ -113,7 +129,7 @@ def test_laplace_transform():
                                                             2*a, True)
     assert LT(sinh(a*t)/t, t, s) == (log((a + s)/(-a + s))/2, a, True)
     assert (LT(t**(-S(3)/2)*sinh(a*t), t, s) ==
-            (sqrt(pi)*(-sqrt(-a + s) + sqrt(a + s)), a, True))
+            (-sqrt(pi)*(sqrt(-a + s) - sqrt(a + s)), a, True))
     assert (LT(sinh(2*sqrt(a*t)), t, s) ==
             (sqrt(pi)*sqrt(a)*exp(a/s)/s**(S(3)/2), 0, True))
     assert (LT(sqrt(t)*sinh(2*sqrt(a*t)), t, s, simplify=True) ==
@@ -277,6 +293,11 @@ def test_laplace_transform():
             LaplaceTransform(f(t), t, s)/2 -
             LaplaceTransform(f(t), t, -2*I*a + s)*exp(2*I*b)/4 -
             LaplaceTransform(f(t), t, 2*I*a + s)*exp(-2*I*b)/4)) == 0
+    L = LT(sin(a*t+b)**2*f(t), t, s, noconds=True)
+    assert (
+        laplace_correspondence(L, {f: F}) ==
+        F(s)/2 - F(-2*I*a + s)*exp(2*I*b)/4 -
+        F(2*I*a + s)*exp(-2*I*b)/4)
     L, plane, _ = LT(sin(a*t)**3*cosh(b*t), t, s)
     assert plane == b
     assert (
@@ -400,16 +421,20 @@ def test_inverse_laplace_transform():
     n, r = symbols('n, r', real=True)
     t, z = symbols('t z')
     f = Function('f')
+    F = Function('F')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
 
     assert ILT(1, s, t) == DiracDelta(t)
     assert ILT(1/s, s, t) == Heaviside(t)
+    L = ILT(F(s), s, t)
+    assert laplace_correspondence(L, {f: F}) == f(t)
     assert ILT(a/(a + s), s, t) == a*exp(-a*t)*Heaviside(t)
     assert ILT(s/(a + s), s, t) == -a*exp(-a*t)*Heaviside(t) + DiracDelta(t)
-    assert ILT(s/(a + s)**3, s, t) == t*(-a*t + 4)*exp(-a*t)*Heaviside(t)/2
-    assert (ILT(1/(s*(a + s)**3), s, t) ==
+    assert (ILT(s/(a + s)**3, s, t, simplify=True) ==
+            t*(-a*t + 4)*exp(-a*t)*Heaviside(t)/2)
+    assert (ILT(1/(s*(a + s)**3), s, t, simplify=True) ==
             (-a**2*t**2 - 4*a*t + 4*exp(a*t) - 4) *
             exp(-a*t)*Heaviside(t)/(2*a**3))
     assert ILT(1/(s*(a + s)**n), s, t) == (
@@ -421,9 +446,9 @@ def test_inverse_laplace_transform():
     assert ILT(s/(s**2 + a**2), s, t) == cos(a*t)*Heaviside(t)
     assert ILT(b/(b**2 + (a + s)**2), s, t) == exp(-a*t)*sin(b*t)*Heaviside(t)
     assert (ILT(b*s/(b**2 + (a + s)**2), s, t) ==
-            (-a*sin(b*t) + b*cos(b*t))*exp(-a*t)*Heaviside(t))
+            b*(-a*exp(-a*t)*sin(b*t)/b + exp(-a*t)*cos(b*t))*Heaviside(t))
     assert ILT(exp(-a*s)/s, s, t) == Heaviside(-a + t)
-    assert ILT(exp(-a*s)/(b + s), s, t) == exp(b*(a - t))*Heaviside(-a + t)
+    assert ILT(exp(-a*s)/(b + s), s, t) == exp(-b*(-a + t))*Heaviside(-a + t)
     assert (ILT((b + s)/(a**2 + (b + s)**2), s, t) ==
             exp(-b*t)*cos(a*t)*Heaviside(t))
     assert (ILT(exp(-a*s)/s**b, s, t) ==
@@ -431,14 +456,15 @@ def test_inverse_laplace_transform():
     assert (ILT(exp(-a*s)/sqrt(s**2 + 1), s, t) ==
             Heaviside(-a + t)*besselj(0, a - t))
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
-    assert ILT(1/(s**2*(s**2 + 1)), s, t) == (t - sin(t))*Heaviside(t)
+    assert (ILT(1/(s**2*(s**2 + 1)), s, t) ==
+            t*Heaviside(t) - sin(t)*Heaviside(t))
     assert ILT(s**2/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1 - 1/(s**2 + 1), s, t) == -sin(t)*Heaviside(t) + DiracDelta(t)
     assert ILT(1/s**2, s, t) == t*Heaviside(t)
     assert ILT(1/s**5, s, t) == t**4*Heaviside(t)/24
     assert ILT(1/s**n, s, t) == t**(n - 1)*Heaviside(t)/gamma(n)
     # Issue #24424
-    assert (ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t) ==
+    assert (ILT((s + 8)/((s + 2)*(s**2 + 2*s + 10)), s, t, simplify=True) ==
             ((8*sin(3*t) - 9*cos(3*t))*exp(t) + 9)*exp(-2*t)*Heaviside(t)/15)
     assert simp_hyp(ILT(a/(s**2 - a**2), s, t)) == sinh(a*t)*Heaviside(t)
     assert simp_hyp(ILT(s/(s**2 - a**2), s, t)) == cosh(a*t)*Heaviside(t)
@@ -455,28 +481,35 @@ def test_inverse_laplace_transform():
         Heaviside(t)*besseli(b, a*t))
     assert (
         ILT(a**b*(s + sqrt(s**2 + a**2))**(-b)/sqrt(s**2 + a**2),
-            s, t).rewrite(exp) ==
+            s, t, simplify=True).rewrite(exp) ==
         Heaviside(t)*besselj(b, a*t))
     assert ILT(1/(s*sqrt(s + 1)), s, t) == Heaviside(t)*erf(sqrt(t))
     # TODO can we make erf(t) work?
-    assert ILT(1/(s**2*(s**2 + 1)), s, t) == (t - sin(t))*Heaviside(t)
+    assert (ILT(1/(s**2*(s**2 + 1)), s, t, simplify=True) ==
+            (t - sin(t))*Heaviside(t))
     assert (ILT((s * eye(2) - Matrix([[1, 0], [0, 2]])).inv(), s, t) ==
             Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]]))
     # New tests for rules
-    assert ILT(b/(s**2-a**2), s, t) == b*sinh(a*t)*Heaviside(t)/a
-    assert ILT(b*s/(s**2-a**2), s, t) == b*cosh(a*t)*Heaviside(t)
-    assert ILT(b/(s*(s+a)), s, t) == b*(exp(a*t) - 1)*exp(-a*t)*Heaviside(t)/a
-    assert ILT(b*s/(s+a)**2, s, t) == b*(-a*t + 1)*exp(-a*t)*Heaviside(t)
-    assert (ILT(c/((s+a)*(s+b)), s, t) ==
+    assert (ILT(b/(s**2-a**2), s, t, simplify=True) ==
+            b*sinh(a*t)*Heaviside(t)/a)
+    assert (ILT(b/(s**2-a**2), s, t) ==
+            b*(exp(a*t)*Heaviside(t)/(2*a) - exp(-a*t)*Heaviside(t)/(2*a)))
+    assert (ILT(b*s/(s**2-a**2), s, t, simplify=True) ==
+            b*cosh(a*t)*Heaviside(t))
+    assert (ILT(b/(s*(s+a)), s, t) ==
+            b*(Heaviside(t)/a - exp(-a*t)*Heaviside(t)/a))
+    assert (ILT(b*s/(s+a)**2, s, t) ==
+            b*(-a*t*exp(-a*t)*Heaviside(t) + exp(-a*t)*Heaviside(t)))
+    assert (ILT(c/((s+a)*(s+b)), s, t, simplify=True) ==
             c*(exp(a*t) - exp(b*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
-    assert (ILT(c*s/((s+a)*(s+b)), s, t) ==
+    assert (ILT(c*s/((s+a)*(s+b)), s, t, simplify=True) ==
             c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
-    assert (ILT(c*s/(d**2*(s+a)**2+b**2), s, t) ==
+    assert (ILT(c*s/(d**2*(s+a)**2+b**2), s, t, simplify=True) ==
             c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2))
     # Test time_diff rule
     assert (ILT(s**42*f(s), s, t) ==
             Derivative(InverseLaplaceTransform(f(s), s, t, None), (t, 42)))
-    assert (ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t) ==
+    assert (ILT((b*s**2 + d)/(a**2 + s**2)**2, s, t, simplify=True) ==
             (a**3*b*t*cos(a*t) + 5*a**2*b*sin(a*t) - a*d*t*cos(a*t) +
              d*sin(a*t))*Heaviside(t)/(2*a**3))
     assert ILT(cos(s), s, t) == InverseLaplaceTransform(cos(s), s, t, None)
@@ -528,9 +561,12 @@ def test_expint():
             ((s - log(s + 1))/s**2, 0, True))
     assert (inverse_laplace_transform(-log(1 + s**2)/2/s, s, u).expand() ==
             Heaviside(u)*Ci(u))
-    assert (inverse_laplace_transform(log(s + 1)/s, s, x).rewrite(expint) ==
-            Heaviside(x)*E1(x))
+    assert (
+        inverse_laplace_transform(log(s + 1)/s, s, x,
+                                  simplify=True).rewrite(expint) ==
+        Heaviside(x)*E1(x))
     assert (
         inverse_laplace_transform(
-            (s - log(s + 1))/s**2, s, x).rewrite(expint).expand() ==
+            (s - log(s + 1))/s**2, s, x,
+            simplify=True).rewrite(expint).expand() ==
         (expint(2, x)*Heaviside(x)).rewrite(Ei).rewrite(expint).expand())

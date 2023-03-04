@@ -49,10 +49,10 @@ git_whitelist = {
     '.github/FUNDING.yml',
     '.editorconfig',
     '.coveragerc',
+    '.flake8',
     'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
-    'pytest.ini',
     'MANIFEST.in',
     'banner.svg',
     # Code of conduct
@@ -130,9 +130,6 @@ git_whitelist = {
     'release/sha256.py',
     'release/authors.py',
     'release/ci_release_script.sh',
-    # This is just a distribute version of setup.py. Used mainly for setup.py
-    # develop, which we don't care about in the release tarball
-    'setupegg.py',
     # pytest stuff
     'conftest.py',
     }
