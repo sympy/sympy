@@ -2070,6 +2070,65 @@ def test_linodesolve():
     assert constant_renumber(linodesolve(A, x, type="type4", doit=True), variables=Tuple(*eq).free_symbols) == sol1
 
 
+def test_dsolve_dae():
+    # Test that dsolve can solve a mixture of ODEs and algebraic equations (at
+    # least in simple cases).
+    funcs = [f(x), g(x)]
+
+    eqs123 = [f(x).diff(x)-g(x), g(x)]
+    sol1 = [Eq(f(x), C1), Eq(g(x), 0)]
+    assert dsolve(eqs123, funcs) == sol1
+
+    ics2 = {f(0):1, g(0): 0}
+    sol2 = [Eq(f(x), 1), Eq(g(x), 0)]
+    assert dsolve(eqs123, funcs, ics=ics2) == sol2
+
+    # With DAEs it is possible that the initial conditions are inconsistent and
+    # so the existence of a solution to an IVP is not guaranteed.
+    #
+    # This example should raise but does not due to this line ignoring False:
+    #
+    #    https://github.com/sympy/sympy/blob/481bb7bdb6bc35d18d15aabfe86c0ea95e2bf301/sympy/solvers/ode/ode.py#L787
+    #
+    # ics3 = {f(0):1, g(0): 1}
+    # raises(ValueError, lambda: dsolve(eqs123, funcs, ics=ics3))
+
+    # Purely algebraic equations should be handled at least if linear. Really
+    # something like this should use solve/linsolve et al butsimple cases can
+    # be can also be handled here as a base case of DAE systems.
+    eqs4 = [f(x)-g(x), g(x)]
+    sol4 = [Eq(f(x), 0), Eq(g(x), 0)]
+    assert dsolve(eqs4, funcs) == sol4
+
+
+def test_dsolve_dae_issue_gh24841():
+    # Regression test for https://github.com/sympy/sympy/discussions/24841
+    #
+    # This system has two ODEs and two linear algebaic equations.
+
+    v_x, v_y, v_C, i_L = symbols('v_x, v_y, v_C, i_L', cls=Function)
+    t = symbols('t')
+
+    eqs = [
+        Eq(v_C(t)/3 - v_x(t)/6 - v_y(t)/6 + 0.125*Derivative(v_C(t), t), 0),
+        Eq(v_y(t) - 15, 0.5*Derivative(i_L(t), t)),
+        Eq(-v_C(t)/6 + v_x(t)/3 - v_y(t)/6, 0),
+        Eq(i_L(t) - v_C(t)/6 - v_x(t)/6 + v_y(t)/3, 0),
+    ]
+
+    funcs = [v_x(t), v_y(t), v_C(t), i_L(t)]
+    ics = {i_L(0): 15/2, v_C(0): 30, v_x(0): 15, v_y(0): 0}
+
+    expected = [
+        Eq(v_x(t), 15.0),
+        Eq(v_y(t), 15.0 - 15.0*exp(-4.0*t)),
+        Eq(v_C(t), 15.0 + 15.0*exp(-4.0*t)),
+        Eq(i_L(t), 7.5*exp(-4.0*t)),
+    ]
+
+    assert dsolve(eqs, funcs, ics=ics) == expected
+
+
 @slow
 def test_linear_3eq_order1_type4_slow():
     x, y, z = symbols('x, y, z', cls=Function)
