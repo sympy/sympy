@@ -5,6 +5,8 @@ ignore =
 select =
     C4,
     E722,
+    E711,
+    E712,
     F,
 exclude =
     sympy/assumptions/*generated.py,
