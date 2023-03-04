@@ -463,7 +463,7 @@ def test_orient_from_dcm_issue_24764():
                     [czx, czy, czz]])
     A = ReferenceFrame('A')
     B = ReferenceFrame('B')
-    B.orient_from_dcm(A, B_C_A)
+    B.orient_dcm(A, B_C_A)
     assert B.dcm(A) == Matrix([[cxx, cxy, cxz],
                                [cyx, cyy, cyz],
                                [czx, czy, czz]])

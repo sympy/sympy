@@ -762,22 +762,43 @@ class ReferenceFrame:
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
 
-    def orient_from_dcm(self, parentframe, dcm):
-        """Orient this frame from a direction cosine matrix.
+
+    def orient_dcm(self, parent, dcm):
+        """Sets the orientation of this reference frame relative to a parent
+        reference frame using a direction cosine matrix that describes the rotation
+        from the parent to the child.
 
         Parameters
         ==========
 
-        parentframe : ReferenceFrame
-            Reference frame from which the direction cosine matrix was computed.
-        dcm : Matrix
-            Direction cosine matrix that specifies the relative rotation
-            between the two reference frames.
+        parent : ReferenceFrame
+            Reference frame that this reference frame will be rotated relative
+            to.
+        dcm : Matrix, shape(3, 3)
+            Direction cosine matrix that specifies the relative rotation between
+            the two reference frames. The DCM should describe the rotation from the
+            parent to the child reference frame.
 
         """
 
-        dcm_inv = Matrix(dcm).transpose()
-        self.orient_explicit(parentframe, dcm_inv)
+        _check_frame(parent)
+        if not isinstance(dcm, MatrixBase):
+            raise TypeError("dcm must be a SymPy Matrix type object.")
+
+        parent_to_child_dcm = dcm
+
+        # Convert the parent-to-child DCM to child-to-parent DCM.
+        child_to_parent_dcm = parent_to_child_dcm.T
+
+        # Set the orientation of this reference frame relative to the parent
+        # reference frame using the child-to-parent DCM.
+        self._dcm(parent, child_to_parent_dcm)
+
+        wvec = self._w_diff_dcm(parent)
+        self._ang_vel_dict.update({parent: wvec})
+        parent._ang_vel_dict.update({self: -wvec})
+        self._var_dict = {}
+
 
     def _rot(self, axis, angle):
         """DCM for simple axis 1,2,or 3 rotations."""
