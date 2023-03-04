@@ -789,7 +789,7 @@ if cin:
             """
             # supported operators list
             operators_list = ['+', '-', '++', '--', '!']
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # it can be either pre increment/decrement or any other operator from the list
             if tokens[0].spelling in operators_list:
@@ -848,7 +848,7 @@ if cin:
             """
             # get all the tokens of assignment
             # and store it in the tokens list
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # supported operators list
             operators_list = ['+', '-', '*', '/', '%','=',

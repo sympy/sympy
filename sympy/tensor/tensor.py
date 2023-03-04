@@ -248,7 +248,7 @@ class _IndexStructure(CantSympify):
     @staticmethod
     def _replace_dummy_names(indices, free, dum):
         dum.sort(key=lambda x: x[0])
-        new_indices = [ind for ind in indices]
+        new_indices = list(indices)
         assert len(indices) == len(free) + 2*len(dum)
         generate_dummy_name = _IndexStructure._get_generator_for_dummy_indices(free)
         for ipos1, ipos2 in dum:

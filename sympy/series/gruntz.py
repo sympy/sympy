@@ -3,7 +3,7 @@ Limits
 ======
 
 Implemented according to the PhD thesis
-http://www.cybertester.com/data/gruntz.pdf, which contains very thorough
+https://www.cybertester.com/data/gruntz.pdf, which contains very thorough
 descriptions of the algorithm including many examples.  We summarize here
 the gist of it.
 

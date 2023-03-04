@@ -295,7 +295,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)
+    .. [1] https://en.wikipedia.org/wiki/Predicate_%28mathematical_logic%29
     .. [2] https://en.wikipedia.org/wiki/Sexy_prime
 
     """

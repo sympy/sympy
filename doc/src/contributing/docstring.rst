@@ -94,12 +94,12 @@ Formatting
 -------------
 
 Docstrings are are written in `reStructuredText
-<http://docutils.sourceforge.net/rst.html>`_ format extended by `Sphinx
-<http://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
-reStructuredText <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_. More in-depth
+<https://docutils.sourceforge.io/rst.html>`_ format extended by `Sphinx
+<https://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
+reStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`_. More in-depth
 information about using reStructuredText can be found in the `Sphinx
 Documentation
-<http://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
+<https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
 
 In order for Sphinx to render docstrings nicely in the HTML documentation, some
 formatting guidelines should be followed when writing docstrings:
@@ -443,7 +443,7 @@ Here is a References section that cites printed and online resources::
     .. [2] Luke, Y. L., The Special Functions and Their Approximations,
            Volume 1, (1969)
     .. [3] https://en.wikipedia.org/wiki/Bessel_function
-    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+    .. [4] https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
 Sample Docstring
 ------------------
@@ -523,9 +523,9 @@ Here is an example of a correctly formatted docstring::
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Gamma_function
-        .. [2] http://dlmf.nist.gov/5
-        .. [3] http://mathworld.wolfram.com/GammaFunction.html
-        .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+        .. [2] https://dlmf.nist.gov/5
+        .. [3] https://mathworld.wolfram.com/GammaFunction.html
+        .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma/
 
         """
 

@@ -235,7 +235,7 @@ class ColorScheme:
         independent variable u.
         """
         bounds = create_bounds()
-        cverts = list()
+        cverts = []
         if callable(set_len):
             set_len(len(u_set)*2)
         # calculate f() = r,g,b for each vert
@@ -273,13 +273,13 @@ class ColorScheme:
         independent variables u and v.
         """
         bounds = create_bounds()
-        cverts = list()
+        cverts = []
         if callable(set_len):
             set_len(len(u_set)*len(v_set)*2)
         # calculate f() = r,g,b for each vert
         # and find the min and max for r,g,b
         for _u in range(len(u_set)):
-            column = list()
+            column = []
             for _v in range(len(v_set)):
                 if verts[_u][_v] is None:
                     column.append(None)

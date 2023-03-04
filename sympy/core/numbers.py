@@ -814,7 +814,7 @@ class Number(AtomicExpr):
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         # a -> c*t
         if self.is_Rational or not rational:
-            return self, tuple()
+            return self, ()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
         return S.One, (self,)
@@ -822,14 +822,14 @@ class Number(AtomicExpr):
     def as_coeff_add(self, *deps):
         # a -> c + t
         if self.is_Rational:
-            return self, tuple()
+            return self, ()
         return S.Zero, (self,)
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
-        if rational and not self.is_Rational:
-            return S.One, self
-        return (self, S.One) if self else (S.One, self)
+        if not rational:
+            return self, S.One
+        return S.One, self
 
     def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation."""

@@ -563,7 +563,7 @@ def galois_group(f, *gens, by_name=False, max_tries=30, randomize=False, **args)
     ==========
 
     f : Expr
-        Irreducible, monic polynomial over :ref:`ZZ`, whose Galois group
+        Irreducible polynomial over :ref:`ZZ` or :ref:`QQ`, whose Galois group
         is to be determined.
     gens : optional list of symbols
         For converting *f* to Poly, and will be passed on to the
