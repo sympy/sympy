@@ -5,8 +5,8 @@ from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import (expand_mul, expand, Derivative,
-                                 AppliedUndef, Function, Subs)
+from sympy.core.function import (expand_mul, expand, AppliedUndef, Function,
+                                 Subs)
 from sympy.functions import (exp, im, cos, sin, re, Piecewise,
                              piecewise_fold, sqrt, log)
 from sympy.functions.combinatorial.factorials import factorial
@@ -1413,7 +1413,26 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     order = _get_func_order(eqs, funcs)
     system_order = max(order[func] for func in funcs)
     is_higher_order = system_order > 1
-    is_second_order = system_order == 2 and all(order[func] == 2 for func in funcs)
+    is_second_order = all(order[func] == 2 for func in funcs)
+
+    if any(order[func] == 0 for func in funcs):
+        # The system contains some purely algebraic equations. The general ODE
+        # systems solvers do not incorporate such equations but the weak component
+        # solver should be able to separate them from the differential equations.
+        #
+        # This happens if we have e.g.:
+        #
+        # (1)  x' = x + y + z
+        # (2)  y' = x - y
+        # (3)  z  = t + x + y
+        #
+        # The weak component solver will divide this into two components (1, 2)
+        # and (3). The first system (1, 2) is all first order. Once solved its
+        # solutions can be substituted directly into (3) which immediately
+        # gives z. The strong component solver will accept (3) as being already
+        # the solution for z. We return None now so that weak component solver
+        # can try again and return components in the form expected here.
+        return None
 
     # Not adding the check if the len(func.args) for
     # every func in funcs is 1
@@ -1696,6 +1715,25 @@ def _higher_order_ode_solver(match):
 def _strong_component_solver(eqs, funcs, t):
     from sympy.solvers.ode.ode import dsolve, constant_renumber
 
+    # In the case of purely algebraic equations we might actually just have
+    # something like:
+    #
+    #  x = something
+    #  y = something
+    #
+    # If that is the case then we can just return the equation as is since it
+    # already gives the solution. Algebraic equations in the orginal input will
+    # be in this form already because an earlier step solves for them
+    # algebraically. The weak component solver will separate such equations
+    # from the differential equations so it should not be necessary to handle
+    # both algebraic and differential equations in the same component.
+
+    def is_solved(eq):
+        return eq.lhs in funcs and not eq.rhs.has_xfree(set(funcs))
+
+    if all(is_solved(eq) for eq in eqs):
+        return eqs
+
     match = _classify_linear_system(eqs, funcs, t, is_canon=True)
     sol = None
 
@@ -1726,7 +1764,14 @@ def _strong_component_solver(eqs, funcs, t):
 
 
 def _get_funcs_from_canon(eqs):
-    return [eq.lhs.args[0] for eq in eqs]
+    #
+    # We need to check if the lhs is a derivative in case there are equations
+    # without derivatives e.g. like:
+    #
+    #  x' = x + y
+    #  y = x + 1
+    #
+    return [eq.lhs.args[0] if eq.lhs.is_Derivative else eq.lhs for eq in eqs]
 
 
 # Returns: List of Equations(a solution)
@@ -2094,7 +2139,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
         '''))
 
     if t is None:
-        t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]
+        [t] = funcs[0].args
 
     sols = []
     canon_eqs = canonical_odes(eqs, funcs, t)
