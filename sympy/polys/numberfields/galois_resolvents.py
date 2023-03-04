@@ -573,7 +573,7 @@ def define_resolvents():
     # First resolvent used in `_galois_group_degree_6_lookup()`:
     H = PGL2F5()
     term0 = X[0]**2*X[5]**2*(X[1]*X[4] + X[2]*X[3])
-    terms = set(term0.compose(list(zip(X, s(X)))) for s in H.elements)
+    terms = {term0.compose(list(zip(X, s(X)))) for s in H.elements}
     F61 = sum(terms)
     s61 = [Permutation(5)] + [Permutation(5)(0, n) for n in range(1, 6)]
 

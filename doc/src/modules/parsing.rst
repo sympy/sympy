@@ -105,7 +105,7 @@ Runtime Installation
 --------------------
 
 The currently-packaged LaTeX parser backend is partially generated with
-`ANTLR4 <http://antlr4.org>`_,
+`ANTLR4 <https://www.antlr.org/>`_,
 but to use the parser, you only need the ``antlr4`` Python package available.
 
 Depending on your package manager, you can install the right package with, for

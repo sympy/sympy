@@ -1711,7 +1711,7 @@ class Derivative(Expr):
                 return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
-        newargs = list(x._subs(old, new) for x in args)
+        newargs = [x._subs(old, new) for x in args]
         if args[0] == old:
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
@@ -2469,7 +2469,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    .. [1] http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    .. [1] https://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
@@ -2635,7 +2635,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     and ``cos(x)`` are not unique, due to the identity `\sin^2(x) + \cos^2(x)
     = 1`.  The current implementation uses the form obtained from Chebyshev
     polynomials, but this may change.  See `this MathWorld article
-    <http://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
+    <https://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
     information.
 
     Notes
@@ -3317,7 +3317,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.matrices.matrices import MatrixBase
 
-    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 
     if isinstance(expr, MatrixBase):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
@@ -3326,7 +3326,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
-                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                args = [tuple((nfloat(i, **kw) for i in a))
                     for a in expr.items()]
             else:
                 args = [(k, nfloat(v, **kw)) for k, v in expr.items()]

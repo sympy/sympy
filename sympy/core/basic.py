@@ -402,7 +402,7 @@ class Basic(Printable):
         References
         ==========
 
-        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
+        from https://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
         if self is other:
             return True

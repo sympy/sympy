@@ -109,9 +109,9 @@ def _convert_indexed_to_array(expr):
         summation_indices = expr.variables
         subexpr, subindices = _convert_indexed_to_array(function)
         subindicessets = {j: i for i in subindices if isinstance(i, frozenset) for j in i}
-        summation_indices = sorted(set([subindicessets.get(i, i) for i in summation_indices]), key=default_sort_key)
+        summation_indices = sorted({subindicessets.get(i, i) for i in summation_indices}, key=default_sort_key)
         # TODO: check that Kronecker delta is only contracted to one other element:
-        kronecker_indices = set([])
+        kronecker_indices = set()
         if isinstance(function, Mul):
             for arg in function.args:
                 if not isinstance(arg, KroneckerDelta):

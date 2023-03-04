@@ -17,7 +17,7 @@ of Git for your operating system to start development.
 .. note::
    Refer to the installation instructions in
    the `Git installation instructions <https://git-scm.com/book/en/v2/Getting-Started-Installing-Git>`_.
-   Learn about the basic git commands in this `Git Handbook <https://guides.github.com/introduction/git-handbook/>`_
+   Learn about the basic git commands in this `Git Handbook <https://docs.github.com/en/get-started/using-git/about-git>`_
    or any other sources on the internet.
 
 Get the SymPy Code
@@ -72,7 +72,7 @@ We recommend using ``conda`` to create a virtual environment:
 
 .. code-block:: bash
 
-    $ conda create -n sympy-dev python=3 mpmath flake8
+    $ conda create -n sympy-dev python=3 mpmath flake8 flake8-comprehensions
 
 You now have a environment that you can use for testing your development copy of SymPy. For example, clone your SymPy fork from Github:
 

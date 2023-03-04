@@ -32,7 +32,7 @@ community.
 ## Download
 
 The recommended installation method is through Anaconda,
-<https://www.anaconda.com/download/>
+<https://www.anaconda.com/products/distribution>
 
 You can also get the latest version of SymPy from
 <https://pypi.python.org/pypi/sympy/>
@@ -108,7 +108,7 @@ To install SymPy from GitHub source, first clone SymPy using `git`:
 
 Then, in the `sympy` repository that you cloned, simply run:
 
-    $ python setup.py install
+    $ pip install .
 
 See <https://docs.sympy.org/dev/install.html> for more information.
 

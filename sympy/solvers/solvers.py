@@ -271,7 +271,7 @@ def checksol(f, symbol, sol=None, **flags):
             if not f.is_Boolean:
                 return
         else:
-            f = f.rewrite(Add, evaluate=False)
+            f = f.rewrite(Add, evaluate=False, deep=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -945,7 +945,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = fi.rewrite(Add, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False, deep=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
@@ -1760,7 +1760,7 @@ def _solve_system(exprs, symbols, **flags):
                 subsyms = set()
                 for e in subexpr:
                     subsyms |= exprsyms[e]
-                subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
+                subsyms = sorted(subsyms, key = lambda x: sym_indices[x])
                 flags['_split'] = False  # skip split step
                 _linear, subsol = _solve_system(subexpr, subsyms, **flags)
                 if linear:
@@ -3028,6 +3028,8 @@ def nsolve(*args, dict=False, **kwargs):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
             f = f.lhs - f.rhs
+        elif f.is_Relational:
+            raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
@@ -3325,7 +3327,7 @@ def unrad(eq, *syms, **flags):
 
     """
 
-    uflags = dict(check=False, simplify=False)
+    uflags = {"check": False, "simplify": False}
 
     def _cov(p, e):
         if cov:
@@ -3398,7 +3400,7 @@ def unrad(eq, *syms, **flags):
         return
 
     cov, nwas, rpt = [flags.setdefault(k, v) for k, v in
-        sorted(dict(cov=[], n=None, rpt=0).items())]
+        sorted({"cov": [], "n": None, "rpt": 0}.items())]
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
@@ -3623,7 +3625,7 @@ def unrad(eq, *syms, **flags):
                 rpt > 3):
         raise NotImplementedError('Cannot remove all radicals')
 
-    flags.update(dict(cov=cov, n=len(rterms), rpt=rpt))
+    flags.update({"cov": cov, "n": len(rterms), "rpt": rpt})
     neq = unrad(eq, *syms, **flags)
     if neq:
         eq, cov = neq
