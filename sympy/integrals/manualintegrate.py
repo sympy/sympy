@@ -1896,10 +1896,11 @@ def substitution_rule(integral):
                 continue
 
             if simplify(c - 1) != 0:
-                _, denom = c.as_numer_denom()
-                if subrule:
-                    subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
+                numer, denom = c.as_numer_denom()
+                subrule = ConstantTimesRule(c * substituted, u_var, c, substituted, subrule)
 
+                # e.g. integrand = E**(a*x), c = 1/a, we should treat a = 0 differently
+                # But for E**(a*x)/a, we already know a != 0
                 if denom.free_symbols:
                     piecewise = []
                     could_be_zero = []
@@ -1910,7 +1911,7 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        if not fuzzy_not(expr.is_zero):
+                        if not fuzzy_not(expr.is_zero) and not integrand.has_free(Pow(expr, S.NegativeOne)):
                             substep = integral_steps(manual_subs(integrand, expr, 0), symbol)
 
                             if substep:

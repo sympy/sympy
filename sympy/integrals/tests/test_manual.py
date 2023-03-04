@@ -1,7 +1,7 @@
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.function import (Derivative, Function, diff, expand)
-from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.numbers import (I, Rational, pi, oo)
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
@@ -599,6 +599,11 @@ def test_issue_23566():
     i = Integral(1/sqrt(x**2 - 1), (x, -2, -1)).doit(manual=True)
     assert i == -log(4 - 2*sqrt(3)) + log(2)
     assert str(i.n()) == '1.31695789692482'
+
+
+def test_issue_24781():
+    assert manualintegrate(exp(-y**2)*Integral(y*exp(-z**2/(2*x**2))/x, (z, -oo, oo)), y) == \
+        -exp(-y**2)*Integral(exp(-z**2/(2*x**2)), (z, -oo, oo))/(2*x)
 
 
 def test_nested_pow():
