@@ -525,6 +525,12 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumpt
     start : int, optional
         The start number.  By default, it is 0.
 
+    exclude : list, tuple, set of cls, optional
+        Symbols to be excluded.
+
+    *args, **kwargs
+        Additional positional and keyword arguments are passed to the *cls* class.
+
     Returns
     =======
 
@@ -896,7 +902,7 @@ def strongly_connected_components(G):
     Parameters
     ==========
 
-    graph : tuple[list, list[tuple[T, T]]
+    G : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph whose strongly connected components are to be found.
 
@@ -1050,7 +1056,7 @@ def connected_components(G):
     Parameters
     ==========
 
-    graph : tuple[list, list[tuple[T, T]]
+    G : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph whose connected components are to be found.
 
@@ -1592,20 +1598,21 @@ def multiset_partitions(multiset, m=None):
 def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of positive integer, n.
 
-    Parameters
-    ==========
-
-    m : integer (default gives partitions of all sizes)
-        limits number of parts in partition (mnemonic: m, maximum parts)
-    k : integer (default gives partitions number from 1 through n)
-        limits the numbers that are kept in the partition (mnemonic: k, keys)
-    size : bool (default False, only partition is returned)
-        when ``True`` then (M, P) is returned where M is the sum of the
-        multiplicities and P is the generated partition.
-
     Each partition is represented as a dictionary, mapping an integer
     to the number of copies of that integer in the partition.  For example,
     the first partition of 4 returned is {4: 1}, "4: one of them".
+
+    Parameters
+    ==========
+    n : int
+    m : int, optional
+        limits number of parts in partition (mnemonic: m, maximum parts)
+    k : int, optional
+        limits the numbers that are kept in the partition (mnemonic: k, keys)
+    size : bool, default: False
+        If ``True``, (M, P) is returned where M is the sum of the
+        multiplicities and P is the generated partition.
+        If ``False``, only the generated partition is returned.
 
     Examples
     ========
@@ -1721,18 +1728,18 @@ def partitions(n, m=None, k=None, size=False):
 
 
 def ordered_partitions(n, m=None, sort=True):
-    """Generates ordered partitions of integer ``n``.
+    """Generates ordered partitions of integer *n*.
 
     Parameters
     ==========
-
-    m : integer (default None)
+    n : int
+    m : int, optional
         The default value gives partitions of all sizes else only
-        those with size m. In addition, if ``m`` is not None then
+        those with size m. In addition, if *m* is not None then
         partitions are generated *in place* (see examples).
-    sort : bool (default True)
+    sort : bool, default: True
         Controls whether partitions are
-        returned in sorted order when ``m`` is not None; when False,
+        returned in sorted order when *m* is not None; when False,
         the partitions are returned as fast as possible with elements
         sorted, but when m|n the partitions will not be in
         ascending lexicographical order.
@@ -1858,7 +1865,7 @@ def ordered_partitions(n, m=None, sort=True):
 
 def binary_partitions(n):
     """
-    Generates the binary partition of n.
+    Generates the binary partition of *n*.
 
     A binary partition consists only of numbers that are
     powers of two. Each step reduces a `2^{k+1}` to `2^k` and

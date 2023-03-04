@@ -267,7 +267,6 @@ def test_files():
         "isympy.py",
         "build.py",
         "setup.py",
-        "setupegg.py",
     ]]
     # Files to exclude from all tests
     exclude = {

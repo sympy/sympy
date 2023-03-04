@@ -827,9 +827,9 @@ class Number(AtomicExpr):
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
-        if rational and not self.is_Rational:
-            return S.One, self
-        return (self, S.One) if self else (S.One, self)
+        if not rational:
+            return self, S.One
+        return S.One, self
 
     def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation."""
