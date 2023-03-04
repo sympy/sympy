@@ -130,9 +130,6 @@ git_whitelist = {
     'release/sha256.py',
     'release/authors.py',
     'release/ci_release_script.sh',
-    # This is just a distribute version of setup.py. Used mainly for setup.py
-    # develop, which we don't care about in the release tarball
-    'setupegg.py',
     # pytest stuff
     'conftest.py',
     }
