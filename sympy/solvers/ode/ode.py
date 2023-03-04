@@ -241,8 +241,7 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 from sympy.core.traversal import preorder_traversal
 
-from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
-                                BooleanFalse)
+from sympy.logic.boolalg import BooleanTrue, BooleanFalse
 from sympy.functions import exp, log, sqrt
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral
@@ -789,15 +788,10 @@ def solve_ics(sols, funcs, constants, ics):
 
         for sol in S:
             if sol.has(matching_func):
-                sol2 = sol
-                sol2 = sol2.subs(x, x0)
+                sol2 = sol.subs(x, x0)
                 sol2 = sol2.subs(funcarg, value)
-                # This check is necessary because of issue #15724
-                if not isinstance(sol2, BooleanAtom) or not subs_sols:
-                    subs_sols = [s for s in subs_sols if not isinstance(s, BooleanAtom)]
-                    subs_sols.append(sol2)
+                subs_sols.append(sol2)
 
-    # TODO: Use solveset here
     try:
         solved_constants = solve(subs_sols, constants, dict=True)
     except NotImplementedError:
@@ -806,7 +800,7 @@ def solve_ics(sols, funcs, constants, ics):
     # XXX: We can't differentiate between the solution not existing because of
     # invalid initial conditions, and not existing because solve is not smart
     # enough. If we could use solveset, this might be improvable, but for now,
-    # we use NotImplementedError in this case.
+    # we use ValueError in this case.
     if not solved_constants:
         raise ValueError("Couldn't solve for initial conditions")
 

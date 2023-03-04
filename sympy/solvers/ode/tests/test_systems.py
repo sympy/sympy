@@ -2084,14 +2084,10 @@ def test_dsolve_dae():
     assert dsolve(eqs123, funcs, ics=ics2) == sol2
 
     # With DAEs it is possible that the initial conditions are inconsistent and
-    # so the existence of a solution to an IVP is not guaranteed.
-    #
-    # This example should raise but does not due to this line ignoring False:
-    #
-    #    https://github.com/sympy/sympy/blob/481bb7bdb6bc35d18d15aabfe86c0ea95e2bf301/sympy/solvers/ode/ode.py#L787
-    #
-    # ics3 = {f(0):1, g(0): 1}
-    # raises(ValueError, lambda: dsolve(eqs123, funcs, ics=ics3))
+    # so the existence of a solution to an IVP is not guaranteed. Here the
+    # initial condition for g contradicts the algebraic equation for g:
+    ics3 = {f(0):1, g(0): 1}
+    raises(ValueError, lambda: dsolve(eqs123, funcs, ics=ics3))
 
     # Purely algebraic equations should be handled at least if linear. Really
     # something like this should use solve/linsolve et al butsimple cases can
