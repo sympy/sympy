@@ -1511,6 +1511,9 @@ def _inverse_laplace_time_shift(F, s, t, plane):
 
     if not F.has(s):
         return F*DiracDelta(t), S.true
+    if not F.has(exp):
+        return None
+
     ma1 = F.match(exp(a*s))
     if ma1:
         if ma1[a].is_negative:
@@ -1669,6 +1672,14 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     debugf('[ILT _i_l_t] (%s, %s, %s)', (fn, s_, t_))
 
     for term in terms:
+        if term.has(exp):
+            # Simplify expressions with exp() such that time-shifted
+            # expressions have negative exponents in the numerator instead of
+            # positive exponents in the numerator and denominator; this is a
+            # (necessary) trick. It will, for example, convert
+            # (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1)) into
+            # (s**2 + 4*exp(-s) - 4*exp(-2*s))/(s*(s**2 + 1))
+            term = term.subs(s_, -s_).together().subs(s_, -s_)
         k, f = term.as_independent(s_, as_Add=False)
         if (
                 dorational and term.is_rational_function(s_) and
