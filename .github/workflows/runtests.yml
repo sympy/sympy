@@ -161,8 +161,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: python -m pip install --upgrade pip
+      - run: pip install build
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
-      - run: python3 setup.py bdist_wheel
+      - run: python -m build --wheel
       - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
@@ -405,7 +410,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - run: python setup.py sdist
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
