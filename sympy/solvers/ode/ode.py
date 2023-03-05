@@ -2157,7 +2157,8 @@ def constant_renumber(expr, variables=None, newconstants=None):
                 *[_constant_renumber(x) for x in expr.args])
         else:
             sortedargs = list(expr.args)
-            sortedargs.sort(key=sort_key)
+            if type(expr) in (Mul, Add) and expr.is_commutative:
+                sortedargs.sort(key=sort_key)
             return expr.func(*[_constant_renumber(x) for x in sortedargs])
     expr = _constant_renumber(expr)
 

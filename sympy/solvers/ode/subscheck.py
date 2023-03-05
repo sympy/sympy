@@ -347,23 +347,18 @@ def checksysodesol(eqs, sols, func=None):
         if isinstance(eqs[i], Equality):
             eqs[i] = eqs[i].lhs - eqs[i].rhs
     if func is None:
-        funcs = []
-        for eq in eqs:
-            derivs = eq.atoms(Derivative)
-            func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            funcs.extend(func)
-        funcs = list(set(funcs))
+        ifuncs = (eq.atoms(AppliedUndef) for eq in eqs)
+        funcs = list(set().union(*ifuncs))
+    else:
+        funcs = func
     if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
     and len({func.args for func in funcs})!=1:
         raise ValueError("func must be a function of one variable, not %s" % func)
-    for sol in sols:
-        if len(sol.atoms(AppliedUndef)) != 1:
-            raise ValueError("solutions should have one function only")
     if len(funcs) != len({sol.lhs for sol in sols}):
         raise ValueError("number of solutions provided does not match the number of equations")
     dictsol = {}
     for sol in sols:
-        func = list(sol.atoms(AppliedUndef))[0]
+        func = list(sol.atoms(AppliedUndef) & set(funcs))[0]
         if sol.rhs == func:
             sol = sol.reversed
         solved = sol.lhs == func and not sol.rhs.has(func)

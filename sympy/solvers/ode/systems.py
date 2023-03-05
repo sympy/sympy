@@ -1,5 +1,6 @@
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
@@ -1066,16 +1067,90 @@ def canonical_odes(eqs, funcs, t):
     """
     from sympy.solvers.solvers import solve
 
+    # In some cases the order might be zero implying that the derivative is
+    # actually just the function.
     order = _get_func_order(eqs, funcs)
+    derivatives = [func.diff(t, order[func]) for func in funcs]
 
-    canon_eqs = solve(eqs, *[func.diff(t, order[func]) for func in funcs], dict=True)
+    # List of dicts for possible solutions for the highest derivative of each
+    # function.
+    solutions = solve(eqs, derivatives, dict=True)
 
     systems = []
-    for eq in canon_eqs:
-        system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
+
+    for solution in solutions:
+        solution = _add_parameters_solve(solution, derivatives, t)
+        system = [Eq(deriv, solution[deriv]) for deriv in derivatives]
         systems.append(system)
 
     return systems
+
+
+def _add_parameters_solve(solution, derivatives, t):
+    #
+    # Process a solution dict from solve to add missing equations and replace
+    # free variables with symbolic parameters.
+    #
+    # If the system of equations to be solved was underdetermined we may have
+    # parametric solutions like:
+    #
+    # {f(t).diff(t): g(t).diff(t)}
+    #
+    # In this case we introduce a dummy function alpha1 and transform the
+    # solution to:
+    #
+    # {f(t).diff(t): alpha1(t), g(t).diff(t): alpha1(t)}
+    #
+    # Then all variables have an explicit equation and at the end dsolve will
+    # find these new functions and replace them with integration "functions"
+    # like C1(x), C2(x), ... along with the actual integration constants.
+    #
+    derivative_map = {}
+    new_solution = {}
+
+    for derivative in derivatives:
+        if derivative in solution:
+            new_solution[derivative] = solution[derivative]
+        else:
+            new_solution[derivative] = derivative
+            derivative_map[derivative] = _DummyFunc.new(t)
+
+    # Replace all occurence of variables on rhs with parameters.
+    return {d: sol.subs(derivative_map) for d, sol in new_solution.items()}
+
+
+class _DummyFunc(Expr):
+    #
+    # This is needed because Function(Dummy()) does not work properly.
+    # In particular:
+    #
+    #   >>> Function(Dummy('x')) == Function(Dummy('x'))
+    #   True
+    #   >>> Function(Dummy('x')).free_symbols
+    #   set()
+    #
+    @classmethod
+    def new(cls, arg):
+        return cls(Dummy(), arg)
+
+    def to_func(self):
+        func = Function(self.args[0].name)
+        return func(*self.args[1:])
+
+    @classmethod
+    def replace_dummyfuncs(cls, eqs, sol):
+        #
+        # Replace all _DummyFunc with ordinary functions. The internal Dummy
+        # will have been already replaced with C1/C2/... by constant_renumber.
+        # Final output from dsolve_system will not include any _DummyFunc so
+        # they should not exist in the input equations to dsolve_system except
+        # during a recursive call from dsolve_system to itself.
+        #
+        dummy_funcs = Tuple(*sol).atoms(_DummyFunc)
+        eqs_tuple = Tuple(*eqs)
+        dummy_funcs = {df for df in dummy_funcs if not eqs_tuple.has_xfree({df})}
+        func_map = {df: df.to_func() for df in dummy_funcs}
+        return [eq.xreplace(func_map) for eq in sol]
 
 
 def _is_commutative_anti_derivative(A, t):
@@ -2128,11 +2203,6 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
             variable.
         '''))
 
-    if len(eqs) != len(funcs):
-        raise ValueError(filldedent('''
-            Number of equations and number of functions do not match
-        '''))
-
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
             The independent variable must be of type Symbol
@@ -2158,11 +2228,13 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     if sols:
         final_sols = []
         variables = Tuple(*eqs).free_symbols
+        functions = {Symbol(f.name) for f in Tuple(*eqs).atoms(AppliedUndef)}
 
         for sol in sols:
 
             sol = _select_equations(sol, funcs)
-            sol = constant_renumber(sol, variables=variables)
+            sol = constant_renumber(sol, variables=variables | functions)
+            sol = _DummyFunc.replace_dummyfuncs(eqs, sol)
 
             if ics:
                 constants = Tuple(*sol).free_symbols - variables
