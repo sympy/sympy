@@ -59,6 +59,8 @@ git_whitelist = {
     'CODE_OF_CONDUCT.md',
     # Contributing guide
     'CONTRIBUTING.md',
+    # Citation config
+    'CITATION.cff',
     # Nothing from bin/ should be shipped unless we intend to install it. Most
     # of this stuff is for development anyway. To run the tests from the
     # tarball, use setup.py test, or import sympy and run sympy.test() or
