@@ -2183,10 +2183,10 @@ def test_dsolve_dae_bad():
 
     # XXX: This one is not handled properly. It is similar to the above but
     # this time solve decides that the equations are inconsistent. The
-    # equations imply that g(x) = 0 but g(x).diff(x) is the highest derivative
-    # of g so that is what solve cwis askedattempts to solve for. Since g(x) is
-    # treated as algebraically independent by solve the conclusion is that the
-    # system is inconsistent.
+    # equations imply that g(x) = 0 but g'(x) is the highest derivative of g so
+    # that is what solve is asked to solve for. Since g(x) is treated as
+    # algebraically independent by solve the conclusion is that the system is
+    # inconsistent.
     eqs2 = [f(x).diff(x), f(x).diff(x) + g(x), g(x).diff(x)]
     sol2_good = [Eq(f(x), C1), Eq(g(x), 0)]
     sol2_bad = []
