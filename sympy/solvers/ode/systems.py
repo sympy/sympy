@@ -1106,6 +1106,23 @@ def _solve_reduce_derivatives(eqs, funcs, t):
     order = _get_func_order(eqs, funcs)
     highest_derivatives = [func.diff(t, order[func]) for func in funcs]
 
+    # There is no point in attempting any of the things below if the equations
+    # are already in explicit form.
+    derivs_found = []
+    derivs_set = set(highest_derivatives)
+    for eq in eqs:
+        if not eq.is_Equality:
+            break
+        for lhs, rhs in [(eq.lhs, eq.rhs), (eq.rhs, eq.lhs)]:
+            if lhs in derivs_set and not rhs.has_xfree(derivs_set):
+                derivs_found.append(eq.lhs)
+                break
+            # XXX: Handle a trivial Add or something else here...
+
+    if len(derivs_found) == len(eqs) == len(set(derivs_found)):
+        [sols] = solve(eqs, highest_derivatives, dict=True)
+        return [(sols, highest_derivatives)]
+
     func2derivs = {}
     deriv2func = {}
 
@@ -1117,8 +1134,6 @@ def _solve_reduce_derivatives(eqs, funcs, t):
 
     all_derivatives = list(deriv2func)
 
-    solutions = solve(eqs, all_derivatives, dict=True)
-
     #
     # Solve will solve somewhat randomly for different variables in the
     # underdetermined system and returns effectively a new system of equations
@@ -1127,6 +1142,7 @@ def _solve_reduce_derivatives(eqs, funcs, t):
     # that are *not* of the highest order. Such an equation can be used to
     # eliminate higher order derivatives from the original equations.
     #
+    solutions = solve(eqs, all_derivatives, dict=True)
 
     all_solutions = []
 
