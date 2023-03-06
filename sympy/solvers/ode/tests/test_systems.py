@@ -2181,6 +2181,16 @@ def test_dsolve_dae():
     for sol15i in sol15:
         assert checksysodesol(eqs15, sol15i) == (True, [0, 0])
 
+    eqs16 = [f(x).diff(x, 2), f(x).diff(x)]
+    sol16 = [Eq(f(x), C1)]
+    assert dsolve(eqs16, [f(x)]) == sol16
+    assert checksysodesol(eqs16, sol16) == (True, [0, 0])
+
+    eqs17 = [f(x).diff(x, 2), f(x).diff(x), f(x)]
+    sol17 = [Eq(f(x), 0)]
+    assert dsolve(eqs17, [f(x)]) == sol17
+    assert checksysodesol(eqs17, sol17) == (True, [0, 0, 0])
+
 
 def test_dsolve_dae_bad():
     C1f = Function('C1')
