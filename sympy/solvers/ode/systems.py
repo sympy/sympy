@@ -1065,25 +1065,134 @@ def canonical_odes(eqs, funcs, t):
     List
 
     """
-    from sympy.solvers.solvers import solve
-
-    # In some cases the order might be zero implying that the derivative is
-    # actually just the function.
-    order = _get_func_order(eqs, funcs)
-    derivatives = [func.diff(t, order[func]) for func in funcs]
-
-    # List of dicts for possible solutions for the highest derivative of each
-    # function.
-    solutions = solve(eqs, derivatives, dict=True)
+    # Solve for the highest derivatives carefully noting whether it is possible
+    # to solve for any lower order derivatives first.
+    solutions_derivatives = _solve_reduce_derivatives(eqs, funcs, t)
 
     systems = []
 
-    for solution in solutions:
+    for solution, derivatives in solutions_derivatives:
+        # Add parameter functions to handle underdetermined cases.
         solution = _add_parameters_solve(solution, derivatives, t)
-        system = [Eq(deriv, solution[deriv]) for deriv in derivatives]
+
+        system = [Eq(lhs, rhs) for lhs, rhs in solution.items()]
         systems.append(system)
 
     return systems
+
+
+def _solve_reduce_derivatives(eqs, funcs, t):
+    #
+    # Solve for the highest derivatives of funcs in eqs.
+    #
+    # First try to solve for all derivatives of all orders. This will likely be
+    # an underdetermined system of equations but might give definite results
+    # for some derivatives. In particular we are interested in cases where we
+    # can solve for a lower order derivative than the highest derivative in the
+    # system. An example would be:
+    #
+    #   x' + y' = x
+    #   x' + y' = 0
+    #
+    # Here although the system appears to be first order in x (x' is the
+    # highest derivative) in fact it is zero order in x and we can conclude
+    # immediately that x=0 implying also that x'=0. The system is reduced to
+    #
+    #   y' = 0
+    #   x  = 0
+    #
+    from sympy.solvers.solvers import solve
+
+    order = _get_func_order(eqs, funcs)
+    highest_derivatives = [func.diff(t, order[func]) for func in funcs]
+
+    func2derivs = {}
+    deriv2func = {}
+
+    for f in funcs:
+        derivs = [f.diff(t, i) for i in range(order[f] + 1)]
+        func2derivs[f] = derivs
+        for n, dfdn in enumerate(derivs):
+            deriv2func[dfdn] = (f, n)
+
+    all_derivatives = list(deriv2func)
+
+    solutions = solve(eqs, all_derivatives, dict=True)
+
+    #
+    # Solve will solve somewhat randomly for different variables in the
+    # underdetermined system and returns effectively a new system of equations
+    # connecting different derivatives of different orders. What we want to do
+    # is for each solution find any equation that connects only derivatives
+    # that are *not* of the highest order. Such an equation can be used to
+    # eliminate higher order derivatives from the original equations.
+    #
+
+    all_solutions = []
+
+    for solution in solutions:
+
+        low_order_eqs = []
+
+        for lhs, rhs in solution.items():
+            if not Tuple(lhs, rhs).has_xfree(set(highest_derivatives)):
+                low_order_eqs.append((lhs, rhs))
+
+        if low_order_eqs:
+            # Build a substitution map to eliminate higher order derivatives
+            # from the original equations and also auxiliary equations to
+            # represent the solved relationships.
+            new_eqs = list(eqs)
+            replacements = {}
+
+            for lhs, rhs in low_order_eqs:
+                f, order_f = deriv2func[lhs]
+                higher_derivs = func2derivs[f][order_f:]
+
+                new_eqs.append(Eq(lhs, rhs))
+
+                for i, df in enumerate(higher_derivs):
+                    assert df not in replacements
+                    replacements[df] = rhs.diff(t, i)
+
+                    if df in solution:
+                        new_eqs.append(Eq(solution[df], replacements[df]))
+
+            # New equations after elimination.
+            #new_eqs = [Eq(lhs, rhs) for lhs, rhs in solution.items()]
+            #new_eqs += [Eq(lhs, rhs) for lhs, rhs in low_order_eqs]
+            eqs_replaced = [eq.subs(replacements) for eq in new_eqs]
+
+            # New equations after elimination
+            eqs_replaced = [eq.subs(replacements) for eq in eqs]
+            eqs_replaced.extend(Eq(lhs, rhs) for lhs, rhs in low_order_eqs)
+
+            # Apply recursively in case more derivatives can be eliminated from
+            # the reduced equations.
+            new_solutions = _solve_reduce_derivatives(eqs_replaced, funcs, t)
+
+            all_solutions.extend(new_solutions)
+
+        else:
+            # Base case of the recursion. No more higher derivatives can be
+            # eliminated. Now solve only for the highest order derivatives.
+            derivs_sol = solve(eqs, highest_derivatives, dict=True)
+
+            for deriv_sol in derivs_sol:
+                all_solutions.append((deriv_sol, highest_derivatives))
+
+    #
+    # When solve returns multiple solutions it is possible that different paths
+    # through the loop above will ultimately lead to the same result giving
+    # duplicate sets of equations.
+    #
+    unique_solutions = []
+
+    for sol_derivs in all_solutions:
+        if sol_derivs not in unique_solutions:
+            unique_solutions.append(sol_derivs)
+
+    return unique_solutions
 
 
 def _add_parameters_solve(solution, derivatives, t):

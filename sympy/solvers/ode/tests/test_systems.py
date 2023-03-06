@@ -2150,63 +2150,105 @@ def test_dsolve_dae():
     eqs11 = [f(x).diff(x) - x, f(x).diff(x) + x]
     assert dsolve(eqs11, [f(x)]) == []
 
+    eqs12 = [f(x).diff(x) - g(x).diff(x), f(x)]
+    sol12 = [Eq(f(x), 0), Eq(g(x), C1)]
+    assert dsolve(eqs12, funcs) == sol12
+    assert checksysodesol(eqs12, sol12) == (True, [0, 0])
+
+    eqs13 = [f(x).diff(x), f(x).diff(x) + g(x), g(x).diff(x)]
+    sol13 = [Eq(f(x), C1), Eq(g(x), 0)]
+    assert dsolve(eqs13, funcs) == sol13
+    assert checksysodesol(eqs13, sol13) == (True, [0, 0, 0])
+
+    eqs14 = [f(x).diff(x)*g(x), g(x).diff(x)*(f(x)-x)]
+    sol14 = [
+        [Eq(f(x), x), Eq(g(x), 0)],
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
+        [Eq(f(x), C1), Eq(g(x), C2)],
+    ]
+    assert dsolve(eqs14, funcs) == sol14
+    for sol14i in sol14:
+        assert checksysodesol(eqs14, sol14i) == (True, [0, 0])
+
+    eqs15 = [f(x).diff(x)*g(x), g(x).diff(x)*(f(x)-1)]
+    sol15 = [
+        [Eq(f(x), 1), Eq(g(x), 0)],
+        [Eq(f(x), 1), Eq(g(x), C1f(x))],
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
+        [Eq(f(x), C1), Eq(g(x), C2)],
+    ]
+    assert dsolve(eqs15, funcs) == sol15
+    for sol15i in sol15:
+        assert checksysodesol(eqs15, sol15i) == (True, [0, 0])
+
 
 def test_dsolve_dae_bad():
-    C1f, C2f, C3f, C4f = symbols('C1:5', cls=Function)
-    funcs = [f(x), g(x)]
+    C1f = Function('C1')
+    C2f = Function('C2')
+    C3f = Function('C3')
 
-    #
-    # The examples below do not work properly. In either case they could be
-    # made to work if either f(x) or g(x) was given to solve as an additional
-    # unknown. It is not clear though how to decide when to pass additional
-    # unknowns to solve though. The first case seems clear because there is an
-    # equation that does not involve any of the highest derivatives of any
-    # function. The second case does not have that property though. Even in the
-    # first case the equation might involve more than one function and we would
-    # have to decide which one to include in the unknowns.
-    #
-
-    # XXX: This one is not handled properly. The problem is that the solver
-    # Ignores the f(x) = 0 equation. The result is not technically incorrect in
-    # the sense that we could have C1(x) = 0 and C3 = 0. A more precise answer
-    # is possible though.
-    eqs1 = [f(x).diff(x) - g(x).diff(x), f(x)]
-    sol1_correct = [Eq(f(x), 0), Eq(g(x), C1)]
-    sol1_wrong = [
-        Eq(f(x), C2 + Integral(C1f(x), x)),
-        Eq(g(x), C3 + Integral(C1f(x), x)),
-    ]
-    res = C2 + Integral(C1f(x), x)
-    assert dsolve(eqs1, funcs) == sol1_wrong
-    assert checksysodesol(eqs1, sol1_wrong) == (False, [0, res])
-    assert checksysodesol(eqs1, sol1_correct) == (True, [0, 0])
-
-    # XXX: This one is not handled properly. It is similar to the above but
-    # this time solve decides that the equations are inconsistent. The
-    # equations imply that g(x) = 0 but g'(x) is the highest derivative of g so
-    # that is what solve is asked to solve for. Since g(x) is treated as
-    # algebraically independent by solve the conclusion is that the system is
-    # inconsistent.
-    eqs2 = [f(x).diff(x), f(x).diff(x) + g(x), g(x).diff(x)]
-    sol2_good = [Eq(f(x), C1), Eq(g(x), 0)]
-    sol2_bad = []
-    assert dsolve(eqs2, funcs) == sol2_bad
-    assert checksysodesol(eqs2, sol2_good) == (True, [0, 0, 0])
-
-    # This one is fine but solving only for f(x) returns a bad result:
-    eqs3 = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
-    sol3 = [
+    eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
+    sol = [
         Eq(f(x), -C1 + C2*exp(2*x)),
         Eq(g(x), +C1 + C2*exp(2*x)),
     ]
-    assert dsolve(eqs3, funcs) == sol3
-    assert checksysodesol(eqs3, sol3) == (True, [0, 0])
+    sol_f = [Eq(f(x), -g(x) + Derivative(g(x), x))]
 
-    # XXX: This one is bad. It should not treat g(x) as being an independent
-    # function. This is caused by solve ignoring the equation for g(x).diff(x).
-    sol3_f_bad = [Eq(f(x), C1*exp(x) + exp(x)*Integral(g(x)*exp(-x), x))]
-    assert dsolve(eqs3, [f(x)]) == sol3_f_bad
-    assert checksysodesol(eqs3, sol3_f_bad, [f(x)]) != (True, [0, 0])
+    # XXX: The solution sol_f is valid for the second equation if g(x) is
+    # considered to be just an arbitrary function (since it isn't an unknown).
+    # Both equations can only be satisfied simultaneously by placing
+    # assumptions on g(x) that would not hold in general. Ideally dsolve should
+    # just return no solutions which it would if solve handled overdetermined
+    # systems properly.
+    assert dsolve(eqs, [f(x), g(x)]) == sol  # good
+    assert dsolve(eqs, [f(x)]) == sol_f      # bad
+    # assert dsolve(eqs, [f(x)]) == []      # <-- this is what it should be
+
+    res = g(x).diff(x, 2) -2*g(x).diff(x)
+
+    assert checksysodesol(eqs, sol) == (True, [0, 0])
+
+    # Valid solution if first equation is ignored:
+    assert checksysodesol(eqs[1:], sol_f, [f(x)]) == (True, [0])
+
+    # Does not satisfy the first equation:
+    assert checksysodesol(eqs, sol_f, [f(x)]) == (False, [res, 0])
+
+    # Another bad example caused by a solve bug:
+    #
+    #   >>> f, g = symbols('f, g', cls=Function)
+    #   >>> x = symbols('x')
+    #   >>> g1, f1, fp1 = symbols('g1, f1, fp1')
+    #   >>> g2, f2, fp2 = g(x), f(x), f(x).diff(x)
+    #   >>> solve([g1*fp1, g1-f1], [f1, g1, fp1], dict=True)
+    #   [{f₁: 0, g₁: 0}, {f₁: g₁, fp₁: 0}]
+    #   >>> solve([g2*fp2, g2-f2], [f2, g2, fp2], dict=True)
+    #   [{f(x): 0, g(x): 0}]
+    #
+    # There should be two solutions...
+
+    eqs2 = [f(x).diff(x, 2)*g(x), g(x) - f(x)]
+    sol2_bad = [Eq(f(x), 0), Eq(g(x), 0)]
+    sol2_good = [
+        [Eq(f(x), 0), Eq(g(x), 0)],
+        [Eq(f(x), C1 + C2*x), Eq(g(x), C3f(x))],
+    ]
+    assert dsolve(eqs2, [f(x), g(x)]) == sol2_bad
+    assert checksysodesol(eqs2, sol2_bad) == (True, [0, 0])
+    assert checksysodesol(eqs2, sol2_good[0]) == (True, [0, 0])
+    # XXX: checksysodesol does not know how to handle C3(x).
+    # assert checksysodesol(eqs2, sol2_good[1]) == (True, [0, 0])
+
+    # XXX: This one should be easy but fails because solve cannot handle the
+    # equations:
+    #
+    #   >>> In [2]: solve([Eq(-x + A, 0), Eq((-x + A)*B, 0)], [A, B, C])
+    #   ...
+    #   NotImplementedError: no valid subset found
+    eqs16 = [f(x) - x, g(x).diff(x)*(f(x) - x)]
+    sol16 = [Eq(f(x), x), Eq(g(x), C1f(x))]
+    raises(NotImplementedError, lambda: dsolve(eqs16, [f(x), g(x)]))
+    assert checksysodesol(eqs16, sol16) == (True, [0, 0])
 
 
 def test_dsolve_dae_issue_gh24841():
