@@ -563,6 +563,10 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         match = classify_sysode(eq, func)
 
         eq = match['eq']
+
+        if not 'order' in match:
+            raise NotImplementedError("dsolve cannot solve this system.")
+
         order = match['order']
         func = match['func']
         t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
@@ -1213,29 +1217,36 @@ def classify_sysode(eq, funcs=None, **kwargs):
     def _sympify(eq):
         return list(map(sympify, eq if iterable(eq) else [eq]))
 
-    eq, funcs = (_sympify(w) for w in [eq, funcs])
+    eq = _sympify(eq)
+
+    # find all the functions if not given
+    if funcs is None:
+        funcs = _extract_funcs(eq)
+    else:
+        funcs = _sympify(funcs)
+
+    t = funcs[0].args[0]
+
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
             eq[i] = fi.lhs - fi.rhs
 
-    t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     matching_hints = {"no_of_equation":i+1}
     matching_hints['eq'] = eq
-    if i==0:
+
+    if len(eq) == 1:
         raise ValueError("classify_sysode() works for systems of ODEs. "
         "For scalar ODEs, classify_ode should be used")
 
-    # find all the functions if not given
-    order = {}
-    if funcs==[None]:
-        funcs = _extract_funcs(eq)
-
     funcs = list(set(funcs))
-    if len(funcs) != len(eq):
-        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
+    if not (len(funcs) == len(eq) and all(e.has(Derivative) for e in eq)):
+        # The old systems solving code cannot handle any cases like this
+        # so we quit here.
+        return matching_hints
 
     # This logic of list of lists in funcs to
     # be replaced later.
+    order = {}
     func_dict = {}
     for func in funcs:
         if not order.get(func, False):
