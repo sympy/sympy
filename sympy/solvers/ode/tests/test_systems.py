@@ -2117,16 +2117,16 @@ def test_dsolve_dae():
 
     eqs7 = [f(x).diff(x) - g(x).diff(x)]
     sol7 = [
-        Eq(f(x), C2 + Integral(C1f(x), x)),
-        Eq(g(x), C3 + Integral(C1f(x), x)),
+        Eq(f(x), C1 + Integral(C2f(x), x)),
+        Eq(g(x), C3 + Integral(C2f(x), x)),
     ]
     assert dsolve(eqs7, funcs) == sol7
     assert checksysodesol(eqs7, sol7) == (True, [0])
 
     eqs8 = [f(x).diff(x) - g(x)]
     sol8 = [
-        Eq(f(x), C2 + Integral(C1f(x), x)),
-        Eq(g(x), C1f(x)),
+        Eq(f(x), C1 + Integral(C2f(x), x)),
+        Eq(g(x), C2f(x)),
     ]
     assert dsolve(eqs8, funcs) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0])
@@ -2135,15 +2135,15 @@ def test_dsolve_dae():
     # Check that function symbols do not clobber existing symbols or functions.
     eqs10 = [f(x).diff(x) - g(x).diff(x) - C1f(x) - C2f(x)]
     sol10 = [
-        Eq(f(x), C4 + Integral(C1f(x) + C2f(x) + C3f(x), x)),
-        Eq(g(x), C5 + Integral(C3f(x), x)),
+        Eq(f(x), C3 + Integral(C1f(x) + C2f(x) + C4f(x), x)),
+        Eq(g(x), C5 + Integral(C4f(x), x)),
     ]
     assert dsolve(eqs10, funcs) == sol10
 
     eqs10 = [f(x).diff(x) - g(x).diff(x) - C1 - C2]
     sol10 = [
-        Eq(f(x), C4 + x*(C1 + C2) + Integral(C3f(x), x)),
-        Eq(g(x), C5 + Integral(C3f(x), x)),
+        Eq(f(x), C3 + x*(C1 + C2) + Integral(C4f(x), x)),
+        Eq(g(x), C5 + Integral(C4f(x), x)),
     ]
     assert dsolve(eqs10, funcs) == sol10
 
@@ -2190,6 +2190,15 @@ def test_dsolve_dae():
     sol17 = [Eq(f(x), 0)]
     assert dsolve(eqs17, [f(x)]) == sol17
     assert checksysodesol(eqs17, sol17) == (True, [0, 0, 0])
+
+    eqs18 = [f(x).diff(x) - g(x)*h(x) - 1, g(x).diff(x)]
+    sol18 = [
+        Eq(f(x), C1 + C2*Integral(C3f(x), x) + x),
+        Eq(g(x), C2),
+        Eq(h(x), C3f(x))
+    ]
+    assert dsolve(eqs18, [f(x), g(x), h(x)]) == sol18
+    assert checksysodesol(eqs18, sol18) == (True, [0, 0])
 
 
 def test_dsolve_dae_bad():
