@@ -2202,8 +2202,6 @@ def test_dsolve_dae():
 
 def test_dsolve_dae_bad():
     C1f = Function('C1')
-    C2f = Function('C2')
-    C3f = Function('C3')
 
     eqs = [Eq(f(x).diff(x), f(x) + g(x)), Eq(g(x).diff(x), f(x) + g(x))]
     sol = [
@@ -2239,7 +2237,7 @@ def test_dsolve_dae_bad():
     #   >>> g1, f1, fp1 = symbols('g1, f1, fp1')
     #   >>> g2, f2, fp2 = g(x), f(x), f(x).diff(x)
     #   >>> solve([g1*fp1, g1-f1], [f1, g1, fp1], dict=True)
-    #   [{f₁: 0, g₁: 0}, {f₁: g₁, fp₁: 0}]
+    #   [{f1: 0, g1: 0}, {f1: g1, fp1: 0}]
     #   >>> solve([g2*fp2, g2-f2], [f2, g2, fp2], dict=True)
     #   [{f(x): 0, g(x): 0}]
     #
