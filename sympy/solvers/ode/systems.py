@@ -1117,7 +1117,7 @@ def _solve_reduce_derivatives(eqs, funcs, t):
             if lhs in derivs_set and not rhs.has_xfree(derivs_set):
                 derivs_found.append(eq.lhs)
                 break
-            # XXX: Handle a trivial Add or something else here...
+            # XXX: Catch a trivial Add or something else here...
 
     if len(derivs_found) == len(eqs) == len(set(derivs_found)):
         [sols] = solve(eqs, highest_derivatives, dict=True)
@@ -1159,32 +1159,37 @@ def _solve_reduce_derivatives(eqs, funcs, t):
             # from the original equations and also auxiliary equations to
             # represent the solved relationships.
             new_eqs = list(eqs)
+            constraints = []
             replacements = {}
 
             for lhs, rhs in low_order_eqs:
                 f, order_f = deriv2func[lhs]
+                lower_derivs = func2derivs[f][:order_f]
                 higher_derivs = func2derivs[f][order_f:]
 
-                new_eqs.append(Eq(lhs, rhs))
+                # Use only the equation for the derivative of lowest order.
+                if any(d in solution for d in lower_derivs):
+                    continue
+
+                # This equation constrains low order derivative
+                constraints.append(Eq(lhs, rhs))
 
                 for i, df in enumerate(higher_derivs):
-                    assert df not in replacements
                     replacements[df] = rhs.diff(t, i)
 
                     if df in solution:
-                        new_eqs.append(Eq(solution[df], replacements[df]))
+                        # Require solutions to be consistent with derivatives
+                        constraints.append(Eq(solution[df], replacements[df]))
 
             # New equations after elimination.
-            #new_eqs = [Eq(lhs, rhs) for lhs, rhs in solution.items()]
-            #new_eqs += [Eq(lhs, rhs) for lhs, rhs in low_order_eqs]
             eqs_replaced = [eq.subs(replacements) for eq in new_eqs]
 
-            # New equations after elimination
-            eqs_replaced = [eq.subs(replacements) for eq in eqs]
-            eqs_replaced.extend(Eq(lhs, rhs) for lhs, rhs in low_order_eqs)
+            # Include also the constraints on derivatives but do not apply the
+            # replacement rules to these as it turns them into 0=0 etc.
+            eqs_replaced.extend(constraints)
 
-            # Apply recursively in case more derivatives can be eliminated from
-            # the reduced equations.
+            # Apply recursively in case more derivatives can now be eliminated
+            # from the reduced equations.
             new_solutions = _solve_reduce_derivatives(eqs_replaced, funcs, t)
 
             all_solutions.extend(new_solutions)
