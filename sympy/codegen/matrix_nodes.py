@@ -60,6 +60,7 @@ class MatrixSolve(Token, MatrixExpr):
     __slots__ = _fields = ('matrix', 'vector')
 
     _construct_matrix = staticmethod(sympify)
+    _construct_vector = staticmethod(sympify)
 
     @property
     def shape(self):
