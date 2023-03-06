@@ -2131,14 +2131,13 @@ def test_dsolve_dae():
     assert dsolve(eqs8, funcs) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0])
 
-
     # Check that function symbols do not clobber existing symbols or functions.
-    eqs10 = [f(x).diff(x) - g(x).diff(x) - C1f(x) - C2f(x)]
-    sol10 = [
+    eqs9 = [f(x).diff(x) - g(x).diff(x) - C1f(x) - C2f(x)]
+    sol9 = [
         Eq(f(x), C3 + Integral(C1f(x) + C2f(x) + C4f(x), x)),
         Eq(g(x), C5 + Integral(C4f(x), x)),
     ]
-    assert dsolve(eqs10, funcs) == sol10
+    assert dsolve(eqs9, funcs) == sol9
 
     eqs10 = [f(x).diff(x) - g(x).diff(x) - C1 - C2]
     sol10 = [
@@ -2250,13 +2249,12 @@ def test_dsolve_dae_bad():
     sol2_bad = [Eq(f(x), 0), Eq(g(x), 0)]
     sol2_good = [
         [Eq(f(x), 0), Eq(g(x), 0)],
-        [Eq(f(x), C1 + C2*x), Eq(g(x), C3f(x))],
+        [Eq(f(x), C1 + C2*x), Eq(g(x), C1 + C2*x)],
     ]
     assert dsolve(eqs2, [f(x), g(x)]) == sol2_bad
     assert checksysodesol(eqs2, sol2_bad) == (True, [0, 0])
-    assert checksysodesol(eqs2, sol2_good[0]) == (True, [0, 0])
-    # XXX: checksysodesol does not know how to handle C3(x).
-    # assert checksysodesol(eqs2, sol2_good[1]) == (True, [0, 0])
+    for sol2i in sol2_good:
+        assert checksysodesol(eqs2, sol2i) == (True, [0, 0])
 
     # XXX: This one should be easy but fails because solve cannot handle the
     # equations:
@@ -2268,6 +2266,10 @@ def test_dsolve_dae_bad():
     sol16 = [Eq(f(x), x), Eq(g(x), C1f(x))]
     raises(NotImplementedError, lambda: dsolve(eqs16, [f(x), g(x)]))
     assert checksysodesol(eqs16, sol16) == (True, [0, 0])
+
+    # This fails because it falls back to classify_sysode which rejects a
+    # single equation:
+    # dsolve([f(x).diff(x)-exp(x)*h(x)/f(x)], [f(x), g(x), h(x)])
 
 
 def test_dsolve_dae_issue_gh24841():
