@@ -1107,7 +1107,7 @@ def _solve_reduce_derivatives(eqs, funcs, t):
     highest_derivatives = [func.diff(t, order[func]) for func in funcs]
 
     # There is no point in attempting any of the things below if the equations
-    # are already in explicit form.
+    # are already in explicit form. Maybe just use linsolve here?
     derivs_found = []
     derivs_set = set(highest_derivatives)
     for eq in eqs:
