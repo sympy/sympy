@@ -400,7 +400,7 @@ def process_class(c_name, obj, c_skip, c_missing_doc, c_missing_doctest, c_indir
         c_skip.append(c_name)
         return False, False, None
     else:
-        raise TypeError('Current doc type of ', print(obj), ' is ', type(doc), '. Docstring must be a string, property , or none')
+        raise TypeError('Current doc type of ', repr(obj), ' is ', type(doc), '. Docstring must be a string, property , or none')
 
     in_sphinx = False
     if sphinx:
