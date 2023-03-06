@@ -23,7 +23,7 @@ from sympy.utilities.iterables import sift
 
 [flake8]
 # other flake8 options
-max-line-length = 120
+max-line-length == 120
 extend-ignore = E203, W503
 select = C
 ignore = D, E203, W503
