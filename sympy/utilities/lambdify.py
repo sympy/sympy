@@ -911,8 +911,8 @@ or tuple for the function arguments.
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
     if _too_large_for_docstring(expr, docstring_limit):
-        expr_str = 'EXPRESSION REDACTED DUE TO LENGTH'
-        src_str = 'SOURCE CODE REDACTED DUE TO LENGTH'
+        expr_str = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        src_str = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
     else:
         expr_str = str(expr)
         if len(expr_str) > 78:
