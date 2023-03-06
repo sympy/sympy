@@ -2103,7 +2103,7 @@ def test_dsolve_dae():
 
     eqs5 = [f(x).diff(x)*g(x)]
     sol5 = [
-        [Eq(f(x), C2 + Integral(C1f(x), x)), Eq(g(x), 0)],
+        [Eq(f(x), C1f(x)), Eq(g(x), 0)],
         [Eq(f(x), C1), Eq(g(x), C2f(x))],
     ]
     assert dsolve(eqs5, funcs) == sol5

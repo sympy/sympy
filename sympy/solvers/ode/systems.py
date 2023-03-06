@@ -1238,10 +1238,18 @@ def _add_parameters_solve(solution, derivatives, t):
     derivative_map = {}
     new_solution = {}
 
+    all_rhs = Tuple(*solution.values())
+
     for derivative in derivatives:
         if derivative in solution:
             new_solution[derivative] = solution[derivative]
         else:
+            # Replace g'' = C1(t) with g = C1(t) if g does not appear in any
+            # other equations.
+            if derivative.is_Derivative:
+                function = derivative.args[0]
+                if not all_rhs.has_xfree({derivative}):
+                    derivative = function
             new_solution[derivative] = derivative
             derivative_map[derivative] = _DummyFunc.new(t)
 
