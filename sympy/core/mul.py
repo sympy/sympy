@@ -15,7 +15,42 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 
+
+
 from sympy.utilities.iterables import sift
+
+# flake8: noqa
+
+[flake8]
+# other flake8 options
+max-line-length = 120
+extend-ignore = E203, W503
+select = C
+ignore = D, E203, W503
+
+[flake8_comprehensions]
+# enable the rules
+enabled = true
+
+# configure the rules
+# examples below
+# (remove the ones you don't want to use)
+inline-quotes = double
+enumerate = true
+not-a-generator = True
+nested-classes = True
+dictionary-keys = True
+list-comprehension-brackets = True
+set-comprehension-brackets = True
+dictionary-comprehension-brackets = True
+tuple-comprehension-brackets = True
+reduce-builtin = True
+map-builtin = True
+filter-builtin = True
+filter-on-multilines = True
+comprehension-locals = True
+
+
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
