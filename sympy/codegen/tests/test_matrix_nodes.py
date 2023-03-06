@@ -48,4 +48,3 @@ def test_matrix_solve_derivative_numpy():
     np.testing.assert_allclose(
         lambdify(p, dx_sm, printer=NumPyPrinter)(*p_vals),
         lambdify(p, dx_lu, printer=NumPyPrinter)(*p_vals))
-
