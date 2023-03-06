@@ -1267,6 +1267,8 @@ class _DummyFunc(Expr):
     #   >>> Function(Dummy('x')).free_symbols
     #   set()
     #
+    is_commutative = True
+
     @classmethod
     def new(cls, arg):
         return cls(Dummy(), arg)
