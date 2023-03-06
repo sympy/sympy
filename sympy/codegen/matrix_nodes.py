@@ -65,3 +65,7 @@ class MatrixSolve(Token, MatrixExpr):
     @property
     def shape(self):
         return self.vector.shape
+
+    def _eval_derivative(self, x):
+        A, b = self.matrix, self.vector
+        return MatrixSolve(A, b.diff(x) - A.diff(x) * MatrixSolve(A, b))
