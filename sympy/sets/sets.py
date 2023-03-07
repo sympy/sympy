@@ -1474,8 +1474,9 @@ class Intersection(Set, LatticeOp):
     def zero(self):
         return S.EmptySet
 
-    def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+    def __new__(cls, *args , evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         # flatten inputs to merge intersections and iterables
         args = list(ordered(set(_sympify(args))))
