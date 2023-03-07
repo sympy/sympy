@@ -415,6 +415,35 @@ def test_laplace_transform():
 
 @slow
 def test_inverse_laplace_transform():
+    s = symbols('s')
+    k, t = symbols('k, t', real=True)
+    a = symbols('a', positive=True)
+    f = Function('f')
+    F = Function('F')
+
+    def ILT(g):
+        return inverse_laplace_transform(g, s, t)
+
+    def ILTF(g):
+        return laplace_correspondence(
+            inverse_laplace_transform(g, s, t), {f: F})
+
+    # Tests for the rules in Bateman54.
+    # Section 4.1: Some of the Laplace transform rules can also be used well
+    #     in the inverse transform.
+    assert ILTF(exp(-a*s)*F(s)) == f(-a + t)  # (4)
+    assert ILTF(k*F(s-a)) == k*f(t)*exp(-a*t)  # (5)
+    assert ILTF(diff(F(s), s, 3)) == -t**3*f(t)  # (6)
+    assert ILTF(diff(F(s), s, 4)) == t**4*f(t)  # (6)
+    # Can _inverse_laplace_time_shift deal with positive exponents?
+    assert (
+        - ILT((s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1))) +
+        cos(t)*Heaviside(t) + 4*cos(t - 2)*Heaviside(t - 2) -
+        4*cos(t - 1)*Heaviside(t - 1) - 4*Heaviside(t - 2) +
+        4*Heaviside(t - 1)).simplify() == 0
+
+@slow
+def test_inverse_laplace_transform_old():
     from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
     a, b, c, d = symbols('a b c d', positive=True)
