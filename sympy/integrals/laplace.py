@@ -1502,6 +1502,26 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
     return None
 
 
+def _inverse_laplace_diff(f, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    a = Wild('a', exclude=[s])
+    n = Wild('n', exclude=[s])
+    g = WildFunction('g')
+    ma = f.match(a*Derivative(g, (s, n)))
+    if ma and ma[n].is_integer:
+        m = [z.has(s) for z in ma[g].args]
+        if sum(m) == 1:
+            debug('_inverse_laplace_apply_rules match:')
+            debugf('      f, n: %s, %s', (f, ma[n]))
+            debug('      rule: t**n*f(t) o---o (-1)**n*diff(F(s), s, n)')
+            r, c = _inverse_laplace_transform(
+                ma[g], s, t, plane, simplify=False, dorational=False)
+            return (-t)**ma[n]*r, c
+    return None
+
+
 def _inverse_laplace_time_shift(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1540,6 +1560,23 @@ def _inverse_laplace_time_shift(F, s, t, plane):
             return InverseLaplaceTransform(F, s, t, plane), S.true
     return None
 
+def _inverse_laplace_freq_shift(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    if not F.has(s):
+        return F*DiracDelta(t), S.true
+    if len(args := F.args) == 1:
+        a = Wild('a', exclude=[s])
+        if (ma := args[0].match(s-a)) and re(ma[a]) > 0:
+            debug('_inverse_laplace_freq_shift match:')
+            debugf('      f:    %s', (F,))
+            debug('      rule: F(s-a) o---o exp(-a*t)*f(t)')
+            debugf('      ma:   %s', (ma,))
+            return (
+                exp(-ma[a]*t) *
+                InverseLaplaceTransform(F.func(s), s, t, plane), S.true)
+    return None
 
 def _inverse_laplace_time_diff(F, s, t, plane):
     """
@@ -1568,8 +1605,8 @@ def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_time_shift,
-                  _inverse_laplace_time_diff]
+    prog_rules = [_inverse_laplace_time_shift, _inverse_laplace_freq_shift,
+                  _inverse_laplace_time_diff, _inverse_laplace_diff]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
