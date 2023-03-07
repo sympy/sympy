@@ -412,8 +412,9 @@ def test_issue_24859():
     u = MatrixSymbol('u', 2, 3)
     Jk = Jinv.subs(A, A + x*u)
 
-    assert Jk[0,0].diff(x).simplify() == B[0, 1]*u[1, 0] + B[1, 1]*u[1, 1] + B[2, 1]*u[1, 2]
-    assert diff(Jk[0,0], x).doit().simplify() == B[0, 1]*u[1, 0] + B[1, 1]*u[1, 1] + B[2, 1]*u[1, 2]
+    expected = B[0, 1]*u[1, 0] + B[1, 1]*u[1, 1] + B[2, 1]*u[1, 2]
+    assert Jk[0, 0].diff(x) == expected
+    assert diff(Jk[0, 0], x).doit() == expected
 
 
 def test_MatMul_postprocessor():
