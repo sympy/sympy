@@ -1194,7 +1194,7 @@ def test_hash():
     assert hash(t4.func(*t4.args)) == hash(t4)
 
     def check_all(obj):
-        return all(isinstance(_, Basic) for _ in obj.args)
+        return all([isinstance(_, Basic) for _ in obj.args])
 
     assert check_all(a)
     assert check_all(Lorentz)

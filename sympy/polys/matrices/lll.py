@@ -81,8 +81,8 @@ def _ddm_lll(x, delta=QQ(3, 4), return_transform=False):
             if return_transform:
                 T[k], T[k - 1] = T[k - 1], T[k]
             k = max(k - 1, 1)
-    assert all(lovasz_condition(i) for i in range(1, m))
-    assert all(mu_small(i, j) for i in range(m) for j in range(i))
+    assert all([lovasz_condition(i) for i in range(1, m)])
+    assert all([mu_small(i, j) for i in range(m) for j in range(i)])
     return y, T
 
 
