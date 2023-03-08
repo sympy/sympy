@@ -1,0 +1,28 @@
+name: Coverage
+
+on:
+  workflow_run:
+    workflows: ["./github/workflows/runtests.yml"]
+    branches: ["master"]
+    types:
+      - completed
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 # Checks the current directory
+      - name: Setup Python
+        uses: actions/setup-python@v4 # Pre-built GitHub Action to setup python
+        with:
+          python-version: "3.7"
+      - run: python -m pip install --upgrade setuptools
+      - run: python setup.py install
+
+      - name: Run coverage
+        run: python ./bin/coverage_report.py
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          directory: ./coverage/reports/
