@@ -494,7 +494,10 @@ it is easy to do.
 The use of consistency checks in the SymPy test suite is not, itself,
 consistent. Some modules make heavy use of them, e.g., every test in the ODE
 module checks itself using [`checkodesol()`](sympy.solvers.ode.checkodesol),
-for instance.
+for instance. Other modules do not use consistency checks in their tests at
+all, although some of these could be updated to do so. In some cases, there
+are no reasonable consistency checks and other sources of truth must be used
+to verify the test outputs.
 
 When making heavy use of consistency checks, it's often a good idea to factor
 out the logic into a helper function in the test file to avoid duplication.
@@ -733,7 +736,8 @@ True
 ```
 
 This passes the doctest, and something along these lines would be fine a
-normal test. But in a docstring example, it is much clearer to just show the actual outpu
+normal test. But in a docstring example, it is much clearer to just show the
+actual output
 
 ```
 # BETTER
