@@ -72,6 +72,11 @@ def _primitive_root_prime_iter(p):
     """
     Generates the primitive roots for a prime ``p``
 
+    Parameters
+    ==========
+
+    p : odd prime
+
     Examples
     ========
 
@@ -87,15 +92,69 @@ def _primitive_root_prime_iter(p):
     """
     # it is assumed that p is an int
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
-    a = 2
-    while a < p:
-        for pw in v:
-            # a TypeError below may indicate that p was not an int
-            if pow(a, pw, p) == 1:
-                break
+    for g in range(2, p):
+        if all(pow(g, pw, p) != 1 for pw in v):
+            yield g
+
+
+def _primitive_root_prime_power_iter(p, e, ordered=True):
+    """
+    Generates the primitive roots of ``p**e``
+
+    Let g be the primitive root of p.
+    If pow(g,p-1,p**2)!=1, then g is primitive root of p**e.
+
+    Parameters
+    ==========
+
+    p : odd prime
+    e : positive integer
+    ordered : if True, return in order
+
+    """
+    p2 = p**2
+    if e == 1:
+        yield from _primitive_root_prime_iter(p)
+    elif ordered:
+        for m in range(0, p**e, p2):
+            for k in range(0, p2, p):
+                for g in _primitive_root_prime_iter(p):
+                    if (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2 != k:
+                        yield g + k + m
+    else:
+        for g in _primitive_root_prime_iter(p):
+            t = (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2
+            for k in range(0, p2, p):
+                if k != t:
+                    for m in range(0, p**e, p2):
+                        yield g + k + m
+
+
+def _primitive_root_prime_power2_iter(p, e, ordered=True):
+    """
+    Generates the primitive roots of ``2*p**e``
+
+    If g is the primitive root of p**e,
+    then the odd one of g and g+p**e is the primitive root of 2*p**e.
+
+    Parameters
+    ==========
+
+    p : odd prime
+    e : positive integer
+    ordered : if True, return in order
+
+    """
+    store = []
+    for g in _primitive_root_prime_power_iter(p, e, ordered=ordered):
+        if g % 2 == 1:
+            yield g
         else:
-            yield a
-        a += 1
+            if ordered:
+                store.append(g + p**e)
+            else:
+                yield g + p**e
+    yield from store
 
 
 def primitive_root(p):
@@ -105,7 +164,7 @@ def primitive_root(p):
     Parameters
     ==========
 
-    p : positive integer
+    p : integer, p > 1
 
     Examples
     ========
@@ -122,46 +181,28 @@ def primitive_root(p):
 
     """
     p = as_int(p)
-    if p < 1:
-        raise ValueError('p is required to be positive')
-    if p <= 2:
-        return 1
-    f = factorint(p)
-    if len(f) > 2:
+    if p < 2:
+        raise ValueError("p should be an integer greater than 1")
+    # Primitive root of p exist only for
+    # p = 2, 4, q**e, 2*q**e (q is odd prime)
+    if p <= 4:
+        return p - 1
+    t = trailing(p)
+    if t > 1:
         return None
-    if len(f) == 2:
-        if 2 not in f or f[2] > 1:
-            return None
-
-        # case p = 2*p1**k, p1 prime
-        for p1, e1 in f.items():
-            if p1 != 2:
-                break
-        i = 1
-        while i < p:
-            i += 2
-            if i % p1 == 0:
-                continue
-            if is_primitive_root(i, p):
-                return i
-
+    q = p >> t
+    if isprime(q):
+        e = 1
     else:
-        if 2 in f:
-            if p == 4:
-                return 3
+        m = perfect_power(q)
+        if not m:
             return None
-        p1, n = list(f.items())[0]
-        if n > 1:
-            # see Ref [2], page 81
-            g = primitive_root(p1)
-            if is_primitive_root(g, p1**2):
-                return g
-            else:
-                for i in range(2, g + p1 + 1):
-                    if igcd(i, p) == 1 and is_primitive_root(i, p):
-                        return i
-
-    return next(_primitive_root_prime_iter(p))
+        q, e = m
+        if not isprime(q):
+            return None
+    if t:
+        return next(_primitive_root_prime_power2_iter(q, e))
+    return next(_primitive_root_prime_power_iter(q, e))
 
 
 def is_primitive_root(a, p):
