@@ -808,10 +808,6 @@ class polygamma(Function):
         from sympy.series.order import Order
         s, z = self.args
         d = z.subs(x, 0) # expansion point
-        if d is S.NaN:
-            return S.NaN
-        if d.is_infinite:
-            return super(polygamma, self)._eval_nseries(x, n, logx, cdir)
         e = (z-d).as_leading_term(x).as_coeff_exponent(x)[1]
         if s.is_integer and s.is_nonnegative and \
                 d.is_integer and d.is_nonpositive and e.is_positive:
