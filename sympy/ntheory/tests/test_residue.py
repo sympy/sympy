@@ -7,12 +7,14 @@ from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
-    polynomial_congruence
+    polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
+    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
+from sympy.core.random import randint, choice
 
 
 def test_residue():
@@ -284,3 +286,32 @@ def test_residue():
     raises(ValueError, lambda: polynomial_congruence(x**x, 6125))
     raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
     raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))
+
+    assert binomial_mod(-1, 1, 10) == 0
+    assert binomial_mod(1, -1, 10) == 0
+    raises(ValueError, lambda: binomial_mod(2, 1, -1))
+    assert binomial_mod(51, 10, 10) == 0
+    assert binomial_mod(10**3, 500, 3**6) == 567
+    assert binomial_mod(10**18 - 1, 123456789, 4) == 0
+    assert binomial_mod(10**18, 10**12, (10**5 + 3)**2) == 3744312326
+
+
+def test_binomial_p_pow():
+    n, binomials, binomial = 1000, [1], 1
+    for i in range(1, n + 1):
+        binomial *= n - i + 1
+        binomial //= i
+        binomials.append(binomial)
+
+    # Test powers of two, which the algorithm treats slightly differently
+    trials_2 = 100
+    for _ in range(trials_2):
+        m, power = randint(0, n), randint(1, 20)
+        assert _binomial_mod_prime_power(n, m, 2, power) == binomials[m] % 2**power
+
+    # Test against other prime powers
+    primes = list(sieve.primerange(2*n))
+    trials = 1000
+    for _ in range(trials):
+        m, prime, power = randint(0, n), choice(primes), randint(1, 10)
+        assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power
