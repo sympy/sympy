@@ -193,6 +193,8 @@ class, or method does when the concise Single-Sentence Summary will not
 suffice. This section should be used to clarify functionality in several
 sentences or paragraphs.
 
+.. _style_guide_docstring_examples_section:
+
 3. Examples Section
 ^^^^^^^^^^^^^^^^^^^^
 
