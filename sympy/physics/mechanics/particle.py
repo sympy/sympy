@@ -1,4 +1,5 @@
-from sympy.core.backend import sympify
+from sympy.core.backend import S
+from sympy.physics.vector import cross, dot
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -24,8 +25,10 @@ class Particle(BodyBase):
     point : Point
         A physics/mechanics Point which represents the position, velocity, and
         acceleration of this Particle
-    mass : sympifyable
+    mass : Sympifyable
         A SymPy expression representing the Particle's mass
+    potential_energy : Sympifyable
+        The potential energy of the Particle.
 
     Examples
     ========
@@ -126,7 +129,8 @@ class Particle(BodyBase):
 
         """
 
-        return self.point.pos_from(point) ^ (self.mass * self.point.vel(frame))
+        return cross(self.point.pos_from(point),
+                     self.mass * self.point.vel(frame))
 
     def kinetic_energy(self, frame):
         """Kinetic energy of the particle.
@@ -164,8 +168,8 @@ class Particle(BodyBase):
 
         """
 
-        return (self.mass / sympify(2) * self.point.vel(frame) &
-                self.point.vel(frame))
+        return S.Half * self.mass * dot(self.point.vel(frame),
+                                        self.point.vel(frame))
 
     def set_potential_energy(self, scalar):
         sympy_deprecation_warning(
