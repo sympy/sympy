@@ -399,7 +399,7 @@ def test_disambiguate():
 
 def test_issue_gh_16734():
     try:
-        import pyodide_js
+        import pyodide_js  # noqa
     except ImportError:
         pass
     else:
