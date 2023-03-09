@@ -67,7 +67,7 @@ def test_linear_momentum():
     Ac = Point('Ac')
     Ac.set_vel(N, 25 * N.y)
     I = outer(N.x, N.x)
-    A = RigidBody('A', Ac, N, 20, (I, Ac))
+    A = RigidBody('A', Ac, ReferenceFrame('A'), 20, (I, Ac))
     P = Point('P')
     Pa = Particle('Pa', P, 1)
     Pa.point.set_vel(N, 10 * N.x)

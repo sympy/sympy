@@ -24,6 +24,7 @@ def test_rigidbody_default():
         "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
         "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
         "B_masscenter)))")
+    assert b.masscenter.vel(b.frame) == 0
 
 
 def test_rigidbody():
