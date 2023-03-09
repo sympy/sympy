@@ -9,6 +9,7 @@ from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
+    _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
     _discrete_log_trial_mul, _discrete_log_shanks_steps, \
     _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
 from sympy.polys.domains import ZZ
@@ -34,6 +35,14 @@ def test_residue():
     for p in primerange(3, 100):
         it = _primitive_root_prime_iter(p)
         assert len(list(it)) == totient(totient(p))
+    for p in primerange(3, 50):
+        for k in range(2, 4):
+            li = list(_primitive_root_prime_power_iter(p, k))
+            li2 = list(_primitive_root_prime_power_iter(p, k, False))
+            li3 = list(_primitive_root_prime_power2_iter(p, k))
+            li4 = list(_primitive_root_prime_power2_iter(p, k, False))
+            assert li == sorted(li2) and li3 == sorted(li4)
+            assert len(li) == len(li2) == totient(totient(p**k))
     assert primitive_root(97) == 5
     assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
