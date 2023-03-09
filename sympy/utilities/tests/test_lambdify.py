@@ -464,7 +464,7 @@ def test_numpy_matrix():
     inp = numpy.zeros((17, 3))
     assert numpy.all(f_dot1(inp) == 0)
 
-    strict_kw = dict(allow_unknown_functions=False, inline=True, fully_qualified_modules=False)
+    strict_kw = {"allow_unknown_functions": False, "inline": True, "fully_qualified_modules": False}
     p2 = NumPyPrinter(dict(user_functions={'dot': 'dot'}, **strict_kw))
     f_dot2 = lambdify(x, x_dot_mtx, printer=p2)
     assert numpy.all(f_dot2(inp) == 0)
@@ -1719,3 +1719,144 @@ def test_23536_lambdify_cse_dummy():
     eval_expr = lambdify(((f, g), z), expr, cse=True)
     ans = eval_expr((1.0, 2.0), 3.0)  # shouldn't raise NameError
     assert ans == 300.0  # not a list and value is 300
+
+
+class LambdifyDocstringTestCase:
+    SIGNATURE = None
+    EXPR = None
+    SRC = None
+
+    def __init__(self, docstring_limit, expected_redacted):
+        self.docstring_limit = docstring_limit
+        self.expected_redacted = expected_redacted
+
+    @property
+    def expected_expr(self):
+        expr_redacted_msg = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        return self.EXPR if not self.expected_redacted else expr_redacted_msg
+
+    @property
+    def expected_src(self):
+        src_redacted_msg = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        return self.SRC if not self.expected_redacted else src_redacted_msg
+
+    @property
+    def expected_docstring(self):
+        expected_docstring = (
+            f'Created with lambdify. Signature:\n\n'
+            f'func({self.SIGNATURE})\n\n'
+            f'Expression:\n\n'
+            f'{self.expected_expr}\n\n'
+            f'Source code:\n\n'
+            f'{self.expected_src}\n\n'
+            f'Imported modules:\n\n'
+        )
+        return expected_docstring
+
+    def __len__(self):
+        return len(self.expected_docstring)
+
+    def __repr__(self):
+        return (
+            f'{self.__class__.__name__}('
+            f'docstring_limit={self.docstring_limit}, '
+            f'expected_redacted={self.expected_redacted})'
+        )
+
+
+def test_lambdify_docstring_size_limit_simple_symbol():
+
+    class SimpleSymbolTestCase(LambdifyDocstringTestCase):
+        SIGNATURE = 'x'
+        EXPR = 'x'
+        SRC = (
+            'def _lambdifygenerated(x):\n'
+            '    return x\n'
+        )
+
+    x = symbols('x')
+
+    test_cases = (
+        SimpleSymbolTestCase(docstring_limit=None, expected_redacted=False),
+        SimpleSymbolTestCase(docstring_limit=100, expected_redacted=False),
+        SimpleSymbolTestCase(docstring_limit=1, expected_redacted=False),
+        SimpleSymbolTestCase(docstring_limit=0, expected_redacted=True),
+        SimpleSymbolTestCase(docstring_limit=-1, expected_redacted=True),
+    )
+    for test_case in test_cases:
+        lambdified_expr = lambdify(
+            [x],
+            x,
+            'sympy',
+            docstring_limit=test_case.docstring_limit,
+        )
+        assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_lambdify_docstring_size_limit_nested_expr():
+
+    class ExprListTestCase(LambdifyDocstringTestCase):
+        SIGNATURE = 'x, y, z'
+        EXPR = (
+            '[x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z '
+            '+ 3*x*z**2 +...'
+        )
+        SRC = (
+            'def _lambdifygenerated(x, y, z):\n'
+            '    return [x, [y], z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 '
+            '+ 6*x*y*z + 3*x*z**2 + y**3 + 3*y**2*z + 3*y*z**2 + z**3]\n'
+        )
+
+    x, y, z = symbols('x, y, z')
+    expr = [x, [y], z, ((x + y + z)**3).expand()]
+
+    test_cases = (
+        ExprListTestCase(docstring_limit=None, expected_redacted=False),
+        ExprListTestCase(docstring_limit=200, expected_redacted=False),
+        ExprListTestCase(docstring_limit=50, expected_redacted=True),
+        ExprListTestCase(docstring_limit=0, expected_redacted=True),
+        ExprListTestCase(docstring_limit=-1, expected_redacted=True),
+    )
+    for test_case in test_cases:
+        lambdified_expr = lambdify(
+            [x, y, z],
+            expr,
+            'sympy',
+            docstring_limit=test_case.docstring_limit,
+        )
+        assert lambdified_expr.__doc__ == test_case.expected_docstring
+
+
+def test_lambdify_docstring_size_limit_matrix():
+
+    class MatrixTestCase(LambdifyDocstringTestCase):
+        SIGNATURE = 'x, y, z'
+        EXPR = (
+            'Matrix([[0, x], [x + y + z, x**3 + 3*x**2*y + 3*x**2*z + 3*x*y**2 '
+            '+ 6*x*y*z...'
+        )
+        SRC = (
+            'def _lambdifygenerated(x, y, z):\n'
+            '    return ImmutableDenseMatrix([[0, x], [x + y + z, x**3 '
+            '+ 3*x**2*y + 3*x**2*z + 3*x*y**2 + 6*x*y*z + 3*x*z**2 + y**3 '
+            '+ 3*y**2*z + 3*y*z**2 + z**3]])\n'
+        )
+
+    x, y, z = symbols('x, y, z')
+    expr = Matrix([[S.Zero, x], [x + y + z, ((x + y + z)**3).expand()]])
+
+    test_cases = (
+        MatrixTestCase(docstring_limit=None, expected_redacted=False),
+        MatrixTestCase(docstring_limit=200, expected_redacted=False),
+        MatrixTestCase(docstring_limit=50, expected_redacted=True),
+        MatrixTestCase(docstring_limit=0, expected_redacted=True),
+        MatrixTestCase(docstring_limit=-1, expected_redacted=True),
+    )
+    for test_case in test_cases:
+        lambdified_expr = lambdify(
+            [x, y, z],
+            expr,
+            'sympy',
+            docstring_limit=test_case.docstring_limit,
+        )
+        assert lambdified_expr.__doc__ == test_case.expected_docstring

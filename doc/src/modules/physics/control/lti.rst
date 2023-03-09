@@ -32,3 +32,5 @@ lti
    :members:
 
 .. autofunction:: bilinear
+
+.. autofunction:: backward_diff

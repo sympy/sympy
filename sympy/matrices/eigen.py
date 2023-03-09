@@ -1010,7 +1010,7 @@ _doc_positive_definite = \
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
@@ -1185,7 +1185,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # and so are diagonalizable.  In this case, don't
     # do extra work!
     if len(eigs.keys()) == mat.cols:
-        blocks     = list(sorted(eigs.keys(), key=default_sort_key))
+        blocks     = sorted(eigs.keys(), key=default_sort_key)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:

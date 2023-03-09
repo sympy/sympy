@@ -591,7 +591,7 @@ References for the above definitions
 .. [rational] https://en.wikipedia.org/wiki/Rational_number
 .. [irrational] https://en.wikipedia.org/wiki/Irrational_number
 .. [integer] https://en.wikipedia.org/wiki/Integer
-.. [parity] https://en.wikipedia.org/wiki/Parity_(mathematics)
+.. [parity] https://en.wikipedia.org/wiki/Parity_%28mathematics%29
 .. [prime] https://en.wikipedia.org/wiki/Prime_number
 .. [composite] https://en.wikipedia.org/wiki/Composite_number
 .. [zero] https://en.wikipedia.org/wiki/0

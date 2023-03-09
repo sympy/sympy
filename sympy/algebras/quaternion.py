@@ -98,7 +98,7 @@ class Quaternion(Expr):
     References
     ==========
 
-    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [1] https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
     .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """

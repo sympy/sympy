@@ -1725,8 +1725,6 @@ class Beam:
         point of the beam. Calculate the I.L.D. equations for reaction forces
         under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildreaction.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1875,8 +1873,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1935,8 +1931,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
@@ -2006,8 +2000,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -2065,8 +2057,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
@@ -2223,9 +2213,9 @@ class Beam:
             # point loads
             if load[2] == -1:
                 if isinstance(load[0], Symbol) or load[0].is_negative:
-                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':{"width": 1.5, "headlength": 5, "headwidth": 5, "facecolor": 'black'}})
                 else:
-                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':{"width": 1.5, "headlength": 4, "headwidth": 4, "facecolor": 'black'}})
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
@@ -2390,7 +2380,7 @@ class Beam3D(Beam):
     References
     ==========
 
-    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+    .. [1] https://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
 
     """
 

@@ -2606,8 +2606,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             raise ValueError("The number of free_symbols in the expression "
                              "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
-            ranges = Tuple(*[range_expr for range_expr in args[
-                           i:i + nb_of_free_symbols]])
+            ranges = Tuple(*list(args[
+                           i:i + nb_of_free_symbols]))
             plots = [expr + ranges for expr in exprs]
             return plots
         else:

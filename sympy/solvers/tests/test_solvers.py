@@ -376,6 +376,14 @@ def test_issue_21004():
     assert solve(f_diff, x) == []
 
 
+def test_issue_24650():
+    x = symbols('x')
+    r = solve(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0))
+    assert r == [0]
+    r = checksol(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0), x, sol=0)
+    assert r is True
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -1717,8 +1725,8 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
-    pqt = dict(quick=True, particular=True)
-    pqf = dict(quick=False, particular=True)
+    pqt = {"quick": True, "particular": True}
+    pqf = {"quick": False, "particular": True}
     assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
     assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):
@@ -2165,6 +2173,7 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
+    raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
 @slow

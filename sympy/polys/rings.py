@@ -553,7 +553,10 @@ class PolyRing(DefaultPrinting, IPolys):
         return self.clone(symbols=list(syms))
 
     def symmetric_poly(self, n):
-        """Return the symmetric poly of given degree over this ring's gens."""
+        """
+        Return the elementary symmetric polynomial of degree *n* over
+        this ring's generators.
+        """
         if n < 0 or n > self.ngens:
             raise ValueError("Cannot generate symmetric polynomial of order %s for %s" % (n, self.gens))
         elif not n:
@@ -2438,6 +2441,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         sympy.polys.polyfuncs.symmetrize
 
+        References
+        ==========
+
+        .. [1] Lauer, E. Algorithms for symmetrical polynomials, Proc. 1976
+            ACM Symp. on Symbolic and Algebraic Computing, NY 242-247.
+            https://dl.acm.org/doi/pdf/10.1145/800205.806342
+
         """
         f = self.copy()
         ring = f.ring
@@ -2500,7 +2510,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if isinstance(x, list):
                 replacements = list(x)
             elif isinstance(x, dict):
-                replacements = sorted(list(x.items()), key=lambda k: gens_map[k[0]])
+                replacements = sorted(x.items(), key=lambda k: gens_map[k[0]])
             else:
                 raise ValueError("expected a generator, value pair a sequence of such pairs")
 

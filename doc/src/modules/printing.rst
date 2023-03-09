@@ -469,7 +469,7 @@ MathMLPrinter
 
 This class is responsible for MathML printing. See ``sympy.printing.mathml``.
 
-More info on mathml : http://www.w3.org/TR/MathML2
+More info on mathml : https://www.w3.org/TR/MathML2
 
 .. autoclass:: MathMLPrinterBase
    :members:

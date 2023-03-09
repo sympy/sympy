@@ -79,7 +79,7 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-.. [Xypic] http://xy-pic.sourceforge.net/
+.. [Xypic] https://xy-pic.sourceforge.net/
 
 """
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
@@ -1456,7 +1456,7 @@ class ArrowStringDescription:
     References
     ==========
 
-    .. [Xypic] http://xy-pic.sourceforge.net/
+    .. [Xypic] https://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,

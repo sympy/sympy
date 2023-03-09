@@ -1290,7 +1290,7 @@ class HolonomicFunction:
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
-        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [2] https://www3.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 
@@ -1716,7 +1716,7 @@ class HolonomicFunction:
             seq.append(K.new(j.rep))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
-        sol = [i for i in recurrence.u0]
+        sol = list(recurrence.u0)
 
         if l + 1 >= n:
             pass
@@ -2636,7 +2636,7 @@ def _extend_y0(Holonomic, n):
         if len(y0) > a:
             y1 = [y0[i] for i in range(a)]
         else:
-            y1 = [i for i  in y0]
+            y1 = list(y0)
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):
