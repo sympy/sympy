@@ -34,6 +34,7 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
               'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
+              "sphinx_design",
               ]
 
 # Add redirects here. This should be done whenever a page that is in the
