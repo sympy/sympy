@@ -164,11 +164,12 @@ class RigidBody(BodyBase):
         >>> init_vprinting(pretty_print=False)
         >>> M, v = dynamicsymbols('M v')
         >>> N = ReferenceFrame('N')
+        >>> B_frame = ReferenceFrame('B_frame')
         >>> P = Point('P')
         >>> P.set_vel(N, v * N.x)
         >>> I = outer (N.x, N.x)
         >>> Inertia_tuple = (I, P)
-        >>> B = RigidBody('B', P, N, M, Inertia_tuple)
+        >>> B = RigidBody('B', P, B_frame, M, Inertia_tuple)
         >>> B.linear_momentum(N)
         M*v*N.x
 

@@ -162,13 +162,14 @@ def linear_momentum(frame, *body):
     >>> from sympy.physics.mechanics import Point, Particle, ReferenceFrame
     >>> from sympy.physics.mechanics import RigidBody, outer, linear_momentum
     >>> N = ReferenceFrame('N')
+    >>> A_frame = ReferenceFrame('A_frame')
     >>> P = Point('P')
     >>> P.set_vel(N, 10 * N.x)
     >>> Pa = Particle('Pa', P, 1)
     >>> Ac = Point('Ac')
     >>> Ac.set_vel(N, 25 * N.y)
     >>> I = outer(N.x, N.x)
-    >>> A = RigidBody('A', Ac, N, 20, (I, Ac))
+    >>> A = RigidBody('A', Ac, A_frame, 20, (I, Ac))
     >>> linear_momentum(N, A, Pa)
     10*N.x + 500*N.y
 
