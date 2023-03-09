@@ -382,7 +382,7 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
-                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+                # https://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                 self.newf = self.newf.xreplace({i: newterm})
 

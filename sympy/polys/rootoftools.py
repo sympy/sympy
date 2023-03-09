@@ -825,7 +825,7 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def eval_approx(self, n):
+    def eval_approx(self, n, return_mpmath=False):
         """Evaluate this complex root to the given precision.
 
         This uses secant method and root bounds are used to both
@@ -908,6 +908,8 @@ class ComplexRootOf(RootOf):
         # update the interval so we at least (for this precision or
         # less) don't have much work to do to recompute the root
         self._set_interval(interval)
+        if return_mpmath:
+            return root
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))
 

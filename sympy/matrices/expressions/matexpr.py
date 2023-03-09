@@ -633,10 +633,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 
@@ -748,7 +745,7 @@ class _LeftRightArgs:
     """
 
     def __init__(self, lines, higher=S.One):
-        self._lines = [i for i in lines]
+        self._lines = list(lines)
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._first_line_index = 0
@@ -802,7 +799,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i for i in data]
+        data = list(data)
         return data
 
     def matrix_form(self):

@@ -125,7 +125,7 @@ def test_Permutation():
     assert Permutation.from_inversion_vector(q.inversion_vector()).array_form\
         == q.array_form
     raises(ValueError, lambda: Permutation.from_inversion_vector([0, 2]))
-    assert Permutation([i for i in range(500, -1, -1)]).inversions() == 125250
+    assert Permutation(list(range(500, -1, -1))).inversions() == 125250
 
     s = Permutation([0, 4, 1, 3, 2])
     assert s.parity() == 0
