@@ -5,7 +5,8 @@ Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
 
 This document will describe how to represent masses and inertias in
-:mod:`sympy.physics.mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
+:mod:`sympy.physics.mechanics` and use of the :class:`~.RigidBody` and
+:class:`~.Particle` classes.
 
 It is assumed that the reader is familiar with the basics of these topics, such
 as finding the center of mass for a system of particles, how to manipulate an
@@ -21,9 +22,9 @@ expression. Keep in mind that masses can be time varying.
 Particle
 ========
 
-Particles are created with the class ``Particle`` in :mod:`sympy.physics.mechanics`.
-A ``Particle`` object has an associated point and an associated mass which are
-the only two attributes of the object.::
+Particles are created with the class :class:`~.Particle` in
+:mod:`sympy.physics.mechanics`. A :class:`~.Particle` object has an associated
+point and an associated mass which are the only two attributes of the object.::
 
   >>> from sympy.physics.mechanics import Particle, Point
   >>> from sympy import Symbol
@@ -33,8 +34,8 @@ the only two attributes of the object.::
   >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the
-particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic analysis of points
-separate from their association with masses.
+particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic
+analysis of points separate from their association with masses.
 
 Inertia
 =======
@@ -45,9 +46,9 @@ See the Inertia (Dyadics) section in 'Advanced Topics' part of
 Rigid Body
 ==========
 
-Rigid bodies are created in a similar fashion as particles. The ``RigidBody``
-class generates objects with four attributes: mass, center of mass, a reference
-frame, and an inertia tuple::
+Rigid bodies are created in a similar fashion as particles. The
+:class:`~.RigidBody` class generates objects with four attributes: mass, center
+of mass, a reference frame, and an inertia tuple::
 
   >>> from sympy import Symbol
   >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
@@ -60,10 +61,10 @@ frame, and an inertia tuple::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-``Particle``'s ``.point``, the ``RigidBody``'s center of mass, ``.masscenter``
-must be specified. The reference frame is stored in an analogous fashion and
-holds information about the body's orientation and angular velocity. Finally,
-the inertia for a rigid body needs to be specified about a point. In
+:class:`~.Particle`'s ``.point``, the :class:`~.RigidBody`'s center of mass,
+``.masscenter`` must be specified. The reference frame is stored in an analogous
+fashion and holds information about the body's orientation and angular velocity.
+Finally, the inertia for a rigid body needs to be specified about a point. In
 :mod:`sympy.physics.mechanics`, you are allowed to specify any point for this. The most
 common is the center of mass, as shown in the above code. If a point is selected
 which is not the center of mass, ensure that the position between the point and
