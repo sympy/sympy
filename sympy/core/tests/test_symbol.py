@@ -7,7 +7,7 @@ from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
 from sympy.core.sympify import sympify  # can't import as S yet
 from sympy.core.symbol import uniquely_named_symbol, _symbol, Str
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.core.symbol import disambiguate
 
 
@@ -398,6 +398,13 @@ def test_disambiguate():
 
 
 def test_issue_gh_16734():
+    try:
+        import pyodide_js
+    except ImportError:
+        pass
+    else:
+        skip('Cannot create threads under pyodide')
+
     # https://github.com/sympy/sympy/issues/16734
 
     syms = list(symbols('x, y'))
