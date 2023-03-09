@@ -1079,7 +1079,7 @@ def nested_pow_rule(integral: IntegralInfo):
             if not terms:
                 return S.One, S.Zero
             results = [_get_base_exp(term) for term in terms]
-            bases = set(b for b, _ in results)
+            bases = {b for b, _ in results}
             bases.discard(S.One)
             if len(bases) == 1:
                 return bases.pop(), Add(*(e for _, e in results))
@@ -1941,9 +1941,7 @@ cancel_rule = rewriter(
 
 distribute_expand_rule = rewriter(
     lambda integrand, symbol: (
-        all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args)
-        or isinstance(integrand, Pow)
-        or isinstance(integrand, Mul)),
+        isinstance(integrand, (Pow, Mul)) or all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args)),
     lambda integrand, symbol: integrand.expand())
 
 trig_expand_rule = rewriter(

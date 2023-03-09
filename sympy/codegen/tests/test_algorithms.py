@@ -32,7 +32,7 @@ def test_newtons_method_function__ccode():
     if not has_c():
         skip("No C compiler found.")
 
-    compile_kw = dict(std='c99')
+    compile_kw = {"std": 'c99'}
     with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton.c', ('#include <math.h>\n'
@@ -93,7 +93,7 @@ def test_newtons_method_function__ccode_parameters():
     if not cython:
         skip("cython not installed.")
 
-    compile_kw = dict(std='c99')
+    compile_kw = {"std": 'c99'}
     with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings([
             ('newton_par.c', ('#include <math.h>\n'

@@ -78,8 +78,8 @@ class MathMLPrinterBase(Printer):
         # Date: 2011-11-18
         # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom\
         #                   -toprettyxml-and-silly-whitespace/#best-solution
-        # Issue: http://bugs.python.org/issue4147
-        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
+        # Issue: https://bugs.python.org/issue4147
+        # Patch: https://hg.python.org/cpython/rev/7262f8f276ff/
 
         from xml.dom.minidom import Element, Text, Node, _write_data
 
@@ -331,7 +331,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_GoldenRatio(self, e):
         """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
+        https://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode("\N{GREEK SMALL LETTER PHI}"))
         return x
@@ -539,7 +539,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_list(self, seq):
         """MathML reference for the <list> element:
-        http://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
+        https://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
         dom_element = self.dom.createElement('list')
         for item in seq:
             dom_element.appendChild(self._print(item))
