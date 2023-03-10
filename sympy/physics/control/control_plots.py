@@ -1013,11 +1013,10 @@ def pade_approximate_time_delay(system,order=2):
         raise NotImplementedError("Only SISO LTI systems are currently supported.")
     sys = system.to_expr()
     t = Wild("T")
-    sys = system.to_expr()
-    td_terms = sys.find(exp(-t * system.var))
+    gtd_expr = exp(-t * system.var)
+    td_terms = sys.find(gtd_expr)
     if(len(td_terms)==0):
         raise ValueError("No time delay terms in system")
-    gtd_expr = exp(-t * system.var)
     taylor = gtd_expr.series(system.var, n=2*order+1).removeO().as_poly(system.var)
     n = order + 1
     c = taylor.all_coeffs()[-1:-2 * n:-1]
