@@ -1268,7 +1268,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        Calling `hat` creates a skew-symmetric Matrix:
+        Calling ``hat`` creates a skew-symmetric Matrix:
 
         >>> from sympy import Matrix
         >>> a = Matrix([1, 2, 3])
@@ -1287,7 +1287,7 @@ class MatrixBase(MatrixDeprecated,
         [ 8],
         [-4]])
 
-        Which is equivalent to calling the `cross` method:
+        Which is equivalent to calling the ``cross`` method:
 
         >>> a.cross(b)
         Matrix([
@@ -1323,7 +1323,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        Calling `vee` creates a vector from a skew-symmetric Matrix:
+        Calling ``vee`` creates a vector from a skew-symmetric Matrix:
 
         >>> from sympy import Matrix
         >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
@@ -1350,7 +1350,7 @@ class MatrixBase(MatrixDeprecated,
         [ 8],
         [-4]])
 
-        `vee` can also be used to retrieve angular velocity expressions.
+        ``vee`` can also be used to retrieve angular velocity expressions.
         Defining a rotation matrix:
 
         >>> from sympy import rot_ccw_axis3, trigsimp
