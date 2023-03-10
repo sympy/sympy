@@ -66,7 +66,7 @@ from .inverse import (
 
 
 class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify)
+    """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples
     ========
@@ -671,7 +671,7 @@ class MatrixDeprecated(MatrixCommon):
         return _det_bareiss(self)
 
     def det_LU_decomposition(self):
-        """Compute matrix determinant using LU decomposition
+        """Compute matrix determinant using LU decomposition.
 
 
         Note that this method fails if the LU decomposition itself
@@ -757,7 +757,7 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self) -> MatrixKind:
-        elem_kinds = set(e.kind for e in self.flat())
+        elem_kinds = {e.kind for e in self.flat()}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -964,9 +964,7 @@ class MatrixBase(MatrixDeprecated,
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
+                    evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
 
@@ -1182,7 +1180,7 @@ class MatrixBase(MatrixDeprecated,
             return
 
     def add(self, b):
-        """Return self + b """
+        """Return self + b."""
         return self + b
 
     def condition_number(self):
@@ -1242,6 +1240,8 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         dot
+        hat
+        vee
         multiply
         multiply_elementwise
         """
@@ -1259,6 +1259,140 @@ class MatrixBase(MatrixDeprecated,
                 (self[1] * b[2] - self[2] * b[1]),
                 (self[2] * b[0] - self[0] * b[2]),
                 (self[0] * b[1] - self[1] * b[0])))
+
+    def hat(self):
+        r"""
+        Return the skew-symmetric matrix representing the cross product,
+        so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
+
+        Examples
+        ========
+
+        Calling `hat` creates a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> a = Matrix([1, 2, 3])
+        >>> a.hat()
+        Matrix([
+        [ 0, -3,  2],
+        [ 3,  0, -1],
+        [-2,  1,  0]])
+
+        Multiplying it with another Matrix calculates the cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> a.hat() * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        Which is equivalent to calling the `cross` method:
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        vee
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 1):
+            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
+                             str(self.shape))
+        else:
+            x, y, z = self
+            return self._new(3, 3, (
+                 0, -z,  y,
+                 z,  0, -x,
+                -y,  x,  0))
+
+    def vee(self):
+        r"""
+        Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
+        so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
+
+        Examples
+        ========
+
+        Calling `vee` creates a vector from a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
+        >>> a = A.vee()
+        >>> a
+        Matrix([
+        [1],
+        [2],
+        [3]])
+
+        Calculating the matrix product of the original matrix with a vector
+        is equivalent to a cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> A * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        `vee` can also be used to retrieve angular velocity expressions.
+        Defining a rotation matrix:
+
+        >>> from sympy import rot_ccw_axis3, trigsimp
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> theta = dynamicsymbols('theta')
+        >>> R = rot_ccw_axis3(theta)
+        >>> R
+        Matrix([
+        [cos(theta(t)), -sin(theta(t)), 0],
+        [sin(theta(t)),  cos(theta(t)), 0],
+        [            0,              0, 1]])
+
+        We can retrive the angular velocity:
+
+        >>> Omega = R.T * R.diff()
+        >>> Omega = trigsimp(Omega)
+        >>> Omega.vee()
+        Matrix([
+        [                      0],
+        [                      0],
+        [Derivative(theta(t), t)]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        hat
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 3):
+            raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
+                             str(self.shape))
+        elif not self.is_anti_symmetric():
+            raise ValueError("Matrix is not skew-symmetric")
+        else:
+            return self._new(3, 1, (
+                 self[2, 1],
+                 self[0, 2],
+                 self[1, 0]))
 
     @property
     def D(self):
@@ -1406,7 +1540,9 @@ class MatrixBase(MatrixDeprecated,
         return (mat * b)[0]
 
     def dual(self):
-        """Returns the dual of a matrix, which is:
+        """Returns the dual of a matrix.
+
+        A dual of a matrix is:
 
         ``(1/2)*levicivita(i, j, k, l)*M(k, l)`` summed over indices `k` and `l`
 
@@ -1579,8 +1715,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     def exp(self):
-
-        """Return the exponential of a square matrix
+        """Return the exponential of a square matrix.
 
         Examples
         ========
@@ -1654,7 +1789,7 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def log(self, simplify=cancel):
-        """Return the logarithm of a square matrix
+        """Return the logarithm of a square matrix.
 
         Parameters
         ==========
@@ -1854,6 +1989,7 @@ class MatrixBase(MatrixDeprecated,
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
+
         In the simplest case this is the geometric size of the vector
         Other norms can be specified by the ord parameter
 

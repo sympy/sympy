@@ -166,7 +166,7 @@ def cached_property(func):
 
 
 def lazy_function(module : str, name : str) -> Callable:
-    """ Create a lazy proxy for a function in a module
+    """Create a lazy proxy for a function in a module.
 
     The module containing the function is not imported until the function is used.
 

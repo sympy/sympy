@@ -1029,7 +1029,7 @@ def test_sanitize_assumptions():
         assert x.is_positive is False
         assert cls('', real=True, positive=None).is_positive is None
         raises(ValueError, lambda: cls('', commutative=None))
-    raises(ValueError, lambda: Symbol._sanitize(dict(commutative=None)))
+    raises(ValueError, lambda: Symbol._sanitize({"commutative": None}))
 
 
 def test_special_assumptions():
@@ -1214,7 +1214,7 @@ def test_issue_21651():
 
 
 def test_assumptions_copy():
-    assert assumptions(Symbol('x'), dict(commutative=True)
+    assert assumptions(Symbol('x'), {"commutative": True}
         ) == {'commutative': True}
     assert assumptions(Symbol('x'), ['integer']) == {}
     assert assumptions(Symbol('x'), ['commutative']

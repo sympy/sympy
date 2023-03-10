@@ -264,7 +264,7 @@ def Geometric(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Geometric_distribution
-    .. [2] http://mathworld.wolfram.com/GeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/GeometricDistribution.html
 
     """
     return rv(name, GeometricDistribution, p)
@@ -429,7 +429,7 @@ def Logarithmic(name, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logarithmic_distribution
-    .. [2] http://mathworld.wolfram.com/LogarithmicDistribution.html
+    .. [2] https://mathworld.wolfram.com/LogarithmicDistribution.html
 
     """
     return rv(name, LogarithmicDistribution, p)
@@ -513,7 +513,7 @@ def NegativeBinomial(name, r, p):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Negative_binomial_distribution
-    .. [2] http://mathworld.wolfram.com/NegativeBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/NegativeBinomialDistribution.html
 
     """
     return rv(name, NegativeBinomialDistribution, r, p)
@@ -587,7 +587,7 @@ def Poisson(name, lamda):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Poisson_distribution
-    .. [2] http://mathworld.wolfram.com/PoissonDistribution.html
+    .. [2] https://mathworld.wolfram.com/PoissonDistribution.html
 
     """
     return rv(name, PoissonDistribution, lamda)

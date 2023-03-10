@@ -590,8 +590,10 @@ Matrix Functions
 
 .. autofunction:: sympy.matrices.dense::randMatrix
 
-Rotation matrices in 3D
-^^^^^^^^^^^^^^^^^^^^^^^
+Rotation matrices
+^^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.matrices.dense::rot_givens
 
 .. autofunction:: sympy.matrices.dense::rot_axis1
 

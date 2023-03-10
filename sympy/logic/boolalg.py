@@ -831,7 +831,7 @@ class Or(LatticeOp, BooleanFunction):
         args = (combinations(self.args, j) for j in args)
         args = chain.from_iterable(args)  # powerset
         args = (And(*arg) for arg in args)
-        args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
+        args = (to_anf(x, deep=deep) if deep else x for x in args)
         return Xor(*list(args), remove_true=False)
 
 
@@ -2761,7 +2761,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     Parameters
     ==========
 
-    expr : Boolean expression
+    expr : Boolean
 
     form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
         If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
@@ -2780,7 +2780,7 @@ def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
         made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
 
-    dontcare : Boolean expression
+    dontcare : Boolean
         Optimize expression under the assumption that inputs where this
         expression is true are don't care. This is useful in e.g. Piecewise
         conditions, where later conditions do not need to consider inputs that
@@ -3169,8 +3169,8 @@ def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement
@@ -3237,8 +3237,8 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j, k], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement

@@ -27,7 +27,7 @@ __all__ = [
 
     'minpoly', 'minimal_polynomial', 'primitive_element', 'field_isomorphism',
     'to_number_field', 'isolate', 'round_two', 'prime_decomp',
-    'prime_valuation',
+    'prime_valuation', 'galois_group',
 
     'itermonomials', 'Monomial',
 
@@ -92,7 +92,7 @@ from .polyerrors import (BasePolynomialError, ExactQuotientFailed,
 
 from .numberfields import (minpoly, minimal_polynomial, primitive_element,
         field_isomorphism, to_number_field, isolate, round_two, prime_decomp,
-        prime_valuation)
+        prime_valuation, galois_group)
 
 from .monomials import itermonomials, Monomial
 

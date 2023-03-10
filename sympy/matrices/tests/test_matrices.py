@@ -247,7 +247,7 @@ def test_power():
     assert (A**S.Half)**2 == A
 
     assert Matrix([[1, 0], [1, 1]])**S.Half == Matrix([[1, 0], [S.Half, 1]])
-    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1, 0], [0.5, 1]])
     from sympy.abc import n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
@@ -673,14 +673,14 @@ def test_issue_18531():
         ])
     with dotprodsimp(True):
         assert M.rref() == (Matrix([
-            [1, 0, 0, 0, 0, 0, 0, 0,  1/2],
-            [0, 1, 0, 0, 0, 0, 0, 0, -1/2],
-            [0, 0, 1, 0, 0, 0, 0, 0,  1/2],
-            [0, 0, 0, 1, 0, 0, 0, 0, -1/2],
+            [1, 0, 0, 0, 0, 0, 0, 0,  S(1)/2],
+            [0, 1, 0, 0, 0, 0, 0, 0, -S(1)/2],
+            [0, 0, 1, 0, 0, 0, 0, 0,  S(1)/2],
+            [0, 0, 0, 1, 0, 0, 0, 0, -S(1)/2],
             [0, 0, 0, 0, 1, 0, 0, 0,    0],
-            [0, 0, 0, 0, 0, 1, 0, 0, -1/2],
+            [0, 0, 0, 0, 0, 1, 0, 0, -S(1)/2],
             [0, 0, 0, 0, 0, 0, 1, 0,    0],
-            [0, 0, 0, 0, 0, 0, 0, 1, -1/2]]), (0, 1, 2, 3, 4, 5, 6, 7))
+            [0, 0, 0, 0, 0, 0, 0, 1, -S(1)/2]]), (0, 1, 2, 3, 4, 5, 6, 7))
 
 
 def test_creation():
@@ -2548,6 +2548,12 @@ def test_cross():
     raises(ShapeError, lambda:
         Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
+def test_hat_vee():
+    v1 = Matrix([x, y, z])
+    v2 = Matrix([a, b, c])
+    assert v1.hat() * v2 == v1.cross(v2)
+    assert v1.hat().is_anti_symmetric()
+    assert v1.hat().vee() == v1
 
 def test_hash():
     for cls in classes[-2:]:
@@ -2716,8 +2722,8 @@ def test_17522_mpmath():
         skip('mpmath must be available to test indexing matrixified mpmath matrices')
 
     m = _matrixify(matrix([[1, 2], [3, 4]]))
-    assert m[3] == 4
-    assert list(m) == [1, 2, 3, 4]
+    assert m[3] == 4.0
+    assert list(m) == [1.0, 2.0, 3.0, 4.0]
 
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
@@ -3004,5 +3010,5 @@ def test_issue_19809():
 def test_issue_23276():
     M = Matrix([x, y])
     assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
-        [1/2],
-        [1/2]])
+        [S.Half],
+        [S.Half]])

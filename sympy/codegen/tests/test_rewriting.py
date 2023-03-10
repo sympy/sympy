@@ -218,19 +218,19 @@ def test_cosm1_apart():
     opt1 = optimize(expr1, [cosm1_opt])
     assert opt1 == -cosm1(x)/cos(x)
     if scipy:
-        _check_num_lambdify(expr1, opt1, {x: S(10)**-30}, 5e-61, lambdify_kw=dict(modules='scipy'))
+        _check_num_lambdify(expr1, opt1, {x: S(10)**-30}, 5e-61, lambdify_kw={"modules": 'scipy'})
 
     expr2 = 2/cos(x) - 2
     opt2 = optimize(expr2, optims_scipy)
     assert opt2 == -2*cosm1(x)/cos(x)
     if scipy:
-        _check_num_lambdify(expr2, opt2, {x: S(10)**-30}, 1e-60, lambdify_kw=dict(modules='scipy'))
+        _check_num_lambdify(expr2, opt2, {x: S(10)**-30}, 1e-60, lambdify_kw={"modules": 'scipy'})
 
     expr3 = pi/cos(3*x) - pi
     opt3 = optimize(expr3, [cosm1_opt])
     assert opt3 == -pi*cosm1(3*x)/cos(3*x)
     if scipy:
-        _check_num_lambdify(expr3, opt3, {x: S(10)**-30/3}, float(5e-61*pi), lambdify_kw=dict(modules='scipy'))
+        _check_num_lambdify(expr3, opt3, {x: S(10)**-30/3}, float(5e-61*pi), lambdify_kw={"modules": 'scipy'})
 
 
 def test_powm1():
@@ -244,11 +244,11 @@ def test_powm1():
     if scipy and tuple(map(int, scipy.version.version.split('.')[:3])) >= (1, 10, 0):
         subs1_a = {x: Rational(*(1.0+1e-13).as_integer_ratio()), y: pi}
         ref1_f64_a = 3.139081648208105e-13
-        _check_num_lambdify(expr1, opt1, subs1_a, ref1_f64_a, lambdify_kw=dict(modules='scipy'), poorness=10**11)
+        _check_num_lambdify(expr1, opt1, subs1_a, ref1_f64_a, lambdify_kw={"modules": 'scipy'}, poorness=10**11)
 
         subs1_b = {x: pi, y: Rational(*(1e-10).as_integer_ratio())}
         ref1_f64_b = 1.1447298859149205e-10
-        _check_num_lambdify(expr1, opt1, subs1_b, ref1_f64_b, lambdify_kw=dict(modules='scipy'), poorness=10**9)
+        _check_num_lambdify(expr1, opt1, subs1_b, ref1_f64_b, lambdify_kw={"modules": 'scipy'}, poorness=10**9)
 
 
 def test_log1p_opt():
@@ -450,8 +450,8 @@ double func_unchanged(double x) {
 double func_rewritten(double x) {
     return %(rewritten)s;
 }
-''' % dict(unchanged=ccode(unchanged.n(NUMBER_OF_DIGITS)),
-           rewritten=ccode(rewritten.n(NUMBER_OF_DIGITS)))
+''' % {"unchanged": ccode(unchanged.n(NUMBER_OF_DIGITS)),
+           "rewritten": ccode(rewritten.n(NUMBER_OF_DIGITS))}
 
     func_pyx = '''
 #cython: language_level=3
@@ -465,7 +465,7 @@ def py_rewritten(x):
     with tempfile.TemporaryDirectory() as folder:
         mod, info = compile_link_import_strings(
             [('func.c', func_c), ('_func.pyx', func_pyx)],
-            build_dir=folder, compile_kwargs=dict(std='c99')
+            build_dir=folder, compile_kwargs={"std": 'c99'}
         )
         err_rewritten = abs(mod.py_rewritten(1e-11) - ref)
         err_unchanged = abs(mod.py_unchanged(1e-11) - ref)

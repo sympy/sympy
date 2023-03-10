@@ -1,11 +1,11 @@
-import warnings
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, cos, sin, atan2)
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
@@ -98,7 +98,7 @@ class Quaternion(Expr):
     References
     ==========
 
-    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [1] https://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
     .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
@@ -122,7 +122,7 @@ class Quaternion(Expr):
             return obj
 
     def set_norm(self, norm):
-        """Sets norm of an already instantiated quaternion.:
+        """Sets norm of an already instantiated quaternion.
 
         Parameters
         ==========
@@ -294,7 +294,7 @@ class Quaternion(Expr):
 
         vector_only : bool
             If True, only imaginary part is returned.
-            Default : False
+            Default value: False
 
         Returns
         =======
@@ -342,7 +342,7 @@ class Quaternion(Expr):
 
         elements : Matrix, list or tuple of length 3 or 4. If length is 3,
             assume real part is zero.
-            Default : False
+            Default value: False
 
         Returns
         =======
@@ -377,7 +377,7 @@ class Quaternion(Expr):
     @classmethod
     def from_euler(cls, angles, seq):
         """Returns quaternion equivalent to rotation represented by the Euler
-        angles, in the sequence defined by `seq`.
+        angles, in the sequence defined by ``seq``.
 
         Parameters
         ==========
@@ -387,9 +387,9 @@ class Quaternion(Expr):
         seq : string of length 3
             Represents the sequence of rotations.
             For intrinsic rotations, seq must be all lowercase and its elements
-            must be from the set `{'x', 'y', 'z'}`
+            must be from the set ``{'x', 'y', 'z'}``
             For extrinsic rotations, seq must be all uppercase and its elements
-            must be from the set `{'X', 'Y', 'Z'}`
+            must be from the set ``{'X', 'Y', 'Z'}``
 
         Returns
         =======
@@ -440,8 +440,11 @@ class Quaternion(Expr):
 
     def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
         r"""Returns Euler angles representing same rotation as the quaternion,
-        in the sequence given by `seq`. This implements the method described
+        in the sequence given by ``seq``. This implements the method described
         in [1]_.
+
+        For degenerate cases (gymbal lock cases), the third angle is
+        set to zero.
 
         Parameters
         ==========
@@ -449,29 +452,30 @@ class Quaternion(Expr):
         seq : string of length 3
             Represents the sequence of rotations.
             For intrinsic rotations, seq must be all lowercase and its elements
-            must be from the set `{'x', 'y', 'z'}`
+            must be from the set ``{'x', 'y', 'z'}``
             For extrinsic rotations, seq must be all uppercase and its elements
-            must be from the set `{'X', 'Y', 'Z'}`
+            must be from the set ``{'X', 'Y', 'Z'}``
 
         angle_addition : bool
-            Default : True
             When True, first and third angles are given as an addition and
-            subtraction of two simpler `atan2` expressions. When False, the
+            subtraction of two simpler ``atan2`` expressions. When False, the
             first and third angles are each given by a single more complicated
-            `atan2` expression. This equivalent is given by:
+            ``atan2`` expression. This equivalent expression is given by:
 
-            --math::
+            .. math::
 
                 \operatorname{atan_2} (b,a) \pm \operatorname{atan_2} (d,c) =
                 \operatorname{atan_2} (bc\pm ad, ac\mp bd)
 
+            Default value: True
+
         avoid_square_root : bool
-            Default : False
             When True, the second angle is calculated with an expression based
-            on acos`, which is slightly more complicated but avoids a square
-            root. When False, second angle is calculated with `atan2`, which
+            on ``acos``, which is slightly more complicated but avoids a square
+            root. When False, second angle is calculated with ``atan2``, which
             is simpler and can be better for numerical reasons (some
-            numerical implementations of `acos` have problems near zero).
+            numerical implementations of ``acos`` have problems near zero).
+            Default value: False
 
 
         Returns
@@ -533,10 +537,16 @@ class Quaternion(Expr):
             a, b, c, d = a - c, b + d, c + a, d - b
 
         if avoid_square_root:
-            n2 = self.norm()**2 if symmetric else 2 * self.norm()**2
-            angles[1] = acos((a*a + b*b - c*c - d*d) / n2)
+            if symmetric:
+                n2 = self.norm()**2
+                angles[1] = acos((a * a + b * b - c * c - d * d) / n2)
+            else:
+                n2 = 2 * self.norm()**2
+                angles[1] = asin((c * c + d * d - a * a - b * b) / n2)
         else:
             angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
+            if not symmetric:
+                angles[1] -= S.Pi / 2
 
         # Check for singularities in numerical cases
         case = 0
@@ -554,8 +564,7 @@ class Quaternion(Expr):
                 angles[2] = atan2(b*c - a*d, a*c + b*d)
 
         else:  # any degenerate case
-            warnings.warn('Singularity case, setting third angle to zero')
-            angles[2 * (not extrinsic)] = sympify(0)
+            angles[2 * (not extrinsic)] = S.Zero
             if case == 1:
                 angles[2 * extrinsic] = 2 * atan2(b, a)
             else:
@@ -564,7 +573,6 @@ class Quaternion(Expr):
 
         # for Tait-Bryan angles
         if not symmetric:
-            angles[1] -= S.Pi / 2
             angles[0] *= sign
 
         if extrinsic:
@@ -1143,7 +1151,7 @@ class Quaternion(Expr):
         return (pout.b, pout.c, pout.d)
 
     def to_axis_angle(self):
-        """Returns the axis and angle of rotation of a quaternion
+        """Returns the axis and angle of rotation of a quaternion.
 
         Returns
         =======
@@ -1219,21 +1227,6 @@ class Quaternion(Expr):
 
         Generates a 4x4 transformation matrix (used for rotation about a point
         other than the origin) if the point(v) is passed as an argument.
-
-        Examples
-        ========
-
-        >>> from sympy import Quaternion
-        >>> from sympy import symbols, trigsimp, cos, sin
-        >>> x = symbols('x')
-        >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
-        >>> trigsimp(q.to_rotation_matrix((1, 1, 1)))
-         Matrix([
-        [cos(x), -sin(x), 0,  sin(x) - cos(x) + 1],
-        [sin(x),  cos(x), 0, -sin(x) - cos(x) + 1],
-        [     0,       0, 1,                    0],
-        [     0,       0, 0,                    1]])
-
         """
 
         q = self
@@ -1493,9 +1486,12 @@ class Quaternion(Expr):
         Parameters
         ==========
 
-        q1 : a pure Quaternion.
-        q2 : a pure Quaternion.
-        q3 : a pure Quaternion.
+        q1
+            A pure Quaternion.
+        q2
+            A pure Quaternion.
+        q3
+            A pure Quaternion.
 
         Returns
         =======
