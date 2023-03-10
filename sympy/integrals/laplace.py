@@ -1601,12 +1601,46 @@ def _inverse_laplace_time_diff(F, s, t, plane):
     return None
 
 
+def _inverse_laplace_irrational(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    c = Wild('c', exclude=[s])
+    f = Wild('f')
+
+    result = None
+    condition = S.true
+
+    if (m1 := fn.match(sqrt(b*s)*f)) is not None:
+        debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
+
+        if (m2 := m1[f].match(c/(b*s-a))) is not None:
+            if (m2[a]*m2[b]).is_positive:
+                if m2[a].is_positive:
+                    a_, b_, c_ = m2[a], m2[b], sqrt(m1[b])*m2[c]
+                else:
+                    a_, b_, c_ = -m2[a], -m2[b], -sqrt(m1[b])*m2[c]
+            result = (
+                c_*exp(a_*t/b_)*erf(sqrt(a_)*sqrt(t)/sqrt(b_)) /
+                (sqrt(a_)*b_**(S(3)/2)))
+            debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
+
+    if result is None:
+        return None
+    else:
+        return result, condition
+
+
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
     prog_rules = [_inverse_laplace_time_shift, _inverse_laplace_freq_shift,
-                  _inverse_laplace_time_diff, _inverse_laplace_diff]
+                  _inverse_laplace_time_diff, _inverse_laplace_diff,
+                  _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
