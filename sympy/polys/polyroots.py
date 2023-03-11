@@ -985,7 +985,7 @@ def roots(f, *gens,
             radicals (if there are any).
             '''))
 
-    # Remove roots that do not satify predicate or filter.
+    # Remove roots that do not satisfy predicate or filter.
     if query:
         result = {zero: m for zero, m in result.items() if query(zero)}
 
