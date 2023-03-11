@@ -5,7 +5,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import acos, sin, cos
 from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
-    KanesMethod, inertia, msubs, Point, RigidBody, dot)
+                                     KanesMethod, inertia, Point, RigidBody,
+                                     dot)
 from sympy.testing.pytest import slow, ON_CI, skip
 
 
@@ -186,23 +187,23 @@ def test_bicycle():
     # model.
     PaperRadRear                    =  0.3
     PaperRadFront                   =  0.35
-    HTA                             =  evalf.N(pi / 2 - pi / 10)
+    HTA                             =  (pi / 2 - pi / 10).evalf()
     TrailPaper                      =  0.08
-    rake                            =  evalf.N(-(TrailPaper*sin(HTA)-(PaperRadFront*cos(HTA))))
+    rake                            =  (-(TrailPaper*sin(HTA)-(PaperRadFront*cos(HTA)))).evalf()
     PaperWb                         =  1.02
     PaperFrameCgX                   =  0.3
     PaperFrameCgZ                   =  0.9
     PaperForkCgX                    =  0.9
     PaperForkCgZ                    =  0.7
-    FrameLength                     =  evalf.N(PaperWb*sin(HTA)-(rake-(PaperRadFront-PaperRadRear)*cos(HTA)))
-    FrameCGNorm                     =  evalf.N((PaperFrameCgZ - PaperRadRear-(PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA))
-    FrameCGPar                      =  evalf.N(PaperFrameCgX / sin(HTA) + (PaperFrameCgZ - PaperRadRear - PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA))
-    tempa                           =  evalf.N(PaperForkCgZ - PaperRadFront)
-    tempb                           =  evalf.N(PaperWb-PaperForkCgX)
-    tempc                           =  evalf.N(sqrt(tempa**2+tempb**2))
-    PaperForkL                      =  evalf.N(PaperWb*cos(HTA)-(PaperRadFront-PaperRadRear)*sin(HTA))
-    ForkCGNorm                      =  evalf.N(rake+(tempc * sin(pi/2-HTA-acos(tempa/tempc))))
-    ForkCGPar                       =  evalf.N(tempc * cos((pi/2-HTA)-acos(tempa/tempc))-PaperForkL)
+    FrameLength                     =  (PaperWb*sin(HTA)-(rake-(PaperRadFront-PaperRadRear)*cos(HTA))).evalf()
+    FrameCGNorm                     =  ((PaperFrameCgZ - PaperRadRear-(PaperFrameCgX/sin(HTA))*cos(HTA))*sin(HTA)).evalf()
+    FrameCGPar                      =  (PaperFrameCgX / sin(HTA) + (PaperFrameCgZ - PaperRadRear - PaperFrameCgX / sin(HTA) * cos(HTA)) * cos(HTA)).evalf()
+    tempa                           =  (PaperForkCgZ - PaperRadFront)
+    tempb                           =  (PaperWb-PaperForkCgX)
+    tempc                           =  (sqrt(tempa**2+tempb**2)).evalf()
+    PaperForkL                      =  (PaperWb*cos(HTA)-(PaperRadFront-PaperRadRear)*sin(HTA)).evalf()
+    ForkCGNorm                      =  (rake+(tempc * sin(pi/2-HTA-acos(tempa/tempc)))).evalf()
+    ForkCGPar                       =  (tempc * cos((pi/2-HTA)-acos(tempa/tempc))-PaperForkL).evalf()
 
     # Here is the final assembly of the numerical values. The symbol 'v' is the
     # forward speed of the bicycle (a concept which only makes sense in the
@@ -257,34 +258,52 @@ def test_bicycle():
     # many rows as *total* coordinates and speeds, but only as many columns as
     # independent coordinates and speeds.
 
-    forcing_lin = KM.linearize()[0]
-
+    A, B, _ = KM.linearize(
+        A_and_B=True,
+        op_point={
+            # Operating points for the accelerations are required for the
+            # linearizer to eliminate u' terms showing up in the coefficient
+            # matrices.
+            u1.diff(): 0,
+            u2.diff(): 0,
+            u3.diff(): 0,
+            u4.diff(): 0,
+            u5.diff(): 0,
+            u6.diff(): 0,
+            u1: 0,
+            u2: 0,
+            u3: v / PaperRadRear,
+            u4: 0,
+            u5: 0,
+            u6: v / PaperRadFront,
+            q1: 0,
+            q2: 0,
+            q4: 0,
+            q5: 0,
+        }
+    )
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as
     # well.  This will likely be changed to be part of the linearized process,
     # for future reference.
-    MM_full = KM.mass_matrix_full
+    A_s = A.xreplace(val_dict)
+    B_s = B.xreplace(val_dict)
 
-    MM_full_s = msubs(MM_full, val_dict)
-    forcing_lin_s = msubs(forcing_lin, KM.kindiffdict(), val_dict)
-
-    MM_full_s = MM_full_s.evalf()
-    forcing_lin_s = forcing_lin_s.evalf()
+    A_s = A_s.evalf()
+    B_s = B_s.evalf()
 
     # Finally, we construct an "A" matrix for the form xdot = A x (x being the
     # state vector, although in this case, the sizes are a little off). The
     # following line extracts only the minimum entries required for eigenvalue
     # analysis, which correspond to rows and columns for lean, steer, lean
     # rate, and steer rate.
-    Amat = MM_full_s.inv() * forcing_lin_s
-    A = Amat.extract([1, 2, 4, 6], [1, 2, 3, 5])
+    A = A_s.extract([1, 2, 3, 5], [1, 2, 3, 5])
 
     # Precomputed for comparison
     Res = Matrix([[               0,                                           0,                  1.0,                    0],
                   [               0,                                           0,                    0,                  1.0],
                   [9.48977444677355, -0.891197738059089*v**2 - 0.571523173729245, -0.105522449805691*v, -0.330515398992311*v],
                   [11.7194768719633,   -1.97171508499972*v**2 + 30.9087533932407,   3.67680523332152*v,  -3.08486552743311*v]])
-
 
     # Actual eigenvalue comparison
     eps = 1.e-12
