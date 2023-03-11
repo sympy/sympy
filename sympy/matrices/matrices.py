@@ -1,5 +1,6 @@
 import mpmath as mp
 from collections.abc import Callable
+import numpy as np
 
 
 from sympy.core.add import Add
@@ -23,6 +24,7 @@ from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
+from sympy import Matrix
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
@@ -580,6 +582,30 @@ class MatrixCalculus(MatrixCommon):
         """
         return self.applyfunc(lambda x: x.limit(*args))
 
+
+class NumpyMatrix(Matrix):
+    def __new__(cls, *args, **kwargs):
+        array = np.array(*args, **kwargs)
+        obj = Matrix.__new__(cls, *args, **kwargs)
+        obj.rows, obj.cols = array.shape
+        obj._mat = array
+        return obj
+    def __array__(self):
+        return self._mat
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        args = []
+        for input in inputs:
+            if isinstance(input, NumpyMatrix):
+                args.append(input._mat)
+            else:
+                args.append(input)
+        result = getattr(np, method)(*args, **kwargs)
+        if isinstance(result, np.ndarray):
+            return NumpyMatrix(result)
+        else:
+            return result
+        
 
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
