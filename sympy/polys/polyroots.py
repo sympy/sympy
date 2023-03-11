@@ -21,7 +21,7 @@ from sympy.functions import exp, im, cos, acos, Piecewise
 from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
-from sympy.polys.polyerrors import (PolynomialError DomainError,
+from sympy.polys.polyerrors import (PolynomialError, DomainError,
     UnsolvableFactorError)
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
