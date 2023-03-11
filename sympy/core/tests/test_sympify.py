@@ -178,7 +178,7 @@ def test_sympify_bool():
 def test_sympyify_iterables():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify(['.3', '.2'], rational=True) == ans
-    assert sympify(dict(x=0, y=1)) == {x: 0, y: 1}
+    assert sympify({"x": 0, "y": 1}) == {x: 0, y: 1}
     assert sympify(['1', '2', ['3', '4']]) == [S(1), S(2), [S(3), S(4)]]
 
 
@@ -189,7 +189,7 @@ def test_issue_16772():
     # along; list, on the other hand, is not converted
     # with a converter so its args are traversed later
     ans = [Rational(3, 10), Rational(1, 5)]
-    assert sympify(tuple(['.3', '.2']), rational=True) == Tuple(*ans)
+    assert sympify(('.3', '.2'), rational=True) == Tuple(*ans)
 
 
 def test_issue_16859():
@@ -584,10 +584,10 @@ def test_issue_10295():
     assert sC[0, 0, 0] == 0
 
     a1 = numpy.array([1, 2, 3])
-    a2 = numpy.array([i for i in range(24)])
+    a2 = numpy.array(list(range(24)))
     a2.resize(2, 4, 3)
     assert sympify(a1) == ImmutableDenseNDimArray([1, 2, 3])
-    assert sympify(a2) == ImmutableDenseNDimArray([i for i in range(24)], (2, 4, 3))
+    assert sympify(a2) == ImmutableDenseNDimArray(list(range(24)), (2, 4, 3))
 
 
 def test_Range():

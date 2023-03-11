@@ -179,16 +179,15 @@ will return values and update the dictionary.
 For a :class:`~.Symbol`, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
 assumptions derived from a given set of initial assumptions. The
-latter assumptions are stored as ``Symbol._assumptions.generator``
+latter assumptions are stored as ``Symbol._assumptions_orig``
 
-    >>> Symbol('x', prime=True, even=True)._assumptions.generator
+    >>> Symbol('x', prime=True, even=True)._assumptions_orig
     {'even': True, 'prime': True}
 
-The ``generator`` is not necessarily canonical nor is it filtered
-in any way: it records the assumptions used to instantiate a Symbol
-and (for storage purposes) represents a more compact representation
-of the assumptions needed to recreate the full set in
-``Symbol.assumptions0``.
+The ``_assumptions_orig`` are not necessarily canonical nor are they filtered
+in any way: they records the assumptions used to instantiate a Symbol and (for
+storage purposes) represent a more compact representation of the assumptions
+needed to recreate the full set in ``Symbol.assumptions0``.
 
 
 References
@@ -202,7 +201,7 @@ References
 .. [6] https://en.wikipedia.org/wiki/Prime_number
 .. [7] https://en.wikipedia.org/wiki/Finite
 .. [8] https://docs.python.org/3/library/math.html#math.isfinite
-.. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+.. [9] https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html
 .. [10] https://en.wikipedia.org/wiki/Transcendental_number
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
 .. [12] https://en.wikipedia.org/wiki/Commutative_property

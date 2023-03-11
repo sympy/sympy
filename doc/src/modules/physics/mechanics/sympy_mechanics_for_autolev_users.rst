@@ -663,13 +663,13 @@ The tools in the PyDy workflow are :
     either as a standalone application, as a library to other
     applications, or live on the web as SymPy Live or SymPy Gamma.
 
--  `NumPy <https://www.numpy.org/>`_: NumPy is a library for the
+-  `NumPy <https://numpy.org/>`_: NumPy is a library for the
     Python programming language, adding support for large,
     multi-dimensional arrays and matrices, along with a large
     collection of high-level mathematical functions to operate on
     these arrays.
 
--  `SciPy <https://www.scipy.org/>`_: SciPy is an open source
+-  `SciPy <https://scipy.org/>`_: SciPy is an open source
     Python library used for scientific computing and technical
     computing. SciPy contains modules for optimization, linear
     algebra, integration, interpolation, special functions, FFT,
@@ -687,7 +687,7 @@ The tools in the PyDy workflow are :
     computations are expressed using a NumPy-esque syntax and
     compiled to run efficiently on either CPU or GPU architectures.
 
--  `Cython <http://cython.org/>`_: Cython is a superset of the
+-  `Cython <https://cython.org/>`_: Cython is a superset of the
     Python programming language, designed to give C-like performance
     with code that is mostly written in Python. Cython is a compiled
     language that generates CPython extension modules.

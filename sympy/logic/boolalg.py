@@ -831,7 +831,7 @@ class Or(LatticeOp, BooleanFunction):
         args = (combinations(self.args, j) for j in args)
         args = chain.from_iterable(args)  # powerset
         args = (And(*arg) for arg in args)
-        args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
+        args = (to_anf(x, deep=deep) if deep else x for x in args)
         return Xor(*list(args), remove_true=False)
 
 
@@ -3169,8 +3169,8 @@ def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement
@@ -3237,8 +3237,8 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
                                 results.append((costsaving, ([i, j, k], np)))
         if results:
             # Sort results based on complexity
-            results = list(reversed(sorted(results,
-                                           key=lambda pair: pair[0])))
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
             # Replace the one providing most simplification
             replacement = results[0][1]
             idx, newrel = replacement

@@ -197,7 +197,7 @@ class CircuitPlot:
             color='k',
             ha='center',
             va='center',
-            bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
+            bbox={"ec": 'k', "fc": 'w', "fill": True, "lw": self.linewidth},
             size=self.fontsize
         )
 

@@ -183,7 +183,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     else:
         rv = (m, sorted([(f,
                           tuple([M] + list(smoothness(f + m))))
-                         for f, M in [i for i in facs.items()]],
+                         for f, M in list(facs.items())],
                         key=lambda x: (x[1][k], x[0])))
 
     if visual is False or (visual is not True) and (type(n) in [int, Mul]):
@@ -812,7 +812,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
            A Computational Perspective", Springer, 2nd edition, 236-238
-    .. [2] http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
+    .. [2] https://web.archive.org/web/20150716201437/http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html
     .. [3] https://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
@@ -1762,7 +1762,7 @@ def udivisors(n, generator=False):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Unitary_divisor
-    .. [2] http://mathworld.wolfram.com/UnitaryDivisor.html
+    .. [2] https://mathworld.wolfram.com/UnitaryDivisor.html
 
     """
 
@@ -1803,7 +1803,7 @@ def udivisor_count(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+    .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
 
@@ -1934,7 +1934,7 @@ class totient(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler%27s_totient_function
-    .. [2] http://mathworld.wolfram.com/TotientFunction.html
+    .. [2] https://mathworld.wolfram.com/TotientFunction.html
 
     """
     @classmethod
@@ -2008,7 +2008,7 @@ class reduced_totient(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Carmichael_function
-    .. [2] http://mathworld.wolfram.com/CarmichaelFunction.html
+    .. [2] https://mathworld.wolfram.com/CarmichaelFunction.html
 
     """
     @classmethod
@@ -2245,7 +2245,7 @@ class udivisor_sigma(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/UnitaryDivisorFunction.html
+    .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
 
@@ -2292,7 +2292,7 @@ class primenu(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
 
@@ -2337,7 +2337,7 @@ class primeomega(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PrimeFactor.html
+    .. [1] https://mathworld.wolfram.com/PrimeFactor.html
 
     """
 
@@ -2390,7 +2390,7 @@ def is_perfect(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PerfectNumber.html
+    .. [1] https://mathworld.wolfram.com/PerfectNumber.html
     .. [2] https://en.wikipedia.org/wiki/Perfect_number
 
     """
@@ -2421,7 +2421,7 @@ def is_perfect(n):
         if not b:
             return False
     else:
-        if n < 10**2000:  # http://www.lirmm.fr/~ochem/opn/
+        if n < 10**2000:  # https://www.lirmm.fr/~ochem/opn/
             return False
         if n % 105 == 0:  # not divis by 105
             return False
@@ -2467,7 +2467,7 @@ def is_mersenne_prime(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/MersennePrime.html
+    .. [1] https://mathworld.wolfram.com/MersennePrime.html
 
     """
 
@@ -2521,7 +2521,7 @@ def is_abundant(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/AbundantNumber.html
+    .. [1] https://mathworld.wolfram.com/AbundantNumber.html
 
     """
     n = as_int(n)
@@ -2547,7 +2547,7 @@ def is_deficient(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/DeficientNumber.html
+    .. [1] https://mathworld.wolfram.com/DeficientNumber.html
 
     """
     n = as_int(n)
@@ -2579,7 +2579,7 @@ def is_amicable(m, n):
     """
     if m == n:
         return False
-    a, b = map(lambda i: divisor_sigma(i), (m, n))
+    a, b = (divisor_sigma(i) for i in (m, n))
     return a == b == (m + n)
 
 
@@ -2635,7 +2635,7 @@ def drm(n, b):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/MultiplicativeDigitalRoot.html
+    .. [1] https://mathworld.wolfram.com/MultiplicativeDigitalRoot.html
 
     """
 

@@ -1008,9 +1008,9 @@ class log(Function):
         if not d.is_positive:
             res = log(a) - b*log(cdir) + b*logx
             _res = res
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=True,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": True,
+                "factor": False}
             expr = self.expand(**logflags)
             if (not a.could_extract_minus_sign() and
                 logx.could_extract_minus_sign()):

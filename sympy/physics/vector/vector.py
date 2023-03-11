@@ -170,7 +170,7 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        newlist = [v for v in self.args]
+        newlist = list(self.args)
         other = sympify(other)
         for i, v in enumerate(newlist):
             newlist[i] = (other * newlist[i][0], newlist[i][1])

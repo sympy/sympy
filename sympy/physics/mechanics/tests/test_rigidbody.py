@@ -1,10 +1,29 @@
-from sympy.core.symbol import symbols
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
 from sympy.physics.mechanics import dynamicsymbols, outer, inertia
 from sympy.physics.mechanics import inertia_of_point_mass
-from sympy.core.backend import expand, zeros, _simplify_matrix
-
+from sympy.core.backend import expand, zeros, _simplify_matrix, symbols
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+
+
+def test_rigidbody_default():
+    # Test default
+    b = RigidBody('B')
+    I = inertia(b.frame, *symbols('B_ixx B_iyy B_izz B_ixy B_iyz B_izx'))
+    assert b.name == 'B'
+    assert b.mass == symbols('B_mass')
+    assert b.masscenter.name == 'B_masscenter'
+    assert b.inertia == (I, b.masscenter)
+    assert b.central_inertia == I
+    assert b.frame.name == 'B_frame'
+    assert b.__str__() == 'B'
+    assert b.__repr__() == (
+        "RigidBody('B', masscenter=B_masscenter, frame=B_frame, mass=B_mass), "
+        "inertia=(B_ixx*(B_frame.x|B_frame.x) + "
+        "B_ixy*(B_frame.x|B_frame.y) + B_izx*(B_frame.x|B_frame.z) + "
+        "B_ixy*(B_frame.y|B_frame.x) + B_iyy*(B_frame.y|B_frame.y) + "
+        "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
+        "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
+        "B_masscenter)))")
 
 
 def test_rigidbody():
@@ -61,6 +80,7 @@ def test_rigidbody2():
     B.potential_energy = M * g * h
     assert B.potential_energy == M * g * h
     assert expand(2 * B.kinetic_energy(N)) == omega**2 + M * v**2
+
 
 def test_rigidbody3():
     q1, q2, q3, q4 = dynamicsymbols('q1:5')

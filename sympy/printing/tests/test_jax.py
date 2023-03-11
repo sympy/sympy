@@ -17,7 +17,7 @@ from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import JaxPrinter, _jax_known_constants, _jax_known_functions
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
