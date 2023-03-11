@@ -5,8 +5,10 @@ from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (
-    msubs, find_dynamicsymbols, _f_list_parser, _validate_coordinates)
+from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
+                                               _f_list_parser,
+                                               _validate_coordinates,
+                                               cramer_solve)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -249,7 +251,7 @@ class KanesMethod(_Methods):
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
             B_ind = self._k_nh[:, :p]
             B_dep = self._k_nh[:, p:o]
-            self._Ars = -B_dep.LUsolve(B_ind)
+            self._Ars = -cramer_solve(B_dep, B_ind)
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
