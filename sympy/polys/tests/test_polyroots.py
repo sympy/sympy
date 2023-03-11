@@ -480,7 +480,6 @@ def test_roots0():
     r13_20, r1_20 = [ Rational(*r)
         for r in ((13, 20), (1, 20)) ]
 
-    s2 = sqrt(2)
     assert roots(f, x) == {
         S(13)/20 + sqrt(S(1)/400 - sqrt(2)*I/50): 1,
         S(13)/20 + sqrt(S(1)/400 + sqrt(2)*I/50): 1,
