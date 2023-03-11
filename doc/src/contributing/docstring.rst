@@ -47,8 +47,8 @@ module docstring is the docstring at the very top of the file, for example, the
 docstring for `solvers.ode
 <https://github.com/sympy/sympy/blob/85e684f782c71d247b13af71f2f134a9d894507e/sympy/solvers/ode.py>`_.
 
-A public function is one that is intended to be used by the end-
-user, or the public. Documentation is important for public functions because
+A public function is one that is intended to be used by the end-user,
+or the public. Documentation is important for public functions because
 they will be seen and used by many people.
 
 A private function, on the other hand, is one that is only intended to be used
@@ -740,8 +740,8 @@ Here are some troubleshooting tips to fix the errors:
   functions like ``int`` or ``NotImplementedError``, functions from other
   modules outside of SymPy like ``matplotlib.plot``, and variable or parameter
   names that are specific to the text at hand. In general, if the object cannot
-  be accessed as ``sympy.something.something.object``, it cannot be cross-
-  referenced and you should not use the ``:obj:`` syntax.
+  be accessed as ``sympy.something.something.object``, it cannot be
+  cross-referenced and you should not use the ``:obj:`` syntax.
 * If you are using are using one of the `type specific
   <https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects>`_
   identifiers like ``:func:``, be sure that the type for it is correct.
