@@ -1,3 +1,5 @@
+from sympy.core.cache import cacheit
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities import dict_merge
 from sympy.utilities.iterables import iterable
 from sympy.physics.vector import (Dyadic, Vector, ReferenceFrame,
@@ -8,7 +10,7 @@ from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
-                                tan, AppliedUndef, S)
+                                tan, AppliedUndef, S, zeros)
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -32,6 +34,31 @@ mprint = vprint
 msprint = vsprint
 mpprint = vpprint
 mlatex = vlatex
+
+
+@cacheit
+def det_laplace(matrix):
+    n = matrix.shape[0]
+    if n == 1:
+        return matrix[0]
+    elif n == 2:
+        return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0]
+    else:
+        return sum((-1) ** i * matrix[0, i] *
+                   det_laplace(matrix.minor_submatrix(0, i)) for i in range(n))
+
+
+def cramer_solve(A, b, det_method=det_laplace):
+    def entry(i, j):
+        return b[i, sol] if j == col else A[i, j]
+
+    A_imu = ImmutableMatrix(A)  # Convert to immutable for cache purposes
+    det_A = det_method(A_imu)
+    x = zeros(*b.shape)
+    for sol in range(b.shape[1]):
+        for col in range(b.shape[0]):
+            x[col, sol] = det_method(ImmutableMatrix(*A.shape, entry)) / det_A
+    return x
 
 
 def mechanics_printing(**kwargs):
