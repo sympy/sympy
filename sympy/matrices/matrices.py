@@ -964,9 +964,7 @@ class MatrixBase(MatrixDeprecated,
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
+                    evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
 
