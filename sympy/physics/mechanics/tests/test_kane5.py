@@ -1,9 +1,14 @@
-from sympy.core.backend import zeros, Matrix, symbols, lambdify, _simplify_matrix
+from sympy.core.backend import (zeros, Matrix, symbols, lambdify,
+                                _simplify_matrix)
 from sympy.matrices.expressions import MatrixExpr
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.physics.mechanics.models import n_link_pendulum_on_cart
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
+from sympy.testing.pytest import skip
+from sympy.external import import_module
+
+np = import_module('numpy')
 
 
 def _create_rolling_disc():
@@ -127,6 +132,8 @@ def test_kane_rolling_disc_lu():
 
 
 def test_kane_rolling_disc_numeric():
+    if not np:
+        skip('numpy not installed.')
     props = _create_rolling_disc()
     kane = KanesMethod(
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
