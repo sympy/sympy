@@ -6,7 +6,7 @@ from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
 
 
-def create_rolling_disc():
+def _create_rolling_disc():
     # Define symbols and coordinates
     t = dynamicsymbols._t
     q1, q2, q3, q4, q5, u1, u2, u3, u4, u5 = dynamicsymbols('q1:6 u1:6')
@@ -54,7 +54,7 @@ def create_rolling_disc():
     }
 
 
-def verify_rolling_disc_numerically(kane, all_zero=False):
+def _verify_rolling_disc_numerically(kane, all_zero=False):
     q, u, p = dynamicsymbols('q1:6'), dynamicsymbols('u1:6'), symbols('g r m')
     eval_sys = lambdify((q, u, p), (kane.mass_matrix_full, kane.forcing_full),
                         cse=True)
@@ -116,18 +116,18 @@ def test_parse_linear_solver():
 
 
 def test_kane_rolling_disc_lu():
-    props = create_rolling_disc()
+    props = _create_rolling_disc()
     kane = KanesMethod(props['frame'], props['q_ind'], props['u_ind'],
                        props['kdes'], u_dependent=props['u_dep'],
                        velocity_constraints=props['fnh'],
                        bodies=props['bodies'], forcelist=props['loads'],
                        explicit_kinematics=False, constraint_solver='lu')
     kane.kanes_equations()
-    verify_rolling_disc_numerically(kane)
+    _verify_rolling_disc_numerically(kane)
 
 
 def test_kane_rolling_disc_numeric():
-    props = create_rolling_disc()
+    props = _create_rolling_disc()
     kane = KanesMethod(
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
         u_dependent=props['u_dep'], velocity_constraints=props['fnh'],
@@ -135,4 +135,4 @@ def test_kane_rolling_disc_numeric():
         explicit_kinematics=False, constraint_solver='numeric',
         kd_eqs_solver=lambda A, b: _simplify_matrix(A.LUsolve(b)))
     kane.kanes_equations()
-    verify_rolling_disc_numerically(kane, all_zero=True)
+    _verify_rolling_disc_numerically(kane, all_zero=True)
