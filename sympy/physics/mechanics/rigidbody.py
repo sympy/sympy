@@ -59,7 +59,10 @@ class RigidBody(BodyBase):
         if frame is None:
             frame = ReferenceFrame(f'{name}_frame')
         self.frame = frame
-        self.masscenter.set_vel(self.frame, 0)
+        try:
+            self.masscenter.vel(self.frame)
+        except ValueError:
+            self.masscenter.set_vel(self.frame, 0)
         if inertia is None:
             ixx = Symbol(f'{name}_ixx')
             iyy = Symbol(f'{name}_iyy')

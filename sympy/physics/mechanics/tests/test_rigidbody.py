@@ -172,6 +172,19 @@ def test_parallel_axis():
         (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
 
 
+def test_rigidbody_masscenter_vel():
+    N = ReferenceFrame('N')
+    assert RigidBody('rb', frame=N).masscenter.vel(N) == 0
+    O = Point('O')
+    O.set_vel(N, N.x)
+    assert RigidBody('rb', masscenter=O, frame=N).masscenter.vel(N) == N.x
+    P = O.locatenew('P', N.y)
+    assert RigidBody('rb', masscenter=P, frame=N).masscenter.vel(N) == N.x
+    O.set_vel(N, 0)
+    P = O.locatenew('P', N.x)
+    assert RigidBody('rb', masscenter=P, frame=N).masscenter.vel(N) == 0
+
+
 def test_deprecated_set_potential_energy():
     m, g, h = symbols('m g h')
     A = ReferenceFrame('A')
