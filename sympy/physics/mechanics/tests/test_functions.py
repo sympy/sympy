@@ -295,4 +295,3 @@ def test_validate_coordinates():
 def test_parse_linear_solver():
     assert _parse_linear_solver('Lu') == Matrix.LUsolve
     assert _parse_linear_solver(Matrix.solve) == Matrix.solve
-
