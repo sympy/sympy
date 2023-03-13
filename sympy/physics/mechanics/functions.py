@@ -781,13 +781,15 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
 
 
 def _parse_linear_solver(solver):
+    """Helper function to retrieve a specified linear solver."""
     if callable(solver):
         return solver
-    elif solver.casefold() == 'lu'.casefold():
+    solver = solver.casefold()
+    if solver == 'lu'.casefold():
         solver = Matrix.LUsolve
-    elif solver.casefold() == 'numeric'.casefold():
+    elif solver == 'numeric'.casefold():
         solver = MatrixSolve
     else:
-        raise NotImplementedError(f"Linear solver '{solver} has not been "
+        raise NotImplementedError(f"Linear solver '{solver}' has not been "
                                   f"implemented.")
     return solver
