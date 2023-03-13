@@ -85,9 +85,9 @@ class Prefix(Expr):
 
         fact = self.scale_factor * other.scale_factor
 
-        if fact == 1:
-            return 1
-        elif isinstance(other, Prefix):
+        if isinstance(other, Prefix):
+            if fact == 1:
+                return 1
             # simplify prefix
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
