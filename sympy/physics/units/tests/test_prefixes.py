@@ -26,7 +26,7 @@ def test_prefix_operations():
     assert dodeca * dodeca == 144
     assert 1 / dodeca == S.One / 12
     assert k / dodeca == S(1000) / 12
-    assert dodeca / dodeca == 1
+    assert dodeca / dodeca == S.One
 
     m = Quantity("fake_meter")
     SI.set_quantity_dimension(m, S.One)
