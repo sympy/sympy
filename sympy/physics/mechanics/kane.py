@@ -96,7 +96,7 @@ class KanesMethod(_Methods):
     can result in zero division errors.
 
     By specifying a ``callable`` you can also specify the use of a different
-    solver like ``Matrix.solve``.
+    solver like ``Matrix.solve`` and ``lambda A, b: A.inv() * b``.
 
     Examples
     ========
