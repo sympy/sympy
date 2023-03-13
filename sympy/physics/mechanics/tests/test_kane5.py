@@ -1,12 +1,9 @@
-from sympy.core.backend import (zeros, Matrix, symbols, lambdify,
+from sympy.core.backend import (zeros, Matrix, symbols, lambdify, sqrt, pi,
                                 _simplify_matrix)
 from sympy.matrices.expressions import MatrixExpr
-from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.physics.mechanics.models import n_link_pendulum_on_cart
-from sympy.physics.mechanics.functions import _parse_linear_solver
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 
 np = import_module('numpy')
@@ -115,12 +112,6 @@ def test_kane_block_matrix_no_constraints():
     assert Matrix(kane.forcing_full - ff) == zeros(4, 1)
 
 
-def test_parse_linear_solver():
-    assert _parse_linear_solver('Lu') == Matrix.LUsolve
-    assert _parse_linear_solver('NumEriC') == MatrixSolve
-    assert _parse_linear_solver(lambdify) == lambdify
-
-
 def test_kane_rolling_disc_lu():
     props = _create_rolling_disc()
     kane = KanesMethod(props['frame'], props['q_ind'], props['u_ind'],
@@ -132,15 +123,29 @@ def test_kane_rolling_disc_lu():
     _verify_rolling_disc_numerically(kane)
 
 
-def test_kane_rolling_disc_numeric():
-    if not np:
-        skip('numpy not installed.')
+def test_kane_rolling_disc_kdes_callable():
     props = _create_rolling_disc()
     kane = KanesMethod(
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
         u_dependent=props['u_dep'], velocity_constraints=props['fnh'],
         bodies=props['bodies'], forcelist=props['loads'],
-        explicit_kinematics=False, constraint_solver='numeric',
+        explicit_kinematics=False,
         kd_eqs_solver=lambda A, b: _simplify_matrix(A.LUsolve(b)))
-    kane.kanes_equations()
-    _verify_rolling_disc_numerically(kane, all_zero=True)
+    q, u, p = dynamicsymbols('q1:6'), dynamicsymbols('u1:6'), symbols('g r m')
+    qd = dynamicsymbols('q1:6', 1)
+    eval_kdes = lambdify((q, qd, u, p), tuple(kane.kindiffdict().items()))
+    eps = 1e-10
+    # Test with only zeros. If 'lu' would be used this would result in nan.
+    p_vals = (9.81, 0.25, 3.5)
+    zero_vals = (0, 0, 0, 0, 0)
+    assert all(abs(qdi - fui) < eps for qdi, fui in
+               eval_kdes(zero_vals, zero_vals, zero_vals, p_vals))
+    # Test with some arbitrary values
+    q_vals = tuple(map(float, (pi / 6, pi / 3, pi / 2, 0.42, 0.62)))
+    qd_vals = tuple(map(float, (4, 1 / 3, 4 - 2 * sqrt(3),
+                                0.25 * (2 * sqrt(3) - 3),
+                                0.25 * (2 - sqrt(3)))))
+    u_vals = tuple(map(float, (-2, 4, 1 / 3, 0.25 * (-3 + 2 * sqrt(3)),
+                               0.25 * (-sqrt(3) + 2))))
+    assert all(abs(qdi - fui) < eps for qdi, fui in
+               eval_kdes(q_vals, qd_vals, u_vals, p_vals))

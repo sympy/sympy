@@ -1,6 +1,5 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
-from sympy.matrices.expressions import BlockMatrix
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.method import _Methods
@@ -67,16 +66,9 @@ class KanesMethod(_Methods):
     constraint_solver : str, callable
         Solver to be used for the velocity constraints. Supported solvers are:
         - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``'numeric'``: numerical solver which utilizes
-          ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
-          ``True``.
         - ``callable``: custom solver supplied by the user, which takes the
           ``A`` matrix as the first argument and ``b`` matrix as the second.
         See the notes for more information.
-    use_block_matrices : bool
-        Boolean whether the mass matrices and forcing vector should be returned
-        as block matrices, instead of normal matrices. See the notes more for
-        information.
 
     Notes
     =====
@@ -96,9 +88,6 @@ class KanesMethod(_Methods):
 
     The implemented solvers are:
         - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``'numeric'``: numerical solver which utilizes
-          ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
-          ``True``.
         - ``callable``: custom solver supplied by the user, which takes the
           ``A`` matrix as the first argument and ``b`` matrix as the second.
 
@@ -106,16 +95,8 @@ class KanesMethod(_Methods):
     time after lambdifying the solution. The weakness of this method is that it
     can result in zero division errors.
 
-    The numeric solver, ``codegen.matrix_nodes.MatrixSolve``, postpones the
-    solve to the numeric evaluation. When using ``lambdify`` combined with the
-    ``NumPyPrinter`` this will result in the usage of ``np.linalg.solve``. The
-    advantage of this method is that it results in numerically stable solutions.
-    It is however slower than ``Matrix.LUsolve``, at least for relatively small
-    systems. A possible disadvantage of this solver is that the resulting
-    matrices do not support indexing. The numeric solver can therefore not be
-    used for the kinematic differential equations. When used for the velocity
-    constraints, ``KanesMethod`` will automatically switch to use
-    ``BlockMatrix`` for the mass matrices and forcing vectors.
+    By specifying a ``callable`` you can also specify the use of a different
+    solver like ``Matrix.solve``.
 
     Examples
     ========
@@ -206,7 +187,6 @@ class KanesMethod(_Methods):
         self._bodylist = bodies
 
         self.explicit_kinematics = explicit_kinematics
-        self.use_block_matrices = False
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
@@ -305,10 +285,6 @@ class KanesMethod(_Methods):
             B_ind = self._k_nh[:, :p]
             B_dep = self._k_nh[:, p:o]
             self._Ars = -constraint_solver(B_dep, B_ind)
-            try:  # Test if indexing is supported
-                self._Ars[0, 0]
-            except NotImplementedError or IndexError:
-                self.use_block_matrices = True
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
@@ -752,9 +728,6 @@ class KanesMethod(_Methods):
         """The mass matrix of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        if self.use_block_matrices:
-            return BlockMatrix([[self._k_d], [self._k_dnh.reshape(
-                self._k_dnh.shape[0], self._k_d.shape[1])]])
         return Matrix([self._k_d, self._k_dnh])
 
     @property
@@ -762,9 +735,6 @@ class KanesMethod(_Methods):
         """The forcing vector of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        if self.use_block_matrices:
-            return -BlockMatrix([[self._f_d], [self._f_dnh.reshape(
-                self._f_dnh.shape[0], self._f_d.shape[1])]])
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
@@ -774,9 +744,6 @@ class KanesMethod(_Methods):
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         o, n = len(self.u), len(self.q)
-        if self.use_block_matrices:
-            return BlockMatrix([[self.mass_matrix_kin, zeros(n, o)],
-                                [zeros(o, n), self.mass_matrix]])
         return (self.mass_matrix_kin.row_join(zeros(n, o))).col_join(
             zeros(o, n).row_join(self.mass_matrix))
 
@@ -784,8 +751,6 @@ class KanesMethod(_Methods):
     def forcing_full(self):
         """The forcing vector of the system, augmented by the kinematic
         differential equations in explicit or implicit form."""
-        if self.use_block_matrices:
-            return BlockMatrix([[self.forcing_kin], [self.forcing]])
         return Matrix([self.forcing_kin, self.forcing])
 
     @property

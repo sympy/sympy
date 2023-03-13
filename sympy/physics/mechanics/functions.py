@@ -779,6 +779,7 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                 raise ValueError(f'Generalized speed "{speed}" is not a '
                                  f'dynamicsymbol.')
 
+
 def _parse_linear_solver(solver):
     if callable(solver):
         return solver
