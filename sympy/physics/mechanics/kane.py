@@ -1,6 +1,5 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
-from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.matrices.expressions import BlockMatrix
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -8,7 +7,8 @@ from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (
-    msubs, find_dynamicsymbols, _f_list_parser, _validate_coordinates)
+    msubs, find_dynamicsymbols, _f_list_parser, _validate_coordinates,
+    _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -58,16 +58,25 @@ class KanesMethod(_Methods):
         explicit form (default) or implicit form for kinematics.
         See the notes for more details.
     kd_eqs_solver : str, callable
-        Solver to be used for the kinematic differential equations. The default
-        is LU solve. See the notes for more details on what the solver is used
-        for and advise on what solver should be used.
+        Solver to be used for the kinematic differential equations. Supported
+        solvers are:
+        - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
+        - ``callable``: custom solver supplied by the user, which takes the
+          ``A`` matrix as the first argument and ``b`` matrix as the second.
+        See the notes for more information.
     constraint_solver : str, callable
-        Solver to be used for the velocity constraints. The default is LU solve.
-        See the notes for more details on what the solver is used for and advise
-        on what solver should be used.
+        Solver to be used for the velocity constraints. Supported solvers are:
+        - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
+        - ``'numeric'``: numerical solver which utilizes
+          ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
+          ``True``.
+        - ``callable``: custom solver supplied by the user, which takes the
+          ``A`` matrix as the first argument and ``b`` matrix as the second.
+        See the notes for more information.
     use_block_matrices : bool
         Boolean whether the mass matrices and forcing vector should be returned
-        as block matrices.
+        as block matrices, instead of normal matrices. See the notes more for
+        information.
 
     Notes
     =====
@@ -78,7 +87,7 @@ class KanesMethod(_Methods):
     In order to get the implicit form of those matrices/vectors, you can set the
     ``explicit_kinematics`` attribute to ``False``. So $\mathbf{k_{k\dot{q}}}$
     is not necessarily an identity matrix. This can provide more compact
-    equations for non-simple kinematics (see #22626).
+    equations for non-simple kinematics.
 
     Two linear solvers can be supplied to ``KanesMethod``: one for solving the
     kinematic differential equations and one to solve the velocity constraints.
@@ -87,7 +96,7 @@ class KanesMethod(_Methods):
 
     The implemented solvers are:
         - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``'numerics'``: numerical solver which utilizes
+        - ``'numeric'``: numerical solver which utilizes
           ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
           ``True``.
         - ``callable``: custom solver supplied by the user, which takes the
@@ -95,7 +104,7 @@ class KanesMethod(_Methods):
 
     The default solver, ``Matrix.LUsolve``, results in the fastest execution
     time after lambdifying the solution. The weakness of this method is that it
-    can result in zero division errors (see #24780).
+    can result in zero division errors.
 
     The numeric solver, ``codegen.matrix_nodes.MatrixSolve``, postpones the
     solve to the numeric evaluation. When using ``lambdify`` combined with the
@@ -107,8 +116,6 @@ class KanesMethod(_Methods):
     used for the kinematic differential equations. When used for the velocity
     constraints, ``KanesMethod`` will automatically switch to use
     ``BlockMatrix`` for the mass matrices and forcing vectors.
-
-    See #24780 for more solver proposals.
 
     Examples
     ========
@@ -209,20 +216,6 @@ class KanesMethod(_Methods):
             configuration_constraints, velocity_constraints,
             acceleration_constraints, constraint_solver)
 
-    @staticmethod
-    def _parse_linear_solver(solver):
-        if callable(solver):
-            return solver
-        elif solver.casefold() == 'lu'.casefold():
-            solver = Matrix.LUsolve
-        elif solver.casefold() == 'numeric'.casefold():
-            solver = MatrixSolve
-        else:
-            raise NotImplementedError(f"Linear solver '{solver} has not been "
-                                      f"implemented.")
-        return solver
-
-
     def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux):
         """Initialize the coordinate and speed vectors."""
 
@@ -254,7 +247,7 @@ class KanesMethod(_Methods):
     def _initialize_constraint_matrices(self, config, vel, acc,
                                         constraint_solver='lu'):
         """Initializes constraint matrices."""
-        constraint_solver = self._parse_linear_solver(constraint_solver)
+        constraint_solver = _parse_linear_solver(constraint_solver)
         # Define vector dimensions
         o = len(self.u)
         m = len(self._udep)
@@ -334,7 +327,7 @@ class KanesMethod(_Methods):
             coordinates and generalized speeds.
 
         """
-        kd_eqs_solver = self._parse_linear_solver(kd_eqs_solver)
+        kd_eqs_solver = _parse_linear_solver(kd_eqs_solver)
         if kdeqs:
             if len(self.q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
