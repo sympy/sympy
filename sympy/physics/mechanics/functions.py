@@ -9,6 +9,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
+from sympy.codegen.matrix_nodes import MatrixSolve
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -777,3 +778,15 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                     speed.free_symbols == t_set):
                 raise ValueError(f'Generalized speed "{speed}" is not a '
                                  f'dynamicsymbol.')
+
+def _parse_linear_solver(solver):
+    if callable(solver):
+        return solver
+    elif solver.casefold() == 'lu'.casefold():
+        solver = Matrix.LUsolve
+    elif solver.casefold() == 'numeric'.casefold():
+        solver = MatrixSolve
+    else:
+        raise NotImplementedError(f"Linear solver '{solver} has not been "
+                                  f"implemented.")
+    return solver

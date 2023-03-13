@@ -3,6 +3,7 @@ from sympy.core.backend import (zeros, Matrix, symbols, lambdify,
 from sympy.matrices.expressions import MatrixExpr
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.physics.mechanics.models import n_link_pendulum_on_cart
+from sympy.physics.mechanics.functions import _parse_linear_solver
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
 from sympy.testing.pytest import skip
@@ -115,9 +116,9 @@ def test_kane_block_matrix_no_constraints():
 
 
 def test_parse_linear_solver():
-    assert KanesMethod._parse_linear_solver('Lu') == Matrix.LUsolve
-    assert KanesMethod._parse_linear_solver('NumEriC') == MatrixSolve
-    assert KanesMethod._parse_linear_solver(lambdify) == lambdify
+    assert _parse_linear_solver('Lu') == Matrix.LUsolve
+    assert _parse_linear_solver('NumEriC') == MatrixSolve
+    assert _parse_linear_solver(lambdify) == lambdify
 
 
 def test_kane_rolling_disc_lu():
