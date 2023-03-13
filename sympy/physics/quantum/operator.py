@@ -249,7 +249,7 @@ class UnitaryOperator(Operator):
         return self._eval_inverse()
 
 
-class IdentityOperator(Operator):
+class IdentityOperator(UnitaryOperator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
@@ -288,9 +288,6 @@ class IdentityOperator(Operator):
         return 2 * other
 
     def _eval_inverse(self):
-        return self
-
-    def _eval_adjoint(self):
         return self
 
     def _apply_operator(self, ket, **options):
