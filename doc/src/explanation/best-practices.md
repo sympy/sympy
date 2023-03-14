@@ -397,6 +397,12 @@ For example,
 >>> expression = x**2 + x/2 + 1
 ```
 
+However, this isn't to say that you should never use floating-point numbers in
+SymPy, only that if a more exact value is known it should be preferred. SymPy
+does support [arbitrary precision floating-point
+numbers](sympy.core.numbers.Float), but some operations may not perform as
+well with them.
+
 One should also take care to avoid writing `integer/integer` where both
 integers are explicit integers. This is because Python will evaluate this to a floating-point value before SymPy is able to parse it.
 
@@ -426,7 +432,7 @@ former is a numerical approximation to $\pi$ and the latter is exactly $\pi$
 (see also [](best-practices-separate-sympy-and-non-sympy) below; in general,
 one should avoid importing `math` when using SymPy).
 
-*Don't**
+**Don't**
 
 ```py
 >>> import math
@@ -447,6 +453,70 @@ pi
 ```
 
 Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\pi$.
+
+**Reason**
+
+Exact values, if they are known, should be preferred over floats for the
+following reasons:
+
+- An exact symbolic value can often be symbolically simplified or manipulated.
+  A float represents an approximation to an exact real number, and therefore
+  cannot be simplified exactly. For example, in the above example,
+  `sin(math.pi)` does not simplify to `0` because `math.pi` is not exactly
+  $\pi$. It is just a floating-point number that approximates $\pi$ to 15
+  digits (effectively, a close rational approximation to $\pi$, but not
+  exactly $\pi$).
+
+- Some algorithms will not be able to compute a result if there are
+  floating-point values, but can if the values are rational numbers. This is
+  because rational numbers have properties that make it easier for these
+  algorithms to work with them. For instance, with floats, one can have a
+  situation where a number should be 0, but due to approximation errors, does
+  not equal exactly 0.
+
+  A particularly notable example of this is with floating-point exponents. For example,
+
+  ```py
+  >>> from sympy import factor
+  >>> factor(x**2.0 - 1)
+  x**2.0 - 1
+  ```
+
+- SymPy floats can have the same loss of significance cancellation issues that
+  can occur from using finite precision floating-point approximations:
+
+  ```py
+  >>> from sympy import expand
+  >>> expand((x + 1.0)*(x - 1e-16)) # the coefficient of x should be slightly less than 1
+  x**2 + 1.0*x - 1.0e-16
+  >>> expand((x + 1)*(x - Rational('1e-16'))) # Using rational numbers gives the coefficient of x exactly
+  x**2 + 9999999999999999*x/10000000000000000 - 1/10000000000000000
+  ```
+
+  It is possible to avoid these issues in SymPy in many cases by making
+  careful use of `evalf` with its ability to evaluate in arbitrary precision.
+  This typically involves either computing an expression with symbolic values
+  and substituting them later with `expr.evalf(subs=...)`, or by starting with
+  `Float` values with a precision higher than the default of 15 digits:
+
+  ```
+  >>> expand((x + 1.0)*(x - Float('1e-16', 20)))
+  x**2 + 0.9999999999999999*x - 1.0e-16
+  ```
+
+A `Float` number can be converted to its exact rational equivalent by passing
+it to `Rational`. Alternatively, you can use `nsimplify` to find the nicest
+rational approximation. This may often reproduce the number that was intended
+if the number is supposed to be rational (although again, it's best to just
+start with rational numbers in the first place, if you can):
+
+```py
+>>> from sympy import nsimplify
+>>> Rational(0.7)
+3152519739159347/4503599627370496
+>>> nsimplify(0.7)
+7/10
+```
 
 ### Avoid `simplify()`
 
