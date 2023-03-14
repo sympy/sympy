@@ -375,8 +375,8 @@ class KanesMethod(_Methods):
         uauxdot = [diff(i, t) for i in self._uaux]
         uauxdot_zero = {i: 0 for i in uauxdot}
         # Dictionary of q' and q'' to u and u'
-        q_ddot_u_map = {k.diff(t): v.diff(t) for (k, v) in
-                self._qdot_u_map.items()}
+        q_ddot_u_map = {k.diff(t): v.diff(t).xreplace(
+            self._qdot_u_map) for (k, v) in self._qdot_u_map.items()}
         q_ddot_u_map.update(self._qdot_u_map)
 
         # Fill up the list of partials: format is a list with num elements
