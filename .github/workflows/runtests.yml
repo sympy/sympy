@@ -201,12 +201,12 @@ jobs:
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
-      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
+      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap                            \
+                         aesara wurlitzer autowrap libclang                   \
                          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
