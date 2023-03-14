@@ -767,12 +767,12 @@ def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             number = tokval
             postfix = []
 
-            if number.endswith('j') or number.endswith('J'):
+            if number.endswith(('j', 'J')):
                 number = number[:-1]
                 postfix = [(OP, '*'), (NAME, 'I')]
 
             if '.' in number or (('e' in number or 'E' in number) and
-                    not (number.startswith('0x') or number.startswith('0X'))):
+                    not (number.startswith(('0x', '0X')))):
                 seq = [(NAME, 'Float'), (OP, '('),
                     (NUMBER, repr(str(number))), (OP, ')')]
             else:
