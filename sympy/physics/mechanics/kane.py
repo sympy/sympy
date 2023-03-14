@@ -60,14 +60,14 @@ class KanesMethod(_Methods):
         Method used to solve the kinematic differential equations. If a string is
         supplied, it should be a valid method that can be used with the
         :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should take two arguments - the `A` matrix and the `rhs`, and solve the
+        should take two arguments - the ``A`` matrix and the ``rhs``, and solve the
         equations and return the solution. The default uses LU solve. See the notes for
         more information.
     constraint_solver : str, callable
         Method used to solve the velocity constraints. If a string is
         supplied, it should be a valid method that can be used with the
         :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should take two arguments - the `A` matrix and the `rhs`, and solve the
+        should take two arguments - the ``A`` matrix and the ``rhs``, and solve the
         equations and return the solution. The default uses LU solve. See the notes for
         more information.
 
@@ -226,10 +226,9 @@ class KanesMethod(_Methods):
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
-    def _initialize_constraint_matrices(self, config, vel, acc,
-                                        constraint_solver='lu'):
+    def _initialize_constraint_matrices(self, config, vel, acc, linear_solver='LU'):
         """Initializes constraint matrices."""
-        constraint_solver = _parse_linear_solver(constraint_solver)
+        linear_solver = _parse_linear_solver(linear_solver)
         # Define vector dimensions
         o = len(self.u)
         m = len(self._udep)
@@ -286,7 +285,7 @@ class KanesMethod(_Methods):
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
             B_ind = self._k_nh[:, :p]
             B_dep = self._k_nh[:, p:o]
-            self._Ars = -constraint_solver(B_dep, B_ind)
+            self._Ars = -linear_solver(B_dep, B_ind)
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
@@ -294,7 +293,7 @@ class KanesMethod(_Methods):
             self._k_dnh = Matrix()
             self._Ars = Matrix()
 
-    def _initialize_kindiffeq_matrices(self, kdeqs, kd_eqs_solver='lu'):
+    def _initialize_kindiffeq_matrices(self, kdeqs, linear_solver='LU'):
         """Initialize the kinematic differential equation matrices.
 
         Parameters
@@ -305,7 +304,7 @@ class KanesMethod(_Methods):
             coordinates and generalized speeds.
 
         """
-        kd_eqs_solver = _parse_linear_solver(kd_eqs_solver)
+        linear_solver = _parse_linear_solver(linear_solver)
         if kdeqs:
             if len(self.q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
@@ -352,8 +351,8 @@ class KanesMethod(_Methods):
             # NOTE : Solving the kinematic differential equations here is not
             # necessary and prevents the equations from being provided in fully
             # implicit form.
-            f_k_explicit = kd_eqs_solver(k_kqdot, f_k)
-            k_ku_explicit = kd_eqs_solver(k_kqdot, k_ku)
+            f_k_explicit = linear_solver(k_kqdot, f_k)
+            k_ku_explicit = linear_solver(k_kqdot, k_ku)
             self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
 
             self._f_k = f_k_explicit.xreplace(uaux_zero)
