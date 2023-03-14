@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 from functools import reduce
 from collections import defaultdict
 import inspect
@@ -67,13 +67,13 @@ class Set(Basic, EvalfMixin):
     is_Interval = False
     is_ProductSet = False
     is_Union = False
-    is_Intersection = None  # type: Optional[bool]
-    is_UniversalSet = None  # type: Optional[bool]
-    is_Complement = None  # type: Optional[bool]
+    is_Intersection: FuzzyBool = None
+    is_UniversalSet: FuzzyBool = None
+    is_Complement: FuzzyBool = None
     is_ComplexRegion = False
 
-    is_empty = None  # type: FuzzyBool
-    is_finite_set = None  # type: FuzzyBool
+    is_empty: FuzzyBool = None
+    is_finite_set: FuzzyBool = None
 
     @property  # type: ignore
     @deprecated(
@@ -1419,10 +1419,15 @@ class Union(Set, LatticeOp):
                 all(isinstance(i, Interval) for i in self.args)):
             # optimization to give 3 args as (x > 1) & (x < 5) & Ne(x, 3)
             # instead of as 4, ((1 <= x) & (x < 3)) | ((x <= 5) & (3 < x))
+            # XXX: This should be ideally be improved to handle any number of
+            # intervals and also not to assume that the intervals are in any
+            # particular sorted order.
             a, b = self.args
-            if (a.sup == b.inf and
-                    not any(a.sup in i for i in self.args)):
-                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
+            if a.sup == b.inf and a.right_open and b.left_open:
+                mincond = symbol > a.inf if a.left_open else symbol >= a.inf
+                maxcond = symbol < b.sup if b.right_open else symbol <= b.sup
+                necond = Ne(symbol, a.sup)
+                return And(necond, mincond, maxcond)
         return Or(*[i.as_relational(symbol) for i in self.args])
 
     @property
@@ -1469,8 +1474,9 @@ class Intersection(Set, LatticeOp):
     def zero(self):
         return S.EmptySet
 
-    def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+    def __new__(cls, *args , evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         # flatten inputs to merge intersections and iterables
         args = list(ordered(set(_sympify(args))))
@@ -1684,7 +1690,7 @@ class Complement(Set):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/ComplementSet.html
+    .. [1] https://mathworld.wolfram.com/ComplementSet.html
     """
 
     is_Complement = True
@@ -2595,7 +2601,7 @@ def simplify_intersection(args):
                 other = Intersection(*other_sets)
                 return Union(*(Intersection(arg, other) for arg in s.args))
             else:
-                return Union(*[arg for arg in s.args])
+                return Union(*s.args)
 
     for s in args:
         if s.is_Complement:

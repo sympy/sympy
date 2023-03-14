@@ -72,7 +72,7 @@ def test_prefix_unit():
 
     prefs = prefix_unit(m, pref)
     assert set(prefs) == set(res)
-    assert set(map(lambda v: v.abbrev, prefs)) == set(symbols("mm,cm,dm"))
+    assert {v.abbrev for v in prefs} == set(symbols("mm,cm,dm"))
 
 
 def test_bases():

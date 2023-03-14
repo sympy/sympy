@@ -2,6 +2,8 @@
  Introduction
 ==============
 
+.. _symbolic-computation:
+
 What is Symbolic Computation?
 =============================
 

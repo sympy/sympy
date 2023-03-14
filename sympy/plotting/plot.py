@@ -1521,7 +1521,7 @@ class MatplotlibBackend(BaseBackend):
         if parent.fill:
             ax.fill_between(**parent.fill)
 
-        # xlim and ylim shoulld always be set at last so that plot limits
+        # xlim and ylim should always be set at last so that plot limits
         # doesn't get altered during the process.
         if parent.xlim:
             ax.set_xlim(parent.xlim)
@@ -1676,7 +1676,7 @@ def plot(*args, show=True, **kwargs):
         The last argument is a 3-tuple denoting the range of the free
         variable. e.g. ``(x, 0, 5)``
 
-        Typical usage examples are in the followings:
+        Typical usage examples are in the following:
 
         - Plotting a single expression with a single range.
             ``plot(expr, range, **kwargs)``
@@ -2606,8 +2606,8 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             raise ValueError("The number of free_symbols in the expression "
                              "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
-            ranges = Tuple(*[range_expr for range_expr in args[
-                           i:i + nb_of_free_symbols]])
+            ranges = Tuple(*list(args[
+                           i:i + nb_of_free_symbols]))
             plots = [expr + ranges for expr in exprs]
             return plots
         else:

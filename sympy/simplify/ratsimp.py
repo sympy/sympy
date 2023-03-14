@@ -4,7 +4,7 @@ from sympy.core.numbers import Rational
 from sympy.polys import cancel, ComputationFailed, parallel_poly_from_expr, reduced, Poly
 from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import DomainError, PolificationFailed
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, debugf
 
 def ratsimp(expr):
     """
@@ -55,7 +55,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     ==========
 
     .. [1] M. Monagan, R. Pearce, Rational Simplification Modulo a Polynomial
-        Ideal, http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
+        Ideal, https://dl.acm.org/doi/pdf/10.1145/1145768.1145809
         (specifically, the second algorithm)
     """
     from sympy.solvers.solvers import solve
@@ -145,7 +145,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
 
             M1 = staircase(N)
             M2 = staircase(D)
-            debug('%s / %s: %s, %s' % (N, D, M1, M2))
+            debugf('%s / %s: %s, %s', (N, D, M1, M2))
 
             Cs = symbols("c:%d" % len(M1), cls=Dummy)
             Ds = symbols("d:%d" % len(M2), cls=Dummy)
@@ -204,10 +204,11 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     c, d, allsol = _ratsimpmodprime(
         Poly(num, opt.gens, domain=opt.domain), Poly(denom, opt.gens, domain=opt.domain), [])
     if not quick and allsol:
-        debug('Looking for best minimal solution. Got: %s' % len(allsol))
+        debugf('Looking for best minimal solution. Got: %s', len(allsol))
         newsol = []
         for c_hat, d_hat, S, ng in allsol:
             sol = solve(S, ng, particular=True, quick=False)
+            # all values of sol should be numbers; if not, solve is broken
             newsol.append((c_hat.subs(sol), d_hat.subs(sol)))
         c, d = min(newsol, key=lambda x: len(x[0].terms()) + len(x[1].terms()))
 

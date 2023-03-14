@@ -44,10 +44,15 @@ unicode_whitelist = [
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
+
+    # lll method has unicode in docstring references and author name
+    r'*/sympy/polys/matrices/domainmatrix.py',
 ]
 
 unicode_strict_whitelist = [
     r'*/sympy/parsing/latex/_antlr/__init__.py',
+    # test_mathematica.py uses some unicode for testing Greek characters are working #24055
+    r'*/sympy/parsing/tests/test_mathematica.py',
 ]
 
 

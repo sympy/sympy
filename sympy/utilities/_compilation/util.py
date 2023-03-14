@@ -27,7 +27,7 @@ class CompileError (Exception):
 
 
 def get_abspath(path, cwd='.'):
-    """ Returns the aboslute path.
+    """ Returns the absolute path.
 
     Parameters
     ==========

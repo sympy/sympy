@@ -324,6 +324,9 @@ def test_simplification_boolalg():
     # This expression can be simplified to get rid of the j variables
     assert simplify_logic(expr) == expr
 
+    # Test dontcare
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
+
     # check input
     ans = SOPform([x, y], [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
@@ -574,7 +577,6 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A >> (B & C))) == to_cnf(A >> (B & C))
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & (B | C) | ~A & (B | C))) == to_cnf(A & (B | C) | ~A & (B | C))
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
-
 
 
 def test_to_dnf():
@@ -1111,7 +1113,9 @@ def test_relational_simplification():
     assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
     # From #16690
     assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
-
+    assert Or(Ne(x, 1), Ne(x, 2)).simplify() == S.true
+    assert And(Eq(x, 1), Ne(2, x)).simplify() == Eq(x, 1)
+    assert Or(Eq(x, 1), Ne(2, x)).simplify() == Ne(x, 2)
 
 def test_issue_8373():
     x = symbols('x', real=True)
@@ -1131,7 +1135,7 @@ def test_relational_simplification_numerically():
     def test_simplification_numerically_function(original, simplified):
         symb = original.free_symbols
         n = len(symb)
-        valuelist = list(set(list(combinations(list(range(-(n-1), n))*n, n))))
+        valuelist = list(set(combinations(list(range(-(n-1), n))*n, n)))
         for values in valuelist:
             sublist = dict(zip(symb, values))
             originalvalue = original.subs(sublist)
@@ -1168,9 +1172,9 @@ def test_relational_simplification_patterns_numerically():
     patternlists = [[And, _simplify_patterns_and()],
                     [Or, _simplify_patterns_or()],
                     [Xor, _simplify_patterns_xor()]]
-    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    valuelist = list(set(combinations(list(range(-2, 3))*3, 3)))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     for func, patternlist in patternlists:
         for pattern in patternlist:
             original = func(*pattern[0].args)
@@ -1320,9 +1324,9 @@ def test_relational_threeterm_simplification_patterns_numerically():
     c = Wild('c')
     symb = [a, b, c]
     patternlists = [[And, _simplify_patterns_and3()]]
-    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    valuelist = list(set(combinations(list(range(-2, 3))*3, 3)))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     for func, patternlist in patternlists:
         for pattern in patternlist:
             original = func(*pattern[0].args)

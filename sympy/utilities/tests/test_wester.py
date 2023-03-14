@@ -76,7 +76,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
+from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
     raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
@@ -485,6 +485,7 @@ def test_H8():
 
 
 def test_H9():
+    x = Symbol('x', zero=False)
     p1 = 2*x**(n + 4) - x**(n + 2)
     p2 = 4*x**(n + 1) + 3*x**n
     assert gcd(p1, p2) == x**n
@@ -919,7 +920,7 @@ def test_M6():
 def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)) == set([
+        226*x**2 - 140*x + 46, x)) == {
         1 - sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
         1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
         1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
@@ -928,7 +929,7 @@ def test_M7():
         1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
         1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
         1 + sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        ])
+        }
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -2608,8 +2609,8 @@ def test_W23b():
 @XFAIL
 @slow
 def test_W24():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2620,15 +2621,14 @@ def test_W24():
 @XFAIL
 @slow
 def test_W25():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
         (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
-
 
 
 def test_W26():
@@ -2914,7 +2914,7 @@ def test_Y2():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
+    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t, simplify=True)
     assert f == cos(t*(w - 1))
 
 
@@ -2922,15 +2922,15 @@ def test_Y3():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
+    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s, simplify=True)
     assert F == w/(s**2 - 4*w**2)
 
 
 def test_Y4():
     t = symbols('t', positive=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s)
-    assert F == (1 - exp(-6*sqrt(s)))/s
+    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s, simplify=True)
+    assert F == 1/s - exp(-6*sqrt(s))/s
 
 
 def test_Y5_Y6():
@@ -2944,13 +2944,13 @@ def test_Y5_Y6():
     t = symbols('t', positive=True)
     s = symbols('s')
     y = Function('y')
-    F, _, _ = laplace_transform(diff(y(t), t, 2)
-                                + y(t)
-                                - 4*(Heaviside(t - 1)
-                                - Heaviside(t - 2)), t, s)
-    assert (F == s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
-            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) -
-            4*exp(-s)/s + 4*exp(-2*s)/s)
+    F, _, _ = laplace_transform(diff(y(t), t, 2) + y(t)
+                                - 4*(Heaviside(t - 1) - Heaviside(t - 2)),
+                                t, s, simplify=True)
+    D = (F - (s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
+            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) +
+            4*(1 - exp(s))*exp(-2*s)/s)).simplify(doit=False)
+    assert D == 0
 # TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]

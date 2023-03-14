@@ -8,6 +8,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.core.sympify import SympifyError
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -19,7 +20,7 @@ from sympy.polys.rootoftools import RootOf
 from sympy.simplify.cse_main import cse
 from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import a, x, y, z, t
 
 
@@ -563,7 +564,7 @@ def test_subs_iter():
 def test_subs_dict():
     a, b, c, d, e = symbols('a b c d e')
 
-    assert (2*x + y + z).subs(dict(x=1, y=2)) == 4 + z
+    assert (2*x + y + z).subs({"x": 1, "y": 2}) == 4 + z
 
     l = [(sin(x), 2), (x, 1)]
     assert (sin(x)).subs(l) == \
@@ -571,13 +572,11 @@ def test_subs_dict():
     assert sin(x).subs(reversed(l)) == sin(1)
 
     expr = sin(2*x) + sqrt(sin(2*x))*cos(2*x)*sin(exp(x)*x)
-    reps = dict([
-               (sin(2*x), c),
-               (sqrt(sin(2*x)), a),
-               (cos(2*x), b),
-               (exp(x), e),
-               (x, d),
-    ])
+    reps = {sin(2*x): c,
+               sqrt(sin(2*x)): a,
+               cos(2*x): b,
+               exp(x): e,
+               x: d,}
     assert expr.subs(reps) == c + a*b*sin(d*e)
 
     l = [(x, 3), (y, x**2)]
@@ -634,7 +633,7 @@ def test_issue_6079():
 
 def test_issue_4680():
     N = Symbol('N')
-    assert N.subs(dict(N=3)) == 3
+    assert N.subs({"N": 3}) == 3
 
 
 def test_issue_6158():
@@ -781,8 +780,8 @@ def test_issue_8886():
     # doesn't play well with SymPy and disallow the
     # substitution
     v = R('A').x
-    assert x.subs(x, v) == x
-    assert v.subs(v, x) == v
+    raises(SympifyError, lambda: x.subs(x, v))
+    raises(SympifyError, lambda: v.subs(v, x))
     assert v.__eq__(x) is False
 
 
@@ -822,8 +821,8 @@ def test_Subs_subs():
 
 def test_issue_13333():
     eq = 1/x
-    assert eq.subs(dict(x='1/2')) == 2
-    assert eq.subs(dict(x='(1/2)')) == 2
+    assert eq.subs({"x": '1/2'}) == 2
+    assert eq.subs({"x": '(1/2)'}) == 2
 
 
 def test_issue_15234():
@@ -880,7 +879,6 @@ def test_issue_19558():
 
     assert e.subs(x, oo) == AccumBounds(-oo, oo)
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
-
 
 
 def test_issue_22033():

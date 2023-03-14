@@ -13,7 +13,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import raises, warns, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns
 
 
 x = Symbol('x', real=True)
@@ -70,7 +70,6 @@ def test_angle_between():
     # direction of points is used to determine angle
     assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
                                 Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
-
 
 
 def test_closing_angle():
@@ -476,10 +475,6 @@ def test_equation():
     assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
         ).equation() == (y - 2, z - 3)
 
-    with warns_deprecated_sympy():
-        assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
-        ).equation(k='k') == (y - 2, z - 3)
-
 
 def test_intersection_2d():
     p1 = Point(0, 0)
@@ -796,11 +791,11 @@ def test_ray_generation():
     assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
 
-def test_symbolic_intersect():
-    # Issue 7814.
+def test_issue_7814():
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
-    assert line.intersection(circle) == [Point(x + sqrt((y - z) * (y + z)), z), Point(x - sqrt((y - z) * (y + z)), z)]
+    _s = sqrt((y - z)*(y + z))
+    assert line.intersection(circle) == [Point2D(x + _s, z), Point2D(x - _s, z)]
 
 
 def test_issue_2941():

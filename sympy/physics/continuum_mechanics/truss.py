@@ -3,8 +3,15 @@ This module can be used to solve problems related
 to 2D Trusses.
 """
 
+from cmath import inf
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
+from sympy import Matrix, pi
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import zeros
+from sympy import sin, cos
 
 
 
@@ -59,6 +66,7 @@ class Truss:
         self._nodes_occupied = {}
         self._reaction_loads = {}
         self._internal_forces = {}
+        self._node_coordinates = {}
 
     @property
     def nodes(self):
@@ -166,6 +174,7 @@ class Truss:
             self._node_positions.append((x, y))
             self._node_position_x.append(x)
             self._node_position_y.append(y)
+            self._node_coordinates[label] = [x, y]
 
     def remove_node(self, label):
         """
@@ -213,6 +222,7 @@ class Truss:
                 self._loads.pop(label)
             if label in list(self._supports):
                 self._supports.pop(label)
+            self._node_coordinates.pop(label)
 
     def add_member(self, label, start, end):
         """
@@ -248,7 +258,7 @@ class Truss:
         elif label in list(self._members):
             raise ValueError("A member with the same label already exists for the truss")
 
-        elif self._nodes_occupied.get(tuple([start, end])):
+        elif self._nodes_occupied.get((start, end)):
             raise ValueError("A member already exists between the two nodes")
 
         else:
@@ -287,8 +297,8 @@ class Truss:
             raise ValueError("No such member exists in the Truss")
 
         else:
-            self._nodes_occupied.pop(tuple([self._members[label][0], self._members[label][1]]))
-            self._nodes_occupied.pop(tuple([self._members[label][1], self._members[label][0]]))
+            self._nodes_occupied.pop((self._members[label][0], self._members[label][1]))
+            self._nodes_occupied.pop((self._members[label][1], self._members[label][0]))
             self._members.pop(label)
             self._internal_forces.pop(label)
 
@@ -327,6 +337,8 @@ class Truss:
                 if node[0] == label:
                     self._nodes[self._nodes.index((label, node[1], node[2]))] = (new_label, node[1], node[2])
                     self._node_labels[self._node_labels.index(node[0])] = new_label
+                    self._node_coordinates[new_label] = self._node_coordinates[label]
+                    self._node_coordinates.pop(label)
                     if node[0] in list(self._supports):
                         self._supports[new_label] = self._supports[node[0]]
                         self._supports.pop(node[0])
@@ -372,14 +384,14 @@ class Truss:
                             self._members[member][0] = new_label
                             self._nodes_occupied[(new_label, self._members[member][1])] = True
                             self._nodes_occupied[(self._members[member][1], new_label)] = True
-                            self._nodes_occupied.pop(tuple([label, self._members[member][1]]))
-                            self._nodes_occupied.pop(tuple([self._members[member][1], label]))
+                            self._nodes_occupied.pop((label, self._members[member][1]))
+                            self._nodes_occupied.pop((self._members[member][1], label))
                         elif self._members[member][1] == node[0]:
                             self._members[member][1] = new_label
                             self._nodes_occupied[(self._members[member][0], new_label)] = True
                             self._nodes_occupied[(new_label, self._members[member][0])] = True
-                            self._nodes_occupied.pop(tuple([self._members[member][0], label]))
-                            self._nodes_occupied.pop(tuple([label, self._members[member][0]]))
+                            self._nodes_occupied.pop((self._members[member][0], label))
+                            self._nodes_occupied.pop((label, self._members[member][0]))
 
     def change_member_label(self, label, new_label):
         """
@@ -599,3 +611,125 @@ class Truss:
             elif self._supports[location] == 'roller':
                 self.remove_load(location, Symbol('R_'+str(location)+'_y'), 90)
             self._supports.pop(location)
+
+    def solve(self):
+        """
+        This method solves for all reaction forces of all supports and all internal forces
+        of all the members in the truss, provided the Truss is solvable.
+
+        A Truss is solvable if the following condition is met,
+
+        2n >= r + m
+
+        Where n is the number of nodes, r is the number of reaction forces, where each pinned
+        support has 2 reaction forces and each roller has 1, and m is the number of members.
+
+        The given condition is derived from the fact that a system of equations is solvable
+        only when the number of variables is lesser than or equal to the number of equations.
+        Equilibrium Equations in x and y directions give two equations per node giving 2n number
+        equations. However, the truss needs to be stable as well and may be unstable if 2n > r + m.
+        The number of variables is simply the sum of the number of reaction forces and member
+        forces.
+
+        .. note::
+           The sign convention for the internal forces present in a member revolves around whether each
+           force is compressive or tensile. While forming equations for each node, internal force due
+           to a member on the node is assumed to be away from the node i.e. each force is assumed to
+           be compressive by default. Hence, a positive value for an internal force implies the
+           presence of compressive force in the member and a negative value implies a tensile force.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.truss import Truss
+        >>> t = Truss()
+        >>> t.add_node("node_1", 0, 0)
+        >>> t.add_node("node_2", 6, 0)
+        >>> t.add_node("node_3", 2, 2)
+        >>> t.add_node("node_4", 2, 0)
+        >>> t.add_member("member_1", "node_1", "node_4")
+        >>> t.add_member("member_2", "node_2", "node_4")
+        >>> t.add_member("member_3", "node_1", "node_3")
+        >>> t.add_member("member_4", "node_2", "node_3")
+        >>> t.add_member("member_5", "node_3", "node_4")
+        >>> t.apply_load("node_4", magnitude=10, direction=270)
+        >>> t.apply_support("node_1", type="pinned")
+        >>> t.apply_support("node_2", type="roller")
+        >>> t.solve()
+        >>> t.reaction_loads
+        {'R_node_1_x': 0, 'R_node_1_y': 20/3, 'R_node_2_y': 10/3}
+        >>> t.internal_forces
+        {'member_1': 20/3, 'member_2': 20/3, 'member_3': -20*sqrt(2)/3, 'member_4': -10*sqrt(5)/3, 'member_5': 10}
+        """
+        count_reaction_loads = 0
+        for node in self._nodes:
+            if node[0] in list(self._supports):
+                if self._supports[node[0]]=='pinned':
+                    count_reaction_loads += 2
+                elif self._supports[node[0]]=='roller':
+                    count_reaction_loads += 1
+        if 2*len(self._nodes) != len(self._members) + count_reaction_loads:
+            raise ValueError("The given truss cannot be solved")
+        coefficients_matrix = [[0 for i in range(2*len(self._nodes))] for j in range(2*len(self._nodes))]
+        load_matrix = zeros(2*len(self.nodes), 1)
+        load_matrix_row = 0
+        for node in self._nodes:
+            if node[0] in list(self._loads):
+                for load in self._loads[node[0]]:
+                    if load[0]!=Symbol('R_'+str(node[0])+'_x') and load[0]!=Symbol('R_'+str(node[0])+'_y'):
+                        load_matrix[load_matrix_row] -= load[0]*cos(pi*load[1]/180)
+                        load_matrix[load_matrix_row + 1] -= load[0]*sin(pi*load[1]/180)
+            load_matrix_row += 2
+        cols = 0
+        row = 0
+        for node in self._nodes:
+            if node[0] in list(self._supports):
+                if self._supports[node[0]]=='pinned':
+                    coefficients_matrix[row][cols] += 1
+                    coefficients_matrix[row+1][cols+1] += 1
+                    cols += 2
+                elif self._supports[node[0]]=='roller':
+                    coefficients_matrix[row+1][cols] += 1
+                    cols += 1
+            row += 2
+        for member in list(self._members):
+            start = self._members[member][0]
+            end = self._members[member][1]
+            length = sqrt((self._node_coordinates[start][0]-self._node_coordinates[end][0])**2 + (self._node_coordinates[start][1]-self._node_coordinates[end][1])**2)
+            start_index = self._node_labels.index(start)
+            end_index = self._node_labels.index(end)
+            horizontal_component_start = (self._node_coordinates[end][0]-self._node_coordinates[start][0])/length
+            vertical_component_start = (self._node_coordinates[end][1]-self._node_coordinates[start][1])/length
+            horizontal_component_end = (self._node_coordinates[start][0]-self._node_coordinates[end][0])/length
+            vertical_component_end = (self._node_coordinates[start][1]-self._node_coordinates[end][1])/length
+            coefficients_matrix[start_index*2][cols] += horizontal_component_start
+            coefficients_matrix[start_index*2+1][cols] += vertical_component_start
+            coefficients_matrix[end_index*2][cols] += horizontal_component_end
+            coefficients_matrix[end_index*2+1][cols] += vertical_component_end
+            cols += 1
+        forces_matrix = (Matrix(coefficients_matrix)**-1)*load_matrix
+        self._reaction_loads = {}
+        i = 0
+        min_load = inf
+        for node in self._nodes:
+            if node[0] in list(self._loads):
+                for load in self._loads[node[0]]:
+                    if type(load[0]) not in [Symbol, Mul, Add]:
+                        min_load = min(min_load, load[0])
+        for j in range(len(forces_matrix)):
+            if type(forces_matrix[j]) not in [Symbol, Mul, Add]:
+                if abs(forces_matrix[j]/min_load) <1E-10:
+                    forces_matrix[j] = 0
+        for node in self._nodes:
+            if node[0] in list(self._supports):
+                if self._supports[node[0]]=='pinned':
+                    self._reaction_loads['R_'+str(node[0])+'_x'] = forces_matrix[i]
+                    self._reaction_loads['R_'+str(node[0])+'_y'] = forces_matrix[i+1]
+                    i += 2
+                elif self._supports[node[0]]=='roller':
+                    self._reaction_loads['R_'+str(node[0])+'_y'] = forces_matrix[i]
+                    i += 1
+        for member in list(self._members):
+            self._internal_forces[member] = forces_matrix[i]
+            i += 1
+        return

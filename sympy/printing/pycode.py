@@ -66,7 +66,7 @@ _known_constants_math = {
 def _print_known_func(self, expr):
     known = self.known_functions[expr.__class__.__name__]
     return '{name}({args})'.format(name=self._module_format(known),
-                                   args=', '.join(map(lambda arg: self._print(arg), expr.args)))
+                                   args=', '.join((self._print(arg) for arg in expr.args)))
 
 
 def _print_known_const(self, expr):
@@ -200,7 +200,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Mod(self, expr):
         PREC = precedence(expr)
-        return ('{} % {}'.format(*map(lambda x: self.parenthesize(x, PREC), expr.args)))
+        return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
 
     def _print_Piecewise(self, expr):
         result = []
@@ -286,7 +286,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return '\n'.join([self.tab + line for line in codestring.split('\n')])
 
     def _print_FunctionDefinition(self, fd):
-        body = '\n'.join(map(lambda arg: self._print(arg), fd.body))
+        body = '\n'.join((self._print(arg) for arg in fd.body))
         return "def {name}({parameters}):\n{body}".format(
             name=self._print(fd.name),
             parameters=', '.join([self._print(var.symbol) for var in fd.parameters]),
@@ -294,7 +294,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         )
 
     def _print_While(self, whl):
-        body = '\n'.join(map(lambda arg: self._print(arg), whl.body))
+        body = '\n'.join((self._print(arg) for arg in whl.body))
         return "while {cond}:\n{body}".format(
             cond=self._print(whl.condition),
             body=self._indent_codestring(body)
@@ -311,7 +311,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         return 'return %s' % self._print(arg)
 
     def _print_Print(self, prnt):
-        print_args = ', '.join(map(lambda arg: self._print(arg), prnt.print_args))
+        print_args = ', '.join((self._print(arg) for arg in prnt.print_args))
         if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
             print_args = '{} % ({})'.format(
                 self._print(prnt.format_string), print_args)
@@ -401,7 +401,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 class ArrayPrinter:
 
     def _arrayify(self, indexed):
-        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+        from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
         try:
             return convert_indexed_to_array(indexed)
         except Exception:
@@ -714,8 +714,8 @@ class MpmathPrinter(PythonCodePrinter):
             self._module_format('mpmath.log'), self._print(e.args[0]))
 
     def _print_log1p(self, e):
-        return '{}({}+1)'.format(
-            self._module_format('mpmath.log'), self._print(e.args[0]))
+        return '{}({})'.format(
+            self._module_format('mpmath.log1p'), self._print(e.args[0]))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='mpmath.sqrt')
@@ -744,7 +744,7 @@ class SymPyPrinter(AbstractPythonCodePrinter):
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),
-                           ', '.join(map(lambda arg: self._print(arg), expr.args)))
+                           ', '.join((self._print(arg) for arg in expr.args)))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational, sqrt='sympy.sqrt')

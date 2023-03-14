@@ -275,24 +275,24 @@ Literature
 ==========
 
 .. [Page52] C. H. Page, `Classes of units in the SI
-    <http://scitation.aip.org/content/aapt/journal/ajp/46/1/10.1119/1.11124>`_,
+    <https://aapt.scitation.org/doi/10.1119/1.11124>`_,
     Am. J. of Phys. 20, 1 (1952): 1.
 
 .. [Page78] C. H. Page, `Units and Dimensions in Physics
-    <http://scitation.aip.org/content/aapt/journal/ajp/20/1/10.1119/1.1927482>`_,
+    <https://aapt.scitation.org/doi/10.1119/1.1927482>`_,
     Am. J. of Phys. 46, 1 (1978): 78.
 
 .. [deBoer79] J. de Boer, `Group properties of quantities and units
-    <http://scitation.aip.org/content/aapt/journal/ajp/47/9/10.1119/1.11703>`_,
+    <https://aapt.scitation.org/doi/10.1119/1.11703>`_,
     Am. J. of Phys. 47, 9 (1979): 818.
 
 .. [LevyLeblond77] J.-M. Lévy-Leblond, `On the Conceptual Nature of the
     Physical Constants
-    <http://link.springer.com/article/10.1007%2FBF02748049>`_,
+    <https://link.springer.com/article/10.1007/BF02748049>`_,
     La Rivista Del Nuovo Cimento 7, no. 2 (1977): 187-214.
 
 .. [NIST] `NIST reference on constants, units and uncertainties
-    <http://physics.nist.gov/cuu/Units/introduction.html>`_.
+    <https://physics.nist.gov/cuu/Units/introduction.html>`_.
 
 
 .. rubric:: Footnotes

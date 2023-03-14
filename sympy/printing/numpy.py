@@ -226,7 +226,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
-            map(lambda arg: self._print(arg), expr.args)))
+            (self._print(arg) for arg in expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
@@ -278,6 +278,7 @@ for const in _numpy_known_constants:
 
 
 _known_functions_scipy_special = {
+    'Ei': 'expi',
     'erf': 'erf',
     'erfc': 'erfc',
     'besselj': 'jv',
@@ -285,10 +286,12 @@ _known_functions_scipy_special = {
     'besseli': 'iv',
     'besselk': 'kv',
     'cosm1': 'cosm1',
+    'powm1': 'powm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
+    'polygamma': 'polygamma',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',
     'gegenbauer': 'eval_gegenbauer',
@@ -399,6 +402,13 @@ class SciPyPrinter(NumPyPrinter):
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
+    def _print_bernoulli(self, expr):
+        # scipy's bernoulli is inconsistent with SymPy's so rewrite
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
+    def _print_harmonic(self, expr):
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
     def _print_Integral(self, e):
         integration_vars, limits = _unpack_integral_limits(e)
 
@@ -417,6 +427,15 @@ class SciPyPrinter(NumPyPrinter):
                 self._print(e.args[0]),
                 limit_str)
 
+    def _print_Si(self, expr):
+        return "{}({})[0]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
+
+    def _print_Ci(self, expr):
+        return "{}({})[1]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
 
 for func in _scipy_known_functions:
     setattr(SciPyPrinter, f'_print_{func}', _print_known_func)

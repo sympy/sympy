@@ -310,7 +310,6 @@ def test_maple_not_supported():
     )  # PROBLEM
 
 
-
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)

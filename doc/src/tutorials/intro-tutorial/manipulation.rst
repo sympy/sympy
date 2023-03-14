@@ -7,6 +7,8 @@
 In this section, we discuss some ways that we can perform advanced
 manipulation of expressions.
 
+.. _tutorial-expression-trees:
+
 Understanding Expression Trees
 ==============================
 
@@ -61,7 +63,7 @@ tree:
 
 .. note::
 
-   The above diagram was made using `Graphviz <http://www.graphviz.org/>`_ and
+   The above diagram was made using `Graphviz <https://www.graphviz.org/>`_ and
    the :py:meth:`dotprint <sympy.printing.dot.dotprint>` function.
 
 First, let's look at the leaves of this tree.  Symbols are instances of the
@@ -543,7 +545,7 @@ evaluations:
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
     y + (x + x)
 
-``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
+``UnevaluatedExpr`` is supported by SymPy printers and can be used to print the
 result in different output forms. For example
 
     >>> from sympy import latex

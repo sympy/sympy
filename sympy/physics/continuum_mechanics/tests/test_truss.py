@@ -1,5 +1,7 @@
 from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.truss import Truss
+from sympy import sqrt
+
 
 def test_truss():
     A = Symbol('A')
@@ -93,3 +95,14 @@ def test_truss():
     assert t.supports == {D: 'roller'}
     assert t.reaction_loads == {}
     assert t.loads == {A: [[P, 90], [2*P, 45]], D: [[P/2, 90], [Symbol('R_D_y'), 90]]}
+
+    t.apply_support(A, "pinned")
+
+    # testing the solve method
+    t.solve()
+    assert t.reaction_loads['R_A_x'] == -sqrt(2)*P
+    assert t.reaction_loads['R_A_y'] == -sqrt(2)*P - P
+    assert t.reaction_loads['R_D_y'] == -P/2
+    assert t.internal_forces[AB]/P == 0
+    assert t.internal_forces[CD] == 0
+    assert t.internal_forces[AC] == 0

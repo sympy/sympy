@@ -1673,7 +1673,7 @@ class PrettyPrinter(Printer):
 
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
-        if e.args[1]==1/2:
+        if e.args[1] is S.Half:
             pform = prettyForm(*self._print(e.args[0]).parens())
             pform = prettyForm(*pform.left(func_name))
             return pform

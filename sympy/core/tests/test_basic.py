@@ -16,7 +16,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -294,3 +294,26 @@ def test_replace_exceptions():
     raises(TypeError, lambda: e.replace(b*c, c.is_real))
     raises(TypeError, lambda: e.replace(b.is_real, 1))
     raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))
+
+
+def test_ManagedProperties():
+    # ManagedProperties is now deprecated. Here we do our best to check that if
+    # someone is using it then it does work in the way that it previously did
+    # but gives a deprecation warning.
+    from sympy.core.assumptions import ManagedProperties
+
+    myclasses = []
+
+    class MyMeta(ManagedProperties):
+        def __init__(cls, *args, **kwargs):
+            myclasses.append('executed')
+            super().__init__(*args, **kwargs)
+
+    code = """
+class MySubclass(Basic, metaclass=MyMeta):
+    pass
+"""
+    with warns_deprecated_sympy():
+        exec(code)
+
+    assert myclasses == ['executed']

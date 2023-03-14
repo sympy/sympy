@@ -20,6 +20,7 @@ found on
 [GitHub](https://github.com/sympy/sympy/network/dependents?dependent_type=PACKAGE)
 or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 
+(hard-dependencies)=
 ## Hard Dependencies
 
 SymPy only has one hard dependency, which is required for it to work: mpmath.
@@ -47,6 +48,7 @@ SymPy only has one hard dependency, which is required for it to work: mpmath.
   install SymPy, e.g., if you are developing directly on SymPy in the git
   repository.
 
+(optional-dependencies)=
 ## Optional Dependencies
 
 These dependencies are not required to use SymPy. The vast majority of SymPy
@@ -163,7 +165,7 @@ Matplotlib.
   [text plots](textplot).
 
 - **pyglet**: SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can
-  be used to interface with the [pyglet](http://pyglet.org/) module to do 2D
+  be used to interface with the [pyglet](https://pyglet.org/) module to do 2D
   and 3D plotting.
 
 (dependencies-lambdify)=
@@ -178,7 +180,7 @@ into an evaluable numeric function.
 In principle, `lambdify` can interface with any external library if the user
 passes in an appropriate namespace dictionary as the third argument, but by
 default, `lambdify` is aware of several popular numeric Python libraries.
-These libraries are enabled as backends in `lambdify` with build-in
+These libraries are enabled as backends in `lambdify` with built-in
 translations to convert SymPy expressions into the appropriate functions for
 those libraries.
 
@@ -198,7 +200,7 @@ those libraries.
   functions using `lambdify(modules='cupy')`.
 
 - **Jax**: [JAX](https://github.com/google/jax) is a library that uses XLA
-  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce 
+  to compile and run NumPy programs on GPUs and TPUs. `lambdify` can produce
   JAX compatibly functions using `lambdify(modules='jax')`.
 
 - **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
@@ -302,7 +304,7 @@ is required to use the sampling functionality of `sympy.stats`.
   random module](https://numpy.org/doc/stable/reference/random/index.html).
 
 - **pymc**: `sample(library='pymc')` uses
-  [PyMC](https://pymc.io/) to do sampling.
+  [PyMC](https://www.pymc.io/) to do sampling.
 
 ### Optional SymEngine Backend
 
@@ -329,13 +331,6 @@ is required to use the sampling functionality of `sympy.stats`.
 
   SymEngine backend support is still experimental, so certain SymPy functions
   may not work correctly when it is enabled.
-
-### Experimental Rubi Integrator
-
-- **MatchPy**: [MatchPy](https://matchpy.readthedocs.io/en/latest/) is a
-  library for doing pattern matching. It is used in the experimental
-  sympy.integrals.rubi module, but presently, it is not used anywhere else in
-  SymPy. SymPy and MatchPy are able to interface with each other.
 
 ### Sage
 
@@ -370,7 +365,7 @@ either by using the `sympy.testing.pytest.skip()` function or by setting `skip
 = True` to skip the entire test file. Optional modules in tests and SymPy
 library code should be imported with `import_module()`.
 
-- **pytest**: [Pytest](https://docs.pytest.org/) is not a required dependency
+- **pytest**: [Pytest](https://docs.pytest.org/en/latest/) is not a required dependency
   for the SymPy test suite. SymPy has its own test runner, which can be
   accessed via the `bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
@@ -388,12 +383,12 @@ library code should be imported with `import_module()`.
 ### Building the Documentation
 
 Building the documentation requires several additional dependencies. [This
-page](build-docs) outlines these dependencies and how to install them. It is
-only necessary to install these dependencies if you are contributing
-documentation to SymPy and want to check that the HTML or PDF documentation
-renders correctly. If you only want to view the documentation for the
-development version of SymPy, development builds of the docs are hosted online
-at https://docs.sympy.org/dev/index.html.
+page](build-the-documentation) outlines these dependencies and how to install
+them. It is only necessary to install these dependencies if you are
+contributing documentation to SymPy and want to check that the HTML or PDF
+documentation renders correctly. If you only want to view the documentation
+for the development version of SymPy, development builds of the docs are
+hosted online at https://docs.sympy.org/dev/index.html.
 
 ### Running the Benchmarks
 

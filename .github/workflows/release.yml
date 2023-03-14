@@ -10,14 +10,14 @@ name: release
 on:
   push:
     branches:
-      - '1.11'
+      - '1.12'
   pull_request:
     branches:
-      - '1.11'
+      - '1.12'
 env:
-  release_branch: '1.11'
-  release_version: '1.11rc1'
-  previous_version: '1.10'
+  release_branch: '1.12'
+  release_version: '1.12rc1'
+  previous_version: '1.11'
 
 jobs:
 
@@ -28,12 +28,12 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       # Check out with full git history for authors check:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
@@ -41,7 +41,7 @@ jobs:
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: release_files
           path: release-${{ env.release_version }}
@@ -54,12 +54,12 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.11', 'pypy-3.8']
 
     name: Python ${{ matrix.python-version }} test install
     steps:
       - name: Setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64

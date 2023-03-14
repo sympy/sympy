@@ -5,6 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
+from sympy.core.mod import Mod
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Ne)
 from sympy.core.singleton import S
@@ -14,7 +15,7 @@ from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, 
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import (Piecewise,
-    piecewise_fold, Undefined, ExprCondPair)
+    piecewise_fold, piecewise_exclusive, Undefined, ExprCondPair)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -124,8 +125,8 @@ def test_piecewise1():
 
     # Test evalf
     assert p.evalf() == Piecewise((-1.0, x < -1), (x**2, x < 0), (log(x), True))
-    assert p.evalf(subs={x: -2}) == -1
-    assert p.evalf(subs={x: -1}) == 1
+    assert p.evalf(subs={x: -2}) == -1.0
+    assert p.evalf(subs={x: -1}) == 1.0
     assert p.evalf(subs={x: 1}) == log(1)
     assert p6.evalf(subs={x: -5}) == Undefined
 
@@ -419,11 +420,11 @@ def test_piecewise_integrate4_symbolic_conditions():
         (-a + x, x <= Max(a, b)),
         (-a + Max(a, b), True))
 
-    p1 = Piecewise((0, x < a), (0.5, x > b), (1, True))
-    p2 = Piecewise((0.5, x > b), (0, x < a), (1, True))
-    p3 = Piecewise((0, x < a), (1, x < b), (0.5, True))
-    p4 = Piecewise((0.5, x > b), (1, x > a), (0, True))
-    p5 = Piecewise((1, And(a < x, x < b)), (0.5, x > b), (0, True))
+    p1 = Piecewise((0, x < a), (S.Half, x > b), (1, True))
+    p2 = Piecewise((S.Half, x > b), (0, x < a), (1, True))
+    p3 = Piecewise((0, x < a), (1, x < b), (S.Half, True))
+    p4 = Piecewise((S.Half, x > b), (1, x > a), (0, True))
+    p5 = Piecewise((1, And(a < x, x < b)), (S.Half, x > b), (0, True))
 
     # check values of a=1, b=3 (and reversed) with values
     # of y of 0, 1, 2, 3, 4
@@ -440,6 +441,22 @@ def test_piecewise_integrate4_symbolic_conditions():
 def test_piecewise_integrate5_independent_conditions():
     p = Piecewise((0, Eq(y, 0)), (x*y, True))
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
+def test_issue_22917():
+    p = (Piecewise((0, ITE((x - y > 1) | (2 * x - 2 * y > 1), False,
+                           ITE(x - y > 1, 2 * y - 2 < -1, 2 * x - 2 * y > 1))),
+                   (Piecewise((0, ITE(x - y > 1, True, 2 * x - 2 * y > 1)),
+                              (2 * Piecewise((0, x - y > 1), (y, True)), True)), True))
+         + 2 * Piecewise((1, ITE((x - y > 1) | (2 * x - 2 * y > 1), False,
+                                 ITE(x - y > 1, 2 * y - 2 < -1, 2 * x - 2 * y > 1))),
+                         (Piecewise((1, ITE(x - y > 1, True, 2 * x - 2 * y > 1)),
+                                    (2 * Piecewise((1, x - y > 1), (x, True)), True)), True)))
+    assert piecewise_fold(p) == Piecewise((2, (x - y > S.Half) | (x - y > 1)),
+                                          (2*y + 4, x - y > 1),
+                                          (4*x + 2*y, True))
+    assert piecewise_fold(p > 1).rewrite(ITE) == ITE((x - y > S.Half) | (x - y > 1), True,
+                                                     ITE(x - y > 1, 2*y + 4 > 1, 4*x + 2*y > 1))
 
 
 def test_piecewise_simplify():
@@ -696,6 +713,36 @@ def test_piecewise_interval():
         (0, x <= 0),
         (x**2/2, x <= 1),
         (S.Half, True))
+
+
+def test_piecewise_exclusive():
+    p = Piecewise((0, x < 0), (S.Half, x <= 0), (1, True))
+    assert piecewise_exclusive(p) == Piecewise((0, x < 0), (S.Half, Eq(x, 0)),
+                                               (1, x > 0), evaluate=False)
+    assert piecewise_exclusive(p + 2) == Piecewise((0, x < 0), (S.Half, Eq(x, 0)),
+                                               (1, x > 0), evaluate=False) + 2
+    assert piecewise_exclusive(Piecewise((1, y <= 0),
+                                         (-Piecewise((2, y >= 0)), True))) == \
+        Piecewise((1, y <= 0),
+                  (-Piecewise((2, y >= 0),
+                              (S.NaN, y < 0), evaluate=False), y > 0), evaluate=False)
+    assert piecewise_exclusive(Piecewise((1, x > y))) == Piecewise((1, x > y),
+                                                                  (S.NaN, x <= y),
+                                                                  evaluate=False)
+    assert piecewise_exclusive(Piecewise((1, x > y)),
+                               skip_nan=True) == Piecewise((1, x > y))
+
+    xr, yr = symbols('xr, yr', real=True)
+
+    p1 = Piecewise((1, xr < 0), (2, True), evaluate=False)
+    p1x = Piecewise((1, xr < 0), (2, xr >= 0), evaluate=False)
+
+    p2 = Piecewise((p1, yr < 0), (3, True), evaluate=False)
+    p2x = Piecewise((p1, yr < 0), (3, yr >= 0), evaluate=False)
+    p2xx = Piecewise((p1x, yr < 0), (3, yr >= 0), evaluate=False)
+
+    assert piecewise_exclusive(p2) == p2xx
+    assert piecewise_exclusive(p2, deep=False) == p2x
 
 
 def test_piecewise_collapse():
@@ -1222,7 +1269,7 @@ def test_unevaluated_integrals():
     # test it by replacing f(x) with x%2 which will not
     # affect the answer: the integrand is essentially 2 over
     # the domain of integration
-    assert Integral(p, (x, 0, 5)).subs(f(x), x%2).n() == 10
+    assert Integral(p, (x, 0, 5)).subs(f(x), x%2).n() == 10.0
 
     # this is a test of using _solve_inequality when
     # solve_univariate_inequality fails
@@ -1292,6 +1339,43 @@ def test_issue_14787():
     x = Symbol('x')
     f = Piecewise((x, x < 1), ((S(58) / 7), True))
     assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
+
+def test_issue_21481():
+    b, e = symbols('b e')
+    C = Piecewise(
+        (2,
+        ((b > 1) & (e > 0)) |
+        ((b > 0) & (b < 1) & (e < 0)) |
+        ((e >= 2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e <= -2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (S.Half,
+        ((b > 1) & (e < 0)) |
+        ((b > 0) & (e > 0) & (b < 1)) |
+        ((e <= -2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e >= 2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (-S.Half,
+        Eq(Mod(e, 2), 1) &
+        (((e <= -1) & (b < -1)) | ((e >= 1) & (b > -1) & (b < 0)))),
+        (-2,
+        ((e >= 1) & (b < -1) & Eq(Mod(e, 2), 1)) |
+        ((e <= -1) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 1)))
+    )
+    A = Piecewise(
+        (1, Eq(b, 1) | Eq(e, 0) | (Eq(b, -1) & Eq(Mod(e, 2), 0))),
+        (0, Eq(b, 0) & (e > 0)),
+        (-1, Eq(b, -1) & Eq(Mod(e, 2), 1)),
+        (C, Eq(im(b), 0) & Eq(im(e), 0))
+    )
+
+    B = piecewise_fold(A)
+    sa = A.simplify()
+    sb = B.simplify()
+    v = (-2, -1, -S.Half, 0, S.Half, 1, 2)
+    for i in v:
+        for j in v:
+            r = {b:i, e:j}
+            ok = [k.xreplace(r) for k in (A, B, sa, sb)]
+            assert len(set(ok)) == 1
 
 
 def test_issue_8458():
@@ -1502,3 +1586,21 @@ def test_issue_22533():
     x = Symbol('x', real=True)
     f = Piecewise((-1 / x, x <= 0), (1 / x, True))
     assert integrate(f, x) == Piecewise((-log(x), x <= 0), (log(x), True))
+
+
+def test_issue_24072():
+    assert Piecewise((1, x > 1), (2, x <= 1), (3, x <= 1)
+        ) == Piecewise((1, x > 1), (2, True))
+
+
+def test_piecewise__eval_is_meromorphic():
+    """ Issue 24127: Tests eval_is_meromorphic auxiliary method """
+    x = symbols('x', real=True)
+    f = Piecewise((1, x < 0), (sqrt(1 - x), True))
+    assert f.is_meromorphic(x, I) is None
+    assert f.is_meromorphic(x, -1) == True
+    assert f.is_meromorphic(x, 0) == None
+    assert f.is_meromorphic(x, 1) == False
+    assert f.is_meromorphic(x, 2) == True
+    assert f.is_meromorphic(x, Symbol('a')) == None
+    assert f.is_meromorphic(x, Symbol('a', real=True)) == None

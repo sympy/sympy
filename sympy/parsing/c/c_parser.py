@@ -32,8 +32,8 @@ to use the features of this module.
 Clang: The C and C++ compiler which is used to extract an AST from the provided
 C source code.
 
-Refrences
-=========
+References
+==========
 
 .. [1] https://github.com/sympy/sympy/issues
 .. [2] https://clang.llvm.org/docs/
@@ -121,7 +121,7 @@ if cin:
 
             It takes the filename as an attribute and creates a Clang AST
             Translation Unit parsing the file.
-            Then the transformation function is called on the transaltion unit,
+            Then the transformation function is called on the translation unit,
             whose reults are collected into a list which is returned by the
             function.
 
@@ -161,7 +161,7 @@ if cin:
 
             It takes the source code as an attribute, stores it in a temporary
             file and creates a Clang AST Translation Unit parsing the file.
-            Then the transformation function is called on the transaltion unit,
+            Then the transformation function is called on the translation unit,
             whose reults are collected into a list which is returned by the
             function.
 
@@ -789,7 +789,7 @@ if cin:
             """
             # supported operators list
             operators_list = ['+', '-', '++', '--', '!']
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # it can be either pre increment/decrement or any other operator from the list
             if tokens[0].spelling in operators_list:
@@ -848,7 +848,7 @@ if cin:
             """
             # get all the tokens of assignment
             # and store it in the tokens list
-            tokens = [token for token in node.get_tokens()]
+            tokens = list(node.get_tokens())
 
             # supported operators list
             operators_list = ['+', '-', '*', '/', '%','=',

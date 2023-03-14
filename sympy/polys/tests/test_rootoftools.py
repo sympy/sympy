@@ -124,7 +124,6 @@ def test_CRootOf_attributes():
     raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
-
 def test_CRootOf___eq__():
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 0)) is True
     assert (rootof(x**3 + x + 3, 0) == rootof(x**3 + x + 3, 1)) is False
@@ -249,8 +248,8 @@ def test_CRootOf_evalf():
     # issue 9019
     r0 = rootof(x**2 + 1, 0, radicals=False)
     r1 = rootof(x**2 + 1, 1, radicals=False)
-    assert r0.n(4) == -1.0*I
-    assert r1.n(4) == 1.0*I
+    assert r0.n(4) == Float(-1.0, 4) * I
+    assert r1.n(4) == Float(1.0, 4) * I
 
     # make sure verification is used in case a max/min traps the "root"
     assert str(rootof(4*x**5 + 16*x**3 + 12*x**2 + 7, 0).n(3)) == '-0.976'
