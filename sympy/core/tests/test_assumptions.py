@@ -703,6 +703,18 @@ def test_other_symbol():
     assert x.is_integer is False
 
 
+def test_evaluate_false():
+    # Previously this failed because the assumptions query would make new
+    # expressions and some of the evaluation logic would fail under
+    # evaluate(False).
+    from sympy.core.parameters import evaluate
+    from sympy.abc import x, h
+    f = 2**x**7
+    with evaluate(False):
+        fh = f.xreplace({x: x+h})
+        assert fh.exp.is_rational is None
+
+
 def test_issue_3825():
     """catch: hash instability"""
     x = Symbol("x")
@@ -1158,9 +1170,11 @@ def test_issue_10302():
     r = Symbol('r', real=True)
     u = -(3*2**pi)**(1/pi) + 2*3**(1/pi)
     i = u + u*I
+
     assert i.is_real is None  # w/o simplification this should fail
     assert (u + i).is_zero is None
     assert (1 + i).is_zero is False
+
     a = Dummy('a', zero=True)
     assert (a + I).is_zero is False
     assert (a + r*I).is_zero is None
