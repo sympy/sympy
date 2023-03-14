@@ -33,17 +33,15 @@ from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
-from sympy.testing.pytest import (raises, XFAIL, slow, skip,
+from sympy.testing.pytest import (raises, XFAIL, slow, skip, skip_under_pyodide,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-from sympy.external import import_module
 from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
-pyodide_js = import_module('pyodide_js')
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2991,9 +2989,8 @@ def test_func():
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
 
 
+@skip_under_pyodide("Cannot create threads under pyodide.")
 def test_issue_19809():
-    if pyodide_js:
-        skip("can't run on pyodide")
 
     def f():
         assert _dotprodsimp_state.state == None

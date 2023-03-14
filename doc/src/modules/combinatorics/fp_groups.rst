@@ -4,10 +4,10 @@ Finitely Presented Groups
 Introduction
 ------------
 
-This module presents the functionality designed for computing with finitely-
-presented groups (fp-groups for short). The name of the corresponding SymPy
-object is ``FpGroup``. The functions or classes described here are studied
-under **computational group theory**. All code examples assume:
+This module presents the functionality designed for computing with
+finitely-presented groups (fp-groups for short). The name of the corresponding
+SymPy object is ``FpGroup``. The functions or classes described here are
+studied under **computational group theory**. All code examples assume:
 
 >>> from sympy.combinatorics.free_groups import free_group, vfree_group, xfree_group
 >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, coset_enumeration_r
