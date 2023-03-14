@@ -17,14 +17,14 @@ from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import JaxPrinter, _jax_known_constants, _jax_known_functions
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 # Unlike NumPy which will aggressively promote operands to double precision,
 # jax always uses single precision. Double precision in jax can be
-# configured before the call to `import jax`, however this must be explicity
+# configured before the call to `import jax`, however this must be explicitly
 # configured and is not fully supported. Thus, the tests here have been modified
 # from the tests in test_numpy.py, only in the fact that they assert lambdify
 # function accuracy to only single precision accuracy.

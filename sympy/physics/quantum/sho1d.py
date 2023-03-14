@@ -116,7 +116,7 @@ class RaisingOp(SHOOp):
     def _eval_commutator_NumberOp(self, other):
         return S.NegativeOne*self
 
-    def _apply_operator_SHOKet(self, ket):
+    def _apply_operator_SHOKet(self, ket, **options):
         temp = ket.n + S.One
         return sqrt(temp)*SHOKet(temp)
 
@@ -254,7 +254,7 @@ class LoweringOp(SHOOp):
     def _eval_commutator_NumberOp(self, other):
         return self
 
-    def _apply_operator_SHOKet(self, ket):
+    def _apply_operator_SHOKet(self, ket, **options):
         temp = ket.n - Integer(1)
         if ket.n is S.Zero:
             return S.Zero
@@ -369,7 +369,7 @@ class NumberOp(SHOOp):
     def _eval_rewrite_as_H(self, *args, **kwargs):
         return H/(hbar*omega) - S.Half
 
-    def _apply_operator_SHOKet(self, ket):
+    def _apply_operator_SHOKet(self, ket, **options):
         return ket.n*ket
 
     def _eval_commutator_Hamiltonian(self, other):
@@ -481,7 +481,7 @@ class Hamiltonian(SHOOp):
     def _eval_rewrite_as_N(self, *args, **kwargs):
         return hbar*omega*(N + S.Half)
 
-    def _apply_operator_SHOKet(self, ket):
+    def _apply_operator_SHOKet(self, ket, **options):
         return (hbar*omega*(ket.n + S.Half))*ket
 
     def _eval_commutator_NumberOp(self, other):

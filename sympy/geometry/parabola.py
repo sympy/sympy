@@ -323,17 +323,21 @@ class Parabola(GeometrySet):
             if o in self:
                 return [o]
             else:
-                return list(ordered([Point(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+                return list(ordered([Point(i) for i in solve(
+                    [parabola_eq, o.equation()], [x, y], set=True)[1]]))
         elif isinstance(o, Point2D):
             if simplify(parabola_eq.subs([(x, o._args[0]), (y, o._args[1])])) == 0:
                 return [o]
             else:
                 return []
         elif isinstance(o, (Segment2D, Ray2D)):
-            result = solve([parabola_eq, Line2D(o.points[0], o.points[1]).equation()], [x, y])
+            result = solve([parabola_eq,
+                Line2D(o.points[0], o.points[1]).equation()],
+                [x, y], set=True)[1]
             return list(ordered([Point2D(i) for i in result if i in o]))
         elif isinstance(o, (Line2D, Ellipse)):
-            return list(ordered([Point2D(i) for i in solve([parabola_eq, o.equation()], [x, y])]))
+            return list(ordered([Point2D(i) for i in solve(
+                [parabola_eq, o.equation()], [x, y], set=True)[1]]))
         elif isinstance(o, LinearEntity3D):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
@@ -361,7 +365,7 @@ class Parabola(GeometrySet):
         See Also
         ========
 
-        http://www.sparknotes.com/math/precalc/conicsections/section2.rhtml
+        https://www.sparknotes.com/math/precalc/conicsections/section2/
 
         Examples
         ========

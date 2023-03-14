@@ -67,12 +67,13 @@ SymPy has special support for definite integrals, and integral transforms.
 .. autoclass:: InverseMellinTransform
    :members:
 .. autofunction:: laplace_transform
+.. autofunction:: laplace_correspondence
+.. autofunction:: laplace_initial_conds
 .. autoclass:: LaplaceTransform
    :members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
    :members:
-.. autofunction:: _fast_inverse_laplace
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
@@ -201,7 +202,7 @@ TODO and Bugs
 There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=is%3Aissue+is%3Aopen+label%3Aintegrals
 
 Numeric Integrals
-=================
+-----------------
 
 SymPy has functions to calculate points and weights for Gaussian quadrature of
 any order and any precision:

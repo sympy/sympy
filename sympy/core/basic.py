@@ -5,9 +5,9 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 
-from .assumptions import ManagedProperties
+from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
-from .core import BasicMeta
+from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -33,7 +33,31 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(Printable, metaclass=ManagedProperties):
+def _old_compare(x: type, y: type) -> int:
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
+
+    n1 = x.__name__
+    n2 = y.__name__
+    if n1 == n2:
+        return 0
+
+    UNKNOWN = len(ordering_of_classes) + 1
+    try:
+        i1 = ordering_of_classes.index(n1)
+    except ValueError:
+        i1 = UNKNOWN
+    try:
+        i2 = ordering_of_classes.index(n2)
+    except ValueError:
+        i2 = UNKNOWN
+    if i1 == UNKNOWN and i2 == UNKNOWN:
+        return (n1 > n2) - (n1 < n2)
+    return (i1 > i2) - (i1 < i2)
+
+
+class Basic(Printable):
     """
     Base class for all SymPy objects.
 
@@ -85,6 +109,17 @@ class Basic(Printable, metaclass=ManagedProperties):
     _args: tuple[Basic, ...]
     _mhash: int | None
 
+    @property
+    def __sympy__(self):
+        return True
+
+    def __init_subclass__(cls):
+        # Initialize the default_assumptions FactKB and also any assumptions
+        # property methods. This method will only be called for subclasses of
+        # Basic but not for Basic itself so we call
+        # _prepare_class_assumptions(Basic) below the class definition.
+        _prepare_class_assumptions(cls)
+
     # To be overridden with True in the appropriate subclasses
     is_number = False
     is_Atom = False
@@ -117,6 +152,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
     is_real: bool | None
+    is_extended_real: bool | None
     is_zero: bool | None
     is_negative: bool | None
     is_commutative: bool | None
@@ -227,7 +263,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
+        c = _old_compare(n1, n2)
         if c:
             return c
         #
@@ -294,7 +330,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes. """
+        """Nice order of classes."""
         return 5, 0, cls.__name__
 
     @cacheit
@@ -337,7 +373,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         to work with SymPy should be handled directly in the __eq__ methods
         of the `Basic` classes it could equate to and not be converted. Note
         that after conversion, `==`  is used again since it is not
-        neccesarily clear whether `self` or `other`'s __eq__ method needs
+        necessarily clear whether `self` or `other`'s __eq__ method needs
         to be used."""
         for superclass in type(other).__mro__:
             conv = _external_converter.get(superclass)
@@ -366,7 +402,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         References
         ==========
 
-        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
+        from https://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
         if self is other:
             return True
@@ -935,21 +971,28 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             raise ValueError("subs accepts either 1 or 2 arguments")
 
-        sequence = list(sequence)
-        for i, s in enumerate(sequence):
-            if isinstance(s[0], str):
-                # when old is a string we prefer Symbol
-                s = Symbol(s[0]), s[1]
-            try:
-                s = [sympify(_, strict=not isinstance(_, (str, type)))
-                     for _ in s]
-            except SympifyError:
-                # if it can't be sympified, skip it
-                sequence[i] = None
-                continue
-            # skip if there is no change
-            sequence[i] = None if _aresame(*s) else tuple(s)
-        sequence = list(filter(None, sequence))
+        def sympify_old(old):
+            if isinstance(old, str):
+                # Use Symbol rather than parse_expr for old
+                return Symbol(old)
+            elif isinstance(old, type):
+                # Allow a type e.g. Function('f') or sin
+                return sympify(old, strict=False)
+            else:
+                return sympify(old, strict=True)
+
+        def sympify_new(new):
+            if isinstance(new, (str, type)):
+                # Allow a type or parse a string input
+                return sympify(new, strict=False)
+            else:
+                return sympify(new, strict=True)
+
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+
+        # skip if there is no change
+        sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
+
         simultaneous = kwargs.pop('simultaneous', False)
 
         if unordered:
@@ -1258,9 +1301,36 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         return self._has(iterargs, *patterns)
 
+    def has_xfree(self, s: set[Basic]):
+        """Return True if self has any of the patterns in s as a
+        free argument, else False. This is like `Basic.has_free`
+        but this will only report exact argument matches.
+
+        Examples
+        ========
+
+        >>> from sympy import Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> f(x).has_xfree({f})
+        False
+        >>> f(x).has_xfree({f(x)})
+        True
+        >>> f(x + 1).has_xfree({x})
+        True
+        >>> f(x + 1).has_xfree({x + 1})
+        True
+        >>> f(x + y + 1).has_xfree({x + 1})
+        False
+        """
+        # protect O(1) containment check by requiring:
+        if type(s) is not set:
+            raise TypeError('expecting set argument')
+        return any(a in s for a in iterfreeargs(self))
+
     @cacheit
     def has_free(self, *patterns):
-        """return True if self has object(s) ``x`` as a free expression
+        """Return True if self has object(s) ``x`` as a free expression
         else False.
 
         Examples
@@ -1284,8 +1354,23 @@ class Basic(Printable, metaclass=ManagedProperties):
         True
         >>> (x + y + 1).has_free(y + 1)
         True
-
         """
+        if not patterns:
+            return False
+        p0 = patterns[0]
+        if len(patterns) == 1 and iterable(p0) and not isinstance(p0, Basic):
+            # Basic can contain iterables (though not non-Basic, ideally)
+            # but don't encourage mixed passing patterns
+            raise TypeError(filldedent('''
+                Expecting 1 or more Basic args, not a single
+                non-Basic iterable. Don't forget to unpack
+                iterables: `eq.has_free(*patterns)`'''))
+        # try quick test first
+        s = set(patterns)
+        rv = self.has_xfree(s)
+        if rv:
+            return rv
+        # now try matching through slower _has
         return self._has(iterfreeargs, *patterns)
 
     def _has(self, iterargs, *patterns):
@@ -1293,7 +1378,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         type_set = set()  # only types
         p_set = set()  # hashable non-types
         for p in patterns:
-            if isinstance(p, BasicMeta):
+            if isinstance(p, type) and issubclass(p, Basic):
                 type_set.add(p)
                 continue
             if not isinstance(p, Basic):
@@ -1582,7 +1667,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query. """
+        """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1600,7 +1685,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return groups
 
     def count(self, query):
-        """Count the number of matching subexpressions. """
+        """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -1708,7 +1793,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return m
         from .symbol import Wild
         from .function import WildFunction
-        wild = pattern.atoms(Wild, WildFunction)
+        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
+        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
         # sanity check
         if set(m) - wild:
             raise ValueError(filldedent('''
@@ -1731,7 +1817,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return m
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
+        """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1807,11 +1893,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         Parameters
         ==========
 
-        args : *rule*, or *pattern* and *rule*.
+        args : Expr
+            A *rule*, or *pattern* and *rule*.
             - *pattern* is a type or an iterable of types.
             - *rule* can be any object.
 
-        deep : bool, optional.
+        deep : bool, optional
             If ``True``, subexpressions are recursively transformed. Default is
             ``True``.
 
@@ -1963,6 +2050,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
+
+
+# For all Basic subclasses _prepare_class_assumptions is called by
+# Basic.__init_subclass__ but that method is not called for Basic itself so we
+# call the function here instead.
+_prepare_class_assumptions(Basic)
 
 
 class Atom(Basic):

@@ -8,7 +8,7 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd
+from .numbers import ilcm, igcd, equal_valued
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
@@ -193,7 +193,7 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
-        See also
+        See Also
         ========
 
         sympy.core.mul.Mul.flatten
@@ -396,7 +396,6 @@ class Add(Expr, AssocOp):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @property
@@ -496,7 +495,7 @@ class Add(Expr, AssocOp):
                 for i in c:
                     if abs(i) >= big:
                         big = abs(i)
-                if big > 0 and big != 1:
+                if big > 0 and not equal_valued(big, 1):
                     from sympy.functions.elementary.complexes import sign
                     bigs = (big, -big)
                     c = [sign(i) if i in bigs else i/big for i in c]
@@ -679,8 +678,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im_I.append(a*S.ImaginaryUnit)
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_I.append(a*S.ImaginaryUnit)
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_I.append(-coeff)
+                else:
+                    return
             else:
                 return
         b = self.func(*nz)
@@ -709,8 +712,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im += 1
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_or_z = True
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_or_z = True
+                else:
+                    return
             else:
                 return
         if z == len(self.args):
@@ -746,6 +753,22 @@ class Add(Expr, AssocOp):
             if a is None:
                 return
         return False
+
+    def _all_nonneg_or_nonppos(self):
+        nn = np = 0
+        for a in self.args:
+            if a.is_nonnegative:
+                if np:
+                    return False
+                nn = 1
+            elif a.is_nonpositive:
+                if nn:
+                    return False
+                np = 1
+            else:
+                break
+        else:
+            return True
 
     def _eval_is_extended_positive(self):
         if self.is_number:
@@ -971,7 +994,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex number
+        Return a tuple representing a complex number.
 
         Examples
         ========
@@ -993,7 +1016,7 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.core.symbol import Dummy
+        from sympy.core.symbol import Dummy, Symbol
         from sympy.series.order import Order
         from sympy.functions.elementary.exponential import log
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
@@ -1010,9 +1033,9 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=False,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": False,
+                "factor": False}
             old = old.expand(**logflags)
         expr = expand_mul(old)
 
@@ -1051,7 +1074,9 @@ class Add(Expr, AssocOp):
             try:
                 n0 = min.getn()
             except NotImplementedError:
-                n0 = 1
+                n0 = S.One
+            if n0.has(Symbol):
+                n0 = S.One
             res = Order(1)
             incr = S.One
             while res.is_Order:
@@ -1254,7 +1279,7 @@ class Add(Expr, AssocOp):
     def __neg__(self):
         if not global_parameters.distribute:
             return super().__neg__()
-        return Add(*[-i for i in self.args])
+        return Mul(S.NegativeOne, self)
 
 add = AssocOpDispatcher('add')
 

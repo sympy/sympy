@@ -14,7 +14,7 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import (Integral, integrate)
 
 
-from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_CI
 
 from sympy.abc import x, k, c, y, b, h, a, m, z, n, t
 
@@ -54,12 +54,11 @@ def test_issue_4525():
     assert not integrate((x**m * (1 - x)**n * (a + b*x + c*x**2))/(1 + x**2), (x, 0, 1)).has(Integral)
 
 
-
 @XFAIL
 @slow
 def test_issue_4540():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Note, this integral is probably nonelementary
     assert not integrate(
         (sin(1/x) - x*exp(x)) /
@@ -97,8 +96,8 @@ def test_issue_4895d():
 @XFAIL
 @slow
 def test_issue_4941():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     assert not integrate(sqrt(1 + sinh(x/20)**2), (x, -25, 25)).has(Integral)
 
 
@@ -133,8 +132,8 @@ def test_issue_15925a():
 @XFAIL
 @slow
 def test_issue_15925b():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     assert not integrate(sqrt((-12*cos(x)**2*sin(x))**2+(12*cos(x)*sin(x)**2)**2),
                          (x, 0, pi/6)).has(Integral)
 
@@ -148,8 +147,8 @@ def test_issue_15925b_manual():
 @XFAIL
 @slow
 def test_issue_15227():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     i = integrate(log(1-x)*log((1+x)**2)/x, (x, 0, 1))
     assert not i.has(Integral)
     # assert i == -5*zeta(3)/4

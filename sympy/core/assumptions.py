@@ -179,16 +179,15 @@ will return values and update the dictionary.
 For a :class:`~.Symbol`, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
 assumptions derived from a given set of initial assumptions. The
-latter assumptions are stored as ``Symbol._assumptions.generator``
+latter assumptions are stored as ``Symbol._assumptions_orig``
 
-    >>> Symbol('x', prime=True, even=True)._assumptions.generator
+    >>> Symbol('x', prime=True, even=True)._assumptions_orig
     {'even': True, 'prime': True}
 
-The ``generator`` is not necessarily canonical nor is it filtered
-in any way: it records the assumptions used to instantiate a Symbol
-and (for storage purposes) represents a more compact representation
-of the assumptions needed to recreate the full set in
-``Symbol.assumptions0``.
+The ``_assumptions_orig`` are not necessarily canonical nor are they filtered
+in any way: they records the assumptions used to instantiate a Symbol and (for
+storage purposes) represent a more compact representation of the assumptions
+needed to recreate the full set in ``Symbol.assumptions0``.
 
 
 References
@@ -202,7 +201,7 @@ References
 .. [6] https://en.wikipedia.org/wiki/Prime_number
 .. [7] https://en.wikipedia.org/wiki/Finite
 .. [8] https://docs.python.org/3/library/math.html#math.isfinite
-.. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
+.. [9] https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html
 .. [10] https://en.wikipedia.org/wiki/Transcendental_number
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
 .. [12] https://en.wikipedia.org/wiki/Commutative_property
@@ -210,14 +209,32 @@ References
 
 """
 
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
 from .facts import FactRules, FactKB
-from .core import BasicMeta
 from .sympify import sympify
 
-from sympy.core.random import shuffle
+from sympy.core.random import _assumptions_shuffle as shuffle
+from sympy.core.assumptions_generated import generated_assumptions as _assumptions
 
+def _load_pre_generated_assumption_rules():
+    """ Load the assumption rules from pre-generated data
 
-_assume_rules = FactRules([
+    To update the pre-generated data, see :method::`_generate_assumption_rules`
+    """
+    _assume_rules=FactRules._from_python(_assumptions)
+    return _assume_rules
+
+def _generate_assumption_rules():
+    """ Generate the default assumption rules
+
+    This method should only be called to update the pre-generated
+    assumption rules.
+
+    To update the pre-generated assumptions run: bin/ask_update.py
+
+    """
+    _assume_rules = FactRules([
 
     'integer        ->  rational',
     'rational       ->  real',
@@ -274,8 +291,11 @@ _assume_rules = FactRules([
     'infinite       ==  !finite',
     'noninteger     ==  extended_real & !integer',
     'extended_nonzero == extended_real & !zero',
-])
+    ])
+    return _assume_rules
 
+
+_assume_rules = _load_pre_generated_assumption_rules()
 _assume_defined = _assume_rules.defined_facts.copy()
 _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
@@ -591,55 +611,82 @@ def _ask(fact, obj):
     return None
 
 
-class ManagedProperties(BasicMeta):
-    """Metaclass for classes with old-style assumptions"""
-    def __init__(cls, *args, **kws):
-        BasicMeta.__init__(cls, *args, **kws)
+def _prepare_class_assumptions(cls):
+    """Precompute class level assumptions and generate handlers.
 
-        local_defs = {}
-        for k in _assume_defined:
-            attrname = as_property(k)
-            v = cls.__dict__.get(attrname, '')
-            if isinstance(v, (bool, int, type(None))):
-                if v is not None:
-                    v = bool(v)
-                local_defs[k] = v
+    This is called by Basic.__init_subclass__ each time a Basic subclass is
+    defined.
+    """
 
-        defs = {}
-        for base in reversed(cls.__bases__):
-            assumptions = getattr(base, '_explicit_class_assumptions', None)
-            if assumptions is not None:
-                defs.update(assumptions)
-        defs.update(local_defs)
+    local_defs = {}
+    for k in _assume_defined:
+        attrname = as_property(k)
+        v = cls.__dict__.get(attrname, '')
+        if isinstance(v, (bool, int, type(None))):
+            if v is not None:
+                v = bool(v)
+            local_defs[k] = v
 
-        cls._explicit_class_assumptions = defs
-        cls.default_assumptions = StdFactKB(defs)
+    defs = {}
+    for base in reversed(cls.__bases__):
+        assumptions = getattr(base, '_explicit_class_assumptions', None)
+        if assumptions is not None:
+            defs.update(assumptions)
+    defs.update(local_defs)
 
-        cls._prop_handler = {}
-        for k in _assume_defined:
-            eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
-            if eval_is_meth is not None:
-                cls._prop_handler[k] = eval_is_meth
+    cls._explicit_class_assumptions = defs
+    cls.default_assumptions = StdFactKB(defs)
 
-        # Put definite results directly into the class dict, for speed
-        for k, v in cls.default_assumptions.items():
-            setattr(cls, as_property(k), v)
+    cls._prop_handler = {}
+    for k in _assume_defined:
+        eval_is_meth = getattr(cls, '_eval_is_%s' % k, None)
+        if eval_is_meth is not None:
+            cls._prop_handler[k] = eval_is_meth
 
-        # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
-        derived_from_bases = set()
-        for base in cls.__bases__:
-            default_assumptions = getattr(base, 'default_assumptions', None)
-            # is an assumption-aware class
-            if default_assumptions is not None:
-                derived_from_bases.update(default_assumptions)
+    # Put definite results directly into the class dict, for speed
+    for k, v in cls.default_assumptions.items():
+        setattr(cls, as_property(k), v)
 
-        for fact in derived_from_bases - set(cls.default_assumptions):
-            pname = as_property(fact)
-            if pname not in cls.__dict__:
-                setattr(cls, pname, make_property(fact))
+    # protection e.g. for Integer.is_even=F <- (Rational.is_integer=F)
+    derived_from_bases = set()
+    for base in cls.__bases__:
+        default_assumptions = getattr(base, 'default_assumptions', None)
+        # is an assumption-aware class
+        if default_assumptions is not None:
+            derived_from_bases.update(default_assumptions)
 
-        # Finally, add any missing automagic property (e.g. for Basic)
-        for fact in _assume_defined:
-            pname = as_property(fact)
-            if not hasattr(cls, pname):
-                setattr(cls, pname, make_property(fact))
+    for fact in derived_from_bases - set(cls.default_assumptions):
+        pname = as_property(fact)
+        if pname not in cls.__dict__:
+            setattr(cls, pname, make_property(fact))
+
+    # Finally, add any missing automagic property (e.g. for Basic)
+    for fact in _assume_defined:
+        pname = as_property(fact)
+        if not hasattr(cls, pname):
+            setattr(cls, pname, make_property(fact))
+
+
+# XXX: ManagedProperties used to be the metaclass for Basic but now Basic does
+# not use a metaclass. We leave this here for backwards compatibility for now
+# in case someone has been using the ManagedProperties class in downstream
+# code. The reason that it might have been used is that when subclassing a
+# class and wanting to use a metaclass the metaclass must be a subclass of the
+# metaclass for the class that is being subclassed. Anyone wanting to subclass
+# Basic and use a metaclass in their subclass would have needed to subclass
+# ManagedProperties. Here ManagedProperties is not the metaclass for Basic any
+# more but it should still be usable as a metaclass for Basic subclasses since
+# it is a subclass of type which is now the metaclass for Basic.
+class ManagedProperties(type):
+    def __init__(cls, *args, **kwargs):
+        msg = ("The ManagedProperties metaclass. "
+               "Basic does not use metaclasses any more")
+        sympy_deprecation_warning(msg,
+            deprecated_since_version="1.12",
+            active_deprecations_target='managedproperties')
+
+        # Here we still call this function in case someone is using
+        # ManagedProperties for something that is not a Basic subclass. For
+        # Basic subclasses this function is now called by __init_subclass__ and
+        # so this metaclass is not needed any more.
+        _prepare_class_assumptions(cls)

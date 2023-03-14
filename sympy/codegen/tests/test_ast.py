@@ -387,7 +387,6 @@ def test_Variable():
     assert Variable.deduced(z, value=3.0+1j).type == complex_
 
 
-
 def test_Pointer():
     p = Pointer(x)
     assert p.symbol == x
@@ -444,7 +443,6 @@ def test_Declaration():
     raises(ValueError, lambda: Declaration(vi, 42))
 
 
-
 def test_IntBaseType():
     assert intc.name == String('intc')
     assert intc.args == (intc.name,)
@@ -495,7 +493,7 @@ def test_FloatType():
     assert abs(f80.tiny / Float('3.36210314311209350626e-4932', precision=80) - 1) < 0.1*10**-f80.dig
     assert abs(f128.tiny / Float('3.3621031431120935062626778173217526e-4932', precision=128) - 1) < 0.1*10**-f128.dig
 
-    assert f64.cast_check(0.5) == 0.5
+    assert f64.cast_check(0.5) == Float(0.5, 17)
     assert abs(f64.cast_check(3.7) - 3.7) < 3e-17
     assert isinstance(f64.cast_check(3), (Float, float))
 
@@ -554,7 +552,6 @@ def test_While():
     whl2 = While(x < 2, cblk)
     assert whl1 == whl2
     assert whl1 != While(x < 3, [xpp])
-
 
 
 def test_Scope():

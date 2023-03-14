@@ -26,6 +26,10 @@ References
 .. [Liberatodebrito82] 'FORTRAN program for the integral of three
   spherical harmonics', A. Liberato de Brito,
   Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)
+.. [Homeier96] 'Some Properties of the Coupling Coefficients of Real
+  Spherical Harmonics and Their Relation to Gaunt Coefficients',
+  H. H. H. Homeier and E. O. Steinborn J. Mol. Struct., Volume 368,
+  pp. 31-37 (1996)
 
 Credits and Copyright
 =====================
@@ -43,6 +47,8 @@ Authors
 
 - Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
 
+- Phil Adam LeMaitre (2022-09-19): added real Gaunt coefficient
+
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
@@ -54,12 +60,14 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
+from sympy.utilities.misc import as_int
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -699,40 +707,32 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Jens Rasch (2009-03-24): initial version for Sage.
     """
-    if int(l_1) != l_1 or int(l_2) != l_2 or int(l_3) != l_3:
-        raise ValueError("l values must be integer")
-    if int(m_1) != m_1 or int(m_2) != m_2 or int(m_3) != m_3:
-        raise ValueError("m values must be integer")
+    l_1, l_2, l_3, m_1, m_2, m_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
 
-    sumL = l_1 + l_2 + l_3
-    bigL = sumL // 2
-    a1 = l_1 + l_2 - l_3
-    if a1 < 0:
+    if l_1 + l_2 - l_3 < 0:
         return S.Zero
-    a2 = l_1 - l_2 + l_3
-    if a2 < 0:
+    if l_1 - l_2 + l_3 < 0:
         return S.Zero
-    a3 = -l_1 + l_2 + l_3
-    if a3 < 0:
-        return S.Zero
-    if sumL % 2:
+    if -l_1 + l_2 + l_3 < 0:
         return S.Zero
     if (m_1 + m_2 + m_3) != 0:
         return S.Zero
     if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
         return S.Zero
+    bigL, remL = divmod(l_1 + l_2 + l_3, 2)
+    if remL % 2:
+        return S.Zero
 
     imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
     imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
 
-    maxfact = max(l_1 + l_2 + l_3 + 1, imax + 1)
-    _calc_factlist(maxfact)
+    _calc_factlist(max(l_1 + l_2 + l_3 + 1, imax + 1))
 
-    argsqrt = (2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
+    ressqrt = sqrt((2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
         _Factlist[l_1 - m_1] * _Factlist[l_1 + m_1] * _Factlist[l_2 - m_2] * \
         _Factlist[l_2 + m_2] * _Factlist[l_3 - m_3] * _Factlist[l_3 + m_3] / \
-        (4*pi)
-    ressqrt = sqrt(argsqrt)
+        (4*pi))
 
     prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
                      _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
@@ -752,6 +752,160 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         res = res.n(prec)
     return res
 
+
+def real_gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
+    r"""
+    Calculate the real Gaunt coefficient.
+
+    Explanation
+    ===========
+
+    The real Gaunt coefficient is defined as the integral over three
+    real spherical harmonics:
+
+    .. math::
+        \begin{aligned}
+        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
+        &=\int Z^{m_1}_{l_1}(\Omega)
+         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
+        \end{aligned}
+
+    Alternatively, it can be defined in terms of the standard Gaunt
+    coefficient by relating the real spherical harmonics to the standard
+    spherical harmonics via a unitary transformation `U`, i.e.
+    `Z^{m}_{l}(\Omega)=\sum_{m'}U^{m}_{m'}Y^{m'}_{l}(\Omega)` [Homeier96]_.
+    The real Gaunt coefficient is then defined as
+
+    .. math::
+        \begin{aligned}
+        \operatorname{RealGaunt}(l_1,l_2,l_3,m_1,m_2,m_3)
+        &=\int Z^{m_1}_{l_1}(\Omega)
+         Z^{m_2}_{l_2}(\Omega) Z^{m_3}_{l_3}(\Omega) \,d\Omega \\
+        &=\sum_{m'_1 m'_2 m'_3} U^{m_1}_{m'_1}U^{m_2}_{m'_2}U^{m_3}_{m'_3}
+         \operatorname{Gaunt}(l_1,l_2,l_3,m'_1,m'_2,m'_3)
+        \end{aligned}
+
+    The unitary matrix `U` has components
+
+    .. math::
+        \begin{aligned}
+        U^m_{m'} = \delta_{|m||m'|}*(\delta_{m'0}\delta_{m0} + \frac{1}{\sqrt{2}}\big[\Theta(m)
+        \big(\delta_{m'm}+(-1)^{m'}\delta_{m'-m}\big)+i\Theta(-m)\big((-1)^{-m}
+        \delta_{m'-m}-\delta_{m'm}*(-1)^{m'-m}\big)\big])
+        \end{aligned}
+
+    where `\delta_{ij}` is the Kronecker delta symbol and `\Theta` is a step
+    function defined as
+
+    .. math::
+        \begin{aligned}
+        \Theta(x) = \begin{cases} 1 \,\text{for}\, x > 0 \\ 0 \,\text{for}\, x \leq 0 \end{cases}
+        \end{aligned}
+
+    Parameters
+    ==========
+
+    l_1, l_2, l_3, m_1, m_2, m_3 :
+        Integer.
+
+    prec - precision, default: ``None``.
+        Providing a precision can
+        drastically speed up the calculation.
+
+    Returns
+    =======
+
+    Rational number times the square root of a rational number.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.wigner import real_gaunt
+    >>> real_gaunt(2,2,4,-1,-1,0)
+    -2/(7*sqrt(pi))
+    >>> real_gaunt(10,10,20,-9,-9,0).n(64)
+    -0.00002480019791932209313156167...
+
+    It is an error to use non-integer values for `l` and `m`::
+        real_gaunt(2.8,0.5,1.3,0,0,0)
+        Traceback (most recent call last):
+        ...
+        ValueError: l values must be integer
+        real_gaunt(2,2,4,0.7,1,-3.4)
+        Traceback (most recent call last):
+        ...
+        ValueError: m values must be integer
+
+    Notes
+    =====
+
+    The real Gaunt coefficient inherits from the standard Gaunt coefficient,
+    the invariance under any permutation of the pairs `(l_i, m_i)` and the
+    requirement that the sum of the `l_i` be even to yield a non-zero value.
+    It also obeys the following symmetry rules:
+
+    - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
+      `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
+      where `l_{\text{max}} = l_2+l_3`,
+
+      .. math::
+          \begin{aligned}
+          l_{\text{min}} = \begin{cases} \kappa(l_2, l_3, m_2, m_3) & \text{if}\,
+          \kappa(l_2, l_3, m_2, m_3) + l_{\text{max}}\, \text{is even} \\
+          \kappa(l_2, l_3, m_2, m_3)+1 & \text{if}\, \kappa(l_2, l_3, m_2, m_3) +
+          l_{\text{max}}\, \text{is odd}\end{cases}
+          \end{aligned}
+
+      and `\kappa(l_2, l_3, m_2, m_3) = \max{\big(|l_2-l_3|, \min{\big(|m_2+m_3|,
+      |m_2-m_3|\big)}\big)}`
+
+    - zero for an odd number of negative `m_i`
+
+    Algorithms
+    ==========
+
+    This function uses the algorithms of [Homeier96]_ and [Rasch03]_ to
+    calculate the value of the real Gaunt coefficient exactly. Note that
+    the formula used in [Rasch03]_ contains alternating sums over large
+    factorials and is therefore unsuitable for finite precision arithmetic
+    and only useful for a computer algebra system [Rasch03]_. However, this
+    function can in principle use any algorithm that computes the Gaunt
+    coefficient, so it is suitable for finite precision arithmetic in so far
+    as the algorithm which computes the Gaunt coefficient is.
+    """
+    l_1, l_2, l_3, m_1, m_2, m_3 = [
+        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
+
+    # check for quick exits
+    if sum(1 for i in (m_1, m_2, m_3) if i < 0) % 2:
+        return S.Zero  # odd number of negative m
+    if (l_1 + l_2 + l_3) % 2:
+        return S.Zero  # sum of l is odd
+    lmax = l_2 + l_3
+    lmin = max(abs(l_2 - l_3), min(abs(m_2 + m_3), abs(m_2 - m_3)))
+    if (lmin + lmax) % 2:
+        lmin += 1
+    if lmin not in range(lmax, lmin - 2, -2):
+        return S.Zero
+
+    kron_del = lambda i, j: 1 if i == j else 0
+    s = lambda e: -1 if e % 2 else 1  #  (-1)**e to give +/-1, avoiding float when e<0
+    A = lambda a, b: (-kron_del(a, b)*s(a-b) + kron_del(a, -b)*
+                      s(b)) if b < 0 else 0
+    B = lambda a, b: (kron_del(a, b) + kron_del(a, -b)*s(a)) if b > 0 else 0
+    C = lambda a, b: kron_del(abs(a), abs(b))*(kron_del(a, 0)*kron_del(b, 0) +
+                                          (B(a, b) + I*A(a, b))/sqrt(2))
+    ugnt = 0
+    for i in range(-l_1, l_1+1):
+        U1 = C(i, m_1)
+        for j in range(-l_2, l_2+1):
+            U2 = C(j, m_2)
+            U3 = C(-i-j, m_3)
+            ugnt = ugnt + re(U1*U2*U3)*gaunt(l_1, l_2, l_3, i, j, -i-j)
+
+    if prec is not None:
+        ugnt = ugnt.n(prec)
+    return ugnt
 
 
 class Wigner3j(Function):

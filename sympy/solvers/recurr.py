@@ -82,11 +82,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
     There are two methods for computing the polynomial solutions.
     If the degree bound is relatively small, i.e. it's smaller than
     or equal to the order of the recurrence, then naive method of
-    undetermined coefficients is being used. This gives system
+    undetermined coefficients is being used. This gives a system
     of algebraic equations with `N+1` unknowns.
 
     In the other case, the algorithm performs transformation of the
-    initial equation to an equivalent one, for which the system of
+    initial equation to an equivalent one for which the system of
     algebraic equations has only `r` indeterminates. This method is
     quite sophisticated (in comparison with the naive one) and was
     invented together by Abramov, Bronstein and Petkovsek.
@@ -197,6 +197,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         solutions = solve_undetermined_coeffs(E - f, C, n)
 
         if solutions is not None:
+            _C = C
             C = [c for c in C if (c not in solutions)]
             result = y.subs(solutions)
         else:
@@ -329,6 +330,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         else:
             result = h
 
+        _C = C[:]
         for c, q in list(zip(C, Q)):
             if c in solutions:
                 s = solutions[c]*q
@@ -337,6 +339,11 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
                 s = c*q
 
             result += s.expand()
+
+    if C != _C:
+        # renumber so they are contiguous
+        result = result.xreplace(dict(zip(C, _C)))
+        C = _C[:len(C)]
 
     if hints.get('symbols', False):
         return (result, C)
@@ -366,14 +373,14 @@ def rsolve_ratio(coeffs, f, n, **hints):
             `y(n) = u(n)/v(n)` and solve it for `u(n)` finding all its
             polynomial solutions. Return ``None`` if none were found.
 
-    Algorithm implemented here is a revised version of the original
+    The algorithm implemented here is a revised version of the original
     Abramov's algorithm, developed in 1989. The new approach is much
     simpler to implement and has better overall efficiency. This
-    method can be easily adapted to q-difference equations case.
+    method can be easily adapted to the q-difference equations case.
 
     Besides finding rational solutions alone, this functions is
-    an important part of Hyper algorithm were it is used to find
-    particular solution of inhomogeneous part of a recurrence.
+    an important part of Hyper algorithm where it is used to find
+    a particular solution for the inhomogeneous part of a recurrence.
 
     Examples
     ========
@@ -382,7 +389,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     >>> from sympy.solvers.recurr import rsolve_ratio
     >>> rsolve_ratio([-2*x**3 + x**2 + 2*x - 1, 2*x**3 + x**2 - 6*x,
     ... - 2*x**3 - 11*x**2 - 18*x - 9, 2*x**3 + 13*x**2 + 22*x + 8], 0, x)
-    C2*(2*x - 3)/(2*(x**2 - 1))
+    C0*(2*x - 3)/(2*(x**2 - 1))
 
     References
     ==========
@@ -579,8 +586,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = [z for z in roots(p, n).keys()]
-    q_factors = [z for z in roots(q, n).keys()]
+    p_factors = list(roots(p, n).keys())
+    q_factors = list(roots(q, n).keys())
 
     factors = [(S.One, S.One)]
 
@@ -756,7 +763,7 @@ def rsolve(f, y, init=None):
     common = S.One
 
     if not i_part.is_zero and not i_part.is_hypergeometric(n) and \
-       not (i_part.is_Add and all(map(lambda x: x.is_hypergeometric(n), i_part.expand().args))):
+       not (i_part.is_Add and all((x.is_hypergeometric(n) for x in i_part.expand().args))):
         raise ValueError("The independent term should be a sum of hypergeometric functions, got '%s'" % i_part)
 
     for coeff in h_part.values():

@@ -9,6 +9,11 @@ This is the official documentation of the ``solveset`` module in solvers.
 It contains the frequently asked questions about our new module to solve
 equations.
 
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
 What's wrong with solve():
 --------------------------
 
@@ -222,10 +227,10 @@ three arguments:
 
 ``solveset(equation, variable=None, domain=S.Complexes)``
 
-Equation(s)
-   The equation(s) to solve.
-Variable(s)
-   The variable(s) for which the equation is to be solved.
+Equation
+   The equation to solve.
+Variable
+   The variable for which the equation is to be solved.
 Domain
    The domain in which the equation is to be solved.
 
@@ -512,10 +517,10 @@ How are symbolic parameters handled in solveset?
 References
 ----------
 
- .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas#solvers
+ .. [1] https://github.com/sympy/sympy/wiki/GSoC-2015-Ideas/7abb76ffed50425299b9065129ae87261668a0f7#solvers
  .. [2] https://github.com/sympy/sympy/wiki/GSoC-2014-Application-Harsh-Gupta:-Solvers
  .. [3] https://github.com/sympy/sympy/wiki/GSoC-2015-Application-AMiT-Kumar--Solvers-:-Extending-Solveset
- .. [5] http://iamit.in/blog/
+ .. [5] https://iamit.in/blog/
  .. [6] https://github.com/sympy/sympy/pull/2948 : Action Plan for improving solvers.
  .. [7] https://github.com/sympy/sympy/issues/6659 : ``solve()`` is a giant mess
  .. [8] https://github.com/sympy/sympy/pull/7523 : ``solveset`` PR
@@ -558,26 +563,15 @@ is the symbol that we want to solve the equation for.
 
 .. autofunction:: sympy.solvers.solveset::solvify
 
-linear_eq_to_matrix
--------------------
-
 .. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
-
-linsolve
---------
-
 .. autofunction:: sympy.solvers.solveset::linsolve
-
-
-nonlinsolve
------------
 
 .. autofunction:: sympy.solvers.solveset::nonlinsolve
 
 
 transolve
----------
+^^^^^^^^^
 
 .. autofunction:: sympy.solvers.solveset::_transolve
 

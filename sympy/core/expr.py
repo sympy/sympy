@@ -158,7 +158,7 @@ class Expr(Basic, EvalfMixin):
     # ***************
     # * Arithmetics *
     # ***************
-    # Expr and its sublcasses use _op_priority to determine which object
+    # Expr and its subclasses use _op_priority to determine which object
     # passed to a binary special method (__mul__, etc.) will handle the
     # operation. In general, the 'call_highest_priority' decorator will choose
     # the object with the highest _op_priority to handle the call.
@@ -1273,7 +1273,6 @@ class Expr(Basic, EvalfMixin):
         raise NotImplementedError('not sure of order of %s' % o)
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1840,8 +1839,12 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        .separatevars(), .expand(log=True), sympy.core.add.Add.as_two_terms(),
-        sympy.core.mul.Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+
+        separatevars
+        expand_log
+        sympy.core.add.Add.as_two_terms
+        sympy.core.mul.Mul.as_two_terms
+        as_coeff_mul
         """
         from .symbol import Symbol
         from .add import _unevaluated_Add
@@ -1946,7 +1949,7 @@ class Expr(Basic, EvalfMixin):
                   of commutative and noncommutative factors.
         """
         d = defaultdict(int)
-        d.update(dict([self.as_base_exp()]))
+        d.update([self.as_base_exp()])
         return d
 
     def as_coefficients_dict(self, *syms):
@@ -2039,7 +2042,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has(*deps):
-                return self, tuple()
+                return self, ()
         return S.One, (self,)
 
     def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
@@ -2075,7 +2078,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has_free(*deps):
-                return self, tuple()
+                return self, ()
         return S.Zero, (self,)
 
     def primitive(self):
@@ -2162,7 +2165,9 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ expression -> a/b -> a, b
+        """Return the numerator and the denominator of an expression.
+
+        expression -> a/b -> a, b
 
         This is just a stub that should be defined by
         an object's class methods to get anything else.
@@ -2176,7 +2181,9 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
-        """ expression -> a/b
+        """Return the expression as a fraction.
+
+        expression -> a/b
 
         See Also
         ========
@@ -2370,8 +2377,8 @@ class Expr(Basic, EvalfMixin):
             co = self
             diff = co - c
             # XXX should we match types? i.e should 3 - .1 succeed?
-            if (co > 0 and diff > 0 and diff < co or
-                    co < 0 and diff < 0 and diff > co):
+            if (co > 0 and diff >= 0 and diff < co or
+                    co < 0 and diff <= 0 and diff > co):
                 return diff
             return None
 
@@ -2695,22 +2702,19 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
-        if self in _illegal:
-            return False
-
         if syms:
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
             if not syms:
-                return True
+                return self not in _illegal
 
         return self._eval_is_rational_function(syms)
 
     def _eval_is_rational_function(self, syms):
         if self in syms:
             return True
-        if not self.has_free(*syms):
+        if not self.has_xfree(syms):
             return True
         # subclasses should return True or False
 
@@ -2816,7 +2820,8 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        is_rational_function()
+
+        is_rational_function
 
         References
         ==========
@@ -2973,33 +2978,45 @@ class Expr(Basic, EvalfMixin):
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
-        if x0 in [S.Infinity, S.NegativeInfinity]:
+        x0 = sympify(x0)
+        cdir = sympify(cdir)
+        from sympy.functions.elementary.complexes import im, sign
+
+        if not cdir.is_zero:
+            if cdir.is_real:
+                dir = '+' if cdir.is_positive else '-'
+            else:
+                dir = '+' if im(cdir).is_positive else '-'
+        else:
+            if x0 and x0.is_infinite:
+                cdir = sign(x0).simplify()
+            elif str(dir) == "+":
+                cdir = S.One
+            elif str(dir) == "-":
+                cdir = S.NegativeOne
+            elif cdir == S.Zero:
+                cdir = S.One
+
+        cdir = cdir/abs(cdir)
+
+        if x0 and x0.is_infinite:
             from .function import PoleError
             try:
-                sgn = 1 if x0 is S.Infinity else -1
-                s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
+                s = self.subs(x, cdir/x).series(x, n=n, dir='+', cdir=1)
                 if n is None:
-                    return (si.subs(x, sgn/x) for si in s)
-                return s.subs(x, sgn/x)
+                    return (si.subs(x, cdir/x) for si in s)
+                return s.subs(x, cdir/x)
             except PoleError:
-                s = self.subs(x, sgn*x).aseries(x, n=n)
-                return s.subs(x, sgn*x)
+                s = self.subs(x, cdir*x).aseries(x, n=n)
+                return s.subs(x, cdir*x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
-        if x0 or dir == '-':
-            if dir == '-':
-                rep = -x + x0
-                rep2 = -x
-                rep2b = x0
-            else:
-                rep = x + x0
-                rep2 = x
-                rep2b = -x0
-            s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx, cdir=cdir)
+        if x0 or cdir != 1:
+            s = self.subs({x: x0 + cdir*x}).series(x, x0=0, n=n, dir='+', logx=logx, cdir=1)
             if n is None:  # lseries...
-                return (si.subs(x, rep2 + rep2b) for si in s)
-            return s.subs(x, rep2 + rep2b)
+                return (si.subs({x: x/cdir - x0/cdir}) for si in s)
+            return s.subs({x: x/cdir - x0/cdir})
 
         # from here on it's x0=0 and dir='+' handling
 
@@ -3177,7 +3194,7 @@ class Expr(Basic, EvalfMixin):
                In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
                pp. 239-244.
         .. [2] Gruntz thesis - p90
-        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+        .. [3] https://en.wikipedia.org/wiki/Asymptotic_expansion
 
         See Also
         ========
@@ -3412,10 +3429,19 @@ class Expr(Basic, EvalfMixin):
         return limit(self, x, xlim, dir)
 
     def compute_leading_term(self, x, logx=None):
-        """
+        """Deprecated function to compute the leading term of a series.
+
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        SymPyDeprecationWarning(
+            feature="compute_leading_term",
+            useinstead="as_leading_term",
+            issue=21843,
+            deprecated_since_version="1.12"
+        ).warn()
 
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         if self.has(Piecewise):
@@ -3425,17 +3451,22 @@ class Expr(Basic, EvalfMixin):
         if self.removeO() == 0:
             return self
 
-        from sympy.series.gruntz import calculate_series
+        from .symbol import Dummy
+        from sympy.functions.elementary.exponential import log
+        from sympy.series.order import Order
 
-        if logx is None:
-            from .symbol import Dummy
-            from sympy.functions.elementary.exponential import log
-            d = Dummy('logx')
-            s = calculate_series(expr, x, d).subs(d, log(x))
-        else:
-            s = calculate_series(expr, x, logx)
+        _logx = logx
+        logx = Dummy('logx') if logx is None else logx
+        res = Order(1)
+        incr = S.One
+        while res.is_Order:
+            res = expr._eval_nseries(x, n=1+incr, logx=logx).cancel().powsimp().trigsimp()
+            incr *= 2
 
-        return s.as_leading_term(x)
+        if _logx is None:
+            res = res.subs(logx, log(x))
+
+        return res.as_leading_term(x)
 
     @cacheit
     def as_leading_term(self, *symbols, logx=None, cdir=0):
@@ -3517,11 +3548,11 @@ class Expr(Basic, EvalfMixin):
         return c, e
 
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def as_coeff_Add(self, rational=False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return S.Zero, self
 
     def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,
@@ -3960,7 +3991,7 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_rational_function(self, syms):
-        return True
+        return self not in _illegal
 
     def _eval_is_meromorphic(self, x, a):
         from sympy.calculus.accumulationbounds import AccumBounds

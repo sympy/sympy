@@ -122,7 +122,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
             return K1.convert(a.LC(), K0.dom)
 
     def log(self, a, b):
-        r"""logarithm of *a* to the base *b*
+        r"""Logarithm of *a* to the base *b*.
 
         Parameters
         ==========

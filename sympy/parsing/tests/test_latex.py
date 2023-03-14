@@ -144,11 +144,11 @@ GOOD_PAIRS = [
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1))),
     (r"(\csc x)(\sec y)", csc(x)*sec(y)),
-    (r"\lim_{x \to 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3)),
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
     (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
@@ -273,6 +273,7 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
 

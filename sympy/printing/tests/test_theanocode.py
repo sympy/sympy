@@ -139,7 +139,6 @@ def theq(a, b):
     return astr == bstr
 
 
-
 def test_example_symbols():
     """
     Check that the example symbols in this module print to their Theano

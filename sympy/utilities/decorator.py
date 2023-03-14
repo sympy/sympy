@@ -5,7 +5,6 @@ import types
 import inspect
 from functools import wraps, update_wrapper
 
-from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 def threaded_factory(func, use_add):
@@ -138,7 +137,6 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
     python_version should be the minimum Python version required, as a tuple
     (like (3, 0))
     """
-
     dependencies = {}
     if exe is not None:
         dependencies['executables'] = exe
@@ -150,6 +148,7 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
         dependencies['python_version'] = python_version
 
     def skiptests():
+        from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter # lazy import
         r = PyTestReporter()
         t = SymPyDocTests(r, None)
         try:
@@ -304,8 +303,8 @@ def deprecated(message, *, deprecated_since_version,
     sympy.testing.pytest.warns_deprecated_sympy
 
     '''
-    decorator_kwargs = dict(deprecated_since_version=deprecated_since_version,
-               active_deprecations_target=active_deprecations_target)
+    decorator_kwargs = {"deprecated_since_version": deprecated_since_version,
+               "active_deprecations_target": active_deprecations_target}
     def deprecated_decorator(wrapped):
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):

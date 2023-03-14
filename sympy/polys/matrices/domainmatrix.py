@@ -28,7 +28,7 @@ from .sdm import SDM
 
 from .domainscalar import DomainScalar
 
-from sympy.polys.domains import ZZ, EXRAW
+from sympy.polys.domains import ZZ, EXRAW, QQ
 
 
 def DM(rows, domain):
@@ -58,11 +58,10 @@ class DomainMatrix:
     ===========
 
     DomainMatrix uses :py:class:`~.Domain` for its internal representation
-    which makes it more faster for many common operations
-    than current SymPy Matrix class, but this advantage makes it not
-    entirely compatible with Matrix.
-    DomainMatrix could be found analogous to numpy arrays with "dtype".
-    In the DomainMatrix, each matrix has a domain such as :ref:`ZZ`
+    which makes it faster than the SymPy Matrix class (currently) for many
+    common operations, but this advantage makes it not entirely compatible
+    with Matrix. DomainMatrix are analogous to numpy arrays with "dtype".
+    In the DomainMatrix, each element has a domain such as :ref:`ZZ`
     or  :ref:`QQ(a)`.
 
 
@@ -80,7 +79,7 @@ class DomainMatrix:
     >>> A
     DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
 
-    Driectly forming a DomainMatrix:
+    Directly forming a DomainMatrix:
 
     >>> from sympy import ZZ
     >>> from sympy.polys.matrices import DomainMatrix
@@ -376,10 +375,10 @@ class DomainMatrix:
         idx = 0
         items_dict = {}
         for i, row in elemsdict.items():
-                items_dict[i] = {}
-                for j in row:
-                    items_dict[i][j] = items_domain[idx]
-                    idx += 1
+            items_dict[i] = {}
+            for j in row:
+                items_dict[i][j] = items_domain[idx]
+                idx += 1
 
         return DomainMatrix(items_dict, (nrows, ncols), domain)
 
@@ -904,13 +903,13 @@ class DomainMatrix:
         ==========
 
         A, B: DomainMatrix
-            matrices to substract
+            matrices to subtract
 
         Returns
         =======
 
         DomainMatrix
-            DomainMatrix after Substraction
+            DomainMatrix after Subtraction
 
         Raises
         ======
@@ -1084,7 +1083,7 @@ class DomainMatrix:
         return A.from_rep(A.rep.mul_elementwise(B.rep))
 
     def __truediv__(A, lamda):
-        """ Method for Scalar Divison"""
+        """ Method for Scalar Division"""
         if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
 
@@ -1691,3 +1690,102 @@ class DomainMatrix:
         if A.domain != B.domain:
             A, B = A.unify(B)
         return A == B
+
+    def lll(A, delta=QQ(3, 4)):
+        """
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm.
+        See [1]_ and [2]_.
+
+        Parameters
+        ==========
+
+        delta : QQ, optional
+            The Lovász parameter. Must be in the interval (0.25, 1), with larger
+            values producing a more reduced basis. The default is 0.75 for
+            historical reasons.
+
+        Returns
+        =======
+
+        The reduced basis as a DomainMatrix over ZZ.
+
+        Throws
+        ======
+
+        DMValueError: if delta is not in the range (0.25, 1)
+        DMShapeError: if the matrix is not of shape (m, n) with m <= n
+        DMDomainError: if the matrix domain is not ZZ
+        DMRankError: if the matrix contains linearly dependent rows
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy.polys.matrices import DM
+        >>> x = DM([[1, 0, 0, 0, -20160],
+        ...         [0, 1, 0, 0, 33768],
+        ...         [0, 0, 1, 0, 39578],
+        ...         [0, 0, 0, 1, 47757]], ZZ)
+        >>> y = DM([[10, -3, -2, 8, -4],
+        ...         [3, -9, 8, 1, -11],
+        ...         [-3, 13, -9, -3, -9],
+        ...         [-12, -7, -11, 9, -1]], ZZ)
+        >>> assert x.lll(delta=QQ(5, 6)) == y
+
+        Notes
+        =====
+
+        The implementation is derived from the Maple code given in Figures 4.3
+        and 4.4 of [3]_ (pp.68-69). It uses the efficient method of only calculating
+        state updates as they are required.
+
+        See also
+        ========
+
+        lll_transform
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Lenstra–Lenstra–Lovász_lattice_basis_reduction_algorithm
+        .. [2] https://web.archive.org/web/20221029115428/https://web.cs.elte.hu/~lovasz/scans/lll.pdf
+        .. [3] Murray R. Bremner, "Lattice Basis Reduction: An Introduction to the LLL Algorithm and Its Applications"
+
+        """
+        return DomainMatrix.from_rep(A.rep.lll(delta=delta))
+
+    def lll_transform(A, delta=QQ(3, 4)):
+        """
+        Performs the Lenstra–Lenstra–Lovász (LLL) basis reduction algorithm
+        and returns the reduced basis and transformation matrix.
+
+        Explanation
+        ===========
+
+        Parameters, algorithm and basis are the same as for :meth:`lll` except that
+        the return value is a tuple `(B, T)` with `B` the reduced basis and
+        `T` a transformation matrix. The original basis `A` is transformed to
+        `B` with `T*A == B`. If only `B` is needed then :meth:`lll` should be
+        used as it is a little faster.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import ZZ, QQ
+        >>> from sympy.polys.matrices import DM
+        >>> X = DM([[1, 0, 0, 0, -20160],
+        ...         [0, 1, 0, 0, 33768],
+        ...         [0, 0, 1, 0, 39578],
+        ...         [0, 0, 0, 1, 47757]], ZZ)
+        >>> B, T = X.lll_transform(delta=QQ(5, 6))
+        >>> T * X == B
+        True
+
+        See also
+        ========
+
+        lll
+
+        """
+        reduced, transform = A.rep.lll_transform(delta=delta)
+        return DomainMatrix.from_rep(reduced), DomainMatrix.from_rep(transform)

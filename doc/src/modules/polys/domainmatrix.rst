@@ -30,33 +30,21 @@ In general, we represent a matrix without concerning about the :py:class:`~.Doma
    [1, 2],
    [3, 4]])
 
-
-
-DomainMatrix Class Reference
-============================
-
-.. :currentmodule:: sympy.polys.matrices
+.. currentmodule:: sympy.polys.matrices
 
 .. autoclass:: sympy.polys.matrices.domainmatrix.DomainMatrix
    :members:
 
-DDM Class Reference
-===================
 .. currentmodule:: sympy.polys.matrices.ddm
 
 .. autoclass:: DDM
    :members:
 
-SDM Class Reference
-===================
 .. currentmodule:: sympy.polys.matrices.sdm
 
 .. autoclass:: SDM
    :members:
 
-
-Normal Forms
-============
 .. currentmodule:: sympy.polys.matrices.normalforms
 
 .. autofunction:: smith_normal_form

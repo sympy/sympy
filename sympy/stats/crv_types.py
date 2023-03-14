@@ -390,7 +390,7 @@ def Benini(name, alpha, beta, sigma):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Benini_distribution
-    .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
+    .. [2] https://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
 
     """
 
@@ -472,7 +472,7 @@ def Beta(name, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta_distribution
-    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+    .. [2] https://mathworld.wolfram.com/BetaDistribution.html
 
     """
 
@@ -633,7 +633,7 @@ def BetaPrime(name, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta_prime_distribution
-    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    .. [2] https://mathworld.wolfram.com/BetaPrimeDistribution.html
 
     """
 
@@ -776,7 +776,7 @@ def Cauchy(name, x0, gamma):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Cauchy_distribution
-    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    .. [2] https://mathworld.wolfram.com/CauchyDistribution.html
 
     """
 
@@ -857,7 +857,7 @@ def Chi(name, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chi_distribution
-    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+    .. [2] https://mathworld.wolfram.com/ChiDistribution.html
 
     """
 
@@ -1019,7 +1019,7 @@ def ChiSquared(name, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Chi_squared_distribution
-    .. [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    .. [2] https://mathworld.wolfram.com/Chi-SquaredDistribution.html
     """
 
     return rv(name, ChiSquaredDistribution, (k, ))
@@ -1174,7 +1174,7 @@ def Erlang(name, k, l):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Erlang_distribution
-    .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    .. [2] https://mathworld.wolfram.com/ErlangDistribution.html
 
     """
 
@@ -1401,7 +1401,7 @@ def Exponential(name, rate):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Exponential_distribution
-    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    .. [2] https://mathworld.wolfram.com/ExponentialDistribution.html
 
     """
 
@@ -1578,7 +1578,7 @@ def FDistribution(name, d1, d2):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/F-distribution
-    .. [2] http://mathworld.wolfram.com/F-Distribution.html
+    .. [2] https://mathworld.wolfram.com/F-Distribution.html
 
     """
 
@@ -1659,7 +1659,7 @@ def FisherZ(name, d1, d2):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Fisher%27s_z-distribution
-    .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    .. [2] https://mathworld.wolfram.com/Fishersz-Distribution.html
 
     """
 
@@ -1846,7 +1846,7 @@ def Gamma(name, k, theta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_distribution
-    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+    .. [2] https://mathworld.wolfram.com/GammaDistribution.html
 
     """
 
@@ -2034,10 +2034,10 @@ def Gumbel(name, beta, mu, minimum=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/GumbelDistribution.html
+    .. [1] https://mathworld.wolfram.com/GumbelDistribution.html
     .. [2] https://en.wikipedia.org/wiki/Gumbel_distribution
-    .. [3] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
-    .. [4] http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
+    .. [3] https://web.archive.org/web/20200628222206/http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_max.html
+    .. [4] https://web.archive.org/web/20200628222212/http://www.mathwave.com/help/easyfit/html/analyses/distributions/gumbel_min.html
 
     """
     return rv(name, GumbelDistribution, (beta, mu, minimum))
@@ -2280,7 +2280,7 @@ def Laplace(name, mu, b):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Laplace_distribution
-    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    .. [2] https://mathworld.wolfram.com/LaplaceDistribution.html
 
     """
 
@@ -2305,7 +2305,7 @@ class LevyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(mu, c):
         _value_check(c > 0, "c (scale parameter) must be positive")
-        _value_check(mu.is_real, "mu (location paramater) must be real")
+        _value_check(mu.is_real, "mu (location parameter) must be real")
 
     def pdf(self, x):
         mu, c = self.mu, self.c
@@ -2365,7 +2365,7 @@ def Levy(name, mu, c):
     References
     ==========
     .. [1] https://en.wikipedia.org/wiki/L%C3%A9vy_distribution
-    .. [2] http://mathworld.wolfram.com/LevyDistribution.html
+    .. [2] https://mathworld.wolfram.com/LevyDistribution.html
     """
 
     return rv(name, LevyDistribution, (mu, c))
@@ -2522,7 +2522,7 @@ def Logistic(name, mu, s):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Logistic_distribution
-    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    .. [2] https://mathworld.wolfram.com/LogisticDistribution.html
 
     """
 
@@ -2799,7 +2799,7 @@ def LogNormal(name, mean, std):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Lognormal
-    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    .. [2] https://mathworld.wolfram.com/LogNormalDistribution.html
 
     """
 
@@ -2944,7 +2944,7 @@ def Maxwell(name, a):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Maxwell_distribution
-    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    .. [2] https://mathworld.wolfram.com/MaxwellDistribution.html
 
     """
 
@@ -3024,7 +3024,7 @@ def Moyal(name, mu, sigma):
     ==========
 
     .. [1] https://reference.wolfram.com/language/ref/MoyalDistribution.html
-    .. [2] http://www.stat.rice.edu/~dobelman/textfiles/DistributionsHandbook.pdf
+    .. [2] https://www.stat.rice.edu/~dobelman/textfiles/DistributionsHandbook.pdf
 
     """
 
@@ -3240,7 +3240,7 @@ def Normal(name, mean, std):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Normal_distribution
-    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    .. [2] https://mathworld.wolfram.com/NormalDistributionFunction.html
 
     """
 
@@ -3352,7 +3352,7 @@ def GaussianInverse(name, mean, shape):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Inverse_Gaussian_distribution
-    .. [2] http://mathworld.wolfram.com/InverseGaussianDistribution.html
+    .. [2] https://mathworld.wolfram.com/InverseGaussianDistribution.html
 
     """
 
@@ -3440,7 +3440,7 @@ def Pareto(name, xm, alpha):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Pareto_distribution
-    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    .. [2] https://mathworld.wolfram.com/ParetoDistribution.html
 
     """
 
@@ -3487,7 +3487,7 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha : Positive number, `0 < \alpha`, the shape paramater
+    alpha : Positive number, `0 < \alpha`, the shape parameter
     a : Real number, :math:`-\infty < a`, the left boundary
     b : Real number, :math:`a < b < \infty`, the right boundary
 
@@ -3529,7 +3529,7 @@ def PowerFunction(name, alpha, a, b):
     References
     ==========
 
-    .. [1] http://www.mathwave.com/help/easyfit/html/analyses/distributions/power_func.html
+    .. [1] https://web.archive.org/web/20200204081320/http://www.mathwave.com/help/easyfit/html/analyses/distributions/power_func.html
 
     """
     return rv(name, PowerFunctionDistribution, (alpha, a, b))
@@ -3791,7 +3791,7 @@ def Rayleigh(name, sigma):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Rayleigh_distribution
-    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    .. [2] https://mathworld.wolfram.com/RayleighDistribution.html
 
     """
 
@@ -4004,7 +4004,7 @@ def StudentT(name, nu):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Student_t-distribution
-    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    .. [2] https://mathworld.wolfram.com/Studentst-Distribution.html
 
     """
 
@@ -4203,7 +4203,7 @@ def Triangular(name, a, b, c):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Triangular_distribution
-    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    .. [2] https://mathworld.wolfram.com/TriangularDistribution.html
 
     """
 
@@ -4313,7 +4313,7 @@ def Uniform(name, left, right):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+    .. [2] https://mathworld.wolfram.com/UniformDistribution.html
 
     """
 
@@ -4421,7 +4421,7 @@ def UniformSum(name, n):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Uniform_sum_distribution
-    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    .. [2] https://mathworld.wolfram.com/UniformSumDistribution.html
 
     """
 
@@ -4495,7 +4495,7 @@ def VonMises(name, mu, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Von_Mises_distribution
-    .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    .. [2] https://mathworld.wolfram.com/vonMisesDistribution.html
 
     """
 
@@ -4572,7 +4572,7 @@ def Weibull(name, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Weibull_distribution
-    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    .. [2] https://mathworld.wolfram.com/WeibullDistribution.html
 
     """
 
@@ -4650,7 +4650,7 @@ def WignerSemicircle(name, R):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    .. [2] https://mathworld.wolfram.com/WignersSemicircleLaw.html
 
     """
 

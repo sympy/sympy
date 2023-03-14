@@ -13,10 +13,9 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-
+from __future__ import annotations
 from functools import singledispatch
 from math import prod
-from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -1447,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, seed=seed, **kwargs))
-    result = Add(*[samp for samp in samples]) / numsamples
+    result = Add(*samples) / numsamples
 
     if evalf:
         return result.evalf()
@@ -1579,7 +1578,7 @@ def rv_subs(expr, symbols=None):
 
 
 class NamedArgsMixin:
-    _argnames = ()  # type: tTuple[str, ...]
+    _argnames: tuple[str, ...] = ()
 
     def __getattr__(self, attr):
         try:

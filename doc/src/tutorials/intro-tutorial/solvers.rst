@@ -2,9 +2,14 @@
  Solvers
 =========
 
-    >>> from sympy import *
-    >>> x, y, z = symbols('x y z')
-    >>> init_printing(use_unicode=True)
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
+>>> from sympy import *
+>>> x, y, z = symbols('x y z')
+>>> init_printing(use_unicode=True)
 
 A Note about Equations
 ======================
@@ -231,7 +236,7 @@ To solve the ODE, pass it and the function to solve for to ``dsolve``.
     f(x) = (C₁ + C₂⋅x)⋅ℯ  + ──────
                               2
 
-``dsolve`` returns an instance of ``Eq``.  This is because in general,
+``dsolve`` returns an instance of ``Eq``.  This is because, in general,
 solutions to differential equations cannot be solved explicitly for the
 function.
 
