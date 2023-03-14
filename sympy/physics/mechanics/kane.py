@@ -57,18 +57,19 @@ class KanesMethod(_Methods):
         explicit form (default) or implicit form for kinematics.
         See the notes for more details.
     kd_eqs_solver : str, callable
-        Solver to be used for the kinematic differential equations. Supported
-        solvers are:
-        - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``callable``: custom solver supplied by the user, which takes the
-          ``A`` matrix as the first argument and ``b`` matrix as the second.
-        See the notes for more information.
+        Method used to solve the kinematic differential equations. If a string is
+        supplied, it should be a valid method that can be used with the
+        :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
+        should take two arguments - the `A` matrix and the `rhs`, and solve the
+        equations and return the solution. The default uses LU solve. See the notes for
+        more information.
     constraint_solver : str, callable
-        Solver to be used for the velocity constraints. Supported solvers are:
-        - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``callable``: custom solver supplied by the user, which takes the
-          ``A`` matrix as the first argument and ``b`` matrix as the second.
-        See the notes for more information.
+        Method used to solve the velocity constraints. If a string is
+        supplied, it should be a valid method that can be used with the
+        :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
+        should take two arguments - the `A` matrix and the `rhs`, and solve the
+        equations and return the solution. The default uses LU solve. See the notes for
+        more information.
 
     Notes
     =====
@@ -83,20 +84,21 @@ class KanesMethod(_Methods):
 
     Two linear solvers can be supplied to ``KanesMethod``: one for solving the
     kinematic differential equations and one to solve the velocity constraints.
-    Both of these sets of equations form a linear system ``Ax = b``, which has
-    to be solved in order to obtain the equations of motion.
+    Both of these sets of equations can be expressed as a linear system ``Ax = rhs``,
+    which have to be solved in order to obtain the equations of motion.
 
-    The implemented solvers are:
-        - ``'lu'``: LU solver which utilizes ``Matrix.LUsolve`` (default)
-        - ``callable``: custom solver supplied by the user, which takes the
-          ``A`` matrix as the first argument and ``b`` matrix as the second.
+    The default solver, LU solve, results in the fastest execution time after
+    lambdifying the solution. The weakness of this method is that it can result in zero
+    division errors.
 
-    The default solver, ``Matrix.LUsolve``, results in the fastest execution
-    time after lambdifying the solution. The weakness of this method is that it
-    can result in zero division errors.
-
-    By specifying a ``callable`` you can also specify the use of a different
-    solver like ``Matrix.solve`` and ``lambda A, b: A.inv() * b``.
+    While a valid list of solvers can be found at
+    :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a
+    `callable`. This way it is possible to use a different solver routine. If the
+    kinematic differential equations are not too complex it can be worth it to simplify
+    the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
+    option solver one may use is :func:`sympy.solvers.solveset.linsolve`. This can be
+    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
+    solution as our system should have only one unique solution.
 
     Examples
     ========
@@ -168,8 +170,8 @@ class KanesMethod(_Methods):
                  configuration_constraints=None, u_dependent=None,
                  velocity_constraints=None, acceleration_constraints=None,
                  u_auxiliary=None, bodies=None, forcelist=None,
-                 explicit_kinematics=True, kd_eqs_solver='lu',
-                 constraint_solver='lu'):
+                 explicit_kinematics=True, kd_eqs_solver='LU',
+                 constraint_solver='LU'):
 
         """Please read the online documentation. """
         if not q_ind:
