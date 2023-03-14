@@ -46,6 +46,7 @@ and bugs even in interactive usage.
 
 ## Basic Usage
 
+(best-practices-defining-symbols)
 ### Defining Symbols
 
 - **The best way to define symbols is using the {func}`~.symbols` function.**
@@ -500,6 +501,64 @@ simplification using {meth}`~sympy.core.basic.Basic.replace`, or in general, man
 
 (best-practices-dont-hardcode-symbol-names)=
 ### Don't Hardcode Symbol Names in Functions
+
+Instead of hard-coding {class}`~.Symbol` names inside of a function
+definition, make the symbols a parameter to the function.
+
+**Don't**
+
+```py
+def theta_operator(expr):
+    t = symbols('t')
+    return t*expr.diff(t)
+```
+
+**Do**
+
+```py
+def theta_operator(expr, t):
+    return t*expr.diff(t)
+```
+
+A hard-coded symbol name has the disadvantage of requiring all expressions to
+use that exact symbol name. In the above example, it is not possible to
+compute $\theta = xD_x$ because it is hard-coded to $tD_t$. What's worse,
+trying to do so silently leads to a wrong result instead of an error, since
+`x` is treated as a constant expression:
+
+```py
+>>> def theta_operator(expr):
+...     t = symbols('t')
+...     return t*expr.diff(t)
+>>> theta_operator(x**2)
+0
+```
+
+This is particularly problematic if the function accepts arbitrary user input,
+as the user may be using a different variable name that makes more sense in
+their mathematical context. And if the user already used the symbol `t` but as
+a constant, they would need to swap things around with `subs` before being
+able to use the function.
+
+The other reason this antipattern is problematic is due to the gotcha that
+symbols with assumptions are considered unequal to symbols without
+assumptions. If someone defined their expression using
+
+```py
+>>> t = symbols('t', positive=True)
+```
+
+for example, to make further simplifications possible (see
+[](best-practices-defining-symbols) above), the function hard-coding
+`Symbol('t')` without assumptions would not work:
+
+```py
+>>> theta_operator(t**2)
+0
+```
+
+By making the symbol an argument, like `theta_operator(expr, t)`, these
+problems all go away.
 
 (best-practices-separate-sympy-and-non-sympy)=
 ### Separate SymPy and non-SymPy Numerical Code
