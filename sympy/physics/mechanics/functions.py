@@ -779,8 +779,8 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                                  f'dynamicsymbol.')
 
 
-def _parse_linear_solver(solver):
+def _parse_linear_solver(linear_solver):
     """Helper function to retrieve a specified linear solver."""
-    if callable(solver):
-        return solver
-    return lambda A, b: Matrix.solve(A, b, method=solver)
+    if callable(linear_solver):
+        return linear_solver
+    return lambda A, b: Matrix.solve(A, b, method=linear_solver)
