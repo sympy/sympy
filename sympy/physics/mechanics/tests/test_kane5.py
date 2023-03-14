@@ -98,7 +98,7 @@ def test_kane_rolling_disc_lu():
                        props['kdes'], u_dependent=props['u_dep'],
                        velocity_constraints=props['fnh'],
                        bodies=props['bodies'], forcelist=props['loads'],
-                       explicit_kinematics=False, constraint_solver='lu')
+                       explicit_kinematics=False, constraint_solver='LU')
     kane.kanes_equations()
     _verify_rolling_disc_numerically(kane)
 
@@ -117,7 +117,7 @@ def test_kane_rolling_disc_kdes_callable():
     qd = dynamicsymbols('q1:6', 1)
     eval_kdes = lambdify((q, qd, u, p), tuple(kane.kindiffdict().items()))
     eps = 1e-10
-    # Test with only zeros. If 'lu' would be used this would result in nan.
+    # Test with only zeros. If 'LU' would be used this would result in nan.
     p_vals = (9.81, 0.25, 3.5)
     zero_vals = (0, 0, 0, 0, 0)
     assert all(abs(qdi - fui) < eps for qdi, fui in

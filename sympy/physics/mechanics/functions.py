@@ -9,7 +9,6 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
-from sympy.codegen.matrix_nodes import MatrixSolve
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -784,12 +783,4 @@ def _parse_linear_solver(solver):
     """Helper function to retrieve a specified linear solver."""
     if callable(solver):
         return solver
-    solver = solver.casefold()
-    if solver == 'lu'.casefold():
-        solver = Matrix.LUsolve
-    elif solver == 'numeric'.casefold():
-        solver = MatrixSolve
-    else:
-        raise NotImplementedError(f"Linear solver '{solver}' has not been "
-                                  f"implemented.")
-    return solver
+    return lambda A, b: Matrix.solve(A, b, method=solver)
