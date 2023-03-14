@@ -449,6 +449,55 @@ Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\p
 
 ### Avoid `simplify()`
 
+{func}`~.simplify` is designed as a general purpose heuristic. It tries
+various simplification algorithms on the input expression and returns the
+result that seems the "simplest" based on some metric.
+
+`simplify()` is perfectly fine for interactive use, where you just want SymPy
+to do whatever it can to an expression. However, in programmatic usage, it's
+better to avoid `simplify()` and use more targeted simplification functions
+like {func}`~.cancel` or {func}`~.collect` instead.
+
+There are a few reasons why this is generally preferred:
+
+- Due to its heuristical nature, `simplify()` can potentially be slow, since
+  it tries a lot of different approaches to try to find the best
+  simplification.
+
+- There are no guarantees about what form an expression will have after being
+  passed through `simplify()`. It may actually end up "less simple" by
+  whatever metric you were hoping for. To contrast, targeted simplification
+  functions are very specific about what behaviors they have and what they
+  guarantee about the output. For example,
+
+  - {func}`~.factor` will always factor a polynomial into irreducible factors.
+
+  - {func}`~.cancel` will always convert a rational function into the form
+    $p/q$ where $p$ and $q$ are expanded polynomials with no common factors.
+
+  - The {func}`~.trigsimp` function is similarly heuristical in nature
+    (although targeted to only trigonometric functions), but the routines in
+    the {mod}`sympy.simplify.fu` submodule allow applying specific
+    trigonometric identities.
+
+- A targeted simplification will not do something unexpected if the expression
+  contains an unexpected form, or an unexpected subexpression. This is
+  especially the case if simplification functions are applied with `deep=False`
+  to only apply the simplification to the top-level expression.
+
+The [simplify section of the tutorial](tutorial-simplify) and the
+[simplify module reference](../modules/simplify/simplify.rst) list the various
+targeted simplification functions.
+
+In some cases, you may know exactly what simplification operations you wish to
+apply to an expression, but there may not be an exact set of simplification
+functions that do them. When this happens, you can create your own targeted
+simplification using {meth}`~sympy.core.basic.Basic.replace`, or in general, manually using
+[advanced expression manipulation](tutorial-manipulation).
+
+<!-- TODO: Add an example -->
+
+
 (best-practices-dont-hardcode-symbol-names)=
 ### Don't Hardcode Symbol Names in Functions
 
