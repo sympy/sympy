@@ -45,8 +45,9 @@ expressed as a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` and the
 reference is a :class:`Point<sympy.physics.vector.point.Point>`. The
 :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` can be defined as the outer
 product between two vectors, which returns the juxtaposition of these vectors.
-See the 'Dyadic' section under the advanced documentation in the
-:mod:`sympy.physics.vector` module. Another more intuitive method to define the
+For further information, please refer to the :ref:`Dyadic` section in the
+advanced documentation of the :mod:`sympy.physics.vector` module. Another more
+intuitive method to define the
 :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is to use the
 :func:`~.inertia` function as described below in the section
 'Inertia (Dyadics)'. The :class:`Point<sympy.physics.vector.point.Point>` about
@@ -120,7 +121,7 @@ Rigid Body
 
 Rigid bodies are created in a similar fashion as particles. The
 :class:`~.RigidBody` class generates objects with four attributes: mass, center
-of mass, a reference frame, and an :class:`~.Inertia` (a ``tuple`` can be parsed
+of mass, a reference frame, and an :class:`~.Inertia` (a ``tuple`` can be passed
 as well).::
 
   >>> from sympy import Symbol

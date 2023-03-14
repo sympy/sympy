@@ -11,26 +11,26 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Explanation
     ===========
 
-    If you do not know what a Dyadic is, just treat this like the inertia
-    tensor. Then, do the easy thing and define it in a body-fixed frame.
+    Creates an inertia Dyadic based on the given tensor values and a body-fixed
+    reference frame.
 
     Parameters
     ==========
 
     frame : ReferenceFrame
-        The frame the inertia is defined in
+        The frame the inertia is defined in.
     ixx : Sympifyable
-        the xx element in the inertia dyadic
+        The xx element in the inertia dyadic.
     iyy : Sympifyable
-        the yy element in the inertia dyadic
+        The yy element in the inertia dyadic.
     izz : Sympifyable
-        the zz element in the inertia dyadic
+        The zz element in the inertia dyadic.
     ixy : Sympifyable
-        the xy element in the inertia dyadic
+        The xy element in the inertia dyadic.
     iyz : Sympifyable
-        the yz element in the inertia dyadic
+        The yz element in the inertia dyadic.
     izx : Sympifyable
-        the zx element in the inertia dyadic
+        The zx element in the inertia dyadic.
 
     Examples
     ========
@@ -44,22 +44,13 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
-    ixx = sympify(ixx)
-    ixy = sympify(ixy)
-    iyy = sympify(iyy)
-    iyz = sympify(iyz)
-    izx = sympify(izx)
-    izz = sympify(izz)
-    ol = ixx * (frame.x | frame.x)
-    ol += ixy * (frame.x | frame.y)
-    ol += izx * (frame.x | frame.z)
-    ol += ixy * (frame.y | frame.x)
-    ol += iyy * (frame.y | frame.y)
-    ol += iyz * (frame.y | frame.z)
-    ol += izx * (frame.z | frame.x)
-    ol += iyz * (frame.z | frame.y)
-    ol += izz * (frame.z | frame.z)
-    return ol
+    ixx, iyy, izz = sympify(ixx), sympify(iyy), sympify(izz)
+    ixy, iyz, izx = sympify(ixy), sympify(iyz), sympify(izx)
+    return (ixx * (frame.x | frame.x) + ixy * (frame.x | frame.y) +
+            izx * (frame.x | frame.z) + ixy * (frame.y | frame.x) +
+            iyy * (frame.y | frame.y) + iyz * (frame.y | frame.z) +
+            izx * (frame.z | frame.x) + iyz * (frame.z | frame.y) +
+            izz * (frame.z | frame.z))
 
 
 def inertia_of_point_mass(mass, pos_vec, frame):
@@ -88,9 +79,9 @@ def inertia_of_point_mass(mass, pos_vec, frame):
 
     """
 
-    return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
-                    (frame.z | frame.z)) * (pos_vec & pos_vec) -
-                   (pos_vec | pos_vec))
+    return mass * (
+        ((frame.x | frame.x) + (frame.y | frame.y) + (frame.z | frame.z)) *
+        (pos_vec & pos_vec) - (pos_vec | pos_vec))
 
 
 class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
@@ -145,8 +136,28 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
         Explanation
         ===========
 
-        This class method uses the ``inertia`` function to create the Dyadic
-        based on the tensor values.
+        This class method uses the :func`~.inertia` to create the Dyadic based
+        on the tensor values.
+
+        Parameters
+        ==========
+
+        point : Point
+            The reference point of the inertia.
+        frame : ReferenceFrame
+            The frame the inertia is defined in.
+        ixx : Sympifyable
+            The xx element in the inertia dyadic.
+        iyy : Sympifyable
+            The yy element in the inertia dyadic.
+        izz : Sympifyable
+            The zz element in the inertia dyadic.
+        ixy : Sympifyable
+            The xy element in the inertia dyadic.
+        iyz : Sympifyable
+            The yz element in the inertia dyadic.
+        izx : Sympifyable
+            The zx element in the inertia dyadic.
 
         Examples
         ========
