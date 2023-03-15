@@ -17,7 +17,11 @@ class TestLinearPathway:
         self.pI = Point('pI')
         self.pathway = LinearPathway(origin=self.pO, insertion=self.pI)
         self.q1 = dynamicsymbols('q1')
+        self.q2 = dynamicsymbols('q2')
+        self.q3 = dynamicsymbols('q3')
         self.q1d = dynamicsymbols('q1', 1)
+        self.q2d = dynamicsymbols('q2', 1)
+        self.q3d = dynamicsymbols('q3', 1)
         self.F = Symbol('F')
 
     def test_static_pathway_length(self) -> None:
@@ -51,5 +55,48 @@ class TestLinearPathway:
         expected = [
             (self.pO, self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
             (self.pI, - self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+        ]
+        assert self.pathway.forces(self.F) == expected
+
+    def test_3D_pathway_length(self) -> None:
+        self.pI.set_pos(
+            self.pO,
+            self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
+        )
+        expected = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
+        assert self.pathway.length == expected
+
+    def test_3D_pathway_shortening_velocity(self) -> None:
+        self.pI.set_pos(
+            self.pO,
+            self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
+        )
+        length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
+        expected = (
+            - self.q1 * self.q1d / length
+            - self.q2 * self.q2d / length
+            - 4 * self.q3 * self.q3d / length
+        )
+        assert self.pathway.shortening_velocity == expected
+
+    def test_3D_pathway_forces(self) -> None:
+        self.pI.set_pos(
+            self.pO,
+            self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
+        )
+        length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
+        pO_force = (
+            self.F * self.q1 * self.N.x / length
+            - self.F * self.q2 * self.N.y / length
+            + 2 * self.F * self.q3 * self.N.z / length
+        )
+        pI_force = (
+            - self.F * self.q1 * self.N.x / length
+            + self.F * self.q2 * self.N.y / length
+            - 2 * self.F * self.q3 * self.N.z / length
+        )
+        expected = [
+            (self.pO, pO_force),
+            (self.pI, pI_force),
         ]
         assert self.pathway.forces(self.F) == expected
