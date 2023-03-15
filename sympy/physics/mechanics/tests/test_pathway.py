@@ -13,7 +13,10 @@ from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
 @pytest.mark.parametrize(
     'concrete_pathway_class, args, kwargs',
     [
+        (LinearPathway, (Point('pO'), Point('pI')), {}),
+        (LinearPathway, (Point('pO'), ), {'insertion': Point('pI')}),
         (LinearPathway, (), {'origin': Point('pO'), 'insertion': Point('pI')}),
+        (LinearPathway, (), {'insertion': Point('pI'), 'origin': Point('pO')}),
     ]
 )
 def test_concrete_pathway_class_valid_constructor(
@@ -48,7 +51,7 @@ class TestLinearPathway:
         self.N = ReferenceFrame('N')
         self.pO = Point('pO')
         self.pI = Point('pI')
-        self.pathway = LinearPathway(origin=self.pO, insertion=self.pI)
+        self.pathway = LinearPathway(self.pO, self.pI)
         self.q1 = dynamicsymbols('q1')
         self.q2 = dynamicsymbols('q2')
         self.q3 = dynamicsymbols('q3')
