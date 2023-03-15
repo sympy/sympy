@@ -52,7 +52,7 @@ class PathwayBase(ABC):
         if not isinstance(origin, Point):
             msg = (
                 f'Value {repr(origin)} passed to `origin` was of type '
-                f'{type(origin)}, must be {type(Point)}.'
+                f'{type(origin)}, must be {Point}.'
             )
             raise TypeError(msg)
         self._origin = origin
@@ -67,7 +67,7 @@ class PathwayBase(ABC):
         if not isinstance(insertion, Point):
             msg = (
                 f'Value {repr(insertion)} passed to `insertion` was of type '
-                f'{type(insertion)}, must be {type(Point)}.'
+                f'{type(insertion)}, must be {Point}.'
             )
             raise TypeError(msg)
         self._insertion = insertion
