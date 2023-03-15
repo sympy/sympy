@@ -6,8 +6,9 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      outer, potential_energy, msubs,
                                      find_dynamicsymbols, Lagrangian)
 
-from sympy.physics.mechanics.functions import (gravity, center_of_mass,
-                                               _validate_coordinates)
+from sympy.physics.mechanics.functions import (
+    gravity, center_of_mass, _validate_coordinates, _parse_linear_solver)
+from sympy.testing.pytest import raises
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -246,6 +247,12 @@ def test_validate_coordinates():
     _validate_coordinates([f1(a), f2(a)])
     raises(ValueError, lambda: _validate_coordinates([f1(t), f2(t)]))
     dynamicsymbols._t = t
+
+
+def test_parse_linear_solver():
+    A, b = Matrix(3, 3, symbols('a:9')), Matrix(3, 2, symbols('b:6'))
+    assert _parse_linear_solver(Matrix.LUsolve) == Matrix.LUsolve  # Test callable
+    assert _parse_linear_solver('LU')(A, b) == Matrix.LUsolve(A, b)
 
 
 def test_deprecated_moved_functions():
