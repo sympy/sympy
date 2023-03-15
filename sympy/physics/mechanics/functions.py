@@ -714,3 +714,10 @@ def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                     speed.free_symbols == t_set):
                 raise ValueError(f'Generalized speed "{speed}" is not a '
                                  f'dynamicsymbol.')
+
+
+def _parse_linear_solver(linear_solver):
+    """Helper function to retrieve a specified linear solver."""
+    if callable(linear_solver):
+        return linear_solver
+    return lambda A, b: Matrix.solve(A, b, method=linear_solver)

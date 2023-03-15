@@ -232,7 +232,7 @@ def test_files():
                     test_set.add(line[3:].split('(')[0].strip())
                     if len(test_set) != tests:
                         assert False, message_duplicate_test % (fname, idx + 1)
-            if line.endswith(" \n") or line.endswith("\t\n"):
+            if line.endswith((" \n", "\t\n")):
                 assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
                 assert False, message_carriage % (fname, idx + 1)
