@@ -627,7 +627,7 @@ def rs_series_reversion_newton(p,x,n):
     >>> from sympy import IndexedBase, symbols
     >>> from sympy.polys.ring_series import rs_series_reversion_newton
     >>> a = IndexedBase('a')
-    >>> x = sm.symbols('x')
+    >>> x = symbols('x')
     >>> f = sum(a[k]*x**k for k in range(1,4))
     >>> R = f.as_poly(x,field=True).domain
     >>> Rx = R[x]
