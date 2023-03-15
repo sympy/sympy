@@ -16,13 +16,29 @@ from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
         (LinearPathway, (), {'origin': Point('pO'), 'insertion': Point('pI')}),
     ]
 )
-def test_concrete_pathway_class_constructor(
+def test_concrete_pathway_class_valid_constructor(
     concrete_pathway_class: PathwayBase,
     args: tuple,
     kwargs: dict,
 ) -> None:
     instance = concrete_pathway_class(*args, **kwargs)
     assert isinstance(instance, concrete_pathway_class)
+
+
+@pytest.mark.parametrize(
+    'concrete_pathway_class, args, kwargs',
+    [
+        (LinearPathway, (), {'origin': None, 'insertion': Point('pI')}),
+        (LinearPathway, (), {'origin': Point('pO'), 'insertion': None}),
+    ]
+)
+def test_concrete_pathway_class_invalid_constructor(
+    concrete_pathway_class: PathwayBase,
+    args: tuple,
+    kwargs: dict,
+) -> None:
+    with pytest.raises(TypeError):
+        _ = concrete_pathway_class(*args, **kwargs)
 
 
 class TestLinearPathway:
