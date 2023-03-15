@@ -5,7 +5,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
     rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_fast_series_reversion, rs_is_puiseux, rs_series)
+    rs_LambertW, rs_series_reversion, rs_series_reversion_newton, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
@@ -118,7 +118,7 @@ def test_rs_fast_series_reversion():
     fr = Rx.from_sympy(f)
     xr = Rx.from_sympy(x)
     ar = Rx.domain.from_sympy(a)
-    calculated = rs_fast_series_reversion(fr,xr,n)
+    calculated = rs_series_reversion_newton(fr,xr,n)
     expected = 1/ar/3*xr**3 - 1/ar/2*xr**2 + 1/ar*xr
     assert calculated == expected
     # linear function with parameter
@@ -129,7 +129,7 @@ def test_rs_fast_series_reversion():
     fr = Rx.from_sympy(f)
     xr = Rx.from_sympy(x)
     ar = Rx.domain.from_sympy(a)
-    calculated = rs_fast_series_reversion(fr,xr,n)
+    calculated = rs_series_reversion_newton(fr,xr,n)
     expected = 1/ar*xr
     assert calculated == expected
 
