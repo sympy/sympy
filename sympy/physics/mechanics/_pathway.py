@@ -35,42 +35,39 @@ class PathwayBase(ABC):
 
     def __init__(
         self,
-        origin: Point,
-        insertion: Point,
+        attachments: tuple[Point, Point],
     ) -> None:
         """Initializer for ``PathwayBase``."""
-        self.origin = origin
-        self.insertion = insertion
+        self.attachments = attachments
 
     @property
-    def origin(self) -> Point:
-        """The ``Point`` from which the pathway originates."""
-        return self._origin
+    def attachments(self) -> tuple[Point, Point]:
+        """The pair of points defining a pathway's ends."""
+        return self._attachments
 
-    @origin.setter
-    def origin(self, origin: Point) -> None:
-        if not isinstance(origin, Point):
+    @attachments.setter
+    def attachments(self, attachments: tuple[Point, Point]) -> None:
+        if not iter(attachments):
             msg = (
-                f'Value {repr(origin)} passed to `origin` was of type '
-                f'{type(origin)}, must be {Point}.'
+                f'Value {repr(attachments)} passed to `attachments` was of '
+                f'type {type(attachments)}, must be {tuple}.'
             )
             raise TypeError(msg)
-        self._origin = origin
-
-    @property
-    def insertion(self) -> Point:
-        """The ``Point`` into which the pathway inserts."""
-        return self._insertion
-
-    @insertion.setter
-    def insertion(self, insertion: Point) -> None:
-        if not isinstance(insertion, Point):
+        if len(attachments) != 2:
             msg = (
-                f'Value {repr(insertion)} passed to `insertion` was of type '
-                f'{type(insertion)}, must be {Point}.'
+                f'Value {repr(attachments)} passed to `attachments` was an '
+                f'iterable of length {len(attachments)}, must be an iterable '
+                f'of length 2.'
             )
-            raise TypeError(msg)
-        self._insertion = insertion
+            raise ValueError(msg)
+        for i, point in enumerate(attachments):
+            if not isinstance(point, Point):
+                msg = (
+                    f'Value {repr(point)} passed to `attachments` at index '
+                    f'{i} was of type {type(attachments)}, must be {Point}.'
+                )
+                raise TypeError(msg)
+        self._attachments = tuple(attachments)
 
     @abstractmethod
     def _true_length(self) -> Expr:
@@ -93,14 +90,11 @@ class PathwayBase(ABC):
         return self._true_shortening_velocity()
 
     def __repr__(self) -> str:
-        return (
-            f'{self.__class__.__name__}(origin={self.origin}, '
-            f'insertion={self.insertion})'
-        )
+        return f'{self.__class__.__name__}(attachments={self.attachments})'
 
 
 class LinearPathway(PathwayBase):
-    """Linear pathway between origin and insertion.
+    """Linear pathway between a pair of attachment points.
 
     Explanation
     ===========
@@ -108,39 +102,38 @@ class LinearPathway(PathwayBase):
     A linear pathway forms a straight-line segment between two points and is
     the simplest pathway that can be formed. It will not interact with any
     other objects in the system, i.e. a ``LinearPathway`` will interest other
-    objects to ensure that the path between its two ends (its origin and
-    insertion) is the shortest possible.
+    objects to ensure that the path between its two ends (its attachments) is
+    the shortest possible.
 
     Examples
     ========
 
     As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace and must be imported directly from
-    the ``sympy.physics.mechanics._pathway`` module.
+    ``sympy.physics.mechanics`` namespace. ``LinearPathway`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._pathway`` module.
 
     >>> from sympy.physics.mechanics._pathway import LinearPathway
 
     To construct a pathway, two points are required to be passed to the
-    ``origin`` and ``insertion`` parameters.
+    ``attachments`` parameter as a ``tuple``.
 
     >>> from sympy.physics.mechanics import Point
-    >>> origin = Point('pO')
-    >>> insertion = Point('pI')
-    >>> linear_pathway = LinearPathway(origin, insertion)
+    >>> attachments = (Point('pO'), Point('pI'))
+    >>> linear_pathway = LinearPathway(attachments)
     >>> linear_pathway
-    LinearPathway(origin=pO, insertion=pI)
+    LinearPathway(attachments=(pO, pI))
 
     The pathway create above isn't very interesting without the positions and
-    velocities of its origin and insertion points being described. Without this
-    its not possible to describe how the pathway moves, i.e. its length or its
+    velocities of its attachment points being described. Without this its not
+    possible to describe how the pathway moves, i.e. its length or its
     shortening velocity.
 
     >>> from sympy.physics.mechanics import ReferenceFrame
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> insertion.set_pos(origin, q * N.x)
-    >>> insertion.pos_from(origin)
+    >>> attachments[-1].set_pos(attachments[0], q * N.x)
+    >>> attachments[-1].pos_from(attachments[0])
     q(t)*N.x
 
     A pathway's length can be accessed via its ``length`` attribute.
@@ -161,42 +154,35 @@ class LinearPathway(PathwayBase):
     Parameters
     ==========
 
-    origin : Point
-        The ``Point`` from which the pathway originates.
-    insertion : Point
-        The ``Point`` into which the pathway inserts.
+    attachments : tuple[Point, Point]
+        The pair of ``Point`` objects between which the linear pathway spans.
 
     """
 
     def __init__(
         self,
-        origin: Point,
-        insertion: Point,
+        attachments: tuple[Point, Point],
     ) -> None:
         """Initializer for ``LinearPathway``.
 
         Parameters
         ==========
 
-        origin : Point
-            The ``Point`` from which the pathway originates.
-        insertion : Point
-            The ``Point`` into which the pathway inserts.
+        attachments : tuple[Point, Point]
+            The pair of ``Point`` objects between which the linear pathway
+            spans.
 
         """
-        super().__init__(
-            origin=origin,
-            insertion=insertion,
-        )
+        super().__init__(attachments)
 
     def _true_length(self) -> Expr:
         """Exact analytical expression for the pathway's length."""
-        length = self.insertion.pos_from(self.origin).magnitude()
+        length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
         return length
 
     def _true_shortening_velocity(self) -> Expr:
         """Exact analytical expression for the pathway's shortening velocity."""
-        relative_position = self.insertion.pos_from(self.origin)
+        relative_position = self.attachments[-1].pos_from(self.attachments[0])
         if not relative_position:
             return S.Zero
         t = dynamicsymbols._t  # type: ignore
@@ -233,10 +219,9 @@ class LinearPathway(PathwayBase):
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
-        >>> origin = Point('pO')
-        >>> insertion = Point('pI')
-        >>> insertion.set_pos(origin, q * N.x)
-        >>> linear_pathway = LinearPathway(origin, insertion)
+        >>> attachments = (Point('pO'), Point('pI'))
+        >>> attachments[-1].set_pos(attachments[0], q * N.x)
+        >>> linear_pathway = LinearPathway(attachments)
 
         Now create a symbol ``F`` to describe the magnitude of the
         (contractile) for that will be produced along the pathway. The list of
@@ -256,13 +241,9 @@ class LinearPathway(PathwayBase):
             ``Symbol`` represents a contractile force.
 
         """
+        relative_position = self.attachments[-1].pos_from(self.attachments[0])
         forces = [
-            (
-                self.origin,
-                force * self.insertion.pos_from(self.origin) / self.length,
-            ),
-            (   self.insertion,
-                force * self.origin.pos_from(self.insertion) / self.length,
-            ),
+            (self.attachments[0], force * relative_position / self.length),
+            (self.attachments[-1], -force * relative_position / self.length),
         ]
         return forces
