@@ -68,7 +68,7 @@ def n_order(a, n):
     return order
 
 
-def _primitive_root_prime_iter(p):
+def _primitive_root_prime_iter(p, ordered=True):
     """
     Generates the primitive roots for a prime ``p``
 
@@ -76,6 +76,7 @@ def _primitive_root_prime_iter(p):
     ==========
 
     p : odd prime
+    ordered : if True, return in order
 
     Examples
     ========
@@ -91,10 +92,36 @@ def _primitive_root_prime_iter(p):
 
     """
     # it is assumed that p is an int
-    v = [(p - 1) // i for i in factorint(p - 1).keys()]
-    for g in range(2, p):
-        if all(pow(g, pw, p) != 1 for pw in v):
-            yield g
+    if p == 3:
+        yield 2
+        return
+    qs = sorted(factorint(p - 1).keys())
+    if p < 41:
+        # small case
+        if p == 23:
+            g = 5
+        elif p == 7 or p % 7 == 3:
+            # 3 is the smallest primitive root of p = 7,17,31
+            g = 3
+        else:
+            # 2 is the smallest primitive root of p = 5,11,13,19,29,37
+            g = 2
+    else:
+        v = [(p - 1) // i for i in qs]
+        for g in range(2, p):
+            if all(pow(g, pw, p) != 1 for pw in v):
+                break
+    yield g
+    # g**k is the primitive root of p iff gcd(p - 1, k) = 1
+    sieve = [True] * ((p - 3) // 2)
+    for q in qs[1:]:
+        for k in range((q - 3) // 2, len(sieve), q):
+            sieve[k] = False
+    gs = (pow(g, 2 * i + 3, p) for i, v in enumerate(sieve) if v)
+    if ordered:
+        yield from sorted(gs)
+    else:
+        yield from gs
 
 
 def _primitive_root_prime_power_iter(p, e, ordered=True):
