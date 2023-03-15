@@ -303,7 +303,7 @@ def test_LUdecomposition_Simple_iszerofunc():
         assert magic_string == err.args[0]
         return
 
-    assert False
+    raise AssertionError()
 
 def test_LUdecomposition_iszerofunc():
     # Test if callable passed to matrices.LUdecomposition() as iszerofunc keyword argument is used inside
@@ -318,7 +318,7 @@ def test_LUdecomposition_iszerofunc():
         assert magic_string == err.args[0]
         return
 
-    assert False
+    raise AssertionError()
 
 def test_LDLdecomposition():
     raises(NonSquareMatrixError, lambda: Matrix((1, 2)).LDLdecomposition())

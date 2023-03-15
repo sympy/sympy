@@ -103,7 +103,7 @@ def test_translate_args():
     except ValueError:
         pass # Exception raised successfully
     else:
-        assert False
+        raise AssertionError()
 
     assert translate('s', None, None, None) == 's'
 
@@ -112,7 +112,7 @@ def test_translate_args():
     except ValueError:
         pass # Exception raised successfully
     else:
-        assert False
+        raise AssertionError()
 
 
 @skip_under_pyodide("Cannot create subprocess under pyodide.")
