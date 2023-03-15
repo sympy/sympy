@@ -611,25 +611,21 @@ def rs_series_reversion_newton(p,x,n):
     Examples
     ========
 
-    The example below shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$.
-    First we truncate the series of $f$, then convert it to fit the polynomial ring - in this case $Q[x]$, and finally call the method:
+    The example below shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$:
 
-    >>> from sympy import exp
-    >>> from sympy.abc import x
-    >>> from sympy.polys.ring_series import rs_fast_series_reversion
-    >>> f = exp(x)-1
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_exp, rs_series_reversion_newton
+    >>> Rx, xr = ring('x', QQ)
     >>> n = 4
-    >>> f = f.series(x,0,n).removeO()
-    >>> Rx = f.as_poly(x,field=True).domain[x]
-    >>> fr = Rx.from_sympy(f)
-    >>> xr = Rx.from_sympy(x)
-    >>> rs_fast_series_reversion(fr,xr,n)
+    >>> fr = rs_exp(xr,xr,n)-1
+    >>> rs_series_reversion_newton(fr,xr,n)
     1/3*x**3 - 1/2*x**2 + x
 
-    The example below show few first explicit coefficients of the inversion expansion, namely:
+    Another example below shows general formulas for few first coefficients of the inversion expansion:
 
     >>> import sympy as sm
-    >>> from sympy.polys.ring_series import rs_fast_series_reversion
+    >>> from sympy.polys.ring_series import rs_series_reversion_newton
     >>> a = sm.IndexedBase('a')
     >>> x = sm.symbols('x')
     >>> f = sum(a[k]*x**k for k in range(1,4))
@@ -637,8 +633,11 @@ def rs_series_reversion_newton(p,x,n):
     >>> Rx = R[x]
     >>> fr = Rx.from_sympy(f)
     >>> xr = Rx.from_sympy(x)
-    >>> rs_fast_series_reversion(fr,xr,n).as_expr()
+    >>> rs_fast_reversion_newton(fr,xr,n).as_expr()
     x**3*(-a[3]/a[1]**4 + 2*a[2]**2/a[1]**5) - x**2*a[2]/a[1]**3 + x/a[1]
+
+
+    
 
     References
     ==========
