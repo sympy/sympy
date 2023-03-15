@@ -670,7 +670,7 @@ def rs_fast_series_reversion(p,x,n):
     x_series = Rxy.zero
     k = 0
     while k < n:
-        x_series = rs_subs(fn_update, {xr:x_series},yr,min(2*k+2,n))
+        x_series = rs_subs(fn_update, {xr:x_series}, yr, min(2*k + 2,n))
         k = 2*k+1
 
     # change variable
