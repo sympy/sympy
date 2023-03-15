@@ -208,14 +208,6 @@ class LinearPathway(PathwayBase):
         shortening_velocity = -relative_velocity.dot(relative_position.normalize())
         return shortening_velocity
 
-    def _unit_vector_to_origin(self) -> Vector:
-        """Unit vector towards the pathway's origin from its insertion."""
-        return self.origin.pos_from(self.insertion) / self.length
-
-    def _unit_vector_to_insertion(self) -> Vector:
-        """Unit vector towards the pathway's insertion from its origin."""
-        return self.insertion.pos_from(self.origin) / self.length
-
     def forces(self, force: Symbol) -> list[tuple[Point, Vector]]:
         """Forces list required by ``KanesMethod``.
 
@@ -265,7 +257,12 @@ class LinearPathway(PathwayBase):
 
         """
         forces = [
-            (self.origin, force * self._unit_vector_to_insertion()),
-            (self.insertion, force * self._unit_vector_to_origin()),
+            (
+                self.origin,
+                force * self.insertion.pos_from(self.origin) / self.length,
+            ),
+            (   self.insertion,
+                force * self.origin.pos_from(self.insertion) / self.length,
+            ),
         ]
         return forces
