@@ -35,7 +35,6 @@ class PathwayBase(ABC):
 
     def __init__(
         self,
-        *,
         origin: Point,
         insertion: Point,
     ) -> None:
@@ -127,7 +126,7 @@ class LinearPathway(PathwayBase):
     >>> from sympy.physics.mechanics import Point
     >>> origin = Point('pO')
     >>> insertion = Point('pI')
-    >>> linear_pathway = LinearPathway(origin=origin, insertion=insertion)
+    >>> linear_pathway = LinearPathway(origin, insertion)
     >>> linear_pathway
     LinearPathway(origin=pO, insertion=pI)
 
@@ -171,7 +170,6 @@ class LinearPathway(PathwayBase):
 
     def __init__(
         self,
-        *,
         origin: Point,
         insertion: Point,
     ) -> None:
@@ -246,7 +244,7 @@ class LinearPathway(PathwayBase):
         >>> origin = Point('pO')
         >>> insertion = Point('pI')
         >>> insertion.set_pos(origin, q * N.x)
-        >>> linear_pathway = LinearPathway(origin=origin, insertion=insertion)
+        >>> linear_pathway = LinearPathway(origin, insertion)
 
         Now create a symbol ``F`` to describe the magnitude of the
         (contractile) for that will be produced along the pathway. The list of
