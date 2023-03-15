@@ -72,13 +72,13 @@ class TestLinearPathway:
         self.pI.set_pos(self.pO, 2 * self.N.x)
         assert self.pathway.shortening_velocity == 0
 
-    def test_static_pathway_forces(self) -> None:
+    def test_static_pathway_compute_loads(self) -> None:
         self.pI.set_pos(self.pO, 2 * self.N.x)
         expected = [
             (self.pO, self.F * self.N.x),
             (self.pI, - self.F * self.N.x),
         ]
-        assert self.pathway.forces(self.F) == expected
+        assert self.pathway.compute_loads(self.F) == expected
 
     def test_2D_pathway_length(self) -> None:
         self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
@@ -90,13 +90,13 @@ class TestLinearPathway:
         expected = -2 * self.q1 * self.q1d / sqrt(self.q1**2)
         assert self.pathway.shortening_velocity == expected
 
-    def test_2D_pathway_forces(self) -> None:
+    def test_2D_pathway_compute_loads(self) -> None:
         self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
         expected = [
             (self.pO, self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
             (self.pI, - self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
-        assert self.pathway.forces(self.F) == expected
+        assert self.pathway.compute_loads(self.F) == expected
 
     def test_3D_pathway_length(self) -> None:
         self.pI.set_pos(
@@ -119,7 +119,7 @@ class TestLinearPathway:
         )
         assert self.pathway.shortening_velocity == expected
 
-    def test_3D_pathway_forces(self) -> None:
+    def test_3D_pathway_compute_loads(self) -> None:
         self.pI.set_pos(
             self.pO,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -139,4 +139,4 @@ class TestLinearPathway:
             (self.pO, pO_force),
             (self.pI, pI_force),
         ]
-        assert self.pathway.forces(self.F) == expected
+        assert self.pathway.compute_loads(self.F) == expected
