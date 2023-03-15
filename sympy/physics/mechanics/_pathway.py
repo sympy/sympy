@@ -35,18 +35,18 @@ class PathwayBase(ABC):
 
     def __init__(
         self,
-        attachments: tuple[Point, Point],
+        attachments: tuple[Point, ...],
     ) -> None:
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
     @property
-    def attachments(self) -> tuple[Point, Point]:
+    def attachments(self) -> tuple[Point, ...]:
         """The pair of points defining a pathway's ends."""
         return self._attachments
 
     @attachments.setter
-    def attachments(self, attachments: tuple[Point, Point]) -> None:
+    def attachments(self, attachments: tuple[Point, ...]) -> None:
         if not iter(attachments):
             msg = (
                 f'Value {repr(attachments)} passed to `attachments` was of '
@@ -161,7 +161,7 @@ class LinearPathway(PathwayBase):
 
     def __init__(
         self,
-        attachments: tuple[Point, Point],
+        attachments: tuple[Point, ...],
     ) -> None:
         """Initializer for ``LinearPathway``.
 
