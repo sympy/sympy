@@ -249,7 +249,7 @@ class UnitaryOperator(Operator):
         return self._eval_inverse()
 
 
-class IdentityOperator(UnitaryOperator):
+class IdentityOperator(HermitianOperator, UnitaryOperator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
@@ -287,17 +287,11 @@ class IdentityOperator(UnitaryOperator):
     def _eval_anticommutator(self, other, **hints):
         return 2 * other
 
-    def _eval_inverse(self):
-        return self
-
     def _apply_operator(self, ket, **options):
         return ket
 
     def _apply_from_right_to(self, bra, **options):
         return bra
-
-    def _eval_power(self, exp):
-        return self
 
     def _print_contents(self, printer, *args):
         return 'I'
