@@ -375,8 +375,8 @@ class KanesMethod(_Methods):
         uauxdot = [diff(i, t) for i in self._uaux]
         uauxdot_zero = {i: 0 for i in uauxdot}
         # Dictionary of q' and q'' to u and u'
-        q_ddot_u_map = {k.diff(t): v.diff(t) for (k, v) in
-                self._qdot_u_map.items()}
+        q_ddot_u_map = {k.diff(t): v.diff(t).xreplace(
+            self._qdot_u_map) for (k, v) in self._qdot_u_map.items()}
         q_ddot_u_map.update(self._qdot_u_map)
 
         # Fill up the list of partials: format is a list with num elements
@@ -451,11 +451,13 @@ class KanesMethod(_Methods):
             MMi = MM[:p, :]
             MMd = MM[p:o, :]
             MM = MMi + (self._Ars.T * MMd)
+            # Apply the same to nonMM
+            nonMM = nonMM[:p, :] + (self._Ars.T * nonMM[p:o, :])
 
         self._bodylist = bl
         self._frstar = fr_star
         self._k_d = MM
-        self._f_d = -msubs(self._fr + self._frstar, udot_zero)
+        self._f_d = -(self._fr - nonMM)
         return fr_star
 
     def to_linearizer(self):

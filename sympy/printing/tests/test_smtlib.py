@@ -229,7 +229,7 @@ def test_quantifier_extensions():
             }
 
         def __new__(cls, *args):
-            limits = [sympify(a) for a in args if isinstance(a, tuple) or isinstance(a, Tuple)]
+            limits = [sympify(a) for a in args if isinstance(a, (tuple, Tuple))]
             function = [sympify(a) for a in args if isinstance(a, Boolean)]
             assert len(limits) + len(function) == len(args)
             assert len(function) == 1
