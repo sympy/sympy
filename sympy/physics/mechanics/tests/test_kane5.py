@@ -1,8 +1,13 @@
 from sympy.core.backend import (zeros, Matrix, symbols, lambdify, sqrt, pi,
                                 _simplify_matrix, USE_SYMENGINE)
+from sympy.matrices.expressions import MatrixExpr
+from sympy.physics.mechanics.models import n_link_pendulum_on_cart
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
 from sympy.testing.pytest import skip
+from sympy.external import import_module
+
+np = import_module('numpy')
 
 
 def _create_rolling_disc():
@@ -90,6 +95,24 @@ def _verify_rolling_disc_numerically(kane, all_zero=False):
         assert solve_sys(q_vals, u_vals, p_vals) == zeros(10, 1)
 
 
+def test_kane_block_matrix_no_constraints():
+    # Uses the n_link_pendulum_on_cart to verify whether block matrices are also
+    # returned correctly when not using velocity constraints
+    kane = n_link_pendulum_on_cart()
+    assert kane.use_block_matrices == False
+    md, fd = kane.mass_matrix, kane.forcing
+    mf, ff = kane.mass_matrix_full, kane.forcing_full
+    assert not any(isinstance(mat, MatrixExpr) for mat in (md, fd, mf, ff))
+    kane.use_block_matrices = True
+    assert all(isinstance(mat, MatrixExpr) for mat in (
+        kane.mass_matrix, kane.forcing, kane.mass_matrix_full,
+        kane.forcing_full))
+    assert Matrix(kane.mass_matrix - md) == zeros(2, 2)
+    assert Matrix(kane.forcing - fd) == zeros(2, 1)
+    assert Matrix(kane.mass_matrix_full - mf) == zeros(4, 4)
+    assert Matrix(kane.forcing_full - ff) == zeros(4, 1)
+
+
 def test_kane_rolling_disc_lu():
     if USE_SYMENGINE:
         skip('symengine does not support lambdify with dynamicsymbols.')
@@ -101,6 +124,20 @@ def test_kane_rolling_disc_lu():
                        explicit_kinematics=False, constraint_solver='LU')
     kane.kanes_equations()
     _verify_rolling_disc_numerically(kane)
+
+
+def test_kane_rolling_disc_numeric():
+    if not np:
+        skip('numpy not installed.')
+    props = _create_rolling_disc()
+    kane = KanesMethod(
+        props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
+        u_dependent=props['u_dep'], velocity_constraints=props['fnh'],
+        bodies=props['bodies'], forcelist=props['loads'],
+        explicit_kinematics=False, constraint_solver='numeric',
+        kd_eqs_solver=lambda A, b: _simplify_matrix(A.LUsolve(b)))
+    kane.kanes_equations()
+    _verify_rolling_disc_numerically(kane, all_zero=True)
 
 
 def test_kane_rolling_disc_kdes_callable():
