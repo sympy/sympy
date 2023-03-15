@@ -203,7 +203,7 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_pow
 .. autofunction:: rs_series_inversion
 .. autofunction:: rs_series_reversion
-.. autofunction:: rs_fast_series_reversion
+.. autofunction:: rs_series_reversion_newton
 .. autofunction:: rs_nth_root
 .. autofunction:: rs_trunc
 .. autofunction:: rs_subs
