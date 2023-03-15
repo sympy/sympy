@@ -1,11 +1,28 @@
 """Tests for the ``sympy.physics.mechanics._pathway.py`` module."""
 
+from __future__ import annotations
+
 import pytest
 
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics._pathway import LinearPathway
+from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
+
+
+@pytest.mark.parametrize(
+    'concrete_pathway_class, args, kwargs',
+    [
+        (LinearPathway, (), {'origin': Point('pO'), 'insertion': Point('pI')}),
+    ]
+)
+def test_concrete_pathway_class_constructor(
+    concrete_pathway_class: PathwayBase,
+    args: tuple,
+    kwargs: dict,
+) -> None:
+    instance = concrete_pathway_class(*args, **kwargs)
+    assert isinstance(instance, concrete_pathway_class)
 
 
 class TestLinearPathway:
