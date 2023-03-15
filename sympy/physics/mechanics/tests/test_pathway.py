@@ -16,6 +16,8 @@ class TestLinearPathway:
         self.pO = Point('pO')
         self.pI = Point('pI')
         self.pathway = LinearPathway(origin=self.pO, insertion=self.pI)
+        self.q1 = dynamicsymbols('q1')
+        self.q1d = dynamicsymbols('q1', 1)
         self.F = Symbol('F')
 
     def test_static_pathway_length(self) -> None:
@@ -31,5 +33,23 @@ class TestLinearPathway:
         expected = [
             (self.pO, self.F * self.N.x),
             (self.pI, - self.F * self.N.x),
+        ]
+        assert self.pathway.forces(self.F) == expected
+
+    def test_2D_pathway_length(self) -> None:
+        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        expected = 2 * sqrt(self.q1**2)
+        assert self.pathway.length == expected
+
+    def test_2D_pathway_shortening_velocity(self) -> None:
+        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        expected = -2 * self.q1 * self.q1d / sqrt(self.q1**2)
+        assert self.pathway.shortening_velocity == expected
+
+    def test_2D_pathway_forces(self) -> None:
+        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        expected = [
+            (self.pO, self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pI, - self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
         assert self.pathway.forces(self.F) == expected
