@@ -194,22 +194,25 @@ class LinearPathway(PathwayBase):
         shortening_velocity = -relative_velocity.dot(relative_position.normalize())
         return shortening_velocity
 
-    def forces(self, force: Symbol) -> list[tuple[Point, Vector]]:
-        """Forces list required by ``KanesMethod``.
+    def compute_loads(self, force: Symbol) -> list[tuple[Point, Vector]]:
+        """Loads required by the equations of motion method classes.
 
         Explanation
         ===========
 
         ``KanesMethod`` requires a ``list[tuple[Point, Vector]]`` to be passed
-        to its ``forcelist`` parameter on creation of an instance. This method
-        acts as a utility to produce the correctly-structred pairs of points
-        and vectors required so that these can be easily concatenated with
-        other items in the force list and passed to ``KanesMethod``.
+        to the ``loads`` parameters of its ``kanes_equations`` method when
+        constructing the equations of motion. This method acts as a utility to
+        produce the correctly-structred pairs of points and vectors required so
+        that these can be easily concatenated with other items in the list of
+        loads and passed to ``KanesMethod.kanes_equations``. These loads are
+        also in the correct form to also be passed to the other equations of
+        motion method classes, e.g. ``LagrangesMethod``.
 
         Examples
         ========
 
-        The below example shows how to generate the forces produced in a linear
+        The below example shows how to generate the loads produced in a linear
         actuator that produces a contractile force ``F``. First, create a
         linear actuator between two points separated by the coordinate ``q``
         in the ``x`` direction of the global frame ``N``.
@@ -224,26 +227,27 @@ class LinearPathway(PathwayBase):
         >>> linear_pathway = LinearPathway(attachments)
 
         Now create a symbol ``F`` to describe the magnitude of the
-        (contractile) for that will be produced along the pathway. The list of
-        forces that ``KanesMethod`` requires can be produced by calling the
-        pathway's ``forces`` method with ``F`` passed as the only argument.
+        (contractile) force that will be produced along the pathway. The list
+        of loads that ``KanesMethod`` requires can be produced by calling the
+        pathway's ``compute_loads`` method with ``F`` passed as the only
+        argument.
 
         >>> from sympy import Symbol
         >>> F = Symbol('F')
-        >>> linear_pathway.forces(F)
+        >>> linear_pathway.compute_loads(F)
         [(pO, F*q(t)/sqrt(q(t)**2)*N.x), (pI, - F*q(t)/sqrt(q(t)**2)*N.x)]
 
         Parameters
         ==========
 
         force : Symbol
-            The force produced by the actuator. It is assumed that this
-            ``Symbol`` represents a contractile force.
+            The force acting along the length of the pathway. It is assumed
+            that this ``Symbol`` represents a contractile force.
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        forces = [
+        loads = [
             (self.attachments[0], force * relative_position / self.length),
             (self.attachments[-1], -force * relative_position / self.length),
         ]
-        return forces
+        return loads
