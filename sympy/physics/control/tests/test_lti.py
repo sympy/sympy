@@ -14,11 +14,12 @@ from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback)
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
+    bilinear, backward_diff)
 from sympy.testing.pytest import raises
 
-a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn = symbols('a, x, b, s, g, d, p, k,\
-    a0:3, b0:3, tau, zeta, wn')
+a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
+    a0:3, b0:3, tau, zeta, wn, T')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -503,7 +504,7 @@ def test_MIMOSeries_construction():
     # arg cannot contain SISO as well as MIMO systems.
     raises(TypeError, lambda: MIMOSeries(tfm_1, tf_1))
 
-    # for all the adjascent transfer function matrices:
+    # for all the adjacent transfer function matrices:
     # no. of inputs of first TFM must be equal to the no. of outputs of the second TFM.
     raises(ValueError, lambda: MIMOSeries(tfm_1, tfm_2, -tfm_1))
 
@@ -1060,7 +1061,7 @@ def test_MIMOFeedback_functions():
     F_1 = MIMOFeedback(tfm_2, tfm_3)
     F_2 = MIMOFeedback(tfm_2, MIMOSeries(tfm_4, -tfm_1), 1)
 
-    assert F_1.sensitivity == Matrix([[1/2, 0], [0, 1/2]])
+    assert F_1.sensitivity == Matrix([[S.Half, 0], [0, S.Half]])
     assert F_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
         (2*s**3 - s**2)/(s**2 - s + 1)], [-s**2, s]])
 
@@ -1220,3 +1221,25 @@ def test_TransferFunctionMatrix_functions():
             (TransferFunction(p, 1, s), TransferFunction(p, s, s)))))
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
+
+def test_TransferFunction_bilinear():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = bilinear(tf, T)
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+
+    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+
+def test_TransferFunction_backward_diff():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = backward_diff(tf, T)
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T, s*(T*b+a)-a, s)
+
+    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num

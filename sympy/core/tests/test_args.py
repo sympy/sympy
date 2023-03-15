@@ -496,6 +496,12 @@ def test_sympy__codegen__scipy_nodes__cosm1():
     from sympy.codegen.scipy_nodes import cosm1
     assert _test_args(cosm1(x))
 
+
+def test_sympy__codegen__scipy_nodes__powm1():
+    from sympy.codegen.scipy_nodes import powm1
+    assert _test_args(powm1(x, y))
+
+
 def test_sympy__codegen__abstract_nodes__List():
     from sympy.codegen.abstract_nodes import List
     assert _test_args(List(1, 2, 3))
@@ -2835,13 +2841,13 @@ def test_sympy__integrals__transforms__InverseMellinTransform():
     assert _test_args(InverseMellinTransform(2, x, y, 0, 1))
 
 
-def test_sympy__integrals__transforms__LaplaceTransform():
-    from sympy.integrals.transforms import LaplaceTransform
+def test_sympy__integrals__laplace__LaplaceTransform():
+    from sympy.integrals.laplace import LaplaceTransform
     assert _test_args(LaplaceTransform(2, x, y))
 
 
-def test_sympy__integrals__transforms__InverseLaplaceTransform():
-    from sympy.integrals.transforms import InverseLaplaceTransform
+def test_sympy__integrals__laplace__InverseLaplaceTransform():
+    from sympy.integrals.laplace import InverseLaplaceTransform
     assert _test_args(InverseLaplaceTransform(2, x, y, 0))
 
 
@@ -4322,7 +4328,7 @@ def test_sympy__series__sequences__SeqBase():
 
 
 def test_sympy__series__sequences__EmptySequence():
-    # Need to imort the instance from series not the class from
+    # Need to import the instance from series not the class from
     # series.sequence
     from sympy.series import EmptySequence
     assert _test_args(EmptySequence)
@@ -4582,6 +4588,21 @@ def test_sympy__tensor__tensor__TensorElement():
     telem = TensorElement(A(x, y), {x: 1})
     assert _test_args(telem)
 
+def test_sympy__tensor__tensor__WildTensor():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorHead, TensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    a = TensorIndex('a', Lorentz)
+    p = WildTensorHead('p')
+    assert _test_args(p(a))
+
+def test_sympy__tensor__tensor__WildTensorHead():
+    from sympy.tensor.tensor import WildTensorHead
+    assert _test_args(WildTensorHead('p'))
+
+def test_sympy__tensor__tensor__WildTensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, WildTensorIndex
+    Lorentz = TensorIndexType('Lorentz', dummy_name='L')
+    assert _test_args(WildTensorIndex('i', Lorentz))
 
 def test_sympy__tensor__toperators__PartialDerivative():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead
@@ -5321,59 +5342,6 @@ def test_sympy__vector__scalar__BaseScalar():
 def test_sympy__physics__wigner__Wigner3j():
     from sympy.physics.wigner import Wigner3j
     assert _test_args(Wigner3j(0, 0, 0, 0, 0, 0))
-
-
-def test_sympy__integrals__rubi__symbol__matchpyWC():
-    from sympy.integrals.rubi.symbol import matchpyWC
-    assert _test_args(matchpyWC(1, True, 'a'))
-
-
-def test_sympy__integrals__rubi__utility_function__rubi_unevaluated_expr():
-    from sympy.integrals.rubi.utility_function import rubi_unevaluated_expr
-    a = symbols('a')
-    assert _test_args(rubi_unevaluated_expr(a))
-
-
-def test_sympy__integrals__rubi__utility_function__rubi_exp():
-    from sympy.integrals.rubi.utility_function import rubi_exp
-    assert _test_args(rubi_exp(5))
-
-
-def test_sympy__integrals__rubi__utility_function__rubi_log():
-    from sympy.integrals.rubi.utility_function import rubi_log
-    assert _test_args(rubi_log(5))
-
-
-def test_sympy__integrals__rubi__utility_function__Int():
-    from sympy.integrals.rubi.utility_function import Int
-    assert _test_args(Int(5, x))
-
-
-def test_sympy__integrals__rubi__utility_function__Util_Coefficient():
-    from sympy.integrals.rubi.utility_function import Util_Coefficient
-    a, x = symbols('a x')
-    assert _test_args(Util_Coefficient(a, x))
-
-
-def test_sympy__integrals__rubi__utility_function__Gamma():
-    from sympy.integrals.rubi.utility_function import Gamma
-    assert _test_args(Gamma(x))
-
-
-def test_sympy__integrals__rubi__utility_function__Util_Part():
-    from sympy.integrals.rubi.utility_function import Util_Part
-    a, b = symbols('a b')
-    assert _test_args(Util_Part(a + b, 0))
-
-
-def test_sympy__integrals__rubi__utility_function__PolyGamma():
-    from sympy.integrals.rubi.utility_function import PolyGamma
-    assert _test_args(PolyGamma(1, x))
-
-
-def test_sympy__integrals__rubi__utility_function__ProductLog():
-    from sympy.integrals.rubi.utility_function import ProductLog
-    assert _test_args(ProductLog(1))
 
 
 def test_sympy__combinatorics__schur_number__SchurNumber():

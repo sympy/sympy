@@ -192,7 +192,7 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def get_target_matrix(self, format='sympy'):
-        """The matrix represenation of the target part of the gate.
+        """The matrix representation of the target part of the gate.
 
         Parameters
         ----------

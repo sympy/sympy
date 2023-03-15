@@ -168,7 +168,7 @@ class besselj(BesselBase):
     .. [2] Luke, Y. L. (1969), The Special Functions and Their
            Approximations, Volume 1
     .. [3] https://en.wikipedia.org/wiki/Bessel_function
-    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+    .. [4] https://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
 
     """
 
@@ -316,7 +316,7 @@ class bessely(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
 
     """
 
@@ -471,7 +471,7 @@ class besseli(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -621,7 +621,7 @@ class besselk(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
 
     """
 
@@ -772,7 +772,7 @@ class hankel1(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
 
     """
 
@@ -819,7 +819,7 @@ class hankel2(BesselBase):
     References
     ==========
 
-    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
+    .. [1] https://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
@@ -934,7 +934,7 @@ class jn(SphericalBesselBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
     @classmethod
@@ -1011,7 +1011,7 @@ class yn(SphericalBesselBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
     @assume_integer_order
@@ -1135,7 +1135,7 @@ class hn1(SphericalHankelBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
 
@@ -1191,7 +1191,7 @@ class hn2(SphericalHankelBase):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/10.47
+    .. [1] https://dlmf.nist.gov/10.47
 
     """
 
@@ -1212,11 +1212,11 @@ def jn_zeros(n, k, method="sympy", dps=15):
     This returns an array of zeros of $jn$ up to the $k$-th zero.
 
     * method = "sympy": uses `mpmath.besseljzero
-      <http://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
+      <https://mpmath.org/doc/current/functions/bessel.html#mpmath.besseljzero>`_
     * method = "scipy": uses the
-      `SciPy's sph_jn <http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
+      `SciPy's sph_jn <https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn_zeros.html>`_
       and
-      `newton <http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
+      `newton <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html>`_
       to find all
       roots, which is faster than computing the zeros using a general
       numerical solver, but it requires SciPy and only works with low
@@ -1396,9 +1396,9 @@ class airyai(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1475,7 +1475,7 @@ class airyai(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.05.16.0001.01
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryAi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1570,9 +1570,9 @@ class airybi(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1652,7 +1652,7 @@ class airybi(AiryBase):
             if M is not None:
                 m = M[m]
                 # The transformation is given by 03.06.16.0001.01
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryBi/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1738,9 +1738,9 @@ class airyaiprime(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1809,7 +1809,7 @@ class airyaiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.07.16.0001.01 but note
                 # that there is an error in this formula.
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryAiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -1897,9 +1897,9 @@ class airybiprime(AiryBase):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Airy_function
-    .. [2] http://dlmf.nist.gov/9
-    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
-    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
+    .. [2] https://dlmf.nist.gov/9
+    .. [3] https://encyclopediaofmath.org/wiki/Airy_functions
+    .. [4] https://mathworld.wolfram.com/AiryFunctions.html
 
     """
 
@@ -1973,7 +1973,7 @@ class airybiprime(AiryBase):
                 # The transformation is in principle
                 # given by 03.08.16.0001.01 but note
                 # that there is an error in this formula.
-                # http://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
+                # https://functions.wolfram.com/Bessel-TypeFunctions/AiryBiPrime/16/01/01/0001/
                 if (3*m).is_integer:
                     c = M[c]
                     d = M[d]
@@ -2028,7 +2028,7 @@ class marcumq(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Marcum_Q-function
-    .. [2] http://mathworld.wolfram.com/MarcumQ-Function.html
+    .. [2] https://mathworld.wolfram.com/MarcumQ-Function.html
 
     """
 

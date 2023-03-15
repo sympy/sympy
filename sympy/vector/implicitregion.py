@@ -98,7 +98,7 @@ class ImplicitRegion(Basic):
         ==========
 
         - Erik Hillgarter, "Rational Points on Conics", Diploma Thesis, RISC-Linz,
-          J. Kepler Universitat Linz, 1996. Availaible:
+          J. Kepler Universitat Linz, 1996. Available:
           https://www3.risc.jku.at/publications/download/risc_1355/Rational%20Points%20on%20Conics.pdf
 
         """
@@ -342,7 +342,7 @@ class ImplicitRegion(Basic):
 
     def rational_parametrization(self, parameters=('t', 's'), reg_point=None):
         """
-        Returns the rational parametrization of implict region.
+        Returns the rational parametrization of implicit region.
 
         Examples
         ========

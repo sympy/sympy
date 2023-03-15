@@ -1,6 +1,6 @@
-========
-Examples
-========
+=============
+More examples
+=============
 
 In the following sections we give few examples of what can be done with this
 module.

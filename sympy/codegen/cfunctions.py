@@ -181,7 +181,7 @@ class exp2(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import exp2
-    >>> exp2(2).evalf() == 4
+    >>> exp2(2).evalf() == 4.0
     True
     >>> exp2(x).diff(x)
     log(2)*exp2(x)
@@ -237,7 +237,7 @@ class log2(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log2
-    >>> log2(4).evalf() == 2
+    >>> log2(4).evalf() == 2.0
     True
     >>> log2(x).diff(x)
     1/(x*log(2))
@@ -342,7 +342,7 @@ class log10(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log10
-    >>> log10(100).evalf() == 2
+    >>> log10(100).evalf() == 2.0
     True
     >>> log10(x).diff(x)
     1/(x*log(10))
@@ -503,7 +503,7 @@ class hypot(Function):
 
     >>> from sympy.abc import x, y
     >>> from sympy.codegen.cfunctions import hypot
-    >>> hypot(3, 4).evalf() == 5
+    >>> hypot(3, 4).evalf() == 5.0
     True
     >>> hypot(x, y)
     hypot(x, y)

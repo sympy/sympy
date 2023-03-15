@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
@@ -94,7 +94,7 @@ class factorial(CombinatorialFunction):
         35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
 
-    _small_factorials = []  # type: List[int]
+    _small_factorials: list[int] = []
 
     @classmethod
     def _swing(cls, n):
@@ -296,7 +296,7 @@ class subfactorial(CombinatorialFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Subfactorial
-    .. [2] http://mathworld.wolfram.com/Subfactorial.html
+    .. [2] https://mathworld.wolfram.com/Subfactorial.html
 
     Examples
     ========
@@ -501,7 +501,7 @@ class RisingFactorial(CombinatorialFunction):
 
     where `x` can be arbitrary expression and `k` is an integer. For
     more information check "Concrete mathematics" by Graham, pp. 66
-    or visit http://mathworld.wolfram.com/RisingFactorial.html page.
+    or visit https://mathworld.wolfram.com/RisingFactorial.html page.
 
     When `x` is a `~.Poly` instance of degree $\ge 1$ with a single variable,
     `(x)^k = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
@@ -708,7 +708,7 @@ class FallingFactorial(CombinatorialFunction):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/FallingFactorial.html
+    .. [1] https://mathworld.wolfram.com/FallingFactorial.html
     .. [2] Peter Paule, "Greatest Factorial Factorization and Symbolic
            Summation", Journal of Symbolic Computation, vol. 20, pp. 235-268,
            1995.
@@ -897,12 +897,12 @@ class binomial(CombinatorialFunction):
     def fdiff(self, argindex=1):
         from sympy.functions.special.gamma_functions import polygamma
         if argindex == 1:
-            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
+            # https://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args
             return binomial(n, k)*(polygamma(0, n + 1) - \
                 polygamma(0, n - k + 1))
         elif argindex == 2:
-            # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
+            # https://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args
             return binomial(n, k)*(polygamma(0, n - k + 1) - \
                 polygamma(0, k + 1))

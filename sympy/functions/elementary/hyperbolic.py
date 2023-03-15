@@ -998,8 +998,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):
@@ -1860,8 +1860,8 @@ class asech(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSech/
 
     """
 
@@ -2042,8 +2042,8 @@ class acsch(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCsch/
 
     """
 

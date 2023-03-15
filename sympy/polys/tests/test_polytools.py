@@ -54,6 +54,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
+from sympy.combinatorics.galois import S4TransitiveSubgroups
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.containers import Tuple
@@ -2900,9 +2901,9 @@ def test_nroots():
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.true
     assert im(roots[0]) == 0.0
-    assert re(roots[1]) == -0.5
+    assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.true
-    assert re(roots[2]) == -0.5
+    assert re(roots[2]) == Float(-0.5, 5)
     assert im(roots[2]).epsilon_eq(+0.86602, eps) is S.true
     assert re(roots[3]).epsilon_eq(+0.87743, eps) is S.true
     assert im(roots[3]).epsilon_eq(-0.74486, eps) is S.true
@@ -2913,9 +2914,9 @@ def test_nroots():
 
     assert re(roots[0]).epsilon_eq(-0.75487, eps) is S.false
     assert im(roots[0]) == 0.0
-    assert re(roots[1]) == -0.5
+    assert re(roots[1]) == Float(-0.5, 5)
     assert im(roots[1]).epsilon_eq(-0.86602, eps) is S.false
-    assert re(roots[2]) == -0.5
+    assert re(roots[2]) == Float(-0.5, 5)
     assert im(roots[2]).epsilon_eq(+0.86602, eps) is S.false
     assert re(roots[3]).epsilon_eq(+0.87743, eps) is S.false
     assert im(roots[3]).epsilon_eq(-0.74486, eps) is S.false
@@ -3157,6 +3158,41 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
     assert cancel((x**2 + 1)/(x - I)) == x + I
+
+
+def test_make_monic_over_integers_by_scaling_roots():
+    f = Poly(x**2 + 3*x + 4, x, domain='ZZ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == f
+    assert c == ZZ.one
+
+    f = Poly(x**2 + 3*x + 4, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == f.to_ring()
+    assert c == ZZ.one
+
+    f = Poly(x**2/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == Poly(x**2 + 2*x + 4, x, domain='ZZ')
+    assert c == 4
+
+    f = Poly(x**3/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == Poly(x**3 + 8*x + 16, x, domain='ZZ')
+    assert c == 4
+
+    f = Poly(x*y, x, y)
+    raises(ValueError, lambda: f.make_monic_over_integers_by_scaling_roots())
+
+    f = Poly(x, domain='RR')
+    raises(ValueError, lambda: f.make_monic_over_integers_by_scaling_roots())
+
+
+def test_galois_group():
+    f = Poly(x ** 4 - 2)
+    G, alt = f.galois_group(by_name=True)
+    assert G == S4TransitiveSubgroups.D4
+    assert alt is False
 
 
 def test_reduced():

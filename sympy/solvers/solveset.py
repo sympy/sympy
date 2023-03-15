@@ -833,6 +833,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                            ) and gen.base.is_Rational:
+                        result = FiniteSet(*[expand_log(i) for i in result])
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
@@ -876,17 +879,35 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if not isinstance(result, FiniteSet):
-        solution_set = result
-    else:
+    def check_finiteset(solutions):
         f_set = []  # solutions for FiniteSet
         c_set = []  # solutions for ConditionSet
-        for s in result:
+        for s in solutions:
             if checksol(f, symbol, s):
                 f_set.append(s)
             else:
                 c_set.append(s)
-        solution_set = FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
+        return FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
+
+    def check_set(solutions):
+        if solutions is S.EmptySet:
+            return solutions
+        elif isinstance(solutions, ConditionSet):
+            # XXX: Maybe the base set should be checked?
+            return solutions
+        elif isinstance(solutions, FiniteSet):
+            return check_finiteset(solutions)
+        elif isinstance(solutions, Complement):
+            A, B = solutions.args
+            return Complement(check_set(A), B)
+        elif isinstance(solutions, Union):
+            return Union(*[check_set(s) for s in solutions.args])
+        else:
+            # XXX: There should be more cases checked here. The cases above
+            # are all those that come up in the test suite for now.
+            return solutions
+
+    solution_set = check_set(result)
 
     return solution_set
 
@@ -1219,7 +1240,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     1. If a is symbol then  m*n + rhs is the required solution.
 
     2. If a is an instance of ``Add`` then we try to find two symbol independent
-       parts of a and the symbol independent part gets tranferred to the other
+       parts of a and the symbol independent part gets transferred to the other
        side and again the ``_invert_modular`` is called on the symbol
        dependent part.
 
@@ -1570,7 +1591,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
             Ne(a_base, 0),
             Ne(b_base, 0))
 
-    L, R = map(lambda i: expand_log(log(i), force=True), (a, -b))
+    L, R = (expand_log(log(i), force=True) for i in (a, -b))
     solutions = _solveset(L - R, symbol, domain)
 
     return ConditionSet(symbol, conditions, solutions)
@@ -2910,9 +2931,9 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     Solves the `system` using substitution method. It is used in
-     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
-     equation(s) is non polynomial equation.
+    Solves the `system` using substitution method. It is used in
+    :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
+    equation(s) is non polynomial equation.
 
     Parameters
     ==========
@@ -3455,7 +3476,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
     if isinstance(soln, FiniteSet):
-        _soln = FiniteSet(*[tuple((s,)) for s in soln])
+        _soln = FiniteSet(*[(s,) for s in soln])
         return _soln
     else:
         return FiniteSet(tuple(FiniteSet(soln)))

@@ -597,7 +597,7 @@ def compile_link_import_strings(sources, build_dir=None, **kwargs):
     """
     source_files, build_dir = _write_sources_to_build_dir(sources, build_dir)
     mod = compile_link_import_py_ext(source_files, build_dir=build_dir, **kwargs)
-    info = dict(build_dir=build_dir)
+    info = {"build_dir": build_dir}
     return mod, info
 
 
@@ -644,5 +644,5 @@ def compile_run_strings(sources, build_dir=None, clean=False, compile_kwargs=Non
         if clean and os.path.isdir(build_dir):
             shutil.rmtree(build_dir)
             build_dir = None
-    info = dict(exit_status=exit_status, build_dir=build_dir)
+    info = {"exit_status": exit_status, "build_dir": build_dir}
     return (stdout, stderr), info
