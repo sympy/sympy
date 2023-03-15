@@ -624,20 +624,18 @@ def rs_series_reversion_newton(p,x,n):
 
     Another example below shows general formulas for few first coefficients of the inversion expansion:
 
-    >>> import sympy as sm
+    >>> from sympy import IndexedBase, symbols
     >>> from sympy.polys.ring_series import rs_series_reversion_newton
-    >>> a = sm.IndexedBase('a')
+    >>> a = IndexedBase('a')
     >>> x = sm.symbols('x')
     >>> f = sum(a[k]*x**k for k in range(1,4))
     >>> R = f.as_poly(x,field=True).domain
     >>> Rx = R[x]
     >>> fr = Rx.from_sympy(f)
     >>> xr = Rx.from_sympy(x)
-    >>> rs_fast_reversion_newton(fr,xr,n).as_expr()
+    >>> rs_series_reversion_newton(fr,xr,4).as_expr()
     x**3*(-a[3]/a[1]**4 + 2*a[2]**2/a[1]**5) - x**2*a[2]/a[1]**3 + x/a[1]
 
-
-    
 
     References
     ==========
