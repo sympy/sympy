@@ -108,7 +108,7 @@ def test_inversion():
     raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
 
 
-def test_rs_fast_series_reversion():
+def test_series_reversion_newton():
     x,a = symbols('x,a')
     # exponential function with parameter
     f = exp(x*a)-1
