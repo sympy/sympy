@@ -59,17 +59,15 @@ class KanesMethod(_Methods):
     kd_eqs_solver : str, callable
         Method used to solve the kinematic differential equations. If a string is
         supplied, it should be a valid method that can be used with the
-        :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should take two arguments - the ``A`` matrix and the ``rhs``, and solve the
-        equations and return the solution. The default uses LU solve. See the notes for
-        more information.
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
+        should have the format ``f(A, rhs)``, where it solves the equations and returns
+        the solution. The default utilizes LU solve. See the notes for more information.
     constraint_solver : str, callable
         Method used to solve the velocity constraints. If a string is
         supplied, it should be a valid method that can be used with the
-        :meth:`~sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should take two arguments - the ``A`` matrix and the ``rhs``, and solve the
-        equations and return the solution. The default uses LU solve. See the notes for
-        more information.
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
+        should have the format ``f(A, rhs)``, where it solves the equations and returns
+        the solution. The default utilizes LU solve. See the notes for more information.
 
     Notes
     =====
@@ -87,8 +85,8 @@ class KanesMethod(_Methods):
     Both of these sets of equations can be expressed as a linear system ``Ax = rhs``,
     which have to be solved in order to obtain the equations of motion.
 
-    The default solver, LU solve, results in the fastest execution time after
-    lambdifying the solution. The weakness of this method is that it can result in zero
+    The default solver ``'LU'``, which stands for LU solve, results relatively low
+    number of operations. The weakness of this method is that it can result in zero
     division errors.
 
     While a valid list of solvers can be found at
