@@ -3028,6 +3028,8 @@ def nsolve(*args, dict=False, **kwargs):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
             f = f.lhs - f.rhs
+        elif f.is_Relational:
+            raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
