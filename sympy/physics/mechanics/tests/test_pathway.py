@@ -2,53 +2,54 @@
 
 from __future__ import annotations
 
+from typing import Any, Sequence
+
 import pytest
 
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
-
-
-@pytest.mark.parametrize(
-    'concrete_pathway_class, args, kwargs',
-    [
-        (LinearPathway, ((Point('pO'), Point('pI')), ), {}),
-        (LinearPathway, ([Point('pO'), Point('pI')], ), {}),
-        (LinearPathway, (), {'attachments': (Point('pO'), Point('pI'))}),
-        (LinearPathway, (), {'attachments': [Point('pO'), Point('pI')]}),
-    ]
-)
-def test_concrete_pathway_class_valid_constructor(
-    concrete_pathway_class: PathwayBase,
-    args: tuple,
-    kwargs: dict,
-) -> None:
-    instance = concrete_pathway_class(*args, **kwargs)
-    assert isinstance(instance, concrete_pathway_class)
-
-
-@pytest.mark.parametrize(
-    'concrete_pathway_class, args, kwargs, error_type',
-    [
-        (LinearPathway, (Point('pO'), ), {}, TypeError),
-        (LinearPathway, (Point('pO'), Point('pI')), {}, TypeError),
-        (LinearPathway, ((Point('pO'), Point('pI'), Point('pZ')), ), {}, ValueError),
-        (LinearPathway, ((None, Point('pI')), ), {}, TypeError),
-        (LinearPathway, ((Point('pO'), None), ), {}, TypeError),
-    ]
-)
-def test_concrete_pathway_class_invalid_constructor(
-    concrete_pathway_class: PathwayBase,
-    args: tuple,
-    kwargs: dict,
-    error_type: Exception,
-) -> None:
-    with pytest.raises(error_type):
-        _ = concrete_pathway_class(*args, **kwargs)
+from sympy.physics.mechanics._pathway import LinearPathway
 
 
 class TestLinearPathway:
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'args, kwargs',
+        [
+            (((Point('pO'), Point('pI')), ), {}),
+            (([Point('pO'), Point('pI')], ), {}),
+            ((), {'attachments': (Point('pO'), Point('pI'))}),
+            ((), {'attachments': [Point('pO'), Point('pI')]}),
+        ]
+    )
+    def test_valid_constructor(args: tuple, kwargs: dict) -> None:
+        instance = LinearPathway(*args, **kwargs)
+        assert isinstance(instance, LinearPathway)
+        assert hasattr(instance, 'attachments')
+        assert len(instance.attachments) == 2
+        assert isinstance(instance.attachments[0], Point)
+        assert instance.attachments[0].name == 'pO'
+        assert isinstance(instance.attachments[1], Point)
+        assert instance.attachments[1].name == 'pI'
+
+    @staticmethod
+    def test_invalid_attachments_too_many() -> None:
+        with pytest.raises(ValueError):
+            _ = LinearPathway((Point('pO'), Point('pI'), Point('pZ')))  # type: ignore
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (None, Point('pI')),
+            (Point('pO'), None),
+        ]
+    )
+    def test_invalid_attachments_not_point(attachments: Sequence[Any]) -> None:
+        with pytest.raises(TypeError):
+            _ = LinearPathway(attachments)  # type: ignore
 
     @pytest.fixture(autouse=True)
     def _linear_pathway_fixture(self) -> None:
