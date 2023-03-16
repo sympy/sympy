@@ -1609,24 +1609,49 @@ def _inverse_laplace_irrational(fn, s, t, plane):
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
     c = Wild('c', exclude=[s])
+    m = Wild('m', exclude=[s])
+    n = Wild('n', exclude=[s])
     f = Wild('f')
 
     result = None
     condition = S.true
 
-    if (m1 := fn.match(sqrt(b*s)*f)) is not None:
-        debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
+    fa = fn.as_ordered_factors()
+    ma = [x.match((a*s**m+b)**n) for x in fa]
 
-        if (m2 := m1[f].match(c/(b*s-a))) is not None:
-            if (m2[a]*m2[b]).is_positive:
-                if m2[a].is_positive:
-                    a_, b_, c_ = m2[a], m2[b], sqrt(m1[b])*m2[c]
-                else:
-                    a_, b_, c_ = -m2[a], -m2[b], -sqrt(m1[b])*m2[c]
-            result = (
-                c_*exp(a_*t/b_)*erf(sqrt(a_)*sqrt(t)/sqrt(b_)) /
-                (sqrt(a_)*b_**(S(3)/2)))
-            debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
+    if (None in ma) == 1:
+        return None
+
+    constants = []
+    zeros = []
+    poles = []
+    rest = []
+
+    for term in ma:
+        if term[a] == 0:
+            constants.append(term)
+        elif term[n].is_positive:
+            zeros.append(term)
+        elif term[n].is_negative:
+            poles.append(term)
+        else:
+            rest.append(term)
+
+    if len(rest) != 0:
+        return None
+
+    debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
+
+    if len(poles) == 2:
+        if len(zeros) == 0:
+            poles = sorted(poles, key=lambda x: x[n])
+            if poles[0][n] == -1 and poles[1][n] == -S.Half:
+                if poles[1][b] == 0:
+                    a_ = -poles[0][b]/poles[0][a]
+                    k_ = 1/sqrt(poles[1][a])/poles[0][a]
+                    if a_.is_positive:
+                        result = k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t))
+                        debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
 
     if result is None:
         return None
