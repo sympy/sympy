@@ -495,10 +495,11 @@ def test_inverse_laplace_transform():
 
     # Section 5.3: Irrational algebraic functions
     assert (
-        -ILT(sqrt(k*s)/(-a*s + 4)) - sqrt(k)*exp(4*t/a) *
-        erf(2*sqrt(t)/sqrt(a))/(2*a**(3/2))).simplify() == 0
-    assert (ILT(sqrt(k*s)/(-a + 4*s)) ==
-            sqrt(k)*exp(a*t/4)*erf(sqrt(a)*sqrt(t)/2)/(8*sqrt(a)))
+        ILT(1/sqrt(k*s)/(-a + s)) ==
+        exp(a*t)*erf(sqrt(a)*sqrt(t))/(sqrt(a)*sqrt(k)))
+    assert (
+        ILT(1/sqrt(k*s)/(b - a*s)) ==
+        -exp(b*t/a)*erf(sqrt(b)*sqrt(t)/sqrt(a))/(sqrt(a)*sqrt(b)*sqrt(k)))
 
     # Miscellaneous tests
     # Can _inverse_laplace_time_shift deal with positive exponents?
