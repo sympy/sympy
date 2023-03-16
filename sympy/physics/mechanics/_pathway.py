@@ -70,25 +70,17 @@ class PathwayBase(ABC):
                 raise TypeError(msg)
         self._attachments = tuple(attachments)
 
-    @abstractmethod
-    def _true_length(self) -> Expr:
-        """Exact analytical expression for the pathway's length."""
-        pass
-
-    @abstractmethod
-    def _true_shortening_velocity(self) -> Expr:
-        """Exact analytical expression for the pathway's shortening velocity."""
-        pass
-
     @property
+    @abstractmethod
     def length(self) -> Expr:
         """An expression representing the pathway's length."""
-        return self._true_length()
+        pass
 
     @property
+    @abstractmethod
     def shortening_velocity(self) -> Expr:
         """An expression representing the pathway's shortening velocity."""
-        return self._true_shortening_velocity()
+        pass
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(attachments={self.attachments})'
@@ -176,12 +168,14 @@ class LinearPathway(PathwayBase):
         """
         super().__init__(attachments)
 
-    def _true_length(self) -> Expr:
+    @property
+    def length(self) -> Expr:
         """Exact analytical expression for the pathway's length."""
         length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
         return length
 
-    def _true_shortening_velocity(self) -> Expr:
+    @property
+    def shortening_velocity(self) -> Expr:
         """Exact analytical expression for the pathway's shortening velocity."""
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         if not relative_position:
