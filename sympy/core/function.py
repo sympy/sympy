@@ -1423,8 +1423,7 @@ class Derivative(Expr):
                 expr = expr.xreplace({old_v: v})
                 # Derivatives and UndefinedFunctions are independent
                 # of all others
-                clashing = not (isinstance(old_v, Derivative) or \
-                    isinstance(old_v, AppliedUndef))
+                clashing = not (isinstance(old_v, (Derivative, AppliedUndef)))
                 if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
@@ -3231,11 +3230,7 @@ def count_ops(expr, visual=False):
                 # count the args
                 ops.append(o*(len(a.args) - 1))
             elif a.args and (
-                    a.is_Pow or
-                    a.is_Function or
-                    isinstance(a, Derivative) or
-                    isinstance(a, Integral) or
-                    isinstance(a, Sum)):
+                    a.is_Pow or a.is_Function or isinstance(a, (Derivative, Integral, Sum))):
                 # if it's not in the list above we don't
                 # consider a.func something to count, e.g.
                 # Tuple, MatrixSymbol, etc...

@@ -22,7 +22,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8 flake8-comprehensions ruff
+
+      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -117,35 +118,24 @@ jobs:
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
-  # -------------------- Test split 1/2 latest Python -------------- #
+  # ------------------------- Test latest Python ------------------- #
 
-  tests1-latest:
+  tests-latest:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=1/2
-
-  # -------------------- Test split 2/2 latest Python -------------- #
-
-  tests2-latest:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=2/2
+      - run: pip install mpmath pytest pytest-split
+      - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
 
@@ -153,17 +143,25 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    timeout-minutes: 75
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
-        split: ['1/2', '2/2']
+        group: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
-      - run: python3 setup.py bdist_wheel
-      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
+          node-version: 18.x
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install build
+      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
+      - run: python -m build --wheel
+      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -201,7 +199,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap                            \
+                         aesara wurlitzer autowrap pytest                     \
                          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
@@ -233,7 +231,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow
+      - run: pip install mpmath numpy scipy tensorflow pytest
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -249,46 +247,35 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine
+      - run: pip install mpmath numpy symengine pytest
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
           USE_SYMENGINE: '1'
 
-  # -------------------- Slow test split 1/2 ----------------------- #
+  # ------------------------- Slow tests --------------------------- #
 
-  slow1:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  tests-slow:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --slow --timeout=595 --split=1/2
+      - run: pip install mpmath pytest pytest-split pytest-timeout
+      - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
-  # -------------------- Slow test split 2/2 ----------------------- #
+  # -------------------- Test older (and newer) Python --------------- #
 
-  slow2:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --slow --timeout=595 --split=2/2
-
-  # -------------------- Test split 1/2 older (and newer) Python --------------- #
-
-  tests1:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  tests-other-python:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     continue-on-error: ${{ matrix.experimental }}
@@ -297,6 +284,7 @@ jobs:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
         experimental: [false]
+        group: [1, 2, 3, 4]
         # Maybe use this to add 3.12 when the time comes:
         #include:
         #  - python-version: '3.12.0-alpha - 3.12'
@@ -307,38 +295,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=1/2
-
-  # -------------------- Test split 2/2 older (and newer) Python --------------- #
-
-  tests2:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
-        experimental: [false]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=2/2
+      - run: pip install mpmath pytest pytest-split
+      - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #
 
-  doctests:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  doctests-other-python:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     continue-on-error: ${{ matrix.experimental }}
@@ -364,7 +327,7 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
@@ -391,7 +354,7 @@ jobs:
   # -------------------- Check the error message under py2 --------- #
 
   py2-import:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
@@ -404,7 +367,7 @@ jobs:
   # -------------------- Check the list of files for sdist --------- #
 
   sdist-check:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
@@ -412,13 +375,14 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - run: python setup.py sdist
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
 
   benchmarks:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
@@ -474,7 +438,7 @@ jobs:
   # -------------------- Save PR number ---------------------------- #
 
   save-pr-number:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     # The comment-on-pr workflow needs the issue number of the PR to be able to
     # comment so we output that to a file and pass it over as an artifact.

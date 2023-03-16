@@ -8,8 +8,8 @@ from sympy.matrices.expressions import (MatrixSymbol, Identity,
         Inverse, trace, Transpose, det, ZeroMatrix, OneMatrix)
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
-from sympy.core import Tuple, symbols, Expr, S
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix, zeros)
+from sympy.core import Tuple, symbols, Expr, S, Function
 from sympy.functions import transpose, im, re
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
@@ -443,3 +443,10 @@ def test_adjoint_and_special_matrices():
     assert re(X) == X
     assert X2.adjoint() == BlockMatrix([[A, ZeroMatrix(3, 2)], [-S.ImaginaryUnit*OneMatrix(2, 3), D]])
     assert im(X2) == BlockMatrix([[ZeroMatrix(3, 3), OneMatrix(3, 2)], [ZeroMatrix(2, 3), ZeroMatrix(2, 2)]])
+
+
+def test_block_matrix_derivative():
+    x = symbols('x')
+    A = Matrix(3, 3, [Function(f'a{i}')(x) for i in range(9)])
+    bc = BlockMatrix([[A[:2, :2], A[:2, 2]], [A[2, :2], A[2:, 2]]])
+    assert Matrix(bc.diff(x)) - A.diff(x) == zeros(3, 3)

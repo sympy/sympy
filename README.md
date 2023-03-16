@@ -108,7 +108,7 @@ To install SymPy from GitHub source, first clone SymPy using `git`:
 
 Then, in the `sympy` repository that you cloned, simply run:
 
-    $ python setup.py install
+    $ pip install .
 
 See <https://docs.sympy.org/dev/install.html> for more information.
 

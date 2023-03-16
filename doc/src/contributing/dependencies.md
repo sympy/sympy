@@ -20,6 +20,7 @@ found on
 [GitHub](https://github.com/sympy/sympy/network/dependents?dependent_type=PACKAGE)
 or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 
+(hard-dependencies)=
 ## Hard Dependencies
 
 SymPy only has one hard dependency, which is required for it to work: mpmath.
@@ -47,6 +48,7 @@ SymPy only has one hard dependency, which is required for it to work: mpmath.
   install SymPy, e.g., if you are developing directly on SymPy in the git
   repository.
 
+(optional-dependencies)=
 ## Optional Dependencies
 
 These dependencies are not required to use SymPy. The vast majority of SymPy
@@ -381,12 +383,12 @@ library code should be imported with `import_module()`.
 ### Building the Documentation
 
 Building the documentation requires several additional dependencies. [This
-page](build-docs) outlines these dependencies and how to install them. It is
-only necessary to install these dependencies if you are contributing
-documentation to SymPy and want to check that the HTML or PDF documentation
-renders correctly. If you only want to view the documentation for the
-development version of SymPy, development builds of the docs are hosted online
-at https://docs.sympy.org/dev/index.html.
+page](build-the-documentation) outlines these dependencies and how to install
+them. It is only necessary to install these dependencies if you are
+contributing documentation to SymPy and want to check that the HTML or PDF
+documentation renders correctly. If you only want to view the documentation
+for the development version of SymPy, development builds of the docs are
+hosted online at https://docs.sympy.org/dev/index.html.
 
 ### Running the Benchmarks
 

@@ -425,7 +425,7 @@ def is_strong_lucas_prp(n):
 
 def is_extra_strong_lucas_prp(n):
     """Extra Strong Lucas compositeness test.  Returns False if n is
-    definitely composite, and True if n is a "extra strong" Lucas probable
+    definitely composite, and True if n is an "extra strong" Lucas probable
     prime.
 
     The parameters are selected using P = 3, Q = 1, then incrementing P until
@@ -434,8 +434,7 @@ def is_extra_strong_lucas_prp(n):
     used in OEIS A217719, Perl's Math::Prime::Util, and the Lucas pseudoprime
     page on Wikipedia.
 
-    With these parameters, there are no counterexamples below 2^64 nor any
-    known above that range.  It is 20-50% faster than the strong test.
+    It is 20-50% faster than the strong test.
 
     Because of the different parameters selected, there is no relationship
     between the strong Lucas pseudoprimes and extra strong Lucas pseudoprimes.
