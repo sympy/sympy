@@ -8,7 +8,6 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
 
 from sympy.physics.mechanics.functions import (
     gravity, center_of_mass, _validate_coordinates, _parse_linear_solver)
-from sympy.testing.pytest import raises
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
