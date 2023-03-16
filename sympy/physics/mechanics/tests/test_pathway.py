@@ -35,6 +35,15 @@ class TestLinearPathway:
         assert instance.attachments[1].name == 'pI'
 
     @staticmethod
+    def test_invalid_attachments_not_iterable() -> None:
+        error_msg = (
+            r'Value .* passed to `attachments` was of type .*, must be '
+            r'<class \'tuple\'>'
+        )
+        with pytest.raises(TypeError, match=error_msg):
+            _ = LinearPathway(Point('pO'))  # type: ignore
+
+    @staticmethod
     def test_invalid_attachments_too_many() -> None:
         with pytest.raises(ValueError):
             _ = LinearPathway((Point('pO'), Point('pI'), Point('pZ')))  # type: ignore
