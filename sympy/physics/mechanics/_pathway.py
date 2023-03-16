@@ -12,6 +12,7 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 
 from sympy.core.backend import S, Symbol
 from sympy.core.expr import Expr
@@ -47,7 +48,7 @@ class PathwayBase(ABC):
 
     @attachments.setter
     def attachments(self, attachments: tuple[Point, ...]) -> None:
-        if not iter(attachments):
+        if not isinstance(attachments, Iterable):
             msg = (
                 f'Value {repr(attachments)} passed to `attachments` was of '
                 f'type {type(attachments)}, must be {tuple}.'
