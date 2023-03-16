@@ -510,7 +510,7 @@ jobs:
 
       - uses: actions/setup-python@v4 # Pre-built GitHub Action to setup python
         with:
-          python-version: "3.11"
+          python-version: "3.7"
       - run: python -m pip install --upgrade pip
       - run: pip install sympy coverage
       - run: bin/coverage_report.py
