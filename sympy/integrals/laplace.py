@@ -1608,10 +1608,8 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
     a = Wild('a', exclude=[s])
     b = Wild('b', exclude=[s])
-    c = Wild('c', exclude=[s])
     m = Wild('m', exclude=[s])
     n = Wild('n', exclude=[s])
-    f = Wild('f')
 
     result = None
     condition = S.true
