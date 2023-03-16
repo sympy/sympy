@@ -76,7 +76,15 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
-There are no deprecations yet for SymPy 1.13.
+(monotonicity-helper)=
+### The ``calculus.singularities.monotonicity_helper`` function
+
+The ``calculus.singularities.monotonicity_helper`` is considered private. Instead use
+the required check directly through the provided functions
+* {func}`~sympy.calculus.singularities.is_increasing`
+* {func}`~sympy.calculus.singularities.is_strictly_increasing`
+* {func}`~sympy.calculus.singularities.is_decreasing`
+* {func}`~sympy.calculus.singularities.is_strictly_decreasing`
 
 ## Version 1.12
 
