@@ -209,7 +209,8 @@ from .utilities import (flatten, group, take, subsets, variations,
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_mellin_transform, MellinTransform, InverseMellinTransform,
-        laplace_transform, inverse_laplace_transform, LaplaceTransform,
+        laplace_transform, laplace_correspondence, laplace_initial_conds,
+        inverse_laplace_transform, LaplaceTransform,
         InverseLaplaceTransform, fourier_transform, inverse_fourier_transform,
         FourierTransform, InverseFourierTransform, sine_transform,
         inverse_sine_transform, SineTransform, InverseSineTransform,
@@ -242,7 +243,7 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-test = lazy_function('sympy.testing.runtests', 'test')
+test = lazy_function('sympy.testing.runtests_pytest', 'test')
 doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
@@ -449,6 +450,7 @@ __all__ = [
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',
     'inverse_mellin_transform', 'MellinTransform', 'InverseMellinTransform',
     'laplace_transform', 'inverse_laplace_transform', 'LaplaceTransform',
+    'laplace_correspondence', 'laplace_initial_conds',
     'InverseLaplaceTransform', 'fourier_transform',
     'inverse_fourier_transform', 'FourierTransform',
     'InverseFourierTransform', 'sine_transform', 'inverse_sine_transform',
