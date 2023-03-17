@@ -661,7 +661,7 @@ def rs_series_reversion_newton(p, x, n):
     assert Rx.domain.is_unit(f.coeff(xr)) # the first coeff is unit
 
     # do Newton updates
-    fn_update = xr-(f-yr)* df_inv
+    fn_update = xr - (f - yr)* df_inv
     x_series = Rxy.zero
     k = 0
     while k < n:
