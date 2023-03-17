@@ -609,7 +609,7 @@ def rs_series_reversion_newton(p, x, n):
     Examples
     ========
 
-    The example below shows how to invert the expresion $f=\mathrm{e}^{x}-1$ around $x=0$:
+    In the example below we invert $f=\mathrm{e}^{x}-1$ around $x=0$:
 
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.rings import ring
@@ -620,7 +620,7 @@ def rs_series_reversion_newton(p, x, n):
     >>> rs_series_reversion_newton(fr,xr,n)
     1/3*x**3 - 1/2*x**2 + x
 
-    Another example below shows general formulas for few first coefficients of the inversion expansion:
+    Another example derives general formulas for the inversion series:
 
     >>> from sympy import IndexedBase, symbols
     >>> from sympy.polys.ring_series import rs_series_reversion_newton
