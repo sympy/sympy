@@ -98,6 +98,57 @@ class Vector(Printable, EvalfMixin):
         >>> dot(N.y, A.y)
         cos(q1)
 
+        #Note
+        The function orientnew(...) has the following function definition ->
+
+        orientnew(self, newname, rot_type, amounts, rot_order='',
+                  variables=None, indices=None, latexs=None)
+
+        where
+        -----
+
+        newname : str
+            Name for the new reference frame.
+        rot_type : str
+            The method used to generate the direction cosine matrix. Supported
+            methods are:
+
+            - ``'Axis'``: simple rotations about a single common axis
+            - ``'DCM'``: for setting the direction cosine matrix directly
+            - ``'Body'``: three successive rotations about new intermediate
+              axes, also called "Euler and Tait-Bryan angles"
+            - ``'Space'``: three successive rotations about the parent
+              frames' unit vectors
+            - ``'Quaternion'``: rotations defined by four parameters which
+              result in a singularity free direction cosine matrix
+
+        amounts :
+            Expressions defining the rotation angles or direction cosine
+            matrix. These must match the ``rot_type``. See examples below for
+            details. The input types are:
+
+            - ``'Axis'``: 2-tuple (expr/sym/func, Vector)
+            - ``'DCM'``: Matrix, shape(3,3)
+            - ``'Body'``: 3-tuple of expressions, symbols, or functions
+            - ``'Space'``: 3-tuple of expressions, symbols, or functions
+            - ``'Quaternion'``: 4-tuple of expressions, symbols, or
+              functions
+
+        rot_order : str or int, optional
+            If applicable, the order of the successive of rotations. The string
+            ``'123'`` and integer ``123`` are equivalent, for example. Required
+            for ``'Body'`` and ``'Space'``.
+        indices : tuple of str
+            Enables the reference frame's basis unit vectors to be accessed by
+            Python's square bracket indexing notation using the provided three
+            indice strings and alters the printing of the unit vectors to
+            reflect this choice.
+        latexs : tuple of str
+            Alters the LaTeX printing of the reference frame's basis unit
+            vectors to the provided three valid LaTeX strings.
+
+        For reference examples, head over to function orientnew(...) in sympy.physics.vector.frame
+
         """
 
         from sympy.physics.vector.dyadic import Dyadic
