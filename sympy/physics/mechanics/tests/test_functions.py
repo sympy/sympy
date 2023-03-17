@@ -7,7 +7,7 @@ from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
                                      find_dynamicsymbols, Lagrangian)
 
 from sympy.physics.mechanics.functions import (
-    gravity, center_of_mass, _validate_coordinates, _parse_linear_solver)
+    center_of_mass, _validate_coordinates, _parse_linear_solver)
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -166,24 +166,6 @@ def test_find_dynamicsymbols():
     raises(ValueError, lambda: find_dynamicsymbols(v))
 
 
-def test_gravity():
-    N = ReferenceFrame('N')
-    m, M, g = symbols('m M g')
-    F1, F2 = dynamicsymbols('F1 F2')
-    po = Point('po')
-    pa = Particle('pa', po, m)
-    A = ReferenceFrame('A')
-    P = Point('P')
-    I = outer(A.x, A.x)
-    B = RigidBody('B', P, A, M, (I, P))
-    forceList = [(po, F1), (P, F2)]
-    forceList.extend(gravity(g*N.y, pa, B))
-    l = [(po, F1), (P, F2), (po, g*m*N.y), (P, g*M*N.y)]
-
-    for i in range(len(l)):
-        for j in range(len(l[i])):
-            assert forceList[i][j] == l[i][j]
-
 # This function tests the center_of_mass() function
 # that was added in PR #14758 to compute the center of
 # mass of a system of bodies.
@@ -255,7 +237,8 @@ def test_parse_linear_solver():
 
 
 def test_deprecated_moved_functions():
-    from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass
+    from sympy.physics.mechanics.functions import (
+        inertia, inertia_of_point_mass, gravity)
     N = ReferenceFrame('N')
     with warns_deprecated_sympy():
         assert inertia(N, 0, 1, 0, 1) == (N.x | N.y) + (N.y | N.x) + (N.y | N.y)
@@ -263,3 +246,6 @@ def test_deprecated_moved_functions():
         assert inertia_of_point_mass(1, N.x + N.y, N) == (
             (N.x | N.x) + (N.y | N.y) + 2 * (N.z | N.z) -
             (N.x | N.y) - (N.y | N.x))
+    p = Particle('P')
+    with warns_deprecated_sympy():
+        assert gravity(-2 * N.z, p) == [(p.masscenter, -2 * p.mass * N.z)]
