@@ -100,7 +100,8 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-
+    is_hermitian = None
+    is_unitary = None
     @classmethod
     def default_args(self):
         return ("O",)
@@ -244,12 +245,12 @@ class UnitaryOperator(Operator):
     >>> U*Dagger(U)
     1
     """
-
+    is_unitary = True
     def _eval_adjoint(self):
         return self._eval_inverse()
 
 
-class IdentityOperator(HermitianOperator, UnitaryOperator):
+class IdentityOperator(Operator):
     """An identity operator I that satisfies op * I == I * op == op for any
     operator op.
 
@@ -267,6 +268,8 @@ class IdentityOperator(HermitianOperator, UnitaryOperator):
     >>> IdentityOperator()
     I
     """
+    is_hermitian = True
+    is_unitary = True
     @property
     def dimension(self):
         return self.N
@@ -287,11 +290,20 @@ class IdentityOperator(HermitianOperator, UnitaryOperator):
     def _eval_anticommutator(self, other, **hints):
         return 2 * other
 
+    def _eval_inverse(self):
+        return self
+
+    def _eval_adjoint(self):
+        return self
+
     def _apply_operator(self, ket, **options):
         return ket
 
     def _apply_from_right_to(self, bra, **options):
         return bra
+
+    def _eval_power(self, exp):
+        return self
 
     def _print_contents(self, printer, *args):
         return 'I'
