@@ -86,6 +86,7 @@ source code, due to the parity between function names and module names. The
 following functions were moved:
 - ``inertia`` has been moved to ``sympy.physics.mechanics.inertia``
 - ``inertia_of_point_mass`` has been moved to ``sympy.physics.mechanics.inertia``
+- ``gravity`` has been moved to ``sympy.physics.mechanics.loads``
 
 Previously you could import the functions from
 ``sympy.physics.mechanics.functions``:
@@ -98,6 +99,7 @@ Now they should be imported from ``sympy.physics.mechanics``:
 
 ```py
 >>> from sympy.physics.mechanics import inertia, inertia_of_point_mass
+>>> from sympy.physics.mechanics.loads import gravity
 ```
 
 ## Version 1.12
