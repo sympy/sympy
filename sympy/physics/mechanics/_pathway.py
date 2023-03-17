@@ -14,7 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 
-from sympy.core.backend import S, Symbol
+from sympy.core.backend import S
 from sympy.core.expr import Expr
 from sympy.physics.mechanics import Point
 from sympy.physics.vector import Vector, dynamicsymbols
@@ -189,7 +189,7 @@ class LinearPathway(PathwayBase):
         shortening_velocity = -relative_velocity.dot(relative_position.normalize())
         return shortening_velocity
 
-    def compute_loads(self, force: Symbol) -> list[tuple[Point, Vector]]:
+    def compute_loads(self, force: Expr) -> list[tuple[Point, Vector]]:
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -235,9 +235,9 @@ class LinearPathway(PathwayBase):
         Parameters
         ==========
 
-        force : Symbol
+        force : Expr
             The force acting along the length of the pathway. It is assumed
-            that this ``Symbol`` represents a contractile force.
+            that this ``Expr`` represents a contractile force.
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
