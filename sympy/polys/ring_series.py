@@ -586,11 +586,11 @@ def rs_series_reversion_newton(p, x, n):
     Parameters
     ==========
 
-    p : :class:`~.PolyElement` 
+    p : :class:`~.PolyElement`
         The polynomial to be inverted.
-    x : :class:`~.PolyElement` 
+    x : :class:`~.PolyElement`
         The variable with respect to which ``p`` is inverted.
-    n : integer 
+    n : integer
         The number of expansion terms to be computed.
 
     Explanation
