@@ -18,6 +18,8 @@ __all__ = [
 
     'inertia', 'inertia_of_point_mass', 'Inertia',
 
+    'Force', 'Torque',
+
     'Particle',
 
     'LagrangesMethod',
@@ -53,6 +55,8 @@ from .functions import (linear_momentum, angular_momentum, kinetic_energy,
                         find_dynamicsymbols)
 
 from .inertia import inertia, inertia_of_point_mass, Inertia
+
+from .loads import Force, Torque
 
 from .particle import Particle
 
