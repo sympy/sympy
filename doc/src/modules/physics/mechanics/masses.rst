@@ -154,14 +154,14 @@ point and the second a vector.
    >>> Force(Po, N.x)
    (Po, N.x)
 
-The location of a torque on the other had is a frame.
+The location of a torque on the other hand is a frame.
 
    >>> from sympy.physics.mechanics import Torque
    >>> Torque(N, 2 * N.x)
    (N, 2*N.x)
 
-Optionally one can, when using the dedicated classes, also parse the body. If
-so, the force will use the center of mass and the torque will use the associated
+Optionally one can also pass the body when using the decicated classes. If so,
+the force will use the center of mass and the torque will use the associated
 frame.
 
    >>> from sympy.physics.mechanics import RigidBody
