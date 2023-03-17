@@ -1,8 +1,9 @@
-from sympy.physics.mechanics.loads import Force, Torque, gravity, _parse_load
-from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame, Point,
-                                     outer, dynamicsymbols)
+from pytest import raises
+
 from sympy.core.backend import symbols
-from sympy.testing.pytest import raises
+from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame, Point,
+                                     outer, dynamicsymbols, Force, Torque, Vector)
+from sympy.physics.mechanics.loads import gravity, _parse_load
 
 
 def test_force_default():
