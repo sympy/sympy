@@ -573,7 +573,7 @@ def _coefficient_t(p, t):
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
 
-def rs_series_reversion_newton(p,x,n):
+def rs_series_reversion_newton(p, x, n):
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
