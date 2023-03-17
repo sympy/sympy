@@ -130,7 +130,7 @@ def test_series_reversion_newton():
     xr = Rx.from_sympy(x)
     ar = Rx.domain.from_sympy(a)
     calculated = rs_series_reversion_newton(fr,xr,n)
-    expected = 1/ar*xr
+    expected = (1/ar)*xr
     assert calculated == expected
 
 def test_series_reversion():
