@@ -53,7 +53,7 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 
 
 def _invert_monoms(p1):
