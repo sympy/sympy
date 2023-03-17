@@ -38,7 +38,7 @@ class TestLinearPathway:
     def test_invalid_attachments_not_iterable() -> None:
         error_msg = (
             r'Value .* passed to `attachments` was of type .*, must be '
-            r'<class \'tuple\'>'
+            r'<class .*Sequence.*>'
         )
         with pytest.raises(TypeError, match=error_msg):
             _ = LinearPathway(Point('pO'))  # type: ignore
