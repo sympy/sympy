@@ -65,7 +65,7 @@ class PathwayBase(ABC):
             if not isinstance(point, Point):
                 msg = (
                     f'Value {repr(point)} passed to `attachments` at index '
-                    f'{i} was of type {type(attachments)}, must be {Point}.'
+                    f'{i} was of type {type(point)}, must be {Point}.'
                 )
                 raise TypeError(msg)
         self._attachments = tuple(attachments)
