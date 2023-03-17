@@ -53,7 +53,6 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
-from sympy.core.symbol import Dummy
 
 
 def _invert_monoms(p1):
@@ -575,7 +574,6 @@ def _coefficient_t(p, t):
     return p1
 
 def rs_series_reversion_newton(p,x,n):
-
     r"""
     Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
 
@@ -647,15 +645,15 @@ def rs_series_reversion_newton(p,x,n):
     f = p
     Rx = f.ring
     df = f.diff(x)
-    df_inv = rs_series_inversion(df,x,n)
+    df_inv = rs_series_inversion(df, x, n)
 
     # inject the auxiliary variable y
     y = Dummy('y')
     Rx = Rx.to_domain()
     Rxy = Rx.inject(y)
-    df_inv = Rxy.convert_from(df_inv,Rx)
-    xr = Rxy.convert_from(x,Rx)
-    f = Rxy.convert_from(f,Rx)
+    df_inv = Rxy.convert_from(df_inv, Rx)
+    xr = Rxy.convert_from(x, Rx)
+    f = Rxy.convert_from(f, Rx)
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
@@ -672,7 +670,7 @@ def rs_series_reversion_newton(p,x,n):
 
     # change variable
     x_series = rs_subs(x_series, {yr:xr}, yr, n)
-    x_series = Rx.convert(x_series,Rxy)
+    x_series = Rx.convert(x_series, Rxy)
 
     return x_series
 
