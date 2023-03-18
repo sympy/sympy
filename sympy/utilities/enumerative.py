@@ -624,7 +624,7 @@ class MultisetPartitionTraverser():
         """
 
         if amt == 1:
-            # In this case we always need to increment, *before*
+            # In this case we always need to decrement, *before*
             # enforcing the "sufficient unallocated multiplicity"
             # constraint.  Easiest for this is just to call the
             # regular decrement method.
