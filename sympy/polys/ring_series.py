@@ -642,8 +642,10 @@ def rs_series_reversion_newton(p, x, n):
     References
     ==========
 
-    .. [1] Brent, Richard P., and Hsiang T. Kung. "Fast algorithms for manipulating formal power series." Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
-    .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource. https://mathworld.wolfram.com/SeriesReversion.html
+    .. [1] Brent, Richard P., and Hsiang T. Kung. "Fast algorithms for manipulating formal power series."
+    Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
+    .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource. 
+    https://mathworld.wolfram.com/SeriesReversion.html
     """
 
     f = p
