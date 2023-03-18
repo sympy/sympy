@@ -1560,6 +1560,7 @@ def _inverse_laplace_time_shift(F, s, t, plane):
             return InverseLaplaceTransform(F, s, t, plane), S.true
     return None
 
+
 def _inverse_laplace_freq_shift(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1577,6 +1578,7 @@ def _inverse_laplace_freq_shift(F, s, t, plane):
                 exp(-ma[a]*t) *
                 InverseLaplaceTransform(F.func(s), s, t, plane), S.true)
     return None
+
 
 def _inverse_laplace_time_diff(F, s, t, plane):
     """
@@ -1615,19 +1617,23 @@ def _inverse_laplace_irrational(fn, s, t, plane):
     condition = S.true
 
     fa = fn.as_ordered_factors()
+
     ma = [x.match((a*s**m+b)**n) for x in fa]
+
+    # XXX remove before merge
+    # debugf('[ILT _i_l_i] matched %s', (ma, ))
 
     if (None in ma) == 1:
         return None
 
-    constants = []
+    constants = S.One
     zeros = []
     poles = []
     rest = []
 
     for term in ma:
         if term[a] == 0:
-            constants.append(term)
+            constants = constants*term
         elif term[n].is_positive:
             zeros.append(term)
         elif term[n].is_negative:
@@ -1640,15 +1646,25 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
     debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
 
+    if len(poles) == 1:
+        if poles[0][n] == -1 and poles[0][m] == S.Half:
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]*constants
+            if a_.is_positive:
+                result = (
+                    k_/sqrt(pi)/sqrt(t) -
+                    k_*a_*exp(a_**2*t)*erfc(a_*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (4) returns %s', (result, ))
+
     if len(poles) == 2:
         if len(zeros) == 0:
             poles = sorted(poles, key=lambda x: x[n])
             if poles[0][n] == -1 and poles[1][n] == -S.Half:
                 if poles[1][b] == 0:
                     a_ = -poles[0][b]/poles[0][a]
-                    k_ = 1/sqrt(poles[1][a])/poles[0][a]
+                    k_ = 1/sqrt(poles[1][a])/poles[0][a]*constants
                     if a_.is_positive:
-                        result = k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t))
+                        result = (k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t)))
                         debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
 
     if result is None:
