@@ -160,7 +160,7 @@ The location of a torque on the other hand is a frame.
    >>> Torque(N, 2 * N.x)
    (N, 2*N.x)
 
-Optionally one can also pass the body when using the decicated classes. If so,
+Optionally, one can also pass the body when using dedicated classes. If so,
 the force will use the center of mass and the torque will use the associated
 frame.
 
