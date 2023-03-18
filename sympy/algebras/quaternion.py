@@ -1407,11 +1407,11 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        Given a quaternion $q = a + bi + cj + dk$ where $a$, $b$, $c$ and $d$
         are real numbers, returns the angle of the quaternion given by
 
         .. math::
-            angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
+            \theta := 2 \operatorname{atan_2}\left(\sqrt{b^2 + c^2 + d^2}, {a}\right)
 
         Examples
         ========
@@ -1419,11 +1419,11 @@ class Quaternion(Expr):
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 4, 4, 4)
         >>> q.angle()
-        atan(4*sqrt(3))
+        2*atan(4*sqrt(3))
 
         """
 
-        return atan2(self.vector_part().norm(), self.scalar_part())
+        return 2 * atan2(self.vector_part().norm(), self.scalar_part())
 
 
     def arc_coplanar(self, other):
