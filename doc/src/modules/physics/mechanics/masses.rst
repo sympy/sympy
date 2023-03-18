@@ -154,7 +154,7 @@ point and the second a vector.
    >>> Force(Po, N.x)
    (Po, N.x)
 
-The location of a torque on the other hand is a frame.
+The location of a torque, on the other hand, is a frame.
 
    >>> from sympy.physics.mechanics import Torque
    >>> Torque(N, 2 * N.x)
