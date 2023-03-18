@@ -661,8 +661,12 @@ def rs_series_reversion_newton(p, x, n):
     yr = Rxy.from_sympy(y)
 
     # check if inversion exists
-    assert Rx.domain.is_zero(f.coeff(xr**0)) # no constant term
-    assert Rx.domain.is_unit(f.coeff(xr)) # the first coeff is unit
+    if not Rx.domain.is_zero(f.coeff(xr**0)):
+        # no constant term
+        raise ValueError('The constant term should be zero.')
+    if not Rx.domain.is_unit(f.coeff(xr)):
+        # the first coeff is unit
+        raise ValueError('The linear term coefficient should be invertible.')
 
     # do Newton updates
     fn_update = xr - (f - yr)* df_inv
