@@ -494,12 +494,15 @@ def test_inverse_laplace_transform():
             Heaviside(t)/sqrt(4*a*c - b**2))
 
     # Section 5.3: Irrational algebraic functions
-    assert (
+    assert (  # (1)
         ILT(1/sqrt(k*s)/(-a + s)) ==
         exp(a*t)*erf(sqrt(a)*sqrt(t))/(sqrt(a)*sqrt(k)))
     assert (
         ILT(1/sqrt(k*s)/(b - a*s)) ==
         -exp(b*t/a)*erf(sqrt(b)*sqrt(t)/sqrt(a))/(sqrt(a)*sqrt(b)*sqrt(k)))
+    assert (  # (4)
+        ILT(1/(sqrt(c*s)+a)) == -a*exp(a**2*t/c)*erfc(a*sqrt(t)/sqrt(c))/c +
+        1/(sqrt(pi)*sqrt(c)*sqrt(t)))
 
     # Miscellaneous tests
     # Can _inverse_laplace_time_shift deal with positive exponents?
