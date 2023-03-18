@@ -1268,7 +1268,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        Calling ``hat`` creates a skew-symmetric Matrix:
+        Calling ``hat`` creates a skew-symmetric matrix:
 
         >>> from sympy import Matrix
         >>> a = Matrix([1, 2, 3])
@@ -1278,7 +1278,7 @@ class MatrixBase(MatrixDeprecated,
         [ 3,  0, -1],
         [-2,  1,  0]])
 
-        Multiplying it with another Matrix calculates the cross product:
+        Multiplying it with another 3x1 matrix calculates the cross product:
 
         >>> b = Matrix([3, 2, 1])
         >>> a.hat() * b
