@@ -12,7 +12,7 @@ from .lambdify import lambdify
 
 from .decorator import threaded, xthreaded, public, memoize_property
 
-from .timeutils import timed
+from .timeutils import timed, timeout
 
 __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
@@ -26,5 +26,5 @@ __all__ = [
 
     'threaded', 'xthreaded', 'public', 'memoize_property',
 
-    'timed',
+    'timed', 'timeout',
 ]
