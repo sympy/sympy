@@ -59,7 +59,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow, ON_CI
+from sympy.testing.pytest import raises, slow
 import traceback
 
 
@@ -275,7 +275,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if len(expected_sol) == 1:
                 expected_checkodesol = (True, 0)
 
-            if not (checkodesol_too_slow and ON_CI):
+            if not checkodesol_too_slow:
                 if not checkodesol_XFAIL:
                     if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
