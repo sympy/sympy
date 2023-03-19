@@ -467,5 +467,5 @@ jobs:
         with:
           python-version: "3.9"
       - run: python -m pip install --upgrade pip
-      - run: pip install pytest-cov
+      - run: pip install pytest-cov sympy
       - run: pytest --cov=coverage_report sympy/
