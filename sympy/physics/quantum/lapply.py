@@ -832,7 +832,7 @@ def lapply_pow_roll1_c_nc_ncef(base:Expr, exp:Expr, to_L:bool, force:bool,
             if cache.get(exp, None) == "expr":
                 del cache[exp] #don't delete in other cases!
             cache.setdefault(exp1, "expr") # register exp1 as lapplied
-    
+
     # hand out c-factors, nc-factors and nc elementary factor
     ncl2, a = (ncl[1:], ncl[0]) if to_L else (ncl[:-1], ncl[-1])
     res = cached[1], (ncl2 + pl) if to_L else (pl + ncl2), a
