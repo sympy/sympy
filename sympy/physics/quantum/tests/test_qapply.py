@@ -714,7 +714,7 @@ def test_powers2023_02_11():
     from sympy.physics.quantum.gate import UGate as UGate_Org # global UGate
     class UGate(UGate_Org):     # UGate is now a local clone of the global UGate
         def _apply_operator_UGate(u1,u2, **options):
-            from sympy.matrices import ImmutableMatrix, eye
+            from sympy.matrices import eye
             if u1.args[0] != u2.args[0]: # This case is not implemented
                 raise NotImplementedError("UGate*UGate on different target qubits")
             u1id = (u1.args[1] == u1.args[1][0,0] * eye(u1.args[1].shape[0]))
@@ -732,7 +732,6 @@ def test_powers2023_02_11():
                 else:
                     return UGate(u1.args[0], res)
 
-    A = symbols('A',commutative=False)
     c, d = symbols("c d", commutative=True)
     f, g = symbols("f g", commutative=True, nonnegative=True)
     o, u = symbols("o u", commutative=True, integer=True, positive=True)

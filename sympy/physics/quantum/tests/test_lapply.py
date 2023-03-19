@@ -4,7 +4,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import Pow
-from sympy.matrices import Identity, MatrixSymbol
 
 from sympy.physics.quantum.lapply import lapply, c_nc_ncef #------------ adapt path to final location of lapply
 
@@ -65,6 +64,12 @@ def test_expansion_NCSym():
         u**w * u**z * (w + sqrt(u*(u + 1) + w*(w + 1)))**w * \
         (w + sqrt(u*(u + 1) + w*(w + 1)))**z # power_xxx has effect
 
+
+# Various test cases for lapply and matrices
+from sympy.matrices import (Matrix, ImmutableMatrix, MatrixSymbol,
+            MatPow, MatMul, DiagMatrix, Identity)
+from sympy import simplify
+from sympy.core.expr import unchanged
 
 def test_powers2023_01_Matrix():
     # Use MatrixSymbols and Identity as generic nc linear operators. Note
@@ -170,13 +175,6 @@ def test_powers2023_01_Matrix():
     #assert lapply(p4, apply_exp=True) == c**(c*A**2*B + d*A*B)
 
 
-# Various test cases for lapply and matrices
-from sympy.matrices import (Matrix, ImmutableMatrix, MatrixSymbol,
-            MatPow, MatMul, DiagMatrix)
-from sympy import simplify
-from sympy.core.expr import unchanged
-
-
 def test_2023_02_11_MatSym():
     # Cases with Powers of MatrixSymbols and generic nc scalars
     A = symbols('A',commutative=False)
@@ -242,7 +240,6 @@ def test_2023_03_matrix():
     A = MatrixSymbol("A", 2, 2)
     B = MatrixSymbol("B", 2, 2)
     Idb = ImmutableMatrix([[b, 0], [0, b]]) # instead of b*Identity(2)
-    n = symbols("n", integer=True, positive=True)
 
     M2 = ImmutableMatrix([[0, sqrt(a*(a+1))], [sqrt(a*(a-1)), 0]])
     M3 = ImmutableMatrix([[0, a], [b, 0]]) # M3*M3=a*b*Identity(2)
@@ -392,8 +389,6 @@ def test_lapply_doc():
     zz = (M3 * A * M3)**(o + 10000)    # doesn't compute
     assert unchanged(MatPow, M3 * A * M3, o+10000)
     assert Z == zz == Z.expand() == Z.simplify() == Z.doit()
-    l = lapply(Z)
-    r = a**(o+9999) * b**(o+9999) * M3 * A**(o+10000) * M3
     assert lapply(Z) == \
         MatMul(a**(o+9999) * b**(o+9999), M3, A**(o+10000), M3)
 

@@ -153,8 +153,8 @@ def lapply(e:Expr, mul=True, Add=Add,
     ========
 
         >>> from sympy.physics.quantum.lapply import lapply #------------Adapt path to final location of lapply
-        >>> from sympy.matrices import (ImmutableMatrix, MatrixSymbol,
-            MatMul, Identity)
+        >>> from sympy import symbols, sqrt
+        >>> from sympy.matrices import (ImmutableMatrix, MatrixSymbol, MatMul, Identity)
         >>> from sympy.algebras.quaternion import Quaternion
 
         >>> a, b = symbols("a b", commutative=True)
@@ -261,7 +261,7 @@ def lapply(e:Expr, mul=True, Add=Add,
     # If a dict is provided, entries will be added and the caller may
     # thus re-use it in the next invocation.
     options["cache_for_pow"] = cache_for_pow \
-                 if isinstance(cache_for_pow, dict) else dict()
+                 if isinstance(cache_for_pow, dict) else {}
 
     # call the workhorse
     res = lapply_mul2([e], [], **options)
