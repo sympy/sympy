@@ -53,6 +53,7 @@ from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
+from sympy.core.symbol import Dummy
 
 
 def _invert_monoms(p1):
@@ -475,6 +476,7 @@ def _check_series_var(p, x, name):
                         "implemented." % name)
     return index, m
 
+
 def _series_inversion1(p, x, prec):
     """
     Univariate series inversion ``1/p`` modulo ``O(x**prec)``.
@@ -571,6 +573,116 @@ def _coefficient_t(p, t):
         if expv[i] == j:
             p1[monomial_div(expv, expv1)] = p[expv]
     return p1
+
+def rs_series_reversion_newton(p, x, n):
+    r"""
+    Fast series reversion (aka Lagrange Inversion) using Newton-like updates.
+
+    Given a ring polynomial $p$ in variable $x$, this method computes a ring polynomial
+    $q$ in $x$ such that $q(p(x)) = x + O(x^n)$.
+
+    The series should be of form $p(x) = a_1 x + a_2 x^2 + ...$ where $a_1$ is invertible.
+
+    Parameters
+    ==========
+
+    p : :class:`~.PolyElement`
+        The polynomial to be inverted.
+    x : :class:`~.PolyElement`
+        The variable with respect to which ``p`` is inverted.
+    n : integer
+        The number of expansion terms to be computed.
+
+    Explanation
+    ===========
+
+    The algorithm adapts the Newton method to solve a general equation
+    $$
+    f(x)=y.
+    $$
+    By Taylor's expansion:
+    $$
+    f(x+h) = f(x) + f'(x) h + O(h^2).
+    $$
+    If $f(x) = y + O(y^{k+1})$ then with $h = -\frac{f(x)-y}{f'(x)} = O(y^{k+1})$ we obtain:
+    $$
+    f(x+h)-y = O(h^2) = O(y^{2k+2}).
+    $$
+    Thus, updating $x\gets x-h$ increases the accuracy from $k$ to $2k+1$ terms.
+
+    Examples
+    ========
+
+    In the example below we invert $f=\mathrm{e}^{x}-1$ around $x=0$:
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_exp, rs_series_reversion_newton
+    >>> Rx, xr = ring('x', QQ)
+    >>> n = 4
+    >>> fr = rs_exp(xr,xr,n)-1
+    >>> rs_series_reversion_newton(fr,xr,n)
+    1/3*x**3 - 1/2*x**2 + x
+
+    Another example derives general formulas for the inversion series:
+
+    >>> from sympy import IndexedBase, symbols
+    >>> from sympy.polys.ring_series import rs_series_reversion_newton
+    >>> a = IndexedBase('a')
+    >>> x = symbols('x')
+    >>> f = sum(a[k]*x**k for k in range(1,4))
+    >>> R = f.as_poly(x,field=True).domain
+    >>> Rx = R[x]
+    >>> fr = Rx.from_sympy(f)
+    >>> xr = Rx.from_sympy(x)
+    >>> rs_series_reversion_newton(fr,xr,4).as_expr()
+    x**3*(-a[3]/a[1]**4 + 2*a[2]**2/a[1]**5) - x**2*a[2]/a[1]**3 + x/a[1]
+
+
+    References
+    ==========
+
+    .. [1] Brent, Richard P., and Hsiang T. Kung. "Fast algorithms for manipulating formal power series."
+    Journal of the ACM (JACM) 25, no. 4 (1978): 581-595.
+    .. [2] Weisstein, Eric W. "Series Reversion." From MathWorld--A Wolfram Web Resource.
+    https://mathworld.wolfram.com/SeriesReversion.html
+    """
+
+    f = p
+    Rx = f.ring
+    df = f.diff(x)
+    df_inv = rs_series_inversion(df, x, n)
+
+    # inject the auxiliary variable y
+    y = Dummy('y')
+    Rx = Rx.to_domain()
+    Rxy = Rx.inject(y)
+    df_inv = Rxy.convert_from(df_inv, Rx)
+    xr = Rxy.convert_from(x, Rx)
+    f = Rxy.convert_from(f, Rx)
+    yr = Rxy.from_sympy(y)
+
+    # check if inversion exists
+    if not Rx.domain.is_zero(f.coeff(xr**0)):
+        # no constant term
+        raise ValueError('The constant term should be zero.')
+    if not Rx.domain.is_unit(f.coeff(xr)):
+        # the first coeff is unit
+        raise ValueError('The linear term coefficient should be invertible.')
+
+    # do Newton updates
+    fn_update = xr - (f - yr)*df_inv
+    x_series = Rxy.zero
+    k = 0
+    while k < n:
+        x_series = rs_subs(fn_update, {xr:x_series}, yr, min(2*k + 2,n))
+        k = 2*k + 1
+
+    # change variable
+    x_series = rs_subs(x_series, {yr:xr}, yr, n)
+    x_series = Rx.convert(x_series, Rxy)
+
+    return x_series
 
 def rs_series_reversion(p, x, n, y):
     r"""
