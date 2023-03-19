@@ -68,7 +68,7 @@ def n_order(a, n):
     return order
 
 
-def _primitive_root_prime_iter(p, ordered=True):
+def _primitive_root_prime_iter(p):
     """
     Generates the primitive roots for a prime ``p``
 
@@ -76,7 +76,6 @@ def _primitive_root_prime_iter(p, ordered=True):
     ==========
 
     p : odd prime
-    ordered : if True, return in order
 
     Examples
     ========
@@ -107,7 +106,7 @@ def _primitive_root_prime_iter(p, ordered=True):
             # 2 is the smallest primitive root of p = 5,11,13,19,29,37
             g = 2
     else:
-        v = [(p - 1) // i for i in qs]
+        v = [(p - 1) // q for q in qs]
         for g in range(2, p):
             if all(pow(g, pw, p) != 1 for pw in v):
                 break
@@ -117,14 +116,10 @@ def _primitive_root_prime_iter(p, ordered=True):
     for q in qs[1:]:
         for k in range((q - 3) // 2, len(sieve), q):
             sieve[k] = False
-    gs = (pow(g, 2 * i + 3, p) for i, v in enumerate(sieve) if v)
-    if ordered:
-        yield from sorted(gs)
-    else:
-        yield from gs
+    yield from sorted(pow(g, 2 * i + 3, p) for i, v in enumerate(sieve) if v)
 
 
-def _primitive_root_prime_power_iter(p, e, ordered=True):
+def _primitive_root_prime_power_iter(p, e):
     """
     Generates the primitive roots of ``p**e``
 
@@ -136,28 +131,20 @@ def _primitive_root_prime_power_iter(p, e, ordered=True):
 
     p : odd prime
     e : positive integer
-    ordered : if True, return in order
 
     """
     p2 = p**2
     if e == 1:
         yield from _primitive_root_prime_iter(p)
-    elif ordered:
+    else:
         for m in range(0, p**e, p2):
             for k in range(0, p2, p):
                 for g in _primitive_root_prime_iter(p):
                     if (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2 != k:
                         yield g + k + m
-    else:
-        for g in _primitive_root_prime_iter(p):
-            t = (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2
-            for k in range(0, p2, p):
-                if k != t:
-                    for m in range(0, p**e, p2):
-                        yield g + k + m
 
 
-def _primitive_root_prime_power2_iter(p, e, ordered=True):
+def _primitive_root_prime_power2_iter(p, e):
     """
     Generates the primitive roots of ``2*p**e``
 
@@ -169,18 +156,14 @@ def _primitive_root_prime_power2_iter(p, e, ordered=True):
 
     p : odd prime
     e : positive integer
-    ordered : if True, return in order
 
     """
     store = []
-    for g in _primitive_root_prime_power_iter(p, e, ordered=ordered):
+    for g in _primitive_root_prime_power_iter(p, e):
         if g % 2 == 1:
             yield g
         else:
-            if ordered:
-                store.append(g + p**e)
-            else:
-                yield g + p**e
+            store.append(g + p**e)
     yield from store
 
 
