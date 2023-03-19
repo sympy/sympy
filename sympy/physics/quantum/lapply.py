@@ -157,7 +157,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> from sympy.matrices import (ImmutableMatrix, MatrixSymbol, MatMul, Identity)
         >>> from sympy.algebras.quaternion import Quaternion
 
-        >>> a, b = symbols("a b", commutative=True)
+        >>> a, b, c, d, x = symbols("a b c d x", commutative=True)
         >>> M1 = ImmutableMatrix([[a, 2], [3, 4]])
         >>> A = MatrixSymbol("A", 2, 2)
         >>> B = MatrixSymbol("B", 2, 2)
@@ -165,6 +165,7 @@ def lapply(e:Expr, mul=True, Add=Add,
 
         >>> lapply(M1.T * (A * M1.I + B * M1.I).T)
         A.T + B.T
+        >>> Z = _
         >>> p = Mul(*[(k*Identity(2) + Z - A.T - B.T) for k in range(1,3)])
         >>> lapply(p * A)
         2*A
@@ -183,9 +184,10 @@ def lapply(e:Expr, mul=True, Add=Add,
 
         >>> ((M3 * A * M3)**(o + 10000)).doit()
         (M3*A*M3)**(o+10000)
-        >>> lapply(_) == MatMul(a**(o+9999)*b**(o+9999),M3,A**(o+10000),M3)
+        >>> lapply(_) == MatMul(a**(o+9999)*b**(o+9999), M3, A**(o+10000),M3)
         True
 
+        >>> Idb = ImmutableMatrix([[b, 0], [0, b]])
         >>> ((M1 * A * M1.I * Idb)**10000).doit()
         (M1*A*M1.I*Idb)**10000
         >>> lapply(_) == MatMul(b**9999, M1, A**10000, (b*M1.I.simplify()))
@@ -202,8 +204,8 @@ def lapply(e:Expr, mul=True, Add=Add,
         As an example that a matrix annuls its characteristic polynomial, take
         a matrix representation of the Quaternion(a, b, c, d)
 
-        >>> Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c],
-                                  [c,  d,  a, -b], [d, -c, b, a]])
+        >>> Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c], \
+        ...                       [c,  d,  a, -b], [d, -c, b, a]])
         >>> cp = Mq.charpoly().eval(x)
         >>> lapply(cp.subs(x, Mq))
         0
@@ -220,11 +222,11 @@ def lapply(e:Expr, mul=True, Add=Add,
         0 + 0*i + 0*j + 0*k
 
         If real quaternions should be identified as commutative add a handler
-        for Quaternions to the c_nc_ncef Dispatcher of lapply:
+        for Quaternions to the ``Dispatcher c_nc_ncef`` of ``lapply``:
 
-        >>> c_nc_ncef.add((Quaternion,), (lambda q, to_L, **options:
-            ([q.scalar_part()], [], S.One) if q.vector_part().is_zero_quaternion()
-                        else ([],[], q) ))
+        >>> c_nc_ncef.add((Quaternion,), (lambda q, to_L, **options: \
+        ...   ([q.scalar_part()], [], S.One) if q.vector_part().is_zero_quaternion() \
+        ...                else ([],[], q) ))
         >>> lapply(q * q.conjugate())
         a**2 + b**2 + c**2 + d**2
     """
