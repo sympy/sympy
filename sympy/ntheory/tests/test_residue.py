@@ -33,17 +33,12 @@ def test_residue():
     raises(ValueError, lambda: is_primitive_root(3, 6))
 
     for p in primerange(3, 100):
-        li = list(_primitive_root_prime_iter(p))
-        li2 = list(_primitive_root_prime_iter(p, False))
-        assert len(li) == totient(totient(p))
-        assert li == sorted(li2)
+        it = _primitive_root_prime_iter(p)
+        assert len(list(it)) == totient(totient(p))
     for p in primerange(3, 50):
         for k in range(2, 4):
             li = list(_primitive_root_prime_power_iter(p, k))
-            li2 = list(_primitive_root_prime_power_iter(p, k, False))
-            li3 = list(_primitive_root_prime_power2_iter(p, k))
-            li4 = list(_primitive_root_prime_power2_iter(p, k, False))
-            assert li == sorted(li2) and li3 == sorted(li4)
+            li2 = list(_primitive_root_prime_power2_iter(p, k))
             assert len(li) == len(li2) == totient(totient(p**k))
     assert primitive_root(97) == 5
     assert primitive_root(97**2) == 5
