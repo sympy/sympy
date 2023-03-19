@@ -1,6 +1,6 @@
 from sympy.core.backend import Symbol
 from sympy.physics.vector import Point, Vector, ReferenceFrame, Dyadic
-from sympy.physics.mechanics import RigidBody, Particle, inertia
+from sympy.physics.mechanics import RigidBody, Particle, Inertia
 from sympy.physics.mechanics.body_base import BodyBase
 
 __all__ = ['Body']
@@ -115,8 +115,8 @@ class Body(RigidBody, Particle):  # type: ignore
             izx = Symbol(name + '_izx')
             ixy = Symbol(name + '_ixy')
             iyz = Symbol(name + '_iyz')
-            _inertia = (inertia(frame, ixx, iyy, izz, ixy, iyz, izx),
-                        masscenter)
+            _inertia = Inertia.from_inertia_scalars(masscenter, frame, ixx, iyy,
+                                                    izz, ixy, iyz, izx)
         else:
             _inertia = (central_inertia, masscenter)
 
