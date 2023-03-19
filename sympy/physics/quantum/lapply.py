@@ -177,7 +177,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         ``lapply`` may help with simplifications of powers of operators:
 
         >>> M3 = ImmutableMatrix([[0, a], [b, 0]])
-        >>> (M3 ** (o + 10000)).symplify().is_diagonal()
+        >>> (M3 ** (o + 10000)).simplify().is_diagonal()
         False
         >>> lapply(M3 ** (o + 10000))
         a**(o/2 + 5000)*b**(o/2 + 5000)
