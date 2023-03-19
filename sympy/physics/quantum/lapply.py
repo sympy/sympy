@@ -152,8 +152,10 @@ def lapply(e:Expr, mul=True, Add=Add,
     Examples
     ========
 
-        >>> from sympy import *
         >>> from sympy.physics.quantum.lapply import lapply #------------Adapt path to final location of lapply
+        >>> from sympy.matrices import (ImmutableMatrix, MatrixSymbol,
+            MatMul, Identity)
+        >>> from sympy.algebras.quaternion import Quaternion
 
         >>> a, b = symbols("a b", commutative=True)
         >>> M1 = ImmutableMatrix([[a, 2], [3, 4]])
