@@ -385,7 +385,7 @@ class MathematicaParser:
             x_args = self.translations[key]['args']
 
             # make CORRESPONDENCES between model arguments and actual ones
-            d = {k: v for k, v in zip(x_args, args)}
+            d = dict(zip(x_args, args))
 
         # with variable-length argument
         elif (fm, '*') in self.translations:
