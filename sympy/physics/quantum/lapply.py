@@ -153,7 +153,7 @@ def lapply(e:Expr, mul=True, Add=Add,
     ========
 
         >>> from sympy.physics.quantum.lapply import lapply, c_nc_ncef #------------Adapt path to final location of lapply
-        >>> from sympy import symbols, sqrt
+        >>> from sympy import symbols, sqrt, S
         >>> from sympy.matrices import (ImmutableMatrix, MatrixSymbol, MatMul, Identity)
         >>> from sympy.algebras.quaternion import Quaternion
 
