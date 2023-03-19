@@ -451,7 +451,7 @@ def test_powers2022_11():
                                       [0, 1*exp(-4*pi*I/n)]])) # == U71 ** 2
     U71p3 = UGate(0, ImmutableMatrix([[1*exp(6*pi*I/n),  0],
                                       [0, 1*exp(-6*pi*I/n)]])) # == U71 ** 3
-    U71p5 = UGate(0, ImmutableMatrix([[1*exp(-4*pi*I/n), 0],   # 2023-01-31 
+    U71p5 = UGate(0, ImmutableMatrix([[1*exp(-4*pi*I/n), 0],   # 2023-01-31
                                       [0, 1*exp(4*pi*I/n) ]])) # == U71 ** 5
     U71p6 = UGate(0, ImmutableMatrix([[1*exp(-2*pi*I/n), 0],
                                       [0, 1*exp(2*pi*I/n) ]])) # == U71 ** 6
@@ -738,7 +738,7 @@ def test_powers2023_02_11():
     o, u = symbols("o u", commutative=True, integer=True, positive=True)
     r = symbols("r", real=True)
 
-    X = XGate(0) 
+    X = XGate(0)
     Ud = UGate(0, ImmutableMatrix([[1, 2], [0, 2]]))
     Ud4 = qapply(Ud ** 4)
     # Expansion of exp ((c+d)*(f+g))! when apply_exp=True

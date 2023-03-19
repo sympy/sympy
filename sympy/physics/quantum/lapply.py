@@ -841,14 +841,14 @@ def lapply_pow_roll1_c_nc_ncef(base:Expr, exp:Expr, to_L:bool, force:bool,
 ##    ##  ---------------------------------------------------------------------
 ##    ##
 ##    ##  @dispatch Handlers for lapply1_pow_type(base, exp, **options)
-##    ##  
+##    ##
 ########  see lapply.py: ------------------------------------------------------
 ########  This handlers are invoked by the lapply1_type(Pow) to handle a power
 ########  Pow(base, exp) with a particular type of base and/or exponent.
 ##    ##  Handlers should take care of non-evaluated objects and recurse into
 ##    ##  inner structure of e, if any, and process it so that the result is
 ##    ##  flattened and c_nc_ncf() may extract factors from the result in a
-##    ##  next step. 
+##    ##  next step.
 
 """ No handler present here. See sympy.physics.quantum.qapply for an example:
 
@@ -863,12 +863,12 @@ lapply1_pow_type = Dispatcher('lapply1_pow_type') # create empty Dispatcher
 ##    ##  ---------------------------------------------------------------------
 ##    ##
 ##    ##  Handlers for lapply1_type(Expr, **options)
-##    ##  
+##    ##
 ##    ##  ---------------------------------------------------------------------
 ########  Handlers should take care of non-evaulated objects and recurse into
 ########  inner structure of e, if any, and process it so that the result is
 ##    ##  flattened and c_nc_ncf() may extract factors from the result in a
-##    ##  next step. 
+##    ##  next step.
 ##    ##  Note: These handlers are also called for commutative factors! In
 ##    ##  most cases no action is wanted as lapply leaves c factors to Mul.
 ##    ##  So put "if e.is_commutative: return e" on top.
@@ -926,11 +926,11 @@ Internal Remark: lapply and powers Pow(base, power)
 """
 
 @lapply1_type.register(Pow)
-def hdlrP_for(e:Pow, **options) -> Expr: 
+def hdlrP_for(e:Pow, **options) -> Expr:
     """Prepare expression Pow(base, exp) for further application by
     going into base and exp."""
-    if e.is_commutative: return e 
-    
+    if e.is_commutative: return e
+
     cached = get_cached_for_base(e.base, **options)
     # dispatch on the type of base and exp of the power, if handler:
     if not cached:
@@ -974,7 +974,7 @@ def hdlrP_for(e:Pow, **options) -> Expr:
         cml = [lapply_expand_mul(Mul(*cl))] if options["mul"] else cl
         base = Mul(*(cml + encl))
         Pow_with_Cache(base, None, RO.UNKN, cl, encl, **options)
-    
+
     if base != e.base or exp != e.exp:
         # Let ** do all it can do using class methods ._pow, ._eval_power etc.
         e = cast(Pow, base ** exp)  # may return any Expr; cast() is for MyPy
@@ -1001,7 +1001,7 @@ def hdlrE_for(e:Expr, **options) -> Expr:
 ##    ##
 ##    ##  ---------------------------------------------------------------------
 ########  Split up expression e in commutative factors and non-commutative
-########  factors. From the nc factors pick the leftmost (if to_L==True) or 
+########  factors. From the nc factors pick the leftmost (if to_L==True) or
 ##    ##  rightmost (to_L==False) elementary factor ncef and return (c_list,
 ##    ##  nc_list_without_ncef, ncef). If  e is commutative, return (c_list, [],
 ##    ##  S.One). If e cannot be split up, return ([], [], e).
@@ -1063,7 +1063,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
     right hand elementary nc factor"""
     # if e.is_commutative: return [e], [], EmptyMul
     if e.is_commutative: # don't touch it. But c Pows that come here are the only
-        # factor in the expr, probably for a reason. So make an exception: 
+        # factor in the expr, probably for a reason. So make an exception:
         return [Pow(lapply_expand_mul(e.base), e.exp, evaluate=False) \
                 if options["mul"] else e], [], EmptyMul
 
@@ -1092,7 +1092,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
     ##### End Helper functions ###### Start function body ###### ---------------
 
     if not e.exp.is_commutative: # so rules 2a, 2b don't apply
-        # and we cannot extract any factor from e.base**exp    
+        # and we cannot extract any factor from e.base**exp
         return [], [], e
 
     # e.exp is commutative, so we may apply 2b or even 2a.
@@ -1145,7 +1145,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
             efpcl  = pow_x(clnonneg, expf, # [c**expf for c in clnonneg]
                 (lambda c: c.base.is_nonnegative and c.exp.is_positive))
             clelse = [c for c in cl if not c in clnonneg]
-            # efp = (clelse*base)**expf holds remaining factors from cl 
+            # efp = (clelse*base)**expf holds remaining factors from cl
             efp    = Pow_with_Cache(Mul(*(clelse + encl)),
                                 expf, RO.UNKN, clelse, encl, **options)
             efpl   = [] if efp is S.One else [efp]
@@ -1208,7 +1208,7 @@ def c_nc_pow_nc_i(base:Expr, encl:List, expi:Expr, **options):
     # Code below relies on this condition to be mathematically correct!
     assert (expi - 1).is_nonnegative # Superfluous. Optical reminder only
 
-    # pow_i is shorthand to raise comm. factors in cl to expi: 
+    # pow_i is shorthand to raise comm. factors in cl to expi:
     if options["nested_exp"]:
         pow_i = (lambda cl, expi:
             [( (c.base ** lapply_expand_mul(c.exp * expi))
@@ -1229,7 +1229,7 @@ def c_nc_pow_nc_i(base:Expr, encl:List, expi:Expr, **options):
             # Unrolling makes no sense, as factor count will just grow.
             # Case 4: expi>=1, base=ar elementary and no base*base
             return ([], [], pb(expi, RO.NORO))
-        
+
         # is ar "involutoric" operator resp. ar*ar is commutative?
         if ar2ncl == []: # ar*ar=ar2cl is even commutative!
             # Case 5a: expi >= 1, base=ar elementary + "involutoric"
@@ -1247,7 +1247,7 @@ def c_nc_pow_nc_i(base:Expr, encl:List, expi:Expr, **options):
 
         if ar2cl == [] and lapply_no_act(ar, ar, ar2ncl[0]):
             return ([], [], pb(expi, RO.NORO))
-            
+
         # else: Case 6: base=ar elementary but not "idempotent"
         if (expi - 2).is_nonnegative: # Idea: split off base**2 at once
             # base**(exp-2) * ar*ar = base**(exp-2)*ar2c*ar2ncl*ar2ar
@@ -1319,8 +1319,8 @@ MM          MM  create explicit matrices in SymPy.
 
 Only the handler c_nc_ncef(MatrixExpr) would required to make lapply work with
 matrices, to turn multiples of the identity to scalars which helps a lot in
-multiplication and simplification of powers. It might generate issues with 
-terms like (1 - Identity(2)) which however vanish as soon as this term is 
+multiplication and simplification of powers. It might generate issues with
+terms like (1 - Identity(2)) which however vanish as soon as this term is
 multiplied with something - so this is accepted. Note that MatAdd cannot
 handle scalar summands, but lapply by default uses Add which can.
 

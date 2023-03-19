@@ -257,10 +257,10 @@ def lapply_mul2daggered(lhs:Expr, rhs:Expr, **options) \
                                                  -> Union[Expr, None]:
     #assert options["dagger"] # precondition for this function
     res0 = lhs * rhs # try the standard last resort first
-    if lapply_no_act(lhs, rhs, res0): 
+    if lapply_no_act(lhs, rhs, res0):
         res0 = Mul(lhs, rhs, evaluate=False)
     else: return res0
-    # Return if the daggered values are just formal adjoints 
+    # Return if the daggered values are just formal adjoints
     if isinstance((rd := Dagger(rhs)), adjoint): return res0
     if isinstance((ld := Dagger(lhs)), adjoint): return res0
     # If daggered values exist try to mul them
@@ -280,14 +280,14 @@ def lapply_mul2daggered(lhs:Expr, rhs:Expr, **options) \
 ##    ##  ---------------------------------------------------------------------
 ##    ##
 ##    ##  @dispatch Handlers for lapply1_pow_type(base, exp, **options)
-##    ##  
+##    ##
 ########  see lapply.py: ------------------------------------------------------
 ########  This handlers are invoked by the lapply1_type(Pow) to handle a power
 ########  Pow(base, exp) with a particular type of base and/or exponent.
 ##    ##  Handlers should take care of non-evaulated objects and recurse into
 ##    ##  inner structure of e, if any, and process it so that the result is
 ##    ##  flattened and c_nc_ncf() may extract factors from the result in a
-##    ##  next step. 
+##    ##  next step.
 
 @lapply1_pow_type.register()
 def hdlrTP_for(base:TensorProduct, exp:Expr, **options): # -> Expr:
@@ -304,12 +304,12 @@ def hdlrTP_for(base:TensorProduct, exp:Expr, **options): # -> Expr:
 ##    ##  ---------------------------------------------------------------------
 ##    ##
 ##    ##  Handlers for lapply1_type(Expr, to_L=..., **options)
-##    ##  
+##    ##
 ##    ##  See lapply.py: ------------------------------------------------------
 ########  Handlers should take care of non-evaulated objects and recurse into
 ########  inner structure of e, if any, and process it so that the result is
 ##    ##  flattened and c_nc_ncf() may extract factors from the result in a
-##    ##  next step. 
+##    ##  next step.
 ##    ##  Note: These handlers are also called for commutative factors! In
 ##    ##  most cases no action is wanted as lapply leaves c factors to Mul.
 ##    ##  So put "if e.is_commutative: return e" on top.

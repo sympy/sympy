@@ -396,7 +396,7 @@ def test_lapply_doc():
     r = a**(o+9999) * b**(o+9999) * M3 * A**(o+10000) * M3
     assert lapply(Z) == \
         MatMul(a**(o+9999) * b**(o+9999), M3, A**(o+10000), M3)
-    
+
     # uses shortcuts on powers if base permits, in DOCS
     # e.g. base change W * A * W**-1
     Z = MatPow(M1 * A * M1.I * Idb, 10000)    # unevaluated
@@ -420,7 +420,7 @@ def test_lapply_doc():
     # Matrix representation of Quaternion(a,b,c,d)
     Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c],
                           [c,  d,  a, -b], [d, -c, b, a]])
-    cp = Mq.charpoly().eval(x) 
+    cp = Mq.charpoly().eval(x)
     # any matrix annuls its characteristic polynomial
     assert str(lapply(cp.subs(x, Mq))) == "0"
 
