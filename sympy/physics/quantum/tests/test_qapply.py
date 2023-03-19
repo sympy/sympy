@@ -789,5 +789,6 @@ def test_powers2023_02_11():
     p = Pow(Ud, e+18)
     q = qapply(p, apply_exp=True, power_exp=True)
     #temporarily commented out: behavior of expand() changed in 1.12
+    print(q, Ud, ep) # so variables are not unused for flake8
     #assert q == Ud**ep * \
     #    UGate(0, ImmutableMatrix([[1, 524286], [0, 262144]]))
