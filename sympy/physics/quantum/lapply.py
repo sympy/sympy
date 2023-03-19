@@ -226,7 +226,7 @@ def lapply(e:Expr, mul=True, Add=Add,
 
         >>> c_nc_ncef.add((Quaternion,), (lambda q, to_L, **options: \
         ...   ([q.scalar_part()], [], S.One) if q.vector_part().is_zero_quaternion() \
-        ...                else ([],[], q) ))
+                         else ([],[], q) ))
         >>> lapply(q * q.conjugate())
         a**2 + b**2 + c**2 + d**2
     """
