@@ -871,7 +871,7 @@ def remove_identity_matrices(expr: ArrayContraction):
     permutation_map = {}
 
     free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
-    free_map = {k: v for k, v in zip(editor.args_with_ind, free_indices[:-1])}
+    free_map = dict(zip(editor.args_with_ind, free_indices[:-1]))
 
     update_pairs = {}
 
