@@ -27,8 +27,7 @@ markers = [
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 select = [
-    "C40",
-    "C41",
+    "C4",
     "E",
     "F",
     "PIE802",
