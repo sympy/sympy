@@ -459,8 +459,6 @@ jobs:
 
   # ---------------- Run and upload coverage report ----------------- #
   coverage:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3 # Checks the current directory
