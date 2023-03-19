@@ -34,8 +34,7 @@ markers = [
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
     "C40",
-    "C416",
-    "C419",
+    "C41",
     "E",
     "F",
     "LOG",
