@@ -21,7 +21,7 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, OuterProduct
-from sympy.physics.quantum.qapply import qapply
+#from sympy.physics.quantum.qapply import qapply #may invoke circular imports
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
 __all__ = [
@@ -345,6 +345,7 @@ def rep_expectation(expr, **options):
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
+    from sympy.physics.quantum.qapply import qapply #avoids circular imports
     return qapply(bra*expr*ket)
 
 

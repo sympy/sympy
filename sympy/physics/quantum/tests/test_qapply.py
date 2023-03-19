@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import Pow
+from sympy.core.expr import unchanged
 from sympy.functions.elementary.trigonometric import sin, cos, pi
 from sympy.matrices import ImmutableMatrix
 
@@ -450,6 +451,8 @@ def test_powers2022_11():
                                       [0, 1*exp(-4*pi*I/n)]])) # == U71 ** 2
     U71p3 = UGate(0, ImmutableMatrix([[1*exp(6*pi*I/n),  0],
                                       [0, 1*exp(-6*pi*I/n)]])) # == U71 ** 3
+    U71p5 = UGate(0, ImmutableMatrix([[1*exp(-4*pi*I/n), 0],   # 2023-01-31 
+                                      [0, 1*exp(4*pi*I/n) ]])) # == U71 ** 5
     U71p6 = UGate(0, ImmutableMatrix([[1*exp(-2*pi*I/n), 0],
                                       [0, 1*exp(2*pi*I/n) ]])) # == U71 ** 6
     U72   = UGate(0, ImmutableMatrix([[2*exp(2*pi*I/n), 0 ],
@@ -513,9 +516,12 @@ def test_powers2022_11():
         sqrt(n * OuterProduct(Ket(1), Bra(1))) * OuterProduct(Ket(1), Bra(1))
 
     # Cases 7, 9, 6:
+    assert qapply((m*U12*U71) ** Rational(3,2) * (n*U13*U71) ** Rational(11,2)) \
+        ==  n**5 * m**Rational(3,2) * 2**Rational(3,2) * 3**Rational(11,2) * \
+            U71**Rational(3,2) * sqrt(n*U71) * U71p5 # 2023-01-31 7.Case expi < 2
     assert qapply((n*U13*U71) ** Rational(11,2) * (m*U12*U71) ** Rational(3,2)) \
         ==  n**5 * m**Rational(3,2) * 2**Rational(3,2) * 3**Rational(11,2) * \
-            sqrt(n*U71) * U71p6 * sqrt(U71) # 7.Case expi  < 2
+            sqrt(n*U71) * sqrt(U71) * U71p6 # 2023-01-31 7.Case expi  < 2
     assert qapply((n * U13*U71) ** 5 * (m * U12*U71) ** 2) == \
             n**5 * m**2 * 2 ** 2 * 3 ** 5 # Case 9, 6
 
@@ -591,7 +597,7 @@ def test_expansion():
     # power_base has effect
     assert qapply(p, mul=False, power_base=True, power_exp=False) == \
         u**(w + z) * (w + sqrt(u*(u + 1) + w*(w + 1)))**(w + z)
-    # mul has effect in basis
+    # As exception mul has effect in commutative in basis IF Pow is the only factor
     assert qapply(p, mul=True, power_base=False, power_exp=False) == \
         (u*w + u*sqrt(u*(u + 1) + w*(w + 1)))**(w + z)
     assert qapply(p, mul=False, power_base=True, power_exp=True) == \
@@ -601,7 +607,7 @@ def test_expansion():
 
 def test_powers2023_01():
 
-    A, B, C, D = symbols('A B C D',commutative=False)
+    A, B = symbols('A B',commutative=False)
     c, d = symbols("c d", commutative=True)
     f, g = symbols("f g", commutative=True, nonnegative=True)
     o = symbols("o", commutative=True, integer=True, positive=True)
@@ -636,7 +642,7 @@ def test_powers2023_01():
                                           f**(o + 4)*g**(o - 3)*A**(2*o + 1)
     # symbolic real exponents non-integer; expand extracts same
     p = Pow(d*f*A*In, o+r)*Pow(d*g*In*A, o-r)
-    assert qapply(p) == f**(o + r)*g**(o - r)*(d*A)**(2*o)
+    assert qapply(p) == d**(2*o) * f**(o + r) * g**(o - r) * A**(2*o) #2023-01-31
     # symbolic real exponents; expand extracts same
     p = Pow(d*f*A*In, r)*Pow(d*g*A*In, -r)
     assert qapply(p) == f**r*g**(-r)
@@ -696,3 +702,93 @@ def test_powers2023_01():
     assert qapply(p3) == p3.doit()  # exponent d*(A+B) un-expanded
     assert qapply(p3, apply_exp=True) == expand(p3.doit())
     assert qapply(p4, apply_exp=True) == c**(c*A**2*B + d*A*B)
+
+def test_density2023_01():
+    # class Density only capable of (unitary) operator from the left
+    d1 = Density((Qubit(0), 0.3), (Qubit(1), 0.7))
+    assert qapply(XGate(0)*d1) == Density((Qubit(1), 0.3), (Qubit(0), 0.7))
+
+def test_powers2023_02_11():
+    # Use a diversified definition of UGate*UGate in order
+    # to build test cases with commutative factors etc.
+    from sympy.physics.quantum.gate import UGate as UGate_Org # global UGate
+    class UGate(UGate_Org):     # UGate is now a local clone of the global UGate
+        def _apply_operator_UGate(u1,u2, **options):
+            from sympy.matrices import ImmutableMatrix, eye
+            if u1.args[0] != u2.args[0]: # This case is not implemented
+                raise NotImplementedError("UGate*UGate on different target qubits")
+            u1id = (u1.args[1] == u1.args[1][0,0] * eye(u1.args[1].shape[0]))
+            u2id = (u2.args[1] == u2.args[1][0,0] * eye(u2.args[1].shape[0]))
+            if u1id and u2id:
+                return u1.args[1][0,0] * u2.args[1][0,0] # scalar result
+            elif u1id:
+                return u1.args[1][0,0] * u2 # scalar * UGate
+            elif u2id:
+                return u2.args[1][0,0] * u1 # scalar * UGate
+            else:
+                res = u1.args[1] * u2.args[1] # assuming res again immutableMatrix
+                if res == res[0,0] * eye(res.shape[0]):
+                    return res[0,0]  # scalar result
+                else:
+                    return UGate(u1.args[0], res)
+
+    A = symbols('A',commutative=False)
+    c, d = symbols("c d", commutative=True)
+    f, g = symbols("f g", commutative=True, nonnegative=True)
+    o, u = symbols("o u", commutative=True, integer=True, positive=True)
+    r = symbols("r", real=True)
+
+    X = XGate(0) 
+    Ud = UGate(0, ImmutableMatrix([[1, 2], [0, 2]]))
+    Ud4 = qapply(Ud ** 4)
+    # Expansion of exp ((c+d)*(f+g))! when apply_exp=True
+    p = Pow(Ud, ((c+d)*(f+g)), evaluate=False) * Ud**o * Ud**3
+    q = qapply(p, apply_exp=True)
+    assert q == Ud**(c*f + c*g + d*f + d*g + o - 1) * Ud4
+
+    # test nested powers
+    p = Pow(Ud, o+1) * Pow(Pow(Ud, o+1), o)
+    q = qapply(p, nexted_exp=True, apply_exp=True)
+    assert q == Ud**(o**2 + 2*o - 3) * Ud4
+    p = Pow(Ud, r) * Pow(Pow(Ud, r), o)
+    q = qapply(p, nexted_exp=True)
+    assert q == Ud**(o*r +r)
+
+    # test involutoric operator
+    p = Pow(X, o+10) * Pow(X, o+8)
+    assert unchanged(Pow, X, o+10) and unchanged(Pow, X, o+8)
+    assert unchanged(Mul, Pow(X, o+10), Pow(X, o+8))
+    q = qapply(p, apply_exp=True)
+    assert q == 1 # involutoric operator simplified
+
+    p = Pow(Ud, o+17)
+    q = qapply(p, apply_exp=True)
+    assert q == Ud**(o-1) * \
+        UGate(0, ImmutableMatrix([[1, 524286],[0, 2**18]]))
+
+    p = Pow(Ud, 10*o+8) # sympy knows that this is >= 18!
+    q = qapply(p, apply_exp=True)
+    assert q == Ud**(10*o-10) * \
+        UGate(0, ImmutableMatrix([[1, 524286],[0, 2**18]]))
+
+    p = Pow(Ud, 5*(o+1)*(u+1))
+    q = qapply(p, apply_exp=True) # exp=5*o*u+5*o+5*u+5, sympy verifies >=5 only
+    assert q == Ud**(5*o*u+5*o+5*u) * \
+        UGate(0, ImmutableMatrix([[1, 62],[0, 2**5]]))
+
+    p = Pow(Ud, 5*(o+1)*(u+1))
+    q = qapply(p) # exp = (5*o+5)*(u+1), sympy verifies >= 4 only
+    assert q == Ud**((5*o+5)*(u+1)-4) * \
+        UGate(0, ImmutableMatrix([[1, 30],[0, 2**4]]))
+
+    p = Pow(Ud, 10*o-3*u) # this is not verifiable >= 0
+    q = qapply(p, apply_exp=True)
+    assert q == Ud**(10*o-3*u)
+
+    e = Pow(Pow(o*f*g, o+3)*Pow(f*g*o, 3-o)+17, o+2)
+    ep = qapply(e, power_exp=True) # power_exp simplifies
+    p = Pow(Ud, e+18)
+    q = qapply(p, apply_exp=True, power_exp=True)
+    print(f"Input: {p}\nqapply: {q}\n")
+    assert q == Ud**ep * \
+        UGate(0, ImmutableMatrix([[1, 524286], [0, 262144]]))
