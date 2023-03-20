@@ -18,10 +18,10 @@ class TestLinearPathway:
     @pytest.mark.parametrize(
         'args, kwargs',
         [
-            (((Point('pO'), Point('pI')), ), {}),
-            (([Point('pO'), Point('pI')], ), {}),
-            ((), {'attachments': (Point('pO'), Point('pI'))}),
-            ((), {'attachments': [Point('pO'), Point('pI')]}),
+            (((Point('pA'), Point('pB')), ), {}),
+            (([Point('pA'), Point('pB')], ), {}),
+            ((), {'attachments': (Point('pA'), Point('pB'))}),
+            ((), {'attachments': [Point('pA'), Point('pB')]}),
         ]
     )
     def test_valid_constructor(args: tuple, kwargs: dict) -> None:
@@ -30,9 +30,9 @@ class TestLinearPathway:
         assert hasattr(instance, 'attachments')
         assert len(instance.attachments) == 2
         assert isinstance(instance.attachments[0], Point)
-        assert instance.attachments[0].name == 'pO'
+        assert instance.attachments[0].name == 'pA'
         assert isinstance(instance.attachments[1], Point)
-        assert instance.attachments[1].name == 'pI'
+        assert instance.attachments[1].name == 'pB'
 
     @staticmethod
     def test_invalid_attachments_not_iterable() -> None:
@@ -41,19 +41,19 @@ class TestLinearPathway:
             r'<class .*Sequence.*>'
         )
         with pytest.raises(TypeError, match=error_msg):
-            _ = LinearPathway(Point('pO'))  # type: ignore
+            _ = LinearPathway(Point('pA'))  # type: ignore
 
     @staticmethod
     def test_invalid_attachments_too_many() -> None:
         with pytest.raises(ValueError):
-            _ = LinearPathway((Point('pO'), Point('pI'), Point('pZ')))  # type: ignore
+            _ = LinearPathway((Point('pA'), Point('pB'), Point('pZ')))  # type: ignore
 
     @staticmethod
     @pytest.mark.parametrize(
         'attachments',
         [
-            (None, Point('pI')),
-            (Point('pO'), None),
+            (None, Point('pB')),
+            (Point('pA'), None),
         ]
     )
     def test_invalid_attachments_not_point(attachments: Sequence[Any]) -> None:
@@ -63,9 +63,9 @@ class TestLinearPathway:
     @pytest.fixture(autouse=True)
     def _linear_pathway_fixture(self) -> None:
         self.N = ReferenceFrame('N')
-        self.pO = Point('pO')
-        self.pI = Point('pI')
-        self.pathway = LinearPathway((self.pO, self.pI))
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway((self.pA, self.pB))
         self.q1 = dynamicsymbols('q1')
         self.q2 = dynamicsymbols('q2')
         self.q3 = dynamicsymbols('q3')
@@ -75,50 +75,50 @@ class TestLinearPathway:
         self.F = Symbol('F')
 
     def test_static_pathway_length(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.N.x)
         assert self.pathway.length == 2
 
     def test_static_pathway_shortening_velocity(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.N.x)
         assert self.pathway.shortening_velocity == 0
 
     def test_static_pathway_compute_loads(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.N.x)
         expected = [
-            (self.pO, self.F * self.N.x),
-            (self.pI, - self.F * self.N.x),
+            (self.pA, self.F * self.N.x),
+            (self.pB, - self.F * self.N.x),
         ]
         assert self.pathway.compute_loads(self.F) == expected
 
     def test_2D_pathway_length(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
         expected = 2 * sqrt(self.q1**2)
         assert self.pathway.length == expected
 
     def test_2D_pathway_shortening_velocity(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
         expected = -2 * self.q1 * self.q1d / sqrt(self.q1**2)
         assert self.pathway.shortening_velocity == expected
 
     def test_2D_pathway_compute_loads(self) -> None:
-        self.pI.set_pos(self.pO, 2 * self.q1 * self.N.x)
+        self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
         expected = [
-            (self.pO, self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
-            (self.pI, - self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pA, self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pB, - self.F * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
         assert self.pathway.compute_loads(self.F) == expected
 
     def test_3D_pathway_length(self) -> None:
-        self.pI.set_pos(
-            self.pO,
+        self.pB.set_pos(
+            self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
         )
         expected = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
         assert self.pathway.length == expected
 
     def test_3D_pathway_shortening_velocity(self) -> None:
-        self.pI.set_pos(
-            self.pO,
+        self.pB.set_pos(
+            self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
         )
         length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
@@ -130,8 +130,8 @@ class TestLinearPathway:
         assert self.pathway.shortening_velocity == expected
 
     def test_3D_pathway_compute_loads(self) -> None:
-        self.pI.set_pos(
-            self.pO,
+        self.pB.set_pos(
+            self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
         )
         length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
@@ -146,7 +146,7 @@ class TestLinearPathway:
             - 2 * self.F * self.q3 * self.N.z / length
         )
         expected = [
-            (self.pO, pO_force),
-            (self.pI, pI_force),
+            (self.pA, pO_force),
+            (self.pB, pI_force),
         ]
         assert self.pathway.compute_loads(self.F) == expected
