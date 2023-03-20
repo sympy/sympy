@@ -57,7 +57,7 @@ def _is_extrinsic(seq):
 class Quaternion(Expr):
     """Provides basic quaternion operations.
     Quaternion objects can be instantiated as ``Quaternion(a, b, c, d)``
-    as in ($a + b*i + c*j + d*k$).
+    as in $q = a + bi + cj + dk$.
 
     Parameters
     ==========
