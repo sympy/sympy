@@ -6,8 +6,7 @@ from typing import Any, Sequence
 
 import pytest
 
-from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.backend import Symbol, sqrt
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics._pathway import LinearPathway
 
