@@ -40,15 +40,89 @@ analysis of points separate from their association with masses.
 Inertia
 =======
 
-See the Inertia (Dyadics) section in 'Advanced Topics' part of
-:mod:`sympy.physics.vector` docs.
+Inertia consists out of two parts: a quantity and a reference. The quantity is
+expressed as a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` and the
+reference is a :class:`Point<sympy.physics.vector.point.Point>`. The
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` can be defined as the outer
+product between two vectors, which returns the juxtaposition of these vectors.
+For further information, please refer to the :ref:`Dyadic` section in the
+advanced documentation of the :mod:`sympy.physics.vector` module. Another more
+intuitive method to define the
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is to use the
+:func:`~.inertia` function as described below in the section
+'Inertia (Dyadics)'. The :class:`Point<sympy.physics.vector.point.Point>` about
+which the :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is specified can
+be any point, as long as it is defined with respect to the center of mass. The
+most common reference point is of course the center of mass itself.
+
+The inertia of a body can be specified using either an :class:`~.Inertia` object
+or a ``tuple``. If a ``tuple`` is used, then it should have a length of two,
+with the first entry being a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`
+and the second entry being a :class:`Point<sympy.physics.vector.point.Point>`
+about which the inertia dyadic is defined. Internally this ``tuple`` gets
+converted to an :class:`~.Inertia` object. An example of using a ``tuple`` about
+the center of mass is given below in the 'Rigid Body' section. The
+:class:`~.Inertia` object can be created as follows.::
+
+   >>> from sympy.physics.mechanics import ReferenceFrame, Point, outer, Inertia
+   >>> A = ReferenceFrame('A')
+   >>> P = Point('P')
+   >>> Inertia(P, outer(A.x, A.x))
+   ((A.x|A.x), P)
+
+
+Inertia (Dyadics)
+=================
+
+A dyadic tensor is a second order tensor formed by the juxtaposition of a pair
+of vectors. There are various operations defined with respect to dyadics,
+which have been implemented in :obj:`~.sympy.physics.vector` in the form of
+class :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`. To know more, refer
+to the :obj:`sympy.physics.vector.dyadic.Dyadic` and
+:obj:`sympy.physics.vector.vector.Vector` class APIs. Dyadics are used to
+define the inertia of bodies within :mod:`sympy.physics.mechanics`. Inertia
+dyadics can be defined explicitly using the outer product, but the
+:func:`~.inertia` function is typically much more convenient for the user.::
+
+  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
+  >>> N = ReferenceFrame('N')
+
+  Supply a reference frame and the moments of inertia if the object
+  is symmetrical:
+
+  >>> inertia(N, 1, 2, 3)
+  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
+
+  Supply a reference frame along with the products and moments of inertia
+  for a general object:
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6)
+  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
+
+Notice that the :func:`~.inertia` function returns a dyadic with each component
+represented as two unit vectors separated by a ``|`` (outer product). Refer to
+the :obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about
+dyadics.
+
+Inertia is often expressed in a matrix, or tensor, form, especially for
+numerical purposes. Since the matrix form does not contain any information
+about the reference frame(s) the inertia dyadic is defined in, you must provide
+one or two reference frames to extract the measure numbers from the dyadic.
+There is a convenience function to do this::
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6).to_matrix(N)
+  Matrix([
+  [1, 4, 6],
+  [4, 2, 5],
+  [6, 5, 3]])
 
 Rigid Body
 ==========
 
 Rigid bodies are created in a similar fashion as particles. The
 :class:`~.RigidBody` class generates objects with four attributes: mass, center
-of mass, a reference frame, and an inertia tuple::
+of mass, a reference frame, and an :class:`~.Inertia` (a ``tuple`` can be passed
+as well).::
 
   >>> from sympy import Symbol
   >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
@@ -64,102 +138,6 @@ The mass is specified exactly as is in a particle. Similar to the
 :class:`~.Particle`'s ``.point``, the :class:`~.RigidBody`'s center of mass,
 ``.masscenter`` must be specified. The reference frame is stored in an analogous
 fashion and holds information about the body's orientation and angular velocity.
-Finally, the inertia for a rigid body needs to be specified about a point. In
-:mod:`sympy.physics.mechanics`, you are allowed to specify any point for this. The most
-common is the center of mass, as shown in the above code. If a point is selected
-which is not the center of mass, ensure that the position between the point and
-the center of mass has been defined. The inertia is specified as a tuple of length
-two with the first entry being a ``Dyadic`` and the second entry being a
-``Point`` of which the inertia dyadic is defined about.
-
-.. _Dyadic:
-
-Dyadic
-======
-
-In :mod:`sympy.physics.mechanics`, dyadics are used to represent inertia ([Kane1985]_,
-[WikiDyadics]_, [WikiDyadicProducts]_). A dyadic is a linear polynomial of
-component unit dyadics, similar to a vector being a linear polynomial of
-component unit vectors. A dyadic is the outer product between two vectors which
-returns a new quantity representing the juxtaposition of these two vectors. For
-example:
-
-.. math::
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_x} &= \mathbf{\hat{a}_x}
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
-  \mathbf{\hat{a}_y}\\
-
-Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
-`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the outer products obtained by
-multiplying the left side as a column vector by the right side as a row vector.
-Note that the order is significant.
-
-Some additional properties of a dyadic are:
-
-.. math::
-  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = x
-  (\mathbf{v} \otimes \mathbf{w})\\
-  \mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &= \mathbf{v} \otimes \mathbf{w}
-  + \mathbf{v} \otimes \mathbf{u}\\
-  (\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &= \mathbf{v} \otimes \mathbf{u}
-  + \mathbf{w} \otimes \mathbf{u}\\
-
-A vector in a reference frame can be represented as
-:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} + b
-\mathbf{\hat{j}} + c \mathbf{\hat{k}}`. Similarly, a dyadic can be represented
-in tensor form:
-
-.. math::
-  \begin{bmatrix}
-  a_{11} & a_{12} & a_{13} \\
-  a_{21} & a_{22} & a_{23} \\
-  a_{31} & a_{32} & a_{33}
-  \end{bmatrix}\\
-
-or in dyadic form:
-
-.. math::
-  a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
-  a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
-  a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
-  a_{21} \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} +
-  a_{22} \mathbf{\hat{a}_y}\mathbf{\hat{a}_y} +
-  a_{23} \mathbf{\hat{a}_y}\mathbf{\hat{a}_z} +
-  a_{31} \mathbf{\hat{a}_z}\mathbf{\hat{a}_x} +
-  a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
-  a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\
-
-Just as with vectors, the later representation makes it possible to keep track
-of which frames the dyadic is defined with respect to. Also, the two
-components of each term in the dyadic need not be in the same frame. The
-following is valid:
-
-.. math::
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
-  \mathbf{\hat{b}_y}
-
-Dyadics can also be crossed and dotted with vectors; again, order matters:
-
-.. math::
-  \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_y}\\
-  \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} \cdot \mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} &=
-  \mathbf{\hat{a}_y}\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_z}\mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_z} &=
-  - \mathbf{\hat{a}_y}\mathbf{\hat{a}_y}\\
-
-One can also take the time derivative of dyadics or express them in different
-frames, just like with vectors.
 
 Linear Momentum
 ===============
