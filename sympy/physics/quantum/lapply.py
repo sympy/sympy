@@ -163,6 +163,9 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> B = MatrixSymbol("B", 2, 2)
         >>> o = symbols("o", integer=True, nonnegative=True, even=True)
 
+        ``lapply`` passes explicit matrices to the matrix package, but
+        may help with simplifications of symbolic matrix terms:
+
         >>> Z = M1.T * (A * M1.I + B * M1.I).T
         >>> lapply(Z)
         A.T + B.T
@@ -174,14 +177,9 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply((p * A).expand().simplify().doit())
         2*A
 
-        ``lapply`` may help with simplifications of powers of operators:
+        Also with powers of matrices with MatrixSymbols:
 
         >>> M3 = ImmutableMatrix([[0, a], [b, 0]])
-        >>> (M3 ** (o + 10000)).simplify().is_diagonal()
-        True
-        >>> lapply(M3 ** (o + 10000))
-        a**(o/2 + 5000)*b**(o/2 + 5000)
-
         >>> Z = ((M3 * A * M3)**(o + 10000)).simplify()
         >>> (Z.base, Z.exp) == (M3 * A * M3, o + 10000)
         True
@@ -203,8 +201,8 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply(Z) == M1 * A*F* A*F* A*F* A * M2*Idb
         True
 
-        As an example that a matrix annuls its characteristic polynomial, take
-        a matrix representation of the Quaternion(a, b, c, d)
+        As an example that a matrix annuls its characteristic polynomial
+        take a matrix representation of the Quaternion(a, b, c, d):
 
         >>> Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c], \
                                   [c,  d,  a, -b], [d, -c, b, a]])
@@ -212,11 +210,11 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply(cp.subs(x, Mq))
         0
 
-        To handle Quaterions directly ``lapply`` must be passed an addition
-        function as ``Add`` doesn't work with Quaternions (Note: Don't use
+        To handle e.g. Quaterions ``lapply`` must be passed an addition
+        function as ``Add`` doesn't handle Quaternions (note: Don't use
         complex numbers with Quaternions and ``lapply`` as SymPy and so
-        ``lapply`` consider complex numbers as commutative which is not correct
-        with Quaternions):
+        ``lapply`` consider complex numbers as commutative which is not
+        correct with Quaternions):
 
         >>> q = Quaternion(a, b, c, d)
         >>> quatAdd = (lambda *summands, evaluate=True: sum(summands).expand())

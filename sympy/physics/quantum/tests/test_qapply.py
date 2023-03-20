@@ -733,7 +733,8 @@ def test_powers2023_02_11():
                     return UGate(u1.args[0], res)
 
     c, d = symbols("c d", commutative=True)
-    f, g = symbols("f g", commutative=True, nonnegative=True)
+    # expansion behaviour of x**(a+b) changed with 1.12, PR #23962
+    f, g = symbols("f g", commutative=True, positive=True)
     o, u = symbols("o u", commutative=True, integer=True, positive=True)
     r = symbols("r", real=True)
 
@@ -788,7 +789,6 @@ def test_powers2023_02_11():
     ep = qapply(e, power_exp=True) # power_exp simplifies
     p = Pow(Ud, e+18)
     q = qapply(p, apply_exp=True, power_exp=True)
-    #temporarily commented out: behavior of expand() changed in 1.12
-    print(q, Ud, ep) # so variables are not unused for flake8
-    #assert q == Ud**ep * \
-    #    UGate(0, ImmutableMatrix([[1, 524286], [0, 262144]]))
+    # expansion behaviour of x**(a+b) changed with 1.12, PR #23962
+    assert q == Ud**ep * \
+        UGate(0, ImmutableMatrix([[1, 524286], [0, 262144]]))

@@ -179,7 +179,8 @@ def test_2023_02_11_MatSym():
     # Cases with Powers of MatrixSymbols and generic nc scalars
     A = symbols('A',commutative=False)
     c, d = symbols("c d", commutative=True)
-    f, g = symbols("f g", commutative=True, nonnegative=True)
+    # expansion behaviour of x**(a+b) changed with 1.12, PR #23962
+    f, g = symbols("f g", commutative=True, positive=True)
     o, u = symbols("o u", commutative=True, integer=True, positive=True)
     r = symbols("r", real=True)
 
@@ -228,11 +229,10 @@ def test_2023_02_11_MatSym():
     # lapply hands power_xxx options to expand(power_xxx=True)
     epx = expand(e, mul=False, power_exp=True, power_base=True)
     # and this time expand() executes power_exp option:
-    # (temporarily commented: behaviour of expand() in 1.12 has changed)
-    print(ep, epx) # so variables are not unused for flake8
-    #assert epx == (f**6*g**6*o**6 + 17)**o * \
-    #              (f**12*g**12*o**12 + 34*f**6*g**6*o**6 + 289)
-    #assert ep == (f**6*g**6*o**6 + 17)**2*(f**6*g**6*o**6 + 17)**o
+    # expansion behaviour of x**(a+b) changed with 1.12, PR #23962
+    assert epx == (f**6*g**6*o**6 + 17)**o * \
+                  (f**12*g**12*o**12 + 34*f**6*g**6*o**6 + 289)
+    assert ep == (f**6*g**6*o**6 + 17)**2*(f**6*g**6*o**6 + 17)**o
 
 
 def test_2023_03_matrix():

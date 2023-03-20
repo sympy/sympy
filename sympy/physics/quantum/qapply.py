@@ -1,9 +1,9 @@
 """
 Evaluates quantum expressions by applying operators and powers to operators
 and states and general expressions by multiplying factors and distributing
-over summands. qapply is based on the generic lapply ("linear apply"). This
-module just provides the qapply() function interface with additional options
-and registers the multipledispatch handlers required for the quantum objects.
+over summands. ``qapply`` is based on the generic ``lapply`` ("linear apply"). This
+module just provides the ``qapply()`` function interface with additional options
+and registers the ``multipledispatch`` handlers required for the quantum objects.
 """
 
 from typing import cast, Any, List, Tuple, Union # For Python 3.8
@@ -34,8 +34,8 @@ __all__ = [
 def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
                    mul=True, power_base=None, power_exp=False, nested_exp=None,
                    apply_exp=False, cache_for_pow=None, **options ) -> Expr:
-    """Knows about quantum objects and invokes their methods _apply_operator
-    and _apply_from_right_to. Applies SymPy standards to apply resp. multiply
+    """Knows about quantum objects and invokes their methods ``._apply_operator``
+    and ``._apply_from_right_to``. Applies SymPy standards to apply resp. multiply
     all other objects in an expression.
 
     Parameters
@@ -60,7 +60,7 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
           and avoid breaking them up to ket * bra (default: True).
         * ``mul``: distribute commutative factors over sums. Corresponds to option
           ``mul`` of ``expand``. ``mul=False`` will do the minimal application only.
-            Use when expansion is slow (default: True).
+          Use when expansion is slow (default: True).
         * ``tensorproduct``: Expand sums in factors of ``TensorProduct`` into sums of
           ``TensorProduct`` (same option as in ``expand``) (default: value of option ``mul``).
         * ``power_base``: for commutative factors, split powers of multiplied bases
