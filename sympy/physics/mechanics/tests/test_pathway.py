@@ -18,10 +18,7 @@ class TestLinearPathway:
     @pytest.mark.parametrize(
         'args, kwargs',
         [
-            (((Point('pA'), Point('pB')), ), {}),
-            (([Point('pA'), Point('pB')], ), {}),
-            ((), {'attachments': (Point('pA'), Point('pB'))}),
-            ((), {'attachments': [Point('pA'), Point('pB')]}),
+            ((Point('pA'), Point('pB')), {}),
         ]
     )
     def test_valid_constructor(args: tuple, kwargs: dict) -> None:
@@ -35,18 +32,18 @@ class TestLinearPathway:
         assert instance.attachments[1].name == 'pB'
 
     @staticmethod
-    def test_invalid_attachments_not_iterable() -> None:
-        error_msg = (
-            r'Value .* passed to `attachments` was of type .*, must be '
-            r'<class .*Sequence.*>'
-        )
-        with pytest.raises(TypeError, match=error_msg):
-            _ = LinearPathway(Point('pA'))  # type: ignore
-
-    @staticmethod
-    def test_invalid_attachments_too_many() -> None:
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (Point('pA'), ),
+            (Point('pA'), Point('pB'), Point('pZ')),
+        ]
+    )
+    def test_invalid_attachments_incorrect_number(
+        attachments: tuple[Point, ...],
+    ) -> None:
         with pytest.raises(ValueError):
-            _ = LinearPathway((Point('pA'), Point('pB'), Point('pZ')))  # type: ignore
+            _ = LinearPathway(*attachments)  # type: ignore
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -58,14 +55,14 @@ class TestLinearPathway:
     )
     def test_invalid_attachments_not_point(attachments: Sequence[Any]) -> None:
         with pytest.raises(TypeError):
-            _ = LinearPathway(attachments)  # type: ignore
+            _ = LinearPathway(*attachments)  # type: ignore
 
     @pytest.fixture(autouse=True)
     def _linear_pathway_fixture(self) -> None:
         self.N = ReferenceFrame('N')
         self.pA = Point('pA')
         self.pB = Point('pB')
-        self.pathway = LinearPathway((self.pA, self.pB))
+        self.pathway = LinearPathway(self.pA, self.pB)
         self.q1 = dynamicsymbols('q1')
         self.q2 = dynamicsymbols('q2')
         self.q3 = dynamicsymbols('q3')
