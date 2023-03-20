@@ -12,7 +12,6 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 
 from sympy.core.backend import S
 from sympy.core.expr import Expr
@@ -36,7 +35,7 @@ class PathwayBase(ABC):
 
     def __init__(
         self,
-        attachments: tuple[Point, ...],
+        *attachments: Point,
     ) -> None:
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
@@ -47,13 +46,7 @@ class PathwayBase(ABC):
         return self._attachments
 
     @attachments.setter
-    def attachments(self, attachments: Sequence[Point]) -> None:
-        if not isinstance(attachments, Sequence):
-            msg = (
-                f'Value {repr(attachments)} passed to `attachments` was of '
-                f'type {type(attachments)}, must be {Sequence}.'
-            )
-            raise TypeError(msg)
+    def attachments(self, attachments: tuple[Point, ...]) -> None:
         if len(attachments) != 2:
             msg = (
                 f'Value {repr(attachments)} passed to `attachments` was an '
@@ -83,7 +76,8 @@ class PathwayBase(ABC):
         pass
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}(attachments={self.attachments})'
+        attachments = ', '.join(str(a) for a in self.attachments)
+        return f'{self.__class__.__name__}({attachments})'
 
 
 class LinearPathway(PathwayBase):
@@ -111,12 +105,12 @@ class LinearPathway(PathwayBase):
     ``attachments`` parameter as a ``tuple``.
 
     >>> from sympy.physics.mechanics import Point
-    >>> attachments = (Point('pO'), Point('pI'))
-    >>> linear_pathway = LinearPathway(attachments)
+    >>> pA, pB = Point('pA'), Point('pB')
+    >>> linear_pathway = LinearPathway(pA, pB)
     >>> linear_pathway
-    LinearPathway(attachments=(pO, pI))
+    LinearPathway(pA, pB)
 
-    The pathway create above isn't very interesting without the positions and
+    The pathway created above isn't very interesting without the positions and
     velocities of its attachment points being described. Without this its not
     possible to describe how the pathway moves, i.e. its length or its
     shortening velocity.
@@ -125,8 +119,8 @@ class LinearPathway(PathwayBase):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> attachments[-1].set_pos(attachments[0], q * N.x)
-    >>> attachments[-1].pos_from(attachments[0])
+    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.pos_from(pA)
     q(t)*N.x
 
     A pathway's length can be accessed via its ``length`` attribute.
@@ -154,7 +148,7 @@ class LinearPathway(PathwayBase):
 
     def __init__(
         self,
-        attachments: tuple[Point, ...],
+        *attachments: Point,
     ) -> None:
         """Initializer for ``LinearPathway``.
 
@@ -166,7 +160,7 @@ class LinearPathway(PathwayBase):
             spans.
 
         """
-        super().__init__(attachments)
+        super().__init__(*attachments)
 
     @property
     def length(self) -> Expr:
@@ -217,9 +211,9 @@ class LinearPathway(PathwayBase):
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
-        >>> attachments = (Point('pO'), Point('pI'))
-        >>> attachments[-1].set_pos(attachments[0], q * N.x)
-        >>> linear_pathway = LinearPathway(attachments)
+        >>> pA, pB = Point('pA'), Point('pB')
+        >>> pB.set_pos(pA, q * N.x)
+        >>> linear_pathway = LinearPathway(pA, pB)
 
         Now create a symbol ``F`` to describe the magnitude of the
         (contractile) force that will be produced along the pathway. The list
@@ -230,7 +224,7 @@ class LinearPathway(PathwayBase):
         >>> from sympy import Symbol
         >>> F = Symbol('F')
         >>> linear_pathway.compute_loads(F)
-        [(pO, F*q(t)/sqrt(q(t)**2)*N.x), (pI, - F*q(t)/sqrt(q(t)**2)*N.x)]
+        [(pA, F*q(t)/sqrt(q(t)**2)*N.x), (pB, - F*q(t)/sqrt(q(t)**2)*N.x)]
 
         Parameters
         ==========
