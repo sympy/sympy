@@ -152,7 +152,6 @@ if cin:
         )
 
 
-    @XFAIL
     def test_int():
         c_src1 = 'int a = 1;'
         c_src2 = (
@@ -629,7 +628,6 @@ if cin:
             )
 
 
-    @XFAIL
     def test_float():
         c_src1 = 'float a = 1.0;'
         c_src2 = (
@@ -854,8 +852,7 @@ if cin:
             )
 
 
-    @XFAIL
-    def  test_bool():
+    def test_bool():
         c_src1 = (
             'bool a = true, b = false;'
         )
