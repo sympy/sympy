@@ -178,7 +178,7 @@ def lapply(e:Expr, mul=True, Add=Add,
 
         >>> M3 = ImmutableMatrix([[0, a], [b, 0]])
         >>> (M3 ** (o + 10000)).simplify().is_diagonal()
-        False
+        True
         >>> lapply(M3 ** (o + 10000))
         a**(o/2 + 5000)*b**(o/2 + 5000)
 
