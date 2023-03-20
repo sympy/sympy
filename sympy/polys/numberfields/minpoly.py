@@ -393,7 +393,7 @@ def _minpoly_mul(x, dom, *a):
 def _minpoly_sin(ex, x):
     """
     Returns the minimal polynomial of ``sin(ex)``
-    see http://mathworld.wolfram.com/TrigonometryAngles.html
+    see https://mathworld.wolfram.com/TrigonometryAngles.html
     """
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
@@ -431,7 +431,7 @@ def _minpoly_sin(ex, x):
 def _minpoly_cos(ex, x):
     """
     Returns the minimal polynomial of ``cos(ex)``
-    see http://mathworld.wolfram.com/TrigonometryAngles.html
+    see https://mathworld.wolfram.com/TrigonometryAngles.html
     """
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:

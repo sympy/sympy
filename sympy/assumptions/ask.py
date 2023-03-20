@@ -381,14 +381,14 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Parameters
     ==========
 
-    proposition : Any boolean expression.
+    proposition : Boolean
         Proposition which will be evaluated to boolean value. If this is
         not ``AppliedPredicate``, it will be wrapped by ``Q.is_true``.
 
-    assumptions : Any boolean expression, optional.
+    assumptions : Boolean, optional
         Local assumptions to evaluate the *proposition*.
 
-    context : AssumptionsContext, optional.
+    context : AssumptionsContext, optional
         Default assumptions to evaluate the *proposition*. By default,
         this is ``sympy.assumptions.global_assumptions`` variable.
 
@@ -607,7 +607,7 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """
-    Removes a handler from the ask system. Same syntax as register_handler
+    Removes a handler from the ask system.
 
     .. deprecated:: 1.8.
         Use multipledispatch handler instead. See :obj:`~.Predicate`.

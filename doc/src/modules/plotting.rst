@@ -108,7 +108,7 @@ For an alternative you can look at the new plotting module.
 
 The pyglet plotting module can do nice 2D and 3D plots that can be
 controlled by console commands as well as keyboard and mouse, with
-the only dependency being `pyglet <http://pyglet.org/>`_.
+the only dependency being `pyglet <https://pyglet.org/>`_.
 
 Here is the simplest usage:
 

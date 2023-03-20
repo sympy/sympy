@@ -74,10 +74,51 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.13
+
+(moved-mechanics-functions)=
+### Moved mechanics functions
+With the introduction of some new objects like the ``Inertia`` and load objects
+in the ``sympy.physics.mechanics`` module, some functions from
+``sympy.physics.mechanics.functions`` have been moved to new modules. This
+removes some circular import errors and makes it easier to navigate through the
+source code, due to the parity between function names and module names. The
+following functions were moved:
+- ``inertia`` has been moved to ``sympy.physics.mechanics.inertia``
+- ``inertia_of_point_mass`` has been moved to ``sympy.physics.mechanics.inertia``
+
+Previously you could import the functions from
+``sympy.physics.mechanics.functions``:
+
+```py
+>>> from sympy.physics.mechanics.functions import inertia, inertia_of_point_mass, gravity
+```
+
+Now they should be imported from ``sympy.physics.mechanics``:
+
+```py
+>>> from sympy.physics.mechanics import inertia, inertia_of_point_mass
+```
+
 ## Version 1.12
+
+(managedproperties)=
+### The ``ManagedProperties`` metaclass
+
+The ``ManagedProperties`` metaclass was previously the metaclass for ``Basic``.
+Now ``Basic`` does not use metaclasses and so its metaclass is just ``type``.
+Any code that previously subclassed ``Basic`` and wanted to do anything with
+metaclasses would have needed to subclass ``ManagedProperties`` to make the
+relevant metaclass. The only relevant method of ``ManagedProperties`` has been
+moved to ``Basic.__init_subclass__``. Since ``ManagedProperties`` is not used
+as the metaclass for ``Basic`` any more and no longer does anything useful it
+should be possible for such code to just subclass ``type`` instead for any
+metaclass.
+
 
 (deprecated-mechanics-joint-coordinate-format)=
 ### New Joint coordinate format
+
 The format, i.e. type and auto generated name, of the generalized coordinates
 and generalized speeds of the joints in the ``sympy.physics.mechanics`` module
 has changed. The data type has changed from ``list`` to ``Matrix``, which is the
@@ -501,17 +542,17 @@ from the polys module, e.g.
 
 All of these matrix subclasses were broken in different ways and the
 introduction of {class}`~.DomainMatrix`
-([#20780](https://github.com/sympy/sympy/issues/20780),
-[#20759](https://github.com/sympy/sympy/issues/20759),
-[#20621](https://github.com/sympy/sympy/issues/20621),
-[#19882](https://github.com/sympy/sympy/issues/19882),
-[#18844](https://github.com/sympy/sympy/issues/18844)) provides a better
+([#20780](https://github.com/sympy/sympy/pull/20780),
+[#20759](https://github.com/sympy/sympy/pull/20759),
+[#20621](https://github.com/sympy/sympy/pull/20621),
+[#19882](https://github.com/sympy/sympy/pull/19882),
+[#18844](https://github.com/sympy/sympy/pull/18844)) provides a better
 solution for all cases. Previous PRs have removed the dependence of these
 other use cases on Matrix
-([#21441](https://github.com/sympy/sympy/issues/21441),
-[#21427](https://github.com/sympy/sympy/issues/21427),
-[#21402](https://github.com/sympy/sympy/issues/21402)) and now
-[#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
+([#21441](https://github.com/sympy/sympy/pull/21441),
+[#21427](https://github.com/sympy/sympy/pull/21427),
+[#21402](https://github.com/sympy/sympy/pull/21402)) and now
+[#21496](https://github.com/sympy/sympy/pull/21496) has deprecated having
 non-`Expr` in a `Matrix`.
 
 This change makes it possible to improve the internals of the Matrix class but
@@ -525,7 +566,7 @@ just printing support then perhaps `TableForm` can be used.
 It isn't clear what to advise as a replacement here without knowing more about
 the usecase. If you are unclear how to update your code, please [open an
 issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
-list](http://groups.google.com/group/sympy) so we can discuss it.
+list](https://groups.google.com/g/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects
@@ -1187,14 +1228,6 @@ The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
 are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
 for details.
 
-(deprecated-eq-expr)=
-### `Eq(expr)` with the rhs defaulting to 0
-
-Calling [`Eq`](sympy.core.relational.Equality) with a single argument is
-deprecated. This caused the right-hand side to default to `0`, but this
-behavior was confusing. You should explicitly use `Eq(expr, 0)` instead.
-
-
 (deprecated-non-tuple-lambda)=
 ### Non-tuple iterable for the first argument to `Lambda`
 
@@ -1243,54 +1276,3 @@ design flaw and not consistent with how the rest of SymPy works.
 
 Instead, the {meth}`.TensExpr.replace_with_arrays` method should be
 used.
-
-(deprecated-matrix-is_diagonalizable-cache)=
-### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
-
-The `clear_cache` and `clear_subproducts` keywords to
-[`Matrix.is_diagonalizable()`](sympy.matrices.matrices.MatrixEigen.is_diagonalizable)
-are deprecated. These used to clear cached entries, but this cache was removed
-because it was not actually safe given that `Matrix` is mutable. The keywords
-now do nothing.
-
-(deprecated-matrix-jordan_block-rows-cols)=
-### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
-
-The `rows` and `cols` keywords to
-[`Matrix.jordan_block`](sympy.matrices.common.MatrixCommon.jordan_block) are
-deprecated. The `size` parameter should be used to specify the (square) number
-of rows and columns.
-
-The non-square matrices created by setting `rows` and `cols` are not
-mathematically Jordan block matrices, which only make sense as square
-matrices.
-
-To emulate the deprecated `jordan_block(rows=n, cols=m)` behavior, use a
-general banded matrix constructor, like
-
-```py
->>> from sympy import Matrix, symbols
->>> eigenvalue = symbols('x')
->>> def entry(i, j):
-...     if i == j:
-...         return eigenvalue
-...     elif i + 1 == j: # use j + 1 == i for band='lower'
-...         return 1
-...     return 0
->>> # the same as the deprecated Matrix.jordan_block(rows=3, cols=5, eigenvalue=x)
->>> Matrix(3, 5, entry)
-Matrix([
-[x, 1, 0, 0, 0],
-[0, x, 1, 0, 0],
-[0, 0, x, 1, 0]])
-```
-
-## Version 1.3
-
-(deprecated-sympy-matrices-classof-a2idx)=
-### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
-
-The functions `sympy.matrices.matrices.classof` and
-`sympy.matrices.matrices.a2idx` were duplicates of the same functions in
-`sympy.matrices.common`. The two functions should be used from the
-`sympy.matrices.common` module instead.

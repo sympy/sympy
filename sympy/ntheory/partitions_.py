@@ -37,7 +37,7 @@ def _a(n, k, prec):
     References
     ==========
 
-    .. [1] http://msp.org/pjm/1956/6-1/pjm-v6-n1-p18-p.pdf
+    .. [1] https://msp.org/pjm/1956/6-1/pjm-v6-n1-p18-p.pdf
 
     """
     if k == 1:
@@ -155,7 +155,7 @@ def npartitions(n, verbose=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PartitionFunctionP.html
+    .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
 
     """
     n = int(n)

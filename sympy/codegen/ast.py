@@ -678,9 +678,6 @@ class CodeBlock(CodegenAST):
         This is a class constructor so that the default constructor for
         CodeBlock can error when variables are used before they are assigned.
 
-        Examples
-        ========
-
         >>> from sympy import symbols
         >>> from sympy.codegen.ast import CodeBlock, Assignment
         >>> x, y, z = symbols('x y z')
@@ -1015,7 +1012,7 @@ class Type(Token):
     References
     ==========
 
-    .. [1] https://docs.scipy.org/doc/numpy/user/basics.types.html
+    .. [1] https://numpy.org/doc/stable/user/basics.types.html
 
     """
     __slots__: tuple[str, ...] = ('name',)
@@ -1402,8 +1399,8 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join(map(lambda arg: printer._print(
-                arg, *args, **kwargs), self.parameters))
+            result += '(%s)' % ', '.join((printer._print(
+                arg, *args, **kwargs) for arg in self.parameters))
         return result
 
 value_const = Attribute('value_const')
@@ -1538,7 +1535,7 @@ class Variable(Node):
         >>> decl1.variable.value == NoneToken()  # OK
         True
         >>> decl2 = x.as_Declaration(value=42.0)
-        >>> decl2.variable.value == 42
+        >>> decl2.variable.value == 42.0
         True
 
         """

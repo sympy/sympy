@@ -112,7 +112,7 @@ class ArrayDerivative(Derivative):
                 return None
         else:
             # Both `expr` and `v` are some array/matrix type:
-            if isinstance(expr, MatrixCommon) or isinstance(expr, MatrixCommon):
+            if isinstance(expr, MatrixCommon) or isinstance(v, MatrixCommon):
                 result = derive_by_array(expr, v)
             elif isinstance(expr, MatrixExpr) and isinstance(v, MatrixExpr):
                 result = cls._call_derive_default(expr, v)

@@ -1860,8 +1860,8 @@ class asech(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSech/
 
     """
 
@@ -2042,8 +2042,8 @@ class acsch(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCsch/
 
     """
 

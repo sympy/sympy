@@ -243,7 +243,7 @@ References
 .. [1] Fu, Hongguang, Xiuqin Zhong, and Zhenbing Zeng.
     "Automated and readable simplification of trigonometric expressions."
     Mathematical and computer modelling 44.11 (2006): 1169-1177.
-    http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
+    https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
 
 .. [2] A formula sheet for trigonometric functions.
     http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html

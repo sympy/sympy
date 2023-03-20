@@ -161,7 +161,7 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    args: tTuple[Expr]
+    args: tTuple[Expr, ...]
 
     is_Mul = True
 
@@ -282,7 +282,7 @@ class Mul(Expr, AssocOp):
                 a, b = b, a
                 seq = [a, b]
             assert a is not S.One
-            if not a.is_zero and a.is_Rational:
+            if a.is_Rational and not a.is_zero:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
@@ -1711,7 +1711,7 @@ class Mul(Expr, AssocOp):
                 noncommutatives come back as a list [(b**e, Rational)]
             """
 
-            (c, nc) = (defaultdict(int), list())
+            (c, nc) = (defaultdict(int), [])
             for a in Mul.make_args(eq):
                 a = powdenest(a)
                 (b, e) = base_exp(a)
