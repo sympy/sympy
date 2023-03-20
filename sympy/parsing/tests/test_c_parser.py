@@ -1669,8 +1669,8 @@ if cin:
                 'int b = 3;' + '\n' +
                 'int mod = 1000000007;' + '\n' +
                 'int c;' + '\n' +
-                'c = ((a % mod + b % mod) % mod *(' \
-                'a % mod - b % mod) % mod) % mod;' + '\n' +
+                'c = ((a % mod + b % mod) % mod' \
+                '* (a % mod - b % mod) % mod) % mod;' + '\n' +
             '}'
         )
 
@@ -2507,7 +2507,7 @@ if cin:
                     )
                 )
             )
-
+        
         assert res19[0] == FunctionDefinition(
             NoneToken(),
             name=String('func'),
@@ -2541,14 +2541,24 @@ if cin:
                     Mod(
                         Mul(
                             Add(
-                                Symbol('a'),
-                                Mul(Integer(-1),
-                                    Symbol('b')
+                                Mod(
+                                    Symbol('a'),
+                                    Symbol('mod')
+                                    ),
+                                Mul(
+                                    Integer(-1),
+                                    Mod(
+                                        Symbol('b'),
+                                        Symbol('mod')
+                                        )
                                     )
                                 ),
-                            Add(
-                                Symbol('a'),
-                                Symbol('b')
+                            Mod(
+                                Add(
+                                    Symbol('a'),
+                                    Symbol('b')
+                                    ),
+                                Symbol('mod')
                                 )
                             ),
                         Symbol('mod')
@@ -5086,13 +5096,13 @@ if cin:
         c_src4 = (
             'int digit_sum(int n)'+
             '{' + '\n' +
-                'int sum = 0;' + '\n' +
+                'int ans = 0;' + '\n' +
                 'while(n > 0)' + '\n' +
                 '{' + '\n' +
-                    'sum += (n % 10);' + '\n' +
+                    'ans += (n % 10);' + '\n' +
                     'n /= 10;' + '\n' +
                 '}' + '\n' +
-                'return sum;' + '\n' +
+                'return ans;' + '\n' +
             '}'
         )
 
