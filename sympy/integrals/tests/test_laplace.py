@@ -495,14 +495,16 @@ def test_inverse_laplace_transform():
 
     # Section 5.3: Irrational algebraic functions
     assert (  # (1)
-        ILT(1/sqrt(k*s)/(-a + s)) ==
-        exp(a*t)*erf(sqrt(a)*sqrt(t))/(sqrt(a)*sqrt(k)))
-    assert (
-        ILT(1/sqrt(k*s)/(b - a*s)) ==
-        -exp(b*t/a)*erf(sqrt(b)*sqrt(t)/sqrt(a))/(sqrt(a)*sqrt(b)*sqrt(k)))
+        ILT(1/sqrt(s)/(b*s-a)) ==
+        exp(a*t/b)*Heaviside(t)*erf(sqrt(a)*sqrt(t)/sqrt(b))/(sqrt(a)*sqrt(b)))
+    assert (  # (2)
+        ILT(1/sqrt(k*s)/(c*s-a)/s) ==
+        (-2*c*sqrt(t)/(sqrt(pi)*a) +
+         c**(S(3)/2)*exp(a*t/c)*erf(sqrt(a)*sqrt(t)/sqrt(c))/a**(S(3)/2)) *
+        Heaviside(t)/(c*sqrt(k)))
     assert (  # (4)
-        ILT(1/(sqrt(c*s)+a)) == -a*exp(a**2*t/c)*erfc(a*sqrt(t)/sqrt(c))/c +
-        1/(sqrt(pi)*sqrt(c)*sqrt(t)))
+        ILT(1/(sqrt(c*s)+a)) == (-a*exp(a**2*t/c)*erfc(a*sqrt(t)/sqrt(c))/c +
+                                 1/(sqrt(pi)*sqrt(c)*sqrt(t)))*Heaviside(t))
 
     # Miscellaneous tests
     # Can _inverse_laplace_time_shift deal with positive exponents?
@@ -511,6 +513,7 @@ def test_inverse_laplace_transform():
         cos(t)*Heaviside(t) + 4*cos(t - 2)*Heaviside(t - 2) -
         4*cos(t - 1)*Heaviside(t - 1) - 4*Heaviside(t - 2) +
         4*Heaviside(t - 1)).simplify() == 0
+
 
 @slow
 def test_inverse_laplace_transform_old():

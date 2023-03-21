@@ -1620,9 +1620,6 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
     ma = [x.match((a*s**m+b)**n) for x in fa]
 
-    # XXX remove before merge
-    # debugf('[ILT _i_l_i] matched %s', (ma, ))
-
     if (None in ma) == 1:
         return None
 
@@ -1641,13 +1638,21 @@ def _inverse_laplace_irrational(fn, s, t, plane):
         else:
             rest.append(term)
 
+    # The code below assumes that the poles are sorted in a specific way:
+    poles = sorted(poles, key=lambda x: (x[n], x[b] != 0, x[b]))
+    # XXX remove the following before merge
+    debugf('[ILT _i_l_i] matched %s', (ma, ))
+    debugf('[ILT _i_l_i] poles: %s', (poles, ))
+    debugf('[ILT _i_l_i] zeros: %s', (zeros, ))
+
     if len(rest) != 0:
         return None
 
     debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
 
-    if len(poles) == 1:
+    if len(poles) == 1 and len(zeros) == 0:
         if poles[0][n] == -1 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0) == 1/a0 * 1/(sqrt(s)+b0/a0)
             a_ = poles[0][b]/poles[0][a]
             k_ = 1/poles[0][a]*constants
             if a_.is_positive:
@@ -1656,21 +1661,38 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                     k_*a_*exp(a_**2*t)*erfc(a_*sqrt(t)))
                 debugf('[ILT _i_l_i] Rule (4) returns %s', (result, ))
 
-    if len(poles) == 2:
-        if len(zeros) == 0:
-            poles = sorted(poles, key=lambda x: x[n])
-            if poles[0][n] == -1 and poles[1][n] == -S.Half:
-                if poles[1][b] == 0:
-                    a_ = -poles[0][b]/poles[0][a]
-                    k_ = 1/sqrt(poles[1][a])/poles[0][a]*constants
-                    if a_.is_positive:
-                        result = (k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t)))
-                        debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
+    if len(poles) == 2 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[0][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*s+b0)*sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((s+b0/a0)*sqrt(s))
+            a_ = -poles[0][b]/poles[0][a]
+            k_ = 1/sqrt(poles[1][a])/poles[0][a]*constants
+            if a_.is_positive:
+                result = (k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
+
+    if len(poles) == 3 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][b] == 0 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[2][n] == -S.Half and poles[2][m] == 1):
+            # 1/((a0*s)*(a1*s+b1)*sqrt(a2*s))
+            # == 1/(a0*a1*sqrt(a2)) * 1/((s)*(s+b1/a1)*sqrt(s))
+            a_ = -poles[1][b]/poles[1][a]
+            k_ = 1/poles[0][a]/poles[1][a]/sqrt(poles[2][a])*constants
+            if a_.is_positive:
+                result = k_ * (
+                    a_**(-S(3)/2) * exp(a_*t) * erf(sqrt(a_)*sqrt(t)) -
+                    2/a_/sqrt(pi)*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (2) returns %s', (result, ))
 
     if result is None:
         return None
     else:
-        return result, condition
+        return Heaviside(t)*result, condition
 
 
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
