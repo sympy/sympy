@@ -46,7 +46,7 @@ and bugs even in interactive usage.
 
 ## Basic Usage
 
-(best-practices-defining-symbols)
+(best-practices-defining-symbols)=
 ### Defining Symbols
 
 - **The best way to define symbols is using the {func}`~.symbols` function.**
@@ -636,6 +636,62 @@ problems all go away.
 ## Custom SymPy Objects
 
 ### Args Invariants
+
+Custom SymPy objects should always satisfy the following invariants:
+
+1. `all(isinstance(arg, Basic) for arg in args)`
+2. `expr.func(*expr.args) == expr`
+
+The first says that all elements of {term}`args` should be instances of
+{term}`Basic`. The second says that an expression should be rebuildable from
+its `args` (note that {term}`func` is usually the same as `type(expr)`).
+
+These two invariants are assumed throughout SymPy, and are essential for any
+function that manipulates expressions.
+
+For example, consider this simple function, which is a simplified version of
+{meth}`~sympy.core.basic.Basic.xreplace`:
+
+```py
+>>> def replace(expr, x, y):
+...     """Replace x with y in expr"""
+...     newargs = []
+...     for arg in expr.args:
+...         if arg == x:
+...             newargs.append(y)
+...         else:
+...             newargs.append(replace(arg, x, y))
+...     return expr.func(*newargs)
+>>> replace(x + sin(x - 1), x, y)
+y + sin(y - 1)
+```
+
+The function works by recursively traversing the `args` of `expr`, and
+rebuilding it except any instances of `x` are replaced by `y`.
+
+It's easy to see how this function would break if the args invariants did not
+hold:
+
+1. If an expression has args that are not `Basic`, they will fail with
+   `AttributeError` on a recursive call, because the non-`Basic` args will not
+   have the `args` or `func` attributes.
+
+   Usually this means calling `_sympify()` on the inputs to the class so that
+   they are basic instances. If you want to store a string on a class, you
+   should either use a `Symbol` or `sympy.core.symbols.Str`.
+
+2. If an expression does not rebuild from its `args`, the line `return
+   exr.func(*newargs)`, which should be a no-op if none of the args are
+   changed by the replacement, will fail.
+
+   In some cases a class may accept args in multiple equivalent forms. It is
+   important that whatever form is stored in `args` is one of the ways that
+   can be used to reconstruct the class.
+
+Note that most user-defined custom functions should be defined by subclassing
+`Function` (see the [guide to writing custom functions](custom-functions)).
+The `Function` class automatically takes care of both of the args invariants,
+so if you are using it, you do not need to worry about this.
 
 ### Avoid Too Much Automatic Evaluation
 
