@@ -3853,6 +3853,12 @@ class TensMul(TensExpr, AssocOp):
             TensMul(*i) for i in itertools.product(*args1)]
         )
 
+    def _eval_expand_mul(self, **hints):
+        args1 = [arg.args if isinstance(arg, (Add, TensAdd)) else (arg,) for arg in self.args]
+        return TensAdd(*[
+            TensMul(*i).doit(deep=False) for i in itertools.product(*args1)]
+        )
+
     def __neg__(self):
         return TensMul(S.NegativeOne, self, is_canon_bp=self._is_canon_bp).doit(deep=False)
 
