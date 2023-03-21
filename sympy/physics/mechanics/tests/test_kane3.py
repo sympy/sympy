@@ -1,4 +1,3 @@
-from sympy.core.evalf import evalf
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -282,7 +281,8 @@ def test_bicycle():
             q2: 0,
             q4: 0,
             q5: 0,
-        }
+        },
+        linear_solver=cramer_solve,
     )
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as

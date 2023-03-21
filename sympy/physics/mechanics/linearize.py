@@ -4,7 +4,7 @@ from sympy.core.backend import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs, cramer_solve
+from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple
 from collections.abc import Iterable
@@ -56,11 +56,17 @@ class Linearizer:
         lams : array_like, optional
             The lagrange multipliers
         linear_solver : callable
-            A function that returns x for A*x=b and has the form x = f(A, b).
+            A function that returns x for a linear system A*x=b and has the
+            form x = f(A, b). This will be used for all linear solves in the
+            linearization process. The default is SymPy's ``A.LUsolve(b)``,
+            which computes fast but will often result in divide-by-zero and
+            ``nan`` results.
 
         """
         if linear_solver is None:
-            self.linear_solver = cramer_solve
+            self.linear_solver = lambda A, b: A.LUsolve(b)
+        else:
+            self.linear_solver = linear_solver
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)

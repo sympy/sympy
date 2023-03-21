@@ -496,7 +496,7 @@ class KanesMethod(_Methods):
         self._f_d = -(self._fr - nonMM)
         return fr_star
 
-    def to_linearizer(self):
+    def to_linearizer(self, linear_solver=None):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
@@ -567,10 +567,10 @@ class KanesMethod(_Methods):
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r)
+                q_d, u_i, u_d, r, linear_solver=linear_solver)
 
     # TODO : Remove `new_method` after 1.1 has been released.
-    def linearize(self, *, new_method=None, **kwargs):
+    def linearize(self, *, new_method=None, linear_solver=None, **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
         Explanation
@@ -597,7 +597,8 @@ class KanesMethod(_Methods):
         you can specify beforehand, the faster this computation will run.
 
         For more documentation, please see the ``Linearizer`` class."""
-        linearizer = self.to_linearizer()
+
+        linearizer = self.to_linearizer(linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
