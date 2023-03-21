@@ -34,7 +34,7 @@ class Linearizer:
 
     def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
                  q_d=None, u_i=None, u_d=None, r=None, lams=None,
-                 linear_solver='lu'):
+                 linear_solver='LU'):
         """
         Parameters
         ==========
@@ -61,9 +61,10 @@ class Linearizer:
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
-            solves the equations and returns the solution. The default is 'lu'
-            which corresponds to SymPy's ``A.LUsolve(b)``, which computes fast
-            but will often result in divide-by-zero and ``nan`` results.
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``, which
+            computes fast but will often result in divide-by-zero and ``nan``
+            results.
 
         """
         self.linear_solver = _parse_linear_solver(linear_solver)
