@@ -7,6 +7,7 @@ from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
+from sympy.physics.mechanics.functions import cramer_solve
 from sympy.testing.pytest import slow, ON_CI, skip
 
 
@@ -176,7 +177,8 @@ def test_bicycle():
             q_dependent=[q4], configuration_constraints=conlist_coord,
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
-            kd_eqs=kd)
+            kd_eqs=kd,
+            constraint_solver=cramer_solve)
     (fr, frstar) = KM.kanes_equations(BL, FL)
 
     # This is the start of entering in the numerical values from the benchmark
