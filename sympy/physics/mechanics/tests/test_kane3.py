@@ -8,7 +8,7 @@ from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
-from sympy.testing.pytest import slow, ON_CI, skip
+from sympy.testing.pytest import slow
 
 
 # TODO : This is a temporary implementation and can be removed once we support
@@ -40,8 +40,6 @@ def cramer_solve(A, b, det_method=det_laplace):
 
 @slow
 def test_bicycle():
-    if ON_CI:
-        skip("Too slow for CI.")
     # Code to get equations of motion for a bicycle modeled as in:
     # J.P Meijaard, Jim M Papadopoulos, Andy Ruina and A.L Schwab. Linearized
     # dynamics equations for the balance and steer of a bicycle: a benchmark
