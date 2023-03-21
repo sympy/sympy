@@ -56,8 +56,8 @@ def _is_extrinsic(seq):
 
 class Quaternion(Expr):
     """Provides basic quaternion operations.
-    Quaternion objects can be instantiated as Quaternion(a, b, c, d)
-    as in (a + b*i + c*j + d*k).
+    Quaternion objects can be instantiated as ``Quaternion(a, b, c, d)``
+    as in $q = a + bi + cj + dk$.
 
     Parameters
     ==========
@@ -74,7 +74,7 @@ class Quaternion(Expr):
     >>> q
     1 + 2*i + 3*j + 4*k
 
-    Quaternions over complex fields can be defined as :
+    Quaternions over complex fields can be defined as:
 
     >>> from sympy import Quaternion
     >>> from sympy import symbols, I
@@ -87,6 +87,7 @@ class Quaternion(Expr):
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
 
     Defining symbolic unit quaternions:
+
     >>> from sympy import Quaternion
     >>> from sympy.abc import w, x, y, z
     >>> q = Quaternion(w, x, y, z, norm=1)
@@ -284,9 +285,9 @@ class Quaternion(Expr):
 
     def to_Matrix(self, vector_only=False):
         """Returns elements of quaternion as a column vector.
-        By default, a Matrix of length 4 is returned, with the real part as the
+        By default, a ``Matrix`` of length 4 is returned, with the real part as the
         first element.
-        If vector_only is True, returns only imaginary part as a Matrix of
+        If ``vector_only`` is ``True``, returns only imaginary part as a Matrix of
         length 3.
 
         Parameters
@@ -946,13 +947,13 @@ class Quaternion(Expr):
         return res
 
     def exp(self):
-        """Returns the exponential of q (e^q).
+        """Returns the exponential of $q$, given by $e^q$.
 
         Returns
         =======
 
         Quaternion
-            Exponential of q (e^q).
+            The exponential of the quaternion.
 
         Examples
         ========
@@ -1107,7 +1108,7 @@ class Quaternion(Expr):
 
     @staticmethod
     def rotate_point(pin, r):
-        """Returns the coordinates of the point pin(a 3 tuple) after rotation.
+        """Returns the coordinates of the point pin (a 3 tuple) after rotation.
 
         Parameters
         ==========
@@ -1192,7 +1193,7 @@ class Quaternion(Expr):
 
     def to_rotation_matrix(self, v=None, homogeneous=True):
         """Returns the equivalent rotation transformation matrix of the quaternion
-        which represents rotation about the origin if v is not passed.
+        which represents rotation about the origin if ``v`` is not passed.
 
         Parameters
         ==========
@@ -1288,7 +1289,7 @@ class Quaternion(Expr):
 
     def vector_part(self):
         r"""
-        Returns vector part($\mathbf{V}(q)$) of the quaternion q.
+        Returns $\mathbf{V}(q)$, the vector part of the quaternion $q$.
 
         Explanation
         ===========
@@ -1313,7 +1314,7 @@ class Quaternion(Expr):
 
     def axis(self):
         r"""
-        Returns the axis($\mathbf{Ax}(q)$) of the quaternion.
+        Returns $\mathbf{Ax}(q)$, the axis of the quaternion $q$.
 
         Explanation
         ===========
@@ -1406,11 +1407,11 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
+        Given a quaternion $q = a + bi + cj + dk$ where $a$, $b$, $c$ and $d$
         are real numbers, returns the angle of the quaternion given by
 
         .. math::
-            angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
+            \theta := 2 \operatorname{atan_2}\left(\sqrt{b^2 + c^2 + d^2}, {a}\right)
 
         Examples
         ========
@@ -1418,11 +1419,11 @@ class Quaternion(Expr):
         >>> from sympy.algebras.quaternion import Quaternion
         >>> q = Quaternion(1, 4, 4, 4)
         >>> q.angle()
-        atan(4*sqrt(3))
+        2*atan(4*sqrt(3))
 
         """
 
-        return atan2(self.vector_part().norm(), self.scalar_part())
+        return 2 * atan2(self.vector_part().norm(), self.scalar_part())
 
 
     def arc_coplanar(self, other):
@@ -1476,7 +1477,7 @@ class Quaternion(Expr):
     def vector_coplanar(cls, q1, q2, q3):
         r"""
         Returns True if the axis of the pure quaternions seen as 3D vectors
-        q1, q2, and q3 are coplanar.
+        ``q1``, ``q2``, and ``q3`` are coplanar.
 
         Explanation
         ===========
@@ -1623,8 +1624,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where $\mathbf{Ax}(q)$ is the axis of the quaternion q,
-        and mod(q) is the $\mathbf{T}(q)$ (magnitude) of the quaternion.
+        The index vector is given by $\mathbf{T}(q)$, the norm (or magnitude) of
+        the quaternion $q$, multiplied by $\mathbf{Ax}(q)$, the axis of $q$.
 
         Returns
         =======

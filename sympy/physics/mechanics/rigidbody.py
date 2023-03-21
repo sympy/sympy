@@ -1,6 +1,7 @@
 from sympy.core.backend import Symbol, S
-from sympy.physics.vector import ReferenceFrame, Dyadic, Point, dot
+from sympy.physics.vector import ReferenceFrame, Dyadic, dot
 from sympy.physics.mechanics.body_base import BodyBase
+from sympy.physics.mechanics.inertia import inertia_of_point_mass, Inertia
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['RigidBody']
@@ -55,8 +56,6 @@ class RigidBody(BodyBase):
 
     def __init__(self, name, masscenter=None, frame=None, mass=None,
                  inertia=None):
-        # circular import issue (will soon be removed)
-        from sympy.physics.mechanics.functions import inertia as inertia_f
         super().__init__(name, masscenter, mass)
         if frame is None:
             frame = ReferenceFrame(f'{name}_frame')
@@ -68,8 +67,8 @@ class RigidBody(BodyBase):
             izx = Symbol(f'{name}_izx')
             ixy = Symbol(f'{name}_ixy')
             iyz = Symbol(f'{name}_iyz')
-            inertia = (inertia_f(frame, ixx, iyy, izz, ixy, iyz, izx),
-                       self.masscenter)
+            inertia = Inertia.from_inertia_scalars(self.masscenter, self.frame,
+                                                   ixx, iyy, izz, ixy, iyz, izx)
         self.inertia = inertia
 
     def __repr__(self):
@@ -106,20 +105,14 @@ class RigidBody(BodyBase):
     @property
     def inertia(self):
         """The body's inertia about a point; stored as (Dyadic, Point)."""
-        return (self._inertia, self._inertia_point)
+        return self._inertia
 
     @inertia.setter
     def inertia(self, I):
-        if not isinstance(I[0], Dyadic):
-            raise TypeError("RigidBody inertia must be a Dyadic object.")
-        if not isinstance(I[1], Point):
-            raise TypeError("RigidBody inertia must be about a Point.")
-        self._inertia = I[0]
-        self._inertia_point = I[1]
+        self._inertia = Inertia(I[0], I[1])
         # have I S/O, want I S/S*
         # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
         # I_S/S* = I_S/O - I_S*/O
-        from sympy.physics.mechanics.functions import inertia_of_point_mass
         I_Ss_O = inertia_of_point_mass(self.mass,
                                        self.masscenter.pos_from(I[1]),
                                        self.frame)
@@ -134,7 +127,7 @@ class RigidBody(BodyBase):
     def central_inertia(self, I):
         if not isinstance(I, Dyadic):
             raise TypeError("RigidBody inertia must be a Dyadic object.")
-        self.inertia = (I, self.masscenter)
+        self.inertia = Inertia(I, self.masscenter)
 
     def linear_momentum(self, frame):
         """ Linear momentum of the rigid body.
@@ -311,8 +304,6 @@ method is deprecated. Instead use
             point.
 
         """
-        # circular import issue
-        from sympy.physics.mechanics.functions import inertia_of_point_mass
         if frame is None:
             frame = self.frame
         return self.central_inertia + inertia_of_point_mass(
