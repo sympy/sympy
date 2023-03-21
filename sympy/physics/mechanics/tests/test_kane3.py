@@ -1,4 +1,5 @@
-from sympy import cacheit, zeros, ImmutableMatrix
+from sympy import cacheit
+from sympy.core.backend import zeros, ImmutableMatrix
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
