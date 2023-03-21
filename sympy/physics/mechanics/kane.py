@@ -8,7 +8,6 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
                                                _f_list_parser,
                                                _validate_coordinates,
-                                               cramer_solve,
                                                _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
@@ -496,7 +495,7 @@ class KanesMethod(_Methods):
         self._f_d = -(self._fr - nonMM)
         return fr_star
 
-    def to_linearizer(self, linear_solver=None):
+    def to_linearizer(self, linear_solver='LU'):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
@@ -570,7 +569,7 @@ class KanesMethod(_Methods):
                 q_d, u_i, u_d, r, linear_solver=linear_solver)
 
     # TODO : Remove `new_method` after 1.1 has been released.
-    def linearize(self, *, new_method=None, linear_solver=None, **kwargs):
+    def linearize(self, *, new_method=None, linear_solver='LU', **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
         Explanation
