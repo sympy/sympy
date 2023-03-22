@@ -654,6 +654,26 @@ class System(_Methods):
         self.add_kdes(*(kde for kde in tuple(kdes) if not kde == 0))
         self.add_bodies(*tuple(bodies))
 
+    def get_body(self, name):
+        """Retrieve a body from the system by name.
+
+        Parameters
+        ==========
+
+        name : str
+            The name of the body to retrieve.
+
+        Returns
+        =======
+
+        RigidBody or Particle
+            The body with the given name, or None if no such body exists.
+
+        """
+        for body in self._bodies:
+            if body.name == name:
+                return body
+
     def _form_eoms(self):
         return self.form_eoms()
 
