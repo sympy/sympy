@@ -674,6 +674,26 @@ class System(_Methods):
             if body.name == name:
                 return body
 
+    def get_joint(self, name):
+        """Retrieve a joint from the system by name.
+
+        Parameters
+        ==========
+
+        name : str
+            The name of the joint to retrieve.
+
+        Returns
+        =======
+
+        subclass of Joint
+            The joint with the given name, or None if no such joint exists.
+
+        """
+        for joint in self._joints:
+            if joint.name == name:
+                return joint
+
     def _form_eoms(self):
         return self.form_eoms()
 
