@@ -442,6 +442,120 @@ class System(_Methods):
         self._loads.extend(loads)
 
     @_reset_eom_method
+    def apply_force(self, point, force, reaction_point=None):
+        """Apply a force to the system.
+
+        Explanation
+        ===========
+
+        Applies the force on point. If a reaction point is supplied, an equal
+        and oppposite force is applied to the reaction point, i.e. -force.
+
+        Parameters
+        ==========
+
+        point: Point or Particle or RigidBody
+            The point on which the force is applied. If a body is supplied, then
+            the center of mass of that body is used.
+        force: Vector
+            The force to be applied.
+        reaction_point : Point or Particle or RigidBody, optional
+            The point on which an equal and opposite force is applied. If a body
+            is supplied, then the center of mass of that body is used. The
+            default is None.
+
+        Example
+        =======
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import System, RigidBody
+        >>> system = System()
+        >>> g = symbols('g')
+        >>> rb = RigidBody('rb')
+        >>> system.apply_force(rb.masscenter, - rb.mass * g * system.z)
+        >>> system.loads
+        ((rb_masscenter, - g*rb_mass*inertial_frame.z),)
+
+        To further demonstrate the use of ``apply_force`` attribute, consider
+        two bodies connected by a spring. For ease the bodies centers of mass
+        are connected.
+
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> x = dynamicsymbols('x')
+        >>> rb1 = RigidBody('rb1')
+        >>> rb2 = RigidBody('rb2')
+        >>> rb2.masscenter.set_pos(rb1.masscenter, x * system.x)
+        >>> spring_force = x * rb1.masscenter.pos_from(rb2.masscenter)
+        >>> system.apply_force(rb1, spring_force, rb2)
+        >>> system.loads
+        ((rb_masscenter, - g*rb_mass*inertial_frame.z), (rb1_masscenter, - x(t)**2*inertial_frame.x), (rb2_masscenter, x(t)**2*inertial_frame.x))
+
+        Notes
+        =====
+
+        Method as it may change a bit with the introduction of Actuator.
+
+        """
+        self._loads.append(Force(point, force))
+        if reaction_point is not None:
+            self._loads.append(Force(reaction_point, -force))
+
+    @_reset_eom_method
+    def apply_torque(self, frame, torque, reaction_frame=None):
+        """Apply a torque to the system.
+
+        Explanation
+        ===========
+
+        Applies the torque on frame. If a reaction frame is supplied, an equal
+        and oppposite torque is applied to the reaction point, i.e. -force.
+
+        Parameters
+        ==========
+
+        frame: ReferenceFrame or Particle or RigidBody
+            The frame to which the torque is applied. If a body is supplied,
+            then the frame associated with that body is used.
+        torque: Vector
+            The torque to be applied.
+        reaction_frame : ReferenceFrame or Particle or RigidBody, optional
+            The frame on which an equal and opposite torque is applied. If a
+            body is supplied, then the frame associated with that body is used.
+            The default is None.
+
+        Example
+        =======
+
+        >>> from sympy.physics.mechanics import RigidBody, System
+        >>> system = System()
+        >>> rb = RigidBody('rb')
+        >>> system.apply_torque(rb.frame, -system.z)
+        >>> system.loads
+        ((rb_frame, - inertial_frame.z),)
+
+        To further demonstrate the use, let us consider two bodies such that
+        a torque ``T`` is acting on one body, and ``-T`` on the other.
+
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> rb1 = RigidBody('rb1')
+        >>> rb2 = RigidBody('rb2')
+        >>> v = dynamicsymbols('v')
+        >>> T = v * system.y  # Torque
+        >>> system.apply_torque(rb1, T, rb2)
+        >>> system.loads
+         ((rb_frame, - inertial_frame.z), (rb1_frame, v(t)*inertial_frame.y), (rb2_frame, - v(t)*inertial_frame.y))
+
+        Notes
+        =====
+
+        Method as it may change a bit with the introduction of Actuator.
+
+        """
+        self._loads.append(Torque(frame, torque))
+        if reaction_frame is not None:
+            self._loads.append(Torque(reaction_frame, -torque))
+
+    @_reset_eom_method
     def remove_load(self, location):
         """Remove the loads applied about a point or frame.
 
