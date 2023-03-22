@@ -94,6 +94,16 @@ class System(_Methods):
         self._loads = []
         self._eom_method = None
 
+    @classmethod
+    def from_newtonian(cls, newtonian):
+        """Constructs the system with respect to a Newtonian body."""
+        if isinstance(newtonian, Particle):
+            raise ValueError('A Particle has no frame so cannot act as '
+                             'the Newtonian.')
+        system = cls(origin=newtonian.masscenter, frame=newtonian.frame)
+        system.add_bodies(newtonian)
+        return system
+
     @property
     def origin(self):
         """Global origin of the system."""
