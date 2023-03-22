@@ -118,7 +118,7 @@ class TestSystem:
          [q[0], q[2], q[1]]),
     ])
     def test_coordinates(self, _empty_system_setup, args, kwargs,
-                                exp_q_ind, exp_q_dep, exp_q):
+                         exp_q_ind, exp_q_dep, exp_q):
         # Test add_coordinates
         self.system.add_coordinates(*args, **kwargs)
         assert self.system.q_ind[:] == exp_q_ind
@@ -155,7 +155,7 @@ class TestSystem:
          [u[0], u[2], u[1]]),
     ])
     def test_speeds(self, _empty_system_setup, args, kwargs, exp_u_ind,
-                           exp_u_dep, exp_u):
+                    exp_u_dep, exp_u):
         # Test add_speeds
         self.system.add_speeds(*args, **kwargs)
         assert self.system.u_ind[:] == exp_u_ind
@@ -192,6 +192,7 @@ class TestSystem:
         assert list(getattr(self.system, prop)[:]) == list(args)
 
     @pytest.mark.parametrize('args, kwargs, exp_kdes', [
+        ((), {}, [ui - qdi for ui, qdi in zip(u[:4], qd[:4])]),
         ((u[4] - qd[4], u[5] - qd[5]), {},
          [ui - qdi for ui, qdi in zip(u[:6], qd[:6])]),
     ])
@@ -208,10 +209,63 @@ class TestSystem:
     @pytest.mark.parametrize('args, kwargs', [
         ((u[0] - qd[0], u[4] - qd[4]), {}),
         ((-(u[0] - qd[0]), u[4] - qd[4]), {}),
-        (([u[0] - qd[0], u[4] - qd[4]]), {}),
         (([u[0] - u[0], u[4] - qd[4]]), {}),
     ])
     def test_kdes_invalid(self, _filled_system_setup, args, kwargs):
         with pytest.raises(ValueError):
             self.system.add_kdes(*args, **kwargs)
+        self._filled_system_check()
+
+    @pytest.mark.parametrize('args, kwargs, exp_con', [
+        ((), {}, [q[2] - q[0] + q[1]]),
+        ((q[4] - q[5], q[5] + q[3]), {},
+         [q[2] - q[0] + q[1], q[4] - q[5], q[5] + q[3]]),
+    ])
+    def test_holonomic_constraints(self, _filled_system_setup, args, kwargs,
+                                   exp_con):
+        # Test add_holonomic_constraints
+        self.system.add_holonomic_constraints(*args, **kwargs)
+        self._filled_system_check(exclude=('holonomic_constraints',))
+        assert self.system.holonomic_constraints[:] == exp_con
+        # Test setter for holonomic_constraints
+        self.system.holonomic_constraints = exp_con
+        self._filled_system_check(exclude=('holonomic_constraints',))
+        assert self.system.holonomic_constraints[:] == exp_con
+
+    @pytest.mark.parametrize('args, kwargs', [
+        ((q[2] - q[0] + q[1], q[4] - q[3]), {}),
+        ((-(q[2] - q[0] + q[1]), q[4] - q[3]), {}),
+        (([q[0] - q[0], q[4] - q[3]]), {}),
+    ])
+    def test_holonomic_constraints_invalid(self, _filled_system_setup, args,
+                                           kwargs):
+        with pytest.raises(ValueError):
+            self.system.add_holonomic_constraints(*args, **kwargs)
+        self._filled_system_check()
+
+    @pytest.mark.parametrize('args, kwargs, exp_con', [
+        ((), {}, [u[3] - qd[1] + u[2]]),
+        ((u[4] - u[5], u[5] + u[3]), {},
+         [u[3] - qd[1] + u[2], u[4] - u[5], u[5] + u[3]]),
+    ])
+    def test_nonholonomic_constraints(self, _filled_system_setup, args, kwargs,
+                                      exp_con):
+        # Test add_nonholonomic_constraints
+        self.system.add_nonholonomic_constraints(*args, **kwargs)
+        self._filled_system_check(exclude=('nonholonomic_constraints',))
+        assert self.system.nonholonomic_constraints[:] == exp_con
+        # Test setter for nonholonomic_constraints
+        self.system.nonholonomic_constraints = exp_con
+        self._filled_system_check(exclude=('nonholonomic_constraints',))
+        assert self.system.nonholonomic_constraints[:] == exp_con
+
+    @pytest.mark.parametrize('args, kwargs', [
+        ((u[3] - qd[1] + u[2], u[4] - u[3]), {}),
+        ((-(u[3] - qd[1] + u[2]), u[4] - u[3]), {}),
+        (([u[0] - u[0], u[4] - u[3]]), {}),
+    ])
+    def test_nonholonomic_constraints_invalid(self, _filled_system_setup, args,
+                                              kwargs):
+        with pytest.raises(ValueError):
+            self.system.add_nonholonomic_constraints(*args, **kwargs)
         self._filled_system_check()
