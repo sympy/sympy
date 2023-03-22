@@ -359,8 +359,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         This file contains all the definitions of the routines in c code and
         refers to the header file.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         routines
             List of Routine instances
         f
@@ -880,8 +880,8 @@ class UfuncifyCodeWrapper(CodeWrapper):
 
         This file contains all the definitions of the routines in c code.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
         routines
             List of Routine instances
         f

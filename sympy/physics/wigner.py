@@ -931,14 +931,16 @@ def dot_rot_grad_Ynm(j, p, l, m, theta, phi):
         \frac{1}{2} (k^2-j^2-l^2+k-j-l)
 
 
-    Arguments
+    Parameters
     =========
 
-    j, p, l, m .... indices in spherical harmonics (expressions or integers)
-    theta, phi .... angle arguments in spherical harmonics
+    j, p, l, m
+        Indices in spherical harmonics (expressions or integers)
+    theta, phi
+        Angle arguments in spherical harmonics
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols
     >>> from sympy.physics.wigner import dot_rot_grad_Ynm

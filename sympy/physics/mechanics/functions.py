@@ -303,8 +303,8 @@ def gravity(acceleration, *bodies):
     Returns a list of gravity forces given the acceleration
     due to gravity and any number of particles or rigidbodies.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
     >>> from sympy.physics.mechanics.functions import gravity
@@ -344,8 +344,8 @@ def center_of_mass(point, *bodies):
     Returns the position vector from the given point to the center of mass
     of the given bodies(particles or rigidbodies).
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy import symbols, S
     >>> from sympy.physics.vector import Point

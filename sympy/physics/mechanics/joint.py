@@ -378,8 +378,8 @@ class Joint(ABC):
             Name of the to be created intermediate frame. The default adds
             "_int_frame" to the name of ``frame``.
 
-        Example
-        =======
+        Examples
+        ========
 
         An intermediate frame, where the X axis of the parent becomes aligned
         with ``parent.y + parent.z`` can be created as follows:

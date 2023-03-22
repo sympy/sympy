@@ -724,8 +724,8 @@ def solve_ics(sols, funcs, constants, ics):
     Returns a dictionary mapping constants to values.
     ``solution.subs(constants)`` will replace the constants in ``solution``.
 
-    Example
-    =======
+    Examples
+    ========
     >>> # From dsolve(f(x).diff(x) - f(x), f(x))
     >>> from sympy import symbols, Eq, exp, Function
     >>> from sympy.solvers.ode.ode import solve_ics

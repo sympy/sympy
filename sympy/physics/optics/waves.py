@@ -41,8 +41,8 @@ class TWave(Expr):
     and :math:`\phi` is the phase angle of the wave.
 
 
-    Arguments
-    =========
+    Parameters
+    ==========
 
     amplitude : Sympifyable
         Amplitude of the wave.
