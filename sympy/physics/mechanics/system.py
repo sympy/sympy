@@ -146,6 +146,13 @@ class System(_Methods):
         """Tuple of all bodies that have been added to the system."""
         return tuple(self._bodies)
 
+    @bodies.setter
+    @_reset_eom_method
+    def bodies(self, bodies):
+        bodies = System._objects_to_list(bodies)
+        self._check_objects(bodies, [], BodyBase, 'Bodies', 'bodies')
+        self._bodies = bodies
+
     @property
     def joints(self):
         """Tuple of all joints that have been added to the system."""
@@ -155,6 +162,12 @@ class System(_Methods):
     def loads(self):
         """Tuple of loads that have been applied on the system."""
         return tuple(self._loads)
+
+    @loads.setter
+    @_reset_eom_method
+    def loads(self, loads):
+        loads = System._objects_to_list(loads)
+        self._loads = [_parse_load(load) for load in loads]
 
     @property
     def q(self):
@@ -171,20 +184,44 @@ class System(_Methods):
         """Matrix of the independent generalized coordinates."""
         return self._q_ind
 
+    @q_ind.setter
+    @_reset_eom_method
+    def q_ind(self, q_ind):
+        self._q_ind, self._q_dep = self._parse_coordinates(
+            self._objects_to_list(q_ind), True, [], self.q_dep, True)
+
     @property
     def q_dep(self):
         """Matrix of the dependent generalized coordinates."""
         return self._q_dep
+
+    @q_dep.setter
+    @_reset_eom_method
+    def q_dep(self, q_dep):
+        self._q_ind, self._q_dep = self._parse_coordinates(
+            self._objects_to_list(q_dep), False, self.q_ind, [], True)
 
     @property
     def u_ind(self):
         """Matrix of the independent generalized speeds."""
         return self._u_ind
 
+    @u_ind.setter
+    @_reset_eom_method
+    def u_ind(self, u_ind):
+        self._u_ind, self._u_dep = self._parse_coordinates(
+            self._objects_to_list(u_ind), True, [], self.u_dep, False)
+
     @property
     def u_dep(self):
         """Matrix of the dependent generalized speeds."""
         return self._u_dep
+
+    @u_dep.setter
+    @_reset_eom_method
+    def u_dep(self, u_dep):
+        self._u_ind, self._u_dep = self._parse_coordinates(
+            self._objects_to_list(u_dep), False, self.u_ind, [], False)
 
     @property
     def kdes(self):
@@ -192,15 +229,36 @@ class System(_Methods):
         between the generalized coordinates and the generalized speeds."""
         return self._kdes
 
+    @kdes.setter
+    @_reset_eom_method
+    def kdes(self, kdes):
+        kdes = System._objects_to_list(kdes)
+        self._kdes = self._parse_expressions(
+            kdes, [], 'kinematic differential equations')
+
     @property
     def holonomic_constraints(self):
         """Matrix with the holonomic constraints as rows."""
         return self._hol_coneqs
 
+    @holonomic_constraints.setter
+    @_reset_eom_method
+    def holonomic_constraints(self, constraints):
+        constraints = System._objects_to_list(constraints)
+        self._hol_coneqs = self._parse_expressions(
+            constraints, [], 'holonomic constraints')
+
     @property
     def nonholonomic_constraints(self):
         """Matrix with the nonholonomic constraints as rows."""
         return self._nonhol_coneqs
+
+    @nonholonomic_constraints.setter
+    @_reset_eom_method
+    def nonholonomic_constraints(self, constraints):
+        constraints = System._objects_to_list(constraints)
+        self._nonhol_coneqs = self._parse_expressions(
+            constraints, [], 'nonholonomic constraints')
 
     @property
     def eom_method(self):
