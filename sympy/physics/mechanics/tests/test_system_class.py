@@ -117,9 +117,8 @@ class TestSystem:
         (q[:3], {'independent': [True, False, True]}, [q[0], q[2]], [q[1]],
          [q[0], q[2], q[1]]),
     ])
-    def test_coordinates_simple(self, _empty_system_setup, args, kwargs,
+    def test_coordinates(self, _empty_system_setup, args, kwargs,
                                 exp_q_ind, exp_q_dep, exp_q):
-        self._empty_system_check()
         # Test add_coordinates
         self.system.add_coordinates(*args, **kwargs)
         assert self.system.q_ind[:] == exp_q_ind
@@ -155,9 +154,8 @@ class TestSystem:
         (u[:3], {'independent': [True, False, True]}, [u[0], u[2]], [u[1]],
          [u[0], u[2], u[1]]),
     ])
-    def test_speeds_simple(self, _empty_system_setup, args, kwargs, exp_u_ind,
+    def test_speeds(self, _empty_system_setup, args, kwargs, exp_u_ind,
                            exp_u_dep, exp_u):
-        self._empty_system_check()
         # Test add_speeds
         self.system.add_speeds(*args, **kwargs)
         assert self.system.u_ind[:] == exp_u_ind
@@ -193,3 +191,27 @@ class TestSystem:
         getattr(self.system, add_func)(*args, **kwargs)
         assert list(getattr(self.system, prop)[:]) == list(args)
 
+    @pytest.mark.parametrize('args, kwargs, exp_kdes', [
+        ((u[4] - qd[4], u[5] - qd[5]), {},
+         [ui - qdi for ui, qdi in zip(u[:6], qd[:6])]),
+    ])
+    def test_kdes(self, _filled_system_setup, args, kwargs, exp_kdes):
+        # Test add_speeds
+        self.system.add_kdes(*args, **kwargs)
+        self._filled_system_check(exclude=('kdes',))
+        assert self.system.kdes[:] == exp_kdes
+        # Test setter for kdes
+        self.system.kdes = exp_kdes
+        self._filled_system_check(exclude=('kdes',))
+        assert self.system.kdes[:] == exp_kdes
+
+    @pytest.mark.parametrize('args, kwargs', [
+        ((u[0] - qd[0], u[4] - qd[4]), {}),
+        ((-(u[0] - qd[0]), u[4] - qd[4]), {}),
+        (([u[0] - qd[0], u[4] - qd[4]]), {}),
+        (([u[0] - u[0], u[4] - qd[4]]), {}),
+    ])
+    def test_kdes_invalid(self, _filled_system_setup, args, kwargs):
+        with pytest.raises(ValueError):
+            self.system.add_kdes(*args, **kwargs)
+        self._filled_system_check()
