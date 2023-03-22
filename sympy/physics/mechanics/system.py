@@ -11,8 +11,20 @@ from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.kane import KanesMethod
 from sympy.physics.mechanics.lagrange import LagrangesMethod
+from functools import wraps
 
 __all__ = ['System', 'SymbolicSystem']
+
+
+def _reset_eom_method(method):
+    """Decorator to reset the eom_method if a property is changed."""
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self._eom_method = None
+        return method(self, *args, **kwargs)
+
+    return wrapper
 
 
 class System(_Methods):
@@ -263,6 +275,7 @@ class System(_Methods):
         return Matrix(1, len(old_expressions) + len(new_expressions),
                       old_expressions + new_expressions).T
 
+    @_reset_eom_method
     def add_coordinates(self, *coordinates, independent=True):
         """Add generalized coordinate(s) to the system.
 
@@ -280,6 +293,7 @@ class System(_Methods):
         self._q_ind, self._q_dep = self._parse_coordinates(
             coordinates, independent, self.q_ind, self.q_dep, True)
 
+    @_reset_eom_method
     def add_speeds(self, *speeds, independent=True):
         """Add generalized speed(s) to the system.
 
@@ -296,6 +310,7 @@ class System(_Methods):
         self._u_ind, self._u_dep = self._parse_coordinates(
             speeds, independent, self.u_ind, self.u_dep, False)
 
+    @_reset_eom_method
     def add_kdes(self, *kdes):
         """Add kinematic differential equation(s) to the system.
 
@@ -310,6 +325,7 @@ class System(_Methods):
             kdes, self.kdes, 'kinematic differential equations',
             check_negatives=True)
 
+    @_reset_eom_method
     def add_holonomic_constraints(self, *constraints):
         """Add holonomic constraint(s) to the system.
 
@@ -324,6 +340,7 @@ class System(_Methods):
             constraints, self._hol_coneqs, 'holonomic constraints',
             check_negatives=True)
 
+    @_reset_eom_method
     def add_nonholonomic_constraints(self, *constraints):
         """Add nonholonomic constraint(s) to the system.
 
@@ -338,6 +355,7 @@ class System(_Methods):
             constraints, self._nonhol_coneqs, 'nonholonomic constraints',
             check_negatives=True)
 
+    @_reset_eom_method
     def add_bodies(self, *bodies):
         """Add body(ies) to the system.
 
@@ -351,6 +369,7 @@ class System(_Methods):
         self._check_objects(bodies, self.bodies, BodyBase, 'Bodies', 'bodies')
         self._bodies.extend(bodies)
 
+    @_reset_eom_method
     def add_loads(self, *loads):
         """Add load(s) to the system.
 
@@ -364,6 +383,7 @@ class System(_Methods):
         loads = [_parse_load(load) for load in loads]  # Checks the loads
         self._loads.extend(loads)
 
+    @_reset_eom_method
     def add_joints(self, *joints):
         """Add joint(s) to the system.
 
