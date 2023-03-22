@@ -1,5 +1,5 @@
 import pytest
-from sympy.physics.mechanics import System, ReferenceFrame, Point
+from sympy.physics.mechanics import System, ReferenceFrame, Point, RigidBody
 
 
 class TestSystem:
@@ -33,3 +33,11 @@ class TestSystem:
         else:
             assert system.frame == frame
         self._empty_system(system)
+
+    def test_from_newtonian(self):
+        rb = RigidBody('body')
+        system = System.from_newtonian(rb)
+        assert system.origin == rb.masscenter
+        assert system.frame == rb.frame
+        self._empty_system(system, exclude=('bodies',))
+        system.bodies = (rb,)
