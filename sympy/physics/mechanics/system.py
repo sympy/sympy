@@ -442,6 +442,61 @@ class System(_Methods):
         self._loads.extend(loads)
 
     @_reset_eom_method
+    def remove_load(self, location):
+        """Remove the loads applied about a point or frame.
+
+        Parameters
+        ==========
+
+        location : Point or ReferenceFrame or Particle or RigidBody
+            Location about which the loads should be removed. If a body is
+            provided then the loads acting upon its center of mass and
+            associated frame are removed.
+
+        Returns
+        =======
+
+        tuple of Force and Torque
+            The removed loads.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import RigidBody, System
+        >>> system = System()
+        >>> rb = RigidBody('rb')
+        >>> system.apply_force(rb, system.x)
+        >>> system.apply_torque(rb, system.z)
+        >>> system.loads
+        ((rb_masscenter, inertial_frame.x), (rb_frame, inertial_frame.z))
+        >>> system.remove_load(rb.masscenter)
+        ((rb_masscenter, inertial_frame.x),)
+        >>> system.loads
+        ((rb_frame, inertial_frame.z),)
+
+        """
+        if isinstance(location, BodyBase):
+            removed_loads = []
+            removed_loads.extend(self.remove_load(location.masscenter))
+            if hasattr(location, 'frame'):  # Particle has no frame
+                removed_loads.extend(self.remove_load(location.frame))
+            return tuple(removed_loads)
+        removed_loads = []
+        updated_loads_list = []
+        for ld in self._loads:
+            if ld.location == location:
+                removed_loads.append(ld)
+            else:
+                updated_loads_list.append(ld)
+        self._loads = updated_loads_list
+        return tuple(removed_loads)
+
+    @_reset_eom_method
+    def clear_loads(self):
+        """Remove all loads from the system"""
+        self._loads = []
+
+    @_reset_eom_method
     def add_joints(self, *joints):
         """Add joint(s) to the system.
 
