@@ -406,3 +406,27 @@ class TestSystem:
         assert system.u_dep[:] == []
         pytest.raises(ValueError, lambda: system.add_joints(J2))
         pytest.raises(TypeError, lambda: system.add_joints(rb1))
+
+    @pytest.mark.parametrize('name, joint_index', [
+        ('J1', 0),
+        ('J2', 1),
+        ('not_existing', None),
+    ])
+    def test_get_joint(self, _filled_system_setup, name, joint_index):
+        joint = self.system.get_joint(name)
+        if joint_index is None:
+            assert joint is None
+        else:
+            assert joint == self.joints[joint_index]
+
+    @pytest.mark.parametrize('name, body_index', [
+        ('rb1', 0),
+        ('rb3', 2),
+        ('not_existing', None),
+    ])
+    def test_get_body(self, _filled_system_setup, name, body_index):
+        body = self.system.get_body(name)
+        if body_index is None:
+            assert body is None
+        else:
+            assert body == self.bodies[body_index]
