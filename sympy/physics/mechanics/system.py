@@ -51,6 +51,8 @@ class System(_Methods):
         Matrix of the kinematic differential equations.
     bodies : tuple of BodyBase subclasses
         Tuple of all bodies that make up the system.
+    joints : tuple of Joint
+        Tuple of all joints that connect bodies in the system.
     loads : tuple of LoadBase subclasses
         Tuple of all loads that have been applied to the system.
     holonomic_constraints : Matrix
@@ -82,6 +84,7 @@ class System(_Methods):
         self._hol_coneqs = Matrix(1, 0, []).T
         self._nonhol_coneqs = Matrix(1, 0, []).T
         self._bodies = []
+        self._joints = []
         self._loads = []
         self._eom_method = None
 
@@ -99,6 +102,11 @@ class System(_Methods):
     def bodies(self):
         """Tuple of all bodies that have been added to the system."""
         return tuple(self._bodies)
+
+    @property
+    def joints(self):
+        """Tuple of all joints that have been added to the system."""
+        return tuple(self._joints)
 
     @property
     def loads(self):
@@ -324,6 +332,49 @@ class System(_Methods):
         """
         loads = [_parse_load(load) for load in loads]  # Checks the loads
         self._loads.extend(loads)
+
+    def add_joints(self, *joints):
+        """Add joint(s) to the system.
+
+        Explanation
+        ===========
+
+        This methods adds one or more joints to the system including its
+        associated objects, i.e. generalized coordinates, generalized speeds,
+        kinematic differential equations and the bodies.
+
+        Parameters
+        ==========
+
+        *joints : subclass of Joint
+            One or more joints.
+
+        Notes
+        =====
+
+        For the generalized coordinates, generalized speeds and bodies it is
+        checked whether they are already known by the system instance. If they
+        are, then they are not added. The kinematic differential equations are
+        however always added to the system, so do not also add those manually
+        beforehand.
+
+        """
+        self._check_objects(joints, self.joints, Joint, 'Joints', 'joints')
+        self._joints.extend(joints)
+        coordinates, speeds, kdes, bodies = (OrderedSet() for _ in range(4))
+        for joint in joints:
+            coordinates.update(joint.coordinates)
+            speeds.update(joint.speeds)
+            kdes.update(joint.kdes)
+            bodies.update((joint.parent, joint.child))
+        coordinates = coordinates.difference(self.q)
+        speeds = speeds.difference(self.u)
+        kdes = kdes.difference(self.kdes[:] + (-self.kdes)[:])
+        bodies = bodies.difference(self.bodies)
+        self.add_coordinates(*tuple(coordinates))
+        self.add_speeds(*tuple(speeds))
+        self.add_kdes(*(kde for kde in tuple(kdes) if not kde == 0))
+        self.add_bodies(*tuple(bodies))
 
     def _form_eoms(self):
         return self.form_eoms()
