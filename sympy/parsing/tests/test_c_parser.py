@@ -2507,7 +2507,7 @@ if cin:
                     )
                 )
             )
-        
+
         assert res19[0] == FunctionDefinition(
             NoneToken(),
             name=String('func'),
