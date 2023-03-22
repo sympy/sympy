@@ -269,13 +269,13 @@ if cin:
             try:
                 children = node.get_children()
                 child = next(children)
-                
+
                 #ignoring namespace and type details for the variable
                 while child.kind == cin.CursorKind.NAMESPACE_REF or child.kind == cin.CursorKind.TYPE_REF:
                     child = next(children)
 
                 val = self.transform(child)
-                
+
                 supported_rhs = [
                     cin.CursorKind.INTEGER_LITERAL,
                     cin.CursorKind.FLOATING_LITERAL,
@@ -670,7 +670,7 @@ if cin:
             """
             expr = []
             children = node.get_children()
-            
+
             for child in children:
                 expr.append(self.transform(child))
             return expr
