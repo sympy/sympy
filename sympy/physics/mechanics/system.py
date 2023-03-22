@@ -834,6 +834,126 @@ class System(_Methods):
         differential equations in explicit or implicit form."""
         return self.eom_method.forcing_full
 
+    def validate_system(self, eom_method=KanesMethod, check_duplicates=False):
+        """Validates the system using some basic checks.
+
+        Explanation
+        ===========
+
+        This method validates the system based on the following checks:
+
+        - The number of dependent generalized coordinates should equal the
+          number of holonomic constraints.
+        - All generalized coordinates defined by the joints should also be known
+          to the system.
+        - If ``KanesMethod`` is used as a ``eom_method``:
+            - All generalized speeds and kinematic differential equations
+              defined by the joints should also be known to the system.
+            - The number of dependent generalized speeds should equal the number
+              of velocity constraints.
+            - The number of generalized coordinates should be less than or equal
+              to the number of generalized speeds.
+            - The number of generalized coordinates should equal the number of
+              kinematic differential equations.
+        - If ``LagrangesMethod`` is used as ``eom_method``:
+            - There should not be any generalized speeds that are not
+              derivatives of the generalized coordinates (this includes the
+              generalized speeds defined by the joints).
+
+        Parameters
+        ==========
+
+        eom_method : class
+            Backend class that will be used for forming the equations of motion.
+            There are different checks for the different backends. The default
+            is ``KanesMethod``.
+        check_duplicates : bool
+            Boolean whether the system should be checked for duplicate
+            definitions. The default is False, because duplicates are already
+            checked when adding objects to the system.
+
+        Notes
+        =====
+
+        This method is not guaranteed to be backwards compatible as it may
+        improve over time. The method can become both more and less strict in
+        certain areas. However a well-defined system should always pass all
+        these tests.
+
+        """
+        msgs = []
+        # Save some data in variables
+        n_hc = self.holonomic_constraints.shape[0]
+        n_nhc = self.nonholonomic_constraints.shape[0]
+        n_q_dep, n_u_dep = self.q_dep.shape[0], self.u_dep.shape[0]
+        q_set, u_set = set(self.q), set(self.u)
+        n_q, n_u = len(q_set), len(u_set)
+        # Check number of holonomic constraints
+        if n_q_dep != n_hc:
+            msgs.append(f'The number of dependent generalized coordinates '
+                        f'{n_q_dep} should be equal to the number of holonomic '
+                        f'constraints {n_hc}.')
+        # Check if all joint coordinates and speeds are present
+        missing_q = set()
+        for joint in self.joints:
+            missing_q.update(set(joint.coordinates).difference(q_set))
+        if missing_q:
+            msgs.append(f'The generalized coordinates {missing_q} used in '
+                        f'joints are not added to the system.')
+        # Method dependent checks
+        if issubclass(eom_method, KanesMethod):
+            n_kdes = len(self.kdes)
+            missing_kdes, missing_u = set(), set()
+            for joint in self.joints:
+                missing_u.update(set(joint.speeds).difference(u_set))
+                missing_kdes.update(set(joint.kdes).difference(
+                    self.kdes[:] + (-self.kdes)[:]))
+            if missing_u:
+                msgs.append(f'The generalized speeds {missing_u} used in '
+                            f'joints are not added to the system.')
+            if missing_kdes:
+                msgs.append(f'The kinematic differential equations '
+                            f'{missing_kdes} used in joints are not added to '
+                            f'the system.')
+            if n_u_dep != n_hc + n_nhc:
+                msgs.append(f'The number of dependent generalized speeds '
+                            f'{n_u_dep} should be equal to the number of '
+                            f'velocity constraints {n_hc + n_nhc}.')
+            if n_q > n_u:
+                msgs.append(f'The number of generalized coordinates {n_q} '
+                            f'should be less than or equal to the number of '
+                            f'generalized speeds {n_u}.')
+            if n_u != n_kdes:
+                msgs.append(f'The number of generalized speeds {n_u} should be '
+                            f'equal to the number of kinematic differential '
+                            f'equations {n_kdes}.')
+        elif issubclass(eom_method, LagrangesMethod):
+            not_qdots = set(self.u).difference(self.q.diff(dynamicsymbols._t))
+            for joint in self.joints:
+                not_qdots.update(set(
+                    joint.speeds).difference(self.q.diff(dynamicsymbols._t)))
+            if not_qdots:
+                msgs.append(f'The generalized speeds {not_qdots} are not '
+                            f'supported by this method. Only derivatives of the'
+                            f' generalized coordinates are supported. If these '
+                            f'symbols are used in your expressions, then this '
+                            f'will result in wrong equations of motion.')
+        else:
+            raise NotImplementedError(f'{eom_method} has not been implemented.')
+        if check_duplicates:  # Should be redundant
+            duplicates_to_check = [('generalized coordinates', self.q),
+                                   ('generalized speeds', self.u),
+                                   ('bodies', self.bodies),
+                                   ('joints', self.joints)]
+            for name, lst in duplicates_to_check:
+                seen = set()
+                duplicates = {x for x in lst if x in seen or seen.add(x)}
+                if duplicates:
+                    msgs.append(f'The {name} {duplicates} exist multiple times '
+                                f'within the system.')
+        if msgs:
+            raise ValueError('\n'.join(msgs))
+
 
 class SymbolicSystem:
     """SymbolicSystem is a class that contains all the information about a
