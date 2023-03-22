@@ -3,7 +3,7 @@ import pytest
 from sympy.core.backend import ImmutableMatrix, symbols
 from sympy.physics.mechanics import (
     System, ReferenceFrame, Point, RigidBody, Particle, dynamicsymbols,
-    PinJoint, PrismaticJoint, Force, Torque)
+    PinJoint, PrismaticJoint, Force, Torque, LagrangesMethod, KanesMethod)
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
@@ -11,7 +11,7 @@ qd = dynamicsymbols('q:6', 1)  # type: ignore
 u = dynamicsymbols('u:6')  # type: ignore
 
 
-class TestSystem:
+class TestSystemBase:
     @pytest.fixture()
     def _empty_system_setup(self):
         self.system = System(Point('origin'), ReferenceFrame('frame'))
@@ -29,11 +29,9 @@ class TestSystem:
         if 'eom_method' not in exclude:
             assert self.system.eom_method is None
 
-    def test_empty_system(self, _empty_system_setup):
-        self._empty_system_check()
-
-    @pytest.fixture()
-    def _filled_system_setup(self, _empty_system_setup):
+    def _create_filled_system(self, with_speeds=True):
+        self.system = System(Point('origin'), ReferenceFrame('frame'))
+        u = dynamicsymbols('u:6') if with_speeds else qd
         self.bodies = symbols('rb1:5', cls=RigidBody)
         self.joints = (
             PinJoint('J1', self.bodies[0], self.bodies[1], q[0], u[0]),
@@ -43,11 +41,25 @@ class TestSystem:
         self.system.add_joints(*self.joints)
         self.system.add_coordinates(q[3], independent=[False])
         self.system.add_speeds(u[3], independent=False)
-        self.system.add_kdes(u[3] - qd[3])
+        if with_speeds:
+            self.system.add_kdes(u[3] - qd[3])
         self.system.add_holonomic_constraints(q[2] - q[0] + q[1])
         self.system.add_nonholonomic_constraints(u[3] - qd[1] + u[2])
         self.system.u_ind = u[:2]
         self.system.u_dep = u[2:4]
+        self.q_ind, self.q_dep = self.system.q_ind[:], self.system.q_dep[:]
+        self.u_ind, self.u_dep = self.system.u_ind[:], self.system.u_dep[:]
+        self.kdes = self.system.kdes[:]
+        self.hc = self.system.holonomic_constraints[:]
+        self.nhc = self.system.nonholonomic_constraints[:]
+
+    @pytest.fixture()
+    def _filled_system_setup(self):
+        self._create_filled_system(with_speeds=True)
+
+    @pytest.fixture()
+    def _filled_system_setup_no_speeds(self):
+        self._create_filled_system(with_speeds=False)
 
     def _filled_system_check(self, exclude=()):
         assert 'q_ind' in exclude or self.system.q_ind[:] == q[:3]
@@ -68,8 +80,15 @@ class TestSystem:
         assert ('joints' in exclude or
                 self.system.joints == tuple(self.joints))
 
+
+class TestSystem(TestSystemBase):
+    def test_empty_system(self, _empty_system_setup):
+        self._empty_system_check()
+        self.system.validate_system()
+
     def test_filled_system(self, _filled_system_setup):
         self._filled_system_check()
+        self.system.validate_system()
 
     @pytest.mark.parametrize('origin', [None, Point('origin')])
     @pytest.mark.parametrize('frame', [None, ReferenceFrame('frame')])
@@ -347,9 +366,9 @@ class TestSystem:
                          (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
                          (N, N.z))
         assert system.loads == (
-        (rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
-        (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
-        (N, N.z))
+            (rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
+            (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+            (N, N.z))
         assert system.remove_load(rb) == ((rb.masscenter, N.x), (rb.frame, N.x))
         assert system.loads == ((pnt, N.z), (p.masscenter, N.z), (pnt, N.x),
                                 (N, N.x), (N, N.y), (N, N.z))
@@ -430,3 +449,75 @@ class TestSystem:
             assert body is None
         else:
             assert body == self.bodies[body_index]
+
+
+class TestValidateSystem(TestSystemBase):
+    def test_only_kanes_valid(self, _filled_system_setup):
+        self.system.validate_system(KanesMethod)
+        # Test Lagrange should fail due to the usage of generalized speeds
+        with pytest.raises(ValueError):
+            self.system.validate_system(LagrangesMethod)
+
+    @pytest.mark.parametrize('method, with_speeds', [
+        (KanesMethod, True), (LagrangesMethod, False)])
+    def test_missing_joint_coordinate(self, method, with_speeds):
+        self._create_filled_system(with_speeds=with_speeds)
+        self.system.q_ind = self.q_ind[1:]
+        self.system.u_ind = self.u_ind[:-1]
+        self.system.kdes = self.kdes[:-1]
+        pytest.raises(ValueError, lambda: self.system.validate_system(method))
+
+    def test_missing_joint_speed(self, _filled_system_setup):
+        self.system.q_ind = self.q_ind[:-1]
+        self.system.u_ind = self.u_ind[1:]
+        self.system.kdes = self.kdes[:-1]
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+
+    def test_missing_joint_kdes(self, _filled_system_setup):
+        self.system.kdes = self.kdes[1:]
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+
+    def test_negative_joint_kdes(self, _filled_system_setup):
+        self.system.kdes = [-self.kdes[0]] + self.kdes[1:]
+        self.system.validate_system()
+
+    @pytest.mark.parametrize('method, with_speeds', [
+        (KanesMethod, True), (LagrangesMethod, False)])
+    def test_missing_holonomic_constraint(self, method, with_speeds):
+        self._create_filled_system(with_speeds=with_speeds)
+        self.system.holonomic_constraints = []
+        self.system.nonholonomic_constraints = self.nhc + [
+            self.u_ind[1] - self.u_dep[0] + self.u_ind[0]]
+        pytest.raises(ValueError, lambda: self.system.validate_system(method))
+        self.system.q_dep = []
+        self.system.q_ind = self.q_ind + self.q_dep
+        self.system.validate_system(method)
+
+    def test_missing_nonholonomic_constraint(self, _filled_system_setup):
+        self.system.nonholonomic_constraints = []
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+        self.system.u_dep = self.u_dep[1]
+        self.system.u_ind = self.u_ind + [self.u_dep[0]]
+        self.system.validate_system()
+
+    def test_number_of_coordinates_speeds(self, _filled_system_setup):
+        # Test more speeds than coordinates
+        self.system._joints = self.joints[:-1]
+        self.system.q_ind = self.q_ind[:-1]
+        self.system.validate_system()
+        # Test more coordinates than speeds
+        self.system.q_ind = self.q_ind
+        self.system.u_ind = self.u_ind[:-1]
+        self.system.kdes = self.kdes[:-1]
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+
+    def test_number_of_kdes(self, _filled_system_setup):
+        # Test wrong number of kdes
+        self.system.kdes = self.kdes[:-1]
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+        self.system.kdes = self.kdes + [u[2] + u[1] - qd[2]]
+        pytest.raises(ValueError, lambda: self.system.validate_system())
+
+    def test_duplicates(self, _filled_system_setup):
+        # This is basically a redundant feature, which should never fail
+        self.system.validate_system(check_duplicates=True)
