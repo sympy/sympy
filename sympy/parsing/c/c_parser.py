@@ -269,12 +269,13 @@ if cin:
             try:
                 children = node.get_children()
                 child = next(children)
+                
                 #ignoring namespace and type details for the variable
                 while child.kind == cin.CursorKind.NAMESPACE_REF or child.kind == cin.CursorKind.TYPE_REF:
                     child = next(children)
 
                 val = self.transform(child)
-
+                
                 supported_rhs = [
                     cin.CursorKind.INTEGER_LITERAL,
                     cin.CursorKind.FLOATING_LITERAL,
@@ -364,33 +365,17 @@ if cin:
                     "and float are supported")
             body = []
             param = []
-            try:
-                children = node.get_children()
-                child = next(children)
 
-                # If the node has any children, the first children will be the
-                # return type and namespace for the function declaration. These
-                # nodes can be ignored.
-                while child.kind == cin.CursorKind.NAMESPACE_REF or child.kind == cin.CursorKind.TYPE_REF:
-                    child = next(children)
-
-
-                # Subsequent nodes will be the parameters for the function.
-                try:
-                    while True:
-                        decl = self.transform(child)
-                        if (child.kind == cin.CursorKind.PARM_DECL):
-                            param.append(decl)
-                        elif (child.kind == cin.CursorKind.COMPOUND_STMT):
-                            for val in decl:
-                                body.append(val)
-                        else:
-                            body.append(decl)
-                        child = next(children)
-                except StopIteration:
-                    pass
-            except StopIteration:
-                pass
+            # Subsequent nodes will be the parameters for the function.
+            for child in node.get_children():
+                decl = self.transform(child)
+                if child.kind == cin.CursorKind.PARM_DECL:
+                    param.append(decl)
+                elif child.kind == cin.CursorKind.COMPOUND_STMT:
+                    for val in decl:
+                        body.append(val)
+                else:
+                    body.append(decl)
 
             if body == []:
                 function = FunctionPrototype(
@@ -655,9 +640,9 @@ if cin:
             try:
                 for child in children:
                     arg = self.transform(child)
-                    if (child.kind == cin.CursorKind.INTEGER_LITERAL):
+                    if child.kind == cin.CursorKind.INTEGER_LITERAL:
                         param.append(Integer(arg))
-                    elif (child.kind == cin.CursorKind.FLOATING_LITERAL):
+                    elif child.kind == cin.CursorKind.FLOATING_LITERAL:
                         param.append(Float(arg))
                     else:
                         param.append(arg)
@@ -683,13 +668,11 @@ if cin:
                 if the compound statement is empty
 
             """
-            try:
-                expr = []
-                children = node.get_children()
-                for child in children:
-                    expr.append(self.transform(child))
-            except StopIteration:
-                return None
+            expr = []
+            children = node.get_children()
+            
+            for child in children:
+                expr.append(self.transform(child))
             return expr
 
         def transform_decl_stmt(self, node):
