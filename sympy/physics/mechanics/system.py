@@ -35,6 +35,12 @@ class System(_Methods):
         Global origin of the system.
     frame : ReferenceFrame
         Inertial reference frame of the system.
+    x : Vector
+        Unit vector in the x direction of the inertial reference frame.
+    y : Vector
+        Unit vector in the y direction of the inertial reference frame.
+    z : Vector
+        Unit vector in the z direction of the inertial reference frame.
     q : Matrix
         Matrix of all the generalized coordinates.
     u : Matrix
@@ -97,6 +103,21 @@ class System(_Methods):
     def frame(self):
         """Inertial reference frame of the system."""
         return self._frame
+
+    @property
+    def x(self):
+        """Unit vector in the x direction of the inertial reference frame."""
+        return self._frame.x
+
+    @property
+    def y(self):
+        """Unit vector in the y direction of the inertial reference frame."""
+        return self._frame.y
+
+    @property
+    def z(self):
+        """Unit vector in the z direction of the inertial reference frame."""
+        return self._frame.z
 
     @property
     def bodies(self):
