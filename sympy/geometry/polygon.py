@@ -285,21 +285,6 @@ class Polygon(GeometrySet):
             raise ValueError("could not determine Polygon orientation.")
         return ret
 
-
-        # Determine orientation of points
-        # args = self.vertices
-        # cw = self._is_clockwise(args[-1], args[0], args[1])
-
-        # ret = {}
-        # for i in range(len(args)):
-        #     a, b, c = args[i - 2], args[i - 1], args[i]
-        #     ang = Ray(b, a).angle_between(Ray(b, c))
-        #     if cw ^ self._is_clockwise(a, b, c):
-        #         ret[b] = 2*S.Pi - ang
-        #     else:
-        #         ret[b] = ang
-        # return ret
-
     @property
     def ambient_dimension(self):
         return self.vertices[0].ambient_dimension
