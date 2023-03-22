@@ -80,6 +80,130 @@ class System(_Methods):
     eom_method : class
         Backend for forming the equations of motion.
 
+    Examples
+    ========
+
+    In the example below a cart with a pendulum is created. The cart moves along
+    the x axis of the rail and the pendulum rotates about the z axis. The length
+    of the pendulum is ``l`` with the pendulum represented as a particle. To
+    move the cart a time dependent force ``F`` is applied to the cart.
+
+    We first need to import some functions and create some of our variables.
+
+    >>> from sympy import symbols, simplify
+    >>> from sympy.physics.mechanics import (
+    ...     mechanics_printing, dynamicsymbols, RigidBody, Particle,
+    ...     ReferenceFrame, System, PrismaticJoint, PinJoint)
+    >>> mechanics_printing(pretty_print=False)
+    >>> g, l = symbols('g l')
+    >>> F = dynamicsymbols('F')
+
+    The next step is to create bodies. It is also useful to create a frame for
+    locating the particle with respect to the pin joint later on, as a particle
+    does not have a body-fixed frame.
+
+    >>> rail = RigidBody('rail')
+    >>> cart = RigidBody('cart')
+    >>> bob = Particle('bob')
+    >>> bob_frame = ReferenceFrame('bob_frame')
+
+    Initialize system, with the rail as Newtonian reference. The body is also
+    automatically added to the system.
+
+    >>> system = System.from_newtonian(rail)
+    >>> print(system.bodies[0])
+    rail
+
+    Create joints, while immediately also adding them to the system.
+
+    >>> system.add_joints(
+    ...     PrismaticJoint('slider', rail, cart, joint_axis=rail.x),
+    ...     PinJoint('pin', cart, bob, joint_axis=cart.z,
+    ...              child_interframe=bob_frame,
+    ...              child_point=l * bob_frame.y)
+    ... )
+    >>> system.joints
+    (PrismaticJoint: slider  parent: rail  child: cart,
+    PinJoint: pin  parent: cart  child: bob)
+
+    While adding the joints, the associated generalized coordinates, generalized
+    speeds, kinematic differential equations and bodies are also added to the
+    system.
+
+    >>> system.q
+    Matrix([
+    [q_slider],
+    [   q_pin]])
+    >>> system.u
+    Matrix([
+    [u_slider],
+    [   u_pin]])
+    >>> system.kdes
+    Matrix([
+    [u_slider - q_slider'],
+    [      u_pin - q_pin']])
+    >>> [body.name for body in system.bodies]
+    ['rail', 'cart', 'bob']
+
+    With the kinematics established, we can no apply gravity and apply the cart
+    force ``F``.
+
+    >>> system.apply_gravity(-g * system.y)
+    >>> system.apply_force(cart, F * rail.x)
+    >>> system.loads
+    ((rail_masscenter, - g*rail_mass*rail_frame.y), (cart_masscenter, - cart_mass*g*rail_frame.y), (bob_masscenter, - bob_mass*g*rail_frame.y), (cart_masscenter, F*rail_frame.x))
+
+    With the entire system defined, we can now form the equations of motion.
+    Before forming the equations of motion, one can also run some checks to
+    check for possible errors.
+
+    >>> system.validate_system()
+    >>> system.form_eoms()
+    Matrix([
+    [bob_mass*l*u_pin**2*sin(q_pin) - bob_mass*l*cos(q_pin)*u_pin' - (bob_mass + cart_mass)*u_slider' + F],
+    [                   -bob_mass*g*l*sin(q_pin) - bob_mass*l**2*u_pin' - bob_mass*l*cos(q_pin)*u_slider']])
+    >>> simplify(system.mass_matrix)
+    Matrix([
+    [ bob_mass + cart_mass, bob_mass*l*cos(q_pin)],
+    [bob_mass*l*cos(q_pin),         bob_mass*l**2]])
+    >>> system.forcing
+    Matrix([
+    [bob_mass*l*u_pin**2*sin(q_pin) + F],
+    [          -bob_mass*g*l*sin(q_pin)]])
+
+    The complexity of the above example can be increased if we add a constraint
+    to prevent the particle from moving in the horizontal (x) direction. This
+    can be done by adding a holonomic constraint. After which we should also
+    redefine what our (in)dependent generalized coordinates and speeds are. Note
+    that the backend for forming the equations of motion is reset automatically
+    because the system properties are changed in this process.
+
+    >>> type(system.eom_method)
+    <class 'sympy.physics.mechanics.kane.KanesMethod'>
+    >>> system.add_holonomic_constraints(
+    ...     bob.masscenter.pos_from(rail.masscenter).dot(system.x)
+    ... )
+    >>> system.q_ind = system.get_joint('pin').coordinates
+    >>> system.q_dep = system.get_joint('slider').coordinates
+    >>> system.u_ind = system.get_joint('pin').speeds
+    >>> system.u_dep = system.get_joint('slider').speeds
+    >>> type(system.eom_method)
+    <class 'NoneType'>
+
+    With the updated system the equations of motion can be formed again.
+
+    >>> system.validate_system()
+    >>> system.form_eoms()
+    Matrix([[-bob_mass*g*l*sin(q_pin) - bob_mass*l**2*u_pin' - bob_mass*l*cos(q_pin)*u_slider' - l*(bob_mass*l*u_pin**2*sin(q_pin) - bob_mass*l*cos(q_pin)*u_pin' - (bob_mass + cart_mass)*u_slider')*cos(q_pin) - l*F*cos(q_pin)]])
+    >>> simplify(system.mass_matrix)
+    Matrix([
+    [bob_mass*l**2*sin(q_pin)**2, -cart_mass*l*cos(q_pin)],
+    [               l*cos(q_pin),                       1]])
+    >>> simplify(system.forcing)
+    Matrix([
+    [-l*(bob_mass*g*sin(q_pin) + bob_mass*l*u_pin**2*sin(2*q_pin)/2 + F*cos(q_pin))],
+    [                                                         l*u_pin**2*sin(q_pin)]])
+
     """
 
     def __init__(self, origin=None, frame=None):
