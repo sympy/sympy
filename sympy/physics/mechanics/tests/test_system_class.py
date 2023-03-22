@@ -3,7 +3,7 @@ import pytest
 from sympy.core.backend import ImmutableMatrix, symbols
 from sympy.physics.mechanics import (
     System, ReferenceFrame, Point, RigidBody, Particle, dynamicsymbols,
-    PinJoint, PrismaticJoint, Force)
+    PinJoint, PrismaticJoint, Force, Torque)
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
@@ -309,3 +309,100 @@ class TestSystem:
         with pytest.raises(TypeError):
             self.system.bodies = (rb1, rb2, p1, p2, symb)
         assert self.system.bodies == (p2,)
+
+    def test_add_loads(self):
+        system = System()
+        N, A = ReferenceFrame('N'), ReferenceFrame('A')
+        rb1, rb2 = RigidBody('rb1', frame=N), RigidBody('rb2', frame=A)
+        mc1, mc2 = Point('mc1'), Point('mc2')
+        p1, p2 = Particle('p1', mc1), Particle('p2', mc2)
+        system.add_loads(Torque(rb1, N.x), (mc1, A.x), Force(p1, A.x))
+        assert system.loads == ((N, N.x), (mc1, A.x), (mc1, A.x))
+        system.loads = [(A, A.x)]
+        assert system.loads == ((A, A.x),)
+        system.apply_force(rb1, N.x, rb2)
+        assert system.loads == ((A, A.x), (rb1.masscenter, N.x),
+                                (rb2.masscenter, -N.x))
+        assert system.remove_load(rb1.masscenter) == ((rb1.masscenter, N.x),)
+        assert system.remove_load(rb2.masscenter) == ((rb2.masscenter, -N.x),)
+        assert system.remove_load(rb2.masscenter) == ()
+        system.apply_torque(rb1, N.x, rb2)
+        assert system.loads == ((A, A.x), (N, N.x), (A, -N.x))
+        system.apply_force(p2, A.x)
+        assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
+        pytest.raises(ValueError, lambda: system.add_loads((N, N.x, N.y)))
+        with pytest.raises(TypeError):
+            system.loads = (N, N.x)
+        assert system.loads == ((A, A.x), (N, N.x), (A, -N.x), (mc2, A.x))
+        system.clear_loads()
+        assert system.loads == ()
+
+    def test_remove_load(self):
+        system = System()
+        N = ReferenceFrame('N')
+        pnt = Point('pnt')
+        rb = RigidBody('rb')
+        p = Particle('p')
+        system.add_loads((rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
+                         (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+                         (N, N.z))
+        assert system.loads == (
+        (rb.masscenter, N.x), (rb.frame, N.x), (pnt, N.z),
+        (p.masscenter, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+        (N, N.z))
+        assert system.remove_load(rb) == ((rb.masscenter, N.x), (rb.frame, N.x))
+        assert system.loads == ((pnt, N.z), (p.masscenter, N.z), (pnt, N.x),
+                                (N, N.x), (N, N.y), (N, N.z))
+        assert system.remove_load(p) == ((p.masscenter, N.z),)
+        assert system.loads == ((pnt, N.z), (pnt, N.x), (N, N.x), (N, N.y),
+                                (N, N.z))
+        assert system.remove_load(pnt) == ((pnt, N.z), (pnt, N.x))
+        assert system.loads == ((N, N.x), (N, N.y), (N, N.z))
+        assert system.remove_load(pnt) == ()
+        assert system.remove_load(N) == ((N, N.x), (N, N.y), (N, N.z))
+        assert system.loads == ()
+        assert system.remove_load(N) == ()
+
+    def test_add_joints(self):
+        q1, q2, q3, q4, u1, u2, u3 = dynamicsymbols('q1:5 u1:4')
+        rb1, rb2, rb3, rb4, rb5 = symbols('rb1:6', cls=RigidBody)
+        J1 = PinJoint('J1', rb1, rb2, q1, u1)
+        J2 = PrismaticJoint('J2', rb2, rb3, q2, u2)
+        J3 = PinJoint('J3', rb3, rb4, q3, u3)
+        J_lag = PinJoint('J_lag', rb4, rb5, q4, q4.diff(t))
+        system = System()
+        system.add_joints(J1)
+        assert system.joints == (J1,)
+        assert system.bodies == (rb1, rb2)
+        assert system.q_ind == ImmutableMatrix([q1])
+        assert system.u_ind == ImmutableMatrix([u1])
+        assert system.kdes == ImmutableMatrix([u1 - q1.diff(t)])
+        system.add_bodies(rb4)
+        system.add_coordinates(q3)
+        system.add_kdes(u3 - q3.diff(t))
+        system.add_joints(J3)
+        assert system.joints == (J1, J3)
+        assert system.bodies == (rb1, rb2, rb4, rb3)
+        assert system.q_ind == ImmutableMatrix([q1, q3])
+        assert system.u_ind == ImmutableMatrix([u1, u3])
+        assert system.kdes == ImmutableMatrix(
+            [u1 - q1.diff(t), u3 - q3.diff(t)])
+        system.add_kdes(-(u2 - q2.diff(t)))
+        system.add_joints(J2)
+        assert system.joints == (J1, J3, J2)
+        assert system.bodies == (rb1, rb2, rb4, rb3)
+        assert system.q_ind == ImmutableMatrix([q1, q3, q2])
+        assert system.u_ind == ImmutableMatrix([u1, u3, u2])
+        assert system.kdes == ImmutableMatrix([u1 - q1.diff(t), u3 - q3.diff(t),
+                                               -(u2 - q2.diff(t))])
+        system.add_joints(J_lag)
+        assert system.joints == (J1, J3, J2, J_lag)
+        assert system.bodies == (rb1, rb2, rb4, rb3, rb5)
+        assert system.q_ind == ImmutableMatrix([q1, q3, q2, q4])
+        assert system.u_ind == ImmutableMatrix([u1, u3, u2, q4.diff(t)])
+        assert system.kdes == ImmutableMatrix([u1 - q1.diff(t), u3 - q3.diff(t),
+                                               -(u2 - q2.diff(t))])
+        assert system.q_dep[:] == []
+        assert system.u_dep[:] == []
+        pytest.raises(ValueError, lambda: system.add_joints(J2))
+        pytest.raises(TypeError, lambda: system.add_joints(rb1))
