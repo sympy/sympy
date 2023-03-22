@@ -28,7 +28,7 @@ __all__ = [
 
     'Body',
 
-    'SymbolicSystem',
+    'System', 'SymbolicSystem',
 
     'PinJoint', 'PrismaticJoint', 'CylindricalJoint', 'PlanarJoint',
     'SphericalJoint', 'WeldJoint',
@@ -66,7 +66,7 @@ from .linearize import Linearizer
 
 from .body import Body
 
-from .system import SymbolicSystem
+from .system import System, SymbolicSystem
 
 from .jointsmethod import JointsMethod
 
