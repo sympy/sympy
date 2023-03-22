@@ -140,6 +140,7 @@ class TestSystem:
         ((q[0],), {'independent': False}),
         ((u[0],), {'independent': False}),
         ((u[0], q[5]), {}),
+        ((symbols('a'), q[5]), {}),
     ])
     def test_coordinates_speeds_invalid(self, _filled_system_setup, func, args,
                                         kwargs):
@@ -191,6 +192,26 @@ class TestSystem:
         getattr(self.system, add_func)(*args, **kwargs)
         assert list(getattr(self.system, prop)[:]) == list(args)
 
+    @pytest.mark.parametrize('prop, add_func, value, error', [
+        ('q_ind', 'add_coordinates', symbols('a'), ValueError),
+        ('q_dep', 'add_coordinates', symbols('a'), ValueError),
+        ('u_ind', 'add_speeds', symbols('a'), ValueError),
+        ('u_dep', 'add_speeds', symbols('a'), ValueError),
+        ('kdes', 'add_kdes', 7, TypeError),
+        ('holonomic_constraints', 'add_holonomic_constraints', 7, TypeError),
+        ('nonholonomic_constraints', 'add_nonholonomic_constraints', 7,
+         TypeError),
+        ('bodies', 'add_bodies', symbols('a'), TypeError),
+        ('loads', 'add_loads', symbols('a'), TypeError),
+    ])
+    def test_type_error(self, _filled_system_setup, prop, add_func, value,
+                        error):
+        with pytest.raises(error):
+            getattr(self.system, add_func)(value)
+        with pytest.raises(error):
+            setattr(self.system, prop, value)
+        self._filled_system_check()
+
     @pytest.mark.parametrize('args, kwargs, exp_kdes', [
         ((), {}, [ui - qdi for ui, qdi in zip(u[:4], qd[:4])]),
         ((u[4] - qd[4], u[5] - qd[5]), {},
@@ -235,7 +256,7 @@ class TestSystem:
     @pytest.mark.parametrize('args, kwargs', [
         ((q[2] - q[0] + q[1], q[4] - q[3]), {}),
         ((-(q[2] - q[0] + q[1]), q[4] - q[3]), {}),
-        (([q[0] - q[0], q[4] - q[3]]), {}),
+        ((q[0] - q[0], q[4] - q[3]), {}),
     ])
     def test_holonomic_constraints_invalid(self, _filled_system_setup, args,
                                            kwargs):
@@ -262,6 +283,7 @@ class TestSystem:
     @pytest.mark.parametrize('args, kwargs', [
         ((u[3] - qd[1] + u[2], u[4] - u[3]), {}),
         ((-(u[3] - qd[1] + u[2]), u[4] - u[3]), {}),
+        ((u[0] - u[0], u[4] - u[3]), {}),
         (([u[0] - u[0], u[4] - u[3]]), {}),
     ])
     def test_nonholonomic_constraints_invalid(self, _filled_system_setup, args,
@@ -269,3 +291,21 @@ class TestSystem:
         with pytest.raises(ValueError):
             self.system.add_nonholonomic_constraints(*args, **kwargs)
         self._filled_system_check()
+
+    def test_bodies(self, _filled_system_setup):
+        rb1, rb2 = RigidBody('rb1'), RigidBody('rb2')
+        p1, p2 = Particle('p1'), Particle('p2')
+        self.system.add_bodies(rb1, p1)
+        assert self.system.bodies == (*self.bodies, rb1, p1)
+        self.system.add_bodies(p2)
+        assert self.system.bodies == (*self.bodies, rb1, p1, p2)
+        self.system.bodies = []
+        assert self.system.bodies == ()
+        self.system.bodies = p2
+        assert self.system.bodies == (p2,)
+        symb = symbols('symb')
+        pytest.raises(TypeError, lambda: self.system.add_bodies(symb))
+        pytest.raises(ValueError, lambda: self.system.add_bodies(p2))
+        with pytest.raises(TypeError):
+            self.system.bodies = (rb1, rb2, p1, p2, symb)
+        assert self.system.bodies == (p2,)
