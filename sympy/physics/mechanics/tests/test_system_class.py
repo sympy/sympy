@@ -1,6 +1,10 @@
 import pytest
 
-from sympy.core.backend import ImmutableMatrix, symbols
+from sympy.core.backend import (ImmutableMatrix, symbols, sin, cos, zeros, eye,
+                                _simplify_matrix, sympify)
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
+
 from sympy.physics.mechanics import (
     System, ReferenceFrame, Point, RigidBody, Particle, dynamicsymbols,
     PinJoint, PrismaticJoint, Force, Torque, LagrangesMethod, KanesMethod)
@@ -538,3 +542,140 @@ class TestValidateSystem(TestSystemBase):
         self.system.u_ind = []
         with pytest.raises(ValueError):
             self.system.validate_system(LagrangesMethod)
+
+
+class TestSystemExamples:
+    def test_cart_pendulum_kanes(self):
+        # This example is the same as in the top documentation of System
+        g, l, mc, mp = symbols('g l mc mp')
+        F, qp, qc, up, uc = dynamicsymbols('F qp qc up uc')
+        rail = RigidBody('rail')
+        cart = RigidBody('cart', mass=mc)
+        bob = Particle('bob', mass=mp)
+        bob_frame = ReferenceFrame('bob_frame')
+        system = System.from_newtonian(rail)
+        assert system.bodies == (rail,)
+        assert system.frame == rail.frame
+        assert system.origin == rail.masscenter
+        slider = PrismaticJoint('slider', rail, cart, qc, uc, joint_axis=rail.x)
+        pin = PinJoint('pin', cart, bob, qp, up, joint_axis=cart.z,
+                       child_interframe=bob_frame, child_point=l * bob_frame.y)
+        system.add_joints(slider, pin)
+        assert system.joints == (slider, pin)
+        assert system.get_joint('slider') == slider
+        assert system.get_body('bob') == bob
+        system.apply_gravity(-g * system.y)
+        system.apply_force(cart, F * rail.x)
+        system.validate_system()
+        system.form_eoms()
+        assert isinstance(system.eom_method, KanesMethod)
+        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+            [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
+                == zeros(2, 2))
+        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+            [mp * l * up ** 2 * sin(qp) + F], [-mp * g * l * sin(qp)]]))
+                == zeros(2, 1))
+
+        system.add_holonomic_constraints(
+            sympify(bob.masscenter.pos_from(rail.masscenter).dot(system.x)))
+        assert system.eom_method is None
+        system.q_ind, system.q_dep = qp, qc
+        system.u_ind, system.u_dep = up, uc
+        system.validate_system()
+
+        # Computed solution based on manually solving the constraints
+        subs = {qc: -l * sin(qp),
+                uc: -l * cos(qp) * up,
+                uc.diff(t): l * (up ** 2 * sin(qp) - up.diff(t) * cos(qp))}
+        upd_expected = (
+            (-g * mp * sin(qp) + l * mc * sin(2 * qp) * up ** 2 / 2 -
+             l * mp * sin(2 * qp) * up ** 2 / 2 - F * cos(qp)) /
+            (l * (mc * cos(qp) ** 2 + mp * sin(qp) ** 2)))
+        upd_sol = tuple(solve(system.form_eoms().xreplace(subs),
+                              up.diff(t)).values())[0]
+        assert simplify(upd_sol - upd_expected) == 0
+        assert isinstance(system.eom_method, KanesMethod)
+
+        # Test other output
+        Mk = -ImmutableMatrix([[0, 1], [1, 0]])
+        gk = -ImmutableMatrix([uc, up])
+        Md = ImmutableMatrix([[-l ** 2 * mp * cos(qp) ** 2 + l ** 2 * mp,
+                               l * mp * cos(qp) - l * (mc + mp) * cos(qp)],
+                              [l * cos(qp), 1]])
+        gd = ImmutableMatrix(
+            [[-g * l * mp * sin(qp) - l ** 2 * mp * up ** 2 * sin(qp) * cos(
+                qp) - l * F * cos(qp)], [l * up ** 2 * sin(qp)]])
+        Mm = (Mk.row_join(zeros(2, 2))).col_join(zeros(2, 2).row_join(Md))
+        gm = gk.col_join(gd)
+        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 2)
+        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
+        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(4, 4)
+        assert _simplify_matrix(system.forcing_full - gm) == zeros(4, 1)
+
+    def test_cart_pendulum_lagrange(self):
+        # Lagrange version of test_cart_pendulus_kanes
+        g, l, mc, mp = symbols('g l mc mp')
+        F, qp, qc = dynamicsymbols('F qp qc')
+        qpd, qcd = dynamicsymbols('qp qc', 1)
+        rail = RigidBody('rail')
+        cart = RigidBody('cart', mass=mc)
+        bob = Particle('bob', mass=mp)
+        bob_frame = ReferenceFrame('bob_frame')
+        system = System.from_newtonian(rail)
+        assert system.bodies == (rail,)
+        assert system.frame == rail.frame
+        assert system.origin == rail.masscenter
+        slider = PrismaticJoint('slider', rail, cart, qc, qcd,
+                                joint_axis=rail.x)
+        pin = PinJoint('pin', cart, bob, qp, qpd, joint_axis=cart.z,
+                       child_interframe=bob_frame, child_point=l * bob_frame.y)
+        system.add_joints(slider, pin)
+        assert system.joints == (slider, pin)
+        assert system.get_joint('slider') == slider
+        assert system.get_body('bob') == bob
+        for body in system.bodies:
+            body.potential_energy = body.mass * g * body.masscenter.pos_from(
+                system.origin).dot(system.y)
+        system.apply_force(cart, F * rail.x)
+        system.validate_system(LagrangesMethod)
+        system.form_eoms(LagrangesMethod)
+        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+            [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
+                == zeros(2, 2))
+        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+            [mp * l * qpd ** 2 * sin(qp) + F], [-mp * g * l * sin(qp)]]))
+                == zeros(2, 1))
+
+        system.add_holonomic_constraints(
+            sympify(bob.masscenter.pos_from(rail.masscenter).dot(system.x)))
+        assert system.eom_method is None
+        system.q_ind, system.q_dep = qp, qc
+
+        # Computed solution based on manually solving the constraints
+        subs = {qc: -l * sin(qp),
+                qcd: -l * cos(qp) * qpd,
+                qcd.diff(t): l * (qpd ** 2 * sin(qp) - qpd.diff(t) * cos(qp))}
+        qpdd_expected = (
+            (-g * mp * sin(qp) + l * mc * sin(2 * qp) * qpd ** 2 / 2 -
+             l * mp * sin(2 * qp) * qpd ** 2 / 2 - F * cos(qp)) /
+            (l * (mc * cos(qp) ** 2 + mp * sin(qp) ** 2)))
+        eoms = system.form_eoms(LagrangesMethod)
+        lam1 = system.eom_method.lam_vec[0]
+        lam1_sol = system.eom_method.solve_multipliers()[lam1]
+        qpdd_sol = solve(eoms[0].xreplace({lam1: lam1_sol}).xreplace(subs),
+                         qpd.diff(t))[0]
+        assert simplify(qpdd_sol - qpdd_expected) == 0
+        assert isinstance(system.eom_method, LagrangesMethod)
+
+        # Test other output
+        Md = ImmutableMatrix([[l ** 2 * mp, l * mp * cos(qp), -l * cos(qp)],
+                              [l * mp * cos(qp), mc + mp, -1]])
+        gd = ImmutableMatrix(
+            [[-g * l * mp * sin(qp)], [l * mp * sin(qp) * qpd ** 2 + F]])
+        Mm = (eye(2).row_join(zeros(2, 3))).col_join(zeros(3, 2).row_join(
+            Md.col_join(ImmutableMatrix([l * cos(qp), 1, 0]).T)))
+        gm = ImmutableMatrix([qpd, qcd] + gd[:] + [l * sin(qp) * qpd ** 2])
+        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 3)
+        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
+        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(5, 5)
+        assert _simplify_matrix(system.forcing_full - gm) == zeros(5, 1)
