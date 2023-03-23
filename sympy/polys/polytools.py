@@ -3349,7 +3349,10 @@ class Poly(Basic):
             try:
                 coeff, factors = f.rep.factor_list()
             except DomainError:
-                return S.One, [(f, 1)]
+                if f.degree() == 0:
+                    return f.as_expr(), []
+                else:
+                    return S.One, [(f, 1)]
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
