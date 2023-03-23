@@ -204,6 +204,7 @@ class ForceActuator:
         proportional to both the spring's stiffness and the pathway's length.
 
         >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics._actuator import ForceActuator
         >>> stiffness = Symbol('k')
         >>> spring_force = stiffness * pathway.length
         >>> spring = ForceActuator(spring_force, pathway)
