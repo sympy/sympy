@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from sympy.core.backend import Symbol
+from sympy.core.backend import Symbol, sqrt
 from sympy.core.expr import Expr
 from sympy.physics.mechanics import (
     Point,
@@ -71,5 +71,14 @@ class TestForceActuator:
         expected = [
             (self.pA, self.force * self.N.x),
             (self.pB, - self.force * self.N.x),
+        ]
+        assert actuator.compute_loads() == expected
+
+    def test_compute_loads_2D_pathway(self) -> None:
+        self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
+        actuator = ForceActuator(self.force, self.pathway)
+        expected = [
+            (self.pA, self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pB, - self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
         assert actuator.compute_loads() == expected
