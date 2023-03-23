@@ -6,7 +6,7 @@ from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, _validate_coordinates, Lagrangian)
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.loads import Force, Torque, _parse_load
+from sympy.physics.mechanics.loads import Force, Torque, _parse_load, gravity
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.kane import KanesMethod
@@ -733,6 +733,11 @@ class System(_Methods):
     def clear_loads(self):
         """Remove all loads from the system"""
         self._loads = []
+
+    @_reset_eom_method
+    def apply_gravity(self, acceleration):
+        """Apply gravity to all bodies in the system."""
+        self.add_loads(*gravity(acceleration, *self.bodies))
 
     @_reset_eom_method
     def add_joints(self, *joints):
