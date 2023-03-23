@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from sympy.core.backend import Basic
 from sympy.core.expr import Expr
 from sympy.physics.mechanics import Point, Vector
 from sympy.physics.mechanics._pathway import PathwayBase
@@ -143,7 +144,7 @@ class ForceActuator:
 
     @force.setter
     def force(self, force: Expr) -> None:
-        if not isinstance(force, Expr):
+        if not isinstance(force, Basic):
             msg = (
                 f'Value {repr(force)} passed to `force` was of type '
                 f'{type(force)}, must be {Expr}.'
