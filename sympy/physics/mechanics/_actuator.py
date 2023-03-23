@@ -92,7 +92,7 @@ class ForceActuator:
     >>> from sympy.physics.mechanics._pathway import LinearPathway
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> force = Symbol ('F')
+    >>> force = Symbol('F')
     >>> pA, pB = Point('pA'), Point('pB')
     >>> pA.set_vel(N, 0)
     >>> pB.set_pos(pA, q * N.x)
