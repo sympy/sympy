@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from sympy.core.backend import Symbol, sqrt
+from sympy.core.backend import Matrix, Symbol, sqrt
 from sympy.core.expr import Expr
 from sympy.physics.mechanics import (
+    KanesMethod,
+    Particle,
     Point,
     ReferenceFrame,
     dynamicsymbols,
@@ -105,3 +107,62 @@ class TestForceActuator:
             (self.pB, pI_force),
         ]
         assert actuator.compute_loads() == expected
+
+
+def test_forced_mass_spring_damper_model():
+    r"""A single degree of freedom translational forced mass-spring-damper.
+
+    Notes
+    =====
+
+    This system is well known to have the governing equation:
+
+    .. math::
+        m \ddot{x} = F - k x - c \dot{x}
+
+    where $F$ is an externally applied force, $m$ is the mass of the particle
+    to which the spring and damper are attached, $k$ is the spring's stiffness,
+    $c$ is the dampers damping coefficient, and $x$ is the generalized
+    coordinate representing the system's single (translational) degree of
+    freedom.
+
+    """
+    m = Symbol('m')
+    k = Symbol('k')
+    c = Symbol('c')
+    F = Symbol('F')
+
+    x = dynamicsymbols('x')
+    dx = dynamicsymbols('x', 1)
+    x_dot = dynamicsymbols('x_dot')
+
+    frame = ReferenceFrame('N')
+    origin = Point('pO')
+    origin.set_vel(frame, 0)
+
+    attachment = Point('pA')
+    attachment.set_pos(origin, x * frame.x)
+
+    mass = Particle('mass', attachment, m)
+    pathway = LinearPathway(origin, attachment)
+    stiffness = k * pathway.length  # positive as assumes contractile force
+    spring = ForceActuator(stiffness, pathway)
+    damping = -c * pathway.shortening_velocity  # negative as acts against velocity
+    damper = ForceActuator(damping, pathway)
+
+    kanes_method = KanesMethod(
+        frame,
+        q_ind=[x],
+        u_ind=[x_dot],
+        kd_eqs=[dx - x_dot],
+    )
+    bodies = [mass]
+    loads = [
+        (attachment, F * frame.x),
+        *spring.compute_loads(),
+        *damper.compute_loads(),
+    ]
+    kanes_method.kanes_equations(bodies, loads)
+
+    assert kanes_method.mass_matrix == Matrix([[m]])
+    assert kanes_method.forcing == Matrix([[F - c*x_dot - k*x]])
