@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from sympy.core.backend import Matrix, Symbol, sqrt
+from sympy.core.backend import USE_SYMENGINE, Basic, Matrix, Symbol, sqrt
 from sympy.core.expr import Expr
 from sympy.physics.mechanics import (
     KanesMethod,
@@ -45,7 +45,10 @@ class TestForceActuator:
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
-        assert isinstance(instance.force, Expr)
+        if USE_SYMENGINE:
+            assert isinstance(instance.force, Basic)
+        else:
+            assert isinstance(instance.force, Expr)
 
     def test_invalid_constructor_force_not_expr(self) -> None:
         with pytest.raises(TypeError):
