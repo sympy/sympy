@@ -82,3 +82,26 @@ class TestForceActuator:
             (self.pB, - self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
         assert actuator.compute_loads() == expected
+
+    def test_compute_loads_3D_pathway(self) -> None:
+        self.pB.set_pos(
+            self.pA,
+            self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
+        )
+        actuator = ForceActuator(self.force, self.pathway)
+        length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
+        pO_force = (
+            self.force * self.q1 * self.N.x / length
+            - self.force * self.q2 * self.N.y / length
+            + 2 * self.force * self.q3 * self.N.z / length
+        )
+        pI_force = (
+            - self.force * self.q1 * self.N.x / length
+            + self.force * self.q2 * self.N.y / length
+            - 2 * self.force * self.q3 * self.N.z / length
+        )
+        expected = [
+            (self.pA, pO_force),
+            (self.pB, pI_force),
+        ]
+        assert actuator.compute_loads() == expected
