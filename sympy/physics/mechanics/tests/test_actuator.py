@@ -64,3 +64,12 @@ class TestForceActuator:
     def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
         with pytest.raises(TypeError):
             _ = ForceActuator(self.force, None)  # type: ignore
+
+    def test_compute_loads_static_pathway(self) -> None:
+        self.pB.set_pos(self.pA, 2 * self.N.x)
+        actuator = ForceActuator(self.force, self.pathway)
+        expected = [
+            (self.pA, self.force * self.N.x),
+            (self.pB, - self.force * self.N.x),
+        ]
+        assert actuator.compute_loads() == expected
