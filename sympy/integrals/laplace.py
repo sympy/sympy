@@ -1640,6 +1640,7 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
     # The code below assumes that the poles are sorted in a specific way:
     poles = sorted(poles, key=lambda x: (x[n], x[b] != 0, x[b]))
+    zeros = sorted(zeros, key=lambda x: (x[n], x[b] != 0, x[b]))
     # XXX remove the following before merge
     debugf('[ILT _i_l_i] matched %s', (ma, ))
     debugf('[ILT _i_l_i] poles: %s', (poles, ))
@@ -1683,6 +1684,24 @@ def _inverse_laplace_irrational(fn, s, t, plane):
             if a_.is_positive:
                 result = k_*(1-exp(a_**2*t)*erfc(a_*sqrt(t)))
                 debugf('[ILT _i_l_i] Rule (5) returns %s', (result, ))
+
+    elif len(poles) == 2 and len(zeros) == 1:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                zeros[0][n] == S.Half and zeros[0][m] == 1 and
+                zeros[0][b] == 0):
+            # sqrt(za0*s)/((a0*s+b0)*(a1*sqrt(s)+b1))
+            # == sqrt(za0)/(a0*a1) * s/((s+b0/a0)*(sqrt(s)+b1/a1))
+            a_ = (poles[1][b]/poles[1][a])**2
+            b_ = -poles[0][b]/poles[0][a]
+            k_ = sqrt(zeros[0][a])/poles[0][a]/poles[1][a]/(a_-b_)*constants
+            if a_.is_positive and b_.is_positive:
+                result = k_*(
+                    a_*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) +
+                    sqrt(a_)*sqrt(b_)*exp(b_*t)*erfc(sqrt(b_)*sqrt(t)) -
+                    b_*exp(b_*t))
+                debugf('[ILT _i_l_i] Rule (6) returns %s', (result, ))
 
     elif len(poles) == 3 and len(zeros) == 0:
         if (
