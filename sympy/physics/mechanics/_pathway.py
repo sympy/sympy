@@ -76,6 +76,7 @@ class PathwayBase(ABC):
         pass
 
     def __repr__(self) -> str:
+        """Default representation of a pathway."""
         attachments = ', '.join(str(a) for a in self.attachments)
         return f'{self.__class__.__name__}({attachments})'
 
