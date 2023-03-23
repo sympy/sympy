@@ -12,6 +12,7 @@ from sympy.testing.pytest import raises, slow, warns
 from sympy.core.random import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy.integrals.integrals import integrate
+from sympy.utilities.iterables import rotate_left
 
 
 def feq(a, b):
@@ -80,12 +81,9 @@ def test_polygon():
     p11 = Polygon(Point(0, 0), 1, n=3)
     p12 = Polygon(Point(0, 0), 1, 0, n=3)
     p13 = Polygon(
-        Point(0,0),Point(8,8),
-        Point(23,20),Point(0,20))
-    p14 = Polygon(
-        Point(8,8),Point(23,20),
-        Point(0,20),Point(0,0))
-
+        Point(0, 0),Point(8, 8),
+        Point(23, 20),Point(0, 20))
+    p14 = Polygon(*rotate_left(p13.args, 1))
 
 
     r = Ray(Point(-9, 6.6), Point(-9, 5.5))
@@ -211,9 +209,9 @@ def test_polygon():
 
     # https://github.com/sympy/sympy/issues/24885
     interior_angles_sum = sum(p13.angles.values())
-    assert feq(interior_angles_sum, (len(p13.angles)-2)*pi )
+    assert feq(interior_angles_sum, (len(p13.angles) - 2)*pi )
     interior_angles_sum = sum(p14.angles.values())
-    assert feq(interior_angles_sum, (len(p14.angles)-2)*pi )
+    assert feq(interior_angles_sum, (len(p14.angles) - 2)*pi )
 
     #
     # Triangle
