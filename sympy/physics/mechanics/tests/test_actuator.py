@@ -70,25 +70,25 @@ class TestForceActuator:
         with pytest.raises(TypeError):
             _ = ForceActuator(self.force, None)  # type: ignore
 
-    def test_compute_loads_static_pathway(self) -> None:
+    def test_to_loads_static_pathway(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
         expected = [
             (self.pA, self.force * self.N.x),
             (self.pB, - self.force * self.N.x),
         ]
-        assert actuator.compute_loads() == expected
+        assert actuator.to_loads() == expected
 
-    def test_compute_loads_2D_pathway(self) -> None:
+    def test_to_loads_2D_pathway(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
         expected = [
             (self.pA, self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
             (self.pB, - self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
-        assert actuator.compute_loads() == expected
+        assert actuator.to_loads() == expected
 
-    def test_compute_loads_3D_pathway(self) -> None:
+    def test_to_loads_3D_pathway(self) -> None:
         self.pB.set_pos(
             self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -109,7 +109,7 @@ class TestForceActuator:
             (self.pA, pO_force),
             (self.pB, pI_force),
         ]
-        assert actuator.compute_loads() == expected
+        assert actuator.to_loads() == expected
 
 
 def test_forced_mass_spring_damper_model():
@@ -162,8 +162,8 @@ def test_forced_mass_spring_damper_model():
     bodies = [mass]
     loads = [
         (attachment, F * frame.x),
-        *spring.compute_loads(),
-        *damper.compute_loads(),
+        *spring.to_loads(),
+        *damper.to_loads(),
     ]
     kanes_method.kanes_equations(bodies, loads)
 
