@@ -12,7 +12,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 from sympy.physics.mechanics._actuator import ForceActuator
-from sympy.physics.mechanics._pathway import LinearPathway
+from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
 
 
 class TestForceActuator:
@@ -48,3 +48,19 @@ class TestForceActuator:
     def test_invalid_constructor_force_not_expr(self) -> None:
         with pytest.raises(TypeError):
             _ = ForceActuator(None, self.pathway)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'pathway',
+        [
+            LinearPathway(Point('pA'), Point('pB')),
+        ]
+    )
+    def test_valid_constructor_pathway(self, pathway: PathwayBase) -> None:
+        instance = ForceActuator(self.force, pathway)
+        assert isinstance(instance, ForceActuator)
+        assert hasattr(instance, 'pathway')
+        assert isinstance(instance.pathway, LinearPathway)
+
+    def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
+        with pytest.raises(TypeError):
+            _ = ForceActuator(self.force, None)  # type: ignore
