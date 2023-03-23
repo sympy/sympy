@@ -79,6 +79,11 @@ class ForceActuator:
 
     >>> from sympy.physics.mechanics._actuator import ForceActuator
 
+    This is similarly the case for imports from the ``_pathway.py`` module like
+    ``LinearPathway``.
+
+    >>> from sympy.physics.mechanics._pathway import LinearPathway
+
     To construct an actuator, an expression (or symbol) must be supplied to
     represent the force it can produce, alongside a pathway specifying its line
     of action. Let's also create a global reference frame and spatially fix one
@@ -89,7 +94,6 @@ class ForceActuator:
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import Point, ReferenceFrame
     >>> from sympy.physics.vector import dynamicsymbols
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
     >>> force = Symbol('F')
