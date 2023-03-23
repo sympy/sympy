@@ -452,11 +452,16 @@ class TestSystem(TestSystemBase):
 
 
 class TestValidateSystem(TestSystemBase):
-    def test_only_kanes_valid(self, _filled_system_setup):
-        self.system.validate_system(KanesMethod)
+    @pytest.mark.parametrize('valid_method, invalid_method, with_speeds', [
+        (KanesMethod, LagrangesMethod, True),
+        (LagrangesMethod, KanesMethod, False)
+    ])
+    def test_only_valid(self, valid_method, invalid_method, with_speeds):
+        self._create_filled_system(with_speeds=with_speeds)
+        self.system.validate_system(valid_method)
         # Test Lagrange should fail due to the usage of generalized speeds
         with pytest.raises(ValueError):
-            self.system.validate_system(LagrangesMethod)
+            self.system.validate_system(invalid_method)
 
     @pytest.mark.parametrize('method, with_speeds', [
         (KanesMethod, True), (LagrangesMethod, False)])
@@ -502,8 +507,8 @@ class TestValidateSystem(TestSystemBase):
 
     def test_number_of_coordinates_speeds(self, _filled_system_setup):
         # Test more speeds than coordinates
-        self.system._joints = self.joints[:-1]
-        self.system.q_ind = self.q_ind[:-1]
+        self.system.u_ind = self.u_ind + [u[5]]
+        self.system.kdes = self.kdes + [u[5] - qd[5]]
         self.system.validate_system()
         # Test more coordinates than speeds
         self.system.q_ind = self.q_ind
@@ -521,3 +526,15 @@ class TestValidateSystem(TestSystemBase):
     def test_duplicates(self, _filled_system_setup):
         # This is basically a redundant feature, which should never fail
         self.system.validate_system(check_duplicates=True)
+
+    def test_speeds_in_lagrange(self, _filled_system_setup_no_speeds):
+        self.system.u_ind = u[:len(self.u_ind)]
+        with pytest.raises(ValueError):
+            self.system.validate_system(LagrangesMethod)
+        self.system.u_ind = []
+        self.system.validate_system(LagrangesMethod)
+        self.system.add_joints(
+            PinJoint('Ju', RigidBody('rbu1'), RigidBody('rbu2')))
+        self.system.u_ind = []
+        with pytest.raises(ValueError):
+            self.system.validate_system(LagrangesMethod)
