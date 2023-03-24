@@ -1,13 +1,13 @@
 import pytest
 
-from sympy.core.backend import (ImmutableMatrix, symbols, sin, cos, zeros, eye,
-                                _simplify_matrix, sympify)
+from sympy.core.backend import (
+    ImmutableMatrix, _simplify_matrix, cos, eye, sin, symbols, sympify, zeros)
+from sympy.physics.mechanics import (
+    Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
+    PrismaticJoint, ReferenceFrame, RigidBody, Torque, dynamicsymbols)
+from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
-from sympy.physics.mechanics._system import System
-from sympy.physics.mechanics import (
-    ReferenceFrame, Point, RigidBody, Particle, dynamicsymbols, PinJoint,
-    PrismaticJoint, Force, Torque, LagrangesMethod, KanesMethod)
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
