@@ -4,6 +4,8 @@ from collections import namedtuple
 
 __all__ = ['inertia', 'inertia_of_point_mass', 'Inertia']
 
+from sympy.printing.pretty.stringpict import prettyForm
+
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     """Simple way to create inertia Dyadic object.
@@ -193,3 +195,21 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
 
     __radd__ = __add__
     __rmul__ = __mul__
+
+    def _print_operator_name(self, printer, *args):
+        return 'I'
+
+    def _print_operator_name_latex(self, printer, *args):
+        return r'\mathcal{R}'
+
+    def _print_operator_name_pretty(self, printer, *args):
+        if printer._use_unicode:
+            return prettyForm('\N{LATIN CAPITAL LETTER I}' + ' ')
+        else:
+            return prettyForm("I ")
+
+    def __str__(self):
+        from sympy.printing.str import sstr
+        return sstr(self)
+
+    __repr__ = __str__

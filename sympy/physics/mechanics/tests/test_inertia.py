@@ -54,8 +54,7 @@ def test_inertia_object():
     I_dyadic = ixx * (N.x | N.x) + iyy * (N.y | N.y) + izz * (N.z | N.z)
     I = Inertia(inertia(N, ixx, iyy, izz), O)
     assert isinstance(I, tuple)
-    assert I.__repr__() == ('Inertia(dyadic=ixx*(N.x|N.x) + iyy*(N.y|N.y) + '
-                            'izz*(N.z|N.z), point=O)')
+    assert I.__repr__() == '(ixx*(N.x|N.x) + iyy*(N.y|N.y) + izz*(N.z|N.z), O)'
     assert I.dyadic == I_dyadic
     assert I.point == O
     assert I[0] == I_dyadic
