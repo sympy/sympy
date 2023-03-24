@@ -336,9 +336,9 @@ class TestSystem(TestSystemBase):
     def test_add_loads(self):
         system = System()
         N, A = ReferenceFrame('N'), ReferenceFrame('A')
-        rb1, rb2 = RigidBody('rb1', frame=N), RigidBody('rb2', frame=A)
+        rb1 = RigidBody('rb1', frame=N)
         mc1, mc2 = Point('mc1'), Point('mc2')
-        p1, p2 = Particle('p1', mc1), Particle('p2', mc2)
+        p1 = Particle('p1', mc1)
         system.add_loads(Torque(rb1, N.x), (mc1, A.x), Force(p1, A.x))
         assert system.loads == ((N, N.x), (mc1, A.x), (mc1, A.x))
         system.loads = [(A, A.x)]
