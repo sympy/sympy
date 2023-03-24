@@ -16,7 +16,7 @@ from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics.functions import _validate_coordinates, Lagrangian
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.loads import Force, Torque, _parse_load, gravity
+from sympy.physics.mechanics.loads import _parse_load, gravity
 from sympy.physics.mechanics.joint import Joint
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.kane import KanesMethod
