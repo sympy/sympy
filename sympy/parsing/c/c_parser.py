@@ -653,7 +653,7 @@ if cin:
 
         def transform_return_stmt(self, node):
             """Returns the Return Node for a return statement"""
-            return Return(next(node.get_children()).spelling)
+            return Return(Symbol(next(node.get_children()).spelling))
 
         def transform_compound_stmt(self, node):
             """Transformation function for compond statemets
