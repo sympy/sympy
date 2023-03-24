@@ -633,6 +633,123 @@ problems all go away.
 (best-practices-separate-sympy-and-non-sympy)=
 ### Separate SymPy and non-SymPy Numerical Code
 
+## Advanced Usage
+
+### Be Careful Comparing and Sorting Symbolic Objects
+
+Be careful with programmatic code that compares numerical quantities, whether
+using an inequality (`<`, `<=`, `>`, `>=`) or indirectly with something like
+`sort`. The issue is that if an inequality is unknown, it will produce a
+symbolic inequality, like
+
+```
+>>> x > 0
+x > 0
+```
+
+A symbolic inequality will raise an exception if `bool()` is called on it, due
+to the ambiguity:
+
+```py
+>>> bool(x > 0)
+Traceback (most recent call last):
+...
+TypeError: cannot determine truth value of Relational
+```
+
+A check like
+
+```py
+if x > 0:
+    ...
+```
+
+May work just fine if you only ever test it for numerical `x`. But if `x` can
+ever be symbolic, the above code is wrong. It will fail with `TypeError:
+cannot determine truth value of Relational`. If you ever see this exception,
+it means this error has been made somewhere (sometimes the error is in SymPy
+itself; if this appears to be the case, please [open an
+issue](https://github.com/sympy/sympy/issues)).
+
+The exact same issue occurs when using `sorted`, since this internally uses `>`.
+
+```py
+>>> sorted([x, 0])
+Traceback (most recent call last):
+...
+TypeError: cannot determine truth value of Relational
+```
+
+There are a few options for fixing this issue, and the correct one to choose
+depends on what you are doing:
+
+- **Disallow symbolic inputs.** If your function cannot possibly work on
+  symbolic inputs, you can explicitly disallow them. The primary benefit here
+  is to give a more readable error message to users. The
+  {attr}`~sympy.core.expr.Expr.is_number` can be used to check expression can
+  be evaluated to a specific number with `evalf()`. If you want to only accept
+  integers, you can check `isinstance(x, Integer)` (after calling `sympify`)
+  (beware that `is_integer` uses the assumptions system and may be True even
+  for symbolic objects, like `Symbol('x', integer=True)`).
+
+- **Use the assumptions system.** If you do support symbolic inputs, you
+  should use the assumptions system to check for things like `x > 0`, e.g.,
+  using `x.is_positive`. When doing this, you should always [be aware of the
+  nuances](booleans-guide) of the {term}`three-valued fuzzy logic
+  <three-valued logic>` used in the assumptions system. That is, always be
+  aware that an assumption could be `None`, meaning its value is unknown and
+  could be either true or false. For example,
+
+  ```py
+  if x.is_positive:
+      ...
+  ```
+
+  will only run the block if `x.is_positive` is `True`, but you may want to do
+  something when `x.is_positive` is `None`.
+
+- **Return a Piecewise result.** If the result of a function depends on an
+  inequality or other boolean condition, you can use {class}`~.Piecewise` to
+  return a result that applies to both possibilities symbolically. This is
+  generally preferred when possible, as it offers the most flexibility. This
+  is because the result is represented symbolically, meaning, for instance,
+  one can later substitute specific values for the symbols and it will
+  evaluate to the specific case, even if it is combined with other
+  expressions.
+
+  For example, instead of
+
+  ```py
+  if x > 0:
+      expr = 1
+  else:
+      expr = 0
+  ```
+
+  this can be represented symbolically as
+
+  ```py
+  >>> expr = Piecewise((1, x > 0), (0, True))
+  >>> expr
+  Piecewise((1, x > 0), (0, True)) + 1
+  >>> expr.subs(x, 1)
+  1
+  >>> expr.subs(x, -1)
+  0
+  ```
+
+- **Use {func}`~.ordered` to sort expressions into a canonical order.** If you
+  are trying to use `sorted` because you want a canonical ordering, but you
+  don't particularly care what that ordering is, you can use `ordered`.
+
+  ```py
+  >>> >>> list(ordered([x, 0]))
+  [0, x]
+  ```
+
+  Alternatively, try to write the function in a way so that the result does not depend on
+  the order that arguments are processed in.
+
 ## Custom SymPy Objects
 
 ### Args Invariants
