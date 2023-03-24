@@ -199,7 +199,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap pytest libclang            \
+                         aesara wurlitzer autowrap pytest                     \
                          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
@@ -208,7 +208,7 @@ jobs:
 
       # These are not available for pypy
       - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc
+        run: pip install gmpy2 jax jaxlib symengine pymc libclang
 
       # Test external imports
       - run: bin/test_external_imports.py
