@@ -653,7 +653,7 @@ class RisingFactorial(CombinatorialFunction):
                           self.args[1].is_nonnegative))
     
     def _eval_is_nonnegative(self):
-    return fuzzy_and((self.args[0].is_nonnegative, self.args[1].is_integer,
+        return fuzzy_and((self.args[0].is_nonnegative, self.args[1].is_integer,
                       self.args[1].is_nonnegative))
 
 
