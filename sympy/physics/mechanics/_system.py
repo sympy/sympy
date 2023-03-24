@@ -66,9 +66,11 @@ class System(_Methods):
     z : Vector
         Unit vector in the z direction of the inertial reference frame.
     q : Matrix
-        Matrix of all the generalized coordinates.
+        Matrix of all the generalized coordinates, i.e. the independent
+        generalized coordinates stacked upon the dependent.
     u : Matrix
-        Matrix of all the generalized speeds.
+        Matrix of all the generalized speeds, i.e. the independent generealized
+        speeds stacked upon the dependent.
     q_ind : Matrix
         Matrix of the independent generalized coordinates.
     q_dep : Matrix
@@ -89,7 +91,7 @@ class System(_Methods):
         Matrix with the holonomic constraints as rows.
     nonholonomic_constraints : Matrix
         Matrix with the nonholonomic constraints as rows.
-    eom_method : class
+    eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
     Examples
@@ -125,14 +127,14 @@ class System(_Methods):
     >>> bob = Particle('bob')
     >>> bob_frame = ReferenceFrame('bob_frame')
 
-    Initialize system, with the rail as Newtonian reference. The body is also
-    automatically added to the system.
+    Initialize the system, with the rail as the Newtonian reference. The body is
+    also automatically added to the system.
 
     >>> system = System.from_newtonian(rail)
     >>> print(system.bodies[0])
     rail
 
-    Create joints, while immediately also adding them to the system.
+    Create the joints, while immediately also adding them to the system.
 
     >>> system.add_joints(
     ...     PrismaticJoint('slider', rail, cart, joint_axis=rail.x),
@@ -163,17 +165,17 @@ class System(_Methods):
     >>> [body.name for body in system.bodies]
     ['rail', 'cart', 'bob']
 
-    With the kinematics established, we can no apply gravity and apply the cart
-    force ``F``.
+    With the kinematics established, we can now apply gravity and the cart force
+    ``F``.
 
     >>> system.apply_gravity(-g * system.y)
-    >>> system.apply_force(cart, F * rail.x)
+    >>> system.add_loads((cart.masscenter, F * rail.x))
     >>> system.loads
     ((rail_masscenter, - g*rail_mass*rail_frame.y), (cart_masscenter, - cart_mass*g*rail_frame.y), (bob_masscenter, - bob_mass*g*rail_frame.y), (cart_masscenter, F*rail_frame.x))
 
     With the entire system defined, we can now form the equations of motion.
-    Before forming the equations of motion, one can also run some checks to
-    check for possible errors.
+    Before forming the equations of motion, one can also run some checks that
+    will try to identify some common errors.
 
     >>> system.validate_system()
     >>> system.form_eoms()
@@ -225,6 +227,19 @@ class System(_Methods):
     """
 
     def __init__(self, origin=None, frame=None):
+        """Initialize the system.
+
+        Parameters
+        ==========
+
+        origin : Point, optional
+            The origin of the system. If none is supplied, a new origin will be
+            created.
+        frame : ReferenceFrame, optional
+            The inertial frame of the system. If none is supplied, a new frame
+            will be created.
+
+        """
         if origin is None:
             origin = Point('inertial_origin')
         elif not isinstance(origin, Point):
@@ -416,7 +431,31 @@ class System(_Methods):
 
     @staticmethod
     def _check_objects(objects, obj_lst, expected_type, obj_name, type_name):
-        """Helper to check the objects that are being added to the system."""
+        """Helper to check the objects that are being added to the system.
+
+        Explanation
+        ===========
+        This method checks that the objects that are being added to the system
+        are of the correct type and have not already been added. If any of the
+        objects are not of the correct type or have already been added, then
+        an error is raised.
+
+        Parameters
+        ==========
+        objects : iterable
+            The objects that would be added to the system.
+        obj_lst : list
+            The list of objects that are already in the system.
+        expected_type : type
+            The type that the objects should be.
+        obj_name : str
+            The name of the category of objects. This string is used to
+            formulate the error message for the user.
+        type_name : str
+            The name of the type that the objects should be. This string is used
+            to formulate the error message for the user.
+
+        """
         seen = set(obj_lst)
         duplicates = set()
         wrong_types = set()
@@ -533,7 +572,8 @@ class System(_Methods):
         ==========
 
         *constraints : Expr
-            One or more holonomic constraints.
+            One or more holonomic constraints, which are expressions that should
+            be zero.
 
         """
         self._hol_coneqs = self._parse_expressions(
@@ -548,7 +588,8 @@ class System(_Methods):
         ==========
 
         *constraints : Expr
-            One or more nonholonomic constraints.
+            One or more nonholonomic constraints, which are expressions that
+            should be zero.
 
         """
         self._nonhol_coneqs = self._parse_expressions(
@@ -585,7 +626,15 @@ class System(_Methods):
 
     @_reset_eom_method
     def apply_gravity(self, acceleration):
-        """Apply gravity to all bodies in the system."""
+        """Apply gravity to all bodies in the system.
+
+        Parameters
+        ==========
+
+        acceleration : Vector
+            The acceleration due to gravity.
+
+        """
         self.add_loads(*gravity(acceleration, *self.bodies))
 
     @_reset_eom_method
@@ -611,8 +660,8 @@ class System(_Methods):
         For the generalized coordinates, generalized speeds and bodies it is
         checked whether they are already known by the system instance. If they
         are, then they are not added. The kinematic differential equations are
-        however always added to the system, so do not also add those manually
-        beforehand.
+        however always added to the system, so you should not also manually add
+        those on beforehand.
 
         """
         self._check_objects(joints, self.joints, Joint, 'Joints', 'joints')
@@ -681,7 +730,7 @@ class System(_Methods):
         Parameters
         ==========
 
-        eom_method : class
+        eom_method : subclass of KanesMethod or LagrangesMethod
             Backend class to be used for forming the equations of motion. The
             default is ``KanesMethod``.
 
@@ -715,7 +764,7 @@ class System(_Methods):
         >>> bob = Particle('P', mass=m)
         >>> bob.potential_energy = S.Half * k * q**2
         >>> system.add_joints(PrismaticJoint('J', wall, bob, q, qd))
-        >>> system.apply_force(bob, b * qd * system.x, reaction_point=wall)
+        >>> system.add_loads((bob.masscenter, b * qd * system.x))
         >>> system.form_eoms(LagrangesMethod)
         Matrix([[-b*Derivative(q(t), t) + k*q(t) + m*Derivative(q(t), (t, 2))]])
 
@@ -730,12 +779,13 @@ class System(_Methods):
         # KanesMethod does not accept empty iterables
         loads = self.loads if self.loads else None
         if issubclass(eom_method, KanesMethod):
+            velocity_constraints = self.holonomic_constraints.diff(
+                dynamicsymbols._t).col_join(self.nonholonomic_constraints)
             self._eom_method = KanesMethod(
                 self.frame, self.q_ind, self.u_ind, kd_eqs=self.kdes,
                 q_dependent=self.q_dep, u_dependent=self.u_dep,
                 configuration_constraints=self.holonomic_constraints,
-                velocity_constraints=self.holonomic_constraints.diff(
-                    dynamicsymbols._t).col_join(self.nonholonomic_constraints),
+                velocity_constraints=velocity_constraints,
                 forcelist=loads, bodies=self.bodies,
                 explicit_kinematics=False)
         elif issubclass(eom_method, LagrangesMethod):
@@ -748,7 +798,7 @@ class System(_Methods):
         return self.eom_method._form_eoms()
 
     def rhs(self, inv_method=None):
-        """Returns equations that can be solved numerically.
+        """Compute the equations of motion in the explicit form.
 
         Parameters
         ==========
@@ -762,15 +812,15 @@ class System(_Methods):
         ========
 
         Matrix
-            Numerically solvable equations.
+            Equations of motion in the explicit form.
 
         See Also
         ========
 
         sympy.physics.mechanics.kane.KanesMethod.rhs:
-            KanesMethod's rhs function.
+            KanesMethod's ``rhs`` function.
         sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
-            LagrangesMethod's rhs function.
+            LagrangesMethod's ``rhs`` function.
 
         """
         return self.eom_method.rhs(inv_method=inv_method)
@@ -784,7 +834,10 @@ class System(_Methods):
 
         The mass matrix $M_d$ and the forcing vector $f_d$ of a system describe
         the system's dynamics according to the following equations:
-        $$M_d \dot{u} = f_d$$
+
+        .. math::
+            M_d \dot{u} = f_d
+
         where $\dot{u}$ is the time derivative of the generalized speeds.
 
         """
@@ -801,7 +854,10 @@ class System(_Methods):
         The full mass matrix $M_m$ and the full forcing vector $f_m$ of a system
         describe the dynamics and kinematics according to the following
         equation:
-        $$M_m \dot{x} = f_m$$
+
+        .. math::
+            M_m \dot{x} = f_m
+
         where $x$ is the state vector stacking $q$ and $u$.
 
         """
@@ -847,7 +903,7 @@ class System(_Methods):
         Parameters
         ==========
 
-        eom_method : class
+        eom_method : subclass of KanesMethod or LagrangesMethod
             Backend class that will be used for forming the equations of motion.
             There are different checks for the different backends. The default
             is ``KanesMethod``.
