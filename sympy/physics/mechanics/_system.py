@@ -306,7 +306,7 @@ class System(_Methods):
     @bodies.setter
     @_reset_eom_method
     def bodies(self, bodies):
-        bodies = System._objects_to_list(bodies)
+        bodies = self._objects_to_list(bodies)
         self._check_objects(bodies, [], BodyBase, 'Bodies', 'bodies')
         self._bodies = bodies
 
@@ -323,7 +323,7 @@ class System(_Methods):
     @loads.setter
     @_reset_eom_method
     def loads(self, loads):
-        loads = System._objects_to_list(loads)
+        loads = self._objects_to_list(loads)
         self._loads = [_parse_load(load) for load in loads]
 
     @property
@@ -389,7 +389,7 @@ class System(_Methods):
     @kdes.setter
     @_reset_eom_method
     def kdes(self, kdes):
-        kdes = System._objects_to_list(kdes)
+        kdes = self._objects_to_list(kdes)
         self._kdes = self._parse_expressions(
             kdes, [], 'kinematic differential equations')
 
@@ -401,7 +401,7 @@ class System(_Methods):
     @holonomic_constraints.setter
     @_reset_eom_method
     def holonomic_constraints(self, constraints):
-        constraints = System._objects_to_list(constraints)
+        constraints = self._objects_to_list(constraints)
         self._hol_coneqs = self._parse_expressions(
             constraints, [], 'holonomic constraints')
 
@@ -413,7 +413,7 @@ class System(_Methods):
     @nonholonomic_constraints.setter
     @_reset_eom_method
     def nonholonomic_constraints(self, constraints):
-        constraints = System._objects_to_list(constraints)
+        constraints = self._objects_to_list(constraints)
         self._nonhol_coneqs = self._parse_expressions(
             constraints, [], 'nonholonomic constraints')
 
