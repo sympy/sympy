@@ -9,19 +9,21 @@ changes.
 
 """
 
-from sympy.core.backend import Basic, ImmutableMatrix as Matrix
+from functools import wraps
+
+from sympy.core.backend import Basic
+from sympy.core.backend import ImmutableMatrix as Matrix
 from sympy.core.containers import OrderedSet
-from sympy.utilities.iterables import iterable
-from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics.functions import _validate_coordinates, Lagrangian
 from sympy.physics.mechanics.body_base import BodyBase
-from sympy.physics.mechanics.particle import Particle
-from sympy.physics.mechanics.loads import _parse_load, gravity
+from sympy.physics.mechanics.functions import Lagrangian, _validate_coordinates
 from sympy.physics.mechanics.joint import Joint
-from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.kane import KanesMethod
 from sympy.physics.mechanics.lagrange import LagrangesMethod
-from functools import wraps
+from sympy.physics.mechanics.loads import _parse_load, gravity
+from sympy.physics.mechanics.method import _Methods
+from sympy.physics.mechanics.particle import Particle
+from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
+from sympy.utilities.iterables import iterable
 
 __all__ = ['System']
 
