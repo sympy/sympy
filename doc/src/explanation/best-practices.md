@@ -817,3 +817,70 @@ so if you are using it, you do not need to worry about this.
 ### Don't Store Attributes in `.args`
 
 ### Don't Overwrite `__eq__`
+
+### Avoiding Infinite Recursion from Assumptions Handlers
+
+When writing assumptions handlers on custom functions like `_eval_is_positive`
+(see the [custom
+functions guide](custom-functions-assumptions) for details on how to do this),
+there are two important things to keep in mind:
+
+**Firstly, avoid creating new expressions inside of an assumption handler. You
+should always pull apart the arguments of a function directly instead.** The
+reason is that creating a new expression could itself result in an assumptions
+query. This can easily lead to infinite recursion. And even when it doesn't,
+creating a new expression which itself could lead to many recursive
+assumptions queries is bad for performance compared to querying the desired
+property more directly.
+
+This generally means using methods like {meth}`~.as_independent` and checking
+the `args` of expressions directly (see the [custom functions
+guide](custom-functions-assumptions) for an example).
+
+<!-- TODO: Give an example here. Can we show an infinite recursion? -->
+
+Secondly, **do not recursively evaluate assumptions on `self` in assumptions
+handlers**. Assumptions handlers should only check for assumptions on
+`self.args`. The global assumptions system will automatically handle
+implications between different assumptions.
+
+For example, you may be tempted to write something like
+
+```py
+# BAD
+
+class f(Function):
+    def _eval_is_integer(self):
+        # Quick return if self is not real (do not do this).
+        if self.is_real is False:
+            return False
+        return self.args[0].is_integer
+```
+
+However, the `if self.is_real is False` check is completely unnecessary. The
+assumptions system already knows that `integer` implies `real`, and it will
+not bother checking `is_integer` if it already knows that `is_real` is False.
+
+If you define the function this way, it will lead to an infinite recursion:
+
+```py
+>>> class f(Function):
+...     def _eval_is_integer(self):
+...         if self.is_real is False:
+...             return False
+...         return self.args[0].is_integer
+>>> f(x).is_real
+Traceback (most recent call last):
+...
+RecursionError: maximum recursion depth exceeded while calling a Python object
+```
+
+Instead, define the handler based on the arguments of the function only:
+
+```
+# GOOD
+
+class f(Function):
+    def _eval_is_integer(self):
+        return self.args[0].is_integer
+```
