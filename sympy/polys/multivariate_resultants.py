@@ -127,7 +127,7 @@ class DixonResultant():
 
         for idx in range(self.n):
             temp[idx] = self.dummy_variables[idx]
-            substitution = {var: t for var, t in zip(self.variables, temp)}
+            substitution = dict(zip(self.variables, temp))
             rows.append([f.subs(substitution) for f in self.polynomials])
 
         A = Matrix(rows)

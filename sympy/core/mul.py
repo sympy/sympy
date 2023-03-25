@@ -161,7 +161,7 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
-    args: tTuple[Expr]
+    args: tTuple[Expr, ...]
 
     is_Mul = True
 
