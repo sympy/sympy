@@ -4,6 +4,7 @@ from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
+from sympy.physics.vector import outer
 
 from warnings import warn
 
@@ -208,6 +209,15 @@ class ReferenceFrame:
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
+        self._xx=outer(self._x,self._x)
+        self._xy=outer(self._x,self._y)
+        self._xz=outer(self._x,self._z)
+        self._yx=outer(self._y,self._x)
+        self._yy=outer(self._y,self._y)
+        self._yz=outer(self._y,self._z)
+        self._zx=outer(self._z,self._x)
+        self._zy=outer(self._z,self._y)
+        self._zz=outer(self._z,self._z)
         # Associate coordinate symbols wrt this frame
         if variables is not None:
             if not isinstance(variables, (tuple, list)):
@@ -1387,7 +1397,43 @@ class ReferenceFrame:
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
-
+    @property
+    def xx(self):
+        """Unit diads in xx"""
+        return self._xx
+    @property
+    def xy(self):
+        """Unit diads in xy"""
+        return self._xy
+    @property
+    def xz(self):
+        """Unit diads in xz"""
+        return self._xz
+    @property
+    def yx(self):
+        """Unit diads in yx"""
+        return self._yx
+    @property
+    def yy(self):
+        """Unit diads in yy"""
+        return self._yy
+    @property
+    def yz(self):
+        """Unit diads in yz"""
+        return self._yz
+    @property
+    def zx(self):
+        """Unit diads in zx"""
+        return self._zx
+    @property
+    def zy(self):
+        """Unit diads in zy"""
+        return self._zy
+    @property
+    def zz(self):
+        """Unit diads in zz"""
+        return self._zz
+    
     def partial_velocity(self, frame, *gen_speeds):
         """Returns the partial angular velocities of this frame in the given
         frame with respect to one or more provided generalized speeds.
