@@ -156,7 +156,7 @@ class ReferenceFrame:
         >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
         >>> P.xx
         (P['1']|P['1'])
-        >>> F.zy
+        >>> P.zy
         (P['3']|P['2'])
 
         Unit dyadic is also accessible via the ``u`` attribute:
