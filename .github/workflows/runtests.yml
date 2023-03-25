@@ -153,12 +153,12 @@ jobs:
           node-version: 18.x
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install build
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
       - run: python -m build --wheel
-      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
+      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -196,8 +196,8 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap pytest                     \
-                         'antlr4-python3-runtime==4.11.*'
+          aesara wurlitzer autowrap pytest                     \
+          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
       - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
@@ -263,7 +263,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath pytest pytest-split pytest-timeout
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
@@ -468,4 +468,11 @@ jobs:
           python-version: "3.9"
       - run: python -m pip install --upgrade pip
       - run: pip install pytest-cov sympy
-      - run: pytest --cov=coverage_report sympy/
+      - run: pytest --cov=sympy --cov-report=xml:./sympy_cov_report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          name: coverage reports
+          directory: ./sympy_cov_report/
+
