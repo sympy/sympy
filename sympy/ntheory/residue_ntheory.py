@@ -401,7 +401,9 @@ def sqrt_mod_iter(a, p, domain=int):
 
 def _sqrt_mod_prime_power(a, p, k):
     """
-    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
+    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``.
+    If no solution exists, return ``None``.
+    Solutions are returned in an ascending list.
 
     Parameters
     ==========
@@ -427,90 +429,49 @@ def _sqrt_mod_prime_power(a, p, k):
     pk = p**k
     a = a % pk
 
-    if k == 1:
-        if p == 2:
-            return [ZZ(a)]
-        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
-            return None
-
-        if p % 4 == 3:
-            res = pow(a, (p + 1) // 4, p)
-        elif p % 8 == 5:
-            sign = pow(a, (p - 1) // 4, p)
-            if sign == 1:
-                res = pow(a, (p + 3) // 8, p)
-            else:
-                b = pow(4*a, (p - 5) // 8, p)
-                x =  (2*a*b) % p
-                if pow(x, 2, p) == a:
-                    res = x
-        else:
-            res = _sqrt_mod_tonelli_shanks(a, p)
-
-        # ``_sqrt_mod_tonelli_shanks(a, p)`` is not deterministic;
-        # sort to get always the same result
-        return sorted([ZZ(res), ZZ(p - res)])
-
-    if k > 1:
+    if p == 2:
         # see Ref.[2]
-        if p == 2:
-            if a % 8 != 1:
-                return None
-            if k <= 3:
-               s = set()
-               for i in range(0, pk, 4):
-                    s.add(1 + i)
-                    s.add(-1 + i)
-               return list(s)
-            # according to Ref.[2] for k > 2 there are two solutions
-            # (mod 2**k-1), that is four solutions (mod 2**k), which can be
-            # obtained from the roots of x**2 = 0 (mod 8)
-            rv = [ZZ(1), ZZ(3), ZZ(5), ZZ(7)]
-            # hensel lift them to solutions of x**2 = 0 (mod 2**k)
-            # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
-            # then r + 2**(nx - 1) is a root mod 2**(nx+1)
-            n = 3
-            res = []
-            for r in rv:
-                nx = n
-                while nx < k:
-                    r1 = (r**2 - a) >> nx
-                    if r1 % 2:
-                        r = r + (1 << (nx - 1))
-                    #assert (r**2 - a)% (1 << (nx + 1)) == 0
-                    nx += 1
-                if r not in res:
-                    res.append(r)
-                x = r + (1 << (k - 1))
-                #assert (x**2 - a) % pk == 0
-                if x < (1 << nx) and x not in res:
-                    if (x**2 - a) % pk == 0:
-                        res.append(x)
-            return res
-        rv = _sqrt_mod_prime_power(a, p, 1)
-        if not rv:
+        if a % 8 != 1:
             return None
-        r = rv[0]
-        fr = r**2 - a
-        # hensel lifting with Newton iteration, see Ref.[3] chapter 9
+        # Trivial
+        if k <= 3:
+            return [ZZ(i) for i in range(1, pk, 2)]
+        r = 1
+        # r is one of the solutions to x**2 - a = 0 (mod 2**3).
+        # Hensel lift them to solutions of x**2 - a = 0 (mod 2**k)
+        # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
+        # then r + 2**(nx - 1) is a root mod 2**(nx+1)
+        for nx in range(3, k):
+            if ((r**2 - a) >> nx) % 2:
+                r += 1 << (nx - 1)
+        # r is a solution of x**2 - a = 0 (mod 2**k), and
+        # there exist other solutions -r, r+h, -(r+h), and these are all solutions.
+        h = 1 << (k - 1)
+        return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
+
+    # If the Legendre symbol (a/p) is not 1, no solution exists.
+    if jacobi_symbol(a, p) != 1:
+        return None
+    if p % 4 == 3:
+        res = pow(a, (p + 1) // 4, p)
+    elif p % 8 == 5:
+        res = pow(a, (p + 3) // 8, p)
+        if pow(res, 2, p) != a % p:
+            res = res * pow(2, (p - 1) // 4, p) % p
+    else:
+        res = _sqrt_mod_tonelli_shanks(a, p)
+    if k > 1:
+        # Hensel lifting with Newton iteration, see Ref.[3] chapter 9
         # with f(x) = x**2 - a; one has f'(a) != 0 (mod p) for p != 2
-        n = 1
         px = p
-        while 1:
-            n1 = n
-            n1 *= 2
-            if n1 > k:
-                break
-            n = n1
+        for _ in range(k.bit_length() - 1):
             px = px**2
-            frinv = igcdex(2*r, px)[0]
-            r = (r - fr*frinv) % px
-            fr = r**2 - a
-        if n < k:
-            px = p**k
-            frinv = igcdex(2*r, px)[0]
-            r = (r - fr*frinv) % px
-        return [r, px - r]
+            frinv = igcdex(2*res, px)[0]
+            res = (res - (res**2 - a)*frinv) % px
+        if k & (k - 1): # If k is not a power of 2
+            frinv = igcdex(2*res, pk)[0]
+            res = (res - (res**2 - a)*frinv) % pk
+    return sorted([ZZ(res), ZZ(pk - res)])
 
 
 def _sqrt_mod1(a, p, n):
