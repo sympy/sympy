@@ -131,6 +131,13 @@ def test_linearize_rolling_disc_kane():
     # Check eigenvalues at critical speed are all zero:
     assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
 
+    # Check whether alternative solvers work
+    linearizer = KM.to_linearizer(linear_solver='GJ')
+    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op],
+                                A_and_B=True, simplify=True)
+    assert A.subs(upright_nominal) == A_sol
+    assert B.subs(upright_nominal) == B_sol
+
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     u1 = dynamicsymbols('u1')                     # Angular velocity
