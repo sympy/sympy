@@ -447,7 +447,7 @@ def _sqrt_mod_prime_power(a, p, k):
         # r is a solution of x**2 - a = 0 (mod 2**k), and
         # there exist other solutions -r, r+h, -(r+h), and these are all solutions.
         h = 1 << (k - 1)
-        return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
+        return sorted([ZZ(r), ZZ(pk - r), ZZ((r + h) % pk), ZZ(-(r + h) % pk)])
 
     # If the Legendre symbol (a/p) is not 1, no solution exists.
     if jacobi_symbol(a, p) != 1:
