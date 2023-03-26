@@ -284,6 +284,12 @@ def test_linearize_pendulum_lagrange_minimal():
     assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
+    # Check an alternative solver
+    A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True, linear_solver='GJ')
+
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert B == Matrix([])
+
 def test_linearize_pendulum_lagrange_nonminimal():
     q1, q2 = dynamicsymbols('q1:3')
     q1d, q2d = dynamicsymbols('q1:3', level=1)
@@ -314,6 +320,13 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+    # Check an alternative solver
+    A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d], op_point=op_point,
+                                 A_and_B=True, linear_solver=lambda A, b:
+                                 A.LUsolve(b))
     assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
