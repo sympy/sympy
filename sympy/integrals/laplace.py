@@ -1450,11 +1450,16 @@ def _inverse_laplace_build_rules():
         except PolynomialError:
             return f
 
+    def _is_integer(x):
+        return x.is_integer
+
     def same(f): return f
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
-        (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c > 0, same, 1),
+        (
+            b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c),
+            S.true, same, 1),
         (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3),
          S.true, same, 1),
         # The next two rules must be there in that order. For the second
@@ -1488,10 +1493,10 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
-            try:
-                c = check.xreplace(ma)
-            except TypeError:
-                continue
+            c = check
+            if c is not S.true:
+                args = [x.xreplace(ma) for x in c[0]]
+                c = c[1](*args)
             if c == S.true:
                 debug('_inverse_laplace_apply_simple_rules match:')
                 debugf('      f:    %s', (f,))
@@ -1665,7 +1670,7 @@ def _inverse_laplace_irrational(fn, s, t, plane):
     elif len(poles) == 2 and len(zeros) == 0:
         if (
                 poles[0][n] == -1 and poles[0][m] == 1 and
-                poles[1][n] == -S.Half and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
                 poles[1][b] == 0):
             # 1/((a0*s+b0)*sqrt(a1*s))
             # == 1/(a0*sqrt(a1)) * 1/((s+b0/a0)*sqrt(s))
@@ -1684,6 +1689,29 @@ def _inverse_laplace_irrational(fn, s, t, plane):
             if a_.is_positive:
                 result = k_*(1-exp(a_**2*t)*erfc(a_*sqrt(t)))
                 debugf('[ILT _i_l_i] Rule (5) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)*(sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((sqrt(s)+b0/a0)"sqrt(s))
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/(poles[0][a]*sqrt(poles[1][a]))*constants
+            if a_.is_positive:
+                result = k_*exp(a_**2*t)*erfc(a_*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (7) returns %s', (result, ))
+        elif(
+                poles[0][n] == -S(3)/2 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half):
+            # 1/((a0**(3/2)*s**(3/2))*(a1*sqrt(s)+b1))
+            # == 1/(a0**(3/2)*a1)  1/((s**(3/2))*(sqrt(s)+b1/a1))
+            a_ = poles[1][b]/poles[1][a]
+            k_ = 1/(poles[0][a]**(S(3)/2)*poles[1][a])/a_**2*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*a_*sqrt(t)+exp(a_**2*t)*erfc(a_*sqrt(t))-1))
+                debugf('[ILT _i_l_i] Rule (8) returns %s', (result, ))
 
     elif len(poles) == 2 and len(zeros) == 1:
         if (

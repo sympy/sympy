@@ -512,6 +512,13 @@ def test_inverse_laplace_transform():
             ILT((a-b)*sqrt(s)/(sqrt(s)+sqrt(a))/(s-b)) ==
             (sqrt(a)*sqrt(b)*exp(b*t)*erfc(sqrt(b)*sqrt(t)) +
              a*exp(a*t)*erfc(sqrt(a)*sqrt(t)) - b*exp(b*t))*Heaviside(t))
+    assert (  # (7)
+            ILT(1/sqrt(s)/(sqrt(b*s)+a)) ==
+            exp(a**2*t/b)*Heaviside(t)*erfc(a*sqrt(t)/sqrt(b))/sqrt(b))
+    assert (  # (8)
+            ILT(a**2/(sqrt(s)+a)/s**(S(3)/2)) ==
+            (2*a*sqrt(t)/sqrt(pi) + exp(a**2*t)*erfc(a*sqrt(t)) - 1) *
+            Heaviside(t))
 
     # Miscellaneous tests
     # Can _inverse_laplace_time_shift deal with positive exponents?
