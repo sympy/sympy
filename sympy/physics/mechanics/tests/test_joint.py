@@ -13,7 +13,6 @@ from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
-Vector.simp = True
 t = dynamicsymbols._t # type: ignore
 
 
@@ -1057,7 +1056,7 @@ def test_spherical_joint_orient_body():
     assert S._rot_order == 123
     assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
     assert A.ang_vel_in(N).to_matrix(A) == N_w_A
-    assert C.masscenter.vel(N).to_matrix(A) == N_v_Co
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
     # Test change of amounts
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -1070,7 +1069,7 @@ def test_spherical_joint_orient_body():
     assert S._rot_order == 123
     assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
     assert A.ang_vel_in(N).to_matrix(A) == switch_order(N_w_A)
-    assert C.masscenter.vel(N).to_matrix(A) == switch_order(N_v_Co)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
     # Test different rot_order
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -1088,7 +1087,7 @@ def test_spherical_joint_orient_body():
     assert A.ang_vel_in(N).to_matrix(A) == Matrix([
         [u0 * sin(q1) - u2], [u0 * cos(q1) * cos(q2) - u1 * sin(q2)],
         [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])
-    assert C.masscenter.vel(N).to_matrix(A) == Matrix([
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == Matrix([
         [-sqrt(2) * (u0 * sin(q2 + pi / 4) * cos(q1) + u1 * cos(q2 + pi / 4))],
         [u0 * sin(q1) - u2], [u0 * sin(q1) - u2]])
 
