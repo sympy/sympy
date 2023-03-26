@@ -1136,14 +1136,14 @@ def Davis(name, b, n, mu):
 
     Explanation
     ===========
-    
+
     The density of Davis distribution is given by
 
     .. math::
         f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\Zeta(n)}
-    
+
         with :math:`x \in [0,\infty]`.
-    
+
     Davis distribution is a generalization of the Planck's law of radiation from statistical physics. It is used for modeling income distribution.
 
     Parameters
@@ -1171,7 +1171,7 @@ def Davis(name, b, n, mu):
     >>> X = Davis("x", b, n, mu)
     >>> density(X)(z)
     b**n*(-mu + z)**(-n - 1)/((exp(b/(-mu + z)) - 1)*gamma(n)*zeta(n))
-    
+
     References
     ==========
 
