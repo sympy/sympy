@@ -56,7 +56,7 @@ class Linearizer:
         lams : array_like, optional
             The lagrange multipliers
         linear_solver : str, callable
-            Method used to solve the numerous symbolic linear systems of the
+            Method used to solve the several symbolic linear systems of the
             form ``A*x=b`` in the linearization process. If a string is
             supplied, it should be a valid method that can be used with the
             :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
