@@ -62,9 +62,9 @@ class Linearizer:
             :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
             supplied, it should have the format ``x = f(A, b)``, where it
             solves the equations and returns the solution. The default is
-            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``, which
-            computes fast but will often result in divide-by-zero and ``nan``
-            results.
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
 
         """
         self.linear_solver = _parse_linear_solver(linear_solver)

@@ -499,7 +499,28 @@ class KanesMethod(_Methods):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points)."""
+        efficient recalculation (i.e. about varying operating points).
+
+        Parameters
+        ==========
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
+        Returns
+        =======
+        Linearizer
+            An instantiated
+            :class:`sympy.physics.mechacnics.linearize.Linearizer`.
+
+        """
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -572,6 +593,24 @@ class KanesMethod(_Methods):
     def linearize(self, *, new_method=None, linear_solver='LU', **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
 
+        Parameters
+        ==========
+        new_method
+            Deprecated, does nothing and will be removed.
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+        **kwargs
+            Extra keyword arguments are passed to
+            :meth:`sympy.physics.mechanics.linearize.Linearizer.linearize`.
+
         Explanation
         ===========
 
@@ -595,7 +634,9 @@ class KanesMethod(_Methods):
         dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
-        For more documentation, please see the ``Linearizer`` class."""
+        For more documentation, please see the ``Linearizer`` class.
+
+        """
 
         linearizer = self.to_linearizer(linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
