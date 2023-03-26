@@ -658,3 +658,63 @@ def test_dcm_cache_dict():
     assert A._dcm_dict == A._dcm_cache
     assert B._dcm_dict == {C: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]]), \
         A: Matrix([[1, 0, 0],[0, cos(b), -sin(b)],[0, sin(b),  cos(b)]])}
+
+def test_xx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xx == Vector.outer(N.x, N.x)
+    assert F.xx == Vector.outer(F.x, F.x)
+
+def test_xy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xy == Vector.outer(N.x, N.y)
+    assert F.xy == Vector.outer(F.x, F.y)
+
+def test_xz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.xz == Vector.outer(N.x, N.z)
+    assert F.xz == Vector.outer(F.x, F.z)
+
+def test_yx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yx == Vector.outer(N.y, N.x)
+    assert F.yx == Vector.outer(F.y, F.x)
+
+def test_yy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yy == Vector.outer(N.y, N.y)
+    assert F.yy == Vector.outer(F.y, F.y)
+
+def test_yz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.yz == Vector.outer(N.y, N.z)
+    assert F.yz == Vector.outer(F.y, F.z)
+
+def test_zx_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zx == Vector.outer(N.z, N.x)
+    assert F.zx == Vector.outer(F.z, F.x)
+
+def test_zy_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zy == Vector.outer(N.z, N.y)
+    assert F.zy == Vector.outer(F.z, F.y)
+
+def test_zz_dyad():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.zz == Vector.outer(N.z, N.z)
+    assert F.zz == Vector.outer(F.z, F.z)
+
+def test_unit_dyadic():
+    N = ReferenceFrame('N')
+    F = ReferenceFrame('F', indices=['1', '2', '3'])
+    assert N.u == N.xx + N.yy + N.zz
+    assert F.u == F.xx + F.yy + F.zz
