@@ -318,7 +318,7 @@ class LagrangesMethod(_Methods):
         =======
         Linearizer
             An instantiated
-            :class:`sympy.physics.mechacnics.linearize.Linearizer`.
+            :class:`sympy.physics.mechanics.linearize.Linearizer`.
 
         """
 
