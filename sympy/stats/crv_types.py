@@ -1132,7 +1132,7 @@ class DavisDistribution(SingleContinuousDistribution):
 
 
 def Davis(name, b, n, mu):
-    r""" Create a continuous random variable with Davis distribution. 
+    r""" Create a continuous random variable with Davis distribution.
 
     Explanation
     ===========
