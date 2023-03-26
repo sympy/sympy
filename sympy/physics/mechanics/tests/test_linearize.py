@@ -232,6 +232,20 @@ def test_linearize_pendulum_kane_nonminimal():
     assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
+                                 simplify=True, linear_solver='GJ')
+
+    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
+    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op],
+                                 A_and_B=True,
+                                 simplify=True,
+                                 linear_solver=lambda A, b: A.LUsolve(b))
+
+    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+    assert B == Matrix([])
+
 def test_linearize_pendulum_lagrange_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
     q1d = dynamicsymbols('q1', 1)                 # Angular velocity
