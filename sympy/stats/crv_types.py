@@ -1117,13 +1117,13 @@ class DavisDistribution(SingleContinuousDistribution):
     _argnames = ('b', 'n', 'mu')
 
     set = Interval(0, oo)
-    
+
     @staticmethod
     def check(b, n, mu):
         _value_check(b > 0, "Scale parameter b must be positive.")
         _value_check(n > 1, "Shape parameter n must be above 1.")
         _value_check(mu > 0, "Location parameter mu must be positive.")
-    
+
     def pdf(self, x):
         b, n, mu = self.b, self.n, self.mu
         dividend = b**n*(x - mu)**(-1-n)
