@@ -5,10 +5,15 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import acos, sin, cos
 from sympy.matrices.dense import Matrix
+from sympy.physics.vector import Vector
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
 from sympy.testing.pytest import slow
+
+# This seemed to be set to True in CI if the following line is not present, so
+# explicitly set it to False here.
+Vector.simp = False
 
 
 # TODO : This is a temporary implementation and can be removed once we support
