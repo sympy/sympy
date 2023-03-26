@@ -645,8 +645,11 @@ class ComplexRootOf(RootOf):
         # If the given poly is already irreducible, then the index does not
         # need to be adjusted, and we can postpone the heavy lifting of
         # computing and refining isolating intervals until that is needed.
+        # Note, however, that `_pure_factors()` extracts a negative leading
+        # coeff if present, so `factors[0][0]` may differ from `poly`, and
+        # is the "normalized" version of `poly` that we must return.
         if lazy and len(factors) == 1 and factors[0][1] == 1:
-            return poly, index
+            return factors[0][0], index
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
