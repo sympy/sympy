@@ -437,7 +437,7 @@ class Dyadic(Printable, EvalfMixin):
         ========
 
         >>> from sympy import symbols, trigsimp
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy.physics.mechanics import inertia
         >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
         >>> N = ReferenceFrame('N')

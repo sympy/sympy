@@ -513,7 +513,6 @@ class Vector(Printable, EvalfMixin):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-        >>> from sympy.physics.vector import Vector
         >>> from sympy.physics.vector import init_vprinting
         >>> init_vprinting(pretty_print=False)
         >>> t = Symbol('t')
