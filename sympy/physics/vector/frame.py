@@ -163,7 +163,7 @@ class ReferenceFrame:
 
         >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
-        >>> N.unit
+        >>> N.u
         (N.x|N.x) + (N.y|N.y) + (N.z|N.z)
         >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
         >>> P.u
