@@ -2159,7 +2159,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr

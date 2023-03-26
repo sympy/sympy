@@ -4,7 +4,7 @@ from sympy.core.backend import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs, cramer_solve
+from sympy.physics.mechanics.functions import msubs, _parse_linear_solver
 
 from collections import namedtuple
 from collections.abc import Iterable
@@ -34,7 +34,7 @@ class Linearizer:
 
     def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
                  q_d=None, u_i=None, u_d=None, r=None, lams=None,
-                 linear_solver=None):
+                 linear_solver='LU'):
         """
         Parameters
         ==========
@@ -55,12 +55,19 @@ class Linearizer:
             The input variables.
         lams : array_like, optional
             The lagrange multipliers
-        linear_solver : callable
-            A function that returns x for A*x=b and has the form x = f(A, b).
+        linear_solver : str, callable
+            Method used to solve the numerous symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``, which
+            computes fast but will often result in divide-by-zero and ``nan``
+            results.
 
         """
-        if linear_solver is None:
-            self.linear_solver = cramer_solve
+        self.linear_solver = _parse_linear_solver(linear_solver)
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)

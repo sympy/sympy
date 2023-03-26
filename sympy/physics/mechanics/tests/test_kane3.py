@@ -1,4 +1,5 @@
-from sympy.core.evalf import evalf
+from sympy import cacheit
+from sympy.core.backend import zeros, ImmutableMatrix
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -7,13 +8,38 @@ from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
-from sympy.testing.pytest import slow, ON_CI, skip
+from sympy.testing.pytest import slow
+
+
+# TODO : This is a temporary implementation and can be removed once we support
+# a new matrix solver A.CramerSolve(b).
+@cacheit
+def det_laplace(matrix):
+    n = matrix.shape[0]
+    if n == 1:
+        return matrix[0]
+    elif n == 2:
+        return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0]
+    else:
+        return sum((-1) ** i * matrix[0, i] *
+                   det_laplace(matrix.minor_submatrix(0, i)) for i in range(n))
+
+
+def cramer_solve(A, b, det_method=det_laplace):
+    def entry(i, j):
+        return b[i, sol] if j == col else A[i, j]
+
+    A_imu = ImmutableMatrix(A)  # Convert to immutable for cache purposes
+    det_A = det_method(A_imu)
+    x = zeros(*b.shape)
+    for sol in range(b.shape[1]):
+        for col in range(b.shape[0]):
+            x[col, sol] = det_method(ImmutableMatrix(*A.shape, entry)) / det_A
+    return x
 
 
 @slow
 def test_bicycle():
-    if ON_CI:
-        skip("Too slow for CI.")
     # Code to get equations of motion for a bicycle modeled as in:
     # J.P Meijaard, Jim M Papadopoulos, Andy Ruina and A.L Schwab. Linearized
     # dynamics equations for the balance and steer of a bicycle: a benchmark
@@ -176,7 +202,8 @@ def test_bicycle():
             q_dependent=[q4], configuration_constraints=conlist_coord,
             u_ind=[u2, u3, u5],
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
-            kd_eqs=kd)
+            kd_eqs=kd,
+            constraint_solver=cramer_solve)
     (fr, frstar) = KM.kanes_equations(BL, FL)
 
     # This is the start of entering in the numerical values from the benchmark
@@ -280,7 +307,8 @@ def test_bicycle():
             q2: 0,
             q4: 0,
             q5: 0,
-        }
+        },
+        linear_solver=cramer_solve,
     )
     # As mentioned above, the size of the linearized forcing terms is expanded
     # to include both q's and u's, so the mass matrix must have this done as
