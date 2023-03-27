@@ -435,7 +435,7 @@ def _sqrt_mod_prime_power(a, p, k):
             return None
         # Trivial
         if k <= 3:
-            return [ZZ(i) for i in range(1, pk, 2)]
+            return list(range(1, pk, 2))
         r = 1
         # r is one of the solutions to x**2 - a = 0 (mod 2**3).
         # Hensel lift them to solutions of x**2 - a = 0 (mod 2**k)
@@ -447,7 +447,7 @@ def _sqrt_mod_prime_power(a, p, k):
         # r is a solution of x**2 - a = 0 (mod 2**k), and
         # there exist other solutions -r, r+h, -(r+h), and these are all solutions.
         h = 1 << (k - 1)
-        return sorted([ZZ(r), ZZ(pk - r), ZZ((r + h) % pk), ZZ(-(r + h) % pk)])
+        return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
 
     # If the Legendre symbol (a/p) is not 1, no solution exists.
     if jacobi_symbol(a, p) != 1:
@@ -471,7 +471,7 @@ def _sqrt_mod_prime_power(a, p, k):
         if k & (k - 1): # If k is not a power of 2
             frinv = igcdex(2*res, pk)[0]
             res = (res - (res**2 - a)*frinv) % pk
-    return sorted([ZZ(res), ZZ(pk - res)])
+    return sorted([res, pk - res])
 
 
 def _sqrt_mod1(a, p, n):
