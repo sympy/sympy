@@ -1140,7 +1140,7 @@ def Davis(name, b, n, mu):
     The density of Davis distribution is given by
 
     .. math::
-        f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\Zeta(n)}
+        f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\zeta(n)}
 
         with :math:`x \in [0,\infty]`.
 
