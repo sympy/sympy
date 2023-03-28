@@ -5096,13 +5096,13 @@ if cin:
         c_src4 = (
             'int digit_sum(int n)'+
             '{' + '\n' +
-                'int ans = 0;' + '\n' +
+                'int sum = 0;' + '\n' +
                 'while(n > 0)' + '\n' +
                 '{' + '\n' +
-                    'ans += (n % 10);' + '\n' +
+                    'sum += (n % 10);' + '\n' +
                     'n /= 10;' + '\n' +
                 '}' + '\n' +
-                'return ans;' + '\n' +
+                'return sum;' + '\n' +
             '}'
         )
 
