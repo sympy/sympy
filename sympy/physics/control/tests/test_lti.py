@@ -15,7 +15,7 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
-    bilinear, backward_diff)
+    sample)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
@@ -1222,10 +1222,10 @@ def test_TransferFunctionMatrix_functions():
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
 
-def test_TransferFunction_bilinear():
+def test_TransferFunction_sample():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = bilinear(tf, T)
+    numZ, denZ = sample(tf, T, 'bilinear')
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
@@ -1233,13 +1233,20 @@ def test_TransferFunction_bilinear():
 
     assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
 
-def test_TransferFunction_backward_diff():
-    # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = backward_diff(tf, T)
+    numZ, denZ = sample(tf, T, 'backward_diff')
     # discretized transfer function with coefs from tf.bilinear()
-    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    tf_test_backward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
     tf_test_manual = TransferFunction(s*T, s*(T*b+a)-a, s)
 
-    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_backward-tf_test_manual).simplify().num
+
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = sample(tf, T, 'forward_diff')
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T, s*a-a+b*T, s)
+
+    assert S.Zero == (tf_test_forward-tf_test_manual).simplify().num
