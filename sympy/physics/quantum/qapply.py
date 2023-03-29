@@ -129,7 +129,7 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
-    
+
     See Also
     ========
 
