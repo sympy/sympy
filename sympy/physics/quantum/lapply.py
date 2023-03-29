@@ -9,56 +9,54 @@ factors. The amount of expansion of terms may be tuned by options. Handlers
 for matrices are included to evaluate matrix expressions that contain
 MatrixSymbols.
 """
-# The following is internal documentation. Not part of the module docstring.
-"""
-lapply evolved as the generic kernel required to apply the objects of the
-quantum package (see sympy.physics.quantum.qapply).
-Handlers for matrices are included in the generic lapply module as a
-convenience, also as matrices are loaded with "from sympy import *"
 
-Design Principles:
-
-1. The objects and notation of the quantum package (Ket, Bra, ...) are just
-   special cases of general objects (vector, linear operator, ...) and
-   the notation of standard Linear Algebra. The same is true for the
-   matrices package, quaternion package etc. Their addition is derived from
-   Add, and their multiplication from Mul, their fields of commutative
-   scalars being the commutative scalars of SymPy. However the rules for
-   multiplication/application of this objects are not all known to Mul (
-   and perhaps should not for performance reasons), and the coding differs
-   per package.
-   So lapply is a generic evaluation engine for associative and distributive
-   law trying the rules for multiplication provided by handlers, defaulting
-   to * resp. Mul. Special rules have been provided for handling of powers
-   with idempotent or involutoric factors in the base.
-
-Object type specifics have completely been deployed to @dispatch handlers:
-a. The algorithm that walks the expression tree and determines to pair factors
-   a,b,c,d as (a*b)*(c*d) or a*((b*c)*d) etc. is completely object type agnostic
-   (lapply_Mul2). Walking of the tree is dependant on the success of pairing:
-   I decided to implement (a*(b*(c*d))) association from the right in general
-   but depending on whether factors interacted to new factors and re-tries to
-   the right side in that case.
-b. Recursing into inner structure of an object (lapply1_type handlers)
-c. Splitting up composite objects in commutative (c) and non-commutative
-   (nc) factors (c_nc_ncef handlers)
-d. All rules how to multiply two object types (lapply_mul2elems with
-   lapply_mul2types_x handlers)
-
-Moreover:
-5. expand() is not used indiscriminately: Only do an expansion of Add if
-   required to apply operators, so keeping expansion to the bare minimum. As
-   default, distribute commutative factors over sums as this allows terms to
-   cancel out thus simplifying the expression. In order to simplify commuta
-   -tive factors lapply() supports the three major hints of expand() "mul",
-   "power_base" and "power_exp" (see options mul, power_base and power_exp).
-6. apply recursion along the structure of the expression but don't use
-   recursion for iterations: this avoids hitting the Python recursion limit
-   in very complex expressions or powers with exponents > 1200 or so.
-7. No need to try to maintain subclass types of objects and expressions, as
-   we simply cannot know whether a product is still in a subclass of Mul etc.
-   So use the top types.
-"""
+# lapply evolved as the generic kernel required to apply the objects of the
+# quantum package (see sympy.physics.quantum.qapply).
+# Handlers for matrices are included in the generic lapply module as a
+# convenience, also as matrices are loaded with "from sympy import *"
+#
+# Design Principles:
+#
+# 1. The objects and notation of the quantum package (Ket, Bra, ...) are just
+#   special cases of general objects (vector, linear operator, ...) and
+#   the notation of standard Linear Algebra. The same is true for the
+#   matrices package, quaternion package etc. Their addition is derived from
+#   Add, and their multiplication from Mul, their fields of commutative
+#   scalars being the commutative scalars of SymPy. However the rules for
+#   multiplication/application of this objects are not all known to Mul (
+#   and perhaps should not for performance reasons), and the coding differs
+#   per package.
+#   So lapply is a generic evaluation engine for associative and distributive
+#   law trying the rules for multiplication provided by handlers, defaulting
+#   to * resp. Mul. Special rules have been provided for handling of powers
+#   with idempotent or involutoric factors in the base.
+#
+# Object type specifics have completely been deployed to @dispatch handlers:
+# a. The algorithm that walks the expression tree and determines to pair factors
+#   a,b,c,d as (a*b)*(c*d) or a*((b*c)*d) etc. is completely object type agnostic
+#   (lapply_Mul2). Walking of the tree is dependant on the success of pairing:
+#   I decided to implement (a*(b*(c*d))) association from the right in general
+#   but depending on whether factors interacted to new factors and re-tries to
+#   the right side in that case.
+# b. Recursing into inner structure of an object (lapply1_type handlers)
+# c. Splitting up composite objects in commutative (c) and non-commutative
+#   (nc) factors (c_nc_ncef handlers)
+# d. All rules how to multiply two object types (lapply_mul2elems with
+#   lapply_mul2types_x handlers)
+#
+# Moreover:
+# 5. expand() is not used indiscriminately: Only do an expansion of Add if
+#   required to apply operators, so keeping expansion to the bare minimum. As
+#   default, distribute commutative factors over sums as this allows terms to
+#   cancel out thus simplifying the expression. In order to simplify commuta
+#   -tive factors lapply() supports the three major hints of expand() "mul",
+#   "power_base" and "power_exp" (see options mul, power_base and power_exp).
+# 6. apply recursion along the structure of the expression but don't use
+#   recursion for iterations: this avoids hitting the Python recursion limit
+#   in very complex expressions or powers with exponents > 1200 or so.
+#7. No need to try to maintain subclass types of objects and expressions, as
+#   we simply cannot know whether a product is still in a subclass of Mul etc.
+#   So use the top types.
 
 from typing import cast, Any, List, Tuple, Callable, Union  # For Python 3.8
 from enum import Enum
@@ -149,7 +147,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         each addition expression will be used. Defaults to standard :obj:`~.Add()`.
 
     options : dict, optional
-        A dict of keyword/value pairs that are passed to the handlers and the 
+        A dict of keyword/value pairs that are passed to the handlers and the
         operator methods as operator and handler specific options.
 
 
@@ -289,99 +287,98 @@ EmptyMul = Mul()     # is Integer(1), is S.One, but more intuitive here
 to_the_left  = True  # option for qrec_x: split elem factor to the left
 to_the_right = False # option for qrec_x: split elem factor to the right
 
-"""
-Internal Remarks on object type constructors and Mul
------------------------------------------------------
 
-1.) The code relies on the auto-simplifications that Mul and the composite
-objects constructors like Pow, Add, InnerProduct, OuterProduct, TensorProduct
-etc do: Extraction of commutative factors, contracting of same factors to
-Powers etc, so these constructors may return their type, Mul or other types.
+# Internal Remarks on object type constructors and Mul
+# -----------------------------------------------------
+#
+# 1.) The code relies on the auto-simplifications that Mul and the composite
+# objects constructors like Pow, Add, InnerProduct, OuterProduct, TensorProduct
+# etc do: Extraction of commutative factors, contracting of same factors to
+# Powers etc, so these constructors may return their type, Mul or other types.
+#
+# 2.) Mul(a,b) != a * b:
+# Mul(a, b, c) processes the arguments a, b, c (e.g. factoring out scalars,
+# grouping same factors to powers) but actually multiplies the
+# arguments only in simple cases or if a postprocessor is defined.
+# On the other hand a*b is executed using *-operator __mul__ for type(a),
+# type(b): E.g. for Kets and Bras, __mul__ is overloaded to form InnerProducts
+# resp. OuterProducts types, and e.g. IdentityOperator()*Ket(1)-> Ket(1)
+# (Examples: Mul(Bra(1), Ket(1)) returns unchanged. Bra(1)*Mul(Ket(1), Bra(1))
+# returns Mul(Bra(1), Ket(1), Bra(1)), while Bra(1)*Ket(1)*Bra(1) returns Mul(
+# InnerProduct(Bra(1),Ket(1)), Bra(1)). So while the return type of Mul(a,b)
+# will be Mul (or Zero) the return type of a*b completely depends on the input.
+#
+# 3.) Performance of Mul: refer to the remarks in code of Mul.flatten:
+# - avoid a*b*c if you don't need the multiplication and use Mul(a,b,c) instead
+# - instead of Mul(a,b)*Mul(c) use Mul(a,b,c)
+# - results of Mul(a,b,c) are cached
 
-2.) Mul(a,b) != a * b:
-Mul(a, b, c) processes the arguments a, b, c (e.g. factoring out scalars,
-grouping same factors to powers) but actually multiplies the
-arguments only in simple cases or if a postprocessor is defined.
-On the other hand a*b is executed using *-operator __mul__ for type(a),
-type(b): E.g. for Kets and Bras, __mul__ is overloaded to form InnerProducts
-resp. OuterProducts types, and e.g. IdentityOperator()*Ket(1)-> Ket(1)
-(Examples: Mul(Bra(1), Ket(1)) returns unchanged. Bra(1)*Mul(Ket(1), Bra(1))
-returns Mul(Bra(1), Ket(1), Bra(1)), while Bra(1)*Ket(1)*Bra(1) returns Mul(
-InnerProduct(Bra(1),Ket(1)), Bra(1)). So while the return type of Mul(a,b)
-will be Mul (or Zero) the return type of a*b completely depends on the input.
+# Remarks on lapply vs. Mul and expand, and "elementary" factors:
+# ---------------------------------------------------------------
+#
+# I will use the verbs 'to apply' and 'to multiply' equivalently as in this
+# context of linear operators they mean the same and are both denoted by *.
+#
+# So the purpose of lapply is to multiply factors that Mul doesn't know
+# how to multiply, and leave those that Mul knows to Mul. This necessarily
+# includes the distribution of factors over Add summands as far as
+# required which forces lapply to partly appear similar to expand().
+# Since lapply also has to handle powers (which come in naturally as
+# repetitions of operators), nested powers (which come in as repetitions of
+# repetitions of operators) and fractional powers (which come in through
+# fractional powers of operators), this is where I see the difference to
+# expand(): lapply will do only expansions that are required: E.g. it won't
+# expand arguments of functions, won't lapply exponents of powers (except
+# if explicitly optioned), and focusses on getting factors multiplied.
+# On the other hand expand's primary task is to form terms and products, its
+# hints are on how to expand a given type, but not on how to multiply
+# two factors. lapply is trying hard to apply factors to each other, handle
+# powers and get a result, and expansion is a byproduct.
+#
+# Now, to draw the border between lapply and Mul, we have to classify all
+# factors in two ways:
+#
+# 1. Does Mul know how to multiply this type with other types, or doesn't it?
+#
+#   For efficiency, lapply would try to only handle those types that Mul
+#   doesn't know how to multiply, and will leave all others to Mul. This
+#   also helps to avoid contradicting results of Mul and lapply.
+#   Of course passing factors to Mul makes only sense if there are more
+#   than one to pass. So commutative factors are best as they can be
+#   grouped together up front. So it fits just nicely that many relevant
+#   mathematical objects are non-commutative and require multiplication
+#   methodes that Mul probably doesn't know.
+#   So I choose to leave commutative objects to Mul assuming that Mul
+#   knows how to handle them. So lapply pulls out commutative factors. All
+#   it does is to apply lapply1_type handlers once (to process rare cases
+#   like InnerProduct) before passing them on.
+#
+#   Scalars would have been a even more simpler group to leave to Mul.
+#   Unfortunately .is_scalar doesn't exist, and the closest approximation
+#   'is_complex' can not be used: on most symbols, is_complex is undefined.
+#   The only predicate that SymPy guarantees is 'is_commutative'!
+#
+#   So we use 'is_commutative' to pass factors on to Mul. This might raise
+#   issues with commutative operators like Identity or IdentityOperator
+#   that are unknown to Mul. So lapply adapts the usance that commutative
+#   operators should be reduced to the scalar they are. And luckily
+#   Identity.is_commutative==False and IdentityOperator.is_commutative==False.
+#   But when this quirks should vanish action is required.
+#
+# 2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is
+#   actually an expression that should be evaluated and broken up into
+#   its components to be multiplied one by one, or is it 'elementary'?
+#   So lapply implements rules (Pow, Mul) and the handler family c_nc_ncef
+#   to break up compound types (e.g. (Anti-)Commutator) or which to break as
+#   an option (e.g. OuterProduct). Those that will not be broken up are called
+#   "elementary" (note that this is similar in meaning but not identical
+#   to the sympy definition of Atom or is_Atom!).
+#
+#   Note that "elementary" refers to the general algorithm (lapply_mul2)
+#   that handles walking the expression tree and the association of factors.
+#   lapply_mul2elems may still inspect the inner contents of factors to do
+#   the multiplication (see e.g. handler for OuterProduct).
 
-3.) Performance of Mul: refer to the remarks in code of Mul.flatten:
-- avoid a*b*c if you don't need the multiplication and use Mul(a,b,c) instead
-- instead of Mul(a,b)*Mul(c) use Mul(a,b,c)
-- results of Mul(a,b,c) are cached
-
-
-Remarks on lapply vs. Mul and expand, and "elementary" factors:
----------------------------------------------------------------
-
-I will use the verbs 'to apply' and 'to multiply' equivalently as in this
-context of linear operators they mean the same and are both denoted by *.
-
-So the purpose of lapply is to multiply factors that Mul doesn't know
-how to multiply, and leave those that Mul knows to Mul. This necessarily
-includes the distribution of factors over Add summands as far as
-required which forces lapply to partly appear similar to expand().
-Since lapply also has to handle powers (which come in naturally as
-repetitions of operators), nested powers (which come in as repetitions of
-repetitions of operators) and fractional powers (which come in through
-fractional powers of operators), this is where I see the difference to
-expand(): lapply will do only expansions that are required: E.g. it won't
-expand arguments of functions, won't lapply exponents of powers (except
-if explicitly optioned), and focusses on getting factors multiplied.
-On the other hand expand's primary task is to form terms and products, its
-hints are on how to expand a given type, but not on how to multiply
-two factors. lapply is trying hard to apply factors to each other, handle
-powers and get a result, and expansion is a byproduct.
-
-Now, to draw the border between lapply and Mul, we have to classify all
-factors in two ways:
-
-1. Does Mul know how to multiply this type with other types, or doesn't it?
-
-    For efficiency, lapply would try to only handle those types that Mul
-    doesn't know how to multiply, and will leave all others to Mul. This
-    also helps to avoid contradicting results of Mul and lapply.
-    Of course passing factors to Mul makes only sense if there are more
-    than one to pass. So commutative factors are best as they can be
-    grouped together up front. So it fits just nicely that many relevant
-    mathematical objects are non-commutative and require multiplication
-    methodes that Mul probably doesn't know.
-    So I choose to leave commutative objects to Mul assuming that Mul
-    knows how to handle them. So lapply pulls out commutative factors. All
-    it does is to apply lapply1_type handlers once (to process rare cases
-    like InnerProduct) before passing them on.
-
-    Scalars would have been a even more simpler group to leave to Mul.
-    Unfortunately .is_scalar doesn't exist, and the closest approximation
-    'is_complex' can not be used: on most symbols, is_complex is undefined.
-    The only predicate that SymPy guarantees is 'is_commutative'!
-
-    So we use 'is_commutative' to pass factors on to Mul. This might raise
-    issues with commutative operators like Identity or IdentityOperator
-    that are unknown to Mul. So lapply adapts the usance that commutative
-    operators should be reduced to the scalar they are. And luckily
-    Identity.is_commutative==False and IdentityOperator.is_commutative==False.
-    But when this quirks should vanish action is required.
-
-2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is
-    actually an expression that should be evaluated and broken up into
-    its components to be multiplied one by one, or is it 'elementary'?
-    So lapply implements rules (Pow, Mul) and the handler family c_nc_ncef
-    to break up compound types (e.g. (Anti-)Commutator) or which to break as
-    an option (e.g. OuterProduct). Those that will not be broken up are called
-    "elementary" (note that this is similar in meaning but not identical
-    to the sympy definition of Atom or is_Atom!).
-
-    Note that "elementary" refers to the general algorithm (lapply_mul2)
-    that handles walking the expression tree and the association of factors.
-    lapply_mul2elems may still inspect the inner contents of factors to do
-    the multiplication (see e.g. handler for OuterProduct).
-""" #--- end of comment block
 
 def lapply_no_act(lhs:Expr, rhs:Expr, res:Expr) -> bool:
     """ Assumes lhs, rhs elementary and nc and res=lapply_mul2([lhs, rhs], []).
@@ -401,20 +398,20 @@ def lapply_no_act(lhs:Expr, rhs:Expr, res:Expr) -> bool:
     # tensor products per factor, quite unexpectedly (same action as
     # tensor_product_simp_Mul())
 
-"""
-Focus of lapply_mul2 is on non-commutative operators. Handling of
-commutative factors (i.e. scalars!) is therefore delegated to Mul.
-However in order to simplify some expressions lapply needs to deeply
-expand and multiply out all commutative Add-factors to find whether
-they cancel out or at least become much simpler. Also expansion of
-powers via expand(power_base=True) or expand(power_exp=True) is enabled
-by default, as it is in expand(). On the other hand we do not want to
-call expand(deep=True), as this also aggressively expands function
-arguments like sqrt(j*(j+1)+m*(m+1)). So we use the parts of expand that
-have greatest effect: the hint function Mul._eval_expand_mul and
-expand() with options power_xxx, which are invoked in the helper functions
-lapply_expand_powers() and lapply_expand_mul():
-"""
+
+# Focus of lapply_mul2 is on non-commutative operators. Handling of
+# commutative factors (i.e. scalars!) is therefore delegated to Mul.
+# However in order to simplify some expressions lapply needs to deeply
+# expand and multiply out all commutative Add-factors to find whether
+# they cancel out or at least become much simpler. Also expansion of
+# powers via expand(power_base=True) or expand(power_exp=True) is enabled
+# by default, as it is in expand(). On the other hand we do not want to
+# call expand(deep=True), as this also aggressively expands function
+# arguments like sqrt(j*(j+1)+m*(m+1)). So we use the parts of expand that
+# have greatest effect: the hint function Mul._eval_expand_mul and
+# expand() with options power_xxx, which are invoked in the helper functions
+# lapply_expand_powers() and lapply_expand_mul():
+
 # Helper functions to expand commutative factors (wrapping expand())
 def lapply_expand_powers(cl:List, **options) -> List:
     """Expands commutative factors in cl according to options power_xxx"""
@@ -738,28 +735,26 @@ lapply_mul2types_B = Dispatcher("lapply_mul2types_B")
 # See sympy.physics.quantum.qapply for examples for layer B.
 
 
-"""
--------------------------------------------------------------------------------
-Cache for Pow
--------------------------------------------------------------------------------
-The purpose of caching is to avoid frequent recomputation if a Pow is
-rolled off to Pow(base,exp-1)*base -> Pow(base,exp-2)*base*base etc.
-
-Principles of Caching for base and exponents of Powers:
-- Only cache exprs that will probably be used multiple times. Do not litter the
-  the cache with one-time results. So bases of Powers are cached. Exponents are
-  cached only in case of option["apply_exp"] and non-simple exponents.
-- Exprs being cached must have been returned in ncl from lapply_mul2_c_nc, so
-  all its factors have been processed fully.
-- The cache returns three types of information on an expr (besides None):
-  i.   "elem": expr is elementary  ii. "expr": expr is fully processed
-  iii. (rolloff, cl, encl) expr is base of a power.
-  which roughly correspond to output of c_nc_ncef, lapply_mul2, lapply_mul2_c_nc.
-- Base and exponents of Pows are cached separately. If a power is rolled off
-  the exponents counted down are removed from cache to avoid litter. This may
-  lead to re-computation of exponents in situations as Pow(A,exp)*B+Pow(A,exp)*C
-  which is unavoidable as the cache only has one instance.
-"""
+# -----------------------------------------------------------------------------
+# Cache for Pow
+# -----------------------------------------------------------------------------
+# The purpose of caching is to avoid frequent recomputation if a Pow is
+# rolled off to Pow(base,exp-1)*base -> Pow(base,exp-2)*base*base etc.
+#
+# Principles of Caching for base and exponents of Powers:
+# - Only cache exprs that will probably be used multiple times. Do not litter the
+#   the cache with one-time results. So bases of Powers are cached. Exponents are
+#   cached only in case of option["apply_exp"] and non-simple exponents.
+# - Exprs being cached must have been returned in ncl from lapply_mul2_c_nc, so
+#   all its factors have been processed fully.
+# - The cache returns three types of information on an expr (besides None):
+#   i.   "elem": expr is elementary  ii. "expr": expr is fully processed
+#   iii. (rolloff, cl, encl) expr is base of a power.
+#   which roughly correspond to output of c_nc_ncef, lapply_mul2, lapply_mul2_c_nc.
+# - Base and exponents of Pows are cached separately. If a power is rolled off
+#   the exponents counted down are removed from cache to avoid litter. This may
+#   lead to re-computation of exponents in situations as Pow(A,exp)*B+Pow(A,exp)*C
+#   which is unavoidable as the cache only has one instance.
 
 class RO(Enum): # the roll-off type of a base:
     UNKN = 0    # Roll-off type is unknown
@@ -867,13 +862,13 @@ def lapply_pow_roll1_c_nc_ncef(base:Expr, exp:Expr, to_L:bool, force:bool,
 ##    ##  flattened and c_nc_ncf() may extract factors from the result in a
 ##    ##  next step.
 
-""" No handler present here. See sympy.physics.quantum.qapply for an example:
+# No handler present here. See sympy.physics.quantum.qapply for an example:
+#
+#@lapply1_pow_type.register(TensorProduct, Expr)
+#def hdlr_TE(base:TensorProduct, exp:Expr, **options) -> Expr:
+#    return TensorProduct(*[lapply_mul2([b**exp], [], **options)
+#                                    for b in base.args]        )
 
-@lapply1_pow_type.register(TensorProduct, Expr)
-def hdlr_TE(base:TensorProduct, exp:Expr, **options) -> Expr:
-    return TensorProduct(*[lapply_mul2([b**exp], [], **options)
-                                    for b in base.args]        )
-"""
 lapply1_pow_type = Dispatcher('lapply1_pow_type') # create empty Dispatcher
 
 
@@ -913,34 +908,33 @@ def hdlrM_for(e:Mul, **options) -> Expr:
 # (see e.g. quantum JxKet etc.). If unintended, user may apply .doit() before
 # passing them to lapply.
 
-"""
-Internal Remark: lapply and powers Pow(base, power)
----------------------------------------------------
 
-1) e as a Pow object is already result of the constructor Pow.__new__(base,
-   power) that contains at lot of logic to compute this power, including
-   calling base._eval_power(power). Pow also has pulled (recognizable)
-   commutative factors from its base into a separate Pow object.
-   Some classes (e.g. in quantum OuterProduct and TensorProduct) lack
-   adequate methods .__pow__, ._pow or ._eval_power to apply powers.
-   So where lapply needs to recursively enter into powers of these types,
-   add a dispatched method lapply1_pow_type for the type of base.
-2) lapply will try some 'tricks' to simplify certain powers that Pow doesn't
-   use, nor Pow._eval_expand_power_xxx, e.g. on idempotent operators/dyads.
-3) But the last resort of lapply is to unroll positive powers of an operator,
-   i.e. apply it one by one to a vector v: For dense A, to compute Pow(A,k)*v
-   via M:=Pow(A,k) and then M*v is much(!) more expensive than (A*..*(A*(A*v))),
-   as long as log2(k)*dim(A)>k - which should be the case considering that A
-   annuls its characteristic polynomial. So, if A*v computes to some b which
-   is not the expression Mul(A,v), we compute (A*..*(A*(A*v))). Only if A*v
-   doesn't compute, we try to compute Pow(A,k) via A*A*..*A*A. If we find that
-   A*A doesn't compute, Pow(A,k) is left alone.
-   In order to make this more efficient, the base is evaluated by lapply only
-   once and then cached (calling Pow_with_Cache(), see caching above).
-4) But as this is an heuristic only: If higher powers of an operator op occur,
-   the **best approach** is that the user provides an appropriate method in
-   the class definition of op and makes sure that Pow(op, exp) evaluates this.
-"""
+# Internal Remark: lapply and powers Pow(base, power)
+# ---------------------------------------------------
+#
+# 1) e as a Pow object is already result of the constructor Pow.__new__(base,
+#    power) that contains at lot of logic to compute this power, including
+#    calling base._eval_power(power). Pow also has pulled (recognizable)
+#    commutative factors from its base into a separate Pow object.
+#    Some classes (e.g. in quantum OuterProduct and TensorProduct) lack
+#    adequate methods .__pow__, ._pow or ._eval_power to apply powers.
+#    So where lapply needs to recursively enter into powers of these types,
+#    add a dispatched method lapply1_pow_type for the type of base.
+# 2) lapply will try some 'tricks' to simplify certain powers that Pow doesn't
+#    use, nor Pow._eval_expand_power_xxx, e.g. on idempotent operators/dyads.
+# 3) But the last resort of lapply is to unroll positive powers of an operator,
+#    i.e. apply it one by one to a vector v: For dense A, to compute Pow(A,k)*v
+#    via M:=Pow(A,k) and then M*v is much(!) more expensive than (A*..*(A*(A*v))),
+#    as long as log2(k)*dim(A)>k - which should be the case considering that A
+#    annuls its characteristic polynomial. So, if A*v computes to some b which
+#    is not the expression Mul(A,v), we compute (A*..*(A*(A*v))). Only if A*v
+#    doesn't compute, we try to compute Pow(A,k) via A*A*..*A*A. If we find that
+#    A*A doesn't compute, Pow(A,k) is left alone.
+#    In order to make this more efficient, the base is evaluated by lapply only
+#    once and then cached (calling Pow_with_Cache(), see caching above).
+# 4) But as this is an heuristic only: If higher powers of an operator op occur,
+#    the **best approach** is that the user provides an appropriate method in
+#    the class definition of op and makes sure that Pow(op, exp) evaluates this.
 
 @lapply1_type.register(Pow)
 def hdlrP_for(e:Pow, **options) -> Expr:
@@ -1052,26 +1046,26 @@ def hadlrM_for(e:Mul, to_L:bool, **options) -> Tuple[List, List, Expr]:
     return cl, ncl, a
 
 
-""" The following rules for simplification of powers are used, same
-as used by expand() or by Pow() with numeric exponents:
-(Rules differ from https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html#powers):
-1.  for arbitrary A, and a, b commutative:
-    A**a * A**b == A**(a+b) == A**(b+a)
-2a. for c commutative, A (non-)commutative, n integer (positive or
-    negative assuming A**-1, c**-1 exists):
-    (c*A)**n == c**n * A**n
-2b. for c nonnegative, A (non-)commutative, a commutative:
-    (c*A)**a == c**a * A**a
-2c. for 0<=r<1 (from 1 and 2a):
-    (c*A)**(n+r) == (c*A)**r * (c*A)**n == c**n * (c*A)**r * A**n
-2d. for c and d nonnegative, a (non-)commutative:
-    (c*d)**a == c**a * d**a  (is commutative if a is)
-3a. (A**b)**a = A**(a*b) if a integer, A,b arbitrary
-3b. if c is nonnegative, b is nonnegative and a (non-)commutative:
-    (c**b)**a = c**(a*b)  (is commutative if a is) (see 2d)
-3c. for 0<=r<1 and n integer (from 1 and 3a):
-    (A**a)**(n+r) == (A**a)**r * (A**(a*n))
-"""
+# ### Simplification Rules for Powers ####
+# same as used by expand() or by Pow() with numeric exponents:
+# (Rules differ from https://docs.sympy.org/latest/tutorials/intro-tutorial/simplification.html#powers):
+# 1.  for arbitrary A, and a, b commutative:
+#     A**a * A**b == A**(a+b) == A**(b+a)
+# 2a. for c commutative, A (non-)commutative, n integer (positive or
+#     negative assuming A**-1, c**-1 exists):
+#     (c*A)**n == c**n * A**n
+# 2b. for c nonnegative, A (non-)commutative, a commutative:
+#     (c*A)**a == c**a * A**a
+# 2c. for 0<=r<1 (from 1 and 2a):
+#     (c*A)**(n+r) == (c*A)**r * (c*A)**n == c**n * (c*A)**r * A**n
+# 2d. for c and d nonnegative, a (non-)commutative:
+#     (c*d)**a == c**a * d**a  (is commutative if a is)
+# 3a. (A**b)**a = A**(a*b) if a integer, A,b arbitrary
+# 3b. if c is nonnegative, b is nonnegative and a (non-)commutative:
+#     (c**b)**a = c**(a*b)  (is commutative if a is) (see 2d)
+# 3c. for 0<=r<1 and n integer (from 1 and 3a):
+#     (A**a)**(n+r) == (A**a)**r * (A**(a*n))
+
 
 @c_nc_ncef.register(Pow) # Call as c_nc_ncef(e, to_L=..., **options)
 def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
@@ -1323,27 +1317,26 @@ def hadrlE_for(e:Expr, to_L, **options) -> Tuple[List, List, object]:
         return ([], [], e)
 
 
-"""------+---------+---------+---------+---------+---------+---------+---------
-MM          MM
-MMM        MMM   lapply Handlers for Matrices
-MMMM      MMMM
-MM MM    MM MM ----------------------------------------------------------------
-MM  MM  MM  MM  Reminder: SymPy Exprs must be immutable for the SymPy internal
-MM   MMMM   MM  cache to handle them. So the matrices package has type Matrix
-MM          MM  that is mutable and co-exists with SymPy, type MatrixExpr for
-MM          MM  SymPy expressions and ImmutableMatrix that should be used to
-MM          MM  create explicit matrices in SymPy.
-
-Only the handler c_nc_ncef(MatrixExpr) would required to make lapply work with
-matrices, to turn multiples of the identity to scalars which helps a lot in
-multiplication and simplification of powers. It might generate issues with
-terms like (1 - Identity(2)) which however vanish as soon as this term is
-multiplied with something - so this is accepted. Note that MatAdd cannot
-handle scalar summands, but lapply by default uses Add which can.
-
-Two further handlers are required as workaround for MatPow not being derived
-from Pow but MatMul being derived from Mul (see comments below).
-"""
+# ---------+---------+---------+---------+---------+---------+---------+-------
+# MM          MM
+# MMM        MMM   lapply Handlers for Matrices
+# MMMM      MMMM
+# MM MM    MM MM --------------------------------------------------------------
+# MM  MM  MM  MM  Reminder: SymPy Exprs must be immutable for the SymPy internal
+# MM   MMMM   MM  cache to handle them. So the matrices package has type Matrix
+# MM          MM  that is mutable and co-exists with SymPy, type MatrixExpr for
+# MM          MM  SymPy expressions and ImmutableMatrix that should be used to
+# MM          MM  create explicit matrices in SymPy.
+#
+# Only the handler c_nc_ncef(MatrixExpr) would required to make lapply work with
+# matrices, to turn multiples of the identity to scalars which helps a lot in
+# multiplication and simplification of powers. It might generate issues with
+# terms like (1 - Identity(2)) which however vanish as soon as this term is
+# multiplied with something - so this is accepted. Note that MatAdd cannot
+# handle scalar summands, but lapply by default uses Add which can.
+#
+# Two further handlers are required as workaround for MatPow not being derived
+# from Pow but MatMul being derived from Mul (see comments below).
 
 from sympy.matrices import (ZeroMatrix, Identity, MatrixExpr,
                             ImmutableMatrix, MatMul, MatAdd)
@@ -1378,23 +1371,23 @@ def hdlrME_for(e:MatrixExpr, to_L:bool, **options) -> Tuple[List,List,Expr]:
     return [], [], e
 
 
-""" ######  Workaround for MatPow not being derived from Pow  #######
+#######  Workaround for MatPow not being derived from Pow  #######
+#
+# 1) PR #1636 in 2012 removed inheritance of MatPow from Pow!
+# This broke SymPy consistency that Pow is the shorthand of Mul for identical
+# factors, and breaks generic code like lapply that must rely on .is_Pow to
+# identify powers as result of Mul, and to treat Pow just as a particular
+# occurrence of a Mul. See conversation at PR #1636.
+# Example: A=MatrixSymbol("A", 2,2): Mul(A,A) -> MatPow(A,2),
+# even Pow(A, 2)->MatPow(A,2), but MatPow(A,2).is_Pow==False!
 
-1) PR #1636 in 2012 removed inheritance of MatPow from Pow!
-This broke SymPy consistency that Pow is the shorthand of Mul for identical
-factors, and breaks generic code like lapply that must rely on .is_Pow to
-identify powers as result of Mul, and to treat Pow just as a particular
-occurrence of a Mul.
-Example: A=MatrixSymbol("A", 2,2): Mul(A,A) -> MatPow(A,2),
-even Pow(A, 2)->MatPow(A,2), but MatPow(A,2).is_Pow==False!
-
-So a workaround is required make lapply work with matrices:
-a) MatPow is changed to Pow in lapply1_type(MatPow) and piped through
-lapply1_type(Pow), except if its base is symbolic (e.g. MatrixSymbol,
-Transpose, Inverse, DiagMatrix, Adjoint etc.) and cannot be evaluated anyway
-b) Same trick in c_nc_ncef(MatPow); it is processed as Pow and switched back
-to MatPow.
-See comment at the end for further details."""
+# So a workaround is required make lapply work with matrices:
+# a) MatPow is changed to Pow in lapply1_type(MatPow) and piped through
+# lapply1_type(Pow), except if its base is symbolic (e.g. MatrixSymbol,
+# Transpose, Inverse, DiagMatrix, Adjoint etc.) and cannot be evaluated anyway
+# b) Same trick in c_nc_ncef(MatPow); it is processed as Pow and switched back
+# to MatPow.
+# See comment at the end for further details.
 
 from sympy.matrices import MatPow, MatrixSymbol
 
