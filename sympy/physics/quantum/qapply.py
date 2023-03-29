@@ -34,9 +34,11 @@ __all__ = [
 def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
                    mul=True, power_base=None, power_exp=False, nested_exp=None,
                    apply_exp=False, cache_for_pow=None, **options ) -> Expr:
-    """Knows about quantum objects and invokes their methods ``._apply_operator``
-    and ``._apply_from_right_to``. Applies SymPy standards to apply resp. multiply
-    all other objects in an expression.
+    """
+    Evaluates expressions of quantum operators and applies quantum operators,
+    powers and factors to each other. Knows about quantum objects and invokes
+    their methods ``._apply_operator`` and ``._apply_from_right_to``. Is based
+    on ``lapply`` and may be extended by ``multipledispatch`` handlers.
 
     Parameters
     ==========
@@ -45,36 +47,56 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         The expression containing operators, states resp. factors, summands and
         powers. The expression tree will be walked and operators resp.
         factors and powers applied and distributed over summands.
-    options : dict
-        A dict of key/value pairs that determine how the operator actions are
-        carried out. All options are passed to operator methods
-        like _apply_operator_<rhs>() or _apply_from_right_to_<lhs>().
 
-        The following options modify the action of qapply itself:
+    dagger : Boolean, optional
+        If True then if ``a * b`` doesn't compute, also try
+        ``Dagger(Dagger(b)*Dagger(a))``. Defaults to False.
 
-        * ``dagger``: if a * b doesn't compute, also try ``Dagger(Dagger(b)*Dagger(a))``
-          (default: False).
-        * ``ip_doit``: call ``.doit()`` in inner products when they are
-          encountered (default: True).
-        * ``op_join``: rewrite ket * bra as outer product ``OuterProduct(ket, bra)``
-          and avoid breaking them up to ket * bra (default: True).
-        * ``mul``: distribute commutative factors over sums. Corresponds to option
-          ``mul`` of ``expand``. ``mul=False`` will do the minimal application only.
-          Use when expansion is slow (default: True).
-        * ``tensorproduct``: Expand sums in factors of ``TensorProduct`` into sums of
-          ``TensorProduct`` (same option as in ``expand``) (default: value of option ``mul``).
-        * ``power_base``: for commutative factors, split powers of multiplied bases
-          (same option as in ``expand``) (default: value of option ``mul``).
-        * ``power_exp``: for cummutative factors, expand addition in exponents into
-          multiplied bases (same option as in ``expand``) (default: False).
-        * ``nested_exp``: if powers are nested and exponents may be multiplied, expand
-          the product of the exponents (default: value of option ``mul``).
-        * ``apply_exp``: use lapply on exponents before applying them to base. Default
-          is to apply exponents "as provided" (default: False).
-        * ``cache_for_pow``: a dictionary that provides cache values for evaluation of
-          powers. If provided is updated in place, so it can be passed on to the next
-          invocation of lapply as long as options and attributes of symbols remain
-          unaltered (default: None)
+    ip_doit : Boolean, optional
+        If True then call ``.doit()`` on inner products when they are
+        encountered. Defaults to True.
+
+    op_join : Boolean, optional
+        If True then rewrite ``ket * bra`` as outer product ``OuterProduct(ket, bra)``
+        and avoid breaking them up to ``ket * bra``. Defaults to True.
+
+    tensorproduct : Boolean, optional
+        If True expand sums in factors of ``TensorProduct`` into sums of
+        ``TensorProduct``. Same option as in :obj:`~.expand()`. Defaults to
+        value of option ``mul``.
+
+    mul : Boolean, optional
+        If True (default) distribute commutative factors over sums. Corresponds to option
+        ``mul`` of :obj:`~.expand()`. ``mul=False`` will do the minimal application only;
+        Use when expansion is slow.
+
+    power_base : Boolean
+        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        If True split powers of multiplied bases. Defaults to value of option ``mul``.
+
+    power_exp : Boolean, optional
+        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        It True expand addition in exponents into multiplied bases. Defaults to False.
+
+    nested_exp : Boolean, optional
+        If True, then if powers are nested and if their exponents may be multiplied,
+        explicitly expand the product of the exponents. Defaults to value of option ``mul``.
+
+    apply_exp : Boolean, optional
+        If True apply ``lapply`` to exponents of a power before applying the exponent
+        to the base. Default is False and to apply exponents as provided.
+
+    cache_for_pow : dict, optional
+        a dictionary that provides cache values to speed up the evaluation
+        of powers. If provided it is updated in place, so it can be passed on to the
+        next invocation of ``lapply`` as long as options and attributes of symbols
+        remain unaltered. Defaults to None, in which case an internal cache is used.
+
+    options : dict, optional
+        A dict of keyword/value pairs that are passed to the handlers and the operator
+        methods like ``._apply_operator_<rhs>()`` or ``._apply_from_right_to_<lhs>()``
+        as specific options.
+
 
 
     Returns
@@ -107,6 +129,11 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
+    
+    See Also
+    ========
+
+    lapply: Generic evaluation engine to apply linear operators, powers and factors
 
     """
     # set quantum specific options for qapply
@@ -261,20 +288,22 @@ def lapply_mul2daggered(lhs:Expr, rhs:Expr, **options) \
         res0 = Mul(lhs, rhs, evaluate=False)
     else: return res0
     # Return if the daggered values are just formal adjoints
-    if isinstance((rd := Dagger(rhs)), adjoint): return res0
-    if isinstance((ld := Dagger(lhs)), adjoint): return res0
-    # If daggered values exist try to mul them
+    rhs_d = Dagger(rhs)
+    if isinstance(rhs_d, adjoint): return res0
+    lhs_d = Dagger(lhs)
+    if isinstance(lhs_d, adjoint): return res0
+    # If daggered values both exist try to mul them
     options["dagger"] = False # don't recurse infinitely.
-    rud = lapply_mul2elems(rd, ld, **options)
+    res_ud = lapply_mul2elems(rhs_d, lhs_d, **options)
     options["dagger"] = True
     # check for interaction before doing un-dagger as this
     # may disturb recognition of no interaction
-    if type(rud) is list: # so assume interaction ok
-        return Dagger(lapply_mul2(rud, [], **options))
-    elif lapply_no_act(rd, ld, rud): # type: ignore[arg-type]
+    if type(res_ud) is list: # so assume interaction ok
+        return Dagger(lapply_mul2(res_ud, [], **options))
+    elif lapply_no_act(rhs_d, lhs_d, res_ud): # type: ignore[arg-type]
         return Mul(lhs, rhs, evaluate=False)
     else: # successful
-        return Dagger(rud)
+        return Dagger(res_ud)
 
 
 ##    ##  ---------------------------------------------------------------------

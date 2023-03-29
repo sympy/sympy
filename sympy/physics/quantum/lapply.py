@@ -91,21 +91,22 @@ __all__ = [
 def lapply(e:Expr, mul=True, Add=Add,
                    power_base=None, power_exp=False, nested_exp=None,
                    apply_exp=False, cache_for_pow=None, **options) -> Expr:
-    """Generic evaluation engine to apply linear operators, powers and factors
+    """
+    Generic evaluation engine to apply linear operators, powers and factors
     and distribute them over summands with focus on non-commutative operators.
-    Multiplication of arbitrary SymPy objects can be defined by multipledispatch
-    handlers (see sympy.physics.quantum.qapply for example). The primary purpose
-    is evaluate larger expression trees of SymPy objects whose multiplication
-    has not been defined with Mul and without having to overload the * operator
+    Multiplication of arbitrary SymPy objects can be defined by ``multipledispatch``
+    handlers (see :obj:`sympy.physics.quantum.qapply()` for example). The primary
+    purpose is evaluate larger expression trees of SymPy objects whose multiplication
+    has not been defined with :obj:`~.Mul()` and without having to overload the ``*`` operator
     or to manually program the expression with intermediate simplifications.
     ``lapply`` incorporates simplification rules for powers with symbolic
     exponents and involutoric or idempotent factors in their base, so it can help
-    to simplify terms in a way like combinations of ``expand()``, ``simplify()``
-    ``powsimp()`` and ``doit()``. The level of expansion can be tuned by options
+    to simplify terms in a way like combinations of :obj:`~.expand()`, :obj:`~.simplify()`,
+    :obj:`~.powsimp()` and ``.doit()``. The level of expansion can be tuned by options
     especially for commutative factors.
     The handling of matrices is included for matrices that are SymPy expressions,
-    i.e. derived from ``MatrixExpr`` and immutable, and is best used with terms
-    that contain MatrixSymbols (see examples).
+    i.e. derived from :obj:`~.MatrixExpr` and immutable, and is best used with terms
+    that contain :obj:`~.MatrixSymbols` (see examples).
 
     Parameters
     ==========
@@ -114,31 +115,42 @@ def lapply(e:Expr, mul=True, Add=Add,
         The expression containing operators, states resp. factors, summands and
         powers. The expression tree will be walked and operators resp.
         factors and powers applied and distributed over summands.
-    options : dict
-        A dict of key/value pairs that determine how the operator actions are
-        carried out. All options are passed to operator methods.
 
-        The following options modify the action of lapply itself:
+    mul : Boolean, optional
+        If True (default) distribute commutative factors over sums. Corresponds to option
+        ``mul`` of :obj:`~.expand()`. ``mul=False`` will do the minimal application only;
+        Use when expansion is slow.
 
-        * ``mul``: distribute commutative factors over sums. Corresponds to option
-          ``mul`` of ``expand``. ``mul=False`` will do the minimal application only.
-          Use when expansion is slow (default: True).
-        * ``power_base``: for commutative factors, split powers of multiplied bases
-          (same option as in ``expand``) (default: value of option ``mul``).
-        * ``power_exp``: for cummutative factors, expand addition in exponents into
-          multiplied bases (same option as in ``expand``) (default: False).
-        * ``nested_exp``: if powers are nested and exponents may be multiplied,
-          expand the product of the exponents (default: value of option ``mul``).
-        * ``apply_exp``: use lapply on exponents before applying them to base.
-          Default is to apply exponents "as provided" (default: False).
-        * ``cache_for_pow``: a dictionary that provides cache values for evaluation
-          of powers. If provided is updated in place, so it can be passed on to the
-          next invocation of lapply as long as options and attributes of symbols
-          remain unaltered (default: None)
-        * ``Add``: the function to add summands. Must accept option evaluate=True
-          and return type Expr. If set to None, the individual .func argument of
-          each addition expression will be used (default: standard ``Add`` from
-          sympy.core.add)
+    power_base : Boolean
+        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        If True split powers of multiplied bases. Defaults to value of option ``mul``.
+
+    power_exp : Boolean, optional
+        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        It True expand addition in exponents into multiplied bases. Defaults to False.
+
+    nested_exp : Boolean, optional
+        If True, then if powers are nested and if their exponents may be multiplied,
+        explicitly expand the product of the exponents. Defaults to value of option ``mul``.
+
+    apply_exp : Boolean, optional
+        If True apply ``lapply`` to exponents of a power before applying the exponent
+        to the base. Default is False and to apply exponents as provided.
+
+    cache_for_pow : dict, optional
+        a dictionary that provides cache values to speed up the evaluation
+        of powers. If provided it is updated in place, so it can be passed on to the
+        next invocation of ``lapply`` as long as options and attributes of symbols
+        remain unaltered. Defaults to None, in which case an internal cache is used.
+
+    Add : Callable
+        This function is used to add summands. It must accept the option ``evaluate=True``
+        and return type :obj:`~.Expr`. If set to None, the individual .func argument of
+        each addition expression will be used. Defaults to standard :obj:`~.Add()`.
+
+    options : dict, optional
+        A dict of keyword/value pairs that are passed to the handlers and the 
+        operator methods as operator and handler specific options.
 
 
     Returns
@@ -229,6 +241,7 @@ def lapply(e:Expr, mul=True, Add=Add,
                         else ([],[], q) ))
         >>> lapply(q * q.conjugate())
         a**2 + b**2 + c**2 + d**2
+
     """
     # if e is no SymPy Expr, return it unmodified (e.g. Numbers).
     # It is useless to call lapply with Basic or even less object types, as
@@ -358,17 +371,17 @@ factors in two ways:
 2. Is the factor a compound type (e.g. OuterProduct, Commutator) that is
     actually an expression that should be evaluated and broken up into
     its components to be multiplied one by one, or is it 'elementary'?
-    So lapply implements rules which compound types to break up (Pow, Mul,
-    (Anti-)Commutator, see c_nc_ncef) and which to break as an option
-    (e.g. OuterProduct). Those that will not be broken up are called
+    So lapply implements rules (Pow, Mul) and the handler family c_nc_ncef
+    to break up compound types (e.g. (Anti-)Commutator) or which to break as
+    an option (e.g. OuterProduct). Those that will not be broken up are called
     "elementary" (note that this is similar in meaning but not identical
     to the sympy definition of Atom or is_Atom!).
 
-    Note that "elementary" refers to the general algorithm (lapply_Mul2)
+    Note that "elementary" refers to the general algorithm (lapply_mul2)
     that handles walking the expression tree and the association of factors.
-    lapply_Mul2elems may still inspect the inner contents of factors to do
+    lapply_mul2elems may still inspect the inner contents of factors to do
     the multiplication (see e.g. handler for OuterProduct).
-"""
+""" #--- end of comment block
 
 def lapply_no_act(lhs:Expr, rhs:Expr, res:Expr) -> bool:
     """ Assumes lhs, rhs elementary and nc and res=lapply_mul2([lhs, rhs], []).
@@ -414,8 +427,8 @@ def lapply_expand_powers(cl:List, **options) -> List:
                                 "multinomial":False, "basic":False })
     cle = [] # Though cl may contain Muls, we flatten the expansion..
     for c in cl:  # ..results, just for consistency. It's not required.
-        cle.extend(c.args) if (c := c.expand(**popts)).is_Mul else \
-        cle.append(c)
+        c = c.expand(**popts)
+        cle.extend(c.args) if c.is_Mul else cle.append(c)
     return cle
 
 # This is a "less intrusive" version of expand_mul():
@@ -428,7 +441,8 @@ def lapply_expand_mul(e:Expr) -> Expr:
     def lapply_expand_chg(e:Expr) -> Expr:
         nonlocal chg
         if e.is_Mul:  # e._eval_expand_mul returns e if no change
-            chg |= (e1 := e._eval_expand_mul(deep=True)) is not e # type: ignore[attr-defined]
+            e1 = e._eval_expand_mul(deep=True) # type: ignore[attr-defined]
+            chg |= (e1 is not e)
         elif e.is_Add:
             sargs = [lapply_expand_chg(ae) for ae in e.args] # type: ignore[arg-type]
             e1 = e.func(*sargs) if chg else e
@@ -595,11 +609,12 @@ def lapply_c_nc_ncef(e:Expr, to_L:bool, **options) -> Tuple[List, List, Expr]:
                                            False, cached, **options)
             e1 = e
             break
-        # is e itself in cache?
-        if (cached := options["cache_for_pow"].get(e, None)) == "elem":
+        # is e itself in cache - which would prove it has been processed?
+        cached = options["cache_for_pow"].get(e, None)
+        if cached == "elem":
             return [], [], e  # shortcut for elements cached as elementary
-        elif cached: # rare case:
-            e1 = e   # e has hit the cache for exponents and bases
+        elif cached:          # rare case:
+            e1 = e            # e has hit the cache for exponents and bases
             break
 
         # Not in cache: regular processing of e: clean up and recurse into e
@@ -786,8 +801,8 @@ def Pow_with_Cache(base:Expr, exp:Union[Expr, None], rolloff:RO,
 def get_cached_for_base(base:Expr, **options) \
                             -> Union[Tuple[RO, List, List], None]:
     """Get cached contents (RO, cl, encl) for base, None if none"""
-    cache = options["cache_for_pow"] # see lapply(), Pow_with_Cache()
-    if type(cached := cache.get(base, None)) is tuple:
+    cache = options["cache_for_pow"].get(base, None)
+    if type(cached) is tuple:
         return (cached[0], cached[1].copy(), cached[2].copy())
     elif cached == "elem": # happens to have been cached as elementary
         return (RO.UNKN, [], [base])
@@ -966,8 +981,8 @@ def hdlrP_for(e:Pow, **options) -> Expr:
                 return e1     # return it with new type.
             if e1.exp.is_nonnegative:  # so if exp turned nonnegative
                 # continue with the new e=e1 and new positive exponent
-                cached = get_cached_for_base((e := e1).base, **options)
-                exp = e.exp
+                e = e1; exp = e.exp
+                cached = get_cached_for_base(e.base, **options)
     base = e.base
     if not cached:
         # if no methods has given a result so far, at least recurse into e.base.
