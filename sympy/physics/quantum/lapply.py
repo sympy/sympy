@@ -99,9 +99,9 @@ def lapply(e:Expr, mul=True, Add=Add,
     or to manually program the expression with intermediate simplifications.
     ``lapply`` incorporates simplification rules for powers with symbolic
     exponents and involutoric or idempotent factors in their base, so it can help
-    to simplify terms in a way like combinations of :obj:`~.expand()`, :obj:`~.simplify()`,
-    :obj:`~.powsimp()` and ``.doit()``. The level of expansion can be tuned by options
-    especially for commutative factors.
+    to simplify terms in a way like combinations of :obj:`sympy.core.function.expand()`,
+    :obj:`~.simplify()`, :obj:`~.powsimp()` and ``.doit()``. The level of expansion may
+    be tuned by options especially for commutative factors.
     The handling of matrices is included for matrices that are SymPy expressions,
     i.e. derived from :obj:`~.MatrixExpr` and immutable, and is best used with terms
     that contain :obj:`~.MatrixSymbols` (see examples).
@@ -116,15 +116,15 @@ def lapply(e:Expr, mul=True, Add=Add,
 
     mul : Boolean, optional
         If True (default) distribute commutative factors over sums. Corresponds to option
-        ``mul`` of :obj:`~.expand()`. ``mul=False`` will do the minimal application only;
-        Use when expansion is slow.
+        ``mul`` of :obj:`sympy.core.function.expand()`. ``mul=False`` will do the minimal
+        application only, so use only when expansion is slow.
 
     power_base : Boolean
-        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
         If True split powers of multiplied bases. Defaults to value of option ``mul``.
 
     power_exp : Boolean, optional
-        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
         It True expand addition in exponents into multiplied bases. Defaults to False.
 
     nested_exp : Boolean, optional
