@@ -796,7 +796,7 @@ def Pow_with_Cache(base:Expr, exp:Union[Expr, None], rolloff:RO,
 def get_cached_for_base(base:Expr, **options) \
                             -> Union[Tuple[RO, List, List], None]:
     """Get cached contents (RO, cl, encl) for base, None if none"""
-    cache = options["cache_for_pow"].get(base, None)
+    cached = options["cache_for_pow"].get(base, None)
     if type(cached) is tuple:
         return (cached[0], cached[1].copy(), cached[2].copy())
     elif cached == "elem": # happens to have been cached as elementary
