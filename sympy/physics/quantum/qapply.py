@@ -62,20 +62,20 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
 
     tensorproduct : Boolean, optional
         If True expand sums in factors of ``TensorProduct`` into sums of
-        ``TensorProduct``. Same option as in :obj:`~.expand()`. Defaults to
-        value of option ``mul``.
+        ``TensorProduct``. Same option as in :obj:`sympy.core.function.expand()`.
+        Defaults to value of option ``mul``.
 
     mul : Boolean, optional
         If True (default) distribute commutative factors over sums. Corresponds to option
-        ``mul`` of :obj:`~.expand()`. ``mul=False`` will do the minimal application only;
-        Use when expansion is slow.
+        ``mul`` of :obj:`sympy.core.function.expand()`. ``mul=False`` will do the minimal
+        application only, so use only when expansion is slow.
 
     power_base : Boolean
-        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
         If True split powers of multiplied bases. Defaults to value of option ``mul``.
 
     power_exp : Boolean, optional
-        Refers to commutative factors. Same option as in :obj:`~.expand()`:
+        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
         It True expand addition in exponents into multiplied bases. Defaults to False.
 
     nested_exp : Boolean, optional
@@ -129,13 +129,13 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
-
-    See Also
-    ========
-
-    lapply: Generic evaluation engine to apply linear operators, powers and factors
-
-    """
+"""
+#    See Also #---------------------- add this to docstring as soon as final location of lapply is fixed
+#    ========
+#
+#    lapply: Generic evaluation engine to apply linear operators, powers and factors
+#
+    
     # set quantum specific options for qapply
     # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
     options['dagger'       ] = dagger
