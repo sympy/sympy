@@ -194,7 +194,7 @@ jobs:
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
-      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
+      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
@@ -208,7 +208,7 @@ jobs:
 
       # These are not available for pypy
       - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc
+        run: pip install gmpy2 jax jaxlib symengine pymc libclang
 
       # Test external imports
       - run: bin/test_external_imports.py
