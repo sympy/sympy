@@ -77,10 +77,9 @@ def gbt(tf, sample_per, alpha):
     # The next line results from multiplying H(z) with z^N/z^N
 
     N = max(len(np), len(dp)) - 1
-    num = Add(*[ 1 / alpha * T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
-    den = Add(*[ 1 / alpha * T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
-    print(type(num))
-    print(num)
+    num = Add(*[ T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
+    den = Add(*[ T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
+
     num_coefs = num.as_poly(z).all_coeffs()
     den_coefs = den.as_poly(z).all_coeffs()
 

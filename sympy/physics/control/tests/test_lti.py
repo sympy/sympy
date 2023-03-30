@@ -1274,7 +1274,7 @@ def test_TransferFunction_bilinear():
 def test_TransferFunction_forward_diff():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = backward_diff(tf, T)
+    numZ, denZ = forward_diff(tf, T)
     # discretized transfer function with coefs from tf.forward_diff()
     tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
