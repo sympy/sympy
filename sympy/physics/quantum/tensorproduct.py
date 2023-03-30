@@ -120,7 +120,7 @@ class TensorProduct(Expr):
     is_commutative = False
 
     def __new__(cls, *args):
-        if isinstance(args[0], (Matrix, numpy_ndarray, scipy_sparse_matrix)):
+        if isinstance(args[0], (MatrixBase, numpy_ndarray, scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
         c_part, new_args = cls.flatten(sympify(args))
         c_part = Mul(*c_part)
