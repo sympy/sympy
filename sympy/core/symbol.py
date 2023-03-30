@@ -600,6 +600,25 @@ class Wild(Symbol):
         return repl_dict
 
 
+class CodeblockResult(Dummy):
+    """
+    A result of a Codeblock.
+    """
+
+    def __new__(cls, name, expr, code_block=[]):
+
+        # Check if code_block is a list of CodeBlock
+        if not all(isinstance(x, CodeBlock) for x in code_block):
+            raise TypeError("code_block must be a list of CodeBlock")
+        
+        output = Dummy.__xnew__(cls, name)
+        output.expr = expr
+        output.code_blocks = code_block
+
+        return output
+
+
+
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 
