@@ -812,6 +812,73 @@ so if you are using it, you do not need to worry about this.
 
 ### Avoid Too Much Automatic Evaluation
 
+When defining a custom function, avoid doing too much automatic evaluation
+(i.e., evaluation in the `eval` or `__new__` methods).
+
+Generally, automatic evaluation should only be done in instances where it is
+fast, and it is something that no one ever want to not happen. Automatic
+evaluation is difficult to undo. A good rule of thumb is to evaluate on
+explicit numeric values (`isinstance(x, Number)`), and leave everything else
+symbolically unevaluated.
+Further simplification using more advanced identities should be done in
+specific simplification functions or `doit` (see the [custom functions
+guide](custom-functions) for a list of common simplification routines that can
+be defined on SymPy objects).
+
+The [custom functions guide](custom-functions-automatic-evaluation) goes over
+this in depth (but note that this guideline applies equally to all SymPy
+objects, not just functions). But in a nutshell, the reason for this is that the only way to prevent automatic evaluation is to use
+`evaluate=False`, which is fragile. Additionally, code will invariably be
+written assuming the invariants that are true due to automatic evaluations,
+meaning that expressions created with `evaluate=False` can lead to wrong
+results from this code.
+
+Evaluation that can potentially be expensive (for
+instance, applying a symbolic identity) is itself bad because it can make
+creating an expression without even doing anything with it allow. This can
+also apply to checking for symbolic assumptions (like `x.is_integer`), so it
+is also better to avoid this.
+
+**Don't**
+
+```py
+class f(Function):
+    @classmethod
+    def eval(cls, x):
+        if x.is_integer: # Bad (checking general assumptions)
+            return 0
+        if isinstance(x, Add): # Bad (applying symbolic identities)
+            return Add(*[f(i) for i in x.args])
+
+```
+
+**Do**
+
+```
+class f(Function):
+    @classmethod
+    def eval(cls, x):
+        if isinstance(x, Integer): # Good (only evaluating on explicit integers)
+            return 0
+    # Good (applying simplification on assumptions in doit())
+    def doit(self, deep=True, **hints):
+        x = self.args[0]
+        if deep:
+           x = x.doit(deep=deep, **hints)
+        if x.is_integer:
+           return S(0)
+        return self
+    # Good (applying symbolic identities inside of simplification functions)
+    def _eval_expand_func(self, **hints):
+        x = self.args[0]
+        if isinstance(x, Add):
+            return Add(*[f(i) for i in x.args])
+        return self
+```
+
+Note that not all the classes in SymPy currently follow this guideline very
+well, but it is something that we are improving.
+
 ### Don't Denest Collections
 
 ### Don't Store Attributes in `.args`
