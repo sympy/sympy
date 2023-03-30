@@ -15,7 +15,7 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
-    sample)
+    gbt, bilinear, forward_diff, backward_diff)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
@@ -1222,10 +1222,10 @@ def test_TransferFunctionMatrix_functions():
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
 
-def test_TransferFunction_sample():
+def test_TransferFunction_gbt():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = sample(tf, T, 'bilinear')
+    numZ, denZ = gbt(tf, T, 0.5)
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
@@ -1234,7 +1234,16 @@ def test_TransferFunction_sample():
     assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
 
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = sample(tf, T, 'backward_diff')
+    numZ, denZ = gbt(tf, T, 0)
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T, s*a-a+b*T, s)
+
+    assert S.Zero == (tf_test_forward-tf_test_manual).simplify().num
+
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = gbt(tf, T, 1)
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_backward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
@@ -1243,10 +1252,43 @@ def test_TransferFunction_sample():
     assert S.Zero == (tf_test_backward-tf_test_manual).simplify().num
 
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = sample(tf, T, 'forward_diff')
+    numZ, denZ = gbt(tf, T, 0.2)
     # discretized transfer function with coefs from tf.bilinear()
+    tf_test_gbt = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T*0.2+0.8*T, s*(0.2*T*b+1.0*a)+(0.8*T*b-1.0*a), s)
+
+    assert S.Zero == (tf_test_gbt-tf_test_manual).simplify().num
+
+def test_TransferFunction_bilinear():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = bilinear(tf, T)
+    # discretized transfer function with coefs from tf.bilinear()
+    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+
+    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+
+def test_TransferFunction_forward_diff():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = backward_diff(tf, T)
+    # discretized transfer function with coefs from tf.forward_diff()
     tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
     tf_test_manual = TransferFunction(s*T, s*a-a+b*T, s)
 
     assert S.Zero == (tf_test_forward-tf_test_manual).simplify().num
+
+def test_TransferFunction_backward_diff():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = backward_diff(tf, T)
+    # discretized transfer function with coefs from tf.backward_diff()
+    tf_test_backward = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*T, s*(T*b+a)-a, s)
+
+    assert S.Zero == (tf_test_backward-tf_test_manual).simplify().num
