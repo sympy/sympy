@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sympify import sympify
-from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.matrices import MatrixBase
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
