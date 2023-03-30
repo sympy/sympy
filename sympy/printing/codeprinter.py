@@ -204,7 +204,7 @@ class CodePrinter(StrPrinter):
         # Check if the code printer defines expr as a code block
         if blockmethod is not None:
           # Parse the CodeBlock as defined
-          return blockmethod(expr, **kwargs)
+          return blockmethod(expr)
 
         # Store the code blocks for the subexpressions in the arguments of expr
         codeblocks = []

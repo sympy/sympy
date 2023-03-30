@@ -1,6 +1,6 @@
 from sympy.printing.codeprinter import CodePrinter
 from sympy.core import symbols
-from sympy.core.symbol import Dummy, CodeblockResult
+from sympy.core.symbol import *
 from sympy.testing.pytest import raises
 
 
@@ -57,7 +57,7 @@ def test_issue_15791():
 
 def test_doblocks():
     a = symbols('a')
-    b = CodeblockResult('test_block', a)
+    b = CodeblockResult(a, 'test_block')
 
     p = setup_test_printer()
     assert p.doblocks(a)[0] == a

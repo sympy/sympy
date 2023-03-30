@@ -632,7 +632,7 @@ class C89CodePrinter(CodePrinter):
     
     def _codeblock_Sum(self, expr, **kwargs):
         # Connect to the rest of the expression
-        sum_result = CodeblockResult('sumResult', expr) 
+        sum_result = CodeblockResult(expr, 'sumResult') 
         sum_expr = Dummy('sumExpr')
         sum_index = Dummy('sumIndex')
         sum_start = Dummy('sumStart')
