@@ -55,9 +55,9 @@ def gbt(tf, sample_per, alpha):
     [2*L + R*T, -2*L + R*T]
     >>> numZ, denZ = gbt(tf, T, 0)
     >>> numZ
-    [T, T]
+    [T]
     >>> denZ
-    [2*L + R*T, -2*L + R*T]
+    [L, -L + R*T]
     >>> numZ, denZ = gbt(tf, T, 1)
     >>> numZ
     [T, 0]
@@ -125,9 +125,9 @@ def forward_diff(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = forward_diff(tf, T)
     >>> numZ
-    [T, T]
+    [T]
     >>> denZ
-    [2*L + R*T, -2*L + R*T]
+    [L, -L + R*T]
     """
     return gbt(tf, sample_per, 0)
 
