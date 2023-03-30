@@ -32,9 +32,9 @@ sys.path = ['ext'] + sys.path
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
               'sphinx_reredirects', 'sphinx_copybutton',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx',
-              ]
+              'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
+              'matplotlib.sphinxext.plot_directive', 'myst_parser',
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
