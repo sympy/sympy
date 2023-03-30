@@ -382,6 +382,12 @@ class CodePrinter(StrPrinter):
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
+    
+    def _print_CodeblockResult(self, expr):
+        if expr.name.startswith('CodeblockResult_'):
+            return '_' + expr.name
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_String(self, string):
         return str(string)
