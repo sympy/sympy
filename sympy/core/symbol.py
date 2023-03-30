@@ -610,6 +610,8 @@ class CodeblockResult(Symbol):
 
     __slots__ = ('dummy_index', 'expr', 'code_blocks')
 
+    is_Dummy = True
+
     def __new__(cls, expr, name=None, code_blocks=[], dummy_index=None, **assumptions):
 
         # Check if code_blocks is a list
