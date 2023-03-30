@@ -22,7 +22,7 @@ from sympy.series import limit
 from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'sample']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'gbt', 'bilinear', 'forward_diff', 'backward_diff']
 
 
 def _roots(poly, var):
@@ -33,67 +33,127 @@ def _roots(poly, var):
         r = [rootof(poly, var, k) for k in range(n)]
     return r
 
-def sample(tf, sample_per, method = 'bilinear'):
-        """
-        Returns falling coefficients of H(z) from numerator and denominator.
-        Where H(z) is the corresponding discretized transfer function,
-        discretized with the different transform method.
-        H(z) is obtained from the continuous transfer function H(s)
-        by substituting s(z) into H(s) according to different methods, where T is the
-        sample period.
-        Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
-        as [a, b], [c, d].
+def gbt(tf, sample_per, alpha):
+    r"""
+    Returns falling coefficients of H(z) from numerator and denominator.
+    Where H(z) is the corresponding discretized transfer function,
+    discretized with the generalised bilinear transformation method.
+    H(z) is obtained from the continuous transfer function H(s)
+    by substituting s(z) = (z-1) / (T * (alpha*z + (1-alpha))) into H(s), where T is the
+    sample period.
+    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    as [a, b], [c, d].
+    Examples
+    ========
+    >>> from sympy.physics.control.lti import TransferFunction, bilinear
+    >>> from sympy.abc import s, L, R, T
+    >>> tf = TransferFunction(1, s*L + R, s)
+    >>> numZ, denZ = gbt(tf, T, 0.5)
+    >>> numZ
+    [T, T]
+    >>> denZ
+    [2*L + R*T, -2*L + R*T]
+    >>> numZ, denZ = gbt(tf, T, 0)
+    >>> numZ
+    [T, T]
+    >>> denZ
+    [2*L + R*T, -2*L + R*T]
+    >>> numZ, denZ = gbt(tf, T, 1)
+    >>> numZ
+    [T, 0]
+    >>> denZ
+    [L + R*T, -L]
+    """
+    if not tf.is_SISO:
+        raise NotImplementedError("Not implemented for MIMO systems.")
 
-        Examples
-        ========
+    T = sample_per  # and sample period T
+    s = tf.var
+    z =  s         # dummy discrete variable z
 
-        >>> from sympy.physics.control.lti import TransferFunction, sample
-        >>> from sympy.abc import s, L, R, T
-        >>> tf = TransferFunction(1, s*L + R, s)
-        >>> numZ, denZ = sample(tf, T, 'bilinear')
-        >>> numZ
-        [T, T]
-        >>> denZ
-        [2*L + R*T, -2*L + R*T]
-        >>> numZ, denZ = sample(tf, T, 'backward_diff')
-        >>> numZ
-        [T, 0]
-        >>> denZ
-        [L + R*T, -L]
-        >>> numZ, denZ = sample(tf, T, 'forward_diff')
-        >>> numZ
-        [T]
-        >>> denZ
-        [L, -L + R*T]
-        """
+    np = tf.num.as_poly(s).all_coeffs()
+    dp = tf.den.as_poly(s).all_coeffs()
 
-        if not tf.is_SISO:
-            raise NotImplementedError('Not implemented for MIMO systems.')
+    # The next line results from multiplying H(z) with z^N/z^N
 
-        T = sample_per  # and sample period T
-        s = tf.var
-        z =  s # dummy discrete variable z
+    N = max(len(np), len(dp)) - 1
+    num = Add(*[ 1 / alpha * T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
+    den = Add(*[ 1 / alpha * T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
+    print(type(num))
+    print(num)
+    num_coefs = num.as_poly(z).all_coeffs()
+    den_coefs = den.as_poly(z).all_coeffs()
 
-        np = tf.num.as_poly(s).all_coeffs()
-        dp = tf.den.as_poly(s).all_coeffs()
+    return num_coefs, den_coefs
 
-        # The next line results from multiplying H(z) with (z-1)^N/(z+1)^N
-        N = max(len(np), len(dp)) - 1
+def bilinear(tf, sample_per):
+    r"""
+    Returns falling coefficients of H(z) from numerator and denominator.
+    Where H(z) is the corresponding discretized transfer function,
+    discretized with the bilinear transform method.
+    H(z) is obtained from the continuous transfer function H(s)
+    by substituting s(z) = 2/T * (z-1)/(z+1) into H(s), where T is the
+    sample period.
+    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    as [a, b], [c, d].
+    Examples
+    ========
+    >>> from sympy.physics.control.lti import TransferFunction, bilinear
+    >>> from sympy.abc import s, L, R, T
+    >>> tf = TransferFunction(1, s*L + R, s)
+    >>> numZ, denZ = bilinear(tf, T)
+    >>> numZ
+    [T, T]
+    >>> denZ
+    [2*L + R*T, -2*L + R*T]
+    """
+    return gbt(tf, sample_per, 0.5)
 
-        if method == 'bilinear':
-            num = Add(*[ T**(N-i) * 2**i * c * (z-1)**i * (z+1)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
-            den = Add(*[ T**(N-i) * 2**i * c * (z-1)**i * (z+1)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
-        if method == 'backward_diff':
-            num = Add(*[ T**(N-i) * c * (z-1)**i * (z)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
-            den = Add(*[ T**(N-i) * c * (z-1)**i * (z)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
-        if method == 'forward_diff':
-            num = Add(*[ T**(N-i) * c * (z-1)**i for c, i in zip(np[::-1], range(len(np))) ])
-            den = Add(*[ T**(N-i) * c * (z-1)**i for c, i in zip(dp[::-1], range(len(dp))) ])
+def forward_diff(tf, sample_per):
+    r"""
+    Returns falling coefficients of H(z) from numerator and denominator.
+    Where H(z) is the corresponding discretized transfer function,
+    discretized with the forward difference transform method.
+    H(z) is obtained from the continuous transfer function H(s)
+    by substituting s(z) = (z-1)/T into H(s), where T is the
+    sample period.
+    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    as [a, b], [c, d].
+    Examples
+    ========
+    >>> from sympy.physics.control.lti import TransferFunction, bilinear
+    >>> from sympy.abc import s, L, R, T
+    >>> tf = TransferFunction(1, s*L + R, s)
+    >>> numZ, denZ = forward_diff(tf, T)
+    >>> numZ
+    [T, T]
+    >>> denZ
+    [2*L + R*T, -2*L + R*T]
+    """
+    return gbt(tf, sample_per, 0)
 
-        num_coefs = num.as_poly(z).all_coeffs()
-        den_coefs = den.as_poly(z).all_coeffs()
-
-        return num_coefs, den_coefs
+def backward_diff(tf, sample_per):
+    r"""
+    Returns falling coefficients of H(z) from numerator and denominator.
+    Where H(z) is the corresponding discretized transfer function,
+    discretized with the backward difference transform method.
+    H(z) is obtained from the continuous transfer function H(s)
+    by substituting s(z) =  (z-1)/(T*z) into H(s), where T is the
+    sample period.
+    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    as [a, b], [c, d].
+    Examples
+    ========
+    >>> from sympy.physics.control.lti import TransferFunction, backward_diff
+    >>> from sympy.abc import s, L, R, T
+    >>> tf = TransferFunction(1, s*L + R, s)
+    >>> numZ, denZ = backward_diff(tf, T)
+    >>> numZ
+    [T, 0]
+    >>> denZ
+    [L + R*T, -L]
+    """
+    return gbt(tf, sample_per, 1)
 
 
 class LinearTimeInvariant(Basic, EvalfMixin):
