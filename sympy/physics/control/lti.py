@@ -45,7 +45,7 @@ def gbt(tf, sample_per, alpha):
     as [a, b], [c, d].
     Examples
     ========
-    >>> from sympy.physics.control.lti import TransferFunction, bilinear
+    >>> from sympy.physics.control.lti import TransferFunction, gbt
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = gbt(tf, T, 0.5)
@@ -120,7 +120,7 @@ def forward_diff(tf, sample_per):
     as [a, b], [c, d].
     Examples
     ========
-    >>> from sympy.physics.control.lti import TransferFunction, bilinear
+    >>> from sympy.physics.control.lti import TransferFunction, forward_diff
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = forward_diff(tf, T)
