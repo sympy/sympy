@@ -130,7 +130,7 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
 """
-#    See Also #---------------------- add this to docstring as soon as final location of lapply is fixed
+#    See Also                    #------!!add this to docstring as soon as sphinx identifies lapply!!
 #    ========
 #
 #    lapply: Generic evaluation engine to apply linear operators, powers and factors
