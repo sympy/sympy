@@ -254,9 +254,9 @@ Eq(Matrix([
 [-5*sqrt(2)/2 - 3 + sqrt(3)*(-8 + 5*sqrt(2))/2],
 [ -4 + 5*sqrt(2)/2 + sqrt(3)*(6 + 5*sqrt(2))/2],
 [                                        -19.6]]), Matrix([
-[vx],
-[vy],
-[vz]]))
+[v_gx],
+[v_gy],
+[v_gz]]))
 >>> solve(eqn, [v_gx, v_gy, v_gz])
 { v_gx: -7.34001277925030,
   v_gy: 10.8554106855973,
