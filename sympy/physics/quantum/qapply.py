@@ -135,7 +135,7 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
 #
 #    lapply: Generic evaluation engine to apply linear operators, powers and factors
 #
-    
+
     # set quantum specific options for qapply
     # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
     options['dagger'       ] = dagger
