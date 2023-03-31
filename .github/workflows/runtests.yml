@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: '3.10'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8 flake8-comprehensions ruff
+      - run: pip install mpmath flake8 ruff
 
       - name: Basic code quality tests
         run: bin/test quality
