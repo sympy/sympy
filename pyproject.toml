@@ -8,6 +8,7 @@ select = [
 
 # Ignore rules that currently fail on the SymPy codebase
 ignore = [
+    "C416",  # Unnecessary `dict` comprehension (rewrite using `dict()`)
     "E401",  # Multiple imports on one line
     "E402",  # Module level import not at top of file
     "E501",  # Line too long (<LENGTH> > 88 characters)
