@@ -231,7 +231,7 @@ We can define the position vector of point P in ``B`` as:
 >>> r_b = 3*B.x + 4*B.y
 
 We can also define the velocity of the ball in the ``B`` reference frame at time t = 2 seconds as:
->>> v_b = 10cos(pi/4)*B.x + 10sin(pi/4)*B.y - 9.82*B.z
+>>> v_b = 10*cos(pi/4)*B.x + 10*sin(pi/4)*B.y - 9.82*B.z
 
 Therefore, the velocity vector of the ball in the ``G`` reference frame at time t = 2 seconds is:
 >>> v_a = v_b + omega.cross(r_b)
