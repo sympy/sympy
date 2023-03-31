@@ -164,6 +164,8 @@ that would be used if there were custom indices. ::
   >>> vlatex(N.z)
   'cat'
 
+
+
 dynamicsymbols
 --------------
 The ``dynamicsymbols`` function also has 'hidden' functionality; the variable
@@ -198,3 +200,65 @@ so dynamic symbols created before or after will print the same way.
 Also note that ``Vector``'s ``.dt`` method uses the ``._t`` attribute of
 ``dynamicsymbols``, along with a number of other important functions and
 methods. Don't mix and match symbols representing time.
+
+
+
+Solving Vectors
+---------------
+We would be looking at an example to understand it better.
+
+PROBLEM:
+
+A ball is thrown at an angle of 45 degrees to the horizontal with a velocity of
+10 m/s in a ground frame G. Another reference frame B is at an angle of 30 degrees
+with respect to G. The position of the ball in the B reference frame at time 
+t = 2 seconds is at point P with a position vector of 3B.x + 4B.y.
+What is the velocity vector of the ball at time t = 2 seconds w.r.t ground frame?
+
+SOLUTION:
+
+We can define two reference frames:
+The ground reference frame, which is fixed with respect to the Earth and has its
+x-axis pointing towards the east and its y-axis pointing towards the north.
+The ``B`` reference frame, which is at an angle of 30 degrees with respect to ``G``. 
+
+We can define two points in the problem:
+
+1) Point O, which is the origin of both reference frames.
+2) Point P, where the ball is located at time t = 2 seconds w.r.t ``B``.
+
+We can define the position vector of point P in ``B`` as:
+>>> r_b = 3*B.x + 4*B.y
+
+We can also define the velocity of the ball in the ``B`` reference frame at time t = 2 seconds as:
+>>> v_b = 10cos(pi/4)*B.x + 10sin(pi/4)*B.y - 9.82*B.z
+
+Therefore, the velocity vector of the ball in the ``G`` reference frame at time t = 2 seconds is:
+>>> v_a = v_b + omega.cross(r_b)
+where ``omega`` is the angular velocity of the ``B`` reference frame w.r.t ground frame, and 
+cross represents the vector cross product.
+
+>>> from sympy import *
+>>> from sympy.physics.vector import *
+>>> G = ReferenceFrame('G')
+>>> B = ReferenceFrame('B')
+>>> B.orient_axis(G, pi/6, G.z)
+>>> r_b = 3*B.x + 4*B.y
+>>> v_b = 10*cos(pi/4)*B.x + 10*sin(pi/4)*B.y - 9.8*2*B.z
+>>> omega = 2*B.z
+>>> v_g = v_b + omega.cross(r_b)
+>>> v_gx, v_gy, v_gz = symbols('v_gx, v_gy, v_gz')
+>>> eqn = Eq(v_g.to_matrix(G), Matrix([[v_gx], [v_gy], [v_gz]]))
+>>> eqn
+Eq(Matrix([
+[-5*sqrt(2)/2 - 3 + sqrt(3)*(-8 + 5*sqrt(2))/2],
+[ -4 + 5*sqrt(2)/2 + sqrt(3)*(6 + 5*sqrt(2))/2],
+[                                        -19.6]]), Matrix([
+[vx],
+[vy],
+[vz]]))
+>>> solve(eqn, [v_gx, v_gy, v_gz])
+{ v_gx: -7.34001277925030,
+  v_gy: 10.8554106855973,
+  v_gz: -19.6000000000000
+}
