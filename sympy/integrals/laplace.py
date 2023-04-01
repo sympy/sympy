@@ -1625,7 +1625,7 @@ def _inverse_laplace_irrational(fn, s, t, plane):
 
     ma = [x.match((a*s**m+b)**n) for x in fa]
 
-    if (None in ma) == 1:
+    if None in ma:
         return None
 
     constants = S.One
@@ -1724,6 +1724,33 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                 result = (
                     k_*(2/sqrt(pi)*a_*sqrt(t)+exp(a_**2*t)*erfc(a_*sqrt(t))-1))
                 debugf('[ILT _i_l_i] Rule (8) returns %s', (result, ))
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*a1*s)
+            # == 1/a0**2/a1 * 1/(sqrt(s)+b0/a0)**2/s
+            a_sq = poles[0][b]/poles[0][a]
+            a_ = a_sq**2
+            k_ = 1/poles[0][a]**2/poles[1][a]*constants
+            if a_sq.is_positive:
+                result = (
+                    k_*(1/a_ + (2*t-1/a_)*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) -
+                        2/sqrt(pi)/sqrt(a_)*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (11) returns %s', (result, ))
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*sqrt(a1*s))
+            # == 1/a0**2/sqrt(a1) * 1/(sqrt(s)+b0/a0)**2/sqrt(s)
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**2/sqrt(poles[1][a])*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*sqrt(t) -
+                        2*a_*t*exp(a_**2*t)*erfc(a_*sqrt(t))))
+                debugf('[ILT _i_l_i] Rule (12) returns %s', (result, ))
 
     elif len(poles) == 2 and len(zeros) == 1:
         if (
