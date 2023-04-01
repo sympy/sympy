@@ -236,11 +236,6 @@ Putting it all together:
   >>> A = ReferenceFrame('A')
   >>> B = ReferenceFrame('B')
   >>> B.orient_axis(A, pi/6, A.z)
-  >>> B.dcm(A)
-  Matrix([
-  [sqrt(3)/2,       1/2, 0],
-  [     -1/2, sqrt(3)/2, 0],
-  [        0,         0, 1]])
   >>> p, q = symbols('p, q')
   >>> va = 10*A.x
   >>> vb = p*B.x + q*B.y
