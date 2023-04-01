@@ -203,62 +203,46 @@ methods. Don't mix and match symbols representing time.
 
 
 
-Solving Vectors
+Solving Vector Equations
 ---------------
-We would be looking at an example to understand it better.
+Solving for unknown scalar variables in a set of vector equations is a common need, but 
+SymPy's solvers do not work directly with the physics vectors, so you must first transform
+the vector equations into a set of scalar equations. The `to_matrix()` method provides
+a simple way to do this. For example:
 
 PROBLEM:
 
-A ball is thrown at an angle of 45 degrees to the horizontal with a velocity of
-10 m/s in a ground frame G. Another reference frame B is at an angle of 30 degrees
-with respect to G. The position of the ball in the B reference frame at time 
-t = 2 seconds is at point P with a position vector of 3B.x + 4B.y.
-What is the velocity vector of the ball at time t = 2 seconds w.r.t ground frame?
+A ball is thrown from origin at a velocity of 10m/s along the x-axis w.r.t frame ``A``.
+An observer ``B``'s reference frame is rotated by 30 degrees w.r.t ``A``.
+What are the x and y component values of the velocity vector of the ball as 
+observed by the observer in its frame?
 
 SOLUTION:
 
-We can define two reference frames:
-The ground reference frame, which is fixed with respect to the Earth and has its
-x-axis pointing towards the east and its y-axis pointing towards the north.
-The ``B`` reference frame, which is at an angle of 30 degrees with respect to ``G``. 
+We have two reference frames: ``A`` & ``B``.
+We can define the velocity vector of ball in ``A`` as:
+  >>> v_a = 10*A.x
 
-We can define two points in the problem:
+We have to align the ``B`` w.r.t ``A` by 30 degrees and this can be done using the ``orient_axis()`` method.
+  >>>B.orient_axis(A, pi/6, A.z)
 
-1) Point O, which is the origin of both reference frames.
-2) Point P, where the ball is located at time t = 2 seconds w.r.t ``B``.
+We can also define the velocity of the ball in the ``B`` reference frame as:
+  >>>vb = p*B.x + q*B.y
 
-We can define the position vector of point P in ``B`` as:
->>> r_b = 3*B.x + 4*B.y
+Putting it all together:
 
-We can also define the velocity of the ball in the ``B`` reference frame at time t = 2 seconds as:
->>> v_b = 10*cos(pi/4)*B.x + 10*sin(pi/4)*B.y - 9.82*B.z
-
-Therefore, the velocity vector of the ball in the ``G`` reference frame at time t = 2 seconds is:
->>> v_a = v_b + omega.cross(r_b)
-where ``omega`` is the angular velocity of the ``B`` reference frame w.r.t ground frame, and 
-cross represents the vector cross product.
-
->>> from sympy import *
->>> from sympy.physics.vector import *
->>> G = ReferenceFrame('G')
->>> B = ReferenceFrame('B')
->>> B.orient_axis(G, pi/6, G.z)
->>> r_b = 3*B.x + 4*B.y
->>> v_b = 10*cos(pi/4)*B.x + 10*sin(pi/4)*B.y - 9.8*2*B.z
->>> omega = 2*B.z
->>> v_g = v_b + omega.cross(r_b)
->>> v_gx, v_gy, v_gz = symbols('v_gx, v_gy, v_gz')
->>> eqn = Eq(v_g.to_matrix(G), Matrix([[v_gx], [v_gy], [v_gz]]))
->>> eqn
-Eq(Matrix([
-[-5*sqrt(2)/2 - 3 + sqrt(3)*(-8 + 5*sqrt(2))/2],
-[ -4 + 5*sqrt(2)/2 + sqrt(3)*(6 + 5*sqrt(2))/2],
-[                                        -19.6]]), Matrix([
-[v_gx],
-[v_gy],
-[v_gz]]))
->>> solve(eqn, [v_gx, v_gy, v_gz])
-{ v_gx: -7.34001277925030,
-  v_gy: 10.8554106855973,
-  v_gz: -19.6000000000000
-}
+  >>> from sympy import *
+  >>> from sympy.physics.vector import *
+  >>> A = ReferenceFrame('A')
+  >>> B = ReferenceFrame('B')
+  >>> B.orient_axis(A, pi/6, A.z)
+  >>> B.dcm(A)
+  Matrix([
+  [sqrt(3)/2,       1/2, 0],
+  [     -1/2, sqrt(3)/2, 0],
+  [        0,         0, 1]])
+  >>> p, q = symbols('p, q')
+  >>> va = 10*A.x
+  >>> vb = p*B.x + q*B.y
+  >>> solve((va - vb).to_matrix(B), [p, q])
+  {p: 5*sqrt(3), q: -5}
