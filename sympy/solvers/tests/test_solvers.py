@@ -2,6 +2,7 @@ from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -13,6 +14,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
@@ -2646,3 +2648,11 @@ def test_solve_undetermined_coeffs_issue_23927():
         phi: 2*atan((A + sqrt(A**2 + B**2))/B),
         r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
         }]
+
+def test_issue_24368():
+    # Ideally these would produce a solution, but for now just check that they
+    # don't fail with a RuntimeError
+    raises(NotImplementedError, lambda: solve(Mod(x**2, 49), x))
+    s2 = Symbol('s2', integer=True, positive=True)
+    f = floor(s2/2 - S(1)/2)
+    raises(NotImplementedError, lambda: solve((Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1))*f + Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1), s2))
