@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
+from contextlib import nullcontext
 from itertools import chain, zip_longest
 
 from .assumptions import _prepare_class_assumptions
@@ -1980,24 +1981,33 @@ class Basic(Printable):
 
         return self._rewrite(pattern, rule, method, **hints)
 
-    def _rewrite(self, pattern, rule, method, **hints):
-        deep = hints.pop('deep', True)
+    def _rewrite(self, pattern, rule, method, deep=True, **hints):
+        from .parameters import evaluate as evaluate_ctx
+
         if deep:
             args = [a._rewrite(pattern, rule, method, **hints)
                     for a in self.args]
         else:
             args = self.args
+
+        if 'evaluate' in hints and hints['evaluate'] in [True, False]:
+            ctx = evaluate_ctx(hints['evaluate'])
+        else:
+            ctx = nullcontext()
+
         if not pattern or any(isinstance(self, p) for p in pattern):
             meth = getattr(self, method, None)
-            if meth is not None:
-                rewritten = meth(*args, **hints)
-            else:
-                rewritten = self._eval_rewrite(rule, args, **hints)
+            with ctx:
+                if meth is not None:
+                    rewritten = meth(*args, **hints)
+                else:
+                    rewritten = self._eval_rewrite(rule, args, **hints)
             if rewritten is not None:
                 return rewritten
         if not args:
             return self
-        return self.func(*args)
+        with ctx:
+            return self.func(*args)
 
     def _eval_rewrite(self, rule, args, **hints):
         return None
