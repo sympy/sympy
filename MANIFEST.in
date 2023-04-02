@@ -8,6 +8,7 @@ exclude doc/src/modules/vector/*.pdf
 recursive-include examples *.py README
 
 include sympy/utilities/mathml/data/*.xsl
+include sympy/utilities/tests/test_xxe.txt
 
 recursive-include sympy/parsing/latex *.g4 *.txt
 recursive-include sympy/parsing/autolev *.g4 *.al
