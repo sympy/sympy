@@ -3641,3 +3641,4 @@ class Beam3D(Beam):
         max_def.append(self._max_deflection('y'))
         max_def.append(self._max_deflection('z'))
         return max_def
+        
