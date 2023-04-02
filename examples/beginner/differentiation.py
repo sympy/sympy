@@ -26,7 +26,7 @@ def main():
     print("\n\nExpanding the above result:")
     print()
     pprint(e.expand().diff(b).diff(a, 2))
-    print("\n\nAnother method for second derivative of the above result w.r.t. a:"
+    print("\n\nAnother method for second derivative of the above result w.r.t. a:")
     print()
     pprint(Derivative(e.expand(), b, a, a).doit())
     print()
