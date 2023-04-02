@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # Check the plot docstring
 
-from sympy import Symbols, exp, sin, cos
+from sympy import symbols, exp, sin, cos
 from sympy.plotting import (plot, plot_parametric,
                             plot3d_parametric_surface, plot3d_parametric_line,
                             plot3d)
@@ -9,7 +9,7 @@ from sympy.plotting import (plot, plot_parametric,
 lx = range(5)
 ly = [i**2 for i in lx]
 
-x, y, u, v = Symbols('x y u v')
+x, y, u, v = symbols('x y u v')
 expr = x**2 - 1
 
 b = plot(expr, (x, 2, 4), show=False)  # cartesian plot
