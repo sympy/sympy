@@ -9,7 +9,7 @@ from sympy.plotting import (plot, plot_parametric,
 lx = range(5)
 ly = [i**2 for i in lx]
 
-x, y, u, v = Symbols('x,y,u,v')
+x, y, u, v = Symbols('x y u v')
 expr = x**2 - 1
 
 b = plot(expr, (x, 2, 4), show=False)  # cartesian plot
