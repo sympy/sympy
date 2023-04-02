@@ -8,7 +8,7 @@ from sympy.utilities.mathml import apply_xsl
 
 lxml = import_module('lxml')
 
-path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sensitive.txt'))
+path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'test_xxe.txt'))
 
 
 def test_xxe():
