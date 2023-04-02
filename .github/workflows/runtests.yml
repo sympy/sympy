@@ -9,18 +9,16 @@
 name: test
 on: [push, pull_request]
 jobs:
-
   # -------------------- Code quality ------------------------------ #
 
   code-quality:
-
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
 
       - run: pip install mpmath flake8 flake8-comprehensions ruff pytest
@@ -50,7 +48,6 @@ jobs:
       #- name: Make sure all commits have an associated author
       #  run: bin/authors_update.py
 
-
   # ----------------------------- mypy ----------------------------- #
 
   mypy:
@@ -61,7 +58,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy
 
@@ -78,7 +75,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -97,7 +94,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -112,7 +109,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -132,7 +129,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath pytest pytest-split
       - run: bin/test --split ${{ matrix.group }}/4
@@ -156,12 +153,12 @@ jobs:
           node-version: 18.x
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install build
       - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
       - run: python -m build --wheel
-      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
+      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -173,7 +170,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
+        python-version: ["3.9", "3.10", "3.11", "pypy3.8"]
         experimental: [false]
         #
         # For now we do not test optional dependencies with 3.12 because as of
@@ -199,8 +196,8 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap pytest                     \
-                         'antlr4-python3-runtime==4.11.*'
+          aesara wurlitzer autowrap pytest                     \
+          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
       - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
@@ -223,13 +220,12 @@ jobs:
   tensorflow:
     needs: code-quality
 
-
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy scipy tensorflow pytest
       # Test modules that can use tensorflow
@@ -245,13 +241,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath numpy symengine pytest
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
-          USE_SYMENGINE: '1'
+          USE_SYMENGINE: "1"
 
   # ------------------------- Slow tests --------------------------- #
 
@@ -267,7 +263,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath pytest pytest-split pytest-timeout
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
@@ -282,7 +278,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version:
+          ["3.8", "3.9", "3.10", "3.12.0-alpha - 3.12", "pypy-3.8"]
         experimental: [false]
         group: [1, 2, 3, 4]
         # Maybe use this to add 3.12 when the time comes:
@@ -308,7 +305,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version:
+          ["3.8", "3.9", "3.10", "3.12.0-alpha - 3.12", "pypy-3.8"]
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -334,7 +332,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -361,7 +359,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '2.7'
+          python-version: "2.7"
       - run: bin/test_py2_import.py
 
   # -------------------- Check the list of files for sdist --------- #
@@ -374,7 +372,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -392,7 +390,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
@@ -458,3 +456,21 @@ jobs:
         with:
           name: pr_number
           path: pr_number.txt
+
+  # ---------------- Run and upload coverage report ----------------- #
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3 # Checks the current directory
+
+      - uses: actions/setup-python@v4 # Pre-built GitHub Action to setup python
+        with:
+          python-version: "3.9"
+      - run: python -m pip install --upgrade pip
+      - run: pip install pytest-cov sympy
+      - run: pytest --cov=sympy --cov-report=xml:./sympy_cov_report
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          name: coverage reports
