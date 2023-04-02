@@ -2880,7 +2880,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -2982,7 +2982,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3085,7 +3085,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3188,7 +3188,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3263,7 +3263,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3360,7 +3360,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters and area of cross section 2 square
-        meters. It it supported by rollers at of its end. A linear load having
+        meters. It it supported by rollers at both of its ends. A linear load having
         slope equal to 12 is applied along y-axis. A constant distributed load
         of magnitude 15 N is applied from start till its end along z-axis.
 
@@ -3456,7 +3456,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3531,7 +3531,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3609,7 +3609,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
