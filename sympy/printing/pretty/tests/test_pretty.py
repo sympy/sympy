@@ -48,7 +48,7 @@ from sympy.physics.quantum.trace import Tr
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
-    meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
+    meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi, polylog,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
@@ -7499,6 +7499,20 @@ def test_issue_15560():
     assert e == result
 
 
+def test_print_polylog():
+    # Part of issue 6013
+    s,z = symbols("s, z")
+    uresult = 'Li₂(3)'
+    aresult = 'polylog(2, 3)'
+    assert pretty(polylog(2,3)) == aresult
+    assert upretty(polylog(2,3)) == uresult
+
+    uresult = 'Liₛ(z)'
+    aresult = 'polylog(s, z)'
+    assert pretty(polylog(s,z)) == aresult
+    assert upretty(polylog(s,z)) == uresult
+
+
 def test_print_lerchphi():
     # Part of issue 6013
     a = Symbol('a')
@@ -7507,6 +7521,7 @@ def test_print_lerchphi():
     aresult = 'lerchphi(a, 1, 2)'
     assert pretty(lerchphi(a, 1, 2)) == aresult
     assert upretty(lerchphi(a, 1, 2)) == uresult
+
 
 def test_issue_15583():
 
