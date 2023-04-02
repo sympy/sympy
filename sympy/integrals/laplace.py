@@ -1676,6 +1676,25 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                     k_*(1 - 2/sqrt(pi)*sqrt(a_)*sqrt(t) +
                         (1-2*a_*t)*exp(a_*t)*(erf(sqrt(a_)*sqrt(t))-1)))
                 debugf('[ILT _i_l_i] Rule (10) returns %s', (result, ))
+        elif poles[0][n] == -3 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**3 == 1/a0**3 * 1/(sqrt(s)+b0/a0)**3
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**3*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*(a_**2*t+1)*sqrt(t) -
+                        a_*t*exp(a_**2*t)*(2*a_**2*t+3)*erfc(a_*sqrt(t))))
+                debugf('[ILT _i_l_i] Rule (13) returns %s', (result, ))
+        elif poles[0][n] == -4 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**4 == 1/a0**4 * 1/(sqrt(s)+b0/a0)**4
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**4*constants/3
+            if a_.is_positive:
+                result = (
+                    k_*(t*(4*a_**4*t**2+12*a_**2*t+3)*exp(a_**2*t) *
+                        erfc(a_*sqrt(t)) -
+                        2/sqrt(pi)*a_**3*t**(S(5)/2)*(2*a_**2*t+5)))
+                debugf('[ILT _i_l_i] Rule (16) returns %s', (result, ))
 
     elif len(poles) == 2 and len(zeros) == 0:
         if (
