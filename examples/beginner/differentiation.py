@@ -5,10 +5,10 @@
 Demonstrates some differentiation operations.
 """
 
-from sympy import pprint, Symbols, Derivative
+from sympy import pprint, symbols, Derivative
 
 def main():
-    a, b = Symbols('a,b')
+    a, b = symbols('a b')
     e = (a + 2*b)**5
 
     print("\nExpression : ")
