@@ -93,14 +93,14 @@ class evaluate:
     """
     def __init__(self, x):
         self.x = x
-        self.old = None
+        self.old = []
 
     def __enter__(self):
-        self.old = global_parameters.evaluate
+        self.old.append(global_parameters.evaluate)
         global_parameters.evaluate = self.x
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        global_parameters.evaluate = self.old
+        global_parameters.evaluate = self.old.pop()
 
 @contextmanager
 def distribute(x):
