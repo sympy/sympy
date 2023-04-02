@@ -67,9 +67,11 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
-    #stats
+    # stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/tests/test_mathml.py",
 ]
 
 
@@ -117,6 +119,8 @@ doctest_list = [
     #stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/mathml/",
 ]
 
 
