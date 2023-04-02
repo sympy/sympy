@@ -5,7 +5,7 @@
 Demonstrates some differentiation operations.
 """
 
-from sympy import pprint, Symbol, Derivative
+from sympy import pprint, Symbols, Derivative
 
 def main():
     a, b = Symbols('a,b')
