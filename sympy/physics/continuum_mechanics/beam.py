@@ -524,7 +524,7 @@ class Beam:
 
         Examples
         ========
-        There is a beam of length 6 meters. A ramp load of magnitude 4 N/m is 
+        There is a beam of length 6 meters. A ramp load of magnitude 4 N/m is
         applied in the downward direction starting from 3 meters away from the
         starting point of the beam till the end of the beam. Find the expression
         for the load.
