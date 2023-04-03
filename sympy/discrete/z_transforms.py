@@ -532,6 +532,7 @@ def z_transform(f,n,z):
     ========
     >>> from sympy.discrete.z_transforms import z_transform
     >>> from sympy.abc import n,z
+    >>> from sympy.core import S
     >>> import sympy as sym
     >>> f = sym.DiracDelta(n)
     >>> z_transform(f,n,z)
@@ -560,7 +561,7 @@ def z_transform(f,n,z):
     >>> z_transform(f,n,z)
     (z/(2*(z - 1/2)**2), Abs(z) > 2, True)
     >>>
-    >>> f = DiracDelta(n) + cos(4*n)
+    >>> f = sym.DiracDelta(n) + sym.cos(4*n)
     >>> z_transform(f,n,z)
     z*(z - cos(4))/(z**2 - 2*z*cos(4) + 1) + 1
     >>>
@@ -854,6 +855,7 @@ def z_properties_inverse(F,z,n):
     ========
     >>> from sympy.discrete.z_transforms import z_properties_inverse
     >>> from sympy.abc import z,n
+    >>> from sympy.core import S
     >>> F = z/(z - 1)**2
     >>> z_properties_inverse(F,z,n)
     (n*Heaviside(n), Abs(z) > 1, True)
