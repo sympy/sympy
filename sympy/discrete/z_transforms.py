@@ -50,7 +50,7 @@ class ZTransformError(NotImplementedError):
     computed.
     """
     def __init__(self, transform, function, msg):
-        super().__init__( 
+        super().__init__(
             "%s could not be computed: %s." % (transform, msg))
         self.function = function
 
