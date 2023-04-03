@@ -520,15 +520,37 @@ class Beam:
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
 
+        Testing the ramp load
+
+        Examples
+        ========
+        There is a beam of length 6 meters. A ramp load of magnitude 4 N/m is 
+        applied in the downward direction starting from 3 meters away from the
+        starting point of the beam till the end of the beam. Find the expression
+        for the load.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(6, E, I)
+        >>> b.apply_load(4, 3, 1, end=6)
+        >>> b.load
+        4*SingularityFunction(x, 3, 1)/3 - 4*SingularityFunction(x, 6, 0) - 4*SingularityFunction(x, 6, 1)/3
         """
         x = self.variable
         value = sympify(value)
         start = sympify(start)
         order = sympify(order)
+        dividing_factor = 1
+
+        if end:
+            dividing_factor = (end-start)
+        if dividing_factor == 0 or order != 1:
+            dividing_factor = 1
 
         self._applied_loads.append((value, start, order, end))
-        self._load += value*SingularityFunction(x, start, order)
-        self._original_load += value*SingularityFunction(x, start, order)
+        self._load += value*SingularityFunction(x, start, order) / dividing_factor
+        self._original_load += value*SingularityFunction(x, start, order) / dividing_factor
 
         if end:
             # load has an end point within the length of the beam.
@@ -585,10 +607,16 @@ class Beam:
         value = sympify(value)
         start = sympify(start)
         order = sympify(order)
+        dividing_factor = 1
+
+        if end:
+            dividing_factor = (end-start)
+        if dividing_factor == 0 or order != 1:
+            dividing_factor = 1
 
         if (value, start, order, end) in self._applied_loads:
-            self._load -= value*SingularityFunction(x, start, order)
-            self._original_load -= value*SingularityFunction(x, start, order)
+            self._load -= value*SingularityFunction(x, start, order) / dividing_factor
+            self._original_load -= value*SingularityFunction(x, start, order) / dividing_factor
             self._applied_loads.remove((value, start, order, end))
         else:
             msg = "No such load distribution exists on the beam object."
@@ -614,20 +642,24 @@ class Beam:
         # point such that it evaluates to zero past 'end'.
         f = value*x**order
 
+        dividing_factor = (end-start)
+        if dividing_factor == 0 or order != 1:
+            dividing_factor = 1
+
         if type == "apply":
             # iterating for "apply_load" method
             for i in range(0, order + 1):
                 self._load -= (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
+                                SingularityFunction(x, end, i)/factorial(i)) / dividing_factor
                 self._original_load -= (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
+                                SingularityFunction(x, end, i)/factorial(i)) / dividing_factor
         elif type == "remove":
             # iterating for "remove_load" method
             for i in range(0, order + 1):
                 self._load += (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
+                                SingularityFunction(x, end, i)/factorial(i)) / dividing_factor
                 self._original_load += (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
+                                SingularityFunction(x, end, i)/factorial(i)) / dividing_factor
 
 
     @property
