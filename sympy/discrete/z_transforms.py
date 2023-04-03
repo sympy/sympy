@@ -7,32 +7,27 @@
 #------------------------------------------------------------------------#
 # http://blog.espol.edu.ec/telg1001/transformada-z-pares-fn-y-fz-con-sympy-python/
 # Edison Del Rosario edelros@espol.edu.ec
-# 2023/03/27
+# 2023/03/31
 """
 ### import for z_transform
-from sympy.core import diff, S #, pi, I
+from sympy.core import diff, S
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.symbol import Wild, Symbol #,Dummy, symbols,
+from sympy.core.symbol import Wild, Symbol
 from sympy.core.function import ( expand, WildFunction)
-                                #,Derivative,Function, Lambda)
 from sympy.simplify import powsimp
-from sympy.simplify.simplify import simplify #,nsimplify
-#from sympy.polys.polyroots import roots
+from sympy.simplify.simplify import simplify
 from sympy.polys.polytools import pdiv,real_roots,degree,LC,factor,Poly
 from sympy.polys.partfrac import apart
-from sympy.functions.elementary.trigonometric import cos, sin, acos, atan #cot,tan,
+from sympy.functions.elementary.trigonometric import cos, sin, acos, atan
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.complexes import Abs#, (re, arg,  polar_lift,
-                                                  #periodic_argument)
-from sympy.functions.elementary.exponential import log #, exp, exp_polar
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import log
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.concrete.summations import summation #,Sum
-
+from sympy.concrete.summations import summation, Sum
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
-#from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy import Float, preorder_traversal
 from sympy.utilities.misc import debug
 
@@ -40,8 +35,7 @@ from sympy.utilities.misc import debug
 # Helpers / Utilities
 ##########################################################################
 
-
-class z_transformError(NotImplementedError):
+class ZTransformError(NotImplementedError):
     """
     Exception raised in relation to problems computing transforms.
 
@@ -56,14 +50,13 @@ class z_transformError(NotImplementedError):
     computed.
     """
     def __init__(self, transform, function, msg):
-        super().__init__(
+        super().__init__( 
             "%s could not be computed: %s." % (transform, msg))
         self.function = function
 
 #------------------------------------------------------------------------#
 #                         z_transform of f[n]                            #
 #------------------------------------------------------------------------#
-
 
 def _z_pairs_table(n, z):
     """
@@ -156,7 +149,6 @@ def _z_pairs_table(n, z):
         return f_dco
     return z_transform_table
 
-
 def z_pairs_properties(f,n,z, apply_properties=True):
     """
     z_transform based on pairs table and properties,
@@ -188,20 +180,24 @@ def z_pairs_properties(f,n,z, apply_properties=True):
     >>> z_pairs_properties(f,n,z)
     (1, 0, True)
     >>>
-    >>> f = sym.cos(3*n)
+    >>> f = sym.cos(3*n)*sym.Heaviside(n)
     >>> z_pairs_properties(f,n,z)
     (z*(z - cos(3))/(z**2 - 2*z*cos(3) + 1), Abs(z) > 1, True)
-    >>> f = sym.sin(2*n)
     >>>
+    >>> f = sym.sin(2*n)*sym.Heaviside(n)
+    >>> z_pairs_properties(f,n,z)
+    (z*sin(2)/(z**2 - 2*z*cos(2) + 1), Abs(z) > 1, True)
     """
 
-    Fz = None
     # Try _z_pairs_table
+    Fz = None
+
     # extract constant factors from Fz
     k, fn = f.as_independent(n, as_Add=False)
     z_pairs = _z_pairs_table(n, z) # get table
     z_pairs_len = len(z_pairs)
     i = 0
+
     # lookup on table
     while (i<z_pairs_len) and (Fz is None):
         n_dom, z_dom, check, plane, prep = z_pairs[i]
@@ -236,6 +232,7 @@ def z_properties(f,n,z):
       Multiplication by a**n , a**n*f[n] <--> F[z/a]
       Time shifting, f[n-b] <--> z**(-b)*F +Fsum
       Time reversal, f[-n] <--> F[1/z]
+    returns None if not found by pairs and properties
     Parameters
     ==========
     f : f[n] expression at discrete n_domain
@@ -260,7 +257,11 @@ def z_properties(f,n,z):
     >>> z_properties(f,n,z)
     (1/(z*(z - 1)), Abs(z) > 1, True)
     >>>
-    >>> f = (0.5**2)*sym.Heaviside(n-2)
+    >>> f = ((sym.S.One/2)**2)*sym.Heaviside(n-2)
+    >>> z_properties(f,n,z)
+    (1/(4*z*(z - 1)), Abs(z) > 1, True)
+    >>>
+    >>> f = ((1/2)**2)*sym.Heaviside(n-2)
     >>> z_properties(f,n,z)
     (0.25/(z*(z - 1)), Abs(z) > 1, True)
     >>>
@@ -275,7 +276,7 @@ def z_properties(f,n,z):
     """
     if not n in f.free_symbols:
         msg = 'n variable is not in f[n] expression'
-        raise z_transformError('z_properties',f,msg)
+        raise ZTransformError('z_properties',f,msg)
     Fz = None
     f = expand(powsimp(f))
     a = Wild('a', exclude=[n,z])
@@ -286,8 +287,8 @@ def z_properties(f,n,z):
     debug('\nz_transform properties_check -------------')
     debug(' k:',k,' ; fn:',fn)
     if fn.is_Add:
-        msg='Additive expression, use z_transform(fn,n,z) instead'
-        raise z_transformError('z_properties',fn,msg)
+        msg = 'f[n] is an Additive expression, suggested to use z_transform(fn,n,z) instead'
+        raise ZTransformError('z_properties',fn,msg)
     # check fn por pow(n,a) or pow(a,n)
     f_powna = S.One
     f_powan = S.One
@@ -326,11 +327,21 @@ def z_properties(f,n,z):
             if ma_powan_:
                 an_value = Rational(S.One,ma_powan_[a])
             #debug('Fz',Fz,ma_powan,ma_powan_,an_value)
-            Fz_k = round_float_is_int(k*factor(Fz[0].subs(z,z/an_value)))
+            Fz_k = k*factor(Fz[0].subs(z,z/an_value))
             cond_z = list(Fz[1].args)
+            num_position = None
+            fun_position = None
             for i in range(len(cond_z)):
                 cond_z[i] = cond_z[i].subs(z,z*an_value)
-            cond_z = simplify(Fz[1].func(cond_z[0],cond_z[1]))
+                if not cond_z[i].has(z):
+                    num_position = i
+                if cond_z[i].has(z):
+                    fun_position = i
+                    k_Rel, f_Rel = cond_z[i].as_independent(z, as_Add=False)
+            if num_position is not None:
+                cond_z[fun_position] = cond_z[fun_position]/k_Rel
+                cond_z[num_position] = cond_z[num_position]/k_Rel
+            cond_z = Fz[1].func(cond_z[0],cond_z[1])
             Fz = (Fz_k,cond_z,Fz[2])
 
             debug('\n  _z_property a**n*f[n] <--> F[z/a]:\n  ',Fz)
@@ -343,7 +354,7 @@ def z_properties(f,n,z):
         debug('  n**a:',n,' ; fn/n, :',fn_n)
         Fz = z_pairs_properties(fn_n,n,z)
         if not Fz is None:
-            Fz = (round_float_is_int(k*(-z)*factor(diff(Fz[0],z,1))),
+            Fz = (k*(-z)*factor(diff(Fz[0],z,1)),
                   Fz[1], Fz[2])
             debug('\n  _z_property n*f[n] <--> -z*diff(Fz):\n  ',Fz)
     # match Heaviside(n)
@@ -383,7 +394,7 @@ def z_properties(f,n,z):
         ma_g = arg_n.match(a*n-b)
         debug(' ma_gn ; ma_g : ',ma_gn,ma_g)
         # g time shift only
-        if not(ma_g[a]==S.Zero) and not(Abs(ma_g[b])==S.Zero):
+        if not ma_g[a]==S.Zero and not Abs(ma_g[b])==S.Zero:
             b_shift = ma_g[b]
             fn_g = ma_gn[g].subs(arg_n,ma_g[a]*n)
             debug(' _z_property time_shift --------')
@@ -393,11 +404,11 @@ def z_properties(f,n,z):
             m = b_shift # Sumation term x[n-m]u[n]
             # DiracDelta does not apply
             # right shift n
-            if not(ma_g[b]==S.Zero) and not(fn_g.has(DiracDelta)):
+            if not ma_g[b]==S.Zero and not fn_g.has(DiracDelta):
                 fn_gz = fn_g.subs(arg_n,-n)*z**n
                 Fsum = summation(fn_gz,(n,1,m))
             # left shift n
-            if ma_g[b]<S.Zero and not(fn_g.has(DiracDelta)):
+            if ma_g[b]<S.Zero and not fn_g.has(DiracDelta):
                 fn_gz = fn_g.subs(arg_n,n)*z**(-n)
                 Fsum = -summation(fn_gz,(n,0,-m-1))
             Fsum = expand(z**(-m)*Fsum)
@@ -465,7 +476,7 @@ def z_properties(f,n,z):
                 if p_invert:
                     plane_z = simplify(Fz[1].func(Fz[1].args[1],
                                                   Fz[1].args[0]))
-                Fz = (round_float_is_int(k*Fz[0]), plane_z, Fz[2])
+                Fz = (k*Fz[0], plane_z, Fz[2])
                 debug('\n  _z_property g*u[n] Fz:\n ',Fz)
 
         else: # g[q(n-k)+p]*u[n-k]
@@ -476,6 +487,15 @@ def z_properties(f,n,z):
             if not Fz is None:
                 Fz = (k*Fz[0], Fz[1], Fz[2])
                 debug(' _z_property g[q(n-k)+p]*u[n-k] Fz:\n ',Fz)
+
+    # clean floats as integers, 4z/(4z-1) to z/(z-1/4)
+    if not Fz is None:
+        Fz0 = _simplify_z(Fz[0],z)
+        Fz0 = _round_float_is_int(Fz0)
+        Fz1 = _round_float_is_int(Fz[1])
+        Fz2 = Fz[2]
+        Fz = (Fz0,Fz1,Fz2)
+    debug(' F[z]:',Fz)
     return Fz
 
 def _z_transform_summation(f, n, z):
@@ -488,9 +508,10 @@ def _z_transform_summation(f, n, z):
         fzn = f*(z**(-n))
         # unilateral summation
         Fz_sum = summation(fzn,(n,0,S.Infinity))
+        debug(' _z_transform_summation: ',Fz)
         if Fz_sum.is_Piecewise:
-            Fz_eq = Fz_sum.args[0]  # primer intervalo
-            Fz = (Fz_eq[0].simplify(),Fz_eq[1]) # expresion buscada
+            Fz_eq = Fz_sum.args[0]  # first interval
+            Fz = (Fz_eq[0].simplify(),Fz_eq[1]) # expression found
         else:
             Fz = Fz_sum
         debug(' _z_transform_summation: ',Fz)
@@ -514,26 +535,34 @@ def z_transform(f,n,z):
     >>> import sympy as sym
     >>> f = sym.DiracDelta(n)
     >>> z_transform(f,n,z)
-    1
+    (1, 0, True)
     >>>
     >>> f = sym.Heaviside(n-1)
     >>> z_transform(f,n,z)
-    1/(z - 1)
+    (1/(z - 1), Abs(z) > 1, True)
     >>>
     >>> f = sym.cos(2*n)
     >>> z_transform(f,n,z)
-    z*(z - cos(2))/(z**2 - 2*z*cos(2) + 1)
+    (z*(z - cos(2))/(z**2 - 2*z*cos(2) + 1), Abs(z) > 1, True)
     >>>
     >>> f = (n**2)*sym.Heaviside(n)
     >>> z_transform(f,n,z)
-    z*(z + 1)/(z - 1)**3
+    (z*(z + 1)/(z - 1)**3, Abs(z) > 1, True)
     >>>
-    >>> f = (0.5**n)*sym.Heaviside(n)
+    >>> f = ((S.One/2)**n)*sym.Heaviside(n)
     >>> z_transform(f,n,z)
-    z/(z - 0.5)
-    >>> f = (0.5**n)*n*sym.Heaviside(n)
+    (z/(z - 1/2), Abs(z) > 2, True)
+    >>>
+    >>> f = ((1/2)**n)*sym.Heaviside(n)
     >>> z_transform(f,n,z)
-    0.5*z/(z - 0.5)**2
+    (z/(z - 0.5), Abs(z) > 2, True)
+    >>> f = ((S.One/2)**n)*n*sym.Heaviside(n)
+    >>> z_transform(f,n,z)
+    (z/(2*(z - 1/2)**2), Abs(z) > 2, True)
+    >>>
+    >>> f = DiracDelta(n) + cos(4*n)
+    >>> z_transform(f,n,z)
+    z*(z - cos(4))/(z**2 - 2*z*cos(4) + 1) + 1
     >>>
 
     Parameters
@@ -547,26 +576,32 @@ def z_transform(f,n,z):
     F_noeval = []
     term_sum = Add.make_args(f)
     debug('\nterm_sum:',len(term_sum))
-    for term_k in term_sum:
-        k, fn = term_k.as_independent(n, as_Add=False)
-        debug('  k:',k,' ; term_k:',fn)
-        if not fn.has(n):
-            msg = 'is a constant term, consider to make it causal by *u[n]'
-            raise z_transformError('z_transform',term_k,msg)
-        term_z = z_pairs_properties(fn, n, z)
-        if term_z is None: # not done by _z_pairs_table or z_properties
-            term_z = [_z_transform_summation(fn, n, z)]
-            debug('  k',k,' ; term_z_summation:',term_z)
-            if term_z is None: # not by summation
-                F_noeval.append(term_k)
-                term_z = None
-        if not term_z is None :
-            if len(term_sum)>1:
-                debug('\n  k:',k,' ; term_z:',term_z)
-            F_zterm = round_float_is_int(k*term_z[0])
-            FT = FT + F_zterm
-    if len(F_noeval)>0:
-        FT = (FT,F_noeval)
+    # to_do express properties with a single Term, no Add
+    if len(term_sum)==1:
+        FT = z_pairs_properties(f, n, z) #[0]
+        if FT is None: # not done by _z_pairs_table or z_properties
+            FT = _z_transform_summation(f, n, z)
+            debug('  FT_summation:',FT)
+    else:
+        for term_k in term_sum:
+            k, fn = term_k.as_independent(n, as_Add=False)
+            debug('  k:',k,' ; term_k:',fn)
+            if not fn.has(n):
+                msg = 'is a constant term, consider to make it causal by *u[n]'
+                raise ZTransformError('z_transform',term_k,msg)
+            term_z = z_pairs_properties(fn, n, z)
+            if term_z is None: # not done by _z_pairs_table or z_properties
+                term_z = _z_transform_summation(fn, n, z)
+                debug('  k',k,' ; term_z_summation:',term_z)
+                if term_z is None or isinstance(term_z,Sum):
+                    F_noeval.append(term_k)
+            if not term_z is None :
+                debug('\n  k:',k,' ; term_z:',term_z,'\n')
+                if not isinstance(term_z,Sum):
+                    term_z = _round_float_is_int(k*term_z[0])
+                FT = FT + term_z
+##        if len(F_noeval)>0:
+##            FT = (FT,F_noeval)
     debug('\n F[z]:',FT)
 
     return FT
@@ -574,7 +609,6 @@ def z_transform(f,n,z):
 #------------------------------------------------------------------------#
 #                         z_transform_inverse of F[z]                    #
 #------------------------------------------------------------------------#
-
 def z_pairs_prop_inverse(F,z,n,apply_properties=True):
     """
     z_transform based on pairs table and properties,
@@ -699,11 +733,11 @@ def z_pairs_prop_inverse(F,z,n,apply_properties=True):
         fn = z_properties_inverse(F, z, n)
         msg = 'prop'
 
-    # restore constant k
+    # clean floats as integers
     if not fn is None:
-        fn0 = round_float_is_int(fn[0])
-        fn1 = round_float_is_int(fn[1])
-        fn2 = round_float_is_int(fn[2])
+        fn0 = _round_float_is_int(fn[0])
+        fn1 = _round_float_is_int(fn[1])
+        fn2 = _round_float_is_int(fn[2])
         fn = (fn0,fn1,fn2)
         debug('   '+msg+' f[n]:',fn)
     return fn
@@ -714,72 +748,67 @@ def _Fz_as_PQ_roots(Fz,z):
     and symbolic parts
     """
     a = Wild('a', exclude=[z])
-    [P,Q] = Fz.as_numer_denom()
-
+    # Fz poles and zeros
+    PQ = _simplify_z(Fz,z,PQ_args=True)
+    P = PQ['P']
+    Q = PQ['Q']
+    k = PQ['k']
+    Fz = PQ['F']
+    P_sign = 1
+    if k<0:
+        P_sign = -1
+        k = Abs(k)
     # P numerator review
-    if P.has(z):
-        P_leadcoef = LC(P)
-    else: # numerator is a constant
-        P_leadcoef = P
-    P = factor(P/P_leadcoef)
-    k = P_leadcoef # constant factor
     P_zeros = []
     P_degree = None # P is not z**a symbol
-    ma_Pza  = P.match(z**a)
+    ma_za  = P.match(z**a)
     if P.has(z): # numerator with pole
-        if ma_Pza: # P_zeros with 0 only or z**(symbol)
+        if ma_za: # P_zeros with 0 only or z**(symbol)
             if len(P.free_symbols)==1:
-                P_zeros = [0]*ma_Pza[a]
+                P_zeros = [0]*ma_za[a]
             if len(P.free_symbols)==2: # z**(symbol)
                 P_zeros = [0] # at least a Zero
-                P_degree = ma_Pza[a]
-        elif len(P.free_symbols)==1 and not ma_Pza:
+                P_degree = ma_za[a]
+        elif len(P.free_symbols)==1 and not ma_za:
             P_zeros  = real_roots(P.evalf())
         else:
-            msg = 'unable to determine P_zeros from expression F[z] = P/Q'
-            raise z_transformError('_Fz_as_PQ_roots',Fz,msg)
+            raise ZTransformError('_Fz_as_PQ_roots',Fz,
+                                  'unable to determine P_zeros from expression F[z] = P/Q')
     if P_degree is None:
         P_degree = degree(P,z)
 
     # Q denominator review
-    if Q.has(z):
-        Q_leadcoef = LC(Q)
-    else: # denominator is a constant
-        Q_leadcoef = Q
-    Q = factor(Q/Q_leadcoef)
-    k = k/Q_leadcoef   # constant factor
-    P_sign = int(k/Abs(k))
-    k = Abs(k)
     Q_poles = []
     Q_degree = None # Q is not z**(symbol)
-    ma_Qza  = Q.match(z**a)
+    ma_za  = Q.match(z**a)
     if Q.has(z): # denominator with pole
-        if ma_Qza: # 0 poles only or z**(symbol)
+        if ma_za: # 0 poles only or z**(symbol)
             if len(Q.free_symbols)==1:
-                Q_poles = [0]*ma_Qza[a]
+                Q_poles = [0]*ma_za[a]
             elif len(Q.free_symbols)==2: #z**(symbol)
                 Q_poles  = [0] # at least a Zero
-                Q_degree = ma_Qza[a]
+                Q_degree = ma_za[a]
         elif len(Q.free_symbols)==1:
             Q_poles  = real_roots(Q.evalf())
-        elif len(Q.free_symbols)>1 and not ma_Qza:
+        elif len(Q.free_symbols)>1 and not ma_za:
             Q_poles  = real_roots(Poly(Q,z))
         else:
-            msg = 'unable to determine Q_poles from expression F[z] = P/Q'
-            raise z_transformError('_Fz_as_PQ_roots',Fz,msg)
+            raise ZTransformError('_Fz_as_PQ_roots',Fz,
+                                  'unable to determine Q_poles from expression F[z] = P/Q')
     # unique poles
     Q_unique = []
     for pole in Q_poles:
-        if not pole in Q_unique:
+        if pole not in Q_unique:
             Q_unique.append(pole)
     if Q_degree is None:
         Q_degree = degree(Q,z)
-    PQ = {'P':round_float_is_int(P),
+    Fz = P/Q
+    PQ = {'P':P,
           'P_degree': P_degree, 'P_zeros':P_zeros,
-          'Q':round_float_is_int(Q),
+          'Q':Q,
           'Q_degree': Q_degree, 'Q_poles':Q_poles,
           'Q_unique': Q_unique,
-          'k':k, 'P_sign':P_sign
+          'k':k, 'P_sign':P_sign, 'F':Fz
           }
     return PQ
 
@@ -814,8 +843,8 @@ def z_properties_inverse(F,z,n):
 
     Multiplication by n    , n*f[n] <--> z*diff(Fz)
     Multiplication by a**n , a**n*f[n] <--> F[z/a]
-    Time shifting, f[n-b] <--> z**(-b)*F +Fsum
-    Time reversal, f[-n] <--> F[1/z]
+    Time shifting , f[n-b] <--> z**(-b)*F +Fsum
+    Time reversal , f[-n] <--> F[1/z]
     case, r*(|gamma|**n)*cos(b*n+c)
          <--> z*(A*z+B)/(z**2-2*a*z+gamma**2)
     case, n*(n-1)*(n-2)...(n-m+1)*(gamma**n)*u[n]/(m!*gamma**m)')
@@ -829,26 +858,23 @@ def z_properties_inverse(F,z,n):
     >>> z_properties_inverse(F,z,n)
     (n*Heaviside(n), Abs(z) > 1, True)
     >>>
-    >>> F = z/(z - 2)
+    >>> F = z/(z - S.Half)
     >>> z_properties_inverse(F,z,n)
-    (2**n*Heaviside(n), Abs(z)/2 > 1, True)
+    (Heaviside(n)/2**n, Abs(z) > 1/2, True)
     >>>
     >>> z_properties_inverse(1/z**2,z,n)
     (DiracDelta(n - 2), 0, True)
     >>> z_properties_inverse(z**2,z,n)
     (DiracDelta(n + 2), 0, True)
     >>>
-    >>> F = z*2/(z-0.5)**2
+    >>> F = z*2/(z-S.One/2)**2
     >>> z_properties_inverse(F,z,n)
-    (4*0.5**n*n*Heaviside(n), 2*Abs(z) > 1, True)
+    (4*n*Heaviside(n)/2**n, Abs(z) > 1/2, True)
     >>>
-    >>> from sympy.functions.elementary.trigonometric import (cos, sin)
-    >>> F = z*sin(2)/(z**2 - 2*z*cos(2) + 1)
-    >>> z_properties_inverse(F,z,n)
-    (sin(2*n)*Heaviside(n), Abs(z) > 1, True)
+    >>> from sympy.functions.elementary.trigonometric import cos
     >>> F = z*(0.968912421710645*z + 0.178246055649492)/(z**2 - 2*z*cos(2) + 1)
     >>> z_properties_inverse(F,z,n)
-    (cos(2*n + 0.25)*Heaviside(n), 0, 0)
+    (cos(2*n + 0.25)*Heaviside(n), Abs(z) > 1, True)
     >>>
 
     Parameters
@@ -859,31 +885,34 @@ def z_properties_inverse(F,z,n):
     """
     if not z in F.free_symbols:
         msg = 'z variable is not in F[z] expression'
-        raise z_transformError('z_properties_inverse',F,msg)
+        raise ZTransformError('z_properties_inverse',F,msg)
     fn = None
     F = simplify(F+0*z) # F+0*z if F=constant
-    k, Fz = F.as_independent(z, as_Add=False)
     debug('\nz_properties_inverse_z_transform')
     a = Wild('a', exclude=[n,z])
     b = Wild('b', exclude=[n,z])
     c = Wild('c', exclude=[n,z])
     r = Wild('r', exclude=[n,z])
-    debug('k:',k,' ; Fz:',Fz)
 
     # Fz poles and zeros
-    PQ = _Fz_as_PQ_roots(Fz,z)
+    PQ = _Fz_as_PQ_roots(F,z)
     P = PQ['P']
     Q = PQ['Q']
     P_zeros  = PQ['P_zeros']
     P_degree = PQ['P_degree']
     Q_poles  = PQ['Q_poles']
     Q_degree = PQ['Q_degree']
+    #Q_unique = PQ['Q_unique']
+    P_sign = PQ['P_sign']
+    k = PQ['k']
+    Fz = PQ['F']
 
+    # P numerator check
     ma_Pza = P.match(z**a)
     ma_P1  = P.match(a*z+ b)
     # Q denominator check
     ma_Qza = Q.match(z**a)
-    ma_Q1 = Q.match(c*(z-a)**b)
+    ma_Q1  = Q.match((c*z-a)**b)
     if ma_Q1 and ma_Q1[b]==0:
         ma_Q1 = None # no z in Q denominator
     ma_Q2 = None # Q degree 2
@@ -918,32 +947,25 @@ def z_properties_inverse(F,z,n):
                 #debug(' -- ma_P1 block sin[a*n]--')
                 # ma_Q2 = Q.match(a*z**2+ b*z + r**2)
                 k_Q2 = ma_Q2[b]/ma_Q2[a]/Abs(cos(k_w))/k_r
-                #k_Q2 = ma_Q2[b]/Abs(cos(k_w).evalf())/k_r
                 if not(ma_P1[a]==S.Zero) and ma_P1[b]==0:
-                    k = (k/sin(k_w)).evalf()
+                    #k = (k/sin(k_w)).evalf()
                     F_numer = z*sin(k_w)
                     F_denom = z**2-k_Q2*k_r*cos(k_w)*z+k_r**2
                     Fz = F_numer/F_denom
                     Fz = k*Fz
-    P_sign = PQ['P_sign']
-    if k<0:
-        P_sign = -P_sign
-        k=-k
-    k = k*PQ['k']
+
     #  ma_Q1 = Q.match(c*(z-a)**b)
     if ma_Q2 and (ma_P2 or ma_P1):
-        #k = 1
         if ma_P2:
             ma_P2 = P.match(r*z*(a*z+b))
         if ma_P1:
             ma_P1 = P.match(a*z+ b)
-    Fz = factor(Fz*P_sign/PQ['k'])
-    Fz = round_float_is_int(Fz)
+    # debug partial results
     debug(' P:',P,'\n Q:',Q)
     debug(' k:',k,' ; P_signo:',P_sign,
           ' ; P_degree:',P_degree,' ; P_zeros:',P_zeros)
     debug(' Q_degree:',Q_degree,' ; Q_poles (real):',Q_poles)
-    debug(' ma_Q1 c*(z-a)**b :',ma_Q1)
+    debug(' ma_Q1 (c*z-a)**b :',ma_Q1)
     if ma_Q2:
         debug(' ma_P1 (a*z+ b)    :',ma_P1)
         debug(' ma_P2 r*z*(b*z+a) :',ma_P2)
@@ -958,6 +980,7 @@ def z_properties_inverse(F,z,n):
     # avoid z/(z-1)**3
     cond3 = not(ma_Q1 and ma_Q1[a]>0 and ma_Q1[b]>2 and
             ma_P1 and ma_P1[a]>S.Zero and ma_P1[b]==S.Zero)
+
     # _z_property nf[n] <--> -z*diff(F[z])
     if (fn is None and ma_Q1 and ma_Q1[a]==1
         and P_degree>=1 and P_degree<=Q_degree and
@@ -980,17 +1003,19 @@ def z_properties_inverse(F,z,n):
             debug('\n _z_property multiply nf[n]:\n  ',fn)
 
     #  _z_property (a**n)*f[n] <--> F(z/a)
-    elif ((ma_Q1 and not(ma_Q1[a]==S.One) and not(ma_Q1[a]==S.Zero)) or
+    # ma_Q1 = Q.match((z-a)**b) # ma_Q2 = Q.match(a*z**2+ b*z + r**2)
+    elif ((ma_Q1 and not ma_Q1[a]==S.One  and not ma_Q1[a]==S.Zero) or
           (ma_Q2 and not(ma_Q2[r]==S.One) and
             ((ma_P2 and ma_P2[a]==S.One) or ma_P1)) and cond2):
         debug('\n _z_property multiply (a**n)*f[n] <--> F(z/a) ')
         k_a = None
         # Q1 is not a/z
-        if ma_Q1 and not(ma_Q1[a]==S.One) and not(ma_Q1[a]==S.Zero):
-            k_a = ma_Q1[a]/ma_Q1[c]
+        if (ma_Q1 and not ma_Q1[a]==S.One and not ma_Q1[a]==S.Zero and
+            not ma_Q1[c]==S.Zero):
+            k_a = ma_Q1[a]
             Fz = factor(Fz.subs(z,k_a*z))
         # quadratic denominator
-        if ma_Q2 and not(ma_Q2[r]==S.One):
+        if ma_Q2 and not ma_Q2[r]==S.One:
             k_a = ma_Q2[r]/ma_Q2[a]
             Fz = factor(Fz.subs(z,k_a*z))
             [P2,Q2] = Fz.as_numer_denom()
@@ -1001,19 +1026,25 @@ def z_properties_inverse(F,z,n):
                 k  = 1
             Q2 = Q2/k_a
             Fz = P2/Q2
-            Fz = round_float_is_int(Fz)
-        debug(' k:',k,' ; k_a:',k_a)
+        debug(' P_sign:',P_sign,'; k:',k,' ; k_a:',k_a,type(k_a))
         debug(' Fz:',Fz)
         fn = z_pairs_prop_inverse(Fz, z, n)
         if not fn is None:
-            fnk = P_sign*k*((k_a.evalf())**n)*fn[0]
-            cond_z = fn[1]
-            # has a Relation '>','<',etc, else is 0
-            if not isinstance(fn[1],int):
-                cond_z = list(fn[1].args)
-                for i in range(len(cond_z)):
-                    cond_z[i] = cond_z[i].subs(z,z/k_a)
-                cond_z = fn[1].func(cond_z[0],cond_z[1])
+            fnk = P_sign*k*(k_a**n)*fn[0]
+            cond_z = list(fn[1].args)
+            num_position = None
+            fun_position = None
+            for i in range(len(cond_z)):
+                cond_z[i] = cond_z[i].subs(z,z/k_a)
+                if not cond_z[i].has(z):
+                    num_position = i
+                if cond_z[i].has(z):
+                    fun_position = i
+                    k_Rel,f_rel = cond_z[i].as_independent(z, as_Add=False)
+            if num_position is not None:
+                cond_z[fun_position] = cond_z[fun_position]/k_Rel
+                cond_z[num_position] = cond_z[num_position]/k_Rel
+            cond_z = fn[1].func(cond_z[0],cond_z[1])
             fn = (fnk,cond_z,fn[2])
             debug('\n  _z_property multiply (a**n)*f[n]:\n ',fn)
 
@@ -1021,12 +1052,13 @@ def z_properties_inverse(F,z,n):
     elif ((0 in Q_poles) or
           (P_sign>0 and not(0 in Q_poles) and not P.has(z)) or
           (P_degree>Q_degree) or
-          (ma_Pza and not(ma_Pza[a]==S.Zero)) and cond3 ):
+          (ma_Pza and not ma_Pza[a]==S.Zero) and cond3):
         debug('\n _z_property time_shift f[n-b] <--> z**(-b)*F +Fsum ')
         debug(' Q_roots:',Q_poles)
         b_shift = 0
-        if not P.has(z):
-            b_shift = 1
+        if (not P.has(z) and ma_Q1 and not(ma_Q1[a]==S.Zero) and
+            not ma_Q1[b]==S.Zero):
+            b_shift = ma_Q1[a]
         if (0 in Q_poles) and not ma_Qza:
             b_shift = Q_poles[0]+1
         # only z**-a with a positive
@@ -1057,7 +1089,7 @@ def z_properties_inverse(F,z,n):
             f_kgu = _split_f_kgu(fn[0],n)
             f_g=1
             f_u=1
-            f_k = f_kgu[0]*k
+            f_k = P_sign*k*f_kgu[0]
             if f_kgu[1]!=1:
                 f_g = f_kgu[1].subs(f_kgu[1].args[0],
                                     f_kgu[1].args[0]-b_shift)
@@ -1077,7 +1109,7 @@ def z_properties_inverse(F,z,n):
             f_kgu = _split_f_kgu(fn[0],n)
             f_g=1
             f_u=1
-            f_k = f_kgu[0]*k #*P_sign
+            f_k = f_kgu[0]*k*P_sign
             if f_kgu[1]!=1:
                 f_g = f_kgu[1].subs(f_kgu[1].args[0],-f_kgu[1].args[0])
             if f_kgu[2]!=1:
@@ -1102,8 +1134,8 @@ def z_properties_inverse(F,z,n):
         beta = acos(-aq/Abs(R)).evalf()
         theta_Q = A*sqrt(r_Q)
         theta = atan((A*aq-B)/theta_Q).evalf()
-        fn = (k*k_r*(Abs(R)**n*cos(beta*n+theta)*Heaviside(n)),
-              0,0)
+        fn = (P_sign*k*k_r*(Abs(R)**n*cos(beta*n+theta)*Heaviside(n)),
+              Abs(z)>R,True)
         debug('\n  case : r*(|gamma|**n)*cos(beta*n+theta)')
         debug('          <--> z*(A*z+B)/(z**2-2*a*z+gamma**2)')
         debug('   F[z] : z(Az+B)/(z**2+2az+|r|**2)')
@@ -1115,7 +1147,7 @@ def z_properties_inverse(F,z,n):
 
     #case: n*(n-1)*(n-2)...(n-m+1)*(gamma**n)*u[n]/(m!*gamma**m)')
     #      <--> z/(z-gamma)**m+1')
-    # z/(z-a)**m+1 #ma_Q1 = Q.match(c*(z-a)**b)
+    # z/(z-a)**m+1 # ma_Q1 = Q.match(c*(z-a)**b)
     elif (fn is None and ma_Q1 and not(ma_Q1[a]==S.Zero)
           and ma_Q1[b]>2 and P_degree==S.One):
         m = ma_Q1[b]-1
@@ -1133,12 +1165,12 @@ def z_properties_inverse(F,z,n):
                 term = term*(n-i)
             debug('   factors:',term)
             fn = term*(ma_Q1[a]**n)/((ma_Q1[a]**m)*factorial(m))
-            fn = (k*fn*Heaviside(n)/ma_Q1[c],Abs(z) > 1,0)
+            fn = (P_sign*k*fn*Heaviside(n),Abs(z) > 1,0)
             debug('   case f[n]:',fn)
     if not fn is None:
-        fn0 = round_float_is_int(fn[0])
-        fn1 = round_float_is_int(fn[1])
-        fn2 = round_float_is_int(fn[2])
+        fn0 = _round_float_is_int(fn[0])
+        fn1 = _round_float_is_int(fn[1])
+        fn2 = fn[2]
         fn = (fn0,fn1,fn2)
         debug('   f[n]:',fn)
     return fn
@@ -1185,7 +1217,7 @@ def inverse_z_transform(F,z,n):
     (9*2**n + 10*3**n)*Heaviside(n)/6 - 19*DiracDelta(n)/6
     >>>
 
-    See Also: check apart_z(F)
+    See Also: apart_z(F)
 
     References
     ==========
@@ -1207,13 +1239,13 @@ def inverse_z_transform(F,z,n):
         if len(term_sum)>1:
             debug('  term_k[z]:',term_k)
         term_n = None # not paired yet
-        if not(term_k==S.Zero): # avoid term_k=0
+        if not term_k==S.Zero: # avoid term_k=0
             term_n = z_pairs_prop_inverse(term_k, z, n)
-        if term_n is None and not(term_k==S.Zero):
+        if term_n is None and not term_k==S.Zero:
             f_noeval.append(term_k)
             term_n = None
         if not term_n is None:
-            fT = fT + round_float_is_int(term_n[0])
+            fT = fT + _round_float_is_int(term_n[0])
         if len(term_sum)>1:
             debug('  term_k[n]:',term_n,)
     debug('\n f[n]:',fT)
@@ -1287,15 +1319,15 @@ def apart_z(F):
 
     # separate symbols z**a , a
     F = factor(F)
-    z_a = 1 # z**a , a is symbol
     k_a = 1 # factor constant and symbol
+    z_a = 1 # z**a , a is symbol
     z_b = 1 # z**a , a is integer
     factor_Mul = Mul.make_args(F)
     for factor_k in factor_Mul:
         ma_za = factor_k.match(z**a)
         ma_ka = factor_k.match(a)
         debug('  z**a, ma_za:',ma_za,' ; a ,ma_ka:',ma_ka)
-        if ma_za and not(ma_za[a]==S.Zero) and not(ma_za[a].is_integer is True):
+        if ma_za and not ma_za[a]==S.Zero and not ma_za[a].is_integer is True:
             za_symbol = list(ma_za[a].free_symbols)
             debug('  za_symbol:',za_symbol)
             for a_symbol in za_symbol: # z**(a+b+c-1)
@@ -1314,7 +1346,7 @@ def apart_z(F):
             debug('  k_a:',k_a)
 
     # apply partial fractions to F[z]/z
-    Fzz = simplify(F/z)
+    Fzz = factor(F/z,z)
 
     # Fz poles and zeros
     PQ = _Fz_as_PQ_roots(Fzz,z)
@@ -1322,15 +1354,12 @@ def apart_z(F):
     Q = PQ['Q']
     P_zeros  = PQ['P_zeros']
     P_degree = PQ['P_degree']
-    #Q_poles  = PQ['Q_poles']
     Q_degree = PQ['Q_degree']
     Q_unique = PQ['Q_unique']
 
     debug('  simplify(F/z):',Fzz)
-    debug('  P:',P)
-    debug('  P_degree:',P_degree,' ; P_zeros   :',P_zeros)
-    debug('  Q:',Q)
-    debug('  Q_degree:',Q_degree,' ; Q_unique:',Q_unique)
+    debug('  P:',P,'\n  P_degree:',P_degree,' ; P_zeros :',P_zeros)
+    debug('  Q:',Q,'\n  Q_degree:',Q_degree,' ; Q_unique:',Q_unique)
 
     # avoid: z**3/(z-1) ; z**2/(z-a) ; 1/(z-1)**2 ; z**2/(z-a)**2
     if (P.has(z) and (len(Q_unique)>1 or P_degree==(Q_degree-1))):
@@ -1343,46 +1372,126 @@ def apart_z(F):
     for term_k in term_suma:
         if term_k.has(z): # not a constant
             # make Q lead coefficient=1
-            [Pk,Qk] = term_k.as_numer_denom()
-            ma_Qk = Qk.match(a*z+b)
+            Pk,Qk = term_k.as_numer_denom()
+            ma_Qk = Qk.match((a*z+b)**c)
             ma_Qk2 = Qk.match(a*z**2+b*z+c)
-            # Q_degree = 1
-            if (ma_Qk and not(ma_Qk[a]==S.One) and
-                not(ma_Qk[a]==S.Zero) and not ma_Qk2):
-                Pk = Pk/ma_Qk[a]
-                Qk = Qk/ma_Qk[a]
+            debug('  ma_Qk:',ma_Qk,' ; ma_Qk2:',ma_Qk2)
+            # Q_degree = 1, not constant
+            if (ma_Qk and not ma_Qk[c]==S.Zero and
+                not ma_Qk[a]==S.One and
+                not ma_Qk[a]==S.Zero):
+                Pk = Pk/ma_Qk[a].doit()
+                Qk = Qk/ma_Qk[a].doit()
                 term_k = Pk/Qk
             # Q_degree = 2
-            if (ma_Qk2 and not(ma_Qk2[a]==S.One) and
-                not(ma_Qk2[a]==S.Zero) and not ma_Qk):
-                Pk = Pk/ma_Qk2[a]
-                Qk = Qk/ma_Qk2[a]
+            elif (ma_Qk2 and not(ma_Qk2[a]==S.One) and
+                  not(ma_Qk2[a]==S.Zero) and
+                  not(ma_Qk and ma_Qk[c]==S.Zero)):
+                Pk = Pk/ma_Qk2[a].doit()
+                Qk = Qk/ma_Qk2[a].doit()
                 term_k = Pk/Qk
         #  restore F[z]*z and symbolic factor z**a or a
+        term_k = _simplify_z(term_k,z)
         Fzp = Fzp + term_k*z*z_a*k_a*z_b
 
-    Fzp = round_float_is_int(Fzp)
-    debug('  z*(Fz/z)  :',Fzp,)
+    Fzp = _round_float_is_int(Fzp)
+    debug('\n apart z*(Fz/z)  :',Fzp)
     return Fzp
 
-def round_float_is_int(F, nearcero=1e-10):
+def _round_float_is_int(F, nearzero=1e-10):
     """
-    round floats in F expresion with no decimal part,
+    auxiliary function to round floats in F expresion with no decimal part,
     ending with .0 to simplify reading expression
     """
     for a in preorder_traversal(F):
         if isinstance(a, Float):
             r = a%1
-            if r<nearcero:
+            if r<nearzero:
                 F = F.subs(a, int(a))
     return F
 
-def round_float(F, precision=15):
+def _round_float(F, precision=15):
     """
-    round floats in expression to simplify reading
-    to a given precision or to match with "Assert" at test files.
+    auxiliary function to round floats F[Z] in expression to simplify
+    reading with a given precision or to match "assert" at test files.
     """
     for a in preorder_traversal(F):
         if isinstance(a, Float):
             F = F.subs(a, round(a,precision))
+    return F
+
+def _simplify_z(F,z,PQ_args = False):
+    """
+    auxiliary function to simplify z expressions
+    4z/4z+3 is simplified as z/(z - 3/4)
+    PQ_args = True, returns{P,Q,k,F}
+    """
+    a = Wild('a', exclude=[z])
+    b = Wild('b', exclude=[z])
+    c = Wild('c', exclude=[z])
+    # review leadcoef 4z/4z+3 is simplified as z/(z - 3/4)
+    P,Q = F.as_numer_denom()
+    debug('\n_simplify_z:',F,'\n P:',P,'\n Q:',Q)
+
+    # P numerator review
+    count_vars = P.free_symbols
+    ma = P.match((a*z-b)**c)
+    if P.has(z) and len(count_vars)==1:
+        k = LC(P)
+    elif P.has(z) and len(count_vars)>1:
+        k = 1
+        for term_k in Mul.make_args(P):
+            if not term_k.has(z):
+                k = k*term_k
+    else: # numerator is a constant
+        k = P
+
+    # repeated zeros
+    ma = P.match((a*z-b)**c)
+    cond = ma and len(ma[c].free_symbols)==0 \
+        and ma[c]>S.One and not ma[c]==S.Zero \
+        and not(ma[a]==S.One) and Abs(ma[a])>S.Zero
+    if cond:
+        P = (z-ma[b]/ma[a])**ma[c]
+    else:
+        P = (P/k).doit()
+    P = _round_float_is_int(P)
+    k = _round_float_is_int(k) #constant factor
+    debug('  P match (a*z-b)**c:',ma,
+          '\n  P_leadcoef:',k,' : P:',P)
+
+    # Q denominator review
+    count_vars = Q.free_symbols
+    ma = Q.match((a*z-b)**c)
+    if Q.has(z) and len(count_vars)==1:
+        Q_leadcoef = LC(Q)
+    elif Q.has(z) and len(count_vars)>1:
+        Q_leadcoef = 1
+        for term_k in Mul.make_args(Q):
+            if not term_k.has(z):
+                Q_leadcoef = Q_leadcoef*term_k
+    else: # denominator is a constant
+        Q_leadcoef = Q
+
+    # repeated poles
+    ma = Q.match((a*z-b)**c)
+    cond = ma and len(ma[c].free_symbols)==0 \
+        and ma[c]>S.One and not ma[c]==S.Zero and \
+        not(ma[a]==S.One) and Abs(ma[a])>S.Zero
+    if cond:
+        Q = (z-ma[b]/ma[a])**ma[c]
+    else:
+        Q = (Q/Q_leadcoef).doit()
+    Q = _round_float_is_int(Q)
+    Q_leadcoef =_round_float_is_int(Q_leadcoef)
+    k = _round_float_is_int(k/Q_leadcoef)   # constant factor
+    debug('  Q match (a*z-b)**c:',ma,
+          '\n  Q_leadcoef:',Q_leadcoef,'  Q:',Q)
+
+    F = k*P/Q
+    debug('  k:',k,' ; Fz:',P/Q,'\n  simplify_z F:',F)
+    PQ = {'P':P,'Q':Q,
+          'k':k,'F':P/Q}
+    if PQ_args is True:
+        F = PQ
     return F
