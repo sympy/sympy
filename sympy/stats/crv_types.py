@@ -1142,7 +1142,7 @@ def Davis(name, b, n, mu):
     .. math::
         f(x; \mu; b, n) := \frac{b^{n}(x - \mu)^{1-n}}{ \left( e^{\frac{b}{x-\mu}} - 1 \right) \Gamma(n)\zeta(n)}
 
-        with :math:`x \in [0,\infty]`.
+    with :math:`x \in [0,\infty]`.
 
     Davis distribution is a generalization of the Planck's law of radiation from statistical physics. It is used for modeling income distribution.
 
