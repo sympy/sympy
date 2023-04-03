@@ -9,7 +9,7 @@ and calculates all kinds of interesting properties, like Jacobian, metric
 tensor, Laplace operator, ...
 """
 
-from sympy import var, sin, cos, pprint, Matrix, eye, trigsimp, Eq, \
+from sympy import sin, cos, pprint, Matrix, eye, Eq, \
     Function, simplify, sinh, cosh, expand, symbols
 
 

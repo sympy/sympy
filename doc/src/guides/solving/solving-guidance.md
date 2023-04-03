@@ -142,7 +142,7 @@ result. For example, this exact equation can be solved:
 ```
 
 but if you use the inexact equation `eq = x**1.4142135623730951 - 2`, SymPy will
-not return a result despite attempting for a long time. 
+not return a result despite attempting for a long time.
 
 ## Include the Variable to be Solved for in the Function Call
 
@@ -175,8 +175,8 @@ Specifying the variable to solve for ensures that SymPy solves for it:
 which is especially important when extracting information about the solution
 programmatically.
 
-To extract the solutions, you can iterate through the list of dictionaries:  
-    
+To extract the solutions, you can iterate through the list of dictionaries:
+
 ```py
 >>> from sympy import parse_expr, solve, solveset
 >>> from sympy.abc import x

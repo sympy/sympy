@@ -1,10 +1,8 @@
-import sys
 import re
 import inspect
 import textwrap
 import pydoc
 import sphinx
-import collections
 
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 

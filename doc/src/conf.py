@@ -425,7 +425,7 @@ if not commit_hash:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         commit_hash = commit_hash.decode('ascii')
         commit_hash = commit_hash.rstrip()
-    except:
+    except Exception:
         import warnings
         warnings.warn(
             "Failed to get the git commit hash as the command " \

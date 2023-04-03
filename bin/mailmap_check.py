@@ -14,7 +14,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
-import os
 if sys.version_info < (3, 8):
     sys.exit("This script requires Python 3.8 or newer")
 
@@ -28,7 +27,6 @@ def sympy_dir():
 
 # put sympy on the path
 sys.path.insert(0, str(sympy_dir()))
-import sympy
 from sympy.utilities.misc import filldedent
 from sympy.external.importtools import version_tuple
 

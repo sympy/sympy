@@ -63,7 +63,6 @@ def main():
     m = Symbol('m', integer=True)
     i = Idx('i', m)
     A = IndexedBase('A')
-    B = IndexedBase('B')
     x = Symbol('x')
 
     print("Compiling ufuncs for radial harmonic oscillator solutions")

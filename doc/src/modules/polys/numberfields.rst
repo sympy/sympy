@@ -281,4 +281,3 @@ Utilities
 .. _order: https://en.wikipedia.org/wiki/Order_(ring_theory)
 .. _ring of integers: https://en.wikipedia.org/wiki/Ring_of_integers
 .. _integral basis: https://en.wikipedia.org/wiki/Algebraic_number_field#Integral_basis
-
