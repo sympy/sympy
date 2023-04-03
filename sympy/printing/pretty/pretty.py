@@ -1108,19 +1108,17 @@ class PrettyPrinter(Printer):
         return mat
 
     def _print_BasisDependent(self, expr):
-        from sympy.vector import Vector
 
-        if not self._use_unicode:
-            raise NotImplementedError("ASCII pretty printing of BasisDependent is not implemented")
+        from sympy.vector import Vector
 
         if expr == expr.zero:
             return prettyForm(expr.zero._pretty_form)
         o1 = []
         vectstrs = []
+        items = [(0, expr)]
         if isinstance(expr, Vector):
             items = expr.separate().items()
-        else:
-            items = [(0, expr)]
+
         for system, vect in items:
             inneritems = list(vect.components.items())
             inneritems.sort(key = lambda x: x[0].__str__())
@@ -1149,6 +1147,7 @@ class PrettyPrinter(Printer):
             o1[0] = o1[0][3:]
         elif o1[0].startswith(" "):
             o1[0] = o1[0][1:]
+
         #Fixing the newlines
         lengths = []
         strs = ['']
@@ -1159,24 +1158,47 @@ class PrettyPrinter(Printer):
             if '\n' in partstr:
                 tempstr = partstr
                 tempstr = tempstr.replace(vectstrs[i], '')
-                if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
-                    for paren in range(len(tempstr)):
+                if self._use_unicode:
+                    if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
                         flag[i] = 1
-                        if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
-                            # We want to place the vector string after all the right parentheses, because
-                            # otherwise, the vector will be in the middle of the string
-                            tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
-                                         + ' '  + vectstrs[i] + tempstr[paren + 1:]
-                            break
-                elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
-                    # We want to place the vector string after all the right parentheses, because
-                    # otherwise, the vector will be in the middle of the string. For this reason,
-                    # we insert the vector string at the rightmost index.
-                    index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
-                    if index != -1: # then this character was found in this string
+                        for paren in range(len(tempstr)):
+                            if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                                # We want to place the vector string after all the right parentheses, because
+                                # otherwise, the vector will be in the middle of the string
+                                tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
+                                            + ' '  + vectstrs[i] + tempstr[paren + 1:]
+                                break
+                    elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
+                        # We want to place the vector string after all the right parentheses, because
+                        # otherwise, the vector will be in the middle of the string. For this reason,
+                        # we insert the vector string at the rightmost index.
                         flag[i] = 1
-                        tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
-                                     + ' '  + vectstrs[i] + tempstr[index + 1:]
+                        index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                        if index != -1: # then this character was found in this string
+                            tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                        + ' '  + vectstrs[i] + tempstr[index + 1:]
+                else:
+                    frac = False
+                    delimiter = "/"
+                    x = partstr.split("\n")
+                    for j, line in enumerate(x):
+                        if "\\" in line:  # start of the parenthesis
+                            pos = line.index("\\")
+                            # looking for its end
+                            for line_bellow in x[i+1:]:
+                                # it's not a two lines parenthesis
+                                if line_bellow[pos] == "|":
+                                    delimiter = "|"
+                                    continue
+                                # found the end
+                                if line_bellow[pos] == "/":
+                                    frac = True
+                                    index = 2*(pos+1)
+                                    break
+                    if frac:
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + delimiter\
+                                        + ' '  + vectstrs[i] + tempstr[index + 1:]
                 o1[i] = tempstr
 
         o1 = [x.split('\n') for x in o1]
@@ -1205,6 +1227,136 @@ class PrettyPrinter(Printer):
                     if j >= len(strs):
                         strs.append(' ' * (sum(lengths[:-1]) +
                                            3*(len(lengths)-1)))
+                    strs[j] += ' '*(lengths[-1]+3)
+
+        return prettyForm('\n'.join([s[:-3] for s in strs]))
+
+    def _print_Dyadic(self, expr):
+        from sympy.vector import Dyadic
+
+        if isinstance(expr, Dyadic):
+            return self._print_BasisDependent(expr)
+
+        pretty_form = lambda a : f"({self.doprint(a.args[0][1])}|{self.doprint(a.args[0][2])})"
+
+        def _ascii_parenthesis_end(partstr):
+            """Checks if there's an ascii art right parenthesis"""
+
+
+        if expr == 0:
+            return prettyForm("0")
+
+        o1 = []
+        vectstrs = []
+
+        inneritems = [(v.__or__(w),k) for k,v,w in expr.args]
+        inneritems.sort(key = lambda x: x[0].__str__())
+
+        for k, v in inneritems:
+            #if the coef of the basis vector is 1
+            #we skip the 1
+            if v == 1:
+                o1.append("" +
+                        pretty_form(k))
+            #Same for -1
+            elif v == -1:
+                o1.append("(-1) " +
+                        pretty_form(k))
+            #For a general expr
+            else:
+                #We always wrap the measure numbers in
+                #parentheses
+                arg_str = self._print(
+                    v).parens()[0]
+
+                o1.append(arg_str + ' ' + pretty_form(k))
+            vectstrs.append(pretty_form(k))
+
+        #outstr = u("").join(o1)
+        if o1[0].startswith(" + "):
+            o1[0] = o1[0][3:]
+        elif o1[0].startswith(" "):
+            o1[0] = o1[0][1:]
+
+        #Fixing the newlines
+        lengths = []
+        strs = ['']
+        flag = []
+        for i, partstr in enumerate(o1):
+            flag.append(0)
+            # XXX: What is this hack?
+            if '\n' in partstr:
+                tempstr = partstr
+                tempstr = tempstr.replace(vectstrs[i], '')
+                if self._use_unicode:
+                    if '\N{RIGHT PARENTHESIS EXTENSION}' in tempstr:   # If scalar is a fraction
+                        flag[i] = 1
+                        for paren in range(len(tempstr)):
+                            if tempstr[paren] == '\N{RIGHT PARENTHESIS EXTENSION}' and tempstr[paren + 1] == '\n':
+                                # We want to place the vector string after all the right parentheses, because
+                                # otherwise, the vector will be in the middle of the string
+                                tempstr = tempstr[:paren] + '\N{RIGHT PARENTHESIS EXTENSION}'\
+                                            + ' '  + vectstrs[i] + tempstr[paren + 1:]
+                                break
+                    elif '\N{RIGHT PARENTHESIS LOWER HOOK}' in tempstr:
+                        # We want to place the vector string after all the right parentheses, because
+                        # otherwise, the vector will be in the middle of the string. For this reason,
+                        # we insert the vector string at the rightmost index.
+                        flag[i] = 1
+                        index = tempstr.rfind('\N{RIGHT PARENTHESIS LOWER HOOK}')
+                        if index != -1: # then this character was found in this string
+                            tempstr = tempstr[:index] + '\N{RIGHT PARENTHESIS LOWER HOOK}'\
+                                        + ' '  + vectstrs[i] + tempstr[index + 1:]
+                else:
+                    frac = False
+                    delimiter = "/"
+                    x = partstr.split("\n")
+                    for j, line in enumerate(x):
+                        if "\\" in line:  # start of the parenthesis
+                            pos = line.index("\\")
+                            # looking for its end
+                            for line_bellow in x[i+1:]:
+                                # it's not a two lines parenthesis
+                                if line_bellow[pos] == "|":
+                                    delimiter = "|"
+                                    continue
+                                # found the end
+                                if line_bellow[pos] == "/":
+                                    frac = True
+                                    index = 2*(pos+1)
+                                    break
+                    if frac:
+                        flag[i] = 1
+                        tempstr = tempstr[:index] + delimiter\
+                                        + ' '  + vectstrs[i] + tempstr[index + 1:]
+                o1[i] = tempstr
+
+        o1 = [x.split('\n') for x in o1]
+        n_newlines = max([len(x) for x in o1])  # Width of part in its pretty form
+
+        if 1 in flag:                           # If there was a fractional scalar
+            for i, parts in enumerate(o1):
+                if len(parts) == 1:             # If part has no newline
+                    parts.insert(0, ' ' * (len(parts[0])))
+                    flag[i] = 1
+
+        for i, parts in enumerate(o1):
+            lengths.append(len(parts[flag[i]]))
+            for j in range(n_newlines):
+                if j+1 <= len(parts):
+                    if j >= len(strs):
+                        strs.append(' ' * (sum(lengths[:-1]) +
+                                        3*(len(lengths)-1)))
+                    if j == flag[i]:
+                        strs[flag[i]] += parts[flag[i]] + ' + '
+                    else:
+                        strs[j] += parts[j] + ' '*(lengths[-1] -
+                                                len(parts[j])+
+                                                3)
+                else:
+                    if j >= len(strs):
+                        strs.append(' ' * (sum(lengths[:-1]) +
+                                        3*(len(lengths)-1)))
                     strs[j] += ' '*(lengths[-1]+3)
 
         return prettyForm('\n'.join([s[:-3] for s in strs]))

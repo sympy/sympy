@@ -196,60 +196,6 @@ class Dyadic(Printable, EvalfMixin):
             outstr = outstr[1:]
         return outstr
 
-    def _pretty(self, printer):
-        e = self
-
-        class Fake:
-            baseline = 0
-
-            def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
-                mpp = printer
-                if len(ar) == 0:
-                    return str(0)
-                bar = "\N{CIRCLED TIMES}" if printer._use_unicode else "|"
-                ol = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    # if the coef of the dyadic is 1, we skip the 1
-                    if ar[i][0] == 1:
-                        ol.extend([" + ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
-
-                    # if the coef of the dyadic is -1, we skip the 1
-                    elif ar[i][0] == -1:
-                        ol.extend([" - ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
-
-                    # If the coefficient of the dyadic is not 1 or -1,
-                    # we might wrap it in parentheses, for readability.
-                    elif ar[i][0] != 0:
-                        if isinstance(ar[i][0], Add):
-                            arg_str = mpp._print(
-                                ar[i][0]).parens()[0]
-                        else:
-                            arg_str = mpp.doprint(ar[i][0])
-                        if arg_str.startswith("-"):
-                            arg_str = arg_str[1:]
-                            str_start = " - "
-                        else:
-                            str_start = " + "
-                        ol.extend([str_start, arg_str, " ",
-                                  mpp.doprint(ar[i][1]),
-                                  bar,
-                                  mpp.doprint(ar[i][2])])
-
-                outstr = "".join(ol)
-                if outstr.startswith(" + "):
-                    outstr = outstr[3:]
-                elif outstr.startswith(" "):
-                    outstr = outstr[1:]
-                return outstr
-        return Fake()
-
     def __rand__(self, other):
         """The inner product operator for a Vector or Dyadic, and a Dyadic
 
