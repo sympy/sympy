@@ -1254,9 +1254,9 @@ def test_TransferFunction_gbt():
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 0.2)
     # discretized transfer function with coefs from tf.bilinear()
-    tf_test_gbt = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    tf_test_gbt = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T*0.2+0.8*T, s*(0.2*T*b+1.0*a)+(0.8*T*b-1.0*a), s)
+    tf_test_manual = TransferFunction(s*T+4*T, s*(T*b+5*a)+(4*T*b-5*a), s)
 
     assert S.Zero == (tf_test_gbt-tf_test_manual).simplify().num
 
