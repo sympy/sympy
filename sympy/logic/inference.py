@@ -77,11 +77,12 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
     UNSAT
 
     """
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
     if algorithm is None or algorithm == "pycosat":
-        pycosat = import_module('pycosat')
-        if pycosat is not None:
+        try:
+            pycosat = import_module('pycosat')
             algorithm = "pycosat"
-        else:
+        except ImportError:
             if algorithm == "pycosat":
                 raise ImportError("pycosat module is not present")
             # Silently fall back to dpll2 if pycosat
@@ -106,6 +107,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
         return minisat22_satisfiable(expr, all_models, minimal)
     raise NotImplementedError
+
 
 
 def valid(expr):
