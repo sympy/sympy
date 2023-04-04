@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import nsimplify
+from sympy import Rational
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -50,19 +50,24 @@ def gbt(tf, sample_per, alpha):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = gbt(tf, T, 0.5)
     >>> numZ
-    [T, T]
+    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
     >>> denZ
-    [2*L + R*T, -2*L + R*T]
+    [1, (-L + R*T/2)/(L + R*T/2)]
     >>> numZ, denZ = gbt(tf, T, 0)
     >>> numZ
-    [T]
+    [T/L]
     >>> denZ
-    [L, -L + R*T]
+    [1, (-L + R*T)/L]
     >>> numZ, denZ = gbt(tf, T, 1)
     >>> numZ
-    [T, 0]
+    [T/(L + R*T), 0]
     >>> denZ
-    [L + R*T, -L]
+    [1, -L/(L + R*T)]
+    >>> numZ, denZ = gbt(tf, T, 0.3)
+    >>> numZ
+    [3*T/(10*(L + 3*R*T/10)), 7*T/(10*(L + 3*R*T/10))]
+    >>> denZ
+    [1, (-L + 7*R*T/10)/(L + 3*R*T/10)]
     """
     if not tf.is_SISO:
         raise NotImplementedError("Not implemented for MIMO systems.")
@@ -73,9 +78,9 @@ def gbt(tf, sample_per, alpha):
 
     np = tf.num.as_poly(s).all_coeffs()
     dp = tf.den.as_poly(s).all_coeffs()
+    alpha = Rational(alpha).limit_denominator(1000)
 
     # The next line results from multiplying H(z) with z^N/z^N
-
     N = max(len(np), len(dp)) - 1
     num = Add(*[ T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(np[::-1], range(len(np))) ])
     den = Add(*[ T**(N-i) * c * (z-1)**i * (alpha * z + 1 - alpha)**(N-i) for c, i in zip(dp[::-1], range(len(dp))) ])
@@ -83,26 +88,11 @@ def gbt(tf, sample_per, alpha):
     num_coefs = num.as_poly(z).all_coeffs()
     den_coefs = den.as_poly(z).all_coeffs()
 
-    # Create a new fraction using the coefficients
-    d = Dummy()
-    new_num = 0
-    for i in range(len(num_coefs)):
-        new_num += num_coefs[i]*d**(len(num_coefs) - i - 1)
-    new_den = 0
-    for i in range(len(den_coefs)):
-        new_den += den_coefs[i]*d**(len(den_coefs) - i - 1)
+    para = den_coefs[0]
+    num_coefs = [coef/para for coef in num_coefs]
+    den_coefs = [coef/para for coef in den_coefs]
 
-    # Simplify the fraction
-    new_tf = nsimplify(new_num / new_den).simplify()
-
-    # Extract the numerator and denominator
-    numerator, denominator = new_tf.as_numer_denom()
-
-    # Get the numerator polynomial and its coefficients
-    numerator_coefs = numerator.as_poly(d).all_coeffs()
-    demonator_coefs = denominator.as_poly(d).all_coeffs()
-
-    return numerator_coefs, demonator_coefs
+    return num_coefs, den_coefs
 
 def bilinear(tf, sample_per):
     r"""
@@ -121,9 +111,9 @@ def bilinear(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = bilinear(tf, T)
     >>> numZ
-    [T, T]
+    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
     >>> denZ
-    [2*L + R*T, -2*L + R*T]
+    [1, (-L + R*T/2)/(L + R*T/2)]
     """
     return gbt(tf, sample_per, 0.5)
 
@@ -144,9 +134,9 @@ def forward_diff(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = forward_diff(tf, T)
     >>> numZ
-    [T]
+    [T/L]
     >>> denZ
-    [L, -L + R*T]
+    [1, (-L + R*T)/L]
     """
     return gbt(tf, sample_per, 0)
 
@@ -167,9 +157,9 @@ def backward_diff(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = backward_diff(tf, T)
     >>> numZ
-    [T, 0]
+    [T/(L + R*T), 0]
     >>> denZ
-    [L + R*T, -L]
+    [1, -L/(L + R*T)]
     """
     return gbt(tf, sample_per, 1)
 

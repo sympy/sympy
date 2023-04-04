@@ -1226,39 +1226,39 @@ def test_TransferFunction_gbt():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 0.5)
-    # discretized transfer function with coefs from tf.bilinear()
-    tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_bilinear = TransferFunction(s * numZ[0] + numZ[1], s * denZ[0] + denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+    tf_test_manual = TransferFunction(s * T/(2*(T*b/2 + a)) + T/(2*(T*b/2 + a)), s + (T*b/2 - a)/(T*b/2 + a), s)
 
-    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
 
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 0)
-    # discretized transfer function with coefs from tf.bilinear()
-    tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T, s*a-a+b*T, s)
+    tf_test_manual = TransferFunction(T/a, s + (T*b - a)/a, s)
 
-    assert S.Zero == (tf_test_forward-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
 
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 1)
-    # discretized transfer function with coefs from tf.bilinear()
+    # discretized transfer function with coefs from tf.gbt()
     tf_test_backward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T, s*(T*b+a)-a, s)
+    tf_test_manual = TransferFunction(s * T/(T*b + a), s - a/(T*b + a), s)
 
-    assert S.Zero == (tf_test_backward-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
 
     tf = TransferFunction(1, a*s+b, s)
-    numZ, denZ = gbt(tf, T, 0.2)
-    # discretized transfer function with coefs from tf.bilinear()
+    numZ, denZ = gbt(tf, T, 0.3)
+    # discretized transfer function with coefs from tf.gbt()
     tf_test_gbt = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T+4*T, s*(T*b+5*a)+(4*T*b-5*a), s)
+    tf_test_manual = TransferFunction(s*3*T/(10*(3*T*b/10 + a)) + 7*T/(10*(3*T*b/10 + a)), s + (7*T*b/10 - a)/(3*T*b/10 + a), s)
 
-    assert S.Zero == (tf_test_gbt-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_gbt.simplify()-tf_test_manual.simplify()).simplify().num
 
 def test_TransferFunction_bilinear():
     # simple transfer function, e.g. ohms law
@@ -1267,20 +1267,20 @@ def test_TransferFunction_bilinear():
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+    tf_test_manual = TransferFunction(s * T / (2*(T*b/2 + a)) + T / (2*(T*b/2 + a)), s + (T*b/2 - a)/(T*b/2 + a), s)
 
-    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
 
 def test_TransferFunction_forward_diff():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = forward_diff(tf, T)
     # discretized transfer function with coefs from tf.forward_diff()
-    tf_test_forward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T, s*a-a+b*T, s)
+    tf_test_manual = TransferFunction(T / a, s + (T*b - a)/a, s)
 
-    assert S.Zero == (tf_test_forward-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
 
 def test_TransferFunction_backward_diff():
     # simple transfer function, e.g. ohms law
@@ -1289,6 +1289,6 @@ def test_TransferFunction_backward_diff():
     # discretized transfer function with coefs from tf.backward_diff()
     tf_test_backward = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T, s*(T*b+a)-a, s)
+    tf_test_manual = TransferFunction(s * T / (T*b + a), s - a/(T*b + a), s)
 
-    assert S.Zero == (tf_test_backward-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
