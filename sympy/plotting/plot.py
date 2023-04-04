@@ -224,15 +224,11 @@ class Plot:
         is_finite = \
             lambda lim: all(getattr(i, 'is_finite', True) for i in lim)
 
-        # reduce code repetition
         def check_and_set(t_name, t):
             if t:
-                if not is_real(t):
+                if not is_real(t) or not is_finite(t):
                     raise ValueError(
-                    "All numbers from {}={} must be real".format(t_name, t))
-                if not is_finite(t):
-                    raise ValueError(
-                    "All numbers from {}={} must be finite".format(t_name, t))
+                    "All numbers from {}={} must be {}".format(t_name, t, "real" if not is_finite(t) else "finite"))
                 setattr(self, t_name, (float(t[0]), float(t[1])))
 
         self.xlim = None
