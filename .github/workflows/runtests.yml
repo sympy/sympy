@@ -393,6 +393,9 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+      - run: sudo apt-get install cpufrequtils
+      - run: sudo cpufreq-set -f 2000000
+      - run: sudo sysctl -w "kernel.tsc=reliable"
       - run: pip install asv virtualenv
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
