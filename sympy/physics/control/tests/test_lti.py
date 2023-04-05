@@ -1229,7 +1229,7 @@ def test_TransferFunction_gbt():
     # discretized transfer function with coefs from tf.gbt()
     tf_test_bilinear = TransferFunction(s * numZ[0] + numZ[1], s * denZ[0] + denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s * T/(2*(T*b/2 + a)) + T/(2*(T*b/2 + a)), s + (T*b/2 - a)/(T*b/2 + a), s)
+    tf_test_manual = TransferFunction(s * 0.5*T/(1.0*a + 0.5*b*T) + 0.5*T/(1.0*a + 0.5*b*T), s + (-1.0*a + 0.5*b*T)/(1.0*a + 0.5*b*T), s)
 
     assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1238,7 +1238,7 @@ def test_TransferFunction_gbt():
     # discretized transfer function with coefs from tf.gbt()
     tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(T/a, s + (T*b - a)/a, s)
+    tf_test_manual = TransferFunction(T/a, s + (-a + b*T)/a, s)
 
     assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1247,7 +1247,7 @@ def test_TransferFunction_gbt():
     # discretized transfer function with coefs from tf.gbt()
     tf_test_backward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s * T/(T*b + a), s - a/(T*b + a), s)
+    tf_test_manual = TransferFunction(s * T/(a + b*T), s - a/(a + b*T), s)
 
     assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1256,7 +1256,7 @@ def test_TransferFunction_gbt():
     # discretized transfer function with coefs from tf.gbt()
     tf_test_gbt = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*3*T/(10*(3*T*b/10 + a)) + 7*T/(10*(3*T*b/10 + a)), s + (7*T*b/10 - a)/(3*T*b/10 + a), s)
+    tf_test_manual = TransferFunction(s*0.3*T/(1.0*a + 0.3*b*T) + 0.7*T/(1.0*a + 0.3*b*T), s + (-1.0*a + 0.7*b*T)/(1.0*a + 0.3*b*T), s)
 
     assert S.Zero == (tf_test_gbt.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1267,7 +1267,7 @@ def test_TransferFunction_bilinear():
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s * T / (2*(T*b/2 + a)) + T / (2*(T*b/2 + a)), s + (T*b/2 - a)/(T*b/2 + a), s)
+    tf_test_manual = TransferFunction(s * 0.5*T/(1.0*a + 0.5*b*T) + 0.5*T/(1.0*a + 0.5*b*T), s + (-1.0*a + 0.5*b*T)/(1.0*a + 0.5*b*T), s)
 
     assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1278,7 +1278,7 @@ def test_TransferFunction_forward_diff():
     # discretized transfer function with coefs from tf.forward_diff()
     tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(T / a, s + (T*b - a)/a, s)
+    tf_test_manual = TransferFunction(T/a, s + (-a + b*T)/a, s)
 
     assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
 
@@ -1289,6 +1289,6 @@ def test_TransferFunction_backward_diff():
     # discretized transfer function with coefs from tf.backward_diff()
     tf_test_backward = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s * T / (T*b + a), s - a/(T*b + a), s)
+    tf_test_manual = TransferFunction(s * T/(a + b*T), s - a/(a + b*T), s)
 
     assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
