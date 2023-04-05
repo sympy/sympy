@@ -50,9 +50,9 @@ def gbt(tf, sample_per, alpha):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = gbt(tf, T, 0.5)
     >>> numZ
-    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
+    [0.5*T/(1.0*L + 0.5*R*T), 0.5*T/(1.0*L + 0.5*R*T)]
     >>> denZ
-    [1, (-L + R*T/2)/(L + R*T/2)]
+    [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
     >>> numZ, denZ = gbt(tf, T, 0)
     >>> numZ
     [T/L]
@@ -65,9 +65,9 @@ def gbt(tf, sample_per, alpha):
     [1, -L/(L + R*T)]
     >>> numZ, denZ = gbt(tf, T, 0.3)
     >>> numZ
-    [3*T/(10*(L + 3*R*T/10)), 7*T/(10*(L + 3*R*T/10))]
+    [0.3*T/(1.0*L + 0.3*R*T), 0.7*T/(1.0*L + 0.3*R*T)]
     >>> denZ
-    [1, (-L + 7*R*T/10)/(L + 3*R*T/10)]
+    [1, (-1.0*L + 0.7*R*T)/(1.0*L + 0.3*R*T)]
     """
     if not tf.is_SISO:
         raise NotImplementedError("Not implemented for MIMO systems.")
@@ -78,7 +78,7 @@ def gbt(tf, sample_per, alpha):
 
     np = tf.num.as_poly(s).all_coeffs()
     dp = tf.den.as_poly(s).all_coeffs()
-    alpha = Rational(alpha).limit_denominator(1000)
+    # alpha = Rational(alpha).limit_denominator(1000)
 
     # The next line results from multiplying H(z) with z^N/z^N
     N = max(len(np), len(dp)) - 1
