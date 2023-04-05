@@ -145,6 +145,30 @@ class ReferenceFrame:
         >>> type(A) == type(D)
         True
 
+        Unit dyads for the ReferenceFrame can be accessed through the attributes ``xx``, ``xy``, etc. For example:
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.yz
+        (N.y|N.z)
+        >>> N.zx
+        (N.z|N.x)
+        >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
+        >>> P.xx
+        (P['1']|P['1'])
+        >>> P.zy
+        (P['3']|P['2'])
+
+        Unit dyadic is also accessible via the ``u`` attribute:
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.u
+        (N.x|N.x) + (N.y|N.y) + (N.z|N.z)
+        >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
+        >>> P.u
+        (P['1']|P['1']) + (P['2']|P['2']) + (P['3']|P['3'])
+
         """
 
         if not isinstance(name, str):
@@ -1387,6 +1411,56 @@ class ReferenceFrame:
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
+
+    @property
+    def xx(self):
+        """Unit dyad of basis Vectors x and x for the ReferenceFrame."""
+        return Vector.outer(self.x, self.x)
+
+    @property
+    def xy(self):
+        """Unit dyad of basis Vectors x and y for the ReferenceFrame."""
+        return Vector.outer(self.x, self.y)
+
+    @property
+    def xz(self):
+        """Unit dyad of basis Vectors x and z for the ReferenceFrame."""
+        return Vector.outer(self.x, self.z)
+
+    @property
+    def yx(self):
+        """Unit dyad of basis Vectors y and x for the ReferenceFrame."""
+        return Vector.outer(self.y, self.x)
+
+    @property
+    def yy(self):
+        """Unit dyad of basis Vectors y and y for the ReferenceFrame."""
+        return Vector.outer(self.y, self.y)
+
+    @property
+    def yz(self):
+        """Unit dyad of basis Vectors y and z for the ReferenceFrame."""
+        return Vector.outer(self.y, self.z)
+
+    @property
+    def zx(self):
+        """Unit dyad of basis Vectors z and x for the ReferenceFrame."""
+        return Vector.outer(self.z, self.x)
+
+    @property
+    def zy(self):
+        """Unit dyad of basis Vectors z and y for the ReferenceFrame."""
+        return Vector.outer(self.z, self.y)
+
+    @property
+    def zz(self):
+        """Unit dyad of basis Vectors z and z for the ReferenceFrame."""
+        return Vector.outer(self.z, self.z)
+
+    @property
+    def u(self):
+        """Unit dyadic for the ReferenceFrame."""
+        return self.xx + self.yy + self.zz
 
     def partial_velocity(self, frame, *gen_speeds):
         """Returns the partial angular velocities of this frame in the given

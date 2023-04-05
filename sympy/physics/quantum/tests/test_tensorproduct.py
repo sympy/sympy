@@ -1,7 +1,7 @@
 from sympy.core.numbers import I
 from sympy.core.symbol import symbols
 from sympy.core.expr import unchanged
-from sympy.matrices import Matrix, SparseMatrix
+from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
 
 from sympy.physics.quantum.commutator import Commutator as Comm
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -125,3 +125,13 @@ def test_eval_trace():
                         1.0*A*Dagger(C)*Tr(B*Dagger(D)) +
                         1.0*C*Dagger(A)*Tr(D*Dagger(B)) +
                         1.0*C*Dagger(C)*Tr(D*Dagger(D)))
+
+
+def test_pr24993():
+    from sympy.matrices.expressions.kronecker import matrix_kronecker_product
+    from sympy.physics.quantum.matrixutils    import matrix_tensor_product
+    X = Matrix([[0, 1], [1, 0]])
+    Xi = ImmutableMatrix(X)
+    assert TensorProduct(Xi, Xi) == TensorProduct(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_tensor_product(X, X)
+    assert TensorProduct(Xi, Xi) == matrix_kronecker_product(X, X)

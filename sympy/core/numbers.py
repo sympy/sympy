@@ -827,9 +827,9 @@ class Number(AtomicExpr):
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
-        if rational and not self.is_Rational:
-            return S.One, self
-        return (self, S.One) if self else (S.One, self)
+        if not rational:
+            return self, S.One
+        return S.One, self
 
     def as_coeff_Add(self, rational=False):
         """Efficiently extract the coefficient of a summation."""
@@ -4341,7 +4341,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10, 1), S.One)
 
-    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None, **hints):
         if (k_sym is not None) or (symbols is not None):
             return self
         from .symbol import Dummy
