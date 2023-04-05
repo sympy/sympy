@@ -42,9 +42,9 @@ def gbt(tf, sample_per, alpha):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1} {T(\alpha z + (1-\alpha))}$ into H(s), where T is the
+    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -111,12 +111,16 @@ def gbt(tf, sample_per, alpha):
 def bilinear(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Explanation
+    ===========
+
     Where H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
     by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -124,6 +128,7 @@ def bilinear(tf, sample_per):
 
     >>> from sympy.physics.control.lti import TransferFunction, bilinear
     >>> from sympy.abc import s, L, R, T
+
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = bilinear(tf, T)
     >>> numZ
@@ -136,12 +141,16 @@ def bilinear(tf, sample_per):
 def forward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Explanation
+    ===========
+
     Where H(z) is the corresponding discretized transfer function,
     discretized with the forward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
     by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -149,6 +158,7 @@ def forward_diff(tf, sample_per):
 
     >>> from sympy.physics.control.lti import TransferFunction, forward_diff
     >>> from sympy.abc import s, L, R, T
+
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = forward_diff(tf, T)
     >>> numZ
@@ -161,12 +171,16 @@ def forward_diff(tf, sample_per):
 def backward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Explanation
+    ===========
+
     Where H(z) is the corresponding discretized transfer function,
     discretized with the backward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
     by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
