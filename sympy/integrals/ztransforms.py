@@ -76,7 +76,7 @@ def _z_pairs_table(n, z):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import _z_pairs_table
+    >>> from sympy.integrals.ztransforms import _z_pairs_table
     >>> from sympy.abc import n,z
     >>> table = _z_pairs_table(n, z)
     >>> len(table)
@@ -166,7 +166,7 @@ def z_pairs_properties(f,n,z, apply_properties=True):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import z_pairs_properties
+    >>> from sympy.integrals.ztransforms import z_pairs_properties
     >>> from sympy.abc import n,z
     >>> import sympy as sym
     >>> f = sym.Heaviside(n)
@@ -242,7 +242,7 @@ def z_properties(f,n,z):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import z_properties
+    >>> from sympy.integrals.ztransforms import z_properties
     >>> from sympy.abc import n,z
     >>> import sympy as sym
     >>> f = n*sym.Heaviside(n)
@@ -530,7 +530,7 @@ def z_transform(f,n,z):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import z_transform
+    >>> from sympy.integrals.ztransforms import z_transform
     >>> from sympy.abc import n,z
     >>> from sympy.core import S
     >>> import sympy as sym
@@ -622,7 +622,7 @@ def z_pairs_prop_inverse(F,z,n,apply_properties=True):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import z_pairs_prop_inverse
+    >>> from sympy.integrals.ztransforms import z_pairs_prop_inverse
     >>> from sympy.abc import z,n
     >>> F = z/(z - 1)
     >>> z_pairs_prop_inverse(F,z,n)
@@ -853,7 +853,7 @@ def z_properties_inverse(F,z,n):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import z_properties_inverse
+    >>> from sympy.integrals.ztransforms import z_properties_inverse
     >>> from sympy.abc import z,n
     >>> from sympy.core import S
     >>> F = z/(z - 1)**2
@@ -1208,7 +1208,7 @@ def inverse_z_transform(F,z,n):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import inverse_z_transform
+    >>> from sympy.integrals.ztransforms import inverse_z_transform
     >>> from sympy.abc import z,n
     >>> F = 5*z/(z-1)
     >>> inverse_z_transform(F,z,n)
@@ -1285,7 +1285,7 @@ def apart_z(F):
 
     Examples
     ========
-    >>> from sympy.discrete.z_transforms import apart_z
+    >>> from sympy.integrals.ztransforms import apart_z
     >>> from sympy.abc import z
     >>> F = (8*z-19)/((z-2)*(z-3))
     >>> apart_z(F)
