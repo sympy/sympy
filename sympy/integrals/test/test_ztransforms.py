@@ -1,7 +1,7 @@
 """
 test file for z_transforms and inverse_z_transforms
 """
-from sympy.discrete.z_transforms import (z_transform,
+from sympy.integrals.ztransforms import (z_transform,
                                          inverse_z_transform,
                                          z_pairs_properties,
                                          z_pairs_prop_inverse,
@@ -15,7 +15,7 @@ from sympy.functions.elementary.complexes import Abs
 
 def test_z_transform():
     """
-    test from z_transform table and excercises
+    test from z_transform table and exercises
     http://blog.espol.edu.ec/telg1001/transformada-z-tabla/
     """
     a, b, c, = symbols('a, b, c', positive=True)
@@ -90,7 +90,7 @@ def test_z_transform():
 
 def test_inverse_z_transform():
     """
-    test from z_transform table and excercises
+    test from z_transform table and exercises
     http://blog.espol.edu.ec/telg1001/transformada-z-tabla/
     """
     a, b = symbols('a, b', positive=True)
@@ -145,7 +145,7 @@ def test_inverse_z_transform():
 
 def test_z_pairs_properties():
     """
-    test from z_transform properties table and excercises
+    test from z_transform properties table and exercises
     http://blog.espol.edu.ec/telg1001/transformada-z-tabla-de-propiedades/
     """
     a, b, c, = symbols('a, b, c', positive=True)
@@ -227,7 +227,7 @@ def test_z_pairs_properties():
 
 def test_z_pairs_prop_inverse():
     """
-    test from z_transform properties table and excercises
+    test from z_transform properties table and exercises
     http://blog.espol.edu.ec/telg1001/transformada-z-tabla-de-propiedades/
     """
     a, b = symbols('a, b', positive=True)
