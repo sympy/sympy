@@ -338,7 +338,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
 
     try:
         A, perm = M.LUdecomposition_Simple(
-            iszerofunc=_iszero, rankcheck=True)
+            iszerofunc=iszerofunc, rankcheck=True)
     except ValueError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 

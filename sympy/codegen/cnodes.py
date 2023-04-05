@@ -93,17 +93,50 @@ class PreDecrement(Basic):
 
 
 class PostDecrement(Basic):
-    """ Represents the post-decrement operator """
+    """ Represents the post-decrement operator
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.codegen.cnodes import PostDecrement
+    >>> from sympy import ccode
+    >>> ccode(PostDecrement(x))
+    '(x)--'
+
+    """
     nargs = 1
 
 
 class PreIncrement(Basic):
-    """ Represents the pre-increment operator """
+    """ Represents the pre-increment operator
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.codegen.cnodes import PreIncrement
+    >>> from sympy import ccode
+    >>> ccode(PreIncrement(x))
+    '++(x)'
+
+    """
     nargs = 1
 
 
 class PostIncrement(Basic):
-    """ Represents the post-increment operator """
+    """ Represents the post-increment operator
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy.codegen.cnodes import PostIncrement
+    >>> from sympy import ccode
+    >>> ccode(PostIncrement(x))
+    '(x)++'
+
+    """
     nargs = 1
 
 

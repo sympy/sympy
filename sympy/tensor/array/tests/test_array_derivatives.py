@@ -48,5 +48,5 @@ def test_array_derivative_construction():
     d = ArrayDerivative(M.as_explicit(), (N.as_explicit(), 2), evaluate=False)
     assert d.doit().shape == (4, 3, 4, 3, 3, 2)
     expr = d.doit()
-    assert isinstance(expr, ArrayDerivative)
+    assert isinstance(expr, NDimArray)
     assert expr.shape == (4, 3, 4, 3, 3, 2)

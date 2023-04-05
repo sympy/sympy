@@ -964,9 +964,7 @@ class MatrixBase(MatrixDeprecated,
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
+                    evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
 
@@ -1270,7 +1268,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        Calling `hat` creates a skew-symmetric Matrix:
+        Calling ``hat`` creates a skew-symmetric 3x3 Matrix from a 3x1 Matrix:
 
         >>> from sympy import Matrix
         >>> a = Matrix([1, 2, 3])
@@ -1280,7 +1278,7 @@ class MatrixBase(MatrixDeprecated,
         [ 3,  0, -1],
         [-2,  1,  0]])
 
-        Multiplying it with another Matrix calculates the cross product:
+        Multiplying it with another 3x1 Matrix calculates the cross product:
 
         >>> b = Matrix([3, 2, 1])
         >>> a.hat() * b
@@ -1289,7 +1287,7 @@ class MatrixBase(MatrixDeprecated,
         [ 8],
         [-4]])
 
-        Which is equivalent to calling the `cross` method:
+        Which is equivalent to calling the ``cross`` method:
 
         >>> a.cross(b)
         Matrix([
@@ -1325,7 +1323,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        Calling `vee` creates a vector from a skew-symmetric Matrix:
+        Calling ``vee`` creates a vector from a skew-symmetric Matrix:
 
         >>> from sympy import Matrix
         >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
@@ -1352,7 +1350,7 @@ class MatrixBase(MatrixDeprecated,
         [ 8],
         [-4]])
 
-        `vee` can also be used to retrieve angular velocity expressions.
+        ``vee`` can also be used to retrieve angular velocity expressions.
         Defining a rotation matrix:
 
         >>> from sympy import rot_ccw_axis3, trigsimp
