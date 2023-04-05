@@ -35,12 +35,16 @@ def _roots(poly, var):
 def gbt(tf, sample_per, alpha):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Explanation
+    ===========
+
     Where H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting s(z) = (z-1) / (T * (alpha*z + (1-alpha))) into H(s), where T is the
+    by substituting $s(z) = \frac{z-1} {T(\alpha z + (1-\alpha))}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -48,27 +52,36 @@ def gbt(tf, sample_per, alpha):
 
     >>> from sympy.physics.control.lti import TransferFunction, gbt
     >>> from sympy.abc import s, L, R, T
+
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = gbt(tf, T, 0.5)
     >>> numZ
     [0.5*T/(1.0*L + 0.5*R*T), 0.5*T/(1.0*L + 0.5*R*T)]
     >>> denZ
     [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
+
     >>> numZ, denZ = gbt(tf, T, 0)
     >>> numZ
     [T/L]
     >>> denZ
     [1, (-L + R*T)/L]
+
     >>> numZ, denZ = gbt(tf, T, 1)
     >>> numZ
     [T/(L + R*T), 0]
     >>> denZ
     [1, -L/(L + R*T)]
+
     >>> numZ, denZ = gbt(tf, T, 0.3)
     >>> numZ
     [0.3*T/(1.0*L + 0.3*R*T), 0.7*T/(1.0*L + 0.3*R*T)]
     >>> denZ
     [1, (-1.0*L + 0.7*R*T)/(1.0*L + 0.3*R*T)]
+
+    References
+    ==========
+
+    .. [1] https://www.polyu.edu.hk/ama/profile/gfzhang/Research/ZCC09_IJC.pdf
     """
     if not tf.is_SISO:
         raise NotImplementedError("Not implemented for MIMO systems.")
@@ -101,9 +114,9 @@ def bilinear(tf, sample_per):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting s(z) = 2/T * (z-1)/(z+1) into H(s), where T is the
+    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -126,9 +139,9 @@ def forward_diff(tf, sample_per):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the forward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting s(z) = (z-1)/T into H(s), where T is the
+    by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
     as [a, b], [c, d].
 
     Examples
@@ -151,15 +164,17 @@ def backward_diff(tf, sample_per):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the backward difference transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting s(z) =  (z-1)/(T*z) into H(s), where T is the
+    by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
     sample period.
-    Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
+    Coefficients are falling, i.e. $H(z) = \frac{az+b}/{cz+d}$ is returned
     as [a, b], [c, d].
+
     Examples
     ========
 
     >>> from sympy.physics.control.lti import TransferFunction, backward_diff
     >>> from sympy.abc import s, L, R, T
+
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = backward_diff(tf, T)
     >>> numZ
@@ -184,7 +199,7 @@ class LinearTimeInvariant(Basic, EvalfMixin):
     @classmethod
     def _check_args(cls, args):
         if not args:
-            raise ValueError("Atleast 1 argument must be passed.")
+            raise ValueError("At least 1 argument must be passed.")
         if not all(isinstance(arg, cls._clstype) for arg in args):
             raise TypeError(f"All arguments must be of type {cls._clstype}.")
         var_set = {arg.var for arg in args}
