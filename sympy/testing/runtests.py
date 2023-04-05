@@ -530,6 +530,16 @@ def _test(*paths,
     blacklist = convert_to_native_paths(blacklist)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors, split=split)
+    # This won't strictly run the test for the corresponding file, but it is
+    # good enough for copying and pasting the failing test.
+    _paths = []
+    for path in paths:
+        if '::' in path:
+            path, _kw = path.split('::', 1)
+            kw += (_kw,)
+        _paths.append(path)
+    paths = _paths
+
     t = SymPyTests(r, kw, post_mortem, seed,
                    fast_threshold=fast_threshold,
                    slow_threshold=slow_threshold)
@@ -2282,7 +2292,7 @@ class PyTestReporter(Reporter):
             for e in self._failed:
                 filename, f, (t, val, tb) = e
                 self.write_center("", "_")
-                self.write_center("%s:%s" % (filename, f.__name__), "_")
+                self.write_center("%s::%s" % (filename, f.__name__), "_")
                 self.write_exception(t, val, tb)
             self.write("\n")
 

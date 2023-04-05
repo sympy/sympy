@@ -1474,8 +1474,9 @@ class Intersection(Set, LatticeOp):
     def zero(self):
         return S.EmptySet
 
-    def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', global_parameters.evaluate)
+    def __new__(cls, *args , evaluate=None):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         # flatten inputs to merge intersections and iterables
         args = list(ordered(set(_sympify(args))))
@@ -2263,7 +2264,7 @@ class DisjointUnion(Set):
                 iter_flag = iter_flag and set_i.is_iterable
         return iter_flag
 
-    def _eval_rewrite_as_Union(self, *sets):
+    def _eval_rewrite_as_Union(self, *sets, **kwargs):
         """
         Rewrites the disjoint union as the union of (``set`` x {``i``})
         where ``set`` is the element in ``sets`` at index = ``i``

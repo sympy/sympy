@@ -9,6 +9,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity, perfect_power
+from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint
 
@@ -400,7 +401,9 @@ def sqrt_mod_iter(a, p, domain=int):
 
 def _sqrt_mod_prime_power(a, p, k):
     """
-    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
+    Find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``.
+    If no solution exists, return ``None``.
+    Solutions are returned in an ascending list.
 
     Parameters
     ==========
@@ -426,195 +429,82 @@ def _sqrt_mod_prime_power(a, p, k):
     pk = p**k
     a = a % pk
 
-    if k == 1:
-        if p == 2:
-            return [ZZ(a)]
-        if not (a % p < 2 or pow(a, (p - 1) // 2, p) == 1):
-            return None
-
-        if p % 4 == 3:
-            res = pow(a, (p + 1) // 4, p)
-        elif p % 8 == 5:
-            sign = pow(a, (p - 1) // 4, p)
-            if sign == 1:
-                res = pow(a, (p + 3) // 8, p)
-            else:
-                b = pow(4*a, (p - 5) // 8, p)
-                x =  (2*a*b) % p
-                if pow(x, 2, p) == a:
-                    res = x
-        else:
-            res = _sqrt_mod_tonelli_shanks(a, p)
-
-        # ``_sqrt_mod_tonelli_shanks(a, p)`` is not deterministic;
-        # sort to get always the same result
-        return sorted([ZZ(res), ZZ(p - res)])
-
-    if k > 1:
+    if p == 2:
         # see Ref.[2]
-        if p == 2:
-            if a % 8 != 1:
-                return None
-            if k <= 3:
-               s = set()
-               for i in range(0, pk, 4):
-                    s.add(1 + i)
-                    s.add(-1 + i)
-               return list(s)
-            # according to Ref.[2] for k > 2 there are two solutions
-            # (mod 2**k-1), that is four solutions (mod 2**k), which can be
-            # obtained from the roots of x**2 = 0 (mod 8)
-            rv = [ZZ(1), ZZ(3), ZZ(5), ZZ(7)]
-            # hensel lift them to solutions of x**2 = 0 (mod 2**k)
-            # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
-            # then r + 2**(nx - 1) is a root mod 2**(nx+1)
-            n = 3
-            res = []
-            for r in rv:
-                nx = n
-                while nx < k:
-                    r1 = (r**2 - a) >> nx
-                    if r1 % 2:
-                        r = r + (1 << (nx - 1))
-                    #assert (r**2 - a)% (1 << (nx + 1)) == 0
-                    nx += 1
-                if r not in res:
-                    res.append(r)
-                x = r + (1 << (k - 1))
-                #assert (x**2 - a) % pk == 0
-                if x < (1 << nx) and x not in res:
-                    if (x**2 - a) % pk == 0:
-                        res.append(x)
-            return res
-        rv = _sqrt_mod_prime_power(a, p, 1)
-        if not rv:
+        if a % 8 != 1:
             return None
-        r = rv[0]
-        fr = r**2 - a
-        # hensel lifting with Newton iteration, see Ref.[3] chapter 9
+        # Trivial
+        if k <= 3:
+            return list(range(1, pk, 2))
+        r = 1
+        # r is one of the solutions to x**2 - a = 0 (mod 2**3).
+        # Hensel lift them to solutions of x**2 - a = 0 (mod 2**k)
+        # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
+        # then r + 2**(nx - 1) is a root mod 2**(nx+1)
+        for nx in range(3, k):
+            if ((r**2 - a) >> nx) % 2:
+                r += 1 << (nx - 1)
+        # r is a solution of x**2 - a = 0 (mod 2**k), and
+        # there exist other solutions -r, r+h, -(r+h), and these are all solutions.
+        h = 1 << (k - 1)
+        return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
+
+    # If the Legendre symbol (a/p) is not 1, no solution exists.
+    if jacobi_symbol(a, p) != 1:
+        return None
+    if p % 4 == 3:
+        res = pow(a, (p + 1) // 4, p)
+    elif p % 8 == 5:
+        res = pow(a, (p + 3) // 8, p)
+        if pow(res, 2, p) != a % p:
+            res = res * pow(2, (p - 1) // 4, p) % p
+    else:
+        res = _sqrt_mod_tonelli_shanks(a, p)
+    if k > 1:
+        # Hensel lifting with Newton iteration, see Ref.[3] chapter 9
         # with f(x) = x**2 - a; one has f'(a) != 0 (mod p) for p != 2
-        n = 1
         px = p
-        while 1:
-            n1 = n
-            n1 *= 2
-            if n1 > k:
-                break
-            n = n1
+        for _ in range(k.bit_length() - 1):
             px = px**2
-            frinv = igcdex(2*r, px)[0]
-            r = (r - fr*frinv) % px
-            fr = r**2 - a
-        if n < k:
-            px = p**k
-            frinv = igcdex(2*r, px)[0]
-            r = (r - fr*frinv) % px
-        return [r, px - r]
+            frinv = igcdex(2*res, px)[0]
+            res = (res - (res**2 - a)*frinv) % px
+        if k & (k - 1): # If k is not a power of 2
+            frinv = igcdex(2*res, pk)[0]
+            res = (res - (res**2 - a)*frinv) % pk
+    return sorted([res, pk - res])
 
 
 def _sqrt_mod1(a, p, n):
     """
-    Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
+    Find solution to ``x**2 == a mod p**n`` when ``a % p == 0``.
+    If no solution exists, return ``None``.
 
-    see http://www.numbertheory.org/php/squareroot.html
+    Parameters
+    ==========
+
+    a : integer
+    p : prime number, p must divide a
+    n : positive integer
+
+    References
+    ==========
+
+    .. [1] http://www.numbertheory.org/php/squareroot.html
     """
     pn = p**n
     a = a % pn
     if a == 0:
         # case gcd(a, p**k) = p**n
-        m = n // 2
-        if n % 2 == 1:
-            pm1 = p**(m + 1)
-            def _iter0a():
-                i = 0
-                while i < pn:
-                    yield i
-                    i += pm1
-            return _iter0a()
-        else:
-            pm = p**m
-            def _iter0b():
-                i = 0
-                while i < pn:
-                    yield i
-                    i += pm
-            return _iter0b()
-
+        return range(0, pn, p**((n + 1) // 2))
     # case gcd(a, p**k) = p**r, r < n
-    f = factorint(a)
-    r = f[p]
+    r = multiplicity(p, a)
     if r % 2 == 1:
         return None
+    res = _sqrt_mod_prime_power(a // p**r, p, n - r)
+    if res is None:
+        return None
     m = r // 2
-    a1 = a >> r
-    if p == 2:
-        if n - r == 1:
-            pnm1 = 1 << (n - m + 1)
-            pm1 = 1 << (m + 1)
-            def _iter1():
-                k = 1 << (m + 2)
-                i = 1 << m
-                while i < pnm1:
-                    j = i
-                    while j < pn:
-                        yield j
-                        j += k
-                    i += pm1
-            return _iter1()
-        if n - r == 2:
-            res = _sqrt_mod_prime_power(a1, p, n - r)
-            if res is None:
-                return None
-            pnm = 1 << (n - m)
-            def _iter2():
-                s = set()
-                for r in res:
-                    i = 0
-                    while i < pn:
-                        x = (r << m) + i
-                        if x not in s:
-                            s.add(x)
-                            yield x
-                        i += pnm
-            return _iter2()
-        if n - r > 2:
-            res = _sqrt_mod_prime_power(a1, p, n - r)
-            if res is None:
-                return None
-            pnm1 = 1 << (n - m - 1)
-            def _iter3():
-                s = set()
-                for r in res:
-                    i = 0
-                    while i < pn:
-                        x = ((r << m) + i) % pn
-                        if x not in s:
-                            s.add(x)
-                            yield x
-                        i += pnm1
-            return _iter3()
-    else:
-        m = r // 2
-        a1 = a // p**r
-        res1 = _sqrt_mod_prime_power(a1, p, n - r)
-        if res1 is None:
-            return None
-        pm = p**m
-        pnr = p**(n-r)
-        pnm = p**(n-m)
-
-        def _iter4():
-            s = set()
-            pm = p**m
-            for rx in res1:
-                i = 0
-                while i < pnm:
-                    x = ((rx + i) % pn)
-                    if x not in s:
-                        s.add(x)
-                        yield x*pm
-                    i += pnr
-        return _iter4()
+    return (x for rx in res for x in range(rx*p**m, pn, p**(n - m)))
 
 
 def is_quad_residue(a, p):
@@ -1571,3 +1461,167 @@ def polynomial_congruence(expr, m):
         lambda p: _polynomial_congruence_prime(coefficients, p),
         lambda root, p: _diff_poly(root, coefficients, p),
         lambda root, p: _val_poly(root, coefficients, p))
+
+
+def binomial_mod(n, m, k):
+    """Compute ``binomial(n, m) % k``.
+
+    Explanation
+    ===========
+
+    Returns ``binomial(n, m) % k`` using a generalization of Lucas'
+    Theorem for prime powers given by Granville [1]_, in conjunction with
+    the Chinese Remainder Theorem.  The residue for each prime power
+    is calculated in time O(log^2(n) + q^4*log(n)log(p) + q^4*p*log^3(p)).
+
+    Parameters
+    ==========
+
+    n : an integer
+    m : an integer
+    k : a positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import binomial_mod
+    >>> binomial_mod(10, 2, 6)  # binomial(10, 2) = 45
+    3
+    >>> binomial_mod(17, 9, 10)  # binomial(17, 9) = 24310
+    0
+
+    References
+    ==========
+
+    .. [1] Binomial coefficients modulo prime powers, Andrew Granville,
+        Available: https://web.archive.org/web/20170202003812/http://www.dms.umontreal.ca/~andrew/PDF/BinCoeff.pdf
+    """
+    if k < 1: raise ValueError('k is required to be positive')
+    # We decompose q into a product of prime powers and apply
+    # the generalization of Lucas' Theorem given by Granville
+    # to obtain binomial(n, k) mod p^e, and then use the Chinese
+    # Remainder Theorem to obtain the result mod q
+    if n < 0 or m < 0 or m > n: return 0
+    factorisation = factorint(k)
+    residues = [_binomial_mod_prime_power(n, m, p, e) for p, e in factorisation.items()]
+    return crt([p**pw for p, pw in factorisation.items()], residues, check=False)[0]
+
+
+def _binomial_mod_prime_power(n, m, p, q):
+    """Compute ``binomial(n, m) % p**q`` for a prime ``p``.
+
+    Parameters
+    ==========
+
+    n : positive integer
+    m : a nonnegative integer
+    p : a prime
+    q : a positive integer (the prime exponent)
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _binomial_mod_prime_power
+    >>> _binomial_mod_prime_power(10, 2, 3, 2)  # binomial(10, 2) = 45
+    0
+    >>> _binomial_mod_prime_power(17, 9, 2, 4)  # binomial(17, 9) = 24310
+    6
+
+    References
+    ==========
+
+    .. [1] Binomial coefficients modulo prime powers, Andrew Granville,
+        Available: https://web.archive.org/web/20170202003812/http://www.dms.umontreal.ca/~andrew/PDF/BinCoeff.pdf
+    """
+    # Function/variable naming within this function follows Ref.[1]
+    # n!_p will be used to denote the product of integers <= n not divisible by
+    # p, with binomial(n, m)_p the same as binomial(n, m), but defined using
+    # n!_p in place of n!
+    modulo = pow(p, q)
+
+    def up_factorial(u):
+        """Compute (u*p)!_p modulo p^q."""
+        r = q // 2
+        fac = prod = 1
+        if r == 1 and p == 2 or 2*r + 1 in (p, p*p):
+            if q % 2 == 1: r += 1
+            modulo, div = pow(p, 2*r), pow(p, 2*r - q)
+        else:
+            modulo, div = pow(p, 2*r + 1), pow(p, (2*r + 1) - q)
+        for j in range(1, r + 1):
+            for mul in range((j - 1)*p + 1, j*p):  # ignore jp itself
+                fac *= mul
+                fac %= modulo
+            bj_ = bj(u, j, r)
+            if bj_ < 0: prod *= pow(mod_inverse(fac, modulo), -bj_, modulo)
+            else: prod *= pow(fac, bj_, modulo)
+            prod %= modulo
+        if p == 2:
+            sm = u // 2
+            for j in range(1, r + 1): sm += j//2 * bj(u, j, r)
+            if sm % 2 == 1: prod *= -1
+        prod %= modulo//div
+        return prod % modulo
+
+    def bj(u, j, r):
+        """Compute the exponent of (j*p)!_p in the calculation of (u*p)!_p."""
+        prod = u
+        for i in range(1, r + 1):
+            if i != j: prod *= u*u - i*i
+        for i in range(1, r + 1):
+            if i != j: prod //= j*j - i*i
+        return prod // j
+
+    def up_plus_v_binom(u, v):
+        """Compute binomial(u*p + v, v)_p modulo p^q."""
+        prod = div = 1
+        for i in range(1, v + 1):
+            div *= i
+            div %= modulo
+        div = mod_inverse(div, modulo)
+        for j in range(1, q):
+            b = div
+            for v_ in range(j*p + 1, j*p + v + 1):
+                b *= v_
+                b %= modulo
+            aj = u
+            for i in range(1, q):
+                if i != j: aj *= u - i
+            for i in range(1, q):
+                if i != j: aj //= j - i
+            aj //= j
+            if aj < 0: b, aj = mod_inverse(b, modulo), -aj
+            prod *= pow(b, aj, modulo)
+            prod %= modulo
+        return prod
+
+    factorials = [1]
+    def factorial(v):
+        """Compute v! modulo p^q."""
+        if len(factorials) <= v:
+            for i in range(len(factorials), v + 1):
+                factorials.append(factorials[-1]*i % modulo)
+        return factorials[v]
+
+    def factorial_p(n):
+        """Compute n!_p modulo p^q."""
+        u, v = divmod(n, p)
+        return (factorial(v) * up_factorial(u) * up_plus_v_binom(u, v)) % modulo
+
+    prod = 1
+    Nj, Mj, Rj = n, m, n - m
+    # e0 will be the p-adic valuation of binomial(n, m) at p
+    e0 = carry = eq_1 = j = 0
+    while Nj:
+        numerator = factorial_p(Nj % modulo)
+        denominator = factorial_p(Mj % modulo) * factorial_p(Rj % modulo) % modulo
+        Nj, (Mj, mj), (Rj, rj) = Nj//p, divmod(Mj, p), divmod(Rj, p)
+        carry = (mj + rj + carry) // p
+        e0 += carry
+        if j >= q - 1: eq_1 += carry
+        prod *= numerator * mod_inverse(denominator, modulo)
+        prod %= modulo
+        j += 1
+
+    mul = pow(1 if p == 2 and q >= 3 else -1, eq_1, modulo)
+    return (pow(p, e0, modulo) * mul * prod) % modulo
