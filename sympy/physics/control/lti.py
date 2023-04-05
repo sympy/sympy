@@ -1,5 +1,4 @@
 from typing import Type
-from sympy import Rational
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -43,6 +42,7 @@ def gbt(tf, sample_per, alpha):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
+    
     Examples
     ========
     >>> from sympy.physics.control.lti import TransferFunction, gbt
@@ -104,6 +104,7 @@ def bilinear(tf, sample_per):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
+
     Examples
     ========
     >>> from sympy.physics.control.lti import TransferFunction, bilinear
@@ -127,6 +128,7 @@ def forward_diff(tf, sample_per):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
+
     Examples
     ========
     >>> from sympy.physics.control.lti import TransferFunction, forward_diff
@@ -150,6 +152,7 @@ def backward_diff(tf, sample_per):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
+
     Examples
     ========
     >>> from sympy.physics.control.lti import TransferFunction, backward_diff
