@@ -42,9 +42,10 @@ def gbt(tf, sample_per, alpha):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
-    
+
     Examples
     ========
+
     >>> from sympy.physics.control.lti import TransferFunction, gbt
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
@@ -107,6 +108,7 @@ def bilinear(tf, sample_per):
 
     Examples
     ========
+
     >>> from sympy.physics.control.lti import TransferFunction, bilinear
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
@@ -131,6 +133,7 @@ def forward_diff(tf, sample_per):
 
     Examples
     ========
+
     >>> from sympy.physics.control.lti import TransferFunction, forward_diff
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
@@ -152,9 +155,9 @@ def backward_diff(tf, sample_per):
     sample period.
     Coefficients are falling, i.e. H(z) = (az+b)/(cz+d) is returned
     as [a, b], [c, d].
-
     Examples
     ========
+
     >>> from sympy.physics.control.lti import TransferFunction, backward_diff
     >>> from sympy.abc import s, L, R, T
     >>> tf = TransferFunction(1, s*L + R, s)
