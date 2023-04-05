@@ -114,9 +114,9 @@ def bilinear(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = bilinear(tf, T)
     >>> numZ
-    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
+    [0.5*T/(1.0*L + 0.5*R*T), 0.5*T/(1.0*L + 0.5*R*T)]
     >>> denZ
-    [1, (-L + R*T/2)/(L + R*T/2)]
+    [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
     """
     return gbt(tf, sample_per, 0.5)
 
