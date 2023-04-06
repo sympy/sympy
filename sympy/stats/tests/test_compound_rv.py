@@ -2,7 +2,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.numbers import (oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -136,6 +136,12 @@ def test_Compound_Distribution():
     assert C.set == S.Naturals0
     assert C.pdf(z, evaluate=True).simplify() == t**z*(t + 1)**(-k - z)*gamma(k \
                     + z)/(gamma(k)*gamma(z + 1))
+
+
+def test_issue_24940():
+    sigma = Symbol("sigma")
+    X = Normal('X', 0, sigma**2)
+    raises(ValueError, lambda: density(X**5 + X))
 
 
 def test_compound_pspace():
