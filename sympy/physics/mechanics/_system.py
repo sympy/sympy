@@ -171,7 +171,10 @@ class System(_Methods):
     >>> system.apply_gravity(-g * system.y)
     >>> system.add_loads((cart.masscenter, F * rail.x))
     >>> system.loads
-    ((rail_masscenter, - g*rail_mass*rail_frame.y), (cart_masscenter, - cart_mass*g*rail_frame.y), (bob_masscenter, - bob_mass*g*rail_frame.y), (cart_masscenter, F*rail_frame.x))
+    ((rail_masscenter, - g*rail_mass*rail_frame.y),
+     (cart_masscenter, - cart_mass*g*rail_frame.y),
+     (bob_masscenter, - bob_mass*g*rail_frame.y),
+     (cart_masscenter, F*rail_frame.x))
 
     With the entire system defined, we can now form the equations of motion.
     Before forming the equations of motion, one can also run some checks that
@@ -180,8 +183,10 @@ class System(_Methods):
     >>> system.validate_system()
     >>> system.form_eoms()
     Matrix([
-    [bob_mass*l*u_pin**2*sin(q_pin) - bob_mass*l*cos(q_pin)*u_pin' - (bob_mass + cart_mass)*u_slider' + F],
-    [                   -bob_mass*g*l*sin(q_pin) - bob_mass*l**2*u_pin' - bob_mass*l*cos(q_pin)*u_slider']])
+    [bob_mass*l*u_pin**2*sin(q_pin) - bob_mass*l*cos(q_pin)*u_pin'
+     - (bob_mass + cart_mass)*u_slider' + F],
+    [                   -bob_mass*g*l*sin(q_pin) - bob_mass*l**2*u_pin'
+     - bob_mass*l*cos(q_pin)*u_slider']])
     >>> simplify(system.mass_matrix)
     Matrix([
     [ bob_mass + cart_mass, bob_mass*l*cos(q_pin)],
@@ -214,15 +219,23 @@ class System(_Methods):
 
     >>> system.validate_system()
     >>> system.form_eoms()
-    Matrix([[-bob_mass*g*l*sin(q_pin) - bob_mass*l**2*u_pin' - bob_mass*l*cos(q_pin)*u_slider' - l*(bob_mass*l*u_pin**2*sin(q_pin) - bob_mass*l*cos(q_pin)*u_pin' - (bob_mass + cart_mass)*u_slider')*cos(q_pin) - l*F*cos(q_pin)]])
+    Matrix([[-bob_mass*g*l*sin(q_pin)
+             - bob_mass*l**2*u_pin'
+             - bob_mass*l*cos(q_pin)*u_slider'
+             - l*(bob_mass*l*u_pin**2*sin(q_pin)
+             - bob_mass*l*cos(q_pin)*u_pin'
+             - (bob_mass + cart_mass)*u_slider')*cos(q_pin)
+             - l*F*cos(q_pin)]])
     >>> simplify(system.mass_matrix)
     Matrix([
     [bob_mass*l**2*sin(q_pin)**2, -cart_mass*l*cos(q_pin)],
     [               l*cos(q_pin),                       1]])
     >>> simplify(system.forcing)
     Matrix([
-    [-l*(bob_mass*g*sin(q_pin) + bob_mass*l*u_pin**2*sin(2*q_pin)/2 + F*cos(q_pin))],
-    [                                                         l*u_pin**2*sin(q_pin)]])
+    [-l*(bob_mass*g*sin(q_pin) + bob_mass*l*u_pin**2*sin(2*q_pin)/2
+     + F*cos(q_pin))],
+    [
+    l*u_pin**2*sin(q_pin)]])
 
     """
 
