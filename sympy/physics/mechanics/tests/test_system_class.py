@@ -392,6 +392,15 @@ class TestSystem(TestSystemBase):
         pytest.raises(ValueError, lambda: system.add_joints(J2))
         pytest.raises(TypeError, lambda: system.add_joints(rb1))
 
+    def test_joints_setter(self, _filled_system_setup):
+        self.system.joints = self.joints[1:]
+        assert self.system.joints == self.joints[1:]
+        self._filled_system_check(exclude=('joints',))
+        self.system.q_ind = ()
+        self.system.u_ind = ()
+        self.system.joints = self.joints
+        self._filled_system_check()
+
     @pytest.mark.parametrize('name, joint_index', [
         ('J1', 0),
         ('J2', 1),
