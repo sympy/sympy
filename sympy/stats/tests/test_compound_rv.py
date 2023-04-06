@@ -138,7 +138,7 @@ def test_Compound_Distribution():
                     + z)/(gamma(k)*gamma(z + 1))
 
 
-def test_issue_24940():
+def test_issue_24915():
     sigma = Symbol("sigma")
     X = Normal('X', 0, sigma**2)
     raises(ValueError, lambda: density(X**5 + X))
