@@ -2,5 +2,5 @@
 Lapply
 ======
 
-.. automodule:: sympy.physics.quantum.qapply
+.. automodule:: sympy.physics.quantum.lapply
    :members:
