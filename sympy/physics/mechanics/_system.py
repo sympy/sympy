@@ -315,6 +315,14 @@ class System(_Methods):
         """Tuple of all joints that have been added to the system."""
         return tuple(self._joints)
 
+    @joints.setter
+    @_reset_eom_method
+    def joints(self, joints):
+        joints = self._objects_to_list(joints)
+        self._check_objects(joints, [], Joint, 'Joints', 'joints')
+        self._joints = []
+        self.add_joints(*joints)
+
     @property
     def loads(self):
         """Tuple of loads that have been applied on the system."""
