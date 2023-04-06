@@ -617,19 +617,10 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
 
 
-def _nthroot_mod2(s, q, p):
-    f = factorint(q)
-    v = []
-    for b, e in f.items():
-        v.extend([b]*e)
-    for qx in v:
-        s = _nthroot_mod1(s, qx, p, False)
-    return s
-
-
 def _nthroot_mod1(s, q, p, all_roots):
     """
-    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``
+    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``.
+    Assume that the root exists.
 
     References
     ==========
@@ -638,40 +629,29 @@ def _nthroot_mod1(s, q, p, all_roots):
 
     """
     g = primitive_root(p)
-    if not isprime(q):
-        r = _nthroot_mod2(s, q, p)
-    else:
-        f = p - 1
-        assert (p - 1) % q == 0
-        # determine k
-        k = 0
-        while f % q == 0:
-            k += 1
-            f = f // q
-        # find z, x, r1
-        f1 = igcdex(-f, q)[0] % q
-        z = f*f1
-        x = (1 + z) // q
-        r1 = pow(s, x, p)
-        s1 = pow(s, f, p)
-        h = pow(g, f*q, p)
-        t = discrete_log(p, s1, h)
-        g2 = pow(g, z*t, p)
-        g3 = igcdex(g2, p)[0]
-        r = r1*g3 % p
-        #assert pow(r, q, p) == s
+    r = s
+    for qx, ex in factorint(q).items():
+        f = (p - 1) // qx**ex
+        while f % qx == 0:
+            f //= qx
+        z = f*igcdex(-f, qx)[0]
+        x = (1 + z) // qx
+        t = discrete_log(p, pow(r, f, p), pow(g, f*qx, p))
+        for _ in range(ex):
+            # assert t == discrete_log(p, pow(r, f, p), pow(g, f*qx, p))
+            r = pow(r, x, p)*pow(g, -z*t % (p - 1), p) % p
+            t //= qx
     res = [r]
     h = pow(g, (p - 1) // q, p)
     #assert pow(h, q, p) == 1
     hx = r
-    for i in range(q - 1):
+    for _ in range(q - 1):
         hx = (hx*h) % p
         res.append(hx)
     if all_roots:
         res.sort()
         return res
     return min(res)
-
 
 
 def _help(m, prime_modulo_method, diff_method, expr_val):
