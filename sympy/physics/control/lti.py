@@ -1,4 +1,5 @@
 from typing import Type
+from sympy import Rational
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -56,9 +57,9 @@ def gbt(tf, sample_per, alpha):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = gbt(tf, T, 0.5)
     >>> numZ
-    [0.5*T/(1.0*L + 0.5*R*T), 0.5*T/(1.0*L + 0.5*R*T)]
+    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
     >>> denZ
-    [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
+    [1, (-L + R*T/2)/(L + R*T/2)]
 
     >>> numZ, denZ = gbt(tf, T, 0)
     >>> numZ
@@ -74,9 +75,9 @@ def gbt(tf, sample_per, alpha):
 
     >>> numZ, denZ = gbt(tf, T, 0.3)
     >>> numZ
-    [0.3*T/(1.0*L + 0.3*R*T), 0.7*T/(1.0*L + 0.3*R*T)]
+    [3*T/(10*(L + 3*R*T/10)), 7*T/(10*(L + 3*R*T/10))]
     >>> denZ
-    [1, (-1.0*L + 0.7*R*T)/(1.0*L + 0.3*R*T)]
+    [1, (-L + 7*R*T/10)/(L + 3*R*T/10)]
 
     References
     ==========
@@ -92,7 +93,7 @@ def gbt(tf, sample_per, alpha):
 
     np = tf.num.as_poly(s).all_coeffs()
     dp = tf.den.as_poly(s).all_coeffs()
-    # alpha = Rational(alpha).limit_denominator(1000)
+    alpha = Rational(alpha).limit_denominator(1000)
 
     # The next line results from multiplying H(z) with z^N/z^N
     N = max(len(np), len(dp)) - 1
@@ -132,9 +133,9 @@ def bilinear(tf, sample_per):
     >>> tf = TransferFunction(1, s*L + R, s)
     >>> numZ, denZ = bilinear(tf, T)
     >>> numZ
-    [0.5*T/(1.0*L + 0.5*R*T), 0.5*T/(1.0*L + 0.5*R*T)]
+    [T/(2*(L + R*T/2)), T/(2*(L + R*T/2))]
     >>> denZ
-    [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
+    [1, (-L + R*T/2)/(L + R*T/2)]
     """
     return gbt(tf, sample_per, S.Half)
 
