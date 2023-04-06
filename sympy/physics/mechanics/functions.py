@@ -299,44 +299,16 @@ def potential_energy(*body):
 
 
 def gravity(acceleration, *bodies):
-    """
-    Returns a list of gravity forces given the acceleration
-    due to gravity and any number of particles or rigidbodies.
-
-    Example
-    =======
-
-    >>> from sympy.physics.mechanics import ReferenceFrame, Point, Particle, outer, RigidBody
-    >>> from sympy.physics.mechanics.functions import gravity
-    >>> from sympy import symbols
-    >>> N = ReferenceFrame('N')
-    >>> m, M, g = symbols('m M g')
-    >>> F1, F2 = symbols('F1 F2')
-    >>> po = Point('po')
-    >>> pa = Particle('pa', po, m)
-    >>> A = ReferenceFrame('A')
-    >>> P = Point('P')
-    >>> I = outer(A.x, A.x)
-    >>> B = RigidBody('B', P, A, M, (I, P))
-    >>> forceList = [(po, F1), (P, F2)]
-    >>> forceList.extend(gravity(g*N.y, pa, B))
-    >>> forceList
-    [(po, F1), (P, F2), (po, g*m*N.y), (P, M*g*N.y)]
-
-    """
-
-    gravity_force = []
-    if not bodies:
-        raise TypeError("No bodies(instances of Particle or Rigidbody) were passed.")
-
-    for e in bodies:
-        point = getattr(e, 'masscenter', None)
-        if point is None:
-            point = e.point
-
-        gravity_force.append((point, e.mass*acceleration))
-
-    return gravity_force
+    from sympy.physics.mechanics.loads import gravity as _gravity
+    sympy_deprecation_warning(
+        """
+        The gravity function has been moved.
+        Import it from "sympy.physics.mechanics.loads".
+        """,
+        deprecated_since_version="1.13",
+        active_deprecations_target="moved-mechanics-functions"
+    )
+    return _gravity(acceleration, *bodies)
 
 
 def center_of_mass(point, *bodies):
@@ -675,6 +647,24 @@ def _f_list_parser(fl, ref_frame):
 
 def _validate_coordinates(coordinates=None, speeds=None, check_duplicates=True,
                           is_dynamicsymbols=True):
+    """Validate the generalized coordinates and generalized speeds.
+
+    Parameters
+    ==========
+    coordinates : iterable, optional
+        Generalized coordinates to be validated.
+    speeds : iterable, optional
+        Generalized speeds to be validated.
+    check_duplicates : bool, optional
+        Checks if there are duplicates in the generalized coordinates and
+        generalized speeds. If so it will raise a ValueError. The default is
+        True.
+    is_dynamicsymbols : iterable, optional
+        Checks if all the generalized coordinates and generalized speeds are
+        dynamicsymbols. If any is not a dynamicsymbol, a ValueError will be
+        raised. The default is True.
+
+    """
     t_set = {dynamicsymbols._t}
     # Convert input to iterables
     if coordinates is None:
