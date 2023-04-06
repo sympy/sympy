@@ -484,14 +484,7 @@ class System(_Methods):
                            old_coords_dep, is_coordinates=True):
         """Helper to parse coordinates and speeds."""
         # Construct lists of the independent and dependent coordinates
-        if is_coordinates:
-            q_ind, q_dep = old_coords_ind[:], old_coords_dep[:]
-            u_ind, u_dep = self.u_ind[:], self.u_dep[:]
-            coords_ind, coords_dep = q_ind, q_dep
-        else:
-            q_ind, q_dep = self.q_ind[:], self.q_dep[:]
-            u_ind, u_dep = old_coords_ind[:], old_coords_dep[:]
-            coords_ind, coords_dep = u_ind, u_dep
+        coords_ind, coords_dep = old_coords_ind[:], old_coords_dep[:]
         if not iterable(independent):
             independent = [independent] * len(new_coords)
         for coord, indep in zip(new_coords, independent):
@@ -500,7 +493,12 @@ class System(_Methods):
             else:
                 coords_dep.append(coord)
         # Check types and duplicates
-        _validate_coordinates(q_ind + q_dep, u_ind + u_dep)
+        if is_coordinates:
+            _validate_coordinates(coords_ind + coords_dep,
+                                  self.u_ind[:] + self.u_dep[:])
+        else:
+            _validate_coordinates(self.q_ind[:] + self.q_dep[:],
+                                  coords_ind + coords_dep)
         return (Matrix(1, len(coords_ind), coords_ind).T,
                 Matrix(1, len(coords_dep), coords_dep).T)
 
