@@ -129,12 +129,13 @@ def qapply(e:Expr, ip_doit=True, dagger=False, op_join=True, tensorproduct=None,
         >>> n = symbols("n", integer=True, nonnegative=True)
         >>> qapply(A ** (n + 2))
         <b|k>**(n + 1)*|k><b|
+
+    See Also
+    ========
+
+    lapply: Generic evaluation engine to apply linear operators, powers and factors
+
 """
-#    See Also                    #------!!add this to docstring as soon as sphinx identifies lapply!!
-#    ========
-#
-#    lapply: Generic evaluation engine to apply linear operators, powers and factors
-#
 
     # set quantum specific options for qapply
     # if a*b doesn't compute, try Dagger(Dagger(b)*Dagger(a))
