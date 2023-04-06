@@ -633,6 +633,8 @@ problems all go away.
 (best-practices-separate-sympy-and-non-sympy)=
 ### Separate SymPy and non-SymPy Numerical Code
 
+TODO
+
 ## Advanced Usage
 
 ### Be Careful Comparing and Sorting Symbolic Objects
@@ -881,9 +883,15 @@ well, but it is something that we are improving.
 
 ### Don't Denest Collections
 
+TODO
+
 ### Don't Store Attributes in `.args`
 
+TODO
+
 ### Don't Overwrite `__eq__`
+
+TODO
 
 ### Avoiding Infinite Recursion from Assumptions Handlers
 
