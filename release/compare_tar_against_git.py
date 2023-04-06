@@ -50,7 +50,7 @@ git_whitelist = {
     '.editorconfig',
     '.coveragerc',
     '.flake8',
-    'CODEOWNERS',
+    '.github/CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
     'MANIFEST.in',
