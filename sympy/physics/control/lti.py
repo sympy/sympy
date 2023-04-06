@@ -136,7 +136,7 @@ def bilinear(tf, sample_per):
     >>> denZ
     [1, (-1.0*L + 0.5*R*T)/(1.0*L + 0.5*R*T)]
     """
-    return gbt(tf, sample_per, 0.5)
+    return gbt(tf, sample_per, S.Half)
 
 def forward_diff(tf, sample_per):
     r"""
@@ -166,7 +166,7 @@ def forward_diff(tf, sample_per):
     >>> denZ
     [1, (-L + R*T)/L]
     """
-    return gbt(tf, sample_per, 0)
+    return gbt(tf, sample_per, S.Zero)
 
 def backward_diff(tf, sample_per):
     r"""
@@ -196,7 +196,7 @@ def backward_diff(tf, sample_per):
     >>> denZ
     [1, -L/(L + R*T)]
     """
-    return gbt(tf, sample_per, 1)
+    return gbt(tf, sample_per, S.One)
 
 
 class LinearTimeInvariant(Basic, EvalfMixin):
