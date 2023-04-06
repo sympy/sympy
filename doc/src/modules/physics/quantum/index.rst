@@ -31,6 +31,7 @@ States and Operators
    operator.rst
    operatorset.rst
    qapply.rst
+   lapply.rst
    represent.rst
    spin.rst
    state.rst
