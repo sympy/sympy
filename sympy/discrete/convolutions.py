@@ -93,7 +93,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
         def loop(a):
             dens = []
             for i in a:
-                if isinstance(i, Rational) and not isinstance(i, Integer)r:
+                if isinstance(i, Rational) and i.q - 1:
                     dens.append(i.q)
                 elif not isinstance(i, int):
                     return
