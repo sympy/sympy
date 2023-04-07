@@ -93,11 +93,15 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
         def loop(a):
             dens = []
             for i in a:
-                if isinstance(i, Rational) and not i.is_integer: dens.append(i.q)
-                elif not isinstance(i, int): return
-            if not dens: lcm = 1
-            else: lcm = ilcm(*dens) if len(dens) > 1 else dens[0]
-            return [int(i*lcm) for i in a], lcm
+                if isinstance(i, Rational) and not isinstance(i, Integer)r:
+                    dens.append(i.q)
+                elif not isinstance(i, int):
+                    return
+            if dens:
+                lcm = ilcm(*dens) if len(dens) > 1 else dens[0]
+                return [int(i*lcm) for i in a], lcm
+            # no lcm of den to deal with
+            return a, 1
         ls = None
         da = loop(a)
         if da is not None:
@@ -105,8 +109,9 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
             if db is not None:
                 (ia, ma), (ib, mb) = da, db
                 den = ma*mb
-                if den == 1: ls = convolution_int(ia, ib)
-                else: ls = [Rational(i, den) for i in convolution_int(ia, ib)]
+                ls = convolution_int(ia, ib)
+                if den != 1:
+                    ls = [Rational(i, den) for i in ls]
         if ls is None:
             ls = convolution_fft(a, b, dps)
 
