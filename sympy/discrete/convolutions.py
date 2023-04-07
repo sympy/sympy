@@ -99,7 +99,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
                     return
             if dens:
                 lcm = ilcm(*dens) if len(dens) > 1 else dens[0]
-                return [int(i*lcm) for i in a], lcm
+                return [i*lcm if type(i) is int else i.p*(lcm//i.q) for i in a], lcm
             # no lcm of den to deal with
             return a, 1
         ls = None
