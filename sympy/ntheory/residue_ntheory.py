@@ -6,7 +6,7 @@ from sympy.core.power import isqrt
 from sympy.core.singleton import S
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
-from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity, perfect_power
 from .modular import crt
@@ -656,7 +656,7 @@ def _nthroot_mod1(s, q, p, all_roots):
 
 def _help(m, prime_modulo_method, diff_method, expr_val):
     """
-    Helper function for _nthroot_mod_composite and polynomial_congruence.
+    Helper function for _nthroot_mod_composite.
 
     Parameters
     ==========
@@ -1275,7 +1275,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 def quadratic_congruence(a, b, c, p):
     """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p.
+    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
 
     Parameters
     ==========
@@ -1324,73 +1324,6 @@ def quadratic_congruence(a, b, c, p):
     return sorted(res)
 
 
-def _polynomial_congruence_prime(coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns the root of a polynomial modulo prime number
-    by naive search from [0, p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    """
-
-    roots = []
-    rank = len(coefficients)
-    for i in range(0, p):
-        f_val = 0
-        for coeff in range(0,rank - 1):
-            f_val = (f_val + pow(i, int(rank - coeff - 1), p) * coefficients[coeff]) % p
-        f_val = f_val + coefficients[-1]
-        if f_val % p == 0:
-            roots.append(i)
-    return roots
-
-
-def _diff_poly(root, coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns the derivative of the polynomial evaluated at the
-    root (mod p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    root : integer
-    """
-
-    diff = 0
-    rank = len(coefficients)
-    for coeff in range(0, rank - 1):
-        if not coefficients[coeff]:
-            continue
-        diff = (diff + pow(root, rank - coeff - 2, p)*(rank - coeff - 1)*
-            coefficients[coeff]) % p
-    return diff % p
-
-
-def _val_poly(root, coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns value of the polynomial at root (mod p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    root : integer
-    """
-    rank = len(coefficients)
-    f_val = 0
-    for coeff in range(0, rank - 1):
-        f_val = (f_val + pow(root, rank - coeff - 1, p)*
-            coefficients[coeff]) % p
-    f_val = f_val + coefficients[-1]
-    return f_val % p
-
-
 def _valid_expr(expr):
     """
     return coefficients of expr if it is a univariate polynomial
@@ -1425,6 +1358,12 @@ def polynomial_congruence(expr, m):
     >>> expr = x**6 - 2*x**5 -35
     >>> polynomial_congruence(expr, 6125)
     [3257]
+
+    See Also
+    ========
+
+    sympy.polys.galoistools.gf_csolve : low level solving routine used by this routine
+
     """
     coefficients = _valid_expr(expr)
     coefficients = [num % m for num in coefficients]
@@ -1435,12 +1374,7 @@ def polynomial_congruence(expr, m):
         return quadratic_congruence(0, *coefficients, m)
     if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
         return nthroot_mod(-coefficients[-1], rank - 1, m, True)
-    if isprime(m):
-        return _polynomial_congruence_prime(coefficients, m)
-    return _help(m,
-        lambda p: _polynomial_congruence_prime(coefficients, p),
-        lambda root, p: _diff_poly(root, coefficients, p),
-        lambda root, p: _val_poly(root, coefficients, p))
+    return gf_csolve(coefficients, m)
 
 
 def binomial_mod(n, m, k):

@@ -2378,6 +2378,11 @@ def gf_csolve(f, n):
     >>> gf_csolve([1, 1, 7], 189)
     [13, 49, 76, 112, 139, 175]
 
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.polynomial_congruence : a higher level solving routine
+
     References
     ==========
 
