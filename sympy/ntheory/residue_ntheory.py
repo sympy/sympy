@@ -1275,7 +1275,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 def quadratic_congruence(a, b, c, p):
     """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p.
+    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
 
     Parameters
     ==========
