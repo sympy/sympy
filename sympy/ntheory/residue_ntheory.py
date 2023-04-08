@@ -574,47 +574,39 @@ def is_nthpow_residue(a, n, m):
         return True
     if n == 2:
         return is_quad_residue(a, m)
-    return _is_nthpow_residue_bign(a, n, m)
-
-
-def _is_nthpow_residue_bign(a, n, m):
-    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
-    # assert n > 2
-    # assert a > 0 and m > 0
-    if primitive_root(m) is None or igcd(a, m) != 1:
-        # assert m >= 8
-        for prime, power in factorint(m).items():
-            if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
-                return False
-        return True
-    f = totient(m)
-    k = int(f // igcd(f, n))
-    return pow(a, k, int(m)) == 1
+    return all(_is_nthpow_residue_bign_prime_power(a, n, p, e)
+               for p, e in factorint(m).items())
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
-    does/does not exist."""
-    # assert a > 0
-    # assert n > 2
-    # assert p is prime
-    # assert k > 0
-    if a % p:
-        if p != 2:
-            return _is_nthpow_residue_bign(a, n, pow(p, k))
-        if n & 1:
-            return True
-        c = trailing(n)
-        return a % pow(2, min(c + 2, k)) == 1
-    else:
+    r"""
+    Returns True if `x^n = a \pmod{p^k}` has solutions for `n > 2`.
+
+    Parameters
+    ==========
+
+    a : positive integer
+    n : integer, n > 2
+    p : prime number
+    k : positive integer
+
+    """
+    while a % p == 0:
         a %= pow(p, k)
         if not a:
             return True
         mu = multiplicity(p, a)
         if mu % n:
             return False
-        pm = pow(p, mu)
-        return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
+        a //= pow(p, mu)
+        k -= mu
+    if p != 2:
+        f = p**(k - 1)*(p - 1) # f = totient(p**k)
+        return pow(a, f // igcd(f, n), pow(p, k)) == 1
+    if n & 1:
+        return True
+    c = trailing(n)
+    return a % pow(2, min(c + 2, k)) == 1
 
 
 def _nthroot_mod1(s, q, p, all_roots):
