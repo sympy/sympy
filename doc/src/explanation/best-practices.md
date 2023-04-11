@@ -887,7 +887,37 @@ well, but it is something that we are improving.
 
 ### Don't Denest Collections
 
-TODO
+Functions and classes that accept an arbitrary number of arguments should
+either accept the arguments directly, like `f(*args)`, or as a single
+argument, like `f(args)`. They should not try to support both at once.
+
+The reason is that this makes it impossible to represented nested collections.
+For example, take the {class}`~.FiniteSet` class. It is constructed like
+`FiniteSet(x, y, z)` (i.e., using `*args`).
+
+```py
+>>> from sympy import FiniteSet
+>>> FiniteSet(1, 2, 3)
+{1, 2, 3}
+```
+
+It might be tempting to also support `FiniteSet([1, 2, 3])`, to match the
+built-in `set`. However, doing so would make it impossible to represent a
+nested FiniteSet containing a single FiniteSet, like $\{\{1\}\}$:
+
+```py
+>>> FiniteSet(FiniteSet(1)) # We don't want this to be the same as {1}
+{{1}}
+```
+
+As to whether `args`, i.e., accepting a single collection, or `*args` should
+be used, if it is only possible for there to be a finite number of arguments,
+`*args` is generally better, as this makes things easier to deal with using
+the object's {term}`args`, since `obj.args` will be the direct arguments of
+the class. However, if it is possible that you might want to support a
+symbolic infinite collection in addition to finite ones, like
+{class}`~.Integers` or {class}`~.Range`, then it is better to use `args` as
+this will be impossible to do with `*args`.
 
 (best-practices-extra-attributes)=
 ### Avoid Storing Extra Attributes on an Object
