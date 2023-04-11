@@ -9,7 +9,7 @@ factors. The amount of expansion of terms may be tuned by options. Handlers
 for matrices are included to evaluate matrix expressions that contain
 MatrixSymbols.
 """
-
+#
 # lapply evolved as the generic kernel required to apply the objects of the
 # quantum package (see sympy.physics.quantum.qapply).
 # Handlers for matrices are included in the generic lapply module as a
