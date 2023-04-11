@@ -474,7 +474,8 @@ following reasons:
   situation where a number should be 0, but due to approximation errors, does
   not equal exactly 0.
 
-  A particularly notable example of this is with floating-point exponents. For example,
+  A particularly notable example of this is with floating-point exponents. For
+  example,
 
   ```py
   >>> from sympy import factor
@@ -500,6 +501,7 @@ following reasons:
   `Float` values with a precision higher than the default of 15 digits:
 
   ```
+  >>> from sympy import Float
   >>> expand((x + 1.0)*(x - Float('1e-16', 20)))
   x**2 + 0.9999999999999999*x - 1.0e-16
   ```
@@ -731,9 +733,10 @@ depends on what you are doing:
   this can be represented symbolically as
 
   ```py
+  >>> from sympy import Piecewise
   >>> expr = Piecewise((1, x > 0), (0, True))
   >>> expr
-  Piecewise((1, x > 0), (0, True)) + 1
+  Piecewise((1, x > 0), (0, True))
   >>> expr.subs(x, 1)
   1
   >>> expr.subs(x, -1)
@@ -745,7 +748,8 @@ depends on what you are doing:
   don't particularly care what that ordering is, you can use `ordered`.
 
   ```py
-  >>> >>> list(ordered([x, 0]))
+  >>> from sympy import ordered
+  >>> list(ordered([x, 0]))
   [0, x]
   ```
 
