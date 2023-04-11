@@ -885,13 +885,161 @@ well, but it is something that we are improving.
 
 TODO
 
-### Don't Store Attributes in `.args`
+(best-practices-extra-attributes)=
+### Avoid Storing Extra Attributes on an Object
 
-TODO
+A common reason that you might want to create a custom SymPy object is that
+you want to store extra attributes on the object. However, doing this in a
+naive way, i.e., by simply storing the data as a Python attribute on the
+object, is almost always a bad idea.
 
+SymPy does not expect objects to have extra data stored in them beyond what is
+in their {term}`args`. For instance, this breaks `==` checking, which only
+compares an objects `args`. See the [](best-practices-eq) section below for
+why it is a bad idea to override `__eq__`. This section and that one are
+closely related.
+
+Typically, there is a better way to do what you are trying to do, depending on
+the specific details of your situation:
+
+- **Store the extra data in the object's `args`.** This is the best approach if
+  the extra data you want to store is part of the *mathematical* description
+  of your object.
+
+  As long as the data is representable using other SymPy objects, it can be
+  stored in `args`. Note that an object's `args` should be usable to recreate
+  the object (e.g., something like `YourObject(*instance.args)` should
+  recreate `instance`).
+
+  Additionally, it should be mentioned that it is not a good idea to subclass
+  `Symbol` if you plan to store anything extra in `args`. `Symbol` is designed
+  around having no `args`. You are better off subclassing `Function` (see
+  [](custom-functions)) or `Expr` directly. If you simply want to have two
+  symbols that are distinct from one another, the best approach is often just
+  to give them different names. If you are concerned about how they are
+  printed, you can replace them with a more canonical name when it comes time
+  to print things, or use a [custom printer](module-printing).
+
+- **Store the data about the object separately.** This is the best approach if
+  the extra data is not directly related to an objects mathematical
+  properties.
+
+  Remember that SymPy objects are hashable, so they can easily be used as
+  dictionary keys. So maintaining a separate dictionary of `{object:
+  extra_data}` pairs is straightforward.
+
+  Note that some SymPy APIs already allow redefining how they operate on
+  objects separately from the objects themselves. A big example of this is the
+  {term}`printers <printing>`, which allow defining [custom
+  printers](module-printing) that change how any SymPy object is printed
+  without modifying those object themselves. Functions like {func}`~.lambdify`
+  and {func}`~.init_printing` allow passing in a custom printer.
+
+- **Represent the attribute using different subclasses.** This is often a good
+  idea if there are only a few possible values for the attribute (e.g., a
+  boolean flag). Code duplication can be avoided by using a common superclass.
+
+- **If the data you want to store is a Python function**, it's best to just
+  use as a method on the class. In many cases, the method may already fit into
+  one of the [existing set of overridable SymPy methods](custom-functions). If
+  you want to define how a function evaluates itself numerically, you can use
+  {func}`~.implemented_function`.
+
+- **Represent the information using by modifying the object's `func`.** This
+  solution is much more complicated than the others, and should only be used
+  when it is necessary. In some extreme cases, it is not possible to represent
+  every mathematical aspect of an object using `args` alone. This can happen,
+  for example, because of the limitation that `args` should only contain
+  `Basic` instances. It is still possible to create custom SymPy objects in
+  these situations by using a custom {term}`func` that is different from
+  `type(expr)` (in this case, you would override `__eq__` on the `func`
+  [rather than on the class](best-practices-eq)).
+
+  However, this sort of situation is rare.
+
+(best-practices-eq)=
 ### Don't Overwrite `__eq__`
 
-TODO
+When building a custom SymPy object, it is sometimes tempting to overwrite
+`__eq__` to define custom logic for the `==` operator. This is almost always a
+bad idea. Custom SymPy classes should leave `__eq__` undefined and use the
+default implementation in the `Basic` superclass.
+
+In SymPy, `==` compares objects using {term}`structural equality`. That is, `a
+== b` means that `a` and `b` are exactly the same object. They have the same
+type and the same {term}`args`. `==` does not perform any sort of
+*mathematical* equality checking. For example,
+
+```py
+>>> x*(x - 1) == x**2 - x
+False
+```
+
+`==` also always returns a boolean `True` or `False`. Symbolic equations can
+be represented with {class}`Eq <sympy.core.relational.Equality>`.
+
+There are several reasons for this
+
+- Mathematical equality checking can be very expensive to compute, and in
+  general, it is [computationally impossible to
+  determine](https://en.wikipedia.org/wiki/Richardson%27s_theorem).
+
+- Python itself automatically uses `==` in various places and assumes that it
+  returns a boolean and is inexpensive to compute. For example, `a in b` uses
+  `==`, where `b` is a builtin Python container like `list`, `dict`, or
+  `set`.[^dict-footnote]
+
+[^dict-footnote]: Python dicts and sets use `hash`, but fallback to using `==`
+    when there is a hash collision.
+
+- SymPy internally uses `==` all over the place, both explicitly and
+  implicitly via things like `in` or dictionary keys. This
+  usage all implicitly assumes that `==` operates structurally.
+
+
+In affect, *structural equality* means that if `a == b` is `True`, then `a`
+and `b` are for all intents and purposes the same object. This is because all
+SymPy objects are {term}`immutable`. Any SymPy function may freely `a` with
+`b` in any subexpression.
+
+The default `__eq__` method on {term}`Basic` checks if the two objects have
+the same type and the same `args`. There are also many parts of SymPy that
+implicitly assume that if two objects are equal, then they have the same
+`args`. Therefore, it is not a good idea to try to override `__eq__` as a way
+to avoid storing some identifying information about an object in its `args`.
+The `args` of an object should contain everything that is needed to recreate
+it (see {term}`args`). Note that it is possible for an objects constructor to
+accept multiple forms of arguments, so long as it accepts the form stored in
+`args` (e.g., it is perfectly fine for some args to have default values).
+
+Here are some examples of reasons you might be tempted to override `__eq__`
+and the preferred alternatives:
+
+- To make `==` apply some smarter equality check than purely structural
+  equality. As noted above, this is a bad idea because too many things
+  implicitly assume `==` works structurally only. Instead, use a function or
+  method to implement the smarter equality (for example, the `equals` method).
+
+  Another option is to define a {term}`canonicalization <canonicalize>` method
+  that puts objects into canonical form (e.g., via `doit`), so that, for
+  instance, `x.doit() == y.doit()` is true whenever `x` and `y` are
+  mathematically equal. This is not always possible because not every type of
+  object has a commutable canonical form, but it is a convenient approach when
+  one does exist.
+
+- To make `==` check for some additional attributes beyond those stored in the
+  `args` of an expression. [](best-practices-extra-attributes) for more
+  details on why it's a bad idea to directly store extra attributes on a SymPy
+  object, and what the best alternatives are.
+
+- To make `==` compare equal to some non-SymPy object. It is preferable to
+  extend `sympify` to be able to convert this object into the SymPy object.
+  The default `__eq__` implementation will automatically call `sympify` on the
+  other argument if it isn't a `Basic` instance (e.g., `Integer(1) == int(1)`
+  gives `True`). It is possible to extend `sympify` both for objects you
+  control by defining a `_sympy_` method and for objects you do not control by
+  extending the `converter` dictionary. See the {func}`~.sympify`
+  documentation for more details.
 
 ### Avoiding Infinite Recursion from Assumptions Handlers
 
