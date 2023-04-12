@@ -181,7 +181,7 @@ def _primitive_root_prime_power2_iter(p, e):
 
 def primitive_root(p, smallest=True):
     """
-    Returns the primitive root or None.
+    Returns a primitive root of p or None.
 
     Parameters
     ==========
@@ -211,10 +211,12 @@ def primitive_root(p, smallest=True):
     if p <= 4:
         return p - 1
     if not smallest:
-        t = trailing(p)
-        if t > 1:
-            return None
-        q = p >> t
+        if p%2:
+            q = p  # p is odd
+        elif p%4:
+            q = p//2  # p had 1 factor of 2
+        else:
+            return None  # p had more than one factor of 2
         if isprime(q):
             e = 1
         else:
