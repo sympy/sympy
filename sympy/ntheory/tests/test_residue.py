@@ -33,24 +33,36 @@ def test_residue():
     raises(ValueError, lambda: is_primitive_root(3, 6))
 
     for p in primerange(3, 100):
-        it = _primitive_root_prime_iter(p)
-        assert len(list(it)) == totient(totient(p))
-    for p in primerange(3, 50):
-        for k in range(2, 4):
-            li = list(_primitive_root_prime_power_iter(p, k))
-            li2 = list(_primitive_root_prime_power2_iter(p, k))
-            assert len(li) == len(li2) == totient(totient(p**k))
+        li = list(_primitive_root_prime_iter(p))
+        assert li[0] == min(li)
+        for g in li:
+            assert n_order(g, p) == p - 1
+        assert len(li) == totient(totient(p))
+        for e in range(1, 4):
+            li_power = list(_primitive_root_prime_power_iter(p, e))
+            li_power2 = list(_primitive_root_prime_power2_iter(p, e))
+            assert len(li_power) == len(li_power2) == totient(totient(p**e))
     assert primitive_root(97) == 5
+    assert n_order(primitive_root(97, False), 97) == totient(97)
     assert primitive_root(97**2) == 5
+    assert n_order(primitive_root(97**2, False), 97**2) == totient(97**2)
     assert primitive_root(40487) == 5
+    assert n_order(primitive_root(40487, False), 40487) == totient(40487)
     # note that primitive_root(40487) + 40487 = 40492 is a primitive root
     # of 40487**2, but it is not the smallest
     assert primitive_root(40487**2) == 10
+    assert n_order(primitive_root(40487**2, False), 40487**2) == totient(40487**2)
     assert primitive_root(82) == 7
+    assert n_order(primitive_root(82, False), 82) == totient(82)
     p = 10**50 + 151
     assert primitive_root(p) == 11
+    assert n_order(primitive_root(p, False), p) == totient(p)
     assert primitive_root(2*p) == 11
+    assert n_order(primitive_root(2*p, False), 2*p) == totient(2*p)
     assert primitive_root(p**2) == 11
+    assert n_order(primitive_root(p**2, False), p**2) == totient(p**2)
+    assert primitive_root(4 * 11) is None and primitive_root(4 * 11, False) is None
+    assert primitive_root(15) is None and primitive_root(15, False) is None
     raises(ValueError, lambda: primitive_root(-3))
 
     assert is_quad_residue(3, 7) is False

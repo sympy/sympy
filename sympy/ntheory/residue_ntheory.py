@@ -70,7 +70,10 @@ def n_order(a, n):
 
 def _primitive_root_prime_iter(p):
     """
-    Generates the primitive roots for a prime ``p``
+    Generates the primitive roots for a prime ``p``.
+
+    The primitive roots generated are not necessarily sorted.
+    However, the first one is the smallest primitive root.
 
     Parameters
     ==========
@@ -81,7 +84,7 @@ def _primitive_root_prime_iter(p):
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
-    >>> list(_primitive_root_prime_iter(19))
+    >>> sorted(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]
 
     References
@@ -106,17 +109,15 @@ def _primitive_root_prime_iter(p):
             # 2 is the smallest primitive root of p = 5,11,13,19,29,37
             g = 2
     else:
-        v = [(p - 1) // q for q in qs]
+        v = [(p - 1) // i for i in qs]
         for g in range(2, p):
             if all(pow(g, pw, p) != 1 for pw in v):
                 break
     yield g
     # g**k is the primitive root of p iff gcd(p - 1, k) = 1
-    sieve = [True] * ((p - 3) // 2)
-    for q in qs[1:]:
-        for k in range((q - 3) // 2, len(sieve), q):
-            sieve[k] = False
-    yield from sorted(pow(g, 2 * i + 3, p) for i, v in enumerate(sieve) if v)
+    for k in range(3, p, 2):
+        if igcd(p - 1, k) == 1:
+            yield pow(g, k, p)
 
 
 def _primitive_root_prime_power_iter(p, e):
@@ -132,16 +133,23 @@ def _primitive_root_prime_power_iter(p, e):
     p : odd prime
     e : positive integer
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_power_iter
+    >>> sorted(_primitive_root_prime_power_iter(5, 2))
+    [2, 3, 8, 12, 13, 17, 22, 23]
+
     """
     p2 = p**2
     if e == 1:
         yield from _primitive_root_prime_iter(p)
     else:
-        for m in range(0, p**e, p2):
+        for g in _primitive_root_prime_iter(p):
+            t = (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2
             for k in range(0, p2, p):
-                for g in _primitive_root_prime_iter(p):
-                    if (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2 != k:
-                        yield g + k + m
+                if k != t:
+                    yield from (g + k + m for m in range(0, p**e, p2))
 
 
 def _primitive_root_prime_power2_iter(p, e):
@@ -157,24 +165,30 @@ def _primitive_root_prime_power2_iter(p, e):
     p : odd prime
     e : positive integer
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_power2_iter
+    >>> sorted(_primitive_root_prime_power2_iter(5, 2))
+    [3, 13, 17, 23, 27, 33, 37, 47]
+
     """
-    store = []
     for g in _primitive_root_prime_power_iter(p, e):
         if g % 2 == 1:
             yield g
         else:
-            store.append(g + p**e)
-    yield from store
+            yield g + p**e
 
 
-def primitive_root(p):
+def primitive_root(p, smallest=True):
     """
-    Returns the smallest primitive root or None.
+    Returns the primitive root or None.
 
     Parameters
     ==========
 
     p : integer, p > 1
+    smallest : if True the smallest primitive root is returned or None
 
     Examples
     ========
@@ -182,6 +196,8 @@ def primitive_root(p):
     >>> from sympy.ntheory.residue_ntheory import primitive_root
     >>> primitive_root(19)
     2
+    >>> primitive_root(21) is None
+    True
 
     References
     ==========
@@ -193,26 +209,61 @@ def primitive_root(p):
     p = as_int(p)
     if p < 2:
         raise ValueError("p should be an integer greater than 1")
-    # Primitive root of p exist only for
-    # p = 2, 4, q**e, 2*q**e (q is odd prime)
     if p <= 4:
         return p - 1
-    t = trailing(p)
-    if t > 1:
+    if not smallest:
+        t = trailing(p)
+        if t > 1:
+            return None
+        q = p >> t
+        if isprime(q):
+            e = 1
+        else:
+            m = perfect_power(q)
+            if not m:
+                return None
+            q, e = m
+            if not isprime(q):
+                return None
+        if t:
+            return next(_primitive_root_prime_power2_iter(q, e))
+        return next(_primitive_root_prime_power_iter(q, e))
+    f = factorint(p)
+    if len(f) > 2:
         return None
-    q = p >> t
-    if isprime(q):
-        e = 1
+    if len(f) == 2:
+        if 2 not in f or f[2] > 1:
+            return None
+
+        # case p = 2*p1**k, p1 prime
+        for p1, e1 in f.items():
+            if p1 != 2:
+                break
+        i = 1
+        while i < p:
+            i += 2
+            if i % p1 == 0:
+                continue
+            if is_primitive_root(i, p):
+                return i
+
     else:
-        m = perfect_power(q)
-        if not m:
+        if 2 in f:
+            if p == 4:
+                return 3
             return None
-        q, e = m
-        if not isprime(q):
-            return None
-    if t:
-        return next(_primitive_root_prime_power2_iter(q, e))
-    return next(_primitive_root_prime_power_iter(q, e))
+        p1, n = list(f.items())[0]
+        if n > 1:
+            # see Ref [2], page 81
+            g = primitive_root(p1)
+            if is_primitive_root(g, p1**2):
+                return g
+            else:
+                for i in range(2, g + p1 + 1):
+                    if igcd(i, p) == 1 and is_primitive_root(i, p):
+                        return i
+
+    return next(_primitive_root_prime_iter(p))
 
 
 def is_primitive_root(a, p):
