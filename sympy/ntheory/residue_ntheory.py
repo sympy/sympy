@@ -97,7 +97,6 @@ def _primitive_root_prime_iter(p):
     if p == 3:
         yield 2
         return
-    qs = sorted(factorint(p - 1).keys())
     if p < 41:
         # small case
         if p == 23:
@@ -109,7 +108,7 @@ def _primitive_root_prime_iter(p):
             # 2 is the smallest primitive root of p = 5,11,13,19,29,37
             g = 2
     else:
-        v = [(p - 1) // i for i in qs]
+        v = [(p - 1) // i for i in sorted(factorint(p - 1))]
         for g in range(2, p):
             if all(pow(g, pw, p) != 1 for pw in v):
                 break
