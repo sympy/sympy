@@ -43,6 +43,7 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
+from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
@@ -920,6 +921,14 @@ class _TensorManager:
         nj = self._comm_symbols2i[j]
         self._comm[ni][nj] = c
         self._comm[nj][ni] = c
+
+        """
+        Cached sympy functions (e.g. expand) may have cached the results of
+        expressions involving tensors, but those results may not be valid after
+        changing the commutation properties. To stay on the safe side, we clear
+        the cache of all functions.
+        """
+        clear_cache()
 
     def set_comms(self, *args):
         """
