@@ -211,7 +211,8 @@ def primitive_root(p, smallest=True):
     if p <= 4:
         return p - 1
     if not smallest:
-        if p%2:
+        p_even = p%2 == 0
+        if not p_even:
             q = p  # p is odd
         elif p%4:
             q = p//2  # p had 1 factor of 2
@@ -226,7 +227,7 @@ def primitive_root(p, smallest=True):
             q, e = m
             if not isprime(q):
                 return None
-        if t:
+        if p_even:
             return next(_primitive_root_prime_power2_iter(q, e))
         return next(_primitive_root_prime_power_iter(q, e))
     f = factorint(p)
