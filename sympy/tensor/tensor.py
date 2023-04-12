@@ -1805,7 +1805,7 @@ class TensorHead(Basic):
         else:
             assert symmetry.rank == len(index_types)
 
-        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry)
+        obj = Basic.__new__(cls, name_symbol, Tuple(*index_types), symmetry, sympify(comm))
         obj.comm = TensorManager.comm_symbols2i(comm)
         return obj
 
