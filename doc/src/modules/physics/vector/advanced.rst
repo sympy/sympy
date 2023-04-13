@@ -204,40 +204,44 @@ methods. Don't mix and match symbols representing time.
 
 
 Solving Vector Equations
----------------
+========================
 Solving for unknown scalar variables in a set of vector equations is a common need, but 
 SymPy's solvers do not work directly with the physics vectors, so you must first transform
-the vector equations into a set of scalar equations. The `to_matrix()` method provides
-a simple way to do this. For example:
+the vector equations into a set of scalar equations.
+The :func:`sympy.physics.vector.vector.Vector.to_matrix` method provides a simple way to do this. For example:
 
-PROBLEM:
+**PROBLEM**:
 
 A ball is thrown from origin at a velocity of 10m/s along the x-axis w.r.t frame ``A``.
 An observer ``B``'s reference frame is rotated by 30 degrees w.r.t ``A``.
 What are the x and y component values of the velocity vector of the ball as 
 observed by the observer in its frame?
 
-SOLUTION:
+**SOLUTION**:
 
 We have two reference frames: ``A`` & ``B``.
 We can define the velocity vector of ball in ``A`` as:
-  >>> v_a = 10*A.x
 
-We have to align the ``B`` w.r.t ``A` by 30 degrees and this can be done using the ``orient_axis()`` method.
-  >>>B.orient_axis(A, pi/6, A.z)
+``v_a = 10 * A.x``
+
+We have to align the ``B`` w.r.t ``A`` by 30 degrees and this can be done using the ``orient_axis()``
+method from ``ReferenceFrame`` as:
+
+``B.orient_axis(A, pi/6, A.z)``
 
 We can also define the velocity of the ball in the ``B`` reference frame as:
-  >>>vb = p*B.x + q*B.y
 
-Putting it all together:
+``v_b = p * B.x + q * B.y``
 
-  >>> from sympy import *
-  >>> from sympy.physics.vector import *
+Putting it all together. ::
+
+  >>> from sympy import solve, pi, symbols
+  >>> from sympy.physics.vector import ReferenceFrame
   >>> A = ReferenceFrame('A')
   >>> B = ReferenceFrame('B')
   >>> B.orient_axis(A, pi/6, A.z)
   >>> p, q = symbols('p, q')
-  >>> va = 10*A.x
-  >>> vb = p*B.x + q*B.y
-  >>> solve((va - vb).to_matrix(B), [p, q])
+  >>> v_a = 10 * A.x
+  >>> v_b = p * B.x + q * B.y
+  >>> solve((v_a - v_b).to_matrix(B), [p, q])
   {p: 5*sqrt(3), q: -5}
