@@ -4,7 +4,7 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add, Wild
+from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1787,6 +1787,9 @@ def test_tensor_expand():
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
+    F = Function("F")
+    x = Symbol("x")
+
     assert isinstance(Add(A(i), B(i)), TensAdd)
     assert isinstance(expand(A(i)+B(i)), TensAdd)
 
@@ -1830,6 +1833,21 @@ def test_tensor_expand():
 
     expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
+
+    """
+    Test whether expand correctly handles the case where the coeff of a TensMul
+    is an add. We do not directly check expr_expand == 2*A(i) + F(x)*A(i) since
+    __add__ currently consolidates the coefficients automatically
+    """
+    expr = (2 + F(x))*A(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i))
+
+    expr = (2 + F(x))*A(i) + B(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i), B(i))
 
 
 def test_tensor_alternative_construction():
