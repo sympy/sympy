@@ -3989,7 +3989,7 @@ class TensMul(TensExpr, AssocOp):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        expr = self.expand()
+        expr = self.expand().doit(deep=False)
         if self != expr:
             expr = canon_bp(expr)
             return contract_metric(expr, g)
