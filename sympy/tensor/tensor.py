@@ -4873,11 +4873,6 @@ def get_postprocessor(cls):
 
     return _postprocessor
 
-"""
-The following makes sure that if a user tries to put a tensor in a Mul, it
-automatically gets converted to a TensMul (see github issue #25051). The
-conversion already seems to work for TensAdd, so we don't do anything for that.
-"""
 Basic._constructor_postprocessor_mapping[TensExpr] = {
     "Mul": [get_postprocessor(Mul)],
 }
