@@ -4866,7 +4866,7 @@ def _expand(expr, **kwargs):
 def get_postprocessor(cls):
     def _postprocessor(expr):
         tens_class = {Mul: TensMul, Add: TensAdd}[cls]
-        if any([isinstance(a, TensExpr) for a in expr.args]):
+        if any(isinstance(a, TensExpr) for a in expr.args):
             return tens_class(*expr.args)
         else:
             return expr
