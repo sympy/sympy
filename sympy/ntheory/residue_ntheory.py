@@ -212,10 +212,10 @@ def primitive_root(p, smallest=True):
     if p <= 4:
         return p - 1
     if not smallest:
-        p_even = p%2 == 0
+        p_even = p % 2 == 0
         if not p_even:
             q = p  # p is odd
-        elif p%4:
+        elif p % 4:
             q = p//2  # p had 1 factor of 2
         else:
             return None  # p had more than one factor of 2
@@ -309,13 +309,15 @@ def is_primitive_root(a, p):
     if p <= 4:
         # The primitive root is only p-1.
         return a == p - 1
-    t = trailing(p)
-    if t > 1:
-        return False
-    q = p >> t
+    if p % 2:
+        q = p  # p is odd
+    elif p % 4:
+        q = p//2  # p had 1 factor of 2
+    else:
+        return False  # p had more than one factor of 2
     if isprime(q):
         group_order = q - 1
-        factors = set(factorint(q - 1).keys())
+        factors = factorint(q - 1).keys()
     else:
         m = perfect_power(q)
         if not m:
