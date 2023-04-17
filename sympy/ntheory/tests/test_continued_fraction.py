@@ -64,7 +64,7 @@ def test_continued_fraction():
     assert take(cf_c([1, [1, 2]])) == [S.One, S(2), Rational(5, 3), Rational(7, 4), Rational(19, 11),
                                     Rational(26, 15), Rational(71, 41)]
 
-    cf_iter_e = map(lambda i: 2 if i == 1 else i // 3 * 2 if i % 3 == 0 else 1, itertools.count(1))
+    cf_iter_e = (2 if i == 1 else i // 3 * 2 if i % 3 == 0 else 1 for i in itertools.count(1))
     assert take(cf_c(cf_iter_e)) == [S(2), S(3), Rational(8, 3), Rational(11, 4), Rational(19, 7),
                                      Rational(87, 32), Rational(106, 39)]
 
