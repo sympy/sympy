@@ -7,7 +7,7 @@ from sympy.integrals.ztransforms import (z_transform,
                                          _z_pairs_prop_inverse,
                                          _round_float)
 from sympy.abc import z, n
-from sympy.core.numbers import Rational
+#from sympy.core.numbers import Rational
 from sympy.core.symbol import symbols
 from sympy.core import S
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
