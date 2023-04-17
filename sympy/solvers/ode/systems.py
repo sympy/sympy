@@ -1882,7 +1882,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
-        subs_dict = {func: new_func for func, new_func in zip(funcs, new_funcs)}
+        subs_dict = dict(zip(funcs, new_funcs))
         subs_dict[t] = exp(t_)
 
         free_function = Function(Dummy())
