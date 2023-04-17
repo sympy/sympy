@@ -1,6 +1,6 @@
 from sympy.ntheory import sieve, isprime
-from sympy.core.numbers import mod_inverse
-from sympy.core.power import integer_log
+from sympy.core.numbers import mod_inverse, igcd
+from sympy.core.power import integer_log, isqrt
 from sympy.utilities.misc import as_int
 import random
 
@@ -201,9 +201,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if isprime(n):
         return n
 
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.polys.polytools import gcd
-    D = int(sqrt(B2))
+    D = isqrt(B2)
     beta = [0]*(D + 1)
     S = [0]*(D + 1)
     k = 1
@@ -224,7 +222,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             a24 = pow(v - u, 3, n)*(3*u + v)*mod_inverse(16*u_3*v, n) % n
         except ValueError:
             #If the mod_inverse(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = gcd(16*u_3*v, n)
+            g = igcd(16*u_3*v, n)
             #If g = n, try another curve
             if g == n:
                 continue
@@ -232,7 +230,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
 
         Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
-        g = gcd(Q.z_cord, n)
+        g = igcd(Q.z_cord, n)
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -267,7 +265,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 g = (g*f) % n
             #Swap
             T, R = R, R.add(S[D], T)
-        g = gcd(n, g)
+        g = igcd(n, g)
 
         #Stage 2 Factor found
         if g != 1 and g != n:

@@ -1,5 +1,5 @@
 from sympy.physics.mechanics import Point, ReferenceFrame, Dyadic, RigidBody
-from sympy.physics.mechanics import dynamicsymbols, outer, inertia
+from sympy.physics.mechanics import dynamicsymbols, outer, inertia, Inertia
 from sympy.physics.mechanics import inertia_of_point_mass
 from sympy.core.backend import expand, zeros, _simplify_matrix, symbols
 from sympy.testing.pytest import raises, warns_deprecated_sympy
@@ -18,12 +18,12 @@ def test_rigidbody_default():
     assert b.__str__() == 'B'
     assert b.__repr__() == (
         "RigidBody('B', masscenter=B_masscenter, frame=B_frame, mass=B_mass), "
-        "inertia=(B_ixx*(B_frame.x|B_frame.x) + "
+        "inertia=Inertia(dyadic=B_ixx*(B_frame.x|B_frame.x) + "
         "B_ixy*(B_frame.x|B_frame.y) + B_izx*(B_frame.x|B_frame.z) + "
         "B_ixy*(B_frame.y|B_frame.x) + B_iyy*(B_frame.y|B_frame.y) + "
         "B_iyz*(B_frame.y|B_frame.z) + B_izx*(B_frame.z|B_frame.x) + "
         "B_iyz*(B_frame.z|B_frame.y) + B_izz*(B_frame.z|B_frame.z), "
-        "B_masscenter)))")
+        "point=B_masscenter)))")
 
 
 def test_rigidbody():
@@ -53,8 +53,7 @@ def test_rigidbody():
     assert B.frame == A2
     assert B.masscenter == P2
     assert B.inertia == (I2, B.masscenter)
-    assert B.masscenter == P2
-    assert B.inertia == (I2, B.masscenter)
+    assert isinstance(B.inertia, Inertia)
 
     # Testing linear momentum function assuming A2 is the inertial frame
     N = ReferenceFrame('N')
@@ -143,6 +142,7 @@ def test_rigidbody_inertia():
     R = RigidBody('R', o, N, m, (Io, p))
     I_check = inertia(N, Ix - b ** 2 * m, Iy - a ** 2 * m,
                       Iz - m * (a ** 2 + b ** 2), m * a * b)
+    assert isinstance(R.inertia, Inertia)
     assert R.inertia == (Io, p)
     assert R.central_inertia == I_check
     R.central_inertia = Io
@@ -151,6 +151,9 @@ def test_rigidbody_inertia():
     R.inertia = (Io, p)
     assert R.inertia == (Io, p)
     assert R.central_inertia == I_check
+    # parse Inertia object
+    R.inertia = Inertia(Io, o)
+    assert R.inertia == (Io, o)
 
 
 def test_parallel_axis():
