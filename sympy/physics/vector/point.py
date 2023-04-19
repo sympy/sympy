@@ -1,11 +1,12 @@
 from .vector import Vector, _check_vector
 from .frame import _check_frame
 from warnings import warn
+from sympy.printing.defaults import Printable
 
 __all__ = ['Point']
 
 
-class Point:
+class Point(Printable):
     """This object represents a point in a dynamic system.
 
     It stores the: position, velocity, and acceleration of a point.
@@ -627,3 +628,13 @@ class Point:
             return partials[0]
         else:
             return tuple(partials)
+
+    def _latex(self, printer):
+        return r"{%s}" % self.name
+
+    def _pretty(self, printer):
+        e = self
+        class Fake:
+            def render(self, *args, **kwargs):
+                return r"{%s}" % e.name
+        return Fake()
