@@ -14,8 +14,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from sympy.core.backend import acos, pi, sqrt
+from sympy.core.backend import Integer, Mul, acos, pi, sqrt, tan
+from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
+from sympy.simplify.simplify import posify, trigsimp
 
 if TYPE_CHECKING:
     from sympy.core.backend import Symbol
@@ -254,3 +256,9 @@ class Sphere(GeometryBase):
             f'{self.__class__.__name__}(radius={self.radius}, '
             f'point={self.point})'
         )
+
+
+def _cancel_sqrt_of_squared_positive(expr) -> Expr:
+    """Cancel ``sqrt(x**2)`` to ``x`` in expressions for positive ``x``."""
+    expr, reps = posify(expr)
+    return expr.subs(reps)
