@@ -6,11 +6,20 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from sympy.core.backend import Integer, S, Symbol
+from sympy.core.backend import (
+    Integer,
+    Rational,
+    S,
+    Symbol,
+    acos,
+    pi,
+    sqrt,
+)
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics._geometry import Sphere
 
 if TYPE_CHECKING:
+    from sympy.core.expr import Expr
     from sympy.physics.mechanics import Vector
 
 
@@ -48,3 +57,31 @@ class TestSphere:
         error_msg = r'point .* does not lie on the surface of'
         with pytest.raises(ValueError, match=error_msg):
             sphere.geodesic_length(p1, p2)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position_1, position_2, expected',
+        [
+            (r * N.x, r * N.x, S.Zero),
+            (r * N.x, r * N.y, S.Half * pi * r),
+            (r * N.x, r * -N.x, pi * r),
+            (r * -N.x, r * N.x, pi * r),
+            (r * N.x, r * sqrt(2) * S.Half * (N.x + N.y), Rational(1, 4) * pi * r),
+            (
+                r * sqrt(2) * S.Half * (N.x + N.y),
+                r * sqrt(3) * Rational(1, 3) * (N.x + N.y + N.z),
+                r * acos(sqrt(6) * Rational(1, 3)),
+            ),
+        ]
+    )
+    def test_geodesic_length(position_1: Vector, position_2: Vector, expected: Expr) -> None:
+        r = Symbol('r')
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        assert sphere.geodesic_length(p1, p2) == expected
