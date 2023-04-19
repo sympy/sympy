@@ -25,7 +25,10 @@ if TYPE_CHECKING:
     from sympy.physics.mechanics import Point, Vector
 
 
-__all__ = ['Sphere']
+__all__ = [
+    'Cylinder',
+    'Sphere',
+]
 
 
 class GeometryBase(ABC):
@@ -255,6 +258,249 @@ class Sphere(GeometryBase):
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
             f'point={self.point})'
+        )
+
+
+class Cylinder(GeometryBase):
+    """A solid (infinite) cylindrical object.
+
+    Explanation
+    ===========
+
+    A wrapping geometry that allows for circular arcs to be defined between
+    pairs of points. These paths are always geodetic (the shortest possible) in
+    the sense that they will be a straight line on the unwrapped cylinder's
+    surface. However, it is also possible for a direction to be specified, i.e.
+    path's can be influenced such that they either wrap along the shortest side
+    or the longest side of the cylinder. To define these directions, the
+    right-hand screw rule is used, i.e. looking along the axis, the path will
+    appear to rotate clockwise as it arcs from the first point to the second
+    point.
+
+    Examples
+    ========
+
+    As the ``_geometry.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``Cylinder`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._geometry`` module.
+
+    >>> from sympy.physics.mechanics._geometry import Cylinder
+
+    To create a ``Cylinder`` instance, a ``Symbol`` denoting its radius, a
+    ``Vector`` defining its axis, and a ``Point`` through which its axis passes
+    are needed:
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> N = ReferenceFrame('N')
+    >>> r = Symbol('r')
+    >>> pO = Point('pO')
+    >>> ax = N.x
+
+    A cylinder with radius ``r``, and axis parallel to ``N.x`` passing through
+    ``pO`` can be instantiated with:
+
+    >>> Cylinder(r, pO, ax)
+    Cylinder(radius=r, point=pO, axis=N.x)
+
+    Parameters
+    ==========
+
+    radius : Symbol
+        The radius of the cylinder.
+    point : Point
+        A point through which the cylinder's axis passes.
+    axis : Vector
+        The axis along which the cylinder is aligned.
+
+    See Also
+    ========
+
+    Sphere: Spherical geometry where the wrapping direction is always geodetic.
+
+    """
+
+    def __init__(self, radius: Symbol, point: Point, axis: Vector) -> None:
+        """Initializer for ``Cylinder``.
+
+        Parameters
+        ==========
+
+        radius : Symbol
+            The radius of the cylinder.
+        point : Point
+            A point through which the cylinder's axis passes.
+        axis : Vector
+            The axis along which the cylinder is aligned.
+
+        """
+        self.radius = radius
+        self.point = point
+        self.axis = axis
+
+    @property
+    def radius(self) -> Symbol:
+        """The radius of the cylinder."""
+        return self._radius
+
+    @radius.setter
+    def radius(self, radius) -> None:
+        self._radius = radius
+
+    @property
+    def point(self) -> Point:
+        """A point through which the cylinder's axis passes."""
+        return self._point
+
+    @point.setter
+    def point(self, point) -> None:
+        self._point = point
+
+    @property
+    def axis(self) -> Vector:
+        """The axis along which the cylinder is aligned."""
+        return self._axis
+
+    @axis.setter
+    def axis(self, axis) -> None:
+        self._axis = axis
+
+    def _point_is_on_surface(self, point: Point) -> bool:
+        """Determine if a point is on the cylinder's surface.
+
+        Parameters
+        ==========
+
+        point : Point
+            The point for which it's to be ascertained if it's on the
+            cylinder's surface or not.
+
+        Notes
+        =====
+
+        The radius of the point from the cylinder's center is compared to the
+        expression `sqrt(self.radius**2)` because this is not automatically
+        symplified when the `magnitude` method is called. This should ideally
+        be fixed and the RHS of the equality expression be changed to check
+        against just `self.radius`.
+
+        """
+        relative_position = point.pos_from(self.point)
+        parallel = relative_position.dot(self.axis) * self.axis
+        perpendicular = relative_position - parallel
+        return trigsimp(perpendicular.magnitude()) == sqrt(self.radius**2)
+
+    def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
+        r"""The shortest distance between two points on a geometry's surface.
+
+        Explanation
+        ===========
+
+        The geodesic length, i.e. the shortest arc along the surface of a
+        cylinder, connecting two points can be calculated using the formula:
+
+        .. math::
+            l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
+
+        where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
+        sphere's center to the first and second points on the sphere's surface
+        respectively.
+
+        Examples
+        ========
+
+        <TODO>
+
+        A geodesic length can only be calculated between two points on the
+        sphere's surface. Firstly, a ``Sphere`` instance must be created along
+        with two points that will lie on its surface:
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics._geometry import Sphere
+        >>> N = ReferenceFrame('N')
+        >>> r = Symbol('r')
+        >>> pO = Point('pO')
+        >>> pO.set_vel(N, 0)
+        >>> sphere = Sphere(r, pO)
+        >>> p1 = Point('p1')
+        >>> p2 = Point('p2')
+
+        Let's assume that ``p1`` lies at a distance of ``r`` in the ``N.x``
+        direction from ``pO`` and that ``p2`` is located on the sphere's
+        surface in the ``N.y + N.z`` direction from ``pO``. These positions can
+        be set with:
+
+        >>> p1.set_pos(pO, r * N.x)
+        >>> p1.pos_from(pO)
+        r*N.x
+        >>> p2.set_pos(pO, r * (N.y + N.z).normalize())
+        >>> p2.pos_from(pO)
+        sqrt(2)*r/2*N.y + sqrt(2)*r/2*N.z
+
+        The geodesic length, which is in this case a quarter of the sphere's
+        circumference, can be calculated using the ``geodesic_length`` method:
+
+        >>> sphere.geodesic_length(p1, p2)
+        pi*r/2
+
+        If the ``geodesic_length`` method is passed an argument ``Point`` that
+        doesn't lie on the sphere's surface then a ``ValueError`` is raised
+        because it's not possible to calculate a value in this case.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic length should be calculated.
+        point_2 : Point
+            The point to which the geodesic length should be calculated.
+
+        """
+        for point in (point_1, point_2):
+            if not self._point_is_on_surface(point):
+                msg = (
+                    f'Geodesic length cannot be calculated as point {point} '
+                    f'with radius {point.pos_from(self.point).magnitude()} '
+                    f'from the cylinder\'s center {self.point} does not lie on '
+                    f'the surface of {self} with radius {self.radius} and axis '
+                    f'{self.axis}.'
+                )
+                raise ValueError(msg)
+
+        relative_position = point_2.pos_from(point_1)
+        parallel_length = relative_position.dot(self.axis)
+
+        point_1_relative_position = point_1.pos_from(self.point)
+        point_1_perpendicular_vector = (
+            point_1_relative_position
+            - point_1_relative_position.dot(self.axis) * self.axis
+        ).normalize()
+
+        point_2_relative_position = point_2.pos_from(self.point)
+        point_2_perpendicular_vector = (
+            point_2_relative_position
+            - point_2_relative_position.dot(self.axis) * self.axis
+        ).normalize()
+
+        central_angle = _directional_atan(
+            point_1_perpendicular_vector
+                .cross(point_2_perpendicular_vector)
+                .dot(self.axis),
+            point_1_perpendicular_vector.dot(point_2_perpendicular_vector),
+        )
+
+        planar_arc_length = self.radius * central_angle
+        geodesic_length = _cancel_sqrt_of_squared_positive(
+            sqrt(parallel_length**2 + planar_arc_length**2)
+        )
+        return geodesic_length
+
+    def __repr__(self) -> str:
+        """Representation of a ``Cylinder``."""
+        return (
+            f'{self.__class__.__name__}(radius={self.radius}, '
+            f'point={self.point}, axis={self.axis})'
         )
 
 
