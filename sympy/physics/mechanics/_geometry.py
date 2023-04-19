@@ -556,12 +556,12 @@ def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
         raise NotImplementedError(msg)
     else:
         ratio = trigsimp(numerator / denominator)
-        if ratio.func is tan:
+        if ratio.func == tan:
             angle = ratio.args[0]
         elif (
-            ratio.func is Mul
+            ratio.func == Mul
             and ratio.args[0] == Integer(-1)
-            and ratio.args[1].func is tan
+            and ratio.args[1].func == tan
         ):
             angle = 2 * pi - ratio.args[1].args[0]
         else:
