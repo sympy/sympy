@@ -12,7 +12,9 @@ from sympy.core.backend import (
     S,
     Symbol,
     acos,
+    cos,
     pi,
+    sin,
     sqrt,
 )
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
@@ -102,3 +104,28 @@ class TestCylinder:
         assert cylinder.point == pO
         assert hasattr(cylinder, 'axis')
         assert cylinder.axis == N.x
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position, expected',
+        [
+            (S.Zero, False),
+            (r * N.y, True),
+            (r * N.z, True),
+            (r * (N.y + N.z).normalize(), True),
+            (Integer(2) * r * N.y, False),
+            (r * (N.x + N.y), True),
+            (r * (Integer(2) * N.x + N.y), True),
+            (Integer(2) * N.x + r * (Integer(2) * N.y + N.z).normalize(), True),
+            (r * (cos(q) * N.y + sin(q) * N.z), True)
+        ]
+    )
+    def test_point_is_on_surface(position: Vector, expected: Expr) -> None:
+        r = Symbol('r')
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, N.x)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position)
+
+        assert cylinder._point_is_on_surface(p1) == expected
