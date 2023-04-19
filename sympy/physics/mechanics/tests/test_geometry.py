@@ -16,7 +16,7 @@ from sympy.core.backend import (
     sqrt,
 )
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics._geometry import Sphere
+from sympy.physics.mechanics._geometry import Cylinder, Sphere
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -85,3 +85,20 @@ class TestSphere:
         p2.set_pos(pO, position_2)
 
         assert sphere.geodesic_length(p1, p2) == expected
+
+
+class TestCylinder:
+
+    @staticmethod
+    def test_valid_constructor() -> None:
+        N = ReferenceFrame('N')
+        r = Symbol('r')
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, N.x)
+        assert isinstance(cylinder, Cylinder)
+        assert hasattr(cylinder, 'radius')
+        assert cylinder.radius == r
+        assert hasattr(cylinder, 'point')
+        assert cylinder.point == pO
+        assert hasattr(cylinder, 'axis')
+        assert cylinder.axis == N.x
