@@ -145,3 +145,40 @@ class TestCylinder:
         error_msg = r'point .* does not lie on the surface of'
         with pytest.raises(ValueError, match=error_msg):
             cylinder.geodesic_length(p1, p2)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, position_1, position_2, expected',
+        [
+            (N.x, r * N.y, r * N.y, S.Zero),
+            (N.x, r * N.y, N.x + r * N.y, S.One),
+            (N.x, r * N.y, x * N.x + r * N.y, x),
+            (-N.x, r * N.y, x * N.x + r * N.y, x),
+            (N.x, r * N.y, r * N.z, S.Half * pi * r),
+            (-N.x, r * N.y, r * N.z, Integer(3) * S.Half * pi * r),
+            (N.x, r * N.z, r * N.y, Integer(3) * S.Half * pi * r),
+            (-N.x, r * N.z, r * N.y, S.Half * pi * r),
+            (N.x, r * N.y, r * (cos(q) * N.y + sin(q) * N.z), r * sqrt(q**2)),
+            (
+                -N.x, r * N.y,
+                r * (cos(q) * N.y + sin(q) * N.z),
+                r * sqrt((Integer(2) * pi - q)**2),
+            ),
+        ]
+    )
+    def test_geodesic_length(
+        axis: Vector,
+        position_1: Vector,
+        position_2: Vector,
+        expected: Expr,
+    ) -> None:
+        r = Symbol('r')
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        assert cylinder.geodesic_length(p1, p2) == expected
