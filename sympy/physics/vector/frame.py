@@ -4,6 +4,7 @@ from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
+from sympy.printing.defaults import Printable
 
 from warnings import warn
 
@@ -79,7 +80,7 @@ class CoordinateSym(Symbol):
         return (self._id[0].__hash__(), self._id[1]).__hash__()
 
 
-class ReferenceFrame:
+class ReferenceFrame(Printable):
     """A reference frame in classical mechanics.
 
     ReferenceFrame is a class used to represent a reference frame in classical
@@ -1501,6 +1502,16 @@ class ReferenceFrame:
             return partials[0]
         else:
             return tuple(partials)
+
+    def _latex(self, printer):
+        return r"{%s}" % self.name
+
+    def _pretty(self, printer):
+        e = self
+        class Fake:
+            def render(self, *args, **kwargs):
+                return r"{%s}" % e.name
+        return Fake()
 
 
 def _check_frame(other):
