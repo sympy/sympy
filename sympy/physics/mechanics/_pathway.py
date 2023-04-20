@@ -222,9 +222,9 @@ class LinearPathway(PathwayBase):
         ========
 
         The below example shows how to generate the loads produced in a linear
-        actuator that produces a contractile force ``F``. First, create a
-        linear actuator between two points separated by the coordinate ``q``
-        in the ``x`` direction of the global frame ``N``.
+        actuator that produces an expansile force ``F``. First, create a linear
+        actuator between two points separated by the coordinate ``q`` in the
+        ``x`` direction of the global frame ``N``.
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> from sympy.physics.mechanics._pathway import LinearPathway
@@ -235,28 +235,27 @@ class LinearPathway(PathwayBase):
         >>> pB.set_pos(pA, q * N.x)
         >>> linear_pathway = LinearPathway(pA, pB)
 
-        Now create a symbol ``F`` to describe the magnitude of the
-        (contractile) force that will be produced along the pathway. The list
-        of loads that ``KanesMethod`` requires can be produced by calling the
-        pathway's ``compute_loads`` method with ``F`` passed as the only
-        argument.
+        Now create a symbol ``F`` to describe the magnitude of the (expansile)
+        force that will be produced along the pathway. The list of loads that
+        ``KanesMethod`` requires can be produced by calling the pathway's
+        ``compute_loads`` method with ``F`` passed as the only argument.
 
         >>> from sympy import Symbol
         >>> F = Symbol('F')
         >>> linear_pathway.compute_loads(F)
-        [(pA, F*q(t)/sqrt(q(t)**2)*N.x), (pB, - F*q(t)/sqrt(q(t)**2)*N.x)]
+        [(pA, - F*q(t)/sqrt(q(t)**2)*N.x), (pB, F*q(t)/sqrt(q(t)**2)*N.x)]
 
         Parameters
         ==========
 
         force : Expr
             The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents a contractile force.
+            that this ``Expr`` represents an expansile force.
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         loads = [
-            (self.attachments[0], force * relative_position / self.length),
-            (self.attachments[-1], -force * relative_position / self.length),
+            (self.attachments[0], -force * relative_position / self.length),
+            (self.attachments[-1], force * relative_position / self.length),
         ]
         return loads
