@@ -9,6 +9,7 @@ import pytest
 from sympy.core.backend import Symbol, sqrt
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics._pathway import LinearPathway
+from sympy.simplify.simplify import simplify
 
 
 class TestLinearPathway:
@@ -110,7 +111,7 @@ class TestLinearPathway:
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
         )
         expected = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
-        assert self.pathway.length == expected
+        assert simplify(self.pathway.length - expected) == 0
 
     def test_3D_pathway_shortening_velocity(self) -> None:
         self.pB.set_pos(
@@ -123,7 +124,7 @@ class TestLinearPathway:
             - self.q2 * self.q2d / length
             - 4 * self.q3 * self.q3d / length
         )
-        assert self.pathway.shortening_velocity == expected
+        assert simplify(self.pathway.shortening_velocity - expected) == 0
 
     def test_3D_pathway_compute_loads(self) -> None:
         self.pB.set_pos(
