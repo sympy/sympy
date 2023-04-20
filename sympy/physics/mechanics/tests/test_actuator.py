@@ -150,7 +150,7 @@ def test_forced_mass_spring_damper_model():
     pathway = LinearPathway(origin, attachment)
     stiffness = k * pathway.length  # positive as assumes contractile force
     spring = ForceActuator(stiffness, pathway)
-    damping = -c * pathway.shortening_velocity  # negative as acts against velocity
+    damping = -c * pathway.extension_velocity  # negative as acts against velocity
     damper = ForceActuator(damping, pathway)
 
     kanes_method = KanesMethod(
