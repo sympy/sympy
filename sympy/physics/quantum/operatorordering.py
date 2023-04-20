@@ -93,7 +93,7 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
             elif factors[n].is_annihilation == factors[n + 1].is_annihilation:
                 if (independent and
                         str(factors[n].name) > str(factors[n + 1].name)):
-                    new_factors.append(factors[n + 1])
+                    new_factors.append(-factors[n + 1])
                     new_factors.append(factors[n])
                     n += 1
                 else:
