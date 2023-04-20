@@ -272,11 +272,9 @@ class Cylinder(GeometryBase):
     pairs of points. These paths are always geodetic (the shortest possible) in
     the sense that they will be a straight line on the unwrapped cylinder's
     surface. However, it is also possible for a direction to be specified, i.e.
-    path's can be influenced such that they either wrap along the shortest side
-    or the longest side of the cylinder. To define these directions, the
-    right-hand screw rule is used, i.e. looking along the axis, the path will
-    appear to rotate clockwise as it arcs from the first point to the second
-    point.
+    paths can be influenced such that they either wrap along the shortest side
+    or the longest side of the cylinder. To define these directions, rotations
+    are in the positive direction following the right-hand rule.
 
     Examples
     ========
