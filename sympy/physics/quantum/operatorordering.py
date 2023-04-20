@@ -61,7 +61,6 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
 
         if key_1 <= key_2:
             new_factors.append(current)
-            print(new_factors, 'here')
             n += 1
             continue
 
