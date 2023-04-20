@@ -53,6 +53,7 @@ class GeometryBase(ABC):
             geometry's surface or not.
 
         """
+        pass
 
     @abstractmethod
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
