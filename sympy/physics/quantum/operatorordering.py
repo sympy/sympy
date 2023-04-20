@@ -177,7 +177,10 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
 
     expr : expression
         The expression write on normal ordered form.
-
+    independent : bool (default False)
+        Whether to consider operator with different names as operating in
+        different Hilbert spaces. If False, the (anti-)commutation is left
+        explicit.
     recursive_limit : int (default 10)
         The number of allowed recursive applications of the function.
 
