@@ -1,5 +1,6 @@
-from sympy.core.numbers import igcd, mod_inverse
+from sympy.core.numbers import mod_inverse
 from sympy.core.power import integer_nthroot
+from sympy.external.gmpy import gcd
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
@@ -434,7 +435,7 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
         v *= i
     #assert u**2 % N == v % N
     v = integer_nthroot(v, 2)[0]
-    return igcd(u - v, N)
+    return gcd(u - v, N)
 
 
 def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
