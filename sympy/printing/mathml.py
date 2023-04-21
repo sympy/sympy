@@ -574,6 +574,17 @@ class MathMLContentPrinter(MathMLPrinterBase):
             x.appendChild(self._print(arg))
         return x
 
+    def _print_Lambda(self, e):
+        # MathML reference for the lambda element:
+        # https://www.w3.org/TR/MathML2/chapter4.html#id.4.2.1.7
+        x = self.dom.createElement(self.mathml_tag(e))
+        for arg in e.signature:
+            x_1 = self.dom.createElement('bvar')
+            x_1.appendChild(self._print(arg))
+            x.appendChild(x_1)
+        x.appendChild(self._print(e.expr))
+        return x
+
     # XXX Symmetric difference is not supported for MathML content printers.
 
 
@@ -634,6 +645,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'mathieuc': 'C',
             'mathieusprime': 'S&#x2032;',
             'mathieucprime': 'C&#x2032;',
+            'Lambda': 'lambda',
         }
 
         def mul_symbol_selection():

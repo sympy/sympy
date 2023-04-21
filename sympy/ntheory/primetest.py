@@ -3,10 +3,9 @@ Primality testing
 
 """
 
-from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY, gcd
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
@@ -283,7 +282,7 @@ def _lucas_selfridge_params(n):
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
-        g = igcd(abs(D), n)
+        g = gcd(D, n)
         if g > 1 and g != n:
             return (0, 0, 0)
         if jacobi_symbol(D, n) == -1:
@@ -307,7 +306,7 @@ def _lucas_extrastrong_params(n):
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
-        g = igcd(D, n)
+        g = gcd(D, n)
         if g > 1 and g != n:
             return (0, 0, 0)
         if jacobi_symbol(D, n) == -1:
