@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Tuple as tTuple, Type
 
 import mpmath.libmp as mlib
@@ -33,6 +34,9 @@ __all__ = [
 
     # isqrt from gmpy or mpmath
     'sqrt',
+
+    # gcd from gmpy or math
+    'gcd',
 ]
 
 
@@ -90,9 +94,11 @@ if gmpy is not None:
 
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
+    gcd = gmpy.gcd
 
 else:
     from .pythonmpq import PythonMPQ
+    import math
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
@@ -102,3 +108,9 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
+    if sys.version_info[:2] >= (3, 9):
+        gcd = math.gcd
+    else:
+        # Until python 3.8 is no longer supported
+        from functools import reduce
+        gcd = lambda *args: reduce(math.gcd, args, 0)
