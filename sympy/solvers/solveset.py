@@ -23,7 +23,7 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.external.gmpy import gcd
+from sympy.external.gmpy import gcd as number_gcd
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
@@ -760,7 +760,7 @@ def _solve_trig2(f, symbol, domain):
 
     # ilcm() require more than one argument
     if len(numerators) > 1:
-        mu = Rational(2)*ilcm(*denominators)/gcd(*numerators)
+        mu = Rational(2)*ilcm(*denominators)/number_gcd(*numerators)
     else:
         assert len(numerators) == 1
         mu = Rational(2)*denominators[0]/numerators[0]
@@ -1333,9 +1333,9 @@ def _invert_modular(modterm, rhs, n, symbol):
         base, expo = a.args
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
-            # m, rhs are made coprime by dividing gcd(m, rhs)
+            # m, rhs are made coprime by dividing number_gcd(m, rhs)
             try:
-                remainder = discrete_log(m / gcd(m, rhs), rhs, a.base)
+                remainder = discrete_log(m / number_gcd(m, rhs), rhs, a.base)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
@@ -1345,7 +1345,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             period = totient(m)
             for p in divisors(period):
                 # there might a lesser period exist than totient(m).
-                if pow(a.base, p, m / gcd(m, a.base)) == 1:
+                if pow(a.base, p, m / number_gcd(m, a.base)) == 1:
                     period = p
                     break
             # recursion is not applied here since _invert_modular is currently

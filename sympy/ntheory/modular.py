@@ -1,4 +1,3 @@
-from functools import reduce
 from math import prod
 
 from sympy.core.numbers import igcdex
