@@ -130,6 +130,16 @@ def test_content_mathml_functions():
     assert mml_3.childNodes[1].childNodes[
         0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
+    mml_4 = mp._print(Lambda((x, y), x * y))
+    assert mml_4.nodeName == 'lambda'
+    assert mml_4.childNodes[0].nodeName == 'bvar'
+    assert mml_4.childNodes[0].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+    assert mml_4.childNodes[1].nodeName == 'bvar'
+    assert mml_4.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>y/ci>
+    assert mml_4.childNodes[2].nodeName == 'apply'
+
 
 def test_content_mathml_limits():
     # XXX No unevaluated limits

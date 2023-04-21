@@ -19,8 +19,9 @@ import warnings
 from itertools import cycle
 
 from sympy.core import Symbol
-from sympy.core.numbers import igcdex, mod_inverse, igcd, Rational
+from sympy.core.numbers import igcdex, mod_inverse, Rational
 from sympy.core.random import _randrange, _randint
+from sympy.external.gmpy import gcd
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.ntheory import totient as _euler
@@ -28,7 +29,7 @@ from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 
@@ -1561,7 +1562,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 ).warn(stacklevel=4)
         phi = _totient._from_factors(tally)
 
-    if igcd(e, phi) == 1:
+    if gcd(e, phi) == 1:
         if public and not private:
             if isinstance(index, int):
                 e = e % phi
@@ -1880,7 +1881,7 @@ def _encipher_decipher_rsa(i, key, factors=None):
         is_coprime_set = True
         for i in range(len(l)):
             for j in range(i+1, len(l)):
-                if igcd(l[i], l[j]) != 1:
+                if gcd(l[i], l[j]) != 1:
                     is_coprime_set = False
                     break
         return is_coprime_set
