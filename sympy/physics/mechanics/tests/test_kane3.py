@@ -1,5 +1,4 @@
-from sympy import cacheit
-from sympy.core.backend import zeros, ImmutableMatrix
+from sympy import cacheit, zeros, ImmutableMatrix
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -10,10 +9,6 @@ from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
 from sympy.testing.pytest import slow
-
-# This seemed to be set to True in CI if the following line is not present, so
-# explicitly set it to False here.
-Vector.simp = False
 
 
 # TODO : This is a temporary implementation and can be removed once we support
