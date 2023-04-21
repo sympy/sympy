@@ -235,6 +235,7 @@ def igcd(*args):
 
     The algorithm is based on the well known Euclid's algorithm [1]_. To
     improve speed, ``igcd()`` has its own caching mechanism.
+    If you do not need the cache mechanism, using `sympy.external.gmpy.gcd`.
 
     Examples
     ========

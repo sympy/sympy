@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from sympy.core.function import Function
-from sympy.core.numbers import igcd, igcdex, mod_inverse
+from sympy.core.numbers import igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.external.gmpy import gcd
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -45,7 +46,7 @@ def n_order(a, n):
     # Trivial
     if a == 1:
         return 1
-    if igcd(a, n) != 1:
+    if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # We want to calculate
     # order = totient(n), factors = factorint(order)
@@ -116,7 +117,7 @@ def _primitive_root_prime_iter(p):
     yield g
     # g**k is the primitive root of p iff gcd(p - 1, k) = 1
     for k in range(3, p, 2):
-        if igcd(p - 1, k) == 1:
+        if gcd(p - 1, k) == 1:
             yield pow(g, k, p)
 
 
@@ -263,7 +264,7 @@ def primitive_root(p, smallest=True):
                 return g
             else:
                 for i in range(2, g + p1 + 1):
-                    if igcd(i, p) == 1 and is_primitive_root(i, p):
+                    if gcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
     return next(_primitive_root_prime_iter(p))
@@ -302,7 +303,7 @@ def is_primitive_root(a, p):
     if p <= 1:
         raise ValueError("p should be an integer greater than 1")
     a = a % p
-    if igcd(a, p) != 1:
+    if gcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # Primitive root of p exist only for
     # p = 2, 4, q**e, 2*q**e (q is odd prime)
@@ -475,7 +476,8 @@ def sqrt_mod_iter(a, p, domain=int):
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
             if domain is ZZ:
-                yield from res
+                for x in res:
+                    yield ZZ(x)
             else:
                 for x in res:
                     yield domain(x)
@@ -708,7 +710,7 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         k -= mu
     if p != 2:
         f = p**(k - 1)*(p - 1) # f = totient(p**k)
-        return pow(a, f // igcd(f, n), pow(p, k)) == 1
+        return pow(a, f // gcd(f, n), pow(p, k)) == 1
     if n & 1:
         return True
     c = trailing(n)
@@ -1013,7 +1015,7 @@ def jacobi_symbol(m, n):
         return int(n == 1)
     if n == 1 or m == 1:
         return 1
-    if igcd(m, n) != 1:
+    if gcd(m, n) != 1:
         return 0
 
     j = 1
