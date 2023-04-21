@@ -5,15 +5,15 @@ Finite Difference Approximations to Derivatives
 Introduction
 ============
 
-Finite difference approximations to derivatives is quite important in numerical analysis and in
-computational physics. In this tutorial we show how to use SymPy to compute  approximations of
+Finite difference approximations to derivatives are quite important in numerical analysis and
+computational physics. In this tutorial, we show how to use SymPy to compute approximations of
 varying accuracy. The hope is that these notes could be useful for the practicing researcher who
 is developing code in some language and needs to be able to efficiently generate finite difference
 formulae for various approximations.
 
 In order to establish notation, we first state that we envision that there exists a continuous function F of a single
-variable x, with F having as many derivatives as desired.  We sample x values uniformly at points along the
-real line separated by h.  In most cases we want h to be small in some sense.  F(x) may be expanded
+variable x, with F having as many derivatives as desired. We sample x values uniformly at points along the
+real line separated by h. In most cases we want h to be small in some sense. F(x) may be expanded
 about some point `x_{0}` via the usual Taylor series expansion. Let `x = x_{0} + h`. Then the Taylor expansion is
 
 .. math::

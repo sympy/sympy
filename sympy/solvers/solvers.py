@@ -42,6 +42,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i
+from sympy.strategies.rl import rebuild
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
@@ -2770,6 +2771,7 @@ def _tsolve(eq, sym, **flags):
                 return _vsolve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
         rewrite = lhs.rewrite(exp)
+        rewrite = rebuild(rewrite) # avoid rewrites involving evaluate=False
         if rewrite != lhs:
             return _vsolve(rewrite - rhs, sym, **flags)
     except NotImplementedError:

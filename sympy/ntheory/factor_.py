@@ -14,10 +14,10 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm, Rational, Integer
+from sympy.core.numbers import ilcm, Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS, gcd
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -675,7 +675,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
             j += 1
             U = F(U)
             V = F(F(V))  # V is 2x further along than U
-            g = igcd(U - V, n)
+            g = gcd(U - V, n)
             if g == 1:
                 continue
             if g == n:
@@ -829,7 +829,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         for p in sieve.primerange(2, B + 1):
             e = int(math.log(B, p))
             aM = pow(aM, pow(p, e), n)
-        g = igcd(aM - 1, n)
+        g = gcd(aM - 1, n)
         if 1 < g < n:
             return int(g)
 
