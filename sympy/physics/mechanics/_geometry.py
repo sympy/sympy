@@ -14,7 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from sympy.core.backend import Integer, Mul, acos, pi, sqrt, sympify, tan
+from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.simplify.simplify import posify, trigsimp
@@ -558,7 +558,7 @@ def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
         if isinstance(ratio, tan):
             angle = ratio.args[0]
         elif (
-            isinstance(ratio, Mul)
+            ratio.is_Mul
             and ratio.args[0] == Integer(-1)
             and isinstance(ratio.args[1], tan)
         ):
