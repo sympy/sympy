@@ -544,7 +544,7 @@ def test_pin_joint_arbitrary_axis():
                                                      u*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
-    assert angle.xreplace({u: 1}) == 0
+    assert angle.xreplace({u: 1}).simplify() == 0
     assert C.masscenter.vel(N).simplify() == (u*A.y + u*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -800,7 +800,7 @@ def test_prismatic_joint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
                    child_interframe=A.x + A.y - A.z)
-    assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
+    assert N.x.angle_between(A.x + A.y - A.z).simplify() == 0 #Axis are aligned
     assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
     assert _simplify_matrix(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
                                                  [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
