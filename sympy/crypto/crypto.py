@@ -3358,3 +3358,86 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+
+
+########### XOR Cipher ############
+
+def encipher_xor(message, key):
+    """
+    Performs XOR encryption on plaintext and returns ciphertext.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_xor
+    >>> encipher_xor("THISISASTRING", "ABCD")
+    '150a0a170811021715100a0a06'
+
+    Parameters
+    ==========
+
+    message: str
+        the message to be encrypted.
+    key: str
+        the key to be used for encryption of the message.
+
+    Returns
+    =======
+    The encrypted ciphertext.
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/XOR_cipher
+
+    """
+
+    encrypted_text = ""
+    itr = 0
+    for f in range(len(message)):
+        encrypted_text += hex(ord(key[itr]) ^ ord(message[f]))[2:].zfill(2)
+        itr += 1
+        if len(key) <= itr:
+            itr = 0
+    return encrypted_text
+
+
+def decipher_xor(ciphertext, key):
+    """
+    Performs XOR decryption on ciphertext and returns plaintext.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_xor
+    >>> decipher_xor("150a0a170811021715100a0a06", "ABCD")
+    'THISISASTRING'
+
+    Parameters
+    ==========
+
+    ciphertext: str
+        requires a hexadecimal number
+    key: str
+        the key to be used for decryption of the message.
+
+    Returns
+    =======
+    The decrypted plaintext.
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/XOR_cipher
+
+    """
+    decrypted_text = ""
+    itr = 0
+    val_in_uni = ""
+    for i in range(0, len(ciphertext), 2):
+        val_in_uni += bytes.fromhex(ciphertext[i:i+2]).decode('utf-8')
+
+    for f in range(len(val_in_uni)):
+        decrypted_text += chr(ord(key[itr]) ^ ord(val_in_uni[f]))
+        itr += 1
+        if len(key) <= itr:
+            itr = 0
+    return decrypted_text
