@@ -108,7 +108,7 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
-    if not sys.version_info[:2] >= (3, 9):
+    if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
     else:
         # Until python 3.8 is no longer supported

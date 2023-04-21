@@ -29,7 +29,7 @@ from sympy.ntheory import reduced_totient as _carmichael
 from sympy.ntheory.generate import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 
