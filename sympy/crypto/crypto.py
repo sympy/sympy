@@ -17,6 +17,9 @@ from functools import reduce
 import warnings
 
 from itertools import cycle
+from random import choice
+from collections import defaultdict
+import string
 
 from sympy.core import Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd, Rational
@@ -3358,3 +3361,158 @@ def decipher_bg(message, key):
         orig_msg += (m ^ b)
 
     return orig_msg
+
+################# Columnar Transposition Cipher #################
+
+def permutation_from_key(key):
+    """
+    Computes permutation list from the
+    given key.
+
+    Parameters
+    ==========
+
+    key : str
+
+    Returns
+    =======
+
+    index_list : The Permutation list.
+
+    """
+    n = len(key)
+    d = defaultdict(list)
+    low = key.lower()
+    for i,c in enumerate(low):
+        d[c].append(i)
+
+    index_list = [j for i,j in sorted(zip([d[c].pop(0) for c in sorted(low)], range(n)))]
+    return index_list
+
+def decrypt_columnar(cipher, index_list):
+    """
+    Computes message for given permutation list
+    and ciphertext.
+
+    Parameters
+    ==========
+
+    cipher, index_list, remainder : str, list, int
+
+    Returns
+    =======
+
+    message : The Decrypted message.
+
+    """
+    n = len(index_list)
+    N = len(cipher)
+    rows = -(-N//n)          # Ceil Function
+    remainder = N%n
+    x = rows*n - N
+
+    if remainder == 0:
+        return ''.join([cipher[j*rows + i] for i in range(rows) for j in index_list])
+    else :
+        o = [0]*n
+        for i in index_list[-x:]:
+            o[i] = 1
+        o = [sum(o[:i]) for i in index_list]
+        rv = []
+        do = N
+        for i in range(rows):
+            for oi, j in zip(o, index_list):
+                k = i + j*rows - oi
+                rv.append(cipher[k])
+                do -= 1
+                if do == 0:
+                    return ''.join(rv)
+
+def encipher_columnar(message, key, padding=True):
+    """
+    Performs Regular Columnar Encryption on plaintext and returns ciphertext
+
+    Examples
+    ========
+
+    >> from sympy.crypto.crypto import encipher_columnar
+    >> message = "HELLO WORLD"
+    >> encipher_columnar(message,"SYM")
+    "LWLEHLODEORY"
+
+    Parameters
+    ==========
+
+    message : string, the message to be encrypted.
+    key : string, the key to be used for encryption.
+    padding: bool, decides if random letters are to be padded
+            in the end of message. By default, its value is true.
+
+    Returns
+    =======
+
+    The Encrypted message.
+
+    References
+    ==========
+    https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition
+
+    """
+    message =  ''.join(c for c in message if c.isalpha())
+    key =  ''.join(c for c in key if c.isalpha())
+    n = len(key)
+    N = len(message)
+    remainder = N%n
+
+    if len(message) < 2:
+        return message
+
+    if remainder != 0 and padding == True:
+        message += ''.join(choice(string.ascii_lowercase) for i in range(n - remainder))
+
+    index_list = permutation_from_key(key)
+
+    cipher = ''.join([message[j].upper() for i in range(n) for j in range(index_list.index(i), len(message), n)])
+    return cipher
+
+def decipher_columnar(cipher, key):
+    """
+    Performs Regular Columnar Decryption on ciphertext and returns plaintext
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decipher_columnar
+    >>> cipher = "LWLEHLODEORY"
+    >>> decipher_columnar(cipher,"SYM")
+    'HELLOWORLDYE'
+
+    In HELLOWORLDYE, Y and E are the random letters added to the original message (as per the algorithm)
+    and are to be ignored
+
+    Parameters
+    ==========
+
+    cipher : string, the cipher text to be decrypted.
+    key : string, the key to be used for decryption.
+
+    Returns
+    =======
+
+    The Decrypted message.
+
+    References
+    ==========
+    https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition
+
+    """
+
+    cipher =  ''.join(c for c in cipher if c.isalpha())
+    key =  ''.join(c for c in key if c.isalpha())
+
+    if len(cipher) < 2:
+        return cipher
+
+    index_list = permutation_from_key(key)
+    message = decrypt_columnar(cipher,index_list)
+    return message

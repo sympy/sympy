@@ -15,7 +15,7 @@ from sympy.crypto.crypto import (cycle_list,
       encipher_gm, gm_public_key, gm_private_key, encipher_bg, decipher_bg,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
-      encipher_railfence, decipher_railfence)
+      encipher_railfence, decipher_railfence, encipher_columnar, decipher_columnar)
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
@@ -560,3 +560,9 @@ def test_bg_public_key():
     assert 5293 == bg_public_key(67, 79)
     assert 713 == bg_public_key(23, 31)
     raises(ValueError, lambda: bg_private_key(13, 17))
+
+def test_decipher_columnar():
+    assert decipher_columnar("EVLNACDTESEAROFODEECWIREE","ZEBRAS") == "WEAREDISCOVEREDFLEEATONCE"
+
+def test_encipher_columnar():
+    assert encipher_columnar("WEAREDISCOVEREDFLEEATONCE","ZEBRAS",padding=False) == "EVLNACDTESEAROFODEECWIREE"
