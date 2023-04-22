@@ -204,7 +204,6 @@ def test_bicycle():
             u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
             kd_eqs=kd,
             constraint_solver=cramer_solve)
-    print("Vector.simp = ", Vector.simp)
     (fr, frstar) = KM.kanes_equations(BL, FL)
 
     # This is the start of entering in the numerical values from the benchmark
