@@ -30,6 +30,7 @@ XFAIL: Callable[[Any], Any]
 skip: Callable[[Any], Any]
 SKIP: Callable[[Any], Any]
 slow: Callable[[Any], Any]
+tooslow: Callable[[Any], Any]
 nocache_fail: Callable[[Any], Any]
 
 
@@ -39,6 +40,7 @@ if USE_PYTEST:
     XFAIL = pytest.mark.xfail
     SKIP = pytest.mark.skip
     slow = pytest.mark.slow
+    tooslow = pytest.mark.tooslow
     nocache_fail = pytest.mark.nocache_fail
     from _pytest.outcomes import Failed
 
@@ -186,6 +188,17 @@ else:
 
         def func_wrapper():
             func()
+
+        func_wrapper = functools.update_wrapper(func_wrapper, func)
+        func_wrapper.__wrapped__ = func
+        return func_wrapper
+
+    def tooslow(func):
+        func._slow = True
+        func._tooslow = True
+
+        def func_wrapper():
+            skip("Too slow")
 
         func_wrapper = functools.update_wrapper(func_wrapper, func)
         func_wrapper.__wrapped__ = func

@@ -19,7 +19,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
-from sympy.testing.pytest import XFAIL, raises, slow, ON_CI, skip
+from sympy.testing.pytest import XFAIL, raises, slow, tooslow
 from sympy.core.random import verify_numerically as tn
 
 from sympy.core.numbers import (Rational, pi)
@@ -743,12 +743,7 @@ def test_prudnikov_2():
                 assert can_do([p, n], [m])
 
 
-@slow
 def test_prudnikov_3():
-    if ON_CI:
-        # See https://github.com/sympy/sympy/pull/12795
-        skip("Too slow for CI.")
-
     h = S.Half
     assert can_do([Rational(1, 4), Rational(3, 4)], [h])
     assert can_do([Rational(1, 4), Rational(3, 4)], [3*h])
@@ -756,6 +751,14 @@ def test_prudnikov_3():
     assert can_do([Rational(3, 4), Rational(5, 4)], [h])
     assert can_do([Rational(3, 4), Rational(5, 4)], [3*h])
 
+
+@tooslow
+def test_prudnikov_3_slow():
+    # XXX: This is marked as tooslow and hence skipped in CI. None of the
+    # individual cases below fails or hangs. Some cases are slow and the loops
+    # below generate 280 different cases. Is it really necessary to test all
+    # 280 cases here?
+    h = S.Half
     for p in [1, 2, 3, 4]:
         for n in [-h, h, 1, 3*h, 2, 5*h, 3, 7*h, 4, 9*h]:
             for m in [1, 3*h, 2, 5*h, 3, 7*h, 4]:
