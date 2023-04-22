@@ -111,21 +111,16 @@ class FermionOp(Operator):
 
     def _eval_power(self, exp):
         from sympy.core.singleton import S
-        try:
-            if exp == 0:
-                return S.One
-            elif exp == 1:
-                return self
-            elif exp > 1 and exp.is_integer:
-                return S.Zero
-            else:
-                raise ValueError("Fermionic operators can only be raised to a"
-                    " positive integer power")
-        except TypeError as e:  # fallback to default implementation
-            if e.args != ('cannot determine truth value of Relational',):
-                raise
-            return Operator._eval_power(self, exp)
-
+        if exp == 0:
+            return S.One
+        elif exp == 1:
+            return self
+        elif (exp > 1) == True and exp.is_integer == True:
+            return S.Zero
+        elif (exp < 0) == True or exp.is_integer == False:
+            raise ValueError("Fermionic operators can only be raised to a"
+                " positive integer power")
+        return Operator._eval_power(self, exp)
 
 class FermionFockKet(Ket):
     """Fock state ket for a fermionic mode.
