@@ -4,7 +4,6 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import acos, sin, cos
 from sympy.matrices.dense import Matrix
-from sympy.physics.vector import Vector
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
                                      KanesMethod, inertia, Point, RigidBody,
                                      dot)
