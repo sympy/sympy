@@ -4,10 +4,11 @@ from sympy.core.backend import Matrix, eye, zeros
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
-from sympy.physics.mechanics.functions import msubs
+from sympy.physics.mechanics.functions import msubs, _parse_linear_solver
 
 from collections import namedtuple
 from collections.abc import Iterable
+
 
 class Linearizer:
     """This object holds the general model form for a dynamic system.
@@ -31,8 +32,9 @@ class Linearizer:
         Permutation matrix such that [q_ind, u_ind]^T = perm_mat*[q, u]^T
     """
 
-    def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u,
-            q_i=None, q_d=None, u_i=None, u_d=None, r=None, lams=None):
+    def __init__(self, f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i=None,
+                 q_d=None, u_i=None, u_d=None, r=None, lams=None,
+                 linear_solver='LU'):
         """
         Parameters
         ==========
@@ -53,7 +55,19 @@ class Linearizer:
             The input variables.
         lams : array_like, optional
             The lagrange multipliers
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
         """
+        self.linear_solver = _parse_linear_solver(linear_solver)
 
         # Generalized equation form
         self.f_0 = Matrix(f_0)
@@ -160,8 +174,9 @@ class Linearizer:
         # If not, C_0 is I_(nxn). Note that this works even if n=0
         if l > 0:
             f_c_jac_q = self.f_c.jacobian(self.q)
-            self._C_0 = (eye(n) - self._Pqd * (f_c_jac_q *
-                    self._Pqd).LUsolve(f_c_jac_q)) * self._Pqi
+            self._C_0 = (eye(n) - self._Pqd*
+                         self.linear_solver(f_c_jac_q*self._Pqd,
+                                            f_c_jac_q))*self._Pqi
         else:
             self._C_0 = eye(n)
         # If there are motion constraints (m > 0), form C_1 and C_2 as normal.
@@ -172,11 +187,11 @@ class Linearizer:
             temp = f_v_jac_u * self._Pud
             if n != 0:
                 f_v_jac_q = self.f_v.jacobian(self.q)
-                self._C_1 = -self._Pud * temp.LUsolve(f_v_jac_q)
+                self._C_1 = -self._Pud * self.linear_solver(temp, f_v_jac_q)
             else:
                 self._C_1 = zeros(o, n)
-            self._C_2 = (eye(o) - self._Pud *
-                    temp.LUsolve(f_v_jac_u)) * self._Pui
+            self._C_2 = (eye(o) - self._Pud*
+                         self.linear_solver(temp, f_v_jac_u))*self._Pui
         else:
             self._C_1 = zeros(o, n)
             self._C_2 = eye(o)
@@ -391,9 +406,9 @@ class Linearizer:
         # kwarg A_and_B indicates to return  A, B for forming the equation
         # dx = [A]x + [B]r, where x = [q_indnd, u_indnd]^T,
         if A_and_B:
-            A_cont = self.perm_mat.T * M_eq.LUsolve(Amat_eq)
+            A_cont = self.perm_mat.T * self.linear_solver(M_eq, Amat_eq)
             if Bmat_eq:
-                B_cont = self.perm_mat.T * M_eq.LUsolve(Bmat_eq)
+                B_cont = self.perm_mat.T * self.linear_solver(M_eq, Bmat_eq)
             else:
                 # Bmat = Matrix([]), so no need to sub
                 B_cont = Bmat_eq
