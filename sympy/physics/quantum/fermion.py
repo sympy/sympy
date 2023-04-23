@@ -109,6 +109,18 @@ class FermionOp(Operator):
         else:
             return pform**prettyForm('\N{DAGGER}')
 
+    def _eval_power(self, exp):
+        from sympy.core.singleton import S
+        if exp == 0:
+            return S.One
+        elif exp == 1:
+            return self
+        elif (exp > 1) == True and exp.is_integer == True:
+            return S.Zero
+        elif (exp < 0) == True or exp.is_integer == False:
+            raise ValueError("Fermionic operators can only be raised to a"
+                " positive integer power")
+        return Operator._eval_power(self, exp)
 
 class FermionFockKet(Ket):
     """Fock state ket for a fermionic mode.
