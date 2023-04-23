@@ -34,8 +34,8 @@ class Linearizer:
     References
     ==========
 
-    .. [1] D. L. Peterson, G. Gede, and M. Hubbard, “Symbolic linearization of
-           equations of motion of constrained multibody systems,” Multibody
+    .. [1] D. L. Peterson, G. Gede, and M. Hubbard, "Symbolic linearization of
+           equations of motion of constrained multibody systems," Multibody
            Syst Dyn, vol. 33, no. 2, pp. 143–161, Feb. 2015, doi:
            10.1007/s11044-014-9436-5.
 
