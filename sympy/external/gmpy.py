@@ -37,6 +37,12 @@ __all__ = [
 
     # gcd from gmpy or math
     'gcd',
+
+    # invert from gmpy or pow
+    # If inverse element does not exist,
+    # gmpy raises `ZeroDivisionError` and
+    # pow raises `ValueError`.
+    'invert',
 ]
 
 
@@ -95,6 +101,7 @@ if gmpy is not None:
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     gcd = gmpy.gcd
+    invert = gmpy.invert
 
 else:
     from .pythonmpq import PythonMPQ
@@ -114,3 +121,4 @@ else:
         # Until python 3.8 is no longer supported
         from functools import reduce
         gcd = lambda *args: reduce(math.gcd, args, 0)
+    invert = lambda x, m: pow(x, -1, m)
