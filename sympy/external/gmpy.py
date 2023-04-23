@@ -118,12 +118,12 @@ else:
         # Until python 3.8 is no longer supported
         from functools import reduce
         gcd = lambda *args: reduce(math.gcd, args, 0)
+
     def invert(x, m):
         """ Return y such that x*y == 1 modulo m.
 
-        Raises ZeroDivisionError if no inverse exists.
-        This function is imitated from ``gmpy2.invert``.
-
+        Uses ``math.pow`` but reproduces the behaviour of ``gmpy2.invert``
+        which raises ZeroDivisionError if no inverse exists.
         """
         try:
             return pow(x, -1, m)
