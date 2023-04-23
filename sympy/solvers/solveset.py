@@ -1329,13 +1329,14 @@ def _invert_modular(modterm, rhs, n, symbol):
             return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
 
     if a.is_Pow:
+        from sympy.utilities.misc import as_int
         # base**expo = a
         base, expo = a.args
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
             try:
-                remainder = discrete_log(m / number_gcd(m, rhs), rhs, a.base)
+                remainder = discrete_log(m / number_gcd(as_int(m), as_int(rhs)), rhs, a.base)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
@@ -1345,7 +1346,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             period = totient(m)
             for p in divisors(period):
                 # there might a lesser period exist than totient(m).
-                if pow(a.base, p, m / number_gcd(m, a.base)) == 1:
+                if pow(a.base, p, m / number_gcd(as_int(m), as_int(a.base))) == 1:
                     period = p
                     break
             # recursion is not applied here since _invert_modular is currently
