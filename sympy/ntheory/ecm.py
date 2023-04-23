@@ -220,7 +220,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             # However, we do not declare a because it is more convenient
             # to use a24 = (a + 2)*invert(4, n) in the calculation.
             a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
-        except (ValueError, ZeroDivisionError):
+        except ZeroDivisionError:
             #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
             g = gcd(16*u_3*v, n)
             #If g = n, try another curve

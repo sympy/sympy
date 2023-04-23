@@ -39,9 +39,6 @@ __all__ = [
     'gcd',
 
     # invert from gmpy or pow
-    # If inverse element does not exist,
-    # gmpy raises `ZeroDivisionError` and
-    # pow raises `ValueError`.
     'invert',
 ]
 
@@ -121,4 +118,14 @@ else:
         # Until python 3.8 is no longer supported
         from functools import reduce
         gcd = lambda *args: reduce(math.gcd, args, 0)
-    invert = lambda x, m: pow(x, -1, m)
+    def invert(x, m):
+        """ Return y such that x*y == 1 modulo m.
+
+        Raises ZeroDivisionError if no inverse exists.
+        This function is imitated from ``gmpy2.invert``.
+
+        """
+        try:
+            return pow(x, -1, m)
+        except ValueError:
+            raise ZeroDivisionError("invert() no inverse exists")

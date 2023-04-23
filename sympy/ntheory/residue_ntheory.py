@@ -1265,9 +1265,7 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
                     e = invert(r, order) * (ab - aa) % order
                     if (pow(b, e, n) - a) % n == 0:
                         return e
-                except (ValueError, ZeroDivisionError):
-                    # If inverse element does not exist,
-                    # a `ValueError` or a `ZeroDivisionError` is raised.
+                except ZeroDivisionError:
                     pass
                 break
     raise ValueError("Pollard's Rho failed to find logarithm")

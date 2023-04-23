@@ -326,7 +326,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
                 partial_relations.pop(large_prime)
                 try:
                     large_prime_inv = invert(large_prime, N)
-                except (ValueError, ZeroDivisionError):#if large_prime divides N
+                except ZeroDivisionError:#if large_prime divides N
                     proper_factor.add(large_prime)
                     continue
                 u = u*u_prev*large_prime_inv
