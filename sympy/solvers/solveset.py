@@ -1334,8 +1334,12 @@ def _invert_modular(modterm, rhs, n, symbol):
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
             # m, rhs are made coprime by dividing number_gcd(m, rhs)
+            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+                return modterm, rhs
+
+            mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
-                remainder = discrete_log(m / number_gcd(m, rhs), rhs, a.base)
+                remainder = discrete_log(mdiv, rhs.p, a.base.p)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
@@ -1345,7 +1349,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             period = totient(m)
             for p in divisors(period):
                 # there might a lesser period exist than totient(m).
-                if pow(a.base, p, m / number_gcd(m, a.base)) == 1:
+                if pow(a.base, p, m / number_gcd(m.p, a.base.p)) == 1:
                     period = p
                     break
             # recursion is not applied here since _invert_modular is currently
