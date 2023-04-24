@@ -38,7 +38,7 @@ class ActuatorBase(ABC):
         pass
 
     @abstractmethod
-    def to_loads(self, force: Expr) -> list[tuple[Point, Vector]]:
+    def to_loads(self) -> list[tuple[Point, Vector]]:
         """Loads required by the equations of motion method classes.
 
         Explanation
