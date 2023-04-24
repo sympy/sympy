@@ -19,9 +19,9 @@ import warnings
 from itertools import cycle
 
 from sympy.core import Symbol
-from sympy.core.numbers import igcdex, mod_inverse, Rational
+from sympy.core.numbers import Rational
 from sympy.core.random import _randrange, _randint
-from sympy.external.gmpy import gcd
+from sympy.external.gmpy import gcd, invert
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.ntheory import totient as _euler
@@ -430,7 +430,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     a, b = key
     assert gcd(a, N) == 1
     if _inverse:
-        c = mod_inverse(a, N)
+        c = invert(a, N)
         d = -b*c
         a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
@@ -1570,7 +1570,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
             return n, e
 
         if private and not public:
-            d = mod_inverse(e, phi)
+            d = invert(e, phi)
             if isinstance(index, int):
                 d += index * phi
             return n, d
@@ -2717,7 +2717,7 @@ def decipher_elgamal(msg, key):
     """
     p, _, d = key
     c1, c2 = msg
-    u = igcdex(c1**d, p)[0]
+    u = pow(c1, -d, p)
     return u * c2 % p
 
 
@@ -3346,7 +3346,7 @@ def decipher_bg(message, key):
     r_p = pow(int(y), int(p_t), int(p))
     r_q = pow(int(y), int(q_t), int(q))
 
-    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+    x = (q * invert(q, p) * r_p + p * invert(p, q) * r_q) % public_key
 
     orig_bits = []
     for _ in range(L):
