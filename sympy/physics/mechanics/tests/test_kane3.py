@@ -51,9 +51,13 @@ def test_bicycle():
 
     # Declare Coordinates & Speeds
     # Simple definitions for qdots - qd = u
-    # Speeds are: yaw frame ang. rate, roll frame ang. rate, rear wheel frame
-    # ang.  rate (spinning motion), frame ang. rate (pitching motion), steering
-    # frame ang. rate, and front wheel ang. rate (spinning motion).
+    # Speeds are:
+    # - u1: yaw frame ang. rate
+    # - u2: roll frame ang. rate
+    # - u3: rear wheel frame ang. rate (spinning motion)
+    # - u4: frame ang. rate (pitching motion)
+    # - u5: steering frame ang. rate
+    # - u6: front wheel ang. rate (spinning motion)
     # Wheel positions are ignorable coordinates, so they are not introduced.
     q1, q2, q4, q5 = dynamicsymbols('q1 q2 q4 q5')
     q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1)
