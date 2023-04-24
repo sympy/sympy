@@ -61,7 +61,7 @@ class ActuatorBase(ABC):
         return f'{self.__class__.__name__}()'
 
 
-class ForceActuator:
+class ForceActuator(ActuatorBase):
     """Force-producing actuator.
 
     Explanation
