@@ -425,6 +425,10 @@ def igcd_lehmer(a, b):
 def ilcm(*args):
     """Computes integer least common multiple.
 
+    It is retained for historical reasons,
+    but if there are no special needs,
+    please use ``sympy.external.gmpy.lcm``.
+
     Examples
     ========
 

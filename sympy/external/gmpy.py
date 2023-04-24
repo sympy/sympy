@@ -38,6 +38,9 @@ __all__ = [
     # gcd from gmpy or math
     'gcd',
 
+    # lcm from gmpy or math
+    'lcm',
+
     # invert from gmpy or pow
     'invert',
 ]
@@ -98,6 +101,7 @@ if gmpy is not None:
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     gcd = gmpy.gcd
+    lcm = gmpy.lcm
     invert = gmpy.invert
 
 else:
@@ -114,10 +118,16 @@ else:
     sqrt = lambda x: int(mlib.isqrt(x))
     if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
+        lcm = math.lcm
     else:
         # Until python 3.8 is no longer supported
         from functools import reduce
         gcd = lambda *args: reduce(math.gcd, args, 0)
+
+        def lcm(*args):
+            if 0 in args:
+                return 0
+            return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
 
     def invert(x, m):
         """ Return y such that x*y == 1 modulo m.
