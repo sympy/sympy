@@ -37,6 +37,9 @@ __all__ = [
 
     # gcd from gmpy or math
     'gcd',
+
+    # invert from gmpy or pow
+    'invert',
 ]
 
 
@@ -95,6 +98,7 @@ if gmpy is not None:
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     gcd = gmpy.gcd
+    invert = gmpy.invert
 
 else:
     from .pythonmpq import PythonMPQ
@@ -114,3 +118,14 @@ else:
         # Until python 3.8 is no longer supported
         from functools import reduce
         gcd = lambda *args: reduce(math.gcd, args, 0)
+
+    def invert(x, m):
+        """ Return y such that x*y == 1 modulo m.
+
+        Uses ``math.pow`` but reproduces the behaviour of ``gmpy2.invert``
+        which raises ZeroDivisionError if no inverse exists.
+        """
+        try:
+            return pow(x, -1, m)
+        except ValueError:
+            raise ZeroDivisionError("invert() no inverse exists")
