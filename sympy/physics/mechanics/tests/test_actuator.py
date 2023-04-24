@@ -13,7 +13,7 @@ from sympy.physics.mechanics import (
     ReferenceFrame,
     dynamicsymbols,
 )
-from sympy.physics.mechanics._actuator import ForceActuator
+from sympy.physics.mechanics._actuator import ActuatorBase, ForceActuator
 from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
 
 
@@ -32,6 +32,9 @@ class TestForceActuator:
         self.q2d = dynamicsymbols('q2', 1)
         self.q3d = dynamicsymbols('q3', 1)
         self.N = ReferenceFrame('N')
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(ForceActuator, ActuatorBase)
 
     @pytest.mark.parametrize(
         'force',
