@@ -3,12 +3,12 @@ Convolution (using **FFT**, **NTT**, **FWHT**), Subset Convolution,
 Covering Product, Intersecting Product
 """
 
-from sympy.core import S, sympify, Rational, ilcm
+from sympy.core import S, sympify, Rational
 from sympy.core.function import expand_mul
 from sympy.discrete.transforms import (
     fft, ifft, ntt, intt, fwht, ifwht,
     mobius_transform, inverse_mobius_transform)
-from sympy.external.gmpy import MPZ
+from sympy.external.gmpy import MPZ, lcm
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
 
@@ -98,8 +98,8 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
                 elif not isinstance(i, int):
                     return
             if dens:
-                lcm = ilcm(*dens) if len(dens) > 1 else dens[0]
-                return [i*lcm if type(i) is int else i.p*(lcm//i.q) for i in a], lcm
+                l = lcm(*dens)
+                return [i*l if type(i) is int else i.p*(l//i.q) for i in a], l
             # no lcm of den to deal with
             return a, 1
         ls = None
