@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from sympy.core.function import Function
-from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.external.gmpy import gcd, invert
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
-from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, trailing, totient, multiplicity, perfect_power
+from .factor_ import factorint, trailing, multiplicity, perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint
@@ -45,7 +45,7 @@ def n_order(a, n):
     # Trivial
     if a == 1:
         return 1
-    if igcd(a, n) != 1:
+    if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # We want to calculate
     # order = totient(n), factors = factorint(order)
@@ -71,13 +71,21 @@ def n_order(a, n):
 
 def _primitive_root_prime_iter(p):
     """
-    Generates the primitive roots for a prime ``p``
+    Generates the primitive roots for a prime ``p``.
+
+    The primitive roots generated are not necessarily sorted.
+    However, the first one is the smallest primitive root.
+
+    Parameters
+    ==========
+
+    p : odd prime
 
     Examples
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
-    >>> list(_primitive_root_prime_iter(19))
+    >>> sorted(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]
 
     References
@@ -87,26 +95,100 @@ def _primitive_root_prime_iter(p):
 
     """
     # it is assumed that p is an int
-    v = [(p - 1) // i for i in factorint(p - 1).keys()]
-    a = 2
-    while a < p:
-        for pw in v:
-            # a TypeError below may indicate that p was not an int
-            if pow(a, pw, p) == 1:
-                break
+    if p == 3:
+        yield 2
+        return
+    if p < 41:
+        # small case
+        if p == 23:
+            g = 5
+        elif p == 7 or p % 7 == 3:
+            # 3 is the smallest primitive root of p = 7,17,31
+            g = 3
         else:
-            yield a
-        a += 1
+            # 2 is the smallest primitive root of p = 5,11,13,19,29,37
+            g = 2
+    else:
+        v = [(p - 1) // i for i in factorint(p - 1).keys()]
+        for g in range(2, p):
+            if all(pow(g, pw, p) != 1 for pw in v):
+                break
+    yield g
+    # g**k is the primitive root of p iff gcd(p - 1, k) = 1
+    for k in range(3, p, 2):
+        if gcd(p - 1, k) == 1:
+            yield pow(g, k, p)
 
 
-def primitive_root(p):
+def _primitive_root_prime_power_iter(p, e):
     """
-    Returns the smallest primitive root or None.
+    Generates the primitive roots of ``p**e``
+
+    Let g be the primitive root of p.
+    If pow(g,p-1,p**2)!=1, then g is primitive root of p**e.
 
     Parameters
     ==========
 
-    p : positive integer
+    p : odd prime
+    e : positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_power_iter
+    >>> sorted(_primitive_root_prime_power_iter(5, 2))
+    [2, 3, 8, 12, 13, 17, 22, 23]
+
+    """
+    p2 = p**2
+    if e == 1:
+        yield from _primitive_root_prime_iter(p)
+    else:
+        for g in _primitive_root_prime_iter(p):
+            t = (g - pow(g, 2 - p, p2)) % p2
+            for k in range(0, p2, p):
+                if k != t:
+                    yield from (g + k + m for m in range(0, p**e, p2))
+
+
+def _primitive_root_prime_power2_iter(p, e):
+    """
+    Generates the primitive roots of ``2*p**e``
+
+    If g is the primitive root of p**e,
+    then the odd one of g and g+p**e is the primitive root of 2*p**e.
+
+    Parameters
+    ==========
+
+    p : odd prime
+    e : positive integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_power2_iter
+    >>> sorted(_primitive_root_prime_power2_iter(5, 2))
+    [3, 13, 17, 23, 27, 33, 37, 47]
+
+    """
+    for g in _primitive_root_prime_power_iter(p, e):
+        if g % 2 == 1:
+            yield g
+        else:
+            yield g + p**e
+
+
+def primitive_root(p, smallest=True):
+    """
+    Returns a primitive root of p or None.
+
+    Parameters
+    ==========
+
+    p : integer, p > 1
+    smallest : if True the smallest primitive root is returned or None
 
     Examples
     ========
@@ -114,6 +196,8 @@ def primitive_root(p):
     >>> from sympy.ntheory.residue_ntheory import primitive_root
     >>> primitive_root(19)
     2
+    >>> primitive_root(21) is None
+    True
 
     References
     ==========
@@ -123,10 +207,30 @@ def primitive_root(p):
 
     """
     p = as_int(p)
-    if p < 1:
-        raise ValueError('p is required to be positive')
-    if p <= 2:
-        return 1
+    if p < 2:
+        raise ValueError("p should be an integer greater than 1")
+    if p <= 4:
+        return p - 1
+    if not smallest:
+        p_even = p % 2 == 0
+        if not p_even:
+            q = p  # p is odd
+        elif p % 4:
+            q = p//2  # p had 1 factor of 2
+        else:
+            return None  # p had more than one factor of 2
+        if isprime(q):
+            e = 1
+        else:
+            m = perfect_power(q)
+            if not m:
+                return None
+            q, e = m
+            if not isprime(q):
+                return None
+        if p_even:
+            return next(_primitive_root_prime_power2_iter(q, e))
+        return next(_primitive_root_prime_power_iter(q, e))
     f = factorint(p)
     if len(f) > 2:
         return None
@@ -159,7 +263,7 @@ def primitive_root(p):
                 return g
             else:
                 for i in range(2, g + p1 + 1):
-                    if igcd(i, p) == 1 and is_primitive_root(i, p):
+                    if gcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
     return next(_primitive_root_prime_iter(p))
@@ -198,20 +302,22 @@ def is_primitive_root(a, p):
     if p <= 1:
         raise ValueError("p should be an integer greater than 1")
     a = a % p
-    if igcd(a, p) != 1:
+    if gcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # Primitive root of p exist only for
     # p = 2, 4, q**e, 2*q**e (q is odd prime)
     if p <= 4:
         # The primitive root is only p-1.
         return a == p - 1
-    t = trailing(p)
-    if t > 1:
-        return False
-    q = p >> t
+    if p % 2:
+        q = p  # p is odd
+    elif p % 4:
+        q = p//2  # p had 1 factor of 2
+    else:
+        return False  # p had more than one factor of 2
     if isprime(q):
         group_order = q - 1
-        factors = set(factorint(q - 1).keys())
+        factors = factorint(q - 1).keys()
     else:
         m = perfect_power(q)
         if not m:
@@ -369,7 +475,8 @@ def sqrt_mod_iter(a, p, domain=int):
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
             if domain is ZZ:
-                yield from res
+                for x in res:
+                    yield ZZ(x)
             else:
                 for x in res:
                     yield domain(x)
@@ -466,10 +573,10 @@ def _sqrt_mod_prime_power(a, p, k):
         px = p
         for _ in range(k.bit_length() - 1):
             px = px**2
-            frinv = igcdex(2*res, px)[0]
+            frinv = invert(2*res, px)
             res = (res - (res**2 - a)*frinv) % px
         if k & (k - 1): # If k is not a power of 2
-            frinv = igcdex(2*res, pk)[0]
+            frinv = invert(2*res, pk)
             res = (res - (res**2 - a)*frinv) % pk
     return sorted([res, pk - res])
 
@@ -574,62 +681,45 @@ def is_nthpow_residue(a, n, m):
         return True
     if n == 2:
         return is_quad_residue(a, m)
-    return _is_nthpow_residue_bign(a, n, m)
-
-
-def _is_nthpow_residue_bign(a, n, m):
-    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
-    # assert n > 2
-    # assert a > 0 and m > 0
-    if primitive_root(m) is None or igcd(a, m) != 1:
-        # assert m >= 8
-        for prime, power in factorint(m).items():
-            if not _is_nthpow_residue_bign_prime_power(a, n, prime, power):
-                return False
-        return True
-    f = totient(m)
-    k = int(f // igcd(f, n))
-    return pow(a, k, int(m)) == 1
+    return all(_is_nthpow_residue_bign_prime_power(a, n, p, e)
+               for p, e in factorint(m).items())
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
-    does/does not exist."""
-    # assert a > 0
-    # assert n > 2
-    # assert p is prime
-    # assert k > 0
-    if a % p:
-        if p != 2:
-            return _is_nthpow_residue_bign(a, n, pow(p, k))
-        if n & 1:
-            return True
-        c = trailing(n)
-        return a % pow(2, min(c + 2, k)) == 1
-    else:
+    r"""
+    Returns True if `x^n = a \pmod{p^k}` has solutions for `n > 2`.
+
+    Parameters
+    ==========
+
+    a : positive integer
+    n : integer, n > 2
+    p : prime number
+    k : positive integer
+
+    """
+    while a % p == 0:
         a %= pow(p, k)
         if not a:
             return True
         mu = multiplicity(p, a)
         if mu % n:
             return False
-        pm = pow(p, mu)
-        return _is_nthpow_residue_bign_prime_power(a//pm, n, p, k - mu)
-
-
-def _nthroot_mod2(s, q, p):
-    f = factorint(q)
-    v = []
-    for b, e in f.items():
-        v.extend([b]*e)
-    for qx in v:
-        s = _nthroot_mod1(s, qx, p, False)
-    return s
+        a //= pow(p, mu)
+        k -= mu
+    if p != 2:
+        f = p**(k - 1)*(p - 1) # f = totient(p**k)
+        return pow(a, f // gcd(f, n), pow(p, k)) == 1
+    if n & 1:
+        return True
+    c = trailing(n)
+    return a % pow(2, min(c + 2, k)) == 1
 
 
 def _nthroot_mod1(s, q, p, all_roots):
     """
-    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``
+    Root of ``x**q = s mod p``, ``p`` prime and ``q`` divides ``p - 1``.
+    Assume that the root exists.
 
     References
     ==========
@@ -638,33 +728,23 @@ def _nthroot_mod1(s, q, p, all_roots):
 
     """
     g = primitive_root(p)
-    if not isprime(q):
-        r = _nthroot_mod2(s, q, p)
-    else:
-        f = p - 1
-        assert (p - 1) % q == 0
-        # determine k
-        k = 0
-        while f % q == 0:
-            k += 1
-            f = f // q
-        # find z, x, r1
-        f1 = igcdex(-f, q)[0] % q
-        z = f*f1
-        x = (1 + z) // q
-        r1 = pow(s, x, p)
-        s1 = pow(s, f, p)
-        h = pow(g, f*q, p)
-        t = discrete_log(p, s1, h)
-        g2 = pow(g, z*t, p)
-        g3 = igcdex(g2, p)[0]
-        r = r1*g3 % p
-        #assert pow(r, q, p) == s
+    r = s
+    for qx, ex in factorint(q).items():
+        f = (p - 1) // qx**ex
+        while f % qx == 0:
+            f //= qx
+        z = f*invert(-f, qx)
+        x = (1 + z) // qx
+        t = discrete_log(p, pow(r, f, p), pow(g, f*qx, p))
+        for _ in range(ex):
+            # assert t == discrete_log(p, pow(r, f, p), pow(g, f*qx, p))
+            r = pow(r, x, p)*pow(g, -z*t % (p - 1), p) % p
+            t //= qx
     res = [r]
     h = pow(g, (p - 1) // q, p)
     #assert pow(h, q, p) == 1
     hx = r
-    for i in range(q - 1):
+    for _ in range(q - 1):
         hx = (hx*h) % p
         res.append(hx)
     if all_roots:
@@ -673,10 +753,9 @@ def _nthroot_mod1(s, q, p, all_roots):
     return min(res)
 
 
-
 def _help(m, prime_modulo_method, diff_method, expr_val):
     """
-    Helper function for _nthroot_mod_composite and polynomial_congruence.
+    Helper function for _nthroot_mod_composite.
 
     Parameters
     ==========
@@ -701,7 +780,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
                 diff = diff_method(root, p)
                 if diff != 0:
                     ppow = p
-                    m_inv = mod_inverse(diff, p)
+                    m_inv = invert(diff, p)
                     for j in range(1, e):
                         ppow *= p
                         root = (root - expr_val(root, ppow) * m_inv) % ppow
@@ -790,9 +869,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         # x**pa - a = x**(q*pb + r) - a = (x**pb)**q * x**r - a =
         #             b**q * x**r - a; x**r - c = 0; c = b**-q * a mod p
         q, r = divmod(pa, pb)
-        c = pow(b, q, p)
-        c = igcdex(c, p)[0]
-        c = (c * a) % p
+        c = pow(b, -q, p) * a % p
         pa, pb = pb, r
         a, b = b, c
     if pa == 1:
@@ -935,7 +1012,7 @@ def jacobi_symbol(m, n):
         return int(n == 1)
     if n == 1 or m == 1:
         return 1
-    if igcd(m, n) != 1:
+    if gcd(m, n) != 1:
         return 0
 
     j = 1
@@ -1084,8 +1161,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     for i in range(m):
         T[x] = i
         x = x * b % n
-    z = mod_inverse(b, n)
-    z = pow(z, m, n)
+    z = pow(b, -m, n)
     x = a
     for i in range(m):
         if x in T:
@@ -1186,10 +1262,10 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
             if xa == xb:
                 r = (ba - bb) % order
                 try:
-                    e = mod_inverse(r, order) * (ab - aa) % order
+                    e = invert(r, order) * (ab - aa) % order
                     if (pow(b, e, n) - a) % n == 0:
                         return e
-                except ValueError:
+                except ZeroDivisionError:
                     pass
                 break
     raise ValueError("Pollard's Rho failed to find logarithm")
@@ -1234,8 +1310,7 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
 
     for i, (pi, ri) in enumerate(f.items()):
         for j in range(ri):
-            gj = pow(b, l[i], n)
-            aj = pow(a * mod_inverse(gj, n), order // pi**(j + 1), n)
+            aj = pow(a * pow(b, -l[i], n), order // pi**(j + 1), n)
             bj = pow(b, order // pi, n)
             cj = discrete_log(n, aj, bj, pi, True)
             l[i] += cj * pi**j
@@ -1295,7 +1370,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 def quadratic_congruence(a, b, c, p):
     """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p.
+    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
 
     Parameters
     ==========
@@ -1324,7 +1399,7 @@ def quadratic_congruence(a, b, c, p):
             roots.append(1)
         return roots
     if isprime(p):
-        inv_a = mod_inverse(a, p)
+        inv_a = invert(a, p)
         b *= inv_a
         c *= inv_a
         if b % 2 == 1:
@@ -1342,73 +1417,6 @@ def quadratic_congruence(a, b, c, p):
         for j in root:
             res.add(j % p)
     return sorted(res)
-
-
-def _polynomial_congruence_prime(coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns the root of a polynomial modulo prime number
-    by naive search from [0, p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    """
-
-    roots = []
-    rank = len(coefficients)
-    for i in range(0, p):
-        f_val = 0
-        for coeff in range(0,rank - 1):
-            f_val = (f_val + pow(i, int(rank - coeff - 1), p) * coefficients[coeff]) % p
-        f_val = f_val + coefficients[-1]
-        if f_val % p == 0:
-            roots.append(i)
-    return roots
-
-
-def _diff_poly(root, coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns the derivative of the polynomial evaluated at the
-    root (mod p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    root : integer
-    """
-
-    diff = 0
-    rank = len(coefficients)
-    for coeff in range(0, rank - 1):
-        if not coefficients[coeff]:
-            continue
-        diff = (diff + pow(root, rank - coeff - 2, p)*(rank - coeff - 1)*
-            coefficients[coeff]) % p
-    return diff % p
-
-
-def _val_poly(root, coefficients, p):
-    """A helper function used by polynomial_congruence.
-    It returns value of the polynomial at root (mod p).
-
-    Parameters
-    ==========
-
-    coefficients : list of integers
-    p : prime number
-    root : integer
-    """
-    rank = len(coefficients)
-    f_val = 0
-    for coeff in range(0, rank - 1):
-        f_val = (f_val + pow(root, rank - coeff - 1, p)*
-            coefficients[coeff]) % p
-    f_val = f_val + coefficients[-1]
-    return f_val % p
 
 
 def _valid_expr(expr):
@@ -1445,6 +1453,12 @@ def polynomial_congruence(expr, m):
     >>> expr = x**6 - 2*x**5 -35
     >>> polynomial_congruence(expr, 6125)
     [3257]
+
+    See Also
+    ========
+
+    sympy.polys.galoistools.gf_csolve : low level solving routine used by this routine
+
     """
     coefficients = _valid_expr(expr)
     coefficients = [num % m for num in coefficients]
@@ -1455,12 +1469,7 @@ def polynomial_congruence(expr, m):
         return quadratic_congruence(0, *coefficients, m)
     if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
         return nthroot_mod(-coefficients[-1], rank - 1, m, True)
-    if isprime(m):
-        return _polynomial_congruence_prime(coefficients, m)
-    return _help(m,
-        lambda p: _polynomial_congruence_prime(coefficients, p),
-        lambda root, p: _diff_poly(root, coefficients, p),
-        lambda root, p: _val_poly(root, coefficients, p))
+    return gf_csolve(coefficients, m)
 
 
 def binomial_mod(n, m, k):
@@ -1553,8 +1562,7 @@ def _binomial_mod_prime_power(n, m, p, q):
                 fac *= mul
                 fac %= modulo
             bj_ = bj(u, j, r)
-            if bj_ < 0: prod *= pow(mod_inverse(fac, modulo), -bj_, modulo)
-            else: prod *= pow(fac, bj_, modulo)
+            prod *= pow(fac, bj_, modulo)
             prod %= modulo
         if p == 2:
             sm = u // 2
@@ -1578,7 +1586,7 @@ def _binomial_mod_prime_power(n, m, p, q):
         for i in range(1, v + 1):
             div *= i
             div %= modulo
-        div = mod_inverse(div, modulo)
+        div = invert(div, modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1590,7 +1598,6 @@ def _binomial_mod_prime_power(n, m, p, q):
             for i in range(1, q):
                 if i != j: aj //= j - i
             aj //= j
-            if aj < 0: b, aj = mod_inverse(b, modulo), -aj
             prod *= pow(b, aj, modulo)
             prod %= modulo
         return prod
@@ -1619,7 +1626,7 @@ def _binomial_mod_prime_power(n, m, p, q):
         carry = (mj + rj + carry) // p
         e0 += carry
         if j >= q - 1: eq_1 += carry
-        prod *= numerator * mod_inverse(denominator, modulo)
+        prod *= numerator * invert(denominator, modulo)
         prod %= modulo
         j += 1
 

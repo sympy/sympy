@@ -71,8 +71,8 @@ class PathwayBase(ABC):
 
     @property
     @abstractmethod
-    def shortening_velocity(self) -> Expr:
-        """An expression representing the pathway's shortening velocity."""
+    def extension_velocity(self) -> Expr:
+        """An expression representing the pathway's extension velocity."""
         pass
 
     @abstractmethod
@@ -133,7 +133,7 @@ class LinearPathway(PathwayBase):
     The pathway created above isn't very interesting without the positions and
     velocities of its attachment points being described. Without this its not
     possible to describe how the pathway moves, i.e. its length or its
-    shortening velocity.
+    extension velocity.
 
     >>> from sympy.physics.mechanics import ReferenceFrame
     >>> from sympy.physics.vector import dynamicsymbols
@@ -152,11 +152,11 @@ class LinearPathway(PathwayBase):
     is actually required as it ensures that a pathway's length is always
     positive.
 
-    A pathway's shortening velocity can be accessed similarly via its
-    ``shortening_velocity`` attribute.
+    A pathway's extension velocity can be accessed similarly via its
+    ``extension_velocity`` attribute.
 
-    >>> linear_pathway.shortening_velocity
-    -q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    >>> linear_pathway.extension_velocity
+    q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
 
     Parameters
     ==========
@@ -189,8 +189,8 @@ class LinearPathway(PathwayBase):
         return length
 
     @property
-    def shortening_velocity(self) -> Expr:
-        """Exact analytical expression for the pathway's shortening velocity."""
+    def extension_velocity(self) -> Expr:
+        """Exact analytical expression for the pathway's extension velocity."""
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         if not relative_position:
             return S.Zero
@@ -200,8 +200,8 @@ class LinearPathway(PathwayBase):
         # ``relative_position`` is defined using.
         frame = relative_position.args[0][1]
         relative_velocity = relative_position.diff(t, frame)
-        shortening_velocity = -relative_velocity.dot(relative_position.normalize())
-        return shortening_velocity
+        extension_velocity = relative_velocity.dot(relative_position.normalize())
+        return extension_velocity
 
     def compute_loads(self, force: Expr) -> list[tuple[Point, Vector]]:
         """Loads required by the equations of motion method classes.
@@ -222,9 +222,9 @@ class LinearPathway(PathwayBase):
         ========
 
         The below example shows how to generate the loads produced in a linear
-        actuator that produces a contractile force ``F``. First, create a
-        linear actuator between two points separated by the coordinate ``q``
-        in the ``x`` direction of the global frame ``N``.
+        actuator that produces an expansile force ``F``. First, create a linear
+        actuator between two points separated by the coordinate ``q`` in the
+        ``x`` direction of the global frame ``N``.
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> from sympy.physics.mechanics._pathway import LinearPathway
@@ -235,28 +235,27 @@ class LinearPathway(PathwayBase):
         >>> pB.set_pos(pA, q * N.x)
         >>> linear_pathway = LinearPathway(pA, pB)
 
-        Now create a symbol ``F`` to describe the magnitude of the
-        (contractile) force that will be produced along the pathway. The list
-        of loads that ``KanesMethod`` requires can be produced by calling the
-        pathway's ``compute_loads`` method with ``F`` passed as the only
-        argument.
+        Now create a symbol ``F`` to describe the magnitude of the (expansile)
+        force that will be produced along the pathway. The list of loads that
+        ``KanesMethod`` requires can be produced by calling the pathway's
+        ``compute_loads`` method with ``F`` passed as the only argument.
 
         >>> from sympy import Symbol
         >>> F = Symbol('F')
         >>> linear_pathway.compute_loads(F)
-        [(pA, F*q(t)/sqrt(q(t)**2)*N.x), (pB, - F*q(t)/sqrt(q(t)**2)*N.x)]
+        [(pA, - F*q(t)/sqrt(q(t)**2)*N.x), (pB, F*q(t)/sqrt(q(t)**2)*N.x)]
 
         Parameters
         ==========
 
         force : Expr
             The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents a contractile force.
+            that this ``Expr`` represents an expansile force.
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         loads = [
-            (self.attachments[0], force * relative_position / self.length),
-            (self.attachments[-1], -force * relative_position / self.length),
+            (self.attachments[0], -force * relative_position / self.length),
+            (self.attachments[-1], force * relative_position / self.length),
         ]
         return loads
