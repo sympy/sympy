@@ -145,7 +145,7 @@ class Sphere(GeometryBase):
         return self._radius
 
     @radius.setter
-    def radius(self, radius) -> None:
+    def radius(self, radius: Symbol) -> None:
         self._radius = radius
 
     @property
@@ -154,7 +154,7 @@ class Sphere(GeometryBase):
         return self._point
 
     @point.setter
-    def point(self, point) -> None:
+    def point(self, point: Point) -> None:
         self._point = point
 
     def _point_is_on_surface(self, point: Point) -> bool:
@@ -346,7 +346,7 @@ class Cylinder(GeometryBase):
         return self._radius
 
     @radius.setter
-    def radius(self, radius) -> None:
+    def radius(self, radius: Symbol) -> None:
         self._radius = radius
 
     @property
@@ -355,7 +355,7 @@ class Cylinder(GeometryBase):
         return self._point
 
     @point.setter
-    def point(self, point) -> None:
+    def point(self, point: Point) -> None:
         self._point = point
 
     @property
@@ -364,7 +364,7 @@ class Cylinder(GeometryBase):
         return self._axis
 
     @axis.setter
-    def axis(self, axis) -> None:
+    def axis(self, axis: Vector) -> None:
         self._axis = axis
 
     def _point_is_on_surface(self, point: Point) -> bool:
