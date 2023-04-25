@@ -179,6 +179,12 @@ Ntheory Functions Reference
 
 .. autofunction:: discrete_log
 
+.. autofunction:: quadratic_congruence
+
+.. autofunction:: polynomial_congruence
+
+.. autofunction:: binomial_mod
+
 .. automodule:: sympy.ntheory.continued_fraction
    :members:
 

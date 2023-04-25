@@ -1,5 +1,6 @@
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
+from sympy.simplify import trigsimp
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import (eye, zeros)
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
@@ -11,8 +12,6 @@ from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
 import warnings
-
-Vector.simp = True
 
 
 def test_dict_list():
@@ -77,22 +76,25 @@ def test_coordinate_vars():
     assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
-    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A, variables=True) == \
-           A[0]*A.x + A[1]*A.y + A[2]*A.z
+    assert express(B[0]*B.x + B[1]*B.y + B[2]*B.z, A,
+                   variables=True).simplify() == A[0]*A.x + A[1]*A.y + A[2]*A.z
     assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B) == \
            (A[0]*cos(q) + A[1]*sin(q))*B.x + \
            (-A[0]*sin(q) + A[1]*cos(q))*B.y + A[2]*B.z
-    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B, variables=True) == \
-           B[0]*B.x + B[1]*B.y + B[2]*B.z
+    assert express(A[0]*A.x + A[1]*A.y + A[2]*A.z, B,
+                   variables=True).simplify() == B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
-    assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
+    assert ({k: v.simplify() for k, v in N.variable_map(A).items()} ==
+            {N[0]: A[0], N[2]: A[2], N[1]: A[1]})
     C = A.orientnew('C', 'Axis', [q, A.x + A.y + A.z])
     mapping = A.variable_map(C)
-    assert mapping[A[0]] == 2*C[0]*cos(q)/3 + C[0]/3 - 2*C[1]*sin(q + pi/6)/3 +\
-           C[1]/3 - 2*C[2]*cos(q + pi/3)/3 + C[2]/3
-    assert mapping[A[1]] == -2*C[0]*cos(q + pi/3)/3 + \
+    assert trigsimp(mapping[A[0]]) == (2*C[0]*cos(q)/3 + C[0]/3 -
+                                       2*C[1]*sin(q + pi/6)/3 +
+                                       C[1]/3 - 2*C[2]*cos(q + pi/3)/3 +
+                                       C[2]/3)
+    assert trigsimp(mapping[A[1]]) == -2*C[0]*cos(q + pi/3)/3 + \
            C[0]/3 + 2*C[1]*cos(q)/3 + C[1]/3 - 2*C[2]*sin(q + pi/6)/3 + C[2]/3
-    assert mapping[A[2]] == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
+    assert trigsimp(mapping[A[2]]) == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
            2*C[1]*cos(q + pi/3)/3 + C[1]/3 + 2*C[2]*cos(q)/3 + C[2]/3
 
 
