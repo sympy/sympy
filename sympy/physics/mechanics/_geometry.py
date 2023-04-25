@@ -220,7 +220,7 @@ class Sphere(GeometryBase):
         >>> p2.pos_from(pO)
         sqrt(2)*r/2*N.y + sqrt(2)*r/2*N.z
 
-        The geodesic length, which is in this case a quarter of the sphere's
+        The geodesic length, which is in this case is a quarter of the sphere's
         circumference, can be calculated using the ``geodesic_length`` method:
 
         >>> sphere.geodesic_length(p1, p2)
