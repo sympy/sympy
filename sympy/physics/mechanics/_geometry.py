@@ -15,6 +15,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
+from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.simplify.simplify import posify, trigsimp
@@ -169,7 +170,7 @@ class Sphere(GeometryBase):
         point_radius = _cancel_sqrt_of_squared_positive(
             point.pos_from(self.point).magnitude()
         )
-        return point_radius == self.radius
+        return Eq(point_radius, self.radius) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
         r"""The shortest distance between two points on a geometry's surface.
@@ -387,7 +388,10 @@ class Cylinder(GeometryBase):
         relative_position = point.pos_from(self.point)
         parallel = relative_position.dot(self.axis) * self.axis
         perpendicular = relative_position - parallel
-        return trigsimp(perpendicular.magnitude()) == sqrt(self.radius**2)
+        point_radius = _cancel_sqrt_of_squared_positive(
+            trigsimp(perpendicular.magnitude())
+        )
+        return Eq(point_radius, self.radius) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
         r"""The shortest distance between two points on a geometry's surface.
