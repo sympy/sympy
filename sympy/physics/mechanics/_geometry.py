@@ -112,7 +112,8 @@ class Sphere(GeometryBase):
     ==========
 
     radius : Symbol
-        The radius of the sphere.
+        The radius of the sphere. This symbol must represent a value that is
+        positive and constant, i.e. it cannot be a dynamic symbol.
     point : Point
         A point at which the sphere is centered.
 
@@ -327,7 +328,8 @@ class Cylinder(GeometryBase):
         ==========
 
         radius : Symbol
-            The radius of the cylinder.
+            The radius of the cylinder. This symbol must represent a value that
+            is positive and constant, i.e. it cannot be a dynamic symbol.
         point : Point
             A point through which the cylinder's axis passes.
         axis : Vector
