@@ -402,46 +402,49 @@ class Cylinder(GeometryBase):
             l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
 
         where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
-        sphere's center to the first and second points on the sphere's surface
-        respectively.
+        cylinder's center to the first and second points on the cylinder's
+        surface respectively.
 
         Examples
         ========
 
-        <TODO>
-
         A geodesic length can only be calculated between two points on the
-        sphere's surface. Firstly, a ``Sphere`` instance must be created along
-        with two points that will lie on its surface:
+        cylinder's surface. Firstly, a ``Cylinder`` instance must be created
+        along with two points that will lie on its surface:
 
-        >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._geometry import Sphere
+        >>> from sympy import Symbol, cos, sin
+        >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
+        ... dynamicsymbols)
+        >>> from sympy.physics.mechanics._geometry import Cylinder
         >>> N = ReferenceFrame('N')
         >>> r = Symbol('r')
         >>> pO = Point('pO')
         >>> pO.set_vel(N, 0)
-        >>> sphere = Sphere(r, pO)
+        >>> cylinder = Cylinder(r, pO, N.x)
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
 
-        Let's assume that ``p1`` lies at a distance of ``r`` in the ``N.x``
-        direction from ``pO`` and that ``p2`` is located on the sphere's
-        surface in the ``N.y + N.z`` direction from ``pO``. These positions can
-        be set with:
+        Let's assume that ``p1`` is located at ``N.x + r*N.y`` relative to
+        ``pO`` and that ``p2`` is located at ``r*(cos(q)*N.y + sin(q)*N.z)``
+        relative to ``pO``, where ``q(t)`` is a generalized coordinate
+        specifying the angle rotated around the ``N.x`` axis according to the
+        right-hand rule where ``N.y`` is zero. These positions can be set with:
 
-        >>> p1.set_pos(pO, r * N.x)
+        >>> q = dynamicsymbols('q')
+        >>> p1.set_pos(pO, N.x + r*N.y)
         >>> p1.pos_from(pO)
-        r*N.x
-        >>> p2.set_pos(pO, r * (N.y + N.z).normalize())
-        >>> p2.pos_from(pO)
-        sqrt(2)*r/2*N.y + sqrt(2)*r/2*N.z
+        N.x + r*N.y
+        >>> p2.set_pos(pO, r * (cos(q)*N.y + sin(q)*N.z).normalize())
+        >>> p2.pos_from(pO).simplify()
+        r*cos(q(t))*N.y + r*sin(q(t))*N.z
 
-        The geodesic length, which is in this case a quarter of the sphere's
-        circumference, can be calculated using the ``geodesic_length`` method:
+        The geodesic length, which is in this case a is the hypotenuse of a
+        right triangle where the other two side lengths are ``1`` (parallel to
+        the cylinder's axis) and ``r*q(t)`` (parallel to the cylinder's cross
+        section), can be calculated using the ``geodesic_length`` method:
 
-        >>> sphere.geodesic_length(p1, p2)
-        pi*r/2
+        >>> cylinder.geodesic_length(p1, p2)
+        sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
         doesn't lie on the sphere's surface then a ``ValueError`` is raised
