@@ -17,13 +17,13 @@ from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
-from sympy.core.numbers import I, Number, Rational, oo, ilcm
+from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.power import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.external.gmpy import gcd as number_gcd
+from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
@@ -758,13 +758,7 @@ def _solve_trig2(f, symbol, domain):
 
     x = Dummy('x')
 
-    # ilcm() require more than one argument
-    if len(numerators) > 1:
-        mu = Rational(2)*ilcm(*denominators)/number_gcd(*numerators)
-    else:
-        assert len(numerators) == 1
-        mu = Rational(2)*denominators[0]/numerators[0]
-
+    mu = Rational(2)*number_lcm(*denominators)/number_gcd(*numerators)
     f = f.subs(symbol, mu*x)
     f = f.rewrite(tan)
     f = expand_trig(f)
