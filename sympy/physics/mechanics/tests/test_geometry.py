@@ -122,7 +122,7 @@ class TestCylinder:
             (r * (cos(q) * N.y + sin(q) * N.z), True)
         ]
     )
-    def test_point_is_on_surface(position: Vector, expected: Expr) -> None:
+    def test_point_is_on_surface(position: Vector, expected: bool) -> None:
         r = Symbol('r')
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
