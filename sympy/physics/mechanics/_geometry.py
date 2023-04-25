@@ -18,12 +18,13 @@ from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
-from sympy.simplify.simplify import posify, trigsimp
+from sympy.physics.vector import Vector, dot
+from sympy.simplify.simplify import trigsimp
 
 if TYPE_CHECKING:
     from sympy.core.backend import Symbol
     from sympy.core.expr import Expr
-    from sympy.physics.mechanics import Point, Vector
+    from sympy.physics.mechanics import Point
 
 
 __all__ = [
@@ -168,10 +169,12 @@ class Sphere(GeometryBase):
             surface or not.
 
         """
-        point_radius = _cancel_sqrt_of_squared_positive(
-            point.pos_from(self.point).magnitude()
-        )
-        return Eq(point_radius, self.radius) == True
+        point_vector = point.pos_from(self.point)
+        if isinstance(point_vector, Vector):
+            point_radius = dot(point_vector, point_vector)
+        else:
+            point_radius = point_vector**2
+        return Eq(point_radius, self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
         r"""The shortest distance between two points on a geometry's surface.
@@ -390,10 +393,12 @@ class Cylinder(GeometryBase):
         relative_position = point.pos_from(self.point)
         parallel = relative_position.dot(self.axis) * self.axis
         perpendicular = relative_position - parallel
-        point_radius = _cancel_sqrt_of_squared_positive(
-            trigsimp(perpendicular.magnitude())
-        )
-        return Eq(point_radius, self.radius) == True
+        point_vector = trigsimp(perpendicular.magnitude())
+        if isinstance(point_vector, Vector):
+            point_radius = dot(point_vector, point_vector)
+        else:
+            point_radius = point_vector**2
+        return Eq(point_radius, self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
         r"""The shortest distance between two points on a geometry's surface.
@@ -492,16 +497,15 @@ class Cylinder(GeometryBase):
         ).normalize()
 
         central_angle = _directional_atan(
-            point_1_perpendicular_vector
+            cancel(point_1_perpendicular_vector
                 .cross(point_2_perpendicular_vector)
-                .dot(self.axis),
-            point_1_perpendicular_vector.dot(point_2_perpendicular_vector),
+                .dot(self.axis)),
+            cancel(point_1_perpendicular_vector.dot(point_2_perpendicular_vector)),
+            positives={self.radius},
         )
 
         planar_arc_length = self.radius * central_angle
-        geodesic_length = _cancel_sqrt_of_squared_positive(
-            sqrt(parallel_length**2 + planar_arc_length**2)
-        )
+        geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
 
     def __repr__(self) -> str:
@@ -512,13 +516,12 @@ class Cylinder(GeometryBase):
         )
 
 
-def _cancel_sqrt_of_squared_positive(expr) -> Expr:
-    """Cancel ``sqrt(x**2)`` to ``x`` in expressions for positive ``x``."""
-    expr, reps = posify(expr)
-    return expr.subs(reps)
-
-
-def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
+def _directional_atan(
+    numerator: Expr,
+    denominator: Expr,
+    *,
+    positives: set[Expr] | None = None,
+) -> Expr:
     """Compute atan in a directional sense as required for geodesics.
 
     Explanation
@@ -543,8 +546,8 @@ def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
 
     """
 
-    numerator = _cancel_sqrt_of_squared_positive(trigsimp(numerator))
-    denominator = _cancel_sqrt_of_squared_positive(trigsimp(denominator))
+    numerator = trigsimp(numerator)
+    denominator = trigsimp(denominator)
 
     if numerator.is_number and denominator.is_number:
         angle = atan2(numerator, denominator)
