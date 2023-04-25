@@ -392,13 +392,12 @@ class Cylinder(GeometryBase):
         """
         relative_position = point.pos_from(self.point)
         parallel = relative_position.dot(self.axis) * self.axis
-        perpendicular = relative_position - parallel
-        point_vector = trigsimp(perpendicular.magnitude())
+        point_vector = relative_position - parallel
         if isinstance(point_vector, Vector):
             point_radius = dot(point_vector, point_vector)
         else:
             point_radius = point_vector**2
-        return Eq(point_radius, self.radius**2) == True
+        return Eq(trigsimp(point_radius), self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
         r"""The shortest distance between two points on a geometry's surface.
@@ -545,9 +544,6 @@ def _directional_atan(
     of this module.
 
     """
-
-    numerator = trigsimp(numerator)
-    denominator = trigsimp(denominator)
 
     if numerator.is_number and denominator.is_number:
         angle = atan2(numerator, denominator)
