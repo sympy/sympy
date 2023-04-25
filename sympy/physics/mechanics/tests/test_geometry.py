@@ -17,8 +17,10 @@ from sympy.core.backend import (
     sin,
     sqrt,
 )
+from sympy.core.relational import Eq
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics._geometry import Cylinder, Sphere
+from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -86,7 +88,7 @@ class TestSphere:
         p2 = Point('p2')
         p2.set_pos(pO, position_2)
 
-        assert sphere.geodesic_length(p1, p2) == expected
+        assert simplify(Eq(sphere.geodesic_length(p1, p2), expected))
 
 
 class TestCylinder:
@@ -181,4 +183,4 @@ class TestCylinder:
         p2 = Point('p2')
         p2.set_pos(pO, position_2)
 
-        assert (cylinder.geodesic_length(p1, p2) - expected).simplify() == 0
+        assert simplify(Eq(cylinder.geodesic_length(p1, p2), expected))
