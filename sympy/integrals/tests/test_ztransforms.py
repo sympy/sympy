@@ -37,7 +37,7 @@ def test_z_transform():
     assert ZT(DiracDelta(n+a),n,z) == (z**a, True, True)
     assert ZT(b*DiracDelta(n+2),n,z) == (b*z**2, True, True)
     assert ZT(-b*DiracDelta(n+2),n,z) == (-b*z**2, True, True)
-    assert ZT(Heaviside(n-a),n,z) == (z**-a*z/(z - 1), Abs(z) > 1, True)
+    assert ZT(Heaviside(n-a),n,z) == (z/(z**a*(z - 1)), Abs(z) > 1, True)
     assert ZT(Heaviside(n+a),n,z) == (z**a*z/(z - 1), Abs(z) > 1, True)
     assert ZT(b*Heaviside(n+a),n,z) == (b*z**a*z/(z - 1), Abs(z) > 1, True)
     # multiply by n property
@@ -113,7 +113,7 @@ def test_inverse_z_transform():
     assert ZT_inv(b*z**2,z,n) == (b*DiracDelta(n + 2), True, True)
     assert ZT_inv(-b*z**2,z,n) == (-b*DiracDelta(n + 2), True, True)
 
-    assert ZT_inv(z**-a*z/(z - 1),z,n) == (Heaviside(n - a), Abs(z) > 1, True)
+    assert ZT_inv((1/z**a)*z/(z - 1),z,n) == (Heaviside(n - a), Abs(z) > 1, True)
     assert ZT_inv(z**a*z/(z - 1),z,n) == (Heaviside(n + a), Abs(z) > 1, True)
     assert ZT_inv(b*z**a*z/(z - 1),z,n) == (b*Heaviside(n + a), Abs(z) > 1, True)
 
@@ -143,7 +143,7 @@ def test_inverse_z_transform():
            (0.5**n*sin(2*n)*Heaviside(n), Abs(z) > 0.5, True)
     # Hsu, Schaum 4.24. Signal and Systems, p194
     assert ZT_inv((z/(z-3))**2,z,n) == \
-           (3**(n + 1)*(n + 1)*Heaviside(n + 1)/3, Abs(z) > 3, True)
+           3**n*(n + 1)*Heaviside(n)
 
     return()
 
@@ -170,7 +170,7 @@ def test_z_pairs_properties():
     assert ZT_pp(DiracDelta(n+a),n,z) == (z**a, True, True)
     assert ZT_pp(b*DiracDelta(n+2),n,z) == (b*z**2, True, True)
     assert ZT_pp(-b*DiracDelta(n+2),n,z) == (-b*z**2, True, True)
-    assert ZT_pp(Heaviside(n-a),n,z) == (z**-a*z/(z - 1), Abs(z) > 1, True)
+    assert ZT_pp(Heaviside(n-a),n,z) == ((1/z**a)*z/(z - 1), Abs(z) > 1, True)
     assert ZT_pp(Heaviside(n+a),n,z) == (z**a*z/(z - 1), Abs(z) > 1, True)
     assert ZT_pp(b*Heaviside(n+a),n,z) == \
            (b*z**a*z/(z - 1), Abs(z) > 1, True)

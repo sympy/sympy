@@ -5,9 +5,10 @@
 #------------------------------------------------------------------------#
 # http://blog.espol.edu.ec/telg1001/transformada-z-pares-fn-y-fz-con-sympy-python/
 # Edison Del Rosario edelros@espol.edu.ec
-# 2023/04/14
+# 2023/04/27
 """
 from sympy.core import diff, S
+from sympy.core.numbers import Integer
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 #from sympy.core.numbers import Rational
@@ -223,13 +224,13 @@ def _z_pairs_properties(f,n,z, apply_properties=True,itera = 0):
             debug('  k:',k,' ; f:',f,
                   '\n  z_pair f[n]:',n_dom,
                   '\n  z_pair F[z]:',z_dom)
-            try:
-                if check.xreplace(ma):
-                    Fz = (k*z_dom.xreplace(ma),
-                          plane.xreplace(ma),
-                          S.true)
-            except Exception:
-                debug(' _z_pairs_table did not match.')
+            #try:
+            if check.xreplace(ma):
+                Fz = (k*z_dom.xreplace(ma),
+                      plane.xreplace(ma),
+                      S.true)
+            #except Exception:
+            #    debug(' _z_pairs_table did not match.')
         i = i+1 # next pair
 
     # f[n] did not match z_pairs, try z_properties()
@@ -371,7 +372,7 @@ def _z_properties(f,n,z,itera=0):
         f = Heaviside(n)
         Fz = _z_pairs_properties(f,n,z,itera=itera+1)
         # time shift only
-        if ma_args and ma_args[a]>0 and Abs(ma_args[b])>=0:
+        if  ma_args[a]>0 and Abs(ma_args[b])>=0:
             b_shift = ma_args[b]
             debug(' _z_property time_shift u[n-b]--------')
             debug('  b_shift:',b_shift,' ; f:', f,)
@@ -385,7 +386,7 @@ def _z_properties(f,n,z,itera=0):
             b_shift = -ma_args[b]
             debug(' _z_property time_reversal and shift u[-(n+b)]---')
             debug('  b_shift:',b_shift,' ; f:',f,)
-            if not Fz is None:
+            if Fz is not None:
                 Fz_k = k*factor((Fz[0].subs(z,1/z))*z**(-b_shift))
                 plane_reversal = Fz[1].func(Fz[1].args[1],
                                             Fz[1].args[0])
@@ -523,7 +524,7 @@ def _split_f(f,n):
     for factor_k in Mul.make_args(f):
         fk_ma = False
         ma = factor_k.match(Pow(n,a))
-        if (ma and not ma[a]==S.Zero and ma[a].is_integer):
+        if ma and not ma[a]==S.Zero and isinstance(ma[a],Integer):
             f_powna = f_powna*factor_k
             fk_ma = True
         ma = factor_k.match(Pow(a,n)) # n positive
@@ -560,7 +561,7 @@ def _z_transform_summation(f, n, z):
     if f.has(n):
         fzn = f*(z**(-n))
         # unilateral summation
-        Fz_sum = summation(fzn,(n,0,S.Infinity))
+        Fz_sum = summation(fzn,(n,S.Zero,S.Infinity))
         debug(' _z_transform_summation: ',Fz)
         if Fz_sum.is_Piecewise:
             Fz_eq = Fz_sum.args[0]  # first interval
@@ -730,18 +731,18 @@ def _z_pairs_prop_inverse(F,z,n,apply_properties=True,itera=0):
             debug(' _z_pairs_table match:','\n  F:',Fz)
             debug('  z_pair F[z]:',z_dom,' ; ma_z:',ma_z)
             debug('  z_pair f[n]:',n_dom)
-            try:
-                c = check.xreplace(ma_z)
-                debug('  try,check  : %s -> %s'%(check, c))
-                if c or F==1:
-                    fn = n_dom.xreplace(ma_z)
-                    if not fn.has(Heaviside) and not fn.has(DiracDelta):
-                        fn = fn*Heaviside(n)
-                    plane_z = plane.xreplace(ma_z)
-                    cond_z  = S.true
-                    fn = (fn, plane_z, cond_z)
-            except Exception:
-                debug(' _z_pairs_table did not match.')
+            #try:
+            c = check.xreplace(ma_z)
+            debug('  try,check  : %s -> %s'%(check, c))
+            if c or F==1:
+                fn = n_dom.xreplace(ma_z)
+                if not fn.has(Heaviside) and not fn.has(DiracDelta):
+                    fn = fn*Heaviside(n)
+                plane_z = plane.xreplace(ma_z)
+                cond_z  = S.true
+                fn = (fn, plane_z, cond_z)
+            #except Exception:
+            #    debug(' _z_pairs_table did not match.')
         i = i+1 # next pair
 
     # f[n] did not match z_pairs, try z_properties_inverse()
@@ -880,7 +881,7 @@ def _z_properties_inverse(F,z,n,PQ=None, itera=0):
                 and ma_Q1[c]>2
                 and ma_P1 and ma_P1[b]==S.Zero)
     # ma_Q1 and z/(z-a)**c
-    c_nf2 = ma_Q1 and P_degree>=1 and P_degree<Q_degree
+    c_nf2 = ma_Q1 and (1 <= P_degree <Q_degree)
     # _z_property nf[n] <--> -z*diff(F[z])
     #  ma_Q1 = Q.match(a*(z-b)**c)
     if fn is None and c_not_zc and c_nf1 and c_nf2:
@@ -1026,7 +1027,7 @@ def _z_properties_inverse(F,z,n,PQ=None, itera=0):
         debug('['+str(itera)+']  _z_properties_inverse f[n]:',fn)
     return fn
 
-def inverse_z_transform(F,z,n):
+def inverse_z_transform(F,z,n,H0=S.Half):
     """
     inverse_z_transform of F[z] to f[n], pairs and properties tables.
 
@@ -1052,6 +1053,7 @@ def inverse_z_transform(F,z,n):
     F : F[z] expression at z_domain
     z : variable on z_domain
     n : variable on discrete n_domain
+    H0 : change Heaviside[0] to H0=S.One, default H0=S.Half
 
     Examples
     ========
@@ -1109,9 +1111,31 @@ def inverse_z_transform(F,z,n):
             term_k = simplify(term_k)
             fT = fT+term_k
         debug(' f[n]:',fT)
+        if H0==S.One:
+            fT = Heaviside_edge_toOne(fT,n)
     if len(f_noeval)>0:
         fT = [fT,f_noeval]
     return fT
+
+def Heaviside_edge_toOne(f,n):
+    fT = 0*n
+    term_sum = Add.make_args(f)
+    print(term_sum)
+    for term_k in term_sum:
+        if term_k.has(Heaviside):
+            term_kH = 1
+            factor_Mul = Mul.make_args(term_k)
+            for factor_k in factor_Mul:
+                if factor_k.has(Heaviside):
+                    H_args = factor_k.args
+                    H = Heaviside(H_args[0],1)
+                    term_kH = term_kH*H
+                else:
+                    term_kH = term_kH*factor_k
+            fT = fT + term_kH
+        else:
+            fT = fT + term_k
+    return(fT)
 
 def apart_z(F):
     """
@@ -1169,14 +1193,22 @@ def apart_z(F):
     c = Wild('c', exclude=[z])
 
     # Fz poles and zeros
+    F = factor(F)
     PQ = _simplify_z(F,z,PQ_args=True)
     # P = PQ['P']
     # Q = PQ['Q']
     k = PQ['k']
     k_sign = PQ['k_sign']
     F = PQ['F']
-    P_zc = PQ['P_zc'] # z**(symbol)
-    Q_zc = PQ['Q_zc'] # z**(symbol)
+    P_zc = PQ['P_zc'] # z**(const+symbol)
+    Q_zc = PQ['Q_zc'] # z**(const+symbol)
+
+    if P_zc is not S.One:
+        P_zc = P_zc/z
+        F = F*z
+    if Q_zc is not S.One:
+        Q_zc = Q_zc/z
+        F = F/z
 
     # apply partial fractions to F[z]/z
     F_z = factor(F/z,z)
@@ -1287,11 +1319,13 @@ def _simplify_z(F,z,PQ_args = False):
     if P.has(z):
         P_rational = 1
         for factor_k in Mul.make_args(P):
-            if factor_k.is_Pow:
+            if factor_k.is_Pow and factor_k.has(z):
                 factor_args = factor_k.args
                 P_rational = P_rational*Pow(P_rational*monic(factor_args[0]),factor_args[1])
-            elif factor_k.has(z): # not a constant coefficient
+            elif not(factor_k.is_Pow) and factor_k.has(z): # not a constant coefficient
                 P_rational = P_rational*monic(factor_k)
+            elif not factor_k.has(z):
+                P_rational = P_rational*1
         P = P_rational.as_expr()
 
     if not k==S.One or not P_zc==S.One:
@@ -1365,7 +1399,7 @@ def _simplify_Q2(P,Q,k,z,nearzero=1e-10):
     c = Wild('c', exclude=[z])
     ma = Q.match(z**2+a*z + b)
     check_Q2 = False
-    if ma and not ma[a]==S.Zero and not ma[b]==S.Zero:
+    if ma and not ma[a]==S.Zero and not ma[b]<S.Zero:
         k_r = sqrt(ma[b])
         if len(ma[a].free_symbols)==0:
             k_b = acos(ma[a]/(-2*k_r)).evalf()
