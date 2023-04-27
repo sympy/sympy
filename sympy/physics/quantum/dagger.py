@@ -1,6 +1,6 @@
 """Hermitian conjugation."""
 
-from sympy.core import Expr, Mul
+from sympy.core import Expr, Mul, sympify
 from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [
@@ -79,12 +79,10 @@ class Dagger(adjoint):
 
     def __new__(cls, arg):
         if hasattr(arg, 'adjoint'):
-            obj = arg.adjoint()
+            return arg.adjoint()
         elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
-            obj = arg.conjugate().transpose()
-        if obj is not None:
-            return obj
-        return Expr.__new__(cls, arg)
+            return arg.conjugate().transpose()
+        return Expr.__new__(cls, sympify(arg))
 
     def __mul__(self, other):
         from sympy.physics.quantum import IdentityOperator
