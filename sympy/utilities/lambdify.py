@@ -848,7 +848,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 for k in m:
                     user_functions[k] = k
         printer = Printer({'fully_qualified_modules': False, 'inline': True,
-                           'allow_unknown_functions': True,
+                           'allow_unknown_functions': True, 'used_from_lambdify': True,
                            'user_functions': user_functions})
 
     if isinstance(args, set):
@@ -896,7 +896,7 @@ or tuple for the function arguments.
     else:
         cses, _expr = (), expr
     funcstr = funcprinter.doprint(funcname, iterable_args, _expr, cses=cses)
-
+    print(funcstr)###DO-NOT-MERGE!!!
     # Collect the module imports from the code printers.
     imp_mod_lines = []
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():

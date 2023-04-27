@@ -64,6 +64,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'used_from_lambdify': False
     }
 
     # Functions which are "simple" to rewrite to other functions that

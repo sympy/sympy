@@ -23,7 +23,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
                                                       sinc, tan)
-from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.bessel import (airyai, besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
@@ -45,6 +45,7 @@ from sympy.functions.special.polynomials import \
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
+from sympy.printing.pycode import LambdifyNotImplemented
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -1742,6 +1743,9 @@ def test_lambdify_arb():
     a3 = f3(flint.arb(5))
     assert math.isclose(float(a3), float(mpmath.besselj(1, 5)))
 
+    raises(LambdifyNotImplemented, lambda: lambdify([x], airyai(x), modules='arb'))  # remove this test once supported
+
+
 def test_lambdify_acb():
     if not flint:
         skip("flint not installed.")
@@ -1752,6 +1756,9 @@ def test_lambdify_acb():
     a1_hi = float(flint.acb.abs_upper(a1))
     assert cmath.isclose(a1_lo, math.sqrt(math.sqrt(2)))  # a very lax test...
     assert cmath.isclose(a1_hi, math.sqrt(math.sqrt(2)))
+
+    raises(LambdifyNotImplemented, lambda: lambdify([x], airyai(x), modules='acb')) # remove this test once supported
+
 
 
 class LambdifyDocstringTestCase:

@@ -4,9 +4,11 @@ Python code printers
 This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
 from collections import defaultdict
+import copy
 from itertools import chain
 from sympy.core import S, Integer
 from sympy.core.mod import Mod
+from sympy.core.function import Function
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
@@ -774,8 +776,57 @@ _known_constants_arb = {
     'NegativeInfinity': 'neg_inf'
 }
 
+class LambdifyNotImplemented(Exception):
+    pass
 
-class ArbPrinter(PythonCodePrinter):
+
+class _ConservativeLambdifyPrinterMixin:
+
+    @classmethod
+    @property
+    def _cls_allow_block(cls):
+        mro = cls.__mro__
+        idx = mro.index(_ConservativeLambdifyPrinterMixin)
+        return mro[:idx], mro[idx:]
+
+    @staticmethod
+    def _raise_func(printer_cls, obj_type):
+        def _print_method_surrogate(self_, *args):
+            raise LambdifyNotImplemented(f"""{printer_cls} cannot generate code for {obj_type}.
+
+            This could be because {printer_cls} does not have the handler added for this object
+            type.""")
+        return _print_method_surrogate
+
+
+    def _print_not_supported(self, arg):
+        self._raise_func(type(self), type(arg))(self, arg)
+
+
+    """This class throws a LambdifyNotImplemented exception."""
+    def _print(self, arg):
+        if not self._settings['used_from_lambdify']:
+            return super()._print(arg)
+        if not isinstance(arg, Function):
+            return super()._print(arg)
+        printer2 = copy.copy(self)
+        allow, block = self._cls_allow_block
+        for cls in type(arg).__mro__:
+            meth_name = '_print_%s' % cls.__name__
+            method = getattr(self, meth_name, None)
+            if method is not None:
+                cls_nam, *_ = method.__func__.__qualname__.split('.')
+                if any(a.__name__ == cls_nam for a in allow):
+                    continue
+                if any(b.__name__ == cls_nam for b in block):
+                    print("Here:",arg,method)
+                    setattr(printer2, meth_name, self._raise_func(type(self), type(arg)))
+        printer2._settings = self._settings.copy()
+        printer2._settings['used_from_lambdify'] = False
+        return printer2._print(arg)
+        
+
+class ArbPrinter(_ConservativeLambdifyPrinterMixin, PythonCodePrinter):
     """
     Code printer for arb (arbitrary precision ball arithmetic).
     """
@@ -833,7 +884,7 @@ _known_constants_acb = {  # TODO: make this list exhaustive
     'Pi': 'pi',
 }
 
-class AcbPrinter(PythonCodePrinter):
+class AcbPrinter(_ConservativeLambdifyPrinterMixin, PythonCodePrinter):
     """
     Code printer for acb (arbitrary precision complex ball arithmetic).
     """
