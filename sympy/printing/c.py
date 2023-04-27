@@ -283,8 +283,7 @@ class C89CodePrinter(CodePrinter):
         PREC = precedence(expr)
         suffix = self._get_func_suffix(real)
         if equal_valued(expr.exp, -1):
-            literal_suffix = self._get_literal_suffix(real)
-            return '1.0%s/%s' % (literal_suffix, self.parenthesize(expr.base, PREC))
+            return '%s/%s' % (self._print_Float(Float(1.0)), self.parenthesize(expr.base, PREC))
         elif equal_valued(expr.exp, 0.5):
             return '%ssqrt%s(%s)' % (self._ns, suffix, self._print(expr.base))
         elif expr.exp == S.One/3 and self.standard != 'C89':

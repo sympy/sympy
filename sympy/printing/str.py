@@ -905,11 +905,6 @@ class StrPrinter(Printer):
     def _print_WildStar(self, expr):
         return expr.name
 
-    def _print_Zero(self, expr):
-        if self._settings.get("sympy_integers", False):
-            return "S(0)"
-        return "0"
-
     def _print_DMP(self, p):
         try:
             if p.ring is not None:
