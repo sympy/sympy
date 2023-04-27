@@ -22,6 +22,8 @@ class Dagger(adjoint):
 
     arg : Expr
         The SymPy expression that we want to take the dagger of.
+    evaluate : bool
+        Whether the resulting expression should be directly evaluated.
 
     Examples
     ========
@@ -77,10 +79,10 @@ class Dagger(adjoint):
     .. [2] https://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new__(cls, arg):
-        if hasattr(arg, 'adjoint'):
+    def __new__(cls, arg, evaluate=True):
+        if hasattr(arg, 'adjoint') and evaluate:
             return arg.adjoint()
-        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
+        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose') and evaluate:
             return arg.conjugate().transpose()
         return Expr.__new__(cls, sympify(arg))
 
