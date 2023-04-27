@@ -12,3 +12,4 @@
 /sympy/physics/mechanics/ @moorepants
 /sympy/physics/vector/ @moorepants
 /sympy/solvers/ode/ @oscarbenjamin
+/sympy/*laplace* @hanspi42

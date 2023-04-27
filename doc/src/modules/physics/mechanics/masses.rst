@@ -5,7 +5,8 @@ Masses, Inertias, Particles and Rigid Bodies in Physics/Mechanics
 =================================================================
 
 This document will describe how to represent masses and inertias in
-:mod:`sympy.physics.mechanics` and use of the ``RigidBody`` and ``Particle`` classes.
+:mod:`sympy.physics.mechanics` and use of the :class:`~.RigidBody` and
+:class:`~.Particle` classes.
 
 It is assumed that the reader is familiar with the basics of these topics, such
 as finding the center of mass for a system of particles, how to manipulate an
@@ -21,9 +22,9 @@ expression. Keep in mind that masses can be time varying.
 Particle
 ========
 
-Particles are created with the class ``Particle`` in :mod:`sympy.physics.mechanics`.
-A ``Particle`` object has an associated point and an associated mass which are
-the only two attributes of the object.::
+Particles are created with the class :class:`~.Particle` in
+:mod:`sympy.physics.mechanics`. A :class:`~.Particle` object has an associated
+point and an associated mass which are the only two attributes of the object.::
 
   >>> from sympy.physics.mechanics import Particle, Point
   >>> from sympy import Symbol
@@ -33,21 +34,95 @@ the only two attributes of the object.::
   >>> pa = Particle('pa', po, m)
 
 The associated point contains the position, velocity and acceleration of the
-particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic analysis of points
-separate from their association with masses.
+particle. :mod:`sympy.physics.mechanics` allows one to perform kinematic
+analysis of points separate from their association with masses.
 
 Inertia
 =======
 
-See the Inertia (Dyadics) section in 'Advanced Topics' part of
-:mod:`sympy.physics.vector` docs.
+Inertia consists out of two parts: a quantity and a reference. The quantity is
+expressed as a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` and the
+reference is a :class:`Point<sympy.physics.vector.point.Point>`. The
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` can be defined as the outer
+product between two vectors, which returns the juxtaposition of these vectors.
+For further information, please refer to the :ref:`Dyadic` section in the
+advanced documentation of the :mod:`sympy.physics.vector` module. Another more
+intuitive method to define the
+:class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is to use the
+:func:`~.inertia` function as described below in the section
+'Inertia (Dyadics)'. The :class:`Point<sympy.physics.vector.point.Point>` about
+which the :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>` is specified can
+be any point, as long as it is defined with respect to the center of mass. The
+most common reference point is of course the center of mass itself.
+
+The inertia of a body can be specified using either an :class:`~.Inertia` object
+or a ``tuple``. If a ``tuple`` is used, then it should have a length of two,
+with the first entry being a :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`
+and the second entry being a :class:`Point<sympy.physics.vector.point.Point>`
+about which the inertia dyadic is defined. Internally this ``tuple`` gets
+converted to an :class:`~.Inertia` object. An example of using a ``tuple`` about
+the center of mass is given below in the 'Rigid Body' section. The
+:class:`~.Inertia` object can be created as follows.::
+
+   >>> from sympy.physics.mechanics import ReferenceFrame, Point, outer, Inertia
+   >>> A = ReferenceFrame('A')
+   >>> P = Point('P')
+   >>> Inertia(P, outer(A.x, A.x))
+   ((A.x|A.x), P)
+
+
+Inertia (Dyadics)
+=================
+
+A dyadic tensor is a second order tensor formed by the juxtaposition of a pair
+of vectors. There are various operations defined with respect to dyadics,
+which have been implemented in :obj:`~.sympy.physics.vector` in the form of
+class :class:`Dyadic<sympy.physics.vector.dyadic.Dyadic>`. To know more, refer
+to the :obj:`sympy.physics.vector.dyadic.Dyadic` and
+:obj:`sympy.physics.vector.vector.Vector` class APIs. Dyadics are used to
+define the inertia of bodies within :mod:`sympy.physics.mechanics`. Inertia
+dyadics can be defined explicitly using the outer product, but the
+:func:`~.inertia` function is typically much more convenient for the user.::
+
+  >>> from sympy.physics.mechanics import ReferenceFrame, inertia
+  >>> N = ReferenceFrame('N')
+
+  Supply a reference frame and the moments of inertia if the object
+  is symmetrical:
+
+  >>> inertia(N, 1, 2, 3)
+  (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
+
+  Supply a reference frame along with the products and moments of inertia
+  for a general object:
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6)
+  (N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)
+
+Notice that the :func:`~.inertia` function returns a dyadic with each component
+represented as two unit vectors separated by a ``|`` (outer product). Refer to
+the :obj:`sympy.physics.vector.dyadic.Dyadic` section for more information about
+dyadics.
+
+Inertia is often expressed in a matrix, or tensor, form, especially for
+numerical purposes. Since the matrix form does not contain any information
+about the reference frame(s) the inertia dyadic is defined in, you must provide
+one or two reference frames to extract the measure numbers from the dyadic.
+There is a convenience function to do this::
+
+  >>> inertia(N, 1, 2, 3, 4, 5, 6).to_matrix(N)
+  Matrix([
+  [1, 4, 6],
+  [4, 2, 5],
+  [6, 5, 3]])
 
 Rigid Body
 ==========
 
-Rigid bodies are created in a similar fashion as particles. The ``RigidBody``
-class generates objects with four attributes: mass, center of mass, a reference
-frame, and an inertia tuple::
+Rigid bodies are created in a similar fashion as particles. The
+:class:`~.RigidBody` class generates objects with four attributes: mass, center
+of mass, a reference frame, and an :class:`~.Inertia` (a ``tuple`` can be passed
+as well).::
 
   >>> from sympy import Symbol
   >>> from sympy.physics.mechanics import ReferenceFrame, Point, RigidBody
@@ -60,105 +135,41 @@ frame, and an inertia tuple::
   >>> B = RigidBody('B', P, A, m, (I, P))
 
 The mass is specified exactly as is in a particle. Similar to the
-``Particle``'s ``.point``, the ``RigidBody``'s center of mass, ``.masscenter``
-must be specified. The reference frame is stored in an analogous fashion and
-holds information about the body's orientation and angular velocity. Finally,
-the inertia for a rigid body needs to be specified about a point. In
-:mod:`sympy.physics.mechanics`, you are allowed to specify any point for this. The most
-common is the center of mass, as shown in the above code. If a point is selected
-which is not the center of mass, ensure that the position between the point and
-the center of mass has been defined. The inertia is specified as a tuple of length
-two with the first entry being a ``Dyadic`` and the second entry being a
-``Point`` of which the inertia dyadic is defined about.
+:class:`~.Particle`'s ``.point``, the :class:`~.RigidBody`'s center of mass,
+``.masscenter`` must be specified. The reference frame is stored in an analogous
+fashion and holds information about the body's orientation and angular velocity.
 
-.. _Dyadic:
+Loads
+=====
 
-Dyadic
-======
+In :mod:`sympy.physics.mechanics` loads can either be represented with tuples or
+with the dedicated classes :class:`~.Force` and :class:`~.Torque`. Generally the
+first argument (or item in the case of a tuple) is the location of the load. The
+second argument is the vector. In the case of a force the first argument is a
+point and the second a vector.
 
-In :mod:`sympy.physics.mechanics`, dyadics are used to represent inertia ([Kane1985]_,
-[WikiDyadics]_, [WikiDyadicProducts]_). A dyadic is a linear polynomial of
-component unit dyadics, similar to a vector being a linear polynomial of
-component unit vectors. A dyadic is the outer product between two vectors which
-returns a new quantity representing the juxtaposition of these two vectors. For
-example:
+   >>> from sympy.physics.mechanics import Point, ReferenceFrame, Force
+   >>> N = ReferenceFrame('N')
+   >>> Po = Point('Po')
+   >>> Force(Po, N.x)
+   (Po, N.x)
 
-.. math::
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_x} &= \mathbf{\hat{a}_x}
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &= \mathbf{\hat{a}_x}
-  \mathbf{\hat{a}_y}\\
+The location of a torque, on the other hand, is a frame.
 
-Where :math:`\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}` and
-`\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}` are the outer products obtained by
-multiplying the left side as a column vector by the right side as a row vector.
-Note that the order is significant.
+   >>> from sympy.physics.mechanics import Torque
+   >>> Torque(N, 2 * N.x)
+   (N, 2*N.x)
 
-Some additional properties of a dyadic are:
+Optionally, one can also pass the body when using dedicated classes. If so,
+the force will use the center of mass and the torque will use the associated
+frame.
 
-.. math::
-  (x \mathbf{v}) \otimes \mathbf{w} &= \mathbf{v} \otimes (x \mathbf{w}) = x
-  (\mathbf{v} \otimes \mathbf{w})\\
-  \mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &= \mathbf{v} \otimes \mathbf{w}
-  + \mathbf{v} \otimes \mathbf{u}\\
-  (\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &= \mathbf{v} \otimes \mathbf{u}
-  + \mathbf{w} \otimes \mathbf{u}\\
-
-A vector in a reference frame can be represented as
-:math:`\begin{bmatrix}a\\b\\c\end{bmatrix}` or :math:`a \mathbf{\hat{i}} + b
-\mathbf{\hat{j}} + c \mathbf{\hat{k}}`. Similarly, a dyadic can be represented
-in tensor form:
-
-.. math::
-  \begin{bmatrix}
-  a_{11} & a_{12} & a_{13} \\
-  a_{21} & a_{22} & a_{23} \\
-  a_{31} & a_{32} & a_{33}
-  \end{bmatrix}\\
-
-or in dyadic form:
-
-.. math::
-  a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
-  a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
-  a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
-  a_{21} \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} +
-  a_{22} \mathbf{\hat{a}_y}\mathbf{\hat{a}_y} +
-  a_{23} \mathbf{\hat{a}_y}\mathbf{\hat{a}_z} +
-  a_{31} \mathbf{\hat{a}_z}\mathbf{\hat{a}_x} +
-  a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
-  a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\
-
-Just as with vectors, the later representation makes it possible to keep track
-of which frames the dyadic is defined with respect to. Also, the two
-components of each term in the dyadic need not be in the same frame. The
-following is valid:
-
-.. math::
-  \mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
-  \mathbf{\hat{b}_y}
-
-Dyadics can also be crossed and dotted with vectors; again, order matters:
-
-.. math::
-  \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_y}\\
-  \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} \cdot \mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} &=
-  \mathbf{\hat{a}_y}\\
-  \mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &=
-  \mathbf{\hat{a}_z}\mathbf{\hat{a}_x}\\
-  \mathbf{\hat{a}_x} \times \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &= 0\\
-  \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_z} &=
-  - \mathbf{\hat{a}_y}\mathbf{\hat{a}_y}\\
-
-One can also take the time derivative of dyadics or express them in different
-frames, just like with vectors.
+   >>> from sympy.physics.mechanics import RigidBody
+   >>> rb = RigidBody('rb')
+   >>> Force(rb, 3 * N.x)
+   (rb_masscenter, 3*N.x)
+   >>> Torque(rb, 4 * N.x)
+   (rb_frame, 4*N.x)
 
 Linear Momentum
 ===============

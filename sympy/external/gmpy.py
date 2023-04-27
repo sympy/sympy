@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Tuple as tTuple, Type
 
 import mpmath.libmp as mlib
@@ -33,6 +34,15 @@ __all__ = [
 
     # isqrt from gmpy or mpmath
     'sqrt',
+
+    # gcd from gmpy or math
+    'gcd',
+
+    # lcm from gmpy or math
+    'lcm',
+
+    # invert from gmpy or pow
+    'invert',
 ]
 
 
@@ -90,9 +100,13 @@ if gmpy is not None:
 
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
+    gcd = gmpy.gcd
+    lcm = gmpy.lcm
+    invert = gmpy.invert
 
 else:
     from .pythonmpq import PythonMPQ
+    import math
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
@@ -102,3 +116,26 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
+    if sys.version_info[:2] >= (3, 9):
+        gcd = math.gcd
+        lcm = math.lcm
+    else:
+        # Until python 3.8 is no longer supported
+        from functools import reduce
+        gcd = lambda *args: reduce(math.gcd, args, 0)
+
+        def lcm(*args):
+            if 0 in args:
+                return 0
+            return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+
+    def invert(x, m):
+        """ Return y such that x*y == 1 modulo m.
+
+        Uses ``math.pow`` but reproduces the behaviour of ``gmpy2.invert``
+        which raises ZeroDivisionError if no inverse exists.
+        """
+        try:
+            return pow(x, -1, m)
+        except ValueError:
+            raise ZeroDivisionError("invert() no inverse exists")

@@ -34,7 +34,7 @@ def is_nilpotent_number(n):
     is_nilpotent = True
     for p_j, a_j in prime_factors:
         for p_i, a_i in prime_factors:
-            if any([Mod(Pow(p_i, k), p_j) == 1 for k in range(1, a_i + 1)]):
+            if any(Mod(Pow(p_i, k), p_j) == 1 for k in range(1, a_i + 1)):
                 is_nilpotent = False
                 break
         if not is_nilpotent:
