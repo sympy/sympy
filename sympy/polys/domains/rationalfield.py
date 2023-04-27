@@ -160,12 +160,22 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         return a.denominator
 
     def is_square(self, a):
-        """Return ``True`` if ``a`` is a perfect square. """
+        """Return ``True`` if ``a`` is a square.
+
+        Explanation
+        ===========
+        A rational number is a square if and only if there exists
+        a rational number ``b`` such that ``b * b == a``.
+        """
         return is_square(a.numerator) and is_square(a.denominator)
 
     def exsqrt(self, a):
-        """Compute the non-negative exact square root of ``a`` if it is a
-        perfect square, or return ``None`` if it isn't. """
+        """Non-negative square root of ``a`` if ``a`` is a square.
+
+        See also
+        ========
+        is_square
+        """
         if a.numerator < 0:  # denominator is always positive
             return None
         p_sqrt, p_rem = sqrtrem(a.numerator)

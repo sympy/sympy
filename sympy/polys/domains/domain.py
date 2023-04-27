@@ -1297,7 +1297,9 @@ class Domain:
         Explanation
         ===========
         Returns ``True`` if there is an element ``b`` in the domain such that
-        ``b * b == a``, otherwise returns ``False``.
+        ``b * b == a``, otherwise returns ``False``. For inexact domains like
+        :ref:`RR` and :ref:`CC`, a tiny difference in this equality can be
+        tolerated.
 
         See also
         ========
@@ -1306,15 +1308,15 @@ class Domain:
         raise NotImplementedError
 
     def exsqrt(self, a):
-        """Returns an exact square root of ``a``, or ``None`` if it doesn't
-        exist.
+        """Principal square root of a within the domain if ``a`` is square.
 
         Explanation
         ===========
         The implementation of this method should return an element ``b`` in the
         domain such that ``b * b == a``, or ``None`` if there is no such ``b``.
-        The choice among multiple possible ``b``s should follow a consistent
-        rule whenever possible.
+        For inexact domains like :ref:`RR` and :ref:`CC`, a tiny difference in
+        this equality can be tolerated. The choice of a "principal" square root
+        should follow a consistent rule whenever possible.
 
         See also
         ========
