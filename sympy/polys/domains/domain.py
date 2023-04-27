@@ -1277,7 +1277,49 @@ class Domain:
         raise NotImplementedError
 
     def sqrt(self, a):
-        """Returns square root of ``a``. """
+        """Returns a (possibly inexact) square root of ``a``.
+
+        Explanation
+        ===========
+        There is no universal definition of "inexact square root" for all
+        domains. It is not recommended to implement this method for domains
+        other then :ref:`ZZ`.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def is_square(self, a):
+        """Returns whether ``a`` is a square in the domain.
+
+        Explanation
+        ===========
+        Returns ``True`` if there is an element ``b`` in the domain such that
+        ``b * b == a``, otherwise returns ``False``.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def exsqrt(self, a):
+        """Returns an exact square root of ``a``, or ``None`` if it doesn't
+        exist.
+
+        Explanation
+        ===========
+        The implementation of this method should return an element ``b`` in the
+        domain such that ``b * b == a``, or ``None`` if there is no such ``b``.
+        The choice among multiple possible ``b``s should follow a consistent
+        rule whenever possible.
+
+        See also
+        ========
+        sqrt, is_square
+        """
         raise NotImplementedError
 
     def evalf(self, a, prec=None, **options):

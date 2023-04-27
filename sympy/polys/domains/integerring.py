@@ -5,7 +5,7 @@ from sympy.external.gmpy import MPZ, HAS_GMPY
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
     factorial,
-    gcdex, gcd, lcm, sqrt,
+    gcdex, gcd, lcm, sqrt, is_square, sqrtrem,
 )
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -222,6 +222,20 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def sqrt(self, a):
         """Compute square root of ``a``. """
         return sqrt(a)
+
+    def is_square(self, a):
+        """Return ``True`` if ``a`` is a perfect square. """
+        return is_square(a)
+
+    def exsqrt(self, a):
+        """Compute the non-negative exact square root of ``a`` if it is a
+        perfect square, or return ``None`` if it isn't. """
+        if a < 0:
+            return None
+        root, rem = sqrtrem(a)
+        if rem != 0:
+            return None
+        return root
 
     def factorial(self, a):
         """Compute factorial of ``a``. """
