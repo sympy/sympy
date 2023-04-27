@@ -235,6 +235,12 @@ def igcd(*args):
 
     The algorithm is based on the well known Euclid's algorithm [1]_. To
     improve speed, ``igcd()`` has its own caching mechanism.
+    If you do not need the cache mechanism, using ``sympy.external.gmpy.gcd``.
+
+    It is also possible to give symbolic arguments such as
+    ``sympy.core.numbers.Integer`` to compute gcd, but it is not recommended;
+    consider converting to ``int``, etc. and using
+    ``sympy.external.gmpy.gcd``.
 
     Examples
     ========
@@ -418,6 +424,10 @@ def igcd_lehmer(a, b):
 
 def ilcm(*args):
     """Computes integer least common multiple.
+
+    It is retained for historical reasons,
+    but if there are no special needs,
+    please use ``sympy.external.gmpy.lcm``.
 
     Examples
     ========
@@ -4341,7 +4351,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10, 1), S.One)
 
-    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None, **hints):
         if (k_sym is not None) or (symbols is not None):
             return self
         from .symbol import Dummy

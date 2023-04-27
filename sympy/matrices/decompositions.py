@@ -1130,7 +1130,7 @@ def _singular_value_decomposition(A):
     Explanation
     ===========
 
-    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
     where
 
     - $U, V$ are column orthogonal matrix.

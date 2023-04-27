@@ -1765,12 +1765,12 @@ class LambdifyDocstringTestCase:
 
     @property
     def expected_expr(self):
-        expr_redacted_msg = 'EXPRESSION REDACTED DUE TO LENGTH'
+        expr_redacted_msg = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
         return self.EXPR if not self.expected_redacted else expr_redacted_msg
 
     @property
     def expected_src(self):
-        src_redacted_msg = 'SOURCE CODE REDACTED DUE TO LENGTH'
+        src_redacted_msg = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
         return self.SRC if not self.expected_redacted else src_redacted_msg
 
     @property

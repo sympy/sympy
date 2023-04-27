@@ -633,10 +633,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 

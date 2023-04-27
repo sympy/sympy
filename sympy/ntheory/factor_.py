@@ -14,10 +14,10 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm, Rational, Integer
+from sympy.core.numbers import Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -675,7 +675,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
             j += 1
             U = F(U)
             V = F(F(V))  # V is 2x further along than U
-            g = igcd(U - V, n)
+            g = gcd(U - V, n)
             if g == 1:
                 continue
             if g == n:
@@ -829,7 +829,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         for p in sieve.primerange(2, B + 1):
             e = int(math.log(B, p))
             aM = pow(aM, pow(p, e), n)
-        g = igcd(aM - 1, n)
+        g = gcd(aM - 1, n)
         if 1 < g < n:
             return int(g)
 
@@ -2026,9 +2026,9 @@ class reduced_totient(Function):
         t = 1
         for p, k in factors.items():
             if p == 2 and k > 2:
-                t = ilcm(t, 2**(k - 2))
+                t = lcm(t, 2**(k - 2))
             else:
-                t = ilcm(t, (p - 1) * p**(k - 1))
+                t = lcm(t, (p - 1) * p**(k - 1))
         return t
 
     @classmethod
@@ -2037,7 +2037,7 @@ class reduced_totient(Function):
         distinct primes
         """
         args = [p - 1 for p in args]
-        return ilcm(*args)
+        return lcm(*args)
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
