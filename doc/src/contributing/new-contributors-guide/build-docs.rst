@@ -1,7 +1,7 @@
 .. _build-the-documentation:
 
 ==========================
-Build the Documentation
+Building the Documentation
 ==========================
 
 

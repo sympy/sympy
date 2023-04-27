@@ -98,8 +98,7 @@ def operators_to_state(operators, **options):
     |psi>
     """
 
-    if not (isinstance(operators, Operator)
-            or isinstance(operators, set) or issubclass(operators, Operator)):
+    if not (isinstance(operators, (Operator, set)) or issubclass(operators, Operator)):
         raise NotImplementedError("Argument is not an Operator or a set!")
 
     if isinstance(operators, set):
