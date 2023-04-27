@@ -1,45 +1,5 @@
 """Square-free decomposition algorithms and related tools. """
 
-from sympy import *
-from sympy.abc import x
-from sympy import sqf_list, sqrt, Poly, Mul
-
-def sqrt_poly(p):
-    """
-    Computing the square root of a polynomial using sqf_list.
-
-    Args:
-        p: The polynomial to compute the square root of.
-
-    Returns:
-        A tuple containing the square root of the polynomial and True if
-        the square root is defined, or None and False otherwise.
-    """
-    sqf = sqf_list(p)
-    coeffs = [f[0] for f in sqf]
-    exponents = [f[1] for f in sqf]
-    n = len(sqf)
-    
-    # Check if all exponents are even
-    if any(e % 2 == 1 for e in exponents):
-        return None, False
-    
-    # Check if constant term is a square
-    c = coeffs[-1]
-    if not c.is_square:
-        return None, False
-    
-    # Compute square root
-    sqrt_coeffs = [cf**(e//2) for cf, e in sqf]
-    sqrt_c = sqrt(c)
-    sqrt_poly = Poly(sqrt_c * Mul(*sqrt_coeffs), x)
-    
-    # Make sure leading coefficient is positive
-    if sqrt_poly.LC() < 0:
-        sqrt_poly = -sqrt_poly
-        
-    return sqrt_poly, True
-
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
