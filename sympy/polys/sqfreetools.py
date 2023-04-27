@@ -30,6 +30,44 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
 
+
+def dup_sqrt(f, K):
+    """
+    Returns the square root of a polynomial f in K[x] if it exists, otherwise returns None.
+    """
+    sqf = gf_sqf_list(f, K)
+    coeffs = []
+    degree = 0
+    for factor, exponent in sqf:
+        if exponent % 2 != 0:
+            return None
+        coeffs.append(dup_convert(dup_quo(factor, K([2]*len(factor))), K))
+        degree += len(factor)//2
+    constant = gf_sqf_part(f, K)
+    if constant < 0:
+        return None
+    sqrt_constant = K(sqrt(constant))
+    return sqrt_constant*dup_convert(dup_mul(coeffs), K([0]*degree))
+
+
+def dmp_sqrt(f, u, K):
+    """
+    Returns the square root of a polynomial f in K[X] if it exists, otherwise returns None.
+    """
+    sqf = gf_sqf_list(f, K)
+    coeffs = []
+    degree = 0
+    for factor, exponent in sqf:
+        if any(i % 2 != 0 for i in factor):
+            return None
+        coeffs.append(dmp_convert(dmp_quo(factor, K([2]*len(factor)), u), K, u))
+        degree += len(factor)//2
+    constant = gf_sqf_part(f, K)
+    if constant < 0:
+        return None
+    sqrt_constant = K(sqrt(constant))
+    return sqrt_constant*dmp_convert(dmp_mul(coeffs, u), K, u)
+
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
