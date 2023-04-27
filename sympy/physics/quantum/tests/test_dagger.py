@@ -91,3 +91,12 @@ def test_unknown():
     x = symbols("x")
     result = Dagger(x)
     assert result.args == (x,) and isinstance(result, adjoint)
+
+
+def test_unevaluated():
+    """Check that evaluate=False returns unevaluated Dagger.
+    """
+    x = symbols("x", real=True)
+    assert Dagger(x) == x
+    result = Dagger(x, evaluate=False)
+    assert result.args == (x,) and isinstance(result, adjoint)
