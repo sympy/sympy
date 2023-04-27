@@ -129,13 +129,17 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self._context.almosteq(a, b, tolerance)
 
     def is_square(self, a):
-        """Returns ``True`` if and only if ``a`` is non-negative so that it
-        has a real square root"""
+        """Returns ``True`` if ``a >= 0`` and ``False`` otherwise. """
         return a >= 0
 
     def exsqrt(self, a):
-        """Returns the non-negative real square root of ``a`` if ``a`` is
-        non-negative, and ``None`` otherwise."""
+        """Non-negative square root for ``a >= 0`` and ``None`` otherwise.
+
+        Explanation
+        ===========
+        The square root may be slightly inaccurate due to floating point
+        rounding error.
+        """
         return a ** 0.5 if a >= 0 else None
 
 

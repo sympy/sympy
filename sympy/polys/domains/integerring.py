@@ -224,12 +224,22 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         return sqrt(a)
 
     def is_square(self, a):
-        """Return ``True`` if ``a`` is a perfect square. """
+        """Return ``True`` if ``a`` is a square.
+
+        Explanation
+        ===========
+        An integer is a square if and only if there exists an integer
+        ``b`` such that ``b * b == a``.
+        """
         return is_square(a)
 
     def exsqrt(self, a):
-        """Compute the non-negative exact square root of ``a`` if it is a
-        perfect square, or return ``None`` if it isn't. """
+        """Non-negative square root of ``a`` if ``a`` is a square.
+
+        See also
+        ========
+        is_square
+        """
         if a < 0:
             return None
         root, rem = sqrtrem(a)
