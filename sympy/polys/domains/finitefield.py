@@ -5,6 +5,7 @@ from sympy.polys.domains.field import Field
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.galoistools import gf_zassenhaus
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
@@ -201,6 +202,22 @@ class FiniteField(Field, SimpleDomain):
 
         if q == 1:
             return K1.dtype(K1.dom.dtype(p))
+
+    def is_square(self, a):
+        """Returns True if ``a`` is a square modulo p. """
+        # TODO: Faster algorithm without computing sqrt, for example using
+        # Legendre symbol
+        return self.exsqrt(a) is not None
+
+    def exsqrt(self, a):
+        """Returns the square root of ``a`` modulo p that is no larger than
+        ``p // 2``, or ``None`` if it does not exist. """
+        # Factorize x**2 - a
+        poly = [x.val for x in [self.one, self.zero, -a]]
+        for factor in gf_zassenhaus(poly, self.mod, self.dom):
+            if len(factor) == 2 and factor[1] <= self.mod // 2:
+                return self.dtype(factor[1])
+        return None
 
 
 FF = GF = FiniteField

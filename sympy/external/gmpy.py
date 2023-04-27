@@ -100,6 +100,8 @@ if gmpy is not None:
 
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
+    is_square = gmpy.is_square
+    sqrtrem = gmpy.isqrt_rem
     gcd = gmpy.gcd
     lcm = gmpy.lcm
     invert = gmpy.invert
@@ -116,6 +118,8 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
+    is_square = lambda x: x >= 0 and mlib.sqrtrem(x)[1] == 0
+    sqrtrem = lambda x: tuple(int(r) for r in mlib.sqrtrem(x))
     if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
         lcm = math.lcm

@@ -147,5 +147,13 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
 
+    def is_square(self, a):
+        """Returns ``True`` as every complex number has a square root."""
+        return True
+
+    def exsqrt(self, a):
+        r"""Returns the complex square root of ``a`` whose argument is within
+        $(-\frac{\pi}{2}, \frac{\pi}{2}]$"""
+        return a ** 0.5
 
 CC = ComplexField()
