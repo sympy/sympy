@@ -5,7 +5,7 @@ from sympy.polys.domains.field import Field
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.galoistools import gf_zassenhaus
+from sympy.polys.galoistools import gf_zassenhaus, gf_irred_p_rabin
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
@@ -204,15 +204,22 @@ class FiniteField(Field, SimpleDomain):
             return K1.dtype(K1.dom.dtype(p))
 
     def is_square(self, a):
-        """Returns True if ``a`` is a square modulo p. """
-        # TODO: Faster algorithm without computing sqrt, for example using
-        # Legendre symbol
-        return self.exsqrt(a) is not None
+        """Returns True if ``a`` is a quadratic residue modulo p. """
+        # a is not a square <=> x**2-a is irreducible
+        poly = [x.val for x in [self.one, self.zero, -a]]
+        return not gf_irred_p_rabin(poly, self.mod, self.dom)
 
     def exsqrt(self, a):
-        """Returns the square root of ``a`` modulo p that is no larger than
-        ``p // 2``, or ``None`` if it does not exist. """
-        # Factorize x**2 - a
+        """Square root modulo p of ``a`` if it is a quadratic residue.
+
+        Explanation
+        ===========
+        Always returns the square root that is no larger than ``p // 2``.
+        """
+        # x**2-a is not square-free if a=0 or the field is characteristic 2
+        if self.mod == 2 or a == 0:
+            return a
+        # Otherwise, use square-free factorization routine to factorize x**2-a
         poly = [x.val for x in [self.one, self.zero, -a]]
         for factor in gf_zassenhaus(poly, self.mod, self.dom):
             if len(factor) == 2 and factor[1] <= self.mod // 2:
