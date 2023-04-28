@@ -88,10 +88,11 @@ Newton's method::
     >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print, QuotedString
     >>> t, dx, x = symbols('tol delta val')
     >>> expr = cos(x) - x**3
+    >>> format_c = QuotedString(r'%s\\n')
     >>> whl = While(abs(dx) > t, [
     ...     Assignment(dx, -expr/expr.diff(x)),
     ...     aug_assign(x, '+', dx),
-    ...     Print([x], QuotedString(r'%s\\n'))
+    ...     Print([x], format_c)
     ... ])
     >>> from sympy import pycode
     >>> py_str = pycode(whl)
@@ -114,7 +115,8 @@ Newton's method::
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
     >>> from sympy import fcode
-    >>> print(fcode(whl, standard=2003, source_format='free'))
+    >>> from sympy.codegen.ast import none
+    >>> print(fcode(whl.subs(format_c, none), standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
        val = val + delta
