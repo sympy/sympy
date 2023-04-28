@@ -91,7 +91,7 @@ Newton's method::
     >>> whl = While(abs(dx) > t, [
     ...     Assignment(dx, -expr/expr.diff(x)),
     ...     aug_assign(x, '+', dx),
-    ...     Print([x])
+    ...     Print([x], QuotedString(r'%s\\n'))
     ... ])
     >>> from sympy import pycode
     >>> py_str = pycode(whl)
@@ -99,7 +99,7 @@ Newton's method::
     while (abs(delta) > tol):
         delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
         val += delta
-        print(val)
+        print("%s\\n" % (val), end="")
     >>> import math
     >>> tol, val, delta = 1e-5, 0.5, float('inf')
     >>> exec(py_str)
@@ -1708,10 +1708,10 @@ class Stream(Token):
     >>> from sympy import pycode, Symbol
     >>> from sympy.codegen.ast import Print, stderr, QuotedString
     >>> print(pycode(Print(['x'], file=stderr)))
-    print(x, file=sys.stderr)
+    print(x, file=sys.stderr, end="")
     >>> x = Symbol('x')
     >>> print(pycode(Print([QuotedString('x')], file=stderr)))  # print literally "x"
-    print("x", file=sys.stderr)
+    print("x", file=sys.stderr, end="")
 
     """
     __slots__ = _fields = ('name',)
