@@ -85,7 +85,7 @@ It is possible to construct simple algorithms using the AST nodes. Let's constru
 Newton's method::
 
     >>> from sympy import symbols, cos
-    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print
+    >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print, QuotedString
     >>> t, dx, x = symbols('tol delta val')
     >>> expr = cos(x) - x**3
     >>> whl = While(abs(dx) > t, [
