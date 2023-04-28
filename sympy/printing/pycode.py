@@ -307,6 +307,9 @@ class AbstractPythonCodePrinter(CodePrinter):
             self._print(decl.variable.value)
         )
 
+    def _print_BreakToken(self, bt):
+        return 'break'
+
     def _print_Return(self, ret):
         arg, = ret.args
         return 'return %s' % self._print(arg)

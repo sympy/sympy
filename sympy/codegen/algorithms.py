@@ -3,10 +3,11 @@ from sympy.core.numbers import oo
 from sympy.core.relational import (Gt, Lt)
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, break_, CodeBlock, Declaration, FunctionDefinition,
-    Print, Return, Scope, While, Variable, Pointer, real
+    Print, Return, Scope, While, Variable, Pointer, real, Raise, RuntimeError_
 )
 from sympy.codegen.cfunctions import isnan
 
@@ -14,7 +15,8 @@ from sympy.codegen.cfunctions import isnan
 
 def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False,
                    itermax=None, counter=None, delta_fn=lambda e, x: -e/e.diff(x),
-                   cse=False, handle_nan=None):
+                   cse=False, handle_nan=None,
+                   bounds=None):
     """ Generates an AST for Newton-Raphson method (a root-finding algorithm).
 
     Explanation
@@ -46,8 +48,10 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
         use delta_fn=lambda e, x: -2*e*e.diff(x)/(2*e.diff(x)**2 - e*e.diff(x, 2))
     cse: bool
         Perform common sub-expression elimination on delta expression
-    handle_nan:
+    handle_nan: Token
         How to handle occurrence of not-a-number (NaN).
+    bounds: Optional[tuple[Expr, Expr]]
+        Perform optimization within bounds
 
     Examples
     ========
@@ -87,9 +91,11 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
     if handle_nan is not None:
         whl_bdy += [While(isnan(delta), CodeBlock(handle_nan, break_))]
     whl_bdy += [AddAugmentedAssignment(wrt, delta)]
+    if bounds is not None:
+        whl_bdy += [Assignment(wrt, Min(Max(wrt, bounds[0]), bounds[1]))]
     if debug:
         prnt = Print([wrt, delta], r"{}=%12.5g {}=%12.5g\n".format(wrt.name, name_d))
-        whl_bdy = whl_bdy[:-1] + [prnt, whl_bdy[-1]]
+        whl_bdy += [prnt]
     req = Gt(Abs(delta), atol + rtol*Abs(wrt))
     declars = [Declaration(Variable(delta, type=real, value=oo))]
     if itermax is not None:
@@ -99,9 +105,10 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
         whl_bdy.append(AddAugmentedAssignment(counter, 1))
         req = And(req, Lt(counter, itermax))
     whl = While(req, CodeBlock(*whl_bdy))
-    blck = declars + [whl]
+    blck = declars
     if debug:
         blck.append(Print([wrt], r"{}=%12.5g\n".format(wrt.name)))
+    blck += [whl]
     return Wrapper(CodeBlock(*blck))
 
 

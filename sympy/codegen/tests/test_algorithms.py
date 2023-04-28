@@ -1,6 +1,9 @@
 import tempfile
 from sympy import log, Symbol, symbols, Min, Max, sqrt
-from sympy.codegen.ast import Assignment, Raise, RuntimeError_
+from sympy.core.numbers import Float
+from sympy.core.symbol import Symbol, symbols
+from sympy.functions.elementary.trigonometric import cos
+from sympy.codegen.ast import Assignment, Raise, RuntimeError_, QuotedString
 from sympy.codegen.algorithms import newtons_method, newtons_method_function
 from sympy.codegen.cfunctions import expm1
 from sympy.codegen.fnodes import bind_C
@@ -16,16 +19,16 @@ cython = import_module('cython')
 wurlitzer = import_module('wurlitzer')
 
 def test_newtons_method():
-    x, dx, atol = sp.symbols('x dx atol')
-    expr = sp.cos(x) - x**3
-    algo = newtons_method(expr, x, atol, dx)
+    x, dx, atol = symbols('x dx atol')
+    expr = cos(x) - x**3
+    algo = newtons_method(expr, x, atol=atol, delta=dx)
     assert algo.has(Assignment(dx, -expr/expr.diff(x)))
 
 
 @may_xfail
 def test_newtons_method_function__ccode():
-    x = sp.Symbol('x', real=True)
-    expr = sp.cos(x) - x**3
+    x = Symbol('x', real=True)
+    expr = cos(x) - x**3
     func = newtons_method_function(expr, x)
 
     if not cython:
@@ -48,8 +51,8 @@ def test_newtons_method_function__ccode():
 
 @may_xfail
 def test_newtons_method_function__fcode():
-    x = sp.Symbol('x', real=True)
-    expr = sp.cos(x) - x**3
+    x = Symbol('x', real=True)
+    expr = cos(x) - x**3
     func = newtons_method_function(expr, x, attrs=[bind_C(name='newton')])
 
     if not cython:
@@ -70,8 +73,8 @@ def test_newtons_method_function__fcode():
 
 
 def test_newtons_method_function__pycode():
-    x = sp.Symbol('x', real=True)
-    expr = sp.cos(x) - x**3
+    x = Symbol('x', real=True)
+    expr = cos(x) - x**3
     func = newtons_method_function(expr, x)
     py_mod = py_module(func)
     namespace = {}
@@ -82,8 +85,8 @@ def test_newtons_method_function__pycode():
 
 @may_xfail
 def test_newtons_method_function__ccode_parameters():
-    args = x, A, k, p = sp.symbols('x A k p')
-    expr = A*sp.cos(k*x) - p*x**3
+    args = x, A, k, p = symbols('x A k p')
+    expr = A*cos(k*x) - p*x**3
     raises(ValueError, lambda: newtons_method_function(expr, x))
     use_wurlitzer = wurlitzer
 
@@ -119,11 +122,12 @@ def test_newtons_method_function__ccode_parameters():
         out, err = out.read(), err.read()
         assert err == ''
         assert out == """\
-x=         0.5 d_x=     0.61214
-x=      1.1121 d_x=    -0.20247
-x=     0.90967 d_x=   -0.042409
-x=     0.86726 d_x=  -0.0017867
-x=     0.86548 d_x= -3.1022e-06
+x=         0.5
+x=      1.1121 d_x=     0.61214
+x=     0.90967 d_x=    -0.20247
+x=     0.86726 d_x=   -0.042409
+x=     0.86548 d_x=  -0.0017867
+x=     0.86547 d_x= -3.1022e-06
 x=     0.86547 d_x= -9.3421e-12
 x=     0.86547 d_x=  3.6902e-17
 """  # try to run tests with LC_ALL=C if this assertion fails
@@ -150,16 +154,27 @@ def test_newtons_method_function__rtol_cse_nan():
         'halley_alt': dict(delta_fn=lambda e, x: (-e/e.diff(x)/(1-e/e.diff(x)*e.diff(x,2)/2/e.diff(x)))),
     }
     args = eqb_log, b
-    kwargs = dict(
-        params=(b, a, c, N_geo, N_tot), itermax=60, debug=True, cse=False,
-        counter=i, atol=1e-100, rtol=1e-13,
-        handle_nan=Raise(RuntimeError_("encountered NaN."))
-    )
-    func = {k: newtons_method_function(*args, func_name=f"{k}_b", **dict(kwargs, **kw)) for k, kw in meth_kw.items()}
-    py_mod = {k: py_module(v) for k, v in func.items()}
-    namespace = {}
-    root_find_b = {}
-    for k, v in py_mod.items():
-        ns = namespace[k] = dict()
-        exec(v, ns, ns)
-        root_find_b[k] = ns[f'{k}_b']
+    for use_cse in [False, True]:
+        kwargs = dict(
+            params=(b, a, c, N_geo, N_tot), itermax=60, debug=True, cse=use_cse,
+            counter=i, atol=1e-100, rtol=2e-16,
+            bounds=(a,c),
+            handle_nan=Raise(RuntimeError_(QuotedString("encountered NaN.")))
+        )
+        func = {k: newtons_method_function(*args, func_name=f"{k}_b", **dict(kwargs, **kw)) for k, kw in meth_kw.items()}
+        py_mod = {k: py_module(v) for k, v in func.items()}
+        namespace = {}
+        root_find_b = {}
+        for k, v in py_mod.items():
+            ns = namespace[k] = dict()
+            exec(v, ns, ns)
+            root_find_b[k] = ns[f'{k}_b']
+        ref = Float('13.2261515064168768938151923226496')
+        reftol=dict(clamped_newton=2e-16, halley=2e-16, halley_alt=3e-16)
+        guess = 4.0
+        for meth, func in root_find_b.items():
+            result = func(guess, 1e-2, 1e2, 50, 100)
+            req = ref*reftol[meth]
+            if use_cse:
+                req *= 2
+            assert abs(result - ref) < req
