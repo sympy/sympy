@@ -4861,3 +4861,18 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        tens_class = {Mul: TensMul, Add: TensAdd}[cls]
+        if any(isinstance(a, TensExpr) for a in expr.args):
+            return tens_class(*expr.args)
+        else:
+            return expr
+
+    return _postprocessor
+
+Basic._constructor_postprocessor_mapping[TensExpr] = {
+    "Mul": [get_postprocessor(Mul)],
+}
