@@ -426,10 +426,7 @@ def ilcm(*args):
     if len(args) < 2:
         raise TypeError(
             'ilcm() takes at least 2 arguments (%s given)' % len(args))
-    ret = int(number_lcm(*map(as_int, args)))
-    if issubclass(type(args[0]), Integer):
-        return Integer(ret)
-    return ret
+    return int(number_lcm(*map(as_int, args)))
 
 
 def igcdex(a, b):
