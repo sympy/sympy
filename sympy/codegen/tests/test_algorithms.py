@@ -1,5 +1,5 @@
 import tempfile
-from sympy import log, Symbol, symbols, Min, Max, sqrt
+from sympy import log, Min, Max, sqrt
 from sympy.core.numbers import Float
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.trigonometric import cos
