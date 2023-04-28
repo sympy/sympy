@@ -81,3 +81,22 @@ def test_scipy_sparse_dagger():
     a = sparse.csr_matrix([[1.0 + 0.0j, 2.0j], [-1.0j, 2.0 + 0.0j]])
     adag = a.copy().transpose().conjugate()
     assert np.linalg.norm((Dagger(a) - adag).todense()) == 0.0
+
+
+def test_unknown():
+    """Check treatment of unknown objects.
+    Objects without adjoint or conjugate/transpose methods
+    are sympified and wrapped in dagger.
+    """
+    x = symbols("x")
+    result = Dagger(x)
+    assert result.args == (x,) and isinstance(result, adjoint)
+
+
+def test_unevaluated():
+    """Check that evaluate=False returns unevaluated Dagger.
+    """
+    x = symbols("x", real=True)
+    assert Dagger(x) == x
+    result = Dagger(x, evaluate=False)
+    assert result.args == (x,) and isinstance(result, adjoint)
