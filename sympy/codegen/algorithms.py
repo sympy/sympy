@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, break_, CodeBlock, Declaration, FunctionDefinition,
-    Print, Return, Scope, While, Variable, Pointer, real, Raise, RuntimeError_
+    Print, Return, Scope, While, Variable, Pointer, real
 )
 from sympy.codegen.cfunctions import isnan
 

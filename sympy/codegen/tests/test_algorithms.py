@@ -145,32 +145,31 @@ def test_newtons_method_function__rtol_cse_nan():
         return Min(Max(low, expr), high)
 
     meth_kw = {
-        'clamped_newton': dict(delta_fn=lambda e, x: _clamp(
+        'clamped_newton': {'delta_fn': lambda e, x: _clamp(
             (sqrt(a*x)-x)*0.99,
             -e/e.diff(x),
             (sqrt(c*x)-x)*0.99
-        )),
-        'halley': dict(delta_fn=lambda e, x: (-2*(e*e.diff(x))/(2*e.diff(x)**2 - e*e.diff(x, 2)))),
-        'halley_alt': dict(delta_fn=lambda e, x: (-e/e.diff(x)/(1-e/e.diff(x)*e.diff(x,2)/2/e.diff(x)))),
+        )},
+        'halley': {'delta_fn': lambda e, x: (-2*(e*e.diff(x))/(2*e.diff(x)**2 - e*e.diff(x, 2)))},
+        'halley_alt': {'delta_fn': lambda e, x: (-e/e.diff(x)/(1-e/e.diff(x)*e.diff(x,2)/2/e.diff(x)))},
     }
     args = eqb_log, b
     for use_cse in [False, True]:
-        kwargs = dict(
-            params=(b, a, c, N_geo, N_tot), itermax=60, debug=True, cse=use_cse,
-            counter=i, atol=1e-100, rtol=2e-16,
-            bounds=(a,c),
-            handle_nan=Raise(RuntimeError_(QuotedString("encountered NaN.")))
-        )
+        kwargs = {
+            'params': (b, a, c, N_geo, N_tot), 'itermax': 60, 'debug': True, 'cse': use_cse,
+            'counter': i, 'atol': 1e-100, 'rtol': 2e-16, 'bounds': (a,c),
+            'handle_nan': Raise(RuntimeError_(QuotedString("encountered NaN.")))
+        }
         func = {k: newtons_method_function(*args, func_name=f"{k}_b", **dict(kwargs, **kw)) for k, kw in meth_kw.items()}
         py_mod = {k: py_module(v) for k, v in func.items()}
         namespace = {}
         root_find_b = {}
         for k, v in py_mod.items():
-            ns = namespace[k] = dict()
+            ns = namespace[k] = {}
             exec(v, ns, ns)
             root_find_b[k] = ns[f'{k}_b']
         ref = Float('13.2261515064168768938151923226496')
-        reftol=dict(clamped_newton=2e-16, halley=2e-16, halley_alt=3e-16)
+        reftol = {'clamped_newton': 2e-16, 'halley': 2e-16, 'halley_alt': 3e-16}
         guess = 4.0
         for meth, func in root_find_b.items():
             result = func(guess, 1e-2, 1e2, 50, 100)
