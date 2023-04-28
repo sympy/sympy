@@ -61,7 +61,7 @@ def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False
     >>> from sympy.codegen.algorithms import newtons_method
     >>> x, dx, atol = symbols('x dx atol')
     >>> expr = cos(x) - x**3
-    >>> algo = newtons_method(expr, x, atol, dx)
+    >>> algo = newtons_method(expr, x, atol=atol, delta=dx)
     >>> algo.has(Assignment(dx, -expr/expr.diff(x)))
     True
 
