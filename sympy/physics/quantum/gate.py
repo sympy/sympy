@@ -192,7 +192,7 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def get_target_matrix(self, format='sympy'):
-        """The matrix represenation of the target part of the gate.
+        """The matrix representation of the target part of the gate.
 
         Parameters
         ----------
@@ -627,6 +627,16 @@ class IdentityGate(OneQubitGate):
     """
     gate_name = '1'
     gate_name_latex = '1'
+
+    # Short cut version of gate._apply_operator_Qubit
+    def _apply_operator_Qubit(self, qubits, **options):
+        # Check number of qubits this gate acts on (see gate._apply_operator_Qubit)
+        if qubits.nqubits < self.min_qubits:
+            raise QuantumError(
+                'Gate needs a minimum of %r qubits to act on, got: %r' %
+                (self.min_qubits, qubits.nqubits)
+            )
+        return qubits # no computation required for IdentityGate
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('eye2', format)

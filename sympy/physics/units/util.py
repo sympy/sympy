@@ -29,7 +29,7 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     dim_dependencies = dimension_system.get_dimensional_dependencies(expr_dim, mark_dimensionless=True)
     target_dims = [Dimension(unit_system.get_dimensional_expr(x)) for x in target_units]
     canon_dim_units = [i for x in target_dims for i in dimension_system.get_dimensional_dependencies(x, mark_dimensionless=True)]
-    canon_expr_units = {i for i in dim_dependencies}
+    canon_expr_units = set(dim_dependencies)
 
     if not canon_expr_units.issubset(set(canon_dim_units)):
         return None

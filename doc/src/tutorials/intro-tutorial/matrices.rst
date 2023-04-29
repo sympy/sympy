@@ -557,6 +557,6 @@ SymPy issue tracker [#sympyissues-fn]_ to get detailed help from the community.
 
 .. [#mathematicazero-fn] How mathematica tests zero https://reference.wolfram.com/language/ref/PossibleZeroQ.html
 
-.. [#matlabzero-fn] How matlab tests zero https://www.mathworks.com/help/symbolic/mupad_ref/iszero.html
+.. [#matlabzero-fn] How matlab tests zero https://web.archive.org/web/20200307091449/https://www.mathworks.com/help/symbolic/mupad_ref/iszero.html
 
 .. [#sympyissues-fn] https://github.com/sympy/sympy/issues

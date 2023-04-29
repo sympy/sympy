@@ -18,7 +18,7 @@ class SolveFailed(Exception):
 
 def solve_poly_system(seq, *gens, strict=False, **args):
     """
-    returns a list of solutions for the system of polynomial equations
+    Return a list of solutions for the system of polynomial equations
     or else None.
 
     Parameters

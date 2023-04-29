@@ -216,14 +216,14 @@ class HermitianOperator(Operator):
 
     def _eval_power(self, exp):
         if isinstance(self, UnitaryOperator):
-            if exp == -1:
-                return Operator._eval_power(self, exp)
-            elif abs(exp) % 2 == 0:
-                return self*(Operator._eval_inverse(self))
-            else:
+            # so all eigenvalues of self are 1 or -1
+            if exp.is_even:
+                from sympy.core.singleton import S
+                return S.One # is identity, see Issue 24153.
+            elif exp.is_odd:
                 return self
-        else:
-            return Operator._eval_power(self, exp)
+        # No simplification in all other cases
+        return Operator._eval_power(self, exp)
 
 
 class UnitaryOperator(Operator):
@@ -295,6 +295,9 @@ class IdentityOperator(Operator):
 
     def _apply_operator(self, ket, **options):
         return ket
+
+    def _apply_from_right_to(self, bra, **options):
+        return bra
 
     def _eval_power(self, exp):
         return self
@@ -612,7 +615,7 @@ class DifferentialOperator(Operator):
 
         return self.expr.free_symbols
 
-    def _apply_operator_Wavefunction(self, func):
+    def _apply_operator_Wavefunction(self, func, **options):
         from sympy.physics.quantum.state import Wavefunction
         var = self.variables
         wf_vars = func.args[1:]

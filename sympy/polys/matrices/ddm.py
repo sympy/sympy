@@ -81,6 +81,9 @@ from .dense import (
         ddm_berk,
         )
 
+from sympy.polys.domains import QQ
+from .lll import ddm_lll, ddm_lll_transform
+
 
 class DDM(list):
     """Dense matrix based on polys domain elements
@@ -482,6 +485,12 @@ class DDM(list):
         """
         zero = self.domain.zero
         return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i+1:])
+
+    def lll(A, delta=QQ(3, 4)):
+        return ddm_lll(A, delta=delta)
+
+    def lll_transform(A, delta=QQ(3, 4)):
+        return ddm_lll_transform(A, delta=delta)
 
 
 from .sdm import SDM

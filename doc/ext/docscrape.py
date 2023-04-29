@@ -141,7 +141,7 @@ class NumpyDocString(Mapping):
             return True
 
         l2 = self._doc.peek(1).strip()  # ---------- or ==========
-        return l2.startswith('-'*len(l1)) or l2.startswith('='*len(l1))
+        return l2.startswith(('-' * len(l1), '=' * len(l1)))
 
     def _strip(self, doc):
         i = 0

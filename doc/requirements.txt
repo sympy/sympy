@@ -4,6 +4,7 @@ matplotlib
 matplotlib-inline
 mpmath
 myst-parser
+scipy
 Sphinx
 sphinx-autobuild
 sphinx-copybutton
@@ -13,6 +14,7 @@ sphinxcontrib-applehelp
 sphinxcontrib-devhelp
 sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
+sphinxcontrib-jquery
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
 sphinx-reredirects

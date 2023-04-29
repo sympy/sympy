@@ -52,7 +52,7 @@ def trigintegrate(f, x, conds='piecewise'):
     References
     ==========
 
-    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    .. [1] https://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========

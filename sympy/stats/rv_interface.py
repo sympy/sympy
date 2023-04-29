@@ -134,9 +134,9 @@ def entropy(expr, condition=None, **kwargs):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Entropy_(information_theory)
+    .. [1] https://en.wikipedia.org/wiki/Entropy_%28information_theory%29
     .. [2] https://www.crmarsh.com/static/pdf/Charles_Marsh_Continuous_Entropy.pdf
-    .. [3] http://www.math.uconn.edu/~kconrad/blurbs/analysis/entropypost.pdf
+    .. [3] https://kconrad.math.uconn.edu/blurbs/analysis/entropypost.pdf
     """
     pdf = density(expr, condition, **kwargs)
     base = kwargs.get('b', exp(1))
@@ -344,7 +344,7 @@ def kurtosis(X, condition=None, **kwargs):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Kurtosis
-    .. [2] http://mathworld.wolfram.com/Kurtosis.html
+    .. [2] https://mathworld.wolfram.com/Kurtosis.html
     """
     return smoment(X, 4, condition=condition, **kwargs)
 
@@ -384,7 +384,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Factorial_moment
-    .. [2] http://mathworld.wolfram.com/FactorialMoment.html
+    .. [2] https://mathworld.wolfram.com/FactorialMoment.html
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
@@ -449,7 +449,7 @@ def median(X, evaluate=True, **kwargs):
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)
         return result
-    raise NotImplementedError("The median of %s is not implemeted."%str(pspace(X)))
+    raise NotImplementedError("The median of %s is not implemented."%str(pspace(X)))
 
 
 def coskewness(X, Y, Z, condition=None, **kwargs):

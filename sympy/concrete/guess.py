@@ -267,7 +267,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     {'egf': (x + 1)*exp(x), 'lgdegf': (x + 2)/(x + 1)}
 
     N-th root of a rational function can also be detected (below is an example
-    coming from the sequence A108626 from http://oeis.org).
+    coming from the sequence A108626 from https://oeis.org).
     The greatest n-th root to be tested is specified as maxsqrtn (default 2).
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
@@ -465,8 +465,8 @@ def guess(l, all=False, evaluate=True, niter=2, variables=None):
               r.append(ri)
         if r:
             for i in range(k-1, -1, -1):
-                r = list(map(lambda v: g[i][0]
-                      * myprod(v, (symb[i+1], 1, symb[i]-1)), r))
+                r = [g[i][0]
+                      * myprod(v, (symb[i+1], 1, symb[i]-1)) for v in r]
             if not all: return r
             res += r
         l = [Rational(l[i+1], l[i]) for i in range(N-k-1)]

@@ -5,7 +5,7 @@ try:
     import pyglet.gl as pgl
 except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
-                      "visit http://www.pyglet.org/")
+                      "visit https://pyglet.org/")
 
 from sympy.core.numbers import Integer
 from sympy.external.gmpy import SYMPY_INTS
@@ -314,7 +314,7 @@ class PygletPlot:
                 args = [args]
             if len(args) == 0:
                 return  # no arguments given
-            kwargs = dict(bounds_callback=self.adjust_all_bounds)
+            kwargs = {"bounds_callback": self.adjust_all_bounds}
             f = PlotMode(*args, **kwargs)
 
         if f:

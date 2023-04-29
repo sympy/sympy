@@ -7,7 +7,7 @@ from .basic import Basic
 from .expr import Expr
 from .function import expand_power_exp
 from .sympify import sympify
-from .numbers import Rational, Integer, Number, I
+from .numbers import Rational, Integer, Number, I, equal_valued
 from .singleton import S
 from .sorting import default_sort_key, ordered
 from .symbol import Dummy
@@ -382,9 +382,9 @@ class Factors:
                             factors[I] = S.One
                         elif a.is_Pow:
                             factors[a.base] = factors.get(a.base, S.Zero) + a.exp
-                        elif a == 1:
+                        elif equal_valued(a, 1):
                             factors[a] = S.One
-                        elif a == -1:
+                        elif equal_valued(a, -1):
                             factors[-a] = S.One
                             factors[S.NegativeOne] = S.One
                         else:
@@ -921,7 +921,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     isprimitive : boolean, optional
         If ``isprimitive`` is True then the call to primitive
         for an Add will be skipped. This is useful when the
-        content has already been extrated.
+        content has already been extracted.
 
     fraction : boolean, optional
         If ``fraction`` is True then the expression will appear over a common

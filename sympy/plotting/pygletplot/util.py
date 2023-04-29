@@ -135,7 +135,7 @@ def scale_value(v, v_min, v_len):
 def scale_value_list(flist):
     v_min, v_max = min(flist), max(flist)
     v_len = v_max - v_min
-    return list(scale_value(f, v_min, v_len) for f in flist)
+    return [scale_value(f, v_min, v_len) for f in flist]
 
 
 def strided_range(r_min, r_max, stride, max_steps=50):
@@ -157,7 +157,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     r_steps = int((r_max - r_min)/stride)
     if max_steps and r_steps > max_steps:
         return strided_range(o_min, o_max, stride*2)
-    return [r_min] + list(r_min + e*stride for e in range(1, r_steps + 1)) + [r_max]
+    return [r_min] + [r_min + e*stride for e in range(1, r_steps + 1)] + [r_max]
 
 
 def parse_option_string(s):

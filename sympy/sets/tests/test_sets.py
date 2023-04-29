@@ -940,7 +940,7 @@ def test_Union_as_relational():
     assert Or(x < 0, x > 0).as_set().as_relational(x) == \
         And((x > -oo), (x < oo), Ne(x, 0))
     assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
-        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
+        ).as_relational(x) == And(Ne(x,3),(x>=1),(x<=5))
 
 
 def test_Intersection_as_relational():
