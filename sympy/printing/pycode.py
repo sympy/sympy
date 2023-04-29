@@ -9,6 +9,7 @@ from sympy.core import S
 from sympy.core.mod import Mod
 from .precedence import precedence
 from .codeprinter import CodePrinter
+from sympy.codegen.ast import none
 
 _kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -324,13 +325,13 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Print(self, prnt):
         print_args = ', '.join((self._print(arg) for arg in prnt.print_args))
-        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
+        if prnt.format_string != none:
             print_args = '{} % ({})'.format(
                 self._print(prnt.format_string), print_args)
+            print_args += ', end=""'  # to match e.g. CCodePrinter which req. '\n'
+
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
-
-        print_args += ', end=""'  # to match e.g. CCodePrinter which req. '\n'
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
