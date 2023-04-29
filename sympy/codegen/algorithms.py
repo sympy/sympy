@@ -13,7 +13,7 @@ from sympy.codegen.cfunctions import isnan
 
 """ This module collects functions for constructing ASTs representing algorithms. """
 
-def newtons_method(expr, wrt, *, atol=1e-12, rtol=4e-16, delta=None, debug=False,
+def newtons_method(expr, wrt, atol=1e-12, delta=None, *, rtol=4e-16, debug=False,
                    itermax=None, counter=None, delta_fn=lambda e, x: -e/e.diff(x),
                    cse=False, handle_nan=None,
                    bounds=None):

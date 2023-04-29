@@ -88,11 +88,10 @@ Newton's method::
     >>> from sympy.codegen.ast import While, Assignment, aug_assign, Print, QuotedString
     >>> t, dx, x = symbols('tol delta val')
     >>> expr = cos(x) - x**3
-    >>> format_c = QuotedString(r'%s\\n')
     >>> whl = While(abs(dx) > t, [
     ...     Assignment(dx, -expr/expr.diff(x)),
     ...     aug_assign(x, '+', dx),
-    ...     Print([x], format_c)
+    ...     Print([x])
     ... ])
     >>> from sympy import pycode
     >>> py_str = pycode(whl)
@@ -100,7 +99,7 @@ Newton's method::
     while (abs(delta) > tol):
         delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
         val += delta
-        print("%s\\n" % (val), end="")
+        print(x)
     >>> import math
     >>> tol, val, delta = 1e-5, 0.5, float('inf')
     >>> exec(py_str)
@@ -115,8 +114,7 @@ Newton's method::
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
     >>> from sympy import fcode
-    >>> from sympy.codegen.ast import none
-    >>> print(fcode(whl.subs(format_c, none), standard=2003, source_format='free'))
+    >>> print(fcode(whl, standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
        val = val + delta
@@ -1710,10 +1708,10 @@ class Stream(Token):
     >>> from sympy import pycode, Symbol
     >>> from sympy.codegen.ast import Print, stderr, QuotedString
     >>> print(pycode(Print(['x'], file=stderr)))
-    print(x, file=sys.stderr, end="")
+    print(x, file=sys.stderr)
     >>> x = Symbol('x')
     >>> print(pycode(Print([QuotedString('x')], file=stderr)))  # print literally "x"
-    print("x", file=sys.stderr, end="")
+    print("x", file=sys.stderr)
 
     """
     __slots__ = _fields = ('name',)
@@ -1737,8 +1735,8 @@ class Print(Token):
 
     >>> from sympy.codegen.ast import Print
     >>> from sympy import pycode
-    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
-    print("coordinate: %12.5g %12.5g" % (x, y), end="")
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g\n")))
+    print("coordinate: %12.5g %12.5g\n" % (x, y), end="")
 
     """
 
