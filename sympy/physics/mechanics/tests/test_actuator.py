@@ -74,8 +74,8 @@ class TestForceActuator:
         self.pB.set_pos(self.pA, 2 * self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
         expected = [
-            (self.pA, self.force * self.N.x),
-            (self.pB, - self.force * self.N.x),
+            (self.pA, - self.force * self.N.x),
+            (self.pB, self.force * self.N.x),
         ]
         assert actuator.to_loads() == expected
 
@@ -83,8 +83,8 @@ class TestForceActuator:
         self.pB.set_pos(self.pA, 2 * self.q1 * self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
         expected = [
-            (self.pA, self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
-            (self.pB, - self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pA, - self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
+            (self.pB, self.force * (self.q1 / sqrt(self.q1**2)) * self.N.x),
         ]
         assert actuator.to_loads() == expected
 
@@ -96,14 +96,14 @@ class TestForceActuator:
         actuator = ForceActuator(self.force, self.pathway)
         length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
         pO_force = (
-            self.force * self.q1 * self.N.x / length
-            - self.force * self.q2 * self.N.y / length
-            + 2 * self.force * self.q3 * self.N.z / length
-        )
-        pI_force = (
             - self.force * self.q1 * self.N.x / length
             + self.force * self.q2 * self.N.y / length
             - 2 * self.force * self.q3 * self.N.z / length
+        )
+        pI_force = (
+            self.force * self.q1 * self.N.x / length
+            - self.force * self.q2 * self.N.y / length
+            + 2 * self.force * self.q3 * self.N.z / length
         )
         expected = [
             (self.pA, pO_force),
@@ -148,9 +148,9 @@ def test_forced_mass_spring_damper_model():
 
     mass = Particle('mass', attachment, m)
     pathway = LinearPathway(origin, attachment)
-    stiffness = k * pathway.length  # positive as assumes contractile force
+    stiffness = -k * pathway.length  # positive as assumes expansile force
     spring = ForceActuator(stiffness, pathway)
-    damping = -c * pathway.shortening_velocity  # negative as acts against velocity
+    damping = -c * pathway.extension_velocity  # negative as acts against velocity
     damper = ForceActuator(damping, pathway)
 
     kanes_method = KanesMethod(

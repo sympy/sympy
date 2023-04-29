@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from sympy.core.function import Function
-from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.external.gmpy import gcd, invert
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -45,7 +45,7 @@ def n_order(a, n):
     # Trivial
     if a == 1:
         return 1
-    if igcd(a, n) != 1:
+    if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # We want to calculate
     # order = totient(n), factors = factorint(order)
@@ -116,7 +116,7 @@ def _primitive_root_prime_iter(p):
     yield g
     # g**k is the primitive root of p iff gcd(p - 1, k) = 1
     for k in range(3, p, 2):
-        if igcd(p - 1, k) == 1:
+        if gcd(p - 1, k) == 1:
             yield pow(g, k, p)
 
 
@@ -146,7 +146,7 @@ def _primitive_root_prime_power_iter(p, e):
         yield from _primitive_root_prime_iter(p)
     else:
         for g in _primitive_root_prime_iter(p):
-            t = (g - mod_inverse(pow(g, p - 2, p2), p2)) % p2
+            t = (g - pow(g, 2 - p, p2)) % p2
             for k in range(0, p2, p):
                 if k != t:
                     yield from (g + k + m for m in range(0, p**e, p2))
@@ -263,7 +263,7 @@ def primitive_root(p, smallest=True):
                 return g
             else:
                 for i in range(2, g + p1 + 1):
-                    if igcd(i, p) == 1 and is_primitive_root(i, p):
+                    if gcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
     return next(_primitive_root_prime_iter(p))
@@ -302,7 +302,7 @@ def is_primitive_root(a, p):
     if p <= 1:
         raise ValueError("p should be an integer greater than 1")
     a = a % p
-    if igcd(a, p) != 1:
+    if gcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     # Primitive root of p exist only for
     # p = 2, 4, q**e, 2*q**e (q is odd prime)
@@ -475,7 +475,8 @@ def sqrt_mod_iter(a, p, domain=int):
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
             if domain is ZZ:
-                yield from res
+                for x in res:
+                    yield ZZ(x)
             else:
                 for x in res:
                     yield domain(x)
@@ -572,10 +573,10 @@ def _sqrt_mod_prime_power(a, p, k):
         px = p
         for _ in range(k.bit_length() - 1):
             px = px**2
-            frinv = igcdex(2*res, px)[0]
+            frinv = invert(2*res, px)
             res = (res - (res**2 - a)*frinv) % px
         if k & (k - 1): # If k is not a power of 2
-            frinv = igcdex(2*res, pk)[0]
+            frinv = invert(2*res, pk)
             res = (res - (res**2 - a)*frinv) % pk
     return sorted([res, pk - res])
 
@@ -708,7 +709,7 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         k -= mu
     if p != 2:
         f = p**(k - 1)*(p - 1) # f = totient(p**k)
-        return pow(a, f // igcd(f, n), pow(p, k)) == 1
+        return pow(a, f // gcd(f, n), pow(p, k)) == 1
     if n & 1:
         return True
     c = trailing(n)
@@ -732,7 +733,7 @@ def _nthroot_mod1(s, q, p, all_roots):
         f = (p - 1) // qx**ex
         while f % qx == 0:
             f //= qx
-        z = f*igcdex(-f, qx)[0]
+        z = f*invert(-f, qx)
         x = (1 + z) // qx
         t = discrete_log(p, pow(r, f, p), pow(g, f*qx, p))
         for _ in range(ex):
@@ -779,7 +780,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
                 diff = diff_method(root, p)
                 if diff != 0:
                     ppow = p
-                    m_inv = mod_inverse(diff, p)
+                    m_inv = invert(diff, p)
                     for j in range(1, e):
                         ppow *= p
                         root = (root - expr_val(root, ppow) * m_inv) % ppow
@@ -868,9 +869,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         # x**pa - a = x**(q*pb + r) - a = (x**pb)**q * x**r - a =
         #             b**q * x**r - a; x**r - c = 0; c = b**-q * a mod p
         q, r = divmod(pa, pb)
-        c = pow(b, q, p)
-        c = igcdex(c, p)[0]
-        c = (c * a) % p
+        c = pow(b, -q, p) * a % p
         pa, pb = pb, r
         a, b = b, c
     if pa == 1:
@@ -1013,7 +1012,7 @@ def jacobi_symbol(m, n):
         return int(n == 1)
     if n == 1 or m == 1:
         return 1
-    if igcd(m, n) != 1:
+    if gcd(m, n) != 1:
         return 0
 
     j = 1
@@ -1162,8 +1161,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     for i in range(m):
         T[x] = i
         x = x * b % n
-    z = mod_inverse(b, n)
-    z = pow(z, m, n)
+    z = pow(b, -m, n)
     x = a
     for i in range(m):
         if x in T:
@@ -1264,10 +1262,10 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
             if xa == xb:
                 r = (ba - bb) % order
                 try:
-                    e = mod_inverse(r, order) * (ab - aa) % order
+                    e = invert(r, order) * (ab - aa) % order
                     if (pow(b, e, n) - a) % n == 0:
                         return e
-                except ValueError:
+                except ZeroDivisionError:
                     pass
                 break
     raise ValueError("Pollard's Rho failed to find logarithm")
@@ -1312,8 +1310,7 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None):
 
     for i, (pi, ri) in enumerate(f.items()):
         for j in range(ri):
-            gj = pow(b, l[i], n)
-            aj = pow(a * mod_inverse(gj, n), order // pi**(j + 1), n)
+            aj = pow(a * pow(b, -l[i], n), order // pi**(j + 1), n)
             bj = pow(b, order // pi, n)
             cj = discrete_log(n, aj, bj, pi, True)
             l[i] += cj * pi**j
@@ -1402,7 +1399,7 @@ def quadratic_congruence(a, b, c, p):
             roots.append(1)
         return roots
     if isprime(p):
-        inv_a = mod_inverse(a, p)
+        inv_a = invert(a, p)
         b *= inv_a
         c *= inv_a
         if b % 2 == 1:
@@ -1565,8 +1562,7 @@ def _binomial_mod_prime_power(n, m, p, q):
                 fac *= mul
                 fac %= modulo
             bj_ = bj(u, j, r)
-            if bj_ < 0: prod *= pow(mod_inverse(fac, modulo), -bj_, modulo)
-            else: prod *= pow(fac, bj_, modulo)
+            prod *= pow(fac, bj_, modulo)
             prod %= modulo
         if p == 2:
             sm = u // 2
@@ -1590,7 +1586,7 @@ def _binomial_mod_prime_power(n, m, p, q):
         for i in range(1, v + 1):
             div *= i
             div %= modulo
-        div = mod_inverse(div, modulo)
+        div = invert(div, modulo)
         for j in range(1, q):
             b = div
             for v_ in range(j*p + 1, j*p + v + 1):
@@ -1602,7 +1598,6 @@ def _binomial_mod_prime_power(n, m, p, q):
             for i in range(1, q):
                 if i != j: aj //= j - i
             aj //= j
-            if aj < 0: b, aj = mod_inverse(b, modulo), -aj
             prod *= pow(b, aj, modulo)
             prod %= modulo
         return prod
@@ -1631,7 +1626,7 @@ def _binomial_mod_prime_power(n, m, p, q):
         carry = (mj + rj + carry) // p
         e0 += carry
         if j >= q - 1: eq_1 += carry
-        prod *= numerator * mod_inverse(denominator, modulo)
+        prod *= numerator * invert(denominator, modulo)
         prod %= modulo
         j += 1
 

@@ -1,7 +1,7 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
-from sympy.core.numbers import igcd
+from sympy.external.gmpy import gcd
 from .residue_ntheory import (_sqrt_mod_prime_power,
     legendre_symbol, jacobi_symbol, is_quad_residue)
 
@@ -99,7 +99,7 @@ def _a(n, k, prec):
             mpf_cos(arg, prec), prec)
 
     if p != 2 or e >= 3:
-        d1, d2 = igcd(k1, 24), igcd(k2, 24)
+        d1, d2 = gcd(k1, 24), gcd(k2, 24)
         e = 24//(d1*d2)
         n1 = ((d2*e*n + (k2**2 - 1)//d1)*
             pow(e*k2*k2*d2, _totient[k1] - 1, k1)) % k1

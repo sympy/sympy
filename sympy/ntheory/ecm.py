@@ -1,6 +1,6 @@
 from sympy.ntheory import sieve, isprime
-from sympy.core.numbers import mod_inverse, igcd
 from sympy.core.power import integer_log, isqrt
+from sympy.external.gmpy import gcd, invert
 from sympy.utilities.misc import as_int
 import random
 
@@ -216,13 +216,13 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
 
         try:
             # We use the elliptic curve y**2 = x**3 + a*x**2 + x
-            # where a = pow(v - u, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2
+            # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
-            # to use a24 = (a + 2)*mod_inverse(4, n) in the calculation.
-            a24 = pow(v - u, 3, n)*(3*u + v)*mod_inverse(16*u_3*v, n) % n
-        except ValueError:
-            #If the mod_inverse(16*u_3*v, n) doesn't exist (i.e., g != 1)
-            g = igcd(16*u_3*v, n)
+            # to use a24 = (a + 2)*invert(4, n) in the calculation.
+            a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
+        except ZeroDivisionError:
+            #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
+            g = gcd(16*u_3*v, n)
             #If g = n, try another curve
             if g == n:
                 continue
@@ -230,7 +230,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
 
         Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
-        g = igcd(Q.z_cord, n)
+        g = gcd(Q.z_cord, n)
 
         #Stage 1 factor
         if g != 1 and g != n:
@@ -265,7 +265,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
                 g = (g*f) % n
             #Swap
             T, R = R, R.add(S[D], T)
-        g = igcd(n, g)
+        g = gcd(n, g)
 
         #Stage 2 Factor found
         if g != 1 and g != n:
