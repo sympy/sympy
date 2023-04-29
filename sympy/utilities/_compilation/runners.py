@@ -51,6 +51,9 @@ class CompilerRunner:
 
     """
 
+    environ_key_compiler: str  # e.g. 'CC', 'CXX', ...
+    environ_key_flags: str  # e.g. 'CFLAGS', 'CXXFLAGS', ...
+
     # Subclass to vendor/binary dict
     compiler_dict: dict[str, str]
 
