@@ -1,4 +1,4 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
 from sympy.core import S
 from sympy.core.expr import Expr
@@ -90,10 +90,10 @@ def vfree_group(symbols):
 
 def _parse_symbols(symbols):
     if not symbols:
-        return tuple()
+        return ()
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
-    elif isinstance(symbols, Expr or FreeGroupElement):
+    elif isinstance(symbols, (Expr, FreeGroupElement)):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, str) for s in symbols):
@@ -109,7 +109,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}  # type: tDict[int, FreeGroup]
+_free_group_cache: dict[int, FreeGroup] = {}
 
 class FreeGroup(DefaultPrinting):
     """
@@ -125,7 +125,7 @@ class FreeGroup(DefaultPrinting):
     References
     ==========
 
-    .. [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
+    .. [1] https://www.gap-system.org/Manuals/doc/ref/chap37.html
 
     .. [2] https://en.wikipedia.org/wiki/Free_group
 
@@ -134,7 +134,7 @@ class FreeGroup(DefaultPrinting):
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = []  # type: List[Expr]
+    relators: list[Expr] = []
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
@@ -363,7 +363,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
     @property
     def is_identity(self):
-        if self.array_form == tuple():
+        if self.array_form == ():
             return True
         else:
             return False
@@ -1023,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicpermutation
+        .. [1] https://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        .. [1] http://planetmath.org/cyclicallyreduced
+        .. [1] https://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

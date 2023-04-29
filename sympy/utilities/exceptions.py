@@ -110,8 +110,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     Parameters
     ==========
 
-    message: str
-
+    message : str
          The deprecation message. This may span multiple lines and contain
          code examples. Messages should be wrapped to 80 characters. The
          message is automatically dedented and leading and trailing whitespace
@@ -120,8 +119,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
          arbitrary, as it might be huge and make the warning message
          unreadable.
 
-    deprecated_since_version: str
-
+    deprecated_since_version : str
          The version of SymPy the feature has been deprecated since. For new
          deprecations, this should be the version in `sympy/release.py
          <https://github.com/sympy/sympy/blob/master/sympy/release.py>`_
@@ -131,8 +129,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
          argument is required and must be passed as a keyword argument.
          (example:  ``deprecated_since_version="1.10"``).
 
-    active_deprecations_target: str
-
+    active_deprecations_target : str
         The Sphinx target corresponding to the section for the deprecation in
         the :ref:`active-deprecations` document (see
         ``doc/src/explanation/active-deprecations.md``). This is used to
@@ -140,8 +137,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
         argument is required and must be passed as a keyword argument.
         (example: ``active_deprecations_target="deprecated-feature-abc"``)
 
-    stacklevel: int (default: 3)
-
+    stacklevel : int, default: 3
         The ``stacklevel`` parameter that is passed to ``warnings.warn``. If
         you create a wrapper that calls this function, this should be
         increased so that the warning message shows the user line of code that

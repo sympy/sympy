@@ -4,7 +4,7 @@ query with same syntax.
 
 In SymPy, there are two assumption systems. Old assumption system is
 defined in sympy/core/assumptions, and it can be accessed by attribute
-such as ``x.is_even``. New assumption system is definded in
+such as ``x.is_even``. New assumption system is defined in
 sympy/assumptions, and it can be accessed by predicates such as
 ``Q.even(x)``.
 
@@ -44,20 +44,8 @@ False
 """
 
 from sympy.assumptions import ask, Q
-from sympy.core.assumptions import (_assume_defined, as_property,
-    ManagedProperties)
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
-
-class AssumptionsWrapperMeta(ManagedProperties):
-    """
-    Metaclass to give _eval_is_[...] attributes to AssumptionsWrapper
-    """
-    def __init__(cls, *args, **kws):
-        for fact in _assume_defined:
-            pname = "_eval_%s" % as_property(fact)
-            setattr(cls, pname, make_eval_method(fact))
-        super().__init__(cls, *args, **kws)
 
 
 def make_eval_method(fact):
@@ -72,7 +60,7 @@ def make_eval_method(fact):
 
 
 # we subclass Basic to use the fact deduction and caching
-class AssumptionsWrapper(Basic, metaclass=AssumptionsWrapperMeta):
+class AssumptionsWrapper(Basic):
     """
     Wrapper over ``Basic`` instances to call predicate query by
     ``.is_[...]`` property
@@ -125,6 +113,38 @@ class AssumptionsWrapper(Basic, metaclass=AssumptionsWrapperMeta):
         obj.expr = expr
         obj.assumptions = assumptions
         return obj
+
+    _eval_is_algebraic = make_eval_method("algebraic")
+    _eval_is_antihermitian = make_eval_method("antihermitian")
+    _eval_is_commutative = make_eval_method("commutative")
+    _eval_is_complex = make_eval_method("complex")
+    _eval_is_composite = make_eval_method("composite")
+    _eval_is_even = make_eval_method("even")
+    _eval_is_extended_negative = make_eval_method("extended_negative")
+    _eval_is_extended_nonnegative = make_eval_method("extended_nonnegative")
+    _eval_is_extended_nonpositive = make_eval_method("extended_nonpositive")
+    _eval_is_extended_nonzero = make_eval_method("extended_nonzero")
+    _eval_is_extended_positive = make_eval_method("extended_positive")
+    _eval_is_extended_real = make_eval_method("extended_real")
+    _eval_is_finite = make_eval_method("finite")
+    _eval_is_hermitian = make_eval_method("hermitian")
+    _eval_is_imaginary = make_eval_method("imaginary")
+    _eval_is_infinite = make_eval_method("infinite")
+    _eval_is_integer = make_eval_method("integer")
+    _eval_is_irrational = make_eval_method("irrational")
+    _eval_is_negative = make_eval_method("negative")
+    _eval_is_noninteger = make_eval_method("noninteger")
+    _eval_is_nonnegative = make_eval_method("nonnegative")
+    _eval_is_nonpositive = make_eval_method("nonpositive")
+    _eval_is_nonzero = make_eval_method("nonzero")
+    _eval_is_odd = make_eval_method("odd")
+    _eval_is_polar = make_eval_method("polar")
+    _eval_is_positive = make_eval_method("positive")
+    _eval_is_prime = make_eval_method("prime")
+    _eval_is_rational = make_eval_method("rational")
+    _eval_is_real = make_eval_method("real")
+    _eval_is_transcendental = make_eval_method("transcendental")
+    _eval_is_zero = make_eval_method("zero")
 
 
 # one shot functions which are faster than AssumptionsWrapper

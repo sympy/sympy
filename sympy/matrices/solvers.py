@@ -36,7 +36,7 @@ def _diagonal_solve(M, rhs):
     if not M.is_diagonal():
         raise TypeError("Matrix should be diagonal")
     if rhs.rows != M.rows:
-        raise TypeError("Size mis-match")
+        raise TypeError("Size mismatch")
 
     return M._new(
         rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / M[i, i])
@@ -338,7 +338,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
 
     try:
         A, perm = M.LUdecomposition_Simple(
-            iszerofunc=_iszero, rankcheck=True)
+            iszerofunc=iszerofunc, rankcheck=True)
     except ValueError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 

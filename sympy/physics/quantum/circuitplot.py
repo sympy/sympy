@@ -14,13 +14,11 @@ Todo:
 * Write some tests/examples!
 """
 
-from typing import List, Dict as tDict
+from __future__ import annotations
 
 from sympy.core.mul import Mul
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
-from sympy.core.core import BasicMeta
-from sympy.core.assumptions import ManagedProperties
 
 
 __all__ = [
@@ -55,8 +53,8 @@ class CircuitPlot:
     control_radius = 0.05
     not_radius = 0.15
     swap_delta = 0.05
-    labels = []  # type: List[str]
-    inits = {}  # type: tDict[str, str]
+    labels: list[str] = []
+    inits: dict[str, str] = {}
     label_buffer = 0.5
 
     def __init__(self, c, nqubits, **kwargs):
@@ -199,7 +197,7 @@ class CircuitPlot:
             color='k',
             ha='center',
             va='center',
-            bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
+            bbox={"ec": 'k', "fc": 'w', "fill": True, "lw": self.linewidth},
             size=self.fontsize
         )
 
@@ -354,12 +352,12 @@ class Mx(OneQubitGate):
     gate_name='Mx'
     gate_name_latex='M_x'
 
-class CreateOneQubitGate(ManagedProperties):
+class CreateOneQubitGate(type):
     def __new__(mcl, name, latexname=None):
         if not latexname:
             latexname = name
-        return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
-                                 {'gate_name': name, 'gate_name_latex': latexname})
+        return type(name + "Gate", (OneQubitGate,),
+            {'gate_name': name, 'gate_name_latex': latexname})
 
 def CreateCGate(name, latexname=None):
     """Use a lexical closure to make a controlled gate.

@@ -30,7 +30,7 @@ def test_schur_partition():
         for item in result:
             _sum_free_test(item)
             """
-            Checks if the occurance of all numbers  is exactly one
+            Checks if the occurrence of all numbers is exactly one
             """
             t += len(item)
             for l in item:

@@ -15,7 +15,7 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer
+from sympy.core.numbers import ilcm, I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -3349,7 +3349,10 @@ class Poly(Basic):
             try:
                 coeff, factors = f.rep.factor_list()
             except DomainError:
-                return S.One, [(f, 1)]
+                if f.degree() == 0:
+                    return f.as_expr(), []
+                else:
+                    return S.One, [(f, 1)]
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
@@ -3869,6 +3872,99 @@ class Poly(Basic):
             return cp/cq, per(p), per(q)
         else:
             return tuple(map(per, result))
+
+    def make_monic_over_integers_by_scaling_roots(f):
+        """
+        Turn any univariate polynomial over :ref:`QQ` or :ref:`ZZ` into a monic
+        polynomial over :ref:`ZZ`, by scaling the roots as necessary.
+
+        Explanation
+        ===========
+
+        This operation can be performed whether or not *f* is irreducible; when
+        it is, this can be understood as determining an algebraic integer
+        generating the same field as a root of *f*.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, S
+        >>> from sympy.abc import x
+        >>> f = Poly(x**2/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+        >>> f.make_monic_over_integers_by_scaling_roots()
+        (Poly(x**2 + 2*x + 4, x, domain='ZZ'), 4)
+
+        Returns
+        =======
+
+        Pair ``(g, c)``
+            g is the polynomial
+
+            c is the integer by which the roots had to be scaled
+
+        """
+        if not f.is_univariate or f.domain not in [ZZ, QQ]:
+            raise ValueError('Polynomial must be univariate over ZZ or QQ.')
+        if f.is_monic and f.domain == ZZ:
+            return f, ZZ.one
+        else:
+            fm = f.monic()
+            c, _ = fm.clear_denoms()
+            return fm.transform(Poly(fm.gen), c).to_ring(), c
+
+    def galois_group(f, by_name=False, max_tries=30, randomize=False):
+        """
+        Compute the Galois group of this polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> f = Poly(x**4 - 2)
+        >>> G, _ = f.galois_group(by_name=True)
+        >>> print(G)
+        S4TransitiveSubgroups.D4
+
+        See Also
+        ========
+
+        sympy.polys.numberfields.galoisgroups.galois_group
+
+        """
+        from sympy.polys.numberfields.galoisgroups import (
+            _galois_group_degree_3, _galois_group_degree_4_lookup,
+            _galois_group_degree_5_lookup_ext_factor,
+            _galois_group_degree_6_lookup,
+        )
+        if (not f.is_univariate
+            or not f.is_irreducible
+            or f.domain not in [ZZ, QQ]
+        ):
+            raise ValueError('Polynomial must be irreducible and univariate over ZZ or QQ.')
+        gg = {
+            3: _galois_group_degree_3,
+            4: _galois_group_degree_4_lookup,
+            5: _galois_group_degree_5_lookup_ext_factor,
+            6: _galois_group_degree_6_lookup,
+        }
+        max_supported = max(gg.keys())
+        n = f.degree()
+        if n > max_supported:
+            raise ValueError(f"Only polynomials up to degree {max_supported} are supported.")
+        elif n < 1:
+            raise ValueError("Constant polynomial has no Galois group.")
+        elif n == 1:
+            from sympy.combinatorics.galois import S1TransitiveSubgroups
+            name, alt = S1TransitiveSubgroups.S1, True
+        elif n == 2:
+            from sympy.combinatorics.galois import S2TransitiveSubgroups
+            name, alt = S2TransitiveSubgroups.S2, False
+        else:
+            g, _ = f.make_monic_over_integers_by_scaling_roots()
+            name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
+        G = name if by_name else name.get_perm_group()
+        return G, alt
 
     @property
     def is_zero(f):
@@ -5632,7 +5728,7 @@ def terms_gcd(f, *gens, **args):
         coeff = S.One
 
     term = Mul(*[x**j for x, j in zip(f.gens, J)])
-    if coeff == 1:
+    if equal_valued(coeff, 1):
         coeff = S.One
         if term == 1:
             return orig
@@ -6096,7 +6192,7 @@ def _generic_factor_list(expr, gens, args, method):
         if fq and not opt.frac:
             raise PolynomialError("a polynomial expected, got %s" % expr)
 
-        _opt = opt.clone(dict(expand=True))
+        _opt = opt.clone({"expand": True})
 
         for factors in (fp, fq):
             for i, (f, k) in enumerate(factors):
@@ -6839,7 +6935,7 @@ def reduced(f, G, *gens, **args):
     retract = False
 
     if opt.auto and domain.is_Ring and not domain.is_Field:
-        opt = opt.clone(dict(domain=domain.get_field()))
+        opt = opt.clone({"domain": domain.get_field()})
         retract = True
 
     from sympy.polys.rings import xring
@@ -7105,10 +7201,10 @@ class GroebnerBasis(Basic):
         polys = list(self._basis)
         domain = opt.domain
 
-        opt = opt.clone(dict(
-            domain=domain.get_field(),
-            order=dst_order,
-        ))
+        opt = opt.clone({
+            "domain": domain.get_field(),
+            "order": dst_order,
+        })
 
         from sympy.polys.rings import xring
         _ring, _ = xring(opt.gens, opt.domain, src_order)
@@ -7163,7 +7259,7 @@ class GroebnerBasis(Basic):
         retract = False
 
         if auto and domain.is_Ring and not domain.is_Field:
-            opt = opt.clone(dict(domain=domain.get_field()))
+            opt = opt.clone({"domain": domain.get_field()})
             retract = True
 
         from sympy.polys.rings import xring

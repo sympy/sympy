@@ -156,9 +156,9 @@ def main():
                 FG = lambdify([x, y], [dx, dy, dz])
                 iu.v_steps /= 5
                 iv.v_steps /= 5
-                Gvl = list(list([FF(u, v), FG(u, v)]
-                                for v in iv.frange())
-                           for u in iu.frange())
+                Gvl = [[[FF(u, v), FG(u, v)]
+                                for v in iv.frange()]
+                           for u in iu.frange()]
 
                 def draw_arrow(p1, p2):
                     """

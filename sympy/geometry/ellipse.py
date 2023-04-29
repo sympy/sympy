@@ -34,6 +34,8 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 
+x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
+
 
 class Ellipse(GeometrySet):
     """An elliptical GeometryEntity.
@@ -103,9 +105,6 @@ class Ellipse(GeometrySet):
 
     def __contains__(self, o):
         if isinstance(o, Point):
-            x = Dummy('x', real=True)
-            y = Dummy('y', real=True)
-
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero
         elif isinstance(o, Ellipse):
@@ -458,7 +457,7 @@ class Ellipse(GeometrySet):
         ==========
 
         .. [1] https://math.stackexchange.com/questions/108270/what-is-the-equation-of-an-ellipse-that-is-not-aligned-with-the-axis
-        .. [2] https://en.wikipedia.org/wiki/Ellipse#Equation_of_a_shifted_ellipse
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Shifted_ellipse
 
         """
 
@@ -664,8 +663,6 @@ class Ellipse(GeometrySet):
         [Point2D(-17/5, -12/5), Point2D(-17/5, 12/5), Point2D(7/5, -12/5), Point2D(7/5, 12/5)]
         """
         # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
-        x = Dummy('x', real=True)
-        y = Dummy('y', real=True)
 
         if isinstance(o, Point):
             if o in self:
@@ -770,7 +767,7 @@ class Ellipse(GeometrySet):
                     else:
                         return False
                 else:
-                    return all_tangents
+                    return False
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
@@ -925,7 +922,6 @@ class Ellipse(GeometrySet):
 
         # find the 4 normal points and construct lines through them with
         # the corresponding slope
-        x, y = Dummy('x', real=True), Dummy('y', real=True)
         eq = self.equation(x, y)
         dydx = idiff(eq, y, x)
         norm = -1/dydx
@@ -1012,7 +1008,7 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/SemilatusRectum.html
+        .. [1] https://mathworld.wolfram.com/SemilatusRectum.html
         .. [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
 
         """
@@ -1299,7 +1295,6 @@ class Ellipse(GeometrySet):
             # else p is outside the ellipse or we can't tell. In case of the
             # latter, the solutions returned will only be valid if
             # the point is not inside the ellipse; if it is, nan will result.
-            x, y = Dummy('x'), Dummy('y')
             eq = self.equation(x, y)
             dydx = idiff(eq, y, x)
             slope = Line(p, Point(x, y)).slope

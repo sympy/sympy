@@ -510,7 +510,7 @@ def _per(M):
     ==========
 
     .. [1] Prof. Frank Ben's notes: https://math.berkeley.edu/~bernd/ban275.pdf
-    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_(mathematics)
+    .. [2] Wikipedia article on Permanent: https://en.wikipedia.org/wiki/Permanent_%28mathematics%29
     .. [3] https://reference.wolfram.com/language/ref/Permanent.html
     .. [4] Permanent of a rectangular matrix : https://arxiv.org/pdf/0904.3251.pdf
     """
@@ -660,7 +660,7 @@ def _det(M, method="bareiss", iszerofunc=None):
 
     dets = []
     for b in M.strongly_connected_components():
-        if method == "domain-ge": # uses DomainMatrix to evalute determinant
+        if method == "domain-ge": # uses DomainMatrix to evaluate determinant
             det = _det_DOM(M[b, b])
         elif method == "bareiss":
             det = M[b, b]._eval_det_bareiss(iszerofunc=iszerofunc)
@@ -713,7 +713,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         sign = (-1) ** (pivot_pos % 2)
 
         # we want every row but the pivot row and every column
-        rows = list(i for i in range(mat.rows) if i != pivot_pos)
+        rows = [i for i in range(mat.rows) if i != pivot_pos]
         cols = list(range(mat.cols))
         tmp_mat = mat.extract(rows, cols)
 
