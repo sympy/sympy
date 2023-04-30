@@ -53,6 +53,7 @@ class CompilerRunner:
 
     environ_key_compiler: str  # e.g. 'CC', 'CXX', ...
     environ_key_flags: str  # e.g. 'CFLAGS', 'CXXFLAGS', ...
+    environ_key_ldflags: str = "LDFLAGS"  # typically 'LDFLAGS'
 
     # Subclass to vendor/binary dict
     compiler_dict: dict[str, str]
@@ -89,7 +90,7 @@ class CompilerRunner:
                     break
             else:
                 self.compiler_vendor, self.compiler_name = list(self.compiler_dict.items())[0]
-                warnings.warn("failed to determine what kind of compiler %s is, assuming %s",
+                warnings.warn("failed to determine what kind of compiler %s is, assuming %s" %
                               (self.compiler_binary, self.compiler_name))
         else:
             # Find a compiler
