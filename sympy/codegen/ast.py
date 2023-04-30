@@ -99,7 +99,7 @@ Newton's method::
     while (abs(delta) > tol):
         delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
         val += delta
-        print(x)
+        print(val)
     >>> import math
     >>> tol, val, delta = 1e-5, 0.5, float('inf')
     >>> exec(py_str)
@@ -1722,7 +1722,7 @@ stderr = Stream('stderr')
 
 
 class Print(Token):
-    """ Represents print command in the code.
+    r""" Represents print command in the code.
 
     Parameters
     ==========
@@ -1735,7 +1735,7 @@ class Print(Token):
 
     >>> from sympy.codegen.ast import Print
     >>> from sympy import pycode
-    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g\n")))
+    >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g\\n")))
     print("coordinate: %12.5g %12.5g\n" % (x, y), end="")
 
     """
