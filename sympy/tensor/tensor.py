@@ -4373,7 +4373,7 @@ class TensMul(TensExpr, AssocOp):
 
                     rem_query = sign*self.func(*[a for a in self.args if a != q_tensor]).doit(deep=False)
                     rem_expr = expr.func(*[a for a in expr.args if a != e]).doit(deep=False)
-                    tmp_repl = dict()
+                    tmp_repl = {}
                     tmp_repl.update(repl_dict)
                     tmp_repl.update(m)
                     rem_m = rem_query.matches(rem_expr, repl_dict=tmp_repl)
@@ -4403,7 +4403,7 @@ class TensMul(TensExpr, AssocOp):
                 free = t.get_free_indices()
                 shares_indices_with_wild = True
                 for i in free:
-                    if all([j.matches(i) is None for j in free_this_wild]):
+                    if all(j.matches(i) is None for j in free_this_wild):
                         #The index i matches none of the indices in free_this_wild
                         shares_indices_with_wild = False
                 if shares_indices_with_wild:
