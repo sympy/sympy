@@ -600,19 +600,19 @@ def test_issue_23566():
     assert i == -log(4 - 2*sqrt(3)) + log(2)
     assert str(i.n()) == '1.31695789692482'
 
+
 def test_issue_25093():
-    a, b, x = symbols('a b x')
+    ap = Symbol('ap', positive=True)
+    an = Symbol('an', negative=True)
     assert manualintegrate(exp(a*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(a)*x)/(2*sqrt(a))
-    assert manualintegrate(sin(a*x**2 + b), x) == \
-        sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)) + cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a))
-    assert manualintegrate(cos(a*x**2 + b), x) == \
-        sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)) + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a))
-    a = Symbol('a', negative=True)
-    assert manualintegrate(exp(a*x**2 + b), x) == -sqrt(pi)*exp(b)*erf(a*x/sqrt(-a))/(2*sqrt(-a))
-    assert manualintegrate(sin(a*x**2 + b), x) == \
-        sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)) + cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a))
-    assert manualintegrate(cos(a*x**2 + b), x) == \
-        sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)) + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a))
+    assert manualintegrate(exp(ap*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(ap)*x)/(2*sqrt(ap))
+    assert manualintegrate(exp(an*x**2 + b), x) == -sqrt(pi)*exp(b)*erf(an*x/sqrt(-an))/(2*sqrt(-an))
+    assert manualintegrate(sin(a*x**2 + b), x) == (
+        sqrt(2)*sqrt(pi)*(sin(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi))
+        + cos(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
+    assert manualintegrate(cos(a*x**2 + b), x) == (
+        sqrt(2)*sqrt(pi)*(-sin(b)*fresnels(sqrt(2)*sqrt(a)*x/sqrt(pi))
+        + cos(b)*fresnelc(sqrt(2)*sqrt(a)*x/sqrt(pi)))/(2*sqrt(a)))
 
 
 def test_nested_pow():
