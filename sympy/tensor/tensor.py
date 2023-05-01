@@ -3102,7 +3102,7 @@ class Tensor(TensExpr):
         rank = comp.rank
 
         old_perms = None
-        new_perms = set([self])
+        new_perms = {self}
         while new_perms != old_perms:
             old_perms = new_perms.copy()
             for tens in old_perms:
@@ -3110,7 +3110,7 @@ class Tensor(TensExpr):
                     inds = tens.get_indices()
                     per = [gen.apply(i) for i in range(0,rank)]
                     sign = (-1)**(gen.apply(rank) - rank)
-                    ind_map = { k:v for k,v in zip(inds, [inds[i] for i in per]) }
+                    ind_map = dict(zip(inds, [inds[i] for i in per]))
                     new_perms.add( sign * tens._replace_indices(ind_map) )
 
         return new_perms
