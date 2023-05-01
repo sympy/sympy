@@ -600,7 +600,7 @@ def test_issue_23566():
     assert i == -log(4 - 2*sqrt(3)) + log(2)
     assert str(i.n()) == '1.31695789692482'
 
-def test_issue_25090():
+def test_issue_25093():
     a, b, x = symbols('a b x')
     assert manualintegrate(exp(a*x**2 + b), x) == sqrt(pi)*exp(b)*erfi(sqrt(a)*x)/(2*sqrt(a))
     assert manualintegrate(sin(a*x**2 + b), x) == \
