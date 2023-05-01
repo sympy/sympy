@@ -675,7 +675,7 @@ class FresnelCRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-         return sqrt(S.Pi)/sqrt(2*a) * (
+        return sqrt(S.Pi)/sqrt(2*a) * (
             cos(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)) +
             sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
 
