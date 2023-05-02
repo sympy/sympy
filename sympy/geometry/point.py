@@ -24,7 +24,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
-from sympy.simplify import nsimplify, simplify
+from sympy.simplify.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im

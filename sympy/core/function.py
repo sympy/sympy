@@ -440,10 +440,10 @@ class Function(Application, Expr):
         return False
 
     @cacheit
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> Function:
         # Handle calls like Function('f')
         if cls is Function:
-            return UndefinedFunction(*args, **options)
+            return UndefinedFunction(*args, **options)  # type: ignore
 
         n = len(args)
 
