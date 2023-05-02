@@ -592,7 +592,6 @@ def test_evalf_issue_939():
     assert NS(
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
     
-    
 def test_manualintegrate_formula_change():
     # Issue 25093
     a = Symbol('a', positive=True)
