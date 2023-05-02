@@ -1,6 +1,6 @@
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_not, FuzzyBool
 from sympy.core.numbers import I, pi, Rational
 from sympy.core.symbol import Dummy
@@ -103,7 +103,7 @@ def _asech_table():
 ###############################################################################
 
 
-class HyperbolicFunction(Function):
+class HyperbolicFunction(DefinedFunction):
     """
     Base class for hyperbolic functions.
 
@@ -1197,7 +1197,7 @@ class sech(ReciprocalHyperbolicFunction):
 ############################# HYPERBOLIC INVERSES #############################
 ###############################################################################
 
-class InverseHyperbolicFunction(Function):
+class InverseHyperbolicFunction(DefinedFunction):
     """Base class for inverse hyperbolic functions."""
 
     pass
@@ -1330,7 +1330,7 @@ class asinh(InverseHyperbolicFunction):
         if arg0 in (I, -I):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1516,7 +1516,7 @@ class acosh(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1687,7 +1687,7 @@ class atanh(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -1839,7 +1839,7 @@ class acoth(InverseHyperbolicFunction):
         if arg0 in (S.One, S.NegativeOne):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -2030,7 +2030,7 @@ class asech(InverseHyperbolicFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
@@ -2234,7 +2234,7 @@ class acsch(InverseHyperbolicFunction):
             res = (res1.removeO()*sqrt(f)).expand()
             return ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
 
-        res = Function._eval_nseries(self, x, n=n, logx=logx)
+        res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
 
