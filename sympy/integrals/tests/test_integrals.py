@@ -591,6 +591,16 @@ def test_evalf_issue_939():
     assert NS(Integral(1/(x**5 + 1), (x, 2, 4))) == '0.0144361088886740'
     assert NS(
         integrate(1/(x**5 + 1), (x, 2, 4)), chop=True) == '0.0144361088886740'
+    
+    
+ def test_manualintegrate_formula_change():
+    # Issue 25093
+    a = Symbol('a', positive=True)
+    assert manualintegrate(exp(x), x) == exp(x)
+    assert manualintegrate(exp(x), x, positive=True) == exp(x)
+    assert manualintegrate(exp(x), x, negative=True) == exp(x)
+    assert manualintegrate(sin(x), x) == -cos(x)
+    assert manualintegrate(cos(x), x) == sin(x)
 
 
 def test_double_previously_failing_integrals():
