@@ -659,11 +659,11 @@ class ErfRule(AtomicRule):
         a, b, c, x = self.a, self.b, self.c, self.variable
         if a.is_extended_real:
             return Piecewise(
-                (sqrt(S.Pi/(-a))/2 * exp(c - b**2/(4*a)) *
+                (sqrt(S.Pi)/sqrt(-a)/2 * exp(c - b**2/(4*a)) *
                     erf((-2*a*x - b)/(2*sqrt(-a))), a < 0),
-                (sqrt(S.Pi/a)/2 * exp(c - b**2/(4*a)) *
+                (sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) *
                     erfi((2*a*x + b)/(2*sqrt(a))), True))
-        return sqrt(S.Pi/a)/2 * exp(c - b**2/(4*a)) * \
+        return sqrt(S.Pi)/sqrt(a)/2 * exp(c - b**2/(4*a)) * \
                 erfi((2*a*x + b)/(2*sqrt(a)))
 
 
@@ -675,7 +675,7 @@ class FresnelCRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return sqrt(S.Pi/(2*a)) * (
+        return sqrt(S.Pi)/sqrt(2*a) * (
             cos(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)) +
             sin(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)))
 
@@ -688,7 +688,7 @@ class FresnelSRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return sqrt(S.Pi/(2*a)) * (
+        return sqrt(S.Pi)/sqrt(2*a) * (
             cos(b**2/(4*a) - c)*fresnels((2*a*x + b)/sqrt(2*a*S.Pi)) -
             sin(b**2/(4*a) - c)*fresnelc((2*a*x + b)/sqrt(2*a*S.Pi)))
 
