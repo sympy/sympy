@@ -1,12 +1,19 @@
 """
-Generic evaluation engine to apply linear operators, powers and factors and
-distribute them over summands, with focus on non-commutative operators.
-Based on Add and Mul as the standard addition and multiplication, the purpose
-of lapply is to be extended by multipledispatch handlers to multiply arbitrary
-object types that have no definition for Mul. It contains simplification
-approaches for powers with symbolic exponents and involutoric or idempotent
-factors. The amount of expansion of terms may be tuned by options. Handlers
-for matrices are included to evaluate matrix expressions that contain
+Lapply (from "linear apply") is a generic evaluation engine to apply linear
+operators, powers and factors and distribute them over summands, with focus on
+non-commutative operators.
+
+Its primary purpose is evaluate larger expression trees of SymPy objects whose
+multiplication has not been defined with :obj:`~.Mul()` and without having to
+overload the ``*`` operator. To this end lapply may be extended by ``multipledispatch``
+handlers for multiplication or to break up compound objects into elementary objects.
+
+Lapply is also capable of handling large expressions that would otherwise require
+to be broken up manually and require intermediate simplifications.
+Lapply  contains simplifications for powers with symbolic exponents and involutoric
+or idempotent factors. The amount of expansion of terms may be tuned by options.
+
+Handlers for matrices are included to evaluate matrix expressions that contain
 MatrixSymbols.
 """
 #
@@ -93,14 +100,13 @@ def lapply(e:Expr, mul=True, Add=Add,
     Generic evaluation engine to apply linear operators, powers and factors
     and distribute them over summands with focus on non-commutative operators.
     Multiplication of arbitrary SymPy objects can be defined by ``multipledispatch``
-    handlers (see :obj:`sympy.physics.quantum.qapply()` for example). The primary
-    purpose is evaluate larger expression trees of SymPy objects whose multiplication
-    has not been defined with :obj:`~.Mul()` and without having to overload the ``*`` operator
-    or to manually program the expression with intermediate simplifications.
+    handlers (see :obj:`sympy.physics.quantum.qapply()` for example).
+
     ``lapply`` incorporates simplification rules for powers with symbolic
     exponents and involutoric or idempotent factors in their base, so it can help
     to simplify terms in a way like combinations of :obj:`sympy.core.function.expand()`,
     :obj:`sympy.simplify.simplify()`, :obj:`sympy.simplify.powsimp()` and ``.doit()``.
+    
     The level of expansion may be tuned by options especially for commutative factors.
     The handling of matrices is included for matrices that are SymPy expressions,
     i.e. derived from :obj:`~.MatrixExpr` and immutable, and is best used with terms
@@ -119,7 +125,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         ``mul`` of :obj:`sympy.core.function.expand()`. ``mul=False`` will do the minimal
         application only, so use only when expansion is slow.
 
-    power_base : Boolean
+    power_base : Boolean, optional
         Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
         If True split powers of multiplied bases. Defaults to value of option ``mul``.
 
@@ -141,7 +147,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         next invocation of ``lapply`` as long as options and attributes of symbols
         remain unaltered. Defaults to None, in which case an internal cache is used.
 
-    Add : Callable
+    Add : Callable, optional
         This function is used to add summands. It must accept the option ``evaluate=True``
         and return type :obj:`~.Expr`. If set to None, the individual .func argument of
         each addition expression will be used. Defaults to standard :obj:`~.Add()`.
@@ -159,6 +165,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         and states and with moderate expansion done by distributing commutative
         factors over summands.
 
+
     Examples
     ========
 
@@ -173,8 +180,8 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> B = MatrixSymbol("B", 2, 2)
         >>> o = symbols("o", integer=True, nonnegative=True, even=True)
 
-        ``lapply`` passes explicit matrices to the matrix package, but
-        may help with simplifications of symbolic matrix terms:
+        ``lapply`` passes explicit matrices on to the matrix package, but
+        may achieve strong simplification of symbolic matrix terms:
 
         >>> Z = M1.T * (A * M1.I + B * M1.I).T
         >>> lapply(Z)
@@ -211,32 +218,30 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply(Z) == M1 * A*F* A*F* A*F* A * M2*Idb
         True
 
-        As an example that a matrix annuls its characteristic polynomial
-        take a matrix representation of the Quaternion(a, b, c, d):
+        Another example: a matrix annuls it characteristic polynomial:
 
-        >>> Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c], \
-                                  [c,  d,  a, -b], [d, -c, b, a]])
+        >>> Mq = ImmutableMatrix([[a, -b, -c, -d], [b, a, -d, c],
+        ...                       [c,  d,  a, -b], [d, -c, b, a]])
         >>> cp = Mq.charpoly().eval(x)
         >>> lapply(cp.subs(x, Mq))
         0
 
-        To handle e.g. Quaterions ``lapply`` must be passed an addition
-        function as ``Add`` doesn't handle Quaternions (note: Don't use
-        complex numbers with Quaternions and ``lapply`` as SymPy and so
-        ``lapply`` consider complex numbers as commutative which is not
-        correct with Quaternions):
+        As ``Add`` doesn't handle Quaternions, this provides an example how
+        to provide an proprietary addition function to ``lapply`` (Note: Don't
+        use complex numbers with Quaternions as SymPy and so ``lapply`` consider
+        complex numbers as commutative which is not correct with Quaternions):
 
         >>> q = Quaternion(a, b, c, d)
         >>> quatAdd = (lambda *summands, evaluate=True: sum(summands).expand())
         >>> lapply(cp.subs(x, q), Add=quatAdd)
         0 + 0*i + 0*j + 0*k
 
-        If real quaternions should be identified as commutative add a handler
-        for Quaternions to the c_nc_ncef Dispatcher of lapply:
+        If ``lapply`` shall handle real Quaternions as commutative scalars,
+        add a handler for Quaternion objects to the ``c_nc_ncef`` dispatcher:
 
-        >>> c_nc_ncef.add((Quaternion,), (lambda q, to_L, **options: \
-             ([q.scalar_part()], [], S.One) if q.vector_part().is_zero_quaternion() \
-                        else ([],[], q) ))
+        >>> c_nc_ncef.add((Quaternion,), (lambda q, to_L, **options:
+        ...   ([q.scalar_part()], [], S.One) if q.vector_part().is_zero_quaternion()
+        ...              else ([],[], q) ))
         >>> lapply(q * q.conjugate())
         a**2 + b**2 + c**2 + d**2
 
