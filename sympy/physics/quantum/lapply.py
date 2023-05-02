@@ -106,7 +106,7 @@ def lapply(e:Expr, mul=True, Add=Add,
     exponents and involutoric or idempotent factors in their base, so it can help
     to simplify terms in a way like combinations of :obj:`sympy.core.function.expand()`,
     :obj:`sympy.simplify.simplify()`, :obj:`sympy.simplify.powsimp()` and ``.doit()``.
-    
+
     The level of expansion may be tuned by options especially for commutative factors.
     The handling of matrices is included for matrices that are SymPy expressions,
     i.e. derived from :obj:`~.MatrixExpr` and immutable, and is best used with terms
