@@ -1,6 +1,6 @@
 from .add import Add
 from .exprtools import gcd_terms
-from .function import Function
+from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
@@ -8,7 +8,7 @@ from .numbers import equal_valued
 from .singleton import S
 
 
-class Mod(Function):
+class Mod(DefinedFunction):
     """Represents a modulo operation on symbolic expressions.
 
     Parameters
