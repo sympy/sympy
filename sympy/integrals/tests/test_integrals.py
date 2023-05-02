@@ -691,7 +691,7 @@ def test_manualintegrate_formula_change():
     assert manualintegrate(exp(x), x, negative=True) == exp(x)
     assert manualintegrate(sin(x), x) == -cos(x)
     assert manualintegrate(cos(x), x) == sin(x)
-    
+
     
 def test_integrate_max_min():
     x = symbols('x', real=True)
