@@ -5,7 +5,7 @@ from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.core.function import Function
+from sympy.core.function import DefinedFunction
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import Integer, int_valued
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
@@ -18,7 +18,7 @@ from sympy.multipledispatch import dispatch
 ###############################################################################
 
 
-class RoundFunction(Function):
+class RoundFunction(DefinedFunction):
     """Abstract base class for rounding functions."""
 
     args: tTuple[Expr]
@@ -428,7 +428,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
 
-class frac(Function):
+class frac(DefinedFunction):
     r"""Represents the fractional part of x
 
     For real numbers it is defined [1]_ as

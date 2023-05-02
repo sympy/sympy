@@ -4,7 +4,7 @@ from typing import Tuple as tTuple
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import (Function, ArgumentIndexError, expand_log,
+from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -32,7 +32,7 @@ from sympy.ntheory.factor_ import factorint
 # p.is_positive.]
 
 
-class ExpBase(Function):
+class ExpBase(DefinedFunction):
 
     unbranched = True
     _singularities = (S.ComplexInfinity,)
@@ -447,7 +447,7 @@ class exp(ExpBase, metaclass=ExpMeta):
 
         if old is exp and not new.is_Function:
             return new**self.exp._subs(old, new)
-        return Function._eval_subs(self, old, new)
+        return super()._eval_subs(old, new)
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
@@ -604,7 +604,7 @@ def match_real_imag(expr):
         return (None, None) # simpler to check for than None
 
 
-class log(Function):
+class log(DefinedFunction):
     r"""
     The natural logarithm function `\ln(x)` or `\log(x)`.
 
@@ -1105,7 +1105,7 @@ class log(Function):
         return res
 
 
-class LambertW(Function):
+class LambertW(DefinedFunction):
     r"""
     The Lambert W function $W(z)$ is defined as the inverse
     function of $w \exp(w)$ [1]_.
