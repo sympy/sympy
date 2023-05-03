@@ -1,20 +1,20 @@
 """
-Lapply (from "linear apply") is a generic evaluation engine to apply linear
+``lapply`` (from "linear apply") is a generic evaluation engine to apply linear
 operators, powers and factors and distribute them over summands, with focus on
 non-commutative operators.
 
 Its primary purpose is evaluate larger expression trees of SymPy objects whose
 multiplication has not been defined with :obj:`~.Mul()` and without having to
-overload the ``*`` operator. To this end lapply may be extended by ``multipledispatch``
+overload the ``*`` operator. To this end ``lapply`` may be extended by ``multipledispatch``
 handlers for multiplication or to break up compound objects into elementary objects.
 
-Lapply is also capable of handling large expressions that would otherwise require
-to be broken up manually and require intermediate simplifications.
-Lapply  contains simplifications for powers with symbolic exponents and involutoric
-or idempotent factors. The amount of expansion of terms may be tuned by options.
+``lapply`` is also useful to compute expressions that grow too large without intermediate
+simplification and would otherwise need to be manually split up and computed piecewise.
+The amount of expansion of terms may be tuned by options. ``lapply`` also contains
+simplifications for powers with symbolic exponents and involutoric or idempotent factors.
 
-Handlers for matrices are included to evaluate matrix expressions that contain
-MatrixSymbols.
+Handlers for SymPy matrix objects are included so ``lapply`` is available to evaluate
+matrix expressions that contain ``MatrixSymbols``.
 """
 #
 # lapply evolved as the generic kernel required to apply the objects of the
@@ -194,7 +194,7 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply((p * A).expand().simplify().doit())
         2*A
 
-        Also with powers of matrices with MatrixSymbols:
+        Also with powers of matrices with ``MatrixSymbols``:
 
         >>> M3 = ImmutableMatrix([[0, a], [b, 0]])
         >>> Z = ((M3 * A * M3)**(o + 10000)).simplify()
@@ -226,8 +226,8 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply(cp.subs(x, Mq))
         0
 
-        As ``Add`` doesn't handle Quaternions, this provides an example how
-        to provide an proprietary addition function to ``lapply`` (Note: Don't
+        As ``Add`` doesn't handle Quaternions, this example shows how
+        to provide an proprietary addition function to ``lapply`` (note: don't
         use complex numbers with Quaternions as SymPy and so ``lapply`` consider
         complex numbers as commutative which is not correct with Quaternions):
 
@@ -245,6 +245,8 @@ def lapply(e:Expr, mul=True, Add=Add,
         >>> lapply(q * q.conjugate())
         a**2 + b**2 + c**2 + d**2
 
+        See :obj:`sympy.physics.quantum.qapply()` as example how to define handlers
+        for a collection of objects.
     """
     # if e is no SymPy Expr, return it unmodified (e.g. Numbers).
     # It is useless to call lapply with Basic or even less object types, as
