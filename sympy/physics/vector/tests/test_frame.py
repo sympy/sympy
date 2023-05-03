@@ -12,6 +12,7 @@ from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import VectorTypeError
 from sympy.testing.pytest import raises
 import warnings
+import pickle
 
 
 def test_dict_list():
@@ -720,3 +721,13 @@ def test_unit_dyadic():
     F = ReferenceFrame('F', indices=['1', '2', '3'])
     assert N.u == N.xx + N.yy + N.zz
     assert F.u == F.xx + F.yy + F.zz
+
+
+def test_pickle_frame():
+    N = ReferenceFrame('N')
+    A = ReferenceFrame('A')
+    A.orient_axis(N, N.x, 1)
+    A_C_N = A.dcm(N)
+    N1 = pickle.loads(pickle.dumps(N))
+    A1 = tuple(N1._dcm_dict.keys())[0]
+    assert A1.dcm(N1) == A_C_N
