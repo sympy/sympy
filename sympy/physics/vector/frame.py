@@ -60,6 +60,9 @@ class CoordinateSym(Symbol):
         obj._id = (frame, index)
         return obj
 
+    def __getnewargs_ex__(self):
+        return (self.name, *self._id), {}
+
     @property
     def frame(self):
         return self._id[0]
