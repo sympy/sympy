@@ -255,3 +255,19 @@ class TestTorqueActuator:
     def test_invalid_constructor_axis_not_vector(self, axis: Any) -> None:
         with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, axis, self.parent, self.child)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'frames',
+        [
+            (ReferenceFrame('A1'), ),
+            (ReferenceFrame('A1'), ReferenceFrame('A2'), ReferenceFrame('A3')),
+            (RigidBody('B1'), ),
+            (RigidBody('B1'), RigidBody('B2'), RigidBody('B3')),
+        ]
+    )
+    def test_invalid_frames_incorrect_number(
+        self,
+        frames: tuple[ReferenceFrame | RigidBody, ...],
+    ) -> None:
+        with pytest.raises(ValueError):
+            _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
