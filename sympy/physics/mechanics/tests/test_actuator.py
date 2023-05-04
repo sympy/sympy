@@ -53,6 +53,7 @@ class TestForceActuator:
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
         assert isinstance(instance.force, ExprType)
+        assert instance.force == force
 
     def test_invalid_constructor_force_not_expr(self) -> None:
         with pytest.raises(TypeError):
@@ -69,6 +70,7 @@ class TestForceActuator:
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'pathway')
         assert isinstance(instance.pathway, LinearPathway)
+        assert instance.pathway == pathway
 
     def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
         with pytest.raises(TypeError):
