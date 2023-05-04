@@ -290,7 +290,6 @@ class TorqueActuator(ActuatorBase):
 
     >>> from sympy import Symbol
     >>> from sympy.physics.mechanics import ReferenceFrame, RigidBody
-    >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> A = ReferenceFrame('A')
     >>> torque = Symbol('T')
