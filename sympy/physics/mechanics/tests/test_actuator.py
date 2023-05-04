@@ -318,3 +318,7 @@ class TestTorqueActuator:
         assert isinstance(instance.frames[0], ReferenceFrame)
         assert isinstance(instance.frames[1], ReferenceFrame)
         assert instance.frames == (self.N, self.A)
+
+    def test_at_pin_joint_pin_joint_not_pin_joint_invalid(self) -> None:
+        with pytest.raises(TypeError):
+            _ = TorqueActuator.at_pin_joint(self.torque, Symbol('pin'))  # type: ignore
