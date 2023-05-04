@@ -255,7 +255,7 @@ class Sphere(GeometryBase):
                 raise ValueError(msg)
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
-        central_angle = acos(cancel(point_2_vector.dot(point_1_vector)))
+        central_angle = acos(point_2_vector.dot(point_1_vector))
         geodesic_length = self.radius * central_angle
         return geodesic_length
 
