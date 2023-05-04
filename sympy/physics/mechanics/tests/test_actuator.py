@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Sequence
 
 import pytest
 
@@ -13,6 +13,7 @@ from sympy.physics.mechanics import (
     Point,
     ReferenceFrame,
     RigidBody,
+    Vector,
     dynamicsymbols,
 )
 from sympy.physics.mechanics._actuator import (
@@ -270,4 +271,17 @@ class TestTorqueActuator:
         frames: tuple[ReferenceFrame | RigidBody, ...],
     ) -> None:
         with pytest.raises(ValueError):
+            _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'frames',
+        [
+            (None, ReferenceFrame('child')),
+            (ReferenceFrame('parent'), None),
+            (None, RigidBody('child')),
+            (RigidBody('parent'), None),
+        ]
+    )
+    def test_invalid_frames_not_frame(self, frames: Sequence[Any]) -> None:
+        with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
