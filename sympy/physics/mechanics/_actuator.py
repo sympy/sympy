@@ -12,6 +12,7 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from sympy.core.backend import USE_SYMENGINE
 from sympy.physics.mechanics import Point, Vector
@@ -21,6 +22,9 @@ if USE_SYMENGINE:
     from sympy.core.backend import Basic as ExprType
 else:
     from sympy.core.expr import Expr as ExprType
+
+if TYPE_CHECKING:
+    from sympy.physics.mechanics.loads import LoadBase
 
 
 __all__ = ['ForceActuator']
@@ -42,7 +46,7 @@ class ActuatorBase(ABC):
         pass
 
     @abstractmethod
-    def to_loads(self) -> list[tuple[Point, Vector]]:
+    def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -175,7 +179,7 @@ class ForceActuator(ActuatorBase):
             raise TypeError(msg)
         self._pathway = pathway
 
-    def to_loads(self) -> list[tuple[Point, Vector]]:
+    def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation

@@ -12,11 +12,15 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
 from sympy.core.expr import Expr
-from sympy.physics.mechanics import Point
-from sympy.physics.vector import Vector, dynamicsymbols
+from sympy.physics.mechanics import Force, Point
+from sympy.physics.vector import dynamicsymbols
+
+if TYPE_CHECKING:
+    from sympy.physics.mechanics.loads import LoadBase
 
 
 __all__ = ['LinearPathway']
@@ -76,7 +80,7 @@ class PathwayBase(ABC):
         pass
 
     @abstractmethod
-    def compute_loads(self, force: Expr) -> list[tuple[Point, Vector]]:
+    def compute_loads(self, force: Expr) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -203,7 +207,7 @@ class LinearPathway(PathwayBase):
         extension_velocity = relative_velocity.dot(relative_position.normalize())
         return extension_velocity
 
-    def compute_loads(self, force: Expr) -> list[tuple[Point, Vector]]:
+    def compute_loads(self, force: Expr) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -254,8 +258,8 @@ class LinearPathway(PathwayBase):
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        loads = [
-            (self.attachments[0], -force * relative_position / self.length),
-            (self.attachments[-1], force * relative_position / self.length),
+        loads: list[LoadBase] = [
+            Force(self.attachments[0], -force * relative_position / self.length),
+            Force(self.attachments[-1], force * relative_position / self.length),
         ]
         return loads
