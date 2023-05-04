@@ -453,7 +453,7 @@ class Cylinder(GeometryBase):
         the cylinder's axis) and ``r*q(t)`` (parallel to the cylinder's cross
         section), can be calculated using the ``geodesic_length`` method:
 
-        >>> cylinder.geodesic_length(p1, p2)
+        >>> cylinder.geodesic_length(p1, p2).simplify()
         sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
