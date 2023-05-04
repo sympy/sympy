@@ -15,7 +15,13 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from sympy.core.backend import USE_SYMENGINE
-from sympy.physics.mechanics import Point, Vector
+from sympy.physics.mechanics import (
+    PinJoint,
+    ReferenceFrame,
+    RigidBody,
+    Torque,
+    Vector,
+)
 from sympy.physics.mechanics._pathway import PathwayBase
 
 if USE_SYMENGINE:
@@ -257,3 +263,274 @@ class ForceActuator(ActuatorBase):
     def __repr__(self) -> str:
         """Representation of a ``ForceActuator``."""
         return f'{self.__class__.__name__}({self.force}, {self.pathway})'
+
+
+class TorqueActuator(ActuatorBase):
+    """Torque-producing actuator.
+
+    Explanation
+    ===========
+
+    A ``TorqueActuator`` is an actuator that produces a pair of equal and
+    opposite torques on a pair of bodies.
+
+    Examples
+    ========
+
+    As the ``_actuator.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``TorqueActuator`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._actuator`` module.
+
+    >>> from sympy.physics.mechanics._actuator import TorqueActuator
+
+    To construct a torque actuator, an expression (or symbol) must be supplied
+    to represent the torque it can produce, alongside a vector specifying the
+    axis about which the torque will act, and a pair of frames on which the
+    torque will act.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import ReferenceFrame, RigidBody
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> A = ReferenceFrame('A')
+    >>> torque = Symbol('T')
+    >>> axis = N.z
+    >>> parent = RigidBody('parent', frame=N)
+    >>> child = RigidBody('child', frame=A)
+    >>> bodies = (parent, child)
+    >>> actuator = TorqueActuator(torque, axis, *bodies)
+    >>> actuator
+    TorqueActuator(T, N.z, N, A)
+
+    Note that because torques actually act on frames, not bodies,
+    ``TorqueActuator`` will extract the frame associated with a ``RigidBody``
+    when one is passed instead of a ``ReferenceFrame``.
+
+    Parameters
+    ==========
+
+    torque : Expr
+        The scalar expression defining the torque that the actuator produces.
+    axis : Vector
+        The axis about which the actuator applies torques.
+    *frames : ReferenceFrame | RigidBody
+        The pair of frames on which the actuator will apply the torque. Note
+        that the torque is applied to the first frame with the (equal and
+        opposite) reaction torque being applied to the second.
+
+    """
+
+    def __init__(
+        self,
+        torque: ExprType,
+        axis: Vector,
+        *frames: ReferenceFrame | RigidBody,
+    ) -> None:
+        """Initializer for ``ForceActuator``.
+
+        Parameters
+        ==========
+
+        torque : Expr
+            The scalar expression defining the torque that the actuator
+            produces.
+        axis : Vector
+            The axis about which the actuator applies torques.
+        *frames : ReferenceFrame | RigidBody
+            The pair of frames on which the actuator will apply the torque.
+            Note that the torque is applied to the first frame with the (equal
+            and opposite) reaction torque being applied to the second.
+
+        """
+        self.torque = torque
+        self.axis = axis
+        self.frames = frames  # type: ignore
+        super().__init__()
+
+    @classmethod
+    def at_pin_joint(
+        cls,
+        torque: ExprType,
+        pin_joint: PinJoint,
+    ) -> TorqueActuator:
+        """Alternate construtor to instantiate from a ``PinJoint`` instance.
+
+        Examples
+        ========
+
+        To create a pin joint the ``PinJoint`` class requires a name, parent
+        body, and child body to be passed to its constructor. It is also
+        possible to control the joint axis using the ``joint_axis`` keyword
+        argument. In this example let's use the parent body's reference frame's
+        z-axis as the joint axis.
+
+        >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
+        ... RigidBody)
+        >>> from sympy.physics.mechanics._actuator import TorqueActuator
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> parent = RigidBody('parent', frame=N)
+        >>> child = RigidBody('child', frame=A)
+        >>> pin_joint = PinJoint(
+        ...     'pin',
+        ...     parent,
+        ...     child,
+        ...     joint_axis=N.z,
+        ... )
+
+        Let's also create a symbol ``T`` that will represent the torque applied
+        by the torque actuator.
+
+        >>> from sympy import Symbol
+        >>> torque = Symbol('T')
+
+        To create the torque actuator from the ``torque`` and ``pin_joint``
+        variables previously instantiated, these can be passed to the alternate
+        constructor class method ``at_pin_joint`` of the ``TorqueActuator``
+        class.
+
+        >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
+        >>> actuator
+        TorqueActuator(T, N.z, N, A)
+
+        Parameters
+        ==========
+
+        torque : Expr
+            The scalar expression defining the torque that the actuator
+            produces.
+        pin_joint : PinJoint
+            The pin joint, and by association the parent and child bodies, on
+            which the torque actuator will act. The pair of bodies acted upon
+            by the torque actuator are the parent and child bodies of the pin
+            joint, with the child acting as the reaction body. The pin joint's
+            axis is used as the axis about which the torque actuator will apply
+            its torque.
+
+        """
+        if not isinstance(pin_joint, PinJoint):
+            msg = (
+                f'Value {repr(pin_joint)} passed to `pin_joint` was of type '
+                f'{type(pin_joint)}, must be {PinJoint}.'
+            )
+            raise TypeError(msg)
+        axis = pin_joint.joint_axis
+        body_1 = pin_joint.parent
+        body_2 = pin_joint.child
+        return cls(torque, axis, body_1, body_2)
+
+    @property
+    def torque(self) -> ExprType:
+        """The magnitude of the torque produced by the actuator."""
+        return self._torque
+
+    @torque.setter
+    def torque(self, torque: ExprType) -> None:
+        if not isinstance(torque, ExprType):
+            msg = (
+                f'Value {repr(torque)} passed to `torque` was of type '
+                f'{type(torque)}, must be {ExprType}.'
+            )
+            raise TypeError(msg)
+        self._torque = torque
+
+    @property
+    def axis(self) -> Vector:
+        """The axis about which the torque acts."""
+        return self._axis
+
+    @axis.setter
+    def axis(self, axis: Vector) -> None:
+        if not isinstance(axis, Vector):
+            msg = (
+                f'Value {repr(axis)} passed to `axis` was of type '
+                f'{type(axis)}, must be {Vector}.'
+            )
+            raise TypeError(msg)
+        self._axis = axis
+
+    @property
+    def frames(self) -> tuple[ReferenceFrame, ...]:
+        """The pair of reference frames on which the torque will act."""
+        return self._frames
+
+    @frames.setter
+    def frames(self, frames: tuple[ReferenceFrame | RigidBody, ...]) -> None:
+        if len(frames) != 2:
+            msg = (
+                f'Value {repr(frames)} passed to `frames` was an iterable of '
+                f'length {len(frames)}, must be an iterable of length 2.'
+            )
+            raise ValueError(msg)
+        _frames = []
+        for i, frame in enumerate(frames):
+            if isinstance(frame, ReferenceFrame):
+                _frames.append(frame)
+            elif isinstance(frame, RigidBody):
+                _frames.append(frame.frame)
+            else:
+                msg = (
+                    f'Value {repr(frame)} passed to `frames` at index {i} was '
+                    f'of type {type(frame)}, must be {ReferenceFrame}.'
+                )
+                raise TypeError(msg)
+        self._frames = tuple(_frames)
+
+    def to_loads(self) -> list[LoadBase]:
+        """Loads required by the equations of motion method classes.
+
+        Explanation
+        ===========
+
+        ``KanesMethod`` requires a list of ``Point``-``Vector`` tuples to be
+        passed to the ``loads`` parameters of its ``kanes_equations`` method
+        when constructing the equations of motion. This method acts as a
+        utility to produce the correctly-structred pairs of points and vectors
+        required so that these can be easily concatenated with other items in
+        the list of loads and passed to ``KanesMethod.kanes_equations``. These
+        loads are also in the correct form to also be passed to the other
+        equations of motion method classes, e.g. ``LagrangesMethod``.
+
+        Examples
+        ========
+
+        The below example shows how to generate the loads produced by a torque
+        actuator that acts on a pair of bodies attached by a pin joint.
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
+        ... RigidBody)
+        >>> from sympy.physics.mechanics._actuator import TorqueActuator
+        >>> torque = Symbol('T')
+        >>> N = ReferenceFrame('N')
+        >>> A = ReferenceFrame('A')
+        >>> parent = RigidBody('parent', frame=N)
+        >>> child = RigidBody('child', frame=A)
+        >>> pin_joint = PinJoint(
+        ...     'pin',
+        ...     parent,
+        ...     child,
+        ...     joint_axis=N.z,
+        ... )
+        >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
+
+        The forces produces by the damper can be generated by calling the
+        ``to_loads`` method.
+
+        >>> actuator.to_loads()
+        [(N, T*N.z), (A, - T*N.z)]
+
+        """
+        loads: list[LoadBase] = [
+            Torque(self.frames[0], self.torque * self.axis),
+            Torque(self.frames[1], -self.torque * self.axis),
+        ]
+        return loads
+
+    def __repr__(self) -> str:
+        """Representation of a ``TorqueActuator``."""
+        frames = ', '.join(str(frame) for frame in self.frames)
+        return (
+            f'{self.__class__.__name__}({self.torque}, {self.axis}, '
+            f'{frames})'
+        )
