@@ -13,7 +13,11 @@ from sympy.physics.mechanics import (
     RigidBody,
     dynamicsymbols,
 )
-from sympy.physics.mechanics._actuator import ActuatorBase, ForceActuator
+from sympy.physics.mechanics._actuator import (
+    ActuatorBase,
+    ForceActuator,
+    TorqueActuator,
+)
 from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
 
 if USE_SYMENGINE:
@@ -185,3 +189,7 @@ def test_forced_mass_spring_damper_model():
 
     assert kanes_method.mass_matrix == Matrix([[m]])
     assert kanes_method.forcing == Matrix([[F - c*x_dot - k*x]])
+
+
+class TestTorqueActuator:
+    pass
