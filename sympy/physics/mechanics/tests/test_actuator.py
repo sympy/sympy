@@ -285,3 +285,8 @@ class TestTorqueActuator:
     def test_invalid_frames_not_frame(self, frames: Sequence[Any]) -> None:
         with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
+
+    def test_repr(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.parent, self.child)
+        expected = "TorqueActuator(T, N.z, N, A)"
+        assert repr(actuator) == expected
