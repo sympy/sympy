@@ -203,3 +203,42 @@ class TestTorqueActuator:
 
     def test_is_actuator_base_subclass(self) -> None:
         assert issubclass(TorqueActuator, ActuatorBase)
+
+    @pytest.mark.parametrize(
+        'torque',
+        [
+            Symbol('T'),
+            dynamicsymbols('T'),
+            Symbol('T')**2 + Symbol('T'),
+        ]
+    )
+    @pytest.mark.parametrize(
+        'frames',
+        [
+            (parent.frame, child.frame),
+            (parent, child.frame),
+            (parent.frame, child),
+            (parent, child),
+        ]
+    )
+    def test_valid_constructor(
+        self,
+        torque: ExprType,
+        frames: tuple[ReferenceFrame | RigidBody, ReferenceFrame | RigidBody],
+    ) -> None:
+        instance = TorqueActuator(torque, self.N.z, frames[0], frames[1])
+        assert isinstance(instance, TorqueActuator)
+
+        assert hasattr(instance, 'torque')
+        assert isinstance(instance.torque, ExprType)
+        assert instance.torque == torque
+
+        assert hasattr(instance, 'axis')
+        assert isinstance(instance.axis, Vector)
+        assert instance.axis == self.N.z
+
+        assert hasattr(instance, 'frames')
+        assert isinstance(instance.frames, tuple)
+        assert isinstance(instance.frames[0], ReferenceFrame)
+        assert isinstance(instance.frames[1], ReferenceFrame)
+        assert instance.frames == (parent.frame, child.frame)
