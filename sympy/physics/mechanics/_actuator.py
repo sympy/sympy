@@ -13,10 +13,14 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import Basic
-from sympy.core.expr import Expr
+from sympy.core.backend import USE_SYMENGINE
 from sympy.physics.mechanics import Point, Vector
 from sympy.physics.mechanics._pathway import PathwayBase
+
+if USE_SYMENGINE:
+    from sympy.core.backend import Basic as ExprType
+else:
+    from sympy.core.expr import Expr as ExprType
 
 
 __all__ = ['ForceActuator']
@@ -121,7 +125,7 @@ class ForceActuator(ActuatorBase):
 
     def __init__(
         self,
-        force: Expr,
+        force: ExprType,
         pathway: PathwayBase,
     ) -> None:
         """Initializer for ``ForceActuator``.
@@ -142,16 +146,16 @@ class ForceActuator(ActuatorBase):
         super().__init__()
 
     @property
-    def force(self) -> Expr:
+    def force(self) -> ExprType:
         """The magnitude of the force produced by the actuator."""
         return self._force
 
     @force.setter
-    def force(self, force: Expr) -> None:
-        if not isinstance(force, Basic):
+    def force(self, force: ExprType) -> None:
+        if not isinstance(force, ExprType):
             msg = (
                 f'Value {repr(force)} passed to `force` was of type '
-                f'{type(force)}, must be {Expr}.'
+                f'{type(force)}, must be {ExprType}.'
             )
             raise TypeError(msg)
         self._force = force
