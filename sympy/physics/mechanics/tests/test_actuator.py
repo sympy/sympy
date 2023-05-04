@@ -192,4 +192,11 @@ def test_forced_mass_spring_damper_model():
 
 
 class TestTorqueActuator:
-    pass
+
+    @pytest.fixture(autouse=True)
+    def _torque_actuator_fixture(self) -> None:
+        self.torque = Symbol('T')
+        self.N = ReferenceFrame('N')
+        self.A = ReferenceFrame('A')
+        self.parent = RigidBody('parent', frame=self.N)
+        self.child = RigidBody('child', frame=self.A)
