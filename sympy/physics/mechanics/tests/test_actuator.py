@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from sympy.core.backend import USE_SYMENGINE, Matrix, Symbol, sqrt
@@ -242,3 +244,14 @@ class TestTorqueActuator:
         assert isinstance(instance.frames[0], ReferenceFrame)
         assert isinstance(instance.frames[1], ReferenceFrame)
         assert instance.frames == (parent.frame, child.frame)
+
+    @pytest.mark.parametrize(
+        'axis',
+        [
+            Symbol('a'),
+            dynamicsymbols('a'),
+        ]
+    )
+    def test_invalid_constructor_axis_not_vector(self, axis: Any) -> None:
+        with pytest.raises(TypeError):
+            _ = TorqueActuator(self.torque, axis, self.parent, self.child)  # type: ignore
