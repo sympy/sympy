@@ -200,3 +200,6 @@ class TestTorqueActuator:
         self.A = ReferenceFrame('A')
         self.parent = RigidBody('parent', frame=self.N)
         self.child = RigidBody('child', frame=self.A)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(TorqueActuator, ActuatorBase)
