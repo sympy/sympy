@@ -76,6 +76,11 @@ class TestForceActuator:
         with pytest.raises(TypeError):
             _ = ForceActuator(self.force, None)  # type: ignore
 
+    def test_repr(self) -> None:
+        actuator = ForceActuator(self.force, self.pathway)
+        expected = "ForceActuator(F, LinearPathway(pA, pB))"
+        assert repr(actuator) == expected
+
     def test_to_loads_static_pathway(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
