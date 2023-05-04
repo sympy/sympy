@@ -10,6 +10,7 @@ from sympy.core.backend import USE_SYMENGINE, Matrix, Symbol, sqrt
 from sympy.physics.mechanics import (
     KanesMethod,
     Particle,
+    PinJoint,
     Point,
     ReferenceFrame,
     RigidBody,
@@ -290,3 +291,30 @@ class TestTorqueActuator:
         actuator = TorqueActuator(self.torque, self.N.z, self.parent, self.child)
         expected = "TorqueActuator(T, N.z, N, A)"
         assert repr(actuator) == expected
+
+    def test_at_pin_joint_constructor(self) -> None:
+        pin_joint = PinJoint(
+            'pin',
+            self.parent,
+            self.child,
+            coordinates=dynamicsymbols('q'),
+            speeds=dynamicsymbols('u'),
+            parent_interframe=self.N,
+            joint_axis=self.N.z,
+        )
+        instance = TorqueActuator.at_pin_joint(self.torque, pin_joint)
+        assert isinstance(instance, TorqueActuator)
+
+        assert hasattr(instance, 'torque')
+        assert isinstance(instance.torque, ExprType)
+        assert instance.torque == self.torque
+
+        assert hasattr(instance, 'axis')
+        assert isinstance(instance.axis, Vector)
+        assert instance.axis == self.N.z
+
+        assert hasattr(instance, 'frames')
+        assert isinstance(instance.frames, tuple)
+        assert isinstance(instance.frames[0], ReferenceFrame)
+        assert isinstance(instance.frames[1], ReferenceFrame)
+        assert instance.frames == (self.N, self.A)
