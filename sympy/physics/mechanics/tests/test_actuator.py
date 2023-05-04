@@ -10,6 +10,7 @@ from sympy.physics.mechanics import (
     Particle,
     Point,
     ReferenceFrame,
+    RigidBody,
     dynamicsymbols,
 )
 from sympy.physics.mechanics._actuator import ActuatorBase, ForceActuator
@@ -19,6 +20,10 @@ if USE_SYMENGINE:
     from sympy.core.backend import Basic as ExprType
 else:
     from sympy.core.expr import Expr as ExprType
+
+
+parent = RigidBody('parent')
+child = RigidBody('child')
 
 
 class TestForceActuator:
