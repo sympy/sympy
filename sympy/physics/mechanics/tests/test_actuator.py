@@ -322,3 +322,11 @@ class TestTorqueActuator:
     def test_at_pin_joint_pin_joint_not_pin_joint_invalid(self) -> None:
         with pytest.raises(TypeError):
             _ = TorqueActuator.at_pin_joint(self.torque, Symbol('pin'))  # type: ignore
+
+    def test_to_loads(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.parent, self.child)
+        expected = [
+            (self.N, self.torque * self.N.z),
+            (self.A, - self.torque * self.N.z),
+        ]
+        assert actuator.to_loads() == expected
