@@ -500,7 +500,6 @@ class Cylinder(GeometryBase):
                 .cross(point_2_perpendicular_vector)
                 .dot(self.axis)),
             cancel(point_1_perpendicular_vector.dot(point_2_perpendicular_vector)),
-            positives={self.radius},
         )
 
         planar_arc_length = self.radius * central_angle
@@ -515,12 +514,7 @@ class Cylinder(GeometryBase):
         )
 
 
-def _directional_atan(
-    numerator: Expr,
-    denominator: Expr,
-    *,
-    positives: set[Expr] | None = None,
-) -> Expr:
+def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
     """Compute atan in a directional sense as required for geodesics.
 
     Explanation
