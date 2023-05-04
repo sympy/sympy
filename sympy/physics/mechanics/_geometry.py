@@ -380,15 +380,6 @@ class Cylinder(GeometryBase):
             The point for which it's to be ascertained if it's on the
             cylinder's surface or not.
 
-        Notes
-        =====
-
-        The radius of the point from the cylinder's center is compared to the
-        expression `sqrt(self.radius**2)` because this is not automatically
-        symplified when the `magnitude` method is called. This should ideally
-        be fixed and the RHS of the equality expression be changed to check
-        against just `self.radius`.
-
         """
         relative_position = point.pos_from(self.point)
         parallel = relative_position.dot(self.axis) * self.axis
