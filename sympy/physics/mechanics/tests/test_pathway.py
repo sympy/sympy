@@ -7,9 +7,9 @@ from typing import Any, Sequence
 import pytest
 
 from sympy.core.backend import Symbol, sqrt
-from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics._pathway import LinearPathway
+from sympy.simplify.simplify import simplify
 
 
 class TestLinearPathway:
