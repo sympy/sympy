@@ -413,10 +413,12 @@ class TorqueActuator(ActuatorBase):
                 f'{type(pin_joint)}, must be {PinJoint}.'
             )
             raise TypeError(msg)
-        axis = pin_joint.joint_axis
-        body_1 = pin_joint.parent
-        body_2 = pin_joint.child
-        return cls(torque, axis, body_1, body_2)
+        return cls(
+            torque,
+            pin_joint.joint_axis,
+            pin_joint.parent_interframe,
+            pin_joint.child_interframe,
+        )
 
     @property
     def torque(self) -> ExprType:
