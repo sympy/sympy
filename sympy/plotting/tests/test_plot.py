@@ -762,3 +762,14 @@ def test_deprecated_get_segments():
     p = plot(f, (x, -10, 10), show=False)
     with warns_deprecated_sympy():
         p[0].get_segments()
+
+def test_special_points():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    y = Symbol('y')
+    f = sin(x)
+    plot(f, special_points=[(0, 0), (float(pi)/2, 1, )])
+    f3d = x + y
+    plot3d(f3d, special_points=[(0, 0, 0), (1, 2, 3)])

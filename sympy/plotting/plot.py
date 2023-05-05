@@ -135,8 +135,8 @@ class Plot:
     - backend : {'default', 'matplotlib', 'text'} or a subclass of BaseBackend
     - size : optional tuple of two floats, (width, height); default: None
     - special_points : list of tuples of either two or three floats
-        Special points are only considered for ``MatplotlibBackend`` at the 
-        moment. Special points must also describe points in all axes available, 
+        Special points are only considered for ``MatplotlibBackend`` at the
+        moment. Special points must also describe points in all axes available,
         depending on whether the plot is 3D or 2D.
 
     The per data series options and aesthetics are:
@@ -1522,6 +1522,20 @@ class MatplotlibBackend(BaseBackend):
                 ax.add_patch(rect)
         if parent.fill:
             ax.fill_between(**parent.fill)
+        if parent.special_points:
+            xticks = ax.get_xticks()
+            yticks = ax.get_yticks()
+            if isinstance(ax, Axes3D): zticks = ax.get_zticks()
+            for point in parent.special_points:
+                xticks = np.append(xticks, point[0])
+                yticks = np.append(yticks, point[1])
+                if isinstance(ax, Axes3D):
+                    zticks = np.append(yticks, point[2])
+                    self.plt.plot(point[0], point[1], point[2], marker="o", markersize=5, markeredgecolor="blue", markerfacecolor="blue", zorder=10)
+                else: self.plt.plot(point[0], point[1], marker="o", markersize=5, markeredgecolor="blue", markerfacecolor="blue", zorder=10)
+            ax.set_xticks(xticks)
+            ax.set_yticks(yticks)
+            if isinstance(ax, Axes3D): ax.set_yticks(zticks)
 
         # xlim and ylim should always be set at last so that plot limits
         # doesn't get altered during the process.
@@ -1529,21 +1543,6 @@ class MatplotlibBackend(BaseBackend):
             ax.set_xlim(parent.xlim)
         if parent.ylim:
             ax.set_ylim(parent.ylim)
-
-        if parent.special_points:
-            xticks = ax.get_xticks()
-            yticks = ax.get_yticks()
-            if isinstance(ax, Axes3D): zticks = ax.get_zticks()
-            for point in parent.special_points: 
-                xticks = np.append(xticks, point[0])
-                yticks = np.append(yticks, point[1])
-                if isinstance(ax, Axes3D):
-                    zticks = np.append(yticks, point[2])
-                    self.plt.plot(point[0], point[1], point[2], marker="o", markersize=5, markeredgecolor="blue", markerfacecolor="blue")
-                self.plt.plot(point[0], point[1], marker="o", markersize=5, markeredgecolor="blue", markerfacecolor="blue")
-            ax.set_xticks(xticks)
-            ax.set_yticks(yticks)
-            if isinstance(ax, Axes3D): ax.set_yticks(zticks)
 
     def process_series(self):
         """
