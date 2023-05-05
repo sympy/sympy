@@ -536,6 +536,14 @@ class TorqueActuator(ActuatorBase):
         >>> actuator.to_loads()
         [(N, T*N.z), (A, - T*N.z)]
 
+        Alternatively, if a torque actuator is created without a reaction frame
+        then the loads returned by the ``to_loads`` method will contain just
+        the single load acting on the target frame.
+
+        >>> actuator = TorqueActuator(torque, N.z, N)
+        >>> actuator.to_loads()
+        [(N, T*N.z)]
+
         """
         loads: list[LoadBase] = [
             Torque(self.target_frame, self.torque * self.axis),
