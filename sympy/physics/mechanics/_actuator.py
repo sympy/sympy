@@ -299,7 +299,7 @@ class TorqueActuator(ActuatorBase):
     >>> bodies = (parent, child)
     >>> actuator = TorqueActuator(torque, axis, *bodies)
     >>> actuator
-    TorqueActuator(T, N.z, N, A)
+    TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
 
     Note that because torques actually act on frames, not bodies,
     ``TorqueActuator`` will extract the frame associated with a ``RigidBody``
@@ -312,10 +312,11 @@ class TorqueActuator(ActuatorBase):
         The scalar expression defining the torque that the actuator produces.
     axis : Vector
         The axis about which the actuator applies torques.
-    *frames : ReferenceFrame | RigidBody
-        The pair of frames on which the actuator will apply the torque. Note
-        that the torque is applied to the first frame with the (equal and
-        opposite) reaction torque being applied to the second.
+    target_frame : ReferenceFrame | RigidBody
+        The primary frame on which the actuator will apply the torque.
+    reaction_frame : ReferenceFrame | RigidBody | None
+        The secondary frame on which the actuator will apply the torque. Note
+        that the (equal and opposite) reaction torque is applied to this frame.
 
     """
 
@@ -323,9 +324,10 @@ class TorqueActuator(ActuatorBase):
         self,
         torque: ExprType,
         axis: Vector,
-        *frames: ReferenceFrame | RigidBody,
+        target_frame: ReferenceFrame | RigidBody,
+        reaction_frame: ReferenceFrame | RigidBody | None = None,
     ) -> None:
-        """Initializer for ``ForceActuator``.
+        """Initializer for ``TorqueActuator``.
 
         Parameters
         ==========
@@ -335,15 +337,18 @@ class TorqueActuator(ActuatorBase):
             produces.
         axis : Vector
             The axis about which the actuator applies torques.
-        *frames : ReferenceFrame | RigidBody
-            The pair of frames on which the actuator will apply the torque.
-            Note that the torque is applied to the first frame with the (equal
-            and opposite) reaction torque being applied to the second.
+        target_frame : ReferenceFrame | RigidBody
+            The primary frame on which the actuator will apply the torque.
+        reaction_frame : ReferenceFrame | RigidBody | None
+           The secondary frame on which the actuator will apply the torque.
+           Note that the (equal and opposite) reaction torque is applied to
+           this frame.
 
         """
         self.torque = torque
         self.axis = axis
-        self.frames = frames  # type: ignore
+        self.target_frame = target_frame  # type: ignore
+        self.reaction_frame = reaction_frame  # type: ignore
         super().__init__()
 
     @classmethod
@@ -390,7 +395,7 @@ class TorqueActuator(ActuatorBase):
 
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
-        TorqueActuator(T, N.z, N, A)
+        TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
 
         Parameters
         ==========
@@ -451,31 +456,41 @@ class TorqueActuator(ActuatorBase):
         self._axis = axis
 
     @property
-    def frames(self) -> tuple[ReferenceFrame, ...]:
-        """The pair of reference frames on which the torque will act."""
-        return self._frames
+    def target_frame(self) -> ReferenceFrame:
+        """The primary reference frames on which the torque will act."""
+        return self._target_frame
 
-    @frames.setter
-    def frames(self, frames: tuple[ReferenceFrame | RigidBody, ...]) -> None:
-        if len(frames) != 2:
+    @target_frame.setter
+    def target_frame(self, target_frame: ReferenceFrame | RigidBody) -> None:
+        if isinstance(target_frame, RigidBody):
+            target_frame = target_frame.frame
+        elif not isinstance(target_frame, ReferenceFrame):
             msg = (
-                f'Value {repr(frames)} passed to `frames` was an iterable of '
-                f'length {len(frames)}, must be an iterable of length 2.'
+                f'Value {repr(target_frame)} passed to `target_frame` was of '
+                f'type 'f'{type(target_frame)}, must be {ReferenceFrame}.'
             )
-            raise ValueError(msg)
-        _frames = []
-        for i, frame in enumerate(frames):
-            if isinstance(frame, ReferenceFrame):
-                _frames.append(frame)
-            elif isinstance(frame, RigidBody):
-                _frames.append(frame.frame)
-            else:
-                msg = (
-                    f'Value {repr(frame)} passed to `frames` at index {i} was '
-                    f'of type {type(frame)}, must be {ReferenceFrame}.'
-                )
-                raise TypeError(msg)
-        self._frames = tuple(_frames)
+            raise TypeError(msg)
+        self._target_frame: ReferenceFrame = target_frame  # type: ignore
+
+    @property
+    def reaction_frame(self) -> ReferenceFrame | None:
+        """The primary reference frames on which the torque will act."""
+        return self._reaction_frame
+
+    @reaction_frame.setter
+    def reaction_frame(self, reaction_frame: ReferenceFrame | RigidBody | None) -> None:
+        if isinstance(reaction_frame, RigidBody):
+            reaction_frame = reaction_frame.frame
+        elif (
+            not isinstance(reaction_frame, ReferenceFrame)
+            and reaction_frame is not None
+        ):
+            msg = (
+                f'Value {repr(reaction_frame)} passed to `reaction_frame` was of '
+                f'type 'f'{type(reaction_frame)}, must be {ReferenceFrame}.'
+            )
+            raise TypeError(msg)
+        self._reaction_frame: ReferenceFrame | None = reaction_frame  # type: ignore
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
@@ -523,15 +538,21 @@ class TorqueActuator(ActuatorBase):
 
         """
         loads: list[LoadBase] = [
-            Torque(self.frames[0], self.torque * self.axis),
-            Torque(self.frames[1], -self.torque * self.axis),
+            Torque(self.target_frame, self.torque * self.axis),
         ]
+        if self.reaction_frame is not None:
+            loads.append(Torque(self.reaction_frame, -self.torque * self.axis))
         return loads
 
     def __repr__(self) -> str:
         """Representation of a ``TorqueActuator``."""
-        frames = ', '.join(str(frame) for frame in self.frames)
-        return (
-            f'{self.__class__.__name__}({self.torque}, {self.axis}, '
-            f'{frames})'
+        string = (
+            f'{self.__class__.__name__}({self.torque}, axis={self.axis}, '
+            f'target_frame={self.target_frame}'
         )
+        if self.reaction_frame is not None:
+            string += f', reaction_frame={self.reaction_frame})'
+        else:
+            string += ')'
+        return string
+
