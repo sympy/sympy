@@ -563,4 +563,3 @@ class TorqueActuator(ActuatorBase):
         else:
             string += ')'
         return string
-
