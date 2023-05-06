@@ -162,6 +162,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
+        'declare':None
     }
 
     type_aliases = {

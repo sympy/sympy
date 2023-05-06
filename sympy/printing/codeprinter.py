@@ -64,6 +64,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'declare': None
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -389,7 +390,10 @@ class CodePrinter(StrPrinter):
         else:
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
-            return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+            codestring = "%s = %s"
+            if 'declare' in self._settings and self._settings['declare']:
+                codestring = self._settings['declare'] + " " + codestring
+            return self._get_statement(codestring % (lhs_code, rhs_code))
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
