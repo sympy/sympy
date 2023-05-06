@@ -2073,3 +2073,27 @@ def test_mul_pow_derivative():
     assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
+
+def test_issue_20782():
+    x_d = symbols('x_d')
+
+    fun1 = lambda x : -Piecewise((0, x < 0.0), (1, True))
+    fun2 = lambda x : Piecewise((0, x < 1.0), (1, True))
+    fun_sum = lambda x : +Piecewise((0, x < 0.0), (1, True)) \
+                        -Piecewise((0, x < 1.0), (1, True))
+
+    fun_sum_neg = lambda x : -Piecewise((0, x < 0.0), (1, True)) \
+                            +Piecewise((0, x < 1.0), (1, True))
+
+    assert integrate(-fun1(x_d), (x_d, -float('Inf'), 1)) == 1
+    assert integrate(-fun2(x_d), (x_d, -float('Inf'), 1)) == 0
+    assert integrate(fun1(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(fun2(x_d), (x_d, -float('Inf'), 1)) == 0
+    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1
+    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1
+
+    f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
+    assert integrate(f, (x, -oo, 1)) == 1
+    assert integrate(-f, (x, -oo, 1)) == -1
