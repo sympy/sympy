@@ -781,7 +781,6 @@ def collect_minmax(expr, *vars, Numbers=True):
                     vars.add(m)
     else:
         vars = sympify(vars)
-    
     vars = list(ordered(vars))
     for v in vars:
         # First, collect constant terms with the same factor v.
