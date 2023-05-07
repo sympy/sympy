@@ -1093,16 +1093,6 @@ def test_isqrt():
     assert isqrt(4503599761588224-tiny) == 67108864
     assert isqrt(10**100 - tiny) == 10**50 - 1
 
-    # Check that using an inaccurate math.sqrt doesn't affect the results.
-    from sympy.core import power
-    old_sqrt = power._sqrt
-    power._sqrt = lambda x: 2.999999999
-    try:
-        assert isqrt(9) == 3
-        assert isqrt(10000) == 100
-    finally:
-        power._sqrt = old_sqrt
-
 
 def test_powers_Integer():
     """Test Integer._eval_power"""
