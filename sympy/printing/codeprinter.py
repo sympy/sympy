@@ -135,7 +135,7 @@ class CodePrinter(StrPrinter):
 
         def _handle_assign_to(expr, assign_to):
             if assign_to is None:
-                return sympify(expr)
+                return Assignment(expr, expr)
             if isinstance(assign_to, (list, tuple)):
                 if len(expr) != len(assign_to):
                     raise ValueError('Failed to assign an expression of length {} to {} variables'.format(len(expr), len(assign_to)))
@@ -388,8 +388,8 @@ class CodePrinter(StrPrinter):
             # print the required loops.
             return self._doprint_loops(rhs, lhs)
         else:
-            lhs_code = self._print(lhs)
-            rhs_code = self._print(rhs)
+            lhs_code = self._print(lhs) # b, left on output and right on input
+            rhs_code = self._print(rhs) # pow(a, 2)
             codestring = "%s = %s"
             if 'declare' in self._settings and self._settings['declare']:
                 codestring = self._settings['declare'] + " " + codestring
@@ -410,7 +410,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
