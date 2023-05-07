@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Callable
-from math import log as _log, sqrt as _sqrt
+from math import log as _log
 from itertools import product
 
 from .sympify import _sympify
@@ -14,7 +14,7 @@ from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
-from sympy.external.gmpy import HAS_GMPY, gmpy
+from sympy.external.gmpy import HAS_GMPY, gmpy, sqrt
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
@@ -23,24 +23,38 @@ from sympy.multipledispatch import Dispatcher
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
 
 
-
 def isqrt(n):
-    """Return the largest integer less than or equal to sqrt(n)."""
-    if n < 0:
-        raise ValueError("n must be nonnegative")
-    n = int(n)
+    r""" Return the largest integer less than or equal to `\sqrt{n}`.
 
-    # Fast path: with IEEE 754 binary64 floats and a correctly-rounded
-    # math.sqrt, int(math.sqrt(n)) works for any integer n satisfying 0 <= n <
-    # 4503599761588224 = 2**52 + 2**27. But Python doesn't guarantee either
-    # IEEE 754 format floats *or* correct rounding of math.sqrt, so check the
-    # answer and fall back to the slow method if necessary.
-    if n < 4503599761588224:
-        s = int(_sqrt(n))
-        if 0 <= n - s*s <= 2*s:
-            return s
+    Parameters
+    ==========
 
-    return integer_nthroot(n, 2)[0]
+    n : non-negative integer
+
+    Returns
+    =======
+
+    int : `\left\lfloor\sqrt{n}\right\rfloor`
+
+    Raises
+    ======
+
+    ValueError
+        If n is negative integer.
+
+    Examples
+    ========
+
+    >>> from sympy.core.power import isqrt
+    >>> isqrt(0)
+    0
+    >>> isqrt(9)
+    3
+    >>> isqrt(10)
+    3
+
+    """
+    return int(sqrt(int(n)))
 
 
 def integer_nthroot(y, n):

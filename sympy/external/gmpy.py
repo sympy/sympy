@@ -115,7 +115,7 @@ else:
     MPQ = PythonMPQ
 
     factorial = lambda x: int(mlib.ifac(x))
-    sqrt = lambda x: int(mlib.isqrt(x))
+    sqrt = math.isqrt
     if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
         lcm = math.lcm
