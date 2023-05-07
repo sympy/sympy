@@ -32,7 +32,7 @@ __all__ = [
     # Either the gmpy or the mpmath function
     'factorial',
 
-    # isqrt from gmpy or mpmath
+    # isqrt from gmpy or math
     'sqrt',
 
     # gcd from gmpy or math
