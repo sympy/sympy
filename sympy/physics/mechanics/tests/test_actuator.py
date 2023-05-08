@@ -155,6 +155,44 @@ class TestLinearSpring:
     def test_is_actuator_base_subclass(self) -> None:
         assert issubclass(LinearSpring, ActuatorBase)
 
+    @pytest.mark.parametrize(
+        'stiffness, equilibrium_length, force',
+        [
+            (Symbol('k'), S.Zero, -Symbol('k')*sqrt(dynamicsymbols('q')**2)),
+            (Symbol('k'), Symbol('l'), -Symbol('k')*(sqrt(dynamicsymbols('q')**2) - Symbol('l'))),
+        ]
+    )
+    def test_valid_constructor(
+        self,
+        stiffness: ExprType,
+        equilibrium_length: ExprType,
+        force: ExprType,
+    ) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(
+            stiffness,
+            self.pathway,
+            equilibrium_length=equilibrium_length,
+        )
+
+        assert isinstance(spring, LinearSpring)
+
+        assert hasattr(spring, 'stiffness')
+        assert isinstance(spring.stiffness, ExprType)
+        assert spring.stiffness == stiffness
+
+        assert hasattr(spring, 'pathway')
+        assert isinstance(spring.pathway, LinearPathway)
+        assert spring.pathway == self.pathway
+
+        assert hasattr(spring, 'equilibrium_length')
+        assert isinstance(spring.equilibrium_length, ExprType)
+        assert spring.equilibrium_length == equilibrium_length
+
+        assert hasattr(spring, 'force')
+        assert isinstance(spring.force, ExprType)
+        assert spring.force == force
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
