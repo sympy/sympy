@@ -155,6 +155,7 @@ class ForceActuator(ActuatorBase):
             a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
 
         """
+        # ``force`` attribute
         if not isinstance(force, ExprType):
             msg = (
                 f'Value {repr(force)} passed to `force` was of type '
@@ -163,8 +164,14 @@ class ForceActuator(ActuatorBase):
             raise TypeError(msg)
         self._force = force
 
-        self.pathway = pathway
-        super().__init__()
+        # ``pathway`` attribute
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
 
     @property
     def force(self) -> ExprType:
@@ -175,16 +182,6 @@ class ForceActuator(ActuatorBase):
     def pathway(self) -> PathwayBase:
         """The ``Pathway`` defining the actuator's line of action."""
         return self._pathway
-
-    @pathway.setter
-    def pathway(self, pathway: PathwayBase) -> None:
-        if not isinstance(pathway, PathwayBase):
-            msg = (
-                f'Value {repr(pathway)} passed to `pathway` was of type '
-                f'{type(pathway)}, must be {PathwayBase}.'
-            )
-            raise TypeError(msg)
-        self._pathway = pathway
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
@@ -386,9 +383,33 @@ class LinearSpring(ForceActuator):
             function of the pathway's length with no constant offset.
 
         """
-        self.stiffness = stiffness
-        self.pathway = pathway
-        self.equilibrium_length = equilibrium_length
+        # ``stiffness`` attribute
+        if not isinstance(stiffness, ExprType):
+            msg = (
+                f'Value {repr(stiffness)} passed to `stiffness` was of type '
+                f'{type(stiffness)}, must be {ExprType}.'
+            )
+            raise TypeError(msg)
+        self._stiffness = stiffness
+
+        # ``pathway`` attribute
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
+        # ``equilibrium_length`` attribute
+        if not isinstance(equilibrium_length, ExprType):
+            msg = (
+                f'Value {repr(equilibrium_length)} passed to '
+                f'`equilibrium_length` was of type '
+                f'{type(equilibrium_length)}, must be {ExprType}.'
+            )
+            raise TypeError(msg)
+        self._equilibrium_length = equilibrium_length
 
     @property
     def force(self) -> ExprType:
@@ -400,31 +421,10 @@ class LinearSpring(ForceActuator):
         """The spring constant for the linear spring."""
         return self._stiffness
 
-    @stiffness.setter
-    def stiffness(self, stiffness: ExprType) -> None:
-        if not isinstance(stiffness, ExprType):
-            msg = (
-                f'Value {repr(stiffness)} passed to `stiffness` was of type '
-                f'{type(stiffness)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._stiffness = stiffness
-
     @property
     def equilibrium_length(self) -> ExprType:
         """The length of the spring at which it produces no force."""
         return self._equilibrium_length
-
-    @equilibrium_length.setter
-    def equilibrium_length(self, equilibrium_length: ExprType) -> None:
-        if not isinstance(equilibrium_length, ExprType):
-            msg = (
-                f'Value {repr(equilibrium_length)} passed to '
-                f'`equilibrium_length` was of type '
-                f'{type(equilibrium_length)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._equilibrium_length = equilibrium_length
 
     def __repr__(self) -> str:
         """Representation of a ``LinearSpring``."""
