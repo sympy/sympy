@@ -84,6 +84,29 @@ The new implementation saves user-provided numerical data into appropriate
 data series, which can easily be processed by ``MatplotlibBackend``.
 Instead of setting those properties directly, users should pass the homonym
 keyword arguments to the plotting functions.
+
+The supported behavior is to pass keyword arguments to the plotting functions,
+which works fine both for previous and current implementation:
+
+```py
+p = plot(x,
+  markers=[{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}],
+  annotations=[{"text": "test", "xy": (0, 0)}],
+  fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
+  rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
+```
+
+Setting attributes on the plot object is deprecated and will raise warnings:
+
+```py
+p = plot(x, show=False)
+p.markers = [{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}]
+p.annotations = [{"text": "test", "xy": (0, 0)}]
+p.fill = {"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]}
+p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
+p.show()
+```
+
 Motivation for this deprecation: the implementation of the ``Plot`` class
 suggests that it is ok to add attributes and hard-coded if-statements in the
 ``MatplotlibBackend`` class to provide more and more functionalities for
