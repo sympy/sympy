@@ -20,6 +20,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._actuator import (
     ActuatorBase,
     ForceActuator,
+    LinearSpring,
     TorqueActuator,
 )
 from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
@@ -134,6 +135,15 @@ class TestForceActuator:
             (self.pB, pI_force),
         ]
         assert actuator.to_loads() == expected
+
+
+class TestLinearSpring:
+
+    def test_is_force_actuator_subclass(self) -> None:
+        assert issubclass(LinearSpring, ForceActuator)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(LinearSpring, ActuatorBase)
 
 
 def test_forced_mass_spring_damper_model():
