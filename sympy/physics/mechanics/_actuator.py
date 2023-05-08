@@ -33,7 +33,11 @@ if TYPE_CHECKING:
     from sympy.physics.mechanics.loads import LoadBase
 
 
-__all__ = ['ForceActuator']
+__all__ = [
+    'ForceActuator',
+    'LinearSpring',
+    'TorqueActuator',
+]
 
 
 class ActuatorBase(ABC):
