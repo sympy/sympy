@@ -1311,7 +1311,7 @@ class GenericDataSeries(BaseSeries):
     in adding custom numerical data to a plot should retrieve the figure
     created by this plotting module. For example, this code:
 
-    >>> from sympy import Symbol, plot
+    >>> from sympy import Symbol, plot, cos
     >>> x = Symbol("x")
     >>> p = plot(cos(x), markers=[{"args": [[0, 1, 2], [0, 1, -1], "*"]}])
 
