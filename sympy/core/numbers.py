@@ -19,7 +19,8 @@ from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
+from sympy.external.gmpy import (SYMPY_INTS, HAS_GMPY, gmpy,
+                                 gcd as number_gcd, lcm as number_lcm)
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -237,11 +238,6 @@ def igcd(*args):
     improve speed, ``igcd()`` has its own caching mechanism.
     If you do not need the cache mechanism, using ``sympy.external.gmpy.gcd``.
 
-    It is also possible to give symbolic arguments such as
-    ``sympy.core.numbers.Integer`` to compute gcd, but it is not recommended;
-    consider converting to ``int``, etc. and using
-    ``sympy.external.gmpy.gcd``.
-
     Examples
     ========
 
@@ -260,17 +256,7 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    args_temp = [abs(as_int(i)) for i in args]
-    if 1 in args_temp:
-        return 1
-    a = args_temp.pop()
-    if HAS_GMPY: # Using gmpy if present to speed up.
-        for b in args_temp:
-            a = gmpy.gcd(a, b) if b else a
-        return as_int(a)
-    for b in args_temp:
-        a = math.gcd(a, b)
-    return a
+    return int(number_gcd(*map(as_int, args)))
 
 
 igcd2 = math.gcd
@@ -425,10 +411,6 @@ def igcd_lehmer(a, b):
 def ilcm(*args):
     """Computes integer least common multiple.
 
-    It is retained for historical reasons,
-    but if there are no special needs,
-    please use ``sympy.external.gmpy.lcm``.
-
     Examples
     ========
 
@@ -444,12 +426,7 @@ def ilcm(*args):
     if len(args) < 2:
         raise TypeError(
             'ilcm() takes at least 2 arguments (%s given)' % len(args))
-    if 0 in args:
-        return 0
-    a = args[0]
-    for b in args[1:]:
-        a = a // igcd(a, b) * b # since gcd(a,b) | a
-    return a
+    return int(number_lcm(*map(as_int, args)))
 
 
 def igcdex(a, b):
