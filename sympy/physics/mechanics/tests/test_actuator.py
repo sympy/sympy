@@ -193,6 +193,22 @@ class TestLinearSpring:
         assert isinstance(spring.force, ExprType)
         assert spring.force == force
 
+    @pytest.mark.parametrize(
+        'equilibrium_length, expected',
+        [
+            (S.Zero, 'LinearSpring(k, LinearPathway(pA, pB))'),
+            (Symbol('l'), 'LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)'),
+        ]
+    )
+    def test_repr(self, equilibrium_length, expected) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(
+            self.stiffness,
+            self.pathway,
+            equilibrium_length=equilibrium_length,
+        )
+        assert repr(spring) == expected
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
