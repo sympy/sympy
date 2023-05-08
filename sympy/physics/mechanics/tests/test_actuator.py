@@ -170,11 +170,7 @@ class TestLinearSpring:
         force: ExprType,
     ) -> None:
         self.pB.set_pos(self.pA, self.q * self.N.x)
-        spring = LinearSpring(
-            stiffness,
-            self.pathway,
-            equilibrium_length=equilibrium_length,
-        )
+        spring = LinearSpring(stiffness, self.pathway, equilibrium_length)
 
         assert isinstance(spring, LinearSpring)
 
@@ -203,20 +199,12 @@ class TestLinearSpring:
     )
     def test_repr(self, equilibrium_length: Any, expected: str) -> None:
         self.pB.set_pos(self.pA, self.q * self.N.x)
-        spring = LinearSpring(
-            self.stiffness,
-            self.pathway,
-            equilibrium_length=equilibrium_length,
-        )
+        spring = LinearSpring(self.stiffness, self.pathway, equilibrium_length)
         assert repr(spring) == expected
 
     def test_to_loads(self) -> None:
         self.pB.set_pos(self.pA, self.q * self.N.x)
-        spring = LinearSpring(
-            self.stiffness,
-            self.pathway,
-            equilibrium_length=self.l,
-        )
+        spring = LinearSpring(self.stiffness, self.pathway, self.l)
         normal = self.q / sqrt(self.q**2) * self.N.x
         pA_force = self.stiffness * (sqrt(self.q**2) - self.l) * normal
         pB_force = -self.stiffness * (sqrt(self.q**2) - self.l) * normal
