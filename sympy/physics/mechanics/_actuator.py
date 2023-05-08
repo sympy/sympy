@@ -357,7 +357,8 @@ class LinearSpring(ForceActuator):
     See Also
     ========
 
-    LinearPathway
+    ForceActuator: force-producing actuator (superclass of ``LinearSpring``).
+    LinearPathway: straight-line pathway between a pair of points.
 
     """
 
