@@ -18,13 +18,14 @@ from functools import wraps
 from itertools import chain
 
 from sympy.core import S
+from sympy.core.symbol import CodeblockResult, Dummy
 from sympy.core.numbers import equal_valued
 from sympy.codegen.ast import (
     Assignment, Pointer, Variable, Declaration, Type,
     real, complex_, integer, bool_, float32, float64, float80,
     complex64, complex128, intc, value_const, pointer_const,
     int8, int16, int32, int64, uint8, uint16, uint32, uint64, untyped,
-    none
+    none, CodeBlock, Comment, While, For, aug_assign
 )
 from sympy.printing.codeprinter import CodePrinter, requires
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -628,6 +629,45 @@ class C89CodePrinter(CodePrinter):
 
     def _print_ContinueToken(self, _):
         return 'continue'
+    
+    def _codeblock_Sum(self, expr, **kwargs):
+        # Connect to the rest of the expression
+        sum_result = CodeblockResult(expr, 'sumResult') 
+        sum_expr = Dummy('sumExpr')
+        sum_index = Dummy('sumIndex')
+        sum_start = Dummy('sumStart')
+        sum_end = Dummy('sumEnd')
+
+        # Replace the index term with the dummy index
+        expr = expr.xreplace({expr.args[1][0]: sum_index})
+
+        # Resolve the possible code blocks in the summand 
+        summand, summand_codeblocks = self.doblocks(expr.args[0])
+        if len(summand_codeblocks) > 0:
+          # Add a comment to highlight nested code blocks
+          summand_codeblocks.insert(0, Comment('Nested CodeBlocks for ' + self._print(sum_result)))
+        else:
+          summand_codeblocks = []
+
+        # TODO: Allow complex expressions with codeblocks in the arguments for the limits # new_args = []
+
+        # Build Code Block for the Sum
+        output_block =  CodeBlock(
+                            Comment('CodeBlock for ' + self._print(sum_result)),
+                            Variable(sum_start, intc).as_Declaration(value=expr.args[1][1]),
+                            Variable(sum_end, intc).as_Declaration(value=expr.args[1][2]),
+                            Variable(sum_index, intc).as_Declaration(value=sum_start),
+                            Assignment(sum_index, sum_start),
+                            Variable(sum_result, float64).as_Declaration(value=0),
+                            While(sum_index < sum_end, [
+                                CodeBlock(*summand_codeblocks),
+                                aug_assign(sum_result, '+', summand),
+                                aug_assign(sum_index, '+', 1)
+                            ])
+                        )
+        
+        sum_result.code_blocks = [output_block]
+        return sum_result, [output_block]
 
     _print_union = _print_struct
 

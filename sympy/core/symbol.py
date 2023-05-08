@@ -600,6 +600,53 @@ class Wild(Symbol):
         return repl_dict
 
 
+class CodeblockResult(Symbol):
+    """
+    A result of a Codeblock.
+    """
+    _count = 0
+    _prng = random.Random()
+    _base_dummy_index = _prng.randint(10**6, 9*10**6)
+
+    __slots__ = ('dummy_index', 'expr', 'code_blocks')
+
+    is_Dummy = True
+
+    def __new__(cls, expr, name=None, code_blocks=[], dummy_index=None, **assumptions):
+
+        # Check if code_blocks is a list
+        if not isinstance(code_blocks, list):
+            raise TypeError("code_blocks must be a list.")
+        
+        if name is None:
+            name = "CodeblockResult_" + str(CodeblockResult._count)
+
+        if dummy_index is None:
+            dummy_index = CodeblockResult._base_dummy_index + CodeblockResult._count
+            CodeblockResult._count += 1
+
+        cls._sanitize(assumptions, cls)
+        obj = Symbol.__xnew__(cls, name, **assumptions)
+
+        obj.expr = expr
+        obj.dummy_index = dummy_index
+        obj.code_blocks = code_blocks
+
+        return obj
+    
+    def __getnewargs_ex__(self):
+        return ((self.name, self.dummy_index), self._assumptions_orig)
+
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (
+            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
+
+    def _hashable_content(self):
+        return Symbol._hashable_content(self) + (self.dummy_index,)
+
+
+
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 

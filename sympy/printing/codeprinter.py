@@ -4,7 +4,7 @@ from typing import Any
 from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, Atom
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
@@ -183,6 +183,44 @@ class CodePrinter(StrPrinter):
         self._number_symbols = set()
         return result
 
+    def doblocks(self, expr):
+        """
+        Generate code blocks for all subexpressions that require it and replace these subexpression in `expr` with a reference to the result of their respective code block.
+
+        Parameters
+        ----------
+        expr : Expression
+            The expression needing code blocks to be printed.
+        """
+        
+        # Return the expression and no code blocks if atomic
+        if isinstance(expr, Atom):
+          return expr, []
+
+        expr_type = type(expr)
+        blockmethodname  = '_codeblock_' + expr_type.__name__
+        blockmethod = getattr(self, blockmethodname, None)
+
+        # Check if the code printer defines expr as a code block
+        if blockmethod is not None:
+          # Parse the CodeBlock as defined
+          return blockmethod(expr)
+
+        # Store the code blocks for the subexpressions in the arguments of expr
+        codeblocks = []
+        # And the new arguments with the subexpressions replaced by references to their code blocks
+        new_args = [] 
+
+        # Check each argument for subexpressions needing code blocks
+        for ind, arg in enumerate(expr.args):
+          new_arg, arg_codeblock = self.doblocks(arg)
+          new_args.append(new_arg)
+          if arg_codeblock is not None:
+            codeblocks.extend(arg_codeblock)
+
+
+        return expr_type(*new_args), codeblocks
+
     def _doprint_loops(self, expr, assign_to=None):
         # Here we print an expression that contains Indexed objects, they
         # correspond to arrays in the generated code.  The low-level implementation
@@ -344,6 +382,12 @@ class CodePrinter(StrPrinter):
 
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
+    
+    def _print_CodeblockResult(self, expr):
+        if expr.name.startswith('CodeblockResult_'):
+            return '_' + expr.name
+        else:
+            return '%s_%d' % (expr.name, expr.dummy_index)
 
     def _print_String(self, string):
         return str(string)

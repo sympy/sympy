@@ -1,6 +1,6 @@
 from sympy.printing.codeprinter import CodePrinter
 from sympy.core import symbols
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import *
 from sympy.testing.pytest import raises
 
 
@@ -53,3 +53,13 @@ def test_issue_15791():
         c.doprint(ImmutableSparseMatrix(2, 2, {}))
     with raises(NotImplementedError):
         c.doprint(MutableSparseMatrix(2, 2, {}))
+
+
+def test_doblocks():
+    a = symbols('a')
+    b = CodeblockResult(a, 'test_block')
+
+    p = setup_test_printer()
+    assert p.doblocks(a)[0] == a
+    assert p.doblocks(a)[1] == []
+    assert b.expr == a
