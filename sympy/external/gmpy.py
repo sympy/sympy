@@ -32,7 +32,7 @@ __all__ = [
     # Either the gmpy or the mpmath function
     'factorial',
 
-    # isqrt from gmpy or math
+    # isqrt from gmpy or mpmath
     'sqrt',
 
     # gcd from gmpy or math
@@ -115,7 +115,7 @@ else:
     MPQ = PythonMPQ
 
     factorial = lambda x: int(mlib.ifac(x))
-    sqrt = math.isqrt
+    sqrt = lambda x: int(mlib.isqrt(x))
     if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
         lcm = math.lcm
