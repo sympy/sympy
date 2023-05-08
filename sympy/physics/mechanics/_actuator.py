@@ -155,17 +155,6 @@ class ForceActuator(ActuatorBase):
             a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
 
         """
-        self.force = force
-        self.pathway = pathway
-        super().__init__()
-
-    @property
-    def force(self) -> ExprType:
-        """The magnitude of the force produced by the actuator."""
-        return self._force
-
-    @force.setter
-    def force(self, force: ExprType) -> None:
         if not isinstance(force, ExprType):
             msg = (
                 f'Value {repr(force)} passed to `force` was of type '
@@ -173,6 +162,14 @@ class ForceActuator(ActuatorBase):
             )
             raise TypeError(msg)
         self._force = force
+
+        self.pathway = pathway
+        super().__init__()
+
+    @property
+    def force(self) -> ExprType:
+        """The magnitude of the force produced by the actuator."""
+        return self._force
 
     @property
     def pathway(self) -> PathwayBase:
