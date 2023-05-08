@@ -7,6 +7,7 @@ from typing import Any, Sequence
 import pytest
 
 from sympy.core.backend import S, USE_SYMENGINE, Matrix, Symbol, sqrt
+from sympy.core.sympify import SympifyError
 from sympy.physics.mechanics import (
     Force,
     KanesMethod,
@@ -56,22 +57,24 @@ class TestForceActuator:
         assert issubclass(ForceActuator, ActuatorBase)
 
     @pytest.mark.parametrize(
-        'force',
+        'force, expected_force',
         [
-            Symbol('F'),
-            dynamicsymbols('F'),
-            Symbol('F')**2 + Symbol('F'),
+            (1, S.One),
+            (S.One, S.One),
+            (Symbol('F'), Symbol('F')),
+            (dynamicsymbols('F'), dynamicsymbols('F')),
+            (Symbol('F')**2 + Symbol('F'), Symbol('F')**2 + Symbol('F')),
         ]
     )
-    def test_valid_constructor_force(self, force: ExprType) -> None:
+    def test_valid_constructor_force(self, force: Any, expected_force: ExprType) -> None:
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
         assert isinstance(instance.force, ExprType)
-        assert instance.force == force
+        assert instance.force == expected_force
 
     def test_invalid_constructor_force_not_expr(self) -> None:
-        with pytest.raises(TypeError):
+        with pytest.raises(SympifyError):
             _ = ForceActuator(None, self.pathway)  # type: ignore
 
     @pytest.mark.parametrize(
@@ -157,16 +160,44 @@ class TestLinearSpring:
         assert issubclass(LinearSpring, ActuatorBase)
 
     @pytest.mark.parametrize(
-        'stiffness, equilibrium_length, force',
+        'stiffness, expected_stiffness, equilibrium_length, expected_equilibrium_length, force',
         [
-            (Symbol('k'), S.Zero, -Symbol('k')*sqrt(dynamicsymbols('q')**2)),
-            (Symbol('k'), Symbol('l'), -Symbol('k')*(sqrt(dynamicsymbols('q')**2) - Symbol('l'))),
+            (
+                1,
+                S.One,
+                0,
+                S.Zero,
+                -sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                0,
+                S.Zero,
+                -Symbol('k')*sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                S.Zero,
+                S.Zero,
+                -Symbol('k')*sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                Symbol('l'),
+                Symbol('l'),
+                -Symbol('k')*(sqrt(dynamicsymbols('q')**2) - Symbol('l')),
+            ),
         ]
     )
     def test_valid_constructor(
         self,
-        stiffness: ExprType,
-        equilibrium_length: ExprType,
+        stiffness: Any,
+        expected_stiffness: ExprType,
+        equilibrium_length: Any,
+        expected_equilibrium_length: ExprType,
         force: ExprType,
     ) -> None:
         self.pB.set_pos(self.pA, self.q * self.N.x)
@@ -176,7 +207,7 @@ class TestLinearSpring:
 
         assert hasattr(spring, 'stiffness')
         assert isinstance(spring.stiffness, ExprType)
-        assert spring.stiffness == stiffness
+        assert spring.stiffness == expected_stiffness
 
         assert hasattr(spring, 'pathway')
         assert isinstance(spring.pathway, LinearPathway)
@@ -184,11 +215,29 @@ class TestLinearSpring:
 
         assert hasattr(spring, 'equilibrium_length')
         assert isinstance(spring.equilibrium_length, ExprType)
-        assert spring.equilibrium_length == equilibrium_length
+        assert spring.equilibrium_length == expected_equilibrium_length
 
         assert hasattr(spring, 'force')
         assert isinstance(spring.force, ExprType)
         assert spring.force == force
+
+    @pytest.mark.parametrize(
+        'stiffness, equilibrium_length, expected_error',
+        [
+            (None, 0, SympifyError),
+            ('k', 0, ValueError),
+            (Symbol('k'), None, SympifyError),
+            (Symbol('k'), 'l', ValueError),
+        ]
+    )
+    def test_invalid_constructor(
+        self,
+        stiffness: Any,
+        equilibrium_length: Any,
+        expected_error: Exception,
+    ) -> None:
+        with pytest.raises(expected_error):  # type: ignore
+            _ = LinearSpring(stiffness, self.pathway, equilibrium_length)
 
     @pytest.mark.parametrize(
         'equilibrium_length, expected',
