@@ -201,7 +201,7 @@ class TestLinearSpring:
             (Symbol('l'), 'LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)'),
         ]
     )
-    def test_repr(self, equilibrium_length, expected) -> None:
+    def test_repr(self, equilibrium_length: Any, expected: str) -> None:
         self.pB.set_pos(self.pA, self.q * self.N.x)
         spring = LinearSpring(
             self.stiffness,
