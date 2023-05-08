@@ -6,8 +6,9 @@ from typing import Any, Sequence
 
 import pytest
 
-from sympy.core.backend import USE_SYMENGINE, Matrix, Symbol, sqrt
+from sympy.core.backend import S, USE_SYMENGINE, Matrix, Symbol, sqrt
 from sympy.physics.mechanics import (
+    Force,
     KanesMethod,
     Particle,
     PinJoint,
@@ -208,6 +209,27 @@ class TestLinearSpring:
             equilibrium_length=equilibrium_length,
         )
         assert repr(spring) == expected
+
+    def test_to_loads(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(
+            self.stiffness,
+            self.pathway,
+            equilibrium_length=self.l,
+        )
+        normal = self.q / sqrt(self.q**2) * self.N.x
+        pA_force = self.stiffness * (sqrt(self.q**2) - self.l) * normal
+        pB_force = -self.stiffness * (sqrt(self.q**2) - self.l) * normal
+        expected = [
+            Force(self.pA, pA_force),
+            Force(self.pB, pB_force),
+        ]
+        loads = spring.to_loads()
+
+        for load, (point, vector) in zip(loads, expected):
+            assert isinstance(load, Force)
+            assert load.point == point
+            assert (load.vector - vector).simplify() == 0
 
 
 def test_forced_mass_spring_damper_model():
