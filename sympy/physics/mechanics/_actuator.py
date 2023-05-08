@@ -25,8 +25,18 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._pathway import PathwayBase
 
 if USE_SYMENGINE:
-    from sympy.core.backend import Basic as ExprType
+    from sympy.core.backend import (
+        Basic as ExprType,
+        sympify as sympify_symengine,
+    )
+    from sympy.core.sympify import sympify as sympify_sympy
+
+    def sympify(*args, **kwargs):
+        if kwargs.get('strict') is True:
+            return sympify_symengine(sympify_sympy(*args, **kwargs))
+        return sympify_symengine(*args, **kwargs)
 else:
+    from sympy.core.backend import sympify
     from sympy.core.expr import Expr as ExprType
 
 if TYPE_CHECKING:
@@ -156,13 +166,7 @@ class ForceActuator(ActuatorBase):
 
         """
         # ``force`` attribute
-        if not isinstance(force, ExprType):
-            msg = (
-                f'Value {repr(force)} passed to `force` was of type '
-                f'{type(force)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._force = force
+        self._force = sympify(force, strict=True)
 
         # ``pathway`` attribute
         if not isinstance(pathway, PathwayBase):
@@ -383,13 +387,7 @@ class LinearSpring(ForceActuator):
 
         """
         # ``stiffness`` attribute
-        if not isinstance(stiffness, ExprType):
-            msg = (
-                f'Value {repr(stiffness)} passed to `stiffness` was of type '
-                f'{type(stiffness)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._stiffness = stiffness
+        self._stiffness = sympify(stiffness, strict=True)
 
         # ``pathway`` attribute
         if not isinstance(pathway, PathwayBase):
@@ -401,14 +399,7 @@ class LinearSpring(ForceActuator):
         self._pathway = pathway
 
         # ``equilibrium_length`` attribute
-        if not isinstance(equilibrium_length, ExprType):
-            msg = (
-                f'Value {repr(equilibrium_length)} passed to '
-                f'`equilibrium_length` was of type '
-                f'{type(equilibrium_length)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._equilibrium_length = equilibrium_length
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
     @property
     def force(self) -> ExprType:
