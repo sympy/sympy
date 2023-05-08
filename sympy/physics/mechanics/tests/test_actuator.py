@@ -139,6 +139,16 @@ class TestForceActuator:
 
 class TestLinearSpring:
 
+    @pytest.fixture(autouse=True)
+    def _linear_pathway_fixture(self) -> None:
+        self.stiffness = Symbol('k')
+        self.l = Symbol('l')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway(self.pA, self.pB)
+        self.q = dynamicsymbols('q')
+        self.N = ReferenceFrame('N')
+
     def test_is_force_actuator_subclass(self) -> None:
         assert issubclass(LinearSpring, ForceActuator)
 
