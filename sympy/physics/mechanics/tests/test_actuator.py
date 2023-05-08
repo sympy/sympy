@@ -141,7 +141,7 @@ class TestForceActuator:
 class TestLinearSpring:
 
     @pytest.fixture(autouse=True)
-    def _linear_pathway_fixture(self) -> None:
+    def _linear_spring_fixture(self) -> None:
         self.stiffness = Symbol('k')
         self.l = Symbol('l')
         self.pA = Point('pA')
