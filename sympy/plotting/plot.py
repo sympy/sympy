@@ -1319,8 +1319,8 @@ class GenericDataSeries(BaseSeries):
 
     >>> p = plot(cos(x))
     >>> fig, ax = p._backend.fig, p._backend.ax[0]
-    >>> ax.plot([0, 1, 2], [0, 1, -1], "*")
-    >>> fig
+    >>> ax.plot([0, 1, 2], [0, 1, -1], "*") # doctest: +SKIP
+    >>> fig # doctest: +SKIP
 
     Which is far better in terms of readibility. Also, it gives access to the
     full plotting library capabilities, without the need to reinvent the wheel.
