@@ -1311,16 +1311,24 @@ class GenericDataSeries(BaseSeries):
     in adding custom numerical data to a plot should retrieve the figure
     created by this plotting module. For example, this code:
 
-    >>> from sympy import Symbol, plot, cos
-    >>> x = Symbol("x")
-    >>> p = plot(cos(x), markers=[{"args": [[0, 1, 2], [0, 1, -1], "*"]}])
+    .. plot::
+       :context: close-figs
+       :include-source: True
+
+       from sympy import Symbol, plot, cos
+       x = Symbol("x")
+       p = plot(cos(x), markers=[{"args": [[0, 1, 2], [0, 1, -1], "*"]}])
 
     Becomes:
 
-    >>> p = plot(cos(x))
-    >>> fig, ax = p._backend.fig, p._backend.ax[0]
-    >>> ax.plot([0, 1, 2], [0, 1, -1], "*") # doctest: +SKIP
-    >>> fig # doctest: +SKIP
+    .. plot::
+       :context: close-figs
+       :include-source: True
+
+       p = plot(cos(x), backend="matplotlib")
+       fig, ax = p._backend.fig, p._backend.ax[0]
+       ax.plot([0, 1, 2], [0, 1, -1], "*")
+       fig
 
     Which is far better in terms of readibility. Also, it gives access to the
     full plotting library capabilities, without the need to reinvent the wheel.
