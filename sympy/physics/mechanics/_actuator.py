@@ -364,7 +364,6 @@ class LinearSpring(ForceActuator):
         self,
         stiffness: ExprType,
         pathway: PathwayBase,
-        *,
         equilibrium_length: ExprType = S.Zero,
     ) -> None:
         """Initializer for ``LinearSpring``.
