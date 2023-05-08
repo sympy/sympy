@@ -762,3 +762,42 @@ def test_deprecated_get_segments():
     p = plot(f, (x, -10, 10), show=False)
     with warns_deprecated_sympy():
         p[0].get_segments()
+
+def test_deprecated_get_points():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    options = dict(show=False, adaptive=False)
+    p = plot(x, (x, -10, 10), **options)
+    with warns_deprecated_sympy():
+        p[0].get_points()
+
+    p = plot_parametric(cos(x), sin(x), (x, -10, 10), **options)
+    with warns_deprecated_sympy():
+        p[0].get_points()
+
+    p = plot3d_parametric_line(cos(x), sin(x), x, (x, -10, 10), **options)
+    with warns_deprecated_sympy():
+        p[0].get_points()
+
+
+def test_deprecated_get_meshes():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = Symbol('x'), Symbol('y')
+    options = dict(show=False, nb_of_points_x=5, nb_of_points_y=5)
+    p = plot3d(cos(x*y), (x, -3, 3), (y, -3, 3), **options)
+    with warns_deprecated_sympy():
+        p[0].get_meshes()
+
+    p = plot_contour(cos(x*y), (x, -3, 3), (y, -3, 3), **options)
+    with warns_deprecated_sympy():
+        p[0].get_meshes()
+
+    p = plot3d_parametric_surface(x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+        (x, 0, pi), (y, 0, 2*pi), show=False,
+        nb_of_points_u=5, nb_of_points_v=5)
+    with warns_deprecated_sympy():
+        p[0].get_meshes()

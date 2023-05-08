@@ -76,6 +76,61 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-get-points-get-meshes-get-raster)=
+### get_points, get_meshes, get_raster
+The plotting module implements ``*Series`` classes in order to generate
+numerical data for plots. Each class exposes a different method to retrieve
+the numerical data. For example, line-related series expose ``get_points``,
+surface-related series expose ``get_meshes``, implicit series exposes
+``get_raster``. As the number of ``*Series`` classes is going to increase,
+a common method to retrieve numerical data is introduced: ``get_data``.
+
+Supported behaviour to retrieve numerical data:
+
+```py
+from sympy import *
+from sympy.plotting.plot import plot3d, plot3d_parametric_line, plot3d_parametric_surface, plot_contour
+var("x, y")
+p1 = plot(cos(x), show=False)
+data1 = p1[0].get_data()
+p2 = plot_parametric(cos(x), sin(x), (x, 0, 2*pi), show=False)
+data2 = p2[0].get_data()
+p3 = plot_implicit(x > y, (x, -3, 3), (y, -3, 3), show=False)
+data3 = p3[0].get_data()
+p4 = plot3d(cos(x*y), (x, -3, 3), (y, -3, 3), show=False)
+data4 = p4[0].get_data()
+p5 = plot_contour(cos(x*y), (x, -3, 3), (y, -3, 3), show=False)
+data5 = p5[0].get_data()
+p6 = plot3d_parametric_line(cos(x), sin(x), x, (x, 0, 2*pi), show=False)
+data6 = p6[0].get_data()
+p7 = plot3d_parametric_surface(
+    x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+    (x, 0, pi), (y, 0, 2*pi), show=False)
+data7 = p7[0].get_data()
+```
+
+Deprecated behaviour:
+
+```py
+p1 = plot(cos(x), show=False)
+data1 = p1[0].get_points()
+p2 = plot_parametric(cos(x), sin(x), (x, 0, 2*pi), show=False)
+data2 = p2[0].get_points()
+p3 = plot_implicit(x > y, (x, -3, 3), (y, -3, 3), show=False)
+data3 = p3[0].get_raster()
+p4 = plot3d(cos(x*y), (x, -3, 3), (y, -3, 3), show=False)
+data4 = p4[0].get_meshes()
+p5 = plot_contour(cos(x*y), (x, -3, 3), (y, -3, 3), show=False)
+data5 = p5[0].get_meshes()
+p6 = plot3d_parametric_line(cos(x), sin(x), x, (x, 0, 2*pi), show=False)
+data6 = p6[0].get_points()
+p7 = plot3d_parametric_surface(
+    x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+    (x, 0, pi), (y, 0, 2*pi), show=False)
+data7 = p7[0].get_meshes()
+```
+
+
 (moved-mechanics-functions)=
 ### Moved mechanics functions
 With the introduction of some new objects like the ``Inertia`` and load objects

@@ -29,7 +29,7 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 
-from .plot import BaseSeries, Plot
+from .plot import BaseSeries, Plot, _deprecation_msg_gp_gr_gm_gpp
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
@@ -80,6 +80,11 @@ class ImplicitSeries(BaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_raster(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_raster")
+        return self.get_data()
+
+    def get_data(self):
         func = experimental_lambdify((self.var_x, self.var_y), self.expr,
                                     use_interval=True)
         xinterval = interval(self.start_x, self.end_x)

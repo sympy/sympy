@@ -8,8 +8,8 @@ expressions. ``plot_backends`` is a dictionary with all the backends.
 This module gives only the essential. For all the fancy stuff use directly
 the backend. You can get the backend wrapper for every plot from the
 ``_backend`` attribute. Moreover the data series classes have various useful
-methods like ``get_points``, ``get_meshes``, etc, that may
-be useful if you wish to use another plotting library.
+methods like ``get_data``, etc, that may be useful if you wish to use another
+plotting library.
 
 Especially if you need publication ready graphs and this module is not enough
 for you - just get the ``_backend`` attribute and add whatever you want
@@ -489,6 +489,13 @@ class PlotGrid:
 ##############################################################################
 #TODO more general way to calculate aesthetics (see get_color_array)
 
+def _deprecation_msg_gp_gr_gm_gpp(attr):
+    sympy_deprecation_warning(
+        f"{attr} is deprecated. Use `get_data` instead.",
+        deprecated_since_version="1.13",
+        active_deprecations_target="deprecated-get-points-get-meshes-get-raster",
+        stacklevel=4)
+
 ### The base class for all series
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
@@ -602,7 +609,7 @@ class Line2DBaseSeries(BaseSeries):
                 List of z-coordinates in case of Parametric3DLineSeries
         """
         np = import_module('numpy')
-        points = self.get_points()
+        points = self._get_points()
         if self.steps is True:
             if len(points) == 2:
                 x = np.array((points[0], points[0])).T.flatten()[1:]
@@ -641,7 +648,7 @@ class Line2DBaseSeries(BaseSeries):
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
             else:
-                variables = list(map(centers_of_segments, self.get_points()))
+                variables = list(map(centers_of_segments, self._get_points()))
                 if nargs == 1:
                     return f(variables[0])
                 elif nargs == 2:
@@ -665,8 +672,13 @@ class List2DSeries(Line2DBaseSeries):
     def __str__(self):
         return 'list plot'
 
-    def get_points(self):
+    def _get_points(self):
         return (self.list_x, self.list_y)
+
+    def get_points(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_points")
+        return self._get_points()
 
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
@@ -689,7 +701,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return 'cartesian line: %s for %s over %s' % (
             str(self.expr), str(self.var), str((self.start, self.end)))
 
-    def get_points(self):
+    def _get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
         ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
@@ -785,6 +797,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
         return (x_coords, y_coords)
 
+    def get_points(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_points")
+        return self._get_points()
+
     def _uniform_sampling(self):
         np = import_module('numpy')
         if self.only_integers is True:
@@ -841,7 +858,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         list_y = fy(param)
         return (list_x, list_y)
 
-    def get_points(self):
+    def _get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
         ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
@@ -943,6 +960,11 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
         return x_coords, y_coords
 
+    def get_points(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_points")
+        return self._get_points()
+
 
 ### 3D lines
 class Line3DBaseSeries(Line2DBaseSeries):
@@ -989,7 +1011,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
-    def get_points(self):
+    def _get_points(self):
         np = import_module('numpy')
         param = self.get_parameter_points()
         fx = vectorized_lambdify([self.var], self.expr_x)
@@ -1012,6 +1034,11 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self._ylim = (np.amin(list_y), np.amax(list_y))
         self._zlim = (np.amin(list_z), np.amax(list_z))
         return list_x, list_y, list_z
+
+    def get_points(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_points")
+        return self._get_points()
 
 
 ### Surfaces
@@ -1036,7 +1063,7 @@ class SurfaceBaseSeries(BaseSeries):
                     return f(variables[0])
                 elif nargs == 2:
                     return f(*variables)
-            variables = list(map(centers_of_faces, self.get_meshes()))
+            variables = list(map(centers_of_faces, self.get_data()))
             if nargs == 1:
                 return f(variables[0])
             elif nargs == 2:
@@ -1079,6 +1106,25 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_meshes")
+        return self.get_data()
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+
+        mesh_x : np.ndarray
+            Discretized x-domain.
+
+        mesh_y : np.ndarray
+            Discretized y-domain.
+
+        mesh_z : np.ndarray
+            Results of the evaluation.
+        """
         np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
@@ -1134,6 +1180,25 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                                        num=self.nb_of_points_v))
 
     def get_meshes(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_meshes")
+        return self.get_data()
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+
+        mesh_x : np.ndarray
+            Discretized x-domain.
+
+        mesh_y : np.ndarray
+            Discretized y-domain.
+
+        mesh_z : np.ndarray
+            Results of the evaluation.
+        """
         np = import_module('numpy')
 
         mesh_u, mesh_v = self.get_parameter_meshes()
@@ -1195,6 +1260,25 @@ class ContourSeries(BaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_gp_gr_gm_gpp("get_meshes")
+        return self.get_data()
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+
+        mesh_x : np.ndarray [n2 x n1]
+            Discretized x-domain.
+
+        mesh_y : np.ndarray [n2 x n1]
+            Discretized y-domain.
+
+        mesh_z : np.ndarray [n2 x n1]
+            Results of the evaluation.
+        """
         np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
@@ -1375,7 +1459,7 @@ class MatplotlibBackend(BaseBackend):
                     lbl = _str_or_latex(s.label)
                     line, = ax.plot(x, y, label=lbl, color=s.line_color)
             elif s.is_contour:
-                ax.contour(*s.get_meshes())
+                ax.contour(*s.get_data())
             elif s.is_3Dline:
                 x, y, z = s.get_data()
                 if (isinstance(s.line_color, (int, float)) or
@@ -1393,7 +1477,7 @@ class MatplotlibBackend(BaseBackend):
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
             elif s.is_3Dsurface:
-                x, y, z = s.get_meshes()
+                x, y, z = s.get_data()
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
@@ -1408,7 +1492,7 @@ class MatplotlibBackend(BaseBackend):
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
             elif s.is_implicit:
-                points = s.get_raster()
+                points = s.get_data()
                 if len(points) == 2:
                     # interval math plotting
                     x, y = _matplotlib_list(points[0])

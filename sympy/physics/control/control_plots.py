@@ -278,7 +278,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     expr = apart(expr, system.var, full=True)
     _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
-        **kwargs).get_points()
+        **kwargs).get_data()
 
 
 def step_response_plot(system, color='b', prec=8, lower_limit=0,
@@ -429,7 +429,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     expr = apart(expr, system.var, full=True)
     _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
-        **kwargs).get_points()
+        **kwargs).get_data()
 
 
 def impulse_response_plot(system, color='b', prec=8, lower_limit=0,
@@ -587,7 +587,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     expr = apart(expr, system.var, full=True)
     _y = _fast_inverse_laplace(expr, system.var, _x).evalf(prec)
     return LineOver1DRangeSeries(_y, (_x, lower_limit, upper_limit),
-        **kwargs).get_points()
+        **kwargs).get_data()
 
 
 def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
@@ -744,7 +744,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
     mag = 20*log(Abs(w_expr), 10)
 
     x, y = LineOver1DRangeSeries(mag,
-        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
+        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_data()
 
     return x, y
 
@@ -861,7 +861,7 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
         phase = arg(w_expr)
 
     x, y = LineOver1DRangeSeries(phase,
-        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
+        (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_data()
 
     return x, y
 

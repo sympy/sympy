@@ -11,6 +11,7 @@ from tempfile import NamedTemporaryFile, mkdtemp
 from sympy.testing.pytest import skip, warns, XFAIL
 from sympy.external import import_module
 from sympy.testing.tmpfiles import TmpFileManager
+from sympy.testing.pytest import warns_deprecated_sympy
 
 import os
 
@@ -144,3 +145,14 @@ def test_region_and():
         compare_images(cmp_filename, test_filename, 0.005)
     finally:
         TmpFileManager.cleanup()
+
+def test_deprecated_get_raster():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = Symbol('x'), Symbol('y')
+
+    p = plot_implicit(x > y, (x, -3, 3), (y, -3, 3))
+    with warns_deprecated_sympy():
+        p[0].get_raster()
