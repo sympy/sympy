@@ -220,10 +220,7 @@ class TestLinearSpring:
         normal = self.q / sqrt(self.q**2) * self.N.x
         pA_force = self.stiffness * (sqrt(self.q**2) - self.l) * normal
         pB_force = -self.stiffness * (sqrt(self.q**2) - self.l) * normal
-        expected = [
-            Force(self.pA, pA_force),
-            Force(self.pB, pB_force),
-        ]
+        expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
         loads = spring.to_loads()
 
         for load, (point, vector) in zip(loads, expected):
