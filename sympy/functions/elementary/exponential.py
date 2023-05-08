@@ -63,6 +63,8 @@ class ExpBase(Function):
         """
         # this should be the same as Pow.as_numer_denom wrt
         # exponent handling
+        if not self.is_commutative:
+            return self, S.One
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:

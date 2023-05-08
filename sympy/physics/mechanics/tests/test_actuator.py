@@ -2,19 +2,36 @@
 
 from __future__ import annotations
 
+from typing import Any, Sequence
+
 import pytest
 
-from sympy.core.backend import USE_SYMENGINE, Basic, Matrix, Symbol, sqrt
-from sympy.core.expr import Expr
+from sympy.core.backend import USE_SYMENGINE, Matrix, Symbol, sqrt
 from sympy.physics.mechanics import (
     KanesMethod,
     Particle,
+    PinJoint,
     Point,
     ReferenceFrame,
+    RigidBody,
+    Vector,
     dynamicsymbols,
 )
-from sympy.physics.mechanics._actuator import ForceActuator
+from sympy.physics.mechanics._actuator import (
+    ActuatorBase,
+    ForceActuator,
+    TorqueActuator,
+)
 from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
+
+if USE_SYMENGINE:
+    from sympy.core.backend import Basic as ExprType
+else:
+    from sympy.core.expr import Expr as ExprType
+
+
+target = RigidBody('target')
+reaction = RigidBody('reaction')
 
 
 class TestForceActuator:
@@ -33,6 +50,9 @@ class TestForceActuator:
         self.q3d = dynamicsymbols('q3', 1)
         self.N = ReferenceFrame('N')
 
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(ForceActuator, ActuatorBase)
+
     @pytest.mark.parametrize(
         'force',
         [
@@ -41,14 +61,12 @@ class TestForceActuator:
             Symbol('F')**2 + Symbol('F'),
         ]
     )
-    def test_valid_constructor_force(self, force: Expr) -> None:
+    def test_valid_constructor_force(self, force: ExprType) -> None:
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
-        if USE_SYMENGINE:
-            assert isinstance(instance.force, Basic)
-        else:
-            assert isinstance(instance.force, Expr)
+        assert isinstance(instance.force, ExprType)
+        assert instance.force == force
 
     def test_invalid_constructor_force_not_expr(self) -> None:
         with pytest.raises(TypeError):
@@ -65,10 +83,16 @@ class TestForceActuator:
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'pathway')
         assert isinstance(instance.pathway, LinearPathway)
+        assert instance.pathway == pathway
 
     def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
         with pytest.raises(TypeError):
             _ = ForceActuator(self.force, None)  # type: ignore
+
+    def test_repr(self) -> None:
+        actuator = ForceActuator(self.force, self.pathway)
+        expected = "ForceActuator(F, LinearPathway(pA, pB))"
+        assert repr(actuator) == expected
 
     def test_to_loads_static_pathway(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.N.x)
@@ -169,3 +193,173 @@ def test_forced_mass_spring_damper_model():
 
     assert kanes_method.mass_matrix == Matrix([[m]])
     assert kanes_method.forcing == Matrix([[F - c*x_dot - k*x]])
+
+
+class TestTorqueActuator:
+
+    @pytest.fixture(autouse=True)
+    def _torque_actuator_fixture(self) -> None:
+        self.torque = Symbol('T')
+        self.N = ReferenceFrame('N')
+        self.A = ReferenceFrame('A')
+        self.target = RigidBody('target', frame=self.N)
+        self.reaction = RigidBody('reaction', frame=self.A)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(TorqueActuator, ActuatorBase)
+
+    @pytest.mark.parametrize(
+        'torque',
+        [
+            Symbol('T'),
+            dynamicsymbols('T'),
+            Symbol('T')**2 + Symbol('T'),
+        ]
+    )
+    @pytest.mark.parametrize(
+        'target_frame, reaction_frame',
+        [
+            (target.frame, reaction.frame),
+            (target, reaction.frame),
+            (target.frame, reaction),
+            (target, reaction),
+        ]
+    )
+    def test_valid_constructor_with_reaction(
+        self,
+        torque: ExprType,
+        target_frame: ReferenceFrame | RigidBody,
+        reaction_frame: ReferenceFrame | RigidBody,
+    ) -> None:
+        instance = TorqueActuator(torque, self.N.z, target_frame, reaction_frame)
+        assert isinstance(instance, TorqueActuator)
+
+        assert hasattr(instance, 'torque')
+        assert isinstance(instance.torque, ExprType)
+        assert instance.torque == torque
+
+        assert hasattr(instance, 'axis')
+        assert isinstance(instance.axis, Vector)
+        assert instance.axis == self.N.z
+
+        assert hasattr(instance, 'target_frame')
+        assert isinstance(instance.target_frame, ReferenceFrame)
+        assert instance.target_frame == target.frame
+
+        assert hasattr(instance, 'reaction_frame')
+        assert isinstance(instance.reaction_frame, ReferenceFrame)
+        assert instance.reaction_frame == reaction.frame
+
+    @pytest.mark.parametrize(
+        'torque',
+        [
+            Symbol('T'),
+            dynamicsymbols('T'),
+            Symbol('T')**2 + Symbol('T'),
+        ]
+    )
+    @pytest.mark.parametrize('target_frame', [target.frame, target])
+    def test_valid_constructor_without_reaction(
+        self,
+        torque: ExprType,
+        target_frame: ReferenceFrame | RigidBody,
+    ) -> None:
+        instance = TorqueActuator(torque, self.N.z, target_frame)
+        assert isinstance(instance, TorqueActuator)
+
+        assert hasattr(instance, 'torque')
+        assert isinstance(instance.torque, ExprType)
+        assert instance.torque == torque
+
+        assert hasattr(instance, 'axis')
+        assert isinstance(instance.axis, Vector)
+        assert instance.axis == self.N.z
+
+        assert hasattr(instance, 'target_frame')
+        assert isinstance(instance.target_frame, ReferenceFrame)
+        assert instance.target_frame == target.frame
+
+        assert hasattr(instance, 'reaction_frame')
+        assert instance.reaction_frame is None
+
+    @pytest.mark.parametrize(
+        'axis',
+        [
+            Symbol('a'),
+            dynamicsymbols('a'),
+        ]
+    )
+    def test_invalid_constructor_axis_not_vector(self, axis: Any) -> None:
+        with pytest.raises(TypeError):
+            _ = TorqueActuator(self.torque, axis, self.target, self.reaction)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'frames',
+        [
+            (None, ReferenceFrame('child')),
+            (ReferenceFrame('parent'), True),
+            (None, RigidBody('child')),
+            (RigidBody('parent'), True),
+        ]
+    )
+    def test_invalid_frames_not_frame(self, frames: Sequence[Any]) -> None:
+        with pytest.raises(TypeError):
+            _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
+
+    def test_repr_without_reaction(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.target)
+        expected = 'TorqueActuator(T, axis=N.z, target_frame=N)'
+        assert repr(actuator) == expected
+
+    def test_repr_with_reaction(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.target, self.reaction)
+        expected = 'TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)'
+        assert repr(actuator) == expected
+
+    def test_at_pin_joint_constructor(self) -> None:
+        pin_joint = PinJoint(
+            'pin',
+            self.target,
+            self.reaction,
+            coordinates=dynamicsymbols('q'),
+            speeds=dynamicsymbols('u'),
+            parent_interframe=self.N,
+            joint_axis=self.N.z,
+        )
+        instance = TorqueActuator.at_pin_joint(self.torque, pin_joint)
+        assert isinstance(instance, TorqueActuator)
+
+        assert hasattr(instance, 'torque')
+        assert isinstance(instance.torque, ExprType)
+        assert instance.torque == self.torque
+
+        assert hasattr(instance, 'axis')
+        assert isinstance(instance.axis, Vector)
+        assert instance.axis == self.N.z
+
+        assert hasattr(instance, 'target_frame')
+        assert isinstance(instance.target_frame, ReferenceFrame)
+        assert instance.target_frame == self.N
+
+        assert hasattr(instance, 'reaction_frame')
+        assert isinstance(instance.reaction_frame, ReferenceFrame)
+        assert instance.reaction_frame == self.A
+
+    def test_at_pin_joint_pin_joint_not_pin_joint_invalid(self) -> None:
+        with pytest.raises(TypeError):
+            _ = TorqueActuator.at_pin_joint(self.torque, Symbol('pin'))  # type: ignore
+
+    def test_to_loads_without_reaction(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.target)
+        expected = [
+            (self.N, self.torque * self.N.z),
+        ]
+        assert actuator.to_loads() == expected
+
+    def test_to_loads_with_reaction(self) -> None:
+        actuator = TorqueActuator(self.torque, self.N.z, self.target, self.reaction)
+        expected = [
+            (self.N, self.torque * self.N.z),
+            (self.A, - self.torque * self.N.z),
+        ]
+        assert actuator.to_loads() == expected
