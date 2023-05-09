@@ -6,8 +6,14 @@ from typing import Any, Sequence
 
 import pytest
 
-from sympy.core.backend import S, USE_SYMENGINE, Matrix, Symbol, sqrt
-from sympy.core.sympify import SympifyError
+from sympy.core.backend import (
+    S,
+    USE_SYMENGINE,
+    Matrix,
+    Symbol,
+    SympifyError,
+    sqrt,
+)
 from sympy.physics.mechanics import (
     Force,
     KanesMethod,
@@ -222,21 +228,20 @@ class TestLinearSpring:
         assert spring.force == force
 
     @pytest.mark.parametrize(
-        'stiffness, equilibrium_length, expected_error',
+        'stiffness, equilibrium_length',
         [
-            (None, 0, SympifyError),
-            ('k', 0, ValueError),
-            (Symbol('k'), None, SympifyError),
-            (Symbol('k'), 'l', ValueError),
+            (None, 0),
+            ('k', 0),
+            (Symbol('k'), None),
+            (Symbol('k'), 'l'),
         ]
     )
     def test_invalid_constructor(
         self,
         stiffness: Any,
         equilibrium_length: Any,
-        expected_error: Exception,
     ) -> None:
-        with pytest.raises(expected_error):  # type: ignore
+        with pytest.raises(SympifyError):
             _ = LinearSpring(stiffness, self.pathway, equilibrium_length)
 
     @pytest.mark.parametrize(
