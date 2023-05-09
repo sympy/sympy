@@ -14,7 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from sympy.core.backend import USE_SYMENGINE
+from sympy.core.backend import S, USE_SYMENGINE, sympify
 from sympy.physics.mechanics import (
     PinJoint,
     ReferenceFrame,
@@ -33,7 +33,11 @@ if TYPE_CHECKING:
     from sympy.physics.mechanics.loads import LoadBase
 
 
-__all__ = ['ForceActuator']
+__all__ = [
+    'ForceActuator',
+    'LinearSpring',
+    'TorqueActuator',
+]
 
 
 class ActuatorBase(ABC):
@@ -151,32 +155,10 @@ class ForceActuator(ActuatorBase):
             a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
 
         """
-        self.force = force
-        self.pathway = pathway
-        super().__init__()
+        # ``force`` attribute
+        self._force = sympify(force, strict=True)
 
-    @property
-    def force(self) -> ExprType:
-        """The magnitude of the force produced by the actuator."""
-        return self._force
-
-    @force.setter
-    def force(self, force: ExprType) -> None:
-        if not isinstance(force, ExprType):
-            msg = (
-                f'Value {repr(force)} passed to `force` was of type '
-                f'{type(force)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._force = force
-
-    @property
-    def pathway(self) -> PathwayBase:
-        """The ``Pathway`` defining the actuator's line of action."""
-        return self._pathway
-
-    @pathway.setter
-    def pathway(self, pathway: PathwayBase) -> None:
+        # ``pathway`` attribute
         if not isinstance(pathway, PathwayBase):
             msg = (
                 f'Value {repr(pathway)} passed to `pathway` was of type '
@@ -184,6 +166,16 @@ class ForceActuator(ActuatorBase):
             )
             raise TypeError(msg)
         self._pathway = pathway
+
+    @property
+    def force(self) -> ExprType:
+        """The magnitude of the force produced by the actuator."""
+        return self._force
+
+    @property
+    def pathway(self) -> PathwayBase:
+        """The ``Pathway`` defining the actuator's line of action."""
+        return self._pathway
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
@@ -263,6 +255,165 @@ class ForceActuator(ActuatorBase):
     def __repr__(self) -> str:
         """Representation of a ``ForceActuator``."""
         return f'{self.__class__.__name__}({self.force}, {self.pathway})'
+
+
+class LinearSpring(ForceActuator):
+    """A spring with its spring force as a linear function of its length.
+
+    Explanation
+    ===========
+
+    Note that the "linear" in the name ``LinearSpring`` refers to the fact that
+    the spring force is a linear function of the springs length. I.e. for a
+    linear spring with stiffness ``k``, distance between its ends of ``x``, and
+    an equilibrium length of ``0``, the spring force will be ``-k*x``, which is
+    a linear function in ``x``. To create a spring that follows a linear, or
+    straight, pathway between its two ends, a ``LinearPathway`` instance needs
+    to be passed to the ``pathway`` parameter.
+
+    Examples
+    ========
+
+    As the ``_actuator.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``LinearSpring`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._actuator`` module.
+
+    >>> from sympy.physics.mechanics._actuator import LinearSpring
+
+    This is similarly the case for imports from the ``_pathway.py`` module like
+    ``LinearPathway``.
+
+    >>> from sympy.physics.mechanics._pathway import LinearPathway
+
+    To construct a linear spring, an expression (or symbol) must be supplied to
+    represent the stiffness (spring constant) of the spring, alongside a
+    pathway specifying its line of action. Let's also create a global reference
+    frame and spatially fix one of the points in it while setting the other to
+    be positioned such that it can freely move in the frame's x direction
+    specified by the coordinate ``q``.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> stiffness = Symbol('k')
+    >>> pA, pB = Point('pA'), Point('pB')
+    >>> pA.set_vel(N, 0)
+    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.pos_from(pA)
+    q(t)*N.x
+    >>> linear_pathway = LinearPathway(pA, pB)
+    >>> spring = LinearSpring(stiffness, linear_pathway)
+    >>> spring
+    LinearSpring(k, LinearPathway(pA, pB))
+
+    This spring will produce a force that is proportional to both its stiffness
+    and the pathway's length. Note that this force is negative as SymPy's sign
+    convention for actuators is that negative forces are contractile.
+
+    >>> spring.force
+    -k*sqrt(q(t)**2)
+
+    To create a linear spring with a non-zero equilibrium length, an expression
+    (or symbol) can be passed to the ``equilibrium_length`` parameter on
+    construction on a ``LinearSpring`` instance. Let's create a symbol ``l``
+    to denote a non-zero equilibrium length and create another linear spring.
+
+    >>> l = Symbol('l')
+    >>> spring = LinearSpring(stiffness, linear_pathway, equilibrium_length=l)
+    >>> spring
+    LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)
+
+    The spring force of this new spring is again proportional to both its
+    stiffness and the pathway's length. However, the spring will not produce
+    any force when ``q(t)`` equals ``l``. Note that the force will become
+    expansile when ``q(t)`` is less than ``l``, as expected.
+
+    >>> spring.force
+    -k*(-l + sqrt(q(t)**2))
+
+    Parameters
+    ==========
+
+    stiffness : Expr
+        The spring constant.
+    pathway : PathwayBase
+        The pathway that the actuator follows. This must be an instance of a
+        concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+    equilibrium_length : Expr, optional
+        The length at which the spring is in equilibrium, i.e. it produces no
+        force. The default value is 0, i.e. the spring force is a linear
+        function of the pathway's length with no constant offset.
+
+    See Also
+    ========
+
+    ForceActuator: force-producing actuator (superclass of ``LinearSpring``).
+    LinearPathway: straight-line pathway between a pair of points.
+
+    """
+
+    def __init__(
+        self,
+        stiffness: ExprType,
+        pathway: PathwayBase,
+        equilibrium_length: ExprType = S.Zero,
+    ) -> None:
+        """Initializer for ``LinearSpring``.
+
+        Parameters
+        ==========
+
+        stiffness : Expr
+            The spring constant.
+        pathway : PathwayBase
+            The pathway that the actuator follows. This must be an instance of
+            a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+        equilibrium_length : Expr, optional
+            The length at which the spring is in equilibrium, i.e. it produces
+            no force. The default value is 0, i.e. the spring force is a linear
+            function of the pathway's length with no constant offset.
+
+        """
+        # ``stiffness`` attribute
+        self._stiffness = sympify(stiffness, strict=True)
+
+        # ``pathway`` attribute
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
+        # ``equilibrium_length`` attribute
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
+
+    @property
+    def force(self) -> ExprType:
+        """The spring force produced by the linear spring."""
+        return -self.stiffness * (self.pathway.length - self.equilibrium_length)
+
+    @property
+    def stiffness(self) -> ExprType:
+        """The spring constant for the linear spring."""
+        return self._stiffness
+
+    @property
+    def equilibrium_length(self) -> ExprType:
+        """The length of the spring at which it produces no force."""
+        return self._equilibrium_length
+
+    def __repr__(self) -> str:
+        """Representation of a ``LinearSpring``."""
+        string = f'{self.__class__.__name__}({self.stiffness}, {self.pathway}'
+        if self.equilibrium_length == S.Zero:
+            string += ')'
+        else:
+            string += f', equilibrium_length={self.equilibrium_length})'
+        return string
 
 
 class TorqueActuator(ActuatorBase):

@@ -6,8 +6,16 @@ from typing import Any, Sequence
 
 import pytest
 
-from sympy.core.backend import USE_SYMENGINE, Matrix, Symbol, sqrt
+from sympy.core.backend import (
+    S,
+    USE_SYMENGINE,
+    Matrix,
+    Symbol,
+    SympifyError,
+    sqrt,
+)
 from sympy.physics.mechanics import (
+    Force,
     KanesMethod,
     Particle,
     PinJoint,
@@ -20,6 +28,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._actuator import (
     ActuatorBase,
     ForceActuator,
+    LinearSpring,
     TorqueActuator,
 )
 from sympy.physics.mechanics._pathway import LinearPathway, PathwayBase
@@ -54,22 +63,24 @@ class TestForceActuator:
         assert issubclass(ForceActuator, ActuatorBase)
 
     @pytest.mark.parametrize(
-        'force',
+        'force, expected_force',
         [
-            Symbol('F'),
-            dynamicsymbols('F'),
-            Symbol('F')**2 + Symbol('F'),
+            (1, S.One),
+            (S.One, S.One),
+            (Symbol('F'), Symbol('F')),
+            (dynamicsymbols('F'), dynamicsymbols('F')),
+            (Symbol('F')**2 + Symbol('F'), Symbol('F')**2 + Symbol('F')),
         ]
     )
-    def test_valid_constructor_force(self, force: ExprType) -> None:
+    def test_valid_constructor_force(self, force: Any, expected_force: ExprType) -> None:
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
         assert isinstance(instance.force, ExprType)
-        assert instance.force == force
+        assert instance.force == expected_force
 
     def test_invalid_constructor_force_not_expr(self) -> None:
-        with pytest.raises(TypeError):
+        with pytest.raises(SympifyError):
             _ = ForceActuator(None, self.pathway)  # type: ignore
 
     @pytest.mark.parametrize(
@@ -134,6 +145,130 @@ class TestForceActuator:
             (self.pB, pI_force),
         ]
         assert actuator.to_loads() == expected
+
+
+class TestLinearSpring:
+
+    @pytest.fixture(autouse=True)
+    def _linear_spring_fixture(self) -> None:
+        self.stiffness = Symbol('k')
+        self.l = Symbol('l')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway(self.pA, self.pB)
+        self.q = dynamicsymbols('q')
+        self.N = ReferenceFrame('N')
+
+    def test_is_force_actuator_subclass(self) -> None:
+        assert issubclass(LinearSpring, ForceActuator)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(LinearSpring, ActuatorBase)
+
+    @pytest.mark.parametrize(
+        'stiffness, expected_stiffness, equilibrium_length, expected_equilibrium_length, force',
+        [
+            (
+                1,
+                S.One,
+                0,
+                S.Zero,
+                -sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                0,
+                S.Zero,
+                -Symbol('k')*sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                S.Zero,
+                S.Zero,
+                -Symbol('k')*sqrt(dynamicsymbols('q')**2),
+            ),
+            (
+                Symbol('k'),
+                Symbol('k'),
+                Symbol('l'),
+                Symbol('l'),
+                -Symbol('k')*(sqrt(dynamicsymbols('q')**2) - Symbol('l')),
+            ),
+        ]
+    )
+    def test_valid_constructor(
+        self,
+        stiffness: Any,
+        expected_stiffness: ExprType,
+        equilibrium_length: Any,
+        expected_equilibrium_length: ExprType,
+        force: ExprType,
+    ) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(stiffness, self.pathway, equilibrium_length)
+
+        assert isinstance(spring, LinearSpring)
+
+        assert hasattr(spring, 'stiffness')
+        assert isinstance(spring.stiffness, ExprType)
+        assert spring.stiffness == expected_stiffness
+
+        assert hasattr(spring, 'pathway')
+        assert isinstance(spring.pathway, LinearPathway)
+        assert spring.pathway == self.pathway
+
+        assert hasattr(spring, 'equilibrium_length')
+        assert isinstance(spring.equilibrium_length, ExprType)
+        assert spring.equilibrium_length == expected_equilibrium_length
+
+        assert hasattr(spring, 'force')
+        assert isinstance(spring.force, ExprType)
+        assert spring.force == force
+
+    @pytest.mark.parametrize(
+        'stiffness, equilibrium_length',
+        [
+            (None, 0),
+            ('k', 0),
+            (Symbol('k'), None),
+            (Symbol('k'), 'l'),
+        ]
+    )
+    def test_invalid_constructor(
+        self,
+        stiffness: Any,
+        equilibrium_length: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = LinearSpring(stiffness, self.pathway, equilibrium_length)
+
+    @pytest.mark.parametrize(
+        'equilibrium_length, expected',
+        [
+            (S.Zero, 'LinearSpring(k, LinearPathway(pA, pB))'),
+            (Symbol('l'), 'LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)'),
+        ]
+    )
+    def test_repr(self, equilibrium_length: Any, expected: str) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(self.stiffness, self.pathway, equilibrium_length)
+        assert repr(spring) == expected
+
+    def test_to_loads(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        spring = LinearSpring(self.stiffness, self.pathway, self.l)
+        normal = self.q / sqrt(self.q**2) * self.N.x
+        pA_force = self.stiffness * (sqrt(self.q**2) - self.l) * normal
+        pB_force = -self.stiffness * (sqrt(self.q**2) - self.l) * normal
+        expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
+        loads = spring.to_loads()
+
+        for load, (point, vector) in zip(loads, expected):
+            assert isinstance(load, Force)
+            assert load.point == point
+            assert (load.vector - vector).simplify() == 0
 
 
 def test_forced_mass_spring_damper_model():
