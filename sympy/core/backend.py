@@ -33,10 +33,15 @@ if USE_SYMENGINE:
             inside SymPy.
 
         """
+        # The parameter ``a`` is used for this function to keep compatibility
+        # with the SymEngine docstring.
         if strict and isinstance(a, str):
             raise SympifyError(a)
         return sympify_symengine(a)
 
+    # Keep the SymEngine docstring and append the additional "Notes" and "See
+    # Also" sections. Replacement of spaces is required to correctly format the
+    # indentation of the combined docstring.
     sympify.__doc__ = (
         sympify_symengine.__doc__
         + sympify.__doc__.replace('        ', '    ')
