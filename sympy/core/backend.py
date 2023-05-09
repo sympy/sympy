@@ -14,15 +14,17 @@ if USE_SYMENGINE:
     from symengine import AppliedUndef
 
     def sympify(obj, *, strict=False):
-        """SymEngine-compatible strict ``sympify``.
-
-        Explanation
-        ===========
+        """
+        Notes
+        =====
 
         SymEngine's ``sympify`` does not accept keyword arguments and is
         therefore not compatible with SymPy's ``sympify`` with ``strict=True``
         (which ensures that only the types for which an explicit conversion has
-        been defined are converted).
+        been defined are converted). This wrapper adds an addiotional parameter
+        ``strict`` (with default ``False``) that will raise a ``SympifyError``
+        if ``strict=True`` and the argument passed to the parameter ``a`` is a
+        string.
 
         See Also
         ========
@@ -34,6 +36,11 @@ if USE_SYMENGINE:
         if strict and isinstance(obj, str):
             raise SympifyError(obj)
         return sympify_symengine(obj)
+
+    sympify.__doc__ = (
+        sympify_symengine.__doc__
+        + sympify.__doc__.replace('        ', '    ')
+    )
 else:
     from sympy.core.add import Add
     from sympy.core.basic import Basic
