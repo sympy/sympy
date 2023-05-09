@@ -44,7 +44,7 @@ if USE_SYMENGINE:
     # indentation of the combined docstring.
     sympify.__doc__ = (
         sympify_symengine.__doc__
-        + sympify.__doc__.replace('        ', '    ')
+        + sympify.__doc__.replace('        ', '    ')  # type: ignore
     )
 else:
     from sympy.core.add import Add
