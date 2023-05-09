@@ -13,7 +13,7 @@ if USE_SYMENGINE:
     from symengine.lib.symengine_wrapper import gcd as igcd
     from symengine import AppliedUndef
 
-    def sympify(obj, *, strict=False):
+    def sympify(a, *, strict=False):
         """
         Notes
         =====
@@ -33,9 +33,9 @@ if USE_SYMENGINE:
             inside SymPy.
 
         """
-        if strict and isinstance(obj, str):
-            raise SympifyError(obj)
-        return sympify_symengine(obj)
+        if strict and isinstance(a, str):
+            raise SympifyError(a)
+        return sympify_symengine(a)
 
     sympify.__doc__ = (
         sympify_symengine.__doc__
