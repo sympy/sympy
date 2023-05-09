@@ -14,7 +14,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from sympy.core.backend import S, USE_SYMENGINE
+from sympy.core.backend import S, USE_SYMENGINE, sympify
 from sympy.physics.mechanics import (
     PinJoint,
     ReferenceFrame,
@@ -25,18 +25,8 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._pathway import PathwayBase
 
 if USE_SYMENGINE:
-    from sympy.core.backend import (
-        Basic as ExprType,
-        sympify as sympify_symengine,
-    )
-    from sympy.core.sympify import sympify as sympify_sympy
-
-    def sympify(*args, **kwargs):
-        if kwargs.get('strict') is True:
-            return sympify_symengine(sympify_sympy(*args, **kwargs))
-        return sympify_symengine(*args, **kwargs)
+    from sympy.core.backend import Basic as ExprType
 else:
-    from sympy.core.backend import sympify
     from sympy.core.expr import Expr as ExprType
 
 if TYPE_CHECKING:
