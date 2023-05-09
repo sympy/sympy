@@ -3,7 +3,7 @@ USE_SYMENGINE = os.getenv('USE_SYMENGINE', '0')
 USE_SYMENGINE = USE_SYMENGINE.lower() in ('1', 't', 'true')  # type: ignore
 
 if USE_SYMENGINE:
-    from symengine import (Symbol, Integer, sympify, S,
+    from symengine import (Symbol, Integer, sympify as sympify_symengine, S,
         SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
         sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
         sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
@@ -12,6 +12,28 @@ if USE_SYMENGINE:
         ImmutableMatrix, MatrixBase, Rational, Basic)
     from symengine.lib.symengine_wrapper import gcd as igcd
     from symengine import AppliedUndef
+
+    def sympify(obj, *, strict=False):
+        """SymEngine-compatible strict ``sympify``.
+
+        Explanation
+        ===========
+
+        SymEngine's ``sympify`` does not accept keyword arguments and is
+        therefore not compatible with SymPy's ``sympify`` with ``strict=True``
+        (which ensures that only the types for which an explicit conversion has
+        been defined are converted).
+
+        See Also
+        ========
+
+        sympify: Converts an arbitrary expression to a type that can be used
+            inside SymPy.
+
+        """
+        if strict and isinstance(obj, str):
+            raise SympifyError(obj)
+        return sympify_symengine(obj)
 else:
     from sympy.core.add import Add
     from sympy.core.basic import Basic
