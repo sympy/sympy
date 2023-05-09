@@ -92,16 +92,16 @@ Those keyword arguments are confusing when symbolic expressions contain
 symbols different from ``x, y, u, v``, or when executing multiple
 functions on the same session. Moreover, they are rather long to type.
 Realizing that these plotting functions discretize at most two ranges
-(cartian or parametric), a different way has been implemented:
+(cartesian or parametric), a different way has been implemented:
 
 * ``n1`` replaces ``nb_of_points``, ``nb_of_points_x`` and ``nb_of_points_u``,
   which discretizes the first range.
 * ``n2`` replaces ``nb_of_points_y`` and ``nb_of_points_v``, which discretizes
   the second range.
 * ``n``: if provided replaces ``nb_of_points``, ``points``, ``nb_of_points_x``,
-  ``nb_of_points_y``, `nb_of_points_u``, ``nb_of_points_v``. It is particularly
-  useful to quickly set the same number of discretization points on both
-  directions.
+  ``nb_of_points_y``, ``nb_of_points_u``, ``nb_of_points_v``.
+  It is particularly useful to quickly set the same number of discretization
+  points on both directions.
 
 Deprecated behavior:
 
