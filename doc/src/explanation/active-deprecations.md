@@ -75,6 +75,70 @@ SymPy deprecation warnings.
 ```
 
 ## Version 1.13
+(deprecate-nb_of_points)=
+### Setting number of discretization points in plots
+The plotting module exposes the following keyword arguments to control the
+number of discretization points:
+
+* ``nb_of_points``: used in ``plot``, ``plot_parametric``,
+  ``plot3d_parametric_line``, discretizes the x-range or the parameter.
+* ``nb_of_points_x, nb_of_points_y``: used in ``plot3d`` and ``plot_contour``,
+  discretize the x-range and y-range, respectively.
+* ``nb_of_points_u, nb_of_points_v``: used in ``plot3d_parametric_surface``,
+  discretize the u-range and v-range, respectively.
+* ``points``: used in ``plot_implicit``, discretizes both ranges.
+
+Those keyword arguments are confusing when symbolic expressions contain
+symbols different from ``x, y, u, v``, or when executing multiple
+functions on the same session. Moreover, they are rather long to type.
+Realizing that these plotting functions discretize at most two ranges
+(cartian or parametric), a different way has been implemented:
+
+* ``n1`` replaces ``nb_of_points``, ``nb_of_points_x`` and ``nb_of_points_u``,
+  which discretizes the first range.
+* ``n2`` replaces ``nb_of_points_y`` and ``nb_of_points_v``, which discretizes
+  the second range.
+* ``n``: if provided replaces ``nb_of_points``, ``points``, ``nb_of_points_x``,
+  ``nb_of_points_y``, `nb_of_points_u``, ``nb_of_points_v``. It is particularly
+  useful to quickly set the same number of discretization points on both
+  directions.
+
+Deprecated behavior:
+
+```py
+from sympy import *
+from sympy.plotting.plot import (
+    plot3d, plot3d_parametric_line, plot3d_parametric_surface, plot_contour)
+var("a, b")
+p1 = plot(sin(a), adaptive=False, nb_of_points=50)
+p2 = plot_parametric(cos(a), sin(a), (a, 0, 2*pi), adaptive=False, nb_of_points=20)
+p3 = plot3d_parametric_line(cos(a), sin(a), a, (a, 0, 2*pi), adaptive=False, nb_of_points=10)
+p4 = plot3d(cos(a*b), (a, -3, 3), (b, -3, 3), nb_of_points_x=10, nb_of_points_y=20)
+p5 = plot_contour(cos(a*b), (a, -3, 3), (b, -3, 3), nb_of_points_x=10, nb_of_points_y=20)
+p6 = plot3d_parametric_surface(
+    a * cos(b), a * sin(b), a * cos(4 * b) / 2,
+    (a, 0, pi), (b, 0, 2*pi), nb_of_points_u=10, nb_of_points_v=20)
+p7 = plot_implicit(a > b**2, (a, -3, 3), (b, -3, 3), adaptive=False, points=10)
+```
+
+Supported behavior:
+
+```py
+p1 = plot(sin(a), adaptive=False, n=50)
+p2 = plot_parametric(cos(a), sin(a), (a, 0, 2*pi), adaptive=False, n=20)
+p3 = plot3d_parametric_line(cos(a), sin(a), a, (a, 0, 2*pi), adaptive=False, n=10)
+p4 = plot3d(cos(a*b), (a, -3, 3), (b, -3, 3), n1=10, n2=20)
+p5 = plot_contour(cos(a*b), (a, -3, 3), (b, -3, 3), n1=10, n2=20)
+p6 = plot3d_parametric_surface(
+    a * cos(b), a * sin(b), a * cos(4 * b) / 2,
+    (a, 0, pi), (b, 0, 2*pi), n1=10, n2=20)
+p7 = plot_implicit(a > y**2, (a, -3, 3), (y, -3, 3), adaptive=False, n=10)
+# set the same number of discretization points on both directions
+p8 = plot3d(cos(a*b), (a, -3, 3), (b, -3, 3), n=20)
+p9 = plot3d_parametric_surface(
+    a * cos(b), a * sin(b), a * cos(4 * b) / 2,
+    (a, 0, pi), (b, 0, 2*pi), n=10)
+```
 
 (moved-mechanics-functions)=
 ### Moved mechanics functions

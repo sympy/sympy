@@ -179,7 +179,7 @@ def test_plot_and_save_2():
         p._backend.close()
 
         #No adaptive sampling.
-        p = plot_parametric(cos(x), sin(x), adaptive=False, nb_of_points=500)
+        p = plot_parametric(cos(x), sin(x), adaptive=False, n=500)
         filename = 'test_adaptive.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -197,7 +197,7 @@ def test_plot_and_save_2():
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
 
-        p = plot3d_parametric_line(sin(x), cos(x), x, nb_of_points=30)
+        p = plot3d_parametric_line(sin(x), cos(x), x, n=30)
         filename = 'test_3d_line_points.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -443,7 +443,7 @@ def test_plotgrid_and_save():
         p1 = plot(x)
         p2 = plot_parametric((sin(x), cos(x)), (x, sin(x)), show=False)
         p3 = plot_parametric(
-            cos(x), sin(x), adaptive=False, nb_of_points=500, show=False)
+            cos(x), sin(x), adaptive=False, n=500, show=False)
         p4 = plot3d_parametric_line(sin(x), cos(x), x, show=False)
         # symmetric grid
         p = PlotGrid(2, 2, p1, p2, p3, p4)
@@ -762,3 +762,34 @@ def test_deprecated_get_segments():
     p = plot(f, (x, -10, 10), show=False)
     with warns_deprecated_sympy():
         p[0].get_segments()
+
+def test_deprecated_nb_of_points():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = Symbol('x'), Symbol('y')
+
+    with warns_deprecated_sympy():
+        plot(sin(x), (x, -10, 10), adaptive=False, nb_of_points=10)
+    with warns_deprecated_sympy():
+        plot_parametric(cos(x), sin(x), (x, 0, 2*pi),
+            adaptive=False, nb_of_points=10)
+    with warns_deprecated_sympy():
+        plot3d_parametric_line(cos(x), sin(x), x, (x, 0, 2*pi),
+            adaptive=False, nb_of_points=10)
+    with warns_deprecated_sympy():
+        plot3d(cos(x*y), (x, -3, 3), (y, -3, 3), nb_of_points_x=10)
+    with warns_deprecated_sympy():
+        plot3d(cos(x*y), (x, -3, 3), (y, -3, 3), nb_of_points_y=10)
+    with warns_deprecated_sympy():
+        plot_contour(cos(x*y), (x, -3, 3), (y, -3, 3), nb_of_points_x=10)
+    with warns_deprecated_sympy():
+        plot_contour(cos(x*y), (x, -3, 3), (y, -3, 3), nb_of_points_y=10)
+    with warns_deprecated_sympy():
+        plot3d_parametric_surface(
+            x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+            (x, 0, pi), (y, 0, 2*pi), nb_of_points_u=10)
+    with warns_deprecated_sympy():
+        plot3d_parametric_surface(
+            x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+            (x, 0, pi), (y, 0, 2*pi), nb_of_points_v=10)
