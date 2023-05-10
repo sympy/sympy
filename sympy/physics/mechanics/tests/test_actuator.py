@@ -423,6 +423,20 @@ class TestForcedMassSpringDamperModel():
         assert self.kanes_method.mass_matrix == self.mass_matrix
         assert self.kanes_method.forcing == self.forcing
 
+    def test_linear_spring_linear_damper(self):
+        spring = LinearSpring(self.k, self.pathway)
+        damper = LinearDamper(self.c, self.pathway)
+
+        loads = [
+            (self.attachment, self.F * self.frame.x),
+            *spring.to_loads(),
+            *damper.to_loads(),
+        ]
+        self.kanes_method.kanes_equations(self.bodies, loads)
+
+        assert self.kanes_method.mass_matrix == self.mass_matrix
+        assert self.kanes_method.forcing == self.forcing
+
 
 class TestTorqueActuator:
 
