@@ -273,7 +273,18 @@ class TestLinearSpring:
 
 
 class TestLinearDamper:
-    pass
+
+    @pytest.fixture(autouse=True)
+    def _linear_damper_fixture(self) -> None:
+        self.damping = Symbol('c')
+        self.l = Symbol('l')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway(self.pA, self.pB)
+        self.q = dynamicsymbols('q')
+        self.dq = dynamicsymbols('q', 1)
+        self.u = dynamicsymbols('u')
+        self.N = ReferenceFrame('N')
 
 
 def test_forced_mass_spring_damper_model():
