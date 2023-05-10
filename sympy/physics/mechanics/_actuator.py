@@ -496,11 +496,42 @@ class TorqueActuator(ActuatorBase):
            this frame.
 
         """
-        self.torque = torque
-        self.axis = axis
-        self.target_frame = target_frame  # type: ignore
-        self.reaction_frame = reaction_frame  # type: ignore
-        super().__init__()
+        # ``torque`` attribute
+        self._torque = sympify(torque, strict=True)
+
+        # ``axis`` attribute
+        if not isinstance(axis, Vector):
+            msg = (
+                f'Value {repr(axis)} passed to `axis` was of type '
+                f'{type(axis)}, must be {Vector}.'
+            )
+            raise TypeError(msg)
+        self._axis = axis
+
+        # ``target_frame`` attribute
+        if isinstance(target_frame, RigidBody):
+            target_frame = target_frame.frame
+        elif not isinstance(target_frame, ReferenceFrame):
+            msg = (
+                f'Value {repr(target_frame)} passed to `target_frame` was of '
+                f'type 'f'{type(target_frame)}, must be {ReferenceFrame}.'
+            )
+            raise TypeError(msg)
+        self._target_frame: ReferenceFrame = target_frame  # type: ignore
+
+        # ``reaction_frame`` attribute
+        if isinstance(reaction_frame, RigidBody):
+            reaction_frame = reaction_frame.frame
+        elif (
+            not isinstance(reaction_frame, ReferenceFrame)
+            and reaction_frame is not None
+        ):
+            msg = (
+                f'Value {repr(reaction_frame)} passed to `reaction_frame` was of '
+                f'type 'f'{type(reaction_frame)}, must be {ReferenceFrame}.'
+            )
+            raise TypeError(msg)
+        self._reaction_frame: ReferenceFrame | None = reaction_frame  # type: ignore
 
     @classmethod
     def at_pin_joint(
@@ -581,67 +612,20 @@ class TorqueActuator(ActuatorBase):
         """The magnitude of the torque produced by the actuator."""
         return self._torque
 
-    @torque.setter
-    def torque(self, torque: ExprType) -> None:
-        if not isinstance(torque, ExprType):
-            msg = (
-                f'Value {repr(torque)} passed to `torque` was of type '
-                f'{type(torque)}, must be {ExprType}.'
-            )
-            raise TypeError(msg)
-        self._torque = torque
-
     @property
     def axis(self) -> Vector:
         """The axis about which the torque acts."""
         return self._axis
-
-    @axis.setter
-    def axis(self, axis: Vector) -> None:
-        if not isinstance(axis, Vector):
-            msg = (
-                f'Value {repr(axis)} passed to `axis` was of type '
-                f'{type(axis)}, must be {Vector}.'
-            )
-            raise TypeError(msg)
-        self._axis = axis
 
     @property
     def target_frame(self) -> ReferenceFrame:
         """The primary reference frames on which the torque will act."""
         return self._target_frame
 
-    @target_frame.setter
-    def target_frame(self, target_frame: ReferenceFrame | RigidBody) -> None:
-        if isinstance(target_frame, RigidBody):
-            target_frame = target_frame.frame
-        elif not isinstance(target_frame, ReferenceFrame):
-            msg = (
-                f'Value {repr(target_frame)} passed to `target_frame` was of '
-                f'type 'f'{type(target_frame)}, must be {ReferenceFrame}.'
-            )
-            raise TypeError(msg)
-        self._target_frame: ReferenceFrame = target_frame  # type: ignore
-
     @property
     def reaction_frame(self) -> ReferenceFrame | None:
         """The primary reference frames on which the torque will act."""
         return self._reaction_frame
-
-    @reaction_frame.setter
-    def reaction_frame(self, reaction_frame: ReferenceFrame | RigidBody | None) -> None:
-        if isinstance(reaction_frame, RigidBody):
-            reaction_frame = reaction_frame.frame
-        elif (
-            not isinstance(reaction_frame, ReferenceFrame)
-            and reaction_frame is not None
-        ):
-            msg = (
-                f'Value {repr(reaction_frame)} passed to `reaction_frame` was of '
-                f'type 'f'{type(reaction_frame)}, must be {ReferenceFrame}.'
-            )
-            raise TypeError(msg)
-        self._reaction_frame: ReferenceFrame | None = reaction_frame  # type: ignore
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
