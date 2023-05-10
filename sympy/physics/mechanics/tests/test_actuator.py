@@ -28,6 +28,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._actuator import (
     ActuatorBase,
     ForceActuator,
+    LinearDamper,
     LinearSpring,
     TorqueActuator,
 )
@@ -269,6 +270,10 @@ class TestLinearSpring:
             assert isinstance(load, Force)
             assert load.point == point
             assert (load.vector - vector).simplify() == 0
+
+
+class TestLinearDamper:
+    pass
 
 
 def test_forced_mass_spring_damper_model():
