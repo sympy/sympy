@@ -79,9 +79,13 @@ class TestForceActuator:
         assert isinstance(instance.force, ExprType)
         assert instance.force == expected_force
 
-    def test_invalid_constructor_force_not_expr(self) -> None:
+    @pytest.mark.parametrize('force', [None, 'F'])
+    def test_invalid_constructor_force_not_sympifyable(
+        self,
+        force: Any,
+    ) -> None:
         with pytest.raises(SympifyError):
-            _ = ForceActuator(None, self.pathway)  # type: ignore
+            _ = ForceActuator(force, self.pathway)  # type: ignore
 
     @pytest.mark.parametrize(
         'pathway',
@@ -226,6 +230,26 @@ class TestLinearSpring:
         assert hasattr(spring, 'force')
         assert isinstance(spring.force, ExprType)
         assert spring.force == force
+
+    @pytest.mark.parametrize('stiffness', [None, 'k'])
+    def test_invalid_constructor_stiffness_not_sympifyable(
+        self,
+        stiffness: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = LinearSpring(stiffness, self.pathway, self.l)
+
+    def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
+        with pytest.raises(TypeError):
+            _ = LinearSpring(self.stiffness, None, self.l)  # type: ignore
+
+    @pytest.mark.parametrize('equilibrium_length', [None, 'l'])
+    def test_invalid_constructor_equilibrium_length_not_sympifyable(
+        self,
+        equilibrium_length: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = LinearSpring(self.stiffness, self.pathway, equilibrium_length)
 
     @pytest.mark.parametrize(
         'stiffness, equilibrium_length',
@@ -417,13 +441,15 @@ class TestTorqueActuator:
         assert hasattr(instance, 'reaction_frame')
         assert instance.reaction_frame is None
 
-    @pytest.mark.parametrize(
-        'axis',
-        [
-            Symbol('a'),
-            dynamicsymbols('a'),
-        ]
-    )
+    @pytest.mark.parametrize('torque', [None, 'T'])
+    def test_invalid_constructor_torque_not_sympifyable(
+        self,
+        torque: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = TorqueActuator(torque, self.axis, self.target)  # type: ignore
+
+    @pytest.mark.parametrize('axis', [Symbol('a'), dynamicsymbols('a')])
     def test_invalid_constructor_axis_not_vector(self, axis: Any) -> None:
         with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, axis, self.target, self.reaction)  # type: ignore
