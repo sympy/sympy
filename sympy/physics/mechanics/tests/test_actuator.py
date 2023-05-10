@@ -392,6 +392,7 @@ class TestTorqueActuator:
         self.torque = Symbol('T')
         self.N = ReferenceFrame('N')
         self.A = ReferenceFrame('A')
+        self.axis = self.N.z
         self.target = RigidBody('target', frame=self.N)
         self.reaction = RigidBody('reaction', frame=self.A)
 
@@ -423,7 +424,7 @@ class TestTorqueActuator:
     ) -> None:
         instance = TorqueActuator(
             torque,
-            self.N.z,
+            self.axis,
             target_frame,
             reaction_frame,
         )
@@ -435,7 +436,7 @@ class TestTorqueActuator:
 
         assert hasattr(instance, 'axis')
         assert isinstance(instance.axis, Vector)
-        assert instance.axis == self.N.z
+        assert instance.axis == self.axis
 
         assert hasattr(instance, 'target_frame')
         assert isinstance(instance.target_frame, ReferenceFrame)
@@ -459,7 +460,7 @@ class TestTorqueActuator:
         torque: ExprType,
         target_frame: ReferenceFrame | RigidBody,
     ) -> None:
-        instance = TorqueActuator(torque, self.N.z, target_frame)
+        instance = TorqueActuator(torque, self.axis, target_frame)
         assert isinstance(instance, TorqueActuator)
 
         assert hasattr(instance, 'torque')
@@ -468,7 +469,7 @@ class TestTorqueActuator:
 
         assert hasattr(instance, 'axis')
         assert isinstance(instance.axis, Vector)
-        assert instance.axis == self.N.z
+        assert instance.axis == self.axis
 
         assert hasattr(instance, 'target_frame')
         assert isinstance(instance.target_frame, ReferenceFrame)
@@ -504,7 +505,7 @@ class TestTorqueActuator:
         frames: tuple[Any, Any],
     ) -> None:
         with pytest.raises(TypeError):
-            _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
+            _ = TorqueActuator(self.torque, self.axis, *frames)  # type: ignore
 
     @pytest.mark.parametrize(
         'property_name, fixture_attr_name',
@@ -522,7 +523,7 @@ class TestTorqueActuator:
     ) -> None:
         actuator = TorqueActuator(
             self.torque,
-            self.N.z,
+            self.axis,
             self.target,
             self.reaction,
         )
@@ -531,14 +532,14 @@ class TestTorqueActuator:
             setattr(actuator, property_name, value)
 
     def test_repr_without_reaction(self) -> None:
-        actuator = TorqueActuator(self.torque, self.N.z, self.target)
+        actuator = TorqueActuator(self.torque, self.axis, self.target)
         expected = 'TorqueActuator(T, axis=N.z, target_frame=N)'
         assert repr(actuator) == expected
 
     def test_repr_with_reaction(self) -> None:
         actuator = TorqueActuator(
             self.torque,
-            self.N.z,
+            self.axis,
             self.target,
             self.reaction,
         )
@@ -553,7 +554,7 @@ class TestTorqueActuator:
             coordinates=dynamicsymbols('q'),
             speeds=dynamicsymbols('u'),
             parent_interframe=self.N,
-            joint_axis=self.N.z,
+            joint_axis=self.axis,
         )
         instance = TorqueActuator.at_pin_joint(self.torque, pin_joint)
         assert isinstance(instance, TorqueActuator)
@@ -564,7 +565,7 @@ class TestTorqueActuator:
 
         assert hasattr(instance, 'axis')
         assert isinstance(instance.axis, Vector)
-        assert instance.axis == self.N.z
+        assert instance.axis == self.axis
 
         assert hasattr(instance, 'target_frame')
         assert isinstance(instance.target_frame, ReferenceFrame)
@@ -579,21 +580,21 @@ class TestTorqueActuator:
             _ = TorqueActuator.at_pin_joint(self.torque, Symbol('pin'))  # type: ignore
 
     def test_to_loads_without_reaction(self) -> None:
-        actuator = TorqueActuator(self.torque, self.N.z, self.target)
+        actuator = TorqueActuator(self.torque, self.axis, self.target)
         expected = [
-            (self.N, self.torque * self.N.z),
+            (self.N, self.torque * self.axis),
         ]
         assert actuator.to_loads() == expected
 
     def test_to_loads_with_reaction(self) -> None:
         actuator = TorqueActuator(
             self.torque,
-            self.N.z,
+            self.axis,
             self.target,
             self.reaction,
         )
         expected = [
-            (self.N, self.torque * self.N.z),
-            (self.A, - self.torque * self.N.z),
+            (self.N, self.torque * self.axis),
+            (self.A, - self.torque * self.axis),
         ]
         assert actuator.to_loads() == expected
