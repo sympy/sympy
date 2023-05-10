@@ -286,6 +286,12 @@ class TestLinearDamper:
         self.u = dynamicsymbols('u')
         self.N = ReferenceFrame('N')
 
+    def test_is_force_actuator_subclass(self) -> None:
+        assert issubclass(LinearDamper, ForceActuator)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(LinearDamper, ActuatorBase)
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
