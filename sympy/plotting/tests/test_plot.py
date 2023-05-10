@@ -19,8 +19,7 @@ from sympy.plotting.plot import (
     Plot, plot, plot_parametric, plot3d_parametric_line, plot3d,
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
-    unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend, BaseBackend)
+    unset_show, plot_contour, PlotGrid, MatplotlibBackend, TextBackend)
 from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
@@ -33,18 +32,22 @@ matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
 
 
-class DummyBackendNotOk(BaseBackend):
+class DummyBackendNotOk(Plot):
     """ Used to verify if users can create their own backends.
     This backend is meant to raise NotImplementedError for methods `show`,
     `save`, `close`.
     """
-    pass
+    def __new__(cls, *args, **kwargs):
+        return object.__new__(cls)
 
 
-class DummyBackendOk(BaseBackend):
+class DummyBackendOk(Plot):
     """ Used to verify if users can create their own backends.
     This backend is meant to pass all tests.
     """
+    def __new__(cls, *args, **kwargs):
+        return object.__new__(cls)
+
     def show(self):
         pass
 
@@ -623,11 +626,11 @@ def test_issue_13516():
     assert len(pt[0].get_data()[0]) >= 30
 
     pd = plot(sin(x), backend="default", show=False)
-    assert pd.backend == DefaultBackend
+    assert pd.backend == MatplotlibBackend
     assert len(pd[0].get_data()[0]) >= 30
 
     p = plot(sin(x), show=False)
-    assert p.backend == DefaultBackend
+    assert p.backend == MatplotlibBackend
     assert len(p[0].get_data()[0]) >= 30
 
 
@@ -639,10 +642,10 @@ def test_plot_limits():
     p = plot(x, x**2, (x, -10, 10))
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 10) < 2
     assert abs(xmax - 10) < 2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 10) < 10
     assert abs(ymax - 100) < 10
 
@@ -658,26 +661,26 @@ def test_plot3d_parametric_line_limits():
     p = plot3d_parametric_line(v1, v2)
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 2) < 1e-2
     assert abs(xmax - 2) < 1e-2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 2) < 1e-2
     assert abs(ymax - 2) < 1e-2
-    zmin, zmax = backend.ax[0].get_zlim()
+    zmin, zmax = backend.ax.get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
 
     p = plot3d_parametric_line(v2, v1)
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 2) < 1e-2
     assert abs(xmax - 2) < 1e-2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 2) < 1e-2
     assert abs(ymax - 2) < 1e-2
-    zmin, zmax = backend.ax[0].get_zlim()
+    zmin, zmax = backend.ax.get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
 
@@ -707,8 +710,7 @@ def test_issue_20113():
     x = Symbol('x')
 
     # verify the capability to use custom backends
-    with raises(TypeError):
-        plot(sin(x), backend=Plot, show=False)
+    plot(sin(x), backend=Plot, show=False)
     p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
     assert p2.backend == MatplotlibBackend
     assert len(p2[0].get_data()[0]) >= 30
