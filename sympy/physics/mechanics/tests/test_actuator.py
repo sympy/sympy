@@ -356,7 +356,7 @@ class TestLinearDamper:
         assert damper.to_loads() == expected
 
 
-def test_forced_mass_spring_damper_model():
+class TestForcedMassSpringDamperModel():
     r"""A single degree of freedom translational forced mass-spring-damper.
 
     Notes
@@ -374,45 +374,54 @@ def test_forced_mass_spring_damper_model():
     freedom.
 
     """
-    m = Symbol('m')
-    k = Symbol('k')
-    c = Symbol('c')
-    F = Symbol('F')
 
-    x = dynamicsymbols('x')
-    dx = dynamicsymbols('x', 1)
-    x_dot = dynamicsymbols('x_dot')
+    @pytest.fixture(autouse=True)
+    def _force_mass_spring_damper_model_fixture(self) -> None:
+        self.m = Symbol('m')
+        self.k = Symbol('k')
+        self.c = Symbol('c')
+        self.F = Symbol('F')
 
-    frame = ReferenceFrame('N')
-    origin = Point('pO')
-    origin.set_vel(frame, 0)
+        self.q = dynamicsymbols('q')
+        self.dq = dynamicsymbols('q', 1)
+        self.u = dynamicsymbols('u')
 
-    attachment = Point('pA')
-    attachment.set_pos(origin, x * frame.x)
+        self.frame = ReferenceFrame('N')
+        self.origin = Point('pO')
+        self.origin.set_vel(self.frame, 0)
 
-    mass = Particle('mass', attachment, m)
-    pathway = LinearPathway(origin, attachment)
-    stiffness = -k * pathway.length  # positive as assumes expansile force
-    spring = ForceActuator(stiffness, pathway)
-    damping = -c * pathway.extension_velocity  # negative as acts against velocity
-    damper = ForceActuator(damping, pathway)
+        self.attachment = Point('pA')
+        self.attachment.set_pos(self.origin, self.q * self.frame.x)
 
-    kanes_method = KanesMethod(
-        frame,
-        q_ind=[x],
-        u_ind=[x_dot],
-        kd_eqs=[dx - x_dot],
-    )
-    bodies = [mass]
-    loads = [
-        (attachment, F * frame.x),
-        *spring.to_loads(),
-        *damper.to_loads(),
-    ]
-    kanes_method.kanes_equations(bodies, loads)
+        self.mass = Particle('mass', self.attachment, self.m)
+        self.pathway = LinearPathway(self.origin, self.attachment)
 
-    assert kanes_method.mass_matrix == Matrix([[m]])
-    assert kanes_method.forcing == Matrix([[F - c*x_dot - k*x]])
+        self.kanes_method = KanesMethod(
+            self.frame,
+            q_ind=[self.q],
+            u_ind=[self.u],
+            kd_eqs=[self.dq - self.u],
+        )
+        self.bodies = [self.mass]
+
+        self.mass_matrix = Matrix([[self.m]])
+        self.forcing = Matrix([[self.F - self.c*self.u - self.k*self.q]])
+
+    def test_force_acuator(self):
+        stiffness = -self.k * self.pathway.length
+        spring = ForceActuator(stiffness, self.pathway)
+        damping = -self.c * self.pathway.extension_velocity
+        damper = ForceActuator(damping, self.pathway)
+
+        loads = [
+            (self.attachment, self.F * self.frame.x),
+            *spring.to_loads(),
+            *damper.to_loads(),
+        ]
+        self.kanes_method.kanes_equations(self.bodies, loads)
+
+        assert self.kanes_method.mass_matrix == self.mass_matrix
+        assert self.kanes_method.forcing == self.forcing
 
 
 class TestTorqueActuator:
