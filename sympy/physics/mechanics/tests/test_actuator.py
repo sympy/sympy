@@ -311,6 +311,18 @@ class TestLinearDamper:
         assert isinstance(damper.force, ExprType)
         assert damper.force == expected_force
 
+    @pytest.mark.parametrize('damping', [None, 'c'])
+    def test_invalid_constructor_damping_not_sympifyable(
+        self,
+        damping: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = LinearDamper(damping, self.pathway)
+
+    def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
+        with pytest.raises(TypeError):
+            _ = LinearDamper(self.damping, None)  # type: ignore
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
