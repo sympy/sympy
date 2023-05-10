@@ -346,6 +346,15 @@ class TestLinearDamper:
         expected = 'LinearDamper(c, LinearPathway(pA, pB))'
         assert repr(damper) == expected
 
+    def test_to_loads(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+        direction = self.q**2 / self.q**2 * self.N.x
+        pA_force = self.damping * self.dq * direction
+        pB_force = -self.damping * self.dq * direction
+        expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
+        assert damper.to_loads() == expected
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
