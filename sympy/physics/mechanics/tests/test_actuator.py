@@ -323,6 +323,23 @@ class TestLinearDamper:
         with pytest.raises(TypeError):
             _ = LinearDamper(self.damping, None)  # type: ignore
 
+    @pytest.mark.parametrize(
+        'property_name, fixture_attr_name',
+        [
+            ('damping', 'damping'),
+            ('pathway', 'pathway'),
+        ]
+    )
+    def test_properties_are_immutable(
+        self,
+        property_name: str,
+        fixture_attr_name: str,
+    ) -> None:
+        damper = LinearDamper(self.damping, self.pathway)
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(damper, property_name, value)
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
