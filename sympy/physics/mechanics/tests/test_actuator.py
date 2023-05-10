@@ -72,7 +72,11 @@ class TestForceActuator:
             (Symbol('F')**2 + Symbol('F'), Symbol('F')**2 + Symbol('F')),
         ]
     )
-    def test_valid_constructor_force(self, force: Any, expected_force: ExprType) -> None:
+    def test_valid_constructor_force(
+        self,
+        force: Any,
+        expected_force: ExprType,
+    ) -> None:
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
@@ -187,7 +191,13 @@ class TestLinearSpring:
         assert issubclass(LinearSpring, ActuatorBase)
 
     @pytest.mark.parametrize(
-        'stiffness, expected_stiffness, equilibrium_length, expected_equilibrium_length, force',
+        (
+            'stiffness, '
+            'expected_stiffness, '
+            'equilibrium_length, '
+            'expected_equilibrium_length, '
+            'force'
+        ),
         [
             (
                 1,
@@ -290,7 +300,10 @@ class TestLinearSpring:
         'equilibrium_length, expected',
         [
             (S.Zero, 'LinearSpring(k, LinearPathway(pA, pB))'),
-            (Symbol('l'), 'LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)'),
+            (
+                Symbol('l'),
+                'LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)',
+            ),
         ]
     )
     def test_repr(self, equilibrium_length: Any, expected: str) -> None:
@@ -408,7 +421,12 @@ class TestTorqueActuator:
         target_frame: ReferenceFrame | RigidBody,
         reaction_frame: ReferenceFrame | RigidBody,
     ) -> None:
-        instance = TorqueActuator(torque, self.N.z, target_frame, reaction_frame)
+        instance = TorqueActuator(
+            torque,
+            self.N.z,
+            target_frame,
+            reaction_frame,
+        )
         assert isinstance(instance, TorqueActuator)
 
         assert hasattr(instance, 'torque')
@@ -481,9 +499,36 @@ class TestTorqueActuator:
             (RigidBody('parent'), True),
         ]
     )
-    def test_invalid_frames_not_frame(self, frames: Sequence[Any]) -> None:
+    def test_invalid_constructor_frames_not_frame(
+        self,
+        frames: tuple[Any, Any],
+    ) -> None:
         with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, self.N.z, *frames)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'property_name, fixture_attr_name',
+        [
+            ('torque', 'torque'),
+            ('axis', 'axis'),
+            ('target_frame', 'target'),
+            ('reaction_frame', 'reaction'),
+        ]
+    )
+    def test_properties_are_immutable(
+        self,
+        property_name: str,
+        fixture_attr_name: str,
+    ) -> None:
+        actuator = TorqueActuator(
+            self.torque,
+            self.N.z,
+            self.target,
+            self.reaction,
+        )
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(actuator, property_name, value)
 
     def test_repr_without_reaction(self) -> None:
         actuator = TorqueActuator(self.torque, self.N.z, self.target)
@@ -491,7 +536,12 @@ class TestTorqueActuator:
         assert repr(actuator) == expected
 
     def test_repr_with_reaction(self) -> None:
-        actuator = TorqueActuator(self.torque, self.N.z, self.target, self.reaction)
+        actuator = TorqueActuator(
+            self.torque,
+            self.N.z,
+            self.target,
+            self.reaction,
+        )
         expected = 'TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)'
         assert repr(actuator) == expected
 
@@ -536,7 +586,12 @@ class TestTorqueActuator:
         assert actuator.to_loads() == expected
 
     def test_to_loads_with_reaction(self) -> None:
-        actuator = TorqueActuator(self.torque, self.N.z, self.target, self.reaction)
+        actuator = TorqueActuator(
+            self.torque,
+            self.N.z,
+            self.target,
+            self.reaction,
+        )
         expected = [
             (self.N, self.torque * self.N.z),
             (self.A, - self.torque * self.N.z),
