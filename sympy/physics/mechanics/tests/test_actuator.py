@@ -292,6 +292,25 @@ class TestLinearDamper:
     def test_is_actuator_base_subclass(self) -> None:
         assert issubclass(LinearDamper, ActuatorBase)
 
+    def test_valid_constructor(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+
+        assert isinstance(damper, LinearDamper)
+
+        assert hasattr(damper, 'damping')
+        assert isinstance(damper.damping, ExprType)
+        assert damper.damping == self.damping
+
+        assert hasattr(damper, 'pathway')
+        assert isinstance(damper.pathway, LinearPathway)
+        assert damper.pathway == self.pathway
+
+        expected_force = -self.damping * self.dq * self.q / sqrt(self.q**2)
+        assert hasattr(damper, 'force')
+        assert isinstance(damper.force, ExprType)
+        assert damper.force == expected_force
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
