@@ -5,16 +5,18 @@ non-commutative operators.
 
 Its primary purpose is evaluate larger expression trees of SymPy objects whose
 multiplication has not been defined with :obj:`~.Mul()` and without having to
-overload the ``*`` operator. To this end ``lapply`` may be extended by ``multipledispatch``
-handlers for multiplication or to break up compound objects into elementary objects.
+overload the ``*`` operator. To this end ``lapply`` may be extended by
+``multipledispatch`` handlers for multiplication or to break up compound
+objects into elementary objects.
 
-``lapply`` is also useful to compute expressions that grow too large without intermediate
-simplification and would otherwise need to be manually split up and computed piecewise.
-The amount of expansion of terms may be tuned by options. ``lapply`` also contains
-simplifications for powers with symbolic exponents and involutoric or idempotent factors.
+``lapply`` is also useful to compute expressions that grow too large without
+intermediate simplification and would otherwise need to be manually split up
+and computed piecewise. The amount of expansion of terms may be tuned by
+options. ``lapply`` also contains simplifications for powers with symbolic
+exponents and involutoric or idempotent factors.
 
-Handlers for SymPy matrix objects are included so ``lapply`` is available to evaluate
-matrix expressions that contain ``MatrixSymbols``.
+Handlers for SymPy matrix objects are included so ``lapply`` is available to
+evaluate matrix expressions that contain ``MatrixSymbols``.
 """
 #
 # lapply evolved as the generic kernel required to apply the objects of the
@@ -99,31 +101,33 @@ def lapply(e:Expr, mul=True, Add=Add,
     """
     Generic evaluation engine to apply linear operators, powers and factors
     and distribute them over summands with focus on non-commutative operators.
-    Multiplication of arbitrary SymPy objects can be defined by ``multipledispatch``
-    handlers (see :obj:`sympy.physics.quantum.qapply()` for example).
+    Multiplication of arbitrary SymPy objects can be defined by
+    ``multipledispatch`` handlers (see :obj:`sympy.physics.quantum.qapply()`
+    for an example).
 
     ``lapply`` incorporates simplification rules for powers with symbolic
-    exponents and involutoric or idempotent factors in their base, so it can help
-    to simplify terms in a way like combinations of :obj:`sympy.core.function.expand()`,
-    :obj:`sympy.simplify.simplify()`, :obj:`sympy.simplify.powsimp()` and ``.doit()``.
+    exponents and involutoric or idempotent factors in their base, so it can
+    help to simplify terms in a way like combinations of
+    :obj:`sympy.core.function.expand()`, :obj:`sympy.simplify.simplify()`,
+    :obj:`sympy.simplify.powsimp()` and ``.doit()``.
 
-    The level of expansion may be tuned by options especially for commutative factors.
-    The handling of matrices is included for matrices that are SymPy expressions,
-    i.e. derived from :obj:`~.MatrixExpr` and immutable, and is best used with terms
-    that contain :obj:`~.MatrixSymbol` (see examples).
+    The level of expansion may be tuned by options especially for commutative
+    factors. The handling of matrices is included for matrices that are SymPy
+    expressions, i.e. derived from :obj:`~.MatrixExpr` and immutable, and is
+    best used with terms that contain :obj:`~.MatrixSymbol` (see examples).
 
     Parameters
     ==========
 
     e : Expr
-        The expression containing operators, states resp. factors, summands and
-        powers. The expression tree will be walked and operators resp.
+        The expression containing operators, states resp. factors, summands
+        and powers. The expression tree will be walked and operators resp.
         factors and powers applied and distributed over summands.
 
     mul : Boolean, optional
-        If True (default) distribute commutative factors over sums. Corresponds to option
-        ``mul`` of :obj:`sympy.core.function.expand()`. ``mul=False`` will do the minimal
-        application only, so use only when expansion is slow.
+        If True (default) distribute commutative factors over sums. Corresponds
+        to option ``mul`` of :obj:`sympy.core.function.expand()`. ``mul=False``
+        will do the minimal application only, so use only when expansion is slow.
 
     power_base : Boolean, optional
         Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
@@ -134,23 +138,26 @@ def lapply(e:Expr, mul=True, Add=Add,
         It True expand addition in exponents into multiplied bases. Defaults to False.
 
     nested_exp : Boolean, optional
-        If True, then if powers are nested and if their exponents may be multiplied,
-        explicitly expand the product of the exponents. Defaults to value of option ``mul``.
+        If True, then if powers are nested and if their exponents may be
+        multiplied, explicitly expand the product of the exponents. Defaults
+        to value of option ``mul``.
 
     apply_exp : Boolean, optional
-        If True apply ``lapply`` to exponents of a power before applying the exponent
-        to the base. Default is False and to apply exponents as provided.
+        If True apply ``lapply`` to exponents of a power before applying the
+        exponent to the base. Default is False and to apply exponents as provided.
 
     cache_for_pow : dict, optional
         a dictionary that provides cache values to speed up the evaluation
-        of powers. If provided it is updated in place, so it can be passed on to the
-        next invocation of ``lapply`` as long as options and attributes of symbols
-        remain unaltered. Defaults to None, in which case an internal cache is used.
+        of powers. If provided it is updated in place, so it can be passed on
+        to the next invocation of ``lapply`` as long as options and attributes
+        of symbols remain unaltered.
+        Defaults to None, in which case an internal cache is used.
 
     Add : Callable, optional
-        This function is used to add summands. It must accept the option ``evaluate=True``
-        and return type :obj:`~.Expr`. If set to None, the individual .func argument of
-        each addition expression will be used. Defaults to standard :obj:`~.Add()`.
+        This function is used to add summands. It must accept the option
+        ``evaluate=True`` and return type :obj:`~.Expr`. If set to None, the
+        individual .func argument of each addition expression will be used.
+        Defaults to standard :obj:`~.Add()`.
 
     options : dict, optional
         A dict of keyword/value pairs that are passed to the handlers and the
@@ -750,12 +757,13 @@ lapply_mul2types_B = Dispatcher("lapply_mul2types_B")
 #
 # Principles of Caching for base and exponents of Powers:
 # - Only cache exprs that will probably be used multiple times. Do not litter the
-#   the cache with one-time results. So bases of Powers are cached. Exponents are
+#   the cache with one-time results. So bases of powers are cached. Exponents are
 #   cached only in case of option["apply_exp"] and non-simple exponents.
 # - Exprs being cached must have been returned in ncl from lapply_mul2_c_nc, so
 #   all its factors have been processed fully.
 # - The cache returns three types of information on an expr (besides None):
-#   i.   "elem": expr is elementary  ii. "expr": expr is fully processed
+#   i.   "elem": expr is elementary (in the sense defined above)
+#   ii.  "expr": expr has been processed fully, all factors elementary
 #   iii. (rolloff, cl, encl) expr is base of a power.
 #   which roughly correspond to output of c_nc_ncef, lapply_mul2, lapply_mul2_c_nc.
 # - Base and exponents of Pows are cached separately. If a power is rolled off
@@ -768,36 +776,43 @@ class RO(Enum): # the roll-off type of a base:
     NORO = 1    # base*base doesn't interact, so don't roll off base**exp
     ROLL = 2    # base*base interacts, so roll off base**exp off
 
-# Pow_with_Cache returns Pow(base, exp), but also caches the rolloff
-# decision assigned to base (rolloff) and the splitting of base
-# into cl and elementary ncl factors (as derived from lapply_mul2_c_nc).
-def Pow_with_Cache(base:Expr, exp:Union[Expr, None], rolloff:RO,
-                   cl:List, encl:List, **options) -> Union[Expr, Tuple]:
-    """Caches factorization data for base. If exp is None, returns the
-    cached tuple (rolloff, cl, encl) else Pow(base, exp)."""
-
-    if exp is not None:  # exp==None is to register a base only
-        if   exp is S.Zero: p = S.One
-        elif exp is S.One : p = base
-        else: p = Pow(base, exp, evaluate=False)
-
+# For a base, cache the rolloff decision assigned to it (rolloff) and the
+# splitting of base into cl and elementary ncl factors as derived e.g.
+# from lapply_mul2_c_nc
+def cache_for_base(base:Expr,
+                   rolloff:RO, cl:List, encl:List, **options) -> Tuple:
+    """Generates the info to be cached for base, updates the cache with
+    it and returns the tuple that has been cached."""
     if base.is_commutative: # in this case overwrite any other rolloff
         # note that factors in encl may be nc but give a c product!
-        rolloff, cl, encl = RO.ROLL, [base], [] # let Mul handle base.
+        rolloff, cl, encl = RO.ROLL, [base], [] # let Mul handle c base.
 
-    to_cache = (rolloff, cl.copy(), encl.copy())
+    to_cache = [rolloff, cl.copy(), encl.copy()]
     cache = options["cache_for_pow"]
-    # The cache is indexed on base, as only attributes of base are stored.
-    if (cached := cache.setdefault(base, to_cache)) == to_cache:
-        return cached if exp is None else p
-    if type(cached) is not tuple: # cache[base] is "elem" or "expr"
-        cached = to_cache         # but cache for base has priority
+    # The cache is indexed on base, as only attributes of base are stored
+    cached = cache.setdefault(base, tuple(to_cache))
+    if cached == to_cache:          # cache is now what is should be
+        return cached
+    if type(cached) is tuple:       # cache had another full base info
+        if to_cache[0] == RO.UNKN:  # Existing Rolloff in cache may not
+            to_cache[0] = cached[0] # be downgraded to RO.UNKN
+    # else: cache[base] is "elem" or "expr". This will be updated
+    # to tuple(to_cache) as it gives more information.
 
-    # Rolloff may not be downgraded to UNKN
-    if rolloff == RO.UNKN: rolloff = cached[0]
+    cached = cache[base] = tuple(to_cache) # (rolloff, to_cache[1], to_cache[2])
+    return cached
 
-    cache[base] = (rolloff, to_cache[1], to_cache[2])
-    return cached if exp is None else p
+# Pow_with_Cache packs a call cache_for_base() in front of Pow(base, exp)
+def Pow_with_cache(base:Expr, exp:Expr,
+                   rolloff:RO, cl:List, encl:List, **options) -> Expr:
+    """Returns Pow(base, exp), but also calls cache_for_base() to
+    cache factorization data (rolloff, cl, encl) of base."""
+
+    cache_for_base(base, rolloff, cl, encl, **options)
+
+    if   exp is S.Zero: return S.One
+    elif exp is S.One : return base
+    else              : return Pow(base, exp, evaluate=False)
 
 
 def get_cached_for_base(base:Expr, **options) \
@@ -991,7 +1006,7 @@ def hdlrP_for(e:Pow, **options) -> Expr:
         for a in encl: options["cache_for_pow"].setdefault(a, "elem")
         cml = [lapply_expand_mul(Mul(*cl))] if options["mul"] else cl
         base = Mul(*(cml + encl))
-        Pow_with_Cache(base, None, RO.UNKN, cl, encl, **options)
+        cache_for_base(base, RO.UNKN, cl, encl, **options)
 
     if base != e.base or exp != e.exp:
         # Let ** do all it can do using class methods ._pow, ._eval_power etc.
@@ -1117,7 +1132,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
     # get factors of e.base = cl*encl
     (cl, encl) = cached[1:]
     if encl == []: # implies e.base is commutative -> rolloff=RO.ROLL
-        Pow_with_Cache(e.base, None, RO.ROLL, cl, encl, **options)
+        cache_for_base(e.base, RO.ROLL, cl, encl, **options)
         return [e], [], EmptyMul # Power is commutative
     if to_L:     # this function can handle split_to_right only
         raise NotImplementedError('Splitting Powers to the left should' +
@@ -1132,7 +1147,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
         clnonneg = [c for c in cl if c.is_nonnegative]
         clelse   = [c for c in cl if not c in clnonneg]
         # ep = (clelse*base)**e.exp
-        ep = cast(Expr, Pow_with_Cache(Mul(*(clelse + encl)), e.exp,
+        ep = cast(Expr, Pow_with_cache(Mul(*(clelse + encl)), e.exp,
                                    RO.UNKN, clelse, encl, **options))
         # we can only apply Rule 3b here and not 3a as exp is no int:
         return pow_x(clnonneg, e.exp, (lambda d:
@@ -1164,7 +1179,7 @@ def hadlrP_for(e:Pow, to_L:bool, **options) -> Tuple[List, List, Expr]:
                 (lambda c: c.base.is_nonnegative and c.exp.is_positive))
             clelse = [c for c in cl if not c in clnonneg]
             # efp = (clelse*base)**expf holds remaining factors from cl
-            efp    = Pow_with_Cache(Mul(*(clelse + encl)),
+            efp    = Pow_with_cache(Mul(*(clelse + encl)),
                                 expf, RO.UNKN, clelse, encl, **options)
             efpl   = [] if efp is S.One else [efp]
         else:
@@ -1192,21 +1207,21 @@ def c_nc_pow_nc_i(base:Expr, encl:List, expi:Expr, **options):
 
     ncl, ar = encl[0:-1], encl[-1] # split encl to the right
 
-    def pb(expi, rolloff):   # shorthand
-        return Pow_with_Cache(base, expi, rolloff=rolloff,
-                                        cl = [], encl=encl, **options)
-
     # Handle special cases expi == 0 or expi == 1:
-    if   expi is S.Zero:
-        pb(None, RO.UNKN)    # cache base
+    if expi is S.Zero:
+        cache_for_base(base, RO.UNKN, cl = [], encl=encl, **options)
         return [], [], S.One
     elif expi is S.One :
-        pb(None, RO.UNKN)    # cache base
+        cache_for_base(base, RO.UNKN, cl = [], encl=encl, **options)
         return [], ncl, ar
 
     #### Now: expi is integer and != 0 and != 1 (secured by if's above)
     # Code below relies on this condition to be mathematically correct!
     assert expi.is_integer   # type: ignore[attr-defined]
+
+    def pb(expi, rolloff):   # shorthand
+        return Pow_with_cache(base, expi, rolloff=rolloff,
+                                        cl = [], encl=encl, **options)
 
     # Handle nested powers (see rule 3a, 3c): base=ar, ncl = []
     # (powdenest() can't handle symbolic exponents and doesn't expand exp.)
@@ -1302,8 +1317,8 @@ def c_nc_pow_nc_i(base:Expr, encl:List, expi:Expr, **options):
         # base**expi = (c*a)**expi * a * b**expi * c
         # Case 2: expi>=1, comp. base, base*base interact/comm.
         base2 = Mul(*ncr2)
-        Pow_with_Cache(base2, None,
-                    rolloff=RO.UNKN, cl=[], encl=ncr2, **options)
+        cache_for_base(base2,
+                       rolloff=RO.UNKN, cl=[], encl=ncr2, **options)
         return [ia ** (expi - 1)], [al, Pow(base2, expi)], ar
 
     # it makes sense to permit the power to unroll.
