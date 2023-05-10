@@ -104,6 +104,23 @@ class TestForceActuator:
         with pytest.raises(TypeError):
             _ = ForceActuator(self.force, None)  # type: ignore
 
+    @pytest.mark.parametrize(
+        'property_name, fixture_attr_name',
+        [
+            ('force', 'force'),
+            ('pathway', 'pathway'),
+        ]
+    )
+    def test_properties_are_immutable(
+        self,
+        property_name: str,
+        fixture_attr_name: str,
+    ) -> None:
+        instance = ForceActuator(self.force, self.pathway)
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(instance, property_name, value)
+
     def test_repr(self) -> None:
         actuator = ForceActuator(self.force, self.pathway)
         expected = "ForceActuator(F, LinearPathway(pA, pB))"
@@ -252,21 +269,22 @@ class TestLinearSpring:
             _ = LinearSpring(self.stiffness, self.pathway, equilibrium_length)
 
     @pytest.mark.parametrize(
-        'stiffness, equilibrium_length',
+        'property_name, fixture_attr_name',
         [
-            (None, 0),
-            ('k', 0),
-            (Symbol('k'), None),
-            (Symbol('k'), 'l'),
+            ('stiffness', 'stiffness'),
+            ('pathway', 'pathway'),
+            ('equilibrium_length', 'l'),
         ]
     )
-    def test_invalid_constructor(
+    def test_properties_are_immutable(
         self,
-        stiffness: Any,
-        equilibrium_length: Any,
+        property_name: str,
+        fixture_attr_name: str,
     ) -> None:
-        with pytest.raises(SympifyError):
-            _ = LinearSpring(stiffness, self.pathway, equilibrium_length)
+        spring = LinearSpring(self.stiffness, self.pathway, self.l)
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(spring, property_name, value)
 
     @pytest.mark.parametrize(
         'equilibrium_length, expected',
