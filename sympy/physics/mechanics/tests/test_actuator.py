@@ -340,6 +340,12 @@ class TestLinearDamper:
         with pytest.raises(AttributeError):
             setattr(damper, property_name, value)
 
+    def test_repr(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+        expected = 'LinearDamper(c, LinearPathway(pA, pB))'
+        assert repr(damper) == expected
+
 
 def test_forced_mass_spring_damper_model():
     r"""A single degree of freedom translational forced mass-spring-damper.
