@@ -88,9 +88,6 @@ Series Classes
 Backends
 --------
 
-.. autoclass:: sympy.plotting.plot::BaseBackend
-   :members:
-
 .. autoclass:: sympy.plotting.plot::MatplotlibBackend
    :members:
 
