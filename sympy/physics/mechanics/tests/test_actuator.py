@@ -28,6 +28,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._actuator import (
     ActuatorBase,
     ForceActuator,
+    LinearDamper,
     LinearSpring,
     TorqueActuator,
 )
@@ -326,7 +327,91 @@ class TestLinearSpring:
             assert (load.vector - vector).simplify() == 0
 
 
-def test_forced_mass_spring_damper_model():
+class TestLinearDamper:
+
+    @pytest.fixture(autouse=True)
+    def _linear_damper_fixture(self) -> None:
+        self.damping = Symbol('c')
+        self.l = Symbol('l')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.pathway = LinearPathway(self.pA, self.pB)
+        self.q = dynamicsymbols('q')
+        self.dq = dynamicsymbols('q', 1)
+        self.u = dynamicsymbols('u')
+        self.N = ReferenceFrame('N')
+
+    def test_is_force_actuator_subclass(self) -> None:
+        assert issubclass(LinearDamper, ForceActuator)
+
+    def test_is_actuator_base_subclass(self) -> None:
+        assert issubclass(LinearDamper, ActuatorBase)
+
+    def test_valid_constructor(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+
+        assert isinstance(damper, LinearDamper)
+
+        assert hasattr(damper, 'damping')
+        assert isinstance(damper.damping, ExprType)
+        assert damper.damping == self.damping
+
+        assert hasattr(damper, 'pathway')
+        assert isinstance(damper.pathway, LinearPathway)
+        assert damper.pathway == self.pathway
+
+        expected_force = -self.damping * self.dq * self.q / sqrt(self.q**2)
+        assert hasattr(damper, 'force')
+        assert isinstance(damper.force, ExprType)
+        assert damper.force == expected_force
+
+    @pytest.mark.parametrize('damping', [None, 'c'])
+    def test_invalid_constructor_damping_not_sympifyable(
+        self,
+        damping: Any,
+    ) -> None:
+        with pytest.raises(SympifyError):
+            _ = LinearDamper(damping, self.pathway)
+
+    def test_invalid_constructor_pathway_not_pathway_base(self) -> None:
+        with pytest.raises(TypeError):
+            _ = LinearDamper(self.damping, None)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'property_name, fixture_attr_name',
+        [
+            ('damping', 'damping'),
+            ('pathway', 'pathway'),
+        ]
+    )
+    def test_properties_are_immutable(
+        self,
+        property_name: str,
+        fixture_attr_name: str,
+    ) -> None:
+        damper = LinearDamper(self.damping, self.pathway)
+        value = getattr(self, fixture_attr_name)
+        with pytest.raises(AttributeError):
+            setattr(damper, property_name, value)
+
+    def test_repr(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+        expected = 'LinearDamper(c, LinearPathway(pA, pB))'
+        assert repr(damper) == expected
+
+    def test_to_loads(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+        direction = self.q**2 / self.q**2 * self.N.x
+        pA_force = self.damping * self.dq * direction
+        pB_force = -self.damping * self.dq * direction
+        expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
+        assert damper.to_loads() == expected
+
+
+class TestForcedMassSpringDamperModel():
     r"""A single degree of freedom translational forced mass-spring-damper.
 
     Notes
@@ -344,45 +429,68 @@ def test_forced_mass_spring_damper_model():
     freedom.
 
     """
-    m = Symbol('m')
-    k = Symbol('k')
-    c = Symbol('c')
-    F = Symbol('F')
 
-    x = dynamicsymbols('x')
-    dx = dynamicsymbols('x', 1)
-    x_dot = dynamicsymbols('x_dot')
+    @pytest.fixture(autouse=True)
+    def _force_mass_spring_damper_model_fixture(self) -> None:
+        self.m = Symbol('m')
+        self.k = Symbol('k')
+        self.c = Symbol('c')
+        self.F = Symbol('F')
 
-    frame = ReferenceFrame('N')
-    origin = Point('pO')
-    origin.set_vel(frame, 0)
+        self.q = dynamicsymbols('q')
+        self.dq = dynamicsymbols('q', 1)
+        self.u = dynamicsymbols('u')
 
-    attachment = Point('pA')
-    attachment.set_pos(origin, x * frame.x)
+        self.frame = ReferenceFrame('N')
+        self.origin = Point('pO')
+        self.origin.set_vel(self.frame, 0)
 
-    mass = Particle('mass', attachment, m)
-    pathway = LinearPathway(origin, attachment)
-    stiffness = -k * pathway.length  # positive as assumes expansile force
-    spring = ForceActuator(stiffness, pathway)
-    damping = -c * pathway.extension_velocity  # negative as acts against velocity
-    damper = ForceActuator(damping, pathway)
+        self.attachment = Point('pA')
+        self.attachment.set_pos(self.origin, self.q * self.frame.x)
 
-    kanes_method = KanesMethod(
-        frame,
-        q_ind=[x],
-        u_ind=[x_dot],
-        kd_eqs=[dx - x_dot],
-    )
-    bodies = [mass]
-    loads = [
-        (attachment, F * frame.x),
-        *spring.to_loads(),
-        *damper.to_loads(),
-    ]
-    kanes_method.kanes_equations(bodies, loads)
+        self.mass = Particle('mass', self.attachment, self.m)
+        self.pathway = LinearPathway(self.origin, self.attachment)
 
-    assert kanes_method.mass_matrix == Matrix([[m]])
-    assert kanes_method.forcing == Matrix([[F - c*x_dot - k*x]])
+        self.kanes_method = KanesMethod(
+            self.frame,
+            q_ind=[self.q],
+            u_ind=[self.u],
+            kd_eqs=[self.dq - self.u],
+        )
+        self.bodies = [self.mass]
+
+        self.mass_matrix = Matrix([[self.m]])
+        self.forcing = Matrix([[self.F - self.c*self.u - self.k*self.q]])
+
+    def test_force_acuator(self):
+        stiffness = -self.k * self.pathway.length
+        spring = ForceActuator(stiffness, self.pathway)
+        damping = -self.c * self.pathway.extension_velocity
+        damper = ForceActuator(damping, self.pathway)
+
+        loads = [
+            (self.attachment, self.F * self.frame.x),
+            *spring.to_loads(),
+            *damper.to_loads(),
+        ]
+        self.kanes_method.kanes_equations(self.bodies, loads)
+
+        assert self.kanes_method.mass_matrix == self.mass_matrix
+        assert self.kanes_method.forcing == self.forcing
+
+    def test_linear_spring_linear_damper(self):
+        spring = LinearSpring(self.k, self.pathway)
+        damper = LinearDamper(self.c, self.pathway)
+
+        loads = [
+            (self.attachment, self.F * self.frame.x),
+            *spring.to_loads(),
+            *damper.to_loads(),
+        ]
+        self.kanes_method.kanes_equations(self.bodies, loads)
+
+        assert self.kanes_method.mass_matrix == self.mass_matrix
+        assert self.kanes_method.forcing == self.forcing
 
 
 class TestTorqueActuator:
