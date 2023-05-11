@@ -179,7 +179,7 @@ def test_plot_and_save_2():
         p._backend.close()
 
         #No adaptive sampling.
-        p = plot_parametric(cos(x), sin(x), adaptive=False, nb_of_points=500)
+        p = plot_parametric(cos(x), sin(x), adaptive=False, n=500)
         filename = 'test_adaptive.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -197,7 +197,7 @@ def test_plot_and_save_2():
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
 
-        p = plot3d_parametric_line(sin(x), cos(x), x, nb_of_points=30)
+        p = plot3d_parametric_line(sin(x), cos(x), x, n=30)
         filename = 'test_3d_line_points.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -443,7 +443,7 @@ def test_plotgrid_and_save():
         p1 = plot(x)
         p2 = plot_parametric((sin(x), cos(x)), (x, sin(x)), show=False)
         p3 = plot_parametric(
-            cos(x), sin(x), adaptive=False, nb_of_points=500, show=False)
+            cos(x), sin(x), adaptive=False, n=500, show=False)
         p4 = plot3d_parametric_line(sin(x), cos(x), x, show=False)
         # symmetric grid
         p = PlotGrid(2, 2, p1, p2, p3, p4)
