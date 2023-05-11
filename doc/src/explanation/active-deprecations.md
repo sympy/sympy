@@ -86,7 +86,7 @@ Instead of setting those properties directly, users should pass the homonym
 keyword arguments to the plotting functions.
 
 The supported behavior is to pass keyword arguments to the plotting functions,
-which works fine both for previous and current implementation:
+which works fine for all versions of SymPy (before and after 1.13):
 
 ```py
 p = plot(x,
