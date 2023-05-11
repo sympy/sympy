@@ -236,7 +236,8 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         Default value is 0. Takes value in the range (0, 4).
 
     - ``n`` integer. The number of points if adaptive mesh grid is not
-        used. Default value is 300.
+        used. Default value is 300. This keyword argument replaces ``points``,
+        which should be considered deprecated.
 
     - ``show`` Boolean. Default value is True. If set to False, the plot will
         not be shown. See ``Plot`` for further information.

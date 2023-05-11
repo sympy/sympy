@@ -515,11 +515,6 @@ def _set_discretization_points(kwargs, pt):
     for k, v in deprecated_keywords.items():
         if k in kwargs.keys():
             kwargs[v] = kwargs.pop(k)
-            sympy_deprecation_warning(
-                f"`{k}` is deprecated. Use `{v}` instead.",
-                deprecated_since_version="1.13",
-                active_deprecations_target='deprecate-nb_of_points',
-                stacklevel=4)
 
     if pt in [LineOver1DRangeSeries, Parametric2DLineSeries,
         Parametric3DLineSeries]:
@@ -1819,10 +1814,10 @@ def plot(*args, show=True, **kwargs):
 
     n : int, optional
         Used when the ``adaptive`` is set to ``False``. The function
-        is uniformly sampled at ``n`` number of points.
-
-        If the ``adaptive`` flag is set to ``True``, this will be
-        ignored.
+        is uniformly sampled at ``n`` number of points. If the ``adaptive``
+        flag is set to ``True``, this will be ignored.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     size : (float, float), optional
         A tuple in the form (width, height) in inches to specify the size of
@@ -1964,10 +1959,10 @@ def plot_parametric(*args, show=True, **kwargs):
         value $n$ samples a maximum of $2^n$ points.
 
     n : int, optional
-        Used when the ``adaptive`` flag is set to ``False``.
-
-        Specifies the number of the points used for the uniform
-        sampling.
+        Used when the ``adaptive`` flag is set to ``False``. Specifies the
+        number of the points used for the uniform sampling.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     line_color : string, or float, or function, optional
         Specifies the color for the plot.
@@ -2148,7 +2143,10 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    n : The range is uniformly sampled at ``n`` number of points.
+    n : int
+        The range is uniformly sampled at ``n`` number of points.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2280,9 +2278,13 @@ def plot3d(*args, show=True, **kwargs):
 
     n1 : int
         The x range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_x``, which should be
+        considered deprecated.
 
     n2 : int
         The y range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_y``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2419,10 +2421,14 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     Arguments for ``ParametricSurfaceSeries`` class:
 
     n1 : int
-        The ``u`` range is sampled uniformly at ``n1`` of points
+        The ``u`` range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_u``, which should be
+        considered deprecated.
 
     n2 : int
-        The ``v`` range is sampled uniformly at ``n2`` of points
+        The ``v`` range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_v``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2536,9 +2542,13 @@ def plot_contour(*args, show=True, **kwargs):
 
     n1 : int
         The x range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_x``, which should be
+        considered deprecated.
 
     n2 : int
         The y range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_y``, which should be
+        considered deprecated.
 
     Aesthetics:
 
