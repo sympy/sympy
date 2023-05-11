@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from sympy.core.function import Function
-from sympy.core.power import isqrt
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert
+from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -1155,7 +1154,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     b %= n
     if order is None:
         order = n_order(b, n)
-    m = isqrt(order) + 1
+    m = sqrt(order) + 1
     T = {}
     x = 1
     for i in range(m):
