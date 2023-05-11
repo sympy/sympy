@@ -489,6 +489,43 @@ class PlotGrid:
 ##############################################################################
 #TODO more general way to calculate aesthetics (see get_color_array)
 
+def _set_discretization_points(kwargs, pt):
+    """Allow the use of the keyword arguments ``n, n1, n2`` to
+    specify the number of discretization points in one and two
+    directions, while keeping back-compatibility with older keyword arguments
+    like, ``nb_of_points, nb_of_points_*, points``.
+
+    Parameters
+    ==========
+
+    kwargs : dict
+        Dictionary of keyword arguments passed into a plotting function.
+    pt : type
+        The type of the series, which indicates the kind of plot we are
+        trying to create.
+    """
+    deprecated_keywords = {
+        "nb_of_points": "n",
+        "nb_of_points_x": "n1",
+        "nb_of_points_y": "n2",
+        "nb_of_points_u": "n1",
+        "nb_of_points_v": "n2",
+        "points": "n"
+    }
+    for k, v in deprecated_keywords.items():
+        if k in kwargs.keys():
+            kwargs[v] = kwargs.pop(k)
+
+    if pt in [LineOver1DRangeSeries, Parametric2DLineSeries,
+        Parametric3DLineSeries]:
+        if "n1" in kwargs.keys():
+            kwargs["n"] = kwargs["n1"]
+    elif pt in [
+        SurfaceOver2DRangeSeries, ContourSeries, ParametricSurfaceSeries]:
+        if "n" in kwargs.keys():
+            kwargs["n1"] = kwargs["n2"] = kwargs["n"]
+    return kwargs
+
 ### The base class for all series
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
@@ -679,7 +716,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.nb_of_points = kwargs.get('n', 300)
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
@@ -819,7 +856,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.nb_of_points = kwargs.get('n', 300)
         self.adaptive = kwargs.get('adaptive', True)
         self.depth = kwargs.get('depth', 12)
         self.line_color = kwargs.get('line_color', None)
@@ -974,7 +1011,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.var = sympify(var_start_end[0])
         self.start = float(var_start_end[1])
         self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.nb_of_points = kwargs.get('n', 300)
         self.line_color = kwargs.get('line_color', None)
         self._xlim = None
         self._ylim = None
@@ -1062,8 +1099,8 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
         self.var_y = sympify(var_start_end_y[0])
         self.start_y = float(var_start_end_y[1])
         self.end_y = float(var_start_end_y[2])
-        self.nb_of_points_x = kwargs.get('nb_of_points_x', 50)
-        self.nb_of_points_y = kwargs.get('nb_of_points_y', 50)
+        self.nb_of_points_x = kwargs.get('n1', 50)
+        self.nb_of_points_y = kwargs.get('n2', 50)
         self.surface_color = kwargs.get('surface_color', None)
 
         self._xlim = (self.start_x, self.end_x)
@@ -1111,8 +1148,8 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
         self.var_v = sympify(var_start_end_v[0])
         self.start_v = float(var_start_end_v[1])
         self.end_v = float(var_start_end_v[2])
-        self.nb_of_points_u = kwargs.get('nb_of_points_u', 50)
-        self.nb_of_points_v = kwargs.get('nb_of_points_v', 50)
+        self.nb_of_points_u = kwargs.get('n1', 50)
+        self.nb_of_points_v = kwargs.get('n2', 50)
         self.surface_color = kwargs.get('surface_color', None)
 
     def __str__(self):
@@ -1760,7 +1797,7 @@ def plot(*args, show=True, **kwargs):
 
     adaptive : bool, optional
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``nb_of_points`` if uniform sampling is required.
+        and specify ``n`` if uniform sampling is required.
 
         The plotting uses an adaptive algorithm which samples
         recursively to accurately plot. The adaptive algorithm uses a
@@ -1775,12 +1812,12 @@ def plot(*args, show=True, **kwargs):
         If the ``adaptive`` flag is set to ``False``, this will be
         ignored.
 
-    nb_of_points : int, optional
+    n : int, optional
         Used when the ``adaptive`` is set to ``False``. The function
-        is uniformly sampled at ``nb_of_points`` number of points.
-
-        If the ``adaptive`` flag is set to ``True``, this will be
-        ignored.
+        is uniformly sampled at ``n`` number of points. If the ``adaptive``
+        flag is set to ``True``, this will be ignored.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     size : (float, float), optional
         A tuple in the form (width, height) in inches to specify the size of
@@ -1842,7 +1879,7 @@ def plot(*args, show=True, **kwargs):
        :format: doctest
        :include-source: True
 
-       >>> plot(x**2, adaptive=False, nb_of_points=400)
+       >>> plot(x**2, adaptive=False, n=400)
        Plot object containing:
        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
@@ -1852,6 +1889,7 @@ def plot(*args, show=True, **kwargs):
     Plot, LineOver1DRangeSeries
 
     """
+    kwargs = _set_discretization_points(kwargs, LineOver1DRangeSeries)
     args = list(map(sympify, args))
     free = set()
     for a in args:
@@ -1914,17 +1952,17 @@ def plot_parametric(*args, show=True, **kwargs):
         Specifies whether to use the adaptive sampling or not.
 
         The default value is set to ``True``. Set adaptive to ``False``
-        and specify ``nb_of_points`` if uniform sampling is required.
+        and specify ``n`` if uniform sampling is required.
 
     depth :  int, optional
         The recursion depth of the adaptive algorithm. A depth of
         value $n$ samples a maximum of $2^n$ points.
 
-    nb_of_points : int, optional
-        Used when the ``adaptive`` flag is set to ``False``.
-
-        Specifies the number of the points used for the uniform
-        sampling.
+    n : int, optional
+        Used when the ``adaptive`` flag is set to ``False``. Specifies the
+        number of the points used for the uniform sampling.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     line_color : string, or float, or function, optional
         Specifies the color for the plot.
@@ -2055,6 +2093,7 @@ def plot_parametric(*args, show=True, **kwargs):
 
     Plot, Parametric2DLineSeries
     """
+    kwargs = _set_discretization_points(kwargs, Parametric2DLineSeries)
     args = list(map(sympify, args))
     series = []
     plot_expr = check_arguments(args, 2, 1)
@@ -2104,8 +2143,10 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
 
     Arguments for ``Parametric3DLineSeries`` class.
 
-    nb_of_points : The range is uniformly sampled at ``nb_of_points``
-    number of points.
+    n : int
+        The range is uniformly sampled at ``n`` number of points.
+        This keyword argument replaces ``nb_of_points``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2177,6 +2218,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     Plot, Parametric3DLineSeries
 
     """
+    kwargs = _set_discretization_points(kwargs, Parametric3DLineSeries)
     args = list(map(sympify, args))
     series = []
     plot_expr = check_arguments(args, 3, 1)
@@ -2234,11 +2276,15 @@ def plot3d(*args, show=True, **kwargs):
 
     Arguments for ``SurfaceOver2DRangeSeries`` class:
 
-    nb_of_points_x : int
-        The x range is sampled uniformly at ``nb_of_points_x`` of points.
+    n1 : int
+        The x range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_x``, which should be
+        considered deprecated.
 
-    nb_of_points_y : int
-        The y range is sampled uniformly at ``nb_of_points_y`` of points.
+    n2 : int
+        The y range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_y``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2318,6 +2364,7 @@ def plot3d(*args, show=True, **kwargs):
 
     """
 
+    kwargs = _set_discretization_points(kwargs, SurfaceOver2DRangeSeries)
     args = list(map(sympify, args))
     series = []
     plot_expr = check_arguments(args, 1, 2)
@@ -2373,11 +2420,15 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     Arguments for ``ParametricSurfaceSeries`` class:
 
-    nb_of_points_u : int
-        The ``u`` range is sampled uniformly at ``nb_of_points_v`` of points
+    n1 : int
+        The ``u`` range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_u``, which should be
+        considered deprecated.
 
-    nb_of_points_y : int
-        The ``v`` range is sampled uniformly at ``nb_of_points_y`` of points
+    n2 : int
+        The ``v`` range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_v``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2432,6 +2483,7 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     """
 
+    kwargs = _set_discretization_points(kwargs, ParametricSurfaceSeries)
     args = list(map(sympify, args))
     series = []
     plot_expr = check_arguments(args, 3, 2)
@@ -2488,11 +2540,15 @@ def plot_contour(*args, show=True, **kwargs):
 
     Arguments for ``ContourSeries`` class:
 
-    nb_of_points_x : int
-        The x range is sampled uniformly at ``nb_of_points_x`` of points.
+    n1 : int
+        The x range is sampled uniformly at ``n1`` of points.
+        This keyword argument replaces ``nb_of_points_x``, which should be
+        considered deprecated.
 
-    nb_of_points_y : int
-        The y range is sampled uniformly at ``nb_of_points_y`` of points.
+    n2 : int
+        The y range is sampled uniformly at ``n2`` of points.
+        This keyword argument replaces ``nb_of_points_y``, which should be
+        considered deprecated.
 
     Aesthetics:
 
@@ -2521,6 +2577,7 @@ def plot_contour(*args, show=True, **kwargs):
 
     """
 
+    kwargs = _set_discretization_points(kwargs, ContourSeries)
     args = list(map(sympify, args))
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]

@@ -165,7 +165,7 @@ def test_impulse_response():
 
     def impulse_res_tester(sys, expected_value):
         x, y = _to_tuple(*impulse_response_numerical_data(sys,
-            adaptive=False, nb_of_points=10))
+            adaptive=False, n=10))
         x_check = check_point_accuracy(x, expected_value[0])
         y_check = check_point_accuracy(y, expected_value[1])
         return x_check and y_check
@@ -216,7 +216,7 @@ def test_step_response():
 
     def step_res_tester(sys, expected_value):
         x, y = _to_tuple(*step_response_numerical_data(sys,
-            adaptive=False, nb_of_points=10))
+            adaptive=False, n=10))
         x_check = check_point_accuracy(x, expected_value[0])
         y_check = check_point_accuracy(y, expected_value[1])
         return x_check and y_check
@@ -264,7 +264,7 @@ def test_ramp_response():
 
     def ramp_res_tester(sys, num_points, expected_value, slope=1):
         x, y = _to_tuple(*ramp_response_numerical_data(sys,
-            slope=slope, adaptive=False, nb_of_points=num_points))
+            slope=slope, adaptive=False, n=num_points))
         x_check = check_point_accuracy(x, expected_value[0])
         y_check = check_point_accuracy(y, expected_value[1])
         return x_check and y_check
