@@ -76,6 +76,61 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-markers-annotations-fill-rectangles)=
+### Deprecate markers, annotations, fill, rectangles of the Plot class
+The properties ``markers, annotations, fill, rectangles`` (containing
+user-provided numerical data to be added on a plot) are deprecated.
+The new implementation saves user-provided numerical data into appropriate
+data series, which can easily be processed by ``MatplotlibBackend``.
+Instead of setting those properties directly, users should pass the homonym
+keyword arguments to the plotting functions.
+
+The supported behavior is to pass keyword arguments to the plotting functions,
+which works fine for all versions of SymPy (before and after 1.13):
+
+```py
+p = plot(x,
+  markers=[{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}],
+  annotations=[{"text": "test", "xy": (0, 0)}],
+  fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
+  rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
+```
+
+Setting attributes on the plot object is deprecated and will raise warnings:
+
+```py
+p = plot(x, show=False)
+p.markers = [{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}]
+p.annotations = [{"text": "test", "xy": (0, 0)}]
+p.fill = {"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]}
+p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
+p.show()
+```
+
+Motivation for this deprecation: the implementation of the ``Plot`` class
+suggests that it is ok to add attributes and hard-coded if-statements in the
+``MatplotlibBackend`` class to provide more and more functionalities for
+user-provided numerical data (e.g. adding horizontal lines, or vertical
+lines, or bar plots, etc). However, in doing so one would reinvent the wheel:
+plotting libraries already implements the necessary API. There is no need to
+hard code these things. The plotting module should facilitate the visualization
+of symbolic expressions. The best way to add custom numerical data is to
+retrieve the figure created by the plotting module and use the API of a
+particular plotting library. For example:
+
+```py
+# plot symbolic expression
+p = plot(cos(x))
+# retrieve Matplotlib's figure and axes object
+fig, ax = p._backend.fig, p._backend.ax[0]
+# add the desired numerical data using Matplotlib's API
+ax.plot([0, 1, 2], [0, 1, -1], "*")
+ax.axhline(0.5)
+# visualize the figure
+fig
+```
+
+
 (moved-mechanics-functions)=
 ### Moved mechanics functions
 With the introduction of some new objects like the ``Inertia`` and load objects

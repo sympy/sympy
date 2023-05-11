@@ -62,10 +62,33 @@ def _str_or_latex(label):
         return latex(label, mode='inline')
     return str(label)
 
+def _create_generic_data_series(**kwargs):
+    keywords = ["annotations", "markers", "fill", "rectangles"]
+    series = []
+    for kw in keywords:
+        dictionaries = kwargs.pop(kw, [])
+        if dictionaries is None:
+            dictionaries = []
+        if isinstance(dictionaries, dict):
+            dictionaries = [dictionaries]
+        for d in dictionaries:
+            args = d.pop("args", [])
+            series.append(GenericDataSeries(kw, *args, **d))
+    return series
+
 ##############################################################################
 # The public interface
 ##############################################################################
 
+def _deprecation_msg_m_a_r_f(attr):
+    sympy_deprecation_warning(
+        f"The `{attr}` property is deprecated. The `{attr}` keyword "
+        "argument should be passed to a plotting function, which generates "
+        "the appropriate data series. If needed, index the plot object to "
+        "retrieve a specific data series.",
+        deprecated_since_version="1.13",
+        active_deprecations_target="deprecated-markers-annotations-fill-rectangles",
+        stacklevel=4)
 
 class Plot:
     """The central class of the plotting module.
@@ -198,15 +221,18 @@ class Plot:
         self.legend = legend
         self.autoscale = autoscale
         self.margin = margin
-        self.annotations = annotations
-        self.markers = markers
-        self.rectangles = rectangles
-        self.fill = fill
+        self._annotations = annotations
+        self._markers = markers
+        self._rectangles = rectangles
+        self._fill = fill
 
         # Contains the data objects to be plotted. The backend should be smart
         # enough to iterate over this list.
         self._series = []
         self._series.extend(args)
+        self._series.extend(_create_generic_data_series(
+            annotations=annotations, markers=markers, rectangles=rectangles,
+            fill=fill))
 
         # The backend type. On every show() a new backend instance is created
         # in self._backend which is tightly coupled to the Plot instance
@@ -241,7 +267,6 @@ class Plot:
         check_and_set("ylim", ylim)
         self.size = None
         check_and_set("size", size)
-
 
     def show(self):
         # TODO move this to the backend (also for save)
@@ -341,6 +366,60 @@ class Plot:
             self._series.extend(arg)
         else:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
+
+    # deprecations
+
+    @property
+    def markers(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("markers")
+        return self._markers
+
+    @markers.setter
+    def markers(self, v):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("markers")
+        self._series.extend(_create_generic_data_series(markers=v))
+        self._markers = v
+
+    @property
+    def annotations(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("annotations")
+        return self._annotations
+
+    @annotations.setter
+    def annotations(self, v):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("annotations")
+        self._series.extend(_create_generic_data_series(annotations=v))
+        self._annotations = v
+
+    @property
+    def rectangles(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("rectangles")
+        return self._rectangles
+
+    @rectangles.setter
+    def rectangles(self, v):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("rectangles")
+        self._series.extend(_create_generic_data_series(rectangles=v))
+        self._rectangles = v
+
+    @property
+    def fill(self):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("fill")
+        return self._fill
+
+    @fill.setter
+    def fill(self, v):
+        """.. deprecated:: 1.13"""
+        _deprecation_msg_m_a_r_f("fill")
+        self._series.extend(_create_generic_data_series(fill=v))
+        self._fill = v
 
 
 class PlotGrid:
@@ -583,6 +662,9 @@ class BaseSeries:
     # The calculation of aesthetics expects:
     #   - get_parameter_points returning one or two np.arrays (1D or 2D)
     # used for calculation aesthetics
+
+    is_generic = False
+    # Represent generic user-provided numerical data
 
     def __init__(self):
         super().__init__()
@@ -1241,6 +1323,63 @@ class ContourSeries(BaseSeries):
         return (mesh_x, mesh_y, f(mesh_x, mesh_y))
 
 
+class GenericDataSeries(BaseSeries):
+    """Represents generic numerical data.
+
+    Notes
+    =====
+    This class serves the purpose of back-compatibility with the "markers,
+    annotations, fill, rectangles" keyword arguments that represent
+    user-provided numerical data. In particular, it solves the problem of
+    combining together two or more plot-objects with the ``extend`` or
+    ``append`` methods: user-provided numerical data is also taken into
+    consideration because it is stored in this series class.
+
+    Also note that the current implementation is far from optimal, as each
+    keyword argument is stored into an attribute in the ``Plot`` class, which
+    requires a hard-coded if-statement in the ``MatplotlibBackend`` class.
+    The implementation suggests that it is ok to add attributes and
+    if-statements to provide more and more functionalities for user-provided
+    numerical data (e.g. adding horizontal lines, or vertical lines, or bar
+    plots, etc). However, in doing so one would reinvent the wheel: plotting
+    libraries (like Matplotlib) already implements the necessary API.
+
+    Instead of adding more keyword arguments and attributes, users interested
+    in adding custom numerical data to a plot should retrieve the figure
+    created by this plotting module. For example, this code:
+
+    .. plot::
+       :context: close-figs
+       :include-source: True
+
+       from sympy import Symbol, plot, cos
+       x = Symbol("x")
+       p = plot(cos(x), markers=[{"args": [[0, 1, 2], [0, 1, -1], "*"]}])
+
+    Becomes:
+
+    .. plot::
+       :context: close-figs
+       :include-source: True
+
+       p = plot(cos(x), backend="matplotlib")
+       fig, ax = p._backend.fig, p._backend.ax[0]
+       ax.plot([0, 1, 2], [0, 1, -1], "*")
+       fig
+
+    Which is far better in terms of readibility. Also, it gives access to the
+    full plotting library capabilities, without the need to reinvent the wheel.
+    """
+    is_generic = True
+
+    def __init__(self, tp, *args, **kwargs):
+        self.type = tp
+        self.args = args
+        self.rendering_kw = kwargs
+
+    def get_data(self):
+        return self.args
+
 ##############################################################################
 # Backends
 ##############################################################################
@@ -1461,6 +1600,20 @@ class MatplotlibBackend(BaseBackend):
                         ax.contour(xarray, yarray, zarray, cmap=colormap)
                     else:
                         ax.contourf(xarray, yarray, zarray, cmap=colormap)
+            elif s.is_generic:
+                if s.type == "markers":
+                    # s.rendering_kw["color"] = s.line_color
+                    ax.plot(*s.args, **s.rendering_kw)
+                elif s.type == "annotations":
+                    ax.annotate(*s.args, **s.rendering_kw)
+                elif s.type == "fill":
+                    # s.rendering_kw["color"] = s.line_color
+                    ax.fill_between(*s.args, **s.rendering_kw)
+                elif s.type == "rectangles":
+                    # s.rendering_kw["color"] = s.line_color
+                    ax.add_patch(
+                        self.matplotlib.patches.Rectangle(
+                            *s.args, **s.rendering_kw))
             else:
                 raise NotImplementedError(
                     '{} is not supported in the SymPy plotting module '
@@ -1541,22 +1694,6 @@ class MatplotlibBackend(BaseBackend):
         if isinstance(ax, Axes3D) and parent.zlabel:
             zlbl = _str_or_latex(parent.zlabel)
             ax.set_zlabel(zlbl, position=(0, 1))
-        if parent.annotations:
-            for a in parent.annotations:
-                ax.annotate(**a)
-        if parent.markers:
-            for marker in parent.markers:
-                # make a copy of the marker dictionary
-                # so that it doesn't get altered
-                m = marker.copy()
-                args = m.pop('args')
-                ax.plot(*args, **m)
-        if parent.rectangles:
-            for r in parent.rectangles:
-                rect = self.matplotlib.patches.Rectangle(**r)
-                ax.add_patch(rect)
-        if parent.fill:
-            ax.fill_between(**parent.fill)
 
         # xlim and ylim should always be set at last so that plot limits
         # doesn't get altered during the process.
