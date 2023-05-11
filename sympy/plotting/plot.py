@@ -1335,11 +1335,11 @@ class MatplotlibBackend(Plot):
         if self._plotgrid_fig is not None:
             self.fig = self._plotgrid_fig
             self.ax = self._plotgrid_ax
-            if not any([s.is_3D for s in self._series]):
+            if not any(s.is_3D for s in self._series):
                 set_spines(self.ax)
         else:
             self.fig = self.plt.figure(figsize=self.size)
-            if any([s.is_3D for s in self._series]):
+            if any(s.is_3D for s in self._series):
                 self.ax = self.fig.add_subplot(1, 1, 1, projection="3d")
             else:
                 self.ax = self.fig.add_subplot(1, 1, 1)
