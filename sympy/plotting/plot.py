@@ -223,7 +223,7 @@ class Plot:
     """
 
     def __new__(cls, *args, **kwargs):
-        backend = kwargs.pop("backend", "matplotlib")
+        backend = kwargs.pop("backend", "default")
         if isinstance(backend, str):
             if backend == "default":
                 matplotlib = import_module('matplotlib',
@@ -519,7 +519,7 @@ class PlotGrid:
         for arg in args:
             self._series.append(arg._series)
         self.size = size
-        if show:
+        if show and self.matplotlib:
             self.show()
 
     def _create_figure(self):
