@@ -1,6 +1,6 @@
 from sympy.ntheory import sieve, isprime
-from sympy.core.power import integer_log, isqrt
-from sympy.external.gmpy import gcd, invert
+from sympy.core.power import integer_log
+from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 import random
 
@@ -201,7 +201,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if isprime(n):
         return n
 
-    D = isqrt(B2)
+    D = sqrt(B2)
     beta = [0]*(D + 1)
     S = [0]*(D + 1)
     k = 1
