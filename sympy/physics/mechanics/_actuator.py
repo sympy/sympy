@@ -418,17 +418,18 @@ class LinearSpring(ForceActuator):
 
 
 class LinearDamper(ForceActuator):
-    """A damper who's force as a linear function of its extension velocity.
+    """A damper whose force is a linear function of its extension velocity.
 
     Explanation
     ===========
 
     Note that the "linear" in the name ``LinearDamper`` refers to the fact that
-    the damping force is a linear function of the damper's length. I.e. for a
-    linear damper with damping ``c`` and extension velocity ``v``, the damping
-    force will be ``-c*v``, which is a linear function in ``v``. To create a
-    damper that follows a linear, or straight, pathway between its two ends, a
-    ``LinearPathway`` instance needs to be passed to the ``pathway`` parameter.
+    the damping force is a linear function of the damper's rate of change in
+    its length. I.e. for a linear damper with damping ``c`` and extension
+    velocity ``v``, the damping force will be ``-c*v``, which is a linear
+    function in ``v``. To create a damper that follows a linear, or straight,
+    pathway between its two ends, a ``LinearPathway`` instance needs to be
+    passed to the ``pathway`` parameter.
 
     Examples
     ========
