@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     'ForceActuator',
+    'LinearDamper',
     'LinearSpring',
     'TorqueActuator',
 ]
@@ -414,6 +415,128 @@ class LinearSpring(ForceActuator):
         else:
             string += f', equilibrium_length={self.equilibrium_length})'
         return string
+
+
+class LinearDamper(ForceActuator):
+    """A damper whose force is a linear function of its extension velocity.
+
+    Explanation
+    ===========
+
+    Note that the "linear" in the name ``LinearDamper`` refers to the fact that
+    the damping force is a linear function of the damper's rate of change in
+    its length. I.e. for a linear damper with damping ``c`` and extension
+    velocity ``v``, the damping force will be ``-c*v``, which is a linear
+    function in ``v``. To create a damper that follows a linear, or straight,
+    pathway between its two ends, a ``LinearPathway`` instance needs to be
+    passed to the ``pathway`` parameter.
+
+    Examples
+    ========
+
+    As the ``_actuator.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``LinearDamper`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._actuator`` module.
+
+    >>> from sympy.physics.mechanics._actuator import LinearDamper
+
+    This is similarly the case for imports from the ``_pathway.py`` module like
+    ``LinearPathway``.
+
+    >>> from sympy.physics.mechanics._pathway import LinearPathway
+
+    To construct a linear damper, an expression (or symbol) must be supplied to
+    represent the damping coefficient of the damper (we'll use the symbol
+    ``c``), alongside a pathway specifying its line of action. Let's also
+    create a global reference frame and spatially fix one of the points in it
+    while setting the other to be positioned such that it can freely move in
+    the frame's x direction specified by the coordinate ``q``. The velocity
+    that the two points move away from one another can be specified by the
+    coordinate ``u`` where ``u`` is the first time derivative of ``q``
+    (i.e., ``u = Derivative(q(t), t)``).
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> damping = Symbol('c')
+    >>> pA, pB = Point('pA'), Point('pB')
+    >>> pA.set_vel(N, 0)
+    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.pos_from(pA)
+    q(t)*N.x
+    >>> pB.vel(N)
+    Derivative(q(t), t)*N.x
+    >>> linear_pathway = LinearPathway(pA, pB)
+    >>> damper = LinearDamper(damping, linear_pathway)
+    >>> damper
+    LinearDamper(c, LinearPathway(pA, pB))
+
+    This damper will produce a force that is proportional to both its damping
+    coefficient and the pathway's extension length. Note that this force is
+    negative as SymPy's sign convention for actuators is that negative forces
+    are contractile and the damping force of the damper will oppose the
+    direction of length change.
+
+    >>> damper.force
+    -c*q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+
+    Parameters
+    ==========
+
+    damping : Expr
+        The damping constant.
+    pathway : PathwayBase
+        The pathway that the actuator follows. This must be an instance of a
+        concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+
+    See Also
+    ========
+
+    ForceActuator: force-producing actuator (superclass of ``LinearDamper``).
+    LinearPathway: straight-line pathway between a pair of points.
+
+    """
+
+    def __init__(self, damping: ExprType, pathway: PathwayBase) -> None:
+        """Initializer for ``LinearDamper``.
+
+        Parameters
+        ==========
+
+        damping : Expr
+            The damping constant.
+        pathway : PathwayBase
+            The pathway that the actuator follows. This must be an instance of
+            a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+
+        """
+        # ``damping`` attribute
+        self._damping = sympify(damping, strict=True)
+
+        # ``pathway`` attribute
+        if not isinstance(pathway, PathwayBase):
+            msg = (
+                f'Value {repr(pathway)} passed to `pathway` was of type '
+                f'{type(pathway)}, must be {PathwayBase}.'
+            )
+            raise TypeError(msg)
+        self._pathway = pathway
+
+    @property
+    def force(self) -> ExprType:
+        """The damping force produced by the linear damper."""
+        return -self.damping * self.pathway.extension_velocity
+
+    @property
+    def damping(self) -> ExprType:
+        """The damping constant for the linear damper."""
+        return self._damping
+
+    def __repr__(self) -> str:
+        """Representation of a ``LinearDamper``."""
+        return f'{self.__class__.__name__}({self.damping}, {self.pathway})'
 
 
 class TorqueActuator(ActuatorBase):
