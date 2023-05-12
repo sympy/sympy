@@ -531,8 +531,10 @@ def test_empty_Plot():
 
     # No exception showing an empty plot
     plot()
+    # Plot is only a base class: doesn't implement any logic for showing
+    # images
     p = Plot()
-    p.show()
+    raises(NotImplementedError, lambda: p.show())
 
 
 def test_issue_17405():
