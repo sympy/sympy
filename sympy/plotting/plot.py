@@ -222,22 +222,6 @@ class Plot:
         warning).
     """
 
-    def __new__(cls, *args, **kwargs):
-        backend = kwargs.pop("backend", "default")
-        if isinstance(backend, str):
-            if backend == "default":
-                matplotlib = import_module('matplotlib',
-                    min_module_version='1.1.0', catch=(RuntimeError,))
-                if matplotlib:
-                    return MatplotlibBackend(*args, **kwargs)
-                return TextBackend(*args, **kwargs)
-            return plot_backends[backend](*args, **kwargs)
-        elif (type(backend) == type) and issubclass(backend, cls):
-            return backend(*args, **kwargs)
-        else:
-            raise TypeError(
-                "backend must be either a string or a subclass of ``Plot``.")
-
     def __init__(self, *args,
         title=None, xlabel=None, ylabel=None, zlabel=None, aspect_ratio='auto',
         xlim=None, ylim=None, axis_center='auto', axis=True,
@@ -571,6 +555,21 @@ class PlotGrid:
 
         return 'PlotGrid object containing:\n' + '\n'.join(plot_strs)
 
+
+def plot_factory(*args, **kwargs):
+    backend = kwargs.pop("backend", "default")
+    if isinstance(backend, str):
+        if backend == "default":
+            matplotlib = import_module('matplotlib',
+                min_module_version='1.1.0', catch=(RuntimeError,))
+            if matplotlib:
+                return MatplotlibBackend(*args, **kwargs)
+            return TextBackend(*args, **kwargs)
+        return plot_backends[backend](*args, **kwargs)
+    elif (type(backend) == type) and issubclass(backend, Plot):
+        return backend(*args, **kwargs)
+    else:
+        raise TypeError("backend must be either a string or a subclass of ``Plot``.")
 
 ##############################################################################
 # Data Series
@@ -1304,9 +1303,6 @@ class MatplotlibBackend(Plot):
     plotting functions.
     """
 
-    def __new__(cls, *args, **kwargs):
-        return object.__new__(cls)
-
     def __init__(self, *series, **kwargs):
         super().__init__(*series, **kwargs)
         self.matplotlib = import_module('matplotlib',
@@ -1577,9 +1573,6 @@ class MatplotlibBackend(Plot):
 
 
 class TextBackend(Plot):
-    def __new__(cls, *args, **kwargs):
-        return object.__new__(cls)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -1873,7 +1866,7 @@ def plot(*args, show=True, **kwargs):
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2064,7 +2057,7 @@ def plot_parametric(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2189,7 +2182,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2330,7 +2323,7 @@ def plot3d(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", series[0].var_x)
     kwargs.setdefault("ylabel", series[0].var_y)
     kwargs.setdefault("zlabel", Function('f')(series[0].var_x, series[0].var_y))
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2444,7 +2437,7 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2529,7 +2522,7 @@ def plot_contour(*args, show=True, **kwargs):
     args = list(map(sympify, args))
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
-    plot_contours = Plot(*series, **kwargs)
+    plot_contours = plot_factory(*series, **kwargs)
     if len(plot_expr[0].free_symbols) > 2:
         raise ValueError('Contour Plot cannot Plot for more than two variables.')
     if show:
