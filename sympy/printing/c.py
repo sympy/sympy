@@ -568,10 +568,19 @@ class C89CodePrinter(CodePrinter):
 
     @requires(headers={'stdio.h'})
     def _print_Print(self, expr):
-        return 'printf({fmt}, {pargs})'.format(
-            fmt=self._print(expr.format_string),
+        if expr.file == none:
+            template = 'printf({fmt}, {pargs})'
+        else:
+            template = 'fprintf(%(out)s, {fmt}, {pargs})' % {
+                'out': self._print(expr.file)
+            }
+        return template.format(
+            fmt="%s\n" if expr.format_string == none else self._print(expr.format_string),
             pargs=', '.join((self._print(arg) for arg in expr.print_args))
         )
+
+    def _print_Stream(self, strm):
+        return strm.name
 
     def _print_FunctionPrototype(self, expr):
         pars = ', '.join((self._print(Declaration(arg)) for arg in expr.parameters))
