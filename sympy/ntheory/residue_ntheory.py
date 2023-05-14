@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt
+from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -345,7 +345,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     # find a non-quadratic residue
     while 1:
         d = randint(2, p - 1)
-        r = legendre_symbol(d, p)
+        r = jacobi(d, p)
         if r == -1:
             break
     #assert legendre_symbol(d, p) == -1
@@ -556,7 +556,7 @@ def _sqrt_mod_prime_power(a, p, k):
         return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
 
     # If the Legendre symbol (a/p) is not 1, no solution exists.
-    if jacobi_symbol(a, p) != 1:
+    if jacobi(a, p) != 1:
         return None
     if p % 4 == 3:
         res = pow(a, (p + 1) // 4, p)
@@ -643,7 +643,7 @@ def is_quad_residue(a, p):
     if a < 2 or p < 3:
         return True
     if not isprime(p):
-        if p % 2 and jacobi_symbol(a, p) == -1:
+        if p % 2 and jacobi(a, p) == -1:
             return False
         r = sqrt_mod(a, p)
         if r is None:
@@ -935,14 +935,9 @@ def legendre_symbol(a, p):
 
     """
     a, p = as_int(a), as_int(p)
-    if not isprime(p) or p == 2:
+    if p == 2 or not isprime(p):
         raise ValueError("p should be an odd prime")
-    a = a % p
-    if not a:
-        return 0
-    if pow(a, (p - 1) // 2, p) == 1:
-        return 1
-    return -1
+    return int(legendre(a, p))
 
 
 def jacobi_symbol(m, n):
@@ -1003,28 +998,7 @@ def jacobi_symbol(m, n):
     is_quad_residue, legendre_symbol
     """
     m, n = as_int(m), as_int(n)
-    if n < 0 or not n % 2:
-        raise ValueError("n should be an odd positive integer")
-    if m < 0 or m > n:
-        m %= n
-    if not m:
-        return int(n == 1)
-    if n == 1 or m == 1:
-        return 1
-    if gcd(m, n) != 1:
-        return 0
-
-    j = 1
-    while m != 0:
-        while m % 2 == 0 and m > 0:
-            m >>= 1
-            if n % 8 in [3, 5]:
-                j = -j
-        m, n = n, m
-        if m % 4 == n % 4 == 3:
-            j = -j
-        m %= n
-    return j
+    return int(jacobi(m, n))
 
 
 class mobius(Function):
