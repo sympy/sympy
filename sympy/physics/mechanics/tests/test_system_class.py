@@ -425,6 +425,21 @@ class TestSystem(TestSystemBase):
         else:
             assert body == self.bodies[body_index]
 
+    @pytest.mark.parametrize('kwargs, expected', [
+        ({}, ImmutableMatrix([[-1, 0], [0, symbols("m")]])),
+        ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0], [0, symbols("m")]])),
+        ({"bodies": []}, ImmutableMatrix([[-1, 0], [0, 0]])),
+    ])
+    def test_system_kane_kwargs(self, _empty_system_setup, kwargs, expected):
+        self.system.q_ind = q[0]
+        self.system.u_ind = u[0]
+        self.system.kdes = u[0] - q[0].diff(t)
+        p = Particle("p", mass=symbols("m"))
+        self.system.add_bodies(p)
+        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        self.system.form_eoms(**kwargs)
+        assert self.system.mass_matrix_full == expected
+
 
 class TestValidateSystem(TestSystemBase):
     @pytest.mark.parametrize('valid_method, invalid_method, with_speeds', [
