@@ -430,7 +430,7 @@ class TestSystem(TestSystemBase):
         ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0], [0, symbols("m")]])),
         ({"bodies": []}, ImmutableMatrix([[-1, 0], [0, 0]])),
     ])
-    def test_system_kane_kwargs(self, _empty_system_setup, kwargs, expected):
+    def test_system_kane_form_eoms_kwargs(self, _empty_system_setup, kwargs, expected):
         self.system.q_ind = q[0]
         self.system.u_ind = u[0]
         self.system.kdes = u[0] - q[0].diff(t)
@@ -449,7 +449,7 @@ class TestSystem(TestSystemBase):
          ImmutableMatrix([[1, 0], [0, symbols("m")]]),
          ImmutableMatrix([q[0].diff(t), -symbols("g")])),
     ])
-    def test_system_lagrange_kwargs(self, _empty_system_setup, kwargs, mm, gm):
+    def test_system_lagrange_form_eoms_kwargs(self, _empty_system_setup, kwargs, mm, gm):
         self.system.q_ind = q[0]
         p = Particle("p", mass=symbols("m"))
         self.system.add_bodies(p)
@@ -457,6 +457,15 @@ class TestSystem(TestSystemBase):
         self.system.form_eoms(eom_method=LagrangesMethod, **kwargs)
         assert self.system.mass_matrix_full == mm
         assert self.system.forcing_full == gm
+
+    @pytest.mark.parametrize('eom_method', [KanesMethod, LagrangesMethod])
+    def test_unspecified_form_eoms_kwargs(self, _empty_system_setup, eom_method):
+        self.system.q_ind = q[0]
+        p = Particle("p", mass=symbols("m"))
+        self.system.add_bodies(p)
+        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        with pytest.raises(TypeError):
+            self.system.form_eoms(eom_method=eom_method, not_existing_kwarg=1)
 
 
 class TestValidateSystem(TestSystemBase):
