@@ -131,7 +131,7 @@ class EllipticCurve:
             raise ValueError("Infinitely many points")
 
     def points_x(self, x):
-        """Returns points on with curve where x-coordinate = x"""
+        """Returns points on the curve for the given x-coordinate."""
         pt = []
         if self._domain == QQ:
             for y in solve(self._poly.subs(self.x, x)):
