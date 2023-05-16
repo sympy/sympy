@@ -79,7 +79,7 @@ class EllipticCurve:
         return self._poly.subs({self.x: x1, self.y: y1, self.z: z1}) == 0
 
     def __repr__(self):
-        return 'E({}): Eq({}, 0)'.format(self._domain, self._poly.expr)
+        return self._poly.__repr__()
 
     def minimal(self):
         """
@@ -92,7 +92,7 @@ class EllipticCurve:
 
         >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
         >>> e1.minimal()
-        E(QQ): Eq(y**2*z, x**3 - 13392*x*z**2 - 1080432*z**3)
+        Poly(-x**3 + 13392*x*z**2 + y**2*z + 1080432*z**3, x, y, z, domain='QQ')
 
         """
         char = self.characteristic
