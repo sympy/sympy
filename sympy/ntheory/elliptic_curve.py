@@ -16,7 +16,7 @@ class EllipticCurve:
     `y^{2} + a_{1} x y + a_{3} y = x^{3} + a_{2} x^{2} + a_{4} x + a_{6}`
 
     The default domain is ``QQ``. If no coefficient ``a1``, ``a2``, ``a3``,
-    it creates curve as following form.
+    is given then it creates a curve with the following form:
 
     `y^{2} = x^{3} + a_{4} x + a_{6}`
 
