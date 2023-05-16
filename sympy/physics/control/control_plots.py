@@ -642,7 +642,7 @@ def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
     See Also
     ========
 
-    step_response_plot, ramp_response_plot
+    step_response_plot, impulse_response_plot
 
     References
     ==========
