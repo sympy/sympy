@@ -1,4 +1,4 @@
-from sympy import KroneckerProduct
+from sympy import KroneckerProduct, Add
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
@@ -40,7 +40,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
                 tprod,
                 *contractions
         )
-    elif isinstance(expr, MatAdd):
+    elif isinstance(expr, (Add, MatAdd)):
         return _array_add(
                 *[convert_matrix_to_array(arg) for arg in expr.args]
         )

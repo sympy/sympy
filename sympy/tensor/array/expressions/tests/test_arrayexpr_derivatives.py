@@ -1,3 +1,4 @@
+from sympy import exp, Matrix, Array
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -76,3 +77,12 @@ def test_arrayexpr_derivatives1():
     cg = Reshape(A, (k**2,))
     res = array_derive(cg, A)
     assert res == Reshape(PermuteDims(ArrayTensorProduct(I, I), [0, 2, 1, 3]), (k, k, k**2))
+
+
+def test_array_derive_with_common_matrices():
+    expr = Matrix([[k, k**2], [sin(k), exp(k)]])
+    assert array_derive(expr, Matrix([k])) == Array([[[[1, 2*k], [cos(k), exp(k)]]]])
+
+    I2 = Identity(2)
+    expr = MatrixSymbol("M", 2, 2)
+    assert array_derive(expr, expr) == PermuteDims(ArrayTensorProduct(I2, I2), [0, 2, 1, 3])

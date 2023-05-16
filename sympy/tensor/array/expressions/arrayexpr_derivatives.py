@@ -1,6 +1,7 @@
 import operator
 from functools import reduce, singledispatch
 
+from sympy import MatrixBase, derive_by_array, Integer
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -28,6 +29,8 @@ def array_derive(expr, x):
 
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
+    if len(expr.free_symbols & x.free_symbols) > 0:
+        raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
 
 
@@ -185,6 +188,17 @@ def _(expr: PermuteDims, x: Expr):
 def _(expr: Reshape, x: Expr):
     de = array_derive(expr.expr, x)
     return Reshape(de, get_shape(x) + expr.shape)
+
+
+@array_derive.register(MatrixBase)
+def _(expr: MatrixBase, x):
+    if len(set.intersection(expr.free_symbols, x.free_symbols)) == 0:
+        return ZeroArray(*x.shape, *expr.shape)
+    if isinstance(x, MatrixExpr) and all(isinstance(i, (int, Integer)) for i in x.shape):
+        x = x.as_explicit()
+    if isinstance(x, MatrixBase):
+        return derive_by_array(expr, x)
+    raise NotImplementedError("could not determine derivative")
 
 
 def matrix_derive(expr, x):

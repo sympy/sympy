@@ -8,7 +8,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product, Reshape, ArrayAdd
 from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
@@ -88,6 +88,10 @@ def test_arrayexpr_convert_matrix_to_array():
 
     expr = 3*Trace(M)**2
     result = ArrayContraction(ArrayTensorProduct(3, M, M), (0, 1), (2, 3))
+    assert convert_matrix_to_array(expr) == result
+
+    expr = Trace(M) + Trace(N)
+    result = ArrayAdd(ArrayContraction(M, (0, 1)), ArrayContraction(N, (0, 1)))
     assert convert_matrix_to_array(expr) == result
 
     expr = HadamardProduct(M, N)

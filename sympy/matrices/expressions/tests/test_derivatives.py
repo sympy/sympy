@@ -3,7 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import KroneckerProduct
+from sympy import KroneckerProduct, Matrix
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -475,3 +475,18 @@ def test_derivatives_of_hadamard_expressions():
 
     expr = hadamard_power(a.T*X*b, S.Half)
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+
+def test_fix_issue_24021():
+    E = MatrixSymbol('E', 3, 3)
+    expr = Trace(E)**2 + Trace(E*E.T)
+    assert expr.diff(E) == 2*Trace(E)*Identity(3) + 2*E
+
+
+def test_fix_issue_on_stackoverflow():
+    # https://stackoverflow.com/questions/69874089/calculating-the-gradient-and-hessian-of-a-symbolic-function-containing-matrices/69876854#69876854
+    x = MatrixSymbol('x', 2, 1)
+    m1 = Matrix([[1, 2], [4, 7]])
+    m3 = Matrix([3, 5])
+    fx = x.T * MatMul(m1, x) + x.T * Matrix(m3) + 6*Identity(1)
+    assert fx.diff(x) == m1*x + m1.T*x + m3
