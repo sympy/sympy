@@ -40,7 +40,7 @@ evaluate matrix expressions that contain ``MatrixSymbols``.
 #   to * resp. Mul. Special rules have been provided for handling of powers
 #   with idempotent or involutoric factors in the base.
 #
-# Object type specifics have completely been deployed to @dispatch handlers:
+# Object type specifics have completely been encapsuled in @dispatch handlers:
 # a. The algorithm that walks the expression tree and determines to pair factors
 #   a,b,c,d as (a*b)*(c*d) or a*((b*c)*d) etc. is completely object type agnostic
 #   (lapply_Mul2). Walking of the tree is dependant on the success of pairing:
@@ -57,8 +57,8 @@ evaluate matrix expressions that contain ``MatrixSymbols``.
 # 5. expand() is not used indiscriminately: Only do an expansion of Add if
 #   required to apply operators, so keeping expansion to the bare minimum. As
 #   default, distribute commutative factors over sums as this allows terms to
-#   cancel out thus simplifying the expression. In order to simplify commuta
-#   -tive factors lapply() supports the three major hints of expand() "mul",
+#   cancel out thus simplifying the expression. In order to simplify commuta-
+#   tive factors lapply() supports the three major hints of expand() "mul",
 #   "power_base" and "power_exp" (see options mul, power_base and power_exp).
 # 6. apply recursion along the structure of the expression but don't use
 #   recursion for iterations: this avoids hitting the Python recursion limit
@@ -130,12 +130,14 @@ def lapply(e:Expr, mul=True, Add=Add,
         will do the minimal application only, so use only when expansion is slow.
 
     power_base : Boolean, optional
-        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
-        If True split powers of multiplied bases. Defaults to value of option ``mul``.
+        Refers to commutative factors. Same option as in
+        :obj:`sympy.core.function.expand()`:. If True split powers of multiplied
+        bases. Defaults to value of option ``mul``.
 
     power_exp : Boolean, optional
-        Refers to commutative factors. Same option as in :obj:`sympy.core.function.expand()`:
-        It True expand addition in exponents into multiplied bases. Defaults to False.
+        Refers to commutative factors. Same option as in
+        :obj:`sympy.core.function.expand()`:.If True expand addition in exponents
+        into multiplied bases. Defaults to False.
 
     nested_exp : Boolean, optional
         If True, then if powers are nested and if their exponents may be
@@ -762,9 +764,9 @@ lapply_mul2types_B = Dispatcher("lapply_mul2types_B")
 # - Exprs being cached must have been returned in ncl from lapply_mul2_c_nc, so
 #   all its factors have been processed fully.
 # - The cache returns three types of information on an expr (besides None):
-#   i.   "elem": expr is elementary (in the sense defined above)
-#   ii.  "expr": expr has been processed fully, all factors elementary
-#   iii. (rolloff, cl, encl) expr is base of a power.
+#     i.   "elem": expr is elementary (in the sense defined above)
+#     ii.  "expr": expr has been processed fully, all factors elementary
+#     iii. (rolloff, cl, encl) expr is base of a power
 #   which roughly correspond to output of c_nc_ncef, lapply_mul2, lapply_mul2_c_nc.
 # - Base and exponents of Pows are cached separately. If a power is rolled off
 #   the exponents counted down are removed from cache to avoid litter. This may
