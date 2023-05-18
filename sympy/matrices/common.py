@@ -120,7 +120,7 @@ class MatrixShaping(MatrixRequired):
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices))
+                         [mat[i] for i in indices])
 
     def _eval_get_diag_blocks(self):
         sub_blocks = []
@@ -556,7 +556,8 @@ class MatrixShaping(MatrixRequired):
 
         See Also
         ========
-        diag - to create a diagonal matrix
+
+        diag
         """
         rv = []
         k = as_int(k)
@@ -832,8 +833,8 @@ class MatrixSpecial(MatrixRequired):
 
         D = cls._new(2*n + 1, 2*n + 1, entry)
 
-        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
-        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+        wminus = cls.diag(list(range(-n, n + 1)), unpack=True) + D + D.T
+        wplus = abs(cls.diag(list(range(-n, n + 1)), unpack=True)) + D + D.T
 
         return wminus, wplus
 
@@ -924,10 +925,10 @@ class MatrixSpecial(MatrixRequired):
         See Also
         ========
         eye
-        diagonal - to extract a diagonal
+        diagonal
         .dense.diag
         .expressions.blockmatrix.BlockMatrix
-        .sparsetools.banded - to create multi-diagonal matrices
+        .sparsetools.banded
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
@@ -983,8 +984,8 @@ class MatrixSpecial(MatrixRequired):
     def eye(kls, rows, cols=None, **kwargs):
         """Returns an identity matrix.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1105,8 +1106,8 @@ class MatrixSpecial(MatrixRequired):
     def ones(kls, rows, cols=None, **kwargs):
         """Returns a matrix of ones.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -1126,8 +1127,8 @@ class MatrixSpecial(MatrixRequired):
     def zeros(kls, rows, cols=None, **kwargs):
         """Returns a matrix of zeros.
 
-        Args
-        ====
+        Parameters
+        ==========
 
         rows : rows of the matrix
         cols : cols of the matrix (if None, cols=rows)
@@ -2449,7 +2450,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
-        """returns the elements on and above the kth diagonal of a matrix.
+        """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
 
@@ -2488,7 +2489,7 @@ class MatrixOperations(MatrixRequired):
 
 
     def lower_triangular(self, k=0):
-        """returns the elements on and below the kth diagonal of a matrix.
+        """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
 
@@ -2968,7 +2969,7 @@ class _MinimalMatrix:
     def __init__(self, rows, cols=None, mat=None, copy=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
+            mat = [mat(i, j) for i in range(rows) for j in range(cols)]
         if cols is None and mat is None:
             mat = rows
         rows, cols = getattr(mat, 'shape', (rows, cols))
@@ -3018,7 +3019,7 @@ class _MinimalMatrix:
                 indices = (i * self.cols + j for i in rowsList for j in
                            colsList)
                 return self._new(len(rowsList), len(colsList),
-                                 list(self.mat[i] for i in indices))
+                                 [self.mat[i] for i in indices])
 
             # if the key is a tuple of ints, change
             # it to an array index

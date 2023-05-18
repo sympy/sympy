@@ -2,11 +2,10 @@ from sympy.core.numbers import (Float, pi)
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
-from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, outer
+from sympy.physics.vector import ReferenceFrame, dynamicsymbols, outer
 from sympy.physics.vector.dyadic import _check_dyadic
 from sympy.testing.pytest import raises
 
-Vector.simp = True
 A = ReferenceFrame('A')
 
 

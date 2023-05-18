@@ -582,7 +582,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     try:
                         reals = sifted[True]
                         if len(reals) > 1:
-                            reals = list(sorted(reals))
+                            reals = sorted(reals)
                     except TypeError:
                         raise NotImplementedError
             except NotImplementedError:

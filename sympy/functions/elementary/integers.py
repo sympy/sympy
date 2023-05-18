@@ -125,7 +125,7 @@ class floor(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/FloorFunction.html
+    .. [2] https://mathworld.wolfram.com/FloorFunction.html
 
     """
     _dir = -1
@@ -283,7 +283,7 @@ class ceiling(RoundFunction):
     ==========
 
     .. [1] "Concrete mathematics" by Graham, pp. 87
-    .. [2] http://mathworld.wolfram.com/CeilingFunction.html
+    .. [2] https://mathworld.wolfram.com/CeilingFunction.html
 
     """
     _dir = 1
@@ -453,7 +453,7 @@ class frac(Function):
     ===========
 
     .. [1] https://en.wikipedia.org/wiki/Fractional_part
-    .. [2] http://mathworld.wolfram.com/FractionalPart.html
+    .. [2] https://mathworld.wolfram.com/FractionalPart.html
 
     """
     @classmethod

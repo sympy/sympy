@@ -58,7 +58,7 @@ def test_trigsimp1():
     assert trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y))) == \
         sinh(y)/(sinh(y)*tanh(x) + cosh(y))
 
-    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1.0
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e)) == log(2)
 
@@ -493,7 +493,7 @@ def test_trigsimp_old():
     assert trigsimp(cosh(x + y) + cosh(x - y), old=True) == 2*cosh(x)*cosh(y)
     assert trigsimp(cosh(x + y) - cosh(x - y), old=True) == 2*sinh(x)*sinh(y)
 
-    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2, old=True) == 1
+    assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2, old=True) == 1.0
 
     assert trigsimp(sin(x)/cos(x), old=True, method='combined') == tan(x)
     assert trigsimp(sin(x)/cos(x), old=True, method='groebner') == sin(x)/cos(x)

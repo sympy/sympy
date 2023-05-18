@@ -173,7 +173,7 @@ class RepMatrix(MatrixBase):
         if domain in (ZZ, QQ):
             element_kind = NumberKind
         elif domain == EXRAW:
-            kinds = set(e.kind for e in self.values())
+            kinds = {e.kind for e in self.values()}
             if len(kinds) == 1:
                 [element_kind] = kinds
             else:

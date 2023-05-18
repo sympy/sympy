@@ -3,10 +3,9 @@ Primality testing
 
 """
 
-from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY, gcd, jacobi
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
@@ -77,7 +76,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    .. [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  https://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -280,13 +279,12 @@ def _lucas_selfridge_params(n):
     .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
            http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
-    from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
-        g = igcd(abs(D), n)
+        g = gcd(D, n)
         if g > 1 and g != n:
             return (0, 0, 0)
-        if jacobi_symbol(D, n) == -1:
+        if jacobi(D, n) == -1:
             break
         if D > 0:
           D = -D - 2
@@ -304,13 +302,12 @@ def _lucas_extrastrong_params(n):
            https://oeis.org/A217719
     .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
-    from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
-        g = igcd(D, n)
+        g = gcd(D, n)
         if g > 1 and g != n:
             return (0, 0, 0)
-        if jacobi_symbol(D, n) == -1:
+        if jacobi(D, n) == -1:
             break
         P += 1
         D = P*P - 4
@@ -425,7 +422,7 @@ def is_strong_lucas_prp(n):
 
 def is_extra_strong_lucas_prp(n):
     """Extra Strong Lucas compositeness test.  Returns False if n is
-    definitely composite, and True if n is a "extra strong" Lucas probable
+    definitely composite, and True if n is an "extra strong" Lucas probable
     prime.
 
     The parameters are selected using P = 3, Q = 1, then incrementing P until
@@ -434,8 +431,7 @@ def is_extra_strong_lucas_prp(n):
     used in OEIS A217719, Perl's Math::Prime::Util, and the Lucas pseudoprime
     page on Wikipedia.
 
-    With these parameters, there are no counterexamples below 2^64 nor any
-    known above that range.  It is 20-50% faster than the strong test.
+    It is 20-50% faster than the strong test.
 
     Because of the different parameters selected, there is no relationship
     between the strong Lucas pseudoprimes and extra strong Lucas pseudoprimes.
@@ -444,7 +440,7 @@ def is_extra_strong_lucas_prp(n):
     References
     ==========
     - "Frobenius Pseudoprimes", Jon Grantham, 2000.
-      http://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
+      https://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
     - OEIS A217719: Extra Strong Lucas Pseudoprimes
       https://oeis.org/A217719
     - https://en.wikipedia.org/wiki/Lucas_pseudoprime

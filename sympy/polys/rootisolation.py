@@ -182,7 +182,7 @@ def dup_mignotte_sep_bound_squared(f, K):
 
     .. [1] Mignotte, Maurice. "Some useful bounds." Computer algebra.
         Springer, Vienna, 1982. 259-263.
-        http://people.dm.unipi.it/gianni/AC-EAG/Mignotte.pdf
+        https://people.dm.unipi.it/gianni/AC-EAG/Mignotte.pdf
     """
     n = dup_degree(f)
     if n < 2:

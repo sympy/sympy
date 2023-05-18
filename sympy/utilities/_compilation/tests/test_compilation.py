@@ -49,7 +49,7 @@ def test_compile_link_import_strings():
     if not has_c():
         skip("No C compiler found.")
 
-    compile_kw = dict(std='c99', include_dirs=[numpy.get_include()])
+    compile_kw = {"std": 'c99', "include_dirs": [numpy.get_include()]}
     info = None
     try:
         mod, info = compile_link_import_strings(_sources1, compile_kwargs=compile_kw)
