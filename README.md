@@ -114,6 +114,10 @@ See <https://docs.sympy.org/dev/install.html> for more information.
 
 ## Contributing
 
+<a href="https://github.com/monoclehq">
+    <img src="https://open-source-assets.middlewarehq.com/svgs/sympy-sympy-contributor-metrics-dark-widget.svg"></img>
+</a>
+
 We welcome contributions from anyone, even if you are new to open
 source. Please read our [Introduction to Contributing](https://github.com/sympy/sympy/wiki/Introduction-to-contributing)
 page and the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html). If you
