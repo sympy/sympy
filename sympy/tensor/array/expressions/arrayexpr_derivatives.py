@@ -30,7 +30,7 @@ def array_derive(expr, x):
 
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
-    if len(expr.free_symbols & x.free_symbols) > 0:
+    if expr.free_symbols & x.free_symbols:
         if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
             return MatrixUnit(expr.i, expr.j, x.shape)
         raise NotImplementedError("algorithm not implemented for this case")
@@ -195,7 +195,7 @@ def _(expr: Reshape, x: Expr):
 
 @array_derive.register(MatrixBase)
 def _(expr: MatrixBase, x):
-    if len(set.intersection(expr.free_symbols, x.free_symbols)) == 0:
+    if not set.intersection(expr.free_symbols, x.free_symbols):
         return ZeroArray(*x.shape, *expr.shape)
     if isinstance(x, MatrixExpr) and all(isinstance(i, (int, Integer)) for i in x.shape):
         x = x.as_explicit()
