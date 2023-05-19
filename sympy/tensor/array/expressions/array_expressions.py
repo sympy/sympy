@@ -328,7 +328,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         ranks = list(set(ranks))
         if len(ranks) != 1:
             raise ValueError("summing arrays of different ranks")
-        shapes = [arg.shape for arg in args]
+        shapes = [arg.shape if hasattr(arg, "shape") else () for arg in args]
         if len({i for i in shapes if i is not None}) > 1:
             raise ValueError("mismatching shapes in addition")
 
@@ -949,7 +949,7 @@ class ArrayElementwiseApplyFunc(_CodegenArrayAbstract):
 
     @property
     def shape(self):
-        return self.expr.shape
+        return get_shape(self.expr)
 
     def _get_function_fdiff(self):
         d = Dummy("d")

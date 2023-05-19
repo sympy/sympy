@@ -4,7 +4,7 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic, Wild, KroneckerProduct
+from sympy import MatMul, Basic, Wild, KroneckerProduct, NDimArray
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -329,6 +329,8 @@ def _(expr: ArrayElementwiseApplyFunc):
             if m is not None:
                 return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
+    elif not hasattr(subexpr, "shape"):
+        return expr.function(subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
@@ -703,6 +705,9 @@ def _a2m_tensor_product(*args):
     arrays = []
     for arg in args:
         if isinstance(arg, (MatrixExpr, _ArrayExpr, _CodegenArrayAbstract)):
+            arrays.append(arg)
+        elif isinstance(arg, (NDimArray, MatrixCommon)):
+            # This fixes issue 15651
             arrays.append(arg)
         else:
             scalars.append(arg)

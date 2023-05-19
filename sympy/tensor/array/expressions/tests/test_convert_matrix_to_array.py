@@ -130,3 +130,8 @@ def test_arrayexpr_convert_matrix_to_array():
     expr = KroneckerProduct(A, B, C, D)
     cg = convert_matrix_to_array(expr)
     assert cg == Reshape(PermuteDims(ArrayTensorProduct(A, B, C, D), [0, 2, 4, 6, 1, 3, 5, 7]), (k**4, k**4))
+
+    # Related to issue 23931
+    expr = 1/Trace(A)
+    cg = convert_matrix_to_array(expr)
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(Lambda(m, 1/m), ArrayContraction(A, (0, 1))))

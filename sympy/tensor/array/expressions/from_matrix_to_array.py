@@ -15,7 +15,7 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import \
     ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _array_add, _permute_dims, Reshape
+    _array_diagonal, _array_add, _permute_dims, Reshape, get_shape
 
 
 def convert_matrix_to_array(expr: Basic) -> Basic:
@@ -57,6 +57,9 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         base = convert_matrix_to_array(expr.base)
         if (expr.exp > 0) == True:
             return _array_tensor_product(*[base for i in range(expr.exp)])
+        elif get_shape(base) == ():
+            d = Dummy("d")
+            return ArrayElementwiseApplyFunc(Lambda(d, d**expr.exp), base)
         else:
             return expr
     elif isinstance(expr, MatPow):

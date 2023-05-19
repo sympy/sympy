@@ -3,7 +3,6 @@ from .special import Identity
 from sympy.core import S
 from sympy.core.expr import ExprBuilder
 from sympy.core.cache import cacheit
-from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 from sympy.matrices.common import NonSquareMatrixError
@@ -92,7 +91,12 @@ class MatPow(MatrixExpr):
         return MatPow(base.T, exp)
 
     def _eval_derivative(self, x):
-        return Pow._eval_derivative(self, x)
+        assert not hasattr(x, "shape")
+        dbase = self.base.diff(x)
+        dexp = self.exp.diff(x)
+        if dexp != 0:
+            raise NotImplementedError("cannot derive matrix power if exponent depends on the derivation variable")
+        return self * (dbase * self.exp/self.base)
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction

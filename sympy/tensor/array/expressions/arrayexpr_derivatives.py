@@ -1,13 +1,14 @@
 import operator
 from functools import reduce, singledispatch
 
-from sympy import MatrixBase, derive_by_array, Integer
-from sympy.core.expr import Expr
 from sympy.core.singleton import S
+from sympy import MatrixBase, derive_by_array, Integer
+from sympy.tensor.array import NDimArray
+from sympy.core.expr import Expr
 from sympy.matrices.expressions.hadamard import HadamardProduct
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol)
-from sympy.matrices.expressions.special import Identity, OneMatrix
+from sympy.matrices.expressions.matexpr import (MatrixExpr, MatrixSymbol, MatrixElement)
+from sympy.matrices.expressions.special import Identity, OneMatrix, MatrixUnit
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -30,6 +31,8 @@ def array_derive(expr, x):
 @array_derive.register(Expr)
 def _(expr: Expr, x: _ArrayExpr):
     if len(expr.free_symbols & x.free_symbols) > 0:
+        if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
+            return MatrixUnit(expr.i, expr.j, x.shape)
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
 
@@ -199,6 +202,11 @@ def _(expr: MatrixBase, x):
     if isinstance(x, MatrixBase):
         return derive_by_array(expr, x)
     raise NotImplementedError("could not determine derivative")
+
+
+@array_derive.register(NDimArray)
+def _(expr: NDimArray, x):
+    derive_by_array(expr, x)
 
 
 def matrix_derive(expr, x):

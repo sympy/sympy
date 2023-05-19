@@ -709,7 +709,13 @@ class MatrixSymbol(MatrixExpr):
 
     def _eval_derivative(self, x):
         # x is a scalar:
-        return ZeroMatrix(self.shape[0], self.shape[1])
+        if self.free_symbols & x.free_symbols:
+            if isinstance(x, MatrixElement):
+                from .special import MatrixUnit
+                return MatrixUnit(x.i, x.j, self.shape)
+            raise NotImplementedError("could not determine this derivative")
+        else:
+            return ZeroMatrix(self.shape[0], self.shape[1])
 
     def _eval_derivative_matrix_lines(self, x):
         if self != x:

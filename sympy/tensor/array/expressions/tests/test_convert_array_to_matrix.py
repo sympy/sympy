@@ -1,4 +1,4 @@
-from sympy import Lambda, S, Dummy, KroneckerProduct
+from sympy import Lambda, S, Dummy, KroneckerProduct, Array
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -666,12 +666,24 @@ def test_convert_array_elementwise_function_to_matrix():
     expr = ArrayElementwiseApplyFunc(Lambda(d, 1 / (2 * sqrt(d))), x)
     assert convert_array_to_matrix(expr) == S.Half * HadamardPower(x, -S.Half)
 
+    # Related to issue 23931
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), Trace(X))
+    assert convert_array_to_matrix(expr) == sin(Trace(X))
+
 
 def test_array2matrix():
     # See issue https://github.com/sympy/sympy/pull/22877
     expr = PermuteDims(ArrayContraction(ArrayTensorProduct(x, I, I1, x), (0, 3), (1, 7)), Permutation(2, 3))
     expected = PermuteDims(ArrayTensorProduct(x*x.T, I1), Permutation(3)(1, 2))
     assert _array2matrix(expr) == expected
+
+    # Related to issue https://github.com/sympy/sympy/issues/15651
+    expr = ArrayTensorProduct(Array(
+        [[[[1, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 1, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 1], [0, 0, 0], [0, 0, 0]]],
+         [[[0, 0, 0], [1, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 1], [0, 0, 0]]],
+         [[[0, 0, 0], [0, 0, 0], [1, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 1, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 1]]]]), X)
+
+    assert _array2matrix(expr) == expr
 
 
 def test_recognize_broadcasting():

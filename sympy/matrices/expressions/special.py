@@ -213,6 +213,10 @@ class GenericIdentity(Identity):
 class OneMatrix(MatrixExpr):
     """
     Matrix whose all entries are ones.
+
+    Also called "matrix of ones" or "all-ones matrix".
+
+    https://en.wikipedia.org/wiki/Matrix_of_ones
     """
     def __new__(cls, m, n, evaluate=False):
         m, n = _sympify(m), _sympify(n)
@@ -290,10 +294,66 @@ class OneMatrix(MatrixExpr):
             return Inverse(self)
 
     def _eval_as_real_imag(self):
-        return (self, ZeroMatrix(*self.shape))
+        return self, ZeroMatrix(*self.shape)
 
     def _eval_conjugate(self):
         return self
 
     def _entry(self, i, j, **kwargs):
         return S.One
+
+
+class MatrixUnit(MatrixExpr):
+    """
+    Matrix with only one nonzero entry with value 1.
+
+    https://en.wikipedia.org/wiki/Matrix_unit
+    """
+    def __new__(cls, i, j, shape):
+        obj = MatrixExpr.__new__(cls, i, j, shape)
+        obj._i = i
+        obj._j = j
+        obj._shape = shape
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def rows(self):
+        return self._shape[0]
+
+    @property
+    def cols(self):
+        return self._shape[1]
+
+    @property
+    def is_square(self):
+        return Eq(self.rows, self.cols)
+
+    def _eval_transpose(self):
+        return MatrixUnit(self._j, self._i, self.shape)
+
+    def _eval_trace(self):
+        if (self.rows == self.cols) == True:
+            if self.shape == (1, 1):
+                return S.One
+            return S.Zero
+
+    def _eval_inverse(self):
+        if self.shape == (1, 1):
+            return self
+        raise NonInvertibleMatrixError("Cannot invert this MatrixUnit")
+
+    def _eval_as_real_imag(self):
+        return self, ZeroMatrix(*self.shape)
+
+    def _eval_conjugate(self):
+        return MatrixUnit(self._j, self._i, self.shape)
+
+    def _eval_adjoint(self):
+        return self._eval_conjugate()
+
+    def _entry(self, i, j, **kwargs):
+        return KroneckerDelta(i, self._i, (0, self.rows-1)) * KroneckerDelta(j, self._j, (0, self.cols-1))
