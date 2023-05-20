@@ -2652,12 +2652,13 @@ class Line3D(LinearEntity3D, Line):
                 return S.Zero
             if self.is_parallel(other):
                 return super().distance(other.p1)
-            else:
-                self_direction = Matrix(self.direction_ratio)
-                other_direction = Matrix(other.direction_ratio)
-                normal = self_direction.cross(other_direction)
-                plane_through_self = Plane(p1=self.p1, normal_vector=normal)
-                return other.p1.distance(plane_through_self)
+
+            # Skew lines
+            self_direction = Matrix(self.direction_ratio)
+            other_direction = Matrix(other.direction_ratio)
+            normal = self_direction.cross(other_direction)
+            plane_through_self = Plane(p1=self.p1, normal_vector=normal)
+            return other.p1.distance(plane_through_self)
 
         if isinstance(other, Plane):
             return other.distance(self)
