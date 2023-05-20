@@ -2650,7 +2650,7 @@ class Line3D(LinearEntity3D, Line):
         if isinstance(other, Line3D):
             if self == other:
                 return S.Zero
-            elif self.is_parallel(other):
+            if self.is_parallel(other):
                 return super().distance(other.p1)
             else:
                 self_direction = Matrix(self.direction_ratio)
