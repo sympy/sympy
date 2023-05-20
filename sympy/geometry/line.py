@@ -2638,7 +2638,7 @@ class Line3D(LinearEntity3D, Line):
 
         from .plane import Plane  # Avoid circular import
 
-        if isinstance(other, tuple) or isinstance(other, list):
+        if isinstance(other, (tuple, list)):
             try:
                 other = Point3D(other)
             except ValueError:
