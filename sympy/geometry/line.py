@@ -2594,7 +2594,7 @@ class Line3D(LinearEntity3D, Line):
 
     def distance(self, other):
         """
-        Finds the shortest distance between a line segment and a point.
+        Finds the shortest distance between a line segment and another object.
 
         Parameters
         ==========
