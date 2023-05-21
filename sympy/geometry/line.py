@@ -2594,7 +2594,7 @@ class Line3D(LinearEntity3D, Line):
 
     def distance(self, other):
         """
-        Finds the shortest distance between a line segment and another object.
+        Finds the shortest distance between a line and another object.
 
         Parameters
         ==========
@@ -2615,7 +2615,7 @@ class Line3D(LinearEntity3D, Line):
         length 3, 2 or 1.
 
         NotImplementedError is raised if `other` is not an instance of one
-        of the specified classes: Point, Line, or Plane.
+        of the specified classes: Point3D, Line3D, or Plane.
 
         Examples
         ========
