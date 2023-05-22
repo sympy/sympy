@@ -84,7 +84,6 @@ from sympy.multipledispatch.dispatcher import Dispatcher
 # Imports required to define object types for handlers are coded
 # just in front of the handlers.
 
-
 __all__ = [
     'lapply'
 ]
