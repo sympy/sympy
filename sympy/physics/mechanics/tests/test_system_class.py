@@ -427,8 +427,8 @@ class TestSystem(TestSystemBase):
 
     @pytest.mark.parametrize('kwargs, expected', [
         ({}, ImmutableMatrix([[-1, 0], [0, symbols("m")]])),
-        ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0], [0, symbols("m")]])),
-        ({"bodies": []}, ImmutableMatrix([[-1, 0], [0, 0]])),
+        ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0],
+                                                         [0, symbols("m")]])),
     ])
     def test_system_kane_form_eoms_kwargs(self, _empty_system_setup, kwargs, expected):
         self.system.q_ind = q[0]
@@ -443,11 +443,6 @@ class TestSystem(TestSystemBase):
     @pytest.mark.parametrize('kwargs, mm, gm', [
         ({}, ImmutableMatrix([[1, 0], [0, symbols("m")]]),
          ImmutableMatrix([q[0].diff(t), 0])),
-        ({"bodies": []}, ImmutableMatrix([[1, 0], [0, 0]]),
-         ImmutableMatrix([q[0].diff(t), 0])),
-        ({"Lagrangian": symbols("m") / 2 * q[0].diff(t) ** 2 - q[0] * symbols("g")},
-         ImmutableMatrix([[1, 0], [0, symbols("m")]]),
-         ImmutableMatrix([q[0].diff(t), -symbols("g")])),
     ])
     def test_system_lagrange_form_eoms_kwargs(self, _empty_system_setup, kwargs, mm, gm):
         self.system.q_ind = q[0]
@@ -458,14 +453,22 @@ class TestSystem(TestSystemBase):
         assert self.system.mass_matrix_full == mm
         assert self.system.forcing_full == gm
 
-    @pytest.mark.parametrize('eom_method', [KanesMethod, LagrangesMethod])
-    def test_unspecified_form_eoms_kwargs(self, _empty_system_setup, eom_method):
+    @pytest.mark.parametrize('eom_method, kwargs, error', [
+        (KanesMethod, {"non_existing_kwarg": 1}, TypeError),
+        (LagrangesMethod, {"non_existing_kwarg": 1}, TypeError),
+        (KanesMethod, {"bodies": []}, ValueError),
+        (KanesMethod, {"kd_eqs": []}, ValueError),
+        (LagrangesMethod, {"bodies": []}, ValueError),
+        (LagrangesMethod, {"Lagrangian": 1}, ValueError),
+    ])
+    def test_form_eoms_kwargs_errors(self, _empty_system_setup, eom_method,
+                                     kwargs, error):
         self.system.q_ind = q[0]
         p = Particle("p", mass=symbols("m"))
         self.system.add_bodies(p)
         p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
-        with pytest.raises(TypeError):
-            self.system.form_eoms(eom_method=eom_method, not_existing_kwarg=1)
+        with pytest.raises(error):
+            self.system.form_eoms(eom_method=eom_method, **kwargs)
 
 
 class TestValidateSystem(TestSystemBase):
