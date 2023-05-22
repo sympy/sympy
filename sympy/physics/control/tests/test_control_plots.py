@@ -34,7 +34,6 @@ ser1 = Series(tf4, TransferFunction(1, p - 5, p))
 ser2 = Series(tf3, TransferFunction(p, p + 2, p))
 
 par1 = Parallel(tf1, tf2)
-par2 = Parallel(tf1, tf2, tf3)
 
 
 def _to_tuple(a, b):
