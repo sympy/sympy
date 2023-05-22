@@ -798,34 +798,34 @@ class System(_Methods):
         # KanesMethod does not accept empty iterables
         loads = self.loads if self.loads else None
         if issubclass(eom_method, KanesMethod):
-            not_allowed_kwargs = {
+            disallowed_kwargs = {
                 "frame", "q_ind", "u_ind", "kd_eqs", "q_dependent",
                 "u_dependent", "configuration_constraints",
                 "velocity_constraints", "forcelist", "bodies"}
-            wrong_kwargs = not_allowed_kwargs.intersection(kwargs)
+            wrong_kwargs = disallowed_kwargs.intersection(kwargs)
             if wrong_kwargs:
                 raise ValueError(
-                    f"The key word arguments {wrong_kwargs} are not allowed to "
-                    f"be overwritten in {eom_method.__name__}.")
+                    f"The following keyword arguments are not allowed to be "
+                    f"overwritten in {eom_method.__name__}: {wrong_kwargs}.")
             velocity_constraints = self.holonomic_constraints.diff(
                 dynamicsymbols._t).col_join(self.nonholonomic_constraints)
-            kwargs = {"frame": self.frame, "q_ind": self.q_ind, "u_ind": self.u_ind,
-                      "kd_eqs": self.kdes, "q_dependent": self.q_dep,
-                      "u_dependent": self.u_dep,
+            kwargs = {"frame": self.frame, "q_ind": self.q_ind,
+                      "u_ind": self.u_ind, "kd_eqs": self.kdes,
+                      "q_dependent": self.q_dep, "u_dependent": self.u_dep,
                       "configuration_constraints": self.holonomic_constraints,
                       "velocity_constraints": velocity_constraints,
                       "forcelist": loads, "bodies": self.bodies,
                       "explicit_kinematics": False, **kwargs}
             self._eom_method = KanesMethod(**kwargs)
         elif issubclass(eom_method, LagrangesMethod):
-            not_allowed_kwargs = {
+            disallowed_kwargs = {
                 "frame", "qs", "forcelist", "bodies", "hol_coneqs",
                 "nonhol_coneqs", "Lagrangian"}
-            wrong_kwargs = not_allowed_kwargs.intersection(kwargs)
+            wrong_kwargs = disallowed_kwargs.intersection(kwargs)
             if wrong_kwargs:
                 raise ValueError(
-                    f"The key word arguments {wrong_kwargs} are not allowed to "
-                    f"be overwritten in {eom_method.__name__}.")
+                    f"The following keyword arguments are not allowed to be "
+                    f"overwritten in {eom_method.__name__}: {wrong_kwargs}.")
             kwargs = {"frame": self.frame, "qs": self.q, "forcelist": loads,
                       "bodies": self.bodies,
                       "hol_coneqs": self.holonomic_constraints,
