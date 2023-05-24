@@ -12,7 +12,7 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sympy.core.backend import S, USE_SYMENGINE, sympify
 from sympy.physics.mechanics import (
@@ -156,10 +156,37 @@ class ForceActuator(ActuatorBase):
             a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
 
         """
-        # ``force`` attribute
+        self.force = force
+        self.pathway = pathway
+
+    @property
+    def force(self) -> ExprType:
+        """The magnitude of the force produced by the actuator."""
+        return self._force
+
+    @force.setter
+    def force(self, force: ExprType) -> None:
+        if hasattr(self, '_force'):
+            msg = (
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
         self._force = sympify(force, strict=True)
 
-        # ``pathway`` attribute
+    @property
+    def pathway(self) -> PathwayBase:
+        """The ``Pathway`` defining the actuator's line of action."""
+        return self._pathway
+
+    @pathway.setter
+    def pathway(self, pathway: PathwayBase) -> None:
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
         if not isinstance(pathway, PathwayBase):
             msg = (
                 f'Value {repr(pathway)} passed to `pathway` was of type '
@@ -167,16 +194,6 @@ class ForceActuator(ActuatorBase):
             )
             raise TypeError(msg)
         self._pathway = pathway
-
-    @property
-    def force(self) -> ExprType:
-        """The magnitude of the force produced by the actuator."""
-        return self._force
-
-    @property
-    def pathway(self) -> PathwayBase:
-        """The ``Pathway`` defining the actuator's line of action."""
-        return self._pathway
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
@@ -377,35 +394,48 @@ class LinearSpring(ForceActuator):
             function of the pathway's length with no constant offset.
 
         """
-        # ``stiffness`` attribute
-        self._stiffness = sympify(stiffness, strict=True)
-
-        # ``pathway`` attribute
-        if not isinstance(pathway, PathwayBase):
-            msg = (
-                f'Value {repr(pathway)} passed to `pathway` was of type '
-                f'{type(pathway)}, must be {PathwayBase}.'
-            )
-            raise TypeError(msg)
-        self._pathway = pathway
-
-        # ``equilibrium_length`` attribute
-        self._equilibrium_length = sympify(equilibrium_length, strict=True)
+        self.stiffness = stiffness
+        self.pathway = pathway
+        self.equilibrium_length = equilibrium_length
 
     @property
     def force(self) -> ExprType:
         """The spring force produced by the linear spring."""
         return -self.stiffness * (self.pathway.length - self.equilibrium_length)
 
+    @force.setter
+    def force(self, force: Any) -> None:
+        raise AttributeError('Can\'t set computed attribute `force`.')
+
     @property
     def stiffness(self) -> ExprType:
         """The spring constant for the linear spring."""
         return self._stiffness
 
+    @stiffness.setter
+    def stiffness(self, stiffness: ExprType):
+        if hasattr(self, '_stiffness'):
+            msg = (
+                f'Can\'t set attribute `stiffness` to {repr(stiffness)} as it '
+                f'is immutable.'
+            )
+            raise AttributeError(msg)
+        self._stiffness = sympify(stiffness, strict=True)
+
     @property
     def equilibrium_length(self) -> ExprType:
         """The length of the spring at which it produces no force."""
         return self._equilibrium_length
+
+    @equilibrium_length.setter
+    def equilibrium_length(self, equilibrium_length: ExprType) -> None:
+        if hasattr(self, '_equilibrium_length'):
+            msg = (
+                f'Can\'t set attribute `equilibrium_length` to '
+                f'{repr(equilibrium_length)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
     def __repr__(self) -> str:
         """Representation of a ``LinearSpring``."""
@@ -512,27 +542,32 @@ class LinearDamper(ForceActuator):
             a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
 
         """
-        # ``damping`` attribute
-        self._damping = sympify(damping, strict=True)
-
-        # ``pathway`` attribute
-        if not isinstance(pathway, PathwayBase):
-            msg = (
-                f'Value {repr(pathway)} passed to `pathway` was of type '
-                f'{type(pathway)}, must be {PathwayBase}.'
-            )
-            raise TypeError(msg)
-        self._pathway = pathway
+        self.damping = damping
+        self.pathway = pathway
 
     @property
     def force(self) -> ExprType:
         """The damping force produced by the linear damper."""
         return -self.damping * self.pathway.extension_velocity
 
+    @force.setter
+    def force(self, force: Any) -> None:
+        raise AttributeError('Can\'t set computed attribute `force`.')
+
     @property
     def damping(self) -> ExprType:
         """The damping constant for the linear damper."""
         return self._damping
+
+    @damping.setter
+    def damping(self, damping: ExprType) -> None:
+        if hasattr(self, '_damping'):
+            msg = (
+                f'Can\'t set attribute `damping` to {repr(damping)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._damping = sympify(damping, strict=True)
 
     def __repr__(self) -> str:
         """Representation of a ``LinearDamper``."""
@@ -619,42 +654,10 @@ class TorqueActuator(ActuatorBase):
            this frame.
 
         """
-        # ``torque`` attribute
-        self._torque = sympify(torque, strict=True)
-
-        # ``axis`` attribute
-        if not isinstance(axis, Vector):
-            msg = (
-                f'Value {repr(axis)} passed to `axis` was of type '
-                f'{type(axis)}, must be {Vector}.'
-            )
-            raise TypeError(msg)
-        self._axis = axis
-
-        # ``target_frame`` attribute
-        if isinstance(target_frame, RigidBody):
-            target_frame = target_frame.frame
-        elif not isinstance(target_frame, ReferenceFrame):
-            msg = (
-                f'Value {repr(target_frame)} passed to `target_frame` was of '
-                f'type 'f'{type(target_frame)}, must be {ReferenceFrame}.'
-            )
-            raise TypeError(msg)
-        self._target_frame: ReferenceFrame = target_frame  # type: ignore
-
-        # ``reaction_frame`` attribute
-        if isinstance(reaction_frame, RigidBody):
-            reaction_frame = reaction_frame.frame
-        elif (
-            not isinstance(reaction_frame, ReferenceFrame)
-            and reaction_frame is not None
-        ):
-            msg = (
-                f'Value {repr(reaction_frame)} passed to `reaction_frame` was of '
-                f'type 'f'{type(reaction_frame)}, must be {ReferenceFrame}.'
-            )
-            raise TypeError(msg)
-        self._reaction_frame: ReferenceFrame | None = reaction_frame  # type: ignore
+        self.torque = torque
+        self.axis = axis
+        self.target_frame = target_frame  # type: ignore
+        self.reaction_frame = reaction_frame  # type: ignore
 
     @classmethod
     def at_pin_joint(
@@ -735,20 +738,85 @@ class TorqueActuator(ActuatorBase):
         """The magnitude of the torque produced by the actuator."""
         return self._torque
 
+    @torque.setter
+    def torque(self, torque: ExprType) -> None:
+        if hasattr(self, '_torque'):
+            msg = (
+                f'Can\'t set attribute `torque` to {repr(torque)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._torque = sympify(torque, strict=True)
+
     @property
     def axis(self) -> Vector:
         """The axis about which the torque acts."""
         return self._axis
+
+    @axis.setter
+    def axis(self, axis: Vector) -> None:
+        if hasattr(self, '_axis'):
+            msg = (
+                f'Can\'t set attribute `axis` to {repr(axis)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        if not isinstance(axis, Vector):
+            msg = (
+                f'Value {repr(axis)} passed to `axis` was of type '
+                f'{type(axis)}, must be {Vector}.'
+            )
+            raise TypeError(msg)
+        self._axis = axis
 
     @property
     def target_frame(self) -> ReferenceFrame:
         """The primary reference frames on which the torque will act."""
         return self._target_frame
 
+    @target_frame.setter
+    def target_frame(self, target_frame: ReferenceFrame) -> None:
+        if hasattr(self, '_target_frame'):
+            msg = (
+                f'Can\'t set attribute `target_frame` to {repr(target_frame)} '
+                f'as it is immutable.'
+            )
+            raise AttributeError(msg)
+        if isinstance(target_frame, RigidBody):
+            target_frame = target_frame.frame
+        elif not isinstance(target_frame, ReferenceFrame):
+            msg = (
+                f'Value {repr(target_frame)} passed to `target_frame` was of '
+                f'type {type(target_frame)}, must be {ReferenceFrame}.'
+            )
+            raise TypeError(msg)
+        self._target_frame = target_frame
+
     @property
     def reaction_frame(self) -> ReferenceFrame | None:
         """The primary reference frames on which the torque will act."""
         return self._reaction_frame
+
+    @reaction_frame.setter
+    def reaction_frame(self, reaction_frame: ReferenceFrame | None) -> None:
+        if hasattr(self, '_reaction_frame'):
+            msg = (
+                f'Can\'t set attribute `reaction_frame` to '
+                f'{repr(reaction_frame)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        if isinstance(reaction_frame, RigidBody):
+            reaction_frame = reaction_frame.frame
+        elif (
+            not isinstance(reaction_frame, ReferenceFrame)
+            and reaction_frame is not None
+        ):
+            msg = (
+                f'Value {repr(reaction_frame)} passed to `reaction_frame` was '
+                f'of type {type(reaction_frame)}, must be {ReferenceFrame}.'
+            )
+            raise TypeError(msg)
+        self._reaction_frame = reaction_frame
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
