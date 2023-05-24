@@ -79,6 +79,11 @@ class TestLinearPathway:
         with pytest.raises(AttributeError):
             instance.attachments = None
 
+    def test_repr(self) -> None:
+        pathway = LinearPathway(self.pA, self.pB)
+        expected = 'LinearPathway(pA, pB)'
+        assert repr(pathway) == expected
+
     def test_static_pathway_length(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.N.x)
         assert self.pathway.length == 2
