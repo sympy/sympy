@@ -357,4 +357,3 @@ def test_strict_mode():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
-    
