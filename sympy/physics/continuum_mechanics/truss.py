@@ -183,7 +183,7 @@ class Truss:
                 self._node_position_y.append(y)
                 self._node_coordinates[label] = [x, y]
 
-        
+
 
     def remove_node(self, *args):
         """
@@ -234,7 +234,7 @@ class Truss:
                     self._supports.pop(label)
                 self._node_coordinates.pop(label)
 
-        
+
 
     def add_member(self, *args):
         """
@@ -242,7 +242,7 @@ class Truss:
 
         Parameters
         ==========
-        The input(s) of the method are tuple(s) of the form (label, start, end). 
+        The input(s) of the method are tuple(s) of the form (label, start, end).
 
         label: String or Symbol
             The label for a member. It is the only way to identify a particular member.
@@ -282,7 +282,7 @@ class Truss:
                 self._nodes_occupied[start, end] = True
                 self._nodes_occupied[end, start] = True
                 self._internal_forces[label] = 0
-        
+
 
     def remove_member(self, *args):
         """
@@ -315,7 +315,7 @@ class Truss:
                 self._nodes_occupied.pop((self._members[label][1], self._members[label][0]))
                 self._members.pop(label)
                 self._internal_forces.pop(label)
-        
+
 
     def change_node_label(self, *args):
         """
@@ -459,7 +459,7 @@ class Truss:
                         self._members.pop(label)
                         self._internal_forces[new_label] = self._internal_forces[label]
                         self._internal_forces.pop(label)
-        
+
 
     def apply_load(self, *args):
         """
