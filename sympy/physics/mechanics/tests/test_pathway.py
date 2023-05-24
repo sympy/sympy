@@ -74,6 +74,11 @@ class TestLinearPathway:
         self.q3d = dynamicsymbols('q3', 1)
         self.F = Symbol('F')
 
+    def test_properties_are_immutable(self) -> None:
+        instance = LinearPathway(self.pA, self.pB)
+        with pytest.raises(AttributeError):
+            instance.attachments = None
+
     def test_static_pathway_length(self) -> None:
         self.pB.set_pos(self.pA, 2 * self.N.x)
         assert self.pathway.length == 2

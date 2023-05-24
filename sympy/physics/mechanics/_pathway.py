@@ -56,6 +56,12 @@ class PathwayBase(ABC):
 
     @attachments.setter
     def attachments(self, attachments: tuple[Point, ...]) -> None:
+        if hasattr(self, '_attachments'):
+            msg = (
+                f'Can\'t set attribute `attachments` to {repr(attachments)} '
+                f'as it is immutable.'
+            )
+            raise AttributeError(msg)
         if len(attachments) != 2:
             msg = (
                 f'Value {repr(attachments)} passed to `attachments` was an '
