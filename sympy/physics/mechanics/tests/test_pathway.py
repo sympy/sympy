@@ -14,6 +14,9 @@ from sympy.simplify.simplify import simplify
 
 class TestLinearPathway:
 
+    def test_is_pathway_base_subclass(self) -> None:
+        assert issubclass(LinearPathway, PathwayBase)
+
     @staticmethod
     @pytest.mark.parametrize(
         'args, kwargs',
