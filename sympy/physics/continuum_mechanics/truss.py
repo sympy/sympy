@@ -1093,7 +1093,7 @@ class Truss:
                             x-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.cos(pi*load[1]/180)/20,
                             y-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.sin(pi*load[1]/180)/20
                         ),
-                        'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')
+                        'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'black'}
                     }
                 )
         return load_annotations
