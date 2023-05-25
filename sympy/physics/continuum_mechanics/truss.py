@@ -37,18 +37,11 @@ class Truss:
 
     >>> from sympy.physics.continuum_mechanics.truss import Truss
     >>> t = Truss()
-    >>> t.add_node("node_1", 0, 0)
-    >>> t.add_node("node_2", 6, 0)
-    >>> t.add_node("node_3", 2, 2)
-    >>> t.add_node("node_4", 2, 0)
-    >>> t.add_member("member_1", "node_1", "node_4")
-    >>> t.add_member("member_2", "node_2", "node_4")
-    >>> t.add_member("member_3", "node_1", "node_3")
-    >>> t.add_member("member_4", "node_2", "node_3")
-    >>> t.add_member("member_5", "node_3", "node_4")
-    >>> t.apply_load("node_4", magnitude=10, direction=270)
-    >>> t.apply_support("node_1", type="fixed")
-    >>> t.apply_support("node_2", type="roller")
+    >>> t.add_node(("node_1", 0, 0), ("node_2", 6, 0), ("node_3", 2, 2), ("node_4", 2, 0))
+    >>> t.add_member(("member_1", "node_1", "node_4"), ("member_2", "node_2", "node_4"), ("member_3", "node_1", "node_3"))
+    >>> t.add_member(("member_4", "node_2", "node_3"), ("member_5", "node_3", "node_4"))
+    >>> t.apply_load(("node_4", 10, 270))
+    >>> t.apply_support(("node_1", "fixed"), ("node_2", "roller"))
     """
 
     def __init__(self):
@@ -677,18 +670,11 @@ class Truss:
 
         >>> from sympy.physics.continuum_mechanics.truss import Truss
         >>> t = Truss()
-        >>> t.add_node("node_1", 0, 0)
-        >>> t.add_node("node_2", 6, 0)
-        >>> t.add_node("node_3", 2, 2)
-        >>> t.add_node("node_4", 2, 0)
-        >>> t.add_member("member_1", "node_1", "node_4")
-        >>> t.add_member("member_2", "node_2", "node_4")
-        >>> t.add_member("member_3", "node_1", "node_3")
-        >>> t.add_member("member_4", "node_2", "node_3")
-        >>> t.add_member("member_5", "node_3", "node_4")
-        >>> t.apply_load("node_4", magnitude=10, direction=270)
-        >>> t.apply_support("node_1", type="pinned")
-        >>> t.apply_support("node_2", type="roller")
+        >>> t.add_node(("node_1", 0, 0), ("node_2", 6, 0), ("node_3", 2, 2), ("node_4", 2, 0))
+        >>> t.add_member(("member_1", "node_1", "node_4"), ("member_2", "node_2", "node_4"), ("member_3", "node_1", "node_3"))
+        >>> t.add_member(("member_4", "node_2", "node_3"), ("member_5", "node_3", "node_4"))
+        >>> t.apply_load(("node_4", 10, 270))
+        >>> t.apply_support(("node_1", "pinned"), ("node_2", "roller"))
         >>> t.solve()
         >>> t.reaction_loads
         {'R_node_1_x': 0, 'R_node_1_y': 20/3, 'R_node_2_y': 10/3}
