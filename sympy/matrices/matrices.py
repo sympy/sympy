@@ -59,7 +59,7 @@ from .graph import (
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
-    _pinv_solve, _solve, _solve_least_squares)
+    _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
@@ -2279,6 +2279,9 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
+    def cramer_solve(self, rhs):
+        return _cramer_solve(self, rhs)
+
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
 
@@ -2349,6 +2352,7 @@ class MatrixBase(MatrixDeprecated,
     QRsolve.__doc__                = _QRsolve.__doc__
     gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
     pinv_solve.__doc__             = _pinv_solve.__doc__
+    cramer_solve.__doc__           = _cramer_solve.__doc__
     solve.__doc__                  = _solve.__doc__
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 
