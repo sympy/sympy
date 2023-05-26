@@ -15,7 +15,7 @@ from sympy.functions.combinatorial.factorials import factorial, subfactorial
 @pytest.mark.parametrize("method", [
     # Evaluating these directly because they are never reached via M.det()
     Matrix._eval_det_bareiss, Matrix._eval_det_berkowitz,
-    Matrix._eval_det_lu
+    Matrix._eval_det_laplace, Matrix._eval_det_lu
 ])
 @pytest.mark.parametrize("M, sol", [
     (Matrix(), 1),
@@ -27,7 +27,7 @@ def test_eval_determinant(method, M, sol):
 
 
 @pytest.mark.parametrize("method", [
-    "domain-ge", "bareiss", "berkowitz", "lu"])
+    "domain-ge", "bareiss", "berkowitz", "laplace", "lu"])
 @pytest.mark.parametrize("M, sol", [
     (Matrix(( (-3,  2),
               ( 8, -5) )), -1),
@@ -191,6 +191,7 @@ def test_adjugate():
     assert e.adjugate() == adj
     assert e.adjugate(method='bareiss') == adj
     assert e.adjugate(method='berkowitz') == adj
+    assert e.adjugate(method='laplace') == adj
 
     a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.adjugate())
@@ -240,6 +241,7 @@ def test_cofactor_and_minors():
     assert e.cofactor_matrix() == cm
     assert e.cofactor_matrix(method="bareiss") == cm
     assert e.cofactor_matrix(method="berkowitz") == cm
+    assert e.cofactor_matrix(method="laplace") == cm
 
     raises(ValueError, lambda: e.cofactor(4, 5))
     raises(ValueError, lambda: e.minor(4, 5))

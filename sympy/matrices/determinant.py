@@ -1,5 +1,6 @@
 from types import FunctionType
 
+from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
@@ -303,8 +304,8 @@ def _adjugate(M, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "laplace" or "lu".
 
     Examples
     ========
@@ -421,8 +422,8 @@ def _cofactor(M, i, j, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "laplace" or "lu".
 
     Examples
     ========
@@ -453,8 +454,8 @@ def _cofactor_matrix(M, method="berkowitz"):
     ==========
 
     method : string, optional
-        Method to use to find the cofactors, can be "bareiss", "berkowitz" or
-        "lu".
+        Method to use to find the cofactors, can be "bareiss", "berkowitz",
+        "laplace" or "lu".
 
     Examples
     ========
@@ -569,6 +570,8 @@ def _det(M, method="bareiss", iszerofunc=None):
 
         If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
 
+        If it is set to ``'laplace'``, Laplace' algorithm will be used.
+
         Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
 
         .. note::
@@ -627,7 +630,7 @@ def _det(M, method="bareiss", iszerofunc=None):
     elif method == "det_lu":
         method = "lu"
 
-    if method not in ("bareiss", "berkowitz", "lu", "domain-ge"):
+    if method not in ("bareiss", "berkowitz", "lu", "domain-ge", "laplace"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
     if iszerofunc is None:
@@ -668,6 +671,8 @@ def _det(M, method="bareiss", iszerofunc=None):
             det = M[b, b]._eval_det_berkowitz()
         elif method == "lu":
             det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        elif method == "laplace":
+            det = M[b, b]._eval_det_laplace()
         dets.append(det)
     return Mul(*dets)
 
@@ -819,6 +824,44 @@ def _det_LU(M, iszerofunc=_iszero, simpfunc=None):
     return det
 
 
+@cacheit
+def __det_laplace(M):
+    """Compute the determinant of a matrix using Laplace expansion.
+
+    This is a recursive function, and it should not be called directly.
+    Use _det_laplace() instead. The reason for splitting this function
+    into two is to allow caching of determinants of submatrices. While
+    one could also define this function inside _det_laplace(), that
+    would remove the advantage of using caching in Cramer Solve.
+    """
+    n = M.shape[0]
+    if n == 1:
+        return M[0]
+    elif n == 2:
+        return M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
+    else:
+        return sum((-1) ** i * M[0, i] *
+                   __det_laplace(M.minor_submatrix(0, i)) for i in range(n))
+
+
+def _det_laplace(M):
+    """Compute the determinant of a matrix using Laplace expansion.
+
+    While Laplace expansion is not the most efficient method of computing
+    a determinant, it is a simple one, and it has the advantage of
+    being division free. To improve efficiency, this function uses
+    caching to avoid recomputing determinants of submatrices.
+    """
+    if not M.is_square:
+        raise NonSquareMatrixError()
+    if M.shape[0] == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
+    return __det_laplace(M.as_immutable())
+
+
 def _minor(M, i, j, method="berkowitz"):
     """Return the (i,j) minor of ``M``.  That is,
     return the determinant of the matrix obtained by deleting
@@ -832,7 +875,7 @@ def _minor(M, i, j, method="berkowitz"):
 
     method : string, optional
         Method to use to find the determinant of the submatrix, can be
-        "bareiss", "berkowitz" or "lu".
+        "bareiss", "berkowitz", "laplace" or "lu".
 
     Examples
     ========
