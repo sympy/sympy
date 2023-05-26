@@ -4,6 +4,8 @@ Module for the SDM class.
 
 """
 
+import sympy
+
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
@@ -924,10 +926,11 @@ def sdm_transpose(M):
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
+            is_operator = lambda x: issubclass(x.__class__, sympy.physics.quantum.operator.Operator)
             try:
-                MT[j][i] = Mij
+                MT[j][i] = Mij.transpose() if is_operator(Mij) else Mij
             except KeyError:
-                MT[j] = {i: Mij}
+                MT[j] = {i: Mij.transpose() if is_operator(Mij) else Mij}
     return MT
 
 

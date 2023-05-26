@@ -34,6 +34,10 @@ def test_matrix():
     m = Matrix([[I, x*I], [2, 4]])
     assert Dagger(m) == m.H
 
+    A = Operator('A')
+    assert Dagger(Matrix([[A]])) != Matrix([[A.conjugate()]])
+    assert Dagger(Matrix([[A]])) == Matrix([[A.adjoint()]])
+
 
 def test_dagger_mul():
     O = Operator('O')
