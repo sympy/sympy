@@ -1,3 +1,4 @@
+import pytest
 from sympy.core.function import expand_mul
 from sympy.core.numbers import (I, Rational)
 from sympy.core.singleton import S
@@ -567,6 +568,24 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
     # https://github.com/sympy/sympy/issues/19815
     sol_2 = A[:, : -1 ] * sol_1 - A[:, -1 ]
     assert sol_2 == Matrix([[0], [0], [0]])
+
+
+@pytest.mark.parametrize("M, rhs", [
+    (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]), Matrix(3, 1, [3, 7, 5])),
+    (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]),
+     Matrix([[1, 2], [3, 4], [5, 6]])),
+    (Matrix(2, 2, symbols("a:4")), Matrix(2, 1, symbols("b:2"))),
+])
+def test_cramer_solve(M, rhs):
+    assert simplify(M.cramer_solve(rhs) - M.LUsolve(rhs)
+                    ) == Matrix.zeros(M.rows, rhs.cols)
+
+
+def test_cramer_solve_errors():
+    # Non-square matrix
+    A = Matrix([[0, -1, 2], [5, 10, 7]])
+    b = Matrix([-2, 15])
+    raises(NonSquareMatrixError, lambda: A.cramer_solve(b))
 
 
 def test_solve():
