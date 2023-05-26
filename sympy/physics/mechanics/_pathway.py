@@ -15,12 +15,17 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
-from sympy.core.expr import Expr
 from sympy.physics.mechanics import Force, Point
 from sympy.physics.vector import dynamicsymbols
 
 if TYPE_CHECKING:
+    from sympy.core.backend import USE_SYMENGINE
     from sympy.physics.mechanics.loads import LoadBase
+
+    if USE_SYMENGINE:
+        from sympy.core.backend import Basic as ExprType
+    else:
+        from sympy.core.expr import Expr as ExprType
 
 
 __all__ = ['LinearPathway']
@@ -69,18 +74,18 @@ class PathwayBase(ABC):
 
     @property
     @abstractmethod
-    def length(self) -> Expr:
+    def length(self) -> ExprType:
         """An expression representing the pathway's length."""
         pass
 
     @property
     @abstractmethod
-    def extension_velocity(self) -> Expr:
+    def extension_velocity(self) -> ExprType:
         """An expression representing the pathway's extension velocity."""
         pass
 
     @abstractmethod
-    def compute_loads(self, force: Expr) -> list[LoadBase]:
+    def compute_loads(self, force: ExprType) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -187,13 +192,13 @@ class LinearPathway(PathwayBase):
         super().__init__(*attachments)
 
     @property
-    def length(self) -> Expr:
+    def length(self) -> ExprType:
         """Exact analytical expression for the pathway's length."""
         length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
         return length
 
     @property
-    def extension_velocity(self) -> Expr:
+    def extension_velocity(self) -> ExprType:
         """Exact analytical expression for the pathway's extension velocity."""
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         if not relative_position:
@@ -207,7 +212,7 @@ class LinearPathway(PathwayBase):
         extension_velocity = relative_velocity.dot(relative_position.normalize())
         return extension_velocity
 
-    def compute_loads(self, force: Expr) -> list[LoadBase]:
+    def compute_loads(self, force: ExprType) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
 
         Explanation
