@@ -778,10 +778,10 @@ def test_generic_data_series():
         annotations=[{"text": "test", "xy": (0, 0)}],
         fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
         rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
-    assert len(p._backend.ax[0].collections) == 1
-    assert len(p._backend.ax[0].patches) == 1
-    assert len(p._backend.ax[0].lines) == 2
-    assert len(p._backend.ax[0].texts) == 1
+    assert len(p._backend.ax.collections) == 1
+    assert len(p._backend.ax.patches) == 1
+    assert len(p._backend.ax.lines) == 2
+    assert len(p._backend.ax.texts) == 1
 
 
 def test_deprecated_markers_annotations_rectangles_fill():

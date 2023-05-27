@@ -1710,22 +1710,6 @@ class MatplotlibBackend(Plot):
         if isinstance(ax, Axes3D) and self.zlabel:
             zlbl = _str_or_latex(self.zlabel)
             ax.set_zlabel(zlbl, position=(0, 1))
-        if self.annotations:
-            for a in self.annotations:
-                ax.annotate(**a)
-        if self.markers:
-            for marker in self.markers:
-                # make a copy of the marker dictionary
-                # so that it doesn't get altered
-                m = marker.copy()
-                args = m.pop('args')
-                ax.plot(*args, **m)
-        if self.rectangles:
-            for r in self.rectangles:
-                rect = self.matplotlib.patches.Rectangle(**r)
-                ax.add_patch(rect)
-        if self.fill:
-            ax.fill_between(**self.fill)
 
         # xlim and ylim should always be set at last so that plot limits
         # doesn't get altered during the process.
