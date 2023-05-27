@@ -924,7 +924,7 @@ def sdm_transpose(M):
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
-            # Operator class names are hardcoded instead of using 
+            # Operator class names are hardcoded instead of using
             # issubclass() to avoid circular imports.
             operator_class_names = [
                 "<class 'sympy.physics.quantum.operator.Operator'>",
