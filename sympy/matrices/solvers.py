@@ -747,20 +747,23 @@ def _cramer_solve(M, rhs, det_method="laplace"):
     [-6,  9]])
 
     """
-    from .dense import zeros, Matrix
+    from .dense import zeros
 
     def entry(i, j):
         return rhs[i, sol] if j == col else M[i, j]
 
-    if isinstance(det_method, str):
-        det = lambda matrix: Matrix.det(matrix, method=det_method)
+    if det_method == "laplace":
+        from .determinant import _det_laplace
+        det = _det_laplace
+    elif isinstance(det_method, str):
+        det = lambda matrix: matrix.det(method=det_method)
     else:
         det = det_method
     det_M = det(M)
     x = zeros(*rhs.shape)
     for sol in range(rhs.shape[1]):
         for col in range(rhs.shape[0]):
-            x[col, sol] = det(Matrix(*M.shape, entry)) / det_M
+            x[col, sol] = det(M.__class__(*M.shape, entry)) / det_M
     return M.__class__(x)
 
 
