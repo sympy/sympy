@@ -2279,8 +2279,8 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
-    def cramer_solve(self, rhs):
-        return _cramer_solve(self, rhs)
+    def cramer_solve(self, rhs, det_method="laplace"):
+        return _cramer_solve(self, rhs, det_method=det_method)
 
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
