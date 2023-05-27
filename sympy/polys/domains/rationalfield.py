@@ -3,7 +3,7 @@
 
 from sympy.external.gmpy import MPQ
 
-from sympy.polys.domains.groundtypes import SymPyRational
+from sympy.polys.domains.groundtypes import SymPyRational, is_square, sqrtrem
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
@@ -159,5 +159,31 @@ class RationalField(Field, CharacteristicZero, SimpleDomain):
         """Returns denominator of ``a``. """
         return a.denominator
 
+    def is_square(self, a):
+        """Return ``True`` if ``a`` is a square.
+
+        Explanation
+        ===========
+        A rational number is a square if and only if there exists
+        a rational number ``b`` such that ``b * b == a``.
+        """
+        return is_square(a.numerator) and is_square(a.denominator)
+
+    def exsqrt(self, a):
+        """Non-negative square root of ``a`` if ``a`` is a square.
+
+        See also
+        ========
+        is_square
+        """
+        if a.numerator < 0:  # denominator is always positive
+            return None
+        p_sqrt, p_rem = sqrtrem(a.numerator)
+        if p_rem != 0:
+            return None
+        q_sqrt, q_rem = sqrtrem(a.denominator)
+        if q_rem != 0:
+            return None
+        return MPQ(p_sqrt, q_sqrt)
 
 QQ = RationalField()

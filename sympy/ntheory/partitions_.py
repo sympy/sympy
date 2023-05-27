@@ -1,9 +1,8 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
-from sympy.external.gmpy import gcd
-from .residue_ntheory import (_sqrt_mod_prime_power,
-    legendre_symbol, jacobi_symbol, is_quad_residue)
+from sympy.external.gmpy import gcd, legendre, jacobi
+from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
 
 import math
 
@@ -63,7 +62,7 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(
                 from_int(4*m), pi, prec), from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int((-1)**e*jacobi_symbol(m - 1, m)),
+                from_int((-1)**e*jacobi(m - 1, m)),
                 mpf_sqrt(from_int(k), prec), prec),
                 mpf_sin(arg, prec), prec)
         if p == 3:
@@ -75,14 +74,14 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(from_int(4*m), pi, prec),
                 from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int(2*(-1)**(e + 1)*legendre_symbol(m, 3)),
+                from_int(2*(-1)**(e + 1)*legendre(m, 3)),
                 mpf_sqrt(from_int(k//3), prec), prec),
                 mpf_sin(arg, prec), prec)
         v = k + v % k
         if v % p == 0:
             if e == 1:
                 return mpf_mul(
-                    from_int(jacobi_symbol(3, k)),
+                    from_int(jacobi(3, k)),
                     mpf_sqrt(from_int(k), prec), prec)
             return fzero
         if not is_quad_residue(v, p):
@@ -94,7 +93,7 @@ def _a(n, k, prec):
             mpf_mul(from_int(4*m), pi, prec),
             from_int(k), prec)
         return mpf_mul(mpf_mul(
-            from_int(2*jacobi_symbol(3, k)),
+            from_int(2*jacobi(3, k)),
             mpf_sqrt(from_int(k), prec), prec),
             mpf_cos(arg, prec), prec)
 
