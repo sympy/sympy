@@ -12,9 +12,9 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sympy.core.backend import USE_SYMENGINE
+from sympy.core.backend import S, USE_SYMENGINE, sympify
 from sympy.physics.mechanics import (
     PinJoint,
     ReferenceFrame,
@@ -33,7 +33,12 @@ if TYPE_CHECKING:
     from sympy.physics.mechanics.loads import LoadBase
 
 
-__all__ = ['ForceActuator']
+__all__ = [
+    'ForceActuator',
+    'LinearDamper',
+    'LinearSpring',
+    'TorqueActuator',
+]
 
 
 class ActuatorBase(ABC):
@@ -153,7 +158,6 @@ class ForceActuator(ActuatorBase):
         """
         self.force = force
         self.pathway = pathway
-        super().__init__()
 
     @property
     def force(self) -> ExprType:
@@ -162,13 +166,13 @@ class ForceActuator(ActuatorBase):
 
     @force.setter
     def force(self, force: ExprType) -> None:
-        if not isinstance(force, ExprType):
+        if hasattr(self, '_force'):
             msg = (
-                f'Value {repr(force)} passed to `force` was of type '
-                f'{type(force)}, must be {ExprType}.'
+                f'Can\'t set attribute `force` to {repr(force)} as it is '
+                f'immutable.'
             )
-            raise TypeError(msg)
-        self._force = force
+            raise AttributeError(msg)
+        self._force = sympify(force, strict=True)
 
     @property
     def pathway(self) -> PathwayBase:
@@ -177,6 +181,12 @@ class ForceActuator(ActuatorBase):
 
     @pathway.setter
     def pathway(self, pathway: PathwayBase) -> None:
+        if hasattr(self, '_pathway'):
+            msg = (
+                f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
         if not isinstance(pathway, PathwayBase):
             msg = (
                 f'Value {repr(pathway)} passed to `pathway` was of type '
@@ -265,6 +275,305 @@ class ForceActuator(ActuatorBase):
         return f'{self.__class__.__name__}({self.force}, {self.pathway})'
 
 
+class LinearSpring(ForceActuator):
+    """A spring with its spring force as a linear function of its length.
+
+    Explanation
+    ===========
+
+    Note that the "linear" in the name ``LinearSpring`` refers to the fact that
+    the spring force is a linear function of the springs length. I.e. for a
+    linear spring with stiffness ``k``, distance between its ends of ``x``, and
+    an equilibrium length of ``0``, the spring force will be ``-k*x``, which is
+    a linear function in ``x``. To create a spring that follows a linear, or
+    straight, pathway between its two ends, a ``LinearPathway`` instance needs
+    to be passed to the ``pathway`` parameter.
+
+    Examples
+    ========
+
+    As the ``_actuator.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``LinearSpring`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._actuator`` module.
+
+    >>> from sympy.physics.mechanics._actuator import LinearSpring
+
+    This is similarly the case for imports from the ``_pathway.py`` module like
+    ``LinearPathway``.
+
+    >>> from sympy.physics.mechanics._pathway import LinearPathway
+
+    To construct a linear spring, an expression (or symbol) must be supplied to
+    represent the stiffness (spring constant) of the spring, alongside a
+    pathway specifying its line of action. Let's also create a global reference
+    frame and spatially fix one of the points in it while setting the other to
+    be positioned such that it can freely move in the frame's x direction
+    specified by the coordinate ``q``.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> stiffness = Symbol('k')
+    >>> pA, pB = Point('pA'), Point('pB')
+    >>> pA.set_vel(N, 0)
+    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.pos_from(pA)
+    q(t)*N.x
+    >>> linear_pathway = LinearPathway(pA, pB)
+    >>> spring = LinearSpring(stiffness, linear_pathway)
+    >>> spring
+    LinearSpring(k, LinearPathway(pA, pB))
+
+    This spring will produce a force that is proportional to both its stiffness
+    and the pathway's length. Note that this force is negative as SymPy's sign
+    convention for actuators is that negative forces are contractile.
+
+    >>> spring.force
+    -k*sqrt(q(t)**2)
+
+    To create a linear spring with a non-zero equilibrium length, an expression
+    (or symbol) can be passed to the ``equilibrium_length`` parameter on
+    construction on a ``LinearSpring`` instance. Let's create a symbol ``l``
+    to denote a non-zero equilibrium length and create another linear spring.
+
+    >>> l = Symbol('l')
+    >>> spring = LinearSpring(stiffness, linear_pathway, equilibrium_length=l)
+    >>> spring
+    LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)
+
+    The spring force of this new spring is again proportional to both its
+    stiffness and the pathway's length. However, the spring will not produce
+    any force when ``q(t)`` equals ``l``. Note that the force will become
+    expansile when ``q(t)`` is less than ``l``, as expected.
+
+    >>> spring.force
+    -k*(-l + sqrt(q(t)**2))
+
+    Parameters
+    ==========
+
+    stiffness : Expr
+        The spring constant.
+    pathway : PathwayBase
+        The pathway that the actuator follows. This must be an instance of a
+        concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+    equilibrium_length : Expr, optional
+        The length at which the spring is in equilibrium, i.e. it produces no
+        force. The default value is 0, i.e. the spring force is a linear
+        function of the pathway's length with no constant offset.
+
+    See Also
+    ========
+
+    ForceActuator: force-producing actuator (superclass of ``LinearSpring``).
+    LinearPathway: straight-line pathway between a pair of points.
+
+    """
+
+    def __init__(
+        self,
+        stiffness: ExprType,
+        pathway: PathwayBase,
+        equilibrium_length: ExprType = S.Zero,
+    ) -> None:
+        """Initializer for ``LinearSpring``.
+
+        Parameters
+        ==========
+
+        stiffness : Expr
+            The spring constant.
+        pathway : PathwayBase
+            The pathway that the actuator follows. This must be an instance of
+            a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+        equilibrium_length : Expr, optional
+            The length at which the spring is in equilibrium, i.e. it produces
+            no force. The default value is 0, i.e. the spring force is a linear
+            function of the pathway's length with no constant offset.
+
+        """
+        self.stiffness = stiffness
+        self.pathway = pathway
+        self.equilibrium_length = equilibrium_length
+
+    @property
+    def force(self) -> ExprType:
+        """The spring force produced by the linear spring."""
+        return -self.stiffness * (self.pathway.length - self.equilibrium_length)
+
+    @force.setter
+    def force(self, force: Any) -> None:
+        raise AttributeError('Can\'t set computed attribute `force`.')
+
+    @property
+    def stiffness(self) -> ExprType:
+        """The spring constant for the linear spring."""
+        return self._stiffness
+
+    @stiffness.setter
+    def stiffness(self, stiffness: ExprType):
+        if hasattr(self, '_stiffness'):
+            msg = (
+                f'Can\'t set attribute `stiffness` to {repr(stiffness)} as it '
+                f'is immutable.'
+            )
+            raise AttributeError(msg)
+        self._stiffness = sympify(stiffness, strict=True)
+
+    @property
+    def equilibrium_length(self) -> ExprType:
+        """The length of the spring at which it produces no force."""
+        return self._equilibrium_length
+
+    @equilibrium_length.setter
+    def equilibrium_length(self, equilibrium_length: ExprType) -> None:
+        if hasattr(self, '_equilibrium_length'):
+            msg = (
+                f'Can\'t set attribute `equilibrium_length` to '
+                f'{repr(equilibrium_length)} as it is immutable.'
+            )
+            raise AttributeError(msg)
+        self._equilibrium_length = sympify(equilibrium_length, strict=True)
+
+    def __repr__(self) -> str:
+        """Representation of a ``LinearSpring``."""
+        string = f'{self.__class__.__name__}({self.stiffness}, {self.pathway}'
+        if self.equilibrium_length == S.Zero:
+            string += ')'
+        else:
+            string += f', equilibrium_length={self.equilibrium_length})'
+        return string
+
+
+class LinearDamper(ForceActuator):
+    """A damper whose force is a linear function of its extension velocity.
+
+    Explanation
+    ===========
+
+    Note that the "linear" in the name ``LinearDamper`` refers to the fact that
+    the damping force is a linear function of the damper's rate of change in
+    its length. I.e. for a linear damper with damping ``c`` and extension
+    velocity ``v``, the damping force will be ``-c*v``, which is a linear
+    function in ``v``. To create a damper that follows a linear, or straight,
+    pathway between its two ends, a ``LinearPathway`` instance needs to be
+    passed to the ``pathway`` parameter.
+
+    Examples
+    ========
+
+    As the ``_actuator.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``LinearDamper`` must therefore be
+    imported directly from the ``sympy.physics.mechanics._actuator`` module.
+
+    >>> from sympy.physics.mechanics._actuator import LinearDamper
+
+    This is similarly the case for imports from the ``_pathway.py`` module like
+    ``LinearPathway``.
+
+    >>> from sympy.physics.mechanics._pathway import LinearPathway
+
+    To construct a linear damper, an expression (or symbol) must be supplied to
+    represent the damping coefficient of the damper (we'll use the symbol
+    ``c``), alongside a pathway specifying its line of action. Let's also
+    create a global reference frame and spatially fix one of the points in it
+    while setting the other to be positioned such that it can freely move in
+    the frame's x direction specified by the coordinate ``q``. The velocity
+    that the two points move away from one another can be specified by the
+    coordinate ``u`` where ``u`` is the first time derivative of ``q``
+    (i.e., ``u = Derivative(q(t), t)``).
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> damping = Symbol('c')
+    >>> pA, pB = Point('pA'), Point('pB')
+    >>> pA.set_vel(N, 0)
+    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.pos_from(pA)
+    q(t)*N.x
+    >>> pB.vel(N)
+    Derivative(q(t), t)*N.x
+    >>> linear_pathway = LinearPathway(pA, pB)
+    >>> damper = LinearDamper(damping, linear_pathway)
+    >>> damper
+    LinearDamper(c, LinearPathway(pA, pB))
+
+    This damper will produce a force that is proportional to both its damping
+    coefficient and the pathway's extension length. Note that this force is
+    negative as SymPy's sign convention for actuators is that negative forces
+    are contractile and the damping force of the damper will oppose the
+    direction of length change.
+
+    >>> damper.force
+    -c*q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+
+    Parameters
+    ==========
+
+    damping : Expr
+        The damping constant.
+    pathway : PathwayBase
+        The pathway that the actuator follows. This must be an instance of a
+        concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+
+    See Also
+    ========
+
+    ForceActuator: force-producing actuator (superclass of ``LinearDamper``).
+    LinearPathway: straight-line pathway between a pair of points.
+
+    """
+
+    def __init__(self, damping: ExprType, pathway: PathwayBase) -> None:
+        """Initializer for ``LinearDamper``.
+
+        Parameters
+        ==========
+
+        damping : Expr
+            The damping constant.
+        pathway : PathwayBase
+            The pathway that the actuator follows. This must be an instance of
+            a concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+
+        """
+        self.damping = damping
+        self.pathway = pathway
+
+    @property
+    def force(self) -> ExprType:
+        """The damping force produced by the linear damper."""
+        return -self.damping * self.pathway.extension_velocity
+
+    @force.setter
+    def force(self, force: Any) -> None:
+        raise AttributeError('Can\'t set computed attribute `force`.')
+
+    @property
+    def damping(self) -> ExprType:
+        """The damping constant for the linear damper."""
+        return self._damping
+
+    @damping.setter
+    def damping(self, damping: ExprType) -> None:
+        if hasattr(self, '_damping'):
+            msg = (
+                f'Can\'t set attribute `damping` to {repr(damping)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
+        self._damping = sympify(damping, strict=True)
+
+    def __repr__(self) -> str:
+        """Representation of a ``LinearDamper``."""
+        return f'{self.__class__.__name__}({self.damping}, {self.pathway})'
+
+
 class TorqueActuator(ActuatorBase):
     """Torque-producing actuator.
 
@@ -349,7 +658,6 @@ class TorqueActuator(ActuatorBase):
         self.axis = axis
         self.target_frame = target_frame  # type: ignore
         self.reaction_frame = reaction_frame  # type: ignore
-        super().__init__()
 
     @classmethod
     def at_pin_joint(
@@ -432,13 +740,13 @@ class TorqueActuator(ActuatorBase):
 
     @torque.setter
     def torque(self, torque: ExprType) -> None:
-        if not isinstance(torque, ExprType):
+        if hasattr(self, '_torque'):
             msg = (
-                f'Value {repr(torque)} passed to `torque` was of type '
-                f'{type(torque)}, must be {ExprType}.'
+                f'Can\'t set attribute `torque` to {repr(torque)} as it is '
+                f'immutable.'
             )
-            raise TypeError(msg)
-        self._torque = torque
+            raise AttributeError(msg)
+        self._torque = sympify(torque, strict=True)
 
     @property
     def axis(self) -> Vector:
@@ -447,6 +755,12 @@ class TorqueActuator(ActuatorBase):
 
     @axis.setter
     def axis(self, axis: Vector) -> None:
+        if hasattr(self, '_axis'):
+            msg = (
+                f'Can\'t set attribute `axis` to {repr(axis)} as it is '
+                f'immutable.'
+            )
+            raise AttributeError(msg)
         if not isinstance(axis, Vector):
             msg = (
                 f'Value {repr(axis)} passed to `axis` was of type '
@@ -461,16 +775,22 @@ class TorqueActuator(ActuatorBase):
         return self._target_frame
 
     @target_frame.setter
-    def target_frame(self, target_frame: ReferenceFrame | RigidBody) -> None:
+    def target_frame(self, target_frame: ReferenceFrame) -> None:
+        if hasattr(self, '_target_frame'):
+            msg = (
+                f'Can\'t set attribute `target_frame` to {repr(target_frame)} '
+                f'as it is immutable.'
+            )
+            raise AttributeError(msg)
         if isinstance(target_frame, RigidBody):
             target_frame = target_frame.frame
         elif not isinstance(target_frame, ReferenceFrame):
             msg = (
                 f'Value {repr(target_frame)} passed to `target_frame` was of '
-                f'type 'f'{type(target_frame)}, must be {ReferenceFrame}.'
+                f'type {type(target_frame)}, must be {ReferenceFrame}.'
             )
             raise TypeError(msg)
-        self._target_frame: ReferenceFrame = target_frame  # type: ignore
+        self._target_frame = target_frame
 
     @property
     def reaction_frame(self) -> ReferenceFrame | None:
@@ -478,7 +798,13 @@ class TorqueActuator(ActuatorBase):
         return self._reaction_frame
 
     @reaction_frame.setter
-    def reaction_frame(self, reaction_frame: ReferenceFrame | RigidBody | None) -> None:
+    def reaction_frame(self, reaction_frame: ReferenceFrame | None) -> None:
+        if hasattr(self, '_reaction_frame'):
+            msg = (
+                f'Can\'t set attribute `reaction_frame` to '
+                f'{repr(reaction_frame)} as it is immutable.'
+            )
+            raise AttributeError(msg)
         if isinstance(reaction_frame, RigidBody):
             reaction_frame = reaction_frame.frame
         elif (
@@ -486,11 +812,11 @@ class TorqueActuator(ActuatorBase):
             and reaction_frame is not None
         ):
             msg = (
-                f'Value {repr(reaction_frame)} passed to `reaction_frame` was of '
-                f'type 'f'{type(reaction_frame)}, must be {ReferenceFrame}.'
+                f'Value {repr(reaction_frame)} passed to `reaction_frame` was '
+                f'of type {type(reaction_frame)}, must be {ReferenceFrame}.'
             )
             raise TypeError(msg)
-        self._reaction_frame: ReferenceFrame | None = reaction_frame  # type: ignore
+        self._reaction_frame = reaction_frame
 
     def to_loads(self) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.

@@ -5,7 +5,7 @@ from sympy.external.gmpy import MPZ, HAS_GMPY
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
     factorial,
-    gcdex, gcd, lcm, sqrt,
+    gcdex, gcd, lcm, sqrt, is_square, sqrtrem,
 )
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
@@ -222,6 +222,30 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def sqrt(self, a):
         """Compute square root of ``a``. """
         return sqrt(a)
+
+    def is_square(self, a):
+        """Return ``True`` if ``a`` is a square.
+
+        Explanation
+        ===========
+        An integer is a square if and only if there exists an integer
+        ``b`` such that ``b * b == a``.
+        """
+        return is_square(a)
+
+    def exsqrt(self, a):
+        """Non-negative square root of ``a`` if ``a`` is a square.
+
+        See also
+        ========
+        is_square
+        """
+        if a < 0:
+            return None
+        root, rem = sqrtrem(a)
+        if rem != 0:
+            return None
+        return root
 
     def factorial(self, a):
         """Compute factorial of ``a``. """

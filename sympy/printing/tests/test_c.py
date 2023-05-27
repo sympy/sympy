@@ -16,7 +16,7 @@ from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
 from sympy.codegen.ast import (
     AddAugmentedAssignment, Element, Type, FloatType, Declaration, Pointer, Variable, value_const, pointer_const,
     While, Scope, Print, FunctionPrototype, FunctionDefinition, FunctionCall, Return,
-    real, float32, float64, float80, float128, intc, Comment, CodeBlock
+    real, float32, float64, float80, float128, intc, Comment, CodeBlock, stderr, QuotedString
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
@@ -848,12 +848,14 @@ def test_ccode_codegen_ast():
     block = CodeBlock(
         x,
         Print([x, y], "%d %d"),
+        Print([QuotedString('hello'), y], "%s %d", file=stderr),
         FunctionCall('pwer', [x]),
         Return(x),
     )
     assert ccode(block) == '\n'.join([
         'x;',
         'printf("%d %d", x, y);',
+        'fprintf(stderr, "%s %d", "hello", y);',
         'pwer(x);',
         'return x;',
     ])
