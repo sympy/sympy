@@ -129,6 +129,16 @@ def test_generate():
 
     assert nextprime(90) == 97
     assert nextprime(10**40) == (10**40 + 121)
+    primelist = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31,
+                 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
+                 79, 83, 89, 97]
+    for i in range(len(primelist) - 2):
+        for j in range(2, len(primelist) - i):
+            assert nextprime(primelist[i], j) == primelist[i + j]
+            if 3 < i:
+                assert nextprime(primelist[i] - 1, j) == primelist[i + j - 1]
+    raises(ValueError, lambda: nextprime(2, 0))
+    raises(ValueError, lambda: nextprime(2, -1))
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
 

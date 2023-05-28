@@ -544,7 +544,23 @@ class primepi(Function):
 def nextprime(n, ith=1):
     """ Return the ith prime greater than n.
 
-        i must be an integer.
+        Parameters
+        ==========
+
+        n : integer
+        ith : positive integer
+
+        Returns
+        =======
+
+        int : Return the ith prime greater than n
+
+        Raises
+        ======
+
+        ValueError
+            If ``ith <= 0``.
+            If ``n`` or ``ith`` is not an integer.
 
         Notes
         =====
@@ -567,26 +583,20 @@ def nextprime(n, ith=1):
     """
     n = int(n)
     i = as_int(ith)
-    if i > 1:
-        pr = n
-        j = 1
-        while 1:
-            pr = nextprime(pr)
-            j += 1
-            if j > i:
-                break
-        return pr
-
+    if i <= 0:
+        raise ValueError("ith should be positive")
     if n < 2:
-        return 2
-    if n < 7:
-        return {2: 3, 3: 5, 4: 5, 5: 7, 6: 7}[n]
+        n = 2
+        i -= 1
     if n <= sieve._list[-2]:
-        l, u = sieve.search(n)
-        if l == u:
-            return sieve[u + 1]
-        else:
-            return sieve[u]
+        l, _ = sieve.search(n)
+        if l + i - 1 < len(sieve._list):
+            return sieve._list[l + i - 1]
+        return nextprime(sieve._list[-1], l + i - len(sieve._list))
+    if 1 < i:
+        for _ in range(i):
+            n = nextprime(n)
+        return n
     nn = 6*(n//6)
     if nn == n:
         n += 1
