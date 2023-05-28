@@ -41,7 +41,7 @@ def n_order(a, n):
 
     ValueError
         If `n \le 1` or `\gcd(a, n) \neq 1`.
-        Or ``a`` or ``n`` is not an integer.
+        If ``a`` or ``n`` is not an integer.
 
     Examples
     ========
