@@ -375,7 +375,7 @@ def is_primitive_root(a, p):
 
     ValueError
         If `p \le 1` or `\gcd(a, p) \neq 1`.
-        Or ``a`` or ``p`` is not an integer.
+        If ``a`` or ``p`` is not an integer.
 
     Examples
     ========
