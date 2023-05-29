@@ -10,6 +10,7 @@ from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
 from sympy.testing.pytest import raises
 from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.polys.matrices.exceptions import DMShapeError
 from sympy.solvers.solveset import linsolve
 from sympy.abc import x, y
 
@@ -582,11 +583,13 @@ def test_cramer_solve(det_method, M, rhs):
                     ) == Matrix.zeros(M.rows, rhs.cols)
 
 
-def test_cramer_solve_errors():
+@pytest.mark.parametrize("det_method, error", [
+    ("bird", DMShapeError), ("laplace", NonSquareMatrixError)])
+def test_cramer_solve_errors(det_method, error):
     # Non-square matrix
     A = Matrix([[0, -1, 2], [5, 10, 7]])
     b = Matrix([-2, 15])
-    raises(NonSquareMatrixError, lambda: A.cramer_solve(b))
+    raises(error, lambda: A.cramer_solve(b, det_method=det_method))
 
 
 def test_solve():
