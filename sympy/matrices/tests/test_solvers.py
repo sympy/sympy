@@ -570,14 +570,15 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
     assert sol_2 == Matrix([[0], [0], [0]])
 
 
+@pytest.mark.parametrize("det_method", ["bird", "laplace"])
 @pytest.mark.parametrize("M, rhs", [
     (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]), Matrix(3, 1, [3, 7, 5])),
     (Matrix([[2, 3, 5], [3, 6, 2], [8, 3, 6]]),
      Matrix([[1, 2], [3, 4], [5, 6]])),
     (Matrix(2, 2, symbols("a:4")), Matrix(2, 1, symbols("b:2"))),
 ])
-def test_cramer_solve(M, rhs):
-    assert simplify(M.cramer_solve(rhs) - M.LUsolve(rhs)
+def test_cramer_solve(det_method, M, rhs):
+    assert simplify(M.cramer_solve(rhs, det_method=det_method) - M.LUsolve(rhs)
                     ) == Matrix.zeros(M.rows, rhs.cols)
 
 
