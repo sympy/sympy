@@ -266,7 +266,7 @@ class Truss:
         elif label in list(self._members):
             raise ValueError("A member with the same label already exists for the truss")
 
-        elif self._nodes_occupied.get(tuple([start, end])):
+        elif self._nodes_occupied.get((start, end)):
             raise ValueError("A member already exists between the two nodes")
 
         else:
@@ -306,8 +306,8 @@ class Truss:
             raise ValueError("No such member exists in the Truss")
 
         else:
-            self._nodes_occupied.pop(tuple([self._members[label][0], self._members[label][1]]))
-            self._nodes_occupied.pop(tuple([self._members[label][1], self._members[label][0]]))
+            self._nodes_occupied.pop((self._members[label][0], self._members[label][1]))
+            self._nodes_occupied.pop((self._members[label][1], self._members[label][0]))
             self._members.pop(label)
             self._member_lengths.pop(label)
             self._internal_forces.pop(label)
@@ -394,14 +394,14 @@ class Truss:
                             self._members[member][0] = new_label
                             self._nodes_occupied[(new_label, self._members[member][1])] = True
                             self._nodes_occupied[(self._members[member][1], new_label)] = True
-                            self._nodes_occupied.pop(tuple([label, self._members[member][1]]))
-                            self._nodes_occupied.pop(tuple([self._members[member][1], label]))
+                            self._nodes_occupied.pop((label, self._members[member][1]))
+                            self._nodes_occupied.pop((self._members[member][1], label))
                         elif self._members[member][1] == node[0]:
                             self._members[member][1] = new_label
                             self._nodes_occupied[(self._members[member][0], new_label)] = True
                             self._nodes_occupied[(new_label, self._members[member][0])] = True
-                            self._nodes_occupied.pop(tuple([self._members[member][0], label]))
-                            self._nodes_occupied.pop(tuple([label, self._members[member][0]]))
+                            self._nodes_occupied.pop((self._members[member][0], label))
+                            self._nodes_occupied.pop((label, self._members[member][0]))
 
     def change_member_label(self, label, new_label):
         """

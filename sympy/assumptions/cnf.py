@@ -359,7 +359,7 @@ class CNF:
         return ll
 
     def rcall(self, expr):
-        clause_list = list()
+        clause_list = []
         for clause in self.clauses:
             lits = [arg.rcall(expr) for arg in clause]
             clause_list.append(OR(*lits))
@@ -414,7 +414,7 @@ class EncodedCNF:
     def from_cnf(self, cnf):
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
-        self.encoding = dict(list(zip(self._symbols, list(range(1, n + 1)))))
+        self.encoding = dict(zip(self._symbols, range(1, n + 1)))
         self.data = [self.encode(clause) for clause in cnf.clauses]
 
     @property

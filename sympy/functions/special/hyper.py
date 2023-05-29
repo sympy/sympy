@@ -1,17 +1,17 @@
 """Hypergeometric and Meijer G-functions"""
-from functools import reduce
-
-from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi, oo, zoo
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
+from sympy.external.gmpy import lcm
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 from sympy.functions import factorial, RisingFactorial
@@ -640,14 +640,14 @@ class meijerg(TupleParametersBase):
                 for j in range(i + 1, len(l)):
                     if not Mod((b - l[j]).simplify(), 1):
                         return oo
-            return reduce(ilcm, (x.q for x in l), 1)
+            return lcm(*(x.q for x in l))
         beta = compute(self.bm)
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
             if oo in (alpha, beta):
                 return oo
-            return 2*pi*ilcm(alpha, beta)
+            return 2*pi*lcm(alpha, beta)
         elif p < q:
             return 2*pi*beta
         else:
@@ -674,7 +674,7 @@ class meijerg(TupleParametersBase):
             branch = branch[0].args[0]/I
         else:
             branch = S.Zero
-        n = ceiling(abs(branch/S.Pi)) + 1
+        n = ceiling(abs(branch/pi)) + 1
         znum = znum**(S.One/n)*exp(I*branch / n)
 
         # Convert all args to mpf or mpc
@@ -1123,7 +1123,7 @@ class appellf1(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Appell_series
-    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+    .. [2] https://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
     """
 

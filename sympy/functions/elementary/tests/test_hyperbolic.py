@@ -559,9 +559,9 @@ def test_asinh_rewrite():
     x = Symbol('x')
     assert asinh(x).rewrite(log) == log(x + sqrt(x**2 + 1))
     assert asinh(x).rewrite(atanh) == atanh(x/sqrt(1 + x**2))
-    assert asinh(x).rewrite(asin) == asinh(x)
+    assert asinh(x).rewrite(asin) == -I*asin(I*x, evaluate=False)
     assert asinh(x*(1 + I)).rewrite(asin) == -I*asin(I*x*(1+I))
-    assert asinh(x).rewrite(acos) == I*(-I*asinh(x) + pi/2) - I*pi/2
+    assert asinh(x).rewrite(acos) == I*acos(I*x, evaluate=False) - I*pi/2
 
 
 def test_asinh_leading_term():
@@ -683,7 +683,7 @@ def test_acosh_rewrite():
     x = Symbol('x')
     assert acosh(x).rewrite(log) == log(x + sqrt(x - 1)*sqrt(x + 1))
     assert acosh(x).rewrite(asin) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
-    assert acosh(x).rewrite(asinh) == sqrt(x - 1)*(-asin(x) + pi/2)/sqrt(1 - x)
+    assert acosh(x).rewrite(asinh) == sqrt(x - 1)*(I*asinh(I*x, evaluate=False) + pi/2)/sqrt(1 - x)
     assert acosh(x).rewrite(atanh) == \
         (sqrt(x - 1)*sqrt(x + 1)*atanh(sqrt(x**2 - 1)/x)/sqrt(x**2 - 1) +
          pi*sqrt(x - 1)*(-x*sqrt(x**(-2)) + 1)/(2*sqrt(1 - x)))
@@ -862,7 +862,7 @@ def test_asech_rewrite():
     x = Symbol('x')
     assert asech(x).rewrite(log) == log(1/x + sqrt(1/x - 1) * sqrt(1/x + 1))
     assert asech(x).rewrite(acosh) == acosh(1/x)
-    assert asech(x).rewrite(asinh) == sqrt(-1 + 1/x)*(-asin(1/x) + pi/2)/sqrt(1 - 1/x)
+    assert asech(x).rewrite(asinh) == sqrt(-1 + 1/x)*(I*asinh(I/x, evaluate=False) + pi/2)/sqrt(1 - 1/x)
     assert asech(x).rewrite(atanh) == \
         sqrt(x + 1)*sqrt(1/(x + 1))*atanh(sqrt(1 - x**2)) + I*pi*(-sqrt(x)*sqrt(1/x) + 1 - I*sqrt(x**2)/(2*sqrt(-x**2)) - I*sqrt(-x)/(2*sqrt(x)))
 
@@ -1334,7 +1334,7 @@ def test_cosh_rewrite():
     x = Symbol('x')
     assert cosh(x).rewrite(exp) == (exp(x) + exp(-x))/2 \
         == cosh(x).rewrite('tractable')
-    assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2)
+    assert cosh(x).rewrite(sinh) == -I*sinh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)**2
     assert cosh(x).rewrite(tanh) == (1 + tanh_half)/(1 - tanh_half)
     coth_half = coth(S.Half*x)**2
@@ -1345,8 +1345,8 @@ def test_tanh_rewrite():
     x = Symbol('x')
     assert tanh(x).rewrite(exp) == (exp(x) - exp(-x))/(exp(x) + exp(-x)) \
         == tanh(x).rewrite('tractable')
-    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x)
-    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x)/cosh(x)
+    assert tanh(x).rewrite(sinh) == I*sinh(x)/sinh(I*pi/2 - x, evaluate=False)
+    assert tanh(x).rewrite(cosh) == I*cosh(I*pi/2 - x, evaluate=False)/cosh(x)
     assert tanh(x).rewrite(coth) == 1/coth(x)
 
 
@@ -1354,8 +1354,8 @@ def test_coth_rewrite():
     x = Symbol('x')
     assert coth(x).rewrite(exp) == (exp(x) + exp(-x))/(exp(x) - exp(-x)) \
         == coth(x).rewrite('tractable')
-    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x)/sinh(x)
-    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x)
+    assert coth(x).rewrite(sinh) == -I*sinh(I*pi/2 - x, evaluate=False)/sinh(x)
+    assert coth(x).rewrite(cosh) == -I*cosh(x)/cosh(I*pi/2 - x, evaluate=False)
     assert coth(x).rewrite(tanh) == 1/tanh(x)
 
 
@@ -1363,7 +1363,7 @@ def test_csch_rewrite():
     x = Symbol('x')
     assert csch(x).rewrite(exp) == 1 / (exp(x)/2 - exp(-x)/2) \
         == csch(x).rewrite('tractable')
-    assert csch(x).rewrite(cosh) == I/cosh(x + I*pi/2)
+    assert csch(x).rewrite(cosh) == I/cosh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)
     assert csch(x).rewrite(tanh) == (1 - tanh_half**2)/(2*tanh_half)
     coth_half = coth(S.Half*x)
@@ -1374,7 +1374,7 @@ def test_sech_rewrite():
     x = Symbol('x')
     assert sech(x).rewrite(exp) == 1 / (exp(x)/2 + exp(-x)/2) \
         == sech(x).rewrite('tractable')
-    assert sech(x).rewrite(sinh) == I/sinh(x + I*pi/2)
+    assert sech(x).rewrite(sinh) == I/sinh(x + I*pi/2, evaluate=False)
     tanh_half = tanh(S.Half*x)**2
     assert sech(x).rewrite(tanh) == (1 - tanh_half)/(1 + tanh_half)
     coth_half = coth(S.Half*x)**2

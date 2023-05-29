@@ -40,25 +40,12 @@ be used to create annihilators just like SymPy expressions.
 We currently use the older implementations of rings in SymPy for priority
 mechanism.
 
-HolonomicFunction
------------------
-
 .. autoclass:: HolonomicFunction
-
-DifferentialOperator
---------------------
 
 .. autoclass:: DifferentialOperator
    :members:
 
-
-DifferentialOperators
----------------------
-
 .. autofunction:: DifferentialOperators
-
-DifferentialOperatorAlgebra
----------------------------
 
 .. autoclass:: DifferentialOperatorAlgebra
    :members:

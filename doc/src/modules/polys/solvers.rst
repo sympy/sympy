@@ -10,22 +10,12 @@ are used internally in sympy.
 
 .. automodule:: sympy.polys.solvers
 
-solve_lin_sys
-^^^^^^^^^^^^^
 .. autofunction:: sympy.polys.solvers.solve_lin_sys
 
-eqs_to_matrix
-^^^^^^^^^^^^^
 .. autofunction:: sympy.polys.solvers.eqs_to_matrix
 
-sympy_eqs_to_ring
-^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.polys.solvers.sympy_eqs_to_ring
 
-_solve_lin_sys
-^^^^^^^^^^^^^^
 .. autofunction:: sympy.polys.solvers._solve_lin_sys
 
-_solve_lin_sys_component
-^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.polys.solvers._solve_lin_sys_component

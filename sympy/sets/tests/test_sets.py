@@ -632,7 +632,7 @@ def test_ProductSet():
     assert Z2.contains(x) == Contains(x, Z2, evaluate=False)
     assert Z2.contains(x).subs(x, 1) is S.false
     assert Z2.contains((x, 1)).subs(x, 2) is S.true
-    assert Z2.contains((x, y)) == Contains((x, y), Z2, evaluate=False)
+    assert Z2.contains((x, y)) == Contains(x, S.Integers) & Contains(y, S.Integers)
     assert unchanged(Contains, (x, y), Z2)
     assert Contains((1, 2), Z2) is S.true
 
@@ -803,17 +803,17 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
-    assert FiniteSet(y)._contains(x) is None
+    assert FiniteSet(y)._contains(x) == Eq(y, x, evaluate=False)
     raises(TypeError, lambda: x in FiniteSet(y))
-    assert FiniteSet({x, y})._contains({x}) is None
-    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is True
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is False
+    assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
+    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
-    assert isinstance(FiniteSet(b).contains(-a), Contains)
-    assert isinstance(FiniteSet(b).contains(a), Contains)
-    assert isinstance(FiniteSet(a).contains(1), Contains)
+    assert FiniteSet(b).contains(-a) == Eq(b, -a)
+    assert FiniteSet(b).contains(a) == Eq(b, a)
+    assert FiniteSet(a).contains(1) == Eq(a, 1)
     raises(TypeError, lambda: 1 in FiniteSet(a))
 
     # issue 8209
@@ -940,7 +940,7 @@ def test_Union_as_relational():
     assert Or(x < 0, x > 0).as_set().as_relational(x) == \
         And((x > -oo), (x < oo), Ne(x, 0))
     assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
-        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
+        ).as_relational(x) == And(Ne(x,3),(x>=1),(x<=5))
 
 
 def test_Intersection_as_relational():

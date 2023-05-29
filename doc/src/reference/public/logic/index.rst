@@ -7,7 +7,7 @@ Logic
 **Contents**
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    ../../../modules/logic.rst
-    ../../../modules/sets.rst
+   ../../../modules/logic.rst
+   ../../../modules/sets.rst

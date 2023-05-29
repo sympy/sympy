@@ -2,8 +2,6 @@
 Linearization (Docstrings)
 ==========================
 
-Linearizer
-==========
-
 .. automodule:: sympy.physics.mechanics.linearize
    :members:
+   :special-members: __init__

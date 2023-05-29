@@ -62,7 +62,7 @@ of the algorithm, a few definitions to understand are -
     `\infty` if `a(\frac{1}{x})` has a pole at 0.
 
 Every pole is associated with an order that is equal to the multiplicity
-of its appearence as a root of `T(x)`. A pole is called a simple pole if
+of its appearance as a root of `T(x)`. A pole is called a simple pole if
 it has an order 1. Similarly, a pole is called a multiple pole if it has
 an order `\ge` 2.
 
@@ -124,7 +124,7 @@ to get the solution correctly.
 Implementation
 ==============
 
-In this implementatin, we use ``Poly`` to represent a rational function
+In this implementation, we use ``Poly`` to represent a rational function
 rather than using ``Expr`` since ``Poly`` is much faster. Since we cannot
 represent rational functions directly using ``Poly``, we instead represent
 a rational function with 2 ``Poly`` objects - one for its numerator and
@@ -153,7 +153,7 @@ the number of poles be `n`. Also find the valuation of `a(x)` at
 NOTE: Although the algorithm considers `\infty` as a pole, it is
 not mentioned if it a part of the set of finite poles. `\infty`
 is NOT a part of the set of finite poles. If a pole exists at
-`\infty`, we use its multiplicty to find the laurent series of
+`\infty`, we use its multiplicity to find the laurent series of
 `a(x)` about `\infty`.
 
 Step 6 : Find `n` c-vectors (one for each pole) and 1 d-vector using
@@ -271,7 +271,7 @@ def linsolve_dict(eq, syms):
     sol = linsolve(eq, syms)
     if not sol:
         return {}
-    return {k:v for k, v in zip(syms, list(sol)[0])}
+    return dict(zip(syms, list(sol)[0]))
 
 
 def match_riccati(eq, f, x):

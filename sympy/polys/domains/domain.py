@@ -1,7 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
-
-from typing import Any, Optional, Type
+from __future__ import annotations
+from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
@@ -187,7 +187,7 @@ class Domain:
 
     """
 
-    dtype = None        # type: Optional[Type]
+    dtype: type | None = None
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
     >>> from sympy import ZZ, QQ, Symbol
@@ -210,7 +210,7 @@ class Domain:
     of_type
     """
 
-    zero = None         # type: Optional[Any]
+    zero: Any = None
     """The zero element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -226,7 +226,7 @@ class Domain:
     one
     """
 
-    one = None          # type: Optional[Any]
+    one: Any = None
     """The one element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -353,8 +353,8 @@ class Domain:
 
     has_CharacteristicZero = False
 
-    rep = None  # type: Optional[str]
-    alias = None  # type: Optional[str]
+    rep: str | None = None
+    alias: str | None = None
 
     def __init__(self):
         raise NotImplementedError
@@ -1277,7 +1277,51 @@ class Domain:
         raise NotImplementedError
 
     def sqrt(self, a):
-        """Returns square root of ``a``. """
+        """Returns a (possibly inexact) square root of ``a``.
+
+        Explanation
+        ===========
+        There is no universal definition of "inexact square root" for all
+        domains. It is not recommended to implement this method for domains
+        other then :ref:`ZZ`.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def is_square(self, a):
+        """Returns whether ``a`` is a square in the domain.
+
+        Explanation
+        ===========
+        Returns ``True`` if there is an element ``b`` in the domain such that
+        ``b * b == a``, otherwise returns ``False``. For inexact domains like
+        :ref:`RR` and :ref:`CC`, a tiny difference in this equality can be
+        tolerated.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def exsqrt(self, a):
+        """Principal square root of a within the domain if ``a`` is square.
+
+        Explanation
+        ===========
+        The implementation of this method should return an element ``b`` in the
+        domain such that ``b * b == a``, or ``None`` if there is no such ``b``.
+        For inexact domains like :ref:`RR` and :ref:`CC`, a tiny difference in
+        this equality can be tolerated. The choice of a "principal" square root
+        should follow a consistent rule whenever possible.
+
+        See also
+        ========
+        sqrt, is_square
+        """
         raise NotImplementedError
 
     def evalf(self, a, prec=None, **options):

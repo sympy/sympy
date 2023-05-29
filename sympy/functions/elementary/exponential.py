@@ -1,10 +1,9 @@
 from itertools import product
 from typing import Tuple as tTuple
 
-from sympy.core.expr import Expr
-from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import (Function, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
@@ -14,6 +13,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -63,6 +63,8 @@ class ExpBase(Function):
         """
         # this should be the same as Pow.as_numer_denom wrt
         # exponent handling
+        if not self.is_commutative:
+            return self, S.One
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
@@ -254,11 +256,11 @@ class exp(ExpBase, metaclass=ExpMeta):
         from sympy.assumptions import ask, Q
         arg = self.args[0]
         if arg.is_Mul:
-            Ioo = S.ImaginaryUnit*S.Infinity
+            Ioo = I*S.Infinity
             if arg in [Ioo, -Ioo]:
                 return S.NaN
 
-            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            coeff = arg.as_coefficient(pi*I)
             if coeff:
                 if ask(Q.integer(2*coeff)):
                     if ask(Q.even(coeff)):
@@ -266,9 +268,9 @@ class exp(ExpBase, metaclass=ExpMeta):
                     elif ask(Q.odd(coeff)):
                         return S.NegativeOne
                     elif ask(Q.even(coeff + S.Half)):
-                        return -S.ImaginaryUnit
+                        return -I
                     elif ask(Q.odd(coeff + S.Half)):
-                        return S.ImaginaryUnit
+                        return I
 
     @classmethod
     def eval(cls, arg):
@@ -300,7 +302,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
         elif arg.is_Mul:
-            coeff = arg.as_coefficient(S.Pi*S.ImaginaryUnit)
+            coeff = arg.as_coefficient(pi*I)
             if coeff:
                 if (2*coeff).is_integer:
                     if coeff.is_even:
@@ -308,15 +310,15 @@ class exp(ExpBase, metaclass=ExpMeta):
                     elif coeff.is_odd:
                         return S.NegativeOne
                     elif (coeff + S.Half).is_even:
-                        return -S.ImaginaryUnit
+                        return -I
                     elif (coeff + S.Half).is_odd:
-                        return S.ImaginaryUnit
+                        return I
                 elif coeff.is_Rational:
                     ncoeff = coeff % 2 # restrict to [0, 2pi)
                     if ncoeff > 1: # restrict to (-pi, pi]
                         ncoeff -= 2
                     if ncoeff != coeff:
-                        return cls(ncoeff*S.Pi*S.ImaginaryUnit)
+                        return cls(ncoeff*pi*I)
 
             # Warning: code in risch.py will be very sensitive to changes
             # in this (see DifferentialExtension).
@@ -451,7 +453,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         if self.args[0].is_extended_real:
             return True
         elif self.args[0].is_imaginary:
-            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            arg2 = -S(2) * I * self.args[0] / pi
             return arg2.is_even
 
     def _eval_is_complex(self):
@@ -461,19 +463,19 @@ class exp(ExpBase, metaclass=ExpMeta):
         return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
-        if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
+        if (self.exp / pi / I).is_rational:
             return True
         if fuzzy_not(self.exp.is_zero):
             if self.exp.is_algebraic:
                 return False
-            elif (self.exp / S.Pi).is_rational:
+            elif (self.exp / pi).is_rational:
                 return False
 
     def _eval_is_extended_positive(self):
         if self.exp.is_extended_real:
             return self.args[0] is not S.NegativeInfinity
         elif self.exp.is_imaginary:
-            arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
+            arg2 = -I * self.args[0] / pi
             return arg2.is_even
 
     def _eval_nseries(self, x, n, logx, cdir=0):
@@ -553,13 +555,11 @@ class exp(ExpBase, metaclass=ExpMeta):
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin
-        I = S.ImaginaryUnit
-        return sin(I*arg + S.Pi/2) - I*sin(I*arg)
+        return sin(I*arg + pi/2) - I*sin(I*arg)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import cos
-        I = S.ImaginaryUnit
-        return cos(I*arg) + I*cos(I*arg + S.Pi/2)
+        return cos(I*arg) + I*cos(I*arg + pi/2)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         from sympy.functions.elementary.hyperbolic import tanh
@@ -568,11 +568,11 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
         from sympy.functions.elementary.trigonometric import sin, cos
         if arg.is_Mul:
-            coeff = arg.coeff(S.Pi*S.ImaginaryUnit)
+            coeff = arg.coeff(pi*I)
             if coeff and coeff.is_number:
-                cosine, sine = cos(S.Pi*coeff), sin(S.Pi*coeff)
+                cosine, sine = cos(pi*coeff), sin(pi*coeff)
                 if not isinstance(cosine, cos) and not isinstance (sine, sin):
-                    return cosine + S.ImaginaryUnit*sine
+                    return cosine + I*sine
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
         if arg.is_Mul:
@@ -592,10 +592,10 @@ def match_real_imag(expr):
     does not expand its argument either.
 
     """
-    r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)
+    r_, i_ = expr.as_independent(I, as_Add=True)
     if i_ == 0 and r_.is_real:
         return (r_, i_)
-    i_ = i_.as_coefficient(S.ImaginaryUnit)
+    i_ = i_.as_coefficient(I)
     if i_ and i_.is_real and r_.is_real:
         return (r_, i_)
     else:
@@ -700,15 +700,14 @@ class log(Function):
 
         if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
             return arg.exp
-        I = S.ImaginaryUnit
         if isinstance(arg, exp) and arg.exp.is_extended_real:
             return arg.exp
         elif isinstance(arg, exp) and arg.exp.is_number:
             r_, i_ = match_real_imag(arg.exp)
             if i_ and i_.is_comparable:
-                i_ %= 2*S.Pi
-                if i_ > S.Pi:
-                    i_ -= 2*S.Pi
+                i_ %= 2*pi
+                if i_ > pi:
+                    i_ -= 2*pi
                 return r_ + expand_mul(i_ * I, deep=False)
         elif isinstance(arg, exp_polar):
             return unpolarify(arg.exp)
@@ -724,7 +723,7 @@ class log(Function):
 
         if arg.is_number:
             if arg.is_negative:
-                return S.Pi * I + cls(-arg)
+                return pi * I + cls(-arg)
             elif arg is S.ComplexInfinity:
                 return S.ComplexInfinity
             elif arg is S.Exp1:
@@ -744,9 +743,9 @@ class log(Function):
                     return S.Infinity
                 elif coeff.is_Rational:
                     if coeff.is_nonnegative:
-                        return S.Pi * I * S.Half + cls(coeff)
+                        return pi * I * S.Half + cls(coeff)
                     else:
-                        return -S.Pi * I * S.Half + cls(-coeff)
+                        return -pi * I * S.Half + cls(-coeff)
 
         if arg.is_number and arg.is_algebraic:
             # Match arg = coeff*(r_ + i_*I) with coeff>0, r_ and i_ real.
@@ -760,48 +759,27 @@ class log(Function):
             if coeff.is_real and i_ and i_.is_real and r_.is_real:
                 if r_.is_zero:
                     if i_.is_positive:
-                        return S.Pi * I * S.Half + cls(coeff * i_)
+                        return pi * I * S.Half + cls(coeff * i_)
                     elif i_.is_negative:
-                        return -S.Pi * I * S.Half + cls(coeff * -i_)
+                        return -pi * I * S.Half + cls(coeff * -i_)
                 else:
                     from sympy.simplify import ratsimp
                     # Check for arguments involving rational multiples of pi
                     t = (i_/r_).cancel()
                     t1 = (-t).cancel()
-                    atan_table = {
-                        # first quadrant only
-                        sqrt(3): S.Pi/3,
-                        1: S.Pi/4,
-                        sqrt(5 - 2*sqrt(5)): S.Pi/5,
-                        sqrt(2)*sqrt(5 - sqrt(5))/(1 + sqrt(5)): S.Pi/5,
-                        sqrt(5 + 2*sqrt(5)): S.Pi*Rational(2, 5),
-                        sqrt(2)*sqrt(sqrt(5) + 5)/(-1 + sqrt(5)): S.Pi*Rational(2, 5),
-                        sqrt(3)/3: S.Pi/6,
-                        sqrt(2) - 1: S.Pi/8,
-                        sqrt(2 - sqrt(2))/sqrt(sqrt(2) + 2): S.Pi/8,
-                        sqrt(2) + 1: S.Pi*Rational(3, 8),
-                        sqrt(sqrt(2) + 2)/sqrt(2 - sqrt(2)): S.Pi*Rational(3, 8),
-                        sqrt(1 - 2*sqrt(5)/5): S.Pi/10,
-                        (-sqrt(2) + sqrt(10))/(2*sqrt(sqrt(5) + 5)): S.Pi/10,
-                        sqrt(1 + 2*sqrt(5)/5): S.Pi*Rational(3, 10),
-                        (sqrt(2) + sqrt(10))/(2*sqrt(5 - sqrt(5))): S.Pi*Rational(3, 10),
-                        2 - sqrt(3): S.Pi/12,
-                        (-1 + sqrt(3))/(1 + sqrt(3)): S.Pi/12,
-                        2 + sqrt(3): S.Pi*Rational(5, 12),
-                        (1 + sqrt(3))/(-1 + sqrt(3)): S.Pi*Rational(5, 12)
-                    }
+                    atan_table = _log_atan_table()
                     if t in atan_table:
                         modulus = ratsimp(coeff * Abs(arg_))
                         if r_.is_positive:
                             return cls(modulus) + I * atan_table[t]
                         else:
-                            return cls(modulus) + I * (atan_table[t] - S.Pi)
+                            return cls(modulus) + I * (atan_table[t] - pi)
                     elif t1 in atan_table:
                         modulus = ratsimp(coeff * Abs(arg_))
                         if r_.is_positive:
                             return cls(modulus) + I * (-atan_table[t1])
                         else:
-                            return cls(modulus) + I * (S.Pi - atan_table[t1])
+                            return cls(modulus) + I * (pi - atan_table[t1])
 
     def as_base_exp(self):
         """
@@ -1032,9 +1010,9 @@ class log(Function):
         if not d.is_positive:
             res = log(a) - b*log(cdir) + b*logx
             _res = res
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=True,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": True,
+                "factor": False}
             expr = self.expand(**logflags)
             if (not a.could_extract_minus_sign() and
                 logx.could_extract_minus_sign()):
@@ -1082,7 +1060,7 @@ class log(Function):
                     break
             if i < 5:
                 coeff, _ = term.as_coeff_exponent(t)
-                res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+                res += -2*I*pi*Heaviside(-im(coeff), 0)
 
         res = res.subs(t, x/cdir)
         return res + Order(x**n, x)
@@ -1128,7 +1106,7 @@ class log(Function):
                     break
             if i < 5:
                 coeff, _ = term.as_coeff_exponent(t)
-                res += -2*I*S.Pi*Heaviside(-im(coeff), 0)
+                res += -2*I*pi*Heaviside(-im(coeff), 0)
         return res
 
 
@@ -1187,8 +1165,8 @@ class LambertW(Function):
                 return -log(2)
             if x == 2*log(2):
                 return log(2)
-            if x == -S.Pi/2:
-                return S.ImaginaryUnit*S.Pi/2
+            if x == -pi/2:
+                return I*pi/2
             if x == exp(1 + S.Exp1):
                 return S.Exp1
             if x is S.Infinity:
@@ -1200,8 +1178,8 @@ class LambertW(Function):
             if x.is_zero:
                 return S.NegativeInfinity
         if k is S.NegativeOne:
-            if x == -S.Pi/2:
-                return -S.ImaginaryUnit*S.Pi/2
+            if x == -pi/2:
+                return -I*pi/2
             elif x == -1/S.Exp1:
                 return S.NegativeOne
             elif x == -2*exp(-2):
@@ -1287,3 +1265,29 @@ class LambertW(Function):
             return x.is_zero
         else:
             return fuzzy_and([x.is_zero, self.args[1].is_zero])
+
+
+@cacheit
+def _log_atan_table():
+    return {
+        # first quadrant only
+        sqrt(3): pi / 3,
+        1: pi / 4,
+        sqrt(5 - 2 * sqrt(5)): pi / 5,
+        sqrt(2) * sqrt(5 - sqrt(5)) / (1 + sqrt(5)): pi / 5,
+        sqrt(5 + 2 * sqrt(5)): pi * Rational(2, 5),
+        sqrt(2) * sqrt(sqrt(5) + 5) / (-1 + sqrt(5)): pi * Rational(2, 5),
+        sqrt(3) / 3: pi / 6,
+        sqrt(2) - 1: pi / 8,
+        sqrt(2 - sqrt(2)) / sqrt(sqrt(2) + 2): pi / 8,
+        sqrt(2) + 1: pi * Rational(3, 8),
+        sqrt(sqrt(2) + 2) / sqrt(2 - sqrt(2)): pi * Rational(3, 8),
+        sqrt(1 - 2 * sqrt(5) / 5): pi / 10,
+        (-sqrt(2) + sqrt(10)) / (2 * sqrt(sqrt(5) + 5)): pi / 10,
+        sqrt(1 + 2 * sqrt(5) / 5): pi * Rational(3, 10),
+        (sqrt(2) + sqrt(10)) / (2 * sqrt(5 - sqrt(5))): pi * Rational(3, 10),
+        2 - sqrt(3): pi / 12,
+        (-1 + sqrt(3)) / (1 + sqrt(3)): pi / 12,
+        2 + sqrt(3): pi * Rational(5, 12),
+        (1 + sqrt(3)) / (-1 + sqrt(3)): pi * Rational(5, 12)
+    }

@@ -1,7 +1,8 @@
 .. _g-functions:
 
+============================================
 Computing Integrals using Meijer G-Functions
-********************************************
+============================================
 
 This text aims do describe in some detail the steps (and subtleties) involved
 in using Meijer G-functions for computing definite and indefinite integrals.

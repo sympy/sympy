@@ -12,9 +12,13 @@ __all__ = [
 
     'RigidBody',
 
-    'inertia', 'inertia_of_point_mass', 'linear_momentum', 'angular_momentum',
-    'kinetic_energy', 'potential_energy', 'Lagrangian', 'mechanics_printing',
-    'mprint', 'msprint', 'mpprint', 'mlatex', 'msubs', 'find_dynamicsymbols',
+    'linear_momentum', 'angular_momentum', 'kinetic_energy', 'potential_energy',
+    'Lagrangian', 'mechanics_printing', 'mprint', 'msprint', 'mpprint',
+    'mlatex', 'msubs', 'find_dynamicsymbols',
+
+    'inertia', 'inertia_of_point_mass', 'Inertia',
+
+    'Force', 'Torque',
 
     'Particle',
 
@@ -26,7 +30,8 @@ __all__ = [
 
     'SymbolicSystem',
 
-    'PinJoint', 'PrismaticJoint', 'CylindricalJoint',
+    'PinJoint', 'PrismaticJoint', 'CylindricalJoint', 'PlanarJoint',
+    'SphericalJoint', 'WeldJoint',
 
     'JointsMethod'
 ]
@@ -44,10 +49,14 @@ from .kane import KanesMethod
 
 from .rigidbody import RigidBody
 
-from .functions import (inertia, inertia_of_point_mass, linear_momentum,
-        angular_momentum, kinetic_energy, potential_energy, Lagrangian,
-        mechanics_printing, mprint, msprint, mpprint, mlatex, msubs,
-        find_dynamicsymbols)
+from .functions import (linear_momentum, angular_momentum, kinetic_energy,
+                        potential_energy, Lagrangian, mechanics_printing,
+                        mprint, msprint, mpprint, mlatex, msubs,
+                        find_dynamicsymbols)
+
+from .inertia import inertia, inertia_of_point_mass, Inertia
+
+from .loads import Force, Torque
 
 from .particle import Particle
 
@@ -61,4 +70,5 @@ from .system import SymbolicSystem
 
 from .jointsmethod import JointsMethod
 
-from .joint import PinJoint, PrismaticJoint, CylindricalJoint
+from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
+                    SphericalJoint, WeldJoint)

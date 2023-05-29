@@ -4,7 +4,7 @@ from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import (diff, expand_func)
 from sympy.core import (EulerGamma, TribonacciConstant)
-from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.numbers import (Float, I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.combinatorial.numbers import carmichael
@@ -118,7 +118,7 @@ def test_fibonacci():
         2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
     assert fibonacci(n).rewrite(sqrt).subs(n, 10).expand() == fibonacci(10)
     assert fibonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        fibonacci(10)
+        Float(fibonacci(10))
     assert lucas(n).rewrite(sqrt) == \
         (fibonacci(n-1).rewrite(sqrt) + fibonacci(n+1).rewrite(sqrt)).simplify()
     assert lucas(n).rewrite(sqrt).subs(n, 10).expand() == lucas(10)
@@ -149,7 +149,7 @@ def test_tribonacci():
       + c**(n + 1)/((c - a)*(c - b)))
     assert tribonacci(n).rewrite(sqrt).subs(n, 4).simplify() == tribonacci(4)
     assert tribonacci(n).rewrite(GoldenRatio).subs(n,10).evalf() == \
-        tribonacci(10)
+        Float(tribonacci(10))
     assert tribonacci(n).rewrite(TribonacciConstant) == floor(
             3*TribonacciConstant**n*(102*sqrt(33) + 586)**Rational(1, 3)/
             (-2*(102*sqrt(33) + 586)**Rational(1, 3) + 4 + (102*sqrt(33)
@@ -213,7 +213,7 @@ def test_harmonic():
     assert harmonic(n, 0) == n
     assert harmonic(n).evalf() == harmonic(n)
     assert harmonic(n, 1) == harmonic(n)
-    assert harmonic(1, n).evalf() == harmonic(1, n)
+    assert harmonic(1, n) == 1
 
     assert harmonic(0, 1) == 0
     assert harmonic(1, 1) == 1

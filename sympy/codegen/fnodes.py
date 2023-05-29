@@ -340,7 +340,7 @@ def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     symbol : symbol
     dim : Attribute or iterable
         If dim is an ``Attribute`` it need to have the name 'dimension'. If it is
-        not an ``Attribute``, then it is passsed to :func:`dimension` as ``*dim``
+        not an ``Attribute``, then it is passed to :func:`dimension` as ``*dim``
     intent : str
         One of: 'in', 'out', 'inout' or None
     \\*\\*kwargs:

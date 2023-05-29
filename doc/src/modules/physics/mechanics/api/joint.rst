@@ -7,32 +7,26 @@ Joint (Docstrings)
 
 .. module:: sympy.physics.mechanics.joint
 
-Joint
------
-
 .. autoclass:: Joint
    :members:
-
-PinJoint
---------
 
 .. autoclass:: PinJoint
    :members:
 
-PrismaticJoint
---------------
-
 .. autoclass:: PrismaticJoint
    :members:
-
-CylindricalJoint
-----------------
 
 .. autoclass:: CylindricalJoint
    :members:
 
-JointsMethod (Docstring)
-========================
+.. autoclass:: PlanarJoint
+   :members:
+
+.. autoclass:: SphericalJoint
+   :members:
+
+.. autoclass:: WeldJoint
+   :members:
 
 .. automodule:: sympy.physics.mechanics.jointsmethod
    :members:

@@ -4,7 +4,7 @@
 
 This tutorial assumes that the reader already knows the basics of the Python programming
 language.  If you do not, the `official Python
-tutorial <http://docs.python.org/3/tutorial/index.html>`_ is excellent.
+tutorial <https://docs.python.org/3/tutorial/index.html>`_ is excellent.
 
 This tutorial assumes a decent mathematical background.  Most examples require
 knowledge lower than a calculus level, and some require knowledge at a
@@ -26,6 +26,6 @@ Exercises
 
 This tutorial was the basis for a tutorial given at the 2013 SciPy conference
 in Austin, TX.  The website for that tutorial is `here
-<http://certik.github.io/scipy-2013-tutorial/html/index.html>`_. It has links
+<https://certik.github.io/scipy-2013-tutorial/html/index.html>`_. It has links
 to videos, materials, and IPython notebook exercises.  The IPython notebook
 exercises in particular are recommended to anyone going through this tutorial.
