@@ -33,8 +33,8 @@ from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
-    _det, _det_bareiss, _det_berkowitz, _det_laplace, _det_LU, _minor,
-    _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_bird, _det_laplace, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -110,6 +110,9 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
         return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
+    def _eval_det_bird(self):
+        return _det_bird(self)
+
     def _eval_det_laplace(self):
         return _det_laplace(self)
 
@@ -144,6 +147,7 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
     _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_bird.__doc__            = _det_bird.__doc__
     _eval_det_laplace.__doc__            = _det_laplace.__doc__
     _eval_det_lu.__doc__                 = _det_LU.__doc__
     _eval_determinant.__doc__            = _det.__doc__

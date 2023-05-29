@@ -8,6 +8,7 @@ from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.matrices.ddm import DDM
 
 from .common import NonSquareMatrixError
 from .utilities import (
@@ -305,7 +306,7 @@ def _adjugate(M, method="berkowitz"):
 
     method : string, optional
         Method to use to find the cofactors, can be "bareiss", "berkowitz",
-        "laplace" or "lu".
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -423,7 +424,7 @@ def _cofactor(M, i, j, method="berkowitz"):
 
     method : string, optional
         Method to use to find the cofactors, can be "bareiss", "berkowitz",
-        "laplace" or "lu".
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -455,7 +456,7 @@ def _cofactor_matrix(M, method="berkowitz"):
 
     method : string, optional
         Method to use to find the cofactors, can be "bareiss", "berkowitz",
-        "laplace" or "lu".
+        "bird", "laplace" or "lu".
 
     Examples
     ========
@@ -570,6 +571,8 @@ def _det(M, method="bareiss", iszerofunc=None):
 
         If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
 
+        If it is set to ``'bird'``, Bird' algorithm will be used.
+
         If it is set to ``'laplace'``, Laplace' algorithm will be used.
 
         Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
@@ -630,7 +633,8 @@ def _det(M, method="bareiss", iszerofunc=None):
     elif method == "det_lu":
         method = "lu"
 
-    if method not in ("bareiss", "berkowitz", "lu", "domain-ge", "laplace"):
+    if method not in ("bareiss", "berkowitz", "lu", "domain-ge", "bird",
+                      "laplace"):
         raise ValueError("Determinant method '%s' unrecognized" % method)
 
     if iszerofunc is None:
@@ -671,6 +675,8 @@ def _det(M, method="bareiss", iszerofunc=None):
             det = M[b, b]._eval_det_berkowitz()
         elif method == "lu":
             det = M[b, b]._eval_det_lu(iszerofunc=iszerofunc)
+        elif method == "bird":
+            det = M[b, b]._eval_det_bird()
         elif method == "laplace":
             det = M[b, b]._eval_det_laplace()
         dets.append(det)
@@ -860,6 +866,51 @@ def _det_laplace(M):
         # suggests that the determinant of a 0 x 0 matrix is one, by
         # convention.
     return __det_laplace(M.as_immutable())
+
+
+def _det_bird(M):
+    r"""Compute the determinant of a matrix using Bird' algorithm.
+
+    Bird's algorithm is a simple division-free algorithm for computing, which
+    is of lower order than the Laplace' algorithm. It is described in [1]_.
+
+    References
+    ==========
+
+    .. [1] Bird, R. S. (2011). A simple division-free algorithm for computing
+           determinants. Inf. Process. Lett., 111(21), 1072–1074. doi:
+           10.1016/j.ipl.2011.08.006
+    """
+    def mu(X):
+        n = X.shape[0]
+        zero = X.domain.zero
+
+        total = zero
+        diag_sums = [zero]
+        for i in reversed(range(1, n)):
+            total -= X[i][i]
+            diag_sums.append(total)
+        diag_sums = diag_sums[::-1]
+
+        elems = [[zero] * i + [diag_sums[i]] + X_i[i + 1:] for i, X_i in
+                 enumerate(X)]
+        return DDM(elems, X.shape, X.domain)
+
+    Mddm = M._rep.to_dense().rep
+    n = M.shape[0]
+    if n == 0:
+        return M.one
+        # sympy/matrices/tests/test_matrices.py contains a test that
+        # suggests that the determinant of a 0 x 0 matrix is one, by
+        # convention.
+    Fn1 = Mddm
+    for _ in range(n - 1):
+        Fn1 = mu(Fn1).matmul(Mddm)
+    detA = Fn1[0][0]
+    if n % 2 == 0:
+        detA = -detA
+
+    return Mddm.domain.to_sympy(detA)
 
 
 def _minor(M, i, j, method="berkowitz"):
