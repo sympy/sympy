@@ -878,7 +878,7 @@ def _det_bird(M):
     ==========
 
     .. [1] Bird, R. S. (2011). A simple division-free algorithm for computing
-           determinants. Inf. Process. Lett., 111(21), 1072–1074. doi:
+           determinants. Inf. Process. Lett., 111(21), 1072-1074. doi:
            10.1016/j.ipl.2011.08.006
     """
     def mu(X):
