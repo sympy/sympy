@@ -73,15 +73,15 @@ class Probability(Expr):
         condition = self.args[0]
         given_condition = self._condition
         numsamples = hints.get('numsamples', False)
-        for_rewrite = not hints.get('for_rewrite', False)
+        evaluate = hints.get('evaluate', True)
 
         if isinstance(condition, Not):
             return S.One - self.func(condition.args[0], given_condition,
-                                    evaluate=for_rewrite).doit(**hints)
+                                    evaluate=evaluate).doit(**hints)
 
         if condition.has(RandomIndexedSymbol):
             return pspace(condition).probability(condition, given_condition,
-                                             evaluate=for_rewrite)
+                                             evaluate=evaluate)
 
         if isinstance(given_condition, RandomSymbol):
             condrv = random_symbols(condition)
@@ -117,13 +117,13 @@ class Probability(Expr):
             return Probability(condition, given_condition)
 
         result = pspace(condition).probability(condition)
-        if hasattr(result, 'doit') and for_rewrite:
+        if hasattr(result, 'doit') and evaluate:
             return result.doit()
         else:
             return result
 
     def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return self.func(arg, condition=condition).doit(for_rewrite=True)
+        return self.func(arg, condition=condition).doit(evaluate=False)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
@@ -249,7 +249,7 @@ class Expectation(Expr):
         condition = self._condition
         expr = self.args[0]
         numsamples = hints.get('numsamples', False)
-        for_rewrite = not hints.get('for_rewrite', False)
+        evaluate = hints.get('evaluate', True)
 
         if deep:
             expr = expr.doit(**hints)
@@ -280,8 +280,8 @@ class Expectation(Expr):
         if pspace(expr) == PSpace():
             return self.func(expr)
         # Otherwise case is simple, pass work off to the ProbabilitySpace
-        result = pspace(expr).compute_expectation(expr, evaluate=for_rewrite)
-        if hasattr(result, 'doit') and for_rewrite:
+        result = pspace(expr).compute_expectation(expr, evaluate=evaluate)
+        if hasattr(result, 'doit') and evaluate:
             return result.doit(**hints)
         else:
             return result
@@ -312,8 +312,8 @@ class Expectation(Expr):
             else:
                 return Sum(arg.replace(rv, symbol)*Probability(Eq(rv, symbol), condition), (symbol, rv.pspace.domain.set.inf, rv.pspace.set.sup))
 
-    def _eval_rewrite_as_Integral(self, arg, condition=None, **kwargs):
-        return self.func(arg, condition=condition).doit(deep=False, for_rewrite=True)
+    def _eval_rewrite_as_Integral(self, arg, condition=None, evaluate=False, **kwargs):
+        return self.func(arg, condition=condition).doit(deep=False, evaluate=evaluate)
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral # For discrete this will be Sum
 
@@ -399,7 +399,7 @@ class Variance(Expr):
             for a in arg.args:
                 if is_random(a):
                     rv.append(a)
-            variances = Add(*map(lambda xv: Variance(xv, condition).expand(), rv))
+            variances = Add(*(Variance(xv, condition).expand() for xv in rv))
             map_to_covar = lambda x: 2*Covariance(*x, condition=condition).expand()
             covariances = Add(*map(map_to_covar, itertools.combinations(rv, 2)))
             return variances + covariances

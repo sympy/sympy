@@ -4,7 +4,7 @@ from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs
-from sympy.integrals.transforms import _fast_inverse_laplace
+from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
@@ -210,7 +210,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     of a SISO continuous-time system. By default, adaptive sampling
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
-    and ``nb_of_points`` must be passed as additional kwargs.
+    and ``n`` must be passed as additional kwargs.
     Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
     for more details.
 
@@ -361,7 +361,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     of a SISO continuous-time system. By default, adaptive sampling
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
-    and ``nb_of_points`` must be passed as additional kwargs.
+    and ``n`` must be passed as additional kwargs.
     Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
     for more details.
 
@@ -512,7 +512,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     of a SISO continuous-time system. By default, adaptive sampling
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
-    and ``nb_of_points`` must be passed as additional kwargs.
+    and ``n`` must be passed as additional kwargs.
     Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
     for more details.
 
@@ -642,7 +642,7 @@ def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
     See Also
     ========
 
-    step_response_plot, ramp_response_plot
+    step_response_plot, impulse_response_plot
 
     References
     ==========

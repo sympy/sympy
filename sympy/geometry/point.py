@@ -863,7 +863,8 @@ class Point2D(Point):
     Parameters
     ==========
 
-    coords : sequence of 2 coordinate values.
+    coords
+        A sequence of 2 coordinate values.
 
     Attributes
     ==========
@@ -1075,7 +1076,8 @@ class Point3D(Point):
     Parameters
     ==========
 
-    coords : sequence of 3 coordinate values.
+    coords
+        A sequence of 3 coordinate values.
 
     Attributes
     ==========

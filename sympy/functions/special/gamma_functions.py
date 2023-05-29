@@ -102,9 +102,9 @@ class gamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/GammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/GammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma/
 
     """
 
@@ -122,8 +122,8 @@ class gamma(Function):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Infinity
+            elif arg is oo:
+                return oo
             elif intlike(arg):
                 if arg.is_positive:
                     return factorial(arg - 1)
@@ -146,9 +146,9 @@ class gamma(Function):
                     coeff *= prod(range(3, 2*k, 2))
 
                     if arg.is_positive:
-                        return coeff*sqrt(S.Pi) / 2**n
+                        return coeff*sqrt(pi) / 2**n
                     else:
-                        return 2**n*sqrt(S.Pi) / coeff
+                        return 2**n*sqrt(pi) / coeff
 
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
@@ -264,13 +264,13 @@ class lowergamma(Function):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_incomplete_gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
 
     """
 
@@ -373,7 +373,7 @@ class lowergamma(Function):
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import O
         s, z = self.args
-        if args0[0] is S.Infinity and not z.has(x):
+        if args0[0] is oo and not z.has(x):
             coeff = z**s*exp(-z)
             sum_expr = sum(z**k/rf(s, k + 1) for k in range(n - 1))
             o = O(z**s*s**(-n))
@@ -449,13 +449,13 @@ class uppergamma(Function):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_Gamma_function
+    .. [1] https://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_incomplete_gamma_function
     .. [2] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
            Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
            and Mathematical Tables
-    .. [3] http://dlmf.nist.gov/8
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Gamma2/
-    .. [5] http://functions.wolfram.com/GammaBetaErf/Gamma3/
+    .. [3] https://dlmf.nist.gov/8
+    .. [4] https://functions.wolfram.com/GammaBetaErf/Gamma2/
+    .. [5] https://functions.wolfram.com/GammaBetaErf/Gamma3/
     .. [6] https://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
 
     """
@@ -487,7 +487,7 @@ class uppergamma(Function):
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
-            elif z is S.Infinity:
+            elif z is oo:
                 return S.Zero
             elif z.is_zero:
                 if re(a).is_positive:
@@ -660,9 +660,9 @@ class polygamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Polygamma_function
-    .. [2] http://mathworld.wolfram.com/PolygammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
-    .. [4] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/PolygammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma/
+    .. [4] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     .. [5] O. Espinosa and V. Moll, "A generalized polygamma function",
            *Integral Transforms and Special Functions* (2004), 101-115.
 
@@ -672,15 +672,15 @@ class polygamma(Function):
     def eval(cls, n, z):
         if n is S.NaN or z is S.NaN:
             return S.NaN
-        elif z is S.Infinity:
-            return S.Infinity if n.is_zero else S.Zero
+        elif z is oo:
+            return oo if n.is_zero else S.Zero
         elif z.is_Integer and z.is_nonpositive:
             return S.ComplexInfinity
         elif n is S.NegativeOne:
             return loggamma(z) - log(2*pi) / 2
         elif n.is_zero:
             if z is -oo or z.extract_multiplicatively(I) in (oo, -oo):
-                return S.Infinity
+                return oo
             elif z.is_Integer:
                 return harmonic(z-1) - S.EulerGamma
             elif z.is_Rational:
@@ -967,27 +967,27 @@ class loggamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Gamma_function
-    .. [2] http://dlmf.nist.gov/5
-    .. [3] http://mathworld.wolfram.com/LogGammaFunction.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/LogGamma/
+    .. [2] https://dlmf.nist.gov/5
+    .. [3] https://mathworld.wolfram.com/LogGammaFunction.html
+    .. [4] https://functions.wolfram.com/GammaBetaErf/LogGamma/
 
     """
     @classmethod
     def eval(cls, z):
         if z.is_integer:
             if z.is_nonpositive:
-                return S.Infinity
+                return oo
             elif z.is_positive:
                 return log(gamma(z))
         elif z.is_rational:
             p, q = z.as_numer_denom()
             # Half-integral values:
             if p.is_positive and q == 2:
-                return log(sqrt(S.Pi) * 2**(1 - p) * gamma(p) / gamma((p + 1)*S.Half))
+                return log(sqrt(pi) * 2**(1 - p) * gamma(p) / gamma((p + 1)*S.Half))
 
-        if z is S.Infinity:
-            return S.Infinity
-        elif abs(z) is S.Infinity:
+        if z is oo:
+            return oo
+        elif abs(z) is oo:
             return S.ComplexInfinity
         if z is S.NaN:
             return S.NaN
@@ -1007,7 +1007,7 @@ class loggamma(Function):
                 if n.is_positive:
                     return loggamma(p / q) - n*log(q) + Sum(log((k - 1)*q + p), (k, 1, n))
                 elif n.is_negative:
-                    return loggamma(p / q) - n*log(q) + S.Pi*S.ImaginaryUnit*n - Sum(log(k*q - p), (k, 1, -n))
+                    return loggamma(p / q) - n*log(q) + pi*I*n - Sum(log(k*q - p), (k, 1, -n))
                 elif n.is_zero:
                     return loggamma(p / q)
 
@@ -1101,8 +1101,8 @@ class digamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Digamma_function
-    .. [2] http://mathworld.wolfram.com/DigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/DigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):
@@ -1195,8 +1195,8 @@ class trigamma(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Trigamma_function
-    .. [2] http://mathworld.wolfram.com/TrigammaFunction.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+    .. [2] https://mathworld.wolfram.com/TrigammaFunction.html
+    .. [3] https://functions.wolfram.com/GammaBetaErf/PolyGamma2/
 
     """
     def _eval_evalf(self, prec):
@@ -1240,7 +1240,7 @@ class trigamma(Function):
         return polygamma(1, z)
 
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
-        return -harmonic(z - 1, 2) + S.Pi**2 / 6
+        return -harmonic(z - 1, 2) + pi**2 / 6
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         z = self.args[0]

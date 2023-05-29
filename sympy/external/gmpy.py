@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Tuple as tTuple, Type
 
 import mpmath.libmp as mlib
@@ -33,6 +34,21 @@ __all__ = [
 
     # isqrt from gmpy or mpmath
     'sqrt',
+
+    # gcd from gmpy or math
+    'gcd',
+
+    # lcm from gmpy or math
+    'lcm',
+
+    # invert from gmpy or pow
+    'invert',
+
+    # legendre from gmpy or sympy
+    'legendre',
+
+    # jacobi from gmpy or sympy
+    'jacobi',
 ]
 
 
@@ -90,9 +106,17 @@ if gmpy is not None:
 
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
+    is_square = gmpy.is_square
+    sqrtrem = gmpy.isqrt_rem
+    gcd = gmpy.gcd
+    lcm = gmpy.lcm
+    invert = gmpy.invert
+    legendre = gmpy.legendre
+    jacobi = gmpy.jacobi
 
 else:
     from .pythonmpq import PythonMPQ
+    import math
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
@@ -102,3 +126,66 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
+    is_square = lambda x: x >= 0 and mlib.sqrtrem(x)[1] == 0
+    sqrtrem = lambda x: tuple(int(r) for r in mlib.sqrtrem(x))
+    if sys.version_info[:2] >= (3, 9):
+        gcd = math.gcd
+        lcm = math.lcm
+    else:
+        # Until python 3.8 is no longer supported
+        from functools import reduce
+        gcd = lambda *args: reduce(math.gcd, args, 0)
+
+        def lcm(*args):
+            if 0 in args:
+                return 0
+            return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+
+    def invert(x, m):
+        """ Return y such that x*y == 1 modulo m.
+
+        Uses ``math.pow`` but reproduces the behaviour of ``gmpy2.invert``
+        which raises ZeroDivisionError if no inverse exists.
+        """
+        try:
+            return pow(x, -1, m)
+        except ValueError:
+            raise ZeroDivisionError("invert() no inverse exists")
+
+    def legendre(x, y):
+        """ Return Legendre symbol (x / y).
+
+        Following the implementation of gmpy2,
+        the error is raised only when y is an even number.
+        """
+        if y <= 0 or not y % 2:
+            raise ValueError("y should be an odd prime")
+        x %= y
+        if not x:
+            return 0
+        if pow(x, (y - 1) // 2, y) == 1:
+            return 1
+        return -1
+
+    def jacobi(x, y):
+        """ Return Jacobi symbol (x / y)."""
+        if y <= 0 or not y % 2:
+            raise ValueError("y should be an odd positive integer")
+        x %= y
+        if not x:
+            return int(y == 1)
+        if y == 1 or x == 1:
+            return 1
+        if gcd(x, y) != 1:
+            return 0
+        j = 1
+        while x != 0:
+            while x % 2 == 0 and x > 0:
+                x >>= 1
+                if y % 8 in [3, 5]:
+                    j = -j
+            x, y = y, x
+            if x % 4 == y % 4 == 3:
+                j = -j
+            x %= y
+        return j

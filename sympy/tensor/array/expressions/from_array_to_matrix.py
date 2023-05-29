@@ -81,7 +81,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
     editor.track_permutation_start()
 
     while True:
-        flag_stop: bool = True
+        flag_stop = True
         for i, arg_with_ind in enumerate(editor.args_with_ind):
             if not isinstance(arg_with_ind.element, MatrixExpr):
                 continue
@@ -145,7 +145,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     second: Optional[MatrixExpr] = None
     removed: List[int] = []
     counter: int = 0
-    args: List[Optional[Basic]] = [i for i in expr.args]
+    args: List[Optional[Basic]] = list(expr.args)
     for i, arg in enumerate(expr.args):
         if isinstance(arg, MatrixExpr):
             if arg.shape == (1, 1):
@@ -428,7 +428,7 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
-    if len(set([get_shape(i) for i in newargs])) > 1:
+    if len({get_shape(i) for i in newargs}) > 1:
         return expr, []
     if len(removed) == 0:
         return expr, removed
@@ -518,7 +518,7 @@ def _(expr: ArrayDiagonal):
     new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices_map.values()]
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
-    removed = sorted({i for i in removed})
+    removed = sorted(set(removed))
     # If there are single axes to diagonalize remaining, it means that their
     # corresponding dimension has been removed, they no longer need diagonalization:
     new_diag_indices = [i for i in new_diag_indices if len(i) > 0]
@@ -779,7 +779,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
             return x == sorted(x)
 
         # Check if expression is a trace:
-        if all([map_ind_to_inds[j] == len(v) and j >= 0 for j in k]) and all([j >= 0 for j in k]):
+        if all(map_ind_to_inds[j] == len(v) and j >= 0 for j in k) and all(j >= 0 for j in k):
             # This is a trace
             make_trace = True
             first_element = v[0].element
@@ -808,7 +808,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 def identify_removable_identity_matrices(expr):
     editor = _EditArrayContraction(expr)
 
-    flag: bool = True
+    flag = True
     while flag:
         flag = False
         for arg_with_ind in editor.args_with_ind:
@@ -871,7 +871,7 @@ def remove_identity_matrices(expr: ArrayContraction):
     permutation_map = {}
 
     free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
-    free_map = {k: v for k, v in zip(editor.args_with_ind, free_indices[:-1])}
+    free_map = dict(zip(editor.args_with_ind, free_indices[:-1]))
 
     update_pairs = {}
 
@@ -886,7 +886,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
         # Check that all identity matrices have at least one free index
         # (otherwise they would be contractions to some other elements)
-        if any([None not in i.indices for i in identity_matrices]):
+        if any(None not in i.indices for i in identity_matrices):
             continue
         # Mark the identity matrices for removal:
         for i in identity_matrices:

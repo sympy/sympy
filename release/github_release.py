@@ -319,8 +319,8 @@ def query_GitHub(url, username=None, password=None, token=None, data=None,
         headers['X-GitHub-OTP'] = OTP
 
     if token:
-        auth = OAuth2(client_id=username, token=dict(access_token=token,
-            token_type='bearer'))
+        auth = OAuth2(client_id=username, token={"access_token": token,
+            "token_type": 'bearer'})
     else:
         auth = HTTPBasicAuth(username, password)
     if data:

@@ -56,7 +56,7 @@ def pyglet_viewer(fname, fmt):
         from pyglet.window import key
         from pyglet.image.codecs import ImageDecodeException
     except ImportError:
-        raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
+        raise ImportError("pyglet is required for preview.\n visit https://pyglet.org/")
 
     try:
         img = image.load(fname)
@@ -205,7 +205,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     You may also enter ``'file'`` for the viewer argument. Doing so will cause
     this function to return a file object in read-only mode, if ``filename``
-    is unset. However, if it was set, then 'preview' writes the genereted
+    is unset. However, if it was set, then 'preview' writes the generated
     file to this filename instead.
 
     There is also support for writing to a ``io.BytesIO`` like object, which

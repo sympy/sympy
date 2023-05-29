@@ -2,7 +2,7 @@
 
 qasm.py - Functions to parse a set of qasm commands into a SymPy Circuit.
 
-Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
+Examples taken from Chuang's page: https://web.archive.org/web/20220120121541/https://www.media.mit.edu/quanta/qasm2circ/
 
 The code returns a circuit and an associated list of labels.
 

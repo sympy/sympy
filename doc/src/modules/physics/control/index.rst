@@ -10,8 +10,8 @@ Control Module
 
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    control.rst
-    lti.rst
-    control_plots.rst
+   control.rst
+   lti.rst
+   control_plots.rst

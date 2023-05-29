@@ -136,7 +136,7 @@ class Limit(Expr):
     >>> from sympy import Limit, sin
     >>> from sympy.abc import x
     >>> Limit(sin(x)/x, x, 0)
-    Limit(sin(x)/x, x, 0)
+    Limit(sin(x)/x, x, 0, dir='+')
     >>> Limit(1/x, x, 0, dir="-")
     Limit(1/x, x, 0, dir='-')
 
@@ -353,20 +353,12 @@ class Limit(Expr):
                 elif ex == 0:
                     return coeff
                 elif ex.is_negative:
-                    if ex.is_integer:
-                        if cdir == 1 or ex.is_even:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.NegativeInfinity*sign(coeff)
-                        else:
-                            return S.ComplexInfinity
+                    if cdir == 1:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
                     else:
-                        if cdir == 1:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
-                        else:
-                            return S.ComplexInfinity
+                        return S.ComplexInfinity
                 else:
                     raise NotImplementedError("Not sure of sign of %s" % ex)
 

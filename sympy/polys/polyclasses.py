@@ -323,7 +323,7 @@ class DMP(PicklableWithSlots, CantSympify):
             if not f:
                 return [f.dom.zero]
             else:
-                return [ c for c in f.rep ]
+                return list(f.rep)
         else:
             raise PolynomialError('multivariate polynomials not supported')
 

@@ -55,7 +55,7 @@ def invariant_factors(m):
     ==========
 
     [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
-    [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
+    [2] https://web.archive.org/web/20200331143852/https://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
 
     '''
     domain = m.domain

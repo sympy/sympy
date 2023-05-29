@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.polys.polytools import Poly
 from sympy.sets.sets import FiniteSet
 
-from sympy.core.parameters import distribute
+from sympy.core.parameters import distribute, evaluate
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, warns
@@ -1724,6 +1724,11 @@ def test_Pow_as_coeff_mul_doesnt_expand():
     assert exp(x + y).as_coeff_mul() == (1, (exp(x + y),))
     assert exp(x + exp(x + y)) != exp(x + exp(x)*exp(y))
 
+def test_issue_24751():
+    expr = Add(-2, -3, evaluate=False)
+    expr1 = Add(-1, expr, evaluate=False)
+    assert int(expr1) == int((-3 - 2) - 1)
+
 
 def test_issue_3514_18626():
     assert sqrt(S.Half) * sqrt(6) == 2 * sqrt(3)/2
@@ -1963,8 +1968,9 @@ def test_Mod():
     #issue 13543
     assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
-    assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
-    assert Mod(Mod(x + 2, 4)*4, 4) == 0
+    x1 = Symbol('x1', integer=True)
+    assert Mod(Mod(x1 + 2, 4)*(x1 + 4), 4) == Mod(x1*(x1 + 2), 4)
+    assert Mod(Mod(x1 + 2, 4)*4, 4) == 0
 
     # issue 15493
     i, j = symbols('i j', integer=True, positive=True)
@@ -1985,6 +1991,10 @@ def test_Mod():
     expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
     expr.subs({1: 1.0})
     sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
+
+    # issue 24215
+    from sympy.abc import phi
+    assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
 
 
 def test_Mod_Pow():
@@ -2222,7 +2232,7 @@ def test_denest_add_mul():
     eq = Mul(eq, 2, evaluate=False)
     eq = Mul(eq, 2, evaluate=False)
     assert Mul(*eq.args) == 8*x
-    # but don't let them denest unecessarily
+    # but don't let them denest unnecessarily
     eq = Mul(-2, x - 2, evaluate=False)
     assert 2*eq == Mul(-4, x - 2, evaluate=False)
     assert -eq == Mul(2, x - 2, evaluate=False)
@@ -2386,6 +2396,9 @@ def test__neg__():
     assert -(2.*x) == -2.*x
     assert -(-2.*x) == 2.*x
     with distribute(False):
+        eq = -(x + y)
+        assert eq.is_Mul and eq.args == (-1, x + y)
+    with evaluate(False):
         eq = -(x + y)
         assert eq.is_Mul and eq.args == (-1, x + y)
 

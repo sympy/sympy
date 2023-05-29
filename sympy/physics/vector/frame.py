@@ -1,8 +1,7 @@
-from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, symbols,
+from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
-from sympy.solvers.solvers import solve
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -61,6 +60,9 @@ class CoordinateSym(Symbol):
         obj._id = (frame, index)
         return obj
 
+    def __getnewargs_ex__(self):
+        return (self.name, *self._id), {}
+
     @property
     def frame(self):
         return self._id[0]
@@ -77,7 +79,7 @@ class CoordinateSym(Symbol):
         return not self == other
 
     def __hash__(self):
-        return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
+        return (self._id[0].__hash__(), self._id[1]).__hash__()
 
 
 class ReferenceFrame:
@@ -145,6 +147,30 @@ class ReferenceFrame:
         E['2']
         >>> type(A) == type(D)
         True
+
+        Unit dyads for the ReferenceFrame can be accessed through the attributes ``xx``, ``xy``, etc. For example:
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.yz
+        (N.y|N.z)
+        >>> N.zx
+        (N.z|N.x)
+        >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
+        >>> P.xx
+        (P['1']|P['1'])
+        >>> P.zy
+        (P['3']|P['2'])
+
+        Unit dyadic is also accessible via the ``u`` attribute:
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> N.u
+        (N.x|N.x) + (N.y|N.y) + (N.z|N.z)
+        >>> P = ReferenceFrame('P', indices=['1', '2', '3'])
+        >>> P.u
+        (P['1']|P['1']) + (P['2']|P['2']) + (P['3']|P['3'])
 
         """
 
@@ -661,7 +687,6 @@ class ReferenceFrame:
 
         axis = _check_vector(axis)
         theta = sympify(angle)
-        parent_orient_axis = []
 
         if not axis.dt(parent) == 0:
             raise ValueError('Axis cannot be time-varying.')
@@ -755,7 +780,6 @@ class ReferenceFrame:
         if not isinstance(dcm, MatrixBase):
             raise TypeError("Amounts must be a SymPy Matrix type object.")
 
-        parent_orient_dcm = []
         parent_orient_dcm = dcm
 
         self._dcm(parent, parent_orient_dcm)
@@ -780,6 +804,48 @@ class ReferenceFrame:
                            [sin(angle), cos(angle), 0],
                            [0, 0, 1]])
 
+    def _parse_consecutive_rotations(self, angles, rotation_order):
+        """Helper for orient_body_fixed and orient_space_fixed.
+
+        Parameters
+        ==========
+        angles : 3-tuple of sympifiable
+            Three angles in radians used for the successive rotations.
+        rotation_order : 3 character string or 3 digit integer
+            Order of the rotations. The order can be specified by the strings
+            ``'XZX'``, ``'131'``, or the integer ``131``. There are 12 unique
+            valid rotation orders.
+
+        Returns
+        =======
+
+        amounts : list
+            List of sympifiables corresponding to the rotation angles.
+        rot_order : list
+            List of integers corresponding to the axis of rotation.
+        rot_matrices : list
+            List of DCM around the given axis with corresponding magnitude.
+
+        """
+        amounts = list(angles)
+        for i, v in enumerate(amounts):
+            if not isinstance(v, Vector):
+                amounts[i] = sympify(v)
+
+        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
+                           '131', '212', '232', '313', '323', '')
+        # make sure XYZ => 123
+        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
+        if rot_order not in approved_orders:
+            raise TypeError('The rotation order is not a valid order.')
+
+        rot_order = [int(r) for r in rot_order]
+        if not (len(amounts) == 3 & len(rot_order) == 3):
+            raise TypeError('Body orientation takes 3 values & 3 orders')
+        rot_matrices = [self._rot(order, amount)
+                        for (order, amount) in zip(rot_order, amounts)]
+        return amounts, rot_order, rot_matrices
+
     def orient_body_fixed(self, parent, angles, rotation_order):
         """Rotates this reference frame relative to the parent reference frame
         by right hand rotating through three successive body fixed simple axis
@@ -789,6 +855,10 @@ class ReferenceFrame:
         Angles`_.
 
         .. _Euler and Tait-Bryan Angles: https://en.wikipedia.org/wiki/Euler_angles
+
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
 
         Parameters
         ==========
@@ -858,55 +928,20 @@ class ReferenceFrame:
         >>> B.orient_body_fixed(N, (q1, q2, q3), 123)
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
+        self._dcm(parent, rot_matrices[0] * rot_matrices[1] * rot_matrices[2])
 
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The rotation order is not a valid order.')
-
-        parent_orient_body = []
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Body orientation takes 3 values & 3 orders')
-        a1 = int(rot_order[0])
-        a2 = int(rot_order[1])
-        a3 = int(rot_order[2])
-        parent_orient_body = (self._rot(a1, amounts[0]) *
-                              self._rot(a2, amounts[1]) *
-                              self._rot(a3, amounts[2]))
-
-        self._dcm(parent, parent_orient_body)
-
-        try:
-            from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
-            q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                           'body', rot_order)
-            templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3])
-            u1 = expand(td[u1])
-            u2 = expand(td[u2])
-            u3 = expand(td[u3])
-            wvec = u1 * self.x + u2 * self.y + u3 * self.z
-            # NOTE : SymPy 1.7 removed the call to simplify() that occured
-            # inside the solve() function, so this restores the pre-1.7
-            # behavior. See:
-            # https://github.com/sympy/sympy/issues/23140
-            # and
-            # https://github.com/sympy/sympy/issues/23130
-            wvec = wvec.simplify()
-        except (CoercionFailed, AssertionError):
-            wvec = self._w_diff_dcm(parent)
+        rot_vecs = [zeros(3, 1) for _ in range(3)]
+        for i, order in enumerate(rot_order):
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
+        u1, u2, u3 = rot_vecs[2] + rot_matrices[2].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[0])
+        wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
@@ -916,6 +951,10 @@ class ReferenceFrame:
         by right hand rotating through three successive space fixed simple axis
         rotations. Each subsequent axis of rotation is about the "space fixed"
         unit vectors of the parent reference frame.
+
+        The computed angular velocity in this method is by default expressed in
+        the child's frame, so it is most preferable to use ``u1 * child.x + u2 *
+        child.y + u3 * child.z`` as generalized speeds.
 
         Parameters
         ==========
@@ -987,48 +1026,20 @@ class ReferenceFrame:
         [sin(q1)*cos(q2), sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1),  sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3)]])
 
         """
+        from sympy.physics.vector.functions import dynamicsymbols
 
         _check_frame(parent)
 
-        amounts = list(angles)
-        for i, v in enumerate(amounts):
-            if not isinstance(v, Vector):
-                amounts[i] = sympify(v)
+        amounts, rot_order, rot_matrices = self._parse_consecutive_rotations(
+            angles, rotation_order)
+        self._dcm(parent, rot_matrices[2] * rot_matrices[1] * rot_matrices[0])
 
-        approved_orders = ('123', '231', '312', '132', '213', '321', '121',
-                           '131', '212', '232', '313', '323', '')
-        # make sure XYZ => 123
-        rot_order = translate(str(rotation_order), 'XYZxyz', '123123')
-        if rot_order not in approved_orders:
-            raise TypeError('The supplied order is not an approved type')
-        parent_orient_space = []
-
-        if not (len(amounts) == 3 & len(rot_order) == 3):
-            raise TypeError('Space orientation takes 3 values & 3 orders')
-        a1 = int(rot_order[0])
-        a2 = int(rot_order[1])
-        a3 = int(rot_order[2])
-        parent_orient_space = (self._rot(a3, amounts[2]) *
-                               self._rot(a2, amounts[1]) *
-                               self._rot(a1, amounts[0]))
-
-        self._dcm(parent, parent_orient_space)
-
-        try:
-            from sympy.polys.polyerrors import CoercionFailed
-            from sympy.physics.vector.functions import kinematic_equations
-            q1, q2, q3 = amounts
-            u1, u2, u3 = symbols('u1, u2, u3', cls=Dummy)
-            templist = kinematic_equations([u1, u2, u3], [q1, q2, q3],
-                                           'space', rot_order)
-            templist = [expand(i) for i in templist]
-            td = solve(templist, [u1, u2, u3])
-            u1 = expand(td[u1])
-            u2 = expand(td[u2])
-            u3 = expand(td[u3])
-            wvec = u1 * self.x + u2 * self.y + u3 * self.z
-        except (CoercionFailed, AssertionError):
-            wvec = self._w_diff_dcm(parent)
+        rot_vecs = [zeros(3, 1) for _ in range(3)]
+        for i, order in enumerate(rot_order):
+            rot_vecs[i][order - 1] = amounts[i].diff(dynamicsymbols._t)
+        u1, u2, u3 = rot_vecs[0] + rot_matrices[0].T * (
+            rot_vecs[1] + rot_matrices[1].T * rot_vecs[2])
+        wvec = u1 * self.x + u2 * self.y + u3 * self.z  # There is a double -
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
         self._var_dict = {}
@@ -1094,7 +1105,6 @@ class ReferenceFrame:
             if not isinstance(v, Vector):
                 numbers[i] = sympify(v)
 
-        parent_orient_quaternion = []
         if not (isinstance(numbers, (list, tuple)) & (len(numbers) == 4)):
             raise TypeError('Amounts are a list or tuple of length 4')
         q0, q1, q2, q3 = numbers
@@ -1404,6 +1414,56 @@ class ReferenceFrame:
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
+
+    @property
+    def xx(self):
+        """Unit dyad of basis Vectors x and x for the ReferenceFrame."""
+        return Vector.outer(self.x, self.x)
+
+    @property
+    def xy(self):
+        """Unit dyad of basis Vectors x and y for the ReferenceFrame."""
+        return Vector.outer(self.x, self.y)
+
+    @property
+    def xz(self):
+        """Unit dyad of basis Vectors x and z for the ReferenceFrame."""
+        return Vector.outer(self.x, self.z)
+
+    @property
+    def yx(self):
+        """Unit dyad of basis Vectors y and x for the ReferenceFrame."""
+        return Vector.outer(self.y, self.x)
+
+    @property
+    def yy(self):
+        """Unit dyad of basis Vectors y and y for the ReferenceFrame."""
+        return Vector.outer(self.y, self.y)
+
+    @property
+    def yz(self):
+        """Unit dyad of basis Vectors y and z for the ReferenceFrame."""
+        return Vector.outer(self.y, self.z)
+
+    @property
+    def zx(self):
+        """Unit dyad of basis Vectors z and x for the ReferenceFrame."""
+        return Vector.outer(self.z, self.x)
+
+    @property
+    def zy(self):
+        """Unit dyad of basis Vectors z and y for the ReferenceFrame."""
+        return Vector.outer(self.z, self.y)
+
+    @property
+    def zz(self):
+        """Unit dyad of basis Vectors z and z for the ReferenceFrame."""
+        return Vector.outer(self.z, self.z)
+
+    @property
+    def u(self):
+        """Unit dyadic for the ReferenceFrame."""
+        return self.xx + self.yy + self.zz
 
     def partial_velocity(self, frame, *gen_speeds):
         """Returns the partial angular velocities of this frame in the given

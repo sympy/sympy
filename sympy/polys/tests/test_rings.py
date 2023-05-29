@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import GeneratorsError, \
 
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
-
+from sympy.core.singleton import S
 from sympy.core.numbers import (oo, pi)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -150,6 +150,18 @@ def test_PolyRing_mul():
 
     assert R.mul([2, 3, 5]) == 30
 
+def test_PolyRing_symmetric_poly():
+    R, x, y, z, t = ring("x,y,z,t", ZZ)
+
+    raises(ValueError, lambda: R.symmetric_poly(-1))
+    raises(ValueError, lambda: R.symmetric_poly(5))
+
+    assert R.symmetric_poly(0) == R.one
+    assert R.symmetric_poly(1) == x + y + z + t
+    assert R.symmetric_poly(2) == x*y + x*z + x*t + y*z + y*t + z*t
+    assert R.symmetric_poly(3) == x*y*z + x*y*t + x*z*t + y*z*t
+    assert R.symmetric_poly(4) == x*y*z*t
+
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")
 
@@ -228,6 +240,17 @@ def test_PolyElement__lt_le_gt_ge__():
     assert x**3 > x**2 > x > R(1)
     assert x**3 >= x**2 >= x >= R(1)
 
+def test_PolyElement__str__():
+    x, y = symbols('x, y')
+
+    for dom in [ZZ, QQ, ZZ[x], ZZ[x,y], ZZ[x][y]]:
+        R, t = ring('t', dom)
+        assert str(2*t**2 + 1) == '2*t**2 + 1'
+
+    for dom in [EX, EX[x]]:
+        R, t = ring('t', dom)
+        assert str(2*t**2 + 1) == 'EX(2)*t**2 + EX(1)'
+
 def test_PolyElement_copy():
     R, x, y, z = ring("x,y,z", ZZ)
 
@@ -248,11 +271,11 @@ def test_PolyElement_as_expr():
     assert f != g
     assert f.as_expr() == g
 
-    X, Y, Z = symbols("x,y,z")
-    g = 3*X**2*Y - X*Y*Z + 7*Z**3 + 1
+    U, V, W = symbols("u,v,w")
+    g = 3*U**2*V - U*V*W + 7*W**3 + 1
 
     assert f != g
-    assert f.as_expr(X, Y, Z) == g
+    assert f.as_expr(U, V, W) == g
 
     raises(ValueError, lambda: f.as_expr(X))
 
@@ -1182,6 +1205,45 @@ def test_PolyElement_subs():
     raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, 1)]))
     raises(CoercionFailed, lambda: f.subs([(x, QQ(1,7)), (y, QQ(1,7))]))
 
+def test_PolyElement_symmetrize():
+    R, x, y = ring("x,y", ZZ)
+
+    # Homogeneous, symmetric
+    f = x**2 + y**2
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Homogeneous, asymmetric
+    f = x**2 - y**2
+    sym, rem, m = f.symmetrize()
+    assert rem != 0
+    assert sym.compose(m) + rem == f
+
+    # Inhomogeneous, symmetric
+    f = x*y + 7
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Inhomogeneous, asymmetric
+    f = y + 7
+    sym, rem, m = f.symmetrize()
+    assert rem != 0
+    assert sym.compose(m) + rem == f
+
+    # Constant
+    f = R.from_expr(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
+    # Constant constructed from sring
+    R, f = sring(3)
+    sym, rem, m = f.symmetrize()
+    assert rem == 0
+    assert sym.compose(m) + rem == f
+
 def test_PolyElement_compose():
     R, x = ring("x", ZZ)
     f = x**3 + 4*x**2 + 2*x + 3
@@ -1392,6 +1454,16 @@ def test_PolyElement_sqf_list():
 
     assert f.sqf_part() == p
     assert f.sqf_list() == (1, [(g, 1), (h, 2)])
+
+def test_issue_18894():
+    items = [S(3)/16 + sqrt(3*sqrt(3) + 10)/8, S(1)/8 + 3*sqrt(3)/16, S(1)/8 + 3*sqrt(3)/16, -S(3)/16 + sqrt(3*sqrt(3) + 10)/8]
+    R, a = sring(items, extension=True)
+    assert R.domain == QQ.algebraic_field(sqrt(3)+sqrt(3*sqrt(3)+10))
+    assert R.gens == ()
+    result = []
+    for item in items:
+        result.append(R.domain.from_sympy(item))
+    assert a == result
 
 def test_PolyElement_factor_list():
     _, x = ring("x", ZZ)

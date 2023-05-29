@@ -117,7 +117,7 @@ def _validate_targets_controls(tandc):
         if not bit.is_Integer and not bit.is_Symbol:
             raise TypeError('Integer expected, got: %r' % tandc[bit])
     # Detect duplicates
-    if len(list(set(tandc))) != len(tandc):
+    if len(set(tandc)) != len(tandc):
         raise QuantumError(
             'Target/control qubits in a gate cannot be duplicated'
         )
@@ -192,7 +192,7 @@ class Gate(UnitaryOperator):
     #-------------------------------------------------------------------------
 
     def get_target_matrix(self, format='sympy'):
-        """The matrix represenation of the target part of the gate.
+        """The matrix representation of the target part of the gate.
 
         Parameters
         ----------
@@ -625,8 +625,19 @@ class IdentityGate(OneQubitGate):
     ========
 
     """
+    is_hermitian = True
     gate_name = '1'
     gate_name_latex = '1'
+
+    # Short cut version of gate._apply_operator_Qubit
+    def _apply_operator_Qubit(self, qubits, **options):
+        # Check number of qubits this gate acts on (see gate._apply_operator_Qubit)
+        if qubits.nqubits < self.min_qubits:
+            raise QuantumError(
+                'Gate needs a minimum of %r qubits to act on, got: %r' %
+                (self.min_qubits, qubits.nqubits)
+            )
+        return qubits # no computation required for IdentityGate
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('eye2', format)
@@ -796,6 +807,7 @@ class PhaseGate(OneQubitGate):
     ========
 
     """
+    is_hermitian =  False
     gate_name = 'S'
     gate_name_latex = 'S'
 
@@ -824,6 +836,7 @@ class TGate(OneQubitGate):
     ========
 
     """
+    is_hermitian = False
     gate_name = 'T'
     gate_name_latex = 'T'
 
@@ -979,6 +992,7 @@ class SwapGate(TwoQubitGate):
     ========
 
     """
+    is_hermitian = True
     gate_name = 'SWAP'
     gate_name_latex = r'\text{SWAP}'
 
