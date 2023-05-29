@@ -712,8 +712,9 @@ def _cramer_solve(M, rhs, det_method="bird"):
     """Solves system of linear equations using Cramer's rule.
 
     This method is relatively inefficient compared to other methods.
-    However it only uses a single division, assuming a division free
-    determinant method is provided.
+    However it only uses a single division, assuming a division-free determinant
+    method is provided. This is helpful to minimize the chance of divide-by-zero
+    cases in symbolic solutions to linear systems.
 
     Parameters
     ==========

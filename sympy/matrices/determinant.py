@@ -571,9 +571,9 @@ def _det(M, method="bareiss", iszerofunc=None):
 
         If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
 
-        If it is set to ``'bird'``, Bird' algorithm will be used.
+        If it is set to ``'bird'``, Bird's algorithm will be used.
 
-        If it is set to ``'laplace'``, Laplace' algorithm will be used.
+        If it is set to ``'laplace'``, Laplace's algorithm will be used.
 
         Otherwise, if it is set to ``'lu'``, LU decomposition will be used.
 
@@ -869,10 +869,10 @@ def _det_laplace(M):
 
 
 def _det_bird(M):
-    r"""Compute the determinant of a matrix using Bird' algorithm.
+    r"""Compute the determinant of a matrix using Bird's algorithm.
 
     Bird's algorithm is a simple division-free algorithm for computing, which
-    is of lower order than the Laplace' algorithm. It is described in [1]_.
+    is of lower order than the Laplace's algorithm. It is described in [1]_.
 
     References
     ==========
@@ -926,7 +926,7 @@ def _minor(M, i, j, method="berkowitz"):
 
     method : string, optional
         Method to use to find the determinant of the submatrix, can be
-        "bareiss", "berkowitz", "laplace" or "lu".
+        "bareiss", "berkowitz", "bird", "laplace" or "lu".
 
     Examples
     ========
