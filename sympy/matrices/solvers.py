@@ -746,6 +746,11 @@ def _cramer_solve(M, rhs, det_method="bird"):
     [ 4,  3],
     [-6,  9]])
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Cramer%27s_rule#Explicit_formulas_for_small_systems
+
     """
     from .dense import zeros
 
