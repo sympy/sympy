@@ -571,7 +571,7 @@ def _det(M, method="bareiss", iszerofunc=None):
 
         If it is set to ``'berkowitz'``, Berkowitz' algorithm will be used.
 
-        If it is set to ``'bird'``, Bird's algorithm will be used.
+        If it is set to ``'bird'``, Bird's algorithm will be used [1]_.
 
         If it is set to ``'laplace'``, Laplace's algorithm will be used.
 
@@ -623,6 +623,13 @@ def _det(M, method="bareiss", iszerofunc=None):
     True
     >>> M.det(method="domain-ge")
     -2
+
+    References
+    ==========
+
+    .. [1] Bird, R. S. (2011). A simple division-free algorithm for computing
+           determinants. Inf. Process. Lett., 111(21), 1072-1074. doi:
+           10.1016/j.ipl.2011.08.006
     """
 
     # sanitize `method`
