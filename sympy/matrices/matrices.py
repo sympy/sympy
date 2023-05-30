@@ -2283,7 +2283,7 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
-    def cramer_solve(self, rhs, det_method="bird"):
+    def cramer_solve(self, rhs, det_method="laplace"):
         return _cramer_solve(self, rhs, det_method=det_method)
 
     def solve(self, rhs, method='GJ'):
