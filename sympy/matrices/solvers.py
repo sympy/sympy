@@ -708,7 +708,7 @@ def _pinv_solve(M, B, arbitrary_matrix=None):
             A_pinv.multiply(A)).multiply(arbitrary_matrix)
 
 
-def _cramer_solve(M, rhs, det_method="bird"):
+def _cramer_solve(M, rhs, det_method="laplace"):
     """Solves system of linear equations using Cramer's rule.
 
     This method is relatively inefficient compared to other methods.
@@ -724,7 +724,7 @@ def _cramer_solve(M, rhs, det_method="bird"):
         The matrix representing the right hand side of the equation.
     det_method : str or callable
         The method to use to calculate the determinant of the matrix.
-        The default is ``'bird'``.  If a callable is passed, it should take a
+        The default is ``'laplace'``.  If a callable is passed, it should take a
         single argument, the matrix, and return the determinant of the matrix.
 
     Returns
