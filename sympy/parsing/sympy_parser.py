@@ -1170,7 +1170,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
+                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
@@ -1181,7 +1181,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     rev = True
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
@@ -1189,7 +1189,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 else:
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
                     keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
