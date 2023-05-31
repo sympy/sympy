@@ -581,7 +581,7 @@ polynomials and to solve some systems of polynomial equations::
     [(5, 5)]
 
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
-                                       ___                 ___
-                                 1   \/ 3 *I         1   \/ 3 *I
-    [(0, -I), (0, I), (1, 0), (- - - -------, 0), (- - + -------, 0)]
-                                 2      2            2      2
+                                -2*I*pi         2*I*pi
+                                --------        ------
+                                   3              3
+    [(0, -I), (0, I), (1, 0), (e        , 0), (e      , 0)]
