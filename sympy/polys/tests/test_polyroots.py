@@ -2,7 +2,7 @@
 
 from sympy.core.numbers import (I, Rational, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.core.symbol import (Wild, symbols)
 from sympy.functions.elementary.complexes import (conjugate, im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
