@@ -10,7 +10,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
-from sympy.simplify.powsimp import powsimp
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -323,12 +322,13 @@ def test_roots_binomial():
     a1 = Symbol('a1', nonnegative=True)
     b1 = Symbol('b1', nonnegative=True)
 
-    r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
-    r1 = roots_binomial(Poly(a1*x**2 + b1, x))
-
     # XXX: Improve the output from roots_quadratic to match that of roots_binomial:
+    #r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
+    #r1 = roots_binomial(Poly(a1*x**2 + b1, x))
+    #
     #assert powsimp(r0[0]) == powsimp(r1[0])
     #assert powsimp(r0[1]) == powsimp(r1[1])
+
     for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
