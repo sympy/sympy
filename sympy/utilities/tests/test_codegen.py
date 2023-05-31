@@ -651,7 +651,6 @@ def test_ccode_unused_array_arg_func():
         '}\n'
     )
     assert source == expected
-    
 
 def test_empty_f_code():
     code_gen = FCodeGen()
