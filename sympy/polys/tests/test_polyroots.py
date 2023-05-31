@@ -319,10 +319,9 @@ def test_roots_binomial():
         [A*zeta**-3, A*zeta**3, A*zeta**-1, A*zeta]
     _check(roots_binomial(Poly(x**8 - 2)))
 
-    a1 = Symbol('a1', nonnegative=True)
-    b1 = Symbol('b1', nonnegative=True)
-
     # XXX: Improve the output from roots_quadratic to match that of roots_binomial:
+    # a1 = Symbol('a1', nonnegative=True)
+    # b1 = Symbol('b1', nonnegative=True)
     #r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     #r1 = roots_binomial(Poly(a1*x**2 + b1, x))
     #
