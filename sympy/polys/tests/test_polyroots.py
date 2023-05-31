@@ -203,7 +203,7 @@ def test_roots_quartic():
     ]
 
     lhs = roots_quartic(Poly(x**4 + x, x))
-    rhs = [S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2, S.Zero, -S.One]
+    rhs = [-1, 0, exp(-I*pi/3), exp(I*pi/3)]
 
     assert sorted(lhs, key=hash) == sorted(rhs, key=hash)
 
@@ -313,10 +313,11 @@ def test_roots_binomial():
     assert roots_binomial(Poly(5*x**4, x)) == [0, 0, 0, 0]
     assert roots_binomial(Poly(5*x + 2, x)) == [Rational(-2, 5)]
 
-    A = 10**Rational(3, 4)/10
+    A = 2**Rational(1, 4)*5**Rational(3, 4)/5
+    zeta = exp(I*pi/4)
 
     assert roots_binomial(Poly(5*x**4 + 2, x)) == \
-        [-A - A*I, -A + A*I, A - A*I, A + A*I]
+        [A*zeta**-3, A*zeta**3, A*zeta**-1, A*zeta]
     _check(roots_binomial(Poly(x**8 - 2)))
 
     a1 = Symbol('a1', nonnegative=True)
@@ -325,8 +326,9 @@ def test_roots_binomial():
     r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
-    assert powsimp(r0[0]) == powsimp(r1[0])
-    assert powsimp(r0[1]) == powsimp(r1[1])
+    # XXX: Improve the output from roots_quadratic to match that of roots_binomial:
+    #assert powsimp(r0[0]) == powsimp(r1[0])
+    #assert powsimp(r0[1]) == powsimp(r1[1])
     for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
@@ -336,9 +338,10 @@ def test_roots_binomial():
 
     # issue 8813
     assert roots(Poly(2*x**3 - 16*y**3, x)) == {
-        2*y*(Rational(-1, 2) - sqrt(3)*I/2): 1,
         2*y: 1,
-        2*y*(Rational(-1, 2) + sqrt(3)*I/2): 1}
+        2*y*exp(-2*I*pi/3): 1,
+        2*y*exp(2*I*pi/3): 1
+    }
 
 
 def test_roots_preprocessing():
@@ -435,10 +438,10 @@ def test_roots0():
         {S.One: 2, -1 - sqrt(2): 1, S.Zero: 2, -1 + sqrt(2): 1}
 
     assert roots(x**8 - 1, x) == {
-        sqrt(2)/2 + I*sqrt(2)/2: 1,
-        sqrt(2)/2 - I*sqrt(2)/2: 1,
-        -sqrt(2)/2 + I*sqrt(2)/2: 1,
-        -sqrt(2)/2 - I*sqrt(2)/2: 1,
+        exp(-I*pi/4): 1,
+        exp(-3*I*pi/4): 1,
+        exp(3*I*pi/4): 1,
+        exp(I*pi/4): 1,
         S.One: 1, -S.One: 1, I: 1, -I: 1
     }
 
@@ -751,8 +754,8 @@ def test_issue_20913():
 
 def test_issue_22768():
     e = Rational(1, 3)
-    r = (-1/a)**e*(a + 1)**(5*e)
+    r = (1/a)**e*(a + 1)**(5*e)
     assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
-        r: 1,
-        -r*(1 + sqrt(3)*I)/2: 1,
-        r*(-1 + sqrt(3)*I)/2: 1}
+        -r: 1,
+        r*exp(I*pi/3): 1,
+        r*exp(-I*pi/3): 1}

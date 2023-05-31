@@ -229,8 +229,7 @@ def test_solve_polynomial1():
 
     assert solve(x - y**3, x) == [y**3]
     rx = root(x, 3)
-    assert solve(x - y**3, y) == [
-        rx, -rx/2 - sqrt(3)*I*rx/2, -rx/2 +  sqrt(3)*I*rx/2]
+    assert solve(x - y**3, y) == [rx, rx*exp(-2*I*pi/3), rx*exp(2*I*pi/3)]
     a11, a12, a21, a22, b1, b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
@@ -898,6 +897,7 @@ def test_PR1964():
     assert solve(exp(3*x) - exp(3), x) in [
         [1, log(E*(Rational(-1, 2) - sqrt(3)*I/2)), log(E*(Rational(-1, 2) + sqrt(3)*I/2))],
         [1, log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)],
+        [1, log(E*exp(-2*I*pi/3)), log(E*exp(2*I*pi/3))],
         ]
 
     # coverage test
@@ -2286,9 +2286,9 @@ def test_issue_11538():
     assert solve(x + E) == [-E]
     assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
     assert solve(x**3 + 2*E) == [
-        -cbrt(2 * E),
-        cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
-        cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
+            -cbrt(2)*cbrt(E),
+            cbrt(2)*cbrt(E)*exp(-I*pi/3),
+            cbrt(2)*cbrt(E)*exp(I*pi/3)]
     assert solve([x + 4, y + E], x, y) == {x: -4, y: -E}
     assert solve([x**2 + 4, y + E], x, y) == [
         (-2*I, -E), (2*I, -E)]
@@ -2535,10 +2535,11 @@ def test_issue_11553():
 
 def test_issue_19113_19102():
     t = S(1)/3
-    solve(cos(x)**5-sin(x)**5)
     assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
-        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
-        -atan(2**(t)*(1 + sqrt(3)*I)/2)]
+            I*atanh((-1)**(S(1)/6)*2**t),
+            -atan((-2)**t),
+            atan(2**t)
+        ]
     h = S.Half
     assert solve(cos(x)**2 + sin(x)) == [
         2*atan(-h + sqrt(5)/2 + sqrt(2)*sqrt(1 - sqrt(5))/2),
@@ -2626,9 +2627,9 @@ def test_solver_flags():
 
 def test_issue_22768():
     eq = 2*x**3 - 16*(y - 1)**6*z**3
-    assert solve(eq.expand(), x, simplify=False
-        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
-        -z*(1 + sqrt(3)*I)*(y - 1)**2]
+    base = 2*z*(y - 1)**2
+    ans = [base, base*exp(-2*I*pi/3), base*exp(2*I*pi/3)]
+    assert solve(eq.expand(), x, simplify=False) == ans
 
 
 def test_issue_22717():
