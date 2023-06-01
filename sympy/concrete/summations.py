@@ -1465,6 +1465,7 @@ def eval_sum_residue(f, i_a_b):
 
     def get_poles(denom):
         roots = denom.sqf_part().all_roots()
+        roots = [r.expand(complex=True) for r in roots]
         roots = sift(roots, lambda x: x.is_integer)
         if None in roots:
             return None

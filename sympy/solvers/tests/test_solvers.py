@@ -556,26 +556,17 @@ def test_solve_transcendental():
     assert solve(exp(x) + 1, x) == [pi*I]
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
-    result = solve(eq, x)
-    x0 = -log(2401)
-    x1 = 3**Rational(1, 5)
-    x2 = log(7**(7*x1/20))
-    x3 = sqrt(2)
-    x4 = sqrt(5)
-    x5 = x3*sqrt(x4 - 5)
-    x6 = x4 + 1
-    x7 = 1/(3*log(7))
-    x8 = -x4
-    x9 = x3*sqrt(x8 - 5)
-    x10 = x8 + 1
-    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
-           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
-           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
-    assert result == ans, result
+    ans = [
+        (-log(2401) - 5*LambertW(-(-1)**(S(2)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW((-1)**(S(3)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW(-(-1)**(S(4)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW(-log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        -S(4)/3 - 5*LambertW(7*(-3)**(S(1)/5)*log(7)/5)/(3*log(7))
+    ]
+    assert solve(eq, x) == ans
+
     # it works if expanded, too
-    assert solve(eq.expand(), x) == result
+    assert solve(eq.expand(), x) == ans
 
     assert solve(z*cos(x) - y, x) == [-acos(y/z) + 2*pi, acos(y/z)]
     assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
