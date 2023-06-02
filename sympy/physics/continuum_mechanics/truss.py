@@ -3,17 +3,24 @@ This module can be used to solve problems related
 to 2D Trusses.
 """
 
-from cmath import inf
+
+from cmath import atan, inf
 from sympy.core.add import Add
+from sympy.core.evalf import INF
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy import Matrix, pi
+from sympy.external.importtools import import_module
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import zeros
+import math
+from sympy.physics.units.quantities import Quantity
+from sympy.plotting import plot
+from sympy.utilities.decorator import doctest_depends_on
 from sympy import sin, cos
 
-
+numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 class Truss:
     """
@@ -47,7 +54,7 @@ class Truss:
     >>> t.add_member("member_4", "node_2", "node_3")
     >>> t.add_member("member_5", "node_3", "node_4")
     >>> t.apply_load("node_4", magnitude=10, direction=270)
-    >>> t.apply_support("node_1", type="fixed")
+    >>> t.apply_support("node_1", type="pinned")
     >>> t.apply_support("node_2", type="roller")
     """
 
@@ -64,6 +71,7 @@ class Truss:
         self._node_position_x = []
         self._node_position_y = []
         self._nodes_occupied = {}
+        self._member_lengths = {}
         self._reaction_loads = {}
         self._internal_forces = {}
         self._node_coordinates = {}
@@ -97,11 +105,11 @@ class Truss:
         return self._members
 
     @property
-    def member_labels(self):
+    def member_lengths(self):
         """
-        Returns the members of the truss along with the start and end points.
+        Returns the length of each member of the truss.
         """
-        return self._member_labels
+        return self._member_lengths
 
     @property
     def supports(self):
@@ -263,6 +271,7 @@ class Truss:
 
         else:
             self._members[label] = [start, end]
+            self._member_lengths[label] = sqrt((self._node_coordinates[end][0]-self._node_coordinates[start][0])**2 + (self._node_coordinates[end][1]-self._node_coordinates[start][1])**2)
             self._nodes_occupied[start, end] = True
             self._nodes_occupied[end, start] = True
             self._internal_forces[label] = 0
@@ -300,6 +309,7 @@ class Truss:
             self._nodes_occupied.pop((self._members[label][0], self._members[label][1]))
             self._nodes_occupied.pop((self._members[label][1], self._members[label][0]))
             self._members.pop(label)
+            self._member_lengths.pop(label)
             self._internal_forces.pop(label)
 
     def change_node_label(self, label, new_label):
@@ -434,6 +444,8 @@ class Truss:
                 if member == label:
                     self._members[new_label] = [self._members[member][0], self._members[member][1]]
                     self._members.pop(label)
+                    self._member_lengths[new_label] = self._member_lengths[label]
+                    self._member_lengths.pop(label)
                     self._internal_forces[new_label] = self._internal_forces[label]
                     self._internal_forces.pop(label)
 
@@ -733,3 +745,355 @@ class Truss:
             self._internal_forces[member] = forces_matrix[i]
             i += 1
         return
+
+    @doctest_depends_on(modules=('numpy',))
+    def draw(self, subs_dict=None):
+        """
+        Returns a plot object of the Truss with all its nodes, members,
+        supports and loads.
+
+        .. note::
+            The user must be careful while entering load values in their
+            directions. The draw function assumes a sign convention that
+            is used for plotting loads.
+
+            Given a right-handed coordinate system with XYZ coordinates,
+            the supports are assumed to be such that the reaction forces of a
+            pinned support is in the +X and +Y direction while those of a
+            roller support is in the +Y direction. For the load, the range
+            of angles, one can input goes all the way to 360 degrees which, in the
+            the plot is the angle that the load vector makes with the positive x-axis in the anticlockwise direction.
+
+            For example, for a 90-degree angle, the load will be a vertically
+            directed along +Y while a 270-degree angle denotes a vertical
+            load as well but along -Y.
+
+        Examples
+        ========
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.truss import Truss
+            >>> import math
+            >>> t = Truss()
+            >>> t.add_node("A", -4, 0)
+            >>> t.add_node("B", 0, 0)
+            >>> t.add_node("C", 4, 0)
+            >>> t.add_node("D", 8, 0)
+            >>> t.add_node("E", 6, 2/math.sqrt(3))
+            >>> t.add_node("F", 2, 2*math.sqrt(3))
+            >>> t.add_node("G", -2, 2/math.sqrt(3))
+            >>> t.add_member("AB","A","B")
+            >>> t.add_member("BC","B","C")
+            >>> t.add_member("CD","C","D")
+            >>> t.add_member("AG","A","G")
+            >>> t.add_member("GB","G","B")
+            >>> t.add_member("GF","G","F")
+            >>> t.add_member("BF","B","F")
+            >>> t.add_member("FC","F","C")
+            >>> t.add_member("CE","C","E")
+            >>> t.add_member("FE","F","E")
+            >>> t.add_member("DE","D","E")
+            >>> t.apply_support("A","pinned")
+            >>> t.apply_support("D","roller")
+            >>> t.apply_load("G", 3, 90)
+            >>> t.apply_load("E", 3, 90)
+            >>> t.apply_load("F", 2, 90)
+            >>> p = t.draw()
+            >>> p
+            Plot object containing:
+            [0]: cartesian line: 1 for x over (1.0, 1.0)
+            >>> p.show()
+        """
+        if not numpy:
+            raise ImportError("To use this function numpy module is required")
+
+        x = Symbol('x')
+
+        markers = []
+        annotations = []
+        rectangles = []
+
+        node_markers = self._draw_nodes(subs_dict)
+        markers += node_markers
+
+        member_rectangles = self._draw_members()
+        rectangles += member_rectangles
+
+        support_markers = self._draw_supports()
+        markers += support_markers
+
+        load_annotations = self._draw_loads()
+        annotations += load_annotations
+
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
+
+        lim = max(xmax*1.1-xmin*0.8+1, ymax*1.1-ymin*0.8+1)
+
+        if lim==xmax*1.1-xmin*0.8+1:
+            sing_plot = plot(1, (x, 1, 1), markers=markers, show=False, annotations=annotations, xlim=(xmin-0.05*lim, xmax*1.1), ylim=(xmin-0.05*lim, xmax*1.1), axis=False, rectangles=rectangles)
+
+        else:
+            sing_plot = plot(1, (x, 1, 1), markers=markers, show=False, annotations=annotations, xlim=(ymin-0.05*lim, ymax*1.1), ylim=(ymin-0.05*lim, ymax*1.1), axis=False, rectangles=rectangles)
+
+        return sing_plot
+
+
+    def _draw_nodes(self, subs_dict):
+        node_markers = []
+
+        for node in list(self._node_coordinates):
+            if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
+                if self._node_coordinates[node][0] in list(subs_dict):
+                    self._node_coordinates[node][0] = subs_dict[self._node_coordinates[node][0]]
+                else:
+                    raise ValueError("provided substituted dictionary is not adequate")
+            elif (type(self._node_coordinates[node][0]) == Mul):
+                objects = self._node_coordinates[node][0].as_coeff_Mul()
+                for object in objects:
+                    if type(object) in (Symbol, Quantity):
+                        if subs_dict==None or object not in list(subs_dict):
+                            raise ValueError("provided substituted dictionary is not adequate")
+                        else:
+                            self._node_coordinates[node][0] /= object
+                            self._node_coordinates[node][0] *= subs_dict[object]
+
+            if (type(self._node_coordinates[node][1]) in (Symbol, Quantity)):
+                if self._node_coordinates[node][1] in list(subs_dict):
+                    self._node_coordinates[node][1] = subs_dict[self._node_coordinates[node][1]]
+                else:
+                    raise ValueError("provided substituted dictionary is not adequate")
+            elif (type(self._node_coordinates[node][1]) == Mul):
+                objects = self._node_coordinates[node][1].as_coeff_Mul()
+                for object in objects:
+                    if type(object) in (Symbol, Quantity):
+                        if subs_dict==None or object not in list(subs_dict):
+                            raise ValueError("provided substituted dictionary is not adequate")
+                        else:
+                            self._node_coordinates[node][1] /= object
+                            self._node_coordinates[node][1] *= subs_dict[object]
+
+        for node in list(self._node_coordinates):
+            node_markers.append(
+                {
+                    'args':[[self._node_coordinates[node][0]], [self._node_coordinates[node][1]]],
+                    'marker':'o',
+                    'markersize':5,
+                    'color':'black'
+                }
+            )
+        return node_markers
+
+    def _draw_members(self):
+
+        member_rectangles = []
+
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        for member in self._members:
+            x1 = self._node_coordinates[self._members[member][0]][0]
+            y1 = self._node_coordinates[self._members[member][0]][1]
+            x2 = self._node_coordinates[self._members[member][1]][0]
+            y2 = self._node_coordinates[self._members[member][1]][1]
+            if x2!=x1 and y2!=y1:
+                if x2>x1:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff*cos(pi/4+atan((y2-y1)/(x2-x1)))/2, y1-0.005*max_diff*sin(pi/4+atan((y2-y1)/(x2-x1)))/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/math.sqrt(2),
+                            'height':0.005*max_diff,
+                            'angle':180*atan((y2-y1)/(x2-x1))/pi,
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x2-0.005*max_diff*cos(pi/4+atan((y2-y1)/(x2-x1)))/2, y2-0.005*max_diff*sin(pi/4+atan((y2-y1)/(x2-x1)))/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/math.sqrt(2),
+                            'height':0.005*max_diff,
+                            'angle':180*atan((y2-y1)/(x2-x1))/pi,
+                            'color':'brown'
+                        }
+                    )
+            elif y2==y1:
+                if x2>x1:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':0.005*max_diff,
+                            'angle':90*(1-math.copysign(1, x2-x1)),
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2),
+                            'height':-0.005*max_diff,
+                            'angle':90*(1-math.copysign(1, x2-x1)),
+                            'color':'brown'
+                        }
+                    )
+            else:
+                if y1<y2:
+                    member_rectangles.append(
+                        {
+                            'xy':(x1-0.005*max_diff/2, y1-0.005*max_diff/2),
+                            'width':sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/2,
+                            'height':0.005*max_diff,
+                            'angle':90*math.copysign(1, y2-y1),
+                            'color':'brown'
+                        }
+                    )
+                else:
+                    member_rectangles.append(
+                        {
+                            'xy':(x2-0.005*max_diff/2, y2-0.005*max_diff/2),
+                            'width':-(sqrt((x1-x2)**2+(y1-y2)**2)+0.005*max_diff/2),
+                            'height':0.005*max_diff,
+                            'angle':90*math.copysign(1, y2-y1),
+                            'color':'brown'
+                        }
+                    )
+
+        return member_rectangles
+
+    def _draw_supports(self):
+        support_markers = []
+
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin
+        else:
+            max_diff = 1.1*ymax-0.8*ymin
+
+        for node in self._supports:
+            if self._supports[node]=='pinned':
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]]
+                        ],
+                        'marker':6,
+                        'markersize':15,
+                        'color':'black',
+                        'markerfacecolor':'none'
+                    }
+                )
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.035*max_diff]
+                        ],
+                        'marker':'_',
+                        'markersize':14,
+                        'color':'black'
+                    }
+                )
+
+            elif self._supports[node]=='roller':
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.02*max_diff]
+                        ],
+                        'marker':'o',
+                        'markersize':11,
+                        'color':'black',
+                        'markerfacecolor':'none'
+                    }
+                )
+                support_markers.append(
+                    {
+                        'args':[
+                            [self._node_coordinates[node][0]],
+                            [self._node_coordinates[node][1]-0.0375*max_diff]
+                        ],
+                        'marker':'_',
+                        'markersize':14,
+                        'color':'black'
+                    }
+                )
+        return support_markers
+
+    def _draw_loads(self):
+        load_annotations = []
+
+        xmax = -INF
+        xmin = INF
+        ymax = -INF
+        ymin = INF
+
+        for node in list(self._node_coordinates):
+            xmax = max(xmax, self._node_coordinates[node][0])
+            xmin = min(xmin, self._node_coordinates[node][0])
+            ymax = max(ymax, self._node_coordinates[node][1])
+            ymin = min(ymin, self._node_coordinates[node][1])
+
+        if abs(1.1*xmax-0.8*xmin)>abs(1.1*ymax-0.8*ymin):
+            max_diff = 1.1*xmax-0.8*xmin+5
+        else:
+            max_diff = 1.1*ymax-0.8*ymin+5
+
+        for node in self._loads:
+            for load in self._loads[node]:
+                if load[0] in [Symbol('R_'+str(node)+'_x'), Symbol('R_'+str(node)+'_y')]:
+                    continue
+                x = self._node_coordinates[node][0]
+                y = self._node_coordinates[node][1]
+                load_annotations.append(
+                    {
+                        'text':'',
+                        'xy':(
+                            x-math.cos(pi*load[1]/180)*(max_diff/100),
+                            y-math.sin(pi*load[1]/180)*(max_diff/100)
+                        ),
+                        'xytext':(
+                            x-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.cos(pi*load[1]/180)/20,
+                            y-(max_diff/100+abs(xmax-xmin)+abs(ymax-ymin))*math.sin(pi*load[1]/180)/20
+                        ),
+                        'arrowprops':{'width':1.5, 'headlength':5, 'headwidth':5, 'facecolor':'black'}
+                    }
+                )
+        return load_annotations
