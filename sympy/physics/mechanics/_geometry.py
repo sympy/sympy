@@ -22,9 +22,13 @@ from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
 
 if TYPE_CHECKING:
-    from sympy.core.backend import Symbol
-    from sympy.core.expr import Expr
+    from sympy.core.backend import USE_SYMENGINE, Symbol
     from sympy.physics.mechanics import Point
+
+    if USE_SYMENGINE:
+        from sympy.core.backend import Basic as ExprType
+    else:
+        from sympy.core.expr import Expr as ExprType
 
 
 __all__ = [
@@ -58,7 +62,7 @@ class GeometryBase(ABC):
         pass
 
     @abstractmethod
-    def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
+    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
         """The shortest distance between two points on a geometry's surface.
 
         Parameters
@@ -176,7 +180,7 @@ class Sphere(GeometryBase):
             point_radius = point_vector**2
         return Eq(point_radius, self.radius**2) == True
 
-    def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
+    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
         r"""The shortest distance between two points on a geometry's surface.
 
         Explanation
@@ -390,7 +394,7 @@ class Cylinder(GeometryBase):
             point_radius = point_vector**2
         return Eq(trigsimp(point_radius), self.radius**2) == True
 
-    def geodesic_length(self, point_1: Point, point_2: Point) -> Expr:
+    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
         r"""The shortest distance between two points on a geometry's surface.
 
         Explanation
@@ -505,7 +509,7 @@ class Cylinder(GeometryBase):
         )
 
 
-def _directional_atan(numerator: Expr, denominator: Expr) -> Expr:
+def _directional_atan(numerator: ExprType, denominator: ExprType) -> ExprType:
     """Compute atan in a directional sense as required for geodesics.
 
     Explanation

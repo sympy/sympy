@@ -633,6 +633,25 @@ def test_ccode_unused_array_arg():
     )
     assert source == expected
 
+def test_ccode_unused_array_arg_func():
+    # issue 16689
+    X = MatrixSymbol('X',3,1)
+    Y = MatrixSymbol('Y',3,1)
+    z = symbols('z',integer = True)
+    name_expr = ('testBug', X[0] + X[1])
+    result = codegen(name_expr, language='C', header=False, empty=False, argument_sequence=(X, Y, z))
+    source = result[0][1]
+    expected = (
+        '#include "testBug.h"\n'
+        '#include <math.h>\n'
+        'double testBug(double *X, double *Y, int z) {\n'
+        '   double testBug_result;\n'
+        '   testBug_result = X[0] + X[1];\n'
+        '   return testBug_result;\n'
+        '}\n'
+    )
+    assert source == expected
+
 def test_empty_f_code():
     code_gen = FCodeGen()
     source = get_string(code_gen.dump_f95, [])
@@ -1554,7 +1573,7 @@ def test_custom_codegen():
     assert source == expected
 
 def test_c_with_printer():
-    #issue 13586
+    # issue 13586
     from sympy.printing.c import C99CodePrinter
     class CustomPrinter(C99CodePrinter):
         def _print_Pow(self, expr):

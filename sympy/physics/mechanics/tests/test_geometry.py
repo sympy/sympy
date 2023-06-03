@@ -23,8 +23,13 @@ from sympy.physics.mechanics._geometry import Cylinder, Sphere
 from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:
-    from sympy.core.expr import Expr
+    from sympy.core.backend import USE_SYMENGINE
     from sympy.physics.mechanics import Vector
+
+    if USE_SYMENGINE:
+        from sympy.core.backend import Basic as ExprType
+    else:
+        from sympy.core.expr import Expr as ExprType
 
 
 r = Symbol('r')
@@ -78,7 +83,7 @@ class TestSphere:
             ),
         ]
     )
-    def test_geodesic_length(position_1: Vector, position_2: Vector, expected: Expr) -> None:
+    def test_geodesic_length(position_1: Vector, position_2: Vector, expected: ExprType) -> None:
         r = Symbol('r')
         pO = Point('pO')
         sphere = Sphere(r, pO)
@@ -172,7 +177,7 @@ class TestCylinder:
         axis: Vector,
         position_1: Vector,
         position_2: Vector,
-        expected: Expr,
+        expected: ExprType,
     ) -> None:
         r = Symbol('r')
         pO = Point('pO')
