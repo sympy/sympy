@@ -388,7 +388,7 @@ def refine_matrixelement(expr, assumptions):
     >>> refine_matrixelement(X[1, 0], Q.hermitian(X))
     conjugate(X[0, 1])
     >>> refine_matrixelement(X[0, 0], Q.diagonal(X))
-    (X[0, 0])
+    X[0, 0]
     >>> refine_matrixelement(X[0, 1], Q.diagonal(X))
     0
     """
