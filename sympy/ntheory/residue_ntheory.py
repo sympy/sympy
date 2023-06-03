@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from sympy.core.function import Function
-from sympy.core.power import isqrt
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert
+from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -13,20 +12,36 @@ from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint
 
+from collections import defaultdict
 from itertools import cycle, product
 
 
 def n_order(a, n):
-    """Returns the order of ``a`` modulo ``n``.
+    r""" Returns the order of ``a`` modulo ``n``.
+
+    Explanation
+    ===========
 
     The order of ``a`` modulo ``n`` is the smallest integer
-    ``k`` such that ``a**k`` leaves a remainder of 1 with ``n``.
+    ``k`` such that `a^k` leaves a remainder of 1 with ``n``.
 
     Parameters
     ==========
 
     a : integer
     n : integer, n > 1. a and n should be relatively prime
+
+    Returns
+    =======
+
+    int : the order of ``a`` modulo ``n``
+
+    Raises
+    ======
+
+    ValueError
+        If `n \le 1` or `\gcd(a, n) \neq 1`.
+        If ``a`` or ``n`` is not an integer.
 
     Examples
     ========
@@ -36,8 +51,15 @@ def n_order(a, n):
     6
     >>> n_order(4, 7)
     3
+
+    See Also
+    ========
+
+    is_primitive_root
+        We say that ``a`` is a primitive root of ``n``
+        when the order of ``a`` modulo ``n`` equals ``totient(n)``
+
     """
-    from collections import defaultdict
     a, n = as_int(a), as_int(n)
     if n <= 1:
         raise ValueError("n should be an integer greater than 1")
@@ -70,16 +92,34 @@ def n_order(a, n):
 
 
 def _primitive_root_prime_iter(p):
-    """
-    Generates the primitive roots for a prime ``p``.
+    r""" Generates the primitive roots for a prime ``p``.
+
+    Explanation
+    ===========
 
     The primitive roots generated are not necessarily sorted.
     However, the first one is the smallest primitive root.
+
+    Find the element whose order is ``p-1`` from the smaller one.
+    If we can find the first primitive root ``g``, we can use the following theorem.
+
+    .. math ::
+        \operatorname{ord}(g^k) = \frac{\operatorname{ord}(g)}{\gcd(\operatorname{ord}(g), k)}
+
+    From the assumption that `\operatorname{ord}(g)=p-1`,
+    it is a necessary and sufficient condition for
+    `\operatorname{ord}(g^k)=p-1` that `\gcd(p-1, k)=1`.
 
     Parameters
     ==========
 
     p : odd prime
+
+    Yields
+    ======
+
+    int
+        the primitive roots of ``p``
 
     Examples
     ========
@@ -94,7 +134,6 @@ def _primitive_root_prime_iter(p):
     .. [1] W. Stein "Elementary Number Theory" (2011), page 44
 
     """
-    # it is assumed that p is an int
     if p == 3:
         yield 2
         return
@@ -121,17 +160,30 @@ def _primitive_root_prime_iter(p):
 
 
 def _primitive_root_prime_power_iter(p, e):
-    """
-    Generates the primitive roots of ``p**e``
+    r""" Generates the primitive roots of `p^e`.
 
-    Let g be the primitive root of p.
-    If pow(g,p-1,p**2)!=1, then g is primitive root of p**e.
+    Explanation
+    ===========
+
+    Let ``g`` be the primitive root of ``p``.
+    If `g^{p-1} \not\equiv 1 \pmod{p^2}`, then ``g`` is primitive root of `p^e`.
+    Thus, if we find a primitive root ``g`` of ``p``,
+    then `g, g+p, g+2p, \ldots, g+(p-1)p` are primitive roots of `p^2` except one.
+    That one satisfies `\hat{g}^{p-1} \equiv 1 \pmod{p^2}`.
+    If ``h`` is the primitive root of `p^2`,
+    then `h, h+p^2, h+2p^2, \ldots, h+(p^{e-2}-1)p^e` are primitive roots of `p^e`.
 
     Parameters
     ==========
 
     p : odd prime
     e : positive integer
+
+    Yields
+    ======
+
+    int
+        the primitive roots of `p^e`
 
     Examples
     ========
@@ -141,10 +193,10 @@ def _primitive_root_prime_power_iter(p, e):
     [2, 3, 8, 12, 13, 17, 22, 23]
 
     """
-    p2 = p**2
     if e == 1:
         yield from _primitive_root_prime_iter(p)
     else:
+        p2 = p**2
         for g in _primitive_root_prime_iter(p):
             t = (g - pow(g, 2 - p, p2)) % p2
             for k in range(0, p2, p):
@@ -153,17 +205,25 @@ def _primitive_root_prime_power_iter(p, e):
 
 
 def _primitive_root_prime_power2_iter(p, e):
-    """
-    Generates the primitive roots of ``2*p**e``
+    r""" Generates the primitive roots of `2p^e`.
 
-    If g is the primitive root of p**e,
-    then the odd one of g and g+p**e is the primitive root of 2*p**e.
+    Explanation
+    ===========
+
+    If ``g`` is the primitive root of ``p**e``,
+    then the odd one of ``g`` and ``g+p**e`` is the primitive root of ``2*p**e``.
 
     Parameters
     ==========
 
     p : odd prime
     e : positive integer
+
+    Yields
+    ======
+
+    int
+        the primitive roots of `2p^e`
 
     Examples
     ========
@@ -181,14 +241,43 @@ def _primitive_root_prime_power2_iter(p, e):
 
 
 def primitive_root(p, smallest=True):
-    """
-    Returns a primitive root of p or None.
+    r""" Returns a primitive root of ``p`` or None.
+
+    Explanation
+    ===========
+
+    For the definition of primitive root,
+    see the explanation of ``is_primitive_root``.
+
+    The primitive root of ``p`` exist only for
+    `p = 2, 4, q^e, 2q^e` (``q`` is an odd prime).
+    Now, if we know the primitive root of ``q``,
+    we can calculate the primitive root of `q^e`,
+    and if we know the primitive root of `q^e`,
+    we can calculate the primitive root of `2q^e`.
+    When there is no need to find the smallest primitive root,
+    this property can be used to obtain a fast primitive root.
+    On the other hand, when we want the smallest primitive root,
+    we naively determine whether it is a primitive root or not.
 
     Parameters
     ==========
 
     p : integer, p > 1
     smallest : if True the smallest primitive root is returned or None
+
+    Returns
+    =======
+
+    int | None :
+        If the primitive root exists, return the primitive root of ``p``.
+        If not, return None.
+
+    Raises
+    ======
+
+    ValueError
+        If `p \le 1` or ``p`` is not an integer.
 
     Examples
     ========
@@ -198,6 +287,13 @@ def primitive_root(p, smallest=True):
     2
     >>> primitive_root(21) is None
     True
+    >>> primitive_root(50, smallest=False)
+    27
+
+    See Also
+    ========
+
+    is_primitive_root
 
     References
     ==========
@@ -207,82 +303,79 @@ def primitive_root(p, smallest=True):
 
     """
     p = as_int(p)
-    if p < 2:
+    if p <= 1:
         raise ValueError("p should be an integer greater than 1")
     if p <= 4:
         return p - 1
+    p_even = p % 2 == 0
+    if not p_even:
+        q = p  # p is odd
+    elif p % 4:
+        q = p//2  # p had 1 factor of 2
+    else:
+        return None  # p had more than one factor of 2
+    if isprime(q):
+        e = 1
+    else:
+        m = perfect_power(q)
+        if not m:
+            return None
+        q, e = m
+        if not isprime(q):
+            return None
     if not smallest:
-        p_even = p % 2 == 0
-        if not p_even:
-            q = p  # p is odd
-        elif p % 4:
-            q = p//2  # p had 1 factor of 2
-        else:
-            return None  # p had more than one factor of 2
-        if isprime(q):
-            e = 1
-        else:
-            m = perfect_power(q)
-            if not m:
-                return None
-            q, e = m
-            if not isprime(q):
-                return None
         if p_even:
             return next(_primitive_root_prime_power2_iter(q, e))
         return next(_primitive_root_prime_power_iter(q, e))
-    f = factorint(p)
-    if len(f) > 2:
-        return None
-    if len(f) == 2:
-        if 2 not in f or f[2] > 1:
-            return None
-
-        # case p = 2*p1**k, p1 prime
-        for p1, e1 in f.items():
-            if p1 != 2:
-                break
-        i = 1
-        while i < p:
-            i += 2
-            if i % p1 == 0:
-                continue
-            if is_primitive_root(i, p):
+    if p_even:
+        for i in range(3, p, 2):
+            if i % q and is_primitive_root(i, p):
                 return i
-
-    else:
-        if 2 in f:
-            if p == 4:
-                return 3
-            return None
-        p1, n = list(f.items())[0]
-        if n > 1:
-            # see Ref [2], page 81
-            g = primitive_root(p1)
-            if is_primitive_root(g, p1**2):
-                return g
-            else:
-                for i in range(2, g + p1 + 1):
-                    if gcd(i, p) == 1 and is_primitive_root(i, p):
-                        return i
-
-    return next(_primitive_root_prime_iter(p))
+    g = next(_primitive_root_prime_iter(q))
+    if e == 1 or pow(g, q - 1, q**2) != 1:
+        return g
+    for i in range(g + 1, p):
+        if i % q and is_primitive_root(i, p):
+            return i
 
 
 def is_primitive_root(a, p):
-    """
-    Returns True if ``a`` is a primitive root of ``p``.
+    r""" Returns True if ``a`` is a primitive root of ``p``.
 
-    ``a`` is said to be the primitive root of ``p`` if gcd(a, p) == 1 and
-    totient(p) is the smallest positive number s.t.
+    Explanation
+    ===========
 
-        a**totient(p) cong 1 mod(p)
+    ``a`` is said to be the primitive root of ``p`` if `\gcd(a, p) = 1` and
+    `\phi(p)` is the smallest positive number s.t.
+
+        `a^{\phi(p)} \equiv 1 \pmod{p}`.
+
+    where `\phi(p)` is Euler's totient function.
+
+    The primitive root of ``p`` exist only for
+    `p = 2, 4, q^e, 2q^e` (``q`` is an odd prime).
+    Hence, if it is not such a ``p``, it returns False.
+    To determine the primitive root, we need to know
+    the prime factorization of ``q-1``.
+    The hardness of the determination depends on this complexity.
 
     Parameters
     ==========
 
     a : integer
-    p : integer, p > 1. a and p should be relatively prime
+    p : integer, ``p`` > 1. ``a`` and ``p`` should be relatively prime
+
+    Returns
+    =======
+
+    bool : If True, ``a`` is the primitive root of ``p``.
+
+    Raises
+    ======
+
+    ValueError
+        If `p \le 1` or `\gcd(a, p) \neq 1`.
+        If ``a`` or ``p`` is not an integer.
 
     Examples
     ========
@@ -296,6 +389,11 @@ def is_primitive_root(a, p):
     True
     >>> n_order(9, 10) == totient(10)
     False
+
+    See Also
+    ========
+
+    primitive_root
 
     """
     a, p = as_int(a), as_int(p)
@@ -346,7 +444,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     # find a non-quadratic residue
     while 1:
         d = randint(2, p - 1)
-        r = legendre_symbol(d, p)
+        r = jacobi(d, p)
         if r == -1:
             break
     #assert legendre_symbol(d, p) == -1
@@ -557,7 +655,7 @@ def _sqrt_mod_prime_power(a, p, k):
         return sorted([r, pk - r, (r + h) % pk, -(r + h) % pk])
 
     # If the Legendre symbol (a/p) is not 1, no solution exists.
-    if jacobi_symbol(a, p) != 1:
+    if jacobi(a, p) != 1:
         return None
     if p % 4 == 3:
         res = pow(a, (p + 1) // 4, p)
@@ -644,7 +742,7 @@ def is_quad_residue(a, p):
     if a < 2 or p < 3:
         return True
     if not isprime(p):
-        if p % 2 and jacobi_symbol(a, p) == -1:
+        if p % 2 and jacobi(a, p) == -1:
             return False
         r = sqrt_mod(a, p)
         if r is None:
@@ -936,14 +1034,9 @@ def legendre_symbol(a, p):
 
     """
     a, p = as_int(a), as_int(p)
-    if not isprime(p) or p == 2:
+    if p == 2 or not isprime(p):
         raise ValueError("p should be an odd prime")
-    a = a % p
-    if not a:
-        return 0
-    if pow(a, (p - 1) // 2, p) == 1:
-        return 1
-    return -1
+    return int(legendre(a, p))
 
 
 def jacobi_symbol(m, n):
@@ -1004,28 +1097,7 @@ def jacobi_symbol(m, n):
     is_quad_residue, legendre_symbol
     """
     m, n = as_int(m), as_int(n)
-    if n < 0 or not n % 2:
-        raise ValueError("n should be an odd positive integer")
-    if m < 0 or m > n:
-        m %= n
-    if not m:
-        return int(n == 1)
-    if n == 1 or m == 1:
-        return 1
-    if gcd(m, n) != 1:
-        return 0
-
-    j = 1
-    while m != 0:
-        while m % 2 == 0 and m > 0:
-            m >>= 1
-            if n % 8 in [3, 5]:
-                j = -j
-        m, n = n, m
-        if m % 4 == n % 4 == 3:
-            j = -j
-        m %= n
-    return j
+    return int(jacobi(m, n))
 
 
 class mobius(Function):
@@ -1155,7 +1227,7 @@ def _discrete_log_shanks_steps(n, a, b, order=None):
     b %= n
     if order is None:
         order = n_order(b, n)
-    m = isqrt(order) + 1
+    m = sqrt(order) + 1
     T = {}
     x = 1
     for i in range(m):

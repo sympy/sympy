@@ -41,6 +41,7 @@ _known_functions_math = {
     'floor': 'floor',
     'gamma': 'gamma',
     'hypot': 'hypot',
+    'isnan': 'isnan',
     'loggamma': 'lgamma',
     'log': 'log',
     'ln': 'log',
@@ -52,7 +53,7 @@ _known_functions_math = {
     'Sqrt': 'sqrt',
     'tan': 'tan',
     'tanh': 'tanh'
-}  # Not used from ``math``: [copysign isclose isfinite isinf isnan ldexp frexp pow modf
+}  # Not used from ``math``: [copysign isclose isfinite isinf ldexp frexp pow modf
 # radians trunc fmod fsum gcd degrees fabs]
 _known_constants_math = {
     'Exp1': 'e',
@@ -306,18 +307,31 @@ class AbstractPythonCodePrinter(CodePrinter):
             self._print(decl.variable.value)
         )
 
+    def _print_BreakToken(self, bt):
+        return 'break'
+
     def _print_Return(self, ret):
         arg, = ret.args
         return 'return %s' % self._print(arg)
 
+    def _print_Raise(self, rs):
+        arg, = rs.args
+        return 'raise %s' % self._print(arg)
+
+    def _print_RuntimeError_(self, re):
+        message, = re.args
+        return "RuntimeError(%s)" % self._print(message)
+
     def _print_Print(self, prnt):
         print_args = ', '.join((self._print(arg) for arg in prnt.print_args))
-        if prnt.format_string != None: # Must be '!= None', cannot be 'is not None'
-            print_args = '{} % ({})'.format(
-                self._print(prnt.format_string), print_args)
+        from sympy.codegen.ast import none
+        if prnt.format_string != none:
+            print_args = '{} % ({}), end=""'.format(
+                self._print(prnt.format_string),
+                print_args
+            )
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
-
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
