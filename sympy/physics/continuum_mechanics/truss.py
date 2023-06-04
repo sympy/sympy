@@ -48,7 +48,7 @@ class Truss:
     >>> t.add_member(("member_1", "node_1", "node_4"), ("member_2", "node_2", "node_4"), ("member_3", "node_1", "node_3"))
     >>> t.add_member(("member_4", "node_2", "node_3"), ("member_5", "node_3", "node_4"))
     >>> t.apply_load(("node_4", 10, 270))
-    >>> t.apply_support(("node_1", "fixed"), ("node_2", "roller"))
+    >>> t.apply_support(("node_1", "pinned"), ("node_2", "roller"))
     """
 
     def __init__(self):
@@ -795,29 +795,16 @@ class Truss:
             >>> from sympy.physics.continuum_mechanics.truss import Truss
             >>> import math
             >>> t = Truss()
-            >>> t.add_node("A", -4, 0)
-            >>> t.add_node("B", 0, 0)
-            >>> t.add_node("C", 4, 0)
-            >>> t.add_node("D", 8, 0)
-            >>> t.add_node("E", 6, 2/math.sqrt(3))
-            >>> t.add_node("F", 2, 2*math.sqrt(3))
-            >>> t.add_node("G", -2, 2/math.sqrt(3))
-            >>> t.add_member("AB","A","B")
-            >>> t.add_member("BC","B","C")
-            >>> t.add_member("CD","C","D")
-            >>> t.add_member("AG","A","G")
-            >>> t.add_member("GB","G","B")
-            >>> t.add_member("GF","G","F")
-            >>> t.add_member("BF","B","F")
-            >>> t.add_member("FC","F","C")
-            >>> t.add_member("CE","C","E")
-            >>> t.add_member("FE","F","E")
-            >>> t.add_member("DE","D","E")
-            >>> t.apply_support("A","pinned")
-            >>> t.apply_support("D","roller")
-            >>> t.apply_load("G", 3, 90)
-            >>> t.apply_load("E", 3, 90)
-            >>> t.apply_load("F", 2, 90)
+            >>> t.add_node(("A", -4, 0), ("B", 0, 0), ("C", 4, 0), ("D", 8, 0))
+            >>> t.add_node(("E", 6, 2/math.sqrt(3)))
+            >>> t.add_node(("F", 2, 2*math.sqrt(3)))
+            >>> t.add_node(("G", -2, 2/math.sqrt(3)))
+            >>> t.add_member(("AB","A","B"), ("BC","B","C"), ("CD","C","D"))
+            >>> t.add_member(("AG","A","G"), ("GB","G","B"), ("GF","G","F"))
+            >>> t.add_member(("BF","B","F"), ("FC","F","C"), ("CE","C","E"))
+            >>> t.add_member(("FE","F","E"), ("DE","D","E"))
+            >>> t.apply_support(("A","pinned"), ("D","roller"))
+            >>> t.apply_load(("G", 3, 90), ("E", 3, 90), ("F", 2, 90))
             >>> p = t.draw()
             >>> p
             Plot object containing:
