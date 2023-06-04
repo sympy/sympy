@@ -12,6 +12,7 @@ from array import array as _array
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
+from sympy.external.gmpy import sqrt
 from .primetest import isprime
 from sympy.utilities.misc import as_int
 
@@ -24,8 +25,8 @@ def _aset(*v):
     return _array('l', v)
 
 
-def _arange(a, b):
-    return _array('l', range(a, b))
+def _arange(a, b, c=1):
+    return _array('l', range(a, b, c))
 
 
 def _as_int_ceiling(a):
@@ -39,7 +40,8 @@ class Sieve:
     """An infinite list of prime numbers, implemented as a dynamically
     growing sieve of Eratosthenes. When a lookup is requested involving
     an odd number that has not been sieved, the sieve is automatically
-    extended up to that number.
+    extended up to that number. Note that due to implementation problems,
+    it cannot handle more than 2**31-1.
 
     Examples
     ========
@@ -110,13 +112,13 @@ class Sieve:
 
         # Create a new sieve starting from sqrt(n)
         begin = self._list[-1] + 1
-        newsieve = _arange(begin, n + 1)
+        newsieve = _arange(begin + 1, n + 1, 2)
 
-        # Now eliminate all multiples of primes in [2, sqrt(n)]
-        for p in self.primerange(maxbase):
+        # Now eliminate all multiples of primes in [3, sqrt(n)]
+        for p in self.primerange(3, maxbase):
             # Start counting at a multiple of p, offsetting
             # the index to account for the new sieve's base index
-            startindex = (-begin) % p
+            startindex = ((p - begin) % (2*p)) // 2
             for i in range(startindex, len(newsieve), p):
                 newsieve[i] = 0
 
@@ -745,14 +747,37 @@ def primerange(a, b=None):
         a, b = 2, a
     if a >= b:
         return
-    # if we already have the range, return it
-    if b <= sieve._list[-1]:
+    # If we already have the range, return it.
+    largest_known_prime = sieve._list[-1]
+    if b <= largest_known_prime:
         yield from sieve.primerange(a, b)
         return
+    # If we know some of it, return it.
+    if a <= largest_known_prime:
+        yield from sieve.primerange(a, largest_known_prime + 1)
+        a = largest_known_prime + 1
+    if a % 2:
+        a -= 1
+    # Array length to be allocated. The larger the length,
+    # the more efficient, but uses more memory.
+    band = 1_000_000
+    tail = min(b, (largest_known_prime + 1)**2)
+    if tail % 2:
+        tail -= 1
+    # assert a % 2 == tail % 2 == 0
+    while a < tail:
+        block_size = min(band, (tail - a) // 2)
+        block = [True] * block_size
+        for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+            for t in range((-(a + 1 + p) // 2) % p, block_size, p):
+                block[t] = False
+        for idx, p in enumerate(block):
+            if p:
+                yield a + 2 * idx + 1
+        a += 2 * block_size
+    if b <= a:
+        return
     # otherwise compute, without storing, the desired range.
-
-    a = _as_int_ceiling(a) - 1
-    b = _as_int_ceiling(b)
     while 1:
         a = nextprime(a)
         if a < b:
