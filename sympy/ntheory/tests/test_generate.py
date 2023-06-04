@@ -178,6 +178,22 @@ def test_generate():
             B = list(primerange(i, i + j))
             assert A == B
     s = Sieve()
+    sieve._reset(prime=True)
+    sieve.extend(13)
+    for i in range(200):
+        for j in range(i, 200):
+            A = list(s.primerange(i, j))
+            B = list(primerange(i, j))
+            assert A == B
+    sieve.extend(1000)
+    for a, b in [(901, 1103), # a < 1000 < b < 1000**2
+                 (806, 1002007), # a < 1000 < 1000**2 < b
+                 (2000, 30001), # 1000 < a < b < 1000**2
+                 (100005, 1010001), # 1000 < a < 1000**2 < b
+                 (1003003, 1005000), # 1000**2 < a < b
+                 ]:
+        assert list(primerange(a, b)) == list(s.primerange(a, b))
+    s = Sieve()
     assert s[10] == 29
 
     assert nextprime(2, 2) == 5
