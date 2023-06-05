@@ -442,7 +442,6 @@ class MatrixCalculus(MatrixCommon):
 
     def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
-        ``args`` will be passed to the ``integrate`` function.
 
         Examples
         ========
