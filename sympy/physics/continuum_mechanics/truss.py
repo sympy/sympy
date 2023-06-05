@@ -170,10 +170,10 @@ class Truss:
             x = sympify(x)
             y=i[2]
             y = sympify(y)
-            if label in self._node_labels:
+            if label in self._node_coordinates:
                 raise ValueError("Node needs to have a unique label")
 
-            elif x in self._node_position_x and y in self._node_position_y and self._node_position_x.index(x)==self._node_position_y.index(y):
+            elif [x, y] in self._node_coordinates.values():
                 raise ValueError("A node already exists at the given position")
 
             else :
@@ -216,7 +216,7 @@ class Truss:
                     x = self._node_position_x[i]
                     y = self._node_position_y[i]
 
-            if label not in self._node_labels:
+            if label not in self._node_coordinates:
                 raise ValueError("No such node exists in the truss")
 
             else:
@@ -269,10 +269,10 @@ class Truss:
             start = i[1]
             end = i[2]
 
-            if start not in self._node_labels or end not in self._node_labels or start==end:
+            if start not in self._node_coordinates or end not in self._node_coordinates or start==end:
                 raise ValueError("The start and end points of the member must be unique nodes")
 
-            elif label in list(self._members):
+            elif label in self._members:
                 raise ValueError("A member with the same label already exists for the truss")
 
             elif self._nodes_occupied.get((start, end)):
@@ -308,7 +308,7 @@ class Truss:
         {'AB': ['A', 'B']}
         """
         for label in args:
-            if label not in list(self._members):
+            if label not in self._members:
                 raise ValueError("No such member exists in the Truss")
 
             else:
@@ -348,9 +348,9 @@ class Truss:
         for i in args:
             label = i[0]
             new_label = i[1]
-            if label not in self._node_labels:
+            if label not in self._node_coordinates:
                 raise ValueError("No such node exists for the Truss")
-            elif new_label in self._node_labels:
+            elif new_label in self._node_coordinates:
                 raise ValueError("A node with the given label already exists")
             else:
                 for node in self._nodes:
@@ -449,7 +449,7 @@ class Truss:
         for i in args:
             label = i[0]
             new_label = i[1]
-            if label not in list(self._members):
+            if label not in self._members:
                 raise ValueError("No such member exists for the Truss")
             else:
                 members_duplicate = list(self._members).copy()
@@ -501,7 +501,7 @@ class Truss:
             magnitude = sympify(magnitude)
             direction = sympify(direction)
 
-            if location not in self.node_labels:
+            if location not in self._node_coordinates:
                 raise ValueError("Load must be applied at a known node")
 
             else:
@@ -552,7 +552,7 @@ class Truss:
             magnitude = sympify(magnitude)
             direction = sympify(direction)
 
-            if location not in self.node_labels:
+            if location not in self._node_coordinates:
                 raise ValueError("Load must be removed from a known node")
 
             else:
@@ -590,7 +590,7 @@ class Truss:
         for i in args:
             location = i[0]
             type = i[1]
-            if location not in self._node_labels:
+            if location not in self._node_coordinates:
                 raise ValueError("Support must be added on a known node")
 
             else:
@@ -633,10 +633,10 @@ class Truss:
         """
         for location in args:
 
-            if location not in self._node_labels:
+            if location not in self._node_coordinates:
                 raise ValueError("No such node exists in the Truss")
 
-            elif location not in list(self._supports):
+            elif location not in self._supports:
                 raise ValueError("No support has been added to the given node")
 
             else:
