@@ -333,13 +333,6 @@ if __name__ == '__main__':
               },
           data_files=[('share/man/man1', ['doc/man/isympy.1'])],
           cmdclass={'test': test_sympy,
-<<<<<<< HEAD
-                    'antlr': antlr,
-=======
-                    'bench': run_benchmarks,
-                    'clean': clean,
-                    'audit': audit,
->>>>>>> e398b35ee9 (Removing all mention of sympy/parsing/latex/_antlr from docs and tests)
                     'sdist': sdist_sympy,
                     },
           python_requires='>=3.8',
