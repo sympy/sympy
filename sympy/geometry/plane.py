@@ -33,8 +33,8 @@ class Plane(GeometryEntity):
     analogue of a point (zero-dimensions), a line (one-dimension) and a solid
     (three-dimensions). A plane can generally be constructed by two types of
     inputs. They are:
-    - three non-collinear points 
-    - a point and the plane's normal vector.
+    - three non-collinear points
+    - a point and the plane's normal vector
 
     Attributes
     ==========
