@@ -213,11 +213,17 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
             expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
 
+    def _internal_print_MinMax(self, name, args):
+        if len(args) == 1:
+            return self._print(args[0])
+        else:
+            return '{}({},{})'.format(name, self._internal_print_MinMax(name, args[:-1]), self._print(args[-1]))
+
     def _print_Min(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amin'), ','.join(self._print(i) for i in expr.args))
+        return self._internal_print_MinMax(self._module_format(self._module + '.minimum'), expr.args)
 
     def _print_Max(self, expr):
-        return '{}(({}), axis=0)'.format(self._module_format(self._module + '.amax'), ','.join(self._print(i) for i in expr.args))
+        return self._internal_print_MinMax(self._module_format(self._module + '.maximum'), expr.args)
 
     def _print_arg(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.angle'), self._print(expr.args[0]))
