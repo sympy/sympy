@@ -1,15 +1,20 @@
+from sympy.core import Eq
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane, Circle
 from sympy.geometry.util import are_coplanar
+from sympy.logic import And
 from sympy.testing.pytest import raises
 
 
+
 def test_plane():
-    x, y, z, u, v = symbols('x y z u v', real=True)
+    x, y, z, u, v, w = symbols('x y z u v w', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
@@ -115,7 +120,8 @@ def test_plane():
     assert pl6.distance(Plane(Point3D(5, 5, 5), normal_vector=(8, 8, 8))) == sqrt(3)
     assert pl6.distance(Ray3D(Point3D(1, 3, 4), direction_ratio=[1, 0, -3])) == 4*sqrt(3)/3
     assert pl6.distance(Ray3D(Point3D(2, 3, 1), direction_ratio=[-1, 0, 3])) == 0
-
+    assert pl4.distance(Line((x,y,z),(1,1,1))) == Piecewise((Abs(sqrt(3)*x/3 + sqrt(3)*y/3 + sqrt(3)*z/3), Eq(x, -y - z + 3) & Eq(y, -x - z + 3) & Eq(z, -x - y + 3)), (0, True))
+    assert pl4.distance(Line((x,y,z),(u,v,w))) == Piecewise((Abs(sqrt(3)*x/3 + sqrt(3)*y/3 + sqrt(3)*z/3), Eq(u, -v - w + x + y + z) & Eq(v, -u - w + x + y + z) & Eq(w, -u - v + x + y + z) & Eq(x, u + v + w - y - z) & Eq(y, u + v + w - x - z) & Eq(z, u + v + w - x - y)), (0, True))
 
     assert pl6.angle_between(pl3) == pi/2
     assert pl6.angle_between(pl6) == 0
