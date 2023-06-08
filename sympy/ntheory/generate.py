@@ -37,7 +37,7 @@ def _as_int_ceiling(a):
 
 
 class Sieve:
-    """An infinite list of prime numbers, implemented as a dynamically
+    """A list of prime numbers, implemented as a dynamically
     growing sieve of Eratosthenes. When a lookup is requested involving
     an odd number that has not been sieved, the sieve is automatically
     extended up to that number. Note that due to implementation problems,
