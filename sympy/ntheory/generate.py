@@ -40,8 +40,8 @@ class Sieve:
     """A list of prime numbers, implemented as a dynamically
     growing sieve of Eratosthenes. When a lookup is requested involving
     an odd number that has not been sieved, the sieve is automatically
-    extended up to that number. Note that due to implementation problems,
-    it cannot handle more than 2**31-1.
+    extended up to that number. Implementation details limit the number of
+    primes to ``2^31-1``.
 
     Examples
     ========
