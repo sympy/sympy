@@ -6,15 +6,19 @@ Plane
 
 """
 
-from sympy.core import Dummy, Rational, S, Symbol
+from sympy.calculus.singularities import singularities
+from sympy.core import Dummy, Rational, S, Symbol, Eq
 from sympy.core.symbol import _symbol
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from .entity import GeometryEntity
 from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
                    Ray3D, Segment3D)
 from .point import Point, Point3D
 from sympy.matrices import Matrix
+from sympy.logic import And
 from sympy.polys.polytools import cancel
+from sympy.sets import EmptySet
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -285,8 +289,17 @@ class Plane(GeometryEntity):
         0
 
         """
-        if self.intersection(o) != []:
-            return S.Zero
+        piecewise_answer = False
+        intersection_points = self.intersection(o)
+        if intersection_points != []:
+            singularity_points = [{var: singularities(expr, var)} for expr in intersection_points for var in expr.free_symbols ]
+            # Check if there are any singularities.
+            if all(all(value == EmptySet for value in subdict.values()) for subdict in singularity_points):
+                return S.Zero
+            else:
+                # Store values to return `Piecewise` answer.
+                conditions = set(Eq(var, expr) for dictionary in singularity_points for var, exprs in dictionary.items() for expr in exprs)
+                piecewise_answer = True
 
         if isinstance(o, (Segment3D, Ray3D)):
             a, b = o.p1, o.p2
@@ -303,6 +316,8 @@ class Plane(GeometryEntity):
         a = o if isinstance(o, Point3D) else o.p1
         n = Point3D(self.normal_vector).unit
         d = (a - self.p1).dot(n)
+        if piecewise_answer:
+            return Piecewise((abs(d),And(*conditions)),(S.Zero,True))
         return abs(d)
 
 
