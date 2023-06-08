@@ -298,7 +298,7 @@ class Plane(GeometryEntity):
                 return S.Zero
             else:
                 # Store values to return `Piecewise` answer.
-                conditions = set(Eq(var, expr) for dictionary in singularity_points for var, exprs in dictionary.items() for expr in exprs)
+                conditions = {Eq(var, expr) for dictionary in singularity_points for var, exprs in dictionary.items() for expr in exprs}
                 piecewise_answer = True
 
         if isinstance(o, (Segment3D, Ray3D)):
