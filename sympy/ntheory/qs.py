@@ -473,7 +473,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     References
     ==========
 
-    .. [1] https://pdfs.semanticscholar.org/5c52/8a975c1405bd35c65993abf5a4edb667c1db.pdf
+    .. [1] https://www.semanticscholar.org/paper/Factoring-Integers-with-the-Self-Initializing-Sieve-Contini/5c528a975c1405bd35c65993abf5a4edb667c1db?p2df
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
     ERROR_TERM*=2**10

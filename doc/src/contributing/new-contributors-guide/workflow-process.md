@@ -570,7 +570,7 @@ The description is a good place to:
   the auto-close
   syntax](https://help.github.com/articles/closing-issues-via-commit-messages)
   and are also [discussed
-  here](https://github.com/blog/1506-closing-issues-via-pull-requests)). Then
+  here](https://github.blog/2013-05-14-closing-issues-via-pull-requests/)). Then
   those other issues or pull requests will be closed automatically when your
   pull request is merged. Note: this syntax does not work in the discussion of
   the pull request. See this [quick
