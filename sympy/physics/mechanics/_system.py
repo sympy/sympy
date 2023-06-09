@@ -88,6 +88,8 @@ class System(_Methods):
         Tuple of all joints that connect bodies in the system.
     loads : tuple of LoadBase subclasses
         Tuple of all loads that have been applied to the system.
+    actuators : tuple of ActuatorBase subclasses
+        Tuple of all actuators present in the system.
     holonomic_constraints : Matrix
         Matrix with the holonomic constraints as rows.
     nonholonomic_constraints : Matrix
@@ -351,7 +353,7 @@ class System(_Methods):
 
     @property
     def actuators(self):
-        """Tuple of actuators that have are in the system."""
+        """Tuple of actuators present in the system."""
         return tuple(self._actuators)
 
     @actuators.setter
@@ -683,8 +685,7 @@ class System(_Methods):
 
         """
         self._check_objects(actuators, self.actuators, ActuatorBase,
-                            'Actuators',
-                            'actuators')
+                            'Actuators', 'actuators')
         self._actuators.extend(actuators)
 
     @_reset_eom_method
