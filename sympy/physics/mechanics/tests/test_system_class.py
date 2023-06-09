@@ -24,7 +24,7 @@ class TestSystemBase:
     def _empty_system_check(self, exclude=()):
         matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'kdes',
                     'holonomic_constraints', 'nonholonomic_constraints')
-        tuples = ('loads', 'bodies', 'joints', "actuators")
+        tuples = ('loads', 'bodies', 'joints', 'actuators')
         for attr in matrices:
             if attr not in exclude:
                 assert getattr(self.system, attr)[:] == []
@@ -208,7 +208,7 @@ class TestSystem(TestSystemBase):
         ('bodies', 'add_bodies', (RigidBody('body'),), {}),
         ('loads', 'add_loads', (Force(Point('P'), ReferenceFrame('N').x),), {}),
         ('actuators', 'add_actuators', (TorqueActuator(
-            symbols("T"), ReferenceFrame('N').x, ReferenceFrame("A")),), {}),
+            symbols('T'), ReferenceFrame('N').x, ReferenceFrame('A')),), {}),
     ])
     def test_add_after_reset(self, _filled_system_setup, prop, add_func, args,
                              kwargs):
@@ -355,8 +355,8 @@ class TestSystem(TestSystemBase):
     def test_add_actuators(self):
         system = System()
         N, A = ReferenceFrame('N'), ReferenceFrame('A')
-        act1 = TorqueActuator(symbols("T1"), N.x, N)
-        act2 = TorqueActuator(symbols("T2"), N.y, N, A)
+        act1 = TorqueActuator(symbols('T1'), N.x, N)
+        act2 = TorqueActuator(symbols('T2'), N.y, N, A)
         system.add_actuators(act1)
         assert system.actuators == (act1,)
         assert system.loads == ()
@@ -441,29 +441,29 @@ class TestSystem(TestSystemBase):
             assert body == self.bodies[body_index]
 
     @pytest.mark.parametrize('kwargs, expected', [
-        ({}, ImmutableMatrix([[-1, 0], [0, symbols("m")]])),
+        ({}, ImmutableMatrix([[-1, 0], [0, symbols('m')]])),
         ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0],
-                                                         [0, symbols("m")]])),
+                                                         [0, symbols('m')]])),
     ])
     def test_system_kane_form_eoms_kwargs(self, _empty_system_setup, kwargs,
                                           expected):
         self.system.q_ind = q[0]
         self.system.u_ind = u[0]
         self.system.kdes = u[0] - q[0].diff(t)
-        p = Particle("p", mass=symbols("m"))
+        p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
         p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
         self.system.form_eoms(**kwargs)
         assert self.system.mass_matrix_full == expected
 
     @pytest.mark.parametrize('kwargs, mm, gm', [
-        ({}, ImmutableMatrix([[1, 0], [0, symbols("m")]]),
+        ({}, ImmutableMatrix([[1, 0], [0, symbols('m')]]),
          ImmutableMatrix([q[0].diff(t), 0])),
     ])
     def test_system_lagrange_form_eoms_kwargs(self, _empty_system_setup, kwargs,
                                               mm, gm):
         self.system.q_ind = q[0]
-        p = Particle("p", mass=symbols("m"))
+        p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
         p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
         self.system.form_eoms(eom_method=LagrangesMethod, **kwargs)
@@ -471,17 +471,17 @@ class TestSystem(TestSystemBase):
         assert self.system.forcing_full == gm
 
     @pytest.mark.parametrize('eom_method, kwargs, error', [
-        (KanesMethod, {"non_existing_kwarg": 1}, TypeError),
-        (LagrangesMethod, {"non_existing_kwarg": 1}, TypeError),
-        (KanesMethod, {"bodies": []}, ValueError),
-        (KanesMethod, {"kd_eqs": []}, ValueError),
-        (LagrangesMethod, {"bodies": []}, ValueError),
-        (LagrangesMethod, {"Lagrangian": 1}, ValueError),
+        (KanesMethod, {'non_existing_kwarg': 1}, TypeError),
+        (LagrangesMethod, {'non_existing_kwarg': 1}, TypeError),
+        (KanesMethod, {'bodies': []}, ValueError),
+        (KanesMethod, {'kd_eqs': []}, ValueError),
+        (LagrangesMethod, {'bodies': []}, ValueError),
+        (LagrangesMethod, {'Lagrangian': 1}, ValueError),
     ])
     def test_form_eoms_kwargs_errors(self, _empty_system_setup, eom_method,
                                      kwargs, error):
         self.system.q_ind = q[0]
-        p = Particle("p", mass=symbols("m"))
+        p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
         p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
         with pytest.raises(error):
@@ -608,8 +608,8 @@ class TestSystemExamples:
             [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
                 == zeros(2, 2))
         assert (_simplify_matrix(system.forcing - ImmutableMatrix([
-            [mp * l * up ** 2 * sin(qp) + F], [-mp * g * l * sin(qp) + k * qp]])
-                                 ) == zeros(2, 1))
+            [mp * l * up ** 2 * sin(qp) + F],
+            [-mp * g * l * sin(qp) + k * qp]])) == zeros(2, 1))
 
         system.add_holonomic_constraints(
             sympify(bob.masscenter.pos_from(rail.masscenter).dot(system.x)))
