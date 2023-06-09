@@ -43,9 +43,8 @@ from sympy.polys.polyerrors import (
     HomomorphismFailed,
     NotInvertible,
     DomainError)
-
-
-
+from collections import defaultdict
+from itertools import chain, compress
 
 def dup_half_gcdex(f, g, K):
     """
@@ -1246,6 +1245,386 @@ def dup_zz_heu_gcd(f, g, K):
         x = 73794*x * K.sqrt(K.sqrt(x)) // 27011
 
     raise HeuristicGCDFailed('no luck')
+
+
+def free_symbols_sparse(p):
+    """
+    Takes a sparse matrix p as input and calculates the sum of exponents
+    for each column. It then returns a set of indices where the sum of
+    exponents is non-zero.
+    """
+    exponents = list(map(sum, zip(*p)))
+    return {n for n, e in enumerate(exponents) if e}
+
+
+def compute_sparse_coefficients(p1, symbols):
+    """
+    It converts a polynomial p1 into a sparse representation where the
+    monomials are split into parts with symbols and parts without symbols,
+    and the coefficients are stored accordingly.
+    """
+
+    num_variables = len(p1.ring.gens)
+    non_symbol_indices = set(range(num_variables)) - symbols
+    p2 = defaultdict(dict)
+    variable_range = range(num_variables)
+
+    for monomial, coefficient in p1.items():
+        symbol_indices = set(compress(variable_range, monomial))
+        monomial_with_symbols = [0] * num_variables
+        monomial_without_symbols = [0] * num_variables
+
+        for i in symbol_indices & symbols:
+            monomial_with_symbols[i] = monomial[i]
+
+        for i in symbol_indices & non_symbol_indices:
+            monomial_without_symbols[i] = monomial[i]
+
+        p2[tuple(monomial_with_symbols)][tuple(monomial_without_symbols)] = coefficient
+
+    return p2
+
+
+def get_sparse_coefficients(p1, symbols):
+    """
+    Compute the sparse coefficients of a polynomial with respect to a set of symbols.
+    """
+    p2 = compute_sparse_coefficients(p1, symbols)
+    return [p1.ring(pi) for pi in p2.values()]
+
+
+def get_sparse_coefficient(p1, symbol, degree):
+    """
+    Returns the coefficient of a specific term in a polynomial p1, given the symbol and degree of the term.
+    """
+    p2 = compute_sparse_coefficients(p1, {symbol})
+    monomial = [0] * len(p1.ring.gens)
+    monomial[symbol] = degree
+    monomial = tuple(monomial)
+    return p1.ring(p2[monomial])
+
+
+def compute_gcd_sparse(p):
+    """
+    Computes the greatest common divisor (GCD) of a list of polynomials p with symbolic coefficients.
+    """
+    ring = p[0].ring
+    domain = ring.domain
+
+    if any(len(pi) == 1 for pi in p):
+        return compute_gcd_terms(p, ring, domain)
+
+    p, monomial_gcd = compute_gcd_monomial(p)
+
+    p, common_symbols = compute_gcd_coefficients(p)
+
+    gcd = p[0]
+    for pi in p[1:]:
+        gcd = compute_gcd_prs_sparse(gcd, pi)
+
+    if monomial_gcd is not None:
+        gcd = gcd * monomial_gcd
+
+    return gcd
+
+
+def compute_gcd_terms(p, ring, domain):
+    """
+    Computes the greatest common divisor (GCD) of a list of polynomials p in a given ring and domain.
+    """
+    terms = chain.from_iterable(pi.terms() for pi in p)
+    monomials = set()
+    coefficients = set()
+
+    for monomial, coefficient in terms:
+        monomials.add(monomial)
+        coefficients.add(coefficient)
+
+    monomial_gcd = compute_monomial_gcd(monomials)
+    coefficient_gcd = compute_ground_gcd(coefficients, domain)
+    term_gcd = ring({monomial_gcd: coefficient_gcd})
+
+    return term_gcd
+
+
+def compute_ground_gcd(coefficients, domain):
+    """
+    Computes the greatest common divisor (GCD) of multiple polynomials represented by their terms.
+    """
+    coefficients = list(coefficients)
+    gcd = domain.gcd
+    d = coefficients[0]
+
+    for coefficient in coefficients[1:]:
+        d = gcd(d, coefficient)
+
+        if d == domain.one:
+            break
+
+    return d
+
+
+def compute_monomial_gcd(monomials):
+    """
+    Computes the greatest common divisor (GCD) of the exponents for each variable in the monomials.
+    """
+    monomial_gcd = tuple(map(min, zip(*monomials)))
+    return monomial_gcd
+
+
+def compute_gcd_monomial(p):
+    """
+    Computes the greatest common divisor (GCD) of a list of polynomials p with respect to the monomials.
+    """
+    ring = p[0].ring
+    monomials = chain(*p)
+    monomial_gcd = tuple(map(min, zip(*monomials)))
+
+    if monomial_gcd == ring.zero_monom:
+        return p, None
+    else:
+        domain = ring.domain
+        d = ring({monomial_gcd: domain.one})
+        p = [pi.exquo(d) for pi in p]
+        return p, d
+
+
+def compute_gcd_coefficients(p):
+    """
+    Computes the coefficients of the greatest common divisor (GCD) of a polynomial list.
+
+    Args:
+        p (list): A list of polynomials.
+
+    Returns:
+        tuple: A tuple containing the coefficients of the GCD and the common symbols in the polynomials.
+    Raises:
+        None
+
+    This function computes the coefficients of the GCD of a given list of polynomials. The function starts by
+    initializing the list of all coefficients as the given polynomial list. It then iteratively processes the
+    polynomials to find the common symbols and compute the GCD coefficients.
+    """
+
+    all_coefficients = p
+
+    while True:
+        p = sorted(set(all_coefficients), key=len)
+        common_symbols = compute_common_symbols(p[0])
+        all_same = True
+
+        for pi in p[1:]:
+            if all_same and compute_free_symbols_sparse(pi) != common_symbols:
+                all_same = False
+
+            common_symbols &= compute_free_symbols_sparse(pi)
+
+        if all_same:
+            return p, common_symbols
+
+        all_coefficients = []
+        for i, pi in enumerate(p):
+            coefficients_i = get_sparse_coefficients(pi, compute_free_symbols_sparse(pi) - common_symbols)
+            all_coefficients.extend(coefficients_i)
+
+            if any(len(c) == 1 for c in coefficients_i):
+                ring = p[0].ring
+                domain = ring.domain
+                gcd = compute_gcd_terms(all_coefficients + p[i+1:], ring, domain)
+                return [gcd], None
+
+
+def compute_prem_sparse(f, g, x):
+    """
+    Computes the pseudo-remainder of the polynomial `f` with respect to `g` using the sparse representation.
+
+    Args:
+        f (PolyElement): The polynomial to compute the pseudo-remainder for.
+        g (PolyElement): The polynomial to divide `f` by.
+        x (Symbol): The main variable of the polynomials.
+
+    Returns:
+        PolyElement: The pseudo-remainder polynomial.
+
+    Raises:
+        ZeroDivisionError: If the degree of `g` is negative.
+        ValueError: If the algorithm encounters an unexpected condition.
+
+    This function implements the pseudo-remainder algorithm for sparse polynomials, which is used to compute
+    the pseudo-remainder of `f` divided by `g`. It starts by checking the degree of `g` and ensures it is
+    non-negative. Then, it initializes the remainder `r` with `f` and sets the current degree `dr` to be the
+    degree of `f`. If the degree of `f` is lower than the degree of `g`, it returns `r` as the pseudo-remainder.
+    Otherwise, it proceeds with the main pseudo-remainder loop.
+
+    After the loop, it calculates the coefficient `c` by raising `lc_g` to the power of `N`. Finally, it returns
+    the polynomial `r` multiplied by `c` as the pseudo-remainder.
+    """
+
+    df = f.degree(x)
+    dg = g.degree(x)
+
+    if dg < 0:
+        raise ZeroDivisionError
+
+    r, dr = f, df
+
+    if df < dg:
+        return r
+
+    N = df - dg + 1
+
+    lc_g = get_sparse_coefficient(g, x, dg)
+
+    xp = f.ring.gens[x]
+
+    while True:
+        lc_r = get_sparse_coefficient(r, x, dr)
+        j, N = dr - dg, N - 1
+
+        R = r * lc_g
+        G = g * lc_r * xp**j
+        r = R - G
+
+        _dr, dr = dr, r.degree(x)
+
+        if dr < dg:
+            break
+        elif not (dr < _dr):
+            raise ValueError
+
+    c = lc_g ** N
+
+    return r * c
+
+
+def compute_subresultants_sparse(f, g, x):
+    """
+    Computes the subresultant sequence for two polynomials `f` and `g` with respect to the variable `x`.
+
+    Args:
+        f: The first polynomial.
+        g: The second polynomial.
+        x: The variable with respect to which the subresultant sequence is computed.
+
+    Returns:
+        R: The list of polynomials representing the subresultant sequence.
+
+    Raises:
+        ValueError: If an unexpected condition occurs during the computation.
+
+    Notes:
+        - The subresultant sequence is a sequence of polynomials obtained by performing polynomial
+          divisions and subtractions in a specific manner.
+        - The subresultant sequence is used in various polynomial algorithms, such as polynomial
+          greatest common divisor (GCD) computation.
+        - The subresultant sequence is computed recursively until a certain condition is met.
+        - The algorithm used in this function is based on the efficient sparse polynomial
+          representation and manipulation techniques.
+
+    Examples:
+
+
+
+    """
+
+    n = f.degree(x)
+    m = g.degree(x)
+
+    if n < m:
+        f, g = g, f
+        n, m = m, n
+
+    if f == 0:
+        return [0, 0]
+
+    if g == 0:
+        return [f, 1]
+
+    # Initialize the subresultant sequence
+    R = [f, g]
+
+    d = n - m
+    b = (-1) ** (d + 1)
+
+    # Compute the initial premultiplication factor for the next polynomial
+    h = compute_prem_sparse(f, g, x)
+    h = h * b
+
+    # Compute the leading coefficient of g
+    lc = get_sparse_coefficient(g, x, m)
+
+    c = lc ** d
+
+    S = [1, c]
+
+    c = -c
+
+    # Iterate until the final polynomial is obtained
+    while h:
+        k = h.degree(x)
+
+        R.append(h)
+        f, g, m, d = g, h, k, m - k
+
+        # Compute the premultiplication factor for the next polynomial
+        b = -lc * c ** d
+        h = compute_prem_sparse(f, g, x)
+        h = h.exquo(b)
+
+        lc = get_sparse_coefficient(g, x, k)
+
+        # Update the constant factor
+        if d > 1:
+            p = (-lc) ** d
+            q = c ** (d - 1)
+            c = p.exquo(q)
+        else:
+            c = -lc
+
+        S.append(-c)
+
+    return R
+
+
+def compute_primitive_sparse(p, x):
+    """
+    Computes the primitive part and content of a polynomial `p` with respect to the variable `x`.
+    """
+
+    coefficients = get_sparse_coefficients(p, {x})
+    content = compute_gcd_sparse(coefficients)
+    primitive = p.exquo(content)
+    return content, primitive
+
+
+def find_main_variable_sparse(p):
+    """
+    Finds the main variable of a polynomial in sparse representation.
+    """
+    symbols = compute_free_symbols_sparse(p)
+    return min(symbols)
+
+
+def compute_gcd_prs_sparse(p1, p2):
+    """
+    Computes the greatest common divisor (GCD) of two polynomials using the Polynomial Resultant Sequences (PRS) method.
+    """
+    x = find_main_variable_sparse(p1)
+
+    c1, pp1 = compute_primitive_sparse(p1, x)
+    c2, pp2 = compute_primitive_sparse(p2, x)
+
+    h = compute_subresultants_sparse(pp1, pp2, x)[-1]
+    c = compute_gcd_sparse([c1, c2])
+
+    ring = p1.ring.to_domain()
+    if ring.is_negative(get_sparse_coefficient(h, x, h.degree(x))):
+        h = -h
+
+    _, h = compute_primitive_sparse(h, x)
+    h = h * c
+
+    return h
 
 
 def _dmp_zz_gcd_interpolate(h, x, v, K):
