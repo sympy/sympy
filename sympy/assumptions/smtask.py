@@ -1,1 +1,191 @@
-"""Module to evaluate the proposition with assumptions using SMT algorithm.Can handle relational propositions and assumptions."""from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Lefrom sympy.assumptions.ask import ask, Qfrom sympy.logic.boolalg import And, Or, Notfrom sympy.assumptions.assume import global_assumptions, AppliedPredicatefrom sympy.printing.smtlib import smtlib_codeimport z3def smtask(proposition, assumptions=True, context=global_assumptions):    """    An alternative to satask that handles relational assumptions. Will pick an    external SMT solver depending on the problem and what is installed.    For exmaple, if a problem involves non-linear real functions that Z3 can't    handle, dreal can be used. Could also call an internal SMT solver    if one is ever built.     Parameters     ==========     proposition : Any boolean expression.         Proposition which will be evaluated to boolean value.     assumptions : Any boolean expression, optional.         Local assumptions to evaluate the *proposition*.     Returns     -------     ``True``, ``False``, or ``None``     Examples     ========     >>> from sympy.assumptions.smtask import z3ask     >>> from sympy.abc import z, w     >>> from sympy import Q     >>> z3ask(z**2 + w**2 > 0, Q.positive(z) & Q.positive(w))     True    """    assumptions = And(assumptions, And(*list(context)))    return z3ask(proposition, assumptions)def z3ask(proposition, assumptions=True):    """    Checks the satisfiability of a proposition using the Z3 SMT solver which    can handle inequalities. Note that it currently lacks many features satask    has; for example, it does not yet have a function equivalent to satask's    get_all_relevant_facts().    Parameters    ==========    proposition : Any boolean expression.        Proposition which will be evaluated to boolean value.    assumptions : Any boolean expression, optional.        Local assumptions to evaluate the *proposition*.    Returns    -------    ``True``, ``False``, or ``None``    Examples    ========    >>> from sympy.assumptions.smtask import z3ask    >>> from sympy.abc import x, y    >>> from sympy import Q    >>> z3ask(x**2 + y**2 > 0, Q.positive(x) & Q.positive(y))    True    >>> z3ask(y > 0, (y < -x**2 +.5) & Q.integer(y))    False    >>> print(z3ask(y > 0, (y < -x**2 +.5))) # y may be positive or not    None    """    """    handled_predicate = [Q.positive, Q.negative, Q.zero, Q.gt, Q.lt, Q.eq, Q.ne, Q.ge, Q.le]    def _contains_unhandled_predicate(proposition):        if isinstance(proposition, AppliedPredicate):            return proposition.function not in handled_predicate        elif isinstance(proposition, (And, Or, Not)):            return any([_contains_unhandled_predicate(arg) for arg in proposition.args])        else:            return False    # prevents wrong output but is too limitting    if _contains_unhandled_predicate(proposition) or _contains_unhandled_predicate(assumptions):        return None    """    all_symbols = proposition.free_symbols | assumptions.free_symbols    integer_symbols = {sym for sym in all_symbols if ask(Q.integer(sym),assumptions)}    real_symbols = all_symbols - integer_symbols    proposition = _to_core(proposition)    assumptions = _to_core(assumptions)    declarations = "\n".join(["(declare-const "+str(sym)+" Real)" for sym in real_symbols])    declarations += "\n" + "\n".join(["(declare-const "+str(sym)+" Int)" for sym in integer_symbols])    props = smtlib_code(proposition,auto_declare=False).replace("pow","^")    _props = smtlib_code(Not(proposition),auto_declare=False).replace("pow","^")    assumptions = smtlib_code(assumptions,auto_declare=False).replace("pow","^")    s_true = z3.Solver()    s_true.from_string(declarations+"\n"+props+"\n"+assumptions)    can_be_true = "sat" == str(s_true.check())    s_false = z3.Solver()    s_false.from_string(declarations+"\n"+_props+"\n"+assumptions)    can_be_false = "sat" == str(s_false.check())    if can_be_true and can_be_false:        return None    if can_be_true and not can_be_false:        return True    if not can_be_true and can_be_false:        return False    if not can_be_true and not can_be_false:        raise ValueError("Inconsistent assumptions")def _to_core(formula):    """    Converts a Boolean formula that contains objects from the New Assumptions    into a Boolean formula only containing objects from the core. Some objects    such as Q.integer(x) may be removed as they have no equivalent in the core.    Parameters    ----------    formula : Boolean    Returns    -------    Boolean    Examples    ========    >>> from sympy.assumptions.smtask import _to_core    >>> from sympy.abc import x,y,z    >>> from sympy import Q    >>> _to_core((x >y) & Q.integer(y) & Q.gt(y,z))    (x > y) & (y > z)    """    if isinstance(formula, AppliedPredicate):        return _pred_to_core(formula)    elif isinstance(formula, (And, Or, Not)):        return formula.func(*[_to_core(arg) for arg in formula.args])    else:        return formuladef _pred_to_core(assmp):    if assmp.function == Q.positive:        return assmp.arguments[0] > 0    if assmp.function == Q.negative:        return assmp.arguments[0] < 0    if assmp.function == Q.zero:        return Eq(assmp.arguments[0], 0)    if assmp.function == Q.gt:        return Gt(assmp.arguments[0], assmp.arguments[1])    if assmp.function == Q.lt:        return Lt(assmp.arguments[0], assmp.arguments[1])    if assmp.function == Q.eq:        return Eq(assmp.arguments[0], assmp.arguments[1])    if assmp.function == Q.ne:        return Ne(assmp.arguments[0], assmp.arguments[1])    if assmp.function == Q.ge:        return Ge(assmp.arguments[0], assmp.arguments[1])    if assmp.function == Q.le:        return Le(assmp.arguments[0], assmp.arguments[1])    return True
+"""
+Module to evaluate the proposition with assumptions using SMT algorithm.
+Can handle relational propositions and assumptions.
+"""
+
+from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.assumptions.ask import ask, Q
+from sympy.logic.boolalg import And, Or, Not
+from sympy.assumptions.assume import global_assumptions, AppliedPredicate
+from sympy.printing.smtlib import smtlib_code
+import z3
+
+
+def smtask(proposition, assumptions=True, context=global_assumptions):
+    """
+    An alternative to satask that handles relational assumptions. Will pick an
+    external SMT solver depending on the problem and what is installed.
+    For exmaple, if a problem involves non-linear real functions that Z3 can't
+    handle, dreal can be used. Could also call an internal SMT solver
+    if one is ever built.
+
+
+     Parameters
+     ==========
+
+     proposition : Any boolean expression.
+         Proposition which will be evaluated to boolean value.
+
+     assumptions : Any boolean expression, optional.
+         Local assumptions to evaluate the *proposition*.
+
+     Returns
+     -------
+
+     ``True``, ``False``, or ``None``
+
+     Examples
+     ========
+
+     >>> from sympy.assumptions.smtask import z3ask
+     >>> from sympy.abc import z, w
+     >>> from sympy import Q
+     >>> z3ask(z**2 + w**2 > 0, Q.positive(z) & Q.positive(w))
+     True
+
+    """
+    assumptions = And(assumptions, And(*list(context)))
+    return z3ask(proposition, assumptions)
+
+
+def z3ask(proposition, assumptions=True):
+    """
+    Checks the satisfiability of a proposition using the Z3 SMT solver which
+    can handle inequalities. Note that it currently lacks many features satask
+    has; for example, it does not yet have a function equivalent to satask's
+    get_all_relevant_facts().
+
+    Parameters
+    ==========
+
+    proposition : Any boolean expression.
+        Proposition which will be evaluated to boolean value.
+
+    assumptions : Any boolean expression, optional.
+        Local assumptions to evaluate the *proposition*.
+
+
+    Returns
+    -------
+
+    ``True``, ``False``, or ``None``
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.smtask import z3ask
+    >>> from sympy.abc import x, y
+    >>> from sympy import Q
+    >>> z3ask(x**2 + y**2 > 0, Q.positive(x) & Q.positive(y))
+    True
+    >>> z3ask(y > 0, (y < -x**2 +.5) & Q.integer(y))
+    False
+    >>> print(z3ask(y > 0, (y < -x**2 +.5))) # y may be positive or not
+    None
+
+    """
+
+    """
+    handled_predicate = [Q.positive, Q.negative, Q.zero, Q.gt, Q.lt, Q.eq, Q.ne, Q.ge, Q.le]
+    def _contains_unhandled_predicate(proposition):
+        if isinstance(proposition, AppliedPredicate):
+            return proposition.function not in handled_predicate
+        elif isinstance(proposition, (And, Or, Not)):
+            return any([_contains_unhandled_predicate(arg) for arg in proposition.args])
+        else:
+            return False
+
+    # prevents wrong output but is too limitting
+    if _contains_unhandled_predicate(proposition) or _contains_unhandled_predicate(assumptions):
+        return None
+    """
+    all_symbols = proposition.free_symbols | assumptions.free_symbols
+    integer_symbols = {sym for sym in all_symbols if ask(Q.integer(sym),assumptions)}
+    real_symbols = all_symbols - integer_symbols
+
+    proposition = _to_core(proposition)
+    assumptions = _to_core(assumptions)
+
+
+    declarations = "\n".join(["(declare-const "+str(sym)+" Real)" for sym in real_symbols])
+    declarations += "\n" + "\n".join(["(declare-const "+str(sym)+" Int)" for sym in integer_symbols])
+
+
+    props = smtlib_code(proposition,auto_declare=False).replace("pow","^")
+    _props = smtlib_code(Not(proposition),auto_declare=False).replace("pow","^")
+
+    assumptions = smtlib_code(assumptions,auto_declare=False).replace("pow","^")
+
+    s_true = z3.Solver()
+    s_true.from_string(declarations+"\n"+props+"\n"+assumptions)
+    can_be_true = "sat" == str(s_true.check())
+
+    s_false = z3.Solver()
+    s_false.from_string(declarations+"\n"+_props+"\n"+assumptions)
+    can_be_false = "sat" == str(s_false.check())
+
+    if can_be_true and can_be_false:
+        return None
+
+    if can_be_true and not can_be_false:
+        return True
+
+    if not can_be_true and can_be_false:
+        return False
+
+    if not can_be_true and not can_be_false:
+        raise ValueError("Inconsistent assumptions")
+
+
+def _to_core(formula):
+    """
+    Converts a Boolean formula that contains objects from the New Assumptions
+    into a Boolean formula only containing objects from the core. Some objects
+    such as Q.integer(x) may be removed as they have no equivalent in the core.
+
+    Parameters
+    ----------
+    formula : Boolean
+
+    Returns
+    -------
+    Boolean
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.smtask import _to_core
+    >>> from sympy.abc import x,y,z
+    >>> from sympy import Q
+    >>> _to_core((x >y) & Q.integer(y) & Q.gt(y,z))
+    (x > y) & (y > z)
+    """
+    if isinstance(formula, AppliedPredicate):
+        return _pred_to_core(formula)
+    elif isinstance(formula, (And, Or, Not)):
+        return formula.func(*[_to_core(arg) for arg in formula.args])
+    else:
+        return formula
+
+
+def _pred_to_core(assmp):
+    if assmp.function == Q.positive:
+        return assmp.arguments[0] > 0
+    if assmp.function == Q.negative:
+        return assmp.arguments[0] < 0
+    if assmp.function == Q.zero:
+        return Eq(assmp.arguments[0], 0)
+    if assmp.function == Q.gt:
+        return Gt(assmp.arguments[0], assmp.arguments[1])
+    if assmp.function == Q.lt:
+        return Lt(assmp.arguments[0], assmp.arguments[1])
+    if assmp.function == Q.eq:
+        return Eq(assmp.arguments[0], assmp.arguments[1])
+    if assmp.function == Q.ne:
+        return Ne(assmp.arguments[0], assmp.arguments[1])
+    if assmp.function == Q.ge:
+        return Ge(assmp.arguments[0], assmp.arguments[1])
+    if assmp.function == Q.le:
+        return Le(assmp.arguments[0], assmp.arguments[1])
+    return True
+
