@@ -282,6 +282,11 @@ def test_parseable():
     for latex_str, sympy_expr in GOOD_PAIRS:
         assert parse_latex(latex_str) == sympy_expr, latex_str
 
+def test_parseable_lark():
+    from sympy.parsing.latex.lark import parse_latex_lark
+    for latex_str, sympy_expr in GOOD_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
     r"(",

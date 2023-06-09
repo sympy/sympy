@@ -71,7 +71,7 @@ def transform_string(s):
     return s
 
 
-def parse_latex(s):
+def parse_latex_lark(s):
     r"""Converts the string ``s`` to a SymPy ``Expr``
 
     Parameters
@@ -101,10 +101,10 @@ def parse_latex(s):
     if _lark is None:
         # generated via lark standalone
         # python -m lark.tools.standalone latex.lark > latex_grammar.py
-        standalone_lark = import_module('sympy.parsing.latex.latex_grammar')
+        standalone_lark = import_module('sympy.parsing.latex.lark.latex_grammar')
         if standalone_lark is None:
             # TODO: throw proper error
-            raise ValueError('precompiled lark grammar "latex_grammar" not avialable')
+            raise ValueError('precompiled lark grammar "latex_grammar" not available')
         parser = standalone_lark.Lark_StandAlone()
         Transformer = standalone_lark.Transformer
     else:
@@ -115,7 +115,7 @@ def parse_latex(s):
             latex_grammar = f.read()
 
         parser = _lark.Lark(latex_grammar, parser='lalr',
-                            lexer='standard',
+                            lexer='auto',
                             propagate_positions=False,
                             maybe_placeholders=False)
         Transformer = _lark.Transformer
