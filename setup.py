@@ -100,6 +100,7 @@ modules = [
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
+    'sympy.parsing.latex.lark',
     'sympy.physics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
