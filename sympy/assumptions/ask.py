@@ -446,6 +446,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         be determined.
     """
     from sympy.assumptions.satask import satask
+    from sympy.assumptions.smtask import smtask
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
@@ -493,6 +494,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
+    if res is not None:
+        return res
+
+    res = smtask(proposition, assumptions=assumptions, context=context)
     return res
 
 
