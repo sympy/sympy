@@ -179,7 +179,7 @@ def test_plot_and_save_2():
         p._backend.close()
 
         #No adaptive sampling.
-        p = plot_parametric(cos(x), sin(x), adaptive=False, nb_of_points=500)
+        p = plot_parametric(cos(x), sin(x), adaptive=False, n=500)
         filename = 'test_adaptive.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -197,7 +197,7 @@ def test_plot_and_save_2():
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
 
-        p = plot3d_parametric_line(sin(x), cos(x), x, nb_of_points=30)
+        p = plot3d_parametric_line(sin(x), cos(x), x, n=30)
         filename = 'test_3d_line_points.png'
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
@@ -443,7 +443,7 @@ def test_plotgrid_and_save():
         p1 = plot(x)
         p2 = plot_parametric((sin(x), cos(x)), (x, sin(x)), show=False)
         p3 = plot_parametric(
-            cos(x), sin(x), adaptive=False, nb_of_points=500, show=False)
+            cos(x), sin(x), adaptive=False, n=500, show=False)
         p4 = plot3d_parametric_line(sin(x), cos(x), x, show=False)
         # symmetric grid
         p = PlotGrid(2, 2, p1, p2, p3, p4)
@@ -762,3 +762,39 @@ def test_deprecated_get_segments():
     p = plot(f, (x, -10, 10), show=False)
     with warns_deprecated_sympy():
         p[0].get_segments()
+
+def test_generic_data_series():
+    # verify that no errors are raised when generic data series are used
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol("x")
+    p = plot(x,
+        markers=[{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}],
+        annotations=[{"text": "test", "xy": (0, 0)}],
+        fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
+        rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
+    assert len(p._backend.ax[0].collections) == 1
+    assert len(p._backend.ax[0].patches) == 1
+    assert len(p._backend.ax[0].lines) == 2
+    assert len(p._backend.ax[0].texts) == 1
+
+
+def test_deprecated_markers_annotations_rectangles_fill():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    p = plot(sin(x), (x, -10, 10), show=False)
+    with warns_deprecated_sympy():
+        p.markers = [{"args":[[0, 1], [0, 1]], "marker": "*", "linestyle": "none"}]
+    assert len(p._series) == 2
+    with warns_deprecated_sympy():
+        p.annotations = [{"text": "test", "xy": (0, 0)}]
+    assert len(p._series) == 3
+    with warns_deprecated_sympy():
+        p.fill = {"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]}
+    assert len(p._series) == 4
+    with warns_deprecated_sympy():
+        p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
+    assert len(p._series) == 5

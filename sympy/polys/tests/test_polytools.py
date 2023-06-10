@@ -2604,6 +2604,21 @@ def test_factor():
     assert factor_list(x**3 - x*y**2, t, w, x) == (
         1, [(x, 1), (x - y, 1), (x + y, 1)])
 
+    # https://github.com/sympy/sympy/issues/24952
+    s2, s2p, s2n = sqrt(2), 1 + sqrt(2), 1 - sqrt(2)
+    pip, pin = 1 + pi, 1 - pi
+    assert factor_list(s2p*s2n) == (-1, [(-s2n, 1), (s2p, 1)])
+    assert factor_list(pip*pin) == (-1, [(-pin, 1), (pip, 1)])
+    # Not sure about this one. Maybe coeff should be 1 or -1?
+    assert factor_list(s2*s2n) == (-s2, [(-s2n, 1)])
+    assert factor_list(pi*pin) == (-1, [(-pin, 1), (pi, 1)])
+    assert factor_list(s2p*s2n, x) == (s2p*s2n, [])
+    assert factor_list(pip*pin, x) == (pip*pin, [])
+    assert factor_list(s2*s2n, x) == (s2*s2n, [])
+    assert factor_list(pi*pin, x) == (pi*pin, [])
+    assert factor_list((x - sqrt(2)*pi)*(x + sqrt(2)*pi), x) == (
+        1, [(x - sqrt(2)*pi, 1), (x + sqrt(2)*pi, 1)])
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
