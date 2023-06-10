@@ -1,3 +1,5 @@
+from bisect import bisect, bisect_left
+
 from sympy.core.numbers import (I, Rational, nan, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -131,7 +133,11 @@ def test_generate():
     assert nextprime(10**40) == (10**40 + 121)
     primelist = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31,
                  37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
-                 79, 83, 89, 97]
+                 79, 83, 89, 97, 101, 103, 107, 109, 113,
+                 127, 131, 137, 139, 149, 151, 157, 163,
+                 167, 173, 179, 181, 191, 193, 197, 199,
+                 211, 223, 227, 229, 233, 239, 241, 251,
+                 257, 263, 269, 271, 277, 281, 283, 293]
     for i in range(len(primelist) - 2):
         for j in range(2, len(primelist) - i):
             assert nextprime(primelist[i], j) == primelist[i + j]
@@ -141,6 +147,21 @@ def test_generate():
     raises(ValueError, lambda: nextprime(2, -1))
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
+
+    for sieve_interval in [1, 10, 11, 1_000_000]:
+        s = Sieve(sieve_interval=sieve_interval)
+        assert s._list[-1] == 13
+        for head in range(14, 17**2, 2):
+            for tail in range(head + 1, 17**2):
+                A = list(s._primerange(head, tail))
+                B = primelist[bisect(primelist, head):bisect_left(primelist, tail)]
+                assert A == B
+        for k in range(15, primelist[-1] - 1, 2):
+            s = Sieve(sieve_interval=sieve_interval)
+            s.extend(k)
+            assert list(s._list) == primelist[:bisect(primelist, k)]
+            s.extend(primelist[-1])
+            assert list(s._list) == primelist
 
     assert list(sieve.primerange(10, 1)) == []
     assert list(sieve.primerange(5, 9)) == [5, 7]
