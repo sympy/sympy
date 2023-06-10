@@ -20,7 +20,7 @@ A pole zero plot of an unknown **Transfer Function** is given above.
 Solution-
 
     >>> # Imports
-    >>> from sympy import symbols, I, pprint, solve
+    >>> from sympy import symbols, I, limit, pprint, solve, oo
     >>> from sympy.physics.control import TransferFunction
 
     Subpart 1
@@ -31,14 +31,14 @@ Solution-
     >>> tf = TransferFunction(a,b,s)
     >>> pprint(tf)
                k*(s + 3)
-    ----------------------------
+    -------------------------------
     (s + 1)*(s + 2 - I)*(s + 2 + I)
     >>> gain = tf.dc_gain()
     >>> print(gain)
     3*k*(2 - I)*(2 + I)/25
     >>> K = solve(gain - 20,k)[0]               # Solve for k
     >>> tf = tf.subs({k:K})                     # Reconstruct the TransferFunction using .subs()
-    >>> pprint(tf)
+    >>> pprint(tf.expand())
        100*s
        ----- + 100
          3
@@ -59,9 +59,9 @@ Solution-
     >>> tf = tf.to_expr()
     >>> Impulse_Response = inverse_laplace_transform(tf,s,t)
     >>> pprint(Impulse_Response)
-         -t        -2*t
+          -t        -2*t
      100*e     100*e    *cos(t)
-     ─────── - ────────────────
+     ------- - ----------------
         3             3
 
     Subpart 4
@@ -82,7 +82,7 @@ Find the Transfer Function of the following Spring-Mass dampering system : -
 Soltion -
 
     >>> # Imports
-    >>> from sympy import Function, laplace_transform, laplace_initial_conds, laplace_correspondence, diff, solve
+    >>> from sympy import Function, laplace_transform, laplace_initial_conds, laplace_correspondence, diff, Symbol, solve
     >>> from sympy.abc import t,s
     >>> from sympy.physics.control import TransferFunction
     >>> y = Function('y')
@@ -105,10 +105,10 @@ Soltion -
     >>> t = (solve(F,Y(s))[0])/U(s) # To construct Transfer Function from Y(s) and U(s)
     >>> tf = TransferFunction.from_rational_expression(t,s)
     >>> pprint(tf)
-           1
-    ----------------
-        2
-     m.s  + c.s + k
+          1
+    --------------
+                 2
+    c*s + k + m*s
 
 Example 3
 ---------
@@ -141,16 +141,16 @@ Solution-
     >>> g =  Matrix([[exp(-t)*(1 - t), exp(-2*t)], [5*exp((-2*t))-exp((-t)), (cos((sqrt(3)*t)/2) - 3*sqrt(3)*sin((sqrt(3)*t)/2))*exp(-t/2)]])
     >>> G = g.applyfunc(lambda a: laplace_transform(a, t, s)[0])
     >>> pprint(G)
-    [   1         1                      1                ]
-    [ ------ - ------                  ------             ]
-    [  s + 1         2                 s + 2              ]
-    [         (s + 1)                                     ]
+    [  1        1                       1                 ]
+    [----- - --------                 -----               ]
+    [s + 1          2                 s + 2               ]
+    [        (s + 1)                                      ]
     [                                                     ]
-    [  5        1         s - 1/2               9         ]
-    [------ - ------  --------------- - ------------------]
-    [(s + 2)  (s + 1)           2   3               2   3 ]
-    [                 (s  + 1/2) +  -   2*((s  + 1/2) + -)]
-    [                               4                   4 ]
+    [   5       1         s + 1/2               9         ]
+    [ ----- - -----    -------------- - ------------------]
+    [ s + 2   s + 1             2   3     /         2   3\]
+    [                  (s + 1/2)  + -   2*|(s + 1/2)  + -|]
+    [                               4     \             4/]
 
     Subpart 2
 
@@ -177,8 +177,8 @@ Solution-
     >>> tf1 = G[0, 0]
     >>> pprint(tf1)
                 2
-    -s + (s + 1) - 1
-    ----------------
+    -s + (s + 1)  - 1
+    -----------------
                 3
          (s + 1)
     >>> step_response_plot(tf1)  # doctest: +SKIP
@@ -238,7 +238,7 @@ Solution-
     [    ]   *[        ]
     [2  2]    [0    3  ]
     [-  -]    [-    -  ]
-    [1  1]{τ} [1    1  ]{τ}
+    [1  1]{t} [1    1  ]{t}
     >>> # Series equivalent, considering (Input)→[C]→[P]→(Output).
     >>> pprint(P*C)
     [1    2  ]    [1  1]
@@ -247,7 +247,7 @@ Solution-
     [        ]   *[    ]
     [0    3  ]    [2  2]
     [-    -  ]    [-  -]
-    [1    1  ]{τ} [1  1]{τ}
+    [1    1  ]{t} [1  1]{t}
     >>> pprint((C*P).doit())
     [1  3*s + 8 ]
     [-  ------- ]
@@ -255,7 +255,7 @@ Solution-
     [           ]
     [2  6*s + 16]
     [-  --------]
-    [s   s + 2  ]{τ}
+    [s   s + 2  ]{t}
     >>> pprint((P*C).doit())
     [ 5*s + 2    5*s + 2 ]
     [---------  ---------]
@@ -263,7 +263,7 @@ Solution-
     [                    ]
     [    6          6    ]
     [    -          -    ]
-    [    1          1    ]{τ}
+    [    1          1    ]{t}
 
     Subpart 2
 
@@ -278,7 +278,7 @@ Solution-
     [   -6*s - 12      3*s  + 9*s + 6]
     [---------------  ---------------]
     [   2                2           ]
-    [7*s  + 19*s + 2  7*s  + 19*s + 2]{τ}
+    [7*s  + 19*s + 2  7*s  + 19*s + 2]{t}
 
 
 
