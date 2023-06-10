@@ -4,7 +4,7 @@ Generating and counting primes.
 """
 
 import random
-from bisect import bisect
+from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
@@ -41,7 +41,7 @@ class Sieve:
     growing sieve of Eratosthenes. When a lookup is requested involving
     an odd number that has not been sieved, the sieve is automatically
     extended up to that number. Implementation details limit the number of
-    primes to ``2^31-1``.
+    primes to ``2^32-1``.
 
     Examples
     ========
@@ -55,11 +55,28 @@ class Sieve:
     """
 
     # data shared (and updated) by all Sieve instances
-    def __init__(self):
+    def __init__(self, sieve_interval=1_000_000):
+        """ Initial parameters for the Sieve class.
+
+        Parameters
+        ==========
+
+        sieve_interval (int): Amount of memory to be used
+
+        Raises
+        ======
+
+        ValueError
+            If ``sieve_interval`` is not positive.
+
+        """
         self._n = 6
-        self._list = _aset(2, 3, 5, 7, 11, 13) # primes
+        self._list = _array('L', [2, 3, 5, 7, 11, 13]) # primes
         self._tlist = _aset(0, 1, 1, 2, 2, 4) # totient
         self._mlist = _aset(0, 1, -1, -1, 0, -1) # mobius
+        if sieve_interval <= 0:
+            raise ValueError("sieve_interval should be a positive integer")
+        self.sieve_interval = sieve_interval
         assert all(len(i) == self._n for i in (self._list, self._tlist, self._mlist))
 
     def __repr__(self):
@@ -89,7 +106,7 @@ class Sieve:
             self._mlist = self._mlist[:self._n]
 
     def extend(self, n):
-        """Grow the sieve to cover all primes <= n (a real number).
+        """Grow the sieve to cover all primes <= n.
 
         Examples
         ========
@@ -101,29 +118,58 @@ class Sieve:
         True
         """
         n = int(n)
-        if n <= self._list[-1]:
+        # `num` is even at any point in the function.
+        # This satisfies the condition required by `self._primerange`.
+        num = self._list[-1] + 1
+        if n < num:
             return
-
-        # We need to sieve against all bases up to sqrt(n).
-        # This is a recursive call that will do nothing if there are enough
-        # known bases already.
-        maxbase = int(n**0.5) + 1
-        self.extend(maxbase)
-
-        # Create a new sieve starting from sqrt(n)
-        begin = self._list[-1] + 1
-        newsieve = _arange(begin + 1, n + 1, 2)
-
-        # Now eliminate all multiples of primes in [3, sqrt(n)]
-        for p in self.primerange(3, maxbase):
-            # Start counting at a multiple of p, offsetting
-            # the index to account for the new sieve's base index
-            startindex = ((p - begin) % (2*p)) // 2
-            for i in range(startindex, len(newsieve), p):
-                newsieve[i] = 0
-
+        num2 = num**2
+        while num2 <= n:
+            self._list += _array('L', self._primerange(num, num2))
+            num, num2 = num2, num2**2
         # Merge the sieves
-        self._list += _array('l', [x for x in newsieve if x])
+        self._list += _array('L', self._primerange(num, n + 1))
+
+    def _primerange(self, a, b):
+        """ Generate all prime numbers in the range (a, b).
+
+        Parameters
+        ==========
+
+        a, b : positive integers assuming the following conditions
+                * a is an even number
+                * 2 < self._list[-1] < a < b < nextprime(self._list[-1])**2
+
+        Yields
+        ======
+
+        p (int): prime numbers such that ``a < p < b``
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.generate import Sieve
+        >>> s = Sieve()
+        >>> s._list[-1]
+        13
+        >>> list(s._primerange(16, 31))
+        [19, 23, 29]
+
+        """
+        if b % 2:
+            b -= 1
+        while a < b:
+            block_size = min(self.sieve_interval, (b - a) // 2)
+            # Create the list such that block[x] iff (a + 2x + 1) is prime.
+            # Note that even numbers are not considered here.
+            block = [True] * block_size
+            for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+                for t in range((-(a + 1 + p) // 2) % p, block_size, p):
+                    block[t] = False
+            for idx, p in enumerate(block):
+                if p:
+                    yield a + 2 * idx + 1
+            a += 2 * block_size
 
     def extend_to_no(self, i):
         """Extend to include the ith prime number.
@@ -754,27 +800,14 @@ def primerange(a, b=None):
         return
     # If we know some of it, return it.
     if a <= largest_known_prime:
-        yield from sieve.primerange(a, largest_known_prime + 1)
+        yield from sieve._list[bisect_left(sieve._list, a):]
         a = largest_known_prime + 1
-    if a % 2:
+    elif a % 2:
         a -= 1
-    # Array length to be allocated. The larger the length,
-    # the more efficient, but uses more memory.
-    band = 1_000_000
-    tail = min(b, (largest_known_prime + 1)**2)
-    if tail % 2:
-        tail -= 1
-    # assert a % 2 == tail % 2 == 0
-    while a < tail:
-        block_size = min(band, (tail - a) // 2)
-        block = [True] * block_size
-        for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
-            for t in range((-(a + 1 + p) // 2) % p, block_size, p):
-                block[t] = False
-        for idx, p in enumerate(block):
-            if p:
-                yield a + 2 * idx + 1
-        a += 2 * block_size
+    tail = min(b, (largest_known_prime)**2)
+    if a < tail:
+        yield from sieve._primerange(a, tail)
+        a = tail
     if b <= a:
         return
     # otherwise compute, without storing, the desired range.
