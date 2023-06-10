@@ -288,20 +288,21 @@ Example 5
         .. image:: https://user-images.githubusercontent.com/53227127/133931743-550bfbd7-ef6a-47e7-9661-2f6b70959815.png
 
 Given,
+        
+        .. math::
+            G1 &= \frac{1}{10 + s}\\\\
 
-    $G1 = \frac{1}{10 + s}$
+            G2 &= \frac{1}{1 + s}\\\\
 
-    $G2 = \frac{1}{1 + s}$
+            G3 &= \frac{1 + s^2}{4 + 4s + s^2}\\\\
 
-    $G3 = \frac{1 + s^2}{4 + 4s + s^2}$
+            G4 &= \frac{1 + s}{6 + s}\\\\
 
-    $G4 = \frac{1 + s}{6 + s}$
+            H1 &= \frac{1 + s}{2 + s}\\\\
 
-    $H1 = \frac{1 + s}{2 + s}$
+            H2 &= \frac{2 \cdot (6 + s)}{1 + s}\\\\
 
-    $H2 = \frac{2 \cdot (6 + s)}{1 + s}$
-
-    $H3 = 1$
+            H3 &= 1\\
 
 Where $s$ is the variable of the transfer function (in Laplace Domain).
 
