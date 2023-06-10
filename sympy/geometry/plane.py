@@ -6,13 +6,15 @@ Plane
 
 """
 
-from sympy.core import Dummy, Rational, S, Symbol
+from sympy.core import Dummy, Rational, S, Symbol, Eq, Ne
 from sympy.core.symbol import _symbol
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from .entity import GeometryEntity
 from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
                    Ray3D, Segment3D)
 from .point import Point, Point3D
+from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.solvers import solve, linsolve
@@ -384,11 +386,15 @@ class Plane(GeometryEntity):
         [Line3D(Point3D(78/23, -24/23, 0), Point3D(147/23, 321/23, 23))]
 
         """
+        symbolic_self = [any(isinstance(i, Symbol) for i in self.p1), any(isinstance(i, Symbol) for i in self.normal_vector)]
         if not isinstance(o, GeometryEntity):
             o = Point(o, dim=3)
         if isinstance(o, Point):
             if o in self:
                 return [o]
+            # Check for symbolic case.
+            elif any(isinstance(i, Symbol) for i in o) or any(i for i in symbolic_self):
+                return [Piecewise((o,Eq((o-self.p1).dot(Point3D(self.normal_vector)),0)),(set(),True))]
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
@@ -421,11 +427,25 @@ class Plane(GeometryEntity):
                     p = a.subs(t, c[0])
                     if p not in o:
                         return []  # e.g. a segment might not intersect a plane
+                    # Check if there is a symbolic point.
+                    symbolic_o = [any(isinstance(i, Symbol) for i in o.p1), any(isinstance(i, Symbol) for i in o.p2)]
+                    if any(i for i in symbolic_o) or any(i for i in symbolic_self):
+                        conditions_eq = set()
+                        conditions_ne = {Eq((o.p2 - o.p1).dot(n), 0), Ne((o.p1 - p1).dot(n), 0)}
+                        if symbolic_o[0] or any(i for i in symbolic_self):
+                            conditions_eq.add(Eq((o.p1 - p1).dot(n),0))
+                        if symbolic_o[1] or any(i for i in symbolic_self):
+                            conditions_eq.add(Eq((o.p2 - p1).dot(n),0))
+                        return [Piecewise((o, And(*conditions_eq)),(set(),And(*conditions_ne)),(p, True))]
                     return [p]
         if isinstance(o, Plane):
+            symbolic_o = [any(isinstance(i, Symbol) for i in o.p1), any(isinstance(i, Symbol) for i in o.normal_vector)]
             if self.equals(o):
                 return [self]
             if self.is_parallel(o):
+                if symbolic_o[0] or symbolic_self[0] == True:
+                    conditions = {Eq(i[0],i[1]) for i in zip(o.p1,self.p1)}
+                    return [Piecewise((self,And(*conditions)),(set(),True))]
                 return []
             else:
                 x, y, z = map(Dummy, 'xyz')
@@ -435,6 +455,18 @@ class Plane(GeometryEntity):
                 e = o.equation(x, y, z)
                 result = list(linsolve([d, e], x, y, z))[0]
                 for i in (x, y, z): result = result.subs(i, 0)
+                if any(b for b in symbolic_o):
+                        conditions_eq = set()
+                        conditions_ne = set()
+                        if symbolic_o[0] or symbolic_self[0]:
+                            conditions_eq.add(Eq((o.p1 - self.p1).dot(Point3D(self.normal_vector)),0))
+                            conditions_ne.add(Ne((o.p1 - self.p1).dot(Point3D(self.normal_vector)),0))
+                        if symbolic_o[1] or symbolic_self[1]:
+                            # We should also allow scalar multiples as well but this isn't so clear in an equation.
+                            for i in zip(o.normal_vector, self.normal_vector):
+                                conditions_eq.add(Eq(i[0],i[1]))
+                                conditions_ne.add(Eq(i[0],i[1]))
+                        return [Piecewise((self,And(*conditions_eq)),(set(),And(*conditions_ne)),(Line3D(Point3D(result), direction_ratio=c), True))]
                 return [Line3D(Point3D(result), direction_ratio=c)]
 
 
