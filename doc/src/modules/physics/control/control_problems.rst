@@ -8,7 +8,7 @@ of the Control Module.
 Example 1
 ---------
 
-        .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/91bd2272-7fa5-4a2c-bca2-94d3be16d78a
+        .. image:: Q1.svg
 
 A pole zero plot of an unknown **Transfer Function** is given above.
 
@@ -76,7 +76,7 @@ Example 2
 
 Find the Transfer Function of the following Spring-Mass dampering system : -
 
-        .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/ec173d39-3b00-49a7-94ae-f9d4b3292a9e
+        .. image:: Q2.svg
 
 
 Soltion -
@@ -170,7 +170,7 @@ Solution-
     [[[-1, 0], []], [[-3/4], [4, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
     >>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
 
-    .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/fe6b05c7-aae6-409b-86c5-3544d871db23
+    .. image:: Q3_3_plot.svg
 
     Subpart 4
 
@@ -183,18 +183,18 @@ Solution-
          (s + 1)
     >>> step_response_plot(tf1)  # doctest: +SKIP
 
-    .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/7805d13c-d934-45f6-aed6-cd9a331f7bd8
+    .. image:: Q3_4_plot.svg
 
     Subpart 5
 
     >>> tf2 = G[0, 1]
     >>> bode_magnitude_plot(tf2)  # doctest: +SKIP
 
-    .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/d6f4503d-2aa0-48a4-bbeb-0866be0509b3
+    .. image:: Q3_5_1_plot.svg
 
     >>> bode_phase_plot(tf2)  # doctest: +SKIP
 
-    .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/69ee2d5e-4e32-415b-8937-074a2ce509b8
+    .. image:: Q3_5_2_plot.svg
 
 
 
@@ -215,7 +215,7 @@ Example 4
 
 2. Also, find the **equivalent closed-loop system** *(or the ratio v/u from the block diagram given below)* for the system (negative-feedback loop) having **C(s)** as the **controller** and **P(s)** as **plant** *(Refer to the block diagram given below)*.
 
-        .. image:: https://user-images.githubusercontent.com/53227127/120820301-0b368c80-c572-11eb-84c4-e372190cf0bd.png
+        .. image:: Q4.svg
 
 Solution-
 
@@ -285,10 +285,10 @@ Solution-
 Example 5
 ---------
 
-        .. image:: https://user-images.githubusercontent.com/53227127/133931743-550bfbd7-ef6a-47e7-9661-2f6b70959815.png
+        .. image:: Q5.svg
 
 Given,
-        
+
         .. math::
             G1 &= \frac{1}{10 + s}\\\\
 
@@ -338,4 +338,4 @@ Solution-
     TransferFunction(s**4 + 3*s**3 + 3*s**2 + 3*s + 2, 12*s**5 + 193*s**4 + 873*s**3 + 1644*s**2 + 1484*s + 712, s)
     >>> pole_zero_plot(sys6)  # doctest: +SKIP
 
-    .. image:: https://github.com/faze-geek/GSOC-Images/assets/90216905/ec08cd00-5a42-4ac3-b927-80b243523c85
+    .. image:: Q5_2_plot.svg
