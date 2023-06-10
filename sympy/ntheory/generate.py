@@ -51,7 +51,7 @@ class Sieve:
     >>> 25 in sieve
     False
     >>> sieve._list
-    array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+    array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
     """
 
     # data shared (and updated) by all Sieve instances
@@ -152,7 +152,7 @@ class Sieve:
         >>> s = Sieve()
         >>> s._list[-1]
         13
-        >>> list(s._primerange(16, 31))
+        >>> list(s._primerange(18, 31))
         [19, 23, 29]
 
         """
@@ -186,7 +186,7 @@ class Sieve:
         >>> sieve._reset() # this line for doctest only
         >>> sieve.extend_to_no(9)
         >>> sieve._list
-        array('l', [2, 3, 5, 7, 11, 13, 17, 19, 23])
+        array('L', [2, 3, 5, 7, 11, 13, 17, 19, 23])
 
         Notes
         =====
