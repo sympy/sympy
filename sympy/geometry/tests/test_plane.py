@@ -9,7 +9,7 @@ from sympy.testing.pytest import raises
 
 
 def test_plane():
-    x, y, z, u, v = symbols('x y z u v', real=True)
+    x, y, z, u, v, X, Y, Z = symbols('x y z u v X Y Z', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
@@ -26,6 +26,7 @@ def test_plane():
     l1 = Line3D(Point3D(5, 0, 0), Point3D(1, -1, 1))
     l2 = Line3D(Point3D(0, -2, 0), Point3D(3, 1, 1))
     l3 = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
+    spl1 = Plane((x,y,z),(1,1,1))
 
     raises(ValueError, lambda: Plane(p1, p1, p1))
 
@@ -42,6 +43,7 @@ def test_plane():
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
     assert pl3.equation(x, y, z) == x - 2*y + z
+    assert spl1.equation() == X + Y + Z - x - y - z
 
     assert pl3.p1 == p1
     assert pl4.p1 == p1
