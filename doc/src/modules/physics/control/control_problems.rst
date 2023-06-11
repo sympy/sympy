@@ -17,7 +17,7 @@ A pole zero plot of an unknown **Transfer Function** is given above.
 3. Obtain the **unit impulse response** of the system.
 4. Find the initial value of the **time-domain response** of system without using the time domain equation.
 
-Solution-
+Solution
 
     >>> # Imports
     >>> from sympy import symbols, I, limit, pprint, solve, oo
@@ -74,12 +74,12 @@ Solution-
 Example 2
 ---------
 
-Find the Transfer Function of the following Spring-Mass dampering system : -
+Find the Transfer Function of the following Spring-Mass dampering system :
 
         .. image:: Q2.svg
 
 
-Soltion -
+Solution
 
     >>> # Imports
     >>> from sympy import Function, laplace_transform, laplace_initial_conds, laplace_correspondence, diff, Symbol, solve
@@ -93,10 +93,13 @@ Soltion -
     >>> c = Symbol('c') # Damper
     >>> m = Symbol('m') # Mass of block
 
-        $The \ Diffential \ Equation \ of \ the \ system \ will \ be \ as \ follows:$
-        $$m\frac{{d^2y(t)}}{{dt^2}} + c\frac{{dy(t)}}{{dt}} + ky(t) = w^2u(t)$$
-        $with \ boundary \ conditions$
-        $$y(0) = t,\quad\frac{{dy}}{{dt}}\bigg|_{t=0} = 0$$
+The **DIFFERENTIAL EQUATION** of the system will be as follows:
+
+        .. math::
+
+            \frac{{d^2y(t)}}{{dt^2}} + c\frac{{dy(t)}}{{dt}} + ky(t) = w^2u(t) \\\\
+            with \ initial \ conditions \\
+            y(0) = t,\quad\frac{{dy}}{{dt}}\bigg|_{t=0} = 0\\
 
     >>> f = m*diff(y(t), t, t) + c*diff(y(t), t) + k*y(t) - u(t)
     >>> F = laplace_transform(f, t, s, noconds=True)
@@ -113,7 +116,7 @@ Soltion -
 Example 3
 ---------
 
-A the signal matrix in time-domain, also known as the *impulse response matrix* **g(t)** is given below.
+A signal matrix in the time-domain, also known as the *impulse response matrix* **g(t)** is given below.
 
         $$g(t) = \begin{bmatrix}
         (1-t)e^{-t} & e^{-2t} \\
@@ -121,7 +124,7 @@ A the signal matrix in time-domain, also known as the *impulse response matrix* 
         \end{bmatrix}$$
 
 
-With Respect to this matrix, find -
+With Respect to this matrix, find
 
 1. The system matrix (Transfer Function Matrix) in the Laplace domain (**g(t)** → **G(s)**).
 2. The number of input and output signals in the system.
@@ -129,7 +132,7 @@ With Respect to this matrix, find -
 4. Plot the **unit step response** of the individual Transfer Function corresponding to the **1st input** and **1st output** of the **G(s)** matrix.
 5. Analyse the Bode magnitude and phase plot of the Transfer Function corresponding to **1st input** and **2nd output** of the **G(s)** matrix.
 
-Solution-
+Solution
 
     >>> # Imports
     >>> from sympy import Matrix, laplace_transform, inverse_laplace_transform, exp, cos, sqrt, sin, pprint
@@ -217,7 +220,7 @@ Example 4
 
         .. image:: Q4.svg
 
-Solution-
+Solution
 
     >>> # Imports
     >>> from sympy import Matrix, pprint
@@ -306,13 +309,13 @@ Given,
 
 Where $s$ is the variable of the transfer function (in Laplace Domain).
 
-Find -
+Find
 
 1. The equivalent Transfer Function representing the system given above.
 2. Pole-Zero plot of the system.
 
 
-Solution-
+Solution
 
     >>> from sympy.abc import s
     >>> from sympy.physics.control import *
