@@ -17,18 +17,6 @@ from .primetest import isprime
 from sympy.utilities.misc import as_int
 
 
-def _azeros(n):
-    return _array('l', [0]*n)
-
-
-def _aset(*v):
-    return _array('l', v)
-
-
-def _arange(a, b, c=1):
-    return _array('l', range(a, b, c))
-
-
 def _as_int_ceiling(a):
     """ Wrapping ceiling in as_int will raise an error if there was a problem
         determining whether the expression was exactly an integer or not."""
@@ -72,8 +60,8 @@ class Sieve:
         """
         self._n = 6
         self._list = _array('L', [2, 3, 5, 7, 11, 13]) # primes
-        self._tlist = _aset(0, 1, 1, 2, 2, 4) # totient
-        self._mlist = _aset(0, 1, -1, -1, 0, -1) # mobius
+        self._tlist = _array('L', [0, 1, 1, 2, 2, 4]) # totient
+        self._mlist = _array('i', [0, 1, -1, -1, 0, -1]) # mobius
         if sieve_interval <= 0:
             raise ValueError("sieve_interval should be a positive integer")
         self.sieve_interval = sieve_interval
@@ -261,7 +249,7 @@ class Sieve:
             for i in range(a, b):
                 yield self._tlist[i]
         else:
-            self._tlist += _arange(n, b)
+            self._tlist += _array('L', range(n, b))
             for i in range(1, n):
                 ti = self._tlist[i]
                 startindex = (n + i - 1) // i * i
@@ -305,7 +293,7 @@ class Sieve:
             for i in range(a, b):
                 yield self._mlist[i]
         else:
-            self._mlist += _azeros(b - n)
+            self._mlist += _array('i', [0]*(b - n))
             for i in range(1, n):
                 mi = self._mlist[i]
                 startindex = (n + i - 1) // i * i

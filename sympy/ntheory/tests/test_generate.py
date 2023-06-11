@@ -148,15 +148,16 @@ def test_generate():
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
 
+    raises(ValueError, lambda: Sieve(0))
+    raises(ValueError, lambda: Sieve(-1))
     for sieve_interval in [1, 10, 11, 1_000_000]:
         s = Sieve(sieve_interval=sieve_interval)
-        assert s._list[-1] == 13
-        for head in range(14, 17**2, 2):
-            for tail in range(head + 1, 17**2):
+        for head in range(s._list[-1] + 1, (s._list[-1] + 1)**2, 2):
+            for tail in range(head + 1, (s._list[-1] + 1)**2):
                 A = list(s._primerange(head, tail))
                 B = primelist[bisect(primelist, head):bisect_left(primelist, tail)]
                 assert A == B
-        for k in range(15, primelist[-1] - 1, 2):
+        for k in range(s._list[-1], primelist[-1] - 1, 2):
             s = Sieve(sieve_interval=sieve_interval)
             s.extend(k)
             assert list(s._list) == primelist[:bisect(primelist, k)]
