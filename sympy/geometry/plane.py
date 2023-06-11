@@ -394,7 +394,7 @@ class Plane(GeometryEntity):
                 return [o]
             # Check for symbolic case.
             elif any(isinstance(i, Symbol) for i in o) or any(i for i in symbolic_self):
-                return [Piecewise((o,Eq((o-self.p1).dot(Point3D(self.normal_vector)),0)),(set(),True))]
+                return [Piecewise((o, Eq((o-self.p1).dot(Point3D(self.normal_vector)), 0)),(set(), True))]
             else:
                 return []
         if isinstance(o, (LinearEntity, LinearEntity3D)):
@@ -433,10 +433,10 @@ class Plane(GeometryEntity):
                         conditions_eq = set()
                         conditions_ne = {Eq((o.p2 - o.p1).dot(n), 0), Ne((o.p1 - p1).dot(n), 0)}
                         if symbolic_o[0] or any(i for i in symbolic_self):
-                            conditions_eq.add(Eq((o.p1 - p1).dot(n),0))
+                            conditions_eq.add(Eq((o.p1 - p1).dot(n), 0))
                         if symbolic_o[1] or any(i for i in symbolic_self):
-                            conditions_eq.add(Eq((o.p2 - p1).dot(n),0))
-                        return [Piecewise((o, And(*conditions_eq)),(set(),And(*conditions_ne)),(p, True))]
+                            conditions_eq.add(Eq((o.p2 - p1).dot(n), 0))
+                        return [Piecewise((o, And(*conditions_eq)), (set(), And(*conditions_ne)), (p, True))]
                     return [p]
         if isinstance(o, Plane):
             symbolic_o = [any(isinstance(i, Symbol) for i in o.p1), any(isinstance(i, Symbol) for i in o.normal_vector)]
@@ -445,7 +445,7 @@ class Plane(GeometryEntity):
             if self.is_parallel(o):
                 if symbolic_o[0] or symbolic_self[0] == True:
                     conditions = {Eq(i[0],i[1]) for i in zip(o.p1,self.p1)}
-                    return [Piecewise((self,And(*conditions)),(set(),True))]
+                    return [Piecewise((self, And(*conditions)), (set(),True))]
                 return []
             else:
                 x, y, z = map(Dummy, 'xyz')
@@ -466,7 +466,7 @@ class Plane(GeometryEntity):
                             for i in zip(o.normal_vector, self.normal_vector):
                                 conditions_eq.add(Eq(i[0],i[1]))
                                 conditions_ne.add(Eq(i[0],i[1]))
-                        return [Piecewise((self,And(*conditions_eq)),(set(),And(*conditions_ne)),(Line3D(Point3D(result), direction_ratio=c), True))]
+                        return [Piecewise((self, And(*conditions_eq)), (set(), And(*conditions_ne)), (Line3D(Point3D(result), direction_ratio=c), True))]
                 return [Line3D(Point3D(result), direction_ratio=c)]
 
 
