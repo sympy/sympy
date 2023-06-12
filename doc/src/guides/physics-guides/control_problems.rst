@@ -1,3 +1,5 @@
+.. _control_problems-physics-guide:
+
 =============================================
 Solved Textbook Problems using Control Module
 =============================================
@@ -8,7 +10,7 @@ of the Control Module.
 Example 1
 ---------
 
-        .. image:: Q1.svg
+        .. image:: Control_Problems_Q1.svg
 
 A pole zero plot of an unknown **Transfer Function** is given above.
 
@@ -76,7 +78,7 @@ Example 2
 
 Find the Transfer Function of the following Spring-Mass dampering system :
 
-        .. image:: Q2.svg
+        .. image:: Control_Problems_Q2.svg
 
 
 Solution
@@ -173,7 +175,7 @@ Solution
     [[[-1, 0], []], [[-3/4], [4, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]]]
     >>> pole_zero_plot(G[0, 0])   # doctest: +SKIP
 
-    .. plot:: modules/physics/control/generate_plots.py q3_3
+    .. plot:: guides/physics-guides/generate_plots.py q3_3
 
     Subpart 4
 
@@ -186,18 +188,18 @@ Solution
          (s + 1)
     >>> step_response_plot(tf1)  # doctest: +SKIP
 
-    .. plot:: modules/physics/control/generate_plots.py q3_4
+    .. plot:: guides/physics-guides/generate_plots.py q3_4
 
     Subpart 5
 
     >>> tf2 = G[0, 1]
     >>> bode_magnitude_plot(tf2)  # doctest: +SKIP
 
-    .. plot:: modules/physics/control/generate_plots.py q3_5_1
+    .. plot:: guides/physics-guides/generate_plots.py q3_5_1
 
     >>> bode_phase_plot(tf2)  # doctest: +SKIP
 
-    .. plot:: modules/physics/control/generate_plots.py q3_5_2
+    .. plot:: guides/physics-guides/generate_plots.py q3_5_2
 
 
 
@@ -218,7 +220,7 @@ Example 4
 
 2. Also, find the **equivalent closed-loop system** *(or the ratio v/u from the block diagram given below)* for the system (negative-feedback loop) having **C(s)** as the **controller** and **P(s)** as **plant** *(Refer to the block diagram given below)*.
 
-        .. image:: Q4.svg
+        .. image:: Control_Problems_Q4.svg
 
 Solution
 
@@ -288,7 +290,7 @@ Solution
 Example 5
 ---------
 
-        .. image:: Q5.svg
+        .. image:: Control_Problems_Q5.svg
 
 Given,
 
@@ -341,4 +343,11 @@ Solution
     TransferFunction(s**4 + 3*s**3 + 3*s**2 + 3*s + 2, 12*s**5 + 193*s**4 + 873*s**3 + 1644*s**2 + 1484*s + 712, s)
     >>> pole_zero_plot(sys6)  # doctest: +SKIP
 
-    .. plot:: modules/physics/control/generate_plots.py q5
+    .. plot:: guides/physics-guides/generate_plots.py q5
+
+
+
+References
+----------
+1. `testbook.com <https://testbook.com/objective-questions/mcq-on-transfer-function--5eea6a1039140f30f369e952>`_
+2. `www.vssut.ac.in <https://www.vssut.ac.in/lecture_notes/lecture1423904331.pdf>`_

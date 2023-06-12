@@ -15,4 +15,3 @@ Control Module
    control.rst
    lti.rst
    control_plots.rst
-   control_problems.rst
