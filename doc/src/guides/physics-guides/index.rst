@@ -13,4 +13,3 @@ Physics, Optics, Quantum Mechanics, Units and Vector algebra.
    :maxdepth: 1
 
    control_problems.rst
-   
