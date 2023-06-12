@@ -80,9 +80,9 @@ BANG: "!"
 
 EQUAL: "="
 LT: "<"
-LTE: "\\leq"
+LTE: "\\leq" | "\\le"
 GT: ">"
-GTE: "\\geq"
+GTE: "\\geq" | "\\ge"
 
 DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/

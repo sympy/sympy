@@ -98,27 +98,18 @@ def parse_latex_lark(s):
     # `lark` is not importable it falls back to using the standalone
     # precompiled lark latex grammar if it exists
     _lark = import_module('lark')
-    if _lark is None:
-        # generated via lark standalone
-        # python -m lark.tools.standalone latex.lark > latex_grammar.py
-        standalone_lark = import_module('sympy.parsing.latex.lark.latex_grammar')
-        if standalone_lark is None:
-            # TODO: throw proper error
-            raise ValueError('precompiled lark grammar "latex_grammar" not available')
-        parser = standalone_lark.Lark_StandAlone()
-        Transformer = standalone_lark.Transformer
-    else:
+    if _lark is not None: # TODO: Emit appropriate error message if Lark module not found.
         # TODO: should we use pkg_resource to get grammar file?  I
         # think this would make sympy depend on setuptools which we
         # would not like
         with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
             latex_grammar = f.read()
 
-        parser = _lark.Lark(latex_grammar, parser='lalr',
-                            lexer='auto',
-                            propagate_positions=False,
-                            maybe_placeholders=False)
-        Transformer = _lark.Transformer
+            parser = _lark.Lark(latex_grammar, parser='lalr',
+                                lexer='auto',
+                                propagate_positions=False,
+                                maybe_placeholders=False)
+            Transformer = _lark.Transformer
 
     class TreeToSympy(Transformer):
         INTEGER = int
@@ -145,14 +136,14 @@ def parse_latex_lark(s):
             return sympy.Symbol(token.value[8:-1])
 
         def group(self, args):
-            print(args)
+            print("group =", args)
             if len(args) == 5: # e.g. \\left ( expr \right )
                 return args[2]
             else: # e.g. ( expr )
                 return args[1]
 
         def abs_group(self, args):
-            print(args)
+            print("abs =", args)
             if len(args) == 5: # e.g. \\left | expr \\right |
                 return sympy.Abs(args[2])
             else: # e.g. | expr |
@@ -191,7 +182,7 @@ def parse_latex_lark(s):
             return sympy.Function(str(args[0]))(args[2])
 
         def implicit_mul(self, args):
-            print('implicit_mul', args)
+            print('implicit_mul:', args)
             result = args[0] * args[1]
             for i in range(len(args) - 2):
                 result = result * args[i + 2]
@@ -203,7 +194,7 @@ def parse_latex_lark(s):
                 'ADD': lambda expr: expr
             }
             op, left = args[0].type, args[1]
-            print('unary', op, left)
+            print('unary:', op, left)
             return op_map[op](left)
 
         def factorial(self, args):
@@ -222,16 +213,16 @@ def parse_latex_lark(s):
                 return sympy.Limit(args[2], sub[2], sub[4])
 
         def binary_op_1(self, args):
-            print('op_1', args)
+            print('op_1:', args)
             return self._binary_op(args)
 
         def binary_op_2(self, args):
-            print('op_2', args)
+            print('op_2:', args)
             return self._binary_op(args)
 
         def binary_op_3(self, args):
             left, op, right = args[0], args[1][0], args[1][1]
-            print('op_3', op, left, right)
+            print('op_3:', op, "left:", left, "right:", right)
             return self._binary_op([left, op, right])
 
         def sup_expression(self, args):
@@ -285,6 +276,8 @@ def parse_latex_lark(s):
             return sympy.binomial(args[2], args[5])
 
         def relation(self, args):
+            # import pdb
+            # pdb.set_trace()
             if len(args) == 1: # relation: expr
                 return args[0]
 
@@ -304,7 +297,10 @@ def parse_latex_lark(s):
         # this could be done within the parse step of lark however we
         # would like to keep it seperate to allow for the possiblity of
         # multiple backends for the generated expression
-        sympy_expression = TreeToSympy().transform(tree)
+        t = TreeToSympy()
+        # import pdb
+        # pdb.set_trace()
+        sympy_expression = t.transform(tree)
     except Exception as e:
         raise LaTeXParsingError(str(e))
     return sympy_expression
