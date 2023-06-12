@@ -1,0 +1,39 @@
+%ignore /[ \t\n\r]+/
+
+%ignore "\\," | "\\thinspace"
+%ignore "\\:" | "\\medspace"
+%ignore "\\;" | "\\thickspace"
+%ignore "\\quad"
+%ignore "\\qquad"
+%ignore "\\!" | "\\negthinspace"
+%ignore "\\negmedspace"
+%ignore "\\negthickspace"
+
+///////////////////// tokens ///////////////////////
+
+ADD: "+"
+SUB: "-"
+MUL: "*"
+DIV: "/"
+
+%ignore "\\left"
+%ignore "\\right"
+
+EQUAL: "="
+NOT_EQUAL: "\\neq" | "\\ne"
+LT: "<"
+LTE: "\\leq" | "\\le"
+GT: ">"
+GTE: "\\geq" | "\\ge"
+
+%import common.INT -> INT
+
+SYMBOL: /[a-z]/
+
+//////////////////// grammar //////////////////////
+
+string: relation | expression
+
+relation: (INT | SYMBOL) (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) (INT | SYMBOL)
+
+expression: (INT | SYMBOL) (ADD | SUB | MUL | DIV) (INT | SYMBOL)
