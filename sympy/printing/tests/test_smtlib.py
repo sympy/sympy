@@ -11,8 +11,9 @@ from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
+from sympy.assumptions.ask import Q
 from sympy.printing.smtlib import smtlib_code
-from sympy.testing.pytest import raises, Failed
+from sympy.testing.pytest import raises, Failed, XFAIL
 
 x, y, z = symbols('x,y,z')
 
@@ -72,6 +73,29 @@ def test_Relational():
         assert smtlib_code(Gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
         assert smtlib_code(Ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
 
+
+def test_AppliedBinaryRelation():
+    assert smtlib_code(Q.eq(x, y), auto_declare=False) == "(assert (= x y))"
+    assert smtlib_code(Q.ne(x, y), auto_declare=False) == "(assert (not (= x y)))"
+    assert smtlib_code(Q.lt(x, y), auto_declare=False) == "(assert (< x y))"
+    assert smtlib_code(Q.le(x, y), auto_declare=False) == "(assert (<= x y))"
+    assert smtlib_code(Q.gt(x, y), auto_declare=False) == "(assert (> x y))"
+    assert smtlib_code(Q.ge(x, y), auto_declare=False) == "(assert (>= x y))"
+
+
+def test_AppliedPredicate():
+    assert smtlib_code(Q.positive(x), auto_declare=False) == "(assert (> x 0))"
+    assert smtlib_code(Q.negative(x), auto_declare=False) == "(assert (< x 0))"
+    assert smtlib_code(Q.zero(x), auto_declare=False) == "(assert (= x 0))"
+    assert smtlib_code(Q.nonpositive(x), auto_declare=False) == "(assert (<= x 0))"
+    assert smtlib_code(Q.nonnegative(x), auto_declare=False) == "(assert (>= x 0))"
+    assert smtlib_code(Q.nonzero(x), auto_declare=False) == "(assert (not (= x 0)))"
+
+
+@XFAIL
+def test_AppliedPredicate_FAIL():
+    assert smtlib_code(Q.imaginary(x)) == "(declare-const imaginary_x Bool)\n" \
+                                          "(assert imaginary_x)"
 
 def test_Function():
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:

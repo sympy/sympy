@@ -15,6 +15,9 @@ from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 
 
 class SMTLibPrinter(Printer):
@@ -41,6 +44,12 @@ class SMTLibPrinter(Printer):
             GreaterThan: '>=',
             StrictLessThan: '<',
             StrictGreaterThan: '>',
+
+            Q.eq: '=',
+            Q.le: '<=',
+            Q.ge: '>=',
+            Q.lt: '<',
+            Q.gt: '>',
 
             exp: 'exp',
             log: 'log',
@@ -104,6 +113,9 @@ class SMTLibPrinter(Printer):
             op = self._known_functions[type(e)]
         elif type(type(e)) == UndefinedFunction:
             op = e.name
+        elif isinstance(e,AppliedBinaryRelation) and e.function in self._known_functions:
+            op = self._known_functions[e.function]
+            return self._s_expr(op, e.arguments)
         else:
             op = self._known_functions[e]  # throw KeyError
 
@@ -147,6 +159,31 @@ class SMTLibPrinter(Printer):
             raise ValueError(f'One-sided intervals (`{e}`) are not supported in SMT.')
         else:
             return f'[{e.start}, {e.end}]'
+
+    def _print_AppliedPredicate(self, e: AppliedPredicate):
+        if e.function == Q.positive:
+            rel = Q.gt(e.arguments[0],0)
+        elif e.function == Q.negative:
+            rel = Q.lt(e.arguments[0], 0)
+        elif e.function == Q.zero:
+            rel = Q.eq(e.arguments[0], 0)
+        elif e.function == Q.nonpositive:
+            rel = Q.le(e.arguments[0], 0)
+        elif e.function == Q.nonnegative:
+            rel = Q.ge(e.arguments[0], 0)
+        elif e.function == Q.nonzero:
+            rel = Q.ne(e.arguments[0], 0)
+        else:
+            return str(e.function)[2:] + "_" + "_".join([str(arg) for arg in e.arguments])
+
+        return self._print_AppliedBinaryRelation(rel)
+
+    def _print_AppliedBinaryRelation(self, e: AppliedPredicate):
+        if e.function == Q.ne:
+            return self._print_Unequality(Unequality(*e.arguments))
+        else:
+            return self._print_Function(e)
+
 
     # todo: Sympy does not support quantifiers yet as of 2022, but quantifiers can be handy in SMT.
     # For now, users can extend this class and build in their own quantifier support.
