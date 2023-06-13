@@ -11,11 +11,11 @@ from sympy.testing.pytest import raises
 
 
 def test_plane():
-    x, y, z, u, v, w, c, d, e, f, g, h = symbols('x y z u v w c d e f g h', real=True)
+    x, y, z, u, v, w, c, d, e, f, g, h, X, Y, A = symbols('x y z u v w c d e f g h X Y A', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
-    sp1 = Point3D(x,y,z)
+    sp1 = Point3D(X,Y,A)
     pl3 = Plane(p1, p2, p3)
     pl4 = Plane(p1, normal_vector=(1, 1, 1))
     pl4b = Plane(p1, p2)
@@ -235,9 +235,9 @@ def test_plane():
     assert pl4.intersection(Line((x,y,z),(u,v,w))) == [Piecewise((Line3D(Point3D(x, y, z), Point3D(u, v, w)), Eq(u + v + w, 0) & Eq(x + y + z, 0)), (set(), Ne(x + y + z, 0) & Eq(u + v + w - x - y - z, 0)), (Point3D(x + (u - x)*(x + y + z)/(-u - v - w + x + y + z), y + (v - y)*(x + y + z)/(-u - v - w + x + y + z), z + (w - z)*(x + y + z)/(-u - v - w + x + y + z)), True))]
     assert pl4.intersection(Plane((x,y,z),(1,1,1))) == [Piecewise((Plane(Point3D(0, 0, 0), (1, 1, 1)), Eq(x, 0) & Eq(y, 0) & Eq(z, 0)), (set(), True))]
     assert pl4.intersection(Plane((x,y,z),(u,v,w))) == [Piecewise((Plane(Point3D(0, 0, 0), (1, 1, 1)), Eq(u, 1) & Eq(v, 1) & Eq(w, 1) & Eq(x + y + z, 0)), (set(), Eq(u, 1) & Eq(v, 1) & Eq(w, 1) & Ne(x + y + z, 0)), (Line3D(Point3D((u*x + v*y + w*z)/(u - v), (-u*x - v*y - w*z)/(u - v), 0), Point3D(-v + w + (u*x + v*y + w*z)/(u - v), u - w + (-u*x - v*y - w*z)/(u - v), -u + v)), True))]
-    assert spl1.intersection(Point(c,d,e)) == [Piecewise((Point3D(c, d, e), Eq(u*(c - x) + v*(d - y) + w*(e - z), 0)), (set(), True))]
-    assert spl1.intersection(Line((c,d,e),(f,g,h))) == [Piecewise((Line3D(Point3D(c, d, e), Point3D(f, g, h)), Eq(u*(c - x) + v*(d - y) + w*(e - z), 0) & Eq(u*(f - x) + v*(g - y) + w*(h - z), 0)), (set(), Eq(u*(-c + f) + v*(-d + g) + w*(-e + h), 0) & Ne(u*(c - x) + v*(d - y) + w*(e - z), 0)), (Point3D(c - (c - f)*(c*u + d*v + e*w - u*x - v*y - w*z)/(c*u + d*v + e*w - f*u - g*v - h*w), d - (d - g)*(c*u + d*v + e*w - u*x - v*y - w*z)/(c*u + d*v + e*w - f*u - g*v - h*w), e - (e - h)*(c*u + d*v + e*w - u*x - v*y - w*z)/(c*u + d*v + e*w - f*u - g*v - h*w)), True))]
-    assert spl1.intersection(Plane((c,d,e),(f,g,h))) == [Piecewise((Plane(Point3D(x, y, z), (u, v, w)), Eq(f, u) & Eq(g, v) & Eq(h, w) & Eq(u*(c - x) + v*(d - y) + w*(e - z), 0)), (set(), Eq(f, u) & Eq(g, v) & Eq(h, w) & Ne(u*(c - x) + v*(d - y) + w*(e - z), 0)), (Line3D(Point3D((-c*f*v - d*g*v - e*h*v + g*u*x + g*v*y + g*w*z)/(-f*v + g*u), (c*f*u + d*g*u + e*h*u - f*u*x - f*v*y - f*w*z)/(-f*v + g*u), 0), Point3D(-g*w + h*v + (-c*f*v - d*g*v - e*h*v + g*u*x + g*v*y + g*w*z)/(-f*v + g*u), f*w - h*u + (c*f*u + d*g*u + e*h*u - f*u*x - f*v*y - f*w*z)/(-f*v + g*u), -f*v + g*u)), True))]
+    assert spl1.intersection(Point(c,d,e)) == [Piecewise((Point3D(c, d, e), Eq(u*(c - X) + v*(d - Y) + w*(e - A), 0)), (set(), True))]
+    assert spl1.intersection(Line((c,d,e),(f,g,h))) == [Piecewise((Line3D(Point3D(c, d, e), Point3D(f, g, h)), Eq(u*(c - X) + v*(d - Y) + w*(e - A), 0) & Eq(u*(f - X) + v*(g - Y) + w*(h - A), 0)), (set(), Eq(u*(-c + f) + v*(-d + g) + w*(-e + h), 0) & Ne(u*(c - X) + v*(d - Y) + w*(e - A), 0)), (Point3D(c - (c - f)*(c*u + d*v + e*w - u*X - v*Y - w*A)/(c*u + d*v + e*w - f*u - g*v - h*w), d - (d - g)*(c*u + d*v + e*w - u*X - v*Y - w*A)/(c*u + d*v + e*w - f*u - g*v - h*w), e - (e - h)*(c*u + d*v + e*w - u*X - v*Y - w*A)/(c*u + d*v + e*w - f*u - g*v - h*w)), True))]
+    assert spl1.intersection(Plane((c,d,e),(f,g,h))) == [Piecewise((Plane(Point3D(X, Y, A), (u, v, w)), Eq(f, u) & Eq(g, v) & Eq(h, w) & Eq(u*(c - X) + v*(d - Y) + w*(e - A), 0)), (set(), Eq(f, u) & Eq(g, v) & Eq(h, w) & Ne(u*(c - X) + v*(d - Y) + w*(e - A), 0)), (Line3D(Point3D((-c*f*v - d*g*v - e*h*v + g*u*X + g*v*Y + g*w*A)/(-f*v + g*u), (c*f*u + d*g*u + e*h*u - f*u*X - f*v*Y - f*w*A)/(-f*v + g*u), 0), Point3D(-g*w + h*v + (-c*f*v - d*g*v - e*h*v + g*u*X + g*v*Y + g*w*A)/(-f*v + g*u), f*w - h*u + (c*f*u + d*g*u + e*h*u - f*u*X - f*v*Y - f*w*A)/(-f*v + g*u), -f*v + g*u)), True))]
 
     # issue 8570
     l2 = Line3D(Point3D(Rational(50000004459633, 5000000000000),
