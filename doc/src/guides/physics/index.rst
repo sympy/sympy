@@ -1,7 +1,7 @@
-.. _physics-guides:
+.. _physics:
 
 =============================
- Physics Guides
+ Physics
 =============================
 
 
