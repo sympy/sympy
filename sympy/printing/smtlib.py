@@ -175,7 +175,7 @@ class SMTLibPrinter(Printer):
         elif e.function == Q.nonzero:
             rel = Q.ne(e.arguments[0], 0)
         else:
-            return str(e.function)[2:] + "_" + "_".join([str(arg) for arg in e.arguments])
+            raise ValueError(f"Predicate (`{e}`) can't be expressed as an inequality or equality")
 
         return self._print_AppliedBinaryRelation(rel)
 
