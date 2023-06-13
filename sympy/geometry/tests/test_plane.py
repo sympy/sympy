@@ -43,8 +43,7 @@ def test_plane():
 
     assert pl5.equation(x, y, z) == x + 2*y + 3*z - 14
     assert pl3.equation(x, y, z) == x - 2*y + z
-    assert spl1.equation() == X + Y + Z - x - y - z
-
+    assert raises(NotImplementedError, lambda: spl1.equation())
     assert pl3.p1 == p1
     assert pl4.p1 == p1
     assert pl5.p1 == p3

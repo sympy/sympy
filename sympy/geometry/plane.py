@@ -350,8 +350,8 @@ class Plane(GeometryEntity):
         x, y, z = [i if i else Symbol(j, real=True) for i, j in zip((x, y, z), 'xyz')]
         # https://github.com/sympy/sympy/issues/25228
         if any(i in self.p1.free_symbols for i in [x,y,z]) or any(i in self.normal_vector.free_symbols for i in [x,y,z]):
-            X, Y, Z = symbols('X Y Z', real=True)
-            return self.equation(X, Y, Z)
+            raise NotImplementedError(
+                f"Use different variables than x, y, z for {self} to avoid clash when calcualting plane equation.")
         a = Point3D(x, y, z)
         b = self.p1.direction_ratio(a)
         c = self.normal_vector
