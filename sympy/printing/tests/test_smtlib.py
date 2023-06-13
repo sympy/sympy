@@ -75,21 +75,23 @@ def test_Relational():
 
 
 def test_AppliedBinaryRelation():
-    assert smtlib_code(Q.eq(x, y), auto_declare=False) == "(assert (= x y))"
-    assert smtlib_code(Q.ne(x, y), auto_declare=False) == "(assert (not (= x y)))"
-    assert smtlib_code(Q.lt(x, y), auto_declare=False) == "(assert (< x y))"
-    assert smtlib_code(Q.le(x, y), auto_declare=False) == "(assert (<= x y))"
-    assert smtlib_code(Q.gt(x, y), auto_declare=False) == "(assert (> x y))"
-    assert smtlib_code(Q.ge(x, y), auto_declare=False) == "(assert (>= x y))"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 12) as w:
+        assert smtlib_code(Q.eq(x, y), auto_declare=False, log_warn=w) == "(assert (= x y))"
+        assert smtlib_code(Q.ne(x, y), auto_declare=False, log_warn=w) == "(assert (not (= x y)))"
+        assert smtlib_code(Q.lt(x, y), auto_declare=False, log_warn=w) == "(assert (< x y))"
+        assert smtlib_code(Q.le(x, y), auto_declare=False, log_warn=w) == "(assert (<= x y))"
+        assert smtlib_code(Q.gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
+        assert smtlib_code(Q.ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
 
 
 def test_AppliedPredicate():
-    assert smtlib_code(Q.positive(x), auto_declare=False) == "(assert (> x 0))"
-    assert smtlib_code(Q.negative(x), auto_declare=False) == "(assert (< x 0))"
-    assert smtlib_code(Q.zero(x), auto_declare=False) == "(assert (= x 0))"
-    assert smtlib_code(Q.nonpositive(x), auto_declare=False) == "(assert (<= x 0))"
-    assert smtlib_code(Q.nonnegative(x), auto_declare=False) == "(assert (>= x 0))"
-    assert smtlib_code(Q.nonzero(x), auto_declare=False) == "(assert (not (= x 0)))"
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 6) as w:
+        assert smtlib_code(Q.positive(x), auto_declare=False, log_warn=w) == "(assert (> x 0))"
+        assert smtlib_code(Q.negative(x), auto_declare=False, log_warn=w) == "(assert (< x 0))"
+        assert smtlib_code(Q.zero(x), auto_declare=False, log_warn=w) == "(assert (= x 0))"
+        assert smtlib_code(Q.nonpositive(x), auto_declare=False, log_warn=w) == "(assert (<= x 0))"
+        assert smtlib_code(Q.nonnegative(x), auto_declare=False, log_warn=w) == "(assert (>= x 0))"
+        assert smtlib_code(Q.nonzero(x), auto_declare=False, log_warn=w) == "(assert (not (= x 0)))"
 
 
 @XFAIL
