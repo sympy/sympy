@@ -13,7 +13,7 @@ from sympy.core import (S, pi, symbols, Function, Rational, Integer,
 from sympy.functions import Piecewise, exp, sin, cos
 from sympy.assumptions.ask import Q
 from sympy.printing.smtlib import smtlib_code
-from sympy.testing.pytest import raises, Failed, XFAIL
+from sympy.testing.pytest import raises, Failed
 
 x, y, z = symbols('x,y,z')
 
@@ -92,12 +92,10 @@ def test_AppliedPredicate():
         assert smtlib_code(Q.nonpositive(x), auto_declare=False, log_warn=w) == "(assert (<= x 0))"
         assert smtlib_code(Q.nonnegative(x), auto_declare=False, log_warn=w) == "(assert (>= x 0))"
         assert smtlib_code(Q.nonzero(x), auto_declare=False, log_warn=w) == "(assert (not (= x 0)))"
+        assert re.match(r"^\(declare-const Dummy_\d+ Bool\)\n" \
+                        r"\(assert Dummy_\d+\)$",
+                        smtlib_code(Q.imaginary(x))) is not None
 
-
-@XFAIL
-def test_AppliedPredicate_FAIL():
-    assert smtlib_code(Q.imaginary(x)) == "(declare-const imaginary_x Bool)\n" \
-                                          "(assert imaginary_x)"
 
 def test_Function():
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:

@@ -18,6 +18,7 @@ from sympy.sets import Interval
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
+from sympy.core.symbol import Dummy
 
 
 class SMTLibPrinter(Printer):
@@ -342,6 +343,24 @@ def smtlib_code(
     ]
 
     if not symbol_table: symbol_table = {}
+
+    dummies_dict = {}; handled_pred = [Q.eq, Q.ne, Q.lt, Q.le, Q.gt, Q.ge, Q.positive, Q.negative, Q.zero, Q.nonpositive, Q.nonnegative, Q.nonzero]
+    def _dummify_unhandled_predicate(expr, symbol_table):
+        if isinstance(expr, AppliedPredicate) and expr.function not in handled_pred:
+            if expr in dummies_dict:
+                return dummies_dict[expr]
+            else:
+                d = Dummy()
+                dummies_dict[expr] = d
+                symbol_table[d] = bool
+                return d
+        elif isinstance(expr, (And, Or, Not)):
+            return expr.func(*[_dummify_unhandled_predicate(arg,symbol_table) for arg in expr.args])
+        else:
+            return expr
+
+    expr = [_dummify_unhandled_predicate(x, symbol_table) for x in expr]
+
     symbol_table = _auto_infer_smtlib_types(
         *expr, symbol_table=symbol_table
     )
