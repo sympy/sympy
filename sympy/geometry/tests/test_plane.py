@@ -9,7 +9,7 @@ from sympy.testing.pytest import raises
 
 
 def test_plane():
-    x, y, z, u, v, X, Y, Z = symbols('x y z u v X Y Z', real=True)
+    x, y, z, u, v= symbols('x y z u v', real=True)
     p1 = Point3D(0, 0, 0)
     p2 = Point3D(1, 1, 1)
     p3 = Point3D(1, 2, 3)
