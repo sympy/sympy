@@ -6,7 +6,7 @@ Plane
 
 """
 
-from sympy.core import Dummy, Rational, S, Symbol, symbols
+from sympy.core import Dummy, Rational, S, Symbol
 from sympy.core.symbol import _symbol
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from .entity import GeometryEntity
