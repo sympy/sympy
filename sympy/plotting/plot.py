@@ -219,6 +219,7 @@ class Plot:
         self.xscale = xscale
         self.yscale = yscale
         self.legend = legend
+        self.legend_loc = legend_loc
         self.autoscale = autoscale
         self.margin = margin
         self._annotations = annotations
@@ -1678,12 +1679,8 @@ class MatplotlibBackend(BaseBackend):
         if not parent.axis:
             ax.set_axis_off()
         if parent.legend:
-            if ax.legend():
+            if ax.legend(parent.legend_loc):
                 ax.legend_.set_visible(parent.legend)
-        if parent.legend_loc:
-            if ax.legend():
-                _loc = self.matplotlib.legend.Legend.codes.get(parent.legend_loc, 'best')
-                ax.legend_._set_loc(_loc)
         if parent.margin:
             ax.set_xmargin(parent.margin)
             ax.set_ymargin(parent.margin)
