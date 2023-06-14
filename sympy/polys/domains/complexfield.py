@@ -147,5 +147,19 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
 
+    def is_square(self, a):
+        """Returns ``True``. Every complex number has a complex square root."""
+        return True
+
+    def exsqrt(self, a):
+        r"""Returns the principal complex square root of ``a``.
+
+        Explanation
+        ===========
+        The argument of the principal square root is always within
+        $(-\frac{\pi}{2}, \frac{\pi}{2}]$. The square root may be
+        slightly inaccurate due to floating point rounding error.
+        """
+        return a ** 0.5
 
 CC = ComplexField()

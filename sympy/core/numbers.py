@@ -19,7 +19,8 @@ from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
+from sympy.external.gmpy import (SYMPY_INTS, HAS_GMPY, gmpy,
+                                 gcd as number_gcd, lcm as number_lcm)
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -235,6 +236,7 @@ def igcd(*args):
 
     The algorithm is based on the well known Euclid's algorithm [1]_. To
     improve speed, ``igcd()`` has its own caching mechanism.
+    If you do not need the cache mechanism, using ``sympy.external.gmpy.gcd``.
 
     Examples
     ========
@@ -254,17 +256,7 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    args_temp = [abs(as_int(i)) for i in args]
-    if 1 in args_temp:
-        return 1
-    a = args_temp.pop()
-    if HAS_GMPY: # Using gmpy if present to speed up.
-        for b in args_temp:
-            a = gmpy.gcd(a, b) if b else a
-        return as_int(a)
-    for b in args_temp:
-        a = math.gcd(a, b)
-    return a
+    return int(number_gcd(*map(as_int, args)))
 
 
 igcd2 = math.gcd
@@ -434,12 +426,7 @@ def ilcm(*args):
     if len(args) < 2:
         raise TypeError(
             'ilcm() takes at least 2 arguments (%s given)' % len(args))
-    if 0 in args:
-        return 0
-    a = args[0]
-    for b in args[1:]:
-        a = a // igcd(a, b) * b # since gcd(a,b) | a
-    return a
+    return int(number_lcm(*map(as_int, args)))
 
 
 def igcdex(a, b):
@@ -814,7 +801,7 @@ class Number(AtomicExpr):
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         # a -> c*t
         if self.is_Rational or not rational:
-            return self, tuple()
+            return self, ()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
         return S.One, (self,)
@@ -822,17 +809,17 @@ class Number(AtomicExpr):
     def as_coeff_add(self, *deps):
         # a -> c + t
         if self.is_Rational:
-            return self, tuple()
+            return self, ()
         return S.Zero, (self,)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
-        if rational and not self.is_Rational:
-            return S.One, self
-        return (self, S.One) if self else (S.One, self)
+        """Efficiently extract the coefficient of a product."""
+        if not rational:
+            return self, S.One
+        return S.One, self
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         if not rational:
             return self, S.Zero
         return S.Zero, self
@@ -1336,7 +1323,7 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if self == 0:
+        if equal_valued(self, 0):
             if expt.is_extended_positive:
                 return self
             if expt.is_extended_negative:
@@ -1624,10 +1611,11 @@ class Rational(Number):
 
             q = 1
             gcd = 1
+        Q = 1
 
         if not isinstance(p, SYMPY_INTS):
             p = Rational(p)
-            q *= p.q
+            Q *= p.q
             p = p.p
         else:
             p = int(p)
@@ -1635,9 +1623,10 @@ class Rational(Number):
         if not isinstance(q, SYMPY_INTS):
             q = Rational(q)
             p *= q.q
-            q = q.p
+            Q *= q.p
         else:
-            q = int(q)
+            Q *= int(q)
+        q = Q
 
         # p and q are now ints
         if q == 0:
@@ -2035,11 +2024,11 @@ class Rational(Number):
         return S.One, self
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return self, S.One
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return self, S.Zero
 
 
@@ -2867,8 +2856,7 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        .AlgebraicNumber.__new__()
-
+        AlgebraicNumber
         """
         return AlgebraicNumber(
             (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
@@ -4340,7 +4328,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10, 1), S.One)
 
-    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None, **hints):
         if (k_sym is not None) or (symbols is not None):
             return self
         from .symbol import Dummy
@@ -4435,7 +4423,106 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     def _mpc_(self):
         return (Float(0)._mpf_, Float(1)._mpf_)
 
+
 I = S.ImaginaryUnit
+
+
+def equal_valued(x, y):
+    """Compare expressions treating plain floats as rationals.
+
+    Examples
+    ========
+
+    >>> from sympy import S, symbols, Rational, Float
+    >>> from sympy.core.numbers import equal_valued
+    >>> equal_valued(1, 2)
+    False
+    >>> equal_valued(1, 1)
+    True
+
+    In SymPy expressions with Floats compare unequal to corresponding
+    expressions with rationals:
+
+    >>> x = symbols('x')
+    >>> x**2 == x**2.0
+    False
+
+    However an individual Float compares equal to a Rational:
+
+    >>> Rational(1, 2) == Float(0.5)
+    True
+
+    In a future version of SymPy this might change so that Rational and Float
+    compare unequal. This function provides the behavior currently expected of
+    ``==`` so that it could still be used if the behavior of ``==`` were to
+    change in future.
+
+    >>> equal_valued(1, 1.0) # Float vs Rational
+    True
+    >>> equal_valued(S(1).n(3), S(1).n(5)) # Floats of different precision
+    True
+
+    Explanation
+    ===========
+
+    In future SymPy verions Float and Rational might compare unequal and floats
+    with different precisions might compare unequal. In that context a function
+    is needed that can check if a number is equal to 1 or 0 etc. The idea is
+    that instead of testing ``if x == 1:`` if we want to accept floats like
+    ``1.0`` as well then the test can be written as ``if equal_valued(x, 1):``
+    or ``if equal_valued(x, 2):``. Since this function is intended to be used
+    in situations where one or both operands are expected to be concrete
+    numbers like 1 or 0 the function does not recurse through the args of any
+    compound expression to compare any nested floats.
+
+    References
+    ==========
+
+    .. [1] https://github.com/sympy/sympy/pull/20033
+    """
+    x = _sympify(x)
+    y = _sympify(y)
+
+    # Handle everything except Float/Rational first
+    if not x.is_Float and not y.is_Float:
+        return x == y
+    elif x.is_Float and y.is_Float:
+        # Compare values without regard for precision
+        return x._mpf_ == y._mpf_
+    elif x.is_Float:
+        x, y = y, x
+    if not x.is_Rational:
+        return False
+
+    # Now y is Float and x is Rational. A simple approach at this point would
+    # just be x == Rational(y) but if y has a large exponent creating a
+    # Rational could be prohibitively expensive.
+
+    sign, man, exp, _ = y._mpf_
+    p, q = x.p, x.q
+
+    if sign:
+        man = -man
+
+    if exp == 0:
+        # y odd integer
+        return q == 1 and man == p
+    elif exp > 0:
+        # y even integer
+        if q != 1:
+            return False
+        if p.bit_length() != man.bit_length() + exp:
+            return False
+        return man << exp == p
+    else:
+        # y non-integer. Need p == man and q == 2**-exp
+        if p != man:
+            return False
+        neg_exp = -exp
+        if q.bit_length() - 1 != neg_exp:
+            return False
+        return (1 << neg_exp) == q
+
 
 @dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811

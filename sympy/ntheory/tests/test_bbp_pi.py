@@ -123,6 +123,7 @@ def test_hex_pi_nth_digits():
     assert pi_hex_digits(0, 3) == '324'
     assert pi_hex_digits(0, 0) == ''
     raises(ValueError, lambda: pi_hex_digits(-1))
+    raises(ValueError, lambda: pi_hex_digits(0, -1))
     raises(ValueError, lambda: pi_hex_digits(3.14))
 
     # this will pick a random segment to compute every time

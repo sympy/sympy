@@ -38,11 +38,13 @@ from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
 
 
 import random
+
+
+t, u = [Dummy('line_dummy') for i in range(2)]
 
 
 class LinearEntity(GeometrySet):
@@ -220,11 +222,6 @@ class LinearEntity(GeometrySet):
 
         angle : angle in radians
 
-        See Also
-        ========
-
-        angle_between, is_perpendicular, Ray2D.closing_angle
-
         Examples
         ========
 
@@ -236,7 +233,8 @@ class LinearEntity(GeometrySet):
 
         See Also
         ========
-        angle_between, Ray2D.closing_angle
+
+        angle_between, is_perpendicular, Ray2D.closing_angle
         """
         if not isinstance(l1, LinearEntity) and not isinstance(l2, LinearEntity):
             raise TypeError('Must pass only LinearEntity objects')
@@ -307,7 +305,8 @@ class LinearEntity(GeometrySet):
         Parameters
         ==========
 
-        lines : a sequence of linear entities.
+        lines
+            A sequence of linear entities.
 
         Returns
         =======
@@ -547,7 +546,6 @@ class LinearEntity(GeometrySet):
                 # arbitrary points, when  equal, both give a
                 # non-negative parameter when the arbitrary point
                 # coordinates are equated
-                t, u = [Dummy(i) for i in 'tu']
                 tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
                     t, u, dict=True)[0]
                 def ok(p, l):
@@ -1038,7 +1036,6 @@ class LinearEntity(GeometrySet):
             rng = random.Random(seed)
         else:
             rng = random
-        t = Dummy()
         pt = self.arbitrary_point(t)
         if isinstance(self, Ray):
             v = abs(rng.gauss(0, 1))
@@ -1911,18 +1908,6 @@ class LinearEntity2D(LinearEntity):
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
-        Examples
-        ========
-
-        >>> from sympy import Point, Line
-        >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
-        >>> l1 = Line(p1, p2)
-        >>> l2 = l1.perpendicular_line(p3)
-        >>> p3 in l2
-        True
-        >>> l1.is_perpendicular(l2)
-        True
-
         Parameters
         ==========
 
@@ -2564,7 +2549,7 @@ class Line3D(LinearEntity3D, Line):
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
-    def equation(self, x='x', y='y', z='z', k=None):
+    def equation(self, x='x', y='y', z='z'):
         """Return the equations that define the line in 3D.
 
         Parameters
@@ -2576,9 +2561,6 @@ class Line3D(LinearEntity3D, Line):
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
             The name to use for the z-axis, default value is 'z'.
-        k : str, optional
-            .. deprecated:: 1.2
-               The ``k`` flag is deprecated. It does nothing.
 
         Returns
         =======
@@ -2596,17 +2578,7 @@ class Line3D(LinearEntity3D, Line):
         (-3*x + 4*y + 3, z)
         >>> solve(eq.subs(z, 0), (x, y, z))
         {x: 4*y/3 + 1}
-
         """
-        if k is not None:
-            sympy_deprecation_warning(
-                """
-                The 'k' argument to Line3D.equation() is deprecated. Is
-                currently has no effect, so it may be omitted.
-                """,
-                deprecated_since_version="1.2",
-                active_deprecations_target='deprecated-line3d-equation-k',
-            )
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
@@ -2619,6 +2591,80 @@ class Line3D(LinearEntity3D, Line):
                 eqs.pop(i)
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
+
+    def distance(self, other):
+        """
+        Finds the shortest distance between a line and another object.
+
+        Parameters
+        ==========
+
+        Point3D, Line3D, Plane, tuple, list
+
+        Returns
+        =======
+
+        distance
+
+        Notes
+        =====
+
+        This method accepts only 3D entities as it's parameter
+
+        Tuples and lists are converted to Point3D and therefore must be of
+        length 3, 2 or 1.
+
+        NotImplementedError is raised if `other` is not an instance of one
+        of the specified classes: Point3D, Line3D, or Plane.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Line3D
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, 1, 0), (1, 1, 1))
+        >>> l1.distance(l2)
+        1
+
+        The computed distance may be symbolic, too:
+
+        >>> from sympy.abc import x, y
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, x, 0), (y, x, 1))
+        >>> l1.distance(l2)
+        Abs(x*y)/Abs(sqrt(y**2))
+
+        """
+
+        from .plane import Plane  # Avoid circular import
+
+        if isinstance(other, (tuple, list)):
+            try:
+                other = Point3D(other)
+            except ValueError:
+                pass
+
+        if isinstance(other, Point3D):
+            return super().distance(other)
+
+        if isinstance(other, Line3D):
+            if self == other:
+                return S.Zero
+            if self.is_parallel(other):
+                return super().distance(other.p1)
+
+            # Skew lines
+            self_direction = Matrix(self.direction_ratio)
+            other_direction = Matrix(other.direction_ratio)
+            normal = self_direction.cross(other_direction)
+            plane_through_self = Plane(p1=self.p1, normal_vector=normal)
+            return other.p1.distance(plane_through_self)
+
+        if isinstance(other, Plane):
+            return other.distance(self)
+
+        msg = f"{other} has type {type(other)}, which is unsupported"
+        raise NotImplementedError(msg)
 
 
 class Ray3D(LinearEntity3D, Ray):

@@ -1663,6 +1663,13 @@ class PrettyPrinter(Printer):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
 
+    def _print_polylog(self, e):
+        if self._use_unicode:
+            func_name = f"Li_{e.args[0].__str__()}"
+            new_e = Function(func_name)(e.args[1])
+            return self._print_Function(new_e)
+        return self._print_Function(e)
+
     def _print_lerchphi(self, e):
         func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
         return self._print_Function(e, func_name=func_name)
@@ -1673,7 +1680,7 @@ class PrettyPrinter(Printer):
 
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
-        if e.args[1]==1/2:
+        if e.args[1] is S.Half:
             pform = prettyForm(*self._print(e.args[0]).parens())
             pform = prettyForm(*pform.left(func_name))
             return pform

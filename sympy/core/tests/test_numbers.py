@@ -9,7 +9,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
     igcd_lehmer, Integer, I, pi, comp, ilcm, Rational, E, nan, igcd2,
-    oo, AlgebraicNumber, igcdex, Number, Float, zoo)
+    oo, AlgebraicNumber, igcdex, Number, Float, zoo, equal_valued)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
@@ -368,6 +368,13 @@ def test_Rational_new():
     n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
+
+def test_issue_24543():
+    for p in ('1.5', 1.5, 2):
+        for q in ('1.5', 1.5, 2):
+            assert Rational(p, q).as_numer_denom() == Rational('%s/%s'%(p,q)).as_numer_denom()
+
+    assert Rational('0.5', '100') == Rational(1, 200)
 
 
 def test_Number_new():
@@ -1086,16 +1093,6 @@ def test_isqrt():
     assert isqrt(4503599761588224-tiny) == 67108864
     assert isqrt(10**100 - tiny) == 10**50 - 1
 
-    # Check that using an inaccurate math.sqrt doesn't affect the results.
-    from sympy.core import power
-    old_sqrt = power._sqrt
-    power._sqrt = lambda x: 2.999999999
-    try:
-        assert isqrt(9) == 3
-        assert isqrt(10000) == 100
-    finally:
-        power._sqrt = old_sqrt
-
 
 def test_powers_Integer():
     """Test Integer._eval_power"""
@@ -1590,25 +1587,25 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).gcd(Float(2.0)) == Float(1.0)
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
-    assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
+    assert Integer(4).cofactors(Float(2.0)) == (Float(1.0), Float(4.0), Float(2.0))
 
-    assert S.Half.gcd(Float(2.0)) == S.One
+    assert S.Half.gcd(Float(2.0)) == Float(1.0)
     assert S.Half.lcm(Float(2.0)) == Float(1.0)
     assert S.Half.cofactors(Float(2.0)) == \
-        (S.One, S.Half, Float(2.0))
+        (Float(1.0), Float(0.5), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).gcd(Integer(4)) == Float(1.0)
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
-    assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
+    assert Float(2.0).cofactors(Integer(4)) == (Float(1.0), Float(2.0), Float(4.0))
 
-    assert Float(2.0).gcd(S.Half) == S.One
+    assert Float(2.0).gcd(S.Half) == Float(1.0)
     assert Float(2.0).lcm(S.Half) == Float(1.0)
     assert Float(2.0).cofactors(S.Half) == \
-        (S.One, Float(2.0), S.Half)
+        (Float(1.0), Float(2.0), Float(0.5))
 
 
 def test_issue_4611():
@@ -2006,7 +2003,7 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(Rational(5, 2)) == S.Half
-    assert S(2).invert(5.) == 0.5
+    assert S(2).invert(5.) == S.Half
     assert S(2).invert(S(5)) == 3
     assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
@@ -2215,7 +2212,7 @@ def test_floordiv():
 
 def test_negation():
     assert -S.Zero is S.Zero
-    assert -Float(0) is not S.Zero and -Float(0) == 0
+    assert -Float(0) is not S.Zero and -Float(0) == 0.0
 
 
 def test_exponentiation_of_0():
@@ -2225,3 +2222,35 @@ def test_exponentiation_of_0():
     x = Symbol('x', zero=True)
     assert 0**-x == S.One
     assert 0**x == S.One
+
+
+def test_equal_valued():
+    x = Symbol('x')
+
+    equal_values = [
+        [1, 1.0, S(1), S(1.0), S(1).n(5)],
+        [2, 2.0, S(2), S(2.0), S(2).n(5)],
+        [-1, -1.0, -S(1), -S(1.0), -S(1).n(5)],
+        [0.5, S(0.5), S(1)/2],
+        [-0.5, -S(0.5), -S(1)/2],
+        [0, 0.0, S(0), S(0.0), S(0).n()],
+        [pi], [pi.n()],           # <-- not equal
+        [S(1)/10], [0.1, S(0.1)], # <-- not equal
+        [S(0.1).n(5)],
+        [oo],
+        [cos(x/2)], [cos(0.5*x)], # <-- no recursion
+    ]
+
+    for m, values_m in enumerate(equal_values):
+        for value_i in values_m:
+
+            # All values in same list equal
+            for value_j in values_m:
+                assert equal_valued(value_i, value_j) is True
+
+            # Not equal to anything in any other list:
+            for n, values_n in enumerate(equal_values):
+                if n == m:
+                    continue
+                for value_j in values_n:
+                    assert equal_valued(value_i, value_j) is False

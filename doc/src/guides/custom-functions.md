@@ -895,7 +895,8 @@ To implement rewriting, define a method `_eval_rewrite(self, rule, args,
 
 - `**hints` are additional keyword arguments which may be used to specify the
   behavior of the rewrite. Unknown hints should be ignored as they may be
-  passed to other `_eval_rewrite()` methods.
+  passed to other `_eval_rewrite()` methods. If you recursively call rewrite,
+  you should pass the `**hints` through.
 
 
 The method should return a rewritten expression, using `args` as the
@@ -1339,8 +1340,8 @@ expression separately.
 
 `as_real_imag(self, deep=True, **hints)` should return a 2-tuple containing
 the real part and imaginary part of the function. That is
-`expr.as_real_imag()` returns `(re(expr), im(expr))`, where `expr == re(expr)
-+ im(expr)*I`, and `re(expr)` and `im(expr)` are real.
+`expr.as_real_imag()` returns `(re(expr), im(expr))`, where
+`expr == re(expr) + im(expr)*I`, and `re(expr)` and `im(expr)` are real.
 
 If `deep=True`, it should recursively call `as_real_imag(deep=True, **hints)`
 on its arguments. As with [`doit()`](custom-functions-doit) and [the

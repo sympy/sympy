@@ -127,7 +127,7 @@ def _liupc(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -175,7 +175,7 @@ def _row_structure_symbolic_cholesky(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -188,7 +188,7 @@ def _row_structure_symbolic_cholesky(M):
                 Lrow[k].append(j)
                 j = parent[j]
 
-        Lrow[k] = list(sorted(set(Lrow[k])))
+        Lrow[k] = sorted(set(Lrow[k]))
 
     return Lrow
 
@@ -1130,7 +1130,7 @@ def _singular_value_decomposition(A):
     Explanation
     ===========
 
-    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
     where
 
     - $U, V$ are column orthogonal matrix.
@@ -1348,7 +1348,7 @@ def _QRdecomposition_optional(M, normalize=True):
     dps = _get_intermediate_simp(expand_mul, expand_mul)
 
     A = M.as_mutable()
-    ranked = list()
+    ranked = []
 
     Q = A
     R = A.zeros(A.cols)
@@ -1563,7 +1563,7 @@ def _QRdecomposition(M):
     return _QRdecomposition_optional(M, normalize=True)
 
 def _upper_hessenberg_decomposition(A):
-    """Converts a matrix into Hessenberg matrix H
+    """Converts a matrix into Hessenberg matrix H.
 
     Returns 2 matrices H, P s.t.
     $P H P^{T} = A$, where H is an upper hessenberg matrix

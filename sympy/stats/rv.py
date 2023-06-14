@@ -1305,11 +1305,11 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
         expr = expr.subs(sub)
 
     def fn_subs(*args):
-        return expr.subs({rv: arg for rv, arg in zip(rvs, args)})
+        return expr.subs(dict(zip(rvs, args)))
 
     def given_fn_subs(*args):
         if condition is not None:
-            return condition.subs({rv: arg for rv, arg in zip(rvs, args)})
+            return condition.subs(dict(zip(rvs, args)))
         return False
 
     if library in ('pymc', 'pymc3'):
@@ -1446,7 +1446,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     """
     samples = list(sample_iter(expr, given_condition, library=library,
                           numsamples=numsamples, seed=seed, **kwargs))
-    result = Add(*[samp for samp in samples]) / numsamples
+    result = Add(*samples) / numsamples
 
     if evalf:
         return result.evalf()

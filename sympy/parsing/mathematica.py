@@ -385,7 +385,7 @@ class MathematicaParser:
             x_args = self.translations[key]['args']
 
             # make CORRESPONDENCES between model arguments and actual ones
-            d = {k: v for k, v in zip(x_args, args)}
+            d = dict(zip(x_args, args))
 
         # with variable-length argument
         elif (fm, '*') in self.translations:
@@ -971,87 +971,87 @@ class MathematicaParser:
 
         return converter(pylist)
 
-    _node_conversions = dict(
-        Times=Mul,
-        Plus=Add,
-        Power=Pow,
-        Log=lambda *a: log(*reversed(a)),
-        Log2=lambda x: log(x, 2),
-        Log10=lambda x: log(x, 10),
-        Exp=exp,
-        Sqrt=sqrt,
+    _node_conversions = {
+        "Times": Mul,
+        "Plus": Add,
+        "Power": Pow,
+        "Log": lambda *a: log(*reversed(a)),
+        "Log2": lambda x: log(x, 2),
+        "Log10": lambda x: log(x, 10),
+        "Exp": exp,
+        "Sqrt": sqrt,
 
-        Sin=sin,
-        Cos=cos,
-        Tan=tan,
-        Cot=cot,
-        Sec=sec,
-        Csc=csc,
+        "Sin": sin,
+        "Cos": cos,
+        "Tan": tan,
+        "Cot": cot,
+        "Sec": sec,
+        "Csc": csc,
 
-        ArcSin=asin,
-        ArcCos=acos,
-        ArcTan=lambda *a: atan2(*reversed(a)) if len(a) == 2 else atan(*a),
-        ArcCot=acot,
-        ArcSec=asec,
-        ArcCsc=acsc,
+        "ArcSin": asin,
+        "ArcCos": acos,
+        "ArcTan": lambda *a: atan2(*reversed(a)) if len(a) == 2 else atan(*a),
+        "ArcCot": acot,
+        "ArcSec": asec,
+        "ArcCsc": acsc,
 
-        Sinh=sinh,
-        Cosh=cosh,
-        Tanh=tanh,
-        Coth=coth,
-        Sech=sech,
-        Csch=csch,
+        "Sinh": sinh,
+        "Cosh": cosh,
+        "Tanh": tanh,
+        "Coth": coth,
+        "Sech": sech,
+        "Csch": csch,
 
-        ArcSinh=asinh,
-        ArcCosh=acosh,
-        ArcTanh=atanh,
-        ArcCoth=acoth,
-        ArcSech=asech,
-        ArcCsch=acsch,
+        "ArcSinh": asinh,
+        "ArcCosh": acosh,
+        "ArcTanh": atanh,
+        "ArcCoth": acoth,
+        "ArcSech": asech,
+        "ArcCsch": acsch,
 
-        Expand=expand,
-        Im=im,
-        Re=sympy.re,
-        Flatten=flatten,
-        Polylog=polylog,
-        Cancel=cancel,
+        "Expand": expand,
+        "Im": im,
+        "Re": sympy.re,
+        "Flatten": flatten,
+        "Polylog": polylog,
+        "Cancel": cancel,
         # Gamma=gamma,
-        TrigExpand=expand_trig,
-        Sign=sign,
-        Simplify=simplify,
-        Defer=UnevaluatedExpr,
-        Identity=S,
+        "TrigExpand": expand_trig,
+        "Sign": sign,
+        "Simplify": simplify,
+        "Defer": UnevaluatedExpr,
+        "Identity": S,
         # Sum=Sum_doit,
         # Module=With,
         # Block=With,
-        Null=lambda *a: S.Zero,
-        Mod=Mod,
-        Max=Max,
-        Min=Min,
-        Pochhammer=rf,
-        ExpIntegralEi=Ei,
-        SinIntegral=Si,
-        CosIntegral=Ci,
-        AiryAi=airyai,
-        AiryAiPrime=airyaiprime,
-        AiryBi=airybi,
-        AiryBiPrime=airybiprime,
-        LogIntegral=li,
-        PrimePi=primepi,
-        Prime=prime,
-        PrimeQ=isprime,
+        "Null": lambda *a: S.Zero,
+        "Mod": Mod,
+        "Max": Max,
+        "Min": Min,
+        "Pochhammer": rf,
+        "ExpIntegralEi": Ei,
+        "SinIntegral": Si,
+        "CosIntegral": Ci,
+        "AiryAi": airyai,
+        "AiryAiPrime": airyaiprime,
+        "AiryBi": airybi,
+        "AiryBiPrime": airybiprime,
+        "LogIntegral": li,
+        "PrimePi": primepi,
+        "Prime": prime,
+        "PrimeQ": isprime,
 
-        List=Tuple,
-        Greater=StrictGreaterThan,
-        GreaterEqual=GreaterThan,
-        Less=StrictLessThan,
-        LessEqual=LessThan,
-        Equal=Equality,
-        Or=Or,
-        And=And,
+        "List": Tuple,
+        "Greater": StrictGreaterThan,
+        "GreaterEqual": GreaterThan,
+        "Less": StrictLessThan,
+        "LessEqual": LessThan,
+        "Equal": Equality,
+        "Or": Or,
+        "And": And,
 
-        Function=_parse_Function,
-    )
+        "Function": _parse_Function,
+    }
 
     _atom_conversions = {
         "I": I,
@@ -1066,7 +1066,7 @@ class MathematicaParser:
                     head = recurse(expr[0])
                 else:
                     head = self._node_conversions.get(expr[0], Function(expr[0]))
-                return head(*list(recurse(arg) for arg in expr[1:]))
+                return head(*[recurse(arg) for arg in expr[1:]])
             else:
                 return self._atom_conversions.get(expr, sympify(expr))
 

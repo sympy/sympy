@@ -486,7 +486,7 @@ implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
-<https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+<https://numpy.org/doc/stable/reference/ufuncs.html>`_ for more.
 
     >>> from sympy import *
     >>> from sympy.abc import x

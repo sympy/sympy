@@ -6,12 +6,12 @@ python mechanism for installing packages.
 For the easiest installation just type the command (you'll probably need
 root privileges for that):
 
-    python setup.py install
+    pip install .
 
 This will install the library in the default location. For instructions on
-how to customize the install procedure read the output of:
+how to customize the installation procedure read the output of:
 
-    python setup.py --help install
+    pip install --help
 
 In addition, there are some other commands:
 
@@ -28,6 +28,7 @@ sympy@googlegroups.com and ask for help.
 import sys
 import os
 import subprocess
+from pathlib import Path
 
 from setuptools import setup, Command
 from setuptools.command.sdist import sdist
@@ -304,6 +305,8 @@ if __name__ == '__main__':
     setup(name='sympy',
           version=__version__,
           description='Computer algebra system (CAS) in Python',
+          long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
+          long_description_content_type='text/markdown',
           author='SymPy development team',
           author_email='sympy@googlegroups.com',
           license='BSD',
