@@ -27,10 +27,10 @@ Solution
 
     Subpart 1
 
-    >>> s,k = symbols('s k')
+    >>> s, k = symbols('s k')
     >>> a = k*(s+3)                     # Zero at -3 in S plane
-    >>> b = (s+1)*(s+2-I)*(s+2+I)       # Poles at -1, (-2,j) and (-2,-j) in S plane
-    >>> tf = TransferFunction(a,b,s)
+    >>> b = (s+1)*(s+2-I)*(s+2+I)       # Poles at -1, (-2, j) and (-2, -j) in S plane
+    >>> tf = TransferFunction(a, b, s)
     >>> pprint(tf)
                k*(s + 3)
     -------------------------------
@@ -38,8 +38,8 @@ Solution
     >>> gain = tf.dc_gain()
     >>> print(gain)
     3*k*(2 - I)*(2 + I)/25
-    >>> K = solve(gain - 20,k)[0]               # Solve for k
-    >>> tf = tf.subs({k:K})                     # Reconstruct the TransferFunction using .subs()
+    >>> K = solve(gain - 20, k)[0]               # Solve for k
+    >>> tf = tf.subs({k: K})                     # Reconstruct the TransferFunction using .subs()
     >>> pprint(tf.expand())
        100*s
        ----- + 100
@@ -56,10 +56,10 @@ Solution
     Subpart 3
 
     >>> from sympy import inverse_laplace_transform
-    >>> t = symbols('t',positive = True)
+    >>> t = symbols('t', positive = True)
     >>> # Convert from S to T domain for impulse response
     >>> tf = tf.to_expr()
-    >>> Impulse_Response = inverse_laplace_transform(tf,s,t)
+    >>> Impulse_Response = inverse_laplace_transform(tf, s, t)
     >>> pprint(Impulse_Response)
           -t        -2*t
      100*e     100*e    *cos(t)
@@ -85,7 +85,7 @@ Solution
 
     >>> # Imports
     >>> from sympy import Function, laplace_transform, laplace_initial_conds, laplace_correspondence, diff, Symbol, solve
-    >>> from sympy.abc import t,s
+    >>> from sympy.abc import s, t
     >>> from sympy.physics.control import TransferFunction
     >>> y = Function('y')
     >>> Y = Function('Y')
@@ -105,10 +105,10 @@ The **DIFFERENTIAL EQUATION** of the system will be as follows:
 
     >>> f = m*diff(y(t), t, t) + c*diff(y(t), t) + k*y(t) - u(t)
     >>> F = laplace_transform(f, t, s, noconds=True)
-    >>> F = laplace_correspondence(F, {u: U,y:Y})
+    >>> F = laplace_correspondence(F, {u: U, y: Y})
     >>> F = laplace_initial_conds(F, t, {y: [0, 0]})
-    >>> t = (solve(F,Y(s))[0])/U(s) # To construct Transfer Function from Y(s) and U(s)
-    >>> tf = TransferFunction.from_rational_expression(t,s)
+    >>> t = (solve(F, Y(s))[0])/U(s) # To construct Transfer Function from Y(s) and U(s)
+    >>> tf = TransferFunction.from_rational_expression(t, s)
     >>> pprint(tf)
           1
     --------------
