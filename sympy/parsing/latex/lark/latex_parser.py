@@ -98,24 +98,26 @@ def parse_latex_lark(s):
     # `lark` is not importable it falls back to using the standalone
     # precompiled lark latex grammar if it exists
     _lark = import_module('lark')
-    if _lark is not None: # TODO: Emit appropriate error message if Lark module not found.
-        # TODO: should we use pkg_resource to get grammar file?  I
-        # think this would make sympy depend on setuptools which we
-        # would not like
-        with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
-            latex_grammar = f.read()
+    if _lark is None:
+        # TODO: Emit appropriate error message if Lark module not found.
+        raise ImportError("could not load 'lark'")
 
-        parser = _lark.Lark(latex_grammar, parser='earley',
-                            lexer='auto',
-                            ambiguity='explicit',
-                            debug=True,
-                            # strict=True,
-                            propagate_positions=False,
-                            maybe_placeholders=False,
-                            keep_all_tokens=True)
-        Transformer = _lark.Transformer
+    # TODO: should we use pkg_resource to get grammar file?  I
+    # think this would make sympy depend on setuptools which we
+    # would not like
+    with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
+        latex_grammar = f.read()
 
-    class TreeToSympy(Transformer):
+    parser = _lark.Lark(latex_grammar, parser='earley',
+                        lexer='auto',
+                        ambiguity='explicit',
+                        debug=True,
+                        # strict=True,
+                        propagate_positions=False,
+                        maybe_placeholders=False,
+                        keep_all_tokens=True)
+
+    class TreeToSympy(_lark.Transformer):
         INTEGER = int
         FLOAT = float
         LETTER = sympy.Symbol

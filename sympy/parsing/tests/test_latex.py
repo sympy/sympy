@@ -300,7 +300,7 @@ def test_parseable_lark():
         if i in expected_failures:
             continue
         else:
-            parse_latex_lark(latex_str) == sympy_expr, latex_str
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
