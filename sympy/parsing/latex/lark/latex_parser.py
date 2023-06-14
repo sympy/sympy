@@ -105,11 +105,15 @@ def parse_latex_lark(s):
         with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
             latex_grammar = f.read()
 
-            parser = _lark.Lark(latex_grammar, parser='lalr',
-                                lexer='auto',
-                                propagate_positions=False,
-                                maybe_placeholders=False)
-            Transformer = _lark.Transformer
+        parser = _lark.Lark(latex_grammar, parser='earley',
+                            lexer='auto',
+                            ambiguity='explicit',
+                            debug=True,
+                            # strict=True,
+                            propagate_positions=False,
+                            maybe_placeholders=False,
+                            keep_all_tokens=True)
+        Transformer = _lark.Transformer
 
     class TreeToSympy(Transformer):
         INTEGER = int
@@ -297,9 +301,10 @@ def parse_latex_lark(s):
         # this could be done within the parse step of lark however we
         # would like to keep it seperate to allow for the possiblity of
         # multiple backends for the generated expression
+        # print(tree.pretty())
         t = TreeToSympy()
-        # import pdb
-        # pdb.set_trace()
+        # import pdb; pdb.set_trace()
+        # import pudb; pudb.set_trace()
         sympy_expression = t.transform(tree)
     except Exception as e:
         raise LaTeXParsingError(str(e))
