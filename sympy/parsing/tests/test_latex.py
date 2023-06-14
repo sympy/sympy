@@ -284,7 +284,7 @@ def test_parseable():
 
 def test_parseable_lark():
     from sympy.parsing.latex.lark import parse_latex_lark
-    
+
     expected_failures = {3, 7, 8, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24,
                          25, 26, 27, 28, 29, 31, 36, 37, 38, 39, 40, 41,
                          42, 44, 45, 46, 47, 49, 50, 51, 52, 53, 54, 55,
@@ -301,7 +301,7 @@ def test_parseable_lark():
             continue
         else:
             parse_latex_lark(latex_str) == sympy_expr, latex_str
-            
+
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
