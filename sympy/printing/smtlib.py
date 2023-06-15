@@ -16,8 +16,10 @@ from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not,
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
 from sympy.assumptions.assume import AppliedPredicate
-from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+
 
 class SMTLibPrinter(Printer):
     printmethod = "_smtlib"
@@ -44,11 +46,11 @@ class SMTLibPrinter(Printer):
             StrictLessThan: '<',
             StrictGreaterThan: '>',
 
-            Q.eq: '=',
-            Q.le: '<=',
-            Q.ge: '>=',
-            Q.lt: '<',
-            Q.gt: '>',
+            EqualityPredicate(): '=',
+            LessThanPredicate(): '<=',
+            GreaterThanPredicate(): '>=',
+            StrictLessThanPredicate(): '<',
+            StrictGreaterThanPredicate(): '>',
 
             exp: 'exp',
             log: 'log',
@@ -341,7 +343,6 @@ def smtlib_code(
     ]
 
     if not symbol_table: symbol_table = {}
-
     symbol_table = _auto_infer_smtlib_types(
         *expr, symbol_table=symbol_table
     )
