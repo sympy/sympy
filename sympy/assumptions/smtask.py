@@ -9,7 +9,7 @@ from sympy.logic.boolalg import And, Or, Not
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.printing.smtlib import smtlib_code
 from sympy.core.power import Pow
-import z3
+from sympy.external.importtools import import_module
 
 
 def smtask(proposition, assumptions=True, context=global_assumptions):
@@ -85,6 +85,9 @@ def z3ask(proposition, assumptions=True):
     None
 
     """
+    z3 = import_module('z3')
+    if z3 is None:
+        return None
 
 
     props = proposition
