@@ -1,12 +1,13 @@
 %ignore /[ \t\n\r]+/
 
-%ignore "\\," | "\\thinspace"
-%ignore "\\:" | "\\medspace"
-%ignore "\\;" | "\\thickspace"
+%ignore "\\," | "\\thinspace" | "\\:" | "\\medspace" | "\\;" | "\\thickspace"
 %ignore "\\quad" | "\\qquad"
-%ignore "\\!" | "\\negthinspace"
-%ignore "\\negmedspace"
-%ignore "\\negthickspace"
+%ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
+%ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\" | "\\(" | "\\="
+
+%ignore "\\left"
+%ignore "\\right"
 
 ///////////////////// tokens ///////////////////////
 
@@ -15,8 +16,59 @@ SUB: "-"
 MUL: "*"
 DIV: "/"
 
-%ignore "\\left"
-%ignore "\\right"
+L_PAREN: "("
+R_PAREN: ")"
+L_BRACE: "{"
+R_BRACE: "}"
+L_BRACE_LITERAL: "\\{"
+R_BRACE_LITERAL: "\\}"
+L_BRACKET: "["
+R_BRACKET: "]"
+
+FUNC_LIM:  "\\lim"
+LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
+FUNC_INT:  "\\int"
+FUNC_SUM:  "\\sum"
+FUNC_PROD: "\\prod"
+
+FUNC_EXP:  "\\exp"
+FUNC_LOG:  "\\log"
+FUNC_LN:   "\\ln"
+FUNC_SIN:  "\\sin"
+FUNC_COS:  "\\cos"
+FUNC_TAN:  "\\tan"
+FUNC_CSC:  "\\csc"
+FUNC_SEC:  "\\sec"
+FUNC_COT:  "\\cot"
+
+FUNC_ARCSIN: "\\arcsin"
+FUNC_ARCCOS: "\\arccos"
+FUNC_ARCTAN: "\\arctan"
+FUNC_ARCCSC: "\\arccsc"
+FUNC_ARCSEC: "\\arcsec"
+FUNC_ARCCOT: "\\arccot"
+
+FUNC_SINH: "\\sinh"
+FUNC_COSH: "\\cosh"
+FUNC_TANH: "\\tanh"
+FUNC_ARSINH: "\\arsinh"
+FUNC_ARCOSH: "\\arcosh"
+FUNC_ARTANH: "\\artanh"
+
+FUNC_SQRT: "\\sqrt"
+
+CMD_TIMES: "\\times"
+CMD_CDOT:  "\\cdot"
+CMD_DIV:   "\\div"
+CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac"
+CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
+CMD_DBINOM: "\\dbinom"
+CMD_TBINOM: "\\tbinom"
+
+UNDERSCORE: "_"
+CARET: "^"
+COLON: ":"
+BANG: "!"
 
 EQUAL: "="
 NOT_EQUAL: "\\neq" | "\\ne"
@@ -25,9 +77,14 @@ LTE: "\\leq" | "\\le"
 GT: ">"
 GTE: "\\geq" | "\\ge"
 
-%import common.INT -> INT
-
 SYMBOL: /[a-z]/
+
+// DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
+// SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
+// SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
+
+%import common.INT -> INT
+%import common.DECIMAL -> FLOAT
 
 //////////////////// grammar //////////////////////
 
