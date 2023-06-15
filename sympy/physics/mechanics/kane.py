@@ -90,6 +90,11 @@ class KanesMethod(_Methods):
     number of operations. The weakness of this method is that it can result in zero
     division errors.
 
+    If zero divisions are encountered, a possible solver which may solve the problem
+    is ``"CRAMER"``. This method uses Cramer's rule to solve the system. This method
+    is slower and results in more operations than the default solver. However it only
+    uses a single division by default per entry of the solution.
+
     While a valid list of solvers can be found at
     :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a
     `callable`. This way it is possible to use a different solver routine. If the
