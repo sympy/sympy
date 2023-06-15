@@ -48,7 +48,7 @@ def plot_implicit_tests(name):
     #Test all input args for plot_implicit
     plot_and_save(Eq(y**2, x**3 - x), dir=temp_dir)
     plot_and_save(Eq(y**2, x**3 - x), adaptive=False, dir=temp_dir)
-    plot_and_save(Eq(y**2, x**3 - x), adaptive=False, points=500, dir=temp_dir)
+    plot_and_save(Eq(y**2, x**3 - x), adaptive=False, n=500, dir=temp_dir)
     plot_and_save(y > x, (x, -5, 5), dir=temp_dir)
     plot_and_save(And(y > exp(x), y > x + 2), dir=temp_dir)
     plot_and_save(Or(y > x, y > -x), dir=temp_dir)
