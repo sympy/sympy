@@ -46,11 +46,11 @@ class SMTLibPrinter(Printer):
             StrictLessThan: '<',
             StrictGreaterThan: '>',
 
-            EqualityPredicate(): '=',
-            LessThanPredicate(): '<=',
-            GreaterThanPredicate(): '>=',
-            StrictLessThanPredicate(): '<',
-            StrictGreaterThanPredicate(): '>',
+#            EqualityPredicate(): '=',
+#            LessThanPredicate(): '<=',
+#            GreaterThanPredicate(): '>=',
+#            StrictLessThanPredicate(): '<',
+#            StrictGreaterThanPredicate(): '>',
 
             exp: 'exp',
             log: 'log',
