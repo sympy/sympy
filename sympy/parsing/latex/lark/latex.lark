@@ -79,6 +79,9 @@ GTE: "\\geq" | "\\ge"
 
 SYMBOL: /[a-z]/
 
+DIVISION: CMD_DIV | DIV
+PRODUCT: MUL | CMD_TIMES | CMD_CDOT
+
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 // SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
 // SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
@@ -90,6 +93,23 @@ SYMBOL: /[a-z]/
 
 string: relation | expression
 
-relation: (INT | SYMBOL) (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) (INT | SYMBOL)
+atom: SYMBOL | INT | FLOAT
 
-expression: (INT | SYMBOL) (ADD | SUB | MUL | DIV) (INT | SYMBOL)
+relation: atom (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) atom
+
+expression: atom (ADD | SUB | PRODUCT | DIVISION) atom
+
+
+fraction: CMD_FRAC L_BRACE atom R_BRACE L_BRACE atom R_BRACE
+
+//sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
+
+binomial: CMD_BINOM L_BRACE atom R_BRACE L_BRACE atom R_BRACE
+
+//summation: FUNC_SUM sub_equation sup_expression expr
+//         | FUNC_SUM sup_expression sub_equation expr
+
+//product: FUNC_PROD sub_equation sup_expression expr
+//       | FUNC_PROD sup_expression sub_equation expr
+
+//limit: FUNC_LIM sub_limit expr
