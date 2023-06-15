@@ -19,7 +19,8 @@ from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.core.symbol import Dummy
-
+from sympy.assumptions.predicates.sets import IntegerPredicate
+from sympy.assumptions.handlers.ntheory import EvenPredicate, OddPredicate, PrimePredicate, CompositePredicate
 
 class SMTLibPrinter(Printer):
     printmethod = "_smtlib"
@@ -51,6 +52,14 @@ class SMTLibPrinter(Printer):
             Q.ge: '>=',
             Q.lt: '<',
             Q.gt: '>',
+
+            # These are non-standard functions
+            # See the custom_Z3_functions variable for their definitions
+            IntegerPredicate(): 'is-int',
+            EvenPredicate(): 'is-even',
+            OddPredicate(): 'is-odd',
+            PrimePredicate(): 'is-prime',
+            CompositePredicate(): 'is-composite',
 
             exp: 'exp',
             log: 'log',
@@ -114,7 +123,7 @@ class SMTLibPrinter(Printer):
             op = self._known_functions[type(e)]
         elif type(type(e)) == UndefinedFunction:
             op = e.name
-        elif isinstance(e,AppliedBinaryRelation) and e.function in self._known_functions:
+        elif isinstance(e,(AppliedBinaryRelation,AppliedPredicate)) and e.function in self._known_functions:
             op = self._known_functions[e.function]
             return self._s_expr(op, e.arguments)
         else:
@@ -162,7 +171,9 @@ class SMTLibPrinter(Printer):
             return f'[{e.start}, {e.end}]'
 
     def _print_AppliedPredicate(self, e: AppliedPredicate):
-        if e.function == Q.positive:
+        if e.function in [Q.integer, Q.even, Q.odd, Q.prime, Q.composite]:
+            return self._print_Function(e)
+        elif e.function == Q.positive:
             rel = Q.gt(e.arguments[0],0)
         elif e.function == Q.negative:
             rel = Q.lt(e.arguments[0], 0)
@@ -243,6 +254,38 @@ class SMTLibPrinter(Printer):
 
     def emptyPrinter(self, expr):
         raise NotImplementedError(f'Cannot convert `{repr(expr)}` of type `{type(expr)}` to SMT.')
+
+
+# Note that these functions were written with Z3 in mind.
+# They may not work in other SMT solvers
+custom_Z3_functions = """\
+; Define a function to check if a real number is an integer
+(define-fun is-int ((n Real)) Bool
+  (= n (to_int n)))
+
+; Define a function to check if a real number is even
+(define-fun is-even ((n Real)) Bool
+  (= (mod n 2) 0))
+
+; Define a function to check if a real number is odd
+(define-fun is-odd ((n Real)) Bool
+  (= (mod n 2) 1))
+
+; Define a function to check if an integer is prime
+(define-fun is-p ((n Int)) Bool
+  (and (> n 1)
+       (forall ((i Int))
+         (=> (and (> i 1) (< i n))
+             (not (= 0 (mod n i)))))))
+
+; Define function to check if a real number is prime
+(define-fun is-prime ((n Real)) Bool
+  (and (is-int n) (is-p n) ))
+
+; Define function to check if a real number is composite
+(define-fun is-composite ((n Real)) Bool
+  (and (> n 1) (is-int n) (not (is-p n))))
+"""
 
 
 def smtlib_code(
@@ -344,22 +387,7 @@ def smtlib_code(
 
     if not symbol_table: symbol_table = {}
 
-    dummies_dict = {}; handled_pred = [Q.eq, Q.ne, Q.lt, Q.le, Q.gt, Q.ge, Q.positive, Q.negative, Q.zero, Q.nonpositive, Q.nonnegative, Q.nonzero]
-    def _dummify_unhandled_predicate(expr, symbol_table):
-        if isinstance(expr, AppliedPredicate) and expr.function not in handled_pred:
-            if expr in dummies_dict:
-                return dummies_dict[expr]
-            else:
-                d = Dummy()
-                dummies_dict[expr] = d
-                symbol_table[d] = bool
-                return d
-        elif isinstance(expr, (And, Or, Not)):
-            return expr.func(*[_dummify_unhandled_predicate(arg,symbol_table) for arg in expr.args])
-        else:
-            return expr
-
-    expr = [_dummify_unhandled_predicate(x, symbol_table) for x in expr]
+    expr = _dummify_unhandled_predicate(expr, symbol_table)
 
     symbol_table = _auto_infer_smtlib_types(
         *expr, symbol_table=symbol_table
@@ -382,6 +410,9 @@ def smtlib_code(
 
     if not prefix_expressions: prefix_expressions = []
     if not suffix_expressions: suffix_expressions = []
+
+    if _contains_custom_predicate(expr):
+        prefix_expressions.append(custom_Z3_functions)
 
     p = SMTLibPrinter(settings, symbol_table)
     del symbol_table
@@ -448,6 +479,41 @@ def smtlib_code(
             for e in suffix_expressions
         ],
     ])
+
+
+def _contains_custom_predicate(expr):
+    custom_predicate = [Q.integer, Q.even, Q.odd, Q.prime, Q.composite]
+    if isinstance(expr, AppliedPredicate) and expr.function in custom_predicate:
+        return True
+    elif isinstance(expr, (And, Or, Not)):
+        return any([_contains_custom_predicate(arg) for arg in expr.args])
+    elif isinstance(expr, list):
+        return any([_contains_custom_predicate(e) for e in expr])
+    else:
+        return False
+
+
+def _dummify_unhandled_predicate(expr, symbol_table):
+    dummies_dict = {}
+    handled_pred = [Q.eq, Q.ne, Q.lt, Q.le, Q.gt, Q.ge, Q.positive, Q.negative, Q.zero, Q.nonpositive, Q.nonnegative,
+                    Q.nonzero, Q.integer, Q.even, Q.odd, Q.prime, Q.composite]
+    def _dummify(expr, symbol_table):
+        if isinstance(expr, AppliedPredicate) and expr.function not in handled_pred:
+            if expr in dummies_dict:
+                return dummies_dict[expr]
+            else:
+                d = Dummy()
+                dummies_dict[expr] = d
+                symbol_table[d] = bool
+                return d
+        elif isinstance(expr, (And, Or, Not)):
+            return expr.func(*[_dummify(arg,symbol_table) for arg in expr.args])
+        elif isinstance(expr, list):
+            return [_dummify(x, symbol_table) for x in expr]
+        else:
+            return expr
+
+    return _dummify(expr, symbol_table)
 
 
 def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
