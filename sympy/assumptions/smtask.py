@@ -8,6 +8,7 @@ from sympy.assumptions.ask import ask, Q
 from sympy.logic.boolalg import And, Or, Not
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.printing.smtlib import smtlib_code
+from sympy.core.power import Pow
 import z3
 
 
@@ -85,44 +86,23 @@ def z3ask(proposition, assumptions=True):
 
     """
 
-    """
-    handled_predicate = [Q.positive, Q.negative, Q.zero, Q.gt, Q.lt, Q.eq, Q.ne, Q.ge, Q.le]
-    def _contains_unhandled_predicate(proposition):
-        if isinstance(proposition, AppliedPredicate):
-            return proposition.function not in handled_predicate
-        elif isinstance(proposition, (And, Or, Not)):
-            return any([_contains_unhandled_predicate(arg) for arg in proposition.args])
-        else:
-            return False
 
-    # prevents wrong output but is too limitting
-    if _contains_unhandled_predicate(proposition) or _contains_unhandled_predicate(assumptions):
-        return None
-    """
-    all_symbols = proposition.free_symbols | assumptions.free_symbols
-    integer_symbols = {sym for sym in all_symbols if ask(Q.integer(sym),assumptions)}
-    real_symbols = all_symbols - integer_symbols
-
-    proposition = _to_core(proposition)
-    assumptions = _to_core(assumptions)
-
-
-    declarations = "\n".join(["(declare-const "+str(sym)+" Real)" for sym in real_symbols])
-    declarations += "\n" + "\n".join(["(declare-const "+str(sym)+" Int)" for sym in integer_symbols])
-
-
-    props = smtlib_code(proposition,auto_declare=False).replace("pow","^")
-    _props = smtlib_code(Not(proposition),auto_declare=False).replace("pow","^")
-
-    assumptions = smtlib_code(assumptions,auto_declare=False).replace("pow","^")
+    props = proposition
+    _props = Not(proposition)
 
     s_true = z3.Solver()
-    s_true.from_string(declarations+"\n"+props+"\n"+assumptions)
-    can_be_true = "sat" == str(s_true.check())
+    s_true.from_string(smtlib_code(And(props,assumptions), known_functions={Pow: "^"}))
+    can_be_true = str(s_true.check())
 
     s_false = z3.Solver()
-    s_false.from_string(declarations+"\n"+_props+"\n"+assumptions)
-    can_be_false = "sat" == str(s_false.check())
+    s_false.from_string(smtlib_code(And(_props,assumptions), known_functions={Pow: "^"}))
+    can_be_false = str(s_false.check())
+
+    if can_be_true == "unknown" or can_be_false == "unknown":
+        return None
+    else:
+        can_be_true = can_be_true == "sat"
+        can_be_false = can_be_false == "sat"
 
     if can_be_true and can_be_false:
         return None
@@ -135,57 +115,3 @@ def z3ask(proposition, assumptions=True):
 
     if not can_be_true and not can_be_false:
         raise ValueError("Inconsistent assumptions")
-
-
-def _to_core(formula):
-    """
-    Converts a Boolean formula that contains objects from the New Assumptions
-    into a Boolean formula only containing objects from the core. Some objects
-    such as Q.integer(x) may be removed as they have no equivalent in the core.
-
-    Parameters
-    ----------
-    formula : Boolean
-
-    Returns
-    -------
-    Boolean
-
-    Examples
-    ========
-
-    >>> from sympy.assumptions.smtask import _to_core
-    >>> from sympy.abc import x,y,z
-    >>> from sympy import Q
-    >>> _to_core((x >y) & Q.integer(y) & Q.gt(y,z))
-    (x > y) & (y > z)
-    """
-    if isinstance(formula, AppliedPredicate):
-        return _pred_to_core(formula)
-    elif isinstance(formula, (And, Or, Not)):
-        return formula.func(*[_to_core(arg) for arg in formula.args])
-    else:
-        return formula
-
-
-def _pred_to_core(assmp):
-    if assmp.function == Q.positive:
-        return assmp.arguments[0] > 0
-    if assmp.function == Q.negative:
-        return assmp.arguments[0] < 0
-    if assmp.function == Q.zero:
-        return Eq(assmp.arguments[0], 0)
-    if assmp.function == Q.gt:
-        return Gt(assmp.arguments[0], assmp.arguments[1])
-    if assmp.function == Q.lt:
-        return Lt(assmp.arguments[0], assmp.arguments[1])
-    if assmp.function == Q.eq:
-        return Eq(assmp.arguments[0], assmp.arguments[1])
-    if assmp.function == Q.ne:
-        return Ne(assmp.arguments[0], assmp.arguments[1])
-    if assmp.function == Q.ge:
-        return Ge(assmp.arguments[0], assmp.arguments[1])
-    if assmp.function == Q.le:
-        return Le(assmp.arguments[0], assmp.arguments[1])
-    return True
-
