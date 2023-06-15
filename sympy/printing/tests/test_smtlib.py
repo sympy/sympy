@@ -12,7 +12,7 @@ from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
 from sympy.assumptions.ask import Q
-from sympy.printing.smtlib import smtlib_code, custom_Z3_functions
+from sympy.printing.smtlib import smtlib_code
 from sympy.testing.pytest import raises, Failed
 
 x, y, z = symbols('x,y,z')
@@ -85,27 +85,13 @@ def test_AppliedBinaryRelation():
 
 
 def test_AppliedPredicate():
-    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 11) as w:
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 6) as w:
         assert smtlib_code(Q.positive(x), auto_declare=False, log_warn=w) == "(assert (> x 0))"
         assert smtlib_code(Q.negative(x), auto_declare=False, log_warn=w) == "(assert (< x 0))"
         assert smtlib_code(Q.zero(x), auto_declare=False, log_warn=w) == "(assert (= x 0))"
         assert smtlib_code(Q.nonpositive(x), auto_declare=False, log_warn=w) == "(assert (<= x 0))"
         assert smtlib_code(Q.nonnegative(x), auto_declare=False, log_warn=w) == "(assert (>= x 0))"
         assert smtlib_code(Q.nonzero(x), auto_declare=False, log_warn=w) == "(assert (not (= x 0)))"
-        assert re.match(r"^\(declare-const Dummy_\d+ Bool\)\n" \
-                        r"\(assert Dummy_\d+\)$",
-                        smtlib_code(Q.imaginary(x))) is not None
-
-        assert smtlib_code(Q.integer(x), auto_declare=False,
-                           log_warn=w) == custom_Z3_functions + "\n(assert (is-int x))"
-        assert smtlib_code(Q.even(x), auto_declare=False,
-                           log_warn=w) == custom_Z3_functions + "\n(assert (is-even x))"
-        assert smtlib_code(Q.odd(x), auto_declare=False,
-                           log_warn=w) == custom_Z3_functions + "\n(assert (is-odd x))"
-        assert smtlib_code(Q.prime(x), auto_declare=False,
-                           log_warn=w) == custom_Z3_functions + "\n(assert (is-prime x))"
-        assert smtlib_code(Q.composite(x), auto_declare=False,
-                           log_warn=w) == custom_Z3_functions + "\n(assert (is-composite x))"
 
 
 def test_Function():
