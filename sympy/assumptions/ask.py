@@ -11,6 +11,7 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
+#from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -349,6 +350,10 @@ def _extract_all_facts(assump, exprs):
                 else:
                     # If any of the literals doesn't have matching expr don't add the whole clause.
                     break
+            else:
+                # If any of the literals aren't unary predicate don't add the whole clause
+                break
+
         else:
             if args:
                 facts.add(frozenset(args))
