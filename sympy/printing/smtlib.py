@@ -18,7 +18,7 @@ from sympy.sets import Interval
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q
-#from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
 
 
 class SMTLibPrinter(Printer):
@@ -46,11 +46,11 @@ class SMTLibPrinter(Printer):
             StrictLessThan: '<',
             StrictGreaterThan: '>',
 
-#            EqualityPredicate(): '=',
-#            LessThanPredicate(): '<=',
-#            GreaterThanPredicate(): '>=',
-#            StrictLessThanPredicate(): '<',
-#            StrictGreaterThanPredicate(): '>',
+            EqualityPredicate: '=',
+            LessThanPredicate: '<=',
+            GreaterThanPredicate: '>=',
+            StrictLessThanPredicate: '<',
+            StrictGreaterThanPredicate: '>',
 
             exp: 'exp',
             log: 'log',
@@ -114,8 +114,8 @@ class SMTLibPrinter(Printer):
             op = self._known_functions[type(e)]
         elif type(type(e)) == UndefinedFunction:
             op = e.name
-        elif isinstance(e,(AppliedBinaryRelation,AppliedPredicate)) and e.function in self._known_functions:
-            op = self._known_functions[e.function]
+        elif isinstance(e,(AppliedBinaryRelation)) and type(e.function) in self._known_functions:
+            op = self._known_functions[type(e.function)]
             return self._s_expr(op, e.arguments)
         else:
             op = self._known_functions[e]  # throw KeyError
