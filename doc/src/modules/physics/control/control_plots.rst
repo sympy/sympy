@@ -54,3 +54,10 @@ Root Locus Plot
 .. automethod:: sympy.physics.control.control_plots.root_locus_plot
 
 .. automethod:: sympy.physics.control.control_plots.root_locus_numerical_data
+
+Nichols Plot
+------------------
+
+.. automethod:: sympy.physics.control.control_plots.nichols_plot
+
+.. automethod:: sympy.physics.control.control_plots.nichols_numerical_data

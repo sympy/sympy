@@ -10,6 +10,7 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.utilities.lambdify import lambdify
 from sympy.solvers import solve
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
@@ -17,7 +18,9 @@ __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'root_locus_numerical_data', 'root_locus_plot',
+    'nichols_numerical_data', 'nichols_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -1053,6 +1056,7 @@ def root_locus_numerical_data(system,  k_max=40, num=100, **kwargs):
 
     root_locus_plot
     """
+    _check_system(system)
     system = system.doit()
     k = np.logspace(np.log10(1e-6), np.log10(k_max), num=num) - 1e-6
     num_poly = Poly(system.num, system.var).all_coeffs()
@@ -1068,14 +1072,14 @@ def root_locus_numerical_data(system,  k_max=40, num=100, **kwargs):
     imag = np.imag(roots)
 
     if(breakaway_points is not None) :
-      idx = 0
-      for i in range(real.shape[0]):
-        if(imag[i][0]==0.0):
-          idx = i
-          break;
+        idx = 0
+        for i in range(real.shape[0]):
+            if(imag[i][0]==0.0):
+                idx = i
+                break;
 
-      real = np.concatenate((real[:idx], np.real(breakaway_points), real[idx:]), axis=0)
-      imag = np.concatenate((imag[:idx], np.imag(breakaway_points), imag[idx:]), axis=0)
+        real = np.concatenate((real[:idx], np.real(breakaway_points), real[idx:]), axis=0)
+        imag = np.concatenate((imag[:idx], np.imag(breakaway_points), imag[idx:]), axis=0)
 
     return real, imag
 
@@ -1136,12 +1140,156 @@ def root_locus_plot(system, k_max=40, num=1000, show_axes=False, grid=False, sho
     pz.title('Root Loci')
 
     if grid:
-      pz.grid(True)
+        pz.grid(True)
     if show_axes:
-      pz.axhline(0, color='black')
-      pz.axvline(0, color='black')
+        pz.axhline(0, color='black')
+        pz.axvline(0, color='black')
     if show:
-      pz.show()
-      return
+        pz.show()
+        return
 
     return pz
+
+
+def nichols_numerical_data(system, initial_omega=1, final_omega=100, **kwargs):
+    """
+    Returns the numerical data of Nichols plot of the system.
+    It is internally used by ``nichols_plot`` to get the data
+    for plotting Nichols plot. Users can use this data to further
+    analyse the dynamics of the system or plot using a different
+    backend/plotting-module.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The system for which the pole-zero data is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 1.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+
+    Returns
+    =======
+
+    tuple : (phase_points, mag_points)
+        phase_points = phase values of the Nichols plot.
+        mag_points = magnitude values of the Nichols plot.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When a SISO LTI system is not passed.
+
+        When time delay terms are present in the system.
+
+    ValueError
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.control_plots import nichols_numerical_data
+    >>> tf1 = TransferFunction(-(0.1)*s**3 - (2.4)*s**2 - 181*s - 1950, s**3 + (3.3)*s**2 + 990*s + 2600, s)
+    >>> nichols_numerical_data(tf1)   # doctest: +SKIP
+    (array([179.83501857, 179.67004337, 179.50508061, ..., 166.86071969,
+        166.86233751, 166.8639549 ]),
+    array([ -2.49883392,  -2.49901149,  -2.49930742, ..., -20.5300856,
+        -20.52996573, -20.52984591]))
+
+    See Also
+    ========
+
+    nichols_plot
+    """
+    _check_system(system)
+    expr = system.to_expr()
+
+    _w = Dummy("w", real=True)
+    repl = I*_w
+    w_expr = expr.subs({system.var: repl})
+
+    mag = 20*log(Abs(w_expr), 10)
+    phase = arg(w_expr)*180/pi
+
+    x = np.linspace(initial_omega, final_omega, 10000)
+
+    mag_func = lambdify(_w, mag, modules=['numpy'])
+    phase_func = lambdify(_w, phase, modules=['numpy'])
+    mag_points = mag_func(x)
+    phase_points = phase_func(x)
+
+    return phase_points, mag_points
+
+def nichols_plot(system, initial_omega=1, final_omega=100,
+                 color='b', grid=False, show=True,**kwargs):
+    r"""
+    Returns the nichols plot of a continuous-time system.
+
+    Nichols Plot is a plot used in signal processing and control system design
+    to determine the stability of a feedback system
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant type
+        The LTI SISO system for which the Ramp Response is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 1.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+    show : boolean, optional
+        If ``True``, the plot will be displayed otherwise
+        the equivalent matplotlib ``plot`` object will be returned.
+        Defaults to True.
+    show_axes : boolean, optional
+        If ``True``, the coordinate axes will be shown. Defaults to False.
+    grid : boolean, optional
+        If ``True``, the plot will have a grid. Defaults to False.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nichols_plot
+        >>> tf1 = TransferFunction(-(0.1)*s**3 - (2.4)*s**2 - 181*s - 1950, s**3 + (3.3)*s**2 + 990*s + 2600, s)
+        >>> nichols_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    bode_magnitude_plot, bode_phase_plot
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Nichols_plot
+
+    """
+    x, y = nichols_numerical_data(system, initial_omega=initial_omega,
+          final_omega=final_omega)
+    plt.plot(x, y, color=color, **kwargs)
+    plt.xlabel('Open Loop Gain (dB)')
+    plt.ylabel('Open Loop Phase (deg)')
+    plt.title(f'Nichols Plot (Phase) of ${latex(system)}$', pad=20)
+    plt.axhline(y=0, color='black', linestyle='dotted', linewidth=1)
+
+    if grid:
+        plt.grid(True)
+
+    if show:
+        plt.show()
+        return
+
+    return plt
