@@ -1,4 +1,5 @@
 from sympy.core.numbers import I, pi
+from sympy.core.function import diff
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
@@ -9,6 +10,7 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.solvers import solve
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
@@ -959,3 +961,187 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+
+
+def _get_breakaway_points(system):
+    """Private method to calculate the breakaway points of a transfer function."""
+    k_expr = -system.den/system.num
+    k = diff(k_expr, system.var)
+    points = solve(k, system.var)
+    points = [point.evalf() for point in points if point.is_real]
+    breakaway_points = []
+
+    for point in points:
+        if k_expr.subs(system.var, point) > 0:
+            breakaway_points.append(np.array([point + 0j, point + 0j], dtype=np.complex128))
+
+    if (len(breakaway_points)>0): return np.vstack(breakaway_points)
+
+def _find_roots(num, den, k=None):
+    """Private method to find roots efficiently."""
+    if k is not None:
+        num_roots = max(len(np.roots(den)), len(np.roots(num)))
+        roots = []
+
+        for gain in k:
+            individual_roots = np.roots(np.polyadd(den, (gain*num)))
+            if len(individual_roots) == num_roots:
+                individual_roots.sort()
+                roots.append(individual_roots)
+
+        return np.vstack(roots)
+
+    num_roots = np.roots(num)
+    den_roots = np.roots(den)
+
+    return num_roots, den_roots
+
+
+def root_locus_numerical_data(system,  k_max=40, num=100, **kwargs):
+    """
+    Returns the numerical data of Root Locus plot of the system.
+    It is internally used by ``root_locus_plot`` to get the data
+    for plotting Root Locus plot. Users can use this data to further
+    analyse the dynamics of the system or plot using a different
+    backend/plotting-module.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The system for which the pole-zero data is to be computed.
+    k_max : Number, optional
+        The maximum gain value permitted for root-locus computation.
+        Defaults to 40.
+    num : Number, optional
+        The number of points used for sampling. Defaults to 100.
+
+    Returns
+    =======
+
+    tuple : (real, imag)
+        real = real-axis values of Root Locus plot.
+        imag = imaginary-axis values of Root Locus plot.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When a SISO LTI system is not passed.
+
+        When time delay terms are present in the system.
+
+    ValueError
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.control_plots import root_locus_numerical_data
+    >>> tf1 = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+    >>> root_locus_numerical_data(tf1)   # doctest: +SKIP
+    (array([[-1.        , -1.        ],[-1.0000001 , -1.0000001],...,[-2.25458196, -0.23806888],
+    [-2.25880749, -0.23501967]]),array([[-1.41421356,  1.41421356],[-1.41421315,  1.41421315],
+    ...,[ 0.        ,  0.        ],[ 0.        ,  0.        ]]))
+
+    See Also
+    ========
+
+    root_locus_plot
+    """
+    system = system.doit()
+    k = np.logspace(np.log10(1e-6), np.log10(k_max), num=num) - 1e-6
+    num_poly = Poly(system.num, system.var).all_coeffs()
+    den_poly = Poly(system.den, system.var).all_coeffs()
+
+    num_poly = np.array(num_poly, dtype=np.float64)
+    den_poly = np.array(den_poly, dtype=np.float64)
+
+    roots = _find_roots(num_poly, den_poly, k)
+    breakaway_points = _get_breakaway_points(system)
+
+    real = np.real(roots)
+    imag = np.imag(roots)
+
+    if(breakaway_points is not None) :
+      idx = 0
+      for i in range(real.shape[0]):
+        if(imag[i][0]==0.0):
+          idx = i
+          break;
+
+      real = np.concatenate((real[:idx], np.real(breakaway_points), real[idx:]), axis=0)
+      imag = np.concatenate((imag[:idx], np.imag(breakaway_points), imag[idx:]), axis=0)
+
+    return real, imag
+
+def root_locus_plot(system, k_max=40, num=1000, show_axes=False, grid=False, show=True, **kwargs):
+    r"""
+    Returns the root locus of a continuous-time system.
+
+    Root Locus analysis is a graphical method for examining how the roots of a system change
+    with variation of a certain system parameter, commonly a gain.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant type
+        The LTI SISO system for which the Ramp Response is to be computed.
+    k_max : Number, optional
+        The maximum gain value permitted for root-locus computation.
+        Defaults to 40.
+    num : Number, optional
+        The number of points used for sampling. Defaults to 100.
+    show : boolean, optional
+        If ``True``, the plot will be displayed otherwise
+        the equivalent matplotlib ``plot`` object will be returned.
+        Defaults to True.
+    show_axes : boolean, optional
+        If ``True``, the coordinate axes will be shown. Defaults to False.
+    grid : boolean, optional
+        If ``True``, the plot will have a grid. Defaults to False.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import root_locus_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> root_locus_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    impulse_response_plot, ramp_response_plot ,step_response_plot
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Root_locus_analysis
+
+    """
+    pz = pole_zero_plot(system, show=False, grid=grid)
+    x, y = root_locus_numerical_data(system, k_max=k_max, num=num)
+    pz.plot(x, y)
+    pz.title('Root Loci')
+
+    if grid:
+      pz.grid(True)
+    if show_axes:
+      pz.axhline(0, color='black')
+      pz.axvline(0, color='black')
+    if show:
+      pz.show()
+      return
+
+    return pz
