@@ -1151,7 +1151,7 @@ def root_locus_plot(system, k_max=40, num=1000, show_axes=False, grid=False, sho
     return pz
 
 
-def nichols_numerical_data(system, initial_omega=1, final_omega=100, **kwargs):
+def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs):
     """
     Returns the numerical data of Nichols plot of the system.
     It is internally used by ``nichols_plot`` to get the data
@@ -1165,7 +1165,7 @@ def nichols_numerical_data(system, initial_omega=1, final_omega=100, **kwargs):
     system : SISOLinearTimeInvariant
         The system for which the pole-zero data is to be computed.
     initial_omega : Number, optional
-        The initial value of frequency. Defaults to 1.
+        The initial value of frequency. Defaults to 0.01.
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
 
@@ -1226,7 +1226,7 @@ def nichols_numerical_data(system, initial_omega=1, final_omega=100, **kwargs):
 
     return phase_points, mag_points
 
-def nichols_plot(system, initial_omega=1, final_omega=100,
+def nichols_plot(system, initial_omega=0.01, final_omega=100,
                  color='b', grid=False, show=True,**kwargs):
     r"""
     Returns the nichols plot of a continuous-time system.
@@ -1240,7 +1240,7 @@ def nichols_plot(system, initial_omega=1, final_omega=100,
     system : SISOLinearTimeInvariant type
         The LTI SISO system for which the Ramp Response is to be computed.
     initial_omega : Number, optional
-        The initial value of frequency. Defaults to 1.
+        The initial value of frequency. Defaults to 0.01.
     final_omega : Number, optional
         The final value of frequency. Defaults to 100.
     show : boolean, optional
@@ -1264,7 +1264,7 @@ def nichols_plot(system, initial_omega=1, final_omega=100,
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import nichols_plot
         >>> tf1 = TransferFunction(-(0.1)*s**3 - (2.4)*s**2 - 181*s - 1950, s**3 + (3.3)*s**2 + 990*s + 2600, s)
-        >>> nichols_plot(tf1)   # doctest: +SKIP
+        >>> nichols_plot(tf1, 1, 100)   # doctest: +SKIP
 
     See Also
     ========
