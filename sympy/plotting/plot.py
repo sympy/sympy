@@ -911,11 +911,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 list_x = np.logspace(int(self.start), int(self.end),
                         num=int(self.end) - int(self.start) + 1)
             else:
-                list_x = np.linspace(int(self.start), int(self.end),
+                list_x = np.linspace(int(np.log10(self.start)), int(np.log10(self.end)),
                     num=int(self.end) - int(self.start) + 1)
         else:
             if self.xscale == 'log':
-                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
+                list_x = np.logspace(np.log10(self.start), np.log10(self.end), num=self.nb_of_points)
             else:
                 list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
