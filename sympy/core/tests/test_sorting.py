@@ -1,3 +1,4 @@
+from sympy import exp, powsimp, symbols, Float
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.testing.pytest import raises
 
@@ -26,3 +27,9 @@ def test_ordered():
     assert list(ordered(l, warn=True)) == [[1], [1], [2]]
     raises(ValueError, lambda: list(ordered(['a', 'ab'], keys=[lambda x: x[0]],
         default=False, warn=True)))
+
+
+def test_tie_breaker_in_case_of_equality():
+    # Issue #24045
+    a, b, c = symbols("a b c")
+    powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))
