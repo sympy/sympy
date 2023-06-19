@@ -908,10 +908,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         np = import_module('numpy')
         if self.only_integers is True:
             if self.xscale == 'log':
-                list_x = np.logspace(int(self.start), int(self.end),
+                list_x = np.logspace(np.log10(int(self.start)), np.log10(int(self.end)),
                         num=int(self.end) - int(self.start) + 1)
             else:
-                list_x = np.linspace(int(np.log10(self.start)), int(np.log10(self.end)),
+                list_x = np.linspace(int(self.start), int(self.end),
                     num=int(self.end) - int(self.start) + 1)
         else:
             if self.xscale == 'log':
