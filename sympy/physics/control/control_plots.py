@@ -10,7 +10,6 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries, Parametric2DLineSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
-from sympy.utilities.lambdify import lambdify
 from sympy.solvers import solve
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
