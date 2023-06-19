@@ -507,6 +507,8 @@ class Relational(Boolean, EvalfMixin):
         return self.func(*args)
 
     def __bool__(self):
+        if self.lhs.equals(self.rhs):
+            return True   # in case of equality, return either one (tie-breaker rule)
         raise TypeError("cannot determine truth value of Relational")
 
     def _eval_as_set(self):
