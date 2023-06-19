@@ -83,6 +83,8 @@ def test_AppliedBinaryRelation():
         assert smtlib_code(Q.gt(x, y), auto_declare=False, log_warn=w) == "(assert (> x y))"
         assert smtlib_code(Q.ge(x, y), auto_declare=False, log_warn=w) == "(assert (>= x y))"
 
+    raises(ValueError, lambda: smtlib_code(Q.complex(x), log_warn=w))
+
 
 def test_AppliedPredicate():
     with _check_warns([_W.DEFAULTING_TO_FLOAT] * 6) as w:
