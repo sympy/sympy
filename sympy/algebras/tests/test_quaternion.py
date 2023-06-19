@@ -13,7 +13,7 @@ from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
-import numpy as np
+import math
 from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
@@ -51,7 +51,7 @@ def test_issue_25254():
     # calculating the inverse cached the norm which caused problems
     # when multiplying
     p = Quaternion(1, 0, 1, 0)
-    q = Quaternion.from_axis_angle((1,1,1), 3 * np.pi/4)
+    q = Quaternion.from_axis_angle((1,1,1), 3 * math.pi/4)
     qi = q.inverse()  # this operation cached the norm
     try:
         test = q * p * qi
