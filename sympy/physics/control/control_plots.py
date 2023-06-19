@@ -7,7 +7,7 @@ from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
-from sympy.plotting.plot import LineOver1DRangeSeries
+from sympy.plotting.plot import LineOver1DRangeSeries, Parametric2DLineSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
 from sympy.utilities.lambdify import lambdify
@@ -1217,13 +1217,7 @@ def nichols_numerical_data(system, initial_omega=0.01, final_omega=100, **kwargs
     mag = 20*log(Abs(w_expr), 10)
     phase = arg(w_expr)*180/pi
 
-    x = np.linspace(initial_omega, final_omega, 10000)
-
-    mag_func = lambdify(_w, mag, modules=['numpy'])
-    phase_func = lambdify(_w, phase, modules=['numpy'])
-    mag_points = mag_func(x)
-    phase_points = phase_func(x)
-
+    phase_points, mag_points = Parametric2DLineSeries(phase,mag,(_w,initial_omega,final_omega), nb_of_points = 100000, adaptive= False).get_points()
     return phase_points, mag_points
 
 def nichols_plot(system, initial_omega=0.01, final_omega=100,
@@ -1279,6 +1273,7 @@ def nichols_plot(system, initial_omega=0.01, final_omega=100,
     """
     x, y = nichols_numerical_data(system, initial_omega=initial_omega,
           final_omega=final_omega)
+
     plt.plot(x, y, color=color, **kwargs)
     plt.xlabel('Open Loop Gain (dB)')
     plt.ylabel('Open Loop Phase (deg)')
