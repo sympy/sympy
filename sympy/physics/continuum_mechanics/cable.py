@@ -11,9 +11,9 @@ class Cable:
     Cables are structures in engineering that support
     the applied transverse loads through the tesnsile
     resistance developed in its members.
-    
-    Cables are widely used in suspension bridges, tension 
-    leg offshore platforms, transmission lines, and find 
+
+    Cables are widely used in suspension bridges, tension
+    leg offshore platforms, transmission lines, and find
     use in several other engineering applications.
     """
     def __init__(self):
@@ -32,7 +32,7 @@ class Cable:
     @property
     def supports(self):
         """
-        Returns the supports of the cable along with their 
+        Returns the supports of the cable along with their
         positions.
         """
         return self._supports
@@ -43,14 +43,14 @@ class Cable:
         Returns the position of the left support.
         """
         return self._left_support
-    
+
     @property
     def right_support(self):
         """
         Returns the position of the right support.
         """
         return self._right_support
-    
+
     @property
     def loads(self):
         """
@@ -58,12 +58,12 @@ class Cable:
         acting on the cable.
         """
         return self._loads
-    
+
     @property
     def loads_position(self):
         """
-        Returns the position of the loads acting on the 
-        cable. 
+        Returns the position of the loads acting on the
+        cable.
         """
         return self._loads_position
 
@@ -73,7 +73,7 @@ class Cable:
         Returns the length of the cable.
         """
         return self._length
-    
+
     @property
     def reaction_loads(self):
         """
@@ -84,25 +84,25 @@ class Cable:
     def add_supports(self, *args):
         """
         This method adds the right and left supports to the Cable object.
-        
+
         Parameters
         ==========
         Pass two tuples of the form (label, x, y) as inputs, where the first
         tuple represents the left support, while the later represents the
         right support. Each element in these tuples are:
-        
+
         label: String or a symbol
             The label for the support.
-            
+
         x: Sympifyable
             The x-coordinate of the position of the support.
-            
+
         y: Sympifyable
             The y-coordinate of the position of the support.
-            
+
         Examples
         ========
-        
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c = Cable()
         >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
@@ -126,14 +126,14 @@ class Cable:
             raise ValueError("Supports can not be at the same position")
 
         elif args[0][1] > args[1][1]:
-            raise ValueError("The x coordinate of left support should be less than its right support counterpart") 
-        
+            raise ValueError("The x coordinate of left support should be less than its right support counterpart")
+
         else:
             for i in args:
                 label = i[0]
                 x = sympify(i[1])
                 y = sympify(i[2])
-            
+
                 self._supports[label] = [x, y]
 
                 if len(self._left_support) == 0:
@@ -145,15 +145,15 @@ class Cable:
                     self._right_support.append(y)
 
                 self._support_labels.append(label)
-            
+
     def remove_supports(self):
         """
-        This method removes the left and right supports, along with 
+        This method removes the left and right supports, along with
         any existing load(s).
-        
+
         Examples
         ========
-        
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c = Cable()
         >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
@@ -165,7 +165,7 @@ class Cable:
         """
         if len(self._supports) == 0:
             raise ValueError("There are no supports to remove")
-        
+
         else:
             self._supports.clear()
             self._left_support.clear()
@@ -173,29 +173,29 @@ class Cable:
             self._loads.clear()
             self._loads_position.clear()
             self._length = 0
-    
+
     def change_support(self, label, new_support):
         """
         This method changes the mentioned support with a new support.
-        
+
         Parameters
         ==========
         label: String or symbol
             The label of the support to be changed
-        
+
         new_support: Tuple of the form (new_label, x, y)
             new_label: String or symbol
                 The label of the new support
-            
+
             x: Sympifyable
                 The x-coordinate of the position of the new support.
-                
+
             y: Sympifyable
                 The y-coordinate of the position of the new support.
-        
+
         Examples
         ========
-        
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c = Cable()
         >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
@@ -207,7 +207,7 @@ class Cable:
         """
         if label not in self._supports:
             raise ValueError("No support exists with the given label")
-        
+
         else:
             if label == self._support_labels[0]:
                 if new_support[1] > self._right_support[0]:
@@ -222,11 +222,11 @@ class Cable:
                     self._left_support = [x, y]
                     self._supports[new_support[0]] = [x, y]
                     self._support_labels.insert(0, new_support[0])
-            
+
             else:
                 if new_support[1] < self._left_support[0]:
                     raise ValueError("x coordinate of right support should be greater than its left support counterpart")
-                
+
                 else:
                     self._supports.pop(label)
                     self._right_support.clear()
@@ -241,33 +241,33 @@ class Cable:
     def add_loads(self, *args):
         """
         This method adds load(s) to the cable.
-        
+
         Parameters
         ==========
         This method takes input as tuple(s) of the form
         (label, x, y, magnitude, direction).
-        
+
         label: String or symbol
             The label of the load
-        
+
         x: Sympifyable
             The x-coordinate of the position of the load.
-        
+
         y: Sympifyable
             The y-coordinate of the position of the load.
-        
+
         magnitude: Sympifyable
             Magnitude of the load applied. It must always be positive and any changes in
             the direction of the load are not reflected here.
-        
+
         direction: Sympifyable
             The angle, in degrees, that the load vector makes with the horizontal
             in the counter-clockwise direction. It takes the values 0 to 360,
             inclusive.
-            
+
         Examples
         ========
-        
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c = Cable()
         >>> c.add_supports(('A', 3, 4), ('B', 6, 5))
@@ -279,7 +279,7 @@ class Cable:
         """
         if len(self._supports) == 0:
             raise ValueError("Add supports before adding any load(s)")
-        
+
         else:
             for i in args:
                 label = i[0]
@@ -290,28 +290,28 @@ class Cable:
 
                 if label in self._loads:
                     raise ValueError("Error adding load " + label + ": label already exists")
-                
+
                 else:
                     if x < self._left_support[0] or x > self._right_support[0]:
                         raise ValueError("Error adding load " + label + ": load should be between the supports")
-                    
+
                     else:
                         self._loads[label] = [magnitude, direction]
                         self._loads_position[label] = [x, y]
-    
+
     def remove_loads(self, *args):
         """
         This methods removes the specified loads.
-        
+
         Parameters
         ==========
         This input takes multiple label(s) as input
         label(s): String or symbol
             The label(s) of the loads to be removed.
-            
+
         Examples
         ========
-        
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
         >>> c = Cable()
         >>> c.add_supports(('A', 3, 4), ('B', 6, 5))
@@ -329,7 +329,7 @@ class Cable:
         for i in args:
             if i not in self._loads:
                 raise ValueError("Error removing load " + i + ": no such load exists")
-            
+
             else:
                 self._loads.pop(i)
                 self._loads_position.pop(i)
