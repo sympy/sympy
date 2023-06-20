@@ -54,7 +54,7 @@ def test_issue_25254():
     q = Quaternion.from_axis_angle((1,1,1), 3 * math.pi/4)
     qi = q.inverse()  # this operation cached the norm
     try:
-        test = q * p * qi
+        q * p * qi
     except ValueError as exc:
         assert False, f"'10 / 5' raised an exception {exc}"
 
