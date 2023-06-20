@@ -837,6 +837,7 @@ def _nthroot_mod1(s, q, p, all_roots):
     Examples
     ========
 
+    >>> from sympy.ntheory.residue_ntheory import _nthroot_mod1
     >>> _nthroot_mod1(5, 3, 13, False)
     7
     >>> _nthroot_mod1(13, 4, 17, True)
