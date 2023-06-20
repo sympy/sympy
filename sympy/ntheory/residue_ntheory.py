@@ -1024,8 +1024,8 @@ def nthroot_mod(a, n, p, all_roots=False):
         prime_power.append(q**e)
         base.append(sorted(tot_roots))
     P, E, S = gf_crt1(prime_power, ZZ)
-    ret = sorted(map(int, set(gf_crt2(c, prime_power, P, E, S, ZZ)
-                              for c in product(*base))))
+    ret = sorted(map(int, {gf_crt2(c, prime_power, P, E, S, ZZ)
+                           for c in product(*base)}))
     if all_roots:
         return ret
     if ret:
