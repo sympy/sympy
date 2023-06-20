@@ -1,4 +1,3 @@
-from sympy.core.symbol import Symbol, symbols
 from sympy.physics.continuum_mechanics.cable import Cable
 
 def test_cable():

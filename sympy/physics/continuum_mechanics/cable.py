@@ -3,7 +3,6 @@ This module can be used to solve problems related
 to 2D Cables.
 """
 
-from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 
 class Cable:
