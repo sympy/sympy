@@ -808,7 +808,6 @@ def test_issue_25190():
     p2 = plot(sin(log(x)), (x, .001, 10), xscale='log', adaptive=False,show=False)
     assert len(p1._series) == 2
     assert len(p2._series) == 2
-    assert p1._series[0].get_data()[0][0] == p2._series[0].get_data()[0][0]
     #check x range of the data
     assert p1[0].get_data()[0][0] == p2[0].get_data()[0][0]
     assert p1[0].get_data()[0][-1] == p2[0].get_data()[0][-1]
