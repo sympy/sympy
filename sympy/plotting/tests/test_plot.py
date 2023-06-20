@@ -798,11 +798,10 @@ def test_deprecated_markers_annotations_rectangles_fill():
     with warns_deprecated_sympy():
         p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
     assert len(p._series) == 5
-    
 def test_issue_25190():
     if not matplotlib:
         skip("Matplotlib not the default backend")
-
+    # testing for the plots equality
     x = Symbol('x')
     p1 = plot(sin(log(x)), (x, .001, 10), xscale='log',show=False)
     p2 = plot(sin(log(x)), (x, .001, 10), xscale='log', adaptive=False,show=False)
