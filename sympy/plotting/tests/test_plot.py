@@ -798,3 +798,20 @@ def test_deprecated_markers_annotations_rectangles_fill():
     with warns_deprecated_sympy():
         p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
     assert len(p._series) == 5
+    
+def test_issue_25190():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    p1 = plot(sin(log(x)), (x, .001, 10), xscale='log',show=False)
+    p2 = plot(sin(log(x)), (x, .001, 10), xscale='log', adaptive=False,show=False)
+    assert len(p1._series) == 2
+    assert len(p2._series) == 2
+    assert p1._series[0].get_data()[0][0] == p2._series[0].get_data()[0][0]
+    #check x range of the data
+    assert p1[0].get_data()[0][0] == p2[0].get_data()[0][0]
+    assert p1[0].get_data()[0][-1] == p2[0].get_data()[0][-1]
+    #check y range of the data
+    assert round(p1[0].get_data()[1][0],4) == round(p2[0].get_data()[1][0],4)
+    assert round(p1[0].get_data()[1][-1],4) == round(p2[0].get_data()[1][-1],4)

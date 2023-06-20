@@ -915,7 +915,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     num=int(self.end) - int(self.start) + 1)
         else:
             if self.xscale == 'log':
-                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
+                list_x = np.logspace(np.log10(self.start), np.log10(self.end), num=self.nb_of_points)
             else:
                 list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
         f = vectorized_lambdify([self.var], self.expr)
