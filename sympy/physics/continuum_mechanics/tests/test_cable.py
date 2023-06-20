@@ -46,4 +46,3 @@ def test_cable():
     assert c.loads_position == {'X': [2, 5]}
     assert c.length == 0
     assert c.reaction_loads == {}
-    
