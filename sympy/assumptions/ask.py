@@ -11,7 +11,6 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
-#from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
