@@ -2,25 +2,26 @@
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Rational, oo, pi)
-from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.numbers import Float, I, Rational, oo, pi
+from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import (And, Or)
-from sympy.polys.polytools import (Poly, PurePoly)
-from sympy.sets.sets import (FiniteSet, Interval, Union)
+from sympy.logic.boolalg import And, Or
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import Poly, PurePoly
+from sympy.sets.sets import FiniteSet, Interval, Union
 from sympy.solvers.inequalities import (reduce_inequalities,
-                                        solve_poly_inequality as psolve,
-                                        reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality,
-                                        _solve_inequality)
+    solve_poly_inequality as psolve,
+    reduce_rational_inequalities,
+    solve_univariate_inequality as isolve,
+    reduce_abs_inequality,
+    _solve_inequality, linear_programming)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -486,3 +487,28 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+
+
+def test_linear_programming():
+    A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    B = Matrix([3, -2, 5])
+    C = Matrix([[-1, -1, -5]])
+    D = Matrix([0])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -2
+    A = Matrix([[1, -1, 2], [-1, 2, -3], [2, 1, -7]])
+    B = Matrix([3, -2, -5])
+    C = Matrix([[-1, -1, -5]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == Rational(-25, 7)
+    B = Matrix([-4, 8, 10])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
+    # input contains Floats
+    A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4
+    # input contains symbolic expression (sqrt(2) for example)
+    A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
+    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    assert optimum == -4

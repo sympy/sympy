@@ -6,6 +6,8 @@ from sympy.calculus.util import (continuous_domain, periodicity,
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.matrices.dense import Matrix
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
@@ -16,6 +18,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
+import random
 
 
 def solve_poly_inequality(poly, rel):
@@ -982,3 +985,154 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # restore original symbols and return
     return rv.xreplace({v: k for k, v in recast.items()})
+
+
+class UnboundedLinearProgrammingError(Exception):
+    pass
+
+
+class InfeasibleLinearProgrammingError(Exception):
+    pass
+
+
+def _pivot(M, i, j):
+    MM = Matrix.zeros(M.rows, M.cols)
+    for ii in range(M.rows):
+        for jj in range(M.cols):
+            if ii == i and jj == j:
+                MM[ii, jj] = 1 / M[i, j]
+            elif ii == i and jj != j:
+                MM[ii, jj] = M[ii, jj] / M[i, j]
+            elif ii != i and jj == j:
+                MM[ii, jj] = -M[ii, jj] / M[i, j]
+            else:
+                MM[ii, jj] = M[ii, jj] - M[ii, j] * M[i, jj] / M[i, j]
+    return MM
+
+
+def _simplex(M, R, S, random_seed=0):
+    """
+    Simplex method with randomized pivoting
+    http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    """
+    rand = random.Random(x=random_seed)
+    while True:
+        B = M[:-1, -1]
+        A = M[:-1, :-1]
+        C = M[-1, :-1]
+        if all(B[i] >= 0 for i in range(B.rows)):
+            piv_cols = []
+            for j in range(C.cols):
+                if C[j] < 0:
+                    piv_cols.append(j)
+
+            if not piv_cols:
+                return M, R, S
+            rand.shuffle(piv_cols)
+            j0 = piv_cols[0]
+
+            piv_rows = []
+            for i in range(A.rows):
+                if A[i, j0] > 0:
+                    ratio = B[i] / A[i, j0]
+                    piv_rows.append((ratio, i))
+
+            if not piv_rows:
+                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
+            piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
+            piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
+            rand.shuffle(piv_rows)
+            _, i0 = piv_rows[0]
+
+            M = _pivot(M, i0, j0)
+            R[j0], S[i0] = S[i0], R[j0]
+        else:
+            for k in range(B.rows):
+                if B[k] < 0:
+                    break
+
+            piv_cols = []
+            for j in range(A.cols):
+                if A[k, j] < 0:
+                    piv_cols.append(j)
+            if not piv_cols:
+                raise InfeasibleLinearProgrammingError('The constraint set is empty!')
+            rand.shuffle(piv_cols)
+            j0 = piv_cols[0]
+
+            ratio = B[k] / A[k, j0]
+            piv_rows = [(ratio, k)]
+            for i in range(A.rows):
+                if A[i, j0] > 0 and B[i] > 0:
+                    ratio = B[i] / A[i, j0]
+                    piv_rows.append((ratio, i))
+
+            piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
+            piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
+            rand.shuffle(piv_rows)
+            _, i0 = piv_rows[0]
+
+            M = _pivot(M, i0, j0)
+            R[j0], S[i0] = S[i0], R[j0]
+
+
+# Maximize Cx + D constrained with Ax <= B and x >= 0
+# Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
+def linear_programming(A, B, C, D = ImmutableMatrix([0])):
+    """
+    When x is a column vector of variables, y is a column vector of dual variables,
+    and when the objective is either:
+
+    *) Maximizing Cx constrained to Ax <= B and x >= 0.
+    *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
+
+    The method returns a triplet of solutions optimum, argmax and argmax_dual where
+    optimum is the optimum solution, argmax is x and argmax_dual is y.
+
+    Examples
+    ========
+    >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.solvers.inequalities import linear_programming
+    >>> A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    >>> B = Matrix([3, -2, 5])
+    >>> C = Matrix([[1, 1, 5]])
+    >>> D = Matrix([0])
+    >>> linear_programming(A, B, C, D)
+    (11/3, [0, 1/3, 2/3], [0, 2/3, 1])
+
+    The method also works with inegers, floats and symbolic expressions (like sqrt(2)).
+    >>> from sympy import sqrt
+    >>> A = Matrix([[0, 1, sqrt(2)], [-1, 0, -3], [2, 1, 7]])
+    >>> B = Matrix([sqrt(3), -2, 5])
+    >>> C = Matrix([[1, 1, sqrt(5)]])
+    >>> linear_programming(A, B, C, D)
+    (3, [2, 1, 0], [0, 1, 1])
+    """
+    M = Matrix([[A, B], [-C, D]])
+    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
+    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
+
+    r = r_orig.copy()
+    s = s_orig.copy()
+
+    M, r, s = _simplex(M, r, s)
+
+    argmax = []
+    argmin_dual = []
+
+    for x in r_orig:
+        for i, xx in enumerate(s):
+            if x == xx:
+                argmax.append(M[i, -1])
+                break
+        else:
+            argmax.append(S.Zero)
+
+    for x in s_orig:
+        for i, xx in enumerate(r):
+            if x == xx:
+                argmin_dual.append(M[-1, i])
+                break
+        else:
+            argmin_dual.append(S.Zero)
+    return M[-1, -1], argmax, argmin_dual
