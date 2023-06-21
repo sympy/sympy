@@ -1233,6 +1233,11 @@ def linear_programming(constraints, objective, random_seed=0):
     [2, 1, 0]
     >>> argmax_dual
     [0, 1, 1]
+
+    See Also
+    ========
+
+    solve_univariate_inequality
     """
     from sympy.matrices.dense import Matrix
     A, B, C = _to_standard_form(constraints, objective)
