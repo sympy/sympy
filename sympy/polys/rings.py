@@ -6,8 +6,6 @@ from typing import Any
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
-from itertools import compress
-from collections import defaultdict
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
@@ -2544,124 +2542,62 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Parameters
         ==========
 
-            p1 : sympy.Poly
-                The polynomial to compute the sparse coefficient for.
-            sym : int
-                The symbol to compute the coefficient for.
-            dg : int
-                The degree of the monomial to compute the coefficient for.
+        p : sympy.Poly
+            The polynomial to compute the sparse coefficient for.
+        sym : int
+            The symbol to compute the coefficient for.
+        dg : int
+            The degree of the monomial to compute the coefficient for.
 
         Returns
         =======
 
-            sympy.Number
-                The sparse coefficient of the polynomial at the given symbol and degree.
+        sympy.Number
+            The sparse coefficient of the polynomial at the given symbol and degree.
 
         Examples
         ========
 
         >>> from sympy.polys import ring, ZZ
         >>> _, x, y, z = ring("x, y, z", ZZ)
-        >>> p1 = 2*x**4 + 3*y**4 + 10*z**2 + 3
+        >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 3
         >>> dg = 2
         >>> sym = 2
-        >>> coeff_wrt(p1, sym, dg)
+        >>> coeff_wrt(p, sym, dg)
         10
 
         """
-        p1 = self
-        p2 = as_polynomial(p1, {sym})
-        monomial = [0] * len(p1.ring.gens)
-        monomial[sym] = dg
-        monomial = tuple(monomial)
-        return p1.ring(p2[monomial])
+        p = self
+        terms = [(m, c) for m, c in p.iterterms() if m[sym] == dg]
+        monoms, coeffs = zip(*terms)
+        monoms = [m[:sym] + (0,) + m[sym + 1:] for m in monoms]
+        return p.ring.from_dict(dict(zip(monoms, coeffs)))
 
 
-    def as_polynomial(self, syms):
+    def prem(self, g, x):
         """
-        It converts a polynomial p1 into a sparse representation where the
-        monomials are split into parts with symbols and parts without symbols,
-        and the coefficients are stored accordingly.
+        Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
 
         Parameters
         ==========
 
-            p1 : sympy.Poly
-                The polynomial to compute the sparse coefficients for.
-            syms : set
-                The set of symbols to keep in the sparse coefficients.
+        f : PolyElement
+            The polynomial to compute the pseudo-remainder for.
+        g : PolyElement
+            The polynomial to divide `f` by.
+        x : Symbol
+            The main variable of the polynomials.
 
         Returns
         =======
 
-            dict
-                A dictionary of sparse coefficients. The keys are tuples of the symbols
-                that are kept, and the values are dictionaries of the coefficients of
-                the monomials where the symbols are not present.
-
-        Examples
-        ========
-
-        >>> from sympy.polys import ring, ZZ
-        >>> _, x, y, z = ring("x, y, z", ZZ)
-        >>> p1 = 2*x**4 + 3*y**4 + 10*z**2 + 3
-        >>> syms = {0}
-        >>> as_polynomial(p1, syms)
-        >>> {(4, 0, 0): {(0, 0, 0): 2}, (0, 0, 0): {(0, 4, 0): 3, (0, 0, 2): 10, (0, 0, 0): 3}}
-
-        """
-        p1 = self
-        num_variables = len(p1.ring.gens)
-        non_symbol_indices = set(range(num_variables)) - syms
-        p2 = defaultdict(dict)
-        variable_range = range(num_variables)
-
-        for monomial, coefficient in p1.items():
-            symbol_indices = set(compress(variable_range, monomial))
-            monomial_with_symbols = [0] * num_variables
-            monomial_without_symbols = [0] * num_variables
-
-            for i in symbol_indices & syms:
-                monomial_with_symbols[i] = monomial[i]
-
-            for i in symbol_indices & non_symbol_indices:
-                monomial_without_symbols[i] = monomial[i]
-
-            p2[tuple(monomial_with_symbols)][tuple(monomial_without_symbols)] = coefficient
-
-        return dict(p2)
-
-
-    def sparse_prem(self, g, x):
-        """
-        Computes the pseudo-remainder of the polynomial `f` with respect to `g` using the sparse representation.
-
-        Parameters
-        ==========
-
-            f (PolyElement): The polynomial to compute the pseudo-remainder for.
-            g (PolyElement): The polynomial to divide `f` by.
-            x (Symbol): The main variable of the polynomials.
-
-        Returns
-        =======
-
-            PolyElement: The pseudo-remainder polynomial.
+        PolyElement: The pseudo-remainder polynomial.
 
         Raises
         ======
 
-            ZeroDivisionError: If the degree of `g` is negative.
-            ValueError: If the algorithm encounters an unexpected condition.
-
-        This function implements the pseudo-remainder algorithm for sparse polynomials, which is used to compute
-        the pseudo-remainder of `f` divided by `g`. It starts by checking the degree of `g` and ensures it is
-        non-negative. Then, it initializes the remainder `r` with `f` and sets the current degree `dr` to be the
-        degree of `f`. If the degree of `f` is lower than the degree of `g`, it returns `r` as the pseudo-remainder.
-        Otherwise, it proceeds with the main pseudo-remainder loop.
-
-        After the loop, it calculates the coefficient `c` by raising `lc_g` to the power of `N`. Finally, it returns
-        the polynomial `r` multiplied by `c` as the pseudo-remainder.
+        ZeroDivisionError: If the degree of `g` is negative.
+        ValueError: If the algorithm encounters an unexpected condition.
 
         Examples
         ========
@@ -2671,7 +2607,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
-        >>> sparse_prem(f, g, 0)
+        >>> prem(f, g, 0)
         -4*y + 4
 
         """
@@ -2688,13 +2624,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return r
 
         N = df - dg + 1
+        self = g
 
-        lc_g = coeff_wrt(g, x, dg)
+        lc_g = self.coeff_wrt(x, dg)
 
         xp = f.ring.gens[x]
 
         while True:
-            lc_r = coeff_wrt(r, x, dr)
+            self = r
+            lc_r = self.coeff_wrt(x, dr)
             j, N = dr - dg, N - 1
 
             R = r * lc_g
