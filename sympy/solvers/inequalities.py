@@ -1087,7 +1087,7 @@ def _to_standard_form(constraints, objective):
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> A, B, C = _to_standard_form([r1, r2, r3], x+y+5*z)
+    >>> A, B, C = _to_standard_form([r1, r2, r3], x + y + 5*z)
     >>> A
     Matrix([[1, 0, 2], [0, -1, -3], [1, 2, 7]])
     >>> B
@@ -1095,7 +1095,7 @@ def _to_standard_form(constraints, objective):
     >>> C
     Matrix([[1, 1, 5]])
     >>> r1 = Eq(x, y)
-    >>> A, B, C = _to_standard_form([Eq(x,3)],x*10) # x = 3 become x >= 3 and x <= 3
+    >>> A, B, C = _to_standard_form([Eq(x, 3)], x*10)  # x = 3 become x >= 3 and x <= 3
     >>> A
     Matrix([[1], [-1]])
     >>> B
@@ -1103,8 +1103,8 @@ def _to_standard_form(constraints, objective):
     >>> C
     Matrix([[10]])
     """
-    A = [];
-    B = [];
+    A = []
+    B = []
     free_sym = objective.free_symbols
 
     for rel in constraints:
@@ -1157,7 +1157,8 @@ def linear_programming(constraints, objective):
     *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
 
     The method returns a triplet of solutions optimum, argmax and argmax_dual where
-    optimum is the optimum solution, argmax is x and argmax_dual is y.
+    optimum is the optimum solution, and argmax/ argmax_dual give the
+    values for x and y, respectively.
 
     Parameters
     ==========
@@ -1184,7 +1185,8 @@ def linear_programming(constraints, objective):
     >>> argmax_dual
     [0, 2/3, 1]
 
-    The method also works with inegers, floats and symbolic expressions (like sqrt(2)).
+    The method also works with non-integer coefficients (like sqrt(2)).
+
     >>> from sympy import sqrt
     >>> r1 = y + sqrt(2)*z <= sqrt(3)
     >>> r2 = -x-3*z <= -2
