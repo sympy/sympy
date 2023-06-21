@@ -13,7 +13,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
-from sympy.matrices.dense import Matrix
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.sets.sets import FiniteSet, Interval, Union
 from sympy.solvers.inequalities import (reduce_inequalities,
@@ -25,7 +24,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 from sympy.core.mod import Mod
 
@@ -490,25 +489,40 @@ def test__pt():
 
 
 def test_linear_programming():
-    A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
-    B = Matrix([3, -2, 5])
-    C = Matrix([[-1, -1, -5]])
-    D = Matrix([0])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    # A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    # B = Matrix([3, -2, 5])
+    # C = Matrix([[-1, -1, -5]])
+    # D = Matrix([0])
+    r1 = y+2*z <= 3
+    r2 = -x - 3*z <= -2
+    r3 = 2*x + y + 7*z <= 5
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -2
-    A = Matrix([[1, -1, 2], [-1, 2, -3], [2, 1, -7]])
-    B = Matrix([3, -2, -5])
-    C = Matrix([[-1, -1, -5]])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    # A = Matrix([[1, -1, 2], [-1, 2, -3], [2, 1, -7]])
+    # B = Matrix([3, -2, -5])
+    # C = Matrix([[-1, -1, -5]])
+    r1 = x - y + 2*z <= 3
+    r2 = -x + 2*y - 3*z <= -2
+    r3 = 2*x + y - 7*z <= -5
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == Rational(-25, 7)
-    B = Matrix([-4, 8, 10])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    #B = Matrix([-4, 8, 10])
+    r1 = x - y + 2*z <= -4
+    r2 = -x + 2*y - 3*z <= 8
+    r3 = 2*x + y - 7*z <= 10
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
     # input contains Floats
-    A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    #A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
+    r1 = x - y + Float(2)*z <= -4
+    r2 = -x + 2*y +Float(- 3)*z <= 8
+    r3 = 2*x + y - 7*z <= 10
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
     # input contains symbolic expression (sqrt(2) for example)
-    A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
-    optimum, argmax, argmax_dual = linear_programming(A, B, C, D)
+    #A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
+    r1 = x - y + sqrt(2)*z <= -4
+    r2 = -x + 2*y - 3*z <= 8
+    r3 = 2*x + y - 7*z <= 10
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
