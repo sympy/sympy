@@ -5,7 +5,7 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.core.relational import Relational, Ge, Lt, Gt, Eq, Ne, Le
 from sympy.matrices.dense import Matrix
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
@@ -1075,11 +1075,81 @@ def _simplex(M, R, S, random_seed=0):
             M = _pivot(M, i0, j0)
             R[j0], S[i0] = S[i0], R[j0]
 
+def _to_standard_form(constraints, objective):
+    """ Converts a list of constraints and an objective function into the standard form for linear programming
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import _to_standard_form
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import Eq
+    >>> r1 = y+2*z <= 3
+    >>> r2 = -x-3*z <= -2
+    >>> r3 = 2*x+y+7*z <= 5
+    >>> A, B, C = _to_standard_form([r1, r2, r3], x+y+5*z)
+    >>> A
+    Matrix([[1, 0, 2], [0, -1, -3], [1, 2, 7]])
+    >>> B
+    Matrix([[3], [-2], [5]])
+    >>> C
+    Matrix([[1, 1, 5]])
+    >>> r1 = Eq(x, y)
+    >>> A, B, C = _to_standard_form([Eq(x,3)],x*10) # x = 3 become x >= 3 and x <= 3
+    >>> A
+    Matrix([[1], [-1]])
+    >>> B
+    Matrix([[3], [-3]])
+    >>> C
+    Matrix([[10]])
+    """
+    A = [];
+    B = [];
+    free_sym = objective.free_symbols
+
+    for rel in constraints:
+        if not isinstance(rel, Relational):
+            raise TypeError(f"{rel} is not relational.")
+        if type(rel) in [Lt, Gt]:
+            raise TypeError("Strict inequalities are not allowed in linear programming.")
+        if type(rel) == Ne:
+            raise TypeError("'not equal to' is not allowed in linear programming.")
+        if not rel.rhs.is_constant():
+            raise ValueError("Right hand side of relation must be constant")
+
+        free_sym = free_sym | rel.free_symbols
+
+        if type(rel) == Le:
+            A.append(rel.lhs)
+            B.append(rel.rhs)
+        elif type(rel) == Ge:
+            A.append(-rel.lhs)
+            B.append(-rel.rhs)
+        elif type(rel) == Eq:
+            # x = 3 can be represented as x <= 3 and x >= 3
+            A.append(rel.lhs)
+            B.append(rel.rhs)
+            A.append(-rel.lhs)
+            B.append(-rel.rhs)
+        else:
+            raise TypeError(f"Unrecognized relational: {rel}")
+
+    A = Matrix([[row.coeff(sym) for sym in free_sym] for row in A])
+    B = Matrix(B)
+    C = Matrix([[objective.coeff(sym) for sym in free_sym]])
+
+    return A, B, C
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
-def linear_programming(A, B, C, D = ImmutableMatrix([0])):
+def linear_programming(constraints, objective):
     """
+    A function to maximize a linear objective function subject to linear
+    constraints with the simplex method.
+
+    Explanation
+    ===========
+
     When x is a column vector of variables, y is a column vector of dual variables,
     and when the objective is either:
 
@@ -1089,25 +1159,47 @@ def linear_programming(A, B, C, D = ImmutableMatrix([0])):
     The method returns a triplet of solutions optimum, argmax and argmax_dual where
     optimum is the optimum solution, argmax is x and argmax_dual is y.
 
+    Parameters
+    ==========
+
+    constraints : list of linear inequalities
+        The lhs of these inequalities are equivalent to the matrix A and the rhs
+        are equivalent to the column vector B.
+
+    objective : a linear function to maximize
+        The objective function is represented by the row vector C.
+
     Examples
     ========
-    >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.inequalities import linear_programming
-    >>> A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
-    >>> B = Matrix([3, -2, 5])
-    >>> C = Matrix([[1, 1, 5]])
-    >>> D = Matrix([0])
-    >>> linear_programming(A, B, C, D)
-    (11/3, [0, 1/3, 2/3], [0, 2/3, 1])
+    >>> r1 = y+2*z <= 3
+    >>> r2 = -x-3*z <= -2
+    >>> r3 = 2*x+y+7*z <= 5
+    >>> optimum, argmax, argmax_dual = linear_programming([r1,r2,r3], x+y+5*z)
+    >>> optimum
+    11/3
+    >>> argmax
+    [0, 1/3, 2/3]
+    >>> argmax_dual
+    [0, 2/3, 1]
 
     The method also works with inegers, floats and symbolic expressions (like sqrt(2)).
     >>> from sympy import sqrt
-    >>> A = Matrix([[0, 1, sqrt(2)], [-1, 0, -3], [2, 1, 7]])
-    >>> B = Matrix([sqrt(3), -2, 5])
-    >>> C = Matrix([[1, 1, sqrt(5)]])
-    >>> linear_programming(A, B, C, D)
-    (3, [2, 1, 0], [0, 1, 1])
+    >>> r1 = y + sqrt(2)*z <= sqrt(3)
+    >>> r2 = -x-3*z <= -2
+    >>> r3 = 2*x+y+7*z <= 5
+    >>> optimum, argmax, argmax_dual = linear_programming([r1,r2,r3], x+y+sqrt(5)*z)
+    >>> optimum
+    3
+    >>> argmax
+    [0, 1, 2]
+    >>> argmax_dual
+    [0, 1, 1]
     """
+    from sympy.matrices.dense import Matrix
+    A, B, C = _to_standard_form(constraints, objective)
+    D = ImmutableMatrix([0])
     M = Matrix([[A, B], [-C, D]])
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
     s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
