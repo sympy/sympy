@@ -771,18 +771,17 @@ def _(expr, assumptions):
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
 
+
 # TranscendentalPredicate
 
 @TranscendentalPredicate.register_many(Exp1, Pi, GoldenRatio)
 def _(expr, assumptions):
     return True
 
-
-@TranscendentalPredicate.register_many(AlgebraicNumber, Float, TribonacciConstant, Infinity, NegativeInfinity,
-                                       ImaginaryUnit, ComplexInfinity)
+@TranscendentalPredicate.register_many(AlgebraicNumber, Float, TribonacciConstant,
+    Infinity, ImaginaryUnit, ComplexInfinity)
 def _(expr, assumptions):
     return False
-
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
@@ -790,7 +789,6 @@ def _(expr, assumptions):
     if ret is None:
         raise MDNotImplementedError
     return ret
-
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):

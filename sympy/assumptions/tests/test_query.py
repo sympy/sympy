@@ -351,6 +351,7 @@ def test_sqrt_2():
     assert ask(Q.antihermitian(z)) is False
     assert ask(Q.transcendental(z)) is False
 
+
 def test_pi():
     z = S.Pi
     assert ask(Q.commutative(z)) is True
