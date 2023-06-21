@@ -1363,6 +1363,32 @@ def test_PolyElement_pdiv():
     assert f.pquo(g) == q
     assert f.pexquo(g) == q
 
+
+def test_PolyElement_sparse():
+
+    _, x, y, z = ring("x, y, z", ZZ)
+    p1 = 4*x**3 + 5*y**2 + 6*z + 7
+    dg, sym = 2, 1
+    assert coeff_wrt(p1, sym, dg) == 5
+
+    syms = {0}
+    assert as_polynomial(p1, syms) == {(3, 0, 0): {(0, 0, 0): 4}, (0, 0, 0): {(0, 2, 0): 5, (0, 0, 1): 6, (0, 0, 0): 7}}
+
+
+    f, g = x**2 + x*y, 2*x + 2
+    assert sparse_prem(f, g, 0) == -4*y + 4
+
+    f1 = x**2 + 1
+    g = 2*x - 4
+    assert sparse_prem(f1, g1, 0) == 20
+    assert sparse_prem(f1, g1, 1) == 0
+
+    f2 = x*y + 2*x + 1
+    g2 = x + y
+    assert sparse_prem(f2, g2, 0) == -y**2 - 2*y + 1
+    assert sparse_prem(f2, g2, 1) == -x**2 + 2*x + 1
+
+
 def test_PolyElement_gcdex():
     _, x = ring("x", QQ)
 
