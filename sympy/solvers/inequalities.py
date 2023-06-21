@@ -1076,7 +1076,9 @@ def _simplex(M, R, S, random_seed=0):
             R[j0], S[i0] = S[i0], R[j0]
 
 def _to_standard_form(constraints, objective):
-    """ Converts a list of constraints and an objective function into the standard form for linear programming
+    """
+    Converts a list of constraints and an objective function into the standard form for linear programming.
+    Each free variable is assigned a column lexicographically.
 
     Examples
     ========
@@ -1133,6 +1135,8 @@ def _to_standard_form(constraints, objective):
             B.append(-rel.rhs)
         else:
             raise TypeError(f"Unrecognized relational: {rel}")
+
+    free_sym = sorted(free_sym, key=lambda v: str(v)) # order symbols lexicographically
 
     A = Matrix([[row.coeff(sym) for sym in free_sym] for row in A])
     B = Matrix(B)
