@@ -50,13 +50,11 @@ def test_quaternion_construction_norm():
 def test_issue_25254():
     # calculating the inverse cached the norm which caused problems
     # when multiplying
-    p = Quaternion(1, 0, 1, 0)
-    q = Quaternion.from_axis_angle((1,1,1), 3 * math.pi/4)
+    p = Quaternion(1, 0, 0, 0)
+    q = Quaternion.from_axis_angle((1, 1, 1), 3 * math.pi/4)
     qi = q.inverse()  # this operation cached the norm
-    try:
-        q * p * qi
-    except ValueError as exc:
-        assert False, f"'10 / 5' raised an exception {exc}"
+    test = q * p * qi
+    assert ((test - p).norm() < 1E-10)
 
 
 def test_to_and_from_Matrix():
