@@ -1091,12 +1091,11 @@ def _to_standard_form(constraints, objective):
     >>> r3 = 2*x+y+7*z <= 5
     >>> A, B, C = _to_standard_form([r1, r2, r3], x + y + 5*z)
     >>> A
-    Matrix([[1, 0, 2], [0, -1, -3], [1, 2, 7]])
+    Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
     >>> B
     Matrix([[3], [-2], [5]])
     >>> C
     Matrix([[1, 1, 5]])
-    >>> r1 = Eq(x, y)
     >>> A, B, C = _to_standard_form([Eq(x, 3)], x*10)  # x = 3 become x >= 3 and x <= 3
     >>> A
     Matrix([[1], [-1]])
@@ -1199,7 +1198,7 @@ def linear_programming(constraints, objective):
     >>> optimum
     3
     >>> argmax
-    [0, 1, 2]
+    [2, 1, 0]
     >>> argmax_dual
     [0, 1, 1]
     """
