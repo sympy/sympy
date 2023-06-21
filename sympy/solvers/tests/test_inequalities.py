@@ -2,7 +2,7 @@
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function
-from sympy.core.numbers import Float, I, Rational, oo, pi
+from sympy.core.numbers import I, Rational, oo, pi
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -514,8 +514,8 @@ def test_linear_programming():
     assert optimum == -4
     # input contains Floats
     #A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
-    r1 = x - y + Float(2)*z <= -4
-    r2 = -x + 2*y +Float(- 3)*z <= 8
+    r1 = x - y + 2.0*z <= -4
+    r2 = -x + 2*y - 3.0*z <= 8
     r3 = 2*x + y - 7*z <= 10
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
