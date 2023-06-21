@@ -489,40 +489,44 @@ def test__pt():
 
 
 def test_linear_programming():
-    # A = Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
-    # B = Matrix([3, -2, 5])
-    # C = Matrix([[-1, -1, -5]])
-    # D = Matrix([0])
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
     r3 = 2*x + y + 7*z <= 5
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -2
-    # A = Matrix([[1, -1, 2], [-1, 2, -3], [2, 1, -7]])
-    # B = Matrix([3, -2, -5])
-    # C = Matrix([[-1, -1, -5]])
+    assert argmax == [2, 0, 0]
+    assert argmax_dual == [0, 1, 0]
+
     r1 = x - y + 2*z <= 3
     r2 = -x + 2*y - 3*z <= -2
     r3 = 2*x + y - 7*z <= -5
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == Rational(-25, 7)
-    #B = Matrix([-4, 8, 10])
+    assert argmax == [0, 0, Rational(5,7)]
+    assert argmax_dual == [0, 0, Rational(5,7)]
+
     r1 = x - y + 2*z <= -4
     r2 = -x + 2*y - 3*z <= 8
     r3 = 2*x + y - 7*z <= 10
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
+    assert argmax == [0, 4, 0]
+    assert argmax_dual == [1, 0, 0]
+
     # input contains Floats
-    #A = Matrix([[1, -1, Float(2)], [-1, 2, Float(-3)], [2, 1, -7]])
     r1 = x - y + 2.0*z <= -4
     r2 = -x + 2*y - 3.0*z <= 8
     r3 = 2*x + y - 7*z <= 10
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
+    assert argmax == [0, 4, 0]
+    assert argmax_dual == [1, 0, 0]
+
     # input contains symbolic expression (sqrt(2) for example)
-    #A = Matrix([[1, -1, sqrt(2)], [-1, 2, -3], [2, 1, -7]])
     r1 = x - y + sqrt(2)*z <= -4
     r2 = -x + 2*y - 3*z <= 8
     r3 = 2*x + y - 7*z <= 10
     optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], -x-y-5*z )
     assert optimum == -4
+    assert argmax == [0, 4, 0]
+    assert argmax_dual == [1, 0, 0]

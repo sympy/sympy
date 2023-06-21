@@ -988,10 +988,36 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 
 class UnboundedLinearProgrammingError(Exception):
+    """
+    Example
+    ========
+
+    Suppose you want to maximize
+        x+y
+    subject to
+        x >= 0
+        y >= 0
+
+    Clearly there's no upper limit that x+y can take. If you try to use the linear_programing function on such a problem
+    you will get this exception.
+    """
     pass
 
 
 class InfeasibleLinearProgrammingError(Exception):
+    """
+    Example
+    ========
+
+    Suppose you want to maximize
+        x
+    subject to
+        x >= 10
+        x <= 9
+
+    Clearly it's not possible for x to satisfy the given contraints. If you try to use the linear_programing function on
+    a problem where it's not possible to satisfy the contraints, you will get this sort of exception.
+    """
     pass
 
 
@@ -1013,7 +1039,9 @@ def _pivot(M, i, j):
 def _simplex(M, R, S, random_seed=0):
     """
     Simplex method with randomized pivoting
-    http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+
+    LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
+      - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     """
     rand = random.Random(x=random_seed)
     while True:
@@ -1145,7 +1173,7 @@ def _to_standard_form(constraints, objective):
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
-def linear_programming(constraints, objective):
+def linear_programming(constraints, objective, random_seed=0):
     """
     A function to maximize a linear objective function subject to linear
     constraints with the simplex method.
@@ -1173,8 +1201,12 @@ def linear_programming(constraints, objective):
     objective : a linear function to maximize
         The objective function is represented by the row vector C.
 
+    random_seed : int
+        Determines the random pivoting behavior of the simplex method
+
     Examples
     ========
+
     >>> from sympy.abc import x, y, z
     >>> from sympy.solvers.inequalities import linear_programming
     >>> r1 = y+2*z <= 3
@@ -1212,7 +1244,7 @@ def linear_programming(constraints, objective):
     r = r_orig.copy()
     s = s_orig.copy()
 
-    M, r, s = _simplex(M, r, s)
+    M, r, s = _simplex(M, r, s, random_seed=random_seed)
 
     argmax = []
     argmin_dual = []
