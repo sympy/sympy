@@ -8,7 +8,7 @@ from sympy.core.sympify import sympify
 class Cable:
     """
     Cables are structures in engineering that support
-    the applied transverse loads through the tesnsile
+    the applied transverse loads through the tensile
     resistance developed in its members.
 
     Cables are widely used in suspension bridges, tension
