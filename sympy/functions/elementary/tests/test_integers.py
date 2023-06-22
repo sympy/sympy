@@ -630,3 +630,11 @@ def test_issue_18689():
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+def test_issue_25230():
+    y = Symbol('y', positive = True)
+    z = Symbol('z', negative = True)
+    assert floor(x/y).as_leading_term(x, cdir = 1) == 0
+    assert floor(x/y).as_leading_term(x, cdir = -1) == -1
+    assert floor(x/z).as_leading_term(x, cdir = 1) == -1
+    assert floor(x/z).as_leading_term(x, cdir = -1) == 0

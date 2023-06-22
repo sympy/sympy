@@ -1315,8 +1315,9 @@ def test_issue_25230():
     a = Symbol('a', real = True)
     b = Symbol('b', positive = True)
     c = Symbol('c', negative = True)
+    n = Symbol('n', integer = True)
     raises(NotImplementedError, lambda: limit(Mod(x, a), x, a))
-    assert limit(Mod(x, b), x, b, '+') == 0
-    assert limit(Mod(x, b), x, b, '-') == b
-    assert limit(Mod(x, c), x, c, '+') == c
-    assert limit(Mod(x, c), x, c, '-') == 0
+    assert limit(Mod(x, b), x, n*b, '+') == 0
+    assert limit(Mod(x, b), x, n*b, '-') == b
+    assert limit(Mod(x, c), x, n*c, '+') == c
+    assert limit(Mod(x, c), x, n*c, '-') == 0
