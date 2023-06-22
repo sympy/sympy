@@ -482,6 +482,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if local_facts.clauses and satisfiable(enc_cnf) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
+    # handle relational assumptions
+    res = smtask(proposition, assumptions=assumptions, context=context)
+    if res is not None:
+        return res
+
     # quick computation for single fact
     res = _ask_single_fact(key, local_facts)
     if res is not None:
@@ -494,10 +499,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)
-    if res is not None:
-        return res
 
-    res = smtask(proposition, assumptions=assumptions, context=context)
     return res
 
 

@@ -46,7 +46,10 @@ def smtask(proposition, assumptions=True, context=global_assumptions):
 
     """
     assumptions = And(assumptions, And(*list(context)))
-    return z3ask(proposition, assumptions)
+    try:
+        return z3ask(proposition, assumptions)
+    except:
+        return None
 
 
 def z3ask(proposition, assumptions=True):
