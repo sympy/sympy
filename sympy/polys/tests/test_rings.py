@@ -1369,20 +1369,20 @@ def test_PolyElement_sparse():
     _, x, y, z = ring("x, y, z", ZZ)
     p1 = 4*x**3 + 5*y**2 + 6*z + 7
     dg, sym = 2, 1
-    assert PolyElement.coeff_wrt(p1, sym, dg) == 5
+    assert p1.coeff_wrt(sym, dg) == 5
 
     f, g = x**2 + x*y, 2*x + 2
-    assert PolyElement.prem(f, g, 0) == -4*y + 4
+    assert f.prem2(g, 0) == -4*y + 4
 
     f1 = x**2 + 1
     g1 = 2*x - 4
-    assert PolyElement.prem(f1, g1, 0) == 20
-    assert PolyElement.prem(f1, g1, 1) == 0
+    assert f1.prem2(g1, 0) == 20
+    assert f1.prem2(g1, 1) == 0
 
     f2 = x*y + 2*x + 1
     g2 = x + y
-    assert PolyElement.prem(f2, g2, 0) == -y**2 - 2*y + 1
-    assert PolyElement.prem(f2, g2, 1) == -x**2 + 2*x + 1
+    assert f2.prem2(g2, 0) == -y**2 - 2*y + 1
+    assert f2.prem2(g2, 1) == -x**2 + 2*x + 1
 
 
 def test_PolyElement_gcdex():
