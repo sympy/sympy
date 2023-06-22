@@ -97,11 +97,11 @@ def z3ask(proposition, assumptions=True):
     _props = Not(proposition)
 
     s_true = z3.Solver()
-    s_true.from_string(smtlib_code(And(props,assumptions), known_functions={Pow: "^"}))
+    s_true.from_string(smtlib_code(And(props,assumptions)).replace("Pow","^"))
     can_be_true = str(s_true.check())
 
     s_false = z3.Solver()
-    s_false.from_string(smtlib_code(And(_props,assumptions), known_functions={Pow: "^"}))
+    s_false.from_string(smtlib_code(And(_props,assumptions)).replace("Pow","^"))
     can_be_false = str(s_false.check())
 
     if can_be_true == "unknown" or can_be_false == "unknown":
