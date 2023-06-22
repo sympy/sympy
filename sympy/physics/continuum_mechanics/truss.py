@@ -229,9 +229,9 @@ class Truss:
                 self._node_positions.remove((x, y))
                 self._node_position_x.remove(x)
                 self._node_position_y.remove(y)
-                if label in list(self._loads):
+                if label in self._loads:
                     self._loads.pop(label)
-                if label in list(self._supports):
+                if label in self._supports:
                     self._supports.pop(label)
                 self._node_coordinates.pop(label)
 
@@ -359,12 +359,12 @@ class Truss:
                         self._node_labels[self._node_labels.index(node[0])] = new_label
                         self._node_coordinates[new_label] = self._node_coordinates[label]
                         self._node_coordinates.pop(label)
-                        if node[0] in list(self._supports):
+                        if node[0] in self._supports:
                             self._supports[new_label] = self._supports[node[0]]
                             self._supports.pop(node[0])
-                        if new_label in list(self._supports):
+                        if new_label in self._supports:
                             if self._supports[new_label] == 'pinned':
-                                if 'R_'+str(label)+'_x' in list(self._reaction_loads) and 'R_'+str(label)+'_y' in list(self._reaction_loads):
+                                if 'R_'+str(label)+'_x' in self._reaction_loads and 'R_'+str(label)+'_y' in self._reaction_loads:
                                     self._reaction_loads['R_'+str(new_label)+'_x'] = self._reaction_loads['R_'+str(label)+'_x']
                                     self._reaction_loads['R_'+str(new_label)+'_y'] = self._reaction_loads['R_'+str(label)+'_y']
                                     self._reaction_loads.pop('R_'+str(label)+'_x')
@@ -396,10 +396,10 @@ class Truss:
                                 self.apply_load(new_label, Symbol('R_'+str(new_label)+'_y'), 90)
                                 self._loads.pop(label)
                         else:
-                            if label in list(self._loads):
+                            if label in self._loads:
                                 self._loads[new_label] = self._loads[label]
                                 self._loads.pop(label)
-                        for member in list(self._members):
+                        for member in self._members:
                             if self._members[member][0] == node[0]:
                                 self._members[member][0] = new_label
                                 self._nodes_occupied[(new_label, self._members[member][1])] = True
@@ -505,7 +505,7 @@ class Truss:
                 raise ValueError("Load must be applied at a known node")
 
             else:
-                if location in list(self._loads):
+                if location in self._loads:
                     self._loads[location].append([magnitude, direction])
                 else:
                     self._loads[location] = [[magnitude, direction]]
@@ -594,7 +594,7 @@ class Truss:
                 raise ValueError("Support must be added on a known node")
 
             else:
-                if location not in list(self._supports):
+                if location not in self._supports:
                     if type == 'pinned':
                         self.apply_load((location, Symbol('R_'+str(location)+'_x'), 0))
                         self.apply_load((location, Symbol('R_'+str(location)+'_y'), 90))
@@ -691,7 +691,7 @@ class Truss:
         """
         count_reaction_loads = 0
         for node in self._nodes:
-            if node[0] in list(self._supports):
+            if node[0] in self._supports:
                 if self._supports[node[0]]=='pinned':
                     count_reaction_loads += 2
                 elif self._supports[node[0]]=='roller':
@@ -702,7 +702,7 @@ class Truss:
         load_matrix = zeros(2*len(self.nodes), 1)
         load_matrix_row = 0
         for node in self._nodes:
-            if node[0] in list(self._loads):
+            if node[0] in self._loads:
                 for load in self._loads[node[0]]:
                     if load[0]!=Symbol('R_'+str(node[0])+'_x') and load[0]!=Symbol('R_'+str(node[0])+'_y'):
                         load_matrix[load_matrix_row] -= load[0]*cos(pi*load[1]/180)
@@ -720,7 +720,7 @@ class Truss:
                     coefficients_matrix[row+1][cols] += 1
                     cols += 1
             row += 2
-        for member in list(self._members):
+        for member in self._members:
             start = self._members[member][0]
             end = self._members[member][1]
             length = sqrt((self._node_coordinates[start][0]-self._node_coordinates[end][0])**2 + (self._node_coordinates[start][1]-self._node_coordinates[end][1])**2)
@@ -740,7 +740,7 @@ class Truss:
         i = 0
         min_load = inf
         for node in self._nodes:
-            if node[0] in list(self._loads):
+            if node[0] in self._loads:
                 for load in self._loads[node[0]]:
                     if type(load[0]) not in [Symbol, Mul, Add]:
                         min_load = min(min_load, load[0])
@@ -749,7 +749,7 @@ class Truss:
                 if abs(forces_matrix[j]/min_load) <1E-10:
                     forces_matrix[j] = 0
         for node in self._nodes:
-            if node[0] in list(self._supports):
+            if node[0] in self._supports:
                 if self._supports[node[0]]=='pinned':
                     self._reaction_loads['R_'+str(node[0])+'_x'] = forces_matrix[i]
                     self._reaction_loads['R_'+str(node[0])+'_y'] = forces_matrix[i+1]
@@ -757,7 +757,7 @@ class Truss:
                 elif self._supports[node[0]]=='roller':
                     self._reaction_loads['R_'+str(node[0])+'_y'] = forces_matrix[i]
                     i += 1
-        for member in list(self._members):
+        for member in self._members:
             self._internal_forces[member] = forces_matrix[i]
             i += 1
         return
@@ -837,7 +837,7 @@ class Truss:
         ymax = -INF
         ymin = INF
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
             xmin = min(xmin, self._node_coordinates[node][0])
             ymax = max(ymax, self._node_coordinates[node][1])
@@ -857,7 +857,7 @@ class Truss:
     def _draw_nodes(self, subs_dict):
         node_markers = []
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
                 if self._node_coordinates[node][0] in list(subs_dict):
                     self._node_coordinates[node][0] = subs_dict[self._node_coordinates[node][0]]
@@ -888,7 +888,7 @@ class Truss:
                             self._node_coordinates[node][1] /= object
                             self._node_coordinates[node][1] *= subs_dict[object]
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             node_markers.append(
                 {
                     'args':[[self._node_coordinates[node][0]], [self._node_coordinates[node][1]]],
@@ -908,7 +908,7 @@ class Truss:
         ymax = -INF
         ymin = INF
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
             xmin = min(xmin, self._node_coordinates[node][0])
             ymax = max(ymax, self._node_coordinates[node][1])
@@ -998,7 +998,7 @@ class Truss:
         ymax = -INF
         ymin = INF
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
             xmin = min(xmin, self._node_coordinates[node][0])
             ymax = max(ymax, self._node_coordinates[node][1])
@@ -1068,7 +1068,7 @@ class Truss:
         ymax = -INF
         ymin = INF
 
-        for node in list(self._node_coordinates):
+        for node in self._node_coordinates:
             xmax = max(xmax, self._node_coordinates[node][0])
             xmin = min(xmin, self._node_coordinates[node][0])
             ymax = max(ymax, self._node_coordinates[node][1])
