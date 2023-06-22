@@ -2563,7 +2563,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 3
         >>> dg = 2
         >>> sym = 2
-        >>> coeff_wrt(p, sym, dg)
+        >>> p.coeff_wrt(sym, dg)
         10
 
         """
@@ -2574,7 +2574,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p.ring.from_dict(dict(zip(monoms, coeffs)))
 
 
-    def prem(self, g, x):
+    def prem2(self, g, x):
         """
         Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
 
@@ -2607,7 +2607,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
-        >>> prem(f, g, 0)
+        >>> f.prem2(g, 0)
         -4*y + 4
 
         """
@@ -2616,7 +2616,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         dg = g.degree(x)
 
         if dg < 0:
-            raise ZeroDivisionError
+            raise ZeroDivisionError('polynomial division')
 
         r, dr = f, df
 
@@ -2624,15 +2624,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return r
 
         N = df - dg + 1
-        self = g
 
-        lc_g = self.coeff_wrt(x, dg)
+        lc_g = g.coeff_wrt(x, dg)
 
         xp = f.ring.gens[x]
 
         while True:
-            self = r
-            lc_r = self.coeff_wrt(x, dr)
+
+            lc_r = r.coeff_wrt(x, dr)
             j, N = dr - dg, N - 1
 
             R = r * lc_g
