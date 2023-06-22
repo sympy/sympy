@@ -150,8 +150,13 @@ class floor(RoundFunction):
             r = floor(arg0)
         if arg0.is_finite:
             if arg0 == r:
-                ndir = arg.dir(x, cdir=cdir)
-                return r - 1 if ndir.is_negative else r
+                ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+                if ndir.is_negative:
+                    return r - 1
+                elif ndir.is_positive:
+                    return r
+                else:
+                    raise NotImplementedError("Not sure of sign of %s" % ndir)
             else:
                 return r
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
@@ -171,7 +176,12 @@ class floor(RoundFunction):
             return s + o
         if arg0 == r:
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
-            return r - 1 if ndir.is_negative else r
+            if ndir.is_negative:
+                return r - 1
+            elif ndir.is_positive:
+                return r
+            else:
+                raise NotImplementedError("Not sure of sign of %s" % ndir)
         else:
             return r
 
