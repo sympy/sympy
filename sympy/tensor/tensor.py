@@ -3933,6 +3933,7 @@ class TensMul(TensExpr, AssocOp):
             return expr.canon_bp()
         if not expr.components:
             return expr
+        expr = expr.doit(deep=False) #make sure self.coeff is populated correctly
         t = expr.sorted_components()
         g, dummies, msym = t._index_structure.indices_canon_args()
         v = components_canon_args(t.components)
