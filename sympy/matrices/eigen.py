@@ -252,7 +252,7 @@ def _eigenvals_dict(
 
         if sum(eigs.values()) != block.rows:
             try:
-                eigs = {k: v for k, v in charpoly.all_roots(multiple=False)}
+                eigs = dict(charpoly.all_roots(multiple=False))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
