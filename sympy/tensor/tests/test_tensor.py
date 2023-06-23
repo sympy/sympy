@@ -8,6 +8,7 @@ from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals import integrate
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
@@ -430,6 +431,16 @@ def test_canonicalize4():
     K = TensorHead("K", [Cartesian])
     expr = TensAdd( K(p) , - 2*K(p) )
     assert expr.canon_bp() == -K(p)
+
+def test_canonicalize5():
+    R3 = TensorIndexType('R3', dim=3)
+    p = tensor_indices("p", R3)
+    K = TensorHead("K", [R3])
+    f = symbols("f", cls=Function)
+    x = symbols("x")
+
+    expr = integrate(f(x), (x,0,1)) * K(p)
+    assert expr.as_dummy().canon_bp() == integrate(f(x), (x,0,1)).as_dummy() * K(p)
 
 def test_TensorIndexType():
     D = Symbol('D')
