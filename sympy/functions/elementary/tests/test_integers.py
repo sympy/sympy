@@ -636,7 +636,12 @@ def test_issue_25230():
     b = Symbol('b', positive = True)
     c = Symbol('c', negative = True)
     raises(NotImplementedError, lambda: floor(x/a).as_leading_term(x, cdir = 1))
+    raises(NotImplementedError, lambda: ceiling(x/a).as_leading_term(x, cdir = 1))
     assert floor(x/b).as_leading_term(x, cdir = 1) == 0
     assert floor(x/b).as_leading_term(x, cdir = -1) == -1
     assert floor(x/c).as_leading_term(x, cdir = 1) == -1
     assert floor(x/c).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/b).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1
