@@ -258,10 +258,7 @@ def _eigenvals_dict(
             f = charpoly.as_expr()
             x = charpoly.gen
             try:
-                eigs = {}
-                for idx in range(degree):
-                    root = CRootOf(f, x, idx)
-                    eigs[root] = eigs.get(root, 0) + 1
+                eigs = Counter(CRootOf(f, x, idx) for idx in range(degree))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
