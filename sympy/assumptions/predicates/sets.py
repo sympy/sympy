@@ -378,7 +378,7 @@ class TranscendentalPredicate(Predicate):
     transcendental numbers. A transcendental number is a real
     or complex number that is not algebraic.
 
-   Examples
+    Examples
     ========
 
     >>> from sympy import ask, Q, pi, exp
