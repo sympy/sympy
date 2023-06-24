@@ -554,19 +554,16 @@ class TransferFunction(SISOLinearTimeInvariant):
         Parameters
         ==========
 
-        num_list : List
-            List comprising of numerator coefficients.
-        den_list : List
-            List comprising of denominator coefficients.
+        num_list : Iterable
+            Sequence comprising of numerator coefficients.
+        den_list : Iterable
+            Sequence comprising of denominator coefficients.
         var : Symbol
             Complex variable of the Laplace transform used by the
             polynomials of the transfer function.
 
         Raises
         ======
-
-        ValueError
-            When ``num_list`` or ``den_list`` are not of data type `list`.
 
         ZeroDivisionError
             When the constructed denominator is zero.
@@ -588,9 +585,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
 
         """
-        if not isinstance(num_list, list) or not isinstance(den_list, list):
-            raise TypeError("Input arguments should be composed of list.")
-
         num_list = num_list[::-1]
         den_list = den_list[::-1]
         num_var_powers = [var**i for i in range(len(num_list))]
@@ -612,21 +606,15 @@ class TransferFunction(SISOLinearTimeInvariant):
         Parameters
         ==========
 
-        zeros : List
-            List comprising of zeros of transfer function.
-        poles : List
-            List comprising of poles of transfer function.
+        zeros : Iterable
+            Sequence comprising of zeros of transfer function.
+        poles : Iterable
+            Sequence comprising of poles of transfer function.
         gain : Number, Symbol, Expression
             A scalar value specifying gain of the model.
         var : Symbol
             Complex variable of the Laplace transform used by the
             polynomials of the transfer function.
-
-        Raises
-        ======
-
-        ValueError
-            When ``poles`` or ``den_list`` are not of data type `list`.
 
         Examples
         ========
@@ -651,9 +639,6 @@ class TransferFunction(SISOLinearTimeInvariant):
         TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
 
         """
-        if not isinstance(poles, list) or not isinstance(zeros, list):
-            raise TypeError("Input arguments zeros and poles should be composed of list.")
-
         num_poly = 1
         den_poly = 1
         for zero in zeros:
