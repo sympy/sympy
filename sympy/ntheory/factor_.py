@@ -1566,8 +1566,8 @@ def primefactors(n, limit=None, verbose=False, **kwargs):
 
     """
     n = int(n)
-    kwargs.update(dict(visual=None, multiple=False,
-                       limit=limit, verbose=verbose))
+    kwargs.update({"visual": None, "multiple": False,
+                   "limit": limit, "verbose": verbose})
     factors = sorted(factorint(n=n, **kwargs).keys())
     # We want to calculate
     # s = [f for f in factors if isprime(f)]
