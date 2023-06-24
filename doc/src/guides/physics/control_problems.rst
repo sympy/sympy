@@ -28,9 +28,10 @@ Solution
     Subpart 1
 
     >>> s, k = symbols('s k')
-    >>> a = k*(s+3)                     # Zero at -3 in S plane
-    >>> b = (s+1)*(s+2-I)*(s+2+I)       # Poles at -1, (-2, j) and (-2, -j) in S plane
-    >>> tf = TransferFunction(a, b, s)
+    >>> gain = k                        # Let unknwon gain be k
+    >>> a = [-3]                        # Zero at -3 in S plane
+    >>> b = [-1, -2-I, -2+I]            # Poles at -1, (-2, j) and (-2, -j) in S plane
+    >>> tf = TransferFunction.from_zpk(a, b, gain, s)
     >>> pprint(tf)
                k*(s + 3)
     -------------------------------
