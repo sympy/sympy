@@ -1,16 +1,12 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
-import random
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
-from sympy.core.random import uniform
+from sympy.core.random import uniform, randint
 from sympy.external.gmpy import SYMPY_INTS, invert
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors
-
-
-rgen = random.Random()
 
 
 def gf_crt(U, M, K=None):
@@ -2413,7 +2409,7 @@ def _csolve_prime_las_vegas(f, p):
         while True:
             # Determine `a` randomly and
             # compute gcd((x+a)**((p-1)//2)-1, f(x))
-            a = rgen.randint(0, p - 1)
+            a = randint(0, p - 1)
             g = gf_pow_mod([1, a], (p - 1) // 2, f, p, ZZ)
             g = gf_sub_ground(g, 1, p, ZZ)
             g = gf_gcd(f, g, p, ZZ)
