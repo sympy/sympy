@@ -578,7 +578,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> from sympy.physics.control.lti import TransferFunction
         >>> num = [1, 0, 2]
         >>> den = [3, 2, 2, 1]
-        >>> tf = TransferFunction.from_coeff_lists(num, den,s)
+        >>> tf = TransferFunction.from_coeff_lists(num, den, s)
         >>> tf
         TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
 
@@ -616,7 +616,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             List comprising of zeros of transfer function.
         poles : List
             List comprising of poles of transfer function.
-        gain : Number
+        gain : Number, Symbol, Expression
             A scalar value specifying gain of the model.
         var : Symbol
             Complex variable of the Laplace transform used by the
