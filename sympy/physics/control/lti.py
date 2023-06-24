@@ -546,6 +546,123 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var):
+        r"""
+        Creates a new ``TransferFunction`` efficiently from a list of coefficients.
+
+        Parameters
+        ==========
+
+        num_list : List
+            List comprising of numerator coefficients.
+        den_list : List
+            List comprising of denominator coefficients.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ValueError
+            When ``num_list`` or ``den_list`` are not of data type `list`.
+
+        ZeroDivisionError
+            When the constructed denominator is zero.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> num = [1, 0, 2]
+        >>> den = [3, 2, 2, 1]
+        >>> tf = TransferFunction.from_coeff_lists(num, den,s)
+        >>> tf
+        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
+
+        # Create a Transfer Function with more than one variable
+        >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
+        >>> tf1
+        TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
+
+        """
+        if not isinstance(num_list, list) or not isinstance(den_list, list):
+            raise TypeError("Input arguments should be composed of list.")
+
+        num_list = num_list[::-1]
+        den_list = den_list[::-1]
+        num_var_powers = [var**i for i in range(len(num_list))]
+        den_var_powers = [var**i for i in range(len(den_list))]
+
+        _num = sum(coeff * var_power for coeff, var_power in zip(num_list, num_var_powers))
+        _den = sum(coeff * var_power for coeff, var_power in zip(den_list, den_var_powers))
+
+        if _den == 0:
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
+
+        return cls(_num, _den, var)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var):
+        r"""
+        Creates a new ``TransferFunction`` from given zeros, poles and gain.
+
+        Parameters
+        ==========
+
+        zeros : List
+            List comprising of zeros of transfer function.
+        poles : List
+            List comprising of poles of transfer function.
+        gain : Number
+            A scalar value specifying gain of the model.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ValueError
+            When ``poles`` or ``den_list`` are not of data type `list`.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, k
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> zeros = [1, 2, 3]
+        >>> poles = [6, 5, 4]
+        >>> gain = 7
+        >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
+        >>> tf
+        TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
+
+        # Create a Transfer Function with variable poles and zeros
+        >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
+        >>> tf1
+        TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
+
+        # Complex poles or zeros are acceptable
+        >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
+        >>> tf2
+        TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
+
+        """
+        if not isinstance(poles, list) or not isinstance(zeros, list):
+            raise TypeError("Input arguments zeros and poles should be composed of list.")
+
+        num_poly = 1
+        den_poly = 1
+        for zero in zeros:
+            num_poly *= var - zero
+        for pole in poles:
+            den_poly *= var - pole
+
+        return cls(gain*num_poly, den_poly, var)
+
     @property
     def num(self):
         """
