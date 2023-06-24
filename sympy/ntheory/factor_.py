@@ -1518,7 +1518,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 
-def primefactors(n, **kwargs):
+def primefactors(n, limit=None, verbose=False, **kwargs):
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
     for complete factorization. Unlike factorint(), primefactors() does
@@ -1528,7 +1528,10 @@ def primefactors(n, **kwargs):
     ==========
 
     n : integer
-    **kwargs : additional keyword arguments to be passed to ``factorint``
+    limit, verbose, **kwargs :
+        Additional keyword arguments to be passed to ``factorint``.
+        Since ``kwargs`` is new in version 1.13,
+        ``limit`` and ``verbose`` are retained for compatibility purposes.
 
     Returns
     =======
@@ -1563,8 +1566,9 @@ def primefactors(n, **kwargs):
 
     """
     n = int(n)
-    factors = sorted(factorint(n=n, visual=None,
-                               multiple=False, **kwargs).keys())
+    kwargs.update(dict(visual=None, multiple=False,
+                       limit=limit, verbose=verbose))
+    factors = sorted(factorint(n=n, **kwargs).keys())
     # We want to calculate
     # s = [f for f in factors if isprime(f)]
     s = [f for f in factors[:-1:] if f not in [-1, 0, 1]]
