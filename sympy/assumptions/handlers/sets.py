@@ -778,7 +778,7 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return True
 
-@TranscendentalPredicate.register_many(AlgebraicNumber, Float, TribonacciConstant,
+@TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
     Infinity, ImaginaryUnit, ComplexInfinity)
 def _(expr, assumptions):
     return False
