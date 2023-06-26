@@ -630,3 +630,9 @@ def test_issue_18689():
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+
+def test_issue_20865():
+    s = -1/(-1/2 + sqrt(3)/2) + 1 + sqrt(3)
+    assert floor(s) == 0
+    assert ceiling(s) == 0
