@@ -32,7 +32,6 @@ from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 from mpmath import mpf
-from mpmath.rational import mpq
 import mpmath
 from sympy.core import numbers
 t = Symbol('t', real=False)
@@ -361,7 +360,6 @@ def test_Rational_new():
     except ImportError:
         pass
 
-    assert Rational(mpq(2, 6)) == Rational(1, 3)
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
     assert Rational(2, 4, gcd=1).q == 4
