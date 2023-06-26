@@ -554,9 +554,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         Parameters
         ==========
 
-        num_list : Iterable
+        num_list : Sequence
             Sequence comprising of numerator coefficients.
-        den_list : Iterable
+        den_list : Sequence
             Sequence comprising of denominator coefficients.
         var : Symbol
             Complex variable of the Laplace transform used by the
@@ -606,9 +606,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         Parameters
         ==========
 
-        zeros : Iterable
+        zeros : Sequence
             Sequence comprising of zeros of transfer function.
-        poles : Iterable
+        poles : Sequence
             Sequence comprising of poles of transfer function.
         gain : Number, Symbol, Expression
             A scalar value specifying gain of the model.
