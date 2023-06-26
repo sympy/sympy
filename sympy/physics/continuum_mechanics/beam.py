@@ -856,6 +856,8 @@ class Beam:
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
+        from sympy import nsimplify
+
         if self._composite_type == "hinge":
             return self._solve_hinge_beams(*reactions)
 
@@ -864,8 +866,13 @@ class Beam:
         C3 = Symbol('C3')
         C4 = Symbol('C4')
 
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        # XXX: Better way to unify the typing of calculated and input loads?
+        # limit always outputs a float if the input has floats. (i.e. 26.0
+        # instead of 26), making the output here inconsistent between floats
+        # (from limit solution) and integers. nsimplify should perhaps be
+        # applied at a higher level, or not at all.
+        shear_curve = nsimplify(limit(self.shear_force(), x, l))
+        moment_curve = nsimplify(limit(self.bending_moment(), x, l))
 
         slope_eqs = []
         deflection_eqs = []

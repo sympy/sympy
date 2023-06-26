@@ -2,7 +2,7 @@ from itertools import product
 
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
-from sympy.core import EulerGamma
+from sympy.core import EulerGamma, N
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -139,7 +139,7 @@ def test_log():
     tau, x = symbols('tau x', positive=True)
     # The value of manualintegrate in the issue
     expr = tau**2*((tau - 1)*(tau + 1)*log(x + 1)/(tau**2 + 1)**2 + 1/((tau**2\
-            + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - 1/2)*log(tau**2\
+            + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - S.Half)*log(tau**2\
             + x**2))/(tau**2 + 1)**2)
     assert limit(expr, x, oo) == pi*tau**3/(tau**2 + 1)**2
 
@@ -194,7 +194,7 @@ def test_floor():
 
     # https://github.com/sympy/sympy/issues/14478
     assert limit(x*floor(3/x)/2, x, 0, '+') == Rational(3, 2)
-    assert limit(floor(x + 1/2) - floor(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
+    assert limit(floor(x + S.Half) - floor(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
 
     # test issue 9158
     assert limit(floor(atan(x)), x, oo) == 1
@@ -230,7 +230,7 @@ def test_ceiling():
 
     # https://github.com/sympy/sympy/issues/14478
     assert limit(x*ceiling(3/x)/2, x, 0, '+') == Rational(3, 2)
-    assert limit(ceiling(x + 1/2) - ceiling(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
+    assert limit(ceiling(x + S.Half) - ceiling(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
 
 
 def test_ceiling_requires_robust_assumptions():
@@ -428,7 +428,7 @@ def test_issue_5164():
 
 def test_issue_5383():
     func = (1.0 * 1 + 1.0 * x)**(1.0 * 1 / x)
-    assert limit(func, x, 0) == E
+    assert limit(func, x, 0) == N(E)
 
 
 def test_issue_14793():
@@ -786,7 +786,7 @@ def test_issue_11879():
 def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
-    assert limit(0.3*1.0**k, k, oo) == Rational(3, 10)
+    assert limit(0.3*1.0**k, k, oo) == 0.3
 
 
 def test_issue_10610():
