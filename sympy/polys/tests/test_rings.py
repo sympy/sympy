@@ -1372,17 +1372,17 @@ def test_PolyElement_sparse():
     assert p1.coeff_wrt(sym, dg) == 5
 
     f, g = x**2 + x*y, 2*x + 2
-    assert f.prem2(g, 0) == -4*y + 4
+    assert f.prem(g) == -4*y + 4
 
     f1 = x**2 + 1
     g1 = 2*x - 4
-    assert f1.prem2(g1, 0) == 20
-    assert f1.prem2(g1, 1) == 0
+    assert f1.prem(g1) == 20
+    assert f1.prem(g1, 1) == 0
 
     f2 = x*y + 2*x + 1
     g2 = x + y
-    assert f2.prem2(g2, 0) == -y**2 - 2*y + 1
-    assert f2.prem2(g2, 1) == -x**2 + 2*x + 1
+    assert f2.prem(g2) == -y**2 - 2*y + 1
+    assert f2.prem(g2, 1) == -x**2 + 2*x + 1
 
 
 def test_PolyElement_gcdex():
