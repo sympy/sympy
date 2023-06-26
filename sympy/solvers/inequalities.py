@@ -15,7 +15,7 @@ from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.solvers.solveset import solvify, solveset
+from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 import random
@@ -1132,9 +1132,8 @@ def _to_standard_form(constraints, objective):
     >>> C
     Matrix([[10]])
     """
-    A = []
-    B = []
-    free_sym = objective.free_symbols
+    variables = objective.free_symbols
+    eqns = []
 
     for rel in constraints:
         if not isinstance(rel, Relational):
@@ -1146,28 +1145,23 @@ def _to_standard_form(constraints, objective):
         if not rel.rhs.is_constant():
             raise ValueError("Right hand side of relation must be constant")
 
-        free_sym = free_sym | rel.free_symbols
+        variables = variables | rel.free_symbols
 
         if type(rel) == Le:
-            A.append(rel.lhs)
-            B.append(rel.rhs)
+            eqns.append(rel.lhs - rel.rhs)
         elif type(rel) == Ge:
-            A.append(-rel.lhs)
-            B.append(-rel.rhs)
+            eqns.append( rel.rhs - rel.lhs)
         elif type(rel) == Eq:
             # x = 3 can be represented as x <= 3 and x >= 3
-            A.append(rel.lhs)
-            B.append(rel.rhs)
-            A.append(-rel.lhs)
-            B.append(-rel.rhs)
+            eqns.append(rel.lhs - rel.rhs)
+            eqns.append(rel.rhs - rel.lhs)
         else:
             raise TypeError(f"Unrecognized relational: {rel}")
 
-    free_sym = sorted(free_sym, key=lambda v: str(v)) # order symbols lexicographically
+    variables = sorted(variables, key=lambda v: str(v)) # order symbols lexicographically
 
-    A = Matrix([[row.coeff(sym) for sym in free_sym] for row in A])
-    B = Matrix(B)
-    C = Matrix([[objective.coeff(sym) for sym in free_sym]])
+    A, B = linear_eq_to_matrix(eqns, *variables)
+    C = linear_eq_to_matrix(objective, *variables)[0] # constant terms can be safely ignored here
 
     return A, B, C
 
