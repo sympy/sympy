@@ -2532,7 +2532,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return poly
 
 
-    def coeff_wrt(self, sym, dg):
+    def coeff_wrt(self, x, dg):
         """
         Coefficient of ``f`` with respect to ``x**deg``.
 
@@ -2544,7 +2544,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         p : sympy.Poly
             The polynomial to compute the sparse coefficient for.
-        sym : int
+        x : int
             The symbol to compute the coefficient for.
         dg : int
             The degree of the monomial to compute the coefficient for.
@@ -2552,31 +2552,42 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Returns
         =======
 
-        sympy.Number
-            The sparse coefficient of the polynomial at the given symbol and degree.
+        sympy.Expr
+            The expression of the polynomial ``f`` at the given symbol and degree.
 
         Examples
         ========
 
         >>> from sympy.polys import ring, ZZ
         >>> _, x, y, z = ring("x, y, z", ZZ)
-        >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 3
+        >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
         >>> dg = 2
-        >>> sym = 2
-        >>> p.coeff_wrt(sym, dg)
-        10
+        >>> x = 2
+        >>> p.coeff_wrt(x, dg)
+        10*x + 10
 
         """
         p = self
-        terms = [(m, c) for m, c in p.iterterms() if m[sym] == dg]
+        i = p.ring.index(x)
+        terms = [(m, c) for m, c in p.iterterms() if m[i] == dg]
         monoms, coeffs = zip(*terms)
-        monoms = [m[:sym] + (0,) + m[sym + 1:] for m in monoms]
+        monoms = [m[:i] + (0,) + m[i + 1:] for m in monoms]
         return p.ring.from_dict(dict(zip(monoms, coeffs)))
 
 
-    def prem2(self, g, x):
+    def prem(self, g, x=None):
         """
         Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
+
+        The pseudo-remainder is a concept in polynomial division that provides a way to divide `f` by `g`
+        and obtain a remainder while still preserving some properties of division. It is defined as follows:
+
+        Given two polynomials `f` and `g`, the pseudo-remainder `r` of `f` with respect to `g` is a polynomial
+        such that there exist polynomials `q0`, `q1`, ..., `q(n-1)` satisfying the following conditions:
+
+        1. `f = q0 * g + r`
+        2. The degree of `r` is less than the degree of `g`
+        3. For each `i` from 0 to n-1, the degree of `q(i) * g` is less than or equal to the degree of `f`
 
         Parameters
         ==========
@@ -2596,8 +2607,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Raises
         ======
 
-        ZeroDivisionError: If the degree of `g` is negative.
-        ValueError: If the algorithm encounters an unexpected condition.
+        ZeroDivisionError : If the degree of `g` is negative or g is the zero polynomial.
+        ValueError : It is raised when the degree of `r` with respect to `x` stops decreasing and remains the same or increases in consecutive iterations of the while loop.
 
         Examples
         ========
@@ -2607,10 +2618,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
-        >>> f.prem2(g, 0)
+        >>> f.prem(g)
         -4*y + 4
 
         """
+        f = self
+        if x is None:
+            x = f.ring.index(x)
+
         f = self
         df = f.degree(x)
         dg = g.degree(x)
@@ -2654,9 +2669,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def pdiv(f, g):
         return f.ring.dmp_pdiv(f, g)
-
-    def prem(f, g):
-        return f.ring.dmp_prem(f, g)
 
     def pquo(f, g):
         return f.ring.dmp_quo(f, g)
