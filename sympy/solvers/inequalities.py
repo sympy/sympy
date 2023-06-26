@@ -19,6 +19,7 @@ from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 import random
+from sympy.core.random import random as core_random
 
 
 def solve_poly_inequality(poly, rel):
@@ -1036,14 +1037,14 @@ def _pivot(M, i, j):
     return MM
 
 
-def _simplex(M, R, S, random_seed=0):
+def _simplex(M, R, S):
     """
     Simplex method with randomized pivoting
 
     LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
       - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     """
-    rand = random.Random(x=random_seed)
+    rand = random.Random(x=core_random())
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -1167,7 +1168,7 @@ def _to_standard_form(constraints, objective):
 
 # Maximize Cx + D constrained with Ax <= B and x >= 0
 # Minimize y^{T}B constrained with y^{T}A >= C^{T} and y >= 0
-def linear_programming(constraints, objective, random_seed=0):
+def linear_programming(constraints, objective):
     """
     A function to maximize a linear objective function subject to linear
     constraints with the simplex method.
@@ -1243,7 +1244,7 @@ def linear_programming(constraints, objective, random_seed=0):
     r = r_orig.copy()
     s = s_orig.copy()
 
-    M, r, s = _simplex(M, r, s, random_seed=random_seed)
+    M, r, s = _simplex(M, r, s)
 
     argmax = []
     argmin_dual = []
