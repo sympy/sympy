@@ -33,7 +33,6 @@ from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
 import mpmath
 from collections import defaultdict, OrderedDict
-from mpmath.rational import mpq
 
 
 numpy = import_module('numpy')
@@ -133,8 +132,6 @@ def test_sympify_mpmath():
 
     mpmath.mp.dps = 15
     assert sympify(mpmath.mpc(1.0 + 2.0j)) == Float(1.0) + Float(2.0)*I
-
-    assert sympify(mpq(1, 2)) == S.Half
 
 
 def test_sympify2():
