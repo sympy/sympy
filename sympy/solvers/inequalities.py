@@ -1125,16 +1125,26 @@ def _to_standard_form(constraints, objective):
     >>> r3 = 2*x+y+7*z <= 5
     >>> A, B, C = _to_standard_form([r1, r2, r3], x + y + 5*z)
     >>> A
-    Matrix([[0, 1, 2], [-1, 0, -3], [2, 1, 7]])
+    Matrix([
+    [ 0, 1,  2],
+    [-1, 0, -3],
+    [ 2, 1,  7]])
     >>> B
-    Matrix([[3], [-2], [5]])
+    Matrix([
+    [ 3],
+    [-2],
+    [ 5]])
     >>> C
     Matrix([[1, 1, 5]])
     >>> A, B, C = _to_standard_form([Eq(x, 3)], x*10)  # x = 3 become x >= 3 and x <= 3
     >>> A
-    Matrix([[1], [-1]])
+    Matrix([
+    [ 1],
+    [-1]])
     >>> B
-    Matrix([[3], [-3]])
+    Matrix([
+    [ 3],
+    [-3]])
     >>> C
     Matrix([[10]])
     """
