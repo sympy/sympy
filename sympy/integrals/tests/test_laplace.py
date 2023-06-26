@@ -541,6 +541,15 @@ def test_inverse_laplace_transform():
             ILT(1/(sqrt(s)+a)**3) ==
             (-a*t*(2*a**2*t + 3)*exp(a**2*t)*erfc(a*sqrt(t)) +
              2*sqrt(t)*(a**2*t + 1)/sqrt(pi))*Heaviside(t))
+    x = (
+        - ILT(sqrt(s)/(sqrt(s)+a)**3) +
+        2*(sqrt(pi)*a**2*t*(-2*sqrt(pi)*erfc(a*sqrt(t)) +
+                            2*exp(-a**2*t)/(a*sqrt(t))) *
+           (-a**4*t**2 - 5*a**2*t/2 - S.Half) * exp(a**2*t)/2 +
+           sqrt(pi)*a*sqrt(t)*(a**2*t + 1)/2) *
+        Heaviside(t)/(pi*a**2*t)).simplify()
+    assert (  # (16)
+            x == 0)
     assert (  # (16)
             factor_terms(ILT(3/(sqrt(s)+a)**4)) ==
             3*(-2*a**3*t**(S(5)/2)*(2*a**2*t + 5)/(3*sqrt(pi)) +
