@@ -990,16 +990,18 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 class UnboundedLinearProgrammingError(Exception):
     """
+    A linear programing problem is said to be unbounded if its objective function can assume arbitrarily large positive
+    values.
+
     Example
     ========
 
     Suppose you want to maximize
-        x+y
+        2x
     subject to
         x >= 0
-        y >= 0
 
-    Clearly there's no upper limit that x+y can take. If you try to use the linear_programing function on such a problem
+    Clearly there's no upper limit that 2x can take. If you try to use the linear_programing function on such a problem
     you will get this exception.
     """
     pass
@@ -1007,6 +1009,9 @@ class UnboundedLinearProgrammingError(Exception):
 
 class InfeasibleLinearProgrammingError(Exception):
     """
+    A linear programing problem is considered infeasible if its constraint set is empty. That is, if the set of all
+    vectors satisfying the contraints is empty, then the problem is infeasible.
+
     Example
     ========
 
