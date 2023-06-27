@@ -2650,7 +2650,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             G = g * lc_r * xp**j
             r = R - G
 
-            _dr, dr = dr, r.degree(x)
+            dr = r.degree(x)
 
             if dr < dg:
                 break
