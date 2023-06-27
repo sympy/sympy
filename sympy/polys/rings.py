@@ -2578,7 +2578,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         terms = [(m, c) for m, c in p.iterterms() if m[i] == deg]
 
         if not terms:
-            return 0
+            return p.ring.zero
 
         monoms, coeffs = zip(*terms)
         monoms = [m[:i] + (0,) + m[i + 1:] for m in monoms]
@@ -2586,16 +2586,29 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def prem(self, g, x=None):
         """
-        Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
+        Computes the pseudo-remainder of the polynomial ``self`` with respect to ``g``.
 
-        The pseudo-remainder `r` of `self` with respect to `g` is a polynomial
-        such that there exist polynomials `q0`, `q1`, ..., `q(n-1)` satisfying
-        the equation:
+        Euclidean division is a well-defined operation for univariate polynomials
+        `f` and `g` with coefficients in a field. It yields a unique pair of polynomials
+        `q` and `r`, the quotient and remainder, respectively, satisfying `f = gq + r`,
+        where `deg(r) < deg(g)`.
 
-        self = q0 * g + r
+        For polynomials `f` and `g` with coefficients in a domain, polynomial
+        pseudo-division can be used. It also yields a unique pair of polynomials
+        `q` and `r`, satisfying `mf = gq + r`, where deg(r) < deg(g), `m` is a power
+        of the leading coefficient of `g`, and `f` is pre-multiplied by `m` to ensure
+        exact coefficient divisions.
 
-        where the degree of polynomial `r` (with respect to the variable `x`) is strictly
-        lower than the degree of polynomial `g` (with respect to the variable `x`).
+        In the context of the `prem` method, multivariate polynomials in a ring
+        like `R[x,y,z]` are treated as univariate polynomials with coefficients
+        that are polynomials, such as `R[x,y][z]`. The pseudo-quotient `q` and
+        pseudo-remainder `r` with respect to `z` when dividing `f` by `g`
+        satisfy `mf = gq + r`, where `deg(r,z) < deg(g,z)` and
+        `m = LC(g,z)**(deg(f,z) - deg(g,z)+1)`.
+
+        The `prem` method returns the pseudo-remainder `r`,
+        the `pquo` method returns the pseudo-quotient `q`,
+        and `pdiv` returns the tuple `(q, r)`.
 
         Parameters
         ==========
