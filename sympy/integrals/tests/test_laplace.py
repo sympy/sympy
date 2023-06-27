@@ -548,7 +548,15 @@ def test_inverse_laplace_transform():
            (-a**4*t**2 - 5*a**2*t/2 - S.Half) * exp(a**2*t)/2 +
            sqrt(pi)*a*sqrt(t)*(a**2*t + 1)/2) *
         Heaviside(t)/(pi*a**2*t)).simplify()
-    assert (  # (16)
+    assert (  # (14)
+            x == 0)
+    x = (
+        - ILT(1/sqrt(s)/(sqrt(s)+a)**3) +
+        Heaviside(t)*(sqrt(t)*((2*a**2*t + 1) *
+                               (sqrt(pi)*a*sqrt(t)*exp(a**2*t) *
+                                erfc(a*sqrt(t)) - 1) + 1) /
+                      (sqrt(pi)*a))).simplify()
+    assert (  # (15)
             x == 0)
     assert (  # (16)
             factor_terms(ILT(3/(sqrt(s)+a)**4)) ==
