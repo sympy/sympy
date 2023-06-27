@@ -2531,29 +2531,26 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
-
-    def coeff_wrt(self, x, dg):
+    def coeff_wrt(self, x, deg):
         """
-        Coefficient of ``f`` with respect to ``x**deg``.
+        Coefficient of ``self`` with respect to ``x**deg``.
 
-        Treating ``f`` as a univariate polynomial in ``x`` this finds the
+        Treating ``self`` as a univariate polynomial in ``x`` this finds the
         coefficient of ``x**deg`` as a polynomial in the other generators.
 
         Parameters
         ==========
 
-        p : sympy.Poly
-            The polynomial to compute the expression for.
         x : generator or generator index
             The generator or generator index to compute the expression for.
-        dg : int
+        deg : int
             The degree of the monomial to compute the expression for.
 
         Returns
         =======
 
-        sympy.Expr
-            The expression of the polynomial ``f`` at the given symbol and degree.
+        PolyElement
+            The coefficient of ``x**deg`` as a polynomial in the same ring.
 
         Examples
         ========
@@ -2561,46 +2558,58 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> from sympy.polys import ring, ZZ
         >>> R, x, y, z = ring("x, y, z", ZZ)
         >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
-        >>> dg = 2
-        >>> p.coeff_wrt(2, dg) # Using the generator index
+        >>> deg = 2
+        >>> p.coeff_wrt(2, deg) # Using the generator index
         10*x + 10
-        >>> p.coeff_wrt(z, 2) # Using the generator
+        >>> p.coeff_wrt(z, deg) # Using the generator
         10*x + 10
+        >>> p.coeff(z**2) # shows the difference between coeff and coeff_wrt
+        10
+
+        See Also
+        ========
+
+        coeff
+        coeffs
 
         """
         p = self
         i = p.ring.index(x)
-        terms = [(m, c) for m, c in p.iterterms() if m[i] == dg]
+        terms = [(m, c) for m, c in p.iterterms() if m[i] == deg]
+
+        if not terms:
+            return 0
+
         monoms, coeffs = zip(*terms)
         monoms = [m[:i] + (0,) + m[i + 1:] for m in monoms]
         return p.ring.from_dict(dict(zip(monoms, coeffs)))
-
 
     def prem(self, g, x=None):
         """
         Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
 
-        The function `prem` returns the pseudo-remainder `r` such that `f` and `g`, the
-        pseudo-remainder `r` of `f` with respect to `g` is a polynomial such that there
-        exist polynomials `q0`, `q1`, ..., `q(n-1)` such that:
-            `f = q0 * g + r`
+        The pseudo-remainder `r` of `self` with respect to `g` is a polynomial
+        such that there exist polynomials `q0`, `q1`, ..., `q(n-1)` satisfying
+        the equation:
 
-        where the degree of `r` is less than the degree of `g`.
+        self = q0 * g + r
+
+        where the degree of polynomial `r` (with respect to the variable `x`) is strictly
+        lower than the degree of polynomial `g` (with respect to the variable `x`).
 
         Parameters
         ==========
 
-        f : PolyElement
-            The polynomial to compute the pseudo-remainder for.
         g : PolyElement
-            The polynomial to divide `f` by.
-        x : Symbol(optional)
+            The polynomial to divide `self` by.
+        x : generator or generator index(optional)
             The main variable of the polynomials.
 
         Returns
         =======
 
-        PolyElement : The pseudo-remainder polynomial.
+        PolyElement
+            The pseudo-remainder polynomial.
 
         Raises
         ======
@@ -2611,19 +2620,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
 
         >>> from sympy.polys import ring, ZZ
-        >>> R, x, y, z = ring("x, y, z", ZZ)
-
+        >>> R, x, y = ring("x, y", ZZ)
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
-        >>> f.prem(g)
+        >>> f.prem(g) # first generator is chosen by default if it is not given
         -4*y + 4
+        >>> f.prem(g, y) # generator is given
+        0
+        >>> f.prem(g, 1) # generator index is given
+        0
 
         """
         f = self
+        x = f.ring.index(x)
         if x is None:
             x = f.ring.index(x)
 
-        f = self
         df = f.degree(x)
         dg = g.degree(x)
 
