@@ -4371,7 +4371,7 @@ class TensMul(TensExpr, AssocOp):
                     if m is None:
                         continue
 
-                    rem_query = sign*self.func(*[a for a in self.args if a != q_tensor]).doit(deep=False)
+                    rem_query = self.func(sign, *[a for a in self.args if a != q_tensor]).doit(deep=False)
                     rem_expr = expr.func(*[a for a in expr.args if a != e]).doit(deep=False)
                     tmp_repl = {}
                     tmp_repl.update(repl_dict)
