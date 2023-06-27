@@ -1040,8 +1040,9 @@ def _pivot(M, i, j):
     >>> _pivot(m, 1,0) # pivot around 2, which is in row 1 and col 0
     Matrix([
     [-3/2, 11/2, 7/2],
-    [1/2, -3/2, 1/2],
-    [0, 3, 1]])
+    [ 1/2, -3/2, 1/2],
+    [   0,    3,   1]])
+
     """
     if M[i, j] == 0:
         raise ZeroDivisionError("Tried to pivot about zero-valued entree.")
@@ -1350,7 +1351,10 @@ def find_feasible(constraints):
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
     >>> find_feasible([r1, r2, r3])
-    [0, 0, 2/3] # x=0, y=0, z=2/3
+    [0, 0, 2/3]
+
+    This result corresponds to x=0, y=0, z=2/3
+
     >>> r1 = x <= 3
     >>> r2 = x >= 4
     >>> find_feasible([r1, r2]) is None
