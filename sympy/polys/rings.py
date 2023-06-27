@@ -2543,11 +2543,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ==========
 
         p : sympy.Poly
-            The polynomial to compute the sparse coefficient for.
-        x : int
-            The symbol to compute the coefficient for.
+            The polynomial to compute the expression for.
+        x : generator or generator index
+            The generator or generator index to compute the expression for.
         dg : int
-            The degree of the monomial to compute the coefficient for.
+            The degree of the monomial to compute the expression for.
 
         Returns
         =======
@@ -2559,11 +2559,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
 
         >>> from sympy.polys import ring, ZZ
-        >>> _, x, y, z = ring("x, y, z", ZZ)
+        >>> R, x, y, z = ring("x, y, z", ZZ)
         >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
         >>> dg = 2
-        >>> x = 2
-        >>> p.coeff_wrt(x, dg)
+        >>> p.coeff_wrt(2, dg) # Using the generator index
+        10*x + 10
+        >>> p.coeff_wrt(z, 2) # Using the generator
         10*x + 10
 
         """
@@ -2579,15 +2580,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         Computes the pseudo-remainder of the polynomial `f` with respect to `g`.
 
-        The pseudo-remainder is a concept in polynomial division that provides a way to divide `f` by `g`
-        and obtain a remainder while still preserving some properties of division. It is defined as follows:
+        The function `prem` returns the pseudo-remainder `r` such that `f` and `g`, the
+        pseudo-remainder `r` of `f` with respect to `g` is a polynomial such that there
+        exist polynomials `q0`, `q1`, ..., `q(n-1)` such that:
+            `f = q0 * g + r`
 
-        Given two polynomials `f` and `g`, the pseudo-remainder `r` of `f` with respect to `g` is a polynomial
-        such that there exist polynomials `q0`, `q1`, ..., `q(n-1)` satisfying the following conditions:
-
-        1. `f = q0 * g + r`
-        2. The degree of `r` is less than the degree of `g`
-        3. For each `i` from 0 to n-1, the degree of `q(i) * g` is less than or equal to the degree of `f`
+        where the degree of `r` is less than the degree of `g`.
 
         Parameters
         ==========
@@ -2596,25 +2594,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             The polynomial to compute the pseudo-remainder for.
         g : PolyElement
             The polynomial to divide `f` by.
-        x : Symbol
+        x : Symbol(optional)
             The main variable of the polynomials.
 
         Returns
         =======
 
-        PolyElement: The pseudo-remainder polynomial.
+        PolyElement : The pseudo-remainder polynomial.
 
         Raises
         ======
 
-        ZeroDivisionError : If the degree of `g` is negative or g is the zero polynomial.
-        ValueError : It is raised when the degree of `r` with respect to `x` stops decreasing and remains the same or increases in consecutive iterations of the while loop.
+        ZeroDivisionError : If `g` is the zero polynomial.
 
         Examples
         ========
 
         >>> from sympy.polys import ring, ZZ
-        >>> _, x, y, z = ring("x, y, z", ZZ)
+        >>> R, x, y, z = ring("x, y, z", ZZ)
 
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
@@ -2657,8 +2654,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             if dr < dg:
                 break
-            elif not (dr < _dr):
-                raise ValueError
 
         c = lc_g ** N
 

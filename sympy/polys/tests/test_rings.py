@@ -1359,17 +1359,31 @@ def test_PolyElement_pdiv():
     q, r = x + y, 0
 
     assert f.pdiv(g) == (q, r)
-    assert f.prem(g) == r
     assert f.pquo(g) == q
     assert f.pexquo(g) == q
 
 
-def test_PolyElement_sparse():
+def test_PolyElement_coeff_wrt():
 
-    _, x, y, z = ring("x, y, z", ZZ)
-    p1 = 4*x**3 + 5*y**2 + 6*z + 7
-    dg, sym = 2, 1
-    assert p1.coeff_wrt(sym, dg) == 5
+    R, x, y, z = ring("x, y, z", ZZ)
+    p = 4*x**3 + 5*y**2 + 6*y**2*z + 7
+
+    assert p.coeff_wrt(1, 2) == 6*z + 5 # using generator index
+    assert p.coeff_wrt(x, 3) == 4 # using generator
+    
+    p1 = 2*x**4 + 3*x*y**2*z + 10*y**2 + 10*x*z**2 
+    
+    assert p1.coeff_wrt(x, 1) == 3*y**2*z + 10*z**2
+    assert p1.coeff_wrt(y, 2) == 3*x*z + 10
+
+    p2 = 4*x**2 + 2*x*y + 5
+    raises(ValueError, lambda: p2.coeff_wrt(z, 1))
+    raises(ValueError, lambda: p2.coeff_wrt(y, 2))
+
+
+
+def test_PolyElement_prem():
+    R, x, y, z = ring("x, y, z", ZZ)
 
     f, g = x**2 + x*y, 2*x + 2
     assert f.prem(g) == -4*y + 4
@@ -1383,6 +1397,8 @@ def test_PolyElement_sparse():
     g2 = x + y
     assert f2.prem(g2) == -y**2 - 2*y + 1
     assert f2.prem(g2, 1) == -x**2 + 2*x + 1
+    
+    raises(ZeroDivisionError, lambda: f2.prem(R(0)))
 
 
 def test_PolyElement_gcdex():
