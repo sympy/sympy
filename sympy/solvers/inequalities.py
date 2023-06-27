@@ -1028,18 +1028,85 @@ class InfeasibleLinearProgrammingError(Exception):
 
 
 def _pivot(M, i, j):
+    """
+    Example
+    ========
+
+    >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.solvers.inequalities import _pivot
+    >>> m = Matrix([[3,1,5], \
+                    [2,-3,1], \
+                    [0,3,1]])
+    >>> _pivot(m, 1,0) # pivot around 2, which is in row 1 and col 0
+    Matrix([
+    [-3/2, 11/2, 7/2],
+    [1/2, -3/2, 1/2],
+    [0, 3, 1]])
+    """
+    if M[i, j] == 0:
+        raise ZeroDivisionError("Tried to pivot about zero-valued entree.")
     MM = Matrix.zeros(M.rows, M.cols)
     for ii in range(M.rows):
         for jj in range(M.cols):
             if ii == i and jj == j:
+                # The pivot quantity goes into its reciprocal
                 MM[ii, jj] = 1 / M[i, j]
             elif ii == i and jj != j:
+                #  Entries in the same row as the pivot are divided by the pivot
                 MM[ii, jj] = M[ii, jj] / M[i, j]
             elif ii != i and jj == j:
+                # Entries in the same column as the pivot are divided by the pivot and changed in sign.
                 MM[ii, jj] = -M[ii, jj] / M[i, j]
             else:
+                # The remaining entries are reduced in value by the following:
+                # the product of the corresponding entries in the same row and column as themselves and the pivot,
+                # divided by the pivot.
                 MM[ii, jj] = M[ii, jj] - M[ii, j] * M[i, jj] / M[i, j]
     return MM
+
+
+def _simplex1(M, R, S):
+    """
+    Perform the first phase of the simplex method: find a feasible solution or determine that no feasible solutions
+    exist.
+
+    LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
+      - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    """
+    rand = random.Random(x=core_random())
+    while True:
+        B = M[:-1, -1]
+        A = M[:-1, :-1]
+        if all(B[i] >= 0 for i in range(B.rows)):
+            return M, R, S # we have found a feasible solution
+
+        for k in range(B.rows):
+            if B[k] < 0:
+                break
+
+        piv_cols = []
+        for j in range(A.cols):
+            if A[k, j] < 0:
+                piv_cols.append(j)
+        if not piv_cols:
+            return None
+        rand.shuffle(piv_cols)
+        j0 = piv_cols[0]
+
+        ratio = B[k] / A[k, j0]
+        piv_rows = [(ratio, k)]
+        for i in range(A.rows):
+            if A[i, j0] > 0 and B[i] > 0:
+                ratio = B[i] / A[i, j0]
+                piv_rows.append((ratio, i))
+
+        piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
+        piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
+        rand.shuffle(piv_rows)
+        _, i0 = piv_rows[0]
+
+        M = _pivot(M, i0, j0)
+        R[j0], S[i0] = S[i0], R[j0]
 
 
 def _simplex(M, R, S):
@@ -1050,64 +1117,42 @@ def _simplex(M, R, S):
       - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     """
     rand = random.Random(x=core_random())
+
+    feasible = _simplex1(M, R, S)
+    if feasible is None:
+        raise InfeasibleLinearProgrammingError('The constraint set is empty!')
+    M, R, S = feasible
+
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
         C = M[-1, :-1]
-        if all(B[i] >= 0 for i in range(B.rows)):
-            piv_cols = []
-            for j in range(C.cols):
-                if C[j] < 0:
-                    piv_cols.append(j)
+        piv_cols = []
+        for j in range(C.cols):
+            if C[j] < 0:
+                piv_cols.append(j)
 
-            if not piv_cols:
-                return M, R, S
-            rand.shuffle(piv_cols)
-            j0 = piv_cols[0]
+        if not piv_cols:
+            return M, R, S
+        rand.shuffle(piv_cols)
+        j0 = piv_cols[0]
 
-            piv_rows = []
-            for i in range(A.rows):
-                if A[i, j0] > 0:
-                    ratio = B[i] / A[i, j0]
-                    piv_rows.append((ratio, i))
+        piv_rows = []
+        for i in range(A.rows):
+            if A[i, j0] > 0:
+                ratio = B[i] / A[i, j0]
+                piv_rows.append((ratio, i))
 
-            if not piv_rows:
-                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
-            piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
-            piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-            rand.shuffle(piv_rows)
-            _, i0 = piv_rows[0]
+        if not piv_rows:
+            raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
+        piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
+        piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
+        rand.shuffle(piv_rows)
+        _, i0 = piv_rows[0]
 
-            M = _pivot(M, i0, j0)
-            R[j0], S[i0] = S[i0], R[j0]
-        else:
-            for k in range(B.rows):
-                if B[k] < 0:
-                    break
+        M = _pivot(M, i0, j0)
+        R[j0], S[i0] = S[i0], R[j0]
 
-            piv_cols = []
-            for j in range(A.cols):
-                if A[k, j] < 0:
-                    piv_cols.append(j)
-            if not piv_cols:
-                raise InfeasibleLinearProgrammingError('The constraint set is empty!')
-            rand.shuffle(piv_cols)
-            j0 = piv_cols[0]
-
-            ratio = B[k] / A[k, j0]
-            piv_rows = [(ratio, k)]
-            for i in range(A.rows):
-                if A[i, j0] > 0 and B[i] > 0:
-                    ratio = B[i] / A[i, j0]
-                    piv_rows.append((ratio, i))
-
-            piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
-            piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-            rand.shuffle(piv_rows)
-            _, i0 = piv_rows[0]
-
-            M = _pivot(M, i0, j0)
-            R[j0], S[i0] = S[i0], R[j0]
 
 def _to_standard_form(constraints, objective):
     """
@@ -1211,9 +1256,6 @@ def linear_programming(constraints, objective):
     objective : a linear function to maximize
         The objective function is represented by the row vector C.
 
-    random_seed : int
-        Determines the random pivoting behavior of the simplex method
-
     Examples
     ========
 
@@ -1248,6 +1290,7 @@ def linear_programming(constraints, objective):
     ========
 
     solve_univariate_inequality
+    find_feasible
     """
     from sympy.matrices.dense import Matrix
     A, B, C = _to_standard_form(constraints, objective)
@@ -1280,3 +1323,76 @@ def linear_programming(constraints, objective):
         else:
             argmin_dual.append(S.Zero)
     return M[-1, -1], argmax, argmin_dual
+
+
+def find_feasible(constraints):
+    """
+    Finds a feasible solution to a system of linear inequalities, if any exist, with the simplex method.
+
+    Parameters
+    ==========
+
+    constraints : list of linear inequalities and equalities
+
+    Returns
+    =======
+
+    list or None
+        If no feasible solutions exist, returns None. Otherwise, returns a list of values for each variable that satisfy
+        the constraints. The values in the list correspond to the variables in lexicographical order.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.inequalities import find_feasible
+    >>> r1 = y+2*z <= 3
+    >>> r2 = -x-3*z <= -2
+    >>> r3 = 2*x+y+7*z <= 5
+    >>> find_feasible([r1, r2, r3])
+    [0, 0, 2/3] # x=0, y=0, z=2/3
+    >>> r1 = x <= 3
+    >>> r2 = x >= 4
+    >>> find_feasible([r1, r2]) is None
+    True
+
+    See Also
+    ========
+
+    linear_programming
+    """
+    from sympy.matrices.dense import Matrix
+    A, B, C = _to_standard_form(constraints, sympify(0))
+    D = ImmutableMatrix([0])
+    M = Matrix([[A, B], [-C, D]])
+    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
+    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
+
+    r = r_orig.copy()
+    s = s_orig.copy()
+
+    feasible = _simplex1(M, r, s)
+    if feasible is None:
+        return None
+
+    M, r, s = feasible
+
+    argmax = []
+    argmin_dual = []
+
+    for x in r_orig:
+        for i, xx in enumerate(s):
+            if x == xx:
+                argmax.append(M[i, -1])
+                break
+        else:
+            argmax.append(S.Zero)
+
+    for x in s_orig:
+        for i, xx in enumerate(r):
+            if x == xx:
+                argmin_dual.append(M[-1, i])
+                break
+        else:
+            argmin_dual.append(S.Zero)
+    return argmax
