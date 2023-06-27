@@ -10,7 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, tan
 
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)
@@ -630,3 +630,18 @@ def test_issue_18689():
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    raises(NotImplementedError, lambda: floor(x/a).as_leading_term(x, cdir = 1))
+    raises(NotImplementedError, lambda: ceiling(x/a).as_leading_term(x, cdir = 1))
+    assert floor(x/b).as_leading_term(x, cdir = 1) == 0
+    assert floor(x/b).as_leading_term(x, cdir = -1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = 1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/b).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1
