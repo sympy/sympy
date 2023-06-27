@@ -1783,6 +1783,18 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                     k_*(2/sqrt(pi)*sqrt(t) -
                         2*a_*t*exp(a_**2*t)*erfc(a_*sqrt(t))))
                 debugf('[ILT _i_l_i] Rule (12) returns %s', (result, ))
+        elif (
+                poles[0][n] == -3 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1 / (sqrt(a1*s)*(a0*sqrt(s+b0)**3))
+            # == 1/(sqrt(a1)*a0) * 1/(sqrt(s)*(sqrt(s+b0)**3))
+            a_ = poles[0][b]
+            k_ = constants/sqrt(poles[1][a])/poles[0][a]
+            result = k_*(
+                (2*a_**2*t+1)*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                2/sqrt(pi)*a_*t**(S(3)/2))
+            debugf('[ILT _i_l_i] Rule (15) returns %s', (result, ))
 
     elif len(poles) == 2 and len(zeros) == 1:
         if (
@@ -1817,10 +1829,11 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                     a_**(-S(3)/2) * exp(a_*t) * erf(sqrt(a_)*sqrt(t)) -
                     2/a_/sqrt(pi)*sqrt(t))
                 debugf('[ILT _i_l_i] Rule (2) returns %s', (result, ))
-        elif (poles[0][n] == -1 and poles[0][m] == 1 and
-              poles[1][n] == -1 and poles[1][m] == S.Half and
-              poles[2][n] == -S.Half and poles[2][m] == 1 and
-              poles[2][b] == 0):
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                poles[2][n] == -S.Half and poles[2][m] == 1 and
+                poles[2][b] == 0):
             # 1/((a0*s+b0)*(a1*sqrt(s)+b1)*(sqrt(a2)*sqrt(s)))
             # == 1/(a0*a1*sqrt(a2)) * 1/((s+b0/a0)*(sqrt(s)+b1/a1)*sqrt(s))
             a_sq = poles[1][b]/poles[1][a]
