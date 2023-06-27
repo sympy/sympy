@@ -4301,19 +4301,30 @@ class TensMul(TensExpr, AssocOp):
         """
         Match assuming all tensors commute. But note that we are not assuming anything about their symmetry under index permutations.
         """
-
-        if repl_dict is None:
-            repl_dict = {}
-        else:
-            repl_dict = repl_dict.copy()
-
         #Take care of the various possible types for expr.
         if not isinstance(expr, TensMul):
             if isinstance(expr, (TensExpr, Expr)):
                 expr = TensMul(expr)
             else:
                 return None
+
         #The code that follows assumes expr is a TensMul
+
+        if repl_dict is None:
+            repl_dict = {}
+        else:
+            repl_dict = repl_dict.copy()
+
+            #Make sure that none of the dummy indices in self, expr conflict with the values already present in repl_dict. This may happen due to automatic index relabelling when rem_query and rem_expr are formed later on in this function (it calls itself recursively).
+            indices = [k for k in repl_dict.values() if isinstance(k ,TensorIndex)]
+            def dedupe(expr):
+                renamed = TensMul._dedupe_indices(expr, indices)
+                if renamed is not None:
+                    return renamed
+                else:
+                    return expr
+            self = dedupe(self)
+            expr = dedupe(expr)
 
         #Find the non-tensor part of expr. This need not be the same as expr.coeff when expr.doit() has not been called.
         expr_coeff = reduce(lambda a, b: a*b, [arg for arg in expr.args if not isinstance(arg, TensExpr)], S.One)
