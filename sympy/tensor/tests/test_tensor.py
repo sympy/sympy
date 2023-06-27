@@ -2074,6 +2074,12 @@ def test_TensMul_matching():
         == V(p)*V(r)*V(q)*V(s)*V(-s)
         )
 
+    #Edge case involving automatic index relabelling
+    D0, D1, D2, D3 = tensor_indices("R_0 R_1 R_2 R_3", R3)
+    expr = delta(-D0, -D1)*K(D2)*K(D3)*K(-D3)
+    m = ( W()*K(a)*K(-a) ).matches(expr)
+    assert D2 not in m.values()
+
 def test_TensMul_subs():
     """
     Test subs and xreplace in TensMul. See bug #24337
