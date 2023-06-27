@@ -1,10 +1,9 @@
 from sympy.ntheory import sieve, isprime
 from sympy.core.power import integer_log
+from sympy.core.random import _randint
 from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
-import random
 
-rgen = random.Random()
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -151,7 +150,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
+def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -198,6 +197,8 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         raise ValueError("The Bounds should be an even integer")
     sieve.extend(B2)
 
+    randint = _randint(seed)
+
     if isprime(n):
         return n
 
@@ -209,7 +210,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         k *= pow(p, integer_log(B1, p)[0])
     for _ in range(max_curve):
         #Suyama's Parametrization
-        sigma = rgen.randint(6, n - 1)
+        sigma = randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
         u_3 = pow(u, 3, n)
@@ -306,10 +307,9 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    rgen.seed(seed)
     while(n > 1):
         try:
-            factor = _ecm_one_factor(n, B1, B2, max_curve)
+            factor = _ecm_one_factor(n, B1, B2, max_curve, seed + n)
         except ValueError:
             raise ValueError("Increase the bounds")
         _factors.add(factor)
