@@ -2643,12 +2643,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> f.prem(g, 1) # generator index is given
         0
 
+        See Also
+        ========
+
+        pquo
+        pdiv
+        pexquo
+
         """
         f = self
         x = f.ring.index(x)
-        if x is None:
-            x = f.ring.index(x)
-
         df = f.degree(x)
         dg = g.degree(x)
 
