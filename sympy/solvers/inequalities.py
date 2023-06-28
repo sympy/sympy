@@ -6,7 +6,8 @@ from sympy.calculus.util import (continuous_domain, periodicity,
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Ge, Lt, Gt, Eq, Ne, Le
-from sympy.matrices.dense import Matrix
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
@@ -994,7 +995,7 @@ class UnboundedLinearProgrammingError(Exception):
     values.
 
     Example
-    ========
+    =======
 
     Suppose you want to maximize
         2x
@@ -1013,7 +1014,7 @@ class InfeasibleLinearProgrammingError(Exception):
     vectors satisfying the contraints is empty, then the problem is infeasible.
 
     Example
-    ========
+    =======
 
     Suppose you want to maximize
         x
@@ -1029,8 +1030,15 @@ class InfeasibleLinearProgrammingError(Exception):
 
 def _pivot(M, i, j):
     """
+    There are four rules for the pivot operation:
+    - The pivot quantity goes into its reciprocal
+    - Entries in the same row as the pivot are divided by the pivot
+    - Entries in the same column as the pivot are divided by the pivot and changed in sign.
+    - The remaining entries are reduced in value by the following: the product of the corresponding entries in the same
+    row and column as themselves and the pivot, divided by the pivot.
+
     Example
-    ========
+    =======
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.solvers.inequalities import _pivot
@@ -1042,117 +1050,194 @@ def _pivot(M, i, j):
     [-3/2, 11/2, 7/2],
     [ 1/2, -3/2, 1/2],
     [   0,    3,   1]])
-
     """
-    if M[i, j] == 0:
-        raise ZeroDivisionError("Tried to pivot about zero-valued entree.")
-    MM = Matrix.zeros(M.rows, M.cols)
-    for ii in range(M.rows):
-        for jj in range(M.cols):
-            if ii == i and jj == j:
-                # The pivot quantity goes into its reciprocal
-                MM[ii, jj] = 1 / M[i, j]
-            elif ii == i and jj != j:
-                #  Entries in the same row as the pivot are divided by the pivot
-                MM[ii, jj] = M[ii, jj] / M[i, j]
-            elif ii != i and jj == j:
-                # Entries in the same column as the pivot are divided by the pivot and changed in sign.
-                MM[ii, jj] = -M[ii, jj] / M[i, j]
-            else:
-                # The remaining entries are reduced in value by the following:
-                # the product of the corresponding entries in the same row and column as themselves and the pivot,
-                # divided by the pivot.
-                MM[ii, jj] = M[ii, jj] - M[ii, j] * M[i, jj] / M[i, j]
+    Mi, Mj, Mij = M[i,:], M[:,j], M[i,j]
+    if Mij == 0:
+        raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
+    MM = M - Mj * (Mi / Mij)
+    MM[i,:] = Mi / Mij
+    MM[:,j] = -Mj / Mij
+    MM[i,j] = 1 / Mij
     return MM
 
 
-def _simplex1(M, R, S):
-    """
-    Perform the first phase of the simplex method: find a feasible solution or determine that no feasible solutions
-    exist.
-
-    LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
-      - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
-    """
-    rand = random.Random(x=core_random())
-    while True:
-        B = M[:-1, -1]
-        A = M[:-1, :-1]
-        if all(B[i] >= 0 for i in range(B.rows)):
-            return M, R, S # we have found a feasible solution
-
-        for k in range(B.rows):
-            if B[k] < 0:
-                break
-
-        piv_cols = []
-        for j in range(A.cols):
-            if A[k, j] < 0:
-                piv_cols.append(j)
-        if not piv_cols:
-            return None
-        rand.shuffle(piv_cols)
-        j0 = piv_cols[0]
-
-        ratio = B[k] / A[k, j0]
-        piv_rows = [(ratio, k)]
-        for i in range(A.rows):
-            if A[i, j0] > 0 and B[i] > 0:
-                ratio = B[i] / A[i, j0]
-                piv_rows.append((ratio, i))
-
-        piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
-        piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-        rand.shuffle(piv_rows)
-        _, i0 = piv_rows[0]
-
-        M = _pivot(M, i0, j0)
-        R[j0], S[i0] = S[i0], R[j0]
-
-
-def _simplex(M, R, S):
+def _simplex(M, skip_phase_2=False):
     """
     Simplex method with randomized pivoting
 
     LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
       - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+
+    Explanation
+    ===========
+
+    When x is a column vector of variables, y is a column vector of dual variables,
+    and when the objective is either:
+
+    *) Maximizing Cx constrained to Ax <= B and x >= 0.
+    *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
+
+    The method returns a triplet of solutions optimum, argmax and argmax_dual where
+    optimum is the optimum solution, and argmax/ argmax_dual give the
+    values for x and y, respectively.
+
+    Examples
+    ========
+
+    Suppose we want to maximize
+        3x+y
+    subject to
+        x+y <= 2
+
+    >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.matrices.immutable import ImmutableMatrix
+    >>> from sympy.core.random import seed
+    >>> from sympy.solvers.inequalities import _simplex
+    >>> A = Matrix([[1,1]])
+    >>> B = Matrix([[2]])
+    >>> C = Matrix([[3, 1]])
+    >>> D = ImmutableMatrix([0])
+    >>> M = Matrix([[A, B], [-C, D]])
+    >>> M
+    Matrix([
+    [ 1,  1, 2],
+    [-3, -1, 0]])
+    >>> seed(47)
+    >>> optimum, argmax, argmax_dual = _simplex(M)
+    >>> optimum
+    6
+    >>> argmax
+    [2, 0]
+    >>> argmax_dual
+    [3]
+
+    Suppose we want to maximize
+        3x+y
+    subject to
+        x <= 2
+        y <= 4
+
+    >>> A = Matrix([[1,0], [0, 1]])
+    >>> B = Matrix([[2],[4]])
+    >>> C = Matrix([[3, 1]])
+    >>> D = ImmutableMatrix([0])
+    >>> M = Matrix([[A, B], [-C, D]])
+    >>> M
+    Matrix([
+    [ 1,  0, 2],
+    [ 0,  1, 4],
+    [-3, -1, 0]])
+    >>> optimum, argmax, argmax_dual = _simplex(M)
+    >>> optimum
+    10
+    >>> argmax
+    [2, 4]
+    >>> argmax_dual
+    [3, 1]
     """
     rand = random.Random(x=core_random())
 
-    feasible = _simplex1(M, R, S)
-    if feasible is None:
-        raise InfeasibleLinearProgrammingError('The constraint set is empty!')
-    M, R, S = feasible
+    phase = 1
+
+    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
+    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
+
+    R = r_orig.copy()
+    S = s_orig.copy()
 
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
         C = M[-1, :-1]
-        piv_cols = []
-        for j in range(C.cols):
-            if C[j] < 0:
-                piv_cols.append(j)
 
-        if not piv_cols:
-            return M, R, S
-        rand.shuffle(piv_cols)
-        j0 = piv_cols[0]
+        if phase == 1:
+            # In phase 1 we look for a feasible solution. Once we find one, we continue to phase 2.
+            if all(B[i] >= 0 for i in range(B.rows)):
+                if skip_phase_2:
+                    break
+                else:
+                    phase = 2
+                    continue
 
-        piv_rows = []
-        for i in range(A.rows):
-            if A[i, j0] > 0:
-                ratio = B[i] / A[i, j0]
-                piv_rows.append((ratio, i))
 
-        if not piv_rows:
-            raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large positive (resp. negative) values at feasible vectors!')
-        piv_rows = sorted(piv_rows, key=lambda x: (x[0], x[1]))
-        piv_rows = [(ratio, i) for ratio, i in piv_rows if ratio == piv_rows[0][0]]
-        rand.shuffle(piv_rows)
-        _, i0 = piv_rows[0]
+            # Pick the first row with a negative rightmost entry.
+            for k in range(B.rows):
+                if B[k] < 0:
+                    break
+
+            # Consider each column with a negative entry in the chosen row.
+            # If there are no such columns, the constraints are infeasible.
+            # From the columns being considered, we randomly pick one (to avoid cycling).
+            # The chosen column, j0, will contain the pivot.
+            piv_cols = [j for j in range(A.cols) if A[k, j] < 0]
+            if not piv_cols:
+                raise InfeasibleLinearProgrammingError('The constraint set is empty!')
+            rand.shuffle(piv_cols)
+            j0 = piv_cols[0]
+
+            # Consider all the rows with a positive itersection with j0 and a positive rightmost entry.
+            # Also consider the row with a negative rightmost entry that we picked earlier.
+            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0 and B[i] > 0]
+            piv_rows.append(k)
+        else:
+            # We consider each column where the last entry is negative.
+            # If there are no such columns, we have found a solution.
+            piv_cols = []
+            for j in range(C.cols):
+                if C[j] < 0:
+                    piv_cols.append(j)
+            if not piv_cols:
+                break
+
+            # From the columns being considered, we randomly pick one (to avoid cycling).
+            # This column, j0, will contain the pivot.
+            rand.shuffle(piv_cols)
+            j0 = piv_cols[0]
+
+            # Then we consider each row which has a positive entry at its intersection with the column we picked.
+            # If there are no such rows, the problem is unbounded.
+            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
+            if not piv_rows:
+                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
+
+        # For each row, we calculate a ratio: B[i] / A[i, j0].
+        # The row with the smallest ratio, i0, contains the pivot entry at its intersection with j0.
+        # If there are ties, pick a row at random.
+        min_ratio = float('inf')
+        min_rows = []
+        for i in piv_rows:
+            ratio = B[i] / A[i, j0]
+            if ratio < min_ratio:
+                min_ratio = ratio
+                min_rows = [i]
+            elif ratio == min_ratio:
+                min_rows.append(i)
+        rand.shuffle(min_rows)
+        i0 = min_rows[0]
 
         M = _pivot(M, i0, j0)
         R[j0], S[i0] = S[i0], R[j0]
+
+    argmax = [None]*(M.cols-1)
+    argmin_dual = [None]*(M.rows-1)
+
+    for i, var in enumerate(R):
+        v = var[0]
+        n = int(var[2])
+        if v == "x":
+            argmax[n] = 0
+        else:
+            argmin_dual[n] = M[-1, i]
+
+    for i, var in enumerate(S):
+        v = var[0]
+        n = int(var[2])
+        if v == "y":
+            argmin_dual[n] = 0
+        else:
+            argmax[n] = M[i, -1]
+
+    return M[-1, -1], argmax, argmin_dual
 
 
 def _to_standard_form(constraints, objective):
@@ -1198,27 +1283,25 @@ def _to_standard_form(constraints, objective):
     eqns = []
 
     for rel in constraints:
-        if not isinstance(rel, Relational):
+        if not isinstance(rel, (Relational, AppliedBinaryRelation)):
             raise TypeError(f"{rel} is not relational.")
-        if type(rel) in [Lt, Gt]:
+        if type(rel) in [Lt, Gt] or isinstance(rel, AppliedBinaryRelation) and rel.function in [Q.lt, Q.gt]:
             raise TypeError("Strict inequalities are not allowed in linear programming.")
-        if type(rel) == Ne:
+        if type(rel) == Ne or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ne:
             raise TypeError("'not equal to' is not allowed in linear programming.")
-        if not rel.rhs.is_constant():
-            raise ValueError("Right hand side of relation must be constant")
 
         variables = variables | rel.free_symbols
 
-        if type(rel) == Le:
+        if type(rel) == Le or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.le:
             eqns.append(rel.lhs - rel.rhs)
-        elif type(rel) == Ge:
+        elif type(rel) == Ge or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ge:
             eqns.append( rel.rhs - rel.lhs)
-        elif type(rel) == Eq:
+        elif type(rel) == Eq or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.eq:
             # x = 3 can be represented as x <= 3 and x >= 3
             eqns.append(rel.lhs - rel.rhs)
             eqns.append(rel.rhs - rel.lhs)
         else:
-            raise TypeError(f"Unrecognized relational: {rel}")
+            raise TypeError(f"Unrecognized relation: {rel}")
 
     variables = sorted(variables, key=lambda v: str(v)) # order symbols lexicographically
 
@@ -1234,42 +1317,45 @@ def linear_programming(constraints, objective):
     A function to maximize a linear objective function subject to linear
     constraints with the simplex method.
 
-    Explanation
-    ===========
-
-    When x is a column vector of variables, y is a column vector of dual variables,
-    and when the objective is either:
-
-    *) Maximizing Cx constrained to Ax <= B and x >= 0.
-    *) Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
-
-    The method returns a triplet of solutions optimum, argmax and argmax_dual where
-    optimum is the optimum solution, and argmax/ argmax_dual give the
-    values for x and y, respectively.
-
     Parameters
     ==========
 
     constraints : list of linear inequalities
-        The lhs of these inequalities are equivalent to the matrix A and the rhs
-        are equivalent to the column vector B.
+        Stict inequalities (>, <) and not equals are not allowed.
 
     objective : a linear function to maximize
-        The objective function is represented by the row vector C.
+        If you want to minimize a function, simply make the objective function negative.
+
+    Returns
+    =======
+
+    Returns a triplet of solutions optimum, argmax, and argmax_dual:
+
+    optimum : maximum value the objective function can take under the constraints
+
+    argmax : The values for the variables that maximize the objective function.
+        The values in the list correspond to the variables in lexicographical order
+
+    argmax_dual : The values for the dual variables that minimize the dual minimum problem
 
     Examples
     ========
 
     >>> from sympy.abc import x, y, z
+    >>> from sympy.core.random import seed
     >>> from sympy.solvers.inequalities import linear_programming
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
+    >>> seed(47)
     >>> optimum, argmax, argmax_dual = linear_programming([r1,r2,r3], x+y+5*z)
     >>> optimum
     11/3
     >>> argmax
     [0, 1/3, 2/3]
+
+    This result corresponds to x=0, y=1/3, z=2/3.
+
     >>> argmax_dual
     [0, 2/3, 1]
 
@@ -1284,6 +1370,9 @@ def linear_programming(constraints, objective):
     3
     >>> argmax
     [2, 1, 0]
+
+    This result corresponds to x=2, y=1, z=0.
+
     >>> argmax_dual
     [0, 1, 1]
 
@@ -1297,43 +1386,19 @@ def linear_programming(constraints, objective):
     A, B, C = _to_standard_form(constraints, objective)
     D = ImmutableMatrix([0])
     M = Matrix([[A, B], [-C, D]])
-    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
-    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
-
-    r = r_orig.copy()
-    s = s_orig.copy()
-
-    M, r, s = _simplex(M, r, s)
-
-    argmax = []
-    argmin_dual = []
-
-    for x in r_orig:
-        for i, xx in enumerate(s):
-            if x == xx:
-                argmax.append(M[i, -1])
-                break
-        else:
-            argmax.append(S.Zero)
-
-    for x in s_orig:
-        for i, xx in enumerate(r):
-            if x == xx:
-                argmin_dual.append(M[-1, i])
-                break
-        else:
-            argmin_dual.append(S.Zero)
-    return M[-1, -1], argmax, argmin_dual
+    return _simplex(M)
 
 
 def find_feasible(constraints):
     """
-    Finds a feasible solution to a system of linear inequalities, if any exist, with the simplex method.
+    Finds a feasible solution to a system of linear inequalities, if any exist, with the first phase of the
+    simplex method.
 
     Parameters
     ==========
 
     constraints : list of linear inequalities and equalities
+        Stict inequalities (>, <) and not equals are not allowed.
 
     Returns
     =======
@@ -1346,14 +1411,16 @@ def find_feasible(constraints):
     ========
 
     >>> from sympy.abc import x, y, z
+    >>> from sympy.core.random import seed
     >>> from sympy.solvers.inequalities import find_feasible
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
+    >>> seed(47)
     >>> find_feasible([r1, r2, r3])
-    [0, 0, 2/3]
+    [2, 0, 0]
 
-    This result corresponds to x=0, y=0, z=2/3
+    This result corresponds to x=2, y=0, z=0.
 
     >>> r1 = x <= 3
     >>> r2 = x >= 4
@@ -1369,34 +1436,8 @@ def find_feasible(constraints):
     A, B, C = _to_standard_form(constraints, sympify(0))
     D = ImmutableMatrix([0])
     M = Matrix([[A, B], [-C, D]])
-    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
-    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
 
-    r = r_orig.copy()
-    s = s_orig.copy()
-
-    feasible = _simplex1(M, r, s)
-    if feasible is None:
+    try:
+        return _simplex(M, skip_phase_2=True)[1]
+    except InfeasibleLinearProgrammingError:
         return None
-
-    M, r, s = feasible
-
-    argmax = []
-    argmin_dual = []
-
-    for x in r_orig:
-        for i, xx in enumerate(s):
-            if x == xx:
-                argmax.append(M[i, -1])
-                break
-        else:
-            argmax.append(S.Zero)
-
-    for x in s_orig:
-        for i, xx in enumerate(r):
-            if x == xx:
-                argmin_dual.append(M[-1, i])
-                break
-        else:
-            argmin_dual.append(S.Zero)
-    return argmax
