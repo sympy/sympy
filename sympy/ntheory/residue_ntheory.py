@@ -1116,7 +1116,7 @@ def kronecker_symbol(a, n):
     >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
     >>> kronecker_symbol(45, 77)
     -1
-    >>> jacobi_symbol(13, -120)
+    >>> kronecker_symbol(13, -120)
     1
 
     See Also
