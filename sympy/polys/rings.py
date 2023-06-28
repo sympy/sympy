@@ -2531,20 +2531,206 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
+    def _zero(self):
+        """
+        Return a multivariate zero.
+
+        Examples
+        ========
+
+        >>>_zero(4)
+        [[[[[]]]]]
+
+        """
+        x = self
+        r = []
+        x = f.ring.index(x)
+
+        for i in range(x):
+            r = [r]
+
+        return r
+
+    def pdiv(self, g, x=None):
+        """
+        Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
+
+        The pseudo-division algorithm finds the pseudo-remainder `r` such that the relationship
+        `ma = bq + r` is satisfied, where `m` is the multiplier and `q` is the pseudo-quotient. `r` and `q`
+        are polynomials in `x`, with `degree(r, x) < degree(b, x)`. The multiplier `m` is defined as
+        `lcoeff(b, x) ^ (degree(a, x) - degree(b, x) + 1)` and is free of `x`.
+
+        The `prem` method returns the pseudo-remainder `r`,
+        the `pquo` method returns the pseudo-quotient `q`,
+        and `pdiv` returns the tuple `(q, r)`.
+
+        Parameters
+        ==========
+
+        g : PolyElement
+            The polynomial to divide `self` by.
+        x : generator or generator index, optional
+            The main variable of the polynomials and default is first generator.
+
+        Returns
+        =======
+
+        PolyElement
+            The pseudo-division polynomial (tuple of `q` and `r`).
+
+        Raises
+        ======
+
+        ZeroDivisionError : If `g` is the zero polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> f = x**2 + x*y
+        >>> g = 2*x + 2
+
+        >>> f.pdiv(g) # first generator is chosen by default if it is not given
+        (2*x + 2*y - 2, -4*y + 4)
+
+        >>> f.div(g, y) # generator is given
+        0
+        >>> f.div(g, 1) # generator index is given
+        0
+
+        See Also
+        ========
+
+        prem, pquo, pexquo
+
+        """
+
+        f = self
+        x = f.ring.index(x)
+
+
+        df = f.degree(x)
+        dg = g.degree(x)
+
+        if dg < 0:
+            raise ZeroDivisionError("polynomial division")
+
+
+        q, r, dr = x._zero(), f, df
+
+        if df < dg:
+            return q, r
+
+        N = df - dg + 1
+        lc_g = g.coeff_wrt(x, dg)
+
+
+        xp = f.ring.gens[x]
+
+        while True:
+
+            lc_r = r.oeff_wrt(x, dr)
+            j, N = dr - dg, N - 1
+
+            Q = q*lc_g
+
+            q = Q + (lc_r)*xp**j
+
+            R = r*lc_g
+
+            G = g*lc_r*xp**j
+
+            r = R - G
+
+            _dr, dr = dr, r.degree(x)
+
+            if dr < dg:
+                break
+
+        c = lc_g**N
+
+        q = q*c
+        r = r*c
+
+        return q, r
+
+    def pquo(self, g, x=None):
+        """
+        Polynomial exact pseudo-quotient in multivariate polynomial ring.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
+
+        >>> f = x**2 + x*y
+        >>> g = 2*x + 2*y
+        >>> h = 2*x + 2
+
+        >>> f.pquo(g)
+        2*x
+
+        >>> f.pquo(h)
+        2*x + 2*y - 2
+
+
+        See Also
+        ========
+
+        prem, pdiv, pexquo
+
+        """
+        f = self
+        x = f.ring.index(x)
+        return f.pdiv(g, x)[0]
+
+    def pexquo(self, g, x=None):
+        """
+        Polynomial pseudo-quotient in multivariate polynomial ring.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
+
+        >>> f = x**2 + x*y
+        >>> g = 2*x + 2*y
+        >>> h = 2*x + 2
+
+        >>> R.pexquo(f, g)
+        2*x
+
+        >>> R.pexquo(f, h)
+        Traceback (most recent call last):
+        ...
+        ExactQuotientFailed: 2*x + 2 does not divide x**2 + x*y
+
+
+
+        See Also
+        ========
+
+        prem, pdiv, pquo
+
+        """
+        f = self
+        x = f.ring.index(x)
+        q, r = f.pdiv(g, x)
+
+        if r.is_zero:
+            return q
+        else:
+            raise ExactQuotientFailed(f, g)
+
     # TODO: following methods should point to polynomial
     # representation independent algorithm implementations.
 
-    def pdiv(f, g):
-        return f.ring.dmp_pdiv(f, g)
 
     def prem(f, g):
         return f.ring.dmp_prem(f, g)
-
-    def pquo(f, g):
-        return f.ring.dmp_quo(f, g)
-
-    def pexquo(f, g):
-        return f.ring.dmp_exquo(f, g)
 
     def half_gcdex(f, g):
         return f.ring.dmp_half_gcdex(f, g)
