@@ -350,7 +350,7 @@ def _extract_all_facts(assump, exprs):
                     # If any of the literals doesn't have matching expr don't add the whole clause.
                     break
             else:
-                # If any of the literals aren't unary predicate don't add the whole clause
+                # If any of the literals aren't unary predicate don't add the whole clause.
                 break
 
         else:
