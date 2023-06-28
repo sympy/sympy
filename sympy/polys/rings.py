@@ -2593,12 +2593,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         `q` and `r`, the quotient and remainder, respectively, satisfying `f = gq + r`,
         where `deg(r) < deg(g)`.
 
-        For polynomials `f` and `g` with coefficients in a domain, polynomial
-        pseudo-division can be used. It also yields a unique pair of polynomials
-        `q` and `r`, satisfying `mf = gq + r`, where deg(r) < deg(g), `m` is a power
-        of the leading coefficient of `g`, and `f` is pre-multiplied by `m` to ensure
-        exact coefficient divisions.
-
         In the context of the `prem` method, multivariate polynomials in a ring
         like `R[x,y,z]` are treated as univariate polynomials with coefficients
         that are polynomials, such as `R[x,y][z]`. The pseudo-quotient `q` and
@@ -2615,8 +2609,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         g : PolyElement
             The polynomial to divide `self` by.
-        x : generator or generator index(optional)
-            The main variable of the polynomials.
+        x : generator or generator index, optional
+            The main variable of the polynomials and default is first generator.
 
         Returns
         =======
