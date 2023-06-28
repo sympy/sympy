@@ -1,9 +1,11 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
+from sympy.core.random import seed
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function
 from sympy.core.numbers import I, Rational, oo, pi
 from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
+from sympy.assumptions.ask import Q
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
@@ -20,11 +22,14 @@ from sympy.solvers.inequalities import (reduce_inequalities,
     reduce_rational_inequalities,
     solve_univariate_inequality as isolve,
     reduce_abs_inequality,
-    _solve_inequality, linear_programming)
+    _solve_inequality, linear_programming, find_feasible,
+    UnboundedLinearProgrammingError, InfeasibleLinearProgrammingError)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y, z
+from sympy.core.symbol import symbols
+
 
 from sympy.core.mod import Mod
 
@@ -489,6 +494,7 @@ def test__pt():
 
 
 def test_linear_programming():
+    seed(47)
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
     r3 = 2*x + y + 7*z <= 5
@@ -513,6 +519,33 @@ def test_linear_programming():
     assert argmax == [0, 4, 0]
     assert argmax_dual == [1, 0, 0]
 
+    # Section 4 Problem 1 from http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
+    r1 = x1 - x2 - 2*x3 - x4 <= 4
+    r2 = 2*x1 + x3 -4*x4 <= 2
+    r3 = -2*x1 + x2 + x4 <= 1
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], x1 - 2*x2 - 3*x3 - x4)
+    assert optimum == 4
+    assert argmax == [7, 0, 0, 3]
+    assert argmax_dual == [1, 0, 0]
+
+    # equality
+    r1 = Eq(x,y)
+    r2 = Eq(y,z)
+    r3 = z <= 3
+    optimum, argmax, argmax_dual = linear_programming([r1, r2, r3], x)
+    assert optimum == 3
+    assert argmax == [3, 3, 3]
+    assert argmax_dual == [1, 0, 1, 0, 1]
+
+    # Binary predicate
+    r1 = Q.ge(x, y)
+    r2 = Q.le(x, 4)
+    optimum, argmax, argmax_dual = linear_programming([r1, r2], x+y)
+    assert optimum == 8
+    assert argmax == [4, 4]
+    assert argmax_dual == [1, 2]
+
     # input contains Floats
     r1 = x - y + 2.0*z <= -4
     r2 = -x + 2*y - 3.0*z <= 8
@@ -530,3 +563,30 @@ def test_linear_programming():
     assert optimum == -4
     assert argmax == [0, 4, 0]
     assert argmax_dual == [1, 0, 0]
+
+    r1 = x >= 0
+    raises(UnboundedLinearProgrammingError, lambda: linear_programming([r1], x))
+    r2 = x <= -1
+    raises(InfeasibleLinearProgrammingError, lambda: linear_programming([r1,r2],x))
+
+    # strict inequalities are not allowed
+    r1 = x > 0
+    raises(TypeError, lambda: linear_programming([r1], x))
+
+    # not equals not allowed
+    r1 = Ne(x, 0)
+    raises(TypeError, lambda: linear_programming([r1], x))
+
+
+def test_find_feasible():
+    seed(47)
+    r1 = x >= 0
+    r2 = x <= -1
+    assert find_feasible([r1, r2]) is None
+    assert find_feasible([r1]) == [0]
+    r1 = x >= 0
+    r2 = x >= 3
+    assert find_feasible([r1, r2]) == [3]
+    r1 = x >= 0
+    r2 = x <= 3
+    assert find_feasible([r1, r2]) == [0]
