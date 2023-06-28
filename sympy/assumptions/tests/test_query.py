@@ -2325,6 +2325,9 @@ def test_check_old_assumption():
     assert ask(Q.irrational(x)) is True
     assert ask(Q.rational(x)) is False
 
+    x = symbols('x', transcendental=True)
+    assert ask(Q.transcendental(x)) is True
+
 
 def test_issue_9636():
     assert ask(Q.integer(1.0)) is False
