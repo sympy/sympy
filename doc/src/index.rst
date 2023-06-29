@@ -52,11 +52,6 @@ See also the full `Development Workflow
 <https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide on the
 SymPy wiki.
 
-:ref:`Press Kit <press-kit>`
-The press kit contains a link to the SymPy logo that is used in the docs, and
-instructions on how to generate SymPy's collection of official logos and where
-to find a high-resolution version of the SymPy logo.
-
 .. toctree::
    :hidden:
 
@@ -66,4 +61,3 @@ to find a high-resolution version of the SymPy logo.
    explanation/index.rst
    reference/index.rst
    contributing/index.rst
-   press-kit/logo.rst
