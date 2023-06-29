@@ -177,6 +177,8 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: kronecker_symbol
+
 .. autofunction:: discrete_log
 
 .. autofunction:: quadratic_congruence

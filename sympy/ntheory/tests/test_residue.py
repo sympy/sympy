@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
+    legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve
@@ -237,6 +237,25 @@ def test_residue():
     assert jacobi_symbol(2, 1) == 1
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
+
+    for n in range(3, 10, 2):
+        for a in range(-n, n):
+            val = kronecker_symbol(a, n)
+            assert val == jacobi_symbol(a, n)
+            minus = kronecker_symbol(a, -n)
+            if a < 0:
+                assert -minus == val
+            else:
+                assert minus == val
+            even = kronecker_symbol(a, 2 * n)
+            if a % 2 == 0:
+                assert even == 0
+            elif a % 8 in [1, 7]:
+                assert even == val
+            else:
+                assert -even == val
+    assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
+    assert kronecker_symbol(0, 0) == 0
 
     assert mobius(13*7) == 1
     assert mobius(1) == 1
