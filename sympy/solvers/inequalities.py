@@ -1127,7 +1127,6 @@ def _simplex(M, skip_phase_2=False):
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.matrices.immutable import ImmutableMatrix
-    >>> from sympy.core.random import seed
     >>> from sympy.solvers.inequalities import _simplex
     >>> A = Matrix([[1,1]])
     >>> B = Matrix([[2]])
@@ -1138,7 +1137,6 @@ def _simplex(M, skip_phase_2=False):
     Matrix([
     [ 1,  1, 2],
     [-3, -1, 0]])
-    >>> seed(47)
     >>> optimum, argmax, argmax_dual = _simplex(M)
     >>> optimum
     6
@@ -1364,12 +1362,10 @@ def linear_programming(constraints, objective):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.core.random import seed
     >>> from sympy.solvers.inequalities import linear_programming
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> seed(47)
     >>> optimum, argmax, argmax_dual = linear_programming([r1,r2,r3], x+y+5*z)
     >>> optimum
     11/3
@@ -1434,12 +1430,10 @@ def find_feasible(constraints):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.core.random import seed
     >>> from sympy.solvers.inequalities import find_feasible
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> seed(47)
     >>> find_feasible([r1, r2, r3])
     [2, 0, 0]
 
