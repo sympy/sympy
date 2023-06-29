@@ -248,3 +248,11 @@ class Mod(Function):
     def _eval_rewrite_as_floor(self, a, b, **kwargs):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.elementary.integers import floor
+        return self.rewrite(floor)._eval_nseries(x, n, logx=logx, cdir=cdir)

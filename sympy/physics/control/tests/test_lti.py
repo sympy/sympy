@@ -152,6 +152,26 @@ def test_TransferFunction_functions():
     assert TransferFunction.from_rational_expression(expr_8, s) == \
         TransferFunction(2*s**2 + 3*s + 2, s**2 + 1, s)
 
+    # classmethod from_coeff_lists
+    tf1 = TransferFunction.from_coeff_lists([1, 2], [3, 4, 5], s)
+    num2 = [p**2, 2*p]
+    den2 = [p**3, p + 1, 4]
+    tf2 = TransferFunction.from_coeff_lists(num2, den2, s)
+    num3 = [1, 2, 3]
+    den3 = [0, 0]
+
+    assert tf1 == TransferFunction(s + 2, 3*s**2 + 4*s + 5, s)
+    assert tf2 == TransferFunction(p**2*s + 2*p, p**3*s**2 + s*(p + 1) + 4, s)
+    raises(ZeroDivisionError, lambda: TransferFunction.from_coeff_lists(num3, den3, s))
+
+    # classmethod from_zpk
+    zeros = [4]
+    poles = [-1+2j, -1-2j]
+    gain = 3
+    tf1 = TransferFunction.from_zpk(zeros, poles, gain, s)
+
+    assert tf1 == TransferFunction(3*s - 12, (s + 1.0 - 2.0*I)*(s + 1.0 + 2.0*I), s)
+
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
     a = TransferFunction(-(s**4 + s**2 + 1), s - 1, s)

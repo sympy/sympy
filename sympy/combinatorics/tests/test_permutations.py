@@ -147,7 +147,6 @@ def test_Permutation():
 
     assert rmul(~p, p).is_Identity
     assert (~p)**13 == Permutation([5, 2, 0, 4, 6, 1, 3])
-    assert ~(r**2).is_Identity
     assert p.max() == 6
     assert p.min() == 0
 
