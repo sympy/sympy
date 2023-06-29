@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi
+from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -1098,6 +1098,39 @@ def jacobi_symbol(m, n):
     """
     m, n = as_int(m), as_int(n)
     return int(jacobi(m, n))
+
+
+def kronecker_symbol(a, n):
+    r"""
+    Returns the Kronecker symbol `(a / n)`.
+
+    Parameters
+    ==========
+
+    a : integer
+    n : integer
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import kronecker_symbol
+    >>> kronecker_symbol(45, 77)
+    -1
+    >>> kronecker_symbol(13, -120)
+    1
+
+    See Also
+    ========
+
+    jacobi_symbol, legendre_symbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
+
+    """
+    return int(kronecker(as_int(a), as_int(n)))
 
 
 class mobius(Function):
