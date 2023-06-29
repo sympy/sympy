@@ -297,7 +297,7 @@ class Cable:
         >>> c = Cable(('A', 0, 10), ('B', 10, 10))
         >>> c.apply_load(-1, ('Z', 5, 5, 12, 30))
         >>> c.loads
-        {'distributed': {}, 'point_load': {'Z': [12, 3]}}
+        {'distributed': {}, 'point_load': {'Z': [12, 30]}}
         >>> c.loads_position
         {'Z': [5, 5]}
 
@@ -362,7 +362,7 @@ class Cable:
         >>> c = Cable(('A', 0, 10), ('B', 10, 10))
         >>> c.apply_load(-1, ('Z', 5, 5, 12, 30))
         >>> c.loads
-        {'distributed': {}, 'point_load': {'Z': [12, 3]}}
+        {'distributed': {}, 'point_load': {'Z': [12, 30]}}
         >>> c.remove_loads('Z')
         >>> c.loads
         {'distributed': {}, 'point_load': {}}
