@@ -2686,14 +2686,26 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
 
-        The pseudo-division algorithm finds the pseudo-remainder `r` such that the relationship
-        `ma = bq + r` is satisfied, where `m` is the multiplier and `q` is the pseudo-quotient.
-        `r` and `q` are polynomials in `x`, with `degree(r, x) < degree(b, x)`. The multiplier
-        `m` is defined as `lcoeff(b, x) ^ (degree(a, x) - degree(b, x) + 1)` and is free of `x`.
+        The pseudo-division algorithm is used to find the pseudo-quotient `q`
+        and pseudo-remainder `r` such that `mf = gq + r`, where `m` represents
+        the multiplier and `f` is the dividend polynomial. The pseudo-quotient `q`
+        and pseudo-remainder `r` are polynomials in the variable `x`, with the
+        degree of `r` with respect to `x` being strictly less than the degree of `g`
+        with respect to `x`.
+        The multiplier `m` is defined as `LC(g, x) ^ (deg(f, x) - deg(g, x) + 1)`,
+        where `LC(g, x)` represents the leading coefficient of `g`.
 
-        The `prem` method returns the pseudo-remainder `r`,
-        the `pquo` method returns the pseudo-quotient `q`,
-        and `pdiv` returns the tuple `(q, r)`.
+        It is important to note that in the context of the `prem` method,
+        multivariate polynomials in a ring, such as `R[x,y,z]`, are treated
+        as univariate polynomials with coefficients that are polynomials,
+        such as `R[x,y][z]`. When dividing `f` by `g` with respect to the variable `z`,
+        the pseudo-quotient `q` and pseudo-remainder `r` satisfy `mf = gq + r`,
+        where `deg(r, z) < deg(g, z)` and `m = LC(g, z)^(deg(f, z) - deg(g, z) + 1)`.
+
+        In this function, the pseudo-remainder `r` can be obtained using the `prem` method,
+        the pseudo-quotient `q` can be obtained using the `pquo` method, and
+        the function `pdiv` itself returns a tuple `(q, r)`
+
 
         Parameters
         ==========
@@ -2818,10 +2830,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> f = x**2 + x*y
         >>> g = 2*x + 2*y
         >>> h = 2*x + 2
-        >>> R.pexquo(f, g)
+        >>> f.pexquo(g)
         2*x
 
-        >>> R.pexquo(f, h)
+        >>> f.pexquo(h)
         Traceback (most recent call last):
         ...
         ExactQuotientFailed: 2*x + 2 does not divide x**2 + x*y
