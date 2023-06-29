@@ -2723,10 +2723,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> g = 2*x + 2
         >>> f.pdiv(g) # first generator is chosen by default if it is not given
         (2*x + 2*y - 2, -4*y + 4)
-        >>> f.div(g, y) # generator is given
-        0
-        >>> f.div(g, 1) # generator index is given
-        0
+
+        >>> f.pdiv(g, y) # generator is given
+        (2*x**3 + 2*x**2*y + 6*x**2 + 2*x*y + 8*x + 4, 0)
+        >>> f.pdiv(g, 1) # generator index is given
+        (2*x**3 + 2*x**2*y + 6*x**2 + 2*x*y + 8*x + 4, 0)
 
         See Also
         ========
@@ -2743,7 +2744,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if dg < 0:
             raise ZeroDivisionError("polynomial division")
 
-        q, r, dr = 0, f, df
+        q, r, dr = x, f, df
 
         if df < dg:
             return q, r
@@ -2751,7 +2752,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         N = df - dg + 1
         lc_g = g.coeff_wrt(x, dg)
 
-        xp = f.ring.gens[0]
+        xp = f.ring.gens[x]
 
         while True:
 
