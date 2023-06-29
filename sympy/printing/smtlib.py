@@ -17,6 +17,69 @@ from sympy.printing.printer import Printer
 from sympy.sets import Interval
 
 
+known_functions_dreal = {
+    Add: '+',
+    Mul: '*',
+
+    Equality: '=',
+    LessThan: '<=',
+    GreaterThan: '>=',
+    StrictLessThan: '<',
+    StrictGreaterThan: '>',
+
+    exp: 'exp',
+    log: 'log',
+    Abs: 'abs',
+    sin: 'sin',
+    cos: 'cos',
+    tan: 'tan',
+    asin: 'arcsin',
+    acos: 'arccos',
+    atan: 'arctan',
+    atan2: 'arctan2',
+    sinh: 'sinh',
+    cosh: 'cosh',
+    tanh: 'tanh',
+    Min: 'min',
+    Max: 'max',
+    Pow: 'pow',
+
+    And: 'and',
+    Or: 'or',
+    Xor: 'xor',
+    Not: 'not',
+    ITE: 'ite',
+    Implies: '=>',
+}
+
+known_functions_z3 = {
+    Add: '+',
+    Mul: '*',
+
+    Equality: '=',
+    LessThan: '<=',
+    GreaterThan: '>=',
+    StrictLessThan: '<',
+    StrictGreaterThan: '>',
+
+    Abs: 'abs',
+    sin: 'sin',
+    cos: 'cos',
+    tan: 'tan',
+    sinh: 'sinh',
+    cosh: 'cosh',
+    tanh: 'tanh',
+    Pow: '^',
+
+    And: 'and',
+    Or: 'or',
+    Xor: 'xor',
+    Not: 'not',
+    ITE: 'ite',
+    Implies: '=>',
+}
+
+
 class SMTLibPrinter(Printer):
     printmethod = "_smtlib"
 
@@ -209,6 +272,7 @@ class SMTLibPrinter(Printer):
 
 def smtlib_code(
     expr,
+    smt_solver = "Z3",
     auto_assert=True, auto_declare=True,
     precision=None,
     symbol_table=None,
@@ -318,7 +382,12 @@ def smtlib_code(
     if known_types: settings['known_types'] = known_types
     del known_types
 
-    if known_functions: settings['known_functions'] = known_functions
+    if smt_solver == "Z3":
+        settings['known_functions'] = known_functions_z3
+    elif smt_solver == "dreal":
+        settings['known_functions'] = known_functions_dreal
+    else:
+        if known_functions: settings['known_functions'] = known_functions
     del known_functions
 
     if known_constants: settings['known_constants'] = known_constants
