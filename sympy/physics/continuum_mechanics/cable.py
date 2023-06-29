@@ -4,6 +4,7 @@ to 2D Cables.
 """
 
 from sympy.core.sympify import sympify
+from sympy.core.symbol import Symbol
 
 class Cable:
     """
@@ -14,19 +15,85 @@ class Cable:
     Cables are widely used in suspension bridges, tension
     leg offshore platforms, transmission lines, and find
     use in several other engineering applications.
+
+    Examples
+    ========
+    A cable is supported at (0, 10) and (10, 10). Two point loads
+    acting vertically downwards act on the cable, one with magnitude 3 kN
+    and acting 2 meters from the left support and 3 meters below it, while
+    the other with magnitude 2 kN is 6 meters from the left support and
+    6 meters below it.
+
+    >>> from sympy.physics.continuum_mechanics.cable import Cable
+    >>> c = Cable(('A', 0, 10), ('B', 10, 10))
+    >>> c.apply_load(-1, ('P', 2, 7, 3, 270))
+    >>> c.apply_load(-1, ('Q', 6, 4, 2, 270))
+    >>> c.loads
+    {'distributed': {}, 'point_load': {'P': [3, 270], 'Q': [2, 270]}}
+    >>> c.loads_position
+    {'P': [2, 7], 'Q': [6, 4]}
     """
-    def __init__(self):
+    def __init__(self, support_1, support_2):
         """
         Initializes the class.
+
+        Parameters
+        ==========
+
+        support_1 and support_2 are tuples of the form
+        (label, x, y), where
+
+        label : String or symbol
+            The label of the support
+
+        x : Sympifyable
+            The x coordinate of the position of the support
+
+        y : Sympifyable
+            The y coordinate of the position of the support
         """
         self._left_support = []
         self._right_support = []
         self._supports = {}
         self._support_labels = []
-        self._loads = {}
+        self._loads = {"distributed": {}, "point_load": {}}
         self._loads_position = {}
         self._length = 0
         self._reaction_loads = {}
+
+        if support_1[0] == support_2[0]:
+            raise ValueError("Supports can not have the same label")
+
+        elif support_1[1] == support_2[1]:
+            raise ValueError("Supports can not be at the same location")
+
+        x1 = sympify(support_1[1])
+        y1 = sympify(support_1[2])
+        self._supports[support_1[0]] = [x1, y1]
+
+        x2 = sympify(support_2[1])
+        y2 = sympify(support_2[2])
+        self._supports[support_2[0]] = [x2, y2]
+
+        if support_1[1] < support_2[1]:
+            self._left_support.append(x1)
+            self._left_support.append(y1)
+            self._right_support.append(x2)
+            self._right_support.append(y2)
+            self._support_labels.append(support_1[0])
+            self._support_labels.append(support_2[0])
+
+        else:
+            self._left_support.append(x2)
+            self._left_support.append(y2)
+            self._right_support.append(x1)
+            self._right_support.append(y1)
+            self._support_labels.append(support_2[0])
+            self._support_labels.append(support_1[0])
+
+        for i in self._support_labels:
+            self._reaction_loads[Symbol("R_"+ i +"_x")] = 0
+            self._reaction_loads[Symbol("R_"+ i +"_y")] = 0
 
     @property
     def supports(self):
@@ -61,7 +128,7 @@ class Cable:
     @property
     def loads_position(self):
         """
-        Returns the position of the loads acting on the
+        Returns the position of the point loads acting on the
         cable.
         """
         return self._loads_position
@@ -76,102 +143,37 @@ class Cable:
     @property
     def reaction_loads(self):
         """
-        Returns the reaction forces at the supports.
+        Returns the reaction forces at the supports, which are
+        initialized to 0.
         """
         return self._reaction_loads
 
-    def add_supports(self, *args):
+    def apply_length(self, length):
         """
-        This method adds the right and left supports to the Cable object.
+        This method specifies the length of the cable
 
         Parameters
         ==========
-        Pass two tuples of the form (label, x, y) as inputs, where the first
-        tuple represents the left support, while the later represents the
-        right support. Each element in these tuples are:
 
-        label: String or a symbol
-            The label for the support.
-
-        x: Sympifyable
-            The x-coordinate of the position of the support.
-
-        y: Sympifyable
-            The y-coordinate of the position of the support.
+        length : Sympifyable
+            The length of the cable
 
         Examples
         ========
 
         >>> from sympy.physics.continuum_mechanics.cable import Cable
-        >>> c = Cable()
-        >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
-        >>> c.supports
-        {'A': [3, 4], 'B': [4, 5]}
-        >>> c.left_support
-        [3, 4]
-        >>> c.right_support
-        [4, 5]
+        >>> c = Cable(('A', 0, 10), ('B', 10, 10))
+        >>> c.apply_length(20)
+        >>> c.length
+        20
         """
-        if len(self._supports) != 0:
-            raise ValueError("Supports already exist")
+        dist = ((self._left_support[0] - self._right_support[0])**2
+                - (self._left_support[1] - self._right_support[1])**2)**(1/2)
 
-        elif len(args) != 2:
-            raise ValueError("Pass only two arguments: left support and right support")
+        if length < dist:
+            raise ValueError("length should not be less than the distance between the supports")
 
-        elif args[0][0] == args[1][0]:
-            raise ValueError("Supports can not have the same label")
-
-        elif args[0][1] == args[1][1] and args[0][2] == args[1][2]:
-            raise ValueError("Supports can not be at the same position")
-
-        elif args[0][1] > args[1][1]:
-            raise ValueError("The x coordinate of left support should be less than its right support counterpart")
-
-        else:
-            for i in args:
-                label = i[0]
-                x = sympify(i[1])
-                y = sympify(i[2])
-
-                self._supports[label] = [x, y]
-
-                if len(self._left_support) == 0:
-                    self._left_support.append(x)
-                    self._left_support.append(y)
-
-                else:
-                    self._right_support.append(x)
-                    self._right_support.append(y)
-
-                self._support_labels.append(label)
-
-    def remove_supports(self):
-        """
-        This method removes the left and right supports, along with
-        any existing load(s).
-
-        Examples
-        ========
-
-        >>> from sympy.physics.continuum_mechanics.cable import Cable
-        >>> c = Cable()
-        >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
-        >>> c.supports
-        {'A': [3, 4], 'B': [4, 5]}
-        >>> c.remove_supports()
-        >>> c.supports
-        {}
-        """
-        if len(self._supports) == 0:
-            raise ValueError("There are no supports to remove")
-
-        else:
-            self._supports.clear()
-            self._left_support.clear()
-            self._right_support.clear()
-            self._loads.clear()
-            self._loads_position.clear()
-            self._length = 0
+        self._length = length
 
     def change_support(self, label, new_support):
         """
@@ -196,107 +198,152 @@ class Cable:
         ========
 
         >>> from sympy.physics.continuum_mechanics.cable import Cable
-        >>> c = Cable()
-        >>> c.add_supports(('A', 3, 4), ('B', 4, 5))
+        >>> c = Cable(('A', 0, 10), ('B', 10, 10))
         >>> c.supports
-        {'A': [3, 4], 'B': [4, 5]}
-        >>> c.change_support('B',('C',5,6))
+        {'A': [0, 10], 'B': [10, 10]}
+        >>> c.change_support('B', ('C', 5, 6))
         >>> c.supports
-        {'A': [3, 4], 'C': [5, 6]}
+        {'A': [0, 10], 'C': [5, 6]}
         """
         if label not in self._supports:
             raise ValueError("No support exists with the given label")
 
+        i = self._support_labels.index(label)
+        rem_label = self._support_labels[(i+1)%2]
+        x1 = self._supports[rem_label][0]
+        y1 = self._supports[rem_label][1]
+
+        x = sympify(new_support[1])
+        y = sympify(new_support[2])
+
+        for l in self._loads_position:
+            if l[0] >= max(x, x1) or l[0] <= min(x, x1):
+                raise ValueError("The change in support will throw an existing load out of range")
+
+        self._supports.pop(label)
+        self._left_support.clear()
+        self._right_support.clear()
+        self._reaction_loads.clear()
+        self._support_labels.remove(label)
+
+        self._supports[new_support[0]] = [x, y]
+
+        if x1 < x:
+            self._left_support.append(x1)
+            self._left_support.append(y1)
+            self._right_support.append(x)
+            self._right_support.append(y)
+            self._support_labels.append(new_support[0])
+
         else:
-            if label == self._support_labels[0]:
-                if new_support[1] > self._right_support[0]:
-                    raise ValueError("x coordinate of left support should be less than its right support counterpart")
-                else:
-                    self._supports.pop(label)
-                    self._left_support.clear()
-                    self._support_labels.remove(label)
+            self._left_support.append(x)
+            self._left_support.append(y)
+            self._right_support.append(x1)
+            self._right_support.append(y1)
+            self._support_labels.insert(0, new_support[0])
 
-                    x = sympify(new_support[1])
-                    y = sympify(new_support[2])
-                    self._left_support = [x, y]
-                    self._supports[new_support[0]] = [x, y]
-                    self._support_labels.insert(0, new_support[0])
+        for i in self._support_labels:
+            self._reaction_loads[Symbol("R_"+ i +"_x")] = 0
+            self._reaction_loads[Symbol("R_"+ i +"_y")] = 0
 
-            else:
-                if new_support[1] < self._left_support[0]:
-                    raise ValueError("x coordinate of right support should be greater than its left support counterpart")
-
-                else:
-                    self._supports.pop(label)
-                    self._right_support.clear()
-                    self._support_labels.remove(label)
-
-                    x = sympify(new_support[1])
-                    y = sympify(new_support[2])
-                    self._right_support = [x, y]
-                    self._supports[new_support[0]] = [x, y]
-                    self._support_labels.append(new_support[0])
-
-    def add_loads(self, *args):
+    def apply_load(self, order, load):
         """
-        This method adds load(s) to the cable.
+        This method adds load to the cable.
 
         Parameters
         ==========
-        This method takes input as tuple(s) of the form
-        (label, x, y, magnitude, direction).
 
-        label: String or symbol
-            The label of the load
+        order : Integer
+            The order of the applied load.
 
-        x: Sympifyable
-            The x-coordinate of the position of the load.
+                - For point loads, order = -1
+                - For distributed load, order = 0
 
-        y: Sympifyable
-            The y-coordinate of the position of the load.
+        load : tuple
 
-        magnitude: Sympifyable
-            Magnitude of the load applied. It must always be positive and any changes in
-            the direction of the load are not reflected here.
+            - For point loads, load is of the form
+            (label, x, y, magnitude, direction), where:
+                label : String or symbol
+                    The label of the load
 
-        direction: Sympifyable
-            The angle, in degrees, that the load vector makes with the horizontal
-            in the counter-clockwise direction. It takes the values 0 to 360,
-            inclusive.
+                x: Sympifyable
+                    The x coordinate of the position of the load
+
+                y: Sympifyable
+                    The y coordinate of the position of the load
+
+                magnitude : Sympifyable
+                    The magnitude of the load. It must always be positive
+
+                direction : Sympifyable
+                    The angle, in degrees, that the load vector makes with the horizontal
+                    in the counter-clockwise direction. It takes the values 0 to 360,
+                    inclusive.
+
+            - For uniformly distributed load, load is of the form
+            (label, magnitude)
+                label : String or symbol
+                    The label of the load
+
+                magnitude : Sympifyable
+                    The magnitude of the load. It must always be positive
 
         Examples
         ========
 
+        For a point load of magnitude 12 units inclined at 30 degrees with the horizontal:
+
         >>> from sympy.physics.continuum_mechanics.cable import Cable
-        >>> c = Cable()
-        >>> c.add_supports(('A', 3, 4), ('B', 6, 5))
-        >>> c.add_loads(('P', 4, 2, 6, 30), ('Q', 5, 3, 12, 0))
+        >>> c = Cable(('A', 0, 10), ('B', 10, 10))
+        >>> c.apply_load(-1, ('Z', 5, 5, 12, 30))
         >>> c.loads
-        {'P': [6, 30], 'Q': [12, 0]}
+        {'distributed': {}, 'point_load': {'Z': [12, 3]}}
         >>> c.loads_position
-        {'P': [4, 2], 'Q': [5, 3]}
+        {'Z': [5, 5]}
+
+
+        For a uniformly distributed load of magnitude 9 units:
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(('A', 0, 10), ('B', 10, 10))
+        >>> c.apply_load(0, ('X', 9))
+        >>> c.loads
+        {'distributed': {'X': 9}, 'point_load': {}}
         """
-        if len(self._supports) == 0:
-            raise ValueError("Add supports before adding any load(s)")
+        if order == -1:
+            if len(self._loads["distributed"]) != 0:
+                raise ValueError("Distributed load already exists")
+
+            label = load[0]
+            if label in self._loads["point_load"]:
+                raise ValueError("Label already exists")
+
+            x = sympify(load[1])
+            y = sympify(load[2])
+
+            if x > self._right_support[0] or x < self._left_support[0]:
+                raise ValueError("The load should be positioned between the supports")
+
+            magnitude = sympify(load[3])
+            direction = sympify(load[4])
+
+            self._loads["point_load"][label] = [magnitude, direction]
+            self._loads_position[label] = [x, y]
+
+        elif order == 0:
+            if len(self._loads_position) != 0:
+                raise ValueError("Point load(s) already exist")
+
+            label = load[0]
+            if label in self._loads["distributed"]:
+                raise ValueError("Label already exists")
+
+            magnitude = sympify(load[1])
+
+            self._loads["distributed"][label] = magnitude
 
         else:
-            for i in args:
-                label = i[0]
-                x = sympify(i[1])
-                y = sympify(i[2])
-                magnitude = sympify(i[3])
-                direction = sympify(i[4])
-
-                if label in self._loads:
-                    raise ValueError("Error adding load " + label + ": label already exists")
-
-                else:
-                    if x < self._left_support[0] or x > self._right_support[0]:
-                        raise ValueError("Error adding load " + label + ": load should be between the supports")
-
-                    else:
-                        self._loads[label] = [magnitude, direction]
-                        self._loads_position[label] = [x, y]
+            raise ValueError("Order should be either -1 or 0")
 
     def remove_loads(self, *args):
         """
@@ -312,23 +359,26 @@ class Cable:
         ========
 
         >>> from sympy.physics.continuum_mechanics.cable import Cable
-        >>> c = Cable()
-        >>> c.add_supports(('A', 3, 4), ('B', 6, 5))
-        >>> c.add_loads(('P', 4, 2, 6, 30), ('Q', 5, 3, 12, 0), ('R', 5, 4, 10, 60))
+        >>> c = Cable(('A', 0, 10), ('B', 10, 10))
+        >>> c.apply_load(-1, ('Z', 5, 5, 12, 30))
         >>> c.loads
-        {'P': [6, 30], 'Q': [12, 0], 'R': [10, 60]}
-        >>> c.loads_position
-        {'P': [4, 2], 'Q': [5, 3], 'R': [5, 4]}
-        >>> c.remove_loads('P', 'R')
+        {'distributed': {}, 'point_load': {'Z': [12, 3]}}
+        >>> c.remove_loads('Z')
         >>> c.loads
-        {'Q': [12, 0]}
-        >>> c.loads_position
-        {'Q': [5, 3]}
+        {'distributed': {}, 'point_load': {}}
         """
         for i in args:
-            if i not in self._loads:
-                raise ValueError("Error removing load " + i + ": no such load exists")
+            if len(self._loads_position) == 0:
+                if i not in self._loads['distributed']:
+                    raise ValueError("Error removing load " + i + ": no such load exists")
+
+                else:
+                    self._loads['disrtibuted'].pop(i)
 
             else:
-                self._loads.pop(i)
-                self._loads_position.pop(i)
+                if i not in self._loads['point_load']:
+                    raise ValueError("Error removing load " + i + ": no such load exists")
+
+                else:
+                    self._loads['point_load'].pop(i)
+                    self._loads_position.pop(i)
