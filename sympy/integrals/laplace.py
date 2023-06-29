@@ -1618,6 +1618,8 @@ def _inverse_laplace_irrational(fn, s, t, plane):
     m = Wild('m', exclude=[s])
     n = Wild('n', exclude=[s])
 
+    debug("**********", fn)
+
     result = None
     condition = S.true
 
@@ -1814,6 +1816,35 @@ def _inverse_laplace_irrational(fn, s, t, plane):
                     sqrt(a_)*sqrt(b_)*exp(b_*t)*erfc(sqrt(b_)*sqrt(t)) -
                     b_*exp(b_*t))
                 debugf('[ILT _i_l_i] Rule (6) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half and zeros[0][n] == 1 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)/(a0*s*(a1*sqrt(s)+b1))
+            # == az/a0/a1 * (sqrt(z)+bz/az)/(s*(sqrt(s)+b1/a1))
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[1][b]/poles[1][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]/poles[0][a]/poles[1][a]*constants
+                result = k_*(
+                    2*exp(a_**2*t)*erfc(a_*sqrt(t))-1)
+                debugf('[ILT _i_l_i] Rule (17) returns %s', (result, ))
+        elif (
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0 and poles[0][n] == -2 and
+                poles[0][m] == S.Half and zeros[0][n] == 2 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)**2/(a1*s*(a0*sqrt(s)+b0)**2)
+            # == az**2/a1/a0**2 * (sqrt(z)+bz/az)**2/(s*(sqrt(s)+b0/a0)**2)
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[0][b]/poles[0][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]**2/poles[1][a]/poles[0][a]**2*constants
+                result = k_*(
+                    1 + 8*a_**2*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                    8/sqrt(pi)*a_*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (18) returns %s', (result, ))
 
     elif len(poles) == 3 and len(zeros) == 0:
         if (
@@ -1853,6 +1884,18 @@ def _inverse_laplace_irrational(fn, s, t, plane):
         return None
     else:
         return Heaviside(t)*result, condition
+
+
+def _inverse_laplace_early_prog_rules(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    prog_rules = [_inverse_laplace_irrational]
+
+    for p_rule in prog_rules:
+        if (r := p_rule(F, s, t, plane)) is not None:
+            return r
+    return None
 
 
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
@@ -1979,6 +2022,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
                     f, s_, t_, plane, simplify=simplify))
                 is not None or
                 (r := _inverse_laplace_apply_simple_rules(f, s_, t_))
+                is not None or
+                (r := _inverse_laplace_early_prog_rules(f, s_, t_, plane))
                 is not None or
                 (r := _inverse_laplace_expand(f, s_, t_, plane))
                 is not None or
