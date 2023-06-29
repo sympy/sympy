@@ -1,6 +1,5 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy.core.random import seed
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function
 from sympy.core.numbers import I, Rational, oo, pi
@@ -494,7 +493,6 @@ def test__pt():
 
 
 def test_linear_programming():
-    seed(47)
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
     r3 = 2*x + y + 7*z <= 5
@@ -580,7 +578,6 @@ def test_linear_programming():
 
 
 def test_find_feasible():
-    seed(47)
     r1 = x >= 0
     r2 = x <= -1
     assert find_feasible([r1, r2]) is None
