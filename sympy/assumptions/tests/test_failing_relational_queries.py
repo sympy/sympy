@@ -8,9 +8,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.abc import a, b, c, w, x, y, z
 
-from sympy import sqrt, Q, refine
-from sympy.abc import x
-
 
 @XFAIL
 def test_inequalities():
