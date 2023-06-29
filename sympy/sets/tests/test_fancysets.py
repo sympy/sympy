@@ -43,8 +43,8 @@ def test_naturals():
     assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.boundary == N
-    assert N.is_open == False
-    assert N.is_closed == True
+    assert N.is_open is False
+    assert N.is_closed is True
 
     assert N.inf == 1
     assert N.sup is oo
@@ -87,8 +87,8 @@ def test_integers():
     assert Z.sup is oo
 
     assert Z.boundary == Z
-    assert Z.is_open == False
-    assert Z.is_closed == True
+    assert Z.is_open is False
+    assert Z.is_closed is True
 
     assert Z.as_relational(x) == And(Eq(floor(x), x), -oo < x, x < oo)
 
@@ -407,7 +407,7 @@ def test_Range_symbolic():
     raises(ValueError, lambda: len(sr))
     raises(ValueError, lambda: sr.size)
     # bool
-    assert bool(Range(0)) == False
+    assert bool(Range(0)) is False
     assert bool(xr)
     assert bool(ir)
     assert bool(ipr)
@@ -671,7 +671,7 @@ def test_Complex():
     assert S.Complexes.intersect(S.Reals) == S.Reals
     assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
-    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
+    assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) is False
     assert str(S.Complexes) == "Complexes"
     assert repr(S.Complexes) == "Complexes"
 
@@ -1162,20 +1162,20 @@ def test_issue_11732():
     finiteset1234 = FiniteSet(1, 2, 3, 4)
     pointComplex = Tuple(1, 5)
 
-    assert (interval12 in S.Naturals) == False
-    assert (interval12 in S.Naturals0) == False
-    assert (interval12 in S.Integers) == False
-    assert (interval12 in S.Complexes) == False
+    assert (interval12 in S.Naturals) is False
+    assert (interval12 in S.Naturals0) is False
+    assert (interval12 in S.Integers) is False
+    assert (interval12 in S.Complexes) is False
 
-    assert (finiteset1234 in S.Naturals) == False
-    assert (finiteset1234 in S.Naturals0) == False
-    assert (finiteset1234 in S.Integers) == False
-    assert (finiteset1234 in S.Complexes) == False
+    assert (finiteset1234 in S.Naturals) is False
+    assert (finiteset1234 in S.Naturals0) is False
+    assert (finiteset1234 in S.Integers) is False
+    assert (finiteset1234 in S.Complexes) is False
 
-    assert (pointComplex in S.Naturals) == False
-    assert (pointComplex in S.Naturals0) == False
-    assert (pointComplex in S.Integers) == False
-    assert (pointComplex in S.Complexes) == True
+    assert (pointComplex in S.Naturals) is False
+    assert (pointComplex in S.Naturals0) is False
+    assert (pointComplex in S.Integers) is False
+    assert (pointComplex in S.Complexes) is True
 
 
 def test_issue_11730():
@@ -1271,8 +1271,8 @@ def test_Rationals():
     # issue #18134:
     assert S.Rationals.boundary == S.Reals
     assert S.Rationals.closure == S.Reals
-    assert S.Rationals.is_open == False
-    assert S.Rationals.is_closed == False
+    assert S.Rationals.is_open is False
+    assert S.Rationals.is_closed is False
 
 
 def test_NZQRC_unions():

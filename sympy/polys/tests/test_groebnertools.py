@@ -530,4 +530,4 @@ def test_is_reduced():
     g = x*y + 2*y**3 - 1
     assert is_reduced([f, g], R) ==  False
     G = groebner([f, g], R)
-    assert is_reduced(G, R) == True
+    assert is_reduced(G, R) is True

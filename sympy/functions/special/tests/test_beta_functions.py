@@ -21,7 +21,7 @@ def test_beta():
     assert unchanged(beta, x, y)
     assert unchanged(beta, x, x)
 
-    assert beta(5, -3).is_real == True
+    assert beta(5, -3).is_real is True
     assert beta(3, y).is_real is None
 
     assert expand_func(beta(x, y)) == gamma(x)*gamma(y)/gamma(x + y)
@@ -63,7 +63,7 @@ def test_betainc():
     assert unchanged(betainc, a, b, x1, x2)
     assert unchanged(betainc, a, b, 0, x1)
 
-    assert betainc(1, 2, 0, -5).is_real == True
+    assert betainc(1, 2, 0, -5).is_real is True
     assert betainc(1, 2, 0, x2).is_real is None
     assert conjugate(betainc(I, 2, 3 - I, 1 + 4*I)) == betainc(-I, 2, 3 + I, 1 - 4*I)
 
@@ -79,7 +79,7 @@ def test_betainc_regularized():
     assert unchanged(betainc_regularized, a, b, x1, x2)
     assert unchanged(betainc_regularized, a, b, 0, x1)
 
-    assert betainc_regularized(3, 5, 0, -1).is_real == True
+    assert betainc_regularized(3, 5, 0, -1).is_real is True
     assert betainc_regularized(3, 5, 0, x2).is_real is None
     assert conjugate(betainc_regularized(3*I, 1, 2 + I, 1 + 2*I)) == betainc_regularized(-3*I, 1, 2 - I, 1 - 2*I)
 

@@ -405,9 +405,9 @@ def test_exp_assumptions():
         assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
 
-    assert Pow(E, I*pi, evaluate=False).is_imaginary == False
-    assert Pow(E, 2*I*pi, evaluate=False).is_imaginary == False
-    assert Pow(E, I*pi/2, evaluate=False).is_imaginary == True
+    assert Pow(E, I*pi, evaluate=False).is_imaginary is False
+    assert Pow(E, 2*I*pi, evaluate=False).is_imaginary is False
+    assert Pow(E, I*pi/2, evaluate=False).is_imaginary is True
     assert Pow(E, I*pi/3, evaluate=False).is_imaginary is None
 
     assert exp(0, evaluate=False).is_algebraic

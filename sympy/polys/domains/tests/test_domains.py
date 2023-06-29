@@ -1210,29 +1210,29 @@ def test_issue_18278():
 def test_Domain_is_negative():
     I = S.ImaginaryUnit
     a, b = [CC.convert(x) for x in (2 + I, 5)]
-    assert CC.is_negative(a) == False
-    assert CC.is_negative(b) == False
+    assert CC.is_negative(a) is False
+    assert CC.is_negative(b) is False
 
 
 def test_Domain_is_positive():
     I = S.ImaginaryUnit
     a, b = [CC.convert(x) for x in (2 + I, 5)]
-    assert CC.is_positive(a) == False
-    assert CC.is_positive(b) == False
+    assert CC.is_positive(a) is False
+    assert CC.is_positive(b) is False
 
 
 def test_Domain_is_nonnegative():
     I = S.ImaginaryUnit
     a, b = [CC.convert(x) for x in (2 + I, 5)]
-    assert CC.is_nonnegative(a) == False
-    assert CC.is_nonnegative(b) == False
+    assert CC.is_nonnegative(a) is False
+    assert CC.is_nonnegative(b) is False
 
 
 def test_Domain_is_nonpositive():
     I = S.ImaginaryUnit
     a, b = [CC.convert(x) for x in (2 + I, 5)]
-    assert CC.is_nonpositive(a) == False
-    assert CC.is_nonpositive(b) == False
+    assert CC.is_nonpositive(a) is False
+    assert CC.is_nonpositive(b) is False
 
 
 def test_exponential_domain():

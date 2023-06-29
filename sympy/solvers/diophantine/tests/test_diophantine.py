@@ -250,7 +250,7 @@ def test_DN():
     assert diop_DN(13, -4) == [(3, 1), (393, 109), (36, 10)]
     # Source I referred returned (3, 1), (393, 109) and (-3, 1) as fundamental solutions
     # So (-3, 1) and (393, 109) should be in the same equivalent class
-    assert equivalent(-3, 1, 393, 109, 13, -4) == True
+    assert equivalent(-3, 1, 393, 109, 13, -4) is True
 
     assert diop_DN(13, 27) == [(220, 61), (40, 11), (768, 213), (12, 3)]
     assert set(diop_DN(157, 12)) == {(13, 1), (10663, 851), (579160, 46222),
@@ -798,8 +798,8 @@ def test_diopcoverage():
     assert len(check_param(S(4) + x, Rational(3, 2), S(2), [x])) == 0
 
     assert _nint_or_floor(16, 10) == 2
-    assert _odd(1) == (not _even(1)) == True
-    assert _odd(0) == (not _even(0)) == False
+    assert _odd(1) == (not _even(1)) is True
+    assert _odd(0) == (not _even(0)) is False
     assert _remove_gcd(2, 4, 6) == (1, 2, 3)
     raises(TypeError, lambda: _remove_gcd((2, 4, 6)))
     assert sqf_normal(2*3**2*5, 2*5*11, 2*7**2*11)  == \

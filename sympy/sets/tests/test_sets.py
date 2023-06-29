@@ -39,7 +39,7 @@ def test_imageset():
     # issue 16878a
     r = symbols('r', real=True)
     assert imageset(x, (x, x), S.Reals)._contains((1, r)) == None
-    assert imageset(x, (x, x), S.Reals)._contains((1, 2)) == False
+    assert imageset(x, (x, x), S.Reals)._contains((1, 2)) is False
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
@@ -162,23 +162,23 @@ def test_interval_is_empty():
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     nn = Symbol('nn', nonnegative=True)
-    assert Interval(1, 2).is_empty == False
-    assert Interval(3, 3).is_empty == False  # FiniteSet
-    assert Interval(r, r).is_empty == False  # FiniteSet
-    assert Interval(r, r + nn).is_empty == False
-    assert Interval(x, x).is_empty == False
-    assert Interval(1, oo).is_empty == False
-    assert Interval(-oo, oo).is_empty == False
-    assert Interval(-oo, 1).is_empty == False
+    assert Interval(1, 2).is_empty is False
+    assert Interval(3, 3).is_empty is False  # FiniteSet
+    assert Interval(r, r).is_empty is False  # FiniteSet
+    assert Interval(r, r + nn).is_empty is False
+    assert Interval(x, x).is_empty is False
+    assert Interval(1, oo).is_empty is False
+    assert Interval(-oo, oo).is_empty is False
+    assert Interval(-oo, 1).is_empty is False
     assert Interval(x, y).is_empty == None
-    assert Interval(r, oo).is_empty == False  # real implies finite
-    assert Interval(n, 0).is_empty == False
-    assert Interval(n, 0, left_open=True).is_empty == False
-    assert Interval(p, 0).is_empty == True  # EmptySet
+    assert Interval(r, oo).is_empty is False  # real implies finite
+    assert Interval(n, 0).is_empty is False
+    assert Interval(n, 0, left_open=True).is_empty is False
+    assert Interval(p, 0).is_empty is True  # EmptySet
     assert Interval(nn, 0).is_empty == None
-    assert Interval(n, p).is_empty == False
-    assert Interval(0, p, left_open=True).is_empty == False
-    assert Interval(0, p, right_open=True).is_empty == False
+    assert Interval(n, p).is_empty is False
+    assert Interval(0, p, left_open=True).is_empty is False
+    assert Interval(0, p, right_open=True).is_empty is False
     assert Interval(0, nn, left_open=True).is_empty == None
     assert Interval(0, nn, right_open=True).is_empty == None
 
@@ -268,7 +268,7 @@ def test_union_iter():
 
 
 def test_union_is_empty():
-    assert (Interval(x, y) + FiniteSet(1)).is_empty == False
+    assert (Interval(x, y) + FiniteSet(1)).is_empty is False
     assert (Interval(x, y) + Interval(-x, y)).is_empty == None
 
 
@@ -548,8 +548,8 @@ def test_issue_9623():
 
 
 def test_is_disjoint():
-    assert Interval(0, 2).is_disjoint(Interval(1, 2)) == False
-    assert Interval(0, 2).is_disjoint(Interval(3, 4)) == True
+    assert Interval(0, 2).is_disjoint(Interval(1, 2)) is False
+    assert Interval(0, 2).is_disjoint(Interval(3, 4)) is True
 
 
 def test_ProductSet__len__():
@@ -643,7 +643,7 @@ def test_ProductSet_of_single_arg_is_not_arg():
 
 
 def test_ProductSet_is_empty():
-    assert ProductSet(S.Integers, S.Reals).is_empty == False
+    assert ProductSet(S.Integers, S.Reals).is_empty is False
     assert ProductSet(Interval(x, 1), S.Reals).is_empty == None
 
 
@@ -755,29 +755,29 @@ def test_is_proper_subset():
 
 
 def test_is_superset():
-    assert Interval(0, 1).is_superset(Interval(0, 2)) == False
+    assert Interval(0, 1).is_superset(Interval(0, 2)) is False
     assert Interval(0, 3).is_superset(Interval(0, 2))
 
-    assert FiniteSet(1, 2).is_superset(FiniteSet(1, 2, 3, 4)) == False
-    assert FiniteSet(4, 5).is_superset(FiniteSet(1, 2, 3, 4)) == False
-    assert FiniteSet(1).is_superset(Interval(0, 2)) == False
-    assert FiniteSet(1, 2).is_superset(Interval(0, 2, True, True)) == False
+    assert FiniteSet(1, 2).is_superset(FiniteSet(1, 2, 3, 4)) is False
+    assert FiniteSet(4, 5).is_superset(FiniteSet(1, 2, 3, 4)) is False
+    assert FiniteSet(1).is_superset(Interval(0, 2)) is False
+    assert FiniteSet(1, 2).is_superset(Interval(0, 2, True, True)) is False
     assert (Interval(1, 2) + FiniteSet(3)).is_superset(
-        Interval(0, 2, False, True) + FiniteSet(2, 3)) == False
+        Interval(0, 2, False, True) + FiniteSet(2, 3)) is False
 
-    assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) == False
+    assert Interval(3, 4).is_superset(Union(Interval(0, 1), Interval(2, 5))) is False
 
-    assert FiniteSet(1, 2, 3, 4).is_superset(Interval(0, 5)) == False
-    assert S.EmptySet.is_superset(FiniteSet(1, 2, 3)) == False
+    assert FiniteSet(1, 2, 3, 4).is_superset(Interval(0, 5)) is False
+    assert S.EmptySet.is_superset(FiniteSet(1, 2, 3)) is False
 
-    assert Interval(0, 1).is_superset(S.EmptySet) == True
-    assert S.EmptySet.is_superset(S.EmptySet) == True
+    assert Interval(0, 1).is_superset(S.EmptySet) is True
+    assert S.EmptySet.is_superset(S.EmptySet) is True
 
     raises(ValueError, lambda: S.EmptySet.is_superset(1))
 
     # tests for the issuperset alias
-    assert Interval(0, 1).issuperset(S.EmptySet) == True
-    assert S.EmptySet.issuperset(S.EmptySet) == True
+    assert Interval(0, 1).issuperset(S.EmptySet) is True
+    assert S.EmptySet.issuperset(S.EmptySet) is True
 
 
 def test_is_proper_superset():

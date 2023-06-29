@@ -94,8 +94,8 @@ def test_residue():
     assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
-    assert sqrt_mod(67, 101) == None
-    assert sqrt_mod(1020, 104729) == None
+    assert sqrt_mod(67, 101) is None
+    assert sqrt_mod(1020, 104729) is None
 
     for p in range(3, 100):
         d = defaultdict(list)
@@ -185,7 +185,7 @@ def test_residue():
     assert is_nthpow_residue(31, 4, 41)
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
-    assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
+    assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) is True
     assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
 
     assert nthroot_mod(29, 31, 74) == [45]

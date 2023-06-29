@@ -86,13 +86,13 @@ def test_gamma():
     assert gamma(3*exp_polar(I*pi)/4).is_extended_nonpositive is True
 
     y = Symbol('y', nonpositive=True, integer=True)
-    assert gamma(y).is_real == False
+    assert gamma(y).is_real is False
     y = Symbol('y', positive=True, noninteger=True)
-    assert gamma(y).is_real == True
+    assert gamma(y).is_real is True
 
-    assert gamma(-1.0, evaluate=False).is_real == False
-    assert gamma(0, evaluate=False).is_real == False
-    assert gamma(-2, evaluate=False).is_real == False
+    assert gamma(-1.0, evaluate=False).is_real is False
+    assert gamma(0, evaluate=False).is_real is False
+    assert gamma(-2, evaluate=False).is_real is False
 
 
 def test_gamma_rewrite():
@@ -151,24 +151,24 @@ def test_lowergamma():
     assert conjugate(lowergamma(x, 0)) == 0
     assert unchanged(conjugate, lowergamma(x, -oo))
 
-    assert lowergamma(0, x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(S(1)/3, x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(1, x, evaluate=False)._eval_is_meromorphic(x, 0) == True
-    assert lowergamma(x, x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(x + 1, x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(1/x, x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(0, x + 1)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(S(1)/3, x + 1)._eval_is_meromorphic(x, 0) == True
-    assert lowergamma(1, x + 1, evaluate=False)._eval_is_meromorphic(x, 0) == True
-    assert lowergamma(x, x + 1)._eval_is_meromorphic(x, 0) == True
-    assert lowergamma(x + 1, x + 1)._eval_is_meromorphic(x, 0) == True
-    assert lowergamma(1/x, x + 1)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(0, 1/x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(S(1)/3, 1/x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(1, 1/x, evaluate=False)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(x, 1/x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(x + 1, 1/x)._eval_is_meromorphic(x, 0) == False
-    assert lowergamma(1/x, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(S(1)/3, x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(1, x, evaluate=False)._eval_is_meromorphic(x, 0) is True
+    assert lowergamma(x, x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(x + 1, x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(1/x, x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(0, x + 1)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(S(1)/3, x + 1)._eval_is_meromorphic(x, 0) is True
+    assert lowergamma(1, x + 1, evaluate=False)._eval_is_meromorphic(x, 0) is True
+    assert lowergamma(x, x + 1)._eval_is_meromorphic(x, 0) is True
+    assert lowergamma(x + 1, x + 1)._eval_is_meromorphic(x, 0) is True
+    assert lowergamma(1/x, x + 1)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(0, 1/x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(S(1)/3, 1/x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(1, 1/x, evaluate=False)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(x, 1/x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(x + 1, 1/x)._eval_is_meromorphic(x, 0) is False
+    assert lowergamma(1/x, 1/x)._eval_is_meromorphic(x, 0) is False
 
     assert lowergamma(x, 2).series(x, oo, 3) == \
         2**x*(1 + 2/(x + 1))*exp(-2)/x + O(exp(x*log(2))/x**3, (x, oo))
@@ -325,16 +325,16 @@ def test_polygamma():
     # Test a bug
     assert polygamma(0, -x).expand(func=True) == polygamma(0, -x)
 
-    assert polygamma(2, 2.5).is_positive == False
-    assert polygamma(2, -2.5).is_positive == False
-    assert polygamma(3, 2.5).is_positive == True
+    assert polygamma(2, 2.5).is_positive is False
+    assert polygamma(2, -2.5).is_positive is False
+    assert polygamma(3, 2.5).is_positive is True
     assert polygamma(3, -2.5).is_positive is True
     assert polygamma(-2, -2.5).is_positive is None
     assert polygamma(-3, -2.5).is_positive is None
 
-    assert polygamma(2, 2.5).is_negative == True
-    assert polygamma(3, 2.5).is_negative == False
-    assert polygamma(3, -2.5).is_negative == False
+    assert polygamma(2, 2.5).is_negative is True
+    assert polygamma(3, 2.5).is_negative is False
+    assert polygamma(3, -2.5).is_negative is False
     assert polygamma(2, -2.5).is_negative is True
     assert polygamma(-2, -2.5).is_negative is None
     assert polygamma(-3, -2.5).is_negative is None
@@ -726,13 +726,13 @@ def test_multigamma():
     assert multigamma(n, 3).rewrite(factorial) == pi**Rational(3, 2)*\
         factorial(n - 2)*factorial(n - Rational(3, 2))*factorial(n - 1)
 
-    assert multigamma(Rational(-1, 2), 3, evaluate=False).is_real == False
-    assert multigamma(S.Half, 3, evaluate=False).is_real == False
-    assert multigamma(0, 1, evaluate=False).is_real == False
-    assert multigamma(1, 3, evaluate=False).is_real == False
-    assert multigamma(-1.0, 3, evaluate=False).is_real == False
-    assert multigamma(0.7, 3, evaluate=False).is_real == True
-    assert multigamma(3, 3, evaluate=False).is_real == True
+    assert multigamma(Rational(-1, 2), 3, evaluate=False).is_real is False
+    assert multigamma(S.Half, 3, evaluate=False).is_real is False
+    assert multigamma(0, 1, evaluate=False).is_real is False
+    assert multigamma(1, 3, evaluate=False).is_real is False
+    assert multigamma(-1.0, 3, evaluate=False).is_real is False
+    assert multigamma(0.7, 3, evaluate=False).is_real is True
+    assert multigamma(3, 3, evaluate=False).is_real is True
 
 def test_gamma_as_leading_term():
     assert gamma(x).as_leading_term(x) == 1/x

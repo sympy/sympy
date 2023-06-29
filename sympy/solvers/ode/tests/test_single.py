@@ -348,10 +348,10 @@ def test_SingleODESolver():
     assert problem.order == 4
 
     problem = SingleODEProblem(f(x).diff(x, 3) + f(x).diff(x, 2) - f(x)**2, f(x), x)
-    assert problem.is_autonomous == True
+    assert problem.is_autonomous is True
 
     problem = SingleODEProblem(f(x).diff(x, 3) + x*f(x).diff(x, 2) - f(x)**2, f(x), x)
-    assert problem.is_autonomous == False
+    assert problem.is_autonomous is False
 
 
 def test_linear_coefficients():
@@ -526,12 +526,12 @@ def test_nth_linear_constant_coeff_undetermined_coefficients():
 def test_nth_order_reducible():
     F = lambda eq: NthOrderReducible(SingleODEProblem(eq, f(x), x))._matches()
     D = Derivative
-    assert F(D(y*f(x), x, y) + D(f(x), x)) == False
-    assert F(D(y*f(y), y, y) + D(f(y), y)) == False
-    assert F(f(x)*D(f(x), x) + D(f(x), x, 2))== False
-    assert F(D(x*f(y), y, 2) + D(u*y*f(x), x, 3)) == False  # no simplification by design
-    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) == False
-    assert F(D(f(x), x, 2) + D(f(x), x, 3)) == True
+    assert F(D(y*f(x), x, y) + D(f(x), x)) is False
+    assert F(D(y*f(y), y, y) + D(f(y), y)) is False
+    assert F(f(x)*D(f(x), x) + D(f(x), x, 2))is False
+    assert F(D(x*f(y), y, 2) + D(u*y*f(x), x, 3)) is False  # no simplification by design
+    assert F(D(f(y), y, 2) + D(f(y), y, 3) + D(f(x), x, 4)) is False
+    assert F(D(f(x), x, 2) + D(f(x), x, 3)) is True
     _ode_solver_test(_get_examples_ode_sol_nth_order_reducible)
 
 

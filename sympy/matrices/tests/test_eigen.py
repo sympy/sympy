@@ -510,74 +510,74 @@ def test_definite():
     # Examples from Gilbert Strang, "Introduction to Linear Algebra"
     # Positive definite matrices
     m = Matrix([[2, -1, 0], [-1, 2, -1], [0, -1, 2]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     m = Matrix([[5, 4], [4, 5]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     # Positive semidefinite matrices
     m = Matrix([[2, -1, -1], [-1, 2, -1], [-1, -1, 2]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is False
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     m = Matrix([[1, 2], [2, 4]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is False
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     # Examples from Mathematica documentation
     # Non-hermitian positive definite matrices
     m = Matrix([[2, 3], [4, 8]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     # Hermetian matrices
     m = Matrix([[1, 2*I], [-I, 4]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     # Symbolic matrices examples
     a = Symbol('a', positive=True)
     b = Symbol('b', negative=True)
     m = Matrix([[a, 0, 0], [0, a, 0], [0, 0, a]])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is False
 
     m = Matrix([[b, 0, 0], [0, b, 0], [0, 0, b]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == False
-    assert m.is_negative_definite == True
-    assert m.is_negative_semidefinite == True
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is False
+    assert m.is_positive_semidefinite is False
+    assert m.is_negative_definite is True
+    assert m.is_negative_semidefinite is True
+    assert m.is_indefinite is False
 
     m = Matrix([[a, 0], [0, b]])
-    assert m.is_positive_definite == False
-    assert m.is_positive_semidefinite == False
-    assert m.is_negative_definite == False
-    assert m.is_negative_semidefinite == False
-    assert m.is_indefinite == True
+    assert m.is_positive_definite is False
+    assert m.is_positive_semidefinite is False
+    assert m.is_negative_definite is False
+    assert m.is_negative_semidefinite is False
+    assert m.is_indefinite is True
 
     m = Matrix([
         [0.0228202735623867, 0.00518748979085398,
@@ -589,9 +589,9 @@ def test_definite():
         [-0.00709135324903921, 0.00233147902806909,
          0.340359081555988, 0.928147644848199]
     ])
-    assert m.is_positive_definite == True
-    assert m.is_positive_semidefinite == True
-    assert m.is_indefinite == False
+    assert m.is_positive_definite is True
+    assert m.is_positive_semidefinite is True
+    assert m.is_indefinite is False
 
     # test for issue 19547: https://github.com/sympy/sympy/issues/19547
     m = Matrix([
@@ -607,23 +607,23 @@ def test_positive_semidefinite_cholesky():
     from sympy.matrices.eigen import _is_positive_semidefinite_cholesky
 
     m = Matrix([[0, 0, 0], [0, 0, 0], [0, 0, 0]])
-    assert _is_positive_semidefinite_cholesky(m) == True
+    assert _is_positive_semidefinite_cholesky(m) is True
     m = Matrix([[0, 0, 0], [0, 5, -10*I], [0, 10*I, 5]])
-    assert _is_positive_semidefinite_cholesky(m) == False
+    assert _is_positive_semidefinite_cholesky(m) is False
     m = Matrix([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
-    assert _is_positive_semidefinite_cholesky(m) == False
+    assert _is_positive_semidefinite_cholesky(m) is False
     m = Matrix([[0, 1], [1, 0]])
-    assert _is_positive_semidefinite_cholesky(m) == False
+    assert _is_positive_semidefinite_cholesky(m) is False
 
     # https://www.value-at-risk.net/cholesky-factorization/
     m = Matrix([[4, -2, -6], [-2, 10, 9], [-6, 9, 14]])
-    assert _is_positive_semidefinite_cholesky(m) == True
+    assert _is_positive_semidefinite_cholesky(m) is True
     m = Matrix([[9, -3, 3], [-3, 2, 1], [3, 1, 6]])
-    assert _is_positive_semidefinite_cholesky(m) == True
+    assert _is_positive_semidefinite_cholesky(m) is True
     m = Matrix([[4, -2, 2], [-2, 1, -1], [2, -1, 5]])
-    assert _is_positive_semidefinite_cholesky(m) == True
+    assert _is_positive_semidefinite_cholesky(m) is True
     m = Matrix([[1, 2, -1], [2, 5, 1], [-1, 1, 9]])
-    assert _is_positive_semidefinite_cholesky(m) == False
+    assert _is_positive_semidefinite_cholesky(m) is False
 
 
 def test_issue_20582():

@@ -197,30 +197,30 @@ def test_PolyElement___hash__():
 def test_PolyElement___eq__():
     R, x, y = ring("x,y", ZZ, lex)
 
-    assert ((x*y + 5*x*y) == 6) == False
-    assert ((x*y + 5*x*y) == 6*x*y) == True
-    assert (6 == (x*y + 5*x*y)) == False
-    assert (6*x*y == (x*y + 5*x*y)) == True
+    assert ((x*y + 5*x*y) == 6) is False
+    assert ((x*y + 5*x*y) == 6*x*y) is True
+    assert (6 == (x*y + 5*x*y)) is False
+    assert (6*x*y == (x*y + 5*x*y)) is True
 
-    assert ((x*y - x*y) == 0) == True
-    assert (0 == (x*y - x*y)) == True
+    assert ((x*y - x*y) == 0) is True
+    assert (0 == (x*y - x*y)) is True
 
-    assert ((x*y - x*y) == 1) == False
-    assert (1 == (x*y - x*y)) == False
+    assert ((x*y - x*y) == 1) is False
+    assert (1 == (x*y - x*y)) is False
 
-    assert ((x*y - x*y) == 1) == False
-    assert (1 == (x*y - x*y)) == False
+    assert ((x*y - x*y) == 1) is False
+    assert (1 == (x*y - x*y)) is False
 
-    assert ((x*y + 5*x*y) != 6) == True
-    assert ((x*y + 5*x*y) != 6*x*y) == False
-    assert (6 != (x*y + 5*x*y)) == True
-    assert (6*x*y != (x*y + 5*x*y)) == False
+    assert ((x*y + 5*x*y) != 6) is True
+    assert ((x*y + 5*x*y) != 6*x*y) is False
+    assert (6 != (x*y + 5*x*y)) is True
+    assert (6*x*y != (x*y + 5*x*y)) is False
 
-    assert ((x*y - x*y) != 0) == False
-    assert (0 != (x*y - x*y)) == False
+    assert ((x*y - x*y) != 0) is False
+    assert (0 != (x*y - x*y)) is False
 
-    assert ((x*y - x*y) != 1) == True
-    assert (1 != (x*y - x*y)) == True
+    assert ((x*y - x*y) != 1) is True
+    assert (1 != (x*y - x*y)) is True
 
     assert R.one == QQ(1, 1) == R.one
     assert R.one == 1 == R.one
@@ -228,8 +228,8 @@ def test_PolyElement___eq__():
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
 
-    assert (t**3*x/x == t**3) == True
-    assert (t**3*x/x == t**4) == False
+    assert (t**3*x/x == t**3) is True
+    assert (t**3*x/x == t**4) is False
 
 def test_PolyElement__lt_le_gt_ge__():
     R, x, y = ring("x,y", ZZ)
@@ -1271,35 +1271,35 @@ def test_PolyElement_compose():
 def test_PolyElement_is_():
     R, x,y,z = ring("x,y,z", QQ)
 
-    assert (x - x).is_generator == False
-    assert (x - x).is_ground == True
-    assert (x - x).is_monomial == True
-    assert (x - x).is_term == True
+    assert (x - x).is_generator is False
+    assert (x - x).is_ground is True
+    assert (x - x).is_monomial is True
+    assert (x - x).is_term is True
 
-    assert (x - x + 1).is_generator == False
-    assert (x - x + 1).is_ground == True
-    assert (x - x + 1).is_monomial == True
-    assert (x - x + 1).is_term == True
+    assert (x - x + 1).is_generator is False
+    assert (x - x + 1).is_ground is True
+    assert (x - x + 1).is_monomial is True
+    assert (x - x + 1).is_term is True
 
-    assert x.is_generator == True
-    assert x.is_ground == False
-    assert x.is_monomial == True
-    assert x.is_term == True
+    assert x.is_generator is True
+    assert x.is_ground is False
+    assert x.is_monomial is True
+    assert x.is_term is True
 
-    assert (x*y).is_generator == False
-    assert (x*y).is_ground == False
-    assert (x*y).is_monomial == True
-    assert (x*y).is_term == True
+    assert (x*y).is_generator is False
+    assert (x*y).is_ground is False
+    assert (x*y).is_monomial is True
+    assert (x*y).is_term is True
 
-    assert (3*x).is_generator == False
-    assert (3*x).is_ground == False
-    assert (3*x).is_monomial == False
-    assert (3*x).is_term == True
+    assert (3*x).is_generator is False
+    assert (3*x).is_ground is False
+    assert (3*x).is_monomial is False
+    assert (3*x).is_term is True
 
-    assert (3*x + 1).is_generator == False
-    assert (3*x + 1).is_ground == False
-    assert (3*x + 1).is_monomial == False
-    assert (3*x + 1).is_term == False
+    assert (3*x + 1).is_generator is False
+    assert (3*x + 1).is_ground is False
+    assert (3*x + 1).is_monomial is False
+    assert (3*x + 1).is_term is False
 
     assert R(0).is_zero is True
     assert R(1).is_zero is False

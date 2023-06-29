@@ -628,12 +628,12 @@ def test_cut_section():
     t1, t2, t3, t4 = [(0, b), (0, 0), (a, 0), (a, b)]
     p = Polygon(t1, t2, t3, t4)
     p1, p2 = p.cut_section(Line((0, b), slope=0))
-    assert p1 == None
+    assert p1 is None
     assert p2 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
 
     p3, p4 = p.cut_section(Line((0, 0), slope=0))
     assert p3 == Polygon(Point2D(0, 10), Point2D(0, 0), Point2D(20, 0), Point2D(20, 10))
-    assert p4 == None
+    assert p4 is None
 
     # case where the line does not intersect with a polygon at all
     raises(ValueError, lambda: p.cut_section(Line((0, a), slope=0)))
@@ -641,21 +641,21 @@ def test_cut_section():
 def test_type_of_triangle():
     # Isoceles triangle
     p1 = Polygon(Point(0, 0), Point(5, 0), Point(2, 4))
-    assert p1.is_isosceles() == True
-    assert p1.is_scalene() == False
-    assert p1.is_equilateral() == False
+    assert p1.is_isosceles() is True
+    assert p1.is_scalene() is False
+    assert p1.is_equilateral() is False
 
     # Scalene triangle
     p2 = Polygon (Point(0, 0), Point(0, 2), Point(4, 0))
-    assert p2.is_isosceles() == False
-    assert p2.is_scalene() == True
-    assert p2.is_equilateral() == False
+    assert p2.is_isosceles() is False
+    assert p2.is_scalene() is True
+    assert p2.is_equilateral() is False
 
     # Equilateral triagle
     p3 = Polygon(Point(0, 0), Point(6, 0), Point(3, sqrt(27)))
-    assert p3.is_isosceles() == True
-    assert p3.is_scalene() == False
-    assert p3.is_equilateral() == True
+    assert p3.is_isosceles() is True
+    assert p3.is_scalene() is False
+    assert p3.is_equilateral() is True
 
 def test_do_poly_distance():
     # Non-intersecting polygons

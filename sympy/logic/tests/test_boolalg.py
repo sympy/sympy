@@ -43,47 +43,47 @@ def test_overloading():
 
 
 def test_And():
-    assert And() is true
+    assert And() == True
     assert And(A) == A
-    assert And(True) is true
-    assert And(False) is false
-    assert And(True, True) is true
-    assert And(True, False) is false
-    assert And(False, False) is false
+    assert And(True) == True
+    assert And(False) == False
+    assert And(True, True) == True
+    assert And(True, False) == False
+    assert And(False, False) == False
     assert And(True, A) == A
-    assert And(False, A) is false
-    assert And(True, True, True) is true
+    assert And(False, A) == False
+    assert And(True, True, True) == True
     assert And(True, True, A) == A
-    assert And(True, False, A) is false
+    assert And(True, False, A) == False
     assert And(1, A) == A
     raises(TypeError, lambda: And(2, A))
     raises(TypeError, lambda: And(A < 2, A))
-    assert And(A < 1, A >= 1) is false
+    assert And(A < 1, A >= 1) == False
     e = A > 1
     assert And(e, e.canonical) == e.canonical
     g, l, ge, le = A > B, B < A, A >= B, B <= A
     assert And(g, l, ge, le) == And(ge, g)
     assert {And(*i) for i in permutations((l,g,le,ge))} == {And(ge, g)}
-    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) is false
+    assert And(And(Eq(a, 0), Eq(b, 0)), And(Ne(a, 0), Eq(c, 0))) == False
 
 
 def test_Or():
-    assert Or() is false
+    assert Or() == False
     assert Or(A) == A
-    assert Or(True) is true
-    assert Or(False) is false
-    assert Or(True, True) is true
-    assert Or(True, False) is true
-    assert Or(False, False) is false
-    assert Or(True, A) is true
+    assert Or(True) == True
+    assert Or(False) == False
+    assert Or(True, True) == True
+    assert Or(True, False) == True
+    assert Or(False, False) == False
+    assert Or(True, A) == True
     assert Or(False, A) == A
-    assert Or(True, False, False) is true
-    assert Or(True, False, A) is true
+    assert Or(True, False, False) == True
+    assert Or(True, False, A) == True
     assert Or(False, False, A) == A
-    assert Or(1, A) is true
+    assert Or(1, A) == True
     raises(TypeError, lambda: Or(2, A))
     raises(TypeError, lambda: Or(A < 2, A))
-    assert Or(A < 1, A >= 1) is true
+    assert Or(A < 1, A >= 1) == True
     e = A > 1
     assert Or(e, e.canonical) == e
     g, l, ge, le = A > B, B < A, A >= B, B <= A
@@ -91,20 +91,20 @@ def test_Or():
 
 
 def test_Xor():
-    assert Xor() is false
+    assert Xor() == False
     assert Xor(A) == A
-    assert Xor(A, A) is false
-    assert Xor(True, A, A) is true
+    assert Xor(A, A) == False
+    assert Xor(True, A, A) == True
     assert Xor(A, A, A, A, A) == A
     assert Xor(True, False, False, A, B) == ~Xor(A, B)
-    assert Xor(True) is true
-    assert Xor(False) is false
-    assert Xor(True, True) is false
-    assert Xor(True, False) is true
-    assert Xor(False, False) is false
+    assert Xor(True) == True
+    assert Xor(False) == False
+    assert Xor(True, True) == False
+    assert Xor(True, False) == True
+    assert Xor(False, False) == False
     assert Xor(True, A) == ~A
     assert Xor(False, A) == A
-    assert Xor(True, False, False) is true
+    assert Xor(True, False, False) == True
     assert Xor(True, False, A) == ~A
     assert Xor(False, False, A) == A
     assert isinstance(Xor(A, B), Xor)
@@ -137,82 +137,82 @@ def test_rewrite_as_Nor():
 
 def test_Not():
     raises(TypeError, lambda: Not(True, False))
-    assert Not(True) is false
-    assert Not(False) is true
-    assert Not(0) is true
-    assert Not(1) is false
-    assert Not(2) is false
+    assert Not(True) == False
+    assert Not(False) == True
+    assert Not(0) == True
+    assert Not(1) == False
+    assert Not(2) == False
 
 
 def test_Nand():
-    assert Nand() is false
+    assert Nand() == False
     assert Nand(A) == ~A
-    assert Nand(True) is false
-    assert Nand(False) is true
-    assert Nand(True, True) is false
-    assert Nand(True, False) is true
-    assert Nand(False, False) is true
+    assert Nand(True) == False
+    assert Nand(False) == True
+    assert Nand(True, True) == False
+    assert Nand(True, False) == True
+    assert Nand(False, False) == True
     assert Nand(True, A) == ~A
-    assert Nand(False, A) is true
-    assert Nand(True, True, True) is false
+    assert Nand(False, A) == True
+    assert Nand(True, True, True) == False
     assert Nand(True, True, A) == ~A
-    assert Nand(True, False, A) is true
+    assert Nand(True, False, A) == True
 
 
 def test_Nor():
-    assert Nor() is true
+    assert Nor() == True
     assert Nor(A) == ~A
-    assert Nor(True) is false
-    assert Nor(False) is true
-    assert Nor(True, True) is false
-    assert Nor(True, False) is false
-    assert Nor(False, False) is true
-    assert Nor(True, A) is false
+    assert Nor(True) == False
+    assert Nor(False) == True
+    assert Nor(True, True) == False
+    assert Nor(True, False) == False
+    assert Nor(False, False) == True
+    assert Nor(True, A) == False
     assert Nor(False, A) == ~A
-    assert Nor(True, True, True) is false
-    assert Nor(True, True, A) is false
-    assert Nor(True, False, A) is false
+    assert Nor(True, True, True) == False
+    assert Nor(True, True, A) == False
+    assert Nor(True, False, A) == False
 
 
 def test_Xnor():
-    assert Xnor() is true
+    assert Xnor() == True
     assert Xnor(A) == ~A
-    assert Xnor(A, A) is true
-    assert Xnor(True, A, A) is false
+    assert Xnor(A, A) == True
+    assert Xnor(True, A, A) == False
     assert Xnor(A, A, A, A, A) == ~A
-    assert Xnor(True) is false
-    assert Xnor(False) is true
-    assert Xnor(True, True) is true
-    assert Xnor(True, False) is false
-    assert Xnor(False, False) is true
+    assert Xnor(True) == False
+    assert Xnor(False) == True
+    assert Xnor(True, True) == True
+    assert Xnor(True, False) == False
+    assert Xnor(False, False) == True
     assert Xnor(True, A) == A
     assert Xnor(False, A) == ~A
-    assert Xnor(True, False, False) is false
+    assert Xnor(True, False, False) == False
     assert Xnor(True, False, A) == A
     assert Xnor(False, False, A) == ~A
 
 
 def test_Implies():
     raises(ValueError, lambda: Implies(A, B, C))
-    assert Implies(True, True) is true
-    assert Implies(True, False) is false
-    assert Implies(False, True) is true
-    assert Implies(False, False) is true
-    assert Implies(0, A) is true
-    assert Implies(1, 1) is true
-    assert Implies(1, 0) is false
+    assert Implies(True, True) == True
+    assert Implies(True, False) == False
+    assert Implies(False, True) == True
+    assert Implies(False, False) == True
+    assert Implies(0, A) == True
+    assert Implies(1, 1) == True
+    assert Implies(1, 0) == False
     assert A >> B == B << A
     assert (A < 1) >> (A >= 1) == (A >= 1)
-    assert (A < 1) >> (S.One > A) is true
-    assert A >> A is true
+    assert (A < 1) >> (S.One > A) == True
+    assert A >> A == True
 
 
 def test_Equivalent():
     assert Equivalent(A, B) == Equivalent(B, A) == Equivalent(A, B, A)
-    assert Equivalent() is true
-    assert Equivalent(A, A) == Equivalent(A) is true
-    assert Equivalent(True, True) == Equivalent(False, False) is true
-    assert Equivalent(True, False) == Equivalent(False, True) is false
+    assert Equivalent() == True
+    assert Equivalent(A, A) == Equivalent(A) == True
+    assert Equivalent(True, True) == Equivalent(False, False) == True
+    assert Equivalent(True, False) == Equivalent(False, True) == False
     assert Equivalent(A, True) == A
     assert Equivalent(A, False) == Not(A)
     assert Equivalent(A, B, True) == A & B
@@ -220,26 +220,26 @@ def test_Equivalent():
     assert Equivalent(1, A) == A
     assert Equivalent(0, A) == Not(A)
     assert Equivalent(A, Equivalent(B, C)) != Equivalent(Equivalent(A, B), C)
-    assert Equivalent(A < 1, A >= 1) is false
-    assert Equivalent(A < 1, A >= 1, 0) is false
-    assert Equivalent(A < 1, A >= 1, 1) is false
+    assert Equivalent(A < 1, A >= 1) == False
+    assert Equivalent(A < 1, A >= 1, 0) == False
+    assert Equivalent(A < 1, A >= 1, 1) == False
     assert Equivalent(A < 1, S.One > A) == Equivalent(1, 1) == Equivalent(0, 0)
-    assert Equivalent(Equality(A, B), Equality(B, A)) is true
+    assert Equivalent(Equality(A, B), Equality(B, A)) == True
 
 
 def test_Exclusive():
-    assert Exclusive(False, False, False) is true
-    assert Exclusive(True, False, False) is true
-    assert Exclusive(True, True, False) is false
-    assert Exclusive(True, True, True) is false
+    assert Exclusive(False, False, False) == True
+    assert Exclusive(True, False, False) == True
+    assert Exclusive(True, True, False) == False
+    assert Exclusive(True, True, True) == False
 
 
 def test_equals():
-    assert Not(Or(A, B)).equals(And(Not(A), Not(B))) is True
-    assert Equivalent(A, B).equals((A >> B) & (B >> A)) is True
-    assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) is True
-    assert (A >> B).equals(~A >> ~B) is False
-    assert (A >> (B >> A)).equals(A >> (C >> A)) is False
+    assert Not(Or(A, B)).equals(And(Not(A), Not(B))) == True
+    assert Equivalent(A, B).equals((A >> B) & (B >> A)) == True
+    assert ((A | ~B) & (~A | B)).equals((~A & ~B) | (A & B)) == True
+    assert (A >> B).equals(~A >> ~B) == False
+    assert (A >> (B >> A)).equals(A >> (C >> A)) == False
     raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
@@ -252,9 +252,9 @@ def test_simplification_boolalg():
     assert SOPform([x, y, z], set1) == Or(And(Not(x), z), And(Not(z), x))
     assert Not(SOPform([x, y, z], set2)) == \
         Not(Or(And(Not(x), Not(z)), And(x, z)))
-    assert POSform([x, y, z], set1 + set2) is true
-    assert SOPform([x, y, z], set1 + set2) is true
-    assert SOPform([Dummy(), Dummy(), Dummy()], set1 + set2) is true
+    assert POSform([x, y, z], set1 + set2) == True
+    assert SOPform([x, y, z], set1 + set2) == True
+    assert SOPform([Dummy(), Dummy(), Dummy()], set1 + set2) == True
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
                 [1, 1, 1, 1]]
@@ -334,14 +334,14 @@ def test_simplification_boolalg():
     assert POSform([x, y], [[1, 0]]) == ans
 
     raises(ValueError, lambda: SOPform([x], [[1]], [[1]]))
-    assert SOPform([x], [[1]], [[0]]) is true
-    assert SOPform([x], [[0]], [[1]]) is true
-    assert SOPform([x], [], []) is false
+    assert SOPform([x], [[1]], [[0]]) == True
+    assert SOPform([x], [[0]], [[1]]) == True
+    assert SOPform([x], [], []) == False
 
     raises(ValueError, lambda: POSform([x], [[1]], [[1]]))
-    assert POSform([x], [[1]], [[0]]) is true
-    assert POSform([x], [[0]], [[1]]) is true
-    assert POSform([x], [], []) is false
+    assert POSform([x], [[1]], [[0]]) == True
+    assert POSform([x], [[0]], [[1]]) == True
+    assert POSform([x], [], []) == False
 
     # check working of simplify
     assert simplify((A & B) | (A & C)) == And(A, Or(B, C))
@@ -391,22 +391,22 @@ def test_bool_symbol():
 
     assert And(A, True) == A
     assert And(A, True, True) == A
-    assert And(A, False) is false
-    assert And(A, True, False) is false
-    assert Or(A, True) is true
+    assert And(A, False) == False
+    assert And(A, True, False) == False
+    assert Or(A, True) == True
     assert Or(A, False) == A
 
 
 def test_is_boolean():
-    assert isinstance(True, Boolean) is False
-    assert isinstance(true, Boolean) is True
+    assert isinstance(True, Boolean) == False
+    assert isinstance(true, Boolean) == True
     assert 1 == True
     assert 1 != true
-    assert (1 == true) is False
+    assert (1 == true) == False
     assert 0 == False
     assert 0 != false
-    assert (0 == false) is False
-    assert true.is_Boolean is True
+    assert (0 == false) == False
+    assert true.is_Boolean == True
     assert (A & B).is_Boolean
     assert (A | B).is_Boolean
     assert (~A).is_Boolean
@@ -417,15 +417,15 @@ def test_is_boolean():
 
 def test_subs():
     assert (A & B).subs(A, True) == B
-    assert (A & B).subs(A, False) is false
+    assert (A & B).subs(A, False) == False
     assert (A & B).subs(B, True) == A
-    assert (A & B).subs(B, False) is false
-    assert (A & B).subs({A: True, B: True}) is true
-    assert (A | B).subs(A, True) is true
+    assert (A & B).subs(B, False) == False
+    assert (A & B).subs({A: True, B: True}) == True
+    assert (A | B).subs(A, True) == True
     assert (A | B).subs(A, False) == B
-    assert (A | B).subs(B, True) is true
+    assert (A | B).subs(B, True) == True
     assert (A | B).subs(B, False) == A
-    assert (A | B).subs({A: True, B: True}) is true
+    assert (A | B).subs({A: True, B: True}) == True
 
 
 """
@@ -511,11 +511,11 @@ def test_to_anf():
 
 
 def test_to_nnf():
-    assert to_nnf(true) is true
-    assert to_nnf(false) is false
+    assert to_nnf(true) == True
+    assert to_nnf(false) == False
     assert to_nnf(A) == A
-    assert to_nnf(A | ~A | B) is true
-    assert to_nnf(A & ~A & B) is false
+    assert to_nnf(A | ~A | B) == True
+    assert to_nnf(A & ~A & B) == False
     assert to_nnf(A >> B) == ~A | B
     assert to_nnf(Equivalent(A, B, C)) == (~A | B) & (~B | C) & (~C | A)
     assert to_nnf(A ^ B ^ C) == \
@@ -611,51 +611,51 @@ def test_to_int_repr():
 
 def test_is_anf():
     x, y = symbols('x,y')
-    assert is_anf(true) is True
-    assert is_anf(false) is True
-    assert is_anf(x) is True
-    assert is_anf(And(x, y)) is True
-    assert is_anf(Xor(x, y, And(x, y))) is True
-    assert is_anf(Xor(x, y, Or(x, y))) is False
-    assert is_anf(Xor(Not(x), y)) is False
+    assert is_anf(true) == True
+    assert is_anf(false) == True
+    assert is_anf(x) == True
+    assert is_anf(And(x, y)) == True
+    assert is_anf(Xor(x, y, And(x, y))) == True
+    assert is_anf(Xor(x, y, Or(x, y))) == False
+    assert is_anf(Xor(Not(x), y)) == False
 
 
 def test_is_nnf():
-    assert is_nnf(true) is True
-    assert is_nnf(A) is True
-    assert is_nnf(~A) is True
-    assert is_nnf(A & B) is True
-    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), False) is True
-    assert is_nnf((A | B) & (~A | ~B)) is True
-    assert is_nnf(Not(Or(A, B))) is False
-    assert is_nnf(A ^ B) is False
-    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), True) is False
+    assert is_nnf(true) == True
+    assert is_nnf(A) == True
+    assert is_nnf(~A) == True
+    assert is_nnf(A & B) == True
+    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), False) == True
+    assert is_nnf((A | B) & (~A | ~B)) == True
+    assert is_nnf(Not(Or(A, B))) == False
+    assert is_nnf(A ^ B) == False
+    assert is_nnf((A & B) | (~A & A) | (~B & B) | (~A & ~B), True) == False
 
 
 def test_is_cnf():
-    assert is_cnf(x) is True
-    assert is_cnf(x | y | z) is True
-    assert is_cnf(x & y & z) is True
-    assert is_cnf((x | y) & z) is True
-    assert is_cnf((x & y) | z) is False
-    assert is_cnf(~(x & y) | z) is False
+    assert is_cnf(x) == True
+    assert is_cnf(x | y | z) == True
+    assert is_cnf(x & y & z) == True
+    assert is_cnf((x | y) & z) == True
+    assert is_cnf((x & y) | z) == False
+    assert is_cnf(~(x & y) | z) == False
 
 
 def test_is_dnf():
-    assert is_dnf(x) is True
-    assert is_dnf(x | y | z) is True
-    assert is_dnf(x & y & z) is True
-    assert is_dnf((x & y) | z) is True
-    assert is_dnf((x | y) & z) is False
-    assert is_dnf(~(x | y) & z) is False
+    assert is_dnf(x) == True
+    assert is_dnf(x | y | z) == True
+    assert is_dnf(x & y & z) == True
+    assert is_dnf((x & y) | z) == True
+    assert is_dnf((x | y) & z) == False
+    assert is_dnf(~(x | y) & z) == False
 
 
 def test_ITE():
     A, B, C = symbols('A:C')
-    assert ITE(True, False, True) is false
-    assert ITE(True, True, False) is true
-    assert ITE(False, True, False) is false
-    assert ITE(False, False, True) is true
+    assert ITE(True, False, True) == False
+    assert ITE(True, True, False) == True
+    assert ITE(False, True, False) == False
+    assert ITE(False, False, True) == True
     assert isinstance(ITE(A, B, C), ITE)
 
     A = True
@@ -664,7 +664,7 @@ def test_ITE():
     assert ITE(A, B, C) == C
     B = True
     assert ITE(And(A, B), B, C) == C
-    assert ITE(Or(A, False), And(B, True), False) is false
+    assert ITE(Or(A, False), And(B, True), False) == False
     assert ITE(x, A, B) == Not(x)
     assert ITE(x, B, A) == x
     assert ITE(1, x, y) == x
@@ -698,15 +698,15 @@ def test_ITE():
 
 
 def test_is_literal():
-    assert is_literal(True) is True
-    assert is_literal(False) is True
-    assert is_literal(A) is True
-    assert is_literal(~A) is True
-    assert is_literal(Or(A, B)) is False
-    assert is_literal(Q.zero(A)) is True
-    assert is_literal(Not(Q.zero(A))) is True
-    assert is_literal(Or(A, B)) is False
-    assert is_literal(And(Q.zero(A), Q.zero(B))) is False
+    assert is_literal(True) == True
+    assert is_literal(False) == True
+    assert is_literal(A) == True
+    assert is_literal(~A) == True
+    assert is_literal(Or(A, B)) == False
+    assert is_literal(Q.zero(A)) == True
+    assert is_literal(Not(Q.zero(A))) == True
+    assert is_literal(Or(A, B)) == False
+    assert is_literal(And(Q.zero(A), Q.zero(B))) == False
     assert is_literal(x < 3)
     assert not is_literal(x + y < 3)
 
@@ -759,107 +759,107 @@ def test_true_false():
     # Note: using 'is' comparison is important here. We want these to return
     # true and false, not True and False
 
-    assert Not(true) is false
-    assert Not(True) is false
-    assert Not(false) is true
-    assert Not(False) is true
-    assert ~true is false
-    assert ~false is true
+    assert Not(true) == False
+    assert Not(True) == False
+    assert Not(false) == True
+    assert Not(False) == True
+    assert ~true == False
+    assert ~false == True
 
     for T, F in product((True, true), (False, false)):
-        assert And(T, F) is false
-        assert And(F, T) is false
-        assert And(F, F) is false
-        assert And(T, T) is true
+        assert And(T, F) == False
+        assert And(F, T) == False
+        assert And(F, F) == False
+        assert And(T, T) == True
         assert And(T, x) == x
-        assert And(F, x) is false
-        if not (T is True and F is False):
-            assert T & F is false
-            assert F & T is false
+        assert And(F, x) == False
+        if not (T == True and F == False):
+            assert T & F == False
+            assert F & T == False
         if F is not False:
-            assert F & F is false
+            assert F & F == False
         if T is not True:
-            assert T & T is true
+            assert T & T == True
 
-        assert Or(T, F) is true
-        assert Or(F, T) is true
-        assert Or(F, F) is false
-        assert Or(T, T) is true
-        assert Or(T, x) is true
+        assert Or(T, F) == True
+        assert Or(F, T) == True
+        assert Or(F, F) == False
+        assert Or(T, T) == True
+        assert Or(T, x) == True
         assert Or(F, x) == x
-        if not (T is True and F is False):
-            assert T | F is true
-            assert F | T is true
+        if not (T == True and F == False):
+            assert T | F == True
+            assert F | T == True
         if F is not False:
-            assert F | F is false
+            assert F | F == False
         if T is not True:
-            assert T | T is true
+            assert T | T == True
 
-        assert Xor(T, F) is true
-        assert Xor(F, T) is true
-        assert Xor(F, F) is false
-        assert Xor(T, T) is false
+        assert Xor(T, F) == True
+        assert Xor(F, T) == True
+        assert Xor(F, F) == False
+        assert Xor(T, T) == False
         assert Xor(T, x) == ~x
         assert Xor(F, x) == x
-        if not (T is True and F is False):
-            assert T ^ F is true
-            assert F ^ T is true
+        if not (T == True and F == False):
+            assert T ^ F == True
+            assert F ^ T == True
         if F is not False:
-            assert F ^ F is false
+            assert F ^ F == False
         if T is not True:
-            assert T ^ T is false
+            assert T ^ T == False
 
-        assert Nand(T, F) is true
-        assert Nand(F, T) is true
-        assert Nand(F, F) is true
-        assert Nand(T, T) is false
+        assert Nand(T, F) == True
+        assert Nand(F, T) == True
+        assert Nand(F, F) == True
+        assert Nand(T, T) == False
         assert Nand(T, x) == ~x
-        assert Nand(F, x) is true
+        assert Nand(F, x) == True
 
-        assert Nor(T, F) is false
-        assert Nor(F, T) is false
-        assert Nor(F, F) is true
-        assert Nor(T, T) is false
-        assert Nor(T, x) is false
+        assert Nor(T, F) == False
+        assert Nor(F, T) == False
+        assert Nor(F, F) == True
+        assert Nor(T, T) == False
+        assert Nor(T, x) == False
         assert Nor(F, x) == ~x
 
-        assert Implies(T, F) is false
-        assert Implies(F, T) is true
-        assert Implies(F, F) is true
-        assert Implies(T, T) is true
+        assert Implies(T, F) == False
+        assert Implies(F, T) == True
+        assert Implies(F, F) == True
+        assert Implies(T, T) == True
         assert Implies(T, x) == x
-        assert Implies(F, x) is true
-        assert Implies(x, T) is true
+        assert Implies(F, x) == True
+        assert Implies(x, T) == True
         assert Implies(x, F) == ~x
-        if not (T is True and F is False):
-            assert T >> F is false
-            assert F << T is false
-            assert F >> T is true
-            assert T << F is true
+        if not (T == True and F == False):
+            assert T >> F == False
+            assert F << T == False
+            assert F >> T == True
+            assert T << F == True
         if F is not False:
-            assert F >> F is true
-            assert F << F is true
+            assert F >> F == True
+            assert F << F == True
         if T is not True:
-            assert T >> T is true
-            assert T << T is true
+            assert T >> T == True
+            assert T << T == True
 
-        assert Equivalent(T, F) is false
-        assert Equivalent(F, T) is false
-        assert Equivalent(F, F) is true
-        assert Equivalent(T, T) is true
+        assert Equivalent(T, F) == False
+        assert Equivalent(F, T) == False
+        assert Equivalent(F, F) == True
+        assert Equivalent(T, T) == True
         assert Equivalent(T, x) == x
         assert Equivalent(F, x) == ~x
         assert Equivalent(x, T) == x
         assert Equivalent(x, F) == ~x
 
-        assert ITE(T, T, T) is true
-        assert ITE(T, T, F) is true
-        assert ITE(T, F, T) is false
-        assert ITE(T, F, F) is false
-        assert ITE(F, T, T) is true
-        assert ITE(F, T, F) is false
-        assert ITE(F, F, T) is true
-        assert ITE(F, F, F) is false
+        assert ITE(T, T, T) == True
+        assert ITE(T, T, F) == True
+        assert ITE(T, F, T) == False
+        assert ITE(T, F, F) == False
+        assert ITE(F, T, T) == True
+        assert ITE(F, T, F) == False
+        assert ITE(F, F, T) == True
+        assert ITE(F, F, F) == False
 
     assert all(i.simplify(1, 2) is i for i in (S.true, S.false))
 

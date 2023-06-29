@@ -267,8 +267,8 @@ def test_point3D():
     assert Point.are_coplanar((0, 0, 0), (1, 1, 0), (1, 1, 1), (1, 2, 1)) is False
     planar2 = Point3D(1, -1, 1)
     planar3 = Point3D(-1, 1, 1)
-    assert Point3D.are_coplanar(p, planar2, planar3) == True
-    assert Point3D.are_coplanar(p, planar2, planar3, p3) == False
+    assert Point3D.are_coplanar(p, planar2, planar3) is True
+    assert Point3D.are_coplanar(p, planar2, planar3, p3) is False
     assert Point.are_coplanar(p, planar2)
     planar2 = Point3D(1, 1, 2)
     planar3 = Point3D(1, 1, 3)
@@ -296,7 +296,7 @@ def test_point3D():
     raises(ValueError, lambda: p.transform(Matrix([[1, 0], [0, 1]])))
 
     # Test Equals
-    assert p.equals(x1) == False
+    assert p.equals(x1) is False
 
     # Test __sub__
     p_4d = Point(0, 0, 0, 1)

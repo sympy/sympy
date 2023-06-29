@@ -166,8 +166,8 @@ def test_logic_fromstring():
 def test_logic_not():
     assert Not('a') != '!a'
     assert Not('!a') != 'a'
-    assert Not(True) == False
-    assert Not(False) == True
+    assert Not(True) is False
+    assert Not(False) is True
 
     # NOTE: we may want to change default Not behaviour and put this
     # functionality into some method.

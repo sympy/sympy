@@ -147,5 +147,5 @@ def test_are_coplanar():
     c = Line3D(Point3D(0, -1, 0), Point3D(5, -1, 9))
     d = Line(Point2D(0, 3), Point2D(1, 5))
 
-    assert are_coplanar(a, b, c) == False
-    assert are_coplanar(a, d) == False
+    assert are_coplanar(a, b, c) is False
+    assert are_coplanar(a, d) is False

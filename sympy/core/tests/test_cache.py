@@ -74,7 +74,7 @@ def test_cached_property():
     assert a.prop == 2
     assert a.calls == 1
     b = A(None)
-    assert b.prop == None
+    assert b.prop is None
 
 
 def test_lazy_function():
