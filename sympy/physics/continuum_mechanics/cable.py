@@ -261,32 +261,33 @@ class Cable:
 
         load : tuple
 
-            - For point loads, load is of the form
-            (label, x, y, magnitude, direction), where:
-                label : String or symbol
-                    The label of the load
+            * For point loads, load is of the form (label, x, y, magnitude, direction), where:
 
-                x: Sympifyable
-                    The x coordinate of the position of the load
+            label : String or symbol
+                The label of the load
 
-                y: Sympifyable
-                    The y coordinate of the position of the load
+            x : Sympifyable
+                The x coordinate of the position of the load
 
-                magnitude : Sympifyable
-                    The magnitude of the load. It must always be positive
+            y : Sympifyable
+                The y coordinate of the position of the load
 
-                direction : Sympifyable
-                    The angle, in degrees, that the load vector makes with the horizontal
-                    in the counter-clockwise direction. It takes the values 0 to 360,
-                    inclusive.
+            magnitude : Sympifyable
+                The magnitude of the load. It must always be positive
 
-            - For uniformly distributed load, load is of the form
-            (label, magnitude)
-                label : String or symbol
-                    The label of the load
+            direction : Sympifyable
+                The angle, in degrees, that the load vector makes with the horizontal
+                in the counter-clockwise direction. It takes the values 0 to 360,
+                inclusive.
 
-                magnitude : Sympifyable
-                    The magnitude of the load. It must always be positive
+
+            * For uniformly distributed load, load is of the form (label, magnitude)
+
+            label : String or symbol
+                The label of the load
+
+            magnitude : Sympifyable
+                The magnitude of the load. It must always be positive
 
         Examples
         ========
