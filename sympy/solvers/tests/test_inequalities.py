@@ -519,7 +519,8 @@ def test_linear_programming():
     assert argmax == [0, 4, 0]
     assert argmax_dual == [1, 0, 0]
 
-    # Section 4 Problem 1 from http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    # Section 4 Problem 1 from
+    # http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
     r1 = x1 - x2 - 2*x3 - x4 <= 4
     r2 = 2*x1 + x3 -4*x4 <= 2

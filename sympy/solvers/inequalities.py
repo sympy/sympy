@@ -19,8 +19,6 @@ from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
-import random
-from sympy.core.random import random as core_random
 
 
 def solve_poly_inequality(poly, rel):
@@ -991,8 +989,8 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 class UnboundedLinearProgrammingError(Exception):
     """
-    A linear programing problem is said to be unbounded if its objective function can assume arbitrarily large positive
-    values.
+    A linear programing problem is said to be unbounded if its objective function
+    can assume arbitrarily large positivevalues.
 
     Example
     =======
@@ -1002,16 +1000,17 @@ class UnboundedLinearProgrammingError(Exception):
     subject to
         x >= 0
 
-    Clearly there's no upper limit that 2x can take. If you try to use the linear_programing function on such a problem
-    you will get this exception.
+    Clearly there's no upper limit that 2x can take. If you try to use the
+    linear_programing function on such a problem you will get this exception.
     """
     pass
 
 
 class InfeasibleLinearProgrammingError(Exception):
     """
-    A linear programing problem is considered infeasible if its constraint set is empty. That is, if the set of all
-    vectors satisfying the contraints is empty, then the problem is infeasible.
+    A linear programing problem is considered infeasible if its constraint set is
+    empty. That is, if the set of allvectors satisfying the contraints is empty,
+    then the problem is infeasible.
 
     Example
     =======
@@ -1022,8 +1021,9 @@ class InfeasibleLinearProgrammingError(Exception):
         x >= 10
         x <= 9
 
-    Clearly it's not possible for x to satisfy the given contraints. If you try to use the linear_programing function on
-    a problem where it's not possible to satisfy the contraints, you will get this sort of exception.
+    Clearly it's not possible for x to satisfy the given contraints. If you try to
+    use the linear_programing function on a problem where it's not possible to
+    satisfy the contraints, you will get this sort of exception.
     """
     pass
 
@@ -1034,17 +1034,18 @@ def _pivot(M, i, j):
     - The pivot quantity goes into its reciprocal
     - Entries in the same row as the pivot are divided by the pivot
     - Entries in the same column as the pivot are divided by the pivot and changed in sign.
-    - The remaining entries are reduced in value by the following: the product of the corresponding entries in the same
-    row and column as themselves and the pivot, divided by the pivot.
+    - The remaining entries are reduced in value by the following: the product of the
+    corresponding entries in the same row and column as themselves and the pivot, divided
+    by the pivot.
 
     Example
     =======
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.solvers.inequalities import _pivot
-    >>> m = Matrix([[3,1,5], \
-                    [2,-3,1], \
-                    [0,3,1]])
+    >>> m = Matrix([[3,1,5],
+    ...             [2,-3,1],
+    ...             [0,3,1]])
     >>> _pivot(m, 1,0) # pivot around 2, which is in row 1 and col 0
     Matrix([
     [-3/2, 11/2, 7/2],
@@ -1060,13 +1061,48 @@ def _pivot(M, i, j):
     MM[i,j] = 1 / Mij
     return MM
 
+# def _choose_pivot_row(B, A, rows, col):
+#     ratios = [B[i] / A[i][col] for i in rows]
+#     min_ratio = min(ratios)
+#     min_rows = [i for i in rows if ratios[i] == min_ratio]
+#     row = rand.choice(min_rows)
+#     return row
+
+# def _choose_pivot_row(A, B, candidate_rows, pivot_col):
+#     min_ratio = float('inf')
+#     min_rows = []
+#     # Choose row with smallest ratio
+#     # If there are ties, pick at random
+#     for i in candidate_rows:
+#         ratio = B[i] / A[i, pivot_col]
+#         if ratio < min_ratio:
+#             min_ratio = ratio
+#             min_rows = [i]
+#         elif ratio == min_ratio:
+#             min_rows.append(i)
+#     row = rand.choice(min_rows)
+#     return row
+
+def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
+    # Choose row with smallest ratio
+    # If there are ties, pick using Bland's rule
+
+    min_ratio = float('inf')
+    min_rows = []
+    for i in candidate_rows:
+        ratio = B[i] / A[i, pivot_col]
+        if ratio < min_ratio:
+            min_ratio = ratio
+            min_rows = [i]
+        elif ratio == min_ratio:
+            min_rows.append(i)
+
+    row = sorted(min_rows, key= lambda r: S[r])[0] # Bland's rule
+    return row
 
 def _simplex(M, skip_phase_2=False):
     """
-    Simplex method with randomized pivoting
-
-    LINEAR PROGRAMMING: A Concise Introduction by Thomas S. Ferguson
-      - http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    Simplex method with Bland's rule.
 
     Explanation
     ===========
@@ -1134,10 +1170,18 @@ def _simplex(M, skip_phase_2=False):
     [2, 4]
     >>> argmax_dual
     [3, 1]
-    """
-    rand = random.Random(x=core_random())
 
-    phase = 1
+    References
+    ==========
+
+    .. [1] Thomas S. Ferguson, LINEAR PROGRAMMING: A Concise Introduction
+           http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+    """
+
+    # Bland's rule:
+    # If there is a choice of pivot columns or a choice of pivot rows,
+    # select the row (or column) with the x variable having the lowest subscript,
+    # or if there are no x variables, with the y variable having the lowest subscript.
 
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
     s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
@@ -1145,78 +1189,55 @@ def _simplex(M, skip_phase_2=False):
     R = r_orig.copy()
     S = s_orig.copy()
 
+    # Phase 1: find a feasible solution or determine none exist
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
-        C = M[-1, :-1]
+        if all(B[i] >= 0 for i in range(B.rows)):
+            # We have found a feasible solution
+            break
 
-        if phase == 1:
-            # In phase 1 we look for a feasible solution. Once we find one, we continue to phase 2.
-            if all(B[i] >= 0 for i in range(B.rows)):
-                if skip_phase_2:
-                    break
-                else:
-                    phase = 2
-                    continue
-
-
-            # Pick the first row with a negative rightmost entry.
-            for k in range(B.rows):
-                if B[k] < 0:
-                    break
-
-            # Consider each column with a negative entry in the chosen row.
-            # If there are no such columns, the constraints are infeasible.
-            # From the columns being considered, we randomly pick one (to avoid cycling).
-            # The chosen column, j0, will contain the pivot.
-            piv_cols = [j for j in range(A.cols) if A[k, j] < 0]
-            if not piv_cols:
-                raise InfeasibleLinearProgrammingError('The constraint set is empty!')
-            rand.shuffle(piv_cols)
-            j0 = piv_cols[0]
-
-            # Consider all the rows with a positive itersection with j0 and a positive rightmost entry.
-            # Also consider the row with a negative rightmost entry that we picked earlier.
-            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0 and B[i] > 0]
-            piv_rows.append(k)
-        else:
-            # We consider each column where the last entry is negative.
-            # If there are no such columns, we have found a solution.
-            piv_cols = []
-            for j in range(C.cols):
-                if C[j] < 0:
-                    piv_cols.append(j)
-            if not piv_cols:
+        # Find k, first row with a negative rightmost entry
+        for k in range(B.rows):
+            if B[k] < 0:
                 break
 
-            # From the columns being considered, we randomly pick one (to avoid cycling).
-            # This column, j0, will contain the pivot.
-            rand.shuffle(piv_cols)
-            j0 = piv_cols[0]
+        # Choose pivot column, j0
+        piv_cols = [j for j in range(A.cols) if A[k, j] < 0]
+        if not piv_cols:
+            raise InfeasibleLinearProgrammingError('The constraint set is empty!')
+        j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
 
-            # Then we consider each row which has a positive entry at its intersection with the column we picked.
-            # If there are no such rows, the problem is unbounded.
-            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
-            if not piv_rows:
-                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
-
-        # For each row, we calculate a ratio: B[i] / A[i, j0].
-        # The row with the smallest ratio, i0, contains the pivot entry at its intersection with j0.
-        # If there are ties, pick a row at random.
-        min_ratio = float('inf')
-        min_rows = []
-        for i in piv_rows:
-            ratio = B[i] / A[i, j0]
-            if ratio < min_ratio:
-                min_ratio = ratio
-                min_rows = [i]
-            elif ratio == min_ratio:
-                min_rows.append(i)
-        rand.shuffle(min_rows)
-        i0 = min_rows[0]
+        # Choose pivot row, i0
+        piv_rows = [i for i in range(A.rows) if A[i, j0] > 0 and B[i] > 0]
+        piv_rows.append(k)
+        i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
 
         M = _pivot(M, i0, j0)
         R[j0], S[i0] = S[i0], R[j0]
+
+    # Phase 2: starting at a feasible solution, pivot until we reach optimal solution
+    if not skip_phase_2:
+        while True:
+            B = M[:-1, -1]
+            A = M[:-1, :-1]
+            C = M[-1, :-1]
+
+            # Choose a pivot column, j0
+            piv_cols = []
+            piv_cols = [j for j in range(C.cols) if C[j] < 0]
+            if not piv_cols:
+                break
+            j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
+
+            # Choose a pivot row, i0
+            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
+            if not piv_rows:
+                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
+            i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
+
+            M = _pivot(M, i0, j0)
+            R[j0], S[i0] = S[i0], R[j0]
 
     argmax = [None]*(M.cols-1)
     argmin_dual = [None]*(M.rows-1)
@@ -1242,8 +1263,9 @@ def _simplex(M, skip_phase_2=False):
 
 def _to_standard_form(constraints, objective):
     """
-    Converts a list of constraints and an objective function into the standard form for linear programming.
-    Each free variable is assigned a column lexicographically.
+    Converts a list of constraints and an objective function into the standard form
+    for linear programming. Each free variable is assigned a column
+    lexicographically.
 
     Examples
     ========
@@ -1333,10 +1355,10 @@ def linear_programming(constraints, objective):
 
     optimum : maximum value the objective function can take under the constraints
 
-    argmax : The values for the variables that maximize the objective function.
+    argmax : Values for the variables that maximize the objective function.
         The values in the list correspond to the variables in lexicographical order
 
-    argmax_dual : The values for the dual variables that minimize the dual minimum problem
+    argmax_dual : Values for the dual variables that minimize the dual minimum problem
 
     Examples
     ========
@@ -1391,8 +1413,8 @@ def linear_programming(constraints, objective):
 
 def find_feasible(constraints):
     """
-    Finds a feasible solution to a system of linear inequalities, if any exist, with the first phase of the
-    simplex method.
+    Finds a feasible solution to a system of linear inequalities, if any exist, with
+    the first phase of the simplex method.
 
     Parameters
     ==========
@@ -1404,8 +1426,9 @@ def find_feasible(constraints):
     =======
 
     list or None
-        If no feasible solutions exist, returns None. Otherwise, returns a list of values for each variable that satisfy
-        the constraints. The values in the list correspond to the variables in lexicographical order.
+        If no feasible solutions exist, returns None. Otherwise, returns a list of
+        values for each variable that satisfy the constraints. The values in the
+        list correspond to the variables in lexicographical order.
 
     Examples
     ========
