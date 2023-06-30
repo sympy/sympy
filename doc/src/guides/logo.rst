@@ -10,7 +10,21 @@ your next academic paper, course materials, or presentation.
   :align: center
   :alt: SymPy Logo
 
-Note that the above logo is an SVG version of the logo.
+The above image logo is an SVG version of the logo. We also have a PNG version of the logo:
+
+.. image::  ../../_build/logo/sympy-500px.png
+  :width: 500
+  :align: center
+  :alt: SymPy Logo
+
+If you would like one without the "SymPy" text, we have that too:
+
+.. image::  ../../_build/logo/sympy-notext-500px.png
+  :width: 500
+  :align: center
+  :alt: SymPy Logo
+
+Note: The text version should be preferred unless the "SymPy" name is already present separately.
 
 If you would like to generate SymPy's collection of official logos yourself,
 you can do so by first :ref:`installing the required dependencies <build-the-documentation>`, and then running:
