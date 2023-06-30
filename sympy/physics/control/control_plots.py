@@ -7,7 +7,6 @@ from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
-from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
@@ -107,10 +106,10 @@ def pole_zero_numerical_data(system):
     pole_points = [pole.as_real_imag() for pole in poles]
     zero_points = [zero.as_real_imag() for zero in zeros]
 
-    x_poles = list(map(lambda x: x[0], pole_points))
-    y_poles = list(map(lambda x: x[1], pole_points))
-    x_zeros = list(map(lambda x: x[0], zero_points))
-    y_zeros = list(map(lambda x: x[1], zero_points))
+    x_poles = [x[0] for x in pole_points]
+    y_poles = [x[1] for x in pole_points]
+    x_zeros = [x[0] for x in zero_points]
+    y_zeros = [x[1] for x in zero_points]
 
     return x_poles, y_poles, x_zeros, y_zeros
 
