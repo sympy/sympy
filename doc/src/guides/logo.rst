@@ -10,9 +10,6 @@ your next academic paper, course materials, or presentation.
   :align: center
   :alt: SymPy Logo
 
-You can find this high-resolution version of the SymPy logo
-`here <https://github.com/sympy/sympy/blob/master/doc/src/logo/sympy.svg>`_.
-
 If you would like to generate SymPy's collection of official logos yourself,
 you can do so by running:
 
