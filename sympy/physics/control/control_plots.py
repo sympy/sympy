@@ -64,9 +64,11 @@ def pole_zero_numerical_data(system):
     Returns
     =======
 
-    tuple : (zeros, poles)
-        zeros = Zeros of the system. NumPy array of complex numbers.
-        poles = Poles of the system. NumPy array of complex numbers.
+    tuple : (x_poles, y_poles, x_zeros, y_zeros)
+        x_poles = x coordinates of Poles of the system.
+        y_poles = y coordinates of Poles of the system.
+        x_zeros = x coordinates of Zeros of the system.
+        y_zeros = y coordinates of Zeros of the system.
 
     Raises
     ======
@@ -89,7 +91,7 @@ def pole_zero_numerical_data(system):
     >>> from sympy.physics.control.control_plots import pole_zero_numerical_data
     >>> tf1 = TransferFunction(s**2 + 1, s**4 + 4*s**3 + 6*s**2 + 5*s + 2, s)
     >>> pole_zero_numerical_data(tf1)   # doctest: +SKIP
-    ([-0.+1.j  0.-1.j], [-2. +0.j        -0.5+0.8660254j -0.5-0.8660254j -1. +0.j       ])
+    ([-2, -1, -1/2, -1/2], [0, 0, -sqrt(3)/2, sqrt(3)/2], [0, 0], [1, -1])
 
     See Also
     ========
@@ -99,17 +101,18 @@ def pole_zero_numerical_data(system):
     """
     _check_system(system)
     system = system.doit()  # Get the equivalent TransferFunction object.
+    poles = system.poles()
+    zeros = system.zeros()
 
-    num_poly = Poly(system.num, system.var).all_coeffs()
-    den_poly = Poly(system.den, system.var).all_coeffs()
+    pole_points = [pole.as_real_imag() for pole in poles]
+    zero_points = [zero.as_real_imag() for zero in zeros]
 
-    num_poly = np.array(num_poly, dtype=np.complex128)
-    den_poly = np.array(den_poly, dtype=np.complex128)
+    x_poles = list(map(lambda x: x[0], pole_points))
+    y_poles = list(map(lambda x: x[1], pole_points))
+    x_zeros = list(map(lambda x: x[0], zero_points))
+    y_zeros = list(map(lambda x: x[1], zero_points))
 
-    zeros = np.roots(num_poly)
-    poles = np.roots(den_poly)
-
-    return zeros, poles
+    return x_poles, y_poles, x_zeros, y_zeros
 
 
 def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
@@ -175,18 +178,13 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     .. [1] https://en.wikipedia.org/wiki/Pole%E2%80%93zero_plot
 
     """
-    zeros, poles = pole_zero_numerical_data(system)
-
-    zero_real = np.real(zeros)
-    zero_imag = np.imag(zeros)
-
-    pole_real = np.real(poles)
-    pole_imag = np.imag(poles)
+    pole_real, pole_imag, zero_real, zero_imag = pole_zero_numerical_data(system)
 
     plt.plot(pole_real, pole_imag, 'x', mfc='none',
         markersize=pole_markersize, color=pole_color)
     plt.plot(zero_real, zero_imag, 'o', markersize=zero_markersize,
         color=zero_color)
+
     plt.xlabel('Real Axis')
     plt.ylabel('Imaginary Axis')
     plt.title(f'Poles and Zeros of ${latex(system)}$', pad=20)
