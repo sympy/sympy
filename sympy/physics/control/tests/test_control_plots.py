@@ -124,8 +124,6 @@ def test_pole_zero():
     assert pz3 == exp3
     assert pz4 == exp4
     assert pz5 == exp5
-    print("pz6",pz6)
-    print("exp6",exp6)
     assert pz6 == exp6
     assert pz7 == exp7
 
