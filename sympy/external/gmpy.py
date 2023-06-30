@@ -35,6 +35,12 @@ __all__ = [
     # isqrt from gmpy or mpmath
     'sqrt',
 
+    # is_square from gmpy or mpmath
+    'is_square',
+
+    # sqrtrem from gmpy or mpmath
+    'sqrtrem',
+
     # gcd from gmpy or math
     'gcd',
 
@@ -49,6 +55,9 @@ __all__ = [
 
     # jacobi from gmpy or sympy
     'jacobi',
+
+    # kronecker from gmpy or sympy
+    'kronecker',
 ]
 
 
@@ -113,6 +122,7 @@ if gmpy is not None:
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
+    kronecker = gmpy.kronecker
 
 else:
     from .pythonmpq import PythonMPQ
@@ -189,3 +199,20 @@ else:
                 j = -j
             x %= y
         return j
+
+    def kronecker(x, y):
+        """ Return Kronecker symbol (x / y)."""
+        if gcd(x, y) != 1:
+            return 0
+        if y == 0:
+            return 1
+        sign = -1 if y < 0 and x < 0 else 1
+        y = abs(y)
+        # We want to calculate s = trailing(y)
+        s = 0
+        while y % 2 == 0:
+            y >>= 1
+            s += 1
+        if s % 2 and x % 8 in [3, 5]:
+            sign = -sign
+        return sign * jacobi(x, y)
