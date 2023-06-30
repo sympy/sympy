@@ -10,8 +10,10 @@ your next academic paper, course materials, or presentation.
   :align: center
   :alt: SymPy Logo
 
+Note that the above logo is an SVG version of the logo.
+
 If you would like to generate SymPy's collection of official logos yourself,
-you can do so by running:
+you can do so by first :ref:`installing the required dependencies <build-the-documentation>`, and then running:
 
 .. code-block:: none
 
