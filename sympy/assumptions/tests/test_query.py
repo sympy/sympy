@@ -107,7 +107,7 @@ def test_float_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    assert ask(Q.transcendental(z)) is None
 
     z = 7.2123
     assert ask(Q.commutative(z)) is True
@@ -126,7 +126,7 @@ def test_float_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is False
+    assert ask(Q.transcendental(z)) is None
 
     # test for issue #12168
     assert ask(Q.rational(math.pi)) is None
@@ -495,7 +495,7 @@ def test_GoldenRatio():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
-    assert ask(Q.transcendental(z)) is True
+    assert ask(Q.transcendental(z)) is False
 
 
 def test_TribonacciConstant():

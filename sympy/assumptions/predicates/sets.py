@@ -381,8 +381,8 @@ class TranscendentalPredicate(Predicate):
     Examples
     ========
 
-    >>> from sympy import ask, Q, pi, exp
-    >>> ask(Q.transcendental(2.5))
+    >>> from sympy import ask, Q, pi, exp, GoldenRatio
+    >>> ask(Q.transcendental(GoldenRatio))
     False
     >>> ask(Q.transcendental(pi))
     True

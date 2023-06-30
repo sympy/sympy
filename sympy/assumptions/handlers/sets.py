@@ -774,12 +774,12 @@ def _(expr, assumptions):
 
 # TranscendentalPredicate
 
-@TranscendentalPredicate.register_many(Exp1, Pi, GoldenRatio)
+@TranscendentalPredicate.register_many(Exp1, Pi)
 def _(expr, assumptions):
     return True
 
 @TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
-    Infinity, ImaginaryUnit, ComplexInfinity)
+    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio)
 def _(expr, assumptions):
     return False
 
