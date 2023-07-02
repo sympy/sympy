@@ -30,6 +30,7 @@ from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, p
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.simplify.cse_main import cse
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
