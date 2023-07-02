@@ -7525,7 +7525,7 @@ def test_print_polylog_long_order_issue_25309():
        ⎛ 2   ⎞\n\
 polylog⎝s , z⎠\
 """
-    assert pretty(polylog(s**2, z)) == ucode_str
+    assert upretty(polylog(s**2, z)) == ucode_str
 
 
 def test_print_lerchphi():
