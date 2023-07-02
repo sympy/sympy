@@ -1,6 +1,5 @@
-from sympy.core.power import integer_nthroot
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert
+from sympy.external.gmpy import gcd, invert, sqrt as isqrt
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
@@ -295,7 +294,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    sqrt_n = sqrt(float(N))
+    sqrt_n = isqrt(N)
     accumulated_val = log(M * sqrt_n)*2**10 - ERROR_TERM
     smooth_relations = []
     proper_factor = set()
@@ -431,7 +430,7 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     for i in independent_v:
         v *= i
     #assert u**2 % N == v % N
-    v = integer_nthroot(v, 2)[0]
+    v = isqrt(v)
     return gcd(u - v, N)
 
 
