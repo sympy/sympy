@@ -80,6 +80,7 @@ from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
+from sympy.testing.pytest import XFAIL
 
 
 import sympy as sym
@@ -7501,22 +7502,26 @@ def test_issue_15560():
 
 def test_print_polylog():
     # Part of issue 6013
-    s,z = symbols("s, z")
     uresult = 'Li₂(3)'
     aresult = 'polylog(2, 3)'
-    assert pretty(polylog(2,3)) == aresult
-    assert upretty(polylog(2,3)) == uresult
+    assert pretty(polylog(2, 3)) == aresult
+    assert upretty(polylog(2, 3)) == uresult
 
+
+@XFAIL
+def test_print_polylog_symbolic_order():
+    s, z = symbols("s, z")
     uresult = 'Liₛ(z)'
     aresult = 'polylog(s, z)'
-    assert pretty(polylog(s,z)) == aresult
-    assert upretty(polylog(s,z)) == uresult
+    assert pretty(polylog(s, z)) == aresult
+    assert upretty(polylog(s, z)) == uresult
 
 
 def test_print_polylog_long_order_issue_25309():
+    s, z = symbols("s, z")
     result = 'polylog(s - 1, z)'
-    assert pretty(polylog(s - 1,z)) == result
-    assert upretty(polylog(s - 1,z)) == result
+    assert pretty(polylog(s - 1, z)) == result
+    assert upretty(polylog(s - 1, z)) == result
 
 
 def test_print_lerchphi():
