@@ -178,6 +178,8 @@ power
 .. autoclass:: Pow
    :members:
 
+.. autofunction:: isqrt
+
 .. autofunction:: integer_nthroot
 
 .. autofunction:: integer_log

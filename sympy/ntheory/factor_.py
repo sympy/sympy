@@ -17,7 +17,7 @@ from sympy.core.numbers import Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -1309,17 +1309,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # square root anyway. Finding 2 factors is easy if they are
             # "close enough." This is the big root equivalent of dividing by
             # 2, 3, 5.
-            sqrt_n = integer_nthroot(n, 2)[0]
+            sqrt_n = isqrt(n)
             a = sqrt_n + 1
             a2 = a**2
             b2 = a2 - n
             for i in range(3):
-                b, fermat = integer_nthroot(b2, 2)
-                if fermat:
+                b, fermat = sqrtrem(b2)
+                if not fermat:
                     break
                 b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
-            if fermat:
+            if not fermat:
                 if verbose:
                     print(fermat_msg)
                 if limit:
@@ -2430,8 +2430,8 @@ def is_perfect(n):
         last2 = n % 100
         if last2 != 28 and last2 % 10 != 6:
             return False
-        r, b = integer_nthroot(1 + 8*n, 2)
-        if not b:
+        r, b = sqrtrem(1 + 8*n)
+        if b:
             return False
         m, x = divmod(1 + r, 4)
         if x:
