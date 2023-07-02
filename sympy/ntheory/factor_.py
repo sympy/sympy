@@ -17,7 +17,7 @@ from sympy.core.numbers import Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt, sqrtrem
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -1309,7 +1309,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # square root anyway. Finding 2 factors is easy if they are
             # "close enough." This is the big root equivalent of dividing by
             # 2, 3, 5.
-            sqrt_n = sqrt(n)
+            sqrt_n = isqrt(n)
             a = sqrt_n + 1
             a2 = a**2
             b2 = a2 - n
