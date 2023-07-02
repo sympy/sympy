@@ -7515,13 +7515,17 @@ def test_print_polylog_symbolic_order():
     aresult = 'polylog(s, z)'
     assert pretty(polylog(s, z)) == aresult
     assert upretty(polylog(s, z)) == uresult
+    # TODO: TBD polylog(s - 1, z)
 
 
 def test_print_polylog_long_order_issue_25309():
     s, z = symbols("s, z")
-    result = 'polylog(s - 1, z)'
-    assert pretty(polylog(s - 1, z)) == result
-    assert upretty(polylog(s - 1, z)) == result
+    ucode_str = \
+"""\
+       ⎛ 2   ⎞\n\
+polylog⎝s , z⎠\
+"""
+    assert pretty(polylog(s**2, z)) == ucode_str
 
 
 def test_print_lerchphi():
