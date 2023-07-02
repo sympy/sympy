@@ -1690,6 +1690,12 @@ def test_lambdify_cse():
             result = f(*case.num_args)
             case.assertAllClose(result)
 
+def test_issue_25288():
+    syms = numbered_symbols(cls=Dummy)
+    ok = lambdify(x, [x**2, sin(x**2)], cse=lambda e: cse(e, symbols=syms))(2)
+    assert ok
+
+
 def test_deprecated_set():
     with warns_deprecated_sympy():
         lambdify({x, y}, x + y)
