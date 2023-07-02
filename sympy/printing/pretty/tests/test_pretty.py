@@ -7513,6 +7513,12 @@ def test_print_polylog():
     assert upretty(polylog(s,z)) == uresult
 
 
+def test_print_polylog_long_order_issue_25309():
+    result = 'polylog(s - 1, z)'
+    assert pretty(polylog(s - 1,z)) == result
+    assert upretty(polylog(s - 1,z)) == result
+
+
 def test_print_lerchphi():
     # Part of issue 6013
     a = Symbol('a')
