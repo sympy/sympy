@@ -1686,8 +1686,8 @@ def test_lambdify_cse():
     for case in cases:
         if not numpy and case.requires_numpy:
             continue
-        for cse in [False, True, minmem, no_op_cse, dummy_cse]:
-            f = case.lambdify(cse=cse)
+        for _cse in [False, True, minmem, no_op_cse, dummy_cse]:
+            f = case.lambdify(cse=_cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
 
