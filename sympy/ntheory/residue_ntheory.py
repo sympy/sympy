@@ -433,10 +433,34 @@ def _sqrt_mod_tonelli_shanks(a, p):
     """
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
+    Assume that the root exists (if it does not, we are in an infinite loop).
+    Although ``p`` correctly returns the answer for any odd prime,
+    ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
+    a more efficient algorithm exists.
+
+    Parameters
+    ==========
+
+    a : integer
+    p : odd prime number
+
+    Returns
+    =======
+
+    int : Generally, there are two roots, but only one is returned.
+          Which one is returned is random.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _sqrt_mod_tonelli_shanks
+    >>> _sqrt_mod_tonelli_shanks(2, 17) in [6, 11]
+    True
+
     References
     ==========
 
-    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
 
     """
     s = trailing(p - 1)
@@ -493,24 +517,16 @@ def sqrt_mod(a, p, all_roots=False):
     """
     if all_roots:
         return sorted(sqrt_mod_iter(a, p))
-    try:
-        p = abs(as_int(p))
-        it = sqrt_mod_iter(a, p)
-        r = next(it)
-        if r > p // 2:
+    p = abs(as_int(p))
+    x = None
+    for r in sqrt_mod_iter(a, p):
+        if r < p // 2:
+            return r
+        elif r > p // 2:
             return p - r
-        elif r < p // 2:
-            return r
         else:
-            try:
-                r = next(it)
-                if r > p // 2:
-                    return p - r
-            except StopIteration:
-                pass
-            return r
-    except StopIteration:
-        return None
+            x = r
+    return x
 
 
 def _product(*iters):
