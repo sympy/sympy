@@ -394,7 +394,6 @@ class TranscendentalPredicate(Predicate):
 
     .. [1] https://www.britannica.com/science/transcendental-number
 
-
     """
 
     name = 'transcendental'
