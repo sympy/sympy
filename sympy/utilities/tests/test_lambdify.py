@@ -30,9 +30,11 @@ from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, p
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.simplify.cse_main import cse
 from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
+from sympy.utilities.iterables import numbered_symbols
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -1597,8 +1599,12 @@ def test_jax_dotproduct():
 
 
 def test_lambdify_cse():
-    def dummy_cse(exprs):
+    def no_op_cse(exprs):
         return (), exprs
+
+    def dummy_cse(exprs):
+        from sympy.simplify.cse_main import cse
+        return cse(exprs, symbols=numbered_symbols(cls=Dummy))
 
     def minmem(exprs):
         from sympy.simplify.cse_main import cse_release_variables, cse
@@ -1680,10 +1686,16 @@ def test_lambdify_cse():
     for case in cases:
         if not numpy and case.requires_numpy:
             continue
-        for cse in [False, True, minmem, dummy_cse]:
-            f = case.lambdify(cse=cse)
+        for _cse in [False, True, minmem, no_op_cse, dummy_cse]:
+            f = case.lambdify(cse=_cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
+
+def test_issue_25288():
+    syms = numbered_symbols(cls=Dummy)
+    ok = lambdify(x, [x**2, sin(x**2)], cse=lambda e: cse(e, symbols=syms))(2)
+    assert ok
+
 
 def test_deprecated_set():
     with warns_deprecated_sympy():
