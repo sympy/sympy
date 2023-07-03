@@ -567,10 +567,26 @@ def test_inverse_laplace_transform():
             ILT((sqrt(s)-a)/(s*(sqrt(s)+a))) ==
             (2*exp(a**2*t)*erfc(a*sqrt(t))-1)*Heaviside(t))
     assert (  # (18)
-            ILT((sqrt(s)-a)**2/(s*(sqrt(s)+a)**2)) ==
-            (
+            ILT((sqrt(s)-a)**2/(s*(sqrt(s)+a)**2)) == (
                 1 + 8*a**2*t*exp(a**2*t)*erfc(a*sqrt(t)) -
                 8/sqrt(pi)*a*sqrt(t))*Heaviside(t))
+    assert (  # (19)
+            ILT((sqrt(s)-a)**3/(s*(sqrt(s)+a)**3)) == Heaviside(t)*(
+                2*(8*a**4*t**2+8*a**2*t+1)*exp(a**2*t) *
+                erfc(a*sqrt(t))-8/sqrt(pi)*a*sqrt(t)*(2*a**2*t+1)-1))
+    assert (  # (22)
+            ILT(sqrt(s+a)/(s+b)) == Heaviside(t)*(
+                exp(-a*t)/sqrt(t)/sqrt(pi) +
+                sqrt(a-b)*exp(-b*t)*erf(sqrt(a-b)*sqrt(t))))
+    assert (  # (23)
+            ILT(1/sqrt(s+b)/(s+a)) == Heaviside(t)*(
+                1/sqrt(b-a)*exp(-a*t)*erf(sqrt(b-a)*sqrt(t))))
+    assert (  # (35)
+            ILT(1/sqrt(s**2+a**2)) == Heaviside(t)*(
+                besselj(0, a*t)))
+    assert (  # (44)
+            ILT(1/sqrt(s**2-a**2)) == Heaviside(t)*(
+                besseli(0, a*t)))
 
     # Miscellaneous tests
     # Can _inverse_laplace_time_shift deal with positive exponents?
