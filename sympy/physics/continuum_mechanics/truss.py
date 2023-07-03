@@ -711,7 +711,7 @@ class Truss:
         cols = 0
         row = 0
         for node in self._nodes:
-            if node[0] in list(self._supports):
+            if node[0] in self._supports:
                 if self._supports[node[0]]=='pinned':
                     coefficients_matrix[row][cols] += 1
                     coefficients_matrix[row+1][cols+1] += 1
@@ -859,7 +859,7 @@ class Truss:
 
         for node in self._node_coordinates:
             if (type(self._node_coordinates[node][0]) in (Symbol, Quantity)):
-                if self._node_coordinates[node][0] in list(subs_dict):
+                if self._node_coordinates[node][0] in subs_dict:
                     self._node_coordinates[node][0] = subs_dict[self._node_coordinates[node][0]]
                 else:
                     raise ValueError("provided substituted dictionary is not adequate")
@@ -867,14 +867,14 @@ class Truss:
                 objects = self._node_coordinates[node][0].as_coeff_Mul()
                 for object in objects:
                     if type(object) in (Symbol, Quantity):
-                        if subs_dict==None or object not in list(subs_dict):
+                        if subs_dict==None or object not in subs_dict:
                             raise ValueError("provided substituted dictionary is not adequate")
                         else:
                             self._node_coordinates[node][0] /= object
                             self._node_coordinates[node][0] *= subs_dict[object]
 
             if (type(self._node_coordinates[node][1]) in (Symbol, Quantity)):
-                if self._node_coordinates[node][1] in list(subs_dict):
+                if self._node_coordinates[node][1] in subs_dict:
                     self._node_coordinates[node][1] = subs_dict[self._node_coordinates[node][1]]
                 else:
                     raise ValueError("provided substituted dictionary is not adequate")
@@ -882,7 +882,7 @@ class Truss:
                 objects = self._node_coordinates[node][1].as_coeff_Mul()
                 for object in objects:
                     if type(object) in (Symbol, Quantity):
-                        if subs_dict==None or object not in list(subs_dict):
+                        if subs_dict==None or object not in subs_dict:
                             raise ValueError("provided substituted dictionary is not adequate")
                         else:
                             self._node_coordinates[node][1] /= object
