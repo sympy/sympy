@@ -36,37 +36,37 @@ def test_number_line_properties():
     # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
 
     # Converse
-    # a ≤ b and b ≥ a are equivalent.
+    # a <= b and b >= a are equivalent.
     ask(Equivalent(a <= b, b >= a))
 
     # Transitivity
-    # If a ≤ b and b ≤ c, then a ≤ c.
+    # If a <= b and b <= c, then a <= c.
     assert ask(a <= c, (a <= b) & (b <= c)) is True
-    # If a ≤ b and b < c, then a < c.
+    # If a <= b and b < c, then a < c.
     assert ask(a < c, (a <= b) & (b < c)) is True
-    # If a < b and b ≤ c, then a < c.
+    # If a < b and b <= c, then a < c.
     assert ask(a < c, (a < b) & (b <= c)) is True
 
     # Addition and subtraction
-    # If a ≤ b, then a + c ≤ b + c and a − c ≤ b − c.
+    # If a <= b, then a + c <= b + c and a - c <= b - c.
     assert ask(a + c <= b + c, a <= b) is True
     assert ask(a - c <= b - c, a <= b) is True
 
     # Multiplication and division
-    # If a ≤ b and c > 0, then ac ≤ bc and a/c ≤ b/c. (True for non-zero c)
+    # If a <= b and c > 0, then ac <= bc and a/c <= b/c. (True for non-zero c)
     assert ask(a*c <= b*c, (a <= b) & (c > 0) & ~ Q.zero(c)) is True
     assert ask(a/c <= b/c, (a <= b) & (c > 0) & ~ Q.zero(c)) is True
-    # If a ≤ b and c < 0, then ac ≥ bc and a/c ≥ b/c. (True for non-zero c)
+    # If a <= b and c < 0, then ac >= bc and a/c >= b/c. (True for non-zero c)
     assert ask(a*c >= b*c, (a <= b) & (c < 0) & ~ Q.zero(c)) is True
     assert ask(a/c >= b/c, (a <= b) & (c < 0) & ~ Q.zero(c)) is True
 
     # Additive inverse
-    # If a ≤ b, then −a ≥ −b.
+    # If a <= b, then -a >= -b.
     assert ask(-a >= -b, a <= b) is True
 
     # Multiplicative inverse
     # For a, b that are both negative or both positive:
-    # If a ≤ b, then 1/a ≥ 1/b .
+    # If a <= b, then 1/a >= 1/b .
     assert ask(1/a >= 1/b, (a <= b) & Q.positive(x) & Q.positive(b)) is True
     assert ask(1/a >= 1/b, (a <= b) & Q.negative(x) & Q.negative(b)) is True
 
@@ -89,5 +89,5 @@ def test_refine():
     assert refine(a+b-c, Q.eq(a+c, c)) == 0
 
     # test piecewise
-    refine(Heaviside(x), x > 2) == 1
-    refine(Heaviside(x-1), x > 2) == 1
+    assert refine(Heaviside(x), x > 2) is 1
+    assert refine(Heaviside(x-1), x > 2) is 1
