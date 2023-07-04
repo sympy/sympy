@@ -441,8 +441,9 @@ def _sqrt_mod_tonelli_shanks(a, p):
     Parameters
     ==========
 
-    a : integer
-    p : odd prime number
+    a : int
+    p : int
+        Odd prime number
 
     Returns
     =======
