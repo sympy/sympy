@@ -1180,7 +1180,7 @@ def _simplex(A, B, C, skip_phase_2=False):
 
     return M[-1, -1], argmax, argmin_dual
 
-def linprog_from_matricies(A, B, C):
+def linprog_from_matrices(A, B, C):
     """
     Because of the duality of linear programming, there are two valid ways to
     interpret this function. The first is as a solver for the standard
@@ -1247,11 +1247,11 @@ def linprog_from_matricies(A, B, C):
         x+y <= 2
 
     >>> from sympy.matrices.dense import Matrix
-    >>> from sympy.solvers.inequalities import linprog_from_matricies
+    >>> from sympy.solvers.inequalities import linprog_from_matrices
     >>> A = Matrix([[1, 1]])
     >>> B = Matrix([[2]])
     >>> C = Matrix([[3, 1]])
-    >>> optimum, argmax, argmax_dual = linprog_from_matricies(A, B, C)
+    >>> optimum, argmax, argmax_dual = linprog_from_matrices(A, B, C)
     >>> optimum
     6
     >>> argmax
@@ -1268,7 +1268,7 @@ def linprog_from_matricies(A, B, C):
     >>> A = Matrix([[1,0], [0, 1]])
     >>> B = Matrix([[2],[4]])
     >>> C = Matrix([[3, 1]])
-    >>> optimum, argmax, argmax_dual = linprog_from_matricies(A, B, C)
+    >>> optimum, argmax, argmax_dual = linprog_from_matrices(A, B, C)
     >>> optimum
     10
     >>> argmax
@@ -1285,11 +1285,10 @@ def linprog_from_matricies(A, B, C):
     return _simplex(A, B, C)
 
 
-def _linear_programming_to_matrix(constraints, objective):
+def _linear_programming_to_matrix(constraints, objective, variables):
     """
     Converts a list of constraints and an objective function into the standard
-    form for linear programming. Each free variable is assigned a column
-    lexicographically.
+    form for linear programming.
 
     Examples
     ========
@@ -1300,7 +1299,7 @@ def _linear_programming_to_matrix(constraints, objective):
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> A, B, C, variables, constraints = _linear_programming_to_matrix([r1, r2, r3], x + y + 5*z)
+    >>> A, B, C, constraints = _linear_programming_to_matrix([r1, r2, r3], x + y + 5*z, [x, y, z])
     >>> A
     Matrix([
     [ 0, 1,  2],
@@ -1313,11 +1312,9 @@ def _linear_programming_to_matrix(constraints, objective):
     [ 5]])
     >>> C
     Matrix([[1, 1, 5]])
-    >>> variables
-    [x, y, z]
     >>> constraints
     [y + 2*z <= 3, -x - 3*z <= -2, 2*x + y + 7*z <= 5]
-    >>> A, B, C, variables, constraints = _linear_programming_to_matrix([Eq(x, 3)], x*10)  # x = 3 become x >= 3 and x <= 3
+    >>> A, B, C, constraints = _linear_programming_to_matrix([Eq(x, 3)], x*10, [x])  # x = 3 become x >= 3 and x <= 3
     >>> A
     Matrix([
     [ 1],
@@ -1328,12 +1325,9 @@ def _linear_programming_to_matrix(constraints, objective):
     [-3]])
     >>> C
     Matrix([[10]])
-    >>> variables
-    [x]
     >>> constraints
     [x <= 3, -x <= -3]
     """
-    variables = objective.free_symbols
     standard_constraints = []
     eqns = []
 
@@ -1344,8 +1338,6 @@ def _linear_programming_to_matrix(constraints, objective):
             raise TypeError("Strict inequalities are not allowed in linear programming.")
         if type(rel) == Ne or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ne:
             raise TypeError("'not equal to' is not allowed in linear programming.")
-
-        variables = variables | rel.free_symbols
 
         if type(rel) == Le or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.le:
             eqns.append(rel.lhs - rel.rhs)
@@ -1362,14 +1354,12 @@ def _linear_programming_to_matrix(constraints, objective):
         else:
             raise TypeError(f"Unrecognized relation: {rel}")
 
-    variables = sorted(variables, key=lambda v: str(v)) # order symbols lexicographically
-
     A, B = linear_eq_to_matrix(eqns, *variables)
     C = linear_eq_to_matrix(objective, *variables)[0] # constant terms can be safely ignored here
 
-    return A, B, C, variables, standard_constraints
+    return A, B, C, standard_constraints
 
-def linprog_from_equations(constraints, objective):
+def linprog_maximize_from_equations(constraints, objective, variables):
     """
     A function to maximize a linear objective function subject to linear
     constraints with the simplex method. All coefficients must be Rational or
@@ -1384,6 +1374,8 @@ def linprog_from_equations(constraints, objective):
     objective : a linear function to maximize
         If you want to minimize a function, f, simply make the objective
         function -f.
+
+    variables : a list of variables included in constraints and objective
 
     Returns
     =======
@@ -1400,11 +1392,11 @@ def linprog_from_equations(constraints, objective):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.inequalities import linprog_from_equations
+    >>> from sympy.solvers.inequalities import linprog_maximize_from_equations
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> optimum, argmax, argmax_dual  = linprog_from_equations([r1,r2,r3], x+y+5*z)
+    >>> optimum, argmax, argmax_dual  = linprog_maximize_from_equations([r1,r2,r3], x+y+5*z, [x, y, z])
     >>> optimum
     11/3
     >>> argmax
@@ -1419,14 +1411,14 @@ def linprog_from_equations(constraints, objective):
     simplex
     find_feasible
     """
-    A, B, C, variables, standard_constraints = _linear_programming_to_matrix(constraints, objective)
+    A, B, C, standard_constraints = _linear_programming_to_matrix(constraints, objective, variables)
     optimum, argmax, argmax_dual = _simplex(A, B, C)
     argmax = {variables[i] : argmax[i] for i in range(len(variables))}
     argmax_dual = {standard_constraints[i] : argmax_dual[i] for i in range(len(standard_constraints))}
     return optimum, argmax, argmax_dual
 
 
-def find_feasible(constraints):
+def find_feasible(constraints, variables):
     """
     Finds a feasible solution to a system of linear inequalities, if any exist,
     with the first phase of the simplex method.
@@ -1437,13 +1429,14 @@ def find_feasible(constraints):
     constraints : list of linear inequalities and equalities
         Stict inequalities (>, <) and not equals are not allowed.
 
+    variables : list of variables included in inequalities
+
     Returns
     =======
 
-    list or None
-        If no feasible solutions exist, returns None. Otherwise, returns a list
-        of values for each variable that satisfy the constraints. The values in
-        the list correspond to the variables in lexicographical order.
+    dictionary or None
+        If no feasible solutions exist, returns None. Otherwise, returns a dictionary
+        of variable to values that satisfies the constraints.
 
     Examples
     ========
@@ -1453,11 +1446,11 @@ def find_feasible(constraints):
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> find_feasible([r1, r2, r3])
+    >>> find_feasible([r1, r2, r3], [x, y, z])
     {x: 2, y: 0, z: 0}
     >>> r1 = x <= 3
     >>> r2 = x >= 4
-    >>> find_feasible([r1, r2]) is None
+    >>> find_feasible([r1, r2], [x]) is None
     True
 
     See Also
@@ -1466,7 +1459,7 @@ def find_feasible(constraints):
     linprog_maximize
     simplex
     """
-    A, B, C, variables, _ = _linear_programming_to_matrix(constraints, sympify(0))
+    A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
     try:
         _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)
         return {variables[i] : feasible[i] for i in range(len(variables))}
