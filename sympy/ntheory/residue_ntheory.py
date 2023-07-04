@@ -433,7 +433,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     """
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
-    Assume that the root exists (if it does not, we are in an infinite loop).
+    Assume that the root exists.
     Although ``p`` correctly returns the answer for any odd prime,
     ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
     a more efficient algorithm exists.
