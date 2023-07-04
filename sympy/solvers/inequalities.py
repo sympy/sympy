@@ -1077,117 +1077,9 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     row = sorted(min_rows, key= lambda r: S[r])[0]
     return row
 
-def simplex(A, B, C, skip_phase_2=False):
+def _simplex(A, B, C, skip_phase_2=False):
     """
     Simplex method with Bland's rule
-
-    Explanation
-    ===========
-
-    Because of the duality of linear programming, there are two valid ways to
-    interpret this function. The first is as a solver for the standard
-    maximization problem:
-        Maximizing Cx constrained to Ax <= B and x >= 0.
-    The second as is a solver for the standard minimization problem:
-        Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
-
-    x is a column vector of variables, and y is a column vector of dual
-    variables.
-
-    If we keep the maximization interpretation in mind, then matrix A and
-    column vector B represent a set of constraints. For example,
-        1*x + 0*y <= 2
-        0*x + 0*y <= 4
-    can be represented as:
-    >>> from sympy.matrices.dense import Matrix
-    >>> A = Matrix([[1, 0],
-    ...             [0, 1]])
-    >>> B = Matrix([[2],
-    ...             [4]])
-
-    In this interpretation, row vector C is an objective function to be
-    maximized. For example,
-        3x + y
-    can be represented as:
-    >>> C = Matrix([[3, 1]])
-
-    Parameters
-    ==========
-
-    Under the maximization interpretation, m is the number of constraints and n
-    is the number of variables.
-
-    A : Matrix with shape (m, n)
-        Must contain only Rational and float coefficients.
-
-    B : Matrix with shape (m, 1)
-        Must contain only Rational and float coefficients.
-
-    C: Matrix with shape (1, n)
-        Must contain only Rational and float coefficients.
-
-    skip_phase_2 : bool, optional
-        Skipping phase 2 means the output will not be a solution to a
-        linear programing problem. This is useful if all you want is a
-        feasible solution to a set of constraints.
-
-    Returns
-    =======
-
-    Returns a triplet of solutions optimum, argmax, and argmax_dual:
-
-    optimum : numerical
-        maximum value of objective function under the constraints
-
-    argmax : Matrix with shape (1, n)
-        x
-
-    argmax_dual : Matrix with shape (m, 1)
-        y
-
-    Examples
-    ========
-
-    Suppose we want to maximize
-        3x+y
-    subject to
-        x+y <= 2
-
-    >>> from sympy.matrices.dense import Matrix
-    >>> from sympy.solvers.inequalities import simplex
-    >>> A = Matrix([[1, 1]])
-    >>> B = Matrix([[2]])
-    >>> C = Matrix([[3, 1]])
-    >>> optimum, argmax, argmax_dual = simplex(A, B, C)
-    >>> optimum
-    6
-    >>> argmax
-    [2, 0]
-    >>> argmax_dual
-    [3]
-
-    Suppose we want to maximize
-        3x+y
-    subject to
-        x <= 2
-        y <= 4
-
-    >>> A = Matrix([[1,0], [0, 1]])
-    >>> B = Matrix([[2],[4]])
-    >>> C = Matrix([[3, 1]])
-    >>> optimum, argmax, argmax_dual = simplex(A, B, C)
-    >>> optimum
-    10
-    >>> argmax
-    [2, 4]
-    >>> argmax_dual
-    [3, 1]
-
-    See Also
-    ========
-
-    linprog_maximize
-    find_feasible
 
     References
     ==========
@@ -1288,6 +1180,110 @@ def simplex(A, B, C, skip_phase_2=False):
 
     return M[-1, -1], argmax, argmin_dual
 
+def linprog_from_matricies(A, B, C):
+    """
+    Because of the duality of linear programming, there are two valid ways to
+    interpret this function. The first is as a solver for the standard
+    maximization problem:
+        Maximizing Cx constrained to Ax <= B and x >= 0.
+    The second as is a solver for the standard minimization problem:
+        Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
+
+    x is a column vector of variables, and y is a column vector of dual
+    variables.
+
+    If we keep the maximization interpretation in mind, then matrix A and
+    column vector B represent a set of constraints. For example,
+        1*x + 0*y <= 2
+        0*x + 0*y <= 4
+    can be represented as:
+    >>> from sympy.matrices.dense import Matrix
+    >>> A = Matrix([[1, 0],
+    ...             [0, 1]])
+    >>> B = Matrix([[2],
+    ...             [4]])
+
+    In this interpretation, row vector C is an objective function to be
+    maximized. For example,
+        3x + y
+    can be represented as:
+    >>> C = Matrix([[3, 1]])
+
+    Parameters
+    ==========
+
+    Under the maximization interpretation, m is the number of constraints and n
+    is the number of variables.
+
+    A : Matrix with shape (m, n)
+        Must contain only Rational and float coefficients.
+
+    B : Matrix with shape (m, 1)
+        Must contain only Rational and float coefficients.
+
+    C: Matrix with shape (1, n)
+        Must contain only Rational and float coefficients.
+
+    Returns
+    =======
+
+    Returns a triplet of solutions optimum, argmax, and argmax_dual:
+
+    optimum : float or Rational
+        maximum value of objective function under the constraints
+
+    argmax : list of floats and/or Rationals
+        x
+
+    argmax_dual : list of floats and/or Rationals
+        y
+
+    Examples
+    ========
+
+    Suppose we want to maximize
+        3x+y
+    subject to
+        x+y <= 2
+
+    >>> from sympy.matrices.dense import Matrix
+    >>> from sympy.solvers.inequalities import linprog_from_matricies
+    >>> A = Matrix([[1, 1]])
+    >>> B = Matrix([[2]])
+    >>> C = Matrix([[3, 1]])
+    >>> optimum, argmax, argmax_dual = linprog_from_matricies(A, B, C)
+    >>> optimum
+    6
+    >>> argmax
+    [2, 0]
+    >>> argmax_dual
+    [3]
+
+    Suppose we want to maximize
+        3x+y
+    subject to
+        x <= 2
+        y <= 4
+
+    >>> A = Matrix([[1,0], [0, 1]])
+    >>> B = Matrix([[2],[4]])
+    >>> C = Matrix([[3, 1]])
+    >>> optimum, argmax, argmax_dual = linprog_from_matricies(A, B, C)
+    >>> optimum
+    10
+    >>> argmax
+    [2, 4]
+    >>> argmax_dual
+    [3, 1]
+
+    See Also
+    ========
+
+    linprog_maximize
+    find_feasible
+    """
+    return _simplex(A, B, C)
+
 
 def _linear_programming_to_matrix(constraints, objective):
     """
@@ -1373,7 +1369,7 @@ def _linear_programming_to_matrix(constraints, objective):
 
     return A, B, C, variables, standard_constraints
 
-def linprog_maximize(constraints, objective):
+def linprog_from_equations(constraints, objective):
     """
     A function to maximize a linear objective function subject to linear
     constraints with the simplex method. All coefficients must be Rational or
@@ -1424,7 +1420,7 @@ def linprog_maximize(constraints, objective):
     find_feasible
     """
     A, B, C, variables, standard_constraints = _linear_programming_to_matrix(constraints, objective)
-    optimum, argmax, argmax_dual = simplex(A, B, C)
+    optimum, argmax, argmax_dual = _simplex(A, B, C)
     argmax = {variables[i] : argmax[i] for i in range(len(variables))}
     argmax_dual = {standard_constraints[i] : argmax_dual[i] for i in range(len(standard_constraints))}
     return optimum, argmax, argmax_dual
@@ -1472,7 +1468,7 @@ def find_feasible(constraints):
     """
     A, B, C, variables, _ = _linear_programming_to_matrix(constraints, sympify(0))
     try:
-        _, feasible, _ = simplex(A, B, C, skip_phase_2=True)
+        _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)
         return {variables[i] : feasible[i] for i in range(len(variables))}
     except InfeasibleLinearProgrammingError:
         return None
