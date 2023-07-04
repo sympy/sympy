@@ -89,5 +89,5 @@ def test_refine():
     assert refine(a+b-c, Q.eq(a+c, c)) == 0
 
     # test piecewise
-    assert refine(Heaviside(x), x > 2) is 1
-    assert refine(Heaviside(x-1), x > 2) is 1
+    assert refine(Heaviside(x), x > 2) == 1
+    assert refine(Heaviside(x-1), x > 2) == 1
