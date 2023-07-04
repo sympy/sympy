@@ -1400,11 +1400,11 @@ def linprog_from_equations(constraints, objective):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.inequalities import linprog_maximize
+    >>> from sympy.solvers.inequalities import linprog_from_equations
     >>> r1 = y+2*z <= 3
     >>> r2 = -x-3*z <= -2
     >>> r3 = 2*x+y+7*z <= 5
-    >>> optimum, argmax, argmax_dual  = linprog_maximize([r1,r2,r3], x+y+5*z)
+    >>> optimum, argmax, argmax_dual  = linprog_from_equations([r1,r2,r3], x+y+5*z)
     >>> optimum
     11/3
     >>> argmax
