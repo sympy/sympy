@@ -25,7 +25,7 @@ from sympy.solvers.inequalities import (reduce_inequalities,
     reduce_abs_inequality,
     _solve_inequality, linprog_maximize, find_feasible,
     UnboundedLinearProgrammingError, InfeasibleLinearProgrammingError,
-    _linear_programming_to_matrix)
+    _linear_programming_to_matrix, simplex)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -497,6 +497,22 @@ def test__pt():
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
 
 
+def test_simplex():
+    # There's no need to have many test cases because test_linprog_maximize
+    # and test_find_feasible test the simplex function extensively.
+    A = Matrix([[1,0], [0, 1]])
+    B = Matrix([[2],[4]])
+    C = Matrix([[3, 1, 3]])
+    raises(ValueError, lambda: simplex(A, B, C))
+
+    B = Matrix([[2],[4], [5]])
+    C = Matrix([[3, 1]])
+    raises(ValueError, lambda: simplex(A, B, C))
+
+    B = Matrix([[2],[4], [5]])
+    C = Matrix([[3, 1, 3]])
+    raises(ValueError, lambda: simplex(A, B, C))
+
 def test_linprog_maximize():
     np = import_module("numpy")
     scipy = import_module("scipy")
@@ -613,6 +629,12 @@ def test_linprog_maximize():
         assert constr.subs(argmax) == True
     B = _linear_programming_to_matrix(constraints, objective)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
+
+    # input contains symbolic expression (sqrt(2) for example)
+    r1 = x - y + sqrt(2) * z <= -4
+    r2 = -x + 2*y - 3*z <= 8
+    r3 = 2*x + y - 7*z <= 10
+    raises(TypeError, lambda: linprog_maximize([r1, r2, r3], -x-y-5*z))
 
     r1 = x >= 0
     raises(UnboundedLinearProgrammingError, lambda: linprog_maximize([r1], x))

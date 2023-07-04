@@ -1118,10 +1118,13 @@ def simplex(A, B, C, skip_phase_2=False):
     is the number of variables.
 
     A : Matrix with shape (m, n)
+        Must contain only Rational and float coefficients.
 
     B : Matrix with shape (m, 1)
+        Must contain only Rational and float coefficients.
 
     C: Matrix with shape (1, n)
+        Must contain only Rational and float coefficients.
 
     skip_phase_2 : bool, optional
         Skipping phase 2 means the output will not be a solution to a
@@ -1202,7 +1205,7 @@ def simplex(A, B, C, skip_phase_2=False):
     for val in list(A) + list(B) + list(C):
         val = sympify(val)
         if not (val.is_rational or isinstance(val, Float)):
-            raise ValueError(f"Only rationals and floats are allowed in the Simplex method." \
+            raise TypeError(f"Only rationals and floats are allowed in the Simplex method." \
                              f" ({val}) is neither.")
 
     D = ImmutableMatrix([0])
@@ -1373,7 +1376,8 @@ def _linear_programming_to_matrix(constraints, objective):
 def linprog_maximize(constraints, objective):
     """
     A function to maximize a linear objective function subject to linear
-    constraints with the simplex method.
+    constraints with the simplex method. All coefficients must be Rational or
+    floats.
 
     Parameters
     ==========
@@ -1382,8 +1386,8 @@ def linprog_maximize(constraints, objective):
         Stict inequalities (>, <) and not equals are not allowed.
 
     objective : a linear function to maximize
-        If you want to minimize a function, simply make the objective function
-        negative.
+        If you want to minimize a function, f, simply make the objective
+        function -f.
 
     Returns
     =======
@@ -1410,7 +1414,7 @@ def linprog_maximize(constraints, objective):
     >>> argmax
     {x: 0, y: 1/3, z: 2/3}
     >>> argmax_dual
-    {y + 2*z <= 3: 0, -x - 3*z <= -2: 2/3, 2*x + y + 7*z <= 5: 1}
+    {-x - 3*z <= -2: 2/3, y + 2*z <= 3: 0, 2*x + y + 7*z <= 5: 1}
 
     See Also
     ========
