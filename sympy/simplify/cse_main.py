@@ -621,7 +621,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
                 expr.is_Order or
                 isinstance(expr, (MatrixSymbol, MatrixElement))):
             if expr.is_Symbol:
-                excluded_symbols.add(expr)
+                excluded_symbols.add(expr.name)
             return
 
         if iterable(expr):
@@ -652,7 +652,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     ## Rebuild tree
 
     # Remove symbols from the generator that conflict with names in the expressions.
-    symbols = (symbol for symbol in symbols if symbol not in excluded_symbols)
+    symbols = (_ for _ in symbols if _.name not in excluded_symbols)
 
     replacements = []
 
