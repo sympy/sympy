@@ -23,9 +23,9 @@ from sympy.solvers.inequalities import (reduce_inequalities,
     reduce_rational_inequalities,
     solve_univariate_inequality as isolve,
     reduce_abs_inequality,
-    _solve_inequality, linprog_from_matricies, find_feasible,
+    _solve_inequality, linprog_maximize_from_equations, find_feasible,
     UnboundedLinearProgrammingError, InfeasibleLinearProgrammingError,
-    _linear_programming_to_matrix, linprog_from_equations)
+    _linear_programming_to_matrix, linprog_from_matrices)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -497,7 +497,7 @@ def test__pt():
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
 
 
-def test_linprog_from_matricies():
+def test_linprog_from_matrices():
     # There's no need to have many test cases because test_linprog_from_equations
     # and test_find_feasible test the simplex function extensively.
 
@@ -505,24 +505,24 @@ def test_linprog_from_matricies():
     A = Matrix([[1,0], [0, 1]])
     B = Matrix([[2],[4]])
     C = Matrix([[3, 1, 3]])
-    raises(ValueError, lambda: linprog_from_matricies(A, B, C))
+    raises(ValueError, lambda: linprog_from_matrices(A, B, C))
     B = Matrix([[2],[4], [5]])
     C = Matrix([[3, 1]])
-    raises(ValueError, lambda: linprog_from_matricies(A, B, C))
+    raises(ValueError, lambda: linprog_from_matrices(A, B, C))
     B = Matrix([[2],[4], [5]])
     C = Matrix([[3, 1, 3]])
-    raises(ValueError, lambda: linprog_from_matricies(A, B, C))
+    raises(ValueError, lambda: linprog_from_matrices(A, B, C))
 
-def test_linprog_from_equations():
+def test_linprog_maximize_from_equations():
     np = import_module("numpy")
     scipy = import_module("scipy")
 
-    def compare_optimum_with_scipy(constraints, objective, optimum):
+    def compare_optimum_with_scipy(constraints, objective, variables, optimum):
         if scipy is not None and np is not None:
-            A, B, C, var, _ = _linear_programming_to_matrix(constraints, objective)
+            A, B, C, _ = _linear_programming_to_matrix(constraints, objective, variables)
 
-            A_sci = Matrix([[A], [-eye(len(var))]])
-            B_sci = Matrix([[B], [Matrix([0] * len(var))]])
+            A_sci = Matrix([[A], [-eye(len(variables))]])
+            B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
             C_sci = -C
             A_sci = np.array(A_sci.tolist())
             B_sci = np.array(B_sci.tolist())
@@ -538,12 +538,13 @@ def test_linprog_from_equations():
     r3 = 2*x + y + 7*z <= 5
     constraints = [r1, r2, r3]
     objective = -x - y - 5 * z
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
-    compare_optimum_with_scipy(constraints, objective, optimum)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    compare_optimum_with_scipy(constraints, objective, variables, optimum)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
     r1 = x - y + 2*z <= 3
@@ -551,12 +552,13 @@ def test_linprog_from_equations():
     r3 = 2*x + y - 7*z <= -5
     constraints = [r1, r2, r3]
     objective = -x - y - 5*z
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
-    compare_optimum_with_scipy(constraints, objective, optimum)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    compare_optimum_with_scipy(constraints, objective, variables,  optimum)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
     r1 = x - y + 2*z <= -4
@@ -564,12 +566,13 @@ def test_linprog_from_equations():
     r3 = 2*x + y - 7*z <= 10
     constraints = [r1, r2, r3]
     objective = -x-y-5*z
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
-    compare_optimum_with_scipy(constraints, objective, optimum)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    compare_optimum_with_scipy(constraints, objective, variables, optimum)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
     # Section 4 Problem 1 from
@@ -579,7 +582,8 @@ def test_linprog_from_equations():
     r1 = x1 - x2 - 2*x3 - x4 <= 4
     r2 = 2*x1 + x3 -4*x4 <= 2
     r3 = -2*x1 + x2 + x4 <= 1
-    optimum, argmax, argmax_dual = linprog_from_equations([r1, r2, r3], x1 - 2*x2 - 3*x3 - x4)
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(
+        [r1, r2, r3], x1 - 2*x2 - 3*x3 - x4, [x1, x2, x3, x4])
     assert optimum == 4
     assert list(argmax.values()) == [7, 0, 0, 3]
     assert list(argmax_dual.values()) == [1, 0, 0]
@@ -590,12 +594,13 @@ def test_linprog_from_equations():
     r3 = z <= 3
     constraints = [r1, r2, r3]
     objective = x
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
-    compare_optimum_with_scipy(constraints, objective, optimum)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    compare_optimum_with_scipy(constraints, objective, variables, optimum)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
     # Binary predicate
@@ -603,10 +608,11 @@ def test_linprog_from_equations():
     r2 = Q.le(x, 4)
     constraints = [r1, r2]
     objective = x + y
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
     assert optimum == 8
     assert [x.subs(argmax), y.subs(argmax)] == [4, 4]
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
     # input contains Floats
@@ -615,51 +621,52 @@ def test_linprog_from_equations():
     r3 = 2*x + y - 7*z <= 10
     constraints = [r1, r2, r3]
     objective = -x-y-5*z
-    optimum, argmax, argmax_dual = linprog_from_equations(constraints, objective)
-    compare_optimum_with_scipy(constraints, objective, optimum)
+    variables = [x, y, z]
+    optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    compare_optimum_with_scipy(constraints, objective, variables, optimum)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(constraints, objective)[1]
+    B = _linear_programming_to_matrix(constraints, objective, variables)[1]
     assert (Matrix([list(argmax_dual.values())]) * B)[0,0] == optimum
 
-    # input contains symbolic expression (sqrt(2) for example)
+    # input contains non-float or non-Rational
     r1 = x - y + sqrt(2) * z <= -4
     r2 = -x + 2*y - 3*z <= 8
     r3 = 2*x + y - 7*z <= 10
-    raises(TypeError, lambda: linprog_from_equations([r1, r2, r3], -x-y-5*z))
+    raises(TypeError, lambda: linprog_maximize_from_equations([r1, r2, r3], -x-y-5*z, [x, y, z]))
 
     r1 = x >= 0
-    raises(UnboundedLinearProgrammingError, lambda: linprog_from_equations([r1], x))
+    raises(UnboundedLinearProgrammingError, lambda: linprog_maximize_from_equations([r1], x, [x]))
     r2 = x <= -1
-    raises(InfeasibleLinearProgrammingError, lambda: linprog_from_equations([r1,r2],x))
+    raises(InfeasibleLinearProgrammingError, lambda: linprog_maximize_from_equations([r1,r2],x, [x]))
 
     # strict inequalities are not allowed
     r1 = x > 0
-    raises(TypeError, lambda: linprog_from_equations([r1], x))
+    raises(TypeError, lambda: linprog_maximize_from_equations([r1], x, [x]))
 
     # not equals not allowed
     r1 = Ne(x, 0)
-    raises(TypeError, lambda: linprog_from_equations([r1], x))
+    raises(TypeError, lambda: linprog_maximize_from_equations([r1], x, [x]))
 
 
 def test_find_feasible():
     r1 = x >= 0
     r2 = x <= -1
-    assert find_feasible([r1, r2]) is None
+    assert find_feasible([r1, r2], [x]) is None
 
-    feasible = find_feasible([r1])
+    feasible = find_feasible([r1], [x])
     assert feasible is not None
     assert r1.subs(feasible) == True
 
     r1 = x >= 0
     r2 = x >= 3
-    feasible = find_feasible([r1, r2])
+    feasible = find_feasible([r1, r2], [x])
     assert feasible is not None
     assert (r1.subs(feasible) and r2.subs(feasible)) == True
 
     r1 = x >= 0
     r2 = x <= 3
-    feasible = find_feasible([r1, r2])
+    feasible = find_feasible([r1, r2], [x])
     assert feasible is not None
     assert (r1.subs(feasible) and r2.subs(feasible)) == True
