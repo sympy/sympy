@@ -516,28 +516,23 @@ def test_simplex():
 def test_linprog_maximize():
     np = import_module("numpy")
     scipy = import_module("scipy")
-    linprog = scipy.optimize.linprog
+    if scipy is not None:
+        linprog = scipy.optimize.linprog
 
     def compare_optimum_with_scipy(constraints, objective, optimum):
-        # optimum, argmax, argmax_dual = linprog_maximize(constraints, objective)
-        A, B, C, var, _ = _linear_programming_to_matrix(constraints, objective)
+        if scipy is not None and np is not None:
+            A, B, C, var, _ = _linear_programming_to_matrix(constraints, objective)
 
-        A_sci = Matrix([[A], [-eye(len(var))]])
-        B_sci = Matrix([[B], [Matrix([0] * len(var))]])
-        C_sci = -C
-        A_sci = np.array(A_sci.tolist())
-        B_sci = np.array(B_sci.tolist())
-        C_sci = np.array(C_sci.tolist())
-        res = linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
-        scipy_optimum = - res.fun
-        optimum = sympify(optimum)
-        assert scipy_optimum == optimum.evalf()
-
-        # assert scipy_optimum == optimum
-        # assert objective.subs(argmax) == optimum
-        # assert Matrix([list(argmax_dual.values())]) * B == optimum
-        # for constr in constraints:
-        #     assert constr.subs(argmax) == True
+            A_sci = Matrix([[A], [-eye(len(var))]])
+            B_sci = Matrix([[B], [Matrix([0] * len(var))]])
+            C_sci = -C
+            A_sci = np.array(A_sci.tolist())
+            B_sci = np.array(B_sci.tolist())
+            C_sci = np.array(C_sci.tolist())
+            res = linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
+            scipy_optimum = - res.fun
+            optimum = sympify(optimum)
+            assert scipy_optimum == optimum.evalf()
 
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
