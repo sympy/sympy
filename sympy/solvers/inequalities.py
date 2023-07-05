@@ -1063,9 +1063,10 @@ def _pivot(M, i, j):
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     # Choose row with smallest ratio
-    min_ratio = float('inf')
-    min_rows = []
-    for i in candidate_rows:
+    first_row = candidate_rows[0]
+    min_ratio = B[first_row] / A[first_row, pivot_col]
+    min_rows = [first_row]
+    for i in candidate_rows[1:]:
         ratio = B[i] / A[i, pivot_col]
         if ratio < min_ratio:
             min_ratio = ratio
@@ -1089,19 +1090,11 @@ def _simplex(A, B, C, skip_phase_2=False):
     """
     from sympy.matrices.dense import Matrix
 
-    m, n = A.shape
-    if B.shape != (m, 1) or C.shape != (1, n):
-        raise ValueError(f"The shape of matrix B ({B.shape}) or C ({C.shape})" \
-                         f"does not match the shape of matrix A ({A.shape}).")
-
-    for val in list(A) + list(B) + list(C):
-        val = sympify(val)
-        if not (val.is_rational or isinstance(val, Float)):
-            raise TypeError(f"Only rationals and floats are allowed in the Simplex method." \
-                             f" ({val}) is neither.")
-
     D = ImmutableMatrix([0])
     M = Matrix([[A, B], [-C, D]])
+
+    if not all(i.is_Float or i.is_Rational for i in M):
+            raise TypeError(f"Only rationals and floats are allowed in the Simplex method.")
 
     r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
     s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
@@ -1282,6 +1275,10 @@ def linprog_from_matrices(A, B, C):
     linprog_maximize
     find_feasible
     """
+    m, n = A.shape
+    if B.shape != (m, 1) or C.shape != (1, n):
+        raise ValueError(f"The shape of matrix B ({B.shape}) or C ({C.shape})" \
+                         f"does not match the shape of matrix A ({A.shape}).")
     return _simplex(A, B, C)
 
 
