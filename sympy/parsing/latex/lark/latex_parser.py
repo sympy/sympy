@@ -1,4 +1,5 @@
 import os
+import logging
 
 from sympy.external import import_module
 
@@ -13,6 +14,8 @@ _lark = import_module('lark')
 
 if _lark is None:
     raise ImportError("Could not load 'lark'")
+
+_lark.logger.setLevel(logging.DEBUG)
 
 
 def parse_latex_lark(s: str):
