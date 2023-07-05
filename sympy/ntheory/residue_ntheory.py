@@ -524,7 +524,7 @@ def sqrt_mod(a, p, all_roots=False):
     for r in sqrt_mod_iter(a, p):
         if r < halfp:
             return r
-        elif r > p // 2:
+        elif r > halfp:
             return p - r
         else:
             x = r
