@@ -513,6 +513,7 @@ def test_linprog_from_matrices():
     C = Matrix([[3, 1, 3]])
     raises(ValueError, lambda: linprog_from_matrices(A, B, C))
 
+
 def test_linprog_maximize_from_equations():
     np = import_module("numpy")
     scipy = import_module("scipy")

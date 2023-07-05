@@ -1042,10 +1042,10 @@ def _pivot(M, i, j):
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.solvers.inequalities import _pivot
-    >>> m = Matrix([[3,1,5],
-    ...             [2,-3,1],
-    ...             [0,3,1]])
-    >>> _pivot(m, 1,0) # pivot around 2, which is in row 1 and col 0
+    >>> m = Matrix([[3, 1, 5],
+    ...             [2,-3, 1],
+    ...             [0, 3, 1]])
+    >>> _pivot(m, 1, 0) # pivot around 2, which is in row 1 and col 0
     Matrix([
     [-3/2, 11/2, 7/2],
     [ 1/2, -3/2, 1/2],
@@ -1180,6 +1180,7 @@ def _simplex(A, B, C, skip_phase_2=False):
 
     return M[-1, -1], argmax, argmin_dual
 
+
 def linprog_from_matrices(A, B, C):
     """
     Because of the duality of linear programming, there are two valid ways to
@@ -1197,6 +1198,7 @@ def linprog_from_matrices(A, B, C):
         1*x + 0*y <= 2
         0*x + 0*y <= 4
     can be represented as:
+
     >>> from sympy.matrices.dense import Matrix
     >>> A = Matrix([[1, 0],
     ...             [0, 1]])
@@ -1207,6 +1209,7 @@ def linprog_from_matrices(A, B, C):
     maximized. For example,
         3x + y
     can be represented as:
+
     >>> C = Matrix([[3, 1]])
 
     Parameters
@@ -1242,9 +1245,9 @@ def linprog_from_matrices(A, B, C):
     ========
 
     Suppose we want to maximize
-        3x+y
+        3x + y
     subject to
-        x+y <= 2
+        x + y <= 2
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.solvers.inequalities import linprog_from_matrices
@@ -1260,13 +1263,13 @@ def linprog_from_matrices(A, B, C):
     [3]
 
     Suppose we want to maximize
-        3x+y
+        3x + y
     subject to
         x <= 2
         y <= 4
 
-    >>> A = Matrix([[1,0], [0, 1]])
-    >>> B = Matrix([[2],[4]])
+    >>> A = Matrix([[1 ,0], [0, 1]])
+    >>> B = Matrix([[2], [4]])
     >>> C = Matrix([[3, 1]])
     >>> optimum, argmax, argmax_dual = linprog_from_matrices(A, B, C)
     >>> optimum
@@ -1296,9 +1299,9 @@ def _linear_programming_to_matrix(constraints, objective, variables):
     >>> from sympy.solvers.inequalities import _linear_programming_to_matrix
     >>> from sympy.abc import x, y, z
     >>> from sympy import Eq
-    >>> r1 = y+2*z <= 3
-    >>> r2 = -x-3*z <= -2
-    >>> r3 = 2*x+y+7*z <= 5
+    >>> r1 = y + 2*z <= 3
+    >>> r2 = -x - 3*z <= -2
+    >>> r3 = 2*x + y + 7*z <= 5
     >>> A, B, C, constraints = _linear_programming_to_matrix([r1, r2, r3], x + y + 5*z, [x, y, z])
     >>> A
     Matrix([
@@ -1358,6 +1361,7 @@ def _linear_programming_to_matrix(constraints, objective, variables):
     C = linear_eq_to_matrix(objective, *variables)[0] # constant terms can be safely ignored here
 
     return A, B, C, standard_constraints
+
 
 def linprog_maximize_from_equations(constraints, objective, variables):
     """
