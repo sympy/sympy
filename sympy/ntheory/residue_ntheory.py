@@ -519,6 +519,7 @@ def sqrt_mod(a, p, all_roots=False):
     if all_roots:
         return sorted(sqrt_mod_iter(a, p))
     p = abs(as_int(p))
+    halfp = p // 2
     x = None
     for r in sqrt_mod_iter(a, p):
         if r < p // 2:
