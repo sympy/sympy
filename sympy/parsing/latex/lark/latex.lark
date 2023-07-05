@@ -100,8 +100,8 @@ MULTIPLICATION: MUL | CMD_TIMES | CMD_CDOT
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 // SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
 // SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
-SYMBOL.1: /[a-zA-Z]+/
-SUBSCRIPTED_SYMBOL: /([a-zA-Z]+)_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+SYMBOL.1: /[a-zA-Z]/
+SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
 %import common.INT -> UNSIGNED_INT
 %import common.SIGNED_INT -> SIGNED_INT
@@ -116,9 +116,17 @@ FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
 //////////////////// grammar //////////////////////
 
-string: relation | expression | atom
+string: relation | expression | atom | ambiguous_sub
 
-atom: SYMBOL | SUBSCRIPTED_SYMBOL | INT | FLOAT
+oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
+number: INT | FLOAT
+infinity: "\\infty"
+
+atomic_expr: oneletter_symbol
+    | number
+    | infinity
+
+atom: atomic_expr
 
 group: L_PAREN expression R_PAREN
       | L_BRACKET expression R_BRACKET
@@ -131,9 +139,28 @@ ceil_group: L_CEIL expression R_CEIL
 
 relation: atom (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) atom
 
-expression: atom (ADD | SUB | MULTIPLICATION | DIVISION) atom
+add: expression ADD expression
+sub: expression SUB expression
+mul: expression MUL expression | (oneletter_symbol oneletter_symbol | number oneletter_symbol)
+div: expression DIV expression
 
-fraction: CMD_FRAC L_BRACE group R_BRACE L_BRACE group R_BRACE
+group_paren: L_PAREN expression R_PAREN
+
+expression: atom
+    | add
+    | sub
+    | mul
+    | div
+    | expression_curly
+    | fraction
+    | ambiguous_sub
+    | group_paren
+
+ambiguous_sub: oneletter_symbol number
+
+expression_curly: L_BRACE expression R_BRACE
+
+fraction: CMD_FRAC expression expression
 
 binomial: CMD_BINOM L_BRACE group R_BRACE L_BRACE group R_BRACE
 
