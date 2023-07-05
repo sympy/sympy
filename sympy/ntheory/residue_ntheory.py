@@ -522,7 +522,7 @@ def sqrt_mod(a, p, all_roots=False):
     halfp = p // 2
     x = None
     for r in sqrt_mod_iter(a, p):
-        if r < p // 2:
+        if r < halfp:
             return r
         elif r > p // 2:
             return p - r
