@@ -11,29 +11,39 @@
 
 ///////////////////// tokens ///////////////////////
 
+// basic binary operators
 ADD: "+"
 SUB: "-"
 MUL: "*"
 DIV: "/"
 
-L_PAREN: "("
-R_PAREN: ")"
+// tokens with distinct left and right symbols
 L_BRACE: "{"
 R_BRACE: "}"
 L_BRACE_LITERAL: "\\{"
 R_BRACE_LITERAL: "\\}"
 L_BRACKET: "["
 R_BRACKET: "]"
+L_CEIL: "\\lceil"
+R_CEIL: "\\rceil"
+L_FLOOR: "\\lfloor"
+R_FLOOR: "\\rfloor"
+L_PAREN: "("
+R_PAREN: ")"
 
+// limit, integral, sum, and product symbols
 FUNC_LIM:  "\\lim"
 LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
 FUNC_INT:  "\\int"
 FUNC_SUM:  "\\sum"
 FUNC_PROD: "\\prod"
 
+// common functions
 FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
+
+// trigonometric functions
 FUNC_SIN:  "\\sin"
 FUNC_COS:  "\\cos"
 FUNC_TAN:  "\\tan"
@@ -41,6 +51,7 @@ FUNC_CSC:  "\\csc"
 FUNC_SEC:  "\\sec"
 FUNC_COT:  "\\cot"
 
+// inverse trigonometric functions
 FUNC_ARCSIN: "\\arcsin"
 FUNC_ARCCOS: "\\arccos"
 FUNC_ARCTAN: "\\arctan"
@@ -48,6 +59,7 @@ FUNC_ARCCSC: "\\arccsc"
 FUNC_ARCSEC: "\\arcsec"
 FUNC_ARCCOT: "\\arccot"
 
+// hyperbolic trigonometric functions
 FUNC_SINH: "\\sinh"
 FUNC_COSH: "\\cosh"
 FUNC_TANH: "\\tanh"
@@ -57,6 +69,7 @@ FUNC_ARTANH: "\\artanh"
 
 FUNC_SQRT: "\\sqrt"
 
+// miscellaneous symbols
 CMD_TIMES: "\\times"
 CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
@@ -65,11 +78,13 @@ CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_DBINOM: "\\dbinom"
 CMD_TBINOM: "\\tbinom"
 
-UNDERSCORE: "_"
+BANG: "!"
+BAR: "|"
 CARET: "^"
 COLON: ":"
-BANG: "!"
+UNDERSCORE: "_"
 
+// relational symbols
 EQUAL: "="
 NOT_EQUAL: "\\neq" | "\\ne"
 LT: "<"
@@ -77,14 +92,14 @@ LTE: "\\leq" | "\\le"
 GT: ">"
 GTE: "\\geq" | "\\ge"
 
-SYMBOL: /[a-z]/
-
 DIVISION: CMD_DIV | DIV
-PRODUCT: MUL | CMD_TIMES | CMD_CDOT
+MULTIPLICATION: MUL | CMD_TIMES | CMD_CDOT
 
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 // SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
 // SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
+SYMBOL.1: /[a-zA-Z]+/
+SUBSCRIPTED_SYMBOL: /([a-zA-Z]+)_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
 %import common.INT -> INT
 %import common.DECIMAL -> FLOAT
@@ -93,18 +108,26 @@ PRODUCT: MUL | CMD_TIMES | CMD_CDOT
 
 string: relation | expression
 
-atom: SYMBOL | INT | FLOAT
+atom: SYMBOL | SUBSCRIPTED_SYMBOL | INT | FLOAT
+
+group: L_PAREN expression R_PAREN
+      | L_BRACKET expression R_BRACKET
+      | L_BRACE expression R_BRACE
+      | L_BRACE_LITERAL expression R_BRACE_LITERAL
+
+abs_group: L_BAR expression R_BAR
+floor_group: L_FLOOR expression R_FLOOR
+ceil_group: L_CEIL expression R_CEIL
 
 relation: atom (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) atom
 
-expression: atom (ADD | SUB | PRODUCT | DIVISION) atom
+expression: atom (ADD | SUB | MULTIPLICATION | DIVISION) atom
 
+fraction: CMD_FRAC L_BRACE group R_BRACE L_BRACE group R_BRACE
 
-fraction: CMD_FRAC L_BRACE atom R_BRACE L_BRACE atom R_BRACE
+binomial: CMD_BINOM L_BRACE group R_BRACE L_BRACE group R_BRACE
 
 //sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
-
-binomial: CMD_BINOM L_BRACE atom R_BRACE L_BRACE atom R_BRACE
 
 //summation: FUNC_SUM sub_equation sup_expression expr
 //         | FUNC_SUM sup_expression sub_equation expr
