@@ -52,12 +52,12 @@ FUNC_SEC:  "\\sec"
 FUNC_COT:  "\\cot"
 
 // inverse trigonometric functions
-FUNC_ARCSIN: "\\arcsin"
-FUNC_ARCCOS: "\\arccos"
-FUNC_ARCTAN: "\\arctan"
-FUNC_ARCCSC: "\\arccsc"
-FUNC_ARCSEC: "\\arcsec"
-FUNC_ARCCOT: "\\arccot"
+FUNC_ARCSIN: "\\arcsin" | "\\sin^{-1}"
+FUNC_ARCCOS: "\\arccos" | "\\cos^{-1}"
+FUNC_ARCTAN: "\\arctan" | "\\tan^{-1}"
+FUNC_ARCCSC: "\\arccsc" | "\\csc^{-1}"
+FUNC_ARCSEC: "\\arcsec" | "\\sec^{-1}"
+FUNC_ARCCOT: "\\arccot" | "\\cot^{-1}"
 
 // hyperbolic trigonometric functions
 FUNC_SINH: "\\sinh"
@@ -77,6 +77,8 @@ CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_DBINOM: "\\dbinom"
 CMD_TBINOM: "\\tbinom"
+
+INFTY: "\\infty"
 
 BANG: "!"
 BAR: "|"
@@ -101,12 +103,20 @@ MULTIPLICATION: MUL | CMD_TIMES | CMD_CDOT
 SYMBOL.1: /[a-zA-Z]+/
 SUBSCRIPTED_SYMBOL: /([a-zA-Z]+)_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
-%import common.INT -> INT
-%import common.DECIMAL -> FLOAT
+%import common.INT -> UNSIGNED_INT
+%import common.SIGNED_INT -> SIGNED_INT
+%import common.SIGNED_FLOAT -> SIGNED_FLOAT
+%import common.DECIMAL -> UNSIGNED_FLOAT
+
+INT: SIGNED_INT | UNSIGNED_INT
+FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
+
+//%import common.INT -> INT
+//%import common.DECIMAL -> FLOAT
 
 //////////////////// grammar //////////////////////
 
-string: relation | expression
+string: relation | expression | atom
 
 atom: SYMBOL | SUBSCRIPTED_SYMBOL | INT | FLOAT
 
@@ -115,7 +125,7 @@ group: L_PAREN expression R_PAREN
       | L_BRACE expression R_BRACE
       | L_BRACE_LITERAL expression R_BRACE_LITERAL
 
-abs_group: L_BAR expression R_BAR
+abs_group: BAR expression BAR
 floor_group: L_FLOOR expression R_FLOOR
 ceil_group: L_CEIL expression R_CEIL
 
