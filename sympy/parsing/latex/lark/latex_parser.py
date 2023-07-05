@@ -37,7 +37,16 @@ def parse_latex_lark(s: str):
     string = parser.parse(s)
     print(string)
     print(string.pretty())
+    return string
 
 
 if __name__ == "__main__":
     parse_latex_lark(r"a \;\thickspace * b")
+
+
+def mypretty(tree):
+    data = tree.data
+    if isinstance(data, _lark.Token):
+        data = data.value
+    output = str(data) + "(" + ", ".join([i for i in tree.children]) + ")"
+    return output
