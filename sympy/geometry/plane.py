@@ -32,8 +32,9 @@ class Plane(GeometryEntity):
     A plane is a flat, two-dimensional surface. A plane is the two-dimensional
     analogue of a point (zero-dimensions), a line (one-dimension) and a solid
     (three-dimensions). A plane can generally be constructed by two types of
-    inputs. They are three non-collinear points and a point and the plane's
-    normal vector.
+    inputs. They are:
+    - three non-collinear points
+    - a point and the plane's normal vector
 
     Attributes
     ==========
