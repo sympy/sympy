@@ -904,7 +904,12 @@ class TransferFunction(SISOLinearTimeInvariant):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
+        if isinstance(other, TransferFunction):
+            if not self.var == other.var:
+                raise ValueError("All the transfer functions should use the same complex variable "
+                    "of the Laplace transform.")
+            return Series(self, TransferFunction(other.den, other.num, self.var))
+        elif (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], (Series, TransferFunction))):
 
             if not self.var == other.var:
@@ -1218,7 +1223,9 @@ class Series(SISOLinearTimeInvariant):
         return Series(*arg_list, other)
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2
+        if isinstance(other, TransferFunction):
+            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        elif (isinstance(other, Parallel) and len(other.args) == 2
             and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
