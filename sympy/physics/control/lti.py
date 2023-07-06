@@ -448,7 +448,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var, inputdelay=0):
+    def __new__(cls, num, den, var, inputdelay=None):
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -457,7 +457,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
-        if (num.is_polynomial(var) is not True or den.is_polynomial(var) is not True) and inputdelay == 0:
+        if (num.is_polynomial(var) is not True or den.is_polynomial(var) is not True) and inputdelay is not None:
             raise TypeError("Numerator and Denominator of TransferFunction must be a polynomial")
         
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
@@ -472,7 +472,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None):
+    def from_rational_expression(cls, expr, var=None, inputdelay=None):
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
 
@@ -547,7 +547,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
-        return cls(_num, _den, var)
+        return cls(_num, _den, var, inputdelay=inputdelay)
 
     @classmethod
     def from_coeff_lists(cls, num_list, den_list, var):
