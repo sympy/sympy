@@ -1102,8 +1102,10 @@ def _simplex(A, B, C, skip_phase_2=False):
     if not all(i.is_Float or i.is_Rational for i in M):
             raise TypeError("Only rationals and floats are allowed in the Simplex method.")
 
-    r_orig = [('x', j) for j in range(M.cols - 1)]
-    s_orig = [('y', i)  for i in range(M.rows - 1)]
+    # It's important that False < True so that x variables are given priority
+    # over the y variables during Bland's rule
+    r_orig = [(False, j) for j in range(M.cols - 1)] # what Ferguson's paper calls 'x' variables
+    s_orig = [(True, i)  for i in range(M.rows - 1)] # what Ferguson's paper calls 'y' variables
 
     R = r_orig.copy()
     S = s_orig.copy()
@@ -1164,7 +1166,7 @@ def _simplex(A, B, C, skip_phase_2=False):
     for i, var in enumerate(R):
         v = var[0]
         n = var[1]
-        if v == "x":
+        if v == False:
             argmax[n] = 0
         else:
             argmin_dual[n] = M[-1, i]
@@ -1172,7 +1174,7 @@ def _simplex(A, B, C, skip_phase_2=False):
     for i, var in enumerate(S):
         v = var[0]
         n = var[1]
-        if v == "y":
+        if v == True:
             argmin_dual[n] = 0
         else:
             argmax[n] = M[i, -1]
