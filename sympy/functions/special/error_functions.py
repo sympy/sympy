@@ -1294,7 +1294,7 @@ class expint(Function):
     >>> expint(nu, z).diff(nu)
     -z**(nu - 1)*meijerg(((), (1, 1)), ((0, 0, 1 - nu), ()), z)
 
-    At non-postive integer orders, the exponential integral reduces to the
+    At non-positive integer orders, the exponential integral reduces to the
     exponential function:
 
     >>> expint(0, z)

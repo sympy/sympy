@@ -11,16 +11,25 @@ from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
                         Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
-from sympy.printing.smtlib import smtlib_code
-from sympy.testing.pytest import raises, Failed
+from sympy.printing.smtlib import smtlib_code, SMTLibPrinter
+from sympy.testing.pytest import Failed
 
 x, y, z = symbols('x,y,z')
 
 
+class _E(Enum):
+    CANNOT_ASSERT = re.compile(r"ValueError\([\"']Cannot automatically assert '.+'-ness when declaring `.+`. Please assert explicitly.[\"']\)")
+    COULD_NOT_INFER = re.compile(r"TypeError\([\"']Could not infer type of `.+`. Apparently both `.+` and `.+`\?[\"']\)")
+    UNKNOWN_TYPE = re.compile(r"TypeError\([\"']Unknown type of undefined function `.+`. Must be mapped to ``str`` in known_functions or mapped to ``Callable\[..]`` in symbol_table.[\"']\)")
+    WILL_NOT_DECLARE = re.compile(r"ValueError\([\"']Non-Symbol/Function `.+` will not be declared.[\"']\)")
+    PIECEWISE_ERROR = re.compile(r"AssertionError\([\"']Piecewise expression must end in \(expr, True\) statement.[\"']\)")
+    NAME_NOT_LEGAL = re.compile(r"AssertionError\([\"']Name `.+` may not be legal in SMT-Lib.[\"']\)")
+    GENERAL_KEY_ERROR = re.compile(r"KeyError\(.+\)")
+
+
 class _W(Enum):
-    DEFAULTING_TO_FLOAT = re.compile("Could not infer type of `.+`. Defaulting to float.", re.I)
-    WILL_NOT_DECLARE = re.compile("Non-Symbol/Function `.+` will not be declared.", re.I)
-    WILL_NOT_ASSERT = re.compile("Non-Boolean expression `.+` will not be asserted. Converting to SMTLib verbatim.", re.I)
+    DEFAULTING_TO_FLOAT = re.compile(r"Could not infer type of `.+`. Defaulting to float.")
+    WILL_NOT_ASSERT = re.compile(r"Non-Boolean expression `.+` will not be asserted. Converting to SMTLib verbatim.")
 
 
 @contextlib.contextmanager
@@ -39,6 +48,20 @@ def _check_warns(expected: typing.Iterable[_W]):
             errors += [f"[{i}] Warning `{w}` does not match expected {e.name}."]
 
     if errors: raise Failed('\n'.join(errors))
+
+
+@contextlib.contextmanager
+def _check_raises(expected: _E):
+    try:
+        yield
+        received = None
+    except Exception as e:
+        received = repr(e)
+
+    if not received:
+        raise Failed(f"Did not receive expected exception `{expected.name}`.")
+    elif not expected.value.match(received):
+        raise Failed(f"Exception `{received}` does not match expected {expected.name}.")
 
 
 def test_Integer():
@@ -469,7 +492,8 @@ def test_smtlib_piecewise():
     # Check that Piecewise without a True (default) condition error
     expr = Piecewise((x, x < 1), (x ** 2, x > 1), (sin(x), x > 0))
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
-        raises(AssertionError, lambda: smtlib_code(expr, log_warn=w))
+        with _check_raises(_E.PIECEWISE_ERROR):
+            smtlib_code(expr, log_warn=w)
 
 
 def test_smtlib_piecewise_times_const():
@@ -507,6 +531,7 @@ def test_smtlib_piecewise_times_const():
 #            "sin(AA[1,2]) + AA[1,1] .^ 2 + AA[1,3]"
 #     assert julia_code(sum(A)) == "AA[1,1] + AA[1,2] + AA[1,3]"
 
+
 def test_smtlib_boolean():
     with _check_warns([]) as w:
         assert smtlib_code(True, auto_assert=False, log_warn=w) == 'true'
@@ -520,6 +545,153 @@ def test_smtlib_boolean():
 def test_not_supported():
     f = Function('f')
     with _check_warns([_W.DEFAULTING_TO_FLOAT, _W.WILL_NOT_ASSERT]) as w:
-        raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}, log_warn=w))
+        with _check_raises(_E.GENERAL_KEY_ERROR):
+            smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}, log_warn=w)
+
     with _check_warns([_W.WILL_NOT_ASSERT]) as w:
-        raises(KeyError, lambda: smtlib_code(S.ComplexInfinity, log_warn=w))
+        with _check_raises(_E.GENERAL_KEY_ERROR):
+            smtlib_code(S.ComplexInfinity, log_warn=w)
+
+    from sympy.stats import Uniform
+    with _check_warns([]) as w:
+        for s in [
+            Symbol('a', prime=True),
+            Symbol('b', positive=True, noninteger=True),
+            Symbol('c', odd=True),
+            Symbol('d', composite=True, real=True),
+            Uniform(Symbol('e', integer=False), 31, 41)
+        ]:
+            with _check_raises(_E.COULD_NOT_INFER):
+                smtlib_code(s, auto_assert=True, log_warn=w)
+            with _check_raises(_E.CANNOT_ASSERT):
+                smtlib_code(s, auto_assert=False, log_warn=w)
+
+    with _check_warns([]) as w:
+        with _check_raises(_E.NAME_NOT_LEGAL):
+            smtlib_code(Symbol('bad name!'), log_warn=w)
+
+
+def test_smtlib_assumptions():
+    a = Symbol('a', nonzero=True, nonpositive=True)
+    b = Symbol('b', zero=True)
+    c = Symbol('c', zero=False, integer=True)
+    d = Symbol('d', zero=False, real=True)
+    e = Symbol('e', positive=True, integer=True)
+    f = Symbol('f', nonpositive=True, integer=True)
+    g = Symbol('g', nonpositive=True, nonnegative=True)
+
+    with _check_warns([]) as w:
+        assert smtlib_code(
+            a + b + c + d + e + f + g,
+            auto_assert=False, log_warn=w
+        ) == '(declare-const a Real)\n' \
+             '(assert (not (= a 0)))\n' \
+             '(assert (< a 0))\n' \
+             '(assert (<= a 0))\n' \
+             '(declare-const b Int)\n' \
+             '(assert (= b 0))\n' \
+             '(assert (>= b 0))\n' \
+             '(assert (<= b 0))\n' \
+             '(declare-const c Int)\n' \
+             '(assert (not (= c 0)))\n' \
+             '(declare-const d Real)\n' \
+             '(assert (not (= d 0)))\n' \
+             '(declare-const e Int)\n' \
+             '(assert (not (= e 0)))\n' \
+             '(assert (> e 0))\n' \
+             '(assert (>= e 0))\n' \
+             '(declare-const f Int)\n' \
+             '(assert (<= f 0))\n' \
+             '(declare-const g Int)\n' \
+             '(assert (= g 0))\n' \
+             '(assert (>= g 0))\n' \
+             '(assert (<= g 0))\n' \
+             '(+ d c f a e b g)'
+
+
+def test_smtlib_random_variables():
+    from sympy.stats import Uniform, Triangular, Normal, DiscreteUniform, Die, Bernoulli
+
+    h = Uniform(Symbol('h', integer=True), 31, 41)
+    i = Uniform(Symbol('i', integer=False), 31, 41)
+    j = Triangular(Symbol('j'), 5, 92, 6)
+    k = Normal(Symbol('k'), 5, 3)
+
+    with _check_warns([]) as w:
+        with _check_raises(_E.COULD_NOT_INFER):
+            smtlib_code(h, auto_assert=False, log_warn=w)
+
+        with _check_raises(_E.CANNOT_ASSERT):
+            smtlib_code(i, auto_assert=False, log_warn=w)
+
+        assert smtlib_code(
+            j + k, auto_assert=False, log_warn=w
+        ) == '(declare-const j Real)\n' \
+             '(assert (and (>= j 5) (<= j 92)))\n' \
+             '(declare-const k Real)\n' \
+             '(assert true)\n' \
+             '(+ j k)'
+
+    l = DiscreteUniform(Symbol('l'), range(5, 89, 7))
+    m = Die(Symbol('m'), sides=9)
+    n = Bernoulli(Symbol('n'), p=32 / 38.0)
+
+    with _check_warns([_W.DEFAULTING_TO_FLOAT] * 3) as w:
+        assert smtlib_code(
+            l + m + n, auto_assert=False, log_warn=w
+        ) == '(declare-const l Real)\n' \
+             '(assert (or (= l 5) (= l 12) (= l 19) (= l 26) (= l 33) (= l 40) (= l 47) (= l 54) (= l 61) (= l 68) (= l 75) (= l 82)))\n' \
+             '(declare-const m Real)\n' \
+             '(assert (or (= m 1) (= m 2) (= m 3) (= m 4) (= m 5) (= m 6) (= m 7) (= m 8) (= m 9)))\n' \
+             '(declare-const n Real)\n' \
+             '(assert (or (= n 0) (= n 1)))\n' \
+             '(+ l m n)'
+
+    o = DiscreteUniform(Symbol('o', integer=True), range(5, 89, 7))
+    p = Die(Symbol('p', integer=True), sides=9)
+    q = Bernoulli(Symbol('q', integer=True), p=32 / 38.0)
+
+    with _check_warns([]) as w:
+        assert smtlib_code(
+            o + p + q, auto_assert=False, log_warn=w
+        ) == '(declare-const o Int)\n' \
+             '(assert (or (= o 5) (= o 12) (= o 19) (= o 26) (= o 33) (= o 40) (= o 47) (= o 54) (= o 61) (= o 68) (= o 75) (= o 82)))\n' \
+             '(declare-const p Int)\n' \
+             '(assert (or (= p 1) (= p 2) (= p 3) (= p 4) (= p 5) (= p 6) (= p 7) (= p 8) (= p 9)))\n' \
+             '(declare-const q Int)\n' \
+             '(assert (or (= q 0) (= q 1)))\n' \
+             '(+ o p q)'
+
+
+def test_smtlib_dreal_example():
+    x, y, z = symbols('x y z', integer=True)
+    minimize = Function('minimize')  # special solver-specific builtin
+    known_functions = SMTLibPrinter()._known_functions
+    known_functions[minimize] = minimize.name
+    exprs = [
+        (-1 <= x) & (x < 10),
+        y < z,
+        x ** 2 + y ** 2 + z ** 2 > 20,
+        minimize(z)
+    ]
+
+    with _check_warns([_W.WILL_NOT_ASSERT]) as w:
+        assert smtlib_code(
+            exprs,
+            known_functions=known_functions,
+            log_warn=w
+        ) == '(declare-const x Int)\n' \
+             '(declare-const y Int)\n' \
+             '(declare-const z Int)\n' \
+             '(assert (and (>= x -1) (< x 10)))\n' \
+             '(assert (< y z))\n' \
+             '(assert (> (+ (pow x 2) (pow y 2) (pow z 2)) 20))\n' \
+             '(minimize z)'
+
+    with _check_warns([]) as w:
+        with _check_raises(_E.UNKNOWN_TYPE):
+            smtlib_code(
+                exprs,
+                # known_functions=known_functions,
+                log_warn=w
+            )
