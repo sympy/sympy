@@ -1029,18 +1029,14 @@ def _pivot(M, i, j):
     """
     The pivot is entry i, j of M.
 
-    There are four rules for the pivot operation:
+    The matrix is modified as follows:
 
-    - All the entries not in row i or column j are reduced by the following:
-    the product of the corresponding entries in the same row and column as
-    themselves and the pivot, divided by the pivot.
+    - M[k,l]-=M[k,j]*M[i,l]/M[i,j] for k != i and l != j
 
-    - Entries in row i (other than the pivot itself) are divided by the pivot
+    - Entries in row i and col j are divided by the pivot
 
-    - Entries in column j (other than the pivot itself) are divided by the
-    pivot and changed in sign.
+    - the sign of entries in column j (except at row i) is changed
 
-    - The pivot becomes its reciprocal
 
     Example
     =======
@@ -1231,7 +1227,7 @@ def linprog_from_matrices(A, B, C):
     Returns
     =======
 
-    Returns a triplet of solutions optimum, argmax, and argmax_dual:
+    Returns `(optimum, argmax, and argmax_dual)`:
 
     optimum : float or Rational
         maximum value of objective function under the constraints
@@ -1393,7 +1389,7 @@ def linprog_maximize_from_equations(constraints, objective, variables):
     Returns
     =======
 
-    Returns a tuple of solutions optimum, argmax:
+    Returns `(optimum, argmax, argmax_dual)`:
 
     optimum : Rational or Float
 
