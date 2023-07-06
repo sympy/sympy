@@ -448,7 +448,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var):
+    def __new__(cls, num, den, var, inputdelay=0):
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -457,6 +457,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
+        if (num.is_polynomial(var) is not True or den.is_polynomial(var) is not True) and inputdelay == 0:
+            raise TypeError("Numerator and Denominator of TransferFunction must be a polynomial")
+        
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
             obj = super(TransferFunction, cls).__new__(cls, num, den, var)
