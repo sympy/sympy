@@ -140,6 +140,15 @@ class PolynomialRing(Ring, CompositeDomain):
         except (CoercionFailed, GeneratorsError):
             return None
 
+    def from_LaurentPolynomialRing(K1, a, K0):
+        """Convert a Laurent polynomial to ``dtype``. """
+        if a.denom.is_zero:
+            return None
+        try:
+            return a.numer.set_ring(K1.ring)
+        except (CoercionFailed, GeneratorsError):
+            return None
+
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
         if K1.domain == K0:

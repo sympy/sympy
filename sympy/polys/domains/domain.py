@@ -322,6 +322,7 @@ class Domain:
     is_ComplexField = is_CC = False
     is_AlgebraicField = is_Algebraic = False
     is_PolynomialRing = is_Poly = False
+    is_LaurentPolynomialRing = is_Laurent = False
     is_FractionField = is_Frac = False
     is_SymbolicDomain = is_EX = False
     is_SymbolicRawDomain = is_EXRAW = False
@@ -646,6 +647,11 @@ class Domain:
         if a.is_ground:
             return K1.convert(a.LC, K0.dom)
 
+    def from_LaurentPolynomialRing(K1, a, K0):
+        """Convert a Laurent polynomial to ``dtype``. """
+        if a.is_ground:
+            return K1.convert(a.numer.LC, K0.dom)
+
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
         return None
@@ -876,6 +882,11 @@ class Domain:
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.old_fractionfield import FractionField
         return FractionField(self, *symbols, **kwargs)
+
+    def laurent_poly_ring(self, *symbols, **kwargs):
+        """Returns a Laurent polynomial ring, i.e. `K[x,1/x]`. """
+        from sympy.polys.domains.laurentpolynomialring import LaurentPolynomialRing
+        return LaurentPolynomialRing(self, symbols, **kwargs)
 
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """

@@ -125,25 +125,45 @@ def test_construct_domain():
     assert construct_domain([x/2, I*3.5*y]) == \
         (dom, [dom.convert(x/2), dom.convert(I*3.5*y)])
 
-    dom = ZZ.frac_field(x)
+    dom = ZZ.laurent_poly_ring(x)
 
     assert construct_domain([2/x, 3]) == \
         (dom, [dom.convert(2/x), dom.convert(3)])
 
-    dom = ZZ.frac_field(x, y)
+    dom = ZZ.laurent_poly_ring(x, y)
 
     assert construct_domain([2/x, 3*y]) == \
         (dom, [dom.convert(2/x), dom.convert(3*y)])
 
-    dom = RR.frac_field(x)
+    dom = RR.laurent_poly_ring(x)
 
     assert construct_domain([2/x, 3.5]) == \
         (dom, [dom.convert(2/x), dom.convert(3.5)])
 
-    dom = RR.frac_field(x, y)
+    dom = RR.laurent_poly_ring(x, y)
 
     assert construct_domain([2/x, 3.5*y]) == \
         (dom, [dom.convert(2/x), dom.convert(3.5*y)])
+
+    dom = ZZ.frac_field(x)
+
+    assert construct_domain([2/(1-x), 3]) == \
+        (dom, [dom.convert(2/(1-x)), dom.convert(3)])
+
+    dom = ZZ.frac_field(x, y)
+
+    assert construct_domain([2/(1-x), 3*y]) == \
+        (dom, [dom.convert(2/(1-x)), dom.convert(3*y)])
+
+    dom = RR.frac_field(x)
+
+    assert construct_domain([2/(1-x), 3.5]) == \
+        (dom, [dom.convert(2/(1-x)), dom.convert(3.5)])
+
+    dom = RR.frac_field(x, y)
+
+    assert construct_domain([2/(1-x), 3.5*y]) == \
+        (dom, [dom.convert(2/(1-x)), dom.convert(3.5*y)])
 
     dom = RealField(prec=336)[x]
 

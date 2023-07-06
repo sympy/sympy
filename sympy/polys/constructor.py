@@ -250,6 +250,38 @@ def _construct_composite(coeffs, opt):
 
             result.append(domain((numer, denom)))
 
+        if not opt.field:
+            # Try a Laurent polynomial ring instead of a rational function
+            # field if possible.
+            #
+            # If we have ZZ(x) then we might be able to go to ZZ[x,1/x] but it
+            # might be necessary to go to QQ[x,1/x].
+            if all(expr.denom.is_term for expr in result):
+
+                grnd = ground
+                change_ground = False
+                if not grnd.is_Field:
+                    if not all(grnd.is_unit(expr.denom.LC) for expr in result):
+                        grnd = grnd.get_field()
+                        change_ground = True
+
+                dom = grnd.laurent_poly_ring(*gens)
+                numer_ring = dom.ring.numer_ring
+
+                res = []
+                for expr in result:
+                    numer, denom = expr.numer, expr.denom
+                    if change_ground:
+                        numer = numer.set_ring(numer_ring)
+                        denom = denom.set_ring(numer_ring)
+                    [(monom, coeff)] = denom.items()
+                    invcoeff = grnd.revert(coeff)
+                    numer = numer.mul_ground(invcoeff)
+                    denom = numer_ring.term_new(monom, grnd.one)
+                    res.append(dom((numer, denom)))
+
+                ground, domain, result = grnd, dom, res
+
     return domain, result
 
 

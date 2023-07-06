@@ -2269,8 +2269,7 @@ class Poly(Basic):
 
         """
         f = self
-
-        if not f.rep.dom.is_Field:
+        if not (f.rep.dom.is_Field or f.rep.dom.is_Laurent):
             return S.One, f
 
         dom = f.get_domain()
@@ -2317,7 +2316,7 @@ class Poly(Basic):
         f = per(f)
         g = per(g)
 
-        if not (dom.is_Field and dom.has_assoc_Ring):
+        if not ((dom.is_Field or dom.is_Laurent) and dom.has_assoc_Ring):
             return f, g
 
         a, f = f.clear_denoms(convert=True)

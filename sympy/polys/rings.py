@@ -350,7 +350,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     __call__ = ring_new
 
-    def from_dict(self, element, orig_domain=None):
+    def from_dict(self, element, orig_domain=None) -> PolyElement:
         domain_new = self.domain_new
         poly = self.zero
 
@@ -571,6 +571,8 @@ class PolyRing(DefaultPrinting, IPolys):
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
+
+    ring: PolyRing
 
     def new(self, init):
         return self.__class__(init)
@@ -2011,6 +2013,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if domain.is_Field:
             quo = domain.quo
             terms = [ (monom, quo(coeff, x)) for monom, coeff in f.iterterms() ]
+        elif domain.is_LaurentPolynomialRing and x.is_term:
+            terms = [ (monom, coeff / x) for monom, coeff in f.iterterms() ]
         else:
             terms = [ (monom, coeff // x) for monom, coeff in f.iterterms() if not (coeff % x) ]
 

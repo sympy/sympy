@@ -211,6 +211,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a ``DMF`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
+    def from_LaurentPolynomialRing(K1, a, K0):
+        """Convert a Laurent polynomial to ``dtype``. """
+        return K1(K0.to_sympy(a))
+
     def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return a
