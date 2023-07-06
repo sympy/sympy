@@ -18,6 +18,7 @@ from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
+from sympy.functions.elementary.exponential import exp
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -448,7 +449,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var, inputdelay=None):
+    def __new__(cls, num, den, var, inputdelay=0):
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -457,7 +458,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
-        if (num.is_polynomial(var) is not True or den.is_polynomial(var) is not True) and inputdelay is not None:
+        if (num.is_polynomial(var) is not True or den.is_polynomial(var) is not True):
             raise TypeError("Numerator and Denominator of TransferFunction must be a polynomial")
         
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
@@ -466,13 +467,14 @@ class TransferFunction(SISOLinearTimeInvariant):
             obj._num = num
             obj._den = den
             obj._var = var
+            obj._delay = exp(-1 * var * inputdelay)
             return obj
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None, inputdelay=None):
+    def from_rational_expression(cls, expr, var=None, inputdelay=0):
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
 
