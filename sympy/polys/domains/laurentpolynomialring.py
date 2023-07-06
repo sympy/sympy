@@ -10,7 +10,7 @@ class LaurentPolynomialRing(Ring, CompositeDomain):
 
     >>> from sympy import QQ
     >>> from sympy.abc import x, y
-    >>> R = QQ.laurent_poly_ring([x, y])
+    >>> R = QQ.laurent_poly_ring(x, y)
     >>> R
     QQ[x,1/x,y,1/y]
     >>> p = R.from_sympy(x + 1/y)

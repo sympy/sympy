@@ -723,7 +723,7 @@ def test_GammaProcess_symbolic():
     # Equivalent to E(2*X(1)) + E(X(1)**2) + E(X(1)**3), where E(X(1)) == g/l
     assert E(X(t)**2 + X(d)*2 + X(y)**3, Contains(t, Interval.Lopen(0, 1))
         & Contains(d, Interval.Lopen(1, 2)) & Contains(y, Interval.Ropen(3, 4))) == \
-            2*g/l + (g**2 + g)/l**2 + (g**3 + 3*g**2 + 2*g)/l**3
+            2*g/l + 2*((g**2/2 + g/2)/l**2) + 6*((g**3/6 + g**2/2 + g/3)/l**3)
 
     assert P(X(t) > 3, Contains(t, Interval.Lopen(3, 4))).simplify() == \
                                 1 - lowergamma(g, 3*l)/gamma(g) # equivalent to P(X(1)>3)
