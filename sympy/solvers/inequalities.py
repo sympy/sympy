@@ -6,7 +6,6 @@ from sympy.calculus.util import (continuous_domain, periodicity,
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Ge, Lt, Gt, Eq, Ne, Le
-from sympy.core.numbers import Float
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.matrices.immutable import ImmutableMatrix
@@ -1028,14 +1027,20 @@ class InfeasibleLinearProgrammingError(Exception):
 
 def _pivot(M, i, j):
     """
+    The pivot is entry i, j of M.
+
     There are four rules for the pivot operation:
-    - The pivot quantity goes into its reciprocal
-    - Entries in the same row as the pivot are divided by the pivot
-    - Entries in the same column as the pivot are divided by the pivot and
-    changed in sign.
-    - The remaining entries are reduced in value by the following: the product
-    of the corresponding entries in the same row and column as themselves and
-    the pivot, divided by the pivot.
+
+    - All the entries not in row i or column j are reduced by the following:
+    the product of the corresponding entries in the same row and column as
+    themselves and the pivot, divided by the pivot.
+
+    - Entries in row i (other than the pivot itself) are divided by the pivot
+
+    - Entries in column j (other than the pivot itself) are divided by the
+    pivot and changed in sign.
+
+    - The pivot becomes its reciprocal
 
     Example
     =======
@@ -1078,6 +1083,7 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     row = sorted(min_rows, key= lambda r: S[r])[0]
     return row
 
+
 def _simplex(A, B, C, skip_phase_2=False):
     """
     Simplex method with Bland's rule
@@ -1094,10 +1100,10 @@ def _simplex(A, B, C, skip_phase_2=False):
     M = Matrix([[A, B], [-C, D]])
 
     if not all(i.is_Float or i.is_Rational for i in M):
-            raise TypeError(f"Only rationals and floats are allowed in the Simplex method.")
+            raise TypeError("Only rationals and floats are allowed in the Simplex method.")
 
-    r_orig = ['x_{}'.format(j) for j in range(M.cols - 1)]
-    s_orig = ['y_{}'.format(i) for i in range(M.rows - 1)]
+    r_orig = [('x', j) for j in range(M.cols - 1)]
+    s_orig = [('y', i)  for i in range(M.rows - 1)]
 
     R = r_orig.copy()
     S = s_orig.copy()
@@ -1157,7 +1163,7 @@ def _simplex(A, B, C, skip_phase_2=False):
 
     for i, var in enumerate(R):
         v = var[0]
-        n = int(var[2])
+        n = var[1]
         if v == "x":
             argmax[n] = 0
         else:
@@ -1165,7 +1171,7 @@ def _simplex(A, B, C, skip_phase_2=False):
 
     for i, var in enumerate(S):
         v = var[0]
-        n = int(var[2])
+        n = var[1]
         if v == "y":
             argmin_dual[n] = 0
         else:
@@ -1275,9 +1281,13 @@ def linprog_from_matrices(A, B, C):
     See Also
     ========
 
-    linprog_maximize
+    linprog_maximize_from_equations
     find_feasible
     """
+    from sympy.matrices.dense import Matrix
+
+    A, B, C = [Matrix(i) for i in (A, B, C)]
+
     m, n = A.shape
     if B.shape != (m, 1) or C.shape != (1, n):
         raise ValueError(f"The shape of matrix B ({B.shape}) or C ({C.shape})" \
@@ -1409,7 +1419,7 @@ def linprog_maximize_from_equations(constraints, objective, variables):
     ========
 
     solve_univariate_inequality
-    simplex
+    linprog_from_matrices
     find_feasible
     """
     A, B, C, standard_constraints = _linear_programming_to_matrix(constraints, objective, variables)
@@ -1457,8 +1467,8 @@ def find_feasible(constraints, variables):
     See Also
     ========
 
-    linprog_maximize
-    simplex
+    linprog_maximize_from_equations
+    linprog_from_matrices
     """
     A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
     try:
