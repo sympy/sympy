@@ -730,8 +730,7 @@ class TorqueActuator(ActuatorBase):
             torque,
             pin_joint.joint_axis,
             pin_joint.child_interframe,
-            pin_joint.parent_interframe,
-            
+            pin_joint.parent_interframe,    
         )
 
     @property
