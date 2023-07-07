@@ -435,7 +435,7 @@ class DomainMatrix:
         return K, items_K
 
     def choose_domain(self, **opts):
-        """Convert to a domain found by :func:`construct_domain`.
+        """Convert to a domain found by :func:`~.construct_domain`.
 
         Examples
         ========
@@ -448,7 +448,12 @@ class DomainMatrix:
         >>> M.choose_domain(field=True)
         DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
 
-        Keyword arguments are passed to :func:`construct_domain`.
+        >>> from sympy.abc import x
+        >>> M = DM([[1, x], [x**2, x**3]], ZZ[x])
+        >>> M.choose_domain(field=True)
+        ZZ(x)
+
+        Keyword arguments are passed to :func:`~.construct_domain`.
 
         See Also
         ========
@@ -700,13 +705,64 @@ class DomainMatrix:
         return MutableDenseMatrix._fromrep(rep)
 
     def to_list(self):
+        """
+        Convert :class:`DomainMatrix` to list of lists.
+
+        See Also
+        ========
+
+        from_list
+        to_list_flat
+        to_flat_nz
+        to_dok
+        """
         return self.rep.to_list()
 
     def to_list_flat(self):
+        """
+        Convert :class:`DomainMatrix` to flat list.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A.to_list_flat()
+        [1, 2, 3, 4]
+
+        See Also
+        ========
+
+        from_list_flat
+        to_list
+        to_flat_nz
+        to_dok
+        """
         return self.rep.to_list_flat()
 
     @classmethod
     def from_list_flat(cls, elements, shape, domain):
+        """
+        Create :class:`DomainMatrix` from flat list.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> element_list = [ZZ(1), ZZ(2), ZZ(3), ZZ(4)]
+        >>> A = DomainMatrix.from_list_flat(element_list, (2, 2), ZZ)
+        >>> A
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> A == A.from_list_flat(A.to_list_flat(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_list_flat
+        """
         return cls.from_rep(DDM.from_list_flat(elements, shape, domain))
 
     def to_flat_nz(self):
@@ -1413,8 +1469,7 @@ class DomainMatrix:
         See Also
         ========
 
-        Matrix.clear_denoms
-        Poly.clear_denoms
+        sympy.polys.polytools.Poly.clear_denoms
         """
         elems0, data = self.to_flat_nz()
 
