@@ -30,6 +30,8 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
+from sympy.polys.densetools import dup_clear_denoms
+
 
 def DM(rows, domain):
     """Convenient alias for DomainMatrix.from_list
@@ -1372,6 +1374,64 @@ class DomainMatrix:
         rows, cols = self.shape
         assert rows == cols
         return self.rep.scc()
+
+    def clear_denoms(self, convert=False):
+        """
+        Clear denominators, but keep the domain unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[(1,2), (1,3)], [(1,4), (1,5)]], QQ)
+        >>> den, Anum = A.clear_denoms()
+        >>> den.to_sympy()
+        60
+        >>> Anum.to_Matrix()
+        Matrix([
+        [30, 20],
+        [15, 12]])
+        >>> den * A == Anum
+        True
+
+        The numerator matrix will be in the same domain as the original matrix
+        unless ``convert`` is set to ``True``:
+
+        >>> A.clear_denoms()[1].domain
+        QQ
+        >>> A.clear_denoms(convert=True)[1].domain
+        ZZ
+
+        The denominator is always in the associated ring:
+
+        >>> A.clear_denoms()[0].domain
+        ZZ
+        >>> A.domain.get_ring()
+        ZZ
+
+        See Also
+        ========
+
+        Matrix.clear_denoms
+        Poly.clear_denoms
+        """
+        elems0, data = self.to_flat_nz()
+
+        K0 = self.domain
+        K1 = K0.get_ring() if K0.has_assoc_Ring else K0
+
+        den, elems1 = dup_clear_denoms(elems0, K0, K1, convert=convert)
+
+        if convert:
+            Kden, Knum = K1, K1
+        else:
+            Kden, Knum = K1, K0
+
+        den = DomainScalar(den, Kden)
+        num = self.from_flat_nz(elems1, data, Knum)
+
+        return den, num
 
     def rref(self):
         r"""
