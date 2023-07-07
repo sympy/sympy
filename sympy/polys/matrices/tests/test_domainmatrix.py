@@ -509,6 +509,17 @@ def test_DomainMatrix_pow():
     raises(DMNonSquareMatrixError, lambda: A ** 1)
 
 
+def test_DomainMatrix_clear_denoms():
+    A = DM([[(1,2),(1,3)],[(1,4),(1,5)]], QQ)
+
+    den_Z = DomainScalar(ZZ(60), ZZ)
+    Anum_Z = DM([[30, 20], [15, 12]], ZZ)
+    Anum_Q = DM([[30, 20], [15, 12]], QQ)
+
+    assert A.clear_denoms() == (den_Z, Anum_Q)
+    assert A.clear_denoms(convert=True) == (den_Z, Anum_Z)
+
+
 def test_DomainMatrix_scc():
     Ad = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)],
                        [ZZ(0), ZZ(1), ZZ(0)],
