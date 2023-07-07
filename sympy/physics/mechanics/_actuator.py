@@ -605,7 +605,7 @@ class TorqueActuator(ActuatorBase):
     >>> axis = N.z
     >>> parent = RigidBody('parent', frame=N)
     >>> child = RigidBody('child', frame=A)
-    >>> bodies = (parent, child)
+    >>> bodies = (child, parent)
     >>> actuator = TorqueActuator(torque, axis, *bodies)
     >>> actuator
     TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
@@ -703,7 +703,7 @@ class TorqueActuator(ActuatorBase):
 
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
-        TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
+        TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
 
         Parameters
         ==========
@@ -860,7 +860,7 @@ class TorqueActuator(ActuatorBase):
         ``to_loads`` method.
 
         >>> actuator.to_loads()
-        [(N, T*N.z), (A, - T*N.z)]
+        [(A, T*N.z), (N, - T*N.z)]
 
         Alternatively, if a torque actuator is created without a reaction frame
         then the loads returned by the ``to_loads`` method will contain just
