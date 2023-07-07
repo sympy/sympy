@@ -24,7 +24,7 @@ from sympy.polys.polytools import (
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
-    real_roots, nroots, ground_roots,
+    all_roots, real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
@@ -2856,6 +2856,7 @@ def test_Poly_root():
 
 
 def test_real_roots():
+
     assert real_roots(x) == [0]
     assert real_roots(x, multiple=False) == [(0, 1)]
 
@@ -2871,6 +2872,11 @@ def test_real_roots():
     assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 3)]
 
+    assert real_roots(x**2 - 2, radicals=False) == [
+            rootof(x**2 - 2, 0, radicals=False),
+            rootof(x**2 - 2, 1, radicals=False),
+        ]
+
     f = 2*x**3 - 7*x**2 + 4*x + 4
     g = x**3 + x + 1
 
@@ -2879,11 +2885,26 @@ def test_real_roots():
 
 
 def test_all_roots():
-    f = 2*x**3 - 7*x**2 + 4*x + 4
-    g = x**3 + x + 1
 
-    assert Poly(f).all_roots() == [Rational(-1, 2), 2, 2]
-    assert Poly(g).all_roots() == [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    froots = [Rational(-1, 2), 2, 2]
+    assert all_roots(f) == Poly(f).all_roots() == froots
+
+    g = x**3 + x + 1
+    groots = [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
+    assert all_roots(g) == Poly(g).all_roots() == groots
+
+    assert all_roots(x**2 - 2) == [-sqrt(2), sqrt(2)]
+    assert all_roots(x**2 - 2, multiple=False) == [(-sqrt(2), 1), (sqrt(2), 1)]
+    assert all_roots(x**2 - 2, radicals=False) == [
+        rootof(x**2 - 2, 0, radicals=False),
+        rootof(x**2 - 2, 1, radicals=False),
+    ]
+
+    p = x**5 - x - 1
+    assert all_roots(p) == [
+        rootof(p, 0), rootof(p, 1), rootof(p, 2), rootof(p, 3), rootof(p, 4)
+    ]
 
 
 def test_nroots():
