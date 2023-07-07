@@ -449,7 +449,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var, inputdelay=0):
+    def __new__(cls, num, den, var, delay=0):
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -467,14 +467,14 @@ class TransferFunction(SISOLinearTimeInvariant):
             obj._num = num
             obj._den = den
             obj._var = var
-            obj._delay = exp(-1 * var * inputdelay)
+            obj._delay = delay
             return obj
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None, inputdelay=0):
+    def from_rational_expression(cls, expr, var=None, delay=0):
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
 
@@ -549,7 +549,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
-        return cls(_num, _den, var, inputdelay=inputdelay)
+        return cls(_num, _den, var, delay=delay)
 
     @classmethod
     def from_coeff_lists(cls, num_list, den_list, var):
@@ -714,22 +714,43 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return self._var
 
+    @property
+    def delay(self):
+        """
+        Returns the time delay of the transfer function. 
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> G1 = TransferFunction(s**2, s - 6, s)
+        >>> G1.delay
+        0
+        >>> G2 = TransferFunction(s**2, s - 6, s, delay=1)
+        >>> G2.delay
+        1
+
+        """
+        return self._delay
+
     def _eval_subs(self, old, new):
         arg_num = self.num.subs(old, new)
         arg_den = self.den.subs(old, new)
-        argnew = TransferFunction(arg_num, arg_den, self.var)
+        argnew = TransferFunction(arg_num, arg_den, self.var, delay=self.delay)
         return self if old == self.var else argnew
 
     def _eval_evalf(self, prec):
         return TransferFunction(
             self.num._eval_evalf(prec),
             self.den._eval_evalf(prec),
-            self.var)
+            self.var,
+        delay=self.delay)
 
     def _eval_simplify(self, **kwargs):
         tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
-        return TransferFunction(num_, den_, self.var)
+        return TransferFunction(num_, den_, self.var, delay=self.delay)
 
     def expand(self):
         """
@@ -749,7 +770,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
 
         """
-        return TransferFunction(expand(self.num), expand(self.den), self.var)
+        return TransferFunction(expand(self.num), expand(self.den), self.var, delay=self.delay)
 
     def dc_gain(self):
         """
@@ -852,6 +873,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
+    #todo
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -871,6 +893,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __radd__(self, other):
         return self + other
 
+    #todo
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
@@ -890,6 +913,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __rsub__(self, other):
         return -self + other
 
+    #todo
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
@@ -908,6 +932,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     __rmul__ = __mul__
 
+    #todo
     def __truediv__(self, other):
         if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], (Series, TransferFunction))):
@@ -943,15 +968,15 @@ class TransferFunction(SISOLinearTimeInvariant):
         if p is S.Zero:
             return TransferFunction(1, 1, self.var)
         elif p > 0:
-            num_, den_ = self.num**p, self.den**p
+            num_, den_, delay_ = self.num**p, self.den**p, self.delay * p
         else:
             p = abs(p)
-            num_, den_ = self.den**p, self.num**p
+            num_, den_, delay_ = self.den**p, self.num**p, self.delay * p
 
         return TransferFunction(num_, den_, self.var)
 
     def __neg__(self):
-        return TransferFunction(-self.num, self.den, self.var)
+        return TransferFunction(-self.num, self.den, self.var, delay=delay_)
 
     @property
     def is_proper(self):
@@ -1041,10 +1066,14 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
 
         if self.num != 1:
-            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+            result = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         else:
-            return Pow(self.den, -1, evaluate=False)
-
+            result = Pow(self.den, -1, evaluate=False)
+        
+        if self.delay == 0:
+            return result
+        else:
+            return Mul(exp(-1 * self.delay * self.var), result, evaluate=False)
 
 def _flatten_args(args, _cls):
     temp_args = []
