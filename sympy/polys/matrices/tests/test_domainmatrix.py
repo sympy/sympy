@@ -1,10 +1,5 @@
-from sympy.testing.pytest import raises
+from sympy import Integer, Rational, S, sqrt, Matrix, symbols
 
-from sympy.core.numbers import Integer, Rational
-from sympy.core.singleton import S
-from sympy.functions import sqrt
-
-from sympy.matrices.dense import Matrix
 from sympy.polys.domains import FF, ZZ, QQ, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
@@ -14,6 +9,8 @@ from sympy.polys.matrices.exceptions import (
 )
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
+
+from sympy.testing.pytest import raises
 
 
 def test_DM():
@@ -199,6 +196,10 @@ def test_DomainMatrix_choose_domain():
     assert DM(A, QQ).choose_domain() == DM(A, ZZ)
     assert DM(A, QQ).choose_domain(field=True) == DM(A, QQ)
     assert DM(A, ZZ).choose_domain(field=True) == DM(A, QQ)
+
+    x = symbols('x')
+    B = [[1, x], [x**2, x**3]]
+    assert DM(B, QQ[x]).choose_domain(field=True) == DM(B, ZZ.frac_field(x))
 
 
 def test_DomainMatrix_to_flat_nz():
