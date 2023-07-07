@@ -335,6 +335,9 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         return _
 
     def __call__(self, *args):
+        if len(self.handler.funcs):
+            if all(len(sig) != len(args) for sig in self.handler.funcs):
+                raise TypeError("Invalid number of arguments")
         return AppliedPredicate(self, *args)
 
     def eval(self, args, assumptions=True):
