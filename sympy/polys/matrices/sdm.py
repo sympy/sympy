@@ -415,9 +415,9 @@ class SDM(dict):
         ========
 
         from_flat_nz
-        DDM.to_flat_nz
-        DomainMatrix.to_flat_nz
-        to_flat_list
+        to_list_flat
+        sympy.polys.matrices.ddm.DDM.to_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_flat_nz
         """
         dok = M.to_dok()
         indices = tuple(dok)
@@ -436,9 +436,9 @@ class SDM(dict):
         ========
 
         to_flat_nz
-        DDM.from_flat_nz
-        DomainMatrix.from_flat_nz
-        from_flat_list
+        from_list_flat
+        sympy.polys.matrices.ddm.DDM.from_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_flat_nz
         """
         indices, shape = data
         dok = dict(zip(indices, elements))

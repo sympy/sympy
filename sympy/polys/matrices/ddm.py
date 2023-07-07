@@ -213,8 +213,8 @@ class DDM(list):
         ========
 
         from_flat_nz
-        SDM.to_flat_nz
-        DomainMatrix.to_flat_nz
+        sympy.polys.matrices.sdm.SDM.to_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_flat_nz
         """
         elements = self.to_list_flat()
         data = self.shape
@@ -241,8 +241,8 @@ class DDM(list):
         ========
 
         to_flat_nz
-        SDM.from_flat_nz
-        DomainMatrix.from_flat_nz
+        sympy.polys.matrices.sdm.SDM.from_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_flat_nz
         """
         shape = data
         return cls.from_list_flat(elements, shape, domain)
@@ -264,9 +264,8 @@ class DDM(list):
         ========
 
         from_dok
-        SDM.to_dok
-        DomainMatrix.to_dok
-        MutableDenseMatrix.todok
+        sympy.polys.matrices.sdm.SDM.to_dok
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dok
         """
         dok = {}
         for i, row in enumerate(self):
@@ -294,8 +293,8 @@ class DDM(list):
         ========
 
         to_dok
-        SDM.from_dok
-        DomainMatrix.from_dok
+        sympy.polys.matrices.sdm.SDM.from_dok
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_dok
         """
         rows, cols = shape
         lol = [[domain.zero] * cols for _ in range(rows)]
