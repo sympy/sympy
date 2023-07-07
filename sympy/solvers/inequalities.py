@@ -1027,39 +1027,34 @@ class InfeasibleLinearProgrammingError(Exception):
 
 def _pivot(M, i, j):
     """
-    The pivot is entry i, j of M.
-
-    The matrix is modified as follows:
-
-    - M[k,l]-=M[k,j]*M[i,l]/M[i,j] for k != i and l != j
-
-    - Entries in row i and col j are divided by the pivot
-
-    - the sign of entries in column j (except at row i) is changed
-
+    The pivot element `M[i, j]` is inverted and the rest of the matrix modified
+    and returned as a new matrix; original is left unmodified.
 
     Example
     =======
 
     >>> from sympy.matrices.dense import Matrix
     >>> from sympy.solvers.inequalities import _pivot
-    >>> m = Matrix([[3, 1, 5],
-    ...             [2,-3, 1],
-    ...             [0, 3, 1]])
-    >>> _pivot(m, 1, 0) # pivot around 2, which is in row 1 and col 0
+    >>> from sympy import var
+    >>> Matrix(3, 3, var('a:i'))
     Matrix([
-    [-3/2, 11/2, 7/2],
-    [ 1/2, -3/2, 1/2],
-    [   0,    3,   1]])
+    [a, b, c],
+    [d, e, f],
+    [g, h, i]])
+    >>> _pivot(_, 1, 0)
+    Matrix([
+    [-a/d, -a*e/d + b, -a*f/d + c],
+    [ 1/d,    e/d    ,    f/d    ],
+    [-g/d,  h - e*g/d,  i - f*g/d]])
     """
     Mi, Mj, Mij = M[i,:], M[:,j], M[i,j]
     if Mij == 0:
         raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-    MM = M - Mj * (Mi / Mij)
-    MM[i,:] = Mi / Mij
-    MM[:,j] = -Mj / Mij
-    MM[i,j] = 1 / Mij
-    return MM
+    A = M - Mj * (Mi / Mij)
+    A[i, :] = Mi / Mij
+    A[:, j] = -Mj / Mij
+    A[i, j] = 1 / Mij
+    return A
 
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
