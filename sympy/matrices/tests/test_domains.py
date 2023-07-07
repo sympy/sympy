@@ -111,11 +111,3 @@ def test_Matrix_to_DM():
     # Options cannot be used with the domain parameter
     M = Matrix([[1, 2], [3, 4]])
     raises(TypeError, lambda: M.to_DM(domain=QQ, field=True))
-
-
-def test_Matrix_clear_denoms():
-    M = Matrix([[1/x, x/2], [3, 4]])
-    den, Mnum = M.clear_denoms()
-    assert den == 2*x
-    assert Mnum == Matrix([[2, x**2], [6*x, 8*x]])
-    assert M * den == Mnum

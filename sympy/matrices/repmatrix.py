@@ -393,69 +393,6 @@ class RepMatrix(MatrixBase):
                     rv = ans
         return rv
 
-    def clear_denoms(self, **opts):
-        """Clear denominators and extract their lcm.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy import Rational as Q
-        >>> M = Matrix([[Q(1,2), Q(2,3)], [Q(3,4), Q(4,5)]])
-        >>> M
-        Matrix([
-        [1/2, 2/3],
-        [3/4, 4/5]])
-        >>> den, Mnum = M.clear_denoms()
-        >>> den
-        60
-        >>> Mnum
-        Matrix([
-        [30, 40],
-        [45, 48]])
-        >>> Mnum / den == M
-        True
-
-        >>> from sympy.abc import a, b, c, d
-        >>> M = Matrix([
-        ... [1/b + 1/a, -1/b, 0],
-        ... [-1/b, 1/c + 1/b, -1/c],
-        ... [0, -1/c, 1/d + 1/c]])
-
-        >>> M
-        Matrix([
-        [1/b + 1/a,      -1/b,         0],
-        [     -1/b, 1/c + 1/b,      -1/c],
-        [        0,      -1/c, 1/d + 1/c]])
-        >>> den, M1 = M.clear_denoms()
-        >>> den
-        a*b*c*d
-        >>> M1
-        Matrix([
-        [a*c*d + b*c*d,        -a*c*d,             0],
-        [       -a*c*d, a*b*d + a*c*d,        -a*b*d],
-        [            0,        -a*b*d, a*b*c + a*b*d]])
-
-        The returned matrix is equal to the original matrix multiplied by the
-        extracted denominator:
-
-        >>> M1 == (den*M).expand()
-        True
-
-        Any keyword arguments are passed to :meth:`to_DM()` and are used to
-        choose the domain for the calculation.
-
-        See Also
-        ========
-
-        sympy.core.expr.Expr.as_numer_denom
-        DomainMatrix.clear_denoms
-        Poly.clear_denoms
-        """
-        dM = self.to_DM(**opts)
-        den, dM1 = dM.clear_denoms()
-        return den.to_sympy(), dM1.to_Matrix()
-
 
 class MutableRepMatrix(RepMatrix):
     """Mutable matrix based on DomainMatrix as the internal representation"""
