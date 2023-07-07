@@ -608,7 +608,7 @@ class TorqueActuator(ActuatorBase):
     >>> bodies = (parent, child)
     >>> actuator = TorqueActuator(torque, axis, *bodies)
     >>> actuator
-    TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
+    TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
 
     Note that because torques actually act on frames, not bodies,
     ``TorqueActuator`` will extract the frame associated with a ``RigidBody``
@@ -729,8 +729,9 @@ class TorqueActuator(ActuatorBase):
         return cls(
             torque,
             pin_joint.joint_axis,
-            pin_joint.parent_interframe,
             pin_joint.child_interframe,
+            pin_joint.parent_interframe,
+            
         )
 
     @property
