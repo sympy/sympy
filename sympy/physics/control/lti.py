@@ -827,6 +827,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         >>> from sympy.abc import s, p, a
         >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import I
         >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
         >>> omega = 0.1
         >>> tf1.evalfr(I*omega)
@@ -3222,6 +3223,30 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
+
+    def evalfr(self,other):
+        """
+        Evaluates each element of the ``TransferFunctionMatrix`` at a frequency.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> from sympy import I
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
+        >>> tfm_1.evalfr(2*I)
+        TransferFunctionMatrix(((TransferFunction(3 - 6*I, 5, s), TransferFunction((1 - 2*I)*(2 - 2*I)*(6 + 2*I), 40, s)), (TransferFunction((-2 - 6*I)*(3 + 2*I), 40, s), TransferFunction((-14 - 10*I)*(16 - 18*I), 296, s))))
+
+        """
+        mat = self._expr_mat.subs(self.var, other)
+        return _to_TFM(mat, self.var)
 
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""
