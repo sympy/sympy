@@ -51,7 +51,6 @@ class LaurentPolyRing:
     >>> R = LaurentPolyRing([x, y], ZZ, order='lex')
     >>> R
     Laurent polynomial ring in x, y over ZZ with lex order
-    >>> p = R.from_expr(1/x + x*y)
     >>> x, y = R.gens
     >>> p = 1/x + x*y
     >>> p
