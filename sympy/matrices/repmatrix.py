@@ -132,7 +132,8 @@ class RepMatrix(MatrixBase):
         # XXX: There should be an option to construct_domain to choose EXRAW
         # instead of EX. At least converting to EX does not initially trigger
         # EX.simplify which is what we want here but should probably be
-        # considered a bug in EX.
+        # considered a bug in EX. Perhaps also this could be handled in
+        # DomainMatrix.choose_domain rather than here...
         if rep_dom.domain.is_EX:
             rep_dom = rep_dom.convert_to(EXRAW)
 

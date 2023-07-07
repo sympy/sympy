@@ -450,7 +450,7 @@ class DomainMatrix:
 
         >>> from sympy.abc import x
         >>> M = DM([[1, x], [x**2, x**3]], ZZ[x])
-        >>> M.choose_domain(field=True)
+        >>> M.choose_domain(field=True).domain
         ZZ(x)
 
         Keyword arguments are passed to :func:`~.construct_domain`.
@@ -461,7 +461,7 @@ class DomainMatrix:
         construct_domain
         convert_to
         """
-        elements, data = self.to_flat_nz()
+        elements, data = self.to_sympy().to_flat_nz()
         dom, elements_dom = construct_domain(elements, **opts)
         return self.from_flat_nz(elements_dom, data, dom)
 
