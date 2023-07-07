@@ -818,6 +818,31 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.num, self.var), self.var)
 
+    def evalfr(self,other):
+        """
+        Returns the system response at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
+        >>> omega = 0.1
+        >>> tf1.evalfr(I*omega)
+        TransferFunction(1, 0.99 + 0.2*I, s)
+        >>> tf2 = TransferFunction(s**2, a*s + p, s)
+        >>> tf2.evalfr(2)
+        TransferFunction(4, 2*a + p, s)
+        >>> tf2.evalfr(I*2)
+        TransferFunction(-4, 2*I*a + p, s)
+
+        """
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        argnew = TransferFunction(arg_num, arg_den, self.var)
+        return argnew.expand()
+
     def is_stable(self):
         """
         Returns True if the transfer function is asymptotically stable; else False.
