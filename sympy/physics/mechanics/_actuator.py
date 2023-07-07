@@ -701,6 +701,10 @@ class TorqueActuator(ActuatorBase):
         constructor class method ``at_pin_joint`` of the ``TorqueActuator``
         class.
 
+        Note: The positive torque will result in a positive displacement of the joint
+        coordinate or that the torque is applied on the child body with a reaction
+        torque on the parent.
+
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
         TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
