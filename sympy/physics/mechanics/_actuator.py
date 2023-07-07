@@ -699,11 +699,9 @@ class TorqueActuator(ActuatorBase):
         To create the torque actuator from the ``torque`` and ``pin_joint``
         variables previously instantiated, these can be passed to the alternate
         constructor class method ``at_pin_joint`` of the ``TorqueActuator``
-        class.
-
-        Note: The positive torque will result in a positive displacement of the joint
-        coordinate or that the torque is applied on the child body with a reaction
-        torque on the parent.
+        class. It should be noted that a positive torque will cause a positive 
+        displacement of the joint coordinate or that the torque is applied on the 
+        child body with a reaction torque on the parent.
 
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
