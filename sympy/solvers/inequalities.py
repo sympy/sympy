@@ -1044,7 +1044,7 @@ def _pivot(M, i, j):
     >>> _pivot(_, 1, 0)
     Matrix([
     [-a/d, -a*e/d + b, -a*f/d + c],
-    [ 1/d,    e/d    ,    f/d    ],
+    [ 1/d,        e/d,        f/d],
     [-g/d,  h - e*g/d,  i - f*g/d]])
     """
     Mi, Mj, Mij = M[i,:], M[:,j], M[i,j]
