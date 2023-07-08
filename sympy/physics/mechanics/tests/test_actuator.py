@@ -677,11 +677,11 @@ class TestTorqueActuator:
 
         assert hasattr(instance, 'target_frame')
         assert isinstance(instance.target_frame, ReferenceFrame)
-        assert instance.target_frame == self.N
+        assert instance.target_frame == self.A
 
         assert hasattr(instance, 'reaction_frame')
         assert isinstance(instance.reaction_frame, ReferenceFrame)
-        assert instance.reaction_frame == self.A
+        assert instance.reaction_frame == self.N
 
     def test_at_pin_joint_pin_joint_not_pin_joint_invalid(self) -> None:
         with pytest.raises(TypeError):
