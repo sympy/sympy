@@ -605,10 +605,10 @@ class TorqueActuator(ActuatorBase):
     >>> axis = N.z
     >>> parent = RigidBody('parent', frame=N)
     >>> child = RigidBody('child', frame=A)
-    >>> bodies = (parent, child)
+    >>> bodies = (child, parent)
     >>> actuator = TorqueActuator(torque, axis, *bodies)
     >>> actuator
-    TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
+    TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
 
     Note that because torques actually act on frames, not bodies,
     ``TorqueActuator`` will extract the frame associated with a ``RigidBody``
@@ -699,11 +699,13 @@ class TorqueActuator(ActuatorBase):
         To create the torque actuator from the ``torque`` and ``pin_joint``
         variables previously instantiated, these can be passed to the alternate
         constructor class method ``at_pin_joint`` of the ``TorqueActuator``
-        class.
+        class. It should be noted that a positive torque will cause a positive
+        displacement of the joint coordinate or that the torque is applied on the
+        child body with a reaction torque on the parent.
 
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
-        TorqueActuator(T, axis=N.z, target_frame=N, reaction_frame=A)
+        TorqueActuator(T, axis=N.z, target_frame=A, reaction_frame=N)
 
         Parameters
         ==========
@@ -729,8 +731,8 @@ class TorqueActuator(ActuatorBase):
         return cls(
             torque,
             pin_joint.joint_axis,
-            pin_joint.parent_interframe,
             pin_joint.child_interframe,
+            pin_joint.parent_interframe,
         )
 
     @property
@@ -860,7 +862,7 @@ class TorqueActuator(ActuatorBase):
         ``to_loads`` method.
 
         >>> actuator.to_loads()
-        [(N, T*N.z), (A, - T*N.z)]
+        [(A, T*N.z), (N, - T*N.z)]
 
         Alternatively, if a torque actuator is created without a reaction frame
         then the loads returned by the ``to_loads`` method will contain just
