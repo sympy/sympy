@@ -35,9 +35,7 @@ def test_number_line_properties():
     # From:
     # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
 
-    # Converse
-    # a <= b and b >= a are equivalent.
-    ask(Equivalent(a <= b, b >= a))
+    # Converse property is currently supported
 
     # Transitivity
     # If a <= b and b <= c, then a <= c.
@@ -73,7 +71,12 @@ def test_number_line_properties():
 
 @XFAIL
 def test_equality():
-    # test substitution property of equality
+    # Currently reflexivity and symmetry are supported, but transitivity and substitution are not 
+    
+    # test transitive proprety
+    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z))
+    
+    # test substitution property
     assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
     assert ask(Q.real(x), Q.eq(x, y) & Q.real(y)) is True
     assert ask(Q.imaginary(x), Q.eq(x, y) & Q.imaginary(y)) is True
