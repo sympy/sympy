@@ -495,10 +495,12 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         # no unique exponent for 0, 1
         # 2 and 3 have exponents of 1
         return False
-    logn = math.log(n, 2)
-    max_possible = int(logn) + 2  # only check values less than this
-    not_square = n % 10 in [2, 3, 7, 8]  # squares cannot end in 2, 3, 7, 8
-    min_possible = 2 + not_square
+    logn = math.log2(n)
+    max_possible = int(logn) + 1  # only check values less than this
+    if 0x213 & (1 << (n & 15)): # simple square number check
+        min_possible = 2
+    else:
+        min_possible = 3
     if not candidates:
         candidates = primerange(min_possible, max_possible)
     else:
@@ -513,6 +515,21 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             r, ok = integer_nthroot(n, e)
             if ok:
                 return (r, e)
+        return False
+
+    if logn < 40 * min_possible:
+        # if n is small
+        for e in candidates:
+            b = 2.0**(logn/e)
+            r = int(b + 0.5)
+            if abs(r - b) > 0.01:
+                continue
+            if r**e == n:
+                if big:
+                    m = perfect_power(r, big=big)
+                    if m:
+                        r, e = m[0], e*m[1]
+                return int(r), e
         return False
 
     def _factors():
@@ -554,21 +571,21 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                     r, e = r**(e//e0[0]), e0[0]
             return r, e
 
-        # Weed out downright impossible candidates
+        # now see if the plausible e makes a perfect power
         if logn/e < 40:
             b = 2.0**(logn/e)
-            if abs(int(b + 0.5) - b) > 0.01:
+            r = int(b + 0.5)
+            if abs(r - b) > 0.01:
                 continue
-
-        # now see if the plausible e makes a perfect power
-        r, exact = integer_nthroot(n, e)
+            exact = r**e == n
+        else:
+            r, exact = integer_nthroot(n, e)
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
                 if m:
                     r, e = m[0], e*m[1]
             return int(r), e
-
     return False
 
 
