@@ -10,6 +10,10 @@ from sympy.abc import a, b, c, w, x, y, z
 
 @XFAIL
 def test_inequalities():
+
+    # inequalities only make sense over real numbers
+    assert ask(Q.real(x), Q.gt(x,y)) is True
+    
     # Test equivalent ways of writing Q.positive, Q.zero, Q.negative
     assert ask(Equivalent(Q.gt(x, 0), Q.positive(x))) is True
     assert ask(Equivalent(Q.lt(x, 0), Q.negative(x))) is True
@@ -74,7 +78,7 @@ def test_equality():
     # Currently reflexivity and symmetry are supported, but transitivity and substitution are not 
     
     # test transitive proprety
-    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z))
+    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
     
     # test substitution property
     assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
