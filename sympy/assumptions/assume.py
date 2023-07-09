@@ -341,7 +341,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
     def __call__(self, *args):
         if self._arity is not None and len(args) != self._arity:
-                raise TypeError("Invalid number of arguments")
+                raise TypeError(f"{type(self)} requires {self._arity} arguments but only {len(args)} were given")
         return AppliedPredicate(self, *args)
 
     def eval(self, args, assumptions=True):
