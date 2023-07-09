@@ -301,6 +301,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     """
 
     is_Atom = True
+    _arity = None
 
     def __new__(cls, *args, **kwargs):
         if cls is Predicate:
@@ -320,6 +321,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         """
         if cls.handler is None:
             raise TypeError("%s cannot be dispatched." % type(cls))
+        if cls._arity is None:
+            cls._arity = len(types)
         return cls.handler.register(*types, **kwargs)
 
     @classmethod
@@ -335,8 +338,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         return _
 
     def __call__(self, *args):
-        if len(self.handler.funcs):
-            if all(len(sig) != len(args) for sig in self.handler.funcs):
+        if self._arity is not None and len(args) != self._arity:
                 raise TypeError("Invalid number of arguments")
         return AppliedPredicate(self, *args)
 
