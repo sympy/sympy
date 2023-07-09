@@ -76,6 +76,7 @@ from .dense import (
         ddm_irmul,
         ddm_imatmul,
         ddm_irref,
+        ddm_irref_den,
         ddm_idet,
         ddm_iinv,
         ddm_ilu_split,
@@ -549,6 +550,13 @@ class DDM(list):
         partial_pivot = K.is_RealField or K.is_ComplexField
         pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
+
+    def rref_den(a):
+        """Reduced-row echelon form of a and list of pivots"""
+        b = a.copy()
+        K = a.domain
+        denom, pivots = ddm_irref_den(b, a.domain)
+        return b, denom, pivots
 
     def nullspace(a):
         rref, pivots = a.rref()
