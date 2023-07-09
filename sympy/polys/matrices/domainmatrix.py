@@ -30,6 +30,8 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
+from sympy.polys.densetools import dup_clear_denoms
+
 
 def DM(rows, domain):
     """Convenient alias for DomainMatrix.from_list
@@ -432,6 +434,37 @@ class DomainMatrix:
         K, items_K = construct_domain(items_sympy, **kwargs)
         return K, items_K
 
+    def choose_domain(self, **opts):
+        """Convert to a domain found by :func:`~.construct_domain`.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> M = DM([[1, 2], [3, 4]], ZZ)
+        >>> M
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> M.choose_domain(field=True)
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), QQ)
+
+        >>> from sympy.abc import x
+        >>> M = DM([[1, x], [x**2, x**3]], ZZ[x])
+        >>> M.choose_domain(field=True).domain
+        ZZ(x)
+
+        Keyword arguments are passed to :func:`~.construct_domain`.
+
+        See Also
+        ========
+
+        construct_domain
+        convert_to
+        """
+        elements, data = self.to_sympy().to_flat_nz()
+        dom, elements_dom = construct_domain(elements, **opts)
+        return self.from_flat_nz(elements_dom, data, dom)
+
     def copy(self):
         return self.from_rep(self.rep.copy())
 
@@ -658,18 +691,187 @@ class DomainMatrix:
 
         """
         from sympy.matrices.dense import MutableDenseMatrix
-        elemlist = self.rep.to_list()
-        elements_sympy = [self.domain.to_sympy(e) for row in elemlist for e in row]
-        return MutableDenseMatrix(*self.shape, elements_sympy)
+
+        # XXX: If the internal representation of RepMatrix changes then this
+        # might need to be changed also.
+        if self.domain in (ZZ, QQ, EXRAW):
+            if self.rep.fmt == "sparse":
+                rep = self.copy()
+            else:
+                rep = self.to_sparse()
+        else:
+            rep = self.convert_to(EXRAW).to_sparse()
+
+        return MutableDenseMatrix._fromrep(rep)
 
     def to_list(self):
+        """
+        Convert :class:`DomainMatrix` to list of lists.
+
+        See Also
+        ========
+
+        from_list
+        to_list_flat
+        to_flat_nz
+        to_dok
+        """
         return self.rep.to_list()
 
     def to_list_flat(self):
+        """
+        Convert :class:`DomainMatrix` to flat list.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> A.to_list_flat()
+        [1, 2, 3, 4]
+
+        See Also
+        ========
+
+        from_list_flat
+        to_list
+        to_flat_nz
+        to_dok
+        """
         return self.rep.to_list_flat()
 
+    @classmethod
+    def from_list_flat(cls, elements, shape, domain):
+        """
+        Create :class:`DomainMatrix` from flat list.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> element_list = [ZZ(1), ZZ(2), ZZ(3), ZZ(4)]
+        >>> A = DomainMatrix.from_list_flat(element_list, (2, 2), ZZ)
+        >>> A
+        DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> A == A.from_list_flat(A.to_list_flat(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_list_flat
+        """
+        return cls.from_rep(DDM.from_list_flat(elements, shape, domain))
+
+    def to_flat_nz(self):
+        """
+        Convert :class:`DomainMatrix` to list of nonzero elements and data.
+
+        Explanation
+        ===========
+
+        Returns a tuple ``(elements, data)`` where ``elements`` is a list of
+        elements of the matrix with zeros possibly excluded. The matrix can be
+        reconstructed by passing these to :meth:`from_flat_nz`. The idea is to
+        be able to modify a flat list of the elements and then create a new
+        matrix of the same shape with the modified elements in the same
+        positions.
+
+        The format of ``data`` differs depending on whether the underlying
+        representation is dense or sparse but either way it represents the
+        positions of the elements in the list in a way that
+        :meth:`from_flat_nz` can use to reconstruct the matrix. The
+        :meth:`from_flat_nz` method should be called on the same
+        :class:`DomainMatrix` that was used to call :meth:`to_flat_nz`.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [ZZ(1), ZZ(2)],
+        ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+        >>> elements, data = A.to_flat_nz()
+        >>> elements
+        [1, 2, 3, 4]
+        >>> A == A.from_flat_nz(elements, data, A.domain)
+        True
+
+        Create a matrix with the elements doubled:
+
+        >>> elements_doubled = [2*x for x in elements]
+        >>> A2 = A.from_flat_nz(elements_doubled, data, A.domain)
+        >>> A2 == 2*A
+        True
+
+        See Also
+        ========
+
+        from_flat_nz
+        """
+        return self.rep.to_flat_nz()
+
+    def from_flat_nz(self, elements, data, domain):
+        """
+        Reconstruct :class:`DomainMatrix` after calling :meth:`to_flat_nz`.
+
+        See :meth:`to_flat_nz` for explanation.
+
+        See Also
+        ========
+
+        to_flat_nz
+        """
+        rep = self.rep.from_flat_nz(elements, data, domain)
+        return self.from_rep(rep)
+
     def to_dok(self):
+        """
+        Convert :class:`DomainMatrix` to dictionary of keys (dok) format.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [ZZ(1), ZZ(0)],
+        ...    [ZZ(0), ZZ(4)]], (2, 2), ZZ)
+        >>> A.to_dok()
+        {(0, 0): 1, (1, 1): 4}
+
+        The matrix can be reconstructed by calling :meth:`from_dok` although
+        the reconstructed matrix will always be in sparse format:
+
+        >>> A.to_sparse() == A.from_dok(A.to_dok(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        from_dok
+        to_list
+        to_list_flat
+        to_flat_nz
+        """
         return self.rep.to_dok()
+
+    @classmethod
+    def from_dok(cls, dok, shape, domain):
+        """
+        Create :class:`DomainMatrix` from dictionary of keys (dok) format.
+
+        See :meth:`to_dok` for explanation.
+
+        See Also
+        ========
+
+        to_dok
+        """
+        return cls.from_rep(SDM.from_dok(dok, shape, domain))
 
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
@@ -1228,6 +1430,63 @@ class DomainMatrix:
         rows, cols = self.shape
         assert rows == cols
         return self.rep.scc()
+
+    def clear_denoms(self, convert=False):
+        """
+        Clear denominators, but keep the domain unchanged.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[(1,2), (1,3)], [(1,4), (1,5)]], QQ)
+        >>> den, Anum = A.clear_denoms()
+        >>> den.to_sympy()
+        60
+        >>> Anum.to_Matrix()
+        Matrix([
+        [30, 20],
+        [15, 12]])
+        >>> den * A == Anum
+        True
+
+        The numerator matrix will be in the same domain as the original matrix
+        unless ``convert`` is set to ``True``:
+
+        >>> A.clear_denoms()[1].domain
+        QQ
+        >>> A.clear_denoms(convert=True)[1].domain
+        ZZ
+
+        The denominator is always in the associated ring:
+
+        >>> A.clear_denoms()[0].domain
+        ZZ
+        >>> A.domain.get_ring()
+        ZZ
+
+        See Also
+        ========
+
+        sympy.polys.polytools.Poly.clear_denoms
+        """
+        elems0, data = self.to_flat_nz()
+
+        K0 = self.domain
+        K1 = K0.get_ring() if K0.has_assoc_Ring else K0
+
+        den, elems1 = dup_clear_denoms(elems0, K0, K1, convert=convert)
+
+        if convert:
+            Kden, Knum = K1, K1
+        else:
+            Kden, Knum = K1, K0
+
+        den = DomainScalar(den, Kden)
+        num = self.from_flat_nz(elems1, data, Knum)
+
+        return den, num
 
     def rref(self):
         r"""
