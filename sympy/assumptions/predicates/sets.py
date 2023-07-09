@@ -33,6 +33,7 @@ class IntegerPredicate(Predicate):
         doc=("Handler for Q.integer.\n\n"
         "Test that an expression belongs to the field of integer numbers.")
     )
+    _arity = 1
 
 
 class RationalPredicate(Predicate):
@@ -68,6 +69,7 @@ class RationalPredicate(Predicate):
         doc=("Handler for Q.rational.\n\n"
         "Test that an expression belongs to the field of rational numbers.")
     )
+    _arity = 1
 
 
 class IrrationalPredicate(Predicate):
@@ -105,6 +107,7 @@ class IrrationalPredicate(Predicate):
         doc=("Handler for Q.irrational.\n\n"
         "Test that an expression is irrational numbers.")
     )
+    _arity = 1
 
 
 class RealPredicate(Predicate):
@@ -171,6 +174,7 @@ class RealPredicate(Predicate):
         doc=("Handler for Q.real.\n\n"
         "Test that an expression belongs to the field of real numbers.")
     )
+    _arity = 1
 
 
 class ExtendedRealPredicate(Predicate):
@@ -205,6 +209,7 @@ class ExtendedRealPredicate(Predicate):
         "Test that an expression belongs to the field of extended real\n"
         "numbers, that is real numbers union {Infinity, -Infinity}.")
     )
+    _arity = 1
 
 
 class HermitianPredicate(Predicate):
@@ -230,6 +235,7 @@ class HermitianPredicate(Predicate):
         doc=("Handler for Q.hermitian.\n\n"
         "Test that an expression belongs to the field of Hermitian operators.")
     )
+    _arity = 1
 
 
 class ComplexPredicate(Predicate):
@@ -266,6 +272,7 @@ class ComplexPredicate(Predicate):
         doc=("Handler for Q.complex.\n\n"
         "Test that an expression belongs to the field of complex numbers.")
     )
+    _arity = 1
 
 
 class ImaginaryPredicate(Predicate):
@@ -303,6 +310,7 @@ class ImaginaryPredicate(Predicate):
         "Test that an expression belongs to the field of imaginary numbers,\n"
         "that is, numbers in the form x*I, where x is real.")
     )
+    _arity = 1
 
 
 class AntihermitianPredicate(Predicate):
@@ -330,6 +338,7 @@ class AntihermitianPredicate(Predicate):
         "Test that an expression belongs to the field of anti-Hermitian\n"
         "operators, that is, operators in the form x*I, where x is Hermitian.")
     )
+    _arity = 1
 
 
 class AlgebraicPredicate(Predicate):
@@ -365,6 +374,7 @@ class AlgebraicPredicate(Predicate):
         "AlgebraicHandler",
         doc="""Handler for Q.algebraic key."""
     )
+    _arity = 1
 
 
 class TranscendentalPredicate(Predicate):
@@ -385,3 +395,4 @@ class TranscendentalPredicate(Predicate):
         "Transcendental",
         doc="""Handler for Q.transcendental key."""
     )
+    _arity = 1
