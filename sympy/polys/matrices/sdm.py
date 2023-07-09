@@ -812,6 +812,24 @@ class SDM(dict):
         B, pivots, _ = sdm_irref(A)
         return A.new(B, A.shape, A.domain), pivots
 
+    def rref_den(A):
+        """
+
+        Returns reduced-row echelon form and list of pivots for the :py:class:`~.SDM`
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(2), 1:QQ(4)}}, (2, 2), QQ)
+        >>> A.rref()
+        ({0: {0: 1, 1: 2}}, [0])
+
+        """
+        B, denom, pivots = A.to_ddm().rref_den()
+        return A.new(B.to_sdm(), A.shape, A.domain), denom, pivots
+
     def inv(A):
         """
 

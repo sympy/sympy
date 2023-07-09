@@ -650,6 +650,135 @@ def test_DomainMatrix_det():
     assert A.det() == QQ(-2)
 
 
+def test_DomainMatrix_eval_poly():
+    dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    p = [ZZ(1), ZZ(2), ZZ(3)]
+    result = DomainMatrix([[ZZ(12), ZZ(14)], [ZZ(21), ZZ(33)]], (2, 2), ZZ)
+    assert dM.eval_poly(p) == result == p[0]*dM**2 + p[1]*dM + p[2]*dM**0
+    assert dM.eval_poly([]) == dM.zeros(dM.shape, dM.domain)
+    assert dM.eval_poly([ZZ(2)]) == 2*dM.I()
+
+    dM2 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMNonSquareMatrixError, lambda: dM2.eval_poly([ZZ(1)]))
+
+
+def test_DomainMatrix_eval_poly_mul():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    p = [ZZ(1), ZZ(2), ZZ(3)]
+    result = DomainMatrix([[ZZ(40)], [ZZ(87)]], (2, 1), ZZ)
+    assert A.eval_poly_mul(p, b) == result == p[0]*A**2*b + p[1]*A*b + p[2]*b
+
+    dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    dM1 = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    raises(DMNonSquareMatrixError, lambda: dM1.eval_poly_mul([ZZ(1)], b))
+    b1 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMShapeError, lambda: dM.eval_poly_mul([ZZ(1)], b1))
+    bq = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    raises(DMDomainError, lambda: dM.eval_poly_mul([ZZ(1)], bq))
+
+
+def _check_solve_den(A, b, xnum, xden):
+    # Examples for solve_den, solve_den_charpoly, solve_den_rref should use
+    # this so that all methods and types are tested.
+
+    case1 = (A, xnum, b)
+    case2 = (A.to_sparse(), xnum.to_sparse(), b.to_sparse())
+
+    for Ai, xnum_i, b_i in [case1, case2]:
+        # The key invariant for solve_den:
+        assert Ai*xnum_i == xden*b_i
+
+        # solve_den_rref can differ at least by a minus sign
+        answers = [(xnum_i, xden), (-xnum_i, -xden)]
+        assert Ai.solve_den(b) in answers
+        assert Ai.solve_den(b, method='rref') in answers
+        assert Ai.solve_den_rref(b) in answers
+
+        # charpoly can only be used if A is square and guarantees to return the
+        # actual determinant as a denominator.
+        m, n = Ai.shape
+        if m == n:
+            assert Ai.solve_den(b_i, method='charpoly') == (xnum_i, xden)
+            assert Ai.solve_den_charpoly(b_i) == (xnum_i, xden)
+        else:
+            raises(DMNonSquareMatrixError, lambda: Ai.solve_den_charpoly(b))
+            raises(DMNonSquareMatrixError, lambda: Ai.solve_den(b, method='charpoly'))
+
+
+def test_DomainMatrix_solve_den():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    result = DomainMatrix([[ZZ(0)], [ZZ(-1)]], (2, 1), ZZ)
+    den = ZZ(-2)
+    _check_solve_den(A, b, result, den)
+
+    A = DomainMatrix([
+        [ZZ(1), ZZ(2), ZZ(3)],
+        [ZZ(1), ZZ(2), ZZ(4)],
+        [ZZ(1), ZZ(3), ZZ(5)]], (3, 3), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)], [ZZ(3)]], (3, 1), ZZ)
+    result = DomainMatrix([[ZZ(2)], [ZZ(0)], [ZZ(-1)]], (3, 1), ZZ)
+    den = ZZ(-1)
+    _check_solve_den(A, b, result, den)
+
+    A = DomainMatrix([[ZZ(2)], [ZZ(2)]], (2, 1), ZZ)
+    b = DomainMatrix([[ZZ(3)], [ZZ(3)]], (2, 1), ZZ)
+    result = DomainMatrix([[ZZ(3)]], (1, 1), ZZ)
+    den = ZZ(2)
+    _check_solve_den(A, b, result, den)
+
+
+def test_DomainMatrix_solve_den_charpoly():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    A1 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMNonSquareMatrixError, lambda: A1.solve_den_charpoly(b))
+    b1 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMShapeError, lambda: A.solve_den_charpoly(b1))
+    bq = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    raises(DMDomainError, lambda: A.solve_den_charpoly(bq))
+
+
+def test_DomainMatrix_solve_den_charpoly_check():
+    # Test check
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(3)]], (2, 1), ZZ)
+    raises(DMNonInvertibleMatrixError, lambda: A.solve_den_charpoly(b))
+    adjAb = DomainMatrix([[ZZ(-2)], [ZZ(1)]], (2, 1), ZZ)
+    assert A.adjugate() * b == adjAb
+    assert A.solve_den_charpoly(b, check=False) == (adjAb, ZZ(0))
+
+
+def test_DomainMatrix_solve_den_errors():
+    A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    raises(DMShapeError, lambda: A.solve_den(b))
+
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    b1 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMShapeError, lambda: A.solve_den(b1))
+
+
+def test_DomainMatrix_inv_den():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    den = ZZ(-2)
+    result = DomainMatrix([[ZZ(4), ZZ(-2)], [ZZ(-3), ZZ(1)]], (2, 2), ZZ)
+    assert A.inv_den() == (result, den)
+
+
+def test_DomainMatrix_adjugate():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    result = DomainMatrix([[ZZ(4), ZZ(-2)], [ZZ(-3), ZZ(1)]], (2, 2), ZZ)
+    assert A.adjugate() == result
+
+
+def test_DomainMatrix_adj_det():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    adjA = DomainMatrix([[ZZ(4), ZZ(-2)], [ZZ(-3), ZZ(1)]], (2, 2), ZZ)
+    assert A.adj_det() == (adjA, ZZ(-2))
+
+
 def test_DomainMatrix_lu():
     A = DomainMatrix([], (0, 0), QQ)
     assert A.lu() == (A, A, [])
@@ -779,6 +908,14 @@ def test_DomainMatrix_eye():
     assert A.domain == QQ
 
 
+def test_DomainMatrix_I():
+    A = DomainMatrix.zeros((2, 2), QQ)
+    assert A.I() == DomainMatrix.eye((2, 2), QQ)
+    assert A.I(3) == DomainMatrix.eye((3, 3), QQ)
+    assert A.I((3, 3)) == DomainMatrix.eye((3, 3), QQ)
+    assert A.I((2, 3)) == DomainMatrix.eye((2, 3), QQ)
+
+
 def test_DomainMatrix_zeros():
     A = DomainMatrix.zeros((1, 2), QQ)
     assert A.rep == SDM.zeros((1, 2), QQ)
@@ -868,6 +1005,11 @@ def test_DomainMatrix_truediv():
     raises(ZeroDivisionError, lambda: A / 0)
     raises(TypeError, lambda: A / 1.5)
     raises(ZeroDivisionError, lambda: A / DomainScalar(ZZ(0), ZZ))
+
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    assert A.to_field() / 2 == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+    assert A / 2 == DomainMatrix([[QQ(1, 2), QQ(1)], [QQ(3, 2), QQ(2)]], (2, 2), QQ)
+    assert A.to_field() / QQ(2,3) == DomainMatrix([[QQ(3, 2), QQ(3)], [QQ(9, 2), QQ(6)]], (2, 2), QQ)
 
 
 def test_DomainMatrix_getitem():
