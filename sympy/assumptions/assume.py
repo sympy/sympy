@@ -323,6 +323,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
             raise TypeError("%s cannot be dispatched." % type(cls))
         if cls._arity is None:
             cls._arity = len(types)
+        elif cls._arity != len(types):
+            raise TypeError(f"{type(cls)} only accepts signatures with {cls._arity} argument(s)")
         return cls.handler.register(*types, **kwargs)
 
     @classmethod
