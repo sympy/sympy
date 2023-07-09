@@ -9,6 +9,7 @@ from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
@@ -58,6 +59,85 @@ class RepMatrix(MatrixBase):
                 return NotImplemented
 
         return self._rep.unify_eq(other._rep)
+
+    def to_DM(self, domain=None, **kwargs):
+        """Convert to a :class:`~.DomainMatrix`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> M.to_DM()
+        DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
+
+        The :meth:`DomainMatrix.to_Matrix` method can be used to convert back:
+
+        >>> M.to_DM().to_Matrix() == M
+        True
+
+        The domain can be given explicitly or otherwise it will be chosen by
+        :func:`construct_domain`. Any keyword arguments (besides ``domain``)
+        are passed to :func:`construct_domain`:
+
+        >>> from sympy import QQ, symbols
+        >>> x = symbols('x')
+        >>> M = Matrix([[x, 1], [1, x]])
+        >>> M
+        Matrix([
+        [x, 1],
+        [1, x]])
+        >>> M.to_DM().domain
+        ZZ[x]
+        >>> M.to_DM(field=True).domain
+        ZZ(x)
+        >>> M.to_DM(domain=QQ[x]).domain
+        QQ[x]
+
+        See Also
+        ========
+
+        DomainMatrix
+        DomainMatrix.to_Matrix
+        DomainMatrix.convert_to
+        DomainMatrix.choose_domain
+        construct_domain
+        """
+        if domain is not None:
+            if kwargs:
+                raise TypeError("Options cannot be used with domain parameter")
+            return self._rep.convert_to(domain)
+
+        rep = self._rep
+        dom = rep.domain
+
+        # If the internal DomainMatrix is already ZZ or QQ then we can maybe
+        # bypass calling construct_domain or performing any conversions. Some
+        # kwargs might affect this though e.g. field=True (not sure if there
+        # are others).
+        if not kwargs:
+            if dom.is_ZZ:
+                return rep.copy()
+            elif dom.is_QQ:
+                # All elements might be integers
+                try:
+                    return rep.convert_to(ZZ)
+                except CoercionFailed:
+                    pass
+                return rep.copy()
+
+        # Let construct_domain choose a domain
+        rep_dom = rep.choose_domain(**kwargs)
+
+        # XXX: There should be an option to construct_domain to choose EXRAW
+        # instead of EX. At least converting to EX does not initially trigger
+        # EX.simplify which is what we want here but should probably be
+        # considered a bug in EX. Perhaps also this could be handled in
+        # DomainMatrix.choose_domain rather than here...
+        if rep_dom.domain.is_EX:
+            rep_dom = rep_dom.convert_to(EXRAW)
+
+        return rep_dom
 
     @classmethod
     def _unify_element_sympy(cls, rep, element):
