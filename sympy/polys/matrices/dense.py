@@ -398,7 +398,7 @@ def ddm_idet(a, K):
     Examples
     ========
 
-    >>> from sympy import ZZ, Matrix
+    >>> from sympy import ZZ
     >>> from sympy.polys.matrices.ddm import ddm_idet
     >>> a = [[ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5), ZZ(6)], [ZZ(7), ZZ(8), ZZ(9)]]
     >>> a
