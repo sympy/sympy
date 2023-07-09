@@ -555,7 +555,7 @@ class DDM(list):
         """Reduced-row echelon form of a and list of pivots"""
         b = a.copy()
         K = a.domain
-        denom, pivots = ddm_irref_den(b, a.domain)
+        denom, pivots = ddm_irref_den(b, K)
         return b, denom, pivots
 
     def nullspace(a):
