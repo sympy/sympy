@@ -307,6 +307,26 @@ class DDM(list):
         return self
 
     def to_sdm(self):
+        """
+        Convert to a :class:`~.SDM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_sdm()
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
+        >>> type(A.to_sdm())
+        <class 'sympy.polys.matrices.sdm.SDM'>
+
+        See Also
+        ========
+
+        SDM
+        sympy.polys.matrices.sdm.SDM.to_ddm
+        """
         return SDM.from_list(self, self.shape, self.domain)
 
     def convert_to(self, K):
