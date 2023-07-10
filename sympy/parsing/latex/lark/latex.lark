@@ -78,7 +78,7 @@ CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_DBINOM: "\\dbinom"
 CMD_TBINOM: "\\tbinom"
 
-INFTY: "\\infty"
+CMD_INFTY: "\\infty"
 
 BANG: "!"
 BAR: "|"
@@ -116,11 +116,11 @@ FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
 //////////////////// grammar //////////////////////
 
-string: relation | expression | atom | ambiguous_sub
+string: relation | expression | ambiguous_sub
 
 oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
 number: INT | FLOAT
-infinity: "\\infty"
+infinity: CMD_INFTY
 
 atomic_expr: oneletter_symbol
     | number
@@ -129,9 +129,9 @@ atomic_expr: oneletter_symbol
 atom: atomic_expr
 
 group: L_PAREN expression R_PAREN
-      | L_BRACKET expression R_BRACKET
-      | L_BRACE expression R_BRACE
-      | L_BRACE_LITERAL expression R_BRACE_LITERAL
+    | L_BRACKET expression R_BRACKET
+    | L_BRACE expression R_BRACE
+    | L_BRACE_LITERAL expression R_BRACE_LITERAL
 
 abs_group: BAR expression BAR
 floor_group: L_FLOOR expression R_FLOOR
