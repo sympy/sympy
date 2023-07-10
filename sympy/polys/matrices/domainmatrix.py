@@ -594,7 +594,7 @@ class DomainMatrix:
         >>> ddm
         [[1, 0], [0, 2]]
         >>> type(ddm)
-        <class 'sympy.polys.matrices.ddm.DDM>
+        <class 'sympy.polys.matrices.ddm.DDM'>
 
         See Also
         ========
