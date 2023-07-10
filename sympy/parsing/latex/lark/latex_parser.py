@@ -15,10 +15,8 @@ _lark = import_module('lark')
 if _lark is None:
     raise ImportError("Could not load 'lark'")
 
-_lark.logger.setLevel(logging.DEBUG)
 
-
-def parse_latex_lark(s: str):
+def parse_latex_lark(s: str, *, logger=False):
     # TODO: should we use pkg_resource to get grammar file?  I
     # think this would make sympy depend on setuptools which we
     # would not like
@@ -33,16 +31,14 @@ def parse_latex_lark(s: str):
                         maybe_placeholders=False,
                         keep_all_tokens=True)
 
+    if logger:
+        _lark.logger.setLevel(logging.DEBUG)
+
     print("expression =", s)
     string = parser.parse(s)
     print(string)
     print(string.pretty())
     return string
-
-
-if __name__ == "__main__":
-    parse_latex_lark(r"a \;\thickspace * b")
-
 
 def mypretty(tree):
     data = tree.data
