@@ -297,15 +297,8 @@ def ddm_irref_den(a, K):
     no_pivots = []
 
     # i, j will be the row and column indices of the current pivot
-    i = -1
+    i = 0
     for j in range(n):
-        # next row
-        i += 1
-
-        # no more rows left?
-        if i >= m:
-            break
-
         # next pivot?
         aij = a[i][j]
 
@@ -344,7 +337,12 @@ def ddm_irref_den(a, K):
             # Update columns without pivots
             for jnp in no_pivots:
                 for ip in range(i):
-                    a[ip][jnp] *= aij
+                    aijp = a[ip][jnp]
+                    if aijp:
+                        aijp *= aij
+                        if d is not None:
+                            aijp = K.exquo(aijp, d)
+                        a[ip][jnp] = aijp
 
         # Eliminate above and below to the right as in ordinary division free
         # Gauss-Jordan elmination except also dividing out d from every entry.
@@ -365,12 +363,18 @@ def ddm_irref_den(a, K):
             # Set to zero above and below the pivot
             aj[j] = K.zero
 
+        # next row
+        pivots.append(j)
+        i += 1
+
+        # no more rows left?
+        if i >= m:
+            break
+
         if not K.is_one(aij):
             d = aij
         else:
             d = None
-
-        pivots.append(j)
 
     if not pivots:
         denom = K.one
