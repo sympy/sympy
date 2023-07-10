@@ -754,10 +754,45 @@ def test_DomainMatrix_solve_den_errors():
     A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
     raises(DMShapeError, lambda: A.solve_den(b))
+    raises(DMShapeError, lambda: A.solve_den_rref(b))
+
+    A = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    b = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
+    raises(DMShapeError, lambda: A.solve_den(b))
+    raises(DMShapeError, lambda: A.solve_den_rref(b))
 
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     b1 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DMShapeError, lambda: A.solve_den(b1))
+
+    A = DomainMatrix([[ZZ(2)]], (1, 1), ZZ)
+    b = DomainMatrix([[ZZ(2)]], (1, 1), ZZ)
+    raises(DMBadInputError, lambda: A.solve_den(b1, method='invalid'))
+
+    A = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
+    raises(DMNonSquareMatrixError, lambda: A.solve_den_charpoly(b))
+
+
+def test_DomainMatrix_solve_den_rref_underdetermined():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(1), ZZ(2)]], (2, 2), ZZ)
+    b = DomainMatrix([[ZZ(1)], [ZZ(1)]], (2, 1), ZZ)
+    raises(DMNonInvertibleMatrixError, lambda: A.solve_den(b))
+    raises(DMNonInvertibleMatrixError, lambda: A.solve_den_rref(b))
+
+
+def test_DomainMatrix_adj_poly_det():
+    A = DM([[ZZ(1), ZZ(2), ZZ(3)],
+            [ZZ(4), ZZ(5), ZZ(6)],
+            [ZZ(7), ZZ(8), ZZ(9)]], ZZ)
+    p, detA = A.adj_poly_det()
+    assert p == [ZZ(1), ZZ(-15), ZZ(-18)]
+    assert A.adjugate() == p[0]*A**2 + p[1]*A**1 + p[2]*A**0 == A.eval_poly(p)
+    assert A.det() == detA
+
+    A = DM([[ZZ(1), ZZ(2), ZZ(3)],
+            [ZZ(7), ZZ(8), ZZ(9)]], ZZ)
+    raises(DMNonSquareMatrixError, lambda: A.adj_poly_det())
 
 
 def test_DomainMatrix_inv_den():

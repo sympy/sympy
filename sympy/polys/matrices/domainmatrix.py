@@ -580,6 +580,56 @@ class DomainMatrix:
 
         return self.from_rep(SDM.to_ddm(self.rep))
 
+    def to_ddm(self):
+        """
+        Return a :class:`DDM` representation of *self*.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix({0: {0: 1}, 1: {1: 2}}, (2, 2), QQ)
+        >>> ddm = A.to_ddm()
+        >>> ddm
+        [[1, 0], [0, 2]]
+        >>> type(ddm)
+        <class 'sympy.polys.matrices.ddm.DDM>
+
+        See Also
+        ========
+
+        to_sdm
+        to_dense
+        DDM.to_sdm
+        """
+        return self.rep.to_ddm()
+
+    def to_sdm(self):
+        """
+        Return a :class:`SDM` representation of *self*.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> sdm = A.to_sdm()
+        >>> sdm
+        {0: {0: 1}, 1: {1: 2}}
+        >>> type(sdm)
+        <class 'sympy.polys.matrices.sdm.SDM'>
+
+        See Also
+        ========
+
+        to_ddm
+        to_sparse
+        SDM.to_ddm
+        """
+        return self.rep.to_sdm()
+
     @classmethod
     def _unify_domain(cls, *matrices):
         """Convert matrices to a common domain"""
