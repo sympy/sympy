@@ -582,7 +582,7 @@ class DomainMatrix:
 
     def to_ddm(self):
         """
-        Return a :class:`DDM` representation of *self*.
+        Return a :class:`~.DDM` representation of *self*.
 
         Examples
         ========
@@ -601,13 +601,13 @@ class DomainMatrix:
 
         to_sdm
         to_dense
-        DDM.to_sdm
+        sympy.polys.matrices.ddm.DDM.to_sdm
         """
         return self.rep.to_ddm()
 
     def to_sdm(self):
         """
-        Return a :class:`SDM` representation of *self*.
+        Return a :class:`~.SDM` representation of *self*.
 
         Examples
         ========
@@ -626,7 +626,7 @@ class DomainMatrix:
 
         to_ddm
         to_sparse
-        SDM.to_ddm
+        sympy.polys.matrices.sdm.SDM.to_ddm
         """
         return self.rep.to_sdm()
 
