@@ -301,6 +301,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     """
 
     is_Atom = True
+    _arity = None
 
     def __new__(cls, *args, **kwargs):
         if cls is Predicate:
