@@ -1832,7 +1832,10 @@ class DomainMatrix:
         """
         m, n = self.shape
         I_m = self.eye((m, m), self.domain)
-        return self.solve_den_charpoly(I_m, check=False)
+        adjA, detA = self.solve_den_charpoly(I_m, check=False)
+        if self.rep.fmt == "dense":
+            adjA = adjA.to_dense()
+        return adjA, detA
 
     def adjugate(self):
         """
@@ -1879,15 +1882,19 @@ class DomainMatrix:
         (inv, den) : (:class:`DomainMatrix`, :class:`~.DomainElement`)
             The inverse matrix and its denominator.
 
-        Currently this is equivalent to :meth:`adj_det` but it is expected that
-        it might be changed in future. The ratio ``inv/den`` is equivalent to
-        ``adj/det`` except that some factors might be cancelled leading to
-        smaller expressions.
+        This is more or less equivalent to :meth:`adj_det` except that ``inv``
+        and ``den`` are not guaranteed to be the adjugate and inverse. The
+        ratio ``inv/den`` is equivalent to ``adj/det`` but some factors
+        might be cancelled between ``inv`` and ``den``. In simple cases this
+        might just be a minus sign so that ``(inv, den) == (-adj, -det)`` but
+        more complicated factors than ``-1`` can also be cancelled.
+        Cancellation is not guaranteed to be complete so ``inv`` and ``den``
+        may not be on lowest terms. The denominator ``den`` will be zero if and
+        only if the determinant is zero.
 
         If the actual adjugate and determinant are needed, use :meth:`adj_det`
         instead. If the intention is to compute the inverse matrix or solve a
-        system of equations then in future it might be more efficient to use
-        :meth:`inv_den`.
+        system of equations then :meth:`inv_den` is more efficient.
 
         Examples
         ========
@@ -2102,10 +2109,13 @@ class DomainMatrix:
         Aaug = A.hstack(b)
         Aaug_rref, denom, pivots = Aaug.rref_den()
 
-        if len(pivots) < n:
+        # XXX: We check here if there are pivots after the last column. If
+        # there were than it possibly means that rref_den performed some
+        # unnecessary elimination. It would be better if rref methods had a
+        # parameter indicating how many columns should be used for elimination.
+        if len(pivots) != n or pivots and pivots[-1] >= n:
             raise DMNonInvertibleMatrixError("Non-unique solution.")
 
-        # XXX: What if some pivots are after the nth column?
         xnum = Aaug_rref[:n, n:]
         xden = denom
 
@@ -2368,6 +2378,9 @@ class DomainMatrix:
         # then products like A*(...) are matrix-vector multiplies and products
         # like p[i]*B are scalar-vector multiplies so there are no
         # matrix-matrix multiplies.
+
+        if not p:
+            return B.zeros(B.shape, B.domain, fmt=B.rep.fmt)
 
         p_A_B = p[0]*B
 
