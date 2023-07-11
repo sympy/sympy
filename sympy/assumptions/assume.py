@@ -9,6 +9,7 @@ from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
+from typing import Any
 
 
 class AssumptionsContext(set):
@@ -301,7 +302,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     """
 
     is_Atom = True
-    _arity = None
+    _arity: Any = None
 
     def __new__(cls, *args, **kwargs):
         if cls is Predicate:
