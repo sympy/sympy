@@ -77,3 +77,24 @@ def test_parseable():
     from sympy.parsing.latex.lark import parse_latex_lark
     for latex_str, sympy_expr in GOOD_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+# Temporary testing code to allow for quick prototyping
+def determine_parseable_lark():
+    from sympy.parsing.latex.lark import parse_latex_lark
+
+    failure_list = []
+    for i, (latex_str, sympy_expr) in enumerate(GOOD_PAIRS):
+        try:
+            parse_latex_lark(latex_str)
+        except Exception as e:
+            failure_list.append(i)
+
+    return failure_list
+
+
+if __name__ == "__main__":
+    fail_list = determine_parseable_lark()
+    print(fail_list)
+    print("Failures =", len(fail_list))
+    print("Passes =", len(GOOD_PAIRS) - len(fail_list))
