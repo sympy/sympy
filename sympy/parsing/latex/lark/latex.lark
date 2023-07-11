@@ -52,12 +52,12 @@ FUNC_SEC:  "\\sec"
 FUNC_COT:  "\\cot"
 
 // inverse trigonometric functions
-FUNC_ARCSIN: "\\arcsin" | "\\sin^{-1}"
-FUNC_ARCCOS: "\\arccos" | "\\cos^{-1}"
-FUNC_ARCTAN: "\\arctan" | "\\tan^{-1}"
-FUNC_ARCCSC: "\\arccsc" | "\\csc^{-1}"
-FUNC_ARCSEC: "\\arcsec" | "\\sec^{-1}"
-FUNC_ARCCOT: "\\arccot" | "\\cot^{-1}"
+FUNC_ARCSIN: "\\arcsin"
+FUNC_ARCCOS: "\\arccos"
+FUNC_ARCTAN: "\\arctan"
+FUNC_ARCCSC: "\\arccsc"
+FUNC_ARCSEC: "\\arcsec"
+FUNC_ARCCOT: "\\arccot"
 
 // hyperbolic trigonometric functions
 FUNC_SINH: "\\sinh"
@@ -130,15 +130,10 @@ atomic_expr: oneletter_symbol
 
 atom: atomic_expr
 
-group: L_PAREN expression R_PAREN
-    | L_BRACKET expression R_BRACKET
-    | L_BRACE expression R_BRACE
-    | L_BRACE_LITERAL expression R_BRACE_LITERAL
-
 group_round_parentheses: L_PAREN expression R_PAREN
 group_curly_parentheses: L_BRACE expression R_BRACE
 
-relation: expression_core (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression_core
+relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
 
 expression_core: atom
   | group_round_parentheses
@@ -147,20 +142,30 @@ expression_core: atom
 add: expression ADD expression
 sub: expression SUB expression
 mul: expression MUL_SYMBOL expression
-    | (oneletter_symbol oneletter_symbol | number oneletter_symbol)
+    | implicit_multiplication
 div: expression DIV_SYMBOL expression
 
-group_paren: L_PAREN expression R_PAREN
+implicit_multiplication: (oneletter_symbol oneletter_symbol | number oneletter_symbol)
+    | group_round_parentheses (group_round_parentheses | oneletter_symbol)
+    | function function
 
 expression: expression_core
     | add
     | sub
     | mul
     | div
+    | unary_neg
+    | superscript
     | fraction
     | binomial
     | function
     | ambiguous_sub
+
+unary_neg: SUB expression
+
+superscript.1: expression_core CARET expression
+
+//subscript.1: expression_core UNDERSCORE expression
 
 ambiguous_sub: oneletter_symbol number
 
@@ -177,14 +182,49 @@ basic_fraction.2: CMD_FRAC DIGIT DIGIT expression?
 
 function: abs | floor | ceil
     | trigonometric_function
+    | inverse_trigonometric_function
+    | hyperbolic_trigonometric_function
+    | inverse_hyperbolic_trigonometric_function
+    | exponential
+//    | log
 
-trigonometric_function: sin //| cos | tan | csc | sec | tan
+exponential: FUNC_EXP expression
+
+//log:
+
+trigonometric_function: sin | cos | tan | csc | sec | cot
+
+sin: FUNC_SIN expression
+cos: FUNC_COS expression
+tan: FUNC_TAN expression
+csc: FUNC_CSC expression
+sec: FUNC_SEC expression
+cot: FUNC_COT expression
+
+hyperbolic_trigonometric_function: sinh | cosh | tanh
+
+sinh: FUNC_SINH expression
+cosh: FUNC_COSH expression
+tanh: FUNC_TANH expression
+
+inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
+
+arcsin: FUNC_ARCSIN expression
+arccos: FUNC_ARCCOS expression
+arctan: FUNC_ARCTAN expression
+arccsc: FUNC_ARCCSC expression
+arcsec: FUNC_ARCSEC expression
+arccot: FUNC_ARCCOT expression
+
+inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
+
+asinh: FUNC_ARSINH expression
+acosh: FUNC_ARCOSH expression
+atanh: FUNC_ARTANH expression
 
 abs: BAR expression BAR
 floor: L_FLOOR expression R_FLOOR
 ceil: L_CEIL expression R_CEIL
-
-sin: FUNC_SIN expression
 
 binomial: basic_binomial
     | simple_binomial
