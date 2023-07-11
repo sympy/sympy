@@ -42,6 +42,8 @@ FUNC_PROD: "\\prod"
 FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
+FUNC_LG:   "\\lg"
+
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -131,6 +133,7 @@ atomic_expr: oneletter_symbol
 atom: atomic_expr
 
 group_round_parentheses: L_PAREN expression R_PAREN
+group_square_brackets: L_BRACKET expression R_BRACKET
 group_curly_parentheses: L_BRACE expression R_BRACE
 
 relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
@@ -186,11 +189,22 @@ function: abs | floor | ceil
     | hyperbolic_trigonometric_function
     | inverse_hyperbolic_trigonometric_function
     | exponential
-//    | log
+    | log
+    | square_root
+    | factorial
 
 exponential: FUNC_EXP expression
 
-//log:
+log: FUNC_LOG expression
+    | FUNC_LN expression
+    | FUNC_LG expression
+    | FUNC_LOG UNDERSCORE (DIGIT | oneletter_symbol) expression
+    | FUNC_LOG UNDERSCORE group_curly_parentheses expression
+
+square_root: FUNC_SQRT group_curly_parentheses
+    | FUNC_SQRT group_square_brackets group_curly_parentheses
+
+factorial: expression BANG
 
 trigonometric_function: sin | cos | tan | csc | sec | cot
 
