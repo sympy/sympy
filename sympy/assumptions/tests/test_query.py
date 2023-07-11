@@ -2467,3 +2467,4 @@ def test_issue_25276():
 
     # one to test that error is also thrown for other aritys
     raises(TypeError, lambda: Q.transcendental(x,y,z))
+    raises(TypeError, lambda: Q.transcendental())
