@@ -1255,7 +1255,7 @@ def sdm_irref(A):
     >>> pivots
     [0, 1]
 
-   The analogous calculation with :py:class:`~.Matrix` would be
+    The analogous calculation with :py:class:`~.MutableDenseMatrix` would be
 
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2], [3, 4]])
@@ -1282,7 +1282,6 @@ def sdm_irref(A):
     The elements of the matrix should support exact division with ``/``. For
     example elements of any domain that is a field (e.g. ``QQ``) should be
     fine. No attempt is made to handle inexact arithmetic.
-
     """
     #
     # Any zeros in the matrix are not stored at all so an element is zero if

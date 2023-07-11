@@ -564,7 +564,16 @@ class DDM(list):
         return a.to_sdm().scc()
 
     def rref(a):
-        """Reduced-row echelon form of a and list of pivots"""
+        """Reduced-row echelon form of a and list of pivots.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.rref
+            Higher level interface to this function.
+        sympy.polys.matrices.dense.ddm_irref
+            The underlying algorithm.
+        """
         b = a.copy()
         K = a.domain
         partial_pivot = K.is_RealField or K.is_ComplexField
@@ -572,7 +581,16 @@ class DDM(list):
         return b, pivots
 
     def rref_den(a):
-        """Reduced-row echelon form of a and list of pivots"""
+        """Reduced-row echelon form of a with denominator and list of pivots
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
+            Higher level interface to this function.
+        sympy.polys.matrices.dense.ddm_irref_den
+            The underlying algorithm.
+        """
         b = a.copy()
         K = a.domain
         denom, pivots = ddm_irref_den(b, K)

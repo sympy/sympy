@@ -45,7 +45,10 @@ from typing import Sequence, TypeVar
 from sympy.polys.matrices._typing import RingElement
 
 
+#: Type variable for the elements of the matrix
 T = TypeVar('T')
+
+#: Type variable for the elements of the matrix that are in a ring
 R = TypeVar('R', bound=RingElement)
 
 
@@ -101,7 +104,7 @@ def ddm_imatmul(
 
 
 def ddm_irref(a, _partial_pivot=False):
-    """a  <--  rref(a)
+    """In-place reduced row echelon form of a matrix.
 
     Compute the reduced row echelon form of $a$. Modifies $a$ in place and
     returns a list of the pivot columns.
@@ -115,7 +118,7 @@ def ddm_irref(a, _partial_pivot=False):
     free approaches.
 
     This method is not suitable for use with rational function fields
-    (:ref:`QQ(x)`) because the elements will blowup leading to costly gcd
+    (:ref:`K(x)`) because the elements will blowup leading to costly gcd
     operations. In this case clearing denominators and using fraction free
     approaches is likely to be more efficient.
 
@@ -137,8 +140,12 @@ def ddm_irref(a, _partial_pivot=False):
     See Also
     ========
 
-    sdm_rref: A sparse version of this routine.
-    DomainMatrix.rref: Higher level interface.
+    sympy.polys.matrices.domainmatrix.DomainMatrix.rref
+        Higher level interface to this routine.
+    ddm_irref_den
+        The fraction free version of this routine.
+    sdm_irref
+        A sparse version of this routine.
 
     References
     ==========
@@ -222,8 +229,8 @@ def ddm_irref_den(a, K):
     The domain $K$ must support exact division (``K.exquo``) but does not need
     to be a field. This method is suitable for most exact rings and fields like
     :ref:`ZZ`, :ref:`QQ` and :ref:`QQ(a)`. In the case of :ref:`QQ` or
-    :ref:`QQ(x)` it might be more efficient to clear denominators and use
-    :ref:`ZZ` or :ref:`ZZ[x]` instead.
+    :ref:`K(x)` it might be more efficient to clear denominators and use
+    :ref:`ZZ` or :ref:`K[x]` instead.
 
     For inexact domains like :ref:`RR` and :ref:`CC` use ``ddm_irref`` instead.
 
@@ -248,14 +255,17 @@ def ddm_irref_den(a, K):
     See Also
     ========
 
-    ddm_irref: A version of this routine that uses field division.
-    sdm_rref: A sparse version of :func:`ddm_irref`.
-    DomainMatrix.rref_den: Higher level interface.
+    ddm_irref
+        A version of this routine that uses field division.
+    sdm_irref
+        A sparse version of :func:`ddm_irref`.
+    sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
+        Higher level interface.
 
     References
     ==========
 
-    .. [1]: Fraction-free algorithms for linear and polynomial equations.
+    .. [1] Fraction-free algorithms for linear and polynomial equations.
         George C. Nakos , Peter R. Turner , Robert M. Williams.
         https://dl.acm.org/doi/10.1145/271130.271133
     """
@@ -417,7 +427,7 @@ def ddm_idet(a, K):
     See Also
     ========
 
-    DomainMatrix.det
+    sympy.polys.matrices.domainmatrix.DomainMatrix.det
 
     References
     ==========
@@ -559,7 +569,7 @@ def ddm_ilu(a):
     Uses division in the ground domain which should be an exact field.
 
     This is only suitable for domains like :ref:`GF(p)`, :ref:`QQ`, :ref:`QQ_I`
-    and :ref:`QQ(a)`. With a rational function field like :ref:`QQ(x)` it is
+    and :ref:`QQ(a)`. With a rational function field like :ref:`K(x)` it is
     better to clear denominators and use division-free algorithms. Pivoting is
     used to avoid exact zeros but not for floating point accuracy so :ref:`RR`
     and :ref:`CC` are not suitable (use :func:`ddm_irref` instead).
@@ -597,7 +607,7 @@ def ddm_ilu(a):
 
     ddm_irref
     ddm_ilu_solve
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     """
     m = len(a)
     if not m:
@@ -659,7 +669,11 @@ def ddm_ilu_solve(x, L, U, swaps, b):
     ========
 
     ddm_ilu
-    DomainMatrix.lu
+        Compute the LU decomposition of a matrix in place.
+    ddm_ilu_split
+        Compute the LU decomposition of a matrix and separate $L$ and $U$.
+    sympy.polys.matrices.domainmatrix.DomainMatrix.lu_solve
+        Higher level interface to this function.
     """
     m = len(U)
     if not m:
@@ -733,7 +747,8 @@ def ddm_berk(M, K):
     See Also
     ========
 
-    DomainMatrix.charpoly
+    sympy.polys.matrices.domainmatrix.DomainMatrix.charpoly
+        The high-level interface to this function.
 
     References
     ==========
