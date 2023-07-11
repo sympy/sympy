@@ -59,31 +59,31 @@ class KanesMethod(_Methods):
 
     frame : ReferenceFrame
         The inertial reference frame for the system.
-    q_ind : iterable
+    q_ind : iterable of dynamicsymbols
         Independent generalized coordinates.
-    u_ind : iterable
+    u_ind : iterable of dynamicsymbols
         Independent generalized speeds.
-    kd_eqs : iterable, optional
+    kd_eqs : iterable of Expr, optional
         Kinematic differential equations, which linearly relate the generalized
         speeds to the time-derivatives of the generalized coordinates.
-    q_dependent : iterable, optional
+    q_dependent : iterable of dynamicsymbols, optional
         Dependent generalized coordinates.
-    configuration_constraints : iterable, optional
+    configuration_constraints : iterable of Expr, optional
         Constraints on the system's configuration, i.e. holonomic constraints.
-    u_dependent : iterable, optional
+    u_dependent : iterable of dynamicsymbols, optional
         Dependent generalized speeds.
-    velocity_constraints : iterable, optional
+    velocity_constraints : iterable of Expr, optional
         Constraints on the system's velocity, i.e. the combination of the
         nonholonomic constraints and the time-derivative of the holonomic
         constraints.
-    acceleration_constraints : iterable, optional
+    acceleration_constraints : iterable of Expr, optional
         Constraints on the system's acceleration, by default these are the
         time-derivative of the velocity constraints.
-    u_auxiliary : iterable, optional
+    u_auxiliary : iterable of dynamicsymbols, optional
         Auxiliary generalized speeds.
-    bodies : iterable, optional
+    bodies : iterable of Particle and/or RigidBody, optional
         The particles and rigid bodies in the system.
-    forcelist : iterable, optional
+    forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
         Forces and torques applied on the system.
     explicit_kinematics : bool
         Boolean whether the mass matrices and forcing vectors should use the
