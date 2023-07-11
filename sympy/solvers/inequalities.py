@@ -1095,8 +1095,8 @@ def _simplex(A, B, C, skip_phase_2=False):
 
     # It's important that False < True so that x variables are given priority
     # over the y variables during Bland's rule
-    r_orig = [(False, j) for j in range(M.cols - 1)] # what Ferguson's paper calls 'x' variables
-    s_orig = [(True, i)  for i in range(M.rows - 1)] # what Ferguson's paper calls 'y' variables
+    r_orig = [(False, j) for j in range(M.cols - 1)] # what Ferguson's introduction calls 'x' variables
+    s_orig = [(True, i)  for i in range(M.rows - 1)] # what Ferguson's introduction calls 'y' variables
 
     R = r_orig.copy()
     S = s_orig.copy()
