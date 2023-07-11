@@ -23,7 +23,7 @@ def parse_latex_lark(s: str, *, logger=False):
     with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
         latex_grammar = f.read()
 
-    parser = _lark.Lark(latex_grammar, parser='earley', start='string',
+    parser = _lark.Lark(latex_grammar, parser='earley', start='latex_string',
                         lexer='auto',
                         ambiguity='explicit',
                         debug=True,
@@ -46,3 +46,7 @@ def mypretty(tree):
         data = data.value
     output = str(data) + "(" + ", ".join([i for i in tree.children]) + ")"
     return output
+
+if __name__ == "__main__":
+    # temporary, for sanity testing and catching errors in the lark grammar.
+    parse_latex_lark(r"\frac{1 + 1}{7\cdot 6} + 7")
