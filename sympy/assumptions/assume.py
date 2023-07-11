@@ -321,7 +321,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         """
         if cls.handler is None:
             raise TypeError("%s cannot be dispatched." % type(cls))
-        if hasattr(cls, '_arity') and cls._arity != len(types):
+        if cls._arity and cls._arity != len(types):
             raise TypeError(f"{type(cls)} only accepts signatures with {cls._arity} argument(s)")
         return cls.handler.register(*types, **kwargs)
 
@@ -338,7 +338,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         return _
 
     def __call__(self, *args):
-        if hasattr(self, '_arity') and len(args) != self._arity:
+        if self._arity is not None and len(args) != self._arity:
                 raise TypeError(f"{type(self)} requires {self._arity} arguments but only {len(args)} were given")
         return AppliedPredicate(self, *args)
 
