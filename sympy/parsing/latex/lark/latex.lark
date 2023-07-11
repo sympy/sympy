@@ -8,6 +8,7 @@
 
 %ignore "\\left"
 %ignore "\\right"
+%ignore "\\limits"
 
 ///////////////////// tokens ///////////////////////
 
@@ -77,6 +78,7 @@ CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
 CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
+CMD_OVERLINE: "\\overline"
 
 CMD_MATHIT: "\\mathit"
 
@@ -153,18 +155,25 @@ implicit_multiplication: (oneletter_symbol oneletter_symbol | number oneletter_s
     | function function
 
 expression: expression_core
-    | add
-    | sub
-    | mul
-    | div
+    | add | sub | mul | div
     | unary_neg
     | superscript
     | fraction
     | binomial
     | function
     | ambiguous_sub
+    | integral
+//    | limit
+
+//limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim expression
+
+//group_curly_parentheses_lim: L_BRACE atomic_expr LIM_APPROACH_SYM  R_BRACE
 
 unary_neg: SUB expression
+
+integral: FUNC_INT expression "d"oneletter_symbol
+    | FUNC_INT (UNDERSCORE (group_curly_parentheses | atomic_expr) CARET (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
+    | FUNC_INT (CARET (group_curly_parentheses | atomic_expr) UNDERSCORE (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
 
 superscript.1: expression_core CARET expression
 
@@ -184,14 +193,13 @@ simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses expression?
 basic_fraction.2: CMD_FRAC DIGIT DIGIT expression?
 
 function: abs | floor | ceil
-    | trigonometric_function
-    | inverse_trigonometric_function
-    | hyperbolic_trigonometric_function
-    | inverse_hyperbolic_trigonometric_function
+    | trigonometric_function | inverse_trigonometric_function
+    | hyperbolic_trigonometric_function | inverse_hyperbolic_trigonometric_function
     | exponential
     | log
     | square_root
     | factorial
+    | conjugate
 
 exponential: FUNC_EXP expression
 
@@ -205,6 +213,9 @@ square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
 
 factorial: expression BANG
+
+conjugate: CMD_OVERLINE group_curly_parentheses
+    | CMD_OVERLINE DIGIT
 
 trigonometric_function: sin | cos | tan | csc | sec | cot
 
