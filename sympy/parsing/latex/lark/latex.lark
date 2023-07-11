@@ -75,8 +75,8 @@ CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
 CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
-CMD_DBINOM: "\\dbinom"
-CMD_TBINOM: "\\tbinom"
+
+CMD_MATHIT: "\\mathit"
 
 CMD_INFTY: "\\infty"
 
@@ -94,8 +94,8 @@ LTE: "\\leq" | "\\le"
 GT: ">"
 GTE: "\\geq" | "\\ge"
 
-DIVISION: CMD_DIV | DIV
-MULTIPLICATION: MUL | CMD_TIMES | CMD_CDOT
+DIV_SYMBOL: CMD_DIV | DIV
+MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
 // SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
@@ -103,7 +103,10 @@ MULTIPLICATION: MUL | CMD_TIMES | CMD_CDOT
 SYMBOL.1: /[a-zA-Z]/
 SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
+WORD: /[a-zA-Z]+/
+
 %import common.INT -> UNSIGNED_INT
+%import common.DIGIT -> DIGIT
 %import common.SIGNED_INT -> SIGNED_INT
 %import common.SIGNED_FLOAT -> SIGNED_FLOAT
 %import common.DECIMAL -> UNSIGNED_FLOAT
@@ -111,18 +114,17 @@ SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]
 INT: SIGNED_INT | UNSIGNED_INT
 FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
-//%import common.INT -> INT
-//%import common.DECIMAL -> FLOAT
-
 //////////////////// grammar //////////////////////
 
-string: relation | expression | ambiguous_sub
+latex_string: relation | expression
 
 oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
+multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
 number: INT | FLOAT
 infinity: CMD_INFTY
 
 atomic_expr: oneletter_symbol
+    | multiletter_symbol
     | number
     | infinity
 
@@ -133,36 +135,67 @@ group: L_PAREN expression R_PAREN
     | L_BRACE expression R_BRACE
     | L_BRACE_LITERAL expression R_BRACE_LITERAL
 
-abs_group: BAR expression BAR
-floor_group: L_FLOOR expression R_FLOOR
-ceil_group: L_CEIL expression R_CEIL
+group_round_parentheses: L_PAREN expression R_PAREN
+group_curly_parentheses: L_BRACE expression R_BRACE
 
-relation: atom (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) atom
+relation: expression_core (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression_core
+
+expression_core: atom
+  | group_round_parentheses
+  | group_curly_parentheses
 
 add: expression ADD expression
 sub: expression SUB expression
-mul: expression MUL expression | (oneletter_symbol oneletter_symbol | number oneletter_symbol)
-div: expression DIV expression
+mul: expression MUL_SYMBOL expression
+    | (oneletter_symbol oneletter_symbol | number oneletter_symbol)
+div: expression DIV_SYMBOL expression
 
 group_paren: L_PAREN expression R_PAREN
 
-expression: atom
+expression: expression_core
     | add
     | sub
     | mul
     | div
-    | expression_curly
     | fraction
+    | binomial
+    | function
     | ambiguous_sub
-    | group_paren
 
 ambiguous_sub: oneletter_symbol number
 
-expression_curly: L_BRACE expression R_BRACE
+fraction: basic_fraction
+    | simple_fraction
+    | general_fraction
 
-fraction: CMD_FRAC expression expression
+general_fraction.0: CMD_FRAC group_curly_parentheses group_curly_parentheses expression?
 
-binomial: CMD_BINOM L_BRACE group R_BRACE L_BRACE group R_BRACE
+simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses expression?
+    | CMD_FRAC group_curly_parentheses DIGIT expression?
+
+basic_fraction.2: CMD_FRAC DIGIT DIGIT expression?
+
+function: abs | floor | ceil
+    | trigonometric_function
+
+trigonometric_function: sin //| cos | tan | csc | sec | tan
+
+abs: BAR expression BAR
+floor: L_FLOOR expression R_FLOOR
+ceil: L_CEIL expression R_CEIL
+
+sin: FUNC_SIN expression
+
+binomial: basic_binomial
+    | simple_binomial
+    | general_binomial
+
+general_binomial.0: CMD_BINOM group_curly_parentheses group_curly_parentheses expression?
+
+simple_binomial.1: CMD_BINOM DIGIT group_curly_parentheses expression?
+    | CMD_FRAC group_curly_parentheses DIGIT expression?
+
+basic_binomial.2: CMD_BINOM DIGIT DIGIT expression?
 
 //sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
 
@@ -173,3 +206,22 @@ binomial: CMD_BINOM L_BRACE group R_BRACE L_BRACE group R_BRACE
 //       | FUNC_PROD sup_expression sub_equation expr
 
 //limit: FUNC_LIM sub_limit expr
+
+
+//expression = ... | application | ...
+
+//application = ... | function | ...
+
+//function = ... | trigonometric_function | ...
+
+//trigonometric_function = ... | sin | ...
+
+//sin: "\\sin" expression
+
+//expression_core: symbol
+//  | number
+//  | group_round_parentheses
+//  | group_curly_parenthese
+
+//expression: expression_core
+//  | add | mul | sub | div
