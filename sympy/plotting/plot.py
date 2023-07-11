@@ -91,10 +91,9 @@ def _deprecation_msg_m_a_r_f(attr):
         stacklevel=4)
 
 class Plot:
-    """The central class of the plotting module.
-
-    Explanation
-    ===========
+    """Base class for all backends. A backend represents the plotting library,
+    which implements the necessary functionalities in order to use SymPy
+    plotting functions.
 
     For interactive work the function :func:`plot()` is better suited.
 
@@ -196,6 +195,54 @@ class Plot:
     Aesthetics:
 
     - surface_color : function which returns a float.
+
+    Notes
+    =====
+
+    How the plotting module works:
+
+    1. Whenever a plotting function is called, the provided expressions are
+       processed and a list of instances of the :class:`BaseSeries` class is
+       created, containing the necessary information to plot the expressions
+       (e.g. the expression, ranges, series name, ...). Eventually, these
+       objects will generate the numerical data to be plotted.
+    2. A subclass of :class:`~.Plot` class is instantiaed (referred to as
+       backend, from now on), which stores the list of series and the main
+       attributes of the plot (e.g. axis labels, title, ...).
+       The backend implements the logic to generate the actual figure with
+       some plotting library.
+    3. When the ``show`` command is executed, series are processed one by one
+       to generate numerical data and add it to the figure. The backend is also
+       going to set the axis labels, title, ..., according to the values stored
+       in the Plot instance.
+
+    The backend should check if it supports the data series that it is given
+    (e.g. :class:`TextBackend` supports only :class:`LineOver1DRangeSeries`).
+
+    It is the backend responsibility to know how to use the class of data series
+    that it's given. Note that the current implementation of the ``*Series``
+    classes is "matplotlib-centric": the numerical data returned by the
+    ``get_points`` and ``get_meshes`` methods is meant to be used directly by
+    Matplotlib. Therefore, the new backend will have to pre-process the
+    numerical data to make it compatible with the chosen plotting library.
+    Keep in mind that future SymPy versions may improve the ``*Series`` classes
+    in order to return numerical data "non-matplotlib-centric", hence if you code
+    a new backend you have the responsibility to check if its working on each
+    SymPy release.
+
+    Please explore the :class:`MatplotlibBackend` source code to understand
+    how a backend should be coded.
+
+    In order to be used by SymPy plotting functions, a backend must implement
+    the following methods:
+
+    * show(self): used to loop over the data series, generate the numerical
+        data, plot it and set the axis labels, title, ...
+    * save(self, path): used to save the current plot to the specified file
+        path.
+    * close(self): used to close the current plot backend (note: some plotting
+        library does not support this functionality. In that case, just raise a
+        warning).
     """
 
     def __init__(self, *args,
@@ -204,7 +251,6 @@ class Plot:
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
         fill=None, backend='default', size=None, **kwargs):
-        super().__init__()
 
         # Options for the graph as a whole.
         # The possible values for each option are described in the docstring of
@@ -234,17 +280,6 @@ class Plot:
             annotations=annotations, markers=markers, rectangles=rectangles,
             fill=fill))
 
-        # The backend type. On every show() a new backend instance is created
-        # in self._backend which is tightly coupled to the Plot instance
-        # (thanks to the parent attribute of the backend).
-        if isinstance(backend, str):
-            self.backend = plot_backends[backend]
-        elif (type(backend) == type) and issubclass(backend, BaseBackend):
-            self.backend = backend
-        else:
-            raise TypeError(
-                "backend must be either a string or a subclass of BaseBackend")
-
         is_real = \
             lambda lim: all(getattr(i, 'is_real', True) for i in lim)
         is_finite = \
@@ -268,18 +303,13 @@ class Plot:
         self.size = None
         check_and_set("size", size)
 
-    def show(self):
-        # TODO move this to the backend (also for save)
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
-        self._backend.show()
+    @property
+    def _backend(self):
+        return self
 
-    def save(self, path):
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
-        self._backend.save(path)
+    @property
+    def backend(self):
+        return type(self)
 
     def __str__(self):
         series_strs = [('[%d]: ' % i) + str(s)
@@ -366,6 +396,15 @@ class Plot:
             self._series.extend(arg)
         else:
             raise TypeError('Expecting Plot or sequence of BaseSeries')
+
+    def show(self):
+        raise NotImplementedError
+
+    def save(self, path):
+        raise NotImplementedError
+
+    def close(self):
+        raise NotImplementedError
 
     # deprecations
 
@@ -533,28 +572,62 @@ class PlotGrid:
             the overall figure. The default value is set to ``None``, meaning
             the size will be set by the default backend.
         """
+        self.matplotlib = import_module('matplotlib',
+            import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+            min_module_version='1.1.0', catch=(RuntimeError,))
         self.nrows = nrows
         self.ncolumns = ncolumns
         self._series = []
+        self._fig = None
         self.args = args
         for arg in args:
             self._series.append(arg._series)
-        self.backend = DefaultBackend
         self.size = size
-        if show:
+        if show and self.matplotlib:
             self.show()
 
+    def _create_figure(self):
+        gs = self.matplotlib.gridspec.GridSpec(self.nrows, self.ncolumns)
+        mapping = {}
+        c = 0
+        for i in range(self.nrows):
+            for j in range(self.ncolumns):
+                if c < len(self.args):
+                    mapping[gs[i, j]] = self.args[c]
+                c += 1
+
+        kw = {} if not self.size else {"figsize": self.size}
+        self._fig = self.matplotlib.pyplot.figure(**kw)
+        for spec, p in mapping.items():
+            kw = ({"projection": "3d"} if (len(p._series) > 0 and
+                p._series[0].is_3D) else {})
+            cur_ax = self._fig.add_subplot(spec, **kw)
+            p._plotgrid_fig = self._fig
+            p._plotgrid_ax = cur_ax
+            p.process_series()
+
+    @property
+    def fig(self):
+        if not self._fig:
+            self._create_figure()
+        return self._fig
+
+    @property
+    def _backend(self):
+        return self
+
+    def close(self):
+        self.matplotlib.pyplot.close(self.fig)
+
     def show(self):
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
-        self._backend.show()
+        if _show:
+            self.fig.tight_layout()
+            self.matplotlib.pyplot.show()
+        else:
+            self.close()
 
     def save(self, path):
-        if hasattr(self, '_backend'):
-            self._backend.close()
-        self._backend = self.backend(self)
-        self._backend.save(path)
+        self.fig.savefig(path)
 
     def __str__(self):
         plot_strs = [('Plot[%d]:' % i) + str(plot)
@@ -562,6 +635,21 @@ class PlotGrid:
 
         return 'PlotGrid object containing:\n' + '\n'.join(plot_strs)
 
+
+def plot_factory(*args, **kwargs):
+    backend = kwargs.pop("backend", "default")
+    if isinstance(backend, str):
+        if backend == "default":
+            matplotlib = import_module('matplotlib',
+                min_module_version='1.1.0', catch=(RuntimeError,))
+            if matplotlib:
+                return MatplotlibBackend(*args, **kwargs)
+            return TextBackend(*args, **kwargs)
+        return plot_backends[backend](*args, **kwargs)
+    elif (type(backend) == type) and issubclass(backend, Plot):
+        return backend(*args, **kwargs)
+    else:
+        raise TypeError("backend must be either a string or a subclass of ``Plot``.")
 
 ##############################################################################
 # Data Series
@@ -1384,123 +1472,51 @@ class GenericDataSeries(BaseSeries):
 # Backends
 ##############################################################################
 
-class BaseBackend:
-    """Base class for all backends. A backend represents the plotting library,
-    which implements the necessary functionalities in order to use SymPy
-    plotting functions.
-
-    How the plotting module works:
-
-    1. Whenever a plotting function is called, the provided expressions are
-        processed and a list of instances of the :class:`BaseSeries` class is
-        created, containing the necessary information to plot the expressions
-        (e.g. the expression, ranges, series name, ...). Eventually, these
-        objects will generate the numerical data to be plotted.
-    2. A :class:`~.Plot` object is instantiated, which stores the list of
-        series and the main attributes of the plot (e.g. axis labels, title, ...).
-    3. When the ``show`` command is executed, a new backend is instantiated,
-        which loops through each series object to generate and plot the
-        numerical data. The backend is also going to set the axis labels, title,
-        ..., according to the values stored in the Plot instance.
-
-    The backend should check if it supports the data series that it is given
-    (e.g. :class:`TextBackend` supports only :class:`LineOver1DRangeSeries`).
-
-    It is the backend responsibility to know how to use the class of data series
-    that it's given. Note that the current implementation of the ``*Series``
-    classes is "matplotlib-centric": the numerical data returned by the
-    ``get_points`` and ``get_meshes`` methods is meant to be used directly by
-    Matplotlib. Therefore, the new backend will have to pre-process the
-    numerical data to make it compatible with the chosen plotting library.
-    Keep in mind that future SymPy versions may improve the ``*Series`` classes
-    in order to return numerical data "non-matplotlib-centric", hence if you code
-    a new backend you have the responsibility to check if its working on each
-    SymPy release.
-
-    Please explore the :class:`MatplotlibBackend` source code to understand how a
-    backend should be coded.
-
-    Methods
-    =======
-
-    In order to be used by SymPy plotting functions, a backend must implement
-    the following methods:
-
-    * show(self): used to loop over the data series, generate the numerical
-        data, plot it and set the axis labels, title, ...
-    * save(self, path): used to save the current plot to the specified file
-        path.
-    * close(self): used to close the current plot backend (note: some plotting
-        library does not support this functionality. In that case, just raise a
-        warning).
-
-    See also
-    ========
-
-    MatplotlibBackend
-    """
-    def __init__(self, parent):
-        super().__init__()
-        self.parent = parent
-
-    def show(self):
-        raise NotImplementedError
-
-    def save(self, path):
-        raise NotImplementedError
-
-    def close(self):
-        raise NotImplementedError
-
 
 # Don't have to check for the success of importing matplotlib in each case;
 # we will only be using this backend if we can successfully import matploblib
-class MatplotlibBackend(BaseBackend):
+class MatplotlibBackend(Plot):
     """ This class implements the functionalities to use Matplotlib with SymPy
     plotting functions.
     """
-    def __init__(self, parent):
-        super().__init__(parent)
+
+    def __init__(self, *series, **kwargs):
+        super().__init__(*series, **kwargs)
         self.matplotlib = import_module('matplotlib',
             import_kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
             min_module_version='1.1.0', catch=(RuntimeError,))
         self.plt = self.matplotlib.pyplot
         self.cm = self.matplotlib.cm
         self.LineCollection = self.matplotlib.collections.LineCollection
-        aspect = getattr(self.parent, 'aspect_ratio', 'auto')
-        if aspect != 'auto':
-            aspect = float(aspect[1]) / aspect[0]
+        self.aspect = kwargs.get('aspect_ratio', 'auto')
+        if self.aspect != 'auto':
+            self.aspect = float(self.aspect[1]) / self.aspect[0]
+        # PlotGrid can provide its figure and axes to be populated with
+        # the data from the series.
+        self._plotgrid_fig = kwargs.pop("fig", None)
+        self._plotgrid_ax = kwargs.pop("ax", None)
 
-        if isinstance(self.parent, Plot):
-            nrows, ncolumns = 1, 1
-            series_list = [self.parent._series]
-        elif isinstance(self.parent, PlotGrid):
-            nrows, ncolumns = self.parent.nrows, self.parent.ncolumns
-            series_list = self.parent._series
+    def _create_figure(self):
+        def set_spines(ax):
+            ax.spines['left'].set_position('zero')
+            ax.spines['right'].set_color('none')
+            ax.spines['bottom'].set_position('zero')
+            ax.spines['top'].set_color('none')
+            ax.xaxis.set_ticks_position('bottom')
+            ax.yaxis.set_ticks_position('left')
 
-        self.ax = []
-        self.fig = self.plt.figure(figsize=parent.size)
-
-        for i, series in enumerate(series_list):
-            are_3D = [s.is_3D for s in series]
-
-            if any(are_3D) and not all(are_3D):
-                raise ValueError('The matplotlib backend cannot mix 2D and 3D.')
-            elif all(are_3D):
-                # mpl_toolkits.mplot3d is necessary for
-                # projection='3d'
-                mpl_toolkits = import_module('mpl_toolkits', # noqa
-                                     import_kwargs={'fromlist': ['mplot3d']})
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, projection='3d', aspect=aspect))
-
-            elif not any(are_3D):
-                self.ax.append(self.fig.add_subplot(nrows, ncolumns, i + 1, aspect=aspect))
-                self.ax[i].spines['left'].set_position('zero')
-                self.ax[i].spines['right'].set_color('none')
-                self.ax[i].spines['bottom'].set_position('zero')
-                self.ax[i].spines['top'].set_color('none')
-                self.ax[i].xaxis.set_ticks_position('bottom')
-                self.ax[i].yaxis.set_ticks_position('left')
+        if self._plotgrid_fig is not None:
+            self.fig = self._plotgrid_fig
+            self.ax = self._plotgrid_ax
+            if not any(s.is_3D for s in self._series):
+                set_spines(self.ax)
+        else:
+            self.fig = self.plt.figure(figsize=self.size)
+            if any(s.is_3D for s in self._series):
+                self.ax = self.fig.add_subplot(1, 1, 1, projection="3d")
+            else:
+                self.ax = self.fig.add_subplot(1, 1, 1)
+                set_spines(self.ax)
 
     @staticmethod
     def get_segments(x, y, z=None):
@@ -1528,7 +1544,7 @@ class MatplotlibBackend(BaseBackend):
         points = np.ma.array(points).T.reshape(-1, 1, dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
 
-    def _process_series(self, series, ax, parent):
+    def _process_series(self, series, ax):
         np = import_module('numpy')
         mpl_toolkits = import_module(
             'mpl_toolkits', import_kwargs={'fromlist': ['mplot3d']})
@@ -1652,14 +1668,14 @@ class MatplotlibBackend(BaseBackend):
         # Set global options.
         # TODO The 3D stuff
         # XXX The order of those is important.
-        if parent.xscale and not isinstance(ax, Axes3D):
-            ax.set_xscale(parent.xscale)
-        if parent.yscale and not isinstance(ax, Axes3D):
-            ax.set_yscale(parent.yscale)
+        if self.xscale and not isinstance(ax, Axes3D):
+            ax.set_xscale(self.xscale)
+        if self.yscale and not isinstance(ax, Axes3D):
+            ax.set_yscale(self.yscale)
         if not isinstance(ax, Axes3D) or self.matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
-            ax.set_autoscale_on(parent.autoscale)
-        if parent.axis_center:
-            val = parent.axis_center
+            ax.set_autoscale_on(self.autoscale)
+        if self.axis_center:
+            val = self.axis_center
             if isinstance(ax, Axes3D):
                 pass
             elif val == 'center':
@@ -1675,32 +1691,33 @@ class MatplotlibBackend(BaseBackend):
             else:
                 ax.spines['left'].set_position(('data', val[0]))
                 ax.spines['bottom'].set_position(('data', val[1]))
-        if not parent.axis:
+        if not self.axis:
             ax.set_axis_off()
-        if parent.legend:
+        if self.legend:
             if ax.legend():
-                ax.legend_.set_visible(parent.legend)
-        if parent.margin:
-            ax.set_xmargin(parent.margin)
-            ax.set_ymargin(parent.margin)
-        if parent.title:
-            ax.set_title(parent.title)
-        if parent.xlabel:
-            xlbl = _str_or_latex(parent.xlabel)
+                ax.legend_.set_visible(self.legend)
+        if self.margin:
+            ax.set_xmargin(self.margin)
+            ax.set_ymargin(self.margin)
+        if self.title:
+            ax.set_title(self.title)
+        if self.xlabel:
+            xlbl = _str_or_latex(self.xlabel)
             ax.set_xlabel(xlbl, position=(1, 0))
-        if parent.ylabel:
-            ylbl = _str_or_latex(parent.ylabel)
+        if self.ylabel:
+            ylbl = _str_or_latex(self.ylabel)
             ax.set_ylabel(ylbl, position=(0, 1))
-        if isinstance(ax, Axes3D) and parent.zlabel:
-            zlbl = _str_or_latex(parent.zlabel)
+        if isinstance(ax, Axes3D) and self.zlabel:
+            zlbl = _str_or_latex(self.zlabel)
             ax.set_zlabel(zlbl, position=(0, 1))
 
         # xlim and ylim should always be set at last so that plot limits
         # doesn't get altered during the process.
-        if parent.xlim:
-            ax.set_xlim(parent.xlim)
-        if parent.ylim:
-            ax.set_ylim(parent.ylim)
+        if self.xlim:
+            ax.set_xlim(self.xlim)
+        if self.ylim:
+            ax.set_ylim(self.ylim)
+        self.ax.set_aspect(self.aspect)
 
 
     def process_series(self):
@@ -1708,16 +1725,8 @@ class MatplotlibBackend(BaseBackend):
         Iterates over every ``Plot`` object and further calls
         _process_series()
         """
-        parent = self.parent
-        if isinstance(parent, Plot):
-            series_list = [parent._series]
-        else:
-            series_list = parent._series
-
-        for i, (series, ax) in enumerate(zip(series_list, self.ax)):
-            if isinstance(self.parent, PlotGrid):
-                parent = self.parent.args[i]
-            self._process_series(series, ax, parent)
+        self._create_figure()
+        self._process_series(self._series, self.ax)
 
     def show(self):
         self.process_series()
@@ -1738,40 +1747,30 @@ class MatplotlibBackend(BaseBackend):
         self.plt.close(self.fig)
 
 
-class TextBackend(BaseBackend):
-    def __init__(self, parent):
-        super().__init__(parent)
+class TextBackend(Plot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def show(self):
         if not _show:
             return
-        if len(self.parent._series) != 1:
+        if len(self._series) != 1:
             raise ValueError(
                 'The TextBackend supports only one graph per Plot.')
-        elif not isinstance(self.parent._series[0], LineOver1DRangeSeries):
+        elif not isinstance(self._series[0], LineOver1DRangeSeries):
             raise ValueError(
                 'The TextBackend supports only expressions over a 1D range')
         else:
-            ser = self.parent._series[0]
+            ser = self._series[0]
             textplot(ser.expr, ser.start, ser.end)
 
     def close(self):
         pass
 
 
-class DefaultBackend(BaseBackend):
-    def __new__(cls, parent):
-        matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
-        if matplotlib:
-            return MatplotlibBackend(parent)
-        else:
-            return TextBackend(parent)
-
-
 plot_backends = {
     'matplotlib': MatplotlibBackend,
     'text': TextBackend,
-    'default': DefaultBackend
 }
 
 
@@ -2043,7 +2042,7 @@ def plot(*args, show=True, **kwargs):
     plot_expr = check_arguments(args, 1, 1)
     series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
 
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2235,7 +2234,7 @@ def plot_parametric(*args, show=True, **kwargs):
     series = []
     plot_expr = check_arguments(args, 2, 1)
     series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2363,7 +2362,7 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2509,7 +2508,7 @@ def plot3d(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", series[0].var_x)
     kwargs.setdefault("ylabel", series[0].var_y)
     kwargs.setdefault("zlabel", Function('f')(series[0].var_x, series[0].var_y))
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2628,7 +2627,7 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
-    plots = Plot(*series, **kwargs)
+    plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
     return plots
@@ -2718,7 +2717,7 @@ def plot_contour(*args, show=True, **kwargs):
     args = list(map(sympify, args))
     plot_expr = check_arguments(args, 1, 2)
     series = [ContourSeries(*arg) for arg in plot_expr]
-    plot_contours = Plot(*series, **kwargs)
+    plot_contours = plot_factory(*series, **kwargs)
     if len(plot_expr[0].free_symbols) > 2:
         raise ValueError('Contour Plot cannot Plot for more than two variables.')
     if show:
