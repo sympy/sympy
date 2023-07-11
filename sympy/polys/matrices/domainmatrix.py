@@ -43,15 +43,15 @@ def DM(rows, domain):
     """Convenient alias for DomainMatrix.from_list
 
     Examples
-    =======
+    ========
 
     >>> from sympy import ZZ
     >>> from sympy.polys.matrices import DM
     >>> DM([[1, 2], [3, 4]], ZZ)
     DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
 
-    See also
-    =======
+    See Also
+    ========
 
     DomainMatrix.from_list
     """
@@ -1828,7 +1828,13 @@ class DomainMatrix:
         ========
 
         adjugate
+            Returns only the adjugate matrix.
         det
+            Returns only the determinant.
+        inv_den
+            Returns a matrix/denominator pair representing the inverse matrix
+            but perhaps differing from the adjugate and determinant by a common
+            factor.
         """
         m, n = self.shape
         I_m = self.eye((m, m), self.domain)
