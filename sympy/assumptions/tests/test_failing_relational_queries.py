@@ -12,14 +12,18 @@ from sympy.abc import a, b, c, w, x, y, z
 def test_inequalities():
 
     # inequalities only make sense over real numbers
-    assert ask(Q.real(x), Q.gt(x,y)) is True
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.gt(x, y)) is True
+
+    # Test finite predicate 
+    assert ask(Q.finite(x), Q.gt(x,-10) & Q.lt(x, 10)) is True
+    assert ask(Q.finite(x), Q.lt(x 10)) is None
     
-    # Test equivalent ways of writing Q.positive, Q.zero, Q.negative
-    assert ask(Equivalent(Q.gt(x, 0), Q.positive(x))) is True
-    assert ask(Equivalent(Q.lt(x, 0), Q.negative(x))) is True
+    # Test equivalent ways of writing Q.extended_positive, Q.zero, Q.extended_negative
+    assert ask(Equivalent(Q.gt(x, 0), Q.extended_positive(x))) is True
+    assert ask(Equivalent(Q.lt(x, 0), Q.extended_negative(x))) is True
     assert ask(Equivalent(Q.eq(x, 0), Q.zero(x))) is True
-    assert ask(Equivalent(Q.ge(x, 0), Q.positive(x) | Q.zero(x))) is True
-    assert ask(Equivalent(Q.le(x, 0), Q.negative(x) | Q.zero(x))) is True
+    assert ask(Equivalent(Q.ge(x, 0), Q.extended_positive(x) | Q.zero(x))) is True
+    assert ask(Equivalent(Q.le(x, 0), Q.extended_negative(x) | Q.zero(x))) is True
 
     # test more complex problems
     assert ask(x > z, (x > y) & (y > z)) is True
@@ -27,7 +31,7 @@ def test_inequalities():
     assert ask(x > z, ((x > y) & (y > z)) | ((x > w) & (w > y) & (y > z))) is True
 
     # test assumptions that mix inequalities and non-inequality unary assumptions
-    assert ask(x > 0, Q.positive(x) & Q.prime(y))
+    assert ask(x > 0, Q.extended_positive(x) & Q.prime(y))
 
     #https://stackoverflow.com/questions/21958031/simplify-a-simple-inequity-with-sympy/21978199#21978199
     with assuming((x > y) & (x > 0) & (y > 0)):
