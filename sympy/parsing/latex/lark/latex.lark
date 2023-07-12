@@ -4,7 +4,7 @@
 %ignore "\\quad" | "\\qquad"
 %ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
-%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\" | "\\(" | "\\="
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\\\" | "\\(" | "\\="
 
 %ignore "\\left" | "\\right"
 %ignore "\\limits" | "\\nolimits"
@@ -121,7 +121,7 @@ latex_string: relation | expression
 
 oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
-number: INT | FLOAT
+number: /\d/
 infinity: CMD_INFTY
 
 atomic_expr: oneletter_symbol
@@ -139,21 +139,24 @@ relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
 
 expression_core: atom | group_curly_parentheses
 
-add: expression ADD expression
-sub: expression SUB expression
-mul: expression MUL_SYMBOL expression
+add: expression ADD expression_mul
+sub: expression SUB expression_mul
+mul: expression_mul MUL_SYMBOL expression_power
     | implicit_multiplication
-div: expression DIV_SYMBOL expression
+div: expression_mul DIV_SYMBOL expression_power
 
-implicit_multiplication: (oneletter_symbol oneletter_symbol | number oneletter_symbol)
+implicit_multiplication: (oneletter_symbol | number) expression_mul
     | group_round_parentheses (group_round_parentheses | oneletter_symbol)
     | function function
+    | fraction expression
 
-expression: expression_core
-    | add | sub | mul | div
+
+multidigits: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
+
+expression_func: expression_core
+    | multidigits
     | group_round_parentheses
     | unary_neg
-    | superscript
     | fraction
     | binomial
     | function
@@ -161,6 +164,17 @@ expression: expression_core
     | integral
     | summation
     | product
+
+expression_power: expression_func | superscript
+
+expression_mul: expression_power | mul | div
+
+expression: expression_mul | add | sub
+
+list_of_expressions: expression | comma_operator
+
+comma_operator: list_of_expressions "," expression
+
 //    | limit
 
 //limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim expression
@@ -181,15 +195,16 @@ summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET expression_
 product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET expression_core expression
     | FUNC_PROD CARET expression_core UNDERSCORE group_curly_parentheses_special expression
 
-superscript.1: (expression_core | group_round_parentheses) CARET expression
+superscript: expression_func CARET expression_power
 
 //subscript.1: expression_core UNDERSCORE expression
 
 ambiguous_sub: oneletter_symbol number
 
-fraction: basic_fraction
-    | simple_fraction
-    | general_fraction
+fraction: CMD_FRAC expression_core expression_core
+// basic_fraction
+//     | simple_fraction
+//    | general_fraction
 
 general_fraction.0: CMD_FRAC group_curly_parentheses group_curly_parentheses expression?
 
@@ -198,7 +213,10 @@ simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses expression?
 
 basic_fraction.2: CMD_FRAC DIGIT DIGIT expression?
 
-function: abs | floor | ceil
+function_applied: oneletter_symbol L_PAREN list_of_expressions R_PAREN
+
+function: function_applied
+    | abs | floor | ceil
     | trigonometric_function | inverse_trigonometric_function
     | hyperbolic_trigonometric_function | inverse_hyperbolic_trigonometric_function
     | exponential
