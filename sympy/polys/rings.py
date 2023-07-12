@@ -2569,8 +2569,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff
-        coeffs
+        coeff, coeffs, LC
 
         """
         p = self
@@ -2640,9 +2639,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        pquo
-        pdiv
-        pexquo
+        pdiv, pquo, pexquo
 
         """
         f = self
