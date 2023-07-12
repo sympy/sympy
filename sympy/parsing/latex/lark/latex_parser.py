@@ -40,6 +40,30 @@ class TransformToSymPyExpr(Transformer):
         else:
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
+    def atom(self, token):
+        return token[0]
+
+    def expression(self, token):
+        return token[0]
+
+    def expression_core(self, token):
+        return token[0]
+
+    def atomic_expr(self, token):
+        return token[0]
+
+    def number(self, token):
+        return token[0]
+
+    def latex_string(self, token):
+        return token[0]
+
+    def infinity(self, token):
+        return sympy.oo
+
+    def oneletter_symbol(self, token):
+        return token[0]
+
 
 def parse_latex_lark(s: str, *, logger=False, print_debug_output=False):
     # last option is temporary, for quick prototyping
@@ -111,4 +135,7 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
+    # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
+    parse_latex_lark(r"1", print_debug_output=True)
+    parse_latex_lark(r"\infty", print_debug_output=True)
+    parse_latex_lark(r"a_b", print_debug_output=True)
