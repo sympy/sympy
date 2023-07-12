@@ -83,18 +83,34 @@ def test_parseable():
 def determine_parseable_lark():
     from sympy.parsing.latex.lark import parse_latex_lark
 
-    failure_list = []
+    # If the expression doesn't raise an error, it means that the expression is parsed into _something_, so it's not a
+    # complete failure for that test case. If even that doesn't happen, we add it into `complete_failure_list`
+    complete_failure_list = []
+    # If the expression parses into _something_, but the output doesn't equal the string given in the test case, then
+    # it's a partial failure. If that happens, we add it here.
+    partial_failure_list = []
+    # If the expression is correctly handled, we add it to this list.
+    success_list = []
+    # checks outputted sympy expression for equality with the test case.
     for i, (latex_str, sympy_expr) in enumerate(GOOD_PAIRS):
         try:
-            parse_latex_lark(latex_str)
-        except Exception as e:
-            failure_list.append(i)
+            result = parse_latex_lark(latex_str)
 
-    return failure_list
+            if result != sympy_expr:
+                partial_failure_list.append(i)
+                parse_latex_lark(latex_str, print_debug_output=True)  # for debugging purposes
+            else:
+                success_list.append(i)
+        except Exception as e:
+            complete_failure_list.append(i)
+
+    return success_list, partial_failure_list, complete_failure_list
 
 
 if __name__ == "__main__":
-    fail_list = determine_parseable_lark()
-    print(fail_list)
-    print("Failures =", len(fail_list))
-    print("Passes =", len(GOOD_PAIRS) - len(fail_list))
+    successes, partial_failures, complete_failures = determine_parseable_lark()
+
+    print("List of failures =", complete_failures)
+    print("Not even parsed =", len(complete_failures))
+    print("Parsing but not (fully) transformed =", len(partial_failures))
+    print("Passes =", len(successes))
