@@ -268,32 +268,3 @@ simple_binomial.1: CMD_BINOM DIGIT group_curly_parentheses expression?
     | CMD_FRAC group_curly_parentheses DIGIT expression?
 
 basic_binomial.2: CMD_BINOM DIGIT DIGIT expression?
-
-//sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
-
-//summation: FUNC_SUM sub_equation sup_expression expr
-//         | FUNC_SUM sup_expression sub_equation expr
-
-//product: FUNC_PROD sub_equation sup_expression expr
-//       | FUNC_PROD sup_expression sub_equation expr
-
-//limit: FUNC_LIM sub_limit expr
-
-
-//expression = ... | application | ...
-
-//application = ... | function | ...
-
-//function = ... | trigonometric_function | ...
-
-//trigonometric_function = ... | sin | ...
-
-//sin: "\\sin" expression
-
-//expression_core: symbol
-//  | number
-//  | group_round_parentheses
-//  | group_curly_parenthese
-
-//expression: expression_core
-//  | add | mul | sub | div
