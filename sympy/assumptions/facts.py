@@ -38,7 +38,10 @@ def get_composite_predicates():
 @cacheit
 def get_known_facts(x=None):
     """
-    Facts between unary predicates.
+    Facts between predicates.
+
+    Relational predicate are somewhat supported. The order of the arguments from
+    relational predicate can't currently be taken into account.
 
     Parameters
     ==========
@@ -56,6 +59,12 @@ def get_known_facts(x=None):
         x = Symbol('x')
 
     fact = And(
+        # inequalities
+        Implies(Q.lt(x, x), Q.extended_real(x)),
+        Implies(Q.le(x, x), Q.extended_real(x)),
+        Implies(Q.gt(x, x), Q.extended_real(x)),
+        Implies(Q.ge(x, x), Q.extended_real(x)),
+
         # primitive predicates for extended real exclude each other.
         Exclusive(Q.negative_infinite(x), Q.negative(x), Q.zero(x),
             Q.positive(x), Q.positive_infinite(x)),

@@ -2406,3 +2406,22 @@ def test_relational():
     assert not ask(Q.eq(x, 0), Q.nonzero(x))
     assert not ask(Q.ne(x, 0), Q.zero(x))
     assert ask(Q.ne(x, 0), Q.nonzero(x))
+
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.gt(x, y)) is True
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.ge(x, y)) is True
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.lt(x, y)) is True
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.le(x, y)) is True
+    assert ask(Q.real(x) & Q.real(y), Q.gt(x, y)) is None
+    assert ask(Q.real(x) & Q.real(y), Q.ge(x, y)) is None
+    assert ask(Q.real(x) & Q.real(y), Q.lt(x, y)) is None
+    assert ask(Q.real(x) & Q.real(y), Q.le(x, y)) is None
+
+
+@XFAIL
+def test_relational_failing():
+    # Q.gt(y, x) and Q.gt(x, y) have the same arguements.
+    # As a result, get_all_relevant_facts from satask ignores Q.gt(x, y)
+    # which causes this issue. Note that this shouldn't cause any "wrong" behavior.
+    # It just means tha satask doesn't know that Q.gt(x, y) => Q.extended_real(x) & Q.extended_real(y).
+    assert ask(Q.extended_real(x) & Q.extended_real(y), Q.gt(y, x) | Q.gt(x, y)) is True
+    raises(ValueError, lambda: ask(Q.positive(x), Q.gt(y, x) | Q.gt(x, y) & ~ Q.extended_real(x)))

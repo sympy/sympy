@@ -10,7 +10,10 @@ from sympy.core.cache import cacheit
 @cacheit
 def get_all_known_facts():
     """
-    Known facts between unary predicates as CNF clauses.
+    Known facts between predicates as CNF clauses.
+
+    Relational predicate are somewhat supported. The order of the arguments from
+    relational predicate can't currently be taken into account.
     """
     return {
         frozenset((Literal(Q.algebraic, False), Literal(Q.imaginary, True), Literal(Q.transcendental, False))),
@@ -42,6 +45,8 @@ def get_all_known_facts():
         frozenset((Literal(Q.finite, True), Literal(Q.infinite, True))),
         frozenset((Literal(Q.fullrank, False), Literal(Q.invertible, True))),
         frozenset((Literal(Q.fullrank, True), Literal(Q.invertible, False), Literal(Q.square, True))),
+        frozenset((Literal(Q.ge, True), Literal(Q.negative, False), Literal(Q.negative_infinite, False), Literal(Q.positive, False), Literal(Q.positive_infinite, False), Literal(Q.zero, False))),
+        frozenset((Literal(Q.gt, True), Literal(Q.negative, False), Literal(Q.negative_infinite, False), Literal(Q.positive, False), Literal(Q.positive_infinite, False), Literal(Q.zero, False))),
         frozenset((Literal(Q.hermitian, False), Literal(Q.negative, True))),
         frozenset((Literal(Q.hermitian, False), Literal(Q.positive, True))),
         frozenset((Literal(Q.hermitian, False), Literal(Q.zero, True))),
@@ -61,8 +66,10 @@ def get_all_known_facts():
         frozenset((Literal(Q.irrational, False), Literal(Q.rational, False), Literal(Q.zero, True))),
         frozenset((Literal(Q.irrational, True), Literal(Q.negative, False), Literal(Q.positive, False), Literal(Q.zero, False))),
         frozenset((Literal(Q.irrational, True), Literal(Q.rational, True))),
+        frozenset((Literal(Q.le, True), Literal(Q.negative, False), Literal(Q.negative_infinite, False), Literal(Q.positive, False), Literal(Q.positive_infinite, False), Literal(Q.zero, False))),
         frozenset((Literal(Q.lower_triangular, False), Literal(Q.triangular, True), Literal(Q.upper_triangular, False))),
         frozenset((Literal(Q.lower_triangular, True), Literal(Q.triangular, False))),
+        frozenset((Literal(Q.lt, True), Literal(Q.negative, False), Literal(Q.negative_infinite, False), Literal(Q.positive, False), Literal(Q.positive_infinite, False), Literal(Q.zero, False))),
         frozenset((Literal(Q.negative, False), Literal(Q.positive, False), Literal(Q.rational, True), Literal(Q.zero, False))),
         frozenset((Literal(Q.negative, True), Literal(Q.negative_infinite, True))),
         frozenset((Literal(Q.negative, True), Literal(Q.positive, True))),
@@ -89,7 +96,7 @@ def get_all_known_facts():
 @cacheit
 def get_known_facts_dict():
     """
-    Logical relations between unary predicates as dictionary.
+    Logical relations between predicates as dictionary.
 
     Each key is a predicate, and item is two groups of predicates.
     First group contains the predicates which are implied by the key, and

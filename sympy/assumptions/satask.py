@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
+from sympy.assumptions.relation.binrel import BinaryRelation, AppliedBinaryRelation
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
@@ -331,6 +332,8 @@ def get_all_relevant_facts(proposition, assumptions, context,
             break
 
     if use_known_facts:
+        all_pred = proposition.all_predicates() | assumptions.all_predicates() | context.all_predicates()
+        rel_pred = [pred for pred in all_pred if isinstance(pred, AppliedBinaryRelation)]
         known_facts_CNF = CNF()
         known_facts_CNF.add_clauses(get_all_known_facts())
         kf_encoded = EncodedCNF()
@@ -345,13 +348,55 @@ def get_all_relevant_facts(proposition, assumptions, context,
         def translate_data(data, delta):
             return [{translate_literal(i, delta) for i in clause} for clause in data]
         data = []
-        symbols = []
         n_lit = len(kf_encoded.symbols)
+        duplicates = {}
+        encoding = {}
         for i, expr in enumerate(all_exprs):
-            symbols += [pred(expr) for pred in kf_encoded.symbols]
+            for j, pred in enumerate(kf_encoded.symbols):
+                enc = i * n_lit + j + 1
+                if isinstance(pred, BinaryRelation):
+                    matching_applied_pred = [rp for rp in rel_pred if rp.function == pred and expr in rp.arguments]
+                    if len(matching_applied_pred) > 0:
+                        chosen_applied_pred = matching_applied_pred[0]
+                        if chosen_applied_pred not in encoding:
+                            encoding[chosen_applied_pred] = enc
+                        else:
+                            duplicates[enc] = encoding[chosen_applied_pred]
+                    else:
+                        # placeholder encoding needed for meaningless variable
+                        encoding[enc] = enc
+                else:
+                    encoding[pred(expr)] = enc
             data += translate_data(kf_encoded.data, i * n_lit)
 
-        encoding = dict(list(zip(symbols, range(1, len(symbols)+1))))
+        def remove_dup(lit):
+            if abs(lit) in duplicates:
+                return duplicates[abs(lit)]*(-1 if lit < 0 else 1)
+            else:
+                return lit
+
+        def normalize(data, encoding):
+            count = 1
+            old_to_normal = {}
+            norm_data = []
+            for clause in data:
+                norm_clause = set()
+                for lit in clause:
+                    if abs(lit) not in old_to_normal:
+                        old_to_normal[abs(lit)] = count
+                        encoding
+                        count += 1
+                    norm_clause.add(old_to_normal[abs(lit)] * (-1 if lit < 0 else 1))
+                norm_data.append(norm_clause)
+
+            norm_encoding = {key: old_to_normal[value] for key, value in encoding.items()}
+            return norm_data, norm_encoding
+
+
+
+
+        data = [{remove_dup(lit) for lit in clause} for clause in data]
+        data, encoding = normalize(data, encoding)
         ctx = EncodedCNF(data, encoding)
     else:
         ctx = EncodedCNF()

@@ -50,7 +50,10 @@ def generate_code():
     @cacheit
     def get_all_known_facts():
         """
-        Known facts between unary predicates as CNF clauses.
+        Known facts between predicates as CNF clauses.
+
+        Relational predicate are somewhat supported. The order of the arguments from
+        relational predicate can't currently be taken into account.
         """
         return {
             %s
@@ -59,7 +62,7 @@ def generate_code():
     @cacheit
     def get_known_facts_dict():
         """
-        Logical relations between unary predicates as dictionary.
+        Logical relations between predicates as dictionary.
 
         Each key is a predicate, and item is two groups of predicates.
         First group contains the predicates which are implied by the key, and
