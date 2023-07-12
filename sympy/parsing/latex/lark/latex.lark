@@ -137,9 +137,7 @@ group_curly_parentheses: L_BRACE expression R_BRACE
 
 relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
 
-expression_core: atom
-  | group_round_parentheses
-  | group_curly_parentheses
+expression_core: atom | group_curly_parentheses
 
 add: expression ADD expression
 sub: expression SUB expression
@@ -153,6 +151,7 @@ implicit_multiplication: (oneletter_symbol oneletter_symbol | number oneletter_s
 
 expression: expression_core
     | add | sub | mul | div
+    | group_round_parentheses
     | unary_neg
     | superscript
     | fraction
@@ -171,18 +170,18 @@ expression: expression_core
 unary_neg: SUB expression
 
 integral: FUNC_INT expression "d"oneletter_symbol
-    | FUNC_INT (UNDERSCORE (group_curly_parentheses | atomic_expr) CARET (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
-    | FUNC_INT (CARET (group_curly_parentheses | atomic_expr) UNDERSCORE (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
+    | FUNC_INT (UNDERSCORE expression_core CARET expression_core)? expression? "d"oneletter_symbol
+    | FUNC_INT (CARET expression_core UNDERSCORE expression_core)? expression? "d"oneletter_symbol
 
 group_curly_parentheses_special: L_BRACE (relation | atomic_expr) R_BRACE
 
-summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET (group_curly_parentheses | atomic_expr) expression
-    | FUNC_SUM CARET (group_curly_parentheses | atomic_expr) UNDERSCORE group_curly_parentheses_special expression
+summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET expression_core expression
+    | FUNC_SUM CARET expression_core UNDERSCORE group_curly_parentheses_special expression
 
-product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET (group_curly_parentheses | atomic_expr) expression
-    | FUNC_PROD CARET (group_curly_parentheses | atomic_expr) UNDERSCORE group_curly_parentheses_special expression
+product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET expression_core expression
+    | FUNC_PROD CARET expression_core UNDERSCORE group_curly_parentheses_special expression
 
-superscript.1: expression_core CARET expression
+superscript.1: (expression_core | group_round_parentheses) CARET expression
 
 //subscript.1: expression_core UNDERSCORE expression
 
