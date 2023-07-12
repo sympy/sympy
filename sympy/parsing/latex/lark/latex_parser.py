@@ -41,7 +41,8 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
 
-def parse_latex_lark(s: str, *, logger=False):
+def parse_latex_lark(s: str, *, logger=False, print_debug_output=False):
+    # last option is temporary, for quick prototyping
     # TODO: should we use pkg_resource to get grammar file?  I
     # think this would make sympy depend on setuptools which we
     # would not like
@@ -59,11 +60,27 @@ def parse_latex_lark(s: str, *, logger=False):
     if logger:
         _lark.logger.setLevel(logging.DEBUG)
 
-    print("expression =", s)
     string = parser.parse(s)
+<<<<<<< HEAD
     # print(string)
     # print(string.pretty())
     return string
+=======
+
+    sympy_expression = ""
+    try:
+        sympy_expression = TransformToSymPyExpr().transform(string)
+    except Exception as e:
+        raise LaTeXParsingError(str(e))
+
+    if print_debug_output:
+        print("expression =", s)
+        print("SymPy expression =", sympy_expression)
+        print(string)
+        print(string.pretty())
+
+    return sympy_expression
+>>>>>>> 917ceb2df6 (Added code to show more descriptive output so that we can see what the state of the Transformer is.)
 
 
 def pretty_print_lark_trees(tree, indent=0, show_expr=True):
@@ -94,16 +111,4 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    parse_latex_lark(r"\frac{1}{7\cdot 6} + 7")
-
-
-# try:
-#     s = transform_string(s)
-#     print(s)
-#     tree = parser.parse(s)
-#     # this could be done within the parse step of lark however we
-#     # would like to keep it separate to allow for the possibility of
-#     # multiple backends for the generated expression
-#     sympy_expression = TreeToSympy().transform(tree)
-# except Exception as e:
-#     raise LaTeXParsingError(str(e))
+    parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
