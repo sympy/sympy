@@ -114,8 +114,8 @@ def ddm_irref(a, _partial_pivot=False):
 
     This routine is only really suitable for use with simple field domains like
     :ref:`GF(p)`, :ref:`QQ` and :ref:`QQ(a)` although even for :ref:`QQ` with
-    larger matrices it is more efficient to clear denominators and use fraction
-    free approaches.
+    larger matrices it is possibly more efficient to use fraction free
+    approaches.
 
     This method is not suitable for use with rational function fields
     (:ref:`K(x)`) because the elements will blowup leading to costly gcd
@@ -152,6 +152,29 @@ def ddm_irref(a, _partial_pivot=False):
 
     .. [1] https://en.wikipedia.org/wiki/Row_echelon_form#Reduced_row_echelon_form
     """
+    # We compute aij**-1 below and then use multiplication instead of division
+    # in the innermost loop. The domain here is a field so either operation is
+    # defined. There are significant performance differences for some domains
+    # though. In the case of e.g. QQ or QQ(x) inversion is free but
+    # multiplication and division have the same cost so it makes no difference.
+    # In cases like GF(p), QQ<sqrt(2)>, RR or CC though multiplication is
+    # faster than division so reusing a precomputed inverse for many
+    # multiplications can be a lot faster. The biggest win is QQ<a> when
+    # deg(minpoly(a)) is large.
+    #
+    # With domains like QQ(x) this can perform badly for other reasons.
+    # Typically the initial matrix has simple denominators and the
+    # fraction-free approach with exquo (ddm_irref_den) will preserve that
+    # property throughout. The method here causes denominator blowup leading to
+    # expensive gcd reductions in the intermediate expressions. With many
+    # generators like QQ(x,y,z,...) this is extremely bad.
+    #
+    # TODO: Use a nontrivial pivoting strategy to control intermediate
+    # expression growth. Rearranging rows and/or columns could defer the most
+    # complicated elements until the end. If the first pivot is a
+    # complicated/large element then the first round of reduction will
+    # immediately blowup the whole matrix.
+
     # a is (m x n)
     m = len(a)
     if not m:
@@ -328,33 +351,37 @@ def ddm_irref_den(a, K):
         # Now aij is the pivot and i,j are the row and column. We need to clear
         # the column above and below but we also need to keep track of the
         # denominator of the RREF which means also multiplying everything above
-        # and to the left by the current pivot aij. This upper left corner is
-        # usually already diagonal with all diagonal entries equal but there
+        # and to the left by the current pivot aij and dividing by d (which we
+        # multiplied everything by in the previous iteration so this is an
+        # exact division).
+        #
+        # First handle the upper left corner which is usually already diagonal
+        # with all diagonal entries equal to the current denominator but there
         # can be other non-zero entries in any column that has no pivot.
-        if not K.is_one(aij):
 
-            # Update previous pivots in the matrix
-            if pivots:
-                pivot_val = aij * a[0][pivots[0]]
-                # Divide out the common factor
-                if d is not None:
-                    pivot_val = K.exquo(pivot_val, d)
+        # Update previous pivots in the matrix
+        if pivots:
+            pivot_val = aij * a[0][pivots[0]]
+            # Divide out the common factor
+            if d is not None:
+                pivot_val = K.exquo(pivot_val, d)
 
-                # Could just do this at the end.
-                for ip, jp in enumerate(pivots):
-                    a[ip][jp] = pivot_val
+            # Could defer this until the end but it is pretty cheap and
+            # helps when debugging.
+            for ip, jp in enumerate(pivots):
+                a[ip][jp] = pivot_val
 
-            # Update columns without pivots
-            for jnp in no_pivots:
-                for ip in range(i):
-                    aijp = a[ip][jnp]
-                    if aijp:
-                        aijp *= aij
-                        if d is not None:
-                            aijp = K.exquo(aijp, d)
-                        a[ip][jnp] = aijp
+        # Update columns without pivots
+        for jnp in no_pivots:
+            for ip in range(i):
+                aijp = a[ip][jnp]
+                if aijp:
+                    aijp *= aij
+                    if d is not None:
+                        aijp = K.exquo(aijp, d)
+                    a[ip][jnp] = aijp
 
-        # Eliminate above and below to the right as in ordinary division free
+        # Eliminate above, below and to the right as in ordinary division free
         # Gauss-Jordan elmination except also dividing out d from every entry.
 
         for jp, aj in enumerate(a):
@@ -363,7 +390,7 @@ def ddm_irref_den(a, K):
             if jp == i:
                 continue
 
-            # Eliminate to the right
+            # Eliminate to the right in all rows
             for kp in range(j+1, n):
                 ajk = aij * aj[kp] - aj[j] * a[i][kp]
                 if d is not None:
