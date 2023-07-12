@@ -1,4 +1,4 @@
-from sympy import ZZ
+from sympy import ZZ, QQ
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_irref_den, ddm_irref
 from sympy.polys.matrices.sdm import sdm_irref
@@ -96,6 +96,12 @@ RREF_EXAMPLES = [
         ZZ(8),
     ),
 
+    (
+        'qq_1',
+        DM([[(1,2), 0], [0, 2]], QQ),
+        DM([[1, 0], [0, 1]], QQ),
+        QQ(1),
+    ),
 ]
 
 
