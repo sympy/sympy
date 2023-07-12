@@ -6,9 +6,9 @@
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
 %ignore "\\*" | "\\-" | "\\." | "\\/" | "\\" | "\\(" | "\\="
 
-%ignore "\\left"
-%ignore "\\right"
-%ignore "\\limits"
+%ignore "\\left" | "\\right"
+%ignore "\\limits" | "\\nolimits"
+%ignore "\\displaystyle"
 
 ///////////////////// tokens ///////////////////////
 
@@ -44,7 +44,6 @@ FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
-
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -102,8 +101,6 @@ DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
-// SYMBOL.0: /([A-Za-z]|\\[a-zA-Z]+)/
-// SUBSCRIPT_SYMBOL: /([A-Za-z]|\\[a-zA-Z]+)_(([A-Za-z0-9]|\\[a-zA-Z]+)|\{([A-Za-z0-9]|\\[a-zA-Z]+)\})/
 SYMBOL.1: /[a-zA-Z]/
 SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
