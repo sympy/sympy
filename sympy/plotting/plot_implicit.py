@@ -29,7 +29,7 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 
-from .plot import BaseSeries, Plot, _set_discretization_points
+from .plot import BaseSeries, plot_factory, _set_discretization_points
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
@@ -429,7 +429,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     # set the x and y labels
     kwargs.setdefault('xlabel', var_start_end_x[0])
     kwargs.setdefault('ylabel', var_start_end_y[0])
-    p = Plot(series_argument, **kwargs)
+    p = plot_factory(series_argument, **kwargs)
     if show:
         p.show()
     return p
