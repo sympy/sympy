@@ -1960,7 +1960,7 @@ class DomainMatrix:
 
         Solve a matrix equation over a polynomial ring:
 
-        >>> from sympy import ZZ, symbols
+        >>> from sympy import ZZ
         >>> from sympy.abc import x, y, z, a, b
         >>> R = ZZ[x, y, z, a, b]
         >>> M = DM([[x*y, x*z], [y*z, x*z]], R)
