@@ -1077,7 +1077,7 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
 
 def _simplex(A, B, C, skip_phase_2=False):
     """
-    Simplex method with Bland's rule
+    Two phase simplex method with Bland's rule
 
     References
     ==========
