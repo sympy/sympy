@@ -173,7 +173,7 @@ def ddm_irref(a, _partial_pivot=False):
     # expression growth. Rearranging rows and/or columns could defer the most
     # complicated elements until the end. If the first pivot is a
     # complicated/large element then the first round of reduction will
-    # immediately blowup the whole matrix.
+    # immediately introduce expression blowup across the whole matrix.
 
     # a is (m x n)
     m = len(a)
@@ -428,7 +428,7 @@ def ddm_idet(a, K):
     ===========
 
     Compute the determinant of $a$ using the Bareiss fraction-free algorithm.
-    The matrix $a$ is modified in-place. Its diagonal elements are the
+    The matrix $a$ is modified in place. Its diagonal elements are the
     determinants of the leading principal minors. The determinant of $a$ is
     returned.
 
@@ -545,7 +545,7 @@ def ddm_ilu_split(L, U, K):
     """L, U  <--  LU(U)
 
     Compute the LU decomposition of a matrix $L$ in place and store the lower
-    and upper triangular matrices in $L$ and $U$ respectively. Returns a list
+    and upper triangular matrices in $L$ and $U$, respectively. Returns a list
     of row swaps that were performed.
 
     Uses division in the ground domain which should be an exact field.

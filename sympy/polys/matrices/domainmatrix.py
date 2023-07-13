@@ -1893,7 +1893,7 @@ class DomainMatrix:
         ratio ``inv/den`` is equivalent to ``adj/det`` but some factors
         might be cancelled between ``inv`` and ``den``. In simple cases this
         might just be a minus sign so that ``(inv, den) == (-adj, -det)`` but
-        more complicated factors than ``-1`` can also be cancelled.
+        factors more complicated than ``-1`` can also be cancelled.
         Cancellation is not guaranteed to be complete so ``inv`` and ``den``
         may not be on lowest terms. The denominator ``den`` will be zero if and
         only if the determinant is zero.
@@ -1961,46 +1961,53 @@ class DomainMatrix:
         Solve a matrix equation over a polynomial ring:
 
         >>> from sympy import ZZ, symbols
-        >>> a, b, c, d, e, f = symbols('a b c d e f')
-        >>> R = ZZ[a, b, c, d, e, f]
-        >>> M = DM([[a, b], [c, d]], R)
-        >>> b = DM([[e], [f]], R)
+        >>> from sympy.abc import x, y, z, a, b
+        >>> R = ZZ[x, y, z, a, b]
+        >>> M = DM([[x*y, x*z], [y*z, x*z]], R)
+        >>> b = DM([[a], [b]], R)
         >>> M.to_Matrix()
         Matrix([
-        [a, b],
-        [c, d]])
+        [x*y, x*z],
+        [y*z, x*z]])
         >>> b.to_Matrix()
         Matrix([
-        [e],
-        [f]])
-        >>> xnum, xden = M.solve_den_charpoly(b)
+        [a],
+        [b]])
+        >>> xnum, xden = M.solve_den(b)
         >>> xden
-        a*d - b*c
+        x**2*y*z - x*y*z**2
         >>> xnum.to_Matrix()
         Matrix([
-        [-b*f + d*e],
-        [ a*f - c*e]])
+        [ a*x*z - b*x*z],
+        [-a*y*z + b*x*y]])
         >>> M * xnum == xden * b
         True
 
         The solution can be expressed over a fraction field which will cancel
-        any gcd between the denominator and the elements of the numerator:
+        gcds between the denominator and the elements of the numerator:
 
         >>> xsol = xnum.to_field() / xden
         >>> xsol.to_Matrix()
         Matrix([
-        [(-b*f + d*e)/(a*d - b*c)],
-        [ (a*f - c*e)/(a*d - b*c)]])
+        [           (a - b)/(x*y - y*z)],
+        [(-a*z + b*x)/(x**2*z - x*z**2)]])
         >>> (M * xsol).to_Matrix() == b.to_Matrix()
         True
 
-        The solution can also be expressed as a ``Matrix`` without attempting
-        any cancellation between the numerator and denominator:
+        When solving a large system of equations this cancellation step might
+        be a lot slower than :func:`solve_den` itself. The solution can also be
+        expressed as a ``Matrix`` without attempting any polynomial
+        cancellation between the numerator and denominator giving a less
+        simplified result more quickly:
 
-        >>> xnum.to_Matrix() / xnum.domain.to_sympy(xden)
+        >>> xsol_uncancelled = xnum.to_Matrix() / xnum.domain.to_sympy(xden)
+        >>> xsol_uncancelled
         Matrix([
-        [(-b*f + d*e)/(a*d - b*c)],
-        [ (a*f - c*e)/(a*d - b*c)]])
+        [ (a*x*z - b*x*z)/(x**2*y*z - x*y*z**2)],
+        [(-a*y*z + b*x*y)/(x**2*y*z - x*y*z**2)]])
+        >>> from sympy import cancel
+        >>> cancel(xsol_uncancelled) == xsol.to_Matrix()
+        True
 
         Parameters
         ==========
@@ -2131,8 +2138,8 @@ class DomainMatrix:
         """
         Solve matrix equation $Ax = b$ using the characteristic polynomial.
 
-        This method solves the matrix equation $Ax = b$ for $x$ using the
-        characteristic polynomial without any division or fractions in the
+        This method solves the square matrix equation $Ax = b$ for $x$ using
+        the characteristic polynomial without any division or fractions in the
         ground domain.
 
         Examples
@@ -2161,8 +2168,8 @@ class DomainMatrix:
         b : DomainMatrix
             The ``n x m`` matrix `b` for the rhs.
         cp : list, optional
-            The characteristic polynomial of the matrix `A`. If not given, it
-            will be computed using :meth:`charpoly`.
+            The characteristic polynomial of the matrix `A` if known. If not
+            given, it will be computed using :meth:`charpoly`.
         check : bool, optional
             If ``True`` (the default) check that the determinant is not zero
             and raise an error if it is. If ``False`` then if the determinant
@@ -2186,7 +2193,11 @@ class DomainMatrix:
         ========
 
         solve_den
+            Main frontend for solving matrix equations with denominator.
+        solve_den_rref
+            Solve matrix equations using fraction-free RREF.
         inv_den
+            Invert a matrix using the characteristic polynomial.
         """
         A, b = self.unify(b)
         m, n = self.shape
@@ -2211,7 +2222,7 @@ class DomainMatrix:
 
     def adj_poly_det(self, cp=None):
         """
-        Return the polynomial $p$ such that $p(A) = adj(a)$ and also the
+        Return the polynomial $p$ such that $p(A) = adj(A)$ and also the
         determinant of $A$.
 
         Examples
@@ -2230,7 +2241,7 @@ class DomainMatrix:
         True
         >>> p_A == A.adjugate()
         True
-        >>> A * A.adjugate() == detA * A.I(2).to_dense()
+        >>> A * A.adjugate() == detA * A.I().to_dense()
         True
 
         See Also
