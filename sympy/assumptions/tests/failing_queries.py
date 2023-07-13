@@ -38,7 +38,7 @@ def test_inequalities():
         assert ask(x+y < 2*x) is True
         assert ask(x > 2*y) is None
 
-
+@XFAIL
 def test_number_line_properties():
     # From:
     # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
