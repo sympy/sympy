@@ -2586,13 +2586,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def prem(self, g, x=None):
         """
-        Computes the pseudo-remainder of the polynomial ``self`` with respect to ``g``.
+        Computes the pseudo-remainder of the polynomial ``self`` with respect
+        to ``g``.
 
-        Euclidean division is a well-defined operation for univariate polynomials ``f`` and ``g`` with coefficients in a field. It yields a unique pair of polynomials ``q`` and ``r``, the quotient and remainder, respectively, satisfying ``f = gq + r``, where ``deg(r) < deg(g)``.
+        Euclidean division is a well-defined operation for univariate
+        polynomials ``f`` and ``g`` with coefficients in a field. It yields a
+        unique pair of polynomials ``q`` and ``r``, the quotient and remainder,
+        respectively, satisfying ``f = gq + r``, where ``deg(r) < deg(g)``.
 
-        In the context of the ``prem`` method, multivariate polynomials in a ring like ``R[x,y,z]`` are treated as univariate polynomials with coefficients that are polynomials, such as ``R[x,y][z]``.
+        In the context of the ``prem`` method, multivariate polynomials in a
+        ring like ``R[x,y,z]`` are treated as univariate polynomials with
+        coefficients that are polynomials, such as ``R[x,y][z]``.
 
-        The pseudo-quotient ``q`` and pseudo-remainder ``r`` with respect to ``z`` when dividing ``f`` by ``g`` satisfy ``mf = gq + r``,
+        The pseudo-quotient ``q`` and pseudo-remainder ``r`` with respect to
+        ``z`` when dividing ``f`` by ``g`` satisfy ``mf = gq + r``,
         where ``deg(r,z) < deg(g,z)`` and
         ``m = LC(g,z)**(deg(f,z) - deg(g,z)+1)``.
 
@@ -2682,9 +2689,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Computes the pseudo-division of the polynomial *self* with respect to ``g``.
 
         The pseudo-division algorithm is used to find the pseudo-quotient ``q``
-        and pseudo-remainder ``r`` such that ``mf = gq + r``, where ``m`` represents the multiplier and ``f`` is the dividend polynomial.
+        and pseudo-remainder ``r`` such that ``mf = gq + r``, where ``m``
+        represents the multiplier and ``f`` is the dividend polynomial.
 
-        The pseudo-quotient ``q`` and pseudo-remainder ``r`` are polynomials in the variable ``x``, with the degree of ``r`` with respect to ``x`` being strictly less than the degree of ``g`` with respect to ``x``.
+        The pseudo-quotient ``q`` and pseudo-remainder ``r`` are polynomials in
+        the variable ``x``, with the degree of ``r`` with respect to ``x``
+        being strictly less than the degree of ``g`` with respect to ``x``.
 
         The multiplier ``m`` is defined as
         ``LC(g, x) ^ (deg(f, x) - deg(g, x) + 1)``,
@@ -2693,10 +2703,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         It is important to note that in the context of the ``prem`` method,
         multivariate polynomials in a ring, such as ``R[x,y,z]``, are treated
         as univariate polynomials with coefficients that are polynomials,
-        such as ``R[x,y][z]``. When dividing ``f`` by ``g`` with respect to the variable ``z``, the pseudo-quotient ``q`` and pseudo-remainder ``r`` satisfy ``mf = gq + r``, where ``deg(r, z) < deg(g, z)``
+        such as ``R[x,y][z]``. When dividing ``f`` by ``g`` with respect to the
+        variable ``z``, the pseudo-quotient ``q`` and pseudo-remainder ``r``
+        satisfy ``mf = gq + r``, where ``deg(r, z) < deg(g, z)``
         and ``m = LC(g, z)^(deg(f, z) - deg(g, z) + 1)``.
 
-        In this function, the pseudo-remainder ``r`` can be obtained using the ``prem`` method, the pseudo-quotient ``q`` can be obtained using the ``pquo`` method, and
+        In this function, the pseudo-remainder ``r`` can be obtained using the
+        `:py:class:`~.PolyElement.prem` method, the pseudo-quotient ``q`` can
+        be obtained using the ``pquo`` method, and
         the function ``pdiv`` itself returns a tuple ``(q, r)``.
 
 
