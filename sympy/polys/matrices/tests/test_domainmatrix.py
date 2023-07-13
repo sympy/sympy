@@ -656,7 +656,7 @@ def test_DomainMatrix_eval_poly():
     result = DomainMatrix([[ZZ(12), ZZ(14)], [ZZ(21), ZZ(33)]], (2, 2), ZZ)
     assert dM.eval_poly(p) == result == p[0]*dM**2 + p[1]*dM + p[2]*dM**0
     assert dM.eval_poly([]) == dM.zeros(dM.shape, dM.domain)
-    assert dM.eval_poly([ZZ(2)]) == 2*dM.I()
+    assert dM.eval_poly([ZZ(2)]) == 2*dM.eye(2, dM.domain)
 
     dM2 = DomainMatrix([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
     raises(DMNonSquareMatrixError, lambda: dM2.eval_poly([ZZ(1)]))
@@ -941,14 +941,6 @@ def test_DomainMatrix_eye():
     assert A.rep == SDM.eye((3, 3), QQ)
     assert A.shape == (3, 3)
     assert A.domain == QQ
-
-
-def test_DomainMatrix_I():
-    A = DomainMatrix.zeros((2, 2), QQ)
-    assert A.I() == DomainMatrix.eye((2, 2), QQ)
-    assert A.I(3) == DomainMatrix.eye((3, 3), QQ)
-    assert A.I((3, 3)) == DomainMatrix.eye((3, 3), QQ)
-    assert A.I((2, 3)) == DomainMatrix.eye((2, 3), QQ)
 
 
 def test_DomainMatrix_zeros():
