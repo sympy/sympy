@@ -20,7 +20,8 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
-                                        _solve_inequality)
+                                        _solve_inequality,
+                                        find_feasible)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -486,3 +487,25 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+
+
+def test_find_feasible():
+    r1 = x >= 0
+    r2 = x <= -1
+    assert find_feasible([r1, r2], [x]) is None
+
+    feasible = find_feasible([r1], [x])
+    assert feasible is not None
+    assert r1.subs(feasible) == True
+
+    r1 = x >= 0
+    r2 = x >= 3
+    feasible = find_feasible([r1, r2], [x])
+    assert feasible is not None
+    assert (r1.subs(feasible) and r2.subs(feasible)) == True
+
+    r1 = x >= 0
+    r2 = x <= 3
+    feasible = find_feasible([r1, r2], [x])
+    assert feasible is not None
+    assert (r1.subs(feasible) and r2.subs(feasible)) == True

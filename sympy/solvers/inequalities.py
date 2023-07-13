@@ -982,3 +982,86 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # restore original symbols and return
     return rv.xreplace({v: k for k, v in recast.items()})
+
+
+class LRASolver():
+    """
+    Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
+    the Dual Simplex method and Bland's pivoting rule.
+
+    References
+    ==========
+
+    .. [1] Dutertre, B., de Moura, L.: A Fast Linear-Arithmetic Solver for DPLL(T)
+           https://link.springer.com/chapter/10.1007/11817963_11
+    """
+
+    def __init__(self, A):
+        self.A = A
+
+    def assert_inequality(self, atom):
+        pass
+
+    def check(self):
+        pass
+
+    def backtrack(self):
+        pass
+
+    def _pivot(self):
+        pass
+
+    def _update(self):
+        pass
+
+    def _pivot_and_update(self):
+        pass
+
+    def _assert_upper(self):
+        pass
+
+    def _assert_lower(self):
+        pass
+
+
+
+def find_feasible(constraints, variables):
+    """
+    Finds a feasible solution to a system of linear inequalities, if any exist,
+    with the first phase of the simplex method.
+    Parameters
+    ==========
+    constraints : list of linear inequalities and equalities
+        Stict inequalities (>, <) and not equals are not allowed.
+TiloRC marked this conversation as resolved.
+    variables : list of variables included in inequalities
+    Returns
+    =======
+    dictionary or None
+        If no feasible solutions exist, returns None. Otherwise, returns a dictionary
+        of variable to values that satisfies the constraints.
+    Examples
+    ========
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.solvers.inequalities import find_feasible
+    >>> r1 = y+2*z <= 3
+    >>> r2 = -x-3*z <= -2
+    >>> r3 = 2*x+y+7*z <= 5
+    >>> find_feasible([r1, r2, r3], [x, y, z])
+    {x: 2, y: 0, z: 0}
+    >>> r1 = x <= 3
+    >>> r2 = x >= 4
+    >>> find_feasible([r1, r2], [x]) is None
+    True
+    See Also
+    ========
+    linprog_maximize_from_equations
+    linprog_from_matrices
+    """
+    pass
+    # A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
+    # try:
+    #     _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)
+    #     return {variables[i] : feasible[i] for i in range(len(variables))}
+    # except InfeasibleLinearProgrammingError:
+    #     return None
