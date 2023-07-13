@@ -1075,7 +1075,7 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     return row
 
 
-def _simplex(A, B, C, skip_phase_2=False):
+def _simplex(A, B, C):
     """
     Two phase simplex method with Bland's rule
 
@@ -1129,27 +1129,26 @@ def _simplex(A, B, C, skip_phase_2=False):
         R[j0], S[i0] = S[i0], R[j0]
 
     # Phase 2: starting at a feasible solution, pivot until we reach optimal solution
-    if not skip_phase_2:
-        while True:
-            B = M[:-1, -1]
-            A = M[:-1, :-1]
-            C = M[-1, :-1]
+    while True:
+        B = M[:-1, -1]
+        A = M[:-1, :-1]
+        C = M[-1, :-1]
 
-            # Choose a pivot column, j0
-            piv_cols = []
-            piv_cols = [j for j in range(C.cols) if C[j] < 0]
-            if not piv_cols:
-                break
-            j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
+        # Choose a pivot column, j0
+        piv_cols = []
+        piv_cols = [j for j in range(C.cols) if C[j] < 0]
+        if not piv_cols:
+            break
+        j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
 
-            # Choose a pivot row, i0
-            piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
-            if not piv_rows:
-                raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
-            i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
+        # Choose a pivot row, i0
+        piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
+        if not piv_rows:
+            raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
+        i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
 
-            M = _pivot(M, i0, j0)
-            R[j0], S[i0] = S[i0], R[j0]
+        M = _pivot(M, i0, j0)
+        R[j0], S[i0] = S[i0], R[j0]
 
     argmax = [None]*(M.cols-1)
     argmin_dual = [None]*(M.rows-1)
@@ -1420,52 +1419,3 @@ def linprog_maximize_from_equations(constraints, objective, variables):
     argmax = {variables[i] : argmax[i] for i in range(len(variables))}
     argmax_dual = {standard_constraints[i] : argmax_dual[i] for i in range(len(standard_constraints))}
     return optimum, argmax, argmax_dual
-
-
-def find_feasible(constraints, variables):
-    """
-    Finds a feasible solution to a system of linear inequalities, if any exist,
-    with the first phase of the simplex method.
-
-    Parameters
-    ==========
-
-    constraints : list of linear inequalities and equalities
-        Stict inequalities (>, <) and not equals are not allowed.
-
-    variables : list of variables included in inequalities
-
-    Returns
-    =======
-
-    dictionary or None
-        If no feasible solutions exist, returns None. Otherwise, returns a dictionary
-        of variable to values that satisfies the constraints.
-
-    Examples
-    ========
-
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.inequalities import find_feasible
-    >>> r1 = y+2*z <= 3
-    >>> r2 = -x-3*z <= -2
-    >>> r3 = 2*x+y+7*z <= 5
-    >>> find_feasible([r1, r2, r3], [x, y, z])
-    {x: 2, y: 0, z: 0}
-    >>> r1 = x <= 3
-    >>> r2 = x >= 4
-    >>> find_feasible([r1, r2], [x]) is None
-    True
-
-    See Also
-    ========
-
-    linprog_maximize_from_equations
-    linprog_from_matrices
-    """
-    A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
-    try:
-        _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)
-        return {variables[i] : feasible[i] for i in range(len(variables))}
-    except InfeasibleLinearProgrammingError:
-        return None

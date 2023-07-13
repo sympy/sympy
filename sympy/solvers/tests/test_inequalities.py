@@ -19,13 +19,16 @@ from sympy.logic.boolalg import And, Or
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.sets.sets import FiniteSet, Interval, Union
 from sympy.solvers.inequalities import (reduce_inequalities,
-    solve_poly_inequality as psolve,
-    reduce_rational_inequalities,
-    solve_univariate_inequality as isolve,
-    reduce_abs_inequality,
-    _solve_inequality, linprog_maximize_from_equations, find_feasible,
-    UnboundedLinearProgrammingError, InfeasibleLinearProgrammingError,
-    _linear_programming_to_matrix, linprog_from_matrices)
+                                        solve_poly_inequality as psolve,
+                                        reduce_rational_inequalities,
+                                        solve_univariate_inequality as isolve,
+                                        reduce_abs_inequality,
+                                        _solve_inequality,
+                                        linprog_maximize_from_equations,
+                                        UnboundedLinearProgrammingError,
+                                        InfeasibleLinearProgrammingError,
+                                        _linear_programming_to_matrix,
+                                        linprog_from_matrices)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -649,25 +652,3 @@ def test_linprog_maximize_from_equations():
     # not equals not allowed
     r1 = Ne(x, 0)
     raises(TypeError, lambda: linprog_maximize_from_equations([r1], x, [x]))
-
-
-def test_find_feasible():
-    r1 = x >= 0
-    r2 = x <= -1
-    assert find_feasible([r1, r2], [x]) is None
-
-    feasible = find_feasible([r1], [x])
-    assert feasible is not None
-    assert r1.subs(feasible) == True
-
-    r1 = x >= 0
-    r2 = x >= 3
-    feasible = find_feasible([r1, r2], [x])
-    assert feasible is not None
-    assert (r1.subs(feasible) and r2.subs(feasible)) == True
-
-    r1 = x >= 0
-    r2 = x <= 3
-    feasible = find_feasible([r1, r2], [x])
-    assert feasible is not None
-    assert (r1.subs(feasible) and r2.subs(feasible)) == True
