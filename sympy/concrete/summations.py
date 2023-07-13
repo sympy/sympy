@@ -96,63 +96,149 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     Examples
     ========
 
+    >>> from sympy import *
+    >>> import math
+    >>> import sympy as sp
+    >>> C100 = sp.Sum(n, (n,1,100)) # Count 1 + 2 + 3 .. + 100 - Evaluating Sums
+    >>> Eq(C100, C100.doit())
+
+    .. math::
+
+        \displaystyle \sum_{n=1}^{100} n = 5050
+
     >>> from sympy.abc import i, k, m, n, x
-    >>> from sympy import Sum, factorial, oo, IndexedBase, Function
-    >>> Sum(k, (k, 1, m))
-    Sum(k, (k, 1, m))
-    >>> Sum(k, (k, 1, m)).doit()
-    m**2/2 + m/2
-    >>> Sum(k**2, (k, 1, m))
-    Sum(k**2, (k, 1, m))
-    >>> Sum(k**2, (k, 1, m)).doit()
-    m**3/3 + m**2/2 + m/6
-    >>> Sum(x**k, (k, 0, oo))
-    Sum(x**k, (k, 0, oo))
-    >>> Sum(x**k, (k, 0, oo)).doit()
-    Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
+    >>> import math
+    >>> EX1 = Sum(k, (k, 1, m))
+    >>> Eq(EX1, EX1.doit())
+
+    .. math::
+
+        \displaystyle \sum_{k=1}^{m} k = \frac{m^{2}}{2} + \frac{m}{2}
+
+    >>> from sympy.abc import i, k, m, n, x
+    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
+    >>> import math
+    >>> EX2 = Sum(k**2, (k, 1, m))
+    >>> Eq(EX2, EX2.doit())
+
+    .. math::
+
+        \displaystyle \sum_{k=1}^{m} k^{2} = \frac{m^{3}}{3} + \frac{m^{2}}{2} + \frac{m}{6}
+
+    >>> from sympy.abc import i, k, m, n, x
+    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
+    >>> import math
+    >>> EX3 = Sum(x**k, (k, 0, oo))
+    >>> Eq(EX3, EX3.doit())
+
+    .. math::
+
+        \displaystyle \sum_{k=0}^{\infty} x^{k} = \begin{cases} \frac{1}{1 - x} & \text{for}\: \left|{x}\right| < 1 \\\sum_{k=0}^{\infty} x^{k} & \text{otherwise} \end{cases}
+
+
+    >>> from sympy.abc import i, k, m, n, x
+    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
+    >>> import math
     >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
-    exp(x)
+
+
+    .. math::
+
+        \displaystyle e^{x}
 
     Here are examples to do summation with symbolic indices.  You
     can use either Function of IndexedBase classes:
 
+
     >>> f = Function('f')
     >>> Sum(f(n), (n, 0, 3)).doit()
-    f(0) + f(1) + f(2) + f(3)
+
+    .. math::
+
+        \displaystyle f{\left(0 \right)} + f{\left(1 \right)} + f{\left(2 \right)} + f{\left(3 \right)}
+
+
+    >>> f = Function('f')
     >>> Sum(f(n), (n, 0, oo)).doit()
-    Sum(f(n), (n, 0, oo))
+
+    .. math::
+
+        \displaystyle \sum_{n=0}^{\infty} f{\left(n \right)}
+
+
     >>> f = IndexedBase('f')
     >>> Sum(f[n]**2, (n, 0, 3)).doit()
-    f[0]**2 + f[1]**2 + f[2]**2 + f[3]**2
+
+    .. math::
+
+        \displaystyle {f}_{0}^{2} + {f}_{1}^{2} + {f}_{2}^{2} + {f}_{3}^{2}
 
     An example showing that the symbolic result of a summation is still
     valid for seemingly nonsensical values of the limits. Then the Karr
     convention allows us to give a perfectly valid interpretation to
     those sums by interchanging the limits according to the above rules:
 
+
     >>> S = Sum(i, (i, 1, n)).doit()
     >>> S
-    n**2/2 + n/2
+
+    .. math::
+
+        \displaystyle \frac{n^{2}}{2} + \frac{n}{2}
+
     >>> S.subs(n, -4)
-    6
-    >>> Sum(i, (i, 1, -4)).doit()
-    6
-    >>> Sum(-i, (i, -3, 0)).doit()
-    6
+
+    .. math::
+
+        \displaystyle 6
+
+
+    >>> EX4 = Sum(i, (i, 1, -4))
+    >>> Eq(EX4, EX4.doit())
+
+
+    .. math::
+
+        \displaystyle \sum_{i=1}^{-4} i = 6
+
+
+    >>> EX5 = Sum(-i, (i, -3, 0))
+    >>> Eq(EX5, EX5.doit())
+
+    .. math::
+
+        \displaystyle \sum_{i=-3}^{0} - i = 6
 
     An explicit example of the Karr summation convention:
 
-    >>> S1 = Sum(i**2, (i, m, m+n-1)).doit()
-    >>> S1
-    m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6
-    >>> S2 = Sum(i**2, (i, m+n, m-1)).doit()
-    >>> S2
-    -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6
-    >>> S1 + S2
-    0
-    >>> S3 = Sum(i, (i, m, m-1)).doit()
-    >>> S3
-    0
+    >>> EX6 = Sum(i**2, (i, m, m+n-1))
+    >>> Eq(EX6, EX6.doit())
+
+
+    .. math::
+
+        \displaystyle \sum_{i=m}^{m + n - 1} i^{2} = m^{2} n + m n^{2} - m n + \frac{n^{3}}{3} - \frac{n^{2}}{2} + \frac{n}{6}
+
+    >>> EX7 = Sum(i**2, (i, m+n, m-1))
+    >>> Eq(EX7, EX7.doit())
+
+    .. math::
+
+        \displaystyle \sum_{i=m + n}^{m - 1} i^{2} = - m^{2} n - m n^{2} + m n - \frac{n^{3}}{3} + \frac{n^{2}}{2} - \frac{n}{6}
+
+    >>> EX6.doit() + EX7.doit()
+
+    .. math::
+
+        \displaystyle 0
+
+    >>> EX8 = Sum(i, (i, m, m-1)).doit()
+    >>> EX8
+
+    .. math::
+
+        \displaystyle 0
 
     See Also
     ========
