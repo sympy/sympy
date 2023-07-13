@@ -1916,7 +1916,7 @@ class DomainMatrix:
         6
         >>> Ainv
         DomainMatrix([[4, 2, 1], [2, 4, 2], [0, 0, 3]], (3, 3), ZZ)
-        >>> A * Ainv == den * A.I().to_dense()
+        >>> A * Ainv == den * A.eye(A.shape, A.domain).to_dense()
         True
 
         Parameters
@@ -1935,7 +1935,8 @@ class DomainMatrix:
         adj_det
         solve_den
         """
-        return self.solve_den(self.I(), method=method)
+        I = self.eye(self.shape, self.domain)
+        return self.solve_den(I, method=method)
 
     def solve_den(self, b, method=None):
         """
@@ -2241,7 +2242,7 @@ class DomainMatrix:
         True
         >>> p_A == A.adjugate()
         True
-        >>> A * A.adjugate() == detA * A.I().to_dense()
+        >>> A * A.adjugate() == detA * A.eye(A.shape, A.domain).to_dense()
         True
 
         See Also
@@ -2326,7 +2327,7 @@ class DomainMatrix:
 
         # Evaluate p(A) using Horner's method:
         # XXX: Use Paterson-Stockmeyer method?
-        I = A.I()
+        I = A.eye(A.shape, A.domain)
         p_A = p[0] * I
         for pi in p[1:]:
             p_A = A*p_A + pi*I
@@ -2570,26 +2571,6 @@ class DomainMatrix:
         if isinstance(shape, int):
             shape = (shape, shape)
         return cls.from_rep(SDM.eye(shape, domain))
-
-    def I(self, m=None):
-        """
-        Return identity matrix with the same shape and domain as ``self``.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.matrices import DM
-        >>> from sympy import QQ
-        >>> M = DM([[1, 2], [3, 4]], QQ)
-        >>> I2 = M.I()
-        >>> I2
-        DomainMatrix({0: {0: 1}, 1: {1: 1}}, (2, 2), QQ)
-        >>> M * I2 == I2 * M == M
-        True
-        """
-        if m is None:
-            m = self.shape
-        return self.eye(m, self.domain)
 
     @classmethod
     def diag(cls, diagonal, domain, shape=None):
