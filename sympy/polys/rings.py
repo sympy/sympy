@@ -2535,7 +2535,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         Coefficient of ``self`` with respect to ``x**deg``.
 
-        Treating ``self`` as a univariate polynomial in ``x`` this finds the
+        Treating *self* as a univariate polynomial in ``x`` this finds the
         coefficient of ``x**deg`` as a polynomial in the other generators.
 
         Parameters
@@ -2549,7 +2549,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Returns
         =======
 
-        PolyElement
+        :py:class:`~.PolyElement`
             The coefficient of ``x**deg`` as a polynomial in the same ring.
 
         Examples
@@ -2557,6 +2557,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x, y, z = ring("x, y, z", ZZ)
+
         >>> p = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
         >>> deg = 2
         >>> p.coeff_wrt(2, deg) # Using the generator index
@@ -2569,7 +2570,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, LC
+        coeff, coeffs
 
         """
         p = self
@@ -2587,46 +2588,43 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         Computes the pseudo-remainder of the polynomial ``self`` with respect to ``g``.
 
-        Euclidean division is a well-defined operation for univariate polynomials
-        `f` and `g` with coefficients in a field. It yields a unique pair of polynomials
-        `q` and `r`, the quotient and remainder, respectively, satisfying `f = gq + r`,
-        where `deg(r) < deg(g)`.
+        Euclidean division is a well-defined operation for univariate polynomials ``f`` and ``g`` with coefficients in a field. It yields a unique pair of polynomials ``q`` and ``r``, the quotient and remainder, respectively, satisfying ``f = gq + r``, where ``deg(r) < deg(g)``.
 
-        In the context of the `prem` method, multivariate polynomials in a ring
-        like `R[x,y,z]` are treated as univariate polynomials with coefficients
-        that are polynomials, such as `R[x,y][z]`. The pseudo-quotient `q` and
-        pseudo-remainder `r` with respect to `z` when dividing `f` by `g`
-        satisfy `mf = gq + r`, where `deg(r,z) < deg(g,z)` and
-        `m = LC(g,z)**(deg(f,z) - deg(g,z)+1)`.
+        In the context of the ``prem`` method, multivariate polynomials in a ring like ``R[x,y,z]`` are treated as univariate polynomials with coefficients that are polynomials, such as ``R[x,y][z]``.
 
-        The `prem` method returns the pseudo-remainder `r`,
-        the `pquo` method returns the pseudo-quotient `q`,
-        and `pdiv` returns the tuple `(q, r)`.
+        The pseudo-quotient ``q`` and pseudo-remainder ``r`` with respect to ``z`` when dividing ``f`` by ``g`` satisfy ``mf = gq + r``,
+        where ``deg(r,z) < deg(g,z)`` and
+        ``m = LC(g,z)**(deg(f,z) - deg(g,z)+1)``.
+
+        The ``prem`` method returns the pseudo-remainder ``r``,
+        the ``pquo`` method returns the pseudo-quotient ``q``,
+        and ``pdiv`` returns the tuple ``(q, r)``.
 
         Parameters
         ==========
 
-        g : PolyElement
-            The polynomial to divide `self` by.
+        g : :py:class:`~.PolyElement`
+            The polynomial to divide *self* by.
         x : generator or generator index, optional
             The main variable of the polynomials and default is first generator.
 
         Returns
         =======
 
-        PolyElement
+        :py:class:`~.PolyElement`
             The pseudo-remainder polynomial.
 
         Raises
         ======
 
-        ZeroDivisionError : If `g` is the zero polynomial.
+        ZeroDivisionError : If ``g`` is the zero polynomial.
 
         Examples
         ========
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
         >>> f.prem(g) # first generator is chosen by default if it is not given
@@ -2681,58 +2679,56 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def pdiv(self, g, x=None):
         """
-        Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
+        Computes the pseudo-division of the polynomial *self* with respect to ``g``.
 
-        The pseudo-division algorithm is used to find the pseudo-quotient `q`
-        and pseudo-remainder `r` such that `mf = gq + r`, where `m` represents
-        the multiplier and `f` is the dividend polynomial. The pseudo-quotient `q`
-        and pseudo-remainder `r` are polynomials in the variable `x`, with the
-        degree of `r` with respect to `x` being strictly less than the degree of `g`
-        with respect to `x`.
-        The multiplier `m` is defined as `LC(g, x) ^ (deg(f, x) - deg(g, x) + 1)`,
-        where `LC(g, x)` represents the leading coefficient of `g`.
+        The pseudo-division algorithm is used to find the pseudo-quotient ``q``
+        and pseudo-remainder ``r`` such that ``mf = gq + r``, where ``m`` represents the multiplier and ``f`` is the dividend polynomial.
 
-        It is important to note that in the context of the `prem` method,
-        multivariate polynomials in a ring, such as `R[x,y,z]`, are treated
+        The pseudo-quotient ``q`` and pseudo-remainder ``r`` are polynomials in the variable ``x``, with the degree of ``r`` with respect to ``x`` being strictly less than the degree of ``g`` with respect to ``x``.
+
+        The multiplier ``m`` is defined as
+        ``LC(g, x) ^ (deg(f, x) - deg(g, x) + 1)``,
+        where ``LC(g, x)`` represents the leading coefficient of ``g``.
+
+        It is important to note that in the context of the ``prem`` method,
+        multivariate polynomials in a ring, such as ``R[x,y,z]``, are treated
         as univariate polynomials with coefficients that are polynomials,
-        such as `R[x,y][z]`. When dividing `f` by `g` with respect to the variable `z`,
-        the pseudo-quotient `q` and pseudo-remainder `r` satisfy `mf = gq + r`,
-        where `deg(r, z) < deg(g, z)` and `m = LC(g, z)^(deg(f, z) - deg(g, z) + 1)`.
+        such as ``R[x,y][z]``. When dividing ``f`` by ``g`` with respect to the variable ``z``, the pseudo-quotient ``q`` and pseudo-remainder ``r`` satisfy ``mf = gq + r``, where ``deg(r, z) < deg(g, z)``
+        and ``m = LC(g, z)^(deg(f, z) - deg(g, z) + 1)``.
 
-        In this function, the pseudo-remainder `r` can be obtained using the `prem` method,
-        the pseudo-quotient `q` can be obtained using the `pquo` method, and
-        the function `pdiv` itself returns a tuple `(q, r)`
+        In this function, the pseudo-remainder ``r`` can be obtained using the ``prem`` method, the pseudo-quotient ``q`` can be obtained using the ``pquo`` method, and
+        the function ``pdiv`` itself returns a tuple ``(q, r)``.
 
 
         Parameters
         ==========
 
-        g : PolyElement
-            The polynomial to divide `self` by.
+        g : :py:class:`~.PolyElement`
+            The polynomial to divide *self* by.
         x : generator or generator index, optional
             The main variable of the polynomials and default is first generator.
 
         Returns
         =======
 
-        PolyElement
-            The pseudo-division polynomial (tuple of `q` and `r`).
+        :py:class:`~.PolyElement`
+            The pseudo-division polynomial (tuple of ``q`` and ``r``).
 
         Raises
         ======
 
-        ZeroDivisionError : If `g` is the zero polynomial.
+        ZeroDivisionError : If ``g`` is the zero polynomial.
 
         Examples
         ========
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> f = x**2 + x*y
         >>> g = 2*x + 2
         >>> f.pdiv(g) # first generator is chosen by default if it is not given
         (2*x + 2*y - 2, -4*y + 4)
-
         >>> f.pdiv(g, y) # generator is given
         (2*x**3 + 2*x**2*y + 6*x**2 + 2*x*y + 8*x + 4, 0)
         >>> f.pdiv(g, 1) # generator index is given
@@ -2798,6 +2794,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
         >>> from sympy.polys import ring, ZZ
         >>> R, x,y = ring("x,y", ZZ)
+
         >>> f = x**2 + x*y
         >>> g = 2*x + 2*y
         >>> h = 2*x + 2
@@ -2813,7 +2810,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         f = self
-        x = f.ring.index(x)
         return f.pdiv(g, x)[0]
 
     def pexquo(self, g, x=None):
@@ -2824,12 +2820,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
         >>> from sympy.polys import ring, ZZ
         >>> R, x,y = ring("x,y", ZZ)
+
         >>> f = x**2 + x*y
         >>> g = 2*x + 2*y
         >>> h = 2*x + 2
         >>> f.pexquo(g)
         2*x
-
         >>> f.pexquo(h)
         Traceback (most recent call last):
         ...
@@ -2842,7 +2838,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         f = self
-        x = f.ring.index(x)
         q, r = f.pdiv(g, x)
 
         if r.is_zero:
