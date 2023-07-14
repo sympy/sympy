@@ -41,9 +41,12 @@ class Determinant(Expr):
         return self.arg.kind.element_kind
 
     def doit(self, expand=False, **hints):
-        try:
-            return self.arg._eval_determinant()
-        except (AttributeError, NotImplementedError):
+        if hints.get('determinant', True):
+            try:
+                return self.arg._eval_determinant()
+            except (AttributeError, NotImplementedError):
+                return self
+        else:
             return self
 
 def det(matexpr):
