@@ -1345,7 +1345,7 @@ def _linear_programming_to_matrix(constraints, objective, variables):
                 rel = Le(rel.lhs, rel.rhs, evaluate=False)
             elif rel.function == Q.ge:
                 rel = Ge(rel.lhs, rel.rhs, evaluate=False)
-            elif rel.function = Q.eq:
+            elif rel.function == Q.eq:
                 rel = Eq(rel.lhs, rel.rhs, evaluate=False)
         # sanity check
         if not isinstance(rel, (Le, Ge, Eq)):
