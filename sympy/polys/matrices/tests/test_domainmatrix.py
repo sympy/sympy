@@ -521,6 +521,38 @@ def test_DomainMatrix_clear_denoms():
     assert A.clear_denoms(convert=True) == (den_Z, Anum_Z)
 
 
+def test_DomainMatrix_cancel_denom():
+    A = DM([[2, 4], [6, 8]], ZZ)
+    assert A.cancel_denom(ZZ(1)) == (DM([[2, 4], [6, 8]], ZZ), ZZ(1))
+    assert A.cancel_denom(ZZ(3)) == (DM([[2, 4], [6, 8]], ZZ), ZZ(3))
+    assert A.cancel_denom(ZZ(4)) == (DM([[1, 2], [3, 4]], ZZ), ZZ(2))
+
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.cancel_denom(ZZ(2)) == (A, ZZ(2))
+
+    raises(ZeroDivisionError, lambda: A.cancel_denom(ZZ(0)))
+
+
+def test_DomainMatrix_cancel_denom_elementwise():
+    A = DM([[2, 4], [6, 8]], ZZ)
+    numers, denoms = A.cancel_denom_elementwise(ZZ(1))
+    assert numers == DM([[2, 4], [6, 8]], ZZ)
+    assert denoms == DM([[1, 1], [1, 1]], ZZ)
+    numers, denoms = A.cancel_denom_elementwise(ZZ(4))
+    assert numers == DM([[1, 1], [3, 2]], ZZ)
+    assert denoms == DM([[2, 1], [2, 1]], ZZ)
+
+    raises(ZeroDivisionError, lambda: A.cancel_denom_elementwise(ZZ(0)))
+
+
+def test_DomainMatrix_content_primitive():
+    A = DM([[2, 4], [6, 8]], ZZ)
+    A_primitive = DM([[1, 2], [3, 4]], ZZ)
+    A_content = ZZ(2)
+    assert A.content() == A_content
+    assert A.primitive() == (A_content, A_primitive)
+
+
 def test_DomainMatrix_scc():
     Ad = DomainMatrix([[ZZ(1), ZZ(2), ZZ(3)],
                        [ZZ(0), ZZ(1), ZZ(0)],

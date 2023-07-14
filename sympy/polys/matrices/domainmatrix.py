@@ -36,7 +36,12 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densetools import dup_clear_denoms
+from sympy.polys.densetools import (
+    dup_content,
+    dup_clear_denoms,
+    dup_primitive,
+    dup_quo_ground,
+)
 
 
 def DM(rows, domain):
@@ -1546,6 +1551,224 @@ class DomainMatrix:
         num = self.from_flat_nz(elems1, data, Knum)
 
         return den, num
+
+    def cancel_denom(self, denom):
+        """
+        Cancel factors between a matrix and a denominator.
+
+        Returns a matrix and denominator on lowest terms.
+
+        Requires ``gcd`` in the ground domain.
+
+        Methods like :meth:`solve_den`, :meth:`inv_den` and :meth:`rref_den`
+        return a matrix and denominator but not necessarily on lowest terms.
+        Reduction to lowest terms without fractions can be performed with
+        :meth:`cancel_denom`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 2, 0],
+        ...         [0, 2, 2],
+        ...         [0, 0, 2]], ZZ)
+        >>> Minv, den = M.inv_den()
+        >>> Minv.to_Matrix()
+        Matrix([
+        [4, -4,  4],
+        [0,  4, -4],
+        [0,  0,  4]])
+        >>> den
+        8
+        >>> Minv_reduced, den_reduced = Minv.cancel_denom(den)
+        >>> Minv_reduced.to_Matrix()
+        Matrix([
+        [1, -1,  1],
+        [0,  1, -1],
+        [0,  0,  1]])
+        >>> den_reduced
+        2
+        >>> Minv_reduced.to_field() / den_reduced == Minv.to_field() / den
+        True
+
+        Any factor common to _all_ elements will be cancelled but there can
+        still be factors in common between _some_ elements of the matrix and
+        the denominator. To cancel factors between each element and the
+        denominator, use :meth:`cancel_denom_elementwise` or otherwise convert
+        to a field and use division:
+
+        >>> M = DM([[4, 6]], ZZ)
+        >>> den = ZZ(12)
+        >>> M.cancel_denom(den)
+        (DomainMatrix([[2, 3]], (1, 2), ZZ), 6)
+        >>> numers, denoms = M.cancel_denom_elementwise(den)
+        >>> numers
+        DomainMatrix([[1, 1]], (1, 2), ZZ)
+        >>> denoms
+        DomainMatrix([[3, 2]], (1, 2), ZZ)
+        >>> M.to_field() / den
+        DomainMatrix([[1/3, 1/2]], (1, 2), QQ)
+
+        See Also
+        ========
+
+        solve_den
+        inv_den
+        rref_den
+        cancel_denom_elementwise
+        """
+        M = self
+        K = self.domain
+
+        if K.is_zero(denom):
+            raise ZeroDivisionError('denominator is zero')
+        elif K.is_one(denom):
+            return (M.copy(), denom)
+
+        elements, data = M.to_flat_nz()
+
+        # Often after e.g. solve_den the denominator will be much more
+        # complicated than the elements of the numerator. Hopefully it will be
+        # quicker to find the gcd of the numerator and if there is no content
+        # then we do not need to look at the denominator at all.
+        content = dup_content(elements, K)
+
+        if K.is_one(content):
+            return (M.copy(), denom)
+
+        common = K.gcd(content, denom)
+
+        if K.is_one(common):
+            return (M.copy(), denom)
+
+        elements_cancelled = dup_quo_ground(elements, common, K)
+        denom_cancelled = K.quo(denom, common)
+
+        M_cancelled = M.from_flat_nz(elements_cancelled, data, K)
+
+        return M_cancelled, denom_cancelled
+
+    def cancel_denom_elementwise(self, denom):
+        """
+        Cancel factors between the elements of a matrix and a denominator.
+
+        Returns a matrix of numerators and matrix of denominators.
+
+        Requires ``gcd`` in the ground domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 3], [4, 12]], ZZ)
+        >>> denom = ZZ(6)
+        >>> numers, denoms = M.cancel_denom_elementwise(denom)
+        >>> numers.to_Matrix()
+        Matrix([
+        [1, 1],
+        [2, 2]])
+        >>> denoms.to_Matrix()
+        Matrix([
+        [3, 2],
+        [3, 1]])
+        >>> M_frac = (M.to_field() / denom).to_Matrix()
+        >>> M_frac
+        Matrix([
+        [1/3, 1/2],
+        [2/3,   2]])
+        >>> denoms_inverted = denoms.to_Matrix().applyfunc(lambda e: 1/e)
+        >>> numers.to_Matrix().multiply_elementwise(denoms_inverted) == M_frac
+        True
+
+        Use :meth:`cancel_denom` to cancel factors between the matrix and the
+        denominator while preserving the form of a matrix with a scalar
+        denominator.
+
+        See Also
+        ========
+
+        cancel_denom
+        """
+        K = self.domain
+        M = self
+
+        if K.is_zero(denom):
+            raise ZeroDivisionError('denominator is zero')
+        elif K.is_one(denom):
+            M_numers = M.copy()
+            M_denoms = M.ones(M.shape, M.domain)
+            return (M_numers, M_denoms)
+
+        elements, data = M.to_flat_nz()
+
+        cofactors = [K.cofactors(numer, denom) for numer in elements]
+        gcds, numers, denoms = zip(*cofactors)
+
+        M_numers = M.from_flat_nz(list(numers), data, K)
+        M_denoms = M.from_flat_nz(list(denoms), data, K)
+
+        return (M_numers, M_denoms)
+
+    def content(self):
+        """
+        Return the gcd of the elements of the matrix.
+
+        Requires ``gcd`` in the ground domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 4], [4, 12]], ZZ)
+        >>> M.content()
+        2
+
+        See Also
+        ========
+
+        primitive
+        cancel_denom
+        """
+        K = self.domain
+        elements, _ = self.to_flat_nz()
+        return dup_content(elements, K)
+
+    def primitive(self):
+        """
+        Factor out gcd of the elements of a matrix.
+
+        Requires ``gcd`` in the ground domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 4], [4, 12]], ZZ)
+        >>> content, M_primitive = M.primitive()
+        >>> content
+        2
+        >>> M_primitive
+        DomainMatrix([[1, 2], [2, 6]], (2, 2), ZZ)
+        >>> content * M_primitive == M
+        True
+        >>> M_primitive.content() == ZZ(1)
+        True
+
+        See Also
+        ========
+
+        content
+        cancel_denom
+        """
+        K = self.domain
+        elements, data = self.to_flat_nz()
+        content, prims = dup_primitive(elements, K)
+        M_primitive = self.from_flat_nz(prims, data, K)
+        return content, M_primitive
 
     def rref(self):
         r"""
