@@ -1380,7 +1380,7 @@ def linprog_maximize_from_equations(constraints, objective, variables):
     ==========
 
     constraints : list of linear inequalities
-        Stict inequalities (>, <) and not equals are not allowed.
+        Strict inequalities (>, <) and not equals (!=) are not allowed.
 
     objective : a linear function to maximize
         If you want to minimize a function, f, simply make the objective
