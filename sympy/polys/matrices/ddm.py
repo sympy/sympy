@@ -693,6 +693,20 @@ class DDM(list):
         zero = self.domain.zero
         return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i+1:])
 
+    def is_diagonal(self):
+        """
+        Says whether this matrix is diagonal. True can be returned even if
+        the matrix is not square.
+        """
+        return self.is_upper() and self.is_lower()
+
+    def diagonal(self):
+        """
+        Returns a list of the elements from the diagonal of the matrix.
+        """
+        m, n = self.shape
+        return [self[i][i] for i in range(min(m, n))]
+
     def lll(A, delta=QQ(3, 4)):
         return ddm_lll(A, delta=delta)
 
