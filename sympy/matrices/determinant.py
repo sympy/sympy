@@ -476,7 +476,7 @@ def _cofactor_matrix(M, method="berkowitz"):
     minor_submatrix
     """
 
-    if not M.is_square or M.rows < 1:
+    if not M.is_square:
         raise NonSquareMatrixError()
 
     return M._new(M.rows, M.cols,
