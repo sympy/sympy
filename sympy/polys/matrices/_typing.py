@@ -5,6 +5,10 @@ T = TypeVar('T')
 
 
 class RingElement(Protocol):
+    """A ring element.
+
+    Must support ``+``, ``-``, ``*``, ``**`` and ``-``.
+    """
     def __add__(self: T, other: T, /) -> T: ...
     def __sub__(self: T, other: T, /) -> T: ...
     def __mul__(self: T, other: T, /) -> T: ...
