@@ -76,6 +76,7 @@ from .dense import (
         ddm_irmul,
         ddm_imatmul,
         ddm_irref,
+        ddm_irref_den,
         ddm_idet,
         ddm_iinv,
         ddm_ilu_split,
@@ -306,6 +307,26 @@ class DDM(list):
         return self
 
     def to_sdm(self):
+        """
+        Convert to a :class:`~.SDM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_sdm()
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}
+        >>> type(A.to_sdm())
+        <class 'sympy.polys.matrices.sdm.SDM'>
+
+        See Also
+        ========
+
+        SDM
+        sympy.polys.matrices.sdm.SDM.to_ddm
+        """
         return SDM.from_list(self, self.shape, self.domain)
 
     def convert_to(self, K):
@@ -543,12 +564,37 @@ class DDM(list):
         return a.to_sdm().scc()
 
     def rref(a):
-        """Reduced-row echelon form of a and list of pivots"""
+        """Reduced-row echelon form of a and list of pivots.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.rref
+            Higher level interface to this function.
+        sympy.polys.matrices.dense.ddm_irref
+            The underlying algorithm.
+        """
         b = a.copy()
         K = a.domain
         partial_pivot = K.is_RealField or K.is_ComplexField
         pivots = ddm_irref(b, _partial_pivot=partial_pivot)
         return b, pivots
+
+    def rref_den(a):
+        """Reduced-row echelon form of a with denominator and list of pivots
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
+            Higher level interface to this function.
+        sympy.polys.matrices.dense.ddm_irref_den
+            The underlying algorithm.
+        """
+        b = a.copy()
+        K = a.domain
+        denom, pivots = ddm_irref_den(b, K)
+        return b, denom, pivots
 
     def nullspace(a):
         rref, pivots = a.rref()

@@ -812,6 +812,24 @@ class SDM(dict):
         B, pivots, _ = sdm_irref(A)
         return A.new(B, A.shape, A.domain), pivots
 
+    def rref_den(A):
+        """
+
+        Returns reduced-row echelon form and list of pivots for the :py:class:`~.SDM`
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(2), 1:QQ(4)}}, (2, 2), QQ)
+        >>> A.rref()
+        ({0: {0: 1, 1: 2}}, [0])
+
+        """
+        B, denom, pivots = A.to_ddm().rref_den()
+        return A.new(B.to_sdm(), A.shape, A.domain), denom, pivots
+
     def inv(A):
         """
 
@@ -1237,7 +1255,7 @@ def sdm_irref(A):
     >>> pivots
     [0, 1]
 
-   The analogous calculation with :py:class:`~.Matrix` would be
+    The analogous calculation with :py:class:`~.MutableDenseMatrix` would be
 
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2], [3, 4]])
@@ -1264,7 +1282,6 @@ def sdm_irref(A):
     The elements of the matrix should support exact division with ``/``. For
     example elements of any domain that is a field (e.g. ``QQ``) should be
     fine. No attempt is made to handle inexact arithmetic.
-
     """
     #
     # Any zeros in the matrix are not stored at all so an element is zero if
