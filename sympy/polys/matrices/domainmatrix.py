@@ -39,6 +39,7 @@ from sympy.polys.domains import ZZ, EXRAW, QQ
 from sympy.polys.densetools import (
     dup_content,
     dup_clear_denoms,
+    dup_primitive,
     dup_quo_ground,
 )
 
@@ -1709,6 +1710,65 @@ class DomainMatrix:
         M_denoms = M.from_flat_nz(list(denoms), data, K)
 
         return (M_numers, M_denoms)
+
+    def content(self):
+        """
+        Return the gcd of the elements of the matrix.
+
+        Requires ``gcd`` in the ground domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 4], [4, 12]], ZZ)
+        >>> M.content()
+        2
+
+        See Also
+        ========
+
+        primitive
+        cancel_denom
+        """
+        K = self.domain
+        elements, _ = self.to_flat_nz()
+        return dup_content(elements, K)
+
+    def primitive(self):
+        """
+        Factor out gcd of the elements of a matrix.
+
+        Requires ``gcd`` in the ground domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[2, 4], [4, 12]], ZZ)
+        >>> content, M_primitive = M.primitive()
+        >>> content
+        2
+        >>> M_primitive
+        DomainMatrix([[1, 2], [2, 6]], (2, 2), ZZ)
+        >>> content * M_primitive == M
+        True
+        >>> M_primitive.content() == ZZ(1)
+        True
+
+        See Also
+        ========
+
+        content
+        cancel_denom
+        """
+        K = self.domain
+        elements, data = self.to_flat_nz()
+        content, prims = dup_primitive(elements, K)
+        M_primitive = self.from_flat_nz(prims, data, K)
+        return content, M_primitive
 
     def rref(self):
         r"""
