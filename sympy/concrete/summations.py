@@ -96,149 +96,159 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     Examples
     ========
 
-    >>> from sympy import *
-    >>> import math
-    >>> import sympy as sp
-    >>> C100 = sp.Sum(n, (n,1,100)) # Count 1 + 2 + 3 .. + 100 - Evaluating Sums
-    >>> Eq(C100, C100.doit())
-
     .. math::
 
         \displaystyle \sum_{n=1}^{100} n = 5050
 
-    >>> from sympy.abc import i, k, m, n, x
-    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
-    >>> import math
-    >>> EX1 = Sum(k, (k, 1, m))
-    >>> Eq(EX1, EX1.doit())
+    >>> from sympy.abc import n
+    >>> from sympy import Sum, Eq
+    >>> C100 = Sum(n, (n,1,100)) # Count 1 + 2 + 3 .. + 100 - Evaluating Sums
+    >>> Eq(C100, C100.doit())
+    Eq(Sum(n, (n, 1, 100)), 5050)
 
     .. math::
 
         \displaystyle \sum_{k=1}^{m} k = \frac{m^{2}}{2} + \frac{m}{2}
 
-    >>> from sympy.abc import i, k, m, n, x
-    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
-    >>> import math
-    >>> EX2 = Sum(k**2, (k, 1, m))
-    >>> Eq(EX2, EX2.doit())
+    >>> from sympy.abc import k, m
+    >>> from sympy import Sum, Eq
+    >>> EX1 = Sum(k, (k, 1, m))
+    >>> Eq(EX1, EX1.doit())
+    Eq(Sum(k, (k, 1, m)), m**2/2 + m/2)
 
     .. math::
 
         \displaystyle \sum_{k=1}^{m} k^{2} = \frac{m^{3}}{3} + \frac{m^{2}}{2} + \frac{m}{6}
 
-    >>> from sympy.abc import i, k, m, n, x
-    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
-    >>> import math
-    >>> EX3 = Sum(x**k, (k, 0, oo))
-    >>> Eq(EX3, EX3.doit())
+    >>> from sympy.abc import k, m
+    >>> from sympy import Sum, Eq
+    >>> EX2 = Sum(k**2, (k, 1, m))
+    >>> Eq(EX2, EX2.doit())
+    Eq(Sum(k**2, (k, 1, m)), m**3/3 + m**2/2 + m/6)
 
     .. math::
 
         \displaystyle \sum_{k=0}^{\infty} x^{k} = \begin{cases} \frac{1}{1 - x} & \text{for}\: \left|{x}\right| < 1 \\\sum_{k=0}^{\infty} x^{k} & \text{otherwise} \end{cases}
 
-
-    >>> from sympy.abc import i, k, m, n, x
-    >>> from sympy import Eq, Sum, factorial, oo, IndexedBase, Function
-    >>> import math
-    >>> Sum(x**k/factorial(k), (k, 0, oo)).doit()
-
+    >>> from sympy.abc import k, x
+    >>> from sympy import Sum, Eq, oo
+    >>> EX3 = Sum(x**k, (k, 0, oo))
+    >>> Eq(EX3, EX3.doit())
+    Eq(Sum(x**k, (k, 0, oo)), Piecewise((1/(1 - x), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True)))
 
     .. math::
 
-        \displaystyle e^{x}
+        \displaystyle \sum_{k=0}^{\infty} \frac{x^{k}}{k!} = e^{x}
+
+    >>> from sympy.abc import k, x
+    >>> from sympy import Sum, Eq, factorial, oo
+    >>> EX4 = Sum(x**k/factorial(k), (k, 0, oo))
+    >>> Eq(EX4, EX4.doit())
+    Eq(Sum(x**k/factorial(k), (k, 0, oo)), exp(x))
 
     Here are examples to do summation with symbolic indices.  You
-    can use either Function of IndexedBase classes:
-
-
-    >>> f = Function('f')
-    >>> Sum(f(n), (n, 0, 3)).doit()
+    can use either Function or IndexedBase classes:
 
     .. math::
 
-        \displaystyle f{\left(0 \right)} + f{\left(1 \right)} + f{\left(2 \right)} + f{\left(3 \right)}
+        \displaystyle \sum_{n=0}^{3} f{\left(n \right)} = f{\left(0 \right)} + f{\left(1 \right)} + f{\left(2 \right)} + f{\left(3 \right)}
 
-
+    >>> from sympy.abc import n
+    >>> from sympy import Sum, Eq, Function
     >>> f = Function('f')
-    >>> Sum(f(n), (n, 0, oo)).doit()
+    >>> EX5 = Sum(f(n), (n, 0, 3))
+    >>> Eq(EX5, EX5.doit())
+    Eq(Sum(f(n), (n, 0, 3)), f(0) + f(1) + f(2) + f(3))
 
     .. math::
 
         \displaystyle \sum_{n=0}^{\infty} f{\left(n \right)}
 
+    >>> from sympy.abc import n
+    >>> from sympy import Sum, oo, Function
+    >>> f = Function('f')
+    >>> Sum(f(n), (n, 0, oo)).doit()
+    Sum(f(n), (n, 0, oo))
 
-    >>> f = IndexedBase('f')
-    >>> Sum(f[n]**2, (n, 0, 3)).doit()
 
     .. math::
 
-        \displaystyle {f}_{0}^{2} + {f}_{1}^{2} + {f}_{2}^{2} + {f}_{3}^{2}
+        \displaystyle \sum_{n=0}^{3} {f}_{n}^{2} = {f}_{0}^{2} + {f}_{1}^{2} + {f}_{2}^{2} + {f}_{3}^{2}
+
+    >>> from sympy.abc import n
+    >>> from sympy import Sum, Eq, oo, IndexedBase
+    >>> f = IndexedBase('f')
+    >>> EX6 = Sum(f[n]**2, (n, 0, 3))
+    >>> Eq(EX6, EX6.doit())
+    Eq(Sum(f[n]**2, (n, 0, 3)), f[0]**2 + f[1]**2 + f[2]**2 + f[3]**2)
 
     An example showing that the symbolic result of a summation is still
     valid for seemingly nonsensical values of the limits. Then the Karr
     convention allows us to give a perfectly valid interpretation to
     those sums by interchanging the limits according to the above rules:
 
-
+    >>> from sympy.abc import i, n
+    >>> from sympy import Sum
     >>> S = Sum(i, (i, 1, n)).doit()
     >>> S
-
-    .. math::
-
-        \displaystyle \frac{n^{2}}{2} + \frac{n}{2}
-
+    n**2/2 + n/2
     >>> S.subs(n, -4)
-
-    .. math::
-
-        \displaystyle 6
-
-
-    >>> EX4 = Sum(i, (i, 1, -4))
-    >>> Eq(EX4, EX4.doit())
-
+    6
+    >>> Sum(i, (i, 1, -4)).doit()
+    6
+    >>> Sum(-i, (i, -3, 0)).doit()
+    6
 
     .. math::
 
         \displaystyle \sum_{i=1}^{-4} i = 6
 
-
-    >>> EX5 = Sum(-i, (i, -3, 0))
-    >>> Eq(EX5, EX5.doit())
+    >>> from sympy.abc import i
+    >>> from sympy import Sum, Eq
+    >>> EX7 = Sum(i, (i, 1, -4))
+    >>> Eq(EX7, EX7.doit())
+    Eq(Sum(i, (i, 1, -4)), 6)
 
     .. math::
 
         \displaystyle \sum_{i=-3}^{0} - i = 6
 
-    An explicit example of the Karr summation convention:
+    >>> from sympy.abc import i
+    >>> from sympy import Sum, Eq
+    >>> EX8 = Sum(-i, (i, -3, 0))
+    >>> Eq(EX8, EX8.doit())
+    Eq(Sum(-i, (i, -3, 0)), 6)
 
-    >>> EX6 = Sum(i**2, (i, m, m+n-1))
-    >>> Eq(EX6, EX6.doit())
+
+    An explicit example of the Karr summation convention:
 
 
     .. math::
 
         \displaystyle \sum_{i=m}^{m + n - 1} i^{2} = m^{2} n + m n^{2} - m n + \frac{n^{3}}{3} - \frac{n^{2}}{2} + \frac{n}{6}
 
-    >>> EX7 = Sum(i**2, (i, m+n, m-1))
-    >>> Eq(EX7, EX7.doit())
+    >>> from sympy.abc import i, m, n
+    >>> from sympy import Sum, Eq
+    >>> EX9 = Sum(i**2, (i, m, m+n-1))
+    >>> Eq(EX9, EX9.doit())
+    Eq(Sum(i**2, (i, m, m + n - 1)), m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6)
+
 
     .. math::
 
         \displaystyle \sum_{i=m + n}^{m - 1} i^{2} = - m^{2} n - m n^{2} + m n - \frac{n^{3}}{3} + \frac{n^{2}}{2} - \frac{n}{6}
 
-    >>> EX6.doit() + EX7.doit()
+    >>> from sympy.abc import i, m, n
+    >>> from sympy import Sum, Eq
+    >>> EX10 = Sum(i**2, (i, m+n, m-1))
+    >>> Eq(EX10, EX10.doit())
+    Eq(Sum(i**2, (i, m + n, m - 1)), -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6)
 
-    .. math::
-
-        \displaystyle 0
-
-    >>> EX8 = Sum(i, (i, m, m-1)).doit()
-    >>> EX8
-
-    .. math::
-
-        \displaystyle 0
+    >>> EX9.doit() + EX10.doit()
+    0
+    >>> EX11 = Sum(i, (i, m, m-1)).doit()
+    >>> EX11
+    0
 
     See Also
     ========
