@@ -1330,6 +1330,8 @@ def _linear_programming_to_matrix(constraints, objective, variables):
     >>> constraints
     [x <= 3, -x <= -3]
     """
+    from sympy.matrices.dense import Matrix
+
     eqns = []
 
     for rel in constraints:
