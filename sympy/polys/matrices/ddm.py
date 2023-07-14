@@ -172,6 +172,7 @@ class DDM(list):
 
         to_list_flat
         """
+        assert type(flat) is list
         rows, cols = shape
         if not (len(flat) == rows*cols):
             raise DMBadInputError("Inconsistent flat-list shape")
