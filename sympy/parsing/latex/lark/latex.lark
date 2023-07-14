@@ -169,7 +169,7 @@ expression_power: expression_func | superscript
 
 expression_mul: expression_power | mul | div
 
-expression: expression_mul | add | sub
+expression: expression_mul | add | sub | limit
 
 list_of_expressions: expression | comma_operator
 
@@ -177,7 +177,9 @@ comma_operator: list_of_expressions "," expression
 
 //    | limit
 
-//limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim expression
+limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
+
+limit: FUNC_LIM (UNDERSCORE L_BRACE expression LIM_APPROACH_SYM expression (CARET limit_dir)? R_BRACE)? expression
 
 //group_curly_parentheses_lim: L_BRACE atomic_expr LIM_APPROACH_SYM  R_BRACE
 
