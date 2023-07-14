@@ -1300,7 +1300,7 @@ def _linear_programming_to_matrix(constraints, objective, variables):
     >>> from sympy import Eq
     >>> r1 = y + 2*z <= 3
     >>> r2 = -x - 3*z <= -2
-    >>> r3 = 2*x + y + 7*z <= 5
+    >>> r3 = 5 - y >= 2*x + 7*z
     >>> A, B, C, constraints = _linear_programming_to_matrix([r1, r2, r3], x + y + 5*z, [x, y, z])
     >>> A
     Matrix([
