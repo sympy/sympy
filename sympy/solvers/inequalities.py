@@ -1342,7 +1342,7 @@ def _linear_programming_to_matrix(constraints, objective, variables):
         # convert AppliedBinaryRelation to Relational
         if isinstance(rel, AppliedBinaryRelation):
             if rel.function == Q.le:
-                rel = Le(rel.lhs, rel.rhs,e evaluate=False)
+                rel = Le(rel.lhs, rel.rhs, evaluate=False)
             elif rel.function == Q.ge:
                 rel = Ge(rel.lhs, rel.rhs, evaluate=False)
             elif rel.function = Q.eq:
