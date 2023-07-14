@@ -1330,7 +1330,6 @@ def _linear_programming_to_matrix(constraints, objective, variables):
     >>> constraints
     [x <= 3, -x <= -3]
     """
-    standard_constraints = []
     eqns = []
 
     for rel in constraints:
@@ -1340,23 +1339,30 @@ def _linear_programming_to_matrix(constraints, objective, variables):
             raise TypeError("Strict inequalities are not allowed in linear programming.")
         if type(rel) == Ne or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ne:
             raise TypeError("'not equal to' is not allowed in linear programming.")
-
-        if type(rel) == Le or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.le:
-            eqns.append(rel.lhs - rel.rhs)
-            standard_constraints.append(rel.lhs <= rel.rhs)
-        elif type(rel) == Ge or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ge:
-            eqns.append(rel.rhs - rel.lhs)
-            standard_constraints.append(-rel.lhs <= -rel.rhs)
-        elif type(rel) == Eq or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.eq:
+        # convert AppliedBinaryRelation to Relational
+        if isinstance(rel, AppliedBinaryRelation):
+            if rel.function == Q.le:
+                rel = Le(rel.lhs, rel.rhs,e evaluate=False)
+            elif rel.function == Q.ge:
+                rel = Ge(rel.lhs, rel.rhs, evaluate=False)
+            elif rel.function = Q.eq:
+                rel = Eq(rel.lhs, rel.rhs, evaluate=False)
+        # sanity check
+        if not isinstance(rel, (Le, Ge, Eq)):
+            raise TypeError(f"Unrecognized relation: {rel}")
+        # make Relational canonical
+        rel = rel.canonical
+        # put in expression form
+        if not isinstance(rel, Eq):
+            eqns.append(rel.lts - rel.gts)
+        else:
             # x = 3 can be represented as x <= 3 and x >= 3
             eqns.append(rel.lhs - rel.rhs)
-            standard_constraints.append(rel.lhs <= rel.rhs)
             eqns.append(rel.rhs - rel.lhs)
-            standard_constraints.append(-rel.lhs <= -rel.rhs)
-        else:
-            raise TypeError(f"Unrecognized relation: {rel}")
 
     A, B = linear_eq_to_matrix(eqns, *variables)
+    eqns = A*Matrix(variables)
+    standard_constraints = [eqns[i] <= B[i] for i in range(len(B))]
     C = linear_eq_to_matrix(objective, *variables)[0] # constant terms can be safely ignored here
 
     return A, B, C, standard_constraints
