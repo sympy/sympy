@@ -4,7 +4,6 @@ Integer factorization
 
 from collections import defaultdict
 from functools import reduce
-import random
 import math
 
 from sympy.core import sympify
@@ -14,10 +13,11 @@ from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
-from sympy.core.numbers import igcd, ilcm, Rational, Integer
+from sympy.core.numbers import Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
+from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -662,7 +662,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     n = int(n)
     if n < 5:
         raise ValueError('pollard_rho should receive n > 4')
-    prng = random.Random(seed + retries)
+    randint = _randint(seed + retries)
     V = s
     for i in range(retries + 1):
         U = V
@@ -675,14 +675,14 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
             j += 1
             U = F(U)
             V = F(F(V))  # V is 2x further along than U
-            g = igcd(U - V, n)
+            g = gcd(U - V, n)
             if g == 1:
                 continue
             if g == n:
                 break
             return int(g)
-        V = prng.randint(0, n - 1)
-        a = prng.randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
+        V = randint(0, n - 1)
+        a = randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
         F = None
     return None
 
@@ -819,7 +819,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     n = int(n)
     if n < 4 or B < 3:
         raise ValueError('pollard_pm1 should receive n > 3 and B > 2')
-    prng = random.Random(seed + B)
+    randint = _randint(seed + B)
 
     # computing a**lcm(1,2,3,..B) % n for B > 2
     # it looks weird, but it's right: primes run [2, B]
@@ -829,7 +829,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         for p in sieve.primerange(2, B + 1):
             e = int(math.log(B, p))
             aM = pow(aM, pow(p, e), n)
-        g = igcd(aM - 1, n)
+        g = gcd(aM - 1, n)
         if 1 < g < n:
             return int(g)
 
@@ -838,7 +838,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         # then (n - 1)**even % n will be 1 which will give a g of 0 and 1 will
         # give a zero, too, so we set the range as [2, n-2]. Some references
         # say 'a' should be coprime to n, but either will detect factors.
-        a = prng.randint(2, n - 2)
+        a = randint(2, n - 2)
 
 
 def _trial(factors, n, candidates, verbose=False):
@@ -1309,17 +1309,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # square root anyway. Finding 2 factors is easy if they are
             # "close enough." This is the big root equivalent of dividing by
             # 2, 3, 5.
-            sqrt_n = integer_nthroot(n, 2)[0]
+            sqrt_n = isqrt(n)
             a = sqrt_n + 1
             a2 = a**2
             b2 = a2 - n
             for i in range(3):
-                b, fermat = integer_nthroot(b2, 2)
-                if fermat:
+                b, fermat = sqrtrem(b2)
+                if not fermat:
                     break
                 b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
-            if fermat:
+            if not fermat:
                 if verbose:
                     print(fermat_msg)
                 if limit:
@@ -1435,7 +1435,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             print(ecm_msg % (B1, B2, num_curves))
         while(1):
             try:
-                factor = _ecm_one_factor(n, B1, B2, num_curves)
+                factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
                 ps = factorint(factor, limit=limit - 1,
                                use_trial=use_trial,
                                use_rho=use_rho,
@@ -1518,11 +1518,25 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 
-def primefactors(n, limit=None, verbose=False):
+def primefactors(n, limit=None, verbose=False, **kwargs):
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
     for complete factorization. Unlike factorint(), primefactors() does
     not return -1 or 0.
+
+    Parameters
+    ==========
+
+    n : integer
+    limit, verbose, **kwargs :
+        Additional keyword arguments to be passed to ``factorint``.
+        Since ``kwargs`` is new in version 1.13,
+        ``limit`` and ``verbose`` are retained for compatibility purposes.
+
+    Returns
+    =======
+
+    list(int) : List of prime numbers dividing ``n``
 
     Examples
     ========
@@ -1548,10 +1562,15 @@ def primefactors(n, limit=None, verbose=False):
     See Also
     ========
 
-    divisors
+    factorint, divisors
+
     """
     n = int(n)
-    factors = sorted(factorint(n, limit=limit, verbose=verbose).keys())
+    kwargs.update({"visual": None, "multiple": False,
+                   "limit": limit, "verbose": verbose})
+    factors = sorted(factorint(n=n, **kwargs).keys())
+    # We want to calculate
+    # s = [f for f in factors if isprime(f)]
     s = [f for f in factors[:-1:] if f not in [-1, 0, 1]]
     if factors and isprime(factors[-1]):
         s += [factors[-1]]
@@ -2026,9 +2045,9 @@ class reduced_totient(Function):
         t = 1
         for p, k in factors.items():
             if p == 2 and k > 2:
-                t = ilcm(t, 2**(k - 2))
+                t = lcm(t, 2**(k - 2))
             else:
-                t = ilcm(t, (p - 1) * p**(k - 1))
+                t = lcm(t, (p - 1) * p**(k - 1))
         return t
 
     @classmethod
@@ -2037,7 +2056,7 @@ class reduced_totient(Function):
         distinct primes
         """
         args = [p - 1 for p in args]
-        return ilcm(*args)
+        return lcm(*args)
 
     def _eval_is_integer(self):
         return fuzzy_and([self.args[0].is_integer, self.args[0].is_positive])
@@ -2411,8 +2430,8 @@ def is_perfect(n):
         last2 = n % 100
         if last2 != 28 and last2 % 10 != 6:
             return False
-        r, b = integer_nthroot(1 + 8*n, 2)
-        if not b:
+        r, b = sqrtrem(1 + 8*n)
+        if b:
             return False
         m, x = divmod(1 + r, 4)
         if x:

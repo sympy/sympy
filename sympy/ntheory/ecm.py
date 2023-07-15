@@ -1,10 +1,9 @@
 from sympy.ntheory import sieve, isprime
-from sympy.core.numbers import mod_inverse
 from sympy.core.power import integer_log
+from sympy.core.random import _randint
+from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
-import random
 
-rgen = random.Random()
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -151,7 +150,7 @@ class Point:
         return Q
 
 
-def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
+def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     """Returns one factor of n using
     Lenstra's 2 Stage Elliptic curve Factorization
     with Suyama's Parameterization. Here Montgomery
@@ -198,12 +197,12 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         raise ValueError("The Bounds should be an even integer")
     sieve.extend(B2)
 
+    randint = _randint(seed)
+
     if isprime(n):
         return n
 
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.polys.polytools import gcd
-    D = int(sqrt(B2))
+    D = sqrt(B2)
     beta = [0]*(D + 1)
     S = [0]*(D + 1)
     k = 1
@@ -211,19 +210,19 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
         k *= pow(p, integer_log(B1, p)[0])
     for _ in range(max_curve):
         #Suyama's Parametrization
-        sigma = rgen.randint(6, n - 1)
+        sigma = randint(6, n - 1)
         u = (sigma*sigma - 5) % n
         v = (4*sigma) % n
         u_3 = pow(u, 3, n)
 
         try:
             # We use the elliptic curve y**2 = x**3 + a*x**2 + x
-            # where a = pow(v - u, 3, n)*(3*u + v)*mod_inverse(4*u_3*v, n) - 2
+            # where a = pow(v - u, 3, n)*(3*u + v)*invert(4*u_3*v, n) - 2
             # However, we do not declare a because it is more convenient
-            # to use a24 = (a + 2)*mod_inverse(4, n) in the calculation.
-            a24 = pow(v - u, 3, n)*(3*u + v)*mod_inverse(16*u_3*v, n) % n
-        except ValueError:
-            #If the mod_inverse(16*u_3*v, n) doesn't exist (i.e., g != 1)
+            # to use a24 = (a + 2)*invert(4, n) in the calculation.
+            a24 = pow(v - u, 3, n)*(3*u + v)*invert(16*u_3*v, n) % n
+        except ZeroDivisionError:
+            #If the invert(16*u_3*v, n) doesn't exist (i.e., g != 1)
             g = gcd(16*u_3*v, n)
             #If g = n, try another curve
             if g == n:
@@ -308,10 +307,9 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
             _factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    rgen.seed(seed)
     while(n > 1):
         try:
-            factor = _ecm_one_factor(n, B1, B2, max_curve)
+            factor = _ecm_one_factor(n, B1, B2, max_curve, seed + n)
         except ValueError:
             raise ValueError("Increase the bounds")
         _factors.add(factor)

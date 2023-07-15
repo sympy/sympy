@@ -1,7 +1,7 @@
 """Ground types for various mathematical domains in SymPy. """
 
 import builtins
-from sympy.external.gmpy import HAS_GMPY, factorial, sqrt
+from sympy.external.gmpy import HAS_GMPY, factorial, sqrt, is_square, sqrtrem
 
 PythonInteger = builtins.int
 PythonReal = builtins.float
@@ -67,7 +67,7 @@ __all__ = [
     'gmpy_denom', 'gmpy_gcdex', 'gmpy_gcd', 'gmpy_lcm',
     'gmpy_qdiv',
 
-    'factorial', 'sqrt',
+    'factorial', 'sqrt', 'is_square', 'sqrtrem',
 
     'GMPYInteger', 'GMPYRational',
 ]

@@ -62,10 +62,35 @@ def gf_crt1(M, K):
     ========
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.galoistools import gf_crt1
+    >>> from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+    >>> U = [49, 76, 65]
+    >>> M = [99, 97, 95]
 
-    >>> gf_crt1([99, 97, 95], ZZ)
-    (912285, [9215, 9405, 9603], [62, 24, 12])
+    The following two codes have the same result.
+
+    >>> gf_crt(U, M, ZZ)
+    639985
+
+    >>> p, E, S = gf_crt1(M, ZZ)
+    >>> gf_crt2(U, M, p, E, S, ZZ)
+    639985
+
+    However, it is faster when we want to fix ``M`` and
+    compute for multiple U, i.e. the following cases:
+
+    >>> p, E, S = gf_crt1(M, ZZ)
+    >>> Us = [[49, 76, 65], [23, 42, 67]]
+    >>> for U in Us:
+    ...     print(gf_crt2(U, M, p, E, S, ZZ))
+    639985
+    236237
+
+    See Also
+    ========
+
+    sympy.ntheory.modular.crt1 : a higher level crt routine
+    sympy.polys.galoistools.gf_crt
+    sympy.polys.galoistools.gf_crt2
 
     """
     E, S = [], []
@@ -82,6 +107,8 @@ def gf_crt2(U, M, p, E, S, K):
     """
     Second part of the Chinese Remainder Theorem.
 
+    See ``gf_crt1`` for usage.
+
     Examples
     ========
 
@@ -96,6 +123,13 @@ def gf_crt2(U, M, p, E, S, K):
 
     >>> gf_crt2(U, M, p, E, S, ZZ)
     639985
+
+    See Also
+    ========
+
+    sympy.ntheory.modular.crt2 : a higher level crt routine
+    sympy.polys.galoistools.gf_crt
+    sympy.polys.galoistools.gf_crt1
 
     """
     v = K.zero
@@ -2343,6 +2377,11 @@ def gf_csolve(f, n):
     >>> from sympy.polys.galoistools import gf_csolve
     >>> gf_csolve([1, 1, 7], 189)
     [13, 49, 76, 112, 139, 175]
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.polynomial_congruence : a higher level solving routine
 
     References
     ==========

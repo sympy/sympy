@@ -9,6 +9,7 @@ from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.ntheory import sieve
+from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
@@ -887,11 +888,27 @@ class binomial(CombinatorialFunction):
     >>> expand_func(binomial(n, 3))
     n*(n - 2)*(n - 1)/6
 
+    In many cases, we can also compute binomial coefficients modulo a
+    prime p quickly using Lucas' Theorem [2]_, though we need to include
+    `evaluate=False` to postpone evaluation:
+
+    >>> from sympy import Mod
+    >>> Mod(binomial(156675, 4433, evaluate=False), 10**5 + 3)
+    28625
+
+    Using a generalisation of Lucas's Theorem given by Granville [3]_,
+    we can extend this to arbitrary n:
+
+    >>> Mod(binomial(10**18, 10**12, evaluate=False), (10**5 + 3)**2)
+    3744312326
+
     References
     ==========
 
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
-
+    .. [2] https://en.wikipedia.org/wiki/Lucas%27s_theorem
+    .. [3] Binomial coefficients modulo prime powers, Andrew Granville,
+        Available: https://web.archive.org/web/20170202003812/http://www.dms.umontreal.ca/~andrew/PDF/BinCoeff.pdf
     """
 
     def fdiff(self, argindex=1):
@@ -1009,6 +1026,9 @@ class binomial(CombinatorialFunction):
 
                     res *= pow(kf*df % aq, aq - 2, aq)
                     res %= aq
+
+            elif _sqrt(q) < k and q != 1:
+                res = binomial_mod(n, k, q)
 
             else:
                 # Binomial Factorization is performed by calculating the

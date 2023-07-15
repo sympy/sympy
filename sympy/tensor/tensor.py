@@ -2706,7 +2706,7 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         return Add.fromiter(args)
 
     def _eval_partial_derivative(self, s):
@@ -3138,7 +3138,7 @@ class Tensor(TensExpr):
     def contract_delta(self, metric):
         return self.contract_metric(metric)
 
-    def _eval_rewrite_as_Indexed(self, tens, indices):
+    def _eval_rewrite_as_Indexed(self, tens, indices, **kwargs):
         from sympy.tensor.indexed import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
@@ -4070,7 +4070,7 @@ class TensMul(TensExpr, AssocOp):
                 exclude.update(get_indices(new_renamed))
         return newrule
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
@@ -4861,3 +4861,18 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        tens_class = {Mul: TensMul, Add: TensAdd}[cls]
+        if any(isinstance(a, TensExpr) for a in expr.args):
+            return tens_class(*expr.args)
+        else:
+            return expr
+
+    return _postprocessor
+
+Basic._constructor_postprocessor_mapping[TensExpr] = {
+    "Mul": [get_postprocessor(Mul)],
+}

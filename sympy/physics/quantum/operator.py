@@ -8,6 +8,7 @@ TODO:
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
 """
+from typing import Optional
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -100,7 +101,8 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-
+    is_hermitian: Optional[bool] = None
+    is_unitary: Optional[bool] = None
     @classmethod
     def default_args(self):
         return ("O",)
@@ -244,7 +246,7 @@ class UnitaryOperator(Operator):
     >>> U*Dagger(U)
     1
     """
-
+    is_unitary = True
     def _eval_adjoint(self):
         return self._eval_inverse()
 
@@ -267,6 +269,8 @@ class IdentityOperator(Operator):
     >>> IdentityOperator()
     I
     """
+    is_hermitian = True
+    is_unitary = True
     @property
     def dimension(self):
         return self.N

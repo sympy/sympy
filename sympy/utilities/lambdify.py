@@ -483,7 +483,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       ``implemented_function`` and user defined subclasses of Function. If
       specified, numexpr may be the only option in modules. The official list
       of numexpr functions can be found at:
-      https://numexpr.readthedocs.io/projects/NumExpr3/en/latest/user_guide.html#supported-functions
+      https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
@@ -1160,9 +1160,9 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(s))
+                funcbody.append('del {}'.format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
+                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
 
