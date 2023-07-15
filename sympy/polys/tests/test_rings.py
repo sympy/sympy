@@ -1429,10 +1429,16 @@ def test_PolyElement_gcdex():
     assert f.gcdex(g) == (s, t, h)
 
 def test_PolyElement_subresultants():
-    _, x = ring("x", ZZ)
-    f, g, h = x**2 - 2*x + 1, x**2 - 1, 2*x - 2
+    R, x, y = ring("x, y", ZZ)
 
-    assert f.subresultants(g) == [f, g, h]
+    f = x**2*y + x*y
+    g = x + y
+    assert f.subresultants(g) == [x**2*y + x*y, x + y, y**3 - y**2] # first generator is chosen default
+    assert f.subresultants(g, 0) ==  f.subresultants(g, x) == [x**2*y + x*y, x + y, y**3 - y**2] # generator index or generator is given
+    assert f.subresultants(g, y) == [x**2*y + x*y, x + y, x**3 + x**2]
+
+    f, g = x**2*y + x*y, R(0)
+    assert f.subresultants(g) == [x**2*y + x*y, 1]
 
 def test_PolyElement_resultant():
     _, x = ring("x", ZZ)
