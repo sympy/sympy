@@ -1,6 +1,7 @@
 from sympy.core.backend import S
 from sympy.physics.vector import cross, dot
 from sympy.physics.mechanics.body_base import BodyBase
+from sympy.physics.mechanics.inertia import inertia_of_point_mass
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['Particle']
@@ -204,7 +205,5 @@ method is deprecated. Instead use
             point and frame.
 
         """
-        # circular import issue
-        from sympy.physics.mechanics import inertia_of_point_mass
         return inertia_of_point_mass(self.mass, self.point.pos_from(point),
                                      frame)

@@ -2592,6 +2592,80 @@ class Line3D(LinearEntity3D, Line):
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])
 
+    def distance(self, other):
+        """
+        Finds the shortest distance between a line and another object.
+
+        Parameters
+        ==========
+
+        Point3D, Line3D, Plane, tuple, list
+
+        Returns
+        =======
+
+        distance
+
+        Notes
+        =====
+
+        This method accepts only 3D entities as it's parameter
+
+        Tuples and lists are converted to Point3D and therefore must be of
+        length 3, 2 or 1.
+
+        NotImplementedError is raised if `other` is not an instance of one
+        of the specified classes: Point3D, Line3D, or Plane.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry import Line3D
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, 1, 0), (1, 1, 1))
+        >>> l1.distance(l2)
+        1
+
+        The computed distance may be symbolic, too:
+
+        >>> from sympy.abc import x, y
+        >>> l1 = Line3D((0, 0, 0), (0, 0, 1))
+        >>> l2 = Line3D((0, x, 0), (y, x, 1))
+        >>> l1.distance(l2)
+        Abs(x*y)/Abs(sqrt(y**2))
+
+        """
+
+        from .plane import Plane  # Avoid circular import
+
+        if isinstance(other, (tuple, list)):
+            try:
+                other = Point3D(other)
+            except ValueError:
+                pass
+
+        if isinstance(other, Point3D):
+            return super().distance(other)
+
+        if isinstance(other, Line3D):
+            if self == other:
+                return S.Zero
+            if self.is_parallel(other):
+                return super().distance(other.p1)
+
+            # Skew lines
+            self_direction = Matrix(self.direction_ratio)
+            other_direction = Matrix(other.direction_ratio)
+            normal = self_direction.cross(other_direction)
+            plane_through_self = Plane(p1=self.p1, normal_vector=normal)
+            return other.p1.distance(plane_through_self)
+
+        if isinstance(other, Plane):
+            return other.distance(self)
+
+        msg = f"{other} has type {type(other)}, which is unsupported"
+        raise NotImplementedError(msg)
+
 
 class Ray3D(LinearEntity3D, Ray):
     """

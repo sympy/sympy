@@ -439,7 +439,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
             return {Dimension(1): 1}
-        return {k: v for k, v in dimdep.items()}
+        return dict(dimdep.items())
 
     def equivalent_dims(self, dim1, dim2):
         deps1 = self.get_dimensional_dependencies(dim1)

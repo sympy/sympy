@@ -77,10 +77,10 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         subresultants, resultant, discriminant, cofactors, gcd_list, gcd,
         lcm_list, lcm, terms_gcd, trunc, monic, content, primitive, compose,
         decompose, sturm, gff_list, gff, sqf_norm, sqf_part, sqf_list, sqf,
-        factor_list, factor, intervals, refine_root, count_roots, real_roots,
-        nroots, ground_roots, nth_power_roots_poly, cancel, reduced, groebner,
-        is_zero_dimensional, GroebnerBasis, poly, symmetrize, horner,
-        interpolate, rational_interpolate, viete, together,
+        factor_list, factor, intervals, refine_root, count_roots, all_roots,
+        real_roots, nroots, ground_roots, nth_power_roots_poly, cancel,
+        reduced, groebner, is_zero_dimensional, GroebnerBasis, poly,
+        symmetrize, horner, interpolate, rational_interpolate, viete, together,
         BasePolynomialError, ExactQuotientFailed, PolynomialDivisionFailed,
         OperationNotSupported, HeuristicGCDFailed, HomomorphismFailed,
         IsomorphismFailed, ExtraneousFactors, EvaluationFailed,
@@ -243,7 +243,7 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         print_tree, StrPrinter, sstr, sstrrepr, TableForm, dotprint,
         maple_code, print_maple_code)
 
-test = lazy_function('sympy.testing.runtests', 'test')
+test = lazy_function('sympy.testing.runtests_pytest', 'test')
 doctest = lazy_function('sympy.testing.runtests', 'doctest')
 
 # This module causes conflicts with other modules:
@@ -295,10 +295,10 @@ __all__ = [
     'gcd', 'lcm_list', 'lcm', 'terms_gcd', 'trunc', 'monic', 'content',
     'primitive', 'compose', 'decompose', 'sturm', 'gff_list', 'gff',
     'sqf_norm', 'sqf_part', 'sqf_list', 'sqf', 'factor_list', 'factor',
-    'intervals', 'refine_root', 'count_roots', 'real_roots', 'nroots',
-    'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced', 'groebner',
-    'is_zero_dimensional', 'GroebnerBasis', 'poly', 'symmetrize', 'horner',
-    'interpolate', 'rational_interpolate', 'viete', 'together',
+    'intervals', 'refine_root', 'count_roots', 'all_roots', 'real_roots',
+    'nroots', 'ground_roots', 'nth_power_roots_poly', 'cancel', 'reduced',
+    'groebner', 'is_zero_dimensional', 'GroebnerBasis', 'poly', 'symmetrize',
+    'horner', 'interpolate', 'rational_interpolate', 'viete', 'together',
     'BasePolynomialError', 'ExactQuotientFailed', 'PolynomialDivisionFailed',
     'OperationNotSupported', 'HeuristicGCDFailed', 'HomomorphismFailed',
     'IsomorphismFailed', 'ExtraneousFactors', 'EvaluationFailed',

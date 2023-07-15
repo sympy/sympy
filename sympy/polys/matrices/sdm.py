@@ -11,9 +11,10 @@ from sympy.utilities.iterables import _strongly_connected_components
 
 from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 
+from sympy.polys.domains import QQ
+
 from .ddm import DDM
 from .lll import ddm_lll, ddm_lll_transform
-from sympy.polys.domains import QQ
 
 
 class SDM(dict):
@@ -226,6 +227,7 @@ class SDM(dict):
     @classmethod
     def from_list(cls, ddm, shape, domain):
         """
+        Create :py:class:`~.SDM` object from a list of lists.
 
         Parameters
         ==========
@@ -252,6 +254,13 @@ class SDM(dict):
         >>> A
         {0: {0: 1/2}, 1: {1: 3/4}}
 
+        See Also
+        ========
+
+        to_list
+        from_list_flat
+        from_dok
+        from_ddm
         """
 
         m, n = shape
@@ -265,8 +274,7 @@ class SDM(dict):
     @classmethod
     def from_ddm(cls, ddm):
         """
-        converts object of :py:class:`~.DDM` to
-        :py:class:`~.SDM`
+        Create :py:class:`~.SDM` from a :py:class:`~.DDM`.
 
         Examples
         ========
@@ -278,14 +286,22 @@ class SDM(dict):
         >>> A = SDM.from_ddm(ddm)
         >>> A
         {0: {0: 1/2}, 1: {1: 3/4}}
+        >>> SDM.from_ddm(ddm).to_ddm() == ddm
+        True
 
+        See Also
+        ========
+
+        to_ddm
+        from_list
+        from_list_flat
+        from_dok
         """
         return cls.from_list(ddm, ddm.shape, ddm.domain)
 
     def to_list(M):
         """
-
-        Converts a :py:class:`~.SDM` object to a list
+        Convert a :py:class:`~.SDM` object to a list of lists.
 
         Examples
         ========
@@ -297,6 +313,7 @@ class SDM(dict):
         >>> A.to_list()
         [[0, 2], [0, 0]]
 
+
         """
         m, n = M.shape
         zero = M.domain.zero
@@ -307,6 +324,28 @@ class SDM(dict):
         return ddm
 
     def to_list_flat(M):
+        """
+        Convert :py:class:`~.SDM` to a flat list.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{0: QQ(3)}}, (2, 2), QQ)
+        >>> A.to_list_flat()
+        [0, 2, 3, 0]
+        >>> A == A.from_list_flat(A.to_list_flat(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        from_list_flat
+        to_list
+        to_dok
+        to_ddm
+        """
         m, n = M.shape
         zero = M.domain.zero
         flat = [zero] * (m * n)
@@ -315,8 +354,149 @@ class SDM(dict):
                 flat[i*n + j] = e
         return flat
 
+    @classmethod
+    def from_list_flat(cls, elements, shape, domain):
+        """
+        Create :py:class:`~.SDM` from a flat list of elements.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM.from_list_flat([QQ(0), QQ(2), QQ(0), QQ(0)], (2, 2), QQ)
+        >>> A
+        {0: {1: 2}}
+        >>> A == A.from_list_flat(A.to_list_flat(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_list_flat
+        from_list
+        from_dok
+        from_ddm
+        """
+        m, n = shape
+        if len(elements) != m * n:
+            raise DMBadInputError("Inconsistent flat-list shape")
+        sdm = defaultdict(dict)
+        for inj, element in enumerate(elements):
+            if element:
+                i, j = divmod(inj, n)
+                sdm[i][j] = element
+        return cls(sdm, shape, domain)
+
+    def to_flat_nz(M):
+        """
+        Convert :class:`SDM` to a flat list of nonzero elements and data.
+
+        Explanation
+        ===========
+
+        This is used to operate on a list of the elements of a matrix and then
+        reconstruct a modified matrix with elements in the same positions using
+        :meth:`from_flat_nz`. Zero elements are omitted from the list.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{0: QQ(3)}}, (2, 2), QQ)
+        >>> elements, data = A.to_flat_nz()
+        >>> elements
+        [2, 3]
+        >>> A == A.from_flat_nz(elements, data, A.domain)
+        True
+
+        See Also
+        ========
+
+        from_flat_nz
+        to_list_flat
+        sympy.polys.matrices.ddm.DDM.to_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_flat_nz
+        """
+        dok = M.to_dok()
+        indices = tuple(dok)
+        elements = list(dok.values())
+        data = (indices, M.shape)
+        return elements, data
+
+    @classmethod
+    def from_flat_nz(cls, elements, data, domain):
+        """
+        Reconstruct a :class:`~.SDM` after calling :meth:`to_flat_nz`.
+
+        See :meth:`to_flat_nz` for explanation.
+
+        See Also
+        ========
+
+        to_flat_nz
+        from_list_flat
+        sympy.polys.matrices.ddm.DDM.from_flat_nz
+        sympy.polys.matrices.domainmatrix.DomainMatrix.from_flat_nz
+        """
+        indices, shape = data
+        dok = dict(zip(indices, elements))
+        return cls.from_dok(dok, shape, domain)
+
     def to_dok(M):
+        """
+        Convert to dictionary of keys (dok) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0: {1: QQ(2)}, 1: {0: QQ(3)}}, (2, 2), QQ)
+        >>> A.to_dok()
+        {(0, 1): 2, (1, 0): 3}
+
+        See Also
+        ========
+
+        from_dok
+        to_list
+        to_list_flat
+        to_ddm
+        """
         return {(i, j): e for i, row in M.items() for j, e in row.items()}
+
+    @classmethod
+    def from_dok(cls, dok, shape, domain):
+        """
+        Create :py:class:`~.SDM` from dictionary of keys (dok) format.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> dok = {(0, 1): QQ(2), (1, 0): QQ(3)}
+        >>> A = SDM.from_dok(dok, (2, 2), QQ)
+        >>> A
+        {0: {1: 2}, 1: {0: 3}}
+        >>> A == SDM.from_dok(A.to_dok(), A.shape, A.domain)
+        True
+
+        See Also
+        ========
+
+        to_dok
+        from_list
+        from_list_flat
+        from_ddm
+        """
+        sdm = defaultdict(dict)
+        for (i, j), e in dok.items():
+            if e:
+                sdm[i][j] = e
+        return cls(sdm, shape, domain)
 
     def to_ddm(M):
         """
@@ -573,7 +753,6 @@ class SDM(dict):
 
     def convert_to(A, K):
         """
-
         Converts the :py:class:`~.Domain` of a :py:class:`~.SDM` matrix to K
 
         Examples
@@ -632,6 +811,24 @@ class SDM(dict):
         """
         B, pivots, _ = sdm_irref(A)
         return A.new(B, A.shape, A.domain), pivots
+
+    def rref_den(A):
+        """
+
+        Returns reduced-row echelon form and list of pivots for the :py:class:`~.SDM`
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(2), 1:QQ(4)}}, (2, 2), QQ)
+        >>> A.rref()
+        ({0: {0: 1, 1: 2}}, [0])
+
+        """
+        B, denom, pivots = A.to_ddm().rref_den()
+        return A.new(B.to_sdm(), A.shape, A.domain), denom, pivots
 
     def inv(A):
         """
@@ -1058,7 +1255,7 @@ def sdm_irref(A):
     >>> pivots
     [0, 1]
 
-   The analogous calculation with :py:class:`~.Matrix` would be
+    The analogous calculation with :py:class:`~.MutableDenseMatrix` would be
 
     >>> from sympy import Matrix
     >>> M = Matrix([[1, 2], [3, 4]])
@@ -1085,7 +1282,6 @@ def sdm_irref(A):
     The elements of the matrix should support exact division with ``/``. For
     example elements of any domain that is a field (e.g. ``QQ``) should be
     fine. No attempt is made to handle inexact arithmetic.
-
     """
     #
     # Any zeros in the matrix are not stored at all so an element is zero if

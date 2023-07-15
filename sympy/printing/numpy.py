@@ -19,6 +19,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
+    'isnan': 'isnan'
 })
 _known_constants_numpy = {
     'Exp1': 'e',

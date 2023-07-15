@@ -61,6 +61,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             except SympifyError:
                 return None
 
+        def __lt__(f, g):
+            return f.ex.sort_key() < g.ex.sort_key()
+
         def __add__(f, g):
             g = f._to_ex(g)
 

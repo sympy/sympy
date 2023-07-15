@@ -29,7 +29,7 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 
-from .plot import BaseSeries, Plot
+from .plot import BaseSeries, plot_factory, _set_discretization_points
 from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
@@ -212,7 +212,7 @@ class ImplicitSeries(BaseSeries):
 
 @doctest_depends_on(modules=('matplotlib',))
 def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
-                  points=300, line_color="blue", show=True, **kwargs):
+                  n=300, line_color="blue", show=True, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
     Arguments
@@ -235,8 +235,9 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     - ``depth`` integer. The depth of recursion for adaptive mesh grid.
         Default value is 0. Takes value in the range (0, 4).
 
-    - ``points`` integer. The number of points if adaptive mesh grid is not
-        used. Default value is 300.
+    - ``n`` integer. The number of points if adaptive mesh grid is not
+        used. Default value is 300. This keyword argument replaces ``points``,
+        which should be considered deprecated.
 
     - ``show`` Boolean. Default value is True. If set to False, the plot will
         not be shown. See ``Plot`` for further information.
@@ -323,7 +324,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
 
         >>> p5 = plot_implicit(
         ...     Eq(x**2 + y**2, 5), (x, -5, 5), (y, -2, 2),
-        ...     adaptive=False, points=400)
+        ...     adaptive=False, n=400)
 
     Plotting regions:
 
@@ -416,9 +417,11 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     elif depth < 0:
         depth = 0
 
+    kwargs["n"] = n
+    kwargs = _set_discretization_points(kwargs, ImplicitSeries)
     series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
                                     has_equality, adaptive, depth,
-                                    points, line_color)
+                                    kwargs["n"], line_color)
 
     #set the x and y limits
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
@@ -426,7 +429,7 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
     # set the x and y labels
     kwargs.setdefault('xlabel', var_start_end_x[0])
     kwargs.setdefault('ylabel', var_start_end_y[0])
-    p = Plot(series_argument, **kwargs)
+    p = plot_factory(series_argument, **kwargs)
     if show:
         p.show()
     return p

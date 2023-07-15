@@ -128,5 +128,19 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
 
+    def is_square(self, a):
+        """Returns ``True`` if ``a >= 0`` and ``False`` otherwise. """
+        return a >= 0
+
+    def exsqrt(self, a):
+        """Non-negative square root for ``a >= 0`` and ``None`` otherwise.
+
+        Explanation
+        ===========
+        The square root may be slightly inaccurate due to floating point
+        rounding error.
+        """
+        return a ** 0.5 if a >= 0 else None
+
 
 RR = RealField()

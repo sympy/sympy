@@ -210,11 +210,8 @@ def _eigenvals_list(
         eigs = roots(charpoly, multiple=True, **flags)
 
         if len(eigs) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                eigs = charpoly.all_roots(multiple=True)
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -254,11 +251,8 @@ def _eigenvals_dict(
         eigs = roots(charpoly, multiple=False, **flags)
 
         if sum(eigs.values()) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                eigs = dict(charpoly.all_roots(multiple=False))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)

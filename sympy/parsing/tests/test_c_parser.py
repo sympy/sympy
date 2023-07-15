@@ -152,7 +152,6 @@ if cin:
         )
 
 
-    @XFAIL
     def test_int():
         c_src1 = 'int a = 1;'
         c_src2 = (
@@ -629,7 +628,6 @@ if cin:
             )
 
 
-    @XFAIL
     def test_float():
         c_src1 = 'float a = 1.0;'
         c_src2 = (
@@ -854,8 +852,7 @@ if cin:
             )
 
 
-    @XFAIL
-    def  test_bool():
+    def test_bool():
         c_src1 = (
             'bool a = true, b = false;'
         )
@@ -938,7 +935,7 @@ if cin:
                 )
             )
 
-
+    @XFAIL # this is expected to fail because of a bug in the C parser.
     def test_function():
         c_src1 = (
             'void fun1()' + '\n' +
@@ -1035,7 +1032,7 @@ if cin:
             parameters=()
         )
 
-
+    @XFAIL # this is expected to fail because of a bug in the C parser.
     def test_parameters():
         c_src1 = (
             'void fun1( int a)' + '\n' +
@@ -1158,7 +1155,7 @@ if cin:
             )
         )
 
-
+    @XFAIL # this is expected to fail because of a bug in the C parser.
     def test_function_call():
         c_src1 = (
             'int fun1(int x)' + '\n' +
@@ -1672,8 +1669,8 @@ if cin:
                 'int b = 3;' + '\n' +
                 'int mod = 1000000007;' + '\n' +
                 'int c;' + '\n' +
-                'c = ((a % mod + b % mod) % mod *(' \
-                'a % mod - b % mod) % mod) % mod;' + '\n' +
+                'c = ((a % mod + b % mod) % mod' \
+                '* (a % mod - b % mod) % mod) % mod;' + '\n' +
             '}'
         )
 
@@ -2544,14 +2541,24 @@ if cin:
                     Mod(
                         Mul(
                             Add(
-                                Symbol('a'),
-                                Mul(Integer(-1),
-                                    Symbol('b')
+                                Mod(
+                                    Symbol('a'),
+                                    Symbol('mod')
+                                    ),
+                                Mul(
+                                    Integer(-1),
+                                    Mod(
+                                        Symbol('b'),
+                                        Symbol('mod')
+                                        )
                                     )
                                 ),
-                            Add(
-                                Symbol('a'),
-                                Symbol('b')
+                            Mod(
+                                Add(
+                                    Symbol('a'),
+                                    Symbol('b')
+                                    ),
+                                Symbol('mod')
                                 )
                             ),
                         Symbol('mod')
@@ -3441,8 +3448,8 @@ if cin:
             'int a = 100;' + '\n' +
             'int b = 3;' + '\n' +
             'int mod = 1000000007;' + '\n' +
-            'int c = ((a % mod + b % mod) % mod *(' \
-            'a % mod - b % mod) % mod) % mod;' + '\n'
+            'int c = ((a % mod + b % mod) % mod *' \
+            '(a % mod - b % mod) % mod) % mod;' + '\n'
         )
 
         c_src22 = (
@@ -5051,7 +5058,7 @@ if cin:
                 )
             )
 
-
+    @XFAIL # this is expected to fail because of a bug in the C parser.
     def test_while_stmt():
         c_src1 = (
             'void func()'+

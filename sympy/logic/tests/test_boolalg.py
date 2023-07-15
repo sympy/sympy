@@ -6,7 +6,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.sets.sets import (Interval, Union)
+from sympy.sets.sets import Interval, Union
+from sympy.sets.contains import Contains
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -1049,6 +1050,12 @@ def test_issue_14700():
     # Should not be more complicated with don't cares
     assert SOPform([w, x, y, z], minterms, dontcares) == \
         (x & ~w) | (y & z & ~x)
+
+
+def test_issue_25115():
+    cond = Contains(x, S.Integers)
+    # Previously this raised an exception:
+    assert simplify_logic(cond) == cond
 
 
 def test_relational_simplification():

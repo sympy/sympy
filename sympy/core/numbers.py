@@ -19,7 +19,8 @@ from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
+from sympy.external.gmpy import (SYMPY_INTS, HAS_GMPY, gmpy,
+                                 gcd as number_gcd, lcm as number_lcm)
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -235,6 +236,7 @@ def igcd(*args):
 
     The algorithm is based on the well known Euclid's algorithm [1]_. To
     improve speed, ``igcd()`` has its own caching mechanism.
+    If you do not need the cache mechanism, using ``sympy.external.gmpy.gcd``.
 
     Examples
     ========
@@ -254,17 +256,7 @@ def igcd(*args):
     if len(args) < 2:
         raise TypeError(
             'igcd() takes at least 2 arguments (%s given)' % len(args))
-    args_temp = [abs(as_int(i)) for i in args]
-    if 1 in args_temp:
-        return 1
-    a = args_temp.pop()
-    if HAS_GMPY: # Using gmpy if present to speed up.
-        for b in args_temp:
-            a = gmpy.gcd(a, b) if b else a
-        return as_int(a)
-    for b in args_temp:
-        a = math.gcd(a, b)
-    return a
+    return int(number_gcd(*map(as_int, args)))
 
 
 igcd2 = math.gcd
@@ -434,12 +426,7 @@ def ilcm(*args):
     if len(args) < 2:
         raise TypeError(
             'ilcm() takes at least 2 arguments (%s given)' % len(args))
-    if 0 in args:
-        return 0
-    a = args[0]
-    for b in args[1:]:
-        a = a // igcd(a, b) * b # since gcd(a,b) | a
-    return a
+    return int(number_lcm(*map(as_int, args)))
 
 
 def igcdex(a, b):
@@ -4341,7 +4328,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10, 1), S.One)
 
-    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None, **hints):
         if (k_sym is not None) or (symbols is not None):
             return self
         from .symbol import Dummy

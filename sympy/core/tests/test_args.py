@@ -320,9 +320,19 @@ def test_sympy__codegen__ast__FunctionDefinition():
     assert _test_args(FunctionDefinition(real, 'pwer', [inp_x], [Assignment(x, x**2)]))
 
 
+def test_sympy__codegen__ast__Raise():
+    from sympy.codegen.ast import Raise
+    assert _test_args(Raise(x))
+
+
 def test_sympy__codegen__ast__Return():
     from sympy.codegen.ast import Return
     assert _test_args(Return(x))
+
+
+def test_sympy__codegen__ast__RuntimeError_():
+    from sympy.codegen.ast import RuntimeError_
+    assert _test_args(RuntimeError_('"message"'))
 
 
 def test_sympy__codegen__ast__FunctionCall():
@@ -1454,6 +1464,11 @@ def test_sympy__stats__crv_types__ChiSquaredDistribution():
 def test_sympy__stats__crv_types__DagumDistribution():
     from sympy.stats.crv_types import DagumDistribution
     assert _test_args(DagumDistribution(1, 1, 1))
+
+
+def test_sympy__stats__crv_types__DavisDistribution():
+    from sympy.stats.crv_types import DavisDistribution
+    assert _test_args(DavisDistribution(1, 1, 1))
 
 
 def test_sympy__stats__crv_types__ExGaussianDistribution():
@@ -5062,6 +5077,11 @@ def test_sympy__codegen__cfunctions__Cbrt():
 def test_sympy__codegen__cfunctions__hypot():
     from sympy.codegen.cfunctions import hypot
     assert _test_args(hypot(x, y))
+
+
+def test_sympy__codegen__cfunctions__isnan():
+    from sympy.codegen.cfunctions import isnan
+    assert _test_args(isnan(x))
 
 
 def test_sympy__codegen__fnodes__FFunction():

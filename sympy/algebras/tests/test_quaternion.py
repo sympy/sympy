@@ -198,8 +198,8 @@ def test_quaternion_functions():
     assert Quaternion(0, 2, 10, 3).is_pure() is True
     assert Quaternion(w, 2, 10, 3).is_pure() is None
 
-    assert q1.angle() == atan(sqrt(29))
-    assert q.angle() == atan2(sqrt(x**2 + y**2 + z**2), w)
+    assert q1.angle() == 2*atan(sqrt(29))
+    assert q.angle() == 2*atan2(sqrt(x**2 + y**2 + z**2), w)
 
     assert Quaternion.arc_coplanar(q1, Quaternion(2, 4, 6, 8)) is True
     assert Quaternion.arc_coplanar(q1, Quaternion(1, -2, -3, -4)) is True
