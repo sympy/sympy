@@ -1,5 +1,5 @@
 # SymPy
-
+hh
 [![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
 [![Join the chat at https://gitter.im/sympy/sympy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
@@ -22,7 +22,7 @@ blogged about SymPy...
 License: New BSD License (see the [LICENSE](LICENSE) file for details) covers all
 files in the sympy repository unless stated otherwise.
 
-Our mailing list is at
+Our mailing list is at 
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>.
 
 We have a community chat at [Gitter](https://gitter.im/sympy/sympy). Feel
