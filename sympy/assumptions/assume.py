@@ -302,7 +302,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     """
 
     is_Atom = True
-    _arity: int | None = None
+    nargs: int | None = None
 
     def __new__(cls, *args, **kwargs):
         if cls is Predicate:
@@ -322,8 +322,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         """
         if cls.handler is None:
             raise TypeError("%s cannot be dispatched." % type(cls))
-        if cls._arity is not None and cls._arity != len(types):
-            raise TypeError(f"{type(cls)} only accepts signatures with {cls._arity} argument(s)")
+        if cls.nargs is not None and cls.nargs != len(types):
+            raise TypeError(f"{type(cls)} only accepts signatures with {cls.nargs} argument(s)")
         return cls.handler.register(*types, **kwargs)
 
     @classmethod
@@ -339,8 +339,8 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         return _
 
     def __call__(self, *args):
-        if self._arity is not None and len(args) != self._arity:
-            raise TypeError(f"{self} requires {self._arity} argument(s) but {len(args)} were given")
+        if self.nargs is not None and len(args) != self.nargs:
+            raise TypeError(f"{self} requires {self.nargs} argument(s) but {len(args)} were given")
         return AppliedPredicate(self, *args)
 
     def eval(self, args, assumptions=True):

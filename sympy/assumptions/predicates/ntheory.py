@@ -37,7 +37,7 @@ class PrimePredicate(Predicate):
         " is subject to the limitations of isprime() which is used to return the "
         "result.")
     )
-    _arity = 1
+    nargs = 1
 
 
 class CompositePredicate(Predicate):
@@ -66,7 +66,7 @@ class CompositePredicate(Predicate):
     """
     name = 'composite'
     handler = Dispatcher("CompositeHandler", doc="Handler for key 'composite'.")
-    _arity = 1
+    nargs = 1
 
 
 class EvenPredicate(Predicate):
@@ -95,7 +95,7 @@ class EvenPredicate(Predicate):
     """
     name = 'even'
     handler = Dispatcher("EvenHandler", doc="Handler for key 'even'.")
-    _arity = 1
+    nargs = 1
 
 
 class OddPredicate(Predicate):
@@ -127,4 +127,4 @@ class OddPredicate(Predicate):
         doc=("Handler for key 'odd'. Test that an expression represents an odd"
         " number.")
     )
-    _arity = 1
+    nargs = 1

@@ -34,7 +34,7 @@ class SquarePredicate(Predicate):
     """
     name = 'square'
     handler = Dispatcher("SquareHandler", doc="Handler for Q.square.")
-    _arity = 1
+    nargs = 1
 
 
 class SymmetricPredicate(Predicate):
@@ -72,7 +72,7 @@ class SymmetricPredicate(Predicate):
     # actual matrices and add more examples in the docstring.
     name = 'symmetric'
     handler = Dispatcher("SymmetricHandler", doc="Handler for Q.symmetric.")
-    _arity = 1
+    nargs = 1
 
 
 class InvertiblePredicate(Predicate):
@@ -107,7 +107,7 @@ class InvertiblePredicate(Predicate):
     """
     name = 'invertible'
     handler = Dispatcher("InvertibleHandler", doc="Handler for Q.invertible.")
-    _arity = 1
+    nargs = 1
 
 
 class OrthogonalPredicate(Predicate):
@@ -147,7 +147,7 @@ class OrthogonalPredicate(Predicate):
     """
     name = 'orthogonal'
     handler = Dispatcher("OrthogonalHandler", doc="Handler for key 'orthogonal'.")
-    _arity = 1
+    nargs = 1
 
 
 class UnitaryPredicate(Predicate):
@@ -184,7 +184,7 @@ class UnitaryPredicate(Predicate):
     """
     name = 'unitary'
     handler = Dispatcher("UnitaryHandler", doc="Handler for key 'unitary'.")
-    _arity = 1
+    nargs = 1
 
 
 class FullRankPredicate(Predicate):
@@ -214,7 +214,7 @@ class FullRankPredicate(Predicate):
     """
     name = 'fullrank'
     handler = Dispatcher("FullRankHandler", doc="Handler for key 'fullrank'.")
-    _arity = 1
+    nargs = 1
 
 
 class PositiveDefinitePredicate(Predicate):
@@ -251,7 +251,7 @@ class PositiveDefinitePredicate(Predicate):
     """
     name = "positive_definite"
     handler = Dispatcher("PositiveDefiniteHandler", doc="Handler for key 'positive_definite'.")
-    _arity = 1
+    nargs = 1
 
 
 class UpperTriangularPredicate(Predicate):
@@ -281,7 +281,7 @@ class UpperTriangularPredicate(Predicate):
     """
     name = "upper_triangular"
     handler = Dispatcher("UpperTriangularHandler", doc="Handler for key 'upper_triangular'.")
-    _arity = 1
+    nargs = 1
 
 
 class LowerTriangularPredicate(Predicate):
@@ -311,7 +311,7 @@ class LowerTriangularPredicate(Predicate):
     """
     name = "lower_triangular"
     handler = Dispatcher("LowerTriangularHandler", doc="Handler for key 'lower_triangular'.")
-    _arity = 1
+    nargs = 1
 
 
 class DiagonalPredicate(Predicate):
@@ -344,7 +344,7 @@ class DiagonalPredicate(Predicate):
     """
     name = "diagonal"
     handler = Dispatcher("DiagonalHandler", doc="Handler for key 'diagonal'.")
-    _arity = 1
+    nargs = 1
 
 
 class IntegerElementsPredicate(Predicate):
@@ -368,7 +368,7 @@ class IntegerElementsPredicate(Predicate):
     """
     name = "integer_elements"
     handler = Dispatcher("IntegerElementsHandler", doc="Handler for key 'integer_elements'.")
-    _arity = 1
+    nargs = 1
 
 
 class RealElementsPredicate(Predicate):
@@ -392,7 +392,7 @@ class RealElementsPredicate(Predicate):
     """
     name = "real_elements"
     handler = Dispatcher("RealElementsHandler", doc="Handler for key 'real_elements'.")
-    _arity = 1
+    nargs = 1
 
 
 class ComplexElementsPredicate(Predicate):
@@ -418,7 +418,7 @@ class ComplexElementsPredicate(Predicate):
     """
     name = "complex_elements"
     handler = Dispatcher("ComplexElementsHandler", doc="Handler for key 'complex_elements'.")
-    _arity = 1
+    nargs = 1
 
 
 class SingularPredicate(Predicate):
@@ -445,7 +445,7 @@ class SingularPredicate(Predicate):
     """
     name = "singular"
     handler = Dispatcher("SingularHandler", doc="Predicate fore key 'singular'.")
-    _arity = 1
+    nargs = 1
 
 
 class NormalPredicate(Predicate):
@@ -470,7 +470,7 @@ class NormalPredicate(Predicate):
     """
     name = "normal"
     handler = Dispatcher("NormalHandler", doc="Predicate fore key 'normal'.")
-    _arity = 1
+    nargs = 1
 
 
 class TriangularPredicate(Predicate):
@@ -501,7 +501,7 @@ class TriangularPredicate(Predicate):
     """
     name = "triangular"
     handler = Dispatcher("TriangularHandler", doc="Predicate fore key 'triangular'.")
-    _arity = 1
+    nargs = 1
 
 
 class UnitTriangularPredicate(Predicate):
@@ -525,4 +525,4 @@ class UnitTriangularPredicate(Predicate):
     """
     name = "unit_triangular"
     handler = Dispatcher("UnitTriangularHandler", doc="Predicate fore key 'unit_triangular'.")
-    _arity = 1
+    nargs = 1
