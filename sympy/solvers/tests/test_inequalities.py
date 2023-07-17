@@ -536,13 +536,13 @@ def test_linprog_maximize_from_equations():
             res = scipy.optimize.linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
             return res
 
-    def make_random_problem(num_variables=2, num_constraints=2, sparcity=.1):
+    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
         def rand():
-            if random() < sparcity:
+            if random() < sparsity:
                 return sympify(0)
-            int1 = randprime(0,200); int2 = randprime(0,200)
+            int1, int2 = [randprime(0, 200) for _ in range(2)]
             return Rational(int1, int2)*choice([-1, 1])
-        variables = symbols('x1:%s'%(num_variables+1))
+        variables = symbols('x1:%s' % (num_variables + 1))
         constraints = [(sum(rand()*x for x in variables) <= rand())
                        for _ in range(num_constraints)]
         objective = sum(rand() * x for x in variables)
