@@ -97,7 +97,7 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"\mathit{x}", Symbol('x')),
     (r"\mathit{test}", Symbol('test')),
     (r"\mathit{TEST}", Symbol('TEST')),
-    (r"\mathit{HELLO world}", Symbol('HELLO world')),
+    (r"\mathit{HELLO world}", Symbol('HELLO world'))
 ]
 
 SIMPLE_EXPRESSION_PAIRS = [
@@ -121,7 +121,7 @@ SIMPLE_EXPRESSION_PAIRS = [
     (r"a + b", a + b),
     (r"a + b - a", _Add(a + b, -a)),
     (r"(x + y) z", _Mul(_Add(x, y), z)),
-    (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'")))),
+    (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'"))))
 ]
 
 FRACTION_EXPRESSION_PAIRS = [
@@ -132,9 +132,8 @@ FRACTION_EXPRESSION_PAIRS = [
     (r"\frac12y", _Mul(_Pow(2, -1), y)),
     (r"\frac1234", _Mul(_Pow(2, -1), 34)),
     (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
-    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1))), # TODO: Check later.
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
-    (r"\frac{7}{3}", _Mul(7, _Pow(3, -1))),
+    (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
 ]
 
 RELATION_EXPRESSION_PAIRS = [
@@ -151,7 +150,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"x > y", StrictGreaterThan(x, y)),
     (r"x \geq y", GreaterThan(x, y)),
     (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
-    (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2)),
+    (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
 ]
 
 POWER_EXPRESSION_PAIRS = [
@@ -159,7 +158,7 @@ POWER_EXPRESSION_PAIRS = [
     (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
 ]
 
 INTEGRAL_EXPRESSION_PAIRS = [
@@ -205,7 +204,8 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\sin a \cos b", _Mul(sin(a), cos(b))),
     (r"\sin \cos \theta", sin(cos(theta))),
     (r"\sin(\cos \theta)", sin(cos(theta))),
-    (r"(\csc x)(\sec y)", csc(x) * sec(y))
+    (r"(\csc x)(\sec y)", csc(x) * sec(y)),
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
 ]
 
 LIMIT_EXPRESSION_PAIRS = [
@@ -218,7 +218,7 @@ LIMIT_EXPRESSION_PAIRS = [
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
     (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
-    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo)),
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo))
 ]
 
 SQRT_EXPRESSION_PAIRS = [
@@ -227,7 +227,7 @@ SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
     (r"\sqrt[y]{\sin x}", root(sin(x), y)),
     (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
-    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1)))),
+    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
 ]
 
 FACTORIAL_EXPRESSION_PAIRS = [
@@ -237,7 +237,7 @@ FACTORIAL_EXPRESSION_PAIRS = [
     (r"(x + 1)!", _factorial(_Add(x, 1))),
     (r"(x!)!", _factorial(_factorial(x))),
     (r"x!!!", _factorial(_factorial(_factorial(x)))),
-    (r"5!7!", _Mul(_factorial(5), _factorial(7))),
+    (r"5!7!", _Mul(_factorial(5), _factorial(7)))
 ]
 
 SUM_EXPRESSION_PAIRS = [
@@ -247,14 +247,14 @@ SUM_EXPRESSION_PAIRS = [
     (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
     (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
-     Sum(_Pow(_factorial(n), -1), (n, 0, oo))),
+     Sum(_Pow(_factorial(n), -1), (n, 0, oo)))
 ]
 
 PRODUCT_EXPRESSION_PAIRS = [
     (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
     (r"\prod^{c}_{a = b} x", Product(x, (a, b, c))),
-    (r"\prod^c_{a = b} x", Product(x, (a, b, c))),
+    (r"\prod^c_{a = b} x", Product(x, (a, b, c)))
 ]
 
 APPLIED_FUNCTION_EXPRESSION_PAIRS = [
@@ -268,7 +268,7 @@ APPLIED_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{z}", _Conjugate(z)),
     (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
     (r"\overline{x + y}", _Conjugate(_Add(x, y))),
-    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
+    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y))
 ]
 
 COMMON_FUNCTION_EXPRESSION_PAIRS = [
@@ -290,7 +290,7 @@ COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\log_{11} x", _log(x, 11)),
     (r"\log_{a^2} x", _log(x, _Pow(a, 2))),
     (r"\log_2 x", _log(x, 2)),
-    (r"\log_a x", _log(x, a)),
+    (r"\log_a x", _log(x, a))
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
@@ -305,7 +305,7 @@ SPACING_RELATED_EXPRESSION_PAIRS = [
     (r"a \! b", _Mul(a, b)),
     (r"a \negthinspace b", _Mul(a, b)),
     (r"a \negmedspace b", _Mul(a, b)),
-    (r"a \negthickspace b", _Mul(a, b)),
+    (r"a \negthickspace b", _Mul(a, b))
 ]
 
 BINOMIAL_EXPRESSION_PAIRS = [
@@ -313,7 +313,7 @@ BINOMIAL_EXPRESSION_PAIRS = [
     (r"\tbinom{n}{k}", _binomial(n, k)),
     (r"\dbinom{n}{k}", _binomial(n, k)),
     (r"\binom{n}{0}", _binomial(n, 0)),
-    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k))),
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k)))
 ]
 
 MISCELLANEOUS_EXPRESSION_PAIRS = [
@@ -325,7 +325,7 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
     (r"[x]", x),
-    (r"[a + b]", _Add(a, b)),
+    (r"[a + b]", _Add(a, b))
 ]
 
 def test_symbol_expressions():
@@ -337,7 +337,6 @@ def test_simple_expressions():
         assert parse_latex(latex_str) == sympy_expr, latex_str
 
 def test_fraction_expressions():
-    from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
         assert parse_latex(latex_str) == sympy_expr, latex_str
 
