@@ -925,24 +925,19 @@ class Quaternion(Expr):
         668 + (-224)*i + (-336)*j + (-448)*k
 
         """
-        p = sympify(p)
-        q = self
         if p == -1:
-            return q.inverse()
-        res = 1
-
-        if not p.is_Integer:
+            return self.inverse()
+        if not isinstance(p, int):
             return NotImplemented
-
         if p < 0:
-            q, p = q.inverse(), -p
+            return self.inverse().pow(-p)
 
+        q, res = self, Quaternion(1, 0, 0, 0)
         while p > 0:
-            if p % 2 == 1:
-                res = q * res
-
-            p = p//2
-            q = q * q
+            if p & 1:
+                res *= q
+            q *= q
+            p >>= 1
 
         return res
 
