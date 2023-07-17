@@ -376,35 +376,18 @@ def test_SDM_nullspace():
 
 
 def test_SDM_rref():
-    eye2 = SDM({0:{0:QQ(1)}, 1:{1:QQ(1)}}, (2, 2), QQ)
+    # More tests are in test_rref.py
 
-    A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
+    A = SDM({0:{0:QQ(1), 1:QQ(2)},
+             1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
+    A_rref = SDM({0:{0:QQ(1)}, 1:{1:QQ(1)}}, (2, 2), QQ)
+    assert A.rref() == (A_rref, [0, 1])
 
-    A = SDM({0:{0:QQ(1)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
-
-    A = SDM({0:{1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-    assert A.rref() == (eye2, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(2), 2:QQ(3)},
-             1:{0:QQ(4), 1:QQ(5), 2:QQ(6)},
-             2:{0:QQ(7), 1:QQ(8), 2:QQ(9)} }, (3, 3), QQ)
-    Arref = SDM({0:{0:QQ(1), 2:QQ(-1)}, 1:{1:QQ(1), 2:QQ(2)}}, (3, 3), QQ)
-    assert A.rref() == (Arref, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(2), 3:QQ(1)},
-             1:{0:QQ(1), 1:QQ(1), 2:QQ(9)}}, (2, 4), QQ)
-    Arref = SDM({0:{0:QQ(1), 2:QQ(18), 3:QQ(-1)},
-                 1:{1:QQ(1), 2:QQ(-9), 3:QQ(1)}}, (2, 4), QQ)
-    assert A.rref() == (Arref, [0, 1])
-
-    A = SDM({0:{0:QQ(1), 1:QQ(1), 2:QQ(1)},
-             1:{0:QQ(1), 1:QQ(2), 2:QQ(2)}}, (2, 3), QQ)
-    Arref = SDM(
-            {0: {0: QQ(1,1)}, 1: {1: QQ(1,1), 2: QQ(1,1)}},
-            (2, 3), QQ)
-    assert A.rref() == (Arref, [0, 1])
+    A = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(2)},
+             1: {0: QQ(3),           2: QQ(4)}}, (2, 3), ZZ)
+    A_rref = SDM({0: {0: QQ(1,1), 2: QQ(4,3)},
+                  1: {1: QQ(1,1), 2: QQ(1,3)}}, (2, 3), QQ)
+    assert A.rref() == (A_rref, [0, 1])
 
 
 def test_SDM_particular():

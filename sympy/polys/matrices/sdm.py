@@ -1601,10 +1601,10 @@ def sdm_rref_den(A, K):
 
     # Handle the trivial cases.
     if not A:
-        return {}, K.one, ()
+        return {}, K.one, []
     elif len(A) == 1:
         Ai, = A.values()
-        return {0: Ai.copy()}, K.one, (0,)
+        return {0: Ai.copy()}, K.one, [0]
 
     # Make sure we have the rows in order to make this deterministic from the
     # outset.
@@ -1762,6 +1762,7 @@ def sdm_rref_den(A, K):
     row_to_col = {i: j for j, i in col_to_row.items()}
     A_rref_rows_col = [(row_to_col[i], Ai) for i, Ai in enumerate(A_rref_rows)]
     pivots, A_rref = zip(*sorted(A_rref_rows_col))
+    pivots = list(pivots)
 
     # Insert the pivot values
     for i, Ai in enumerate(A_rref):
