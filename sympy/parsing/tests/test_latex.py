@@ -22,6 +22,8 @@ from sympy.series.limits import Limit
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
+
+from sympy.parsing.latex import parse_latex, LaTeXParsingError
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python3-runtime is not present
@@ -326,10 +328,73 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"[a + b]", _Add(a, b)),
 ]
 
+def test_symbol_expressions():
+    for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
 
-def test_parseable():
+def test_simple_expressions():
+    for latex_str, sympy_expr in SIMPLE_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_fraction_expressions():
     from sympy.parsing.latex import parse_latex
-    for latex_str, sympy_expr in GOOD_PAIRS:
+    for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_relation_expressions():
+    for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_integral_expressions():
+    for latex_str, sympy_expr in INTEGRAL_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_derivative_expressions():
+    for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_trigonometric_expressions():
+    for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_limit_expressions():
+    for latex_str, sympy_expr in LIMIT_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_square_root_expressions():
+    for latex_str, sympy_expr in SQRT_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_factorial_expressions():
+    for latex_str, sympy_expr in FACTORIAL_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_sum_expressions():
+    for latex_str, sympy_expr in SUM_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_product_expressions():
+    for latex_str, sympy_expr in PRODUCT_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_applied_function_expressions():
+    for latex_str, sympy_expr in APPLIED_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_common_function_expressions():
+    for latex_str, sympy_expr in COMMON_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_spacing():
+    for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_binomial_expressions():
+    for latex_str, sympy_expr in BINOMIAL_EXPRESSION_PAIRS:
+        assert parse_latex(latex_str) == sympy_expr, latex_str
+
+def test_miscellaneous_expressions():
+    for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
         assert parse_latex(latex_str) == sympy_expr, latex_str
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
@@ -375,7 +440,6 @@ BAD_STRINGS = [
 ]
 
 def test_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
@@ -396,14 +460,12 @@ FAILING_BAD_STRINGS = [
 
 @XFAIL
 def test_failing_not_parseable():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
 
 # In strict mode, FAILING_BAD_STRINGS would fail
 def test_strict_mode():
-    from sympy.parsing.latex import parse_latex, LaTeXParsingError
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
