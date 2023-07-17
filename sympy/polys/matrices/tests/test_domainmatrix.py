@@ -1,6 +1,5 @@
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
-
-from sympy.polys.domains import FF, ZZ, QQ, EXRAW
+from sympy import FF, ZZ, QQ, QQ_I, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
@@ -529,6 +528,11 @@ def test_DomainMatrix_cancel_denom():
 
     A = DM([[1, 2], [3, 4]], ZZ)
     assert A.cancel_denom(ZZ(2)) == (A, ZZ(2))
+    assert A.cancel_denom(ZZ(-2)) == (-A, ZZ(2))
+
+    # Test canonicalization of denominator over Gaussian rationals.
+    A = DM([[1, 2], [3, 4]], QQ_I)
+    assert A.cancel_denom(QQ_I(0,2)) == (QQ_I(0,-1)*A, QQ_I(2))
 
     raises(ZeroDivisionError, lambda: A.cancel_denom(ZZ(0)))
 
@@ -566,28 +570,28 @@ def test_DomainMatrix_scc():
 
 def test_DomainMatrix_rref():
     A = DomainMatrix([], (0, 1), QQ)
-    assert A.rref() == (A, ())
+    assert A.rref() == (A, [])
 
     A = DomainMatrix([[QQ(1)]], (1, 1), QQ)
-    assert A.rref() == (A, (0,))
+    assert A.rref() == (A, [0])
 
     A = DomainMatrix([[QQ(0)]], (1, 1), QQ)
-    assert A.rref() == (A, ())
+    assert A.rref() == (A, [])
 
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
-    assert pivots == (0, 1)
+    assert pivots == [0, 1]
 
     A = DomainMatrix([[QQ(0), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
-    assert pivots == (0, 1)
+    assert pivots == [0, 1]
 
     A = DomainMatrix([[QQ(0), QQ(2)], [QQ(0), QQ(4)]], (2, 2), QQ)
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(0), QQ(1)], [QQ(0), QQ(0)]], (2, 2), QQ)
-    assert pivots == (1,)
+    assert pivots == [1]
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     raises(DMNotAField, lambda: Az.rref())

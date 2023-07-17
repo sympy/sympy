@@ -36,11 +36,13 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
+from sympy.polys.densearith import dup_neg
 from sympy.polys.densetools import (
-    dup_content,
-    dup_clear_denoms,
-    dup_primitive,
+    dup_mul_ground,
     dup_quo_ground,
+    dup_content,
+    dup_primitive,
+    dup_clear_denoms,
 )
 
 
@@ -1592,6 +1594,14 @@ class DomainMatrix:
         >>> Minv_reduced.to_field() / den_reduced == Minv.to_field() / den
         True
 
+        The denominator is made canonical respect to units (e.g. a negative
+        denominator is made positive):
+
+        >>> M = DM([[2, 2, 0]], ZZ)
+        >>> den = ZZ(-4)
+        >>> M.cancel_denom(den)
+        (DomainMatrix([[-1, -1, 0]], (1, 3), ZZ), 2)
+
         Any factor common to _all_ elements will be cancelled but there can
         still be factors in common between _some_ elements of the matrix and
         the denominator. To cancel factors between each element and the
@@ -1628,26 +1638,36 @@ class DomainMatrix:
 
         elements, data = M.to_flat_nz()
 
+        # First canonicalize the denominator (e.g. multiply by -1).
+        if K.is_negative(denom):
+            u = -K.one
+        else:
+            u = K.canonical_unit(denom)
+
         # Often after e.g. solve_den the denominator will be much more
         # complicated than the elements of the numerator. Hopefully it will be
         # quicker to find the gcd of the numerator and if there is no content
         # then we do not need to look at the denominator at all.
         content = dup_content(elements, K)
-
-        if K.is_one(content):
-            return (M.copy(), denom)
-
         common = K.gcd(content, denom)
 
-        if K.is_one(common):
+        if not K.is_one(content):
+
+            common = K.gcd(content, denom)
+
+            if not K.is_one(common):
+                elements = dup_quo_ground(elements, common, K)
+                denom = K.quo(denom, common)
+
+        if not K.is_one(u):
+            elements = dup_mul_ground(elements, u, K)
+            denom = u * denom
+        elif K.is_one(common):
             return (M.copy(), denom)
 
-        elements_cancelled = dup_quo_ground(elements, common, K)
-        denom_cancelled = K.quo(denom, common)
+        M_cancelled = M.from_flat_nz(elements, data, K)
 
-        M_cancelled = M.from_flat_nz(elements_cancelled, data, K)
-
-        return M_cancelled, denom_cancelled
+        return M_cancelled, denom
 
     def cancel_denom_elementwise(self, denom):
         """
@@ -1812,7 +1832,7 @@ class DomainMatrix:
         if not self.domain.is_Field:
             raise DMNotAField('Not a field')
         rref_ddm, pivots = self.rep.rref()
-        return self.from_rep(rref_ddm), tuple(pivots)
+        return self.from_rep(rref_ddm), pivots
 
     def rref_den(self):
         r"""
@@ -1860,7 +1880,7 @@ class DomainMatrix:
 
         """
         rref_ddm, denom, pivots = self.rep.rref_den()
-        return self.from_rep(rref_ddm), denom, tuple(pivots)
+        return self.from_rep(rref_ddm), denom, pivots
 
     def columnspace(self):
         r"""
