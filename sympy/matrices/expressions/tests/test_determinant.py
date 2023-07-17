@@ -28,6 +28,8 @@ def test_det():
 
     assert Determinant(A).arg is A
 
+    assert isinstance(Determinant(eye(2)).doit(determinant=False), Determinant)
+
 def test_eval_determinant():
     assert det(Identity(n)) == 1
     assert det(ZeroMatrix(n, n)) == 0
