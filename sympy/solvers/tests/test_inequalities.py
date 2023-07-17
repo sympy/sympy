@@ -332,8 +332,8 @@ def test_solve_univariate_inequality():
     raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
     n = Dummy('n', negative=True)
     assert isolve(n/c1 > -2, c1) == (-n/2 < c1)
-    assert isolve(n/c1 < 0, c1) is True
-    assert isolve(n/c1 > 0, c1) is False
+    assert isolve(n/c1 < 0, c1) == True
+    assert isolve(n/c1 > 0, c1) == False
 
     zero = cos(1)**2 + sin(1)**2 - 1
     raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
