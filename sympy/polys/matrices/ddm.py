@@ -598,22 +598,55 @@ class DDM(list):
         return b, denom, pivots
 
     def nullspace(a):
+        """Returns a basis for the nullspace of a.
+
+        The domain of the matrix must be a field.
+
+        See Also
+        ========
+
+        rref
+        sympy.polys.matrices.domainmatrix.DomainMatrix.nullspace
+        """
         rref, pivots = a.rref()
-        rows, cols = a.shape
-        domain = a.domain
+        return rref.nullspace_from_rref(pivots)
+
+    def nullspace_from_rref(a, pivots):
+        """Compute the nullspace of a matrix from its rref.
+
+        The domain of the matrix can be any domain.
+
+        Returns a tuple (basis, nonpivots).
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.nullspace
+            The higher level interface to this function.
+        """
+        m, n = a.shape
+        K = a.domain
+
+        if not pivots:
+            return (a.eye(n, K), list(range(n)))
+
+        # After rref the pivots are all one but after rref_den they may not be.
+        pivot_val = a[0][pivots[0]]
 
         basis = []
         nonpivots = []
-        for i in range(cols):
+        for i in range(n):
             if i in pivots:
                 continue
             nonpivots.append(i)
-            vec = [domain.one if i == j else domain.zero for j in range(cols)]
+            vec = [pivot_val if i == j else K.zero for j in range(n)]
             for ii, jj in enumerate(pivots):
-                vec[jj] -= rref[ii][i]
+                vec[jj] -= a[ii][i]
             basis.append(vec)
 
-        return DDM(basis, (len(basis), cols), domain), nonpivots
+        basis_ddm = DDM(basis, (len(basis), n), K)
+
+        return (basis_ddm, nonpivots)
 
     def particular(a):
         return a.to_sdm().particular().to_ddm()
