@@ -685,7 +685,7 @@ def test_linear_optimization():
         constraints = [(sum(rand()*x for x in variables) <= rand())
                        for _ in range(num_constraints)]
         objective = sum(rand() * x for x in variables)
-        return constraints, objective, variables
+        return objective, constraints, variables
 
     # testing random problems
     if scipy is not None and np is not None:
