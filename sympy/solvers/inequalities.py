@@ -1075,7 +1075,7 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     return row
 
 
-def _simplex(A, B, C):
+def _simplex(A, B, C, D=ImmutableMatrix([0])):
     """
     Two phase simplex method with Bland's rule
 
@@ -1087,7 +1087,6 @@ def _simplex(A, B, C):
     """
     from sympy.matrices.dense import Matrix
 
-    D = ImmutableMatrix([0])
     M = Matrix([[A, B], [-C, D]])
 
     if not all(i.is_Float or i.is_Rational for i in M):
@@ -1362,12 +1361,16 @@ def _linear_programming_to_matrix(constraints, objective, variables):
             eqns.append(rel.lhs - rel.rhs)
             eqns.append(rel.rhs - rel.lhs)
 
+    obj_const = objective.subs({var: 0 for var in variables})
+
     A, B = linear_eq_to_matrix(eqns, *variables)
+    C = linear_eq_to_matrix(objective, *variables)[0]
+    D = ImmutableMatrix([obj_const])
+
     eqns = A*Matrix(variables)
     standard_constraints = [eqns[i] <= B[i] for i in range(len(B))]
-    C = linear_eq_to_matrix(objective, *variables)[0] # constant terms can be safely ignored here
 
-    return A, B, C, standard_constraints
+    return A, B, C, D, standard_constraints
 
 
 def linprog_maximize_from_equations(constraints, objective, variables):
@@ -1422,8 +1425,8 @@ def linprog_maximize_from_equations(constraints, objective, variables):
     linprog_from_matrices
     find_feasible
     """
-    A, B, C, standard_constraints = _linear_programming_to_matrix(constraints, objective, variables)
-    optimum, argmax, argmax_dual = _simplex(A, B, C)
+    A, B, C, D, standard_constraints = _linear_programming_to_matrix(constraints, objective, variables)
+    optimum, argmax, argmax_dual = _simplex(A, B, C, D)
     argmax = {variables[i] : argmax[i] for i in range(len(variables))}
     argmax_dual = {standard_constraints[i] : argmax_dual[i] for i in range(len(standard_constraints))}
     return optimum, argmax, argmax_dual
