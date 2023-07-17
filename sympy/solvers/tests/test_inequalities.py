@@ -539,18 +539,6 @@ def test_linear_optimization():
             res = scipy.optimize.linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
             return res
 
-    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
-        def rand():
-            if random() < sparsity:
-                return sympify(0)
-            int1, int2 = [randprime(0, 200) for _ in range(2)]
-            return Rational(int1, int2)*choice([-1, 1])
-        variables = symbols('x1:%s' % (num_variables + 1))
-        constraints = [(sum(rand()*x for x in variables) <= rand())
-                       for _ in range(num_constraints)]
-        objective = sum(rand() * x for x in variables)
-        return constraints, objective, variables
-
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
     r3 = 2*x + y + 7*z <= 5
@@ -687,17 +675,17 @@ def test_linear_optimization():
     r1 = Ne(x, 0)
     raises(TypeError, lambda: linear_optimization(x, [r1], [x]))
 
-    def make_random_problem(num_variables=2, num_constraints=2, sparcity=.1):
+    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
         def rand():
-            if random() < sparcity:
+            if random() < sparsity:
                 return sympify(0)
-            int1 = randprime(0,200); int2 = randprime(0,200)
+            int1, int2 = [randprime(0, 200) for _ in range(2)]
             return Rational(int1, int2)*choice([-1, 1])
-        variables = symbols('x1:%s'%(num_variables+1))
+        variables = symbols('x1:%s' % (num_variables + 1))
         constraints = [(sum(rand()*x for x in variables) <= rand())
                        for _ in range(num_constraints)]
         objective = sum(rand() * x for x in variables)
-        return objective, constraints, variables
+        return constraints, objective, variables
 
     # testing random problems
     if scipy is not None and np is not None:
