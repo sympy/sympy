@@ -3,10 +3,12 @@
 from sympy.concrete.summations import Sum
 from sympy.core.function import Function
 from sympy.core.numbers import I, Rational, oo, pi
-from sympy.core.relational import Eq, Ge, Gt, Le, Lt, Ne
+from sympy.core.relational import Relational, Eq, Ge, Gt, Le, Lt, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify
+from sympy.core.random import random, choice
+from sympy.ntheory.generate import randprime
 from sympy.assumptions.ask import Q
 from sympy.matrices.dense import Matrix, eye
 from sympy.functions.elementary.complexes import Abs
@@ -521,7 +523,7 @@ def test_linprog_maximize_from_equations():
     np = import_module("numpy")
     scipy = import_module("scipy")
 
-    def compare_optimum_with_scipy(constraints, objective, variables, optimum):
+    def get_results_with_scipy(constraints, objective, variables):
         if scipy is not None and np is not None:
             A, B, C, _ = _linear_programming_to_matrix(constraints, objective, variables)
 
@@ -532,10 +534,20 @@ def test_linprog_maximize_from_equations():
             B_sci = np.array(B_sci.tolist())
             C_sci = np.array(C_sci.tolist())
             res = scipy.optimize.linprog(C_sci, A_ub=A_sci, b_ub=B_sci)
+            return res
 
-            scipy_optimum = - res.fun
-            optimum = sympify(optimum)
-            assert scipy_optimum == optimum.evalf()
+    def make_random_problem(num_variables=2, num_constraints=2, sparcity=.1):
+        def rand():
+            if random() < sparcity:
+                return sympify(0)
+            int1 = randprime(0,200); int2 = randprime(0,200)
+            return Rational(int1, int2)*choice([-1, 1])
+        variables = symbols('x1:%s'%(num_variables+1))
+        constraints = [(sum(rand()*x for x in variables) <= rand())
+                       for _ in range(num_constraints)]
+        objective = sum(rand() * x for x in variables)
+        return constraints, objective, variables
+
 
     r1 = y+2*z <= 3
     r2 = -x - 3*z <= -2
@@ -544,7 +556,8 @@ def test_linprog_maximize_from_equations():
     objective = -x - y - 5 * z
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
-    compare_optimum_with_scipy(constraints, objective, variables, optimum)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -558,7 +571,8 @@ def test_linprog_maximize_from_equations():
     objective = -x - y - 5*z
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
-    compare_optimum_with_scipy(constraints, objective, variables,  optimum)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -572,7 +586,8 @@ def test_linprog_maximize_from_equations():
     objective = -x-y-5*z
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
-    compare_optimum_with_scipy(constraints, objective, variables, optimum)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -600,7 +615,8 @@ def test_linprog_maximize_from_equations():
     objective = x
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
-    compare_optimum_with_scipy(constraints, objective, variables, optimum)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -614,6 +630,8 @@ def test_linprog_maximize_from_equations():
     objective = x + y
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert optimum == 8
     assert [x.subs(argmax), y.subs(argmax)] == [4, 4]
     B = _linear_programming_to_matrix(constraints, objective, variables)[1]
@@ -627,7 +645,8 @@ def test_linprog_maximize_from_equations():
     objective = -x-y-5*z
     variables = [x, y, z]
     optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
-    compare_optimum_with_scipy(constraints, objective, variables, optimum)
+    scipy_res = get_results_with_scipy(constraints, objective, variables)
+    assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
@@ -652,3 +671,33 @@ def test_linprog_maximize_from_equations():
     # not equals not allowed
     r1 = Ne(x, 0)
     raises(TypeError, lambda: linprog_maximize_from_equations([r1], x, [x]))
+
+    # testing random problems
+    for _ in range(100):
+        constraints, objective, variables = make_random_problem()
+        constraints = [c for c in constraints if isinstance(c, Relational)] # in case c auto simplifies to True or False
+        if len(constraints) == 0:
+            continue
+
+        scipy_res = get_results_with_scipy(constraints, objective, variables)
+        if scipy_res.status == 0:
+            optimum, argmax, argmax_dual = linprog_maximize_from_equations(constraints, objective, variables)
+            scipy_op = -scipy_res.fun
+            assert abs(optimum.evalf() - scipy_op) < .1**10
+            assert objective.subs(argmax) == optimum
+            for constr in constraints:
+                assert constr.subs(argmax) == True
+            B = _linear_programming_to_matrix(constraints, objective, variables)[1]
+            assert (Matrix([list(argmax_dual.values())]) * B)[0, 0] == optimum
+        elif scipy_res.status == 2:
+            # scipy: problem is infeasible
+            raises(InfeasibleLinearProgrammingError,
+                   lambda: linprog_maximize_from_equations(constraints, objective, variables))
+        elif scipy_res.status == 3:
+            # scipy: problem is unbounded
+            raises(UnboundedLinearProgrammingError,
+                   lambda: linprog_maximize_from_equations(constraints, objective, variables))
+        else:
+            # scipy: either iteration limit reached or numerical difficulties
+            pass
+    #test_random_problem()
