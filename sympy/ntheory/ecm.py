@@ -332,7 +332,7 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     """
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
-        raise ValueError("The Bounds should be an even integer")
+        raise ValueError("both bounds must be even")
     _factors = set()
     for prime in sieve.primerange(1, 100000):
         if n % prime == 0:
