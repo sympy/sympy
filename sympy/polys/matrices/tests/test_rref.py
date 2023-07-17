@@ -185,7 +185,7 @@ def test_sdm_rref_den(name, A, A_rref, den):
     A = A.to_sdm()
     A_rref = A_rref.to_sdm()
     pivots = _pivots(A_rref)
-    assert A.rref_den() == (A_rref, den, list(pivots))
+    assert A.rref_den() == (A_rref, den, pivots)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)

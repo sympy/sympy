@@ -1918,7 +1918,7 @@ class DomainMatrix:
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
 
-    def nullspace(self):
+    def nullspace(self, normalize=False):
         r"""
         Returns the nullspace for the DomainMatrix
 
@@ -1932,17 +1932,124 @@ class DomainMatrix:
         ========
 
         >>> from sympy import QQ
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [QQ(1), QQ(-1)],
-        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([
+        ...    [QQ(2), QQ(-2)],
+        ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
+        DomainMatrix([[2, 2]], (1, 2), QQ)
+        >>> A.nullspace(normalize=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
+        The returned matrix is a basis for the nullspace:
+
+        >>> A_null = A.nullspace().transpose()
+        >>> A * A_null
+        DomainMatrix([[0], [0]], (2, 1), QQ)
+        >>> rows, cols = A.shape
+        >>> nullity = rows - A.rank()
+        >>> A_null.shape == (cols, nullity)
+        True
+
+        Nullspace can also be computed for non-field rings. If the ring is not
+        a field then normalization is not done. Setting normalize to True will
+        raise an error.
+
+        >>> from sympy import ZZ
+        >>> B = DM([[6, -3],
+        ...         [4, -2]], ZZ)
+        >>> B.nullspace()
+        DomainMatrix([[3, 6]], (1, 2), ZZ)
+        >>> B.nullspace(normalize=True)
+        Traceback (most recent call last):
+        ...
+        ValueError: Cannot normalize vectors over a non-field
+
+        Over a ring with ``gcd`` defined the nullspace can potentially be
+        reduced with :meth:`primitive`:
+
+        >>> B.nullspace().primitive()
+        (3, DomainMatrix([[1, 2]], (1, 2), ZZ))
+
+        A matrix over a ring can often be normalized by converting it to a
+        field but it is often a bad idea to do so:
+
+        >>> from sympy.abc import a, b, c
+        >>> from sympy import Matrix
+        >>> M = Matrix([[        a*b,       b + c,        c],
+        ...             [      a - b,         b*c,     c**2],
+        ...             [a*b + a - b, b*c + b + c, c**2 + c]])
+        >>> M.to_DM().domain
+        ZZ[a,b,c]
+        >>> M.to_DM().nullspace().to_Matrix()
+        Matrix([
+        [                             c**3],
+        [            -a*b*c**2 + a*c - b*c],
+        [a*b**2*c - a*b - a*c + b**2 + b*c]])
+
+        The unnormalized form here is nicer than the normalized form that
+        spreads a large denominator throughout the matrix:
+
+        >>> M.to_DM().to_field().nullspace(normalize=True).to_Matrix()
+        Matrix([
+        [                   c**3/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [(-a*b*c**2 + a*c - b*c)/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [                                                          1]])
+
+        Parameters
+        ==========
+
+        normalize : bool, optional
+            If False (the default), the vectors are not normalized and the RREF
+            is computed using :meth:`rref_den` and discarding the denominator.
+            If ``normalize=True`` is passed, then :meth:`rref` is used and the
+            vectors in the nullspace are normalized so that the bottom non-zero
+            entry in each column is 1.
+
+        See Also
+        ========
+
+        nullspace_from_rref
+        rref
+        rref_den
+        rowspace
         """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        return self.from_rep(self.rep.nullspace()[0])
+        A = self
+        K = A.domain
+
+        if normalize and not K.is_Field:
+            raise ValueError("Cannot normalize vectors over a non-field")
+
+        if normalize:
+            A_rref, pivots = A.rref()
+        else:
+            A_rref, den, pivots = A.rref_den()
+
+        A_null = A_rref.nullspace_from_rref(pivots)
+
+        return A_null
+
+    def nullspace_from_rref(self, pivots=None):
+        """
+        Compute nullspace from rref and pivots.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must be in reduced row echelon form already. Otherwise the
+        result will be incorrect. Use :meth:`rref` or :meth:`rref_den` first
+        to get the reduced row echelon form or use :meth:`nullspace` instead.
+
+        See Also
+        ========
+
+        nullspace
+        rref
+        rref_den
+        sympy.polys.matrices.sdm.SDM.nullspace_from_rref
+        sympy.polys.matrices.ddm.DDM.nullspace_from_rref
+        """
+        null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
+        return self.from_rep(null_rep)
 
     def inv(self):
         r"""
