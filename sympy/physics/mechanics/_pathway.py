@@ -123,7 +123,7 @@ class LinearPathway(PathwayBase):
 
     A linear pathway forms a straight-line segment between two points and is
     the simplest pathway that can be formed. It will not interact with any
-    other objects in the system, i.e. a ``LinearPathway`` will interest other
+    other objects in the system, i.e. a ``LinearPathway`` will intersect other
     objects to ensure that the path between its two ends (its attachments) is
     the shortest possible.
 
