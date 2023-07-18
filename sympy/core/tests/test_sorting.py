@@ -32,4 +32,4 @@ def test_ordered():
 def test_tie_breaker_in_case_of_equality():
     # Issue #24045
     a, b, c = symbols("a b c")
-    powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))
+    list(ordered([a * c - b * c, 1.0 * a * c - 1.0 * b * c]))
