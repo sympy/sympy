@@ -339,7 +339,7 @@ def _to_DM(A, ans):
 
 def _pivots(A_rref):
     """Return the pivots from the rref of A."""
-    return list(sorted(map(min, A_rref.to_sdm().values())))
+    return sorted(map(min, A_rref.to_sdm().values()))
 
 
 def _check_cancel(result, rref_ans, den_ans):
