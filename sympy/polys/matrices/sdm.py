@@ -1601,10 +1601,12 @@ def sdm_rref_den(A, K):
 
     # Handle the trivial cases.
     if not A:
-        return {}, K.one, []
+        return ({}, K.one, [])
     elif len(A) == 1:
         Ai, = A.values()
-        return {0: Ai.copy()}, K.one, [0]
+        j = min(Ai)
+        Aij = Ai[j]
+        return ({0: Ai.copy()}, Aij, [j])
 
     # Make sure we have the rows in order to make this deterministic from the
     # outset.
