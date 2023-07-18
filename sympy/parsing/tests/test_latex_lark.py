@@ -68,12 +68,6 @@ def _binomial(n, k):
     return binomial(n, k, evaluate=False)
 
 
-def test_parseable():
-    from sympy.parsing.latex.lark import parse_latex_lark
-    for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
-
-
 # These LaTeX strings should parse to the corresponding SymPy expression
 SYMBOL_EXPRESSION_PAIRS = [
     (r"x_0", Symbol('x_{0}')),
@@ -318,57 +312,71 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"[a + b]", _Add(a, b))
 ]
 
+
 def test_symbol_expressions():
     for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_simple_expressions():
     for latex_str, sympy_expr in SIMPLE_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_fraction_expressions():
     for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_relation_expressions():
     for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_integral_expressions():
     for latex_str, sympy_expr in INTEGRAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_derivative_expressions():
     for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_trigonometric_expressions():
     for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_limit_expressions():
     for latex_str, sympy_expr in LIMIT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_square_root_expressions():
     for latex_str, sympy_expr in SQRT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_factorial_expressions():
     for latex_str, sympy_expr in FACTORIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_sum_expressions():
     for latex_str, sympy_expr in SUM_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_product_expressions():
     for latex_str, sympy_expr in PRODUCT_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_applied_function_expressions():
     for latex_str, sympy_expr in APPLIED_FUNCTION_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_common_function_expressions():
     for latex_str, sympy_expr in COMMON_FUNCTION_EXPRESSION_PAIRS:
@@ -378,9 +386,11 @@ def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+
 def test_binomial_expressions():
     for latex_str, sympy_expr in BINOMIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
