@@ -25,8 +25,7 @@ from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 lark = import_module("lark")
 
-if not lark:
-    disabled = True
+disabled = lark is None
 
 theta = Symbol('theta')
 f = Function('f')
@@ -86,6 +85,7 @@ def determine_parseable_lark():
 
     return failure_list
 
+
 # A list of tests we usually use to test the edge cases and stress test the WIP implementation
 TRICKY_TESTS = [
     (r"\mathit{HELLO world}", Symbol('HELLO world')),
@@ -105,7 +105,7 @@ TRICKY_TESTS = [
 ]
 
 
-def tricky_tests():
+def test_tricky_tests():
     from sympy.parsing.latex.lark import parse_latex_lark
 
     failure_list = []
