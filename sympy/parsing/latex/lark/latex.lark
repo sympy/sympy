@@ -151,10 +151,10 @@ implicit_multiplication: (oneletter_symbol | number) expression_mul
     | fraction expression
 
 
-multidigits: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
+multidigit_number: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
 
 expression_func: expression_core
-    | multidigits
+    | multidigit_number
     | group_round_parentheses
     | unary_neg
     | fraction
@@ -174,8 +174,6 @@ expression: expression_mul | add | sub | limit
 list_of_expressions: expression | comma_operator
 
 comma_operator: list_of_expressions "," expression
-
-//    | limit
 
 limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
