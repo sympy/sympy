@@ -824,7 +824,7 @@ class SDM(dict):
         >>> from sympy.polys.matrices.sdm import SDM
         >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(2), 1:QQ(4)}}, (2, 2), QQ)
         >>> A.rref_den()
-        ({0: {0: 1, 1: 2}}, 1, (0,))
+        ({0: {0: 1, 1: 2}}, 1, [0])
 
         """
         K = A.domain
@@ -1554,7 +1554,7 @@ def sdm_rref_den(A, K):
     >>> den
     -2
     >>> pivots
-    (0, 1)
+    [0, 1]
 
     See Also
     ========

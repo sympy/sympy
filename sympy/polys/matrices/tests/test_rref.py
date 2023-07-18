@@ -435,7 +435,7 @@ def test_ddm_irref_den(name, A, A_rref, den):
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
 def test_sparse_sdm_rref(name, A, A_rref, den):
     A = A.to_field().to_sdm()
-    _check_divide(A.rref(), A_rref, den)
+    _check_divide(sdm_irref(A)[:2], A_rref, den)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
