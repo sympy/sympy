@@ -144,7 +144,7 @@ class Expr(Basic, EvalfMixin):
         args = (len(args), tuple(args))
         exp = exp.sort_key(order=order)
 
-        return expr.class_key(), args, exp, coeff
+        return expr.class_key(), args, exp, coeff.sort_key()
 
     def _hashable_content(self):
         """Return a tuple of information about self that can be used to

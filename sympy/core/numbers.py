@@ -1189,6 +1189,10 @@ class Float(Number):
     def _hashable_content(self):
         return (self._mpf_, self._prec)
 
+    @classmethod
+    def class_key(cls):
+        return 1, 0, 'Number_Float'
+
     def floor(self):
         return Integer(int(mlib.to_int(
             mlib.mpf_floor(self._mpf_, self._prec))))
