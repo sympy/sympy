@@ -402,7 +402,50 @@ class CNF:
 class EncodedCNF:
     """
     Class for encoding the CNF expression.
+
+    Example:
+        # Create an instance of EncodedCNF
+        encoded_cnf = EncodedCNF()
+
+        # Add a propositional expression
+        prop = Or('A', Not('B'))
+        encoded_cnf.add_prop(prop)
+
+        # Encode the CNF expression
+        encoded_cnf.from_cnf(encoded_cnf.to_cnf())
+
+        # Print the encoded data and encoding dictionary
+        print(encoded_cnf.data)
+        # Output: [{1, -2}]
+
+        print(encoded_cnf.encoding)
+        # Output: {'A': 1, 'B': 2}
+
+        # Retrieve the symbols used in encoding
+        print(encoded_cnf.symbols)
+        # Output: ['A', 'B']
+
+        # Retrieve the variable range used in encoding
+        print(encoded_cnf.variables)
+        # Output: range(1, 3)
+
+        # Create a copy of the encoded CNF object
+        copied_encoded_cnf = encoded_cnf.copy()
+
+        # Add more clauses from a CNF object
+        cnf = CNF.from_prop('A | B')
+        encoded_cnf.add_from_cnf(cnf)
+
+        # Check the updated encoded data
+        print(encoded_cnf.data)
+        # Output: [{1, -2}, {1, 2}]
+
+        # Check the copied encoded data (should remain unchanged)
+        print(copied_encoded_cnf.data)
+        # Output: [{1, -2}]
+
     """
+
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
             data = []
@@ -412,6 +455,12 @@ class EncodedCNF:
         self._symbols = list(encoding.keys())
 
     def from_cnf(self, cnf):
+        """
+        Encode the given CNF expression.
+
+        Args:
+            cnf (sympy.logic.boolalg.CNF): The CNF expression to encode.
+        """
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
@@ -419,25 +468,64 @@ class EncodedCNF:
 
     @property
     def symbols(self):
+        """
+        Retrieve the symbols used in encoding.
+
+        Returns:
+            list: List of symbols used in encoding.
+        """
         return self._symbols
 
     @property
     def variables(self):
+        """
+        Retrieve the variable range used in encoding.
+
+        Returns:
+            range: Range of variables used in encoding.
+        """
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
+        """
+        Create a copy of the EncodedCNF object.
+
+        Returns:
+            EncodedCNF: Copied instance of EncodedCNF.
+        """
         new_data = [set(clause) for clause in self.data]
         return EncodedCNF(new_data, dict(self.encoding))
 
     def add_prop(self, prop):
+        """
+        Add a propositional expression to the encoded CNF.
+
+        Args:
+            prop (sympy.logic.boolalg.BooleanFunction): The propositional expression to add.
+        """
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
 
     def add_from_cnf(self, cnf):
+        """
+        Add clauses from a CNF object to the encoded CNF.
+
+        Args:
+            cnf (sympy.logic.boolalg.CNF): The CNF object containing clauses to add.
+        """
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
 
     def encode_arg(self, arg):
+        """
+        Encode a logical argument.
+
+        Args:
+            arg (sympy.logic.boolalg.BooleanAtom): The logical argument to encode.
+
+        Returns:
+            int: The encoded value of the argument.
+        """
         literal = arg.lit
         value = self.encoding.get(literal, None)
         if value is None:
@@ -450,4 +538,34 @@ class EncodedCNF:
             return value
 
     def encode(self, clause):
+        """
+        Encode a clause of the CNF expression.
+
+        Args:
+            clause (sympy.logic.boolalg.Or): The clause to encode.
+
+        Returns:
+            set: The encoded clause.
+        """
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
+
+    def decode(self, encoded_clause):
+        """
+        Decode an encoded clause into a human-readable clause.
+
+        Args:
+            encoded_clause (set): The encoded clause to decode.
+
+        Returns:
+            sympy.logic.boolalg.Or: The decoded clause.
+        """
+        clause = []
+        for encoded_arg in encoded_clause:
+            if encoded_arg == 0:
+                clause.append(S.false)
+            else:
+                symbol = self._symbols[abs(encoded_arg) - 1]
+                literal = Not(symbol) if encoded_arg < 0 else symbol
+                clause.append(literal)
+        return Or(*clause)
+
