@@ -100,9 +100,45 @@ GTE: "\\geq" | "\\ge"
 DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
+// Greek symbols
+// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
+ALPHA: "\\alpha"
+BETA: "\\beta"
+GAMMA: "\\gamma"
+DELTA: "\\delta" // TODO: Should this be included? Delta usually denotes other things.
+EPSILON: "\\epsilon" |  "\\varepsilon"
+ZETA: "\\zeta"
+ETA: "\\eta"
+THETA: "\\theta" | "\\vartheta"
+// TODO: Should I add iota to the list?
+KAPPA: "\\kappa"
+LAMBDA: "\\lambda" // TODO: What about the uppercase variant?
+MU: "\\mu"
+NU: "\\nu"
+XI: "\\xi"
+// TODO: Should there be a separate note for transforming \pi into sympy.pi?
+RHO: "\\rho" | "\\varrho"
+// TODO: What should we do about sigma?
+TAU: "\\tau"
+UPSILON: "\\upsilon"
+PHI: "\\phi" | "\\varphi"
+CHI: "\\chi"
+PSI: "\\psi"
+OMEGA: "\\omega"
+
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
+    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
-SYMBOL.1: /[a-zA-Z]/
-SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+SYMBOL: /[a-zA-Z]/
+BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
+// best to define the variant with braces like that instead of shoving it all into one case like in
+// /([a-zA-Z])_/ L_BRACE? GREEK_SYMBOL R_BRACE? because then we can easily error out on input like
+// r"h_{\theta"
+GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+
+SUBSCRIPTED_SYMBOL: BASIC_SUBSCRIPTED_SYMBOL | SYMBOL_WITH_GREEK_SUBSCRIPT | GREEK_SUBSCRIPTED_SYMBOL
 
 WORD: /[a-zA-Z]+/
 
@@ -119,7 +155,7 @@ FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
 latex_string: relation | expression
 
-oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
+oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
 number: /\d/
 infinity: CMD_INFTY
