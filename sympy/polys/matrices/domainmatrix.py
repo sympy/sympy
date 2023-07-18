@@ -36,7 +36,6 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
-from sympy.polys.densearith import dup_neg
 from sympy.polys.densetools import (
     dup_mul_ground,
     dup_quo_ground,
@@ -1820,7 +1819,7 @@ class DomainMatrix:
         >>> rref_matrix
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
         >>> rref_pivots
-        (0, 1, 2)
+        [0, 1, 2]
 
         See Also
         ========
@@ -1866,7 +1865,7 @@ class DomainMatrix:
         >>> denom
         6
         >>> pivots
-        (0, 1, 2)
+        [0, 1, 2]
         >>> A_rref.to_field() / denom
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
         >>> A_rref.to_field() / denom == A.convert_to(QQ).rref()[0]
