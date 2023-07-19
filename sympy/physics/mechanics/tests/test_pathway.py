@@ -77,7 +77,11 @@ class TestLinearPathway:
     def test_properties_are_immutable(self) -> None:
         instance = LinearPathway(self.pA, self.pB)
         with pytest.raises(AttributeError):
-            instance.attachments = None
+            instance.attachments = None  # type: ignore
+        with pytest.raises(TypeError):
+            instance.attachments[0] = None  # type: ignore
+        with pytest.raises(TypeError):
+            instance.attachments[1] = None  # type: ignore
 
     def test_repr(self) -> None:
         pathway = LinearPathway(self.pA, self.pB)
