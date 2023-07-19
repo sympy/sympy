@@ -48,6 +48,12 @@ class GeometryBase(ABC):
 
     """
 
+    @property
+    @abstractmethod
+    def point(cls) -> Point:
+        """The point with which the geometry is associated."""
+        pass
+
     @abstractmethod
     def _point_is_on_surface(self, point: Point) -> bool:
         """Determine if a point is on the geometry's surface.
