@@ -2,14 +2,29 @@
 
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import TYPE_CHECKING, Any, Sequence
 
 import pytest
 
-from sympy.core.backend import Symbol, sqrt
-from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics._pathway import LinearPathway
+from sympy.core.backend import Rational, Symbol, cos, pi, sin, sqrt
+from sympy.physics.mechanics import (
+    Force,
+    Point,
+    ReferenceFrame,
+    dynamicsymbols,
+)
+from sympy.physics.mechanics._geometry import Cylinder, GeometryBase, Sphere
+from sympy.physics.mechanics._pathway import (
+    LinearPathway,
+    PathwayBase,
+    WrappingPathway,
+)
 from sympy.simplify.simplify import simplify
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.numbers import Number
+    from sympy.physics.mechanics.loads import LoadBase
 
 
 class TestLinearPathway:
