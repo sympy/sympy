@@ -199,7 +199,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     Returns
     =======
 
-    integer : A non-trivial divisor of ``n``. If ``n`` is prime, then ``n``.
+    integer : ``n`` (if it is prime) else a non-trivial divisor of ``n``
 
     Raises
     ======
