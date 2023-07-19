@@ -167,4 +167,6 @@ class TestLinearPathway:
 
 
 class TestWrappingPathway:
-    pass
+
+    def test_is_pathway_base_subclass(self) -> None:
+        assert issubclass(WrappingPathway, PathwayBase)
