@@ -401,51 +401,49 @@ class CNF:
 
 class EncodedCNF:
     """
-    Class for encoding the CNF expression.
+        Class for encoding the CNF expression.
 
-    Example:
-        # Create an instance of EncodedCNF
-        encoded_cnf = EncodedCNF()
+        Examples
+        ========
 
-        # Add a propositional expression
-        prop = Or('A', Not('B'))
-        encoded_cnf.add_prop(prop)
+        Example 1:
+        ----------
+        Create an instance of EncodedCNF and add a propositional expression.
 
-        # Encode the CNF expression
-        encoded_cnf.from_cnf(encoded_cnf.to_cnf())
+        >>> encoded_cnf = EncodedCNF()
+        >>> prop = Or('A', Not('B'))
+        >>> encoded_cnf.add_prop(prop)
 
-        # Print the encoded data and encoding dictionary
-        print(encoded_cnf.data)
-        # Output: [{1, -2}]
+        Encode the CNF expression and print the encoded data and encoding dictionary.
 
-        print(encoded_cnf.encoding)
-        # Output: {'A': 1, 'B': 2}
+        >>> encoded_cnf.from_cnf(encoded_cnf.to_cnf())
+        >>> print(encoded_cnf.data)
+        [{1, -2}]
+        >>> print(encoded_cnf.encoding)
+        {'A': 1, 'B': 2}
 
-        # Retrieve the symbols used in encoding
-        print(encoded_cnf.symbols)
-        # Output: ['A', 'B']
+        Retrieve the symbols used in encoding and the variable range.
 
-        # Retrieve the variable range used in encoding
-        print(encoded_cnf.variables)
-        # Output: range(1, 3)
+        >>> print(encoded_cnf.symbols)
+        ['A', 'B']
+        >>> print(encoded_cnf.variables)
+        range(1, 3)
 
-        # Create a copy of the encoded CNF object
-        copied_encoded_cnf = encoded_cnf.copy()
+        Example 2:
+        ----------
+        Create a copy of the encoded CNF object and add more clauses from a CNF object.
 
-        # Add more clauses from a CNF object
-        cnf = CNF.from_prop('A | B')
-        encoded_cnf.add_from_cnf(cnf)
+        >>> copied_encoded_cnf = encoded_cnf.copy()
+        >>> cnf = CNF.from_prop('A | B')
+        >>> encoded_cnf.add_from_cnf(cnf)
 
-        # Check the updated encoded data
-        print(encoded_cnf.data)
-        # Output: [{1, -2}, {1, 2}]
+        Check the updated encoded data for `encoded_cnf` and the copied encoded data.
 
-        # Check the copied encoded data (should remain unchanged)
-        print(copied_encoded_cnf.data)
-        # Output: [{1, -2}]
-
-    """
-
+        >>> print(encoded_cnf.data)
+        [{1, -2}, {1, 2}]
+        >>> print(copied_encoded_cnf.data)
+        [{1, -2}]
+        """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
             data = []
@@ -457,9 +455,6 @@ class EncodedCNF:
     def from_cnf(self, cnf):
         """
         Encode the given CNF expression.
-
-        Args:
-            cnf (sympy.logic.boolalg.CNF): The CNF expression to encode.
         """
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
@@ -470,9 +465,6 @@ class EncodedCNF:
     def symbols(self):
         """
         Retrieve the symbols used in encoding.
-
-        Returns:
-            list: List of symbols used in encoding.
         """
         return self._symbols
 
@@ -480,18 +472,12 @@ class EncodedCNF:
     def variables(self):
         """
         Retrieve the variable range used in encoding.
-
-        Returns:
-            range: Range of variables used in encoding.
         """
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
         """
         Create a copy of the EncodedCNF object.
-
-        Returns:
-            EncodedCNF: Copied instance of EncodedCNF.
         """
         new_data = [set(clause) for clause in self.data]
         return EncodedCNF(new_data, dict(self.encoding))
@@ -499,9 +485,6 @@ class EncodedCNF:
     def add_prop(self, prop):
         """
         Add a propositional expression to the encoded CNF.
-
-        Args:
-            prop (sympy.logic.boolalg.BooleanFunction): The propositional expression to add.
         """
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
@@ -509,9 +492,6 @@ class EncodedCNF:
     def add_from_cnf(self, cnf):
         """
         Add clauses from a CNF object to the encoded CNF.
-
-        Args:
-            cnf (sympy.logic.boolalg.CNF): The CNF object containing clauses to add.
         """
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
@@ -519,12 +499,6 @@ class EncodedCNF:
     def encode_arg(self, arg):
         """
         Encode a logical argument.
-
-        Args:
-            arg (sympy.logic.boolalg.BooleanAtom): The logical argument to encode.
-
-        Returns:
-            int: The encoded value of the argument.
         """
         literal = arg.lit
         value = self.encoding.get(literal, None)
@@ -540,24 +514,12 @@ class EncodedCNF:
     def encode(self, clause):
         """
         Encode a clause of the CNF expression.
-
-        Args:
-            clause (sympy.logic.boolalg.Or): The clause to encode.
-
-        Returns:
-            set: The encoded clause.
         """
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
 
     def decode(self, encoded_clause):
         """
         Decode an encoded clause into a human-readable clause.
-
-        Args:
-            encoded_clause (set): The encoded clause to decode.
-
-        Returns:
-            sympy.logic.boolalg.Or: The decoded clause.
         """
         clause = []
         for encoded_arg in encoded_clause:
