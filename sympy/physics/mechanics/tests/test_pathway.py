@@ -170,3 +170,16 @@ class TestWrappingPathway:
 
     def test_is_pathway_base_subclass(self) -> None:
         assert issubclass(WrappingPathway, PathwayBase)
+
+    @pytest.fixture(autouse=True)
+    def _wrapping_pathway_fixture(self) -> None:
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.r = Symbol('r', positive=True)
+        self.pO = Point('pO')
+        self.N = ReferenceFrame('N')
+        self.ax = self.N.z
+        self.sphere = Sphere(self.r, self.pO)
+        self.cylinder = Cylinder(self.r, self.pO, self.ax)
+        self.pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
+        self.F = Symbol('F')
