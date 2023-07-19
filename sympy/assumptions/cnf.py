@@ -411,32 +411,33 @@ class EncodedCNF:
         Create an instance of EncodedCNF and add a propositional expression.
         >>> from sympy.assumptions.cnf import CNF, EncodedCNF
         >>> from sympy.logic.boolalg import Or, Not
+        >>> from sympy.abc import x, y
         >>> encoded_cnf = EncodedCNF()
-        >>> prop = Or('A', Not('B'))
+        >>> prop = Or(x, Not(y))
         >>> encoded_cnf.add_prop(prop)
 
         Encode the CNF expression and print the encoded data and encoding dictionary.
         >>> print(encoded_cnf.data)
         [{1, -2}]
         >>> print(encoded_cnf.encoding)
-        {'A': 1, 'B': 2}
+        {y: 1, x: 2}
 
         Retrieve the symbols used in encoding.
         >>> print(encoded_cnf.symbols)
-        ['A', 'B']
+        [x, y]
 
         Example 2:
         ----------
         Create a copy of the encoded CNF object and add more clauses from a CNF object.
 
         >>> copied_encoded_cnf = encoded_cnf.copy()
-        >>> cnf = CNF.from_prop('A | B')
+        >>> cnf = CNF.from_prop('x | y')
         >>> encoded_cnf.add_from_cnf(cnf)
 
         Check the updated encoded data for `encoded_cnf` and the copied encoded data.
 
         >>> print(encoded_cnf.data)
-        [{1, -2}, {1, 2}]
+        [{1, -2}, {3}]
         >>> print(copied_encoded_cnf.data)
         [{1, -2}]
         """
