@@ -280,3 +280,70 @@ class TestCylinder:
         p2.set_pos(pO, position_2)
 
         assert simplify(Eq(cylinder.geodesic_length(p1, p2), expected))
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, position_1, position_2, vector_1, vector_2',
+        [
+            (N.z, r * N.x, r * N.y, N.y, N.x),
+            (N.z, r * N.x, -r * N.x, N.y, N.y),
+            (N.z, -r * N.x, r * N.x, -N.y, -N.y),
+            (-N.z, r * N.x, -r * N.x, -N.y, -N.y),
+            (-N.z, -r * N.x, r * N.x, N.y, N.y),
+            (N.z, r * N.x, -r * N.y, N.y, -N.x),
+            (
+                N.z,
+                r * N.y,
+                sqrt(2)/2 * r * N.x - sqrt(2)/2 * r * N.y,
+                - N.x,
+                - sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r / 2 * N.x + sqrt(3)/2 * r * N.y,
+                N.y,
+                sqrt(3)/2 * N.x - 1/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                sqrt(2)/2 * r * N.x + sqrt(2)/2 * r * N.y,
+                N.y,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r * N.x + N.z,
+                N.z,
+                -N.z,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r * N.y + pi/2 * r * N.z,
+                sqrt(2)/2 * N.y + sqrt(2)/2 * N.z,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.z,
+            ),
+        ]
+    )
+    def test_geodesic_end_vectors(
+        axis: Vector,
+        position_1: Vector,
+        position_2: Vector,
+        vector_1: Vector,
+        vector_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        expected = (vector_1, vector_2)
+
+        assert cylinder._geodesic_end_vectors(p1, p2) == expected
