@@ -1391,7 +1391,7 @@ def sdm_irref(A):
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref
         The higher-level function that would normally be used to call this
         routine.
-    sympy.polys.matrices.ddm.ddm_rref
+    sympy.polys.matrices.dense.ddm_irref
         The dense equivalent of this routine.
     sdm_rref_den
         Fraction-free version of this routine.
@@ -1572,7 +1572,7 @@ def sdm_rref_den(A, K):
         The ``SDM`` method that uses this function.
     sdm_irref
         Computes RREF using field division.
-    ddm_rref_den
+    ddm_irref_den
         The dense version of this algorithm.
 
     References
