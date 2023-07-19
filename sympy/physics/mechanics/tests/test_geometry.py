@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         from sympy.core.expr import Expr as ExprType
 
 
-r = Symbol('r')
+r = Symbol('r', positive=True)
 x = Symbol('x')
 q = dynamicsymbols('q')
 N = ReferenceFrame('N')
@@ -42,7 +42,7 @@ class TestSphere:
 
     @staticmethod
     def test_valid_constructor() -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
         assert isinstance(sphere, Sphere)
@@ -54,7 +54,7 @@ class TestSphere:
     @staticmethod
     @pytest.mark.parametrize('position', [S.Zero, Integer(2) * r * N.x])
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
 
@@ -84,7 +84,7 @@ class TestSphere:
         ]
     )
     def test_geodesic_length(position_1: Vector, position_2: Vector, expected: ExprType) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
 
@@ -101,7 +101,7 @@ class TestCylinder:
     @staticmethod
     def test_valid_constructor() -> None:
         N = ReferenceFrame('N')
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
         assert isinstance(cylinder, Cylinder)
@@ -128,7 +128,7 @@ class TestCylinder:
         ]
     )
     def test_point_is_on_surface(position: Vector, expected: bool) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
 
@@ -140,7 +140,7 @@ class TestCylinder:
     @staticmethod
     @pytest.mark.parametrize('position', [S.Zero, Integer(2) * r * N.y])
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
 
@@ -179,7 +179,7 @@ class TestCylinder:
         position_2: Vector,
         expected: ExprType,
     ) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, axis)
 
