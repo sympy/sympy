@@ -261,3 +261,29 @@ class TestWrappingPathway:
             f'geometry={self.cylinder!r})'
         )
         assert repr(self.pathway) == expected
+
+    @staticmethod
+    def _expand_pos_to_vec(pos, frame):
+        return sum(mag * unit for (mag, unit) in zip(pos, frame))
+
+    @pytest.mark.parametrize(
+        'pA_vec, pB_vec, expected_factor',
+        [
+            ((1, 0, 0), (0, 1, 0), pi / 2),
+            ((0, 1, 0), (sqrt(2) / 2, -sqrt(2) / 2, 0), 3 * pi / 4),
+            ((1, 0, 0), (Rational(1, 2), sqrt(3) / 2, 0), pi / 3),
+        ]
+    )
+    def test_static_pathway_on_sphere_length(
+        self,
+        pA_vec: tuple[int | Number, int | Number, int | Number],
+        pB_vec: tuple[int | Number, int | Number, int | Number],
+        expected_factor: Expr,
+    ) -> None:
+        pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
+        pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
+        self.pA.set_pos(self.pO, self.r * pA_vec)
+        self.pB.set_pos(self.pO, self.r * pB_vec)
+        pathway = WrappingPathway(self.pA, self.pB, self.sphere)
+        expected = expected_factor * self.r
+        assert simplify(pathway.length - expected) == 0
