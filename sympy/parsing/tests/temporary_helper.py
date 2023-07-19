@@ -92,6 +92,7 @@ TRICKY_TESTS = [
     (r"-3.14", -3.14),
     (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
     (r"3x - 1", _Add(_Mul(3, x), -1)),
+    (r"xy", _Mul(x, y)),
     (r"-c", -c),
     (r"a + b - a", _Add(a + b, -a)),
     (r"(x + y) z", _Mul(_Add(x, y), z)),
