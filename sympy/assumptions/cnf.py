@@ -530,4 +530,3 @@ class EncodedCNF:
                 literal = Not(symbol) if encoded_arg < 0 else symbol
                 clause.append(literal)
         return Or(*clause)
-
