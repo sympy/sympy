@@ -393,6 +393,86 @@ class WrappingPathway(PathwayBase):
         """Exact analytical expression for the pathway's extension velocity."""
         return self.length.diff(dynamicsymbols._t)  # type: ignore
 
+    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+        """Loads required by the equations of motion method classes.
+
+        Explanation
+        ===========
+
+        ``KanesMethod`` requires a list of ``Point``-``Vector`` tuples to be
+        passed to the ``loads`` parameters of its ``kanes_equations`` method
+        when constructing the equations of motion. This method acts as a
+        utility to produce the correctly-structred pairs of points and vectors
+        required so that these can be easily concatenated with other items in
+        the list of loads and passed to ``KanesMethod.kanes_equations``. These
+        loads are also in the correct form to also be passed to the other
+        equations of motion method classes, e.g. ``LagrangesMethod``.
+
+        Examples
+        ========
+
+        The below example shows how to generate the loads produced in an
+        actuator that produces an expansile force ``F`` while wrapping around a
+        cylinder. First, create a cylinder with radius ``r`` and an axis
+        parallel to the ``N.z`` direction of the global frame ``N`` that also
+        passes through a point ``pO``.
+
+        >>> from sympy import Symbol
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics._geometry import Cylinder
+        >>> N = ReferenceFrame('N')
+        >>> r = Symbol('r', positive=True)
+        >>> pO = Point('pO')
+        >>> cylinder = Cylinder(r, pO, N.z)
+
+        Create the pathway of the actuator using the ``WrappingPathway`` class,
+        defined to span between two points ``pA`` and ``pB``. Both points lie
+        on the surface of the cylinder and the location of ``pB`` is defined
+        relative to ``pA`` by the dynamics symbol ``q``.
+
+        >>> from sympy import cos, sin
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> from sympy.physics.mechanics._pathway import WrappingPathway
+        >>> q = dynamicsymbols('q')
+        >>> pA = Point('pA')
+        >>> pB = Point('pB')
+        >>> pA.set_pos(pO, r * N.x)
+        >>> pB.set_pos(pO, r * (cos(q) * N.x + sin(q) * N.y))
+        >>> pB.pos_from(pA)
+        (r*cos(q(t)) - r)*N.x + r*sin(q(t))*N.y
+        >>> pathway = WrappingPathway(pA, pB, cylinder)
+
+        Now create a symbol ``F`` to describe the magnitude of the (expansile)
+        force that will be produced along the pathway. The list of loads that
+        ``KanesMethod`` requires can be produced by calling the pathway's
+        ``compute_loads`` method with ``F`` passed as the only argument.
+
+        >>> F = Symbol('F')
+        >>> loads = pathway.compute_loads(F)
+        >>> [load.__class__(load.location, load.vector.simplify()) for load in loads]
+        [(pA, F*N.y), (pB, F*sin(q(t))*N.x - F*cos(q(t))*N.y),
+         (pO, - F*sin(q(t))*N.x + F*(cos(q(t)) - 1)*N.y)]
+
+        Parameters
+        ==========
+
+        force : Expr
+            The force acting along the length of the pathway. It is assumed
+            that this ``Expr`` represents an expansile force.
+
+        """
+        pA, pB = self.attachments
+        pO = self.geometry.point
+        pA_force, pB_force = self.geometry._geodesic_end_vectors(pA, pB)
+        pO_force = -(pA_force + pB_force)
+
+        loads: list[LoadBase] = [
+            Force(pA, force * pA_force),
+            Force(pB, force * pB_force),
+            Force(pO, force * pO_force),
+        ]
+        return loads
+
     def __repr__(self) -> str:
         """Representation of a ``WrappingPathway``."""
         attachments = ', '.join(str(a) for a in self.attachments)
