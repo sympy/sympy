@@ -158,6 +158,34 @@ class TestSphere:
         with pytest.raises(ValueError):
             _ = sphere._geodesic_end_vectors(p1, p2)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position_1, position_2',
+        [
+            (r * N.x, -r * N.x),
+            (-r * N.y, r * N.y),
+            (
+                r * cos(q) * N.x + r * sin(q) * N.y,
+                -r * cos(q) * N.x - r * sin(q) * N.y,
+            )
+        ]
+    )
+    def test_geodesic_end_vectors_invalid_diametrically_opposite(
+        position_1: Vector,
+        position_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        with pytest.raises(ValueError):
+            _ = sphere._geodesic_end_vectors(p1, p2)
+
 
 class TestCylinder:
 
