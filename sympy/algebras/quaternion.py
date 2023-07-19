@@ -12,6 +12,7 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not, fuzzy_or
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -925,14 +926,15 @@ class Quaternion(Expr):
         668 + (-224)*i + (-336)*j + (-448)*k
 
         """
-        if p == -1:
-            return self.inverse()
-        if not isinstance(p, int):
-            return NotImplemented
-        if p < 0:
-            return self.inverse().pow(-p)
+        q, p = self, as_int(p)
 
-        q, res = self, Quaternion(1, 0, 0, 0)
+        if p < 0:
+            q, p = q.inverse(), -p
+
+        if p == 1:
+            return q
+
+        res = Quaternion(1, 0, 0, 0)
         while p > 0:
             if p & 1:
                 res *= q
