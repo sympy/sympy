@@ -484,3 +484,12 @@ class TestWrappingPathway:
             Force(self.pO, pO_force_expected),
         ]
         assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
+
+    def test_2D_pathway_on_cylinder_length(self) -> None:
+        q = dynamicsymbols('q')
+        pA_pos = self.r * self.N.x
+        pB_pos = self.r * (cos(q) * self.N.x + sin(q) * self.N.y)
+        self.pA.set_pos(self.pO, pA_pos)
+        self.pB.set_pos(self.pO, pB_pos)
+        expected = self.r * sqrt(q**2)
+        assert simplify(self.pathway.length - expected) == 0
