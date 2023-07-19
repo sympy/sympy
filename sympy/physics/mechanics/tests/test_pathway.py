@@ -224,3 +224,7 @@ class TestWrappingPathway:
     ) -> None:
         with pytest.raises(TypeError):
             _ = WrappingPathway(*attachments)  # type: ignore
+
+    def test_invalid_constructor_geometry_is_not_supplied(self) -> None:
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(self.pA, self.pB)  # type: ignore
