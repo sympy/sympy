@@ -164,3 +164,7 @@ class TestLinearPathway:
             (self.pB, pI_force),
         ]
         assert self.pathway.compute_loads(self.F) == expected
+
+
+class TestWrappingPathway:
+    pass
