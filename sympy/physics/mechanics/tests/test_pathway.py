@@ -244,3 +244,9 @@ class TestWrappingPathway:
     ) -> None:
         with pytest.raises(TypeError):
             _ = WrappingPathway(self.pA, self.pB, geometry)
+
+    def test_attachments_property_is_immutable(self) -> None:
+        with pytest.raises(TypeError):
+            self.pathway.attachments[0] = self.pB  # type: ignore
+        with pytest.raises(TypeError):
+            self.pathway.attachments[1] = self.pA  # type: ignore
