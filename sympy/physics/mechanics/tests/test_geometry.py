@@ -326,6 +326,13 @@ class TestCylinder:
                 sqrt(2)/2 * N.y + sqrt(2)/2 * N.z,
                 sqrt(2)/2 * N.x - sqrt(2)/2 * N.z,
             ),
+            (
+                N.z,
+                r * N.x,
+                r * cos(q) * N.x + r * sin(q) * N.y,
+                N.y,
+                sin(q) * N.x - cos(q) * N.y,
+            ),
         ]
     )
     def test_geodesic_end_vectors(
@@ -345,8 +352,12 @@ class TestCylinder:
         p2.set_pos(pO, position_2)
 
         expected = (vector_1, vector_2)
+        end_vectors = tuple(
+            end_vector.simplify()
+            for end_vector in cylinder._geodesic_end_vectors(p1, p2)
+        )
 
-        assert cylinder._geodesic_end_vectors(p1, p2) == expected
+        assert end_vectors == expected
 
     @staticmethod
     @pytest.mark.parametrize(
