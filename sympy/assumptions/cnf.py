@@ -409,7 +409,7 @@ class EncodedCNF:
         Example 1:
         ----------
         Create an instance of EncodedCNF and add a propositional expression.
-        >>> from sympy.assumptions.cnf import EncodedCNF
+        >>> from sympy.assumptions.cnf import CNF, EncodedCNF
         >>> from sympy.logic.boolalg import Or, Not
         >>> encoded_cnf = EncodedCNF()
         >>> prop = Or('A', Not('B'))
