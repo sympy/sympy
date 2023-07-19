@@ -28,7 +28,7 @@ if TYPE_CHECKING:
         from sympy.core.expr import Expr as ExprType
 
 
-__all__ = ['LinearPathway']
+__all__ = ['LinearPathway', 'WrappingPathway']
 
 
 class PathwayBase(ABC):
@@ -274,3 +274,65 @@ class LinearPathway(PathwayBase):
             Force(self.attachments[-1], force * relative_position / self.length),
         ]
         return loads
+
+
+class WrappingPathway(PathwayBase):
+    """Pathway that wraps a geometry object.
+
+    Explanation
+    ===========
+
+    A wrapping pathway interacts with a geometry object and forms a path that
+    wraps smoothly along its surface. The wrapping pathway along the geometry
+    object will be the geodesic that the geometry object defines based on the
+    two points. It will not interact with any other objects in the system, i.e.
+    a ``WrappingPathway`` will intersect other objects to ensure that the path
+    between its two ends (its attachments) is the shortest possible.
+
+    Examples
+    ========
+
+    As the ``_pathway.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``WrappingPathway`` must therefore
+    be imported directly from the ``sympy.physics.mechanics._pathway`` module.
+
+    >>> from sympy.physics.mechanics._pathway import WrappingPathway
+
+    To construct a wrapping pathway, a geometry object, which the pathway can
+    wrap, is required. Similar to above, the ``_geometry.py`` module is also
+    experimental so geometry classes needed to be imported directly from the
+    ``sympy.physics.mechanics._geometry.py`` module. Let's create a wrapping
+    pathway that wraps around a cylinder. To do this we need to import the
+    ``Cylinder`` class.
+
+    >>> from sympy.physics.mechanics._geometry import Cylinder
+
+    To construct a wrapping pathway, like other pathways, a pair of points must
+    be passed, followed by an instance of a geometry class as a keyword
+    argument. We'll use a cylinder with radius ``r`` and its axis parallel to
+    ``N.x`` passing through a point ``pO``.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> r = Symbol('r')
+    >>> N = ReferenceFrame('N')
+    >>> pA, pB, pO = Point('pA'), Point('pB'), Point('pO')
+    >>> cylinder = Cylinder(r, pO, N.x)
+    >>> wrapping_pathway = WrappingPathway(pA, pB, cylinder)
+    >>> wrapping_pathway
+    WrappingPathway(pA, pB, geometry=Cylinder(radius=r, point=pO,
+        axis=N.x))
+
+    Parameters
+    ==========
+
+    attachment_1 : Point
+        The first of the pair of ``Point`` objects between which the wrapping
+        pathway spans.
+    attachment_2 : Point
+        The second of the pair of ``Point`` objects between which the wrapping
+        pathway spans.
+    geometry : GeometryBase
+        The geometry about which the pathway wraps.
+
+    """
