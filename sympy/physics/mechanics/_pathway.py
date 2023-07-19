@@ -388,6 +388,11 @@ class WrappingPathway(PathwayBase):
         """Exact analytical expression for the pathway's length."""
         return self.geometry.geodesic_length(*self.attachments)
 
+    @property
+    def extension_velocity(self) -> ExprType:
+        """Exact analytical expression for the pathway's extension velocity."""
+        return self.length.diff(dynamicsymbols._t)  # type: ignore
+
     def __repr__(self) -> str:
         """Representation of a ``WrappingPathway``."""
         attachments = ', '.join(str(a) for a in self.attachments)
