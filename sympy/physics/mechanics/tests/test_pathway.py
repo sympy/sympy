@@ -415,3 +415,72 @@ class TestWrappingPathway:
             Force(self.pO, self.F * (self.r**3 / sqrt(self.r**6)) * pO_vec_expected),
         ]
         assert pathway.compute_loads(self.F) == expected
+
+    @pytest.mark.parametrize(
+        'pA_vec, pB_vec, pA_vec_expected, pB_vec_expected, pO_vec_expected',
+        (
+            ((1, 0, 0), (0, 1, 0), (0, 1, 0), (1, 0, 0), (-1, -1, 0)),
+            ((1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, 1, 0), (0, -2, 0)),
+            ((-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, -1, 0), (0, 2, 0)),
+            (
+                (0, 1, 0),
+                (sqrt(2) / 2, -sqrt(2) / 2, 0),
+                (-1, 0, 0),
+                (-sqrt(2) / 2, -sqrt(2) / 2, 0),
+                (1 + sqrt(2) / 2, sqrt(2) / 2, 0)
+            ),
+            (
+                (1, 0, 0),
+                (Rational(1, 2), sqrt(3) / 2, 0),
+                (0, 1, 0),
+                (sqrt(3) / 2, -Rational(1, 2), 0),
+                (-sqrt(3) / 2, Rational(1, 2) - 1, 0),
+            ),
+            (
+                (1, 0, 0),
+                (sqrt(2) / 2, sqrt(2) / 2, 0),
+                (0, 1, 0),
+                (sqrt(2) / 2, -sqrt(2) / 2, 0),
+                (-sqrt(2) / 2, sqrt(2) / 2 - 1, 0),
+            ),
+            ((0, 1, 0), (0, 1, 1), (0, 0, 1), (0, 0, -1), (0, 0, 0)),
+            (
+                (0, 1, 0),
+                (sqrt(2) / 2, -sqrt(2) / 2, 1),
+                (-5 * pi / sqrt(16 + 25*pi**2), 0, 4 / sqrt(16 + 25*pi**2)),
+                (
+                    -5 * sqrt(2) * pi / (2 * sqrt(16 + 25*pi**2)),
+                    -5 * sqrt(2) * pi / (2 * sqrt(16 + 25*pi**2)),
+                    -4 / sqrt(16 + 25*pi**2),
+                ),
+                (
+                    5 * (sqrt(2) + 2) * pi / (2 * sqrt(16 + 25*pi**2)),
+                    5 * sqrt(2) * pi / (2 * sqrt(16 + 25*pi**2)),
+                    0,
+                ),
+            ),
+        )
+    )
+    def test_static_pathway_on_cylinder_compute_loads(
+        self,
+        pA_vec: tuple[int | Number, int | Number, int | Number],
+        pB_vec: tuple[int | Number, int | Number, int | Number],
+        pA_vec_expected: tuple[int | Number, int | Number, int | Number],
+        pB_vec_expected: tuple[int | Number, int | Number, int | Number],
+        pO_vec_expected: tuple[int | Number, int | Number, int | Number],
+    ) -> None:
+        pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
+        pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
+        self.pA.set_pos(self.pO, self.r * pA_vec)
+        self.pB.set_pos(self.pO, self.r * pB_vec)
+        pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
+
+        pA_force_expected = self.F * self._expand_pos_to_vec(pA_vec_expected, self.N)
+        pB_force_expected = self.F * self._expand_pos_to_vec(pB_vec_expected, self.N)
+        pO_force_expected = self.F * self._expand_pos_to_vec(pO_vec_expected, self.N)
+        expected = [
+            Force(self.pA, pA_force_expected),
+            Force(self.pB, pB_force_expected),
+            Force(self.pO, pO_force_expected),
+        ]
+        assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
