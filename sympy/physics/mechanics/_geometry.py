@@ -391,7 +391,7 @@ class Cylinder(GeometryBase):
 
     @axis.setter
     def axis(self, axis: Vector) -> None:
-        self._axis = axis
+        self._axis = axis.normalize()
 
     def _point_is_on_surface(self, point: Point) -> bool:
         """Determine if a point is on the cylinder's surface.
