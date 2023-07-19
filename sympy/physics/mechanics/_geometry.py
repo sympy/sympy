@@ -282,6 +282,40 @@ class Sphere(GeometryBase):
         geodesic_length = self.radius * central_angle
         return geodesic_length
 
+    def _geodesic_end_vectors(
+        self,
+        point_1: Point,
+        point_2: Point,
+    ) -> tuple[Vector, Vector]:
+        """The vectors parallel to the geodesic at the two end points.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic originates.
+        point_2 : Point
+            The point at which the geodesic terminates.
+
+        """
+        pA, pB = point_1, point_2
+        pO = self.point
+        pA_vec = pA.pos_from(pO)
+        pB_vec = pB.pos_from(pO)
+
+        if pA_vec.cross(pB_vec) == 0:
+            msg = (
+                f'Can\'t compute geodesic end vectors for the pair of points '
+                f'{pA} and {pB} on a sphere {self} as they are diametrically '
+                f'opposed, thus the geodesic is not defined.'
+            )
+            raise ValueError(msg)
+
+        return (
+            pA_vec.cross(pB.pos_from(pA)).cross(pA_vec).normalize(),
+            pB_vec.cross(pA.pos_from(pB)).cross(pB_vec).normalize(),
+        )
+
     def __repr__(self) -> str:
         """Representation of a ``Sphere``."""
         return (
