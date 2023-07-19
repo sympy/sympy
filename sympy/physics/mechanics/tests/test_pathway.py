@@ -493,3 +493,10 @@ class TestWrappingPathway:
         self.pB.set_pos(self.pO, pB_pos)
         expected = self.r * sqrt(q**2)
         assert simplify(self.pathway.length - expected) == 0
+
+    @staticmethod
+    def _simplify_loads(loads: list[LoadBase]) -> list[LoadBase]:
+        return [
+            load.__class__(load.location, load.vector.simplify())
+            for load in loads
+        ]
