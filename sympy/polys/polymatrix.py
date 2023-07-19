@@ -1,4 +1,3 @@
-from sympy import Matrix
 from sympy.core.expr import Expr
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
