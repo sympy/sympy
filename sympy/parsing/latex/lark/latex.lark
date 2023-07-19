@@ -157,7 +157,7 @@ latex_string: relation | expression
 
 oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
-number: /\d/
+number: /\.?\d/
 infinity: CMD_INFTY
 
 atomic_expr: oneletter_symbol
@@ -176,7 +176,7 @@ relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
 expression_core: atom | group_curly_parentheses
 
 add: expression ADD expression_mul
-sub: expression SUB expression_mul
+sub: expression? SUB expression_mul
 mul: expression_mul MUL_SYMBOL expression_power
     | implicit_multiplication
 div: expression_mul DIV_SYMBOL expression_power
@@ -187,12 +187,10 @@ implicit_multiplication: (oneletter_symbol | number) expression_mul
     | fraction expression
 
 
-multidigit_number: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
+// multidigit_number: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
 
 expression_func: expression_core
-    | multidigit_number
     | group_round_parentheses
-    | unary_neg
     | fraction
     | binomial
     | function
@@ -217,7 +215,7 @@ limit: FUNC_LIM (UNDERSCORE L_BRACE expression LIM_APPROACH_SYM expression (CARE
 
 //group_curly_parentheses_lim: L_BRACE atomic_expr LIM_APPROACH_SYM  R_BRACE
 
-unary_neg: SUB expression
+// unary_neg: SUB expression
 
 integral: FUNC_INT expression "d"oneletter_symbol
     | FUNC_INT (UNDERSCORE expression_core CARET expression_core)? expression? "d"oneletter_symbol

@@ -92,11 +92,17 @@ TRICKY_TESTS = [
     (r"\mathit{HELLOworld}", Symbol('HELLOworld')),
     # (r"\mathit{HELLO world}", Symbol('HELLO world')),
     (r"-3.14", -3.14),
+    (r"0", 0),
+    (r".0", .0),
+    (r"2.0", 2.0),
+    (r"14", 14),
     (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
     (r"3x - 1", _Add(_Mul(3, x), -1)),
     (r"xy", _Mul(x, y)),
     (r"-c", -c),
     (r"a + b - a", _Add(a + b, -a)),
+    (r"a - b - c", None),
+    (r"a(b)", None),
     (r"(x + y) z", _Mul(_Add(x, y), z)),
     (r"\frac12", _Pow(2, -1)),
     (r"\frac12y", _Mul(_Pow(2, -1), y)),
@@ -104,7 +110,7 @@ TRICKY_TESTS = [
     (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
     (r"\sin a \cos b", _Mul(sin(a), cos(b))),
     (r"100!", _factorial(100)),
-    (r"a \negthinspace b", _Mul(a, b))
+    (r"a \negthinspace b", _Mul(a, b)),
 ]
 
 
@@ -115,7 +121,9 @@ def test_tricky_tests():
     for i, (latex_str, sympy_expr) in enumerate(TRICKY_TESTS):
         try:
             out = parse_latex_lark(latex_str)
-            print(pretty_print_lark_trees(out))
+            pretty = pretty_print_lark_trees(out)
+            print(pretty)
+            assert "_ambig" not in pretty
         except Exception as e:
             failure_list.append(i)
 
