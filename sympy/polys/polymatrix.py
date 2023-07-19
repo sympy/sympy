@@ -1,3 +1,4 @@
+from sympy import Matrix
 from sympy.core.expr import Expr
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
@@ -281,7 +282,7 @@ class MutablePolyDenseMatrix:
             raise ValueError("PolyMatrix nullspace is only for ground field elements")
         dm = self._dm
         K, Kx = self.domain, self.ring
-        dm_null_rows = dm.convert_to(K).nullspace().convert_to(Kx)
+        dm_null_rows = dm.convert_to(K).nullspace(normalize=True).convert_to(Kx)
         dm_null = dm_null_rows.transpose()
         dm_basis = [dm_null[:,i] for i in range(dm_null.shape[1])]
         return [self.from_dm(dmvec) for dmvec in dm_basis]

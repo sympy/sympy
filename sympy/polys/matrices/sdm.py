@@ -983,38 +983,44 @@ class SDM(dict):
         elif len(pivots) == n:
             return A.zeros((0, n), K), []
 
-        # We need to insert a row with a single nonzero entry for each column.
-        # In fraction-free RREF the nonzero entry is not necessarily 1.
+        # In fraction-free RREF the nonzero entry inserted for the pivots is
+        # not necessarily 1.
         pivot_val = A[0][pivots[0]]
         assert not K.is_zero(pivot_val)
+
+        pivots_set = set(pivots)
+
+        # Loop once over all nonzero entries making a map from column indices
+        # to the nonzero entries in that column along with the row index of the
+        # nonzero entry. This is basically the transpose of the matrix.
+        nonzero_cols = defaultdict(list)
+        for i, Ai in A.items():
+            for j, Aij in Ai.items():
+                nonzero_cols[j].append((i, Aij))
 
         # Usually in SDM we want to avoid looping over the dimensions of the
         # matrix because it is optimised to support extremely sparse matrices.
         # Here in nullspace though every zero column becomes a nonzero column
-        # so we need to loop once over the columns at least (range(n)).
-        pivots_set = set(pivots)
-        nonpivots = [i for i in range(n) if i not in pivots_set]
-        nullity = len(nonpivots)
-        col_map = dict(zip(nonpivots, range(nullity)))
+        # so we need to loop once over the columns at least (range(n)) rather
+        # than just the nonzero entries of the matrix. We can still avoid
+        # an inner loop over the rows though by using the nonzero_cols map.
+        basis = []
+        nonpivots = []
+        for j in range(n):
+            if j in pivots_set:
+                continue
+            nonpivots.append(j)
 
-        A_null = defaultdict(dict)
+            vec = {j: pivot_val}
+            for ip, Aij in nonzero_cols[j]:
+                vec[pivots[ip]] = -Aij
 
-        # Discard pivot columns and negate
-        for i, Ai in A.items():
-            for j, Aij in Ai.items():
-                if j in pivots_set:
-                    assert Aij == pivot_val
-                    assert j == pivots[i]
-                    continue
-                A_null[i][col_map[j]] = -Aij
+            basis.append(vec)
 
-        # Add a single nonzero entry to each column
-        for j, i in enumerate(nonpivots):
-            A_null[i][j] = pivot_val
+        sdm = dict(enumerate(basis))
+        A_null = A.new(sdm, (len(basis), n), K)
 
-        A_null = A.new(A_null, (n, nullity), K)
-
-        return A_null, nonpivots
+        return (A_null, nonpivots)
 
     def particular(A):
         ncols = A.shape[1]
