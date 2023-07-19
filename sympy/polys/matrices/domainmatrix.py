@@ -1819,7 +1819,7 @@ class DomainMatrix:
         >>> rref_matrix
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
         >>> rref_pivots
-        [0, 1, 2]
+        (0, 1, 2)
 
         See Also
         ========
@@ -1831,7 +1831,7 @@ class DomainMatrix:
         if not self.domain.is_Field:
             raise DMNotAField('Not a field')
         rref_ddm, pivots = self.rep.rref()
-        return self.from_rep(rref_ddm), pivots
+        return self.from_rep(rref_ddm), tuple(pivots)
 
     def rref_den(self):
         r"""
@@ -1865,7 +1865,7 @@ class DomainMatrix:
         >>> denom
         6
         >>> pivots
-        [0, 1, 2]
+        (0, 1, 2)
         >>> A_rref.to_field() / denom
         DomainMatrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]], (3, 3), QQ)
         >>> A_rref.to_field() / denom == A.convert_to(QQ).rref()[0]
@@ -1879,7 +1879,7 @@ class DomainMatrix:
 
         """
         rref_ddm, denom, pivots = self.rep.rref_den()
-        return self.from_rep(rref_ddm), denom, pivots
+        return self.from_rep(rref_ddm), denom, tuple(pivots)
 
     def columnspace(self):
         r"""
@@ -2000,7 +2000,7 @@ class DomainMatrix:
         ...             [a*b + a - b, b*c + b + c, c**2 + c]])
         >>> M.to_DM().domain
         ZZ[a,b,c]
-        >>> M.to_DM().nullspace().to_Matrix()
+        >>> M.to_DM().nullspace().to_Matrix().transpose()
         Matrix([
         [                             c**3],
         [            -a*b*c**2 + a*c - b*c],
@@ -2009,7 +2009,7 @@ class DomainMatrix:
         The unnormalized form here is nicer than the normalized form that
         spreads a large denominator throughout the matrix:
 
-        >>> M.to_DM().to_field().nullspace(normalize=True).to_Matrix()
+        >>> M.to_DM().to_field().nullspace(normalize=True).to_Matrix().transpose()
         Matrix([
         [                   c**3/(a*b**2*c - a*b - a*c + b**2 + b*c)],
         [(-a*b*c**2 + a*c - b*c)/(a*b**2*c - a*b - a*c + b**2 + b*c)],
