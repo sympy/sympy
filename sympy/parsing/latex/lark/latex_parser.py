@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 
 from sympy.external import import_module
 
@@ -36,16 +37,21 @@ def parse_latex_lark(s: str, *, logger=False):
 
     print("expression =", s)
     string = parser.parse(s)
-    print(string)
-    print(string.pretty())
+    # print(string)
+    # print(string.pretty())
     return string
 
-def mypretty(tree):
+
+def pretty_print_lark_trees(tree):
+    if isinstance(tree, _lark.Token):
+        return tree.value
     data = tree.data
-    if isinstance(data, _lark.Token):
-        data = data.value
-    output = str(data) + "(" + ", ".join([i for i in tree.children]) + ")"
+    data = str(data)
+    if data.startswith("expression"):
+        data = re.sub(r"^expression", "E", data)
+    output = str(data) + "(" + ", ".join([pretty_print_lark_trees(i) for i in tree.children]) + ")"
     return output
+
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
