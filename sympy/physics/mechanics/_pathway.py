@@ -383,6 +383,11 @@ class WrappingPathway(PathwayBase):
             raise TypeError(msg)
         self._geometry = geometry
 
+    @property
+    def length(self) -> ExprType:
+        """Exact analytical expression for the pathway's length."""
+        return self.geometry.geodesic_length(*self.attachments)
+
     def __repr__(self) -> str:
         """Representation of a ``WrappingPathway``."""
         attachments = ', '.join(str(a) for a in self.attachments)
