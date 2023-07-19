@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point
+from sympy.physics.mechanics._geometry import GeometryBase
 from sympy.physics.vector import dynamicsymbols
 
 if TYPE_CHECKING:
@@ -336,3 +337,27 @@ class WrappingPathway(PathwayBase):
         The geometry about which the pathway wraps.
 
     """
+
+    def __init__(
+        self,
+        attachment_1: Point,
+        attachment_2: Point,
+        geometry: GeometryBase,
+    ) -> None:
+        """Initializer for ``WrappingPathway``.
+
+        Parameters
+        ==========
+
+        attachment_1 : Point
+            The first of the pair of ``Point`` objects between which the
+            wrapping pathway spans.
+        attachment_2 : Point
+            The second of the pair of ``Point`` objects between which the
+            wrapping pathway spans.
+        geometry : GeometryBase
+            The geometry about which the pathway wraps.
+
+        """
+        super().__init__(attachment_1, attachment_2)
+        self.geometry = geometry
