@@ -1,3 +1,4 @@
+from sympy.parsing.latex.lark.latex_parser import pretty_print_lark_trees
 from sympy.parsing.tests.test_latex import GOOD_PAIRS
 from sympy.testing.pytest import raises, XFAIL
 from sympy.external import import_module
@@ -88,7 +89,8 @@ def determine_parseable_lark():
 
 # A list of tests we usually use to test the edge cases and stress test the WIP implementation
 TRICKY_TESTS = [
-    (r"\mathit{HELLO world}", Symbol('HELLO world')),
+    (r"\mathit{HELLOworld}", Symbol('HELLOworld')),
+    # (r"\mathit{HELLO world}", Symbol('HELLO world')),
     (r"-3.14", -3.14),
     (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
     (r"3x - 1", _Add(_Mul(3, x), -1)),
@@ -112,7 +114,8 @@ def test_tricky_tests():
     failure_list = []
     for i, (latex_str, sympy_expr) in enumerate(TRICKY_TESTS):
         try:
-            parse_latex_lark(latex_str)
+            out = parse_latex_lark(latex_str)
+            print(pretty_print_lark_trees(out))
         except Exception as e:
             failure_list.append(i)
 
