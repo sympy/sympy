@@ -361,3 +361,24 @@ class WrappingPathway(PathwayBase):
         """
         super().__init__(attachment_1, attachment_2)
         self.geometry = geometry
+
+    @property
+    def geometry(self) -> GeometryBase:
+        """The geometry around which the pathway wraps."""
+        return self._geometry
+
+    @geometry.setter
+    def geometry(self, geometry: GeometryBase) -> None:
+        if hasattr(self, '_geometry'):
+            msg = (
+                f'Can\'t set attribute `geometry` to {repr(geometry)} as it '
+                f'is immutable.'
+            )
+            raise AttributeError(msg)
+        if not isinstance(geometry, GeometryBase):
+            msg = (
+                f'Value {repr(geometry)} passed to `geometry` was of type '
+                f'{type(geometry)}, must be {GeometryBase}.'
+            )
+            raise TypeError(msg)
+        self._geometry = geometry
