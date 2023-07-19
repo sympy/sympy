@@ -210,3 +210,17 @@ class TestWrappingPathway:
     ) -> None:
         with pytest.raises(TypeError):
             _ = WrappingPathway(*attachments, self.cylinder)  # type: ignore
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (None, Point('pB')),
+            (Point('pA'), None),
+        ]
+    )
+    def test_invalid_constructor_attachments_not_point(
+        attachments: Sequence[Any],
+    ) -> None:
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(*attachments)  # type: ignore
