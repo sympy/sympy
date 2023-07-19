@@ -140,6 +140,24 @@ class TestSphere:
 
         assert sphere._geodesic_end_vectors(p1, p2) == expected
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position',
+        [r * N.x, r * cos(q) * N.x + r * sin(q) * N.y]
+    )
+    def test_geodesic_end_vectors_invalid_coincident(position: Vector) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position)
+        p2 = Point('p2')
+        p2.set_pos(pO, position)
+
+        with pytest.raises(ValueError):
+            _ = sphere._geodesic_end_vectors(p1, p2)
+
 
 class TestCylinder:
 
