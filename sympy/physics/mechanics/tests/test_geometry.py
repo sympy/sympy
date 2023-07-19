@@ -347,3 +347,27 @@ class TestCylinder:
         expected = (vector_1, vector_2)
 
         assert cylinder._geodesic_end_vectors(p1, p2) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, position',
+        [
+            (N.z, r * N.x),
+            (N.z, r * cos(q) * N.x + r * sin(q) * N.y + N.z),
+        ]
+    )
+    def test_geodesic_end_vectors_invalid_coincident(
+        axis: Vector,
+        position: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position)
+        p2 = Point('p2')
+        p2.set_pos(pO, position)
+
+        with pytest.raises(ValueError):
+            _ = cylinder._geodesic_end_vectors(p1, p2)
