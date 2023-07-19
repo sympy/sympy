@@ -952,7 +952,7 @@ class SDM(dict):
         >>> A_rref, pivots = A.rref()
         >>> A_null, nonpivots = A_rref.nullspace_from_rref(pivots)
         >>> A_null
-        {0: {0: -2}, 1: {0: 1}}
+        {0: {0: -2, 1: 1}}
         >>> pivots
         [0]
         >>> nonpivots

@@ -354,12 +354,15 @@ def _to_DM(A, ans):
 
 def _pivots(A_rref):
     """Return the pivots from the rref of A."""
-    return sorted(map(min, A_rref.to_sdm().values()))
+    return tuple(sorted(map(min, A_rref.to_sdm().values())))
 
 
 def _check_cancel(result, rref_ans, den_ans):
     """Check the cancelled result."""
     rref, den, pivots = result
+    if isinstance(rref, (DDM, SDM, list, dict)):
+        assert type(pivots) is list
+        pivots = tuple(pivots)
     rref = _to_DM(rref, rref_ans)
     rref2, den2 = rref.cancel_denom(den)
     assert rref2 == rref_ans
@@ -370,9 +373,9 @@ def _check_cancel(result, rref_ans, den_ans):
 def _check_divide(result, rref_ans, den_ans):
     """Check the divided result."""
     rref, pivots = result
-    if isinstance(rref, Matrix):
-        assert type(pivots) is tuple
-        pivots = list(pivots)
+    if isinstance(rref, (DDM, SDM, list, dict)):
+        assert type(pivots) is list
+        pivots = tuple(pivots)
     rref = _to_DM(rref, rref_ans).to_field()
     rref_ans = rref_ans.to_field() / den_ans
     assert rref == rref_ans
