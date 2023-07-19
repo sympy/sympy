@@ -196,3 +196,17 @@ class TestWrappingPathway:
         assert hasattr(instance, 'geometry')
         assert isinstance(instance.geometry, GeometryBase)
         assert instance.geometry == self.cylinder
+
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (Point('pA'), ),
+            (Point('pA'), Point('pB'), Point('pZ')),
+        ]
+    )
+    def test_invalid_constructor_attachments_incorrect_number(
+        self,
+        attachments: Sequence[Point],
+    ) -> None:
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(*attachments, self.cylinder)  # type: ignore
