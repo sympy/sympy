@@ -321,3 +321,23 @@ class TestWrappingPathway:
         pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
         expected = expected_factor * sqrt(self.r**2)
         assert simplify(pathway.length - expected) == 0
+
+    @pytest.mark.parametrize(
+        'pA_vec, pB_vec',
+        [
+            ((1, 0, 0), (0, 1, 0)),
+            ((0, 1, 0), (sqrt(2) * Rational(1, 2), -sqrt(2)* Rational(1, 2), 0)),
+            ((1, 0, 0), (Rational(1, 2), sqrt(3) * Rational(1, 2), 0)),
+        ]
+    )
+    def test_static_pathway_on_sphere_extension_velocity(
+        self,
+        pA_vec: tuple[int | Number, int | Number, int | Number],
+        pB_vec: tuple[int | Number, int | Number, int | Number],
+    ) -> None:
+        pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
+        pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
+        self.pA.set_pos(self.pO, self.r * pA_vec)
+        self.pB.set_pos(self.pO, self.r * pB_vec)
+        pathway = WrappingPathway(self.pA, self.pB, self.sphere)
+        assert pathway.extension_velocity == 0
