@@ -287,3 +287,37 @@ class TestWrappingPathway:
         pathway = WrappingPathway(self.pA, self.pB, self.sphere)
         expected = expected_factor * self.r
         assert simplify(pathway.length - expected) == 0
+
+    @pytest.mark.parametrize(
+        'pA_vec, pB_vec, expected_factor',
+        [
+            ((1, 0, 0), (0, 1, 0), Rational(1, 2) * pi),
+            ((1, 0, 0), (-1, 0, 0), pi),
+            ((-1, 0, 0), (1, 0, 0), pi),
+            ((0, 1, 0), (sqrt(2) / 2, -sqrt(2) / 2, 0), 5 * pi / 4),
+            ((1, 0, 0), (Rational(1, 2), sqrt(3) / 2, 0), pi / 3),
+            (
+                (0, 1, 0),
+                (sqrt(2) * Rational(1, 2), -sqrt(2)* Rational(1, 2), 1),
+                sqrt(1 + (Rational(5, 4) * pi)**2),
+            ),
+            (
+                (1, 0, 0),
+                (Rational(1, 2), sqrt(3) * Rational(1, 2), 1),
+                sqrt(1 + (Rational(1, 3) * pi)**2),
+            ),
+        ]
+    )
+    def test_static_pathway_on_cylinder_length(
+        self,
+        pA_vec: tuple[int | Number, int | Number, int | Number],
+        pB_vec: tuple[int | Number, int | Number, int | Number],
+        expected_factor: Expr,
+    ) -> None:
+        pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
+        pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
+        self.pA.set_pos(self.pO, self.r * pA_vec)
+        self.pB.set_pos(self.pO, self.r * pB_vec)
+        pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
+        expected = expected_factor * sqrt(self.r**2)
+        assert simplify(pathway.length - expected) == 0
