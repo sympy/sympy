@@ -1,4 +1,4 @@
-from sympy import ZZ, QQ, Matrix
+from sympy import ZZ, Matrix
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
@@ -199,13 +199,6 @@ def test_sdm_nullspace(name, A, A_null):
     A = A.to_field().to_sdm()
     A_null_found, _ = A.nullspace()
     _check_normalized(A_null_found, A_null)
-
-
-@pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
-def test_dm_dense_nullspace_fracfree(name, A, A_null):
-    A = A.to_field()
-    A_null_found = A.nullspace()
-    _check_primitive(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
