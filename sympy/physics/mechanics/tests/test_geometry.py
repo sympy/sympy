@@ -95,6 +95,51 @@ class TestSphere:
 
         assert simplify(Eq(sphere.geodesic_length(p1, p2), expected))
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position_1, position_2, vector_1, vector_2',
+        [
+            (r * N.x, r * N.y, N.y, N.x),
+            (r * N.x, -r * N.y, -N.y, N.x),
+            (
+                r * N.y,
+                sqrt(2)/2 * r * N.x - sqrt(2)/2 * r * N.y,
+                N.x,
+                sqrt(2)/2 * N.x + sqrt(2)/2 * N.y,
+            ),
+            (
+                r * N.x,
+                r / 2 * N.x + sqrt(3)/2 * r * N.y,
+                N.y,
+                sqrt(3)/2 * N.x - 1/2 * N.y,
+            ),
+            (
+                r * N.x,
+                sqrt(2)/2 * r * N.x + sqrt(2)/2 * r * N.y,
+                N.y,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+        ]
+    )
+    def test_geodesic_end_vectors(
+        position_1: Vector,
+        position_2: Vector,
+        vector_1: Vector,
+        vector_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        expected = (vector_1, vector_2)
+
+        assert sphere._geodesic_end_vectors(p1, p2) == expected
+
 
 class TestCylinder:
 
