@@ -183,3 +183,16 @@ class TestWrappingPathway:
         self.cylinder = Cylinder(self.r, self.pO, self.ax)
         self.pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
         self.F = Symbol('F')
+
+    def test_valid_constructor(self) -> None:
+        instance = WrappingPathway(self.pA, self.pB, self.cylinder)
+        assert isinstance(instance, WrappingPathway)
+        assert hasattr(instance, 'attachments')
+        assert len(instance.attachments) == 2
+        assert isinstance(instance.attachments[0], Point)
+        assert instance.attachments[0] == self.pA
+        assert isinstance(instance.attachments[1], Point)
+        assert instance.attachments[1] == self.pB
+        assert hasattr(instance, 'geometry')
+        assert isinstance(instance.geometry, GeometryBase)
+        assert instance.geometry == self.cylinder
