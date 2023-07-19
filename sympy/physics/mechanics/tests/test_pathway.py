@@ -254,3 +254,10 @@ class TestWrappingPathway:
     def test_geometry_property_is_immutable(self) -> None:
         with pytest.raises(AttributeError):
             self.pathway.geometry = None  # type: ignore
+
+    def test_repr(self) -> None:
+        expected = (
+            f'WrappingPathway(pA, pB, '
+            f'geometry={self.cylinder!r})'
+        )
+        assert repr(self.pathway) == expected
