@@ -76,6 +76,25 @@ class GeometryBase(ABC):
         """
         pass
 
+    @abstractmethod
+    def _geodesic_end_vectors(
+        self,
+        point_1: Point,
+        point_2: Point,
+    ) -> tuple[Vector, Vector]:
+        """The vectors parallel to the geodesic at the two end points.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic originates.
+        point_2 : Point
+            The point at which the geodesic terminates.
+
+        """
+        pass
+
     def __repr__(self) -> str:
         """Default representation of a geometry object."""
         return f'{self.__class__.__name__}()'
