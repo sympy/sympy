@@ -228,3 +228,19 @@ class TestWrappingPathway:
     def test_invalid_constructor_geometry_is_not_supplied(self) -> None:
         with pytest.raises(TypeError):
             _ = WrappingPathway(self.pA, self.pB)  # type: ignore
+
+    @pytest.mark.parametrize(
+        'geometry',
+        [
+            Symbol('r'),
+            dynamicsymbols('q'),
+            ReferenceFrame('N'),
+            ReferenceFrame('N').x,
+        ]
+    )
+    def test_invalid_geometry_not_geometry(
+        self,
+        geometry: Any,
+    ) -> None:
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(self.pA, self.pB, geometry)
