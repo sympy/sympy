@@ -631,7 +631,7 @@ def test_DomainMatrix_nullspace():
     Anull = DomainMatrix([[ZZ(-1), ZZ(1)]], (1, 2), ZZ)
     assert A.nullspace() == Anull
 
-    raises(DMNotAField, lambda: A.nullspace(normalize=True))
+    raises(DMNotAField, lambda: A.nullspace(divide_last=True))
 
     A = DomainMatrix([[ZZ(2), ZZ(2)], [ZZ(2), ZZ(2)]], (2, 2), ZZ)
     Anull = DomainMatrix([[ZZ(-2), ZZ(2)]], (1, 2), ZZ)

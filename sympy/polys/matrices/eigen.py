@@ -32,7 +32,7 @@ def dom_eigenvects(A, l=Dummy('lambda')):
                 for i in range(rows)]
             EE = DomainMatrix(EE_items, (rows, cols), field)
 
-            basis = (A - EE).nullspace(normalize=True)
+            basis = (A - EE).nullspace(divide_last=True)
             rational_eigenvects.append((field, eigenval, exp, basis))
         else:
             minpoly = Poly.from_list(base, l, domain=domain)
@@ -49,7 +49,7 @@ def dom_eigenvects(A, l=Dummy('lambda')):
                 for i in range(rows)]
             EE = DomainMatrix(EE_items, (rows, cols), field)
 
-            basis = (AA - EE).nullspace(normalize=True)
+            basis = (AA - EE).nullspace(divide_last=True)
             algebraic_eigenvects.append((field, minpoly, exp, basis))
 
     return rational_eigenvects, algebraic_eigenvects

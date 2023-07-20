@@ -1937,7 +1937,7 @@ class DomainMatrix:
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
 
-    def nullspace(self, normalize=False):
+    def nullspace(self, divide_last=False):
         r"""
         Returns the nullspace for the DomainMatrix
 
@@ -1957,7 +1957,7 @@ class DomainMatrix:
         ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
         DomainMatrix([[2, 2]], (1, 2), QQ)
-        >>> A.nullspace(normalize=True)
+        >>> A.nullspace(divide_last=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
         The returned matrix is a basis for the nullspace:
@@ -1979,7 +1979,7 @@ class DomainMatrix:
         ...         [4, -2]], ZZ)
         >>> B.nullspace()
         DomainMatrix([[3, 6]], (1, 2), ZZ)
-        >>> B.nullspace(normalize=True)
+        >>> B.nullspace(divide_last=True)
         Traceback (most recent call last):
         ...
         DMNotAField: Cannot normalize vectors over a non-field
@@ -2009,7 +2009,7 @@ class DomainMatrix:
         The unnormalized form here is nicer than the normalized form that
         spreads a large denominator throughout the matrix:
 
-        >>> M.to_DM().to_field().nullspace(normalize=True).to_Matrix().transpose()
+        >>> M.to_DM().to_field().nullspace(divide_last=True).to_Matrix().transpose()
         Matrix([
         [                   c**3/(a*b**2*c - a*b - a*c + b**2 + b*c)],
         [(-a*b*c**2 + a*c - b*c)/(a*b**2*c - a*b - a*c + b**2 + b*c)],
@@ -2018,12 +2018,11 @@ class DomainMatrix:
         Parameters
         ==========
 
-        normalize : bool, optional
+        divide_last : bool, optional
             If False (the default), the vectors are not normalized and the RREF
             is computed using :meth:`rref_den` and discarding the denominator.
-            If ``normalize=True`` is passed, then :meth:`rref` is used and the
-            vectors in the nullspace are normalized so that the bottom non-zero
-            entry in each column is 1.
+            If ``divide_last=True`` is passed then each row is divided by its
+            final element (the domain must be a field in this case).
 
         See Also
         ========
@@ -2036,13 +2035,13 @@ class DomainMatrix:
         A = self
         K = A.domain
 
-        if normalize and not K.is_Field:
+        if divide_last and not K.is_Field:
             raise DMNotAField("Cannot normalize vectors over a non-field")
 
-        if normalize:
+        if divide_last:
             A_rref, pivots = A.rref()
         else:
-            A_rref, den, pivots = A.rref_den()
+            A_rref, _, pivots = A.rref_den()
 
         A_null = A_rref.nullspace_from_rref(pivots)
 
