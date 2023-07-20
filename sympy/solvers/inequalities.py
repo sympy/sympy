@@ -1125,8 +1125,8 @@ class LRASolver():
 
             if self.beta[xi] < self.lower[xi]:
                 cand = [nb for nb, j in self.nonbasic.items()
-                        if (-A[i, j] > 0 and self.beta[nb] < self.upper[nb])
-                        or (-A[i, j] < 0 and self.beta[nb] > self.lower[nb])]
+                        if (-A[i, j] < 0 and self.beta[nb] < self.upper[nb])
+                        or (-A[i, j] > 0 and self.beta[nb] > self.lower[nb])]
                 if len(cand) == 0:
                     N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
                     N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
