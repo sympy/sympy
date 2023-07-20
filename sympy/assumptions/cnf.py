@@ -418,13 +418,13 @@ class EncodedCNF:
 
         Encode the CNF expression and print the encoded data and encoding dictionary.
         >>> print(encoded_cnf.data)
-        [{1, -2}]
+        [{2, -1}]
         >>> print(encoded_cnf.encoding)
-        {y: 1, x: 2}
+        {x: 1, y: 2}
 
         Retrieve the symbols used in encoding.
         >>> print(encoded_cnf.symbols)
-        [x, y]
+        [y, x]
 
         Example 2:
         ----------
@@ -437,9 +437,9 @@ class EncodedCNF:
         Check the updated encoded data for `encoded_cnf` and the copied encoded data.
 
         >>> print(encoded_cnf.data)
-        [{1, -2}, {3}]
+        [{2, -1}, {3}]
         >>> print(copied_encoded_cnf.data)
-        [{1, -2}]
+        [{2, -1}]
         """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
