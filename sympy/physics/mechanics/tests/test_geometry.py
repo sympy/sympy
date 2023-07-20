@@ -11,6 +11,7 @@ from sympy.core.backend import (
     Rational,
     S,
     Symbol,
+    USE_SYMENGINE,
     acos,
     cos,
     pi,
@@ -23,7 +24,6 @@ from sympy.physics.mechanics._geometry import Cylinder, Sphere
 from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:
-    from sympy.core.backend import USE_SYMENGINE
     from sympy.physics.mechanics import Vector
 
     if USE_SYMENGINE:
@@ -96,6 +96,7 @@ class TestSphere:
         assert simplify(Eq(sphere.geodesic_length(p1, p2), expected))
 
     @staticmethod
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'position_1, position_2, vector_1, vector_2',
         [
@@ -282,6 +283,7 @@ class TestCylinder:
         assert simplify(Eq(cylinder.geodesic_length(p1, p2), expected))
 
     @staticmethod
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'axis, position_1, position_2, vector_1, vector_2',
         [
