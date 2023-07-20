@@ -1982,7 +1982,7 @@ class DomainMatrix:
         >>> B.nullspace(normalize=True)
         Traceback (most recent call last):
         ...
-        ValueError: Cannot normalize vectors over a non-field
+        DMNotAField: Cannot normalize vectors over a non-field
 
         Over a ring with ``gcd`` defined the nullspace can potentially be
         reduced with :meth:`primitive`:
