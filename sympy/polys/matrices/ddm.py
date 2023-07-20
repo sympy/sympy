@@ -611,7 +611,7 @@ class DDM(list):
         rref, pivots = a.rref()
         return rref.nullspace_from_rref(pivots)
 
-    def nullspace_from_rref(a, pivots):
+    def nullspace_from_rref(a, pivots=None):
         """Compute the nullspace of a matrix from its rref.
 
         The domain of the matrix can be any domain.
@@ -626,6 +626,17 @@ class DDM(list):
         """
         m, n = a.shape
         K = a.domain
+
+        if pivots is None:
+            pivots = []
+            last_pivot = -1
+            for i in range(m):
+                for j in range(last_pivot+1, n):
+                    aij = a[i][j]
+                    if aij:
+                        last_pivot = j
+                        pivots.append(j)
+                        break
 
         if not pivots:
             return (a.eye(n, K), list(range(n)))
