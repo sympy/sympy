@@ -10,13 +10,13 @@ eye = lambda n, K: DomainMatrix.eye(n, K).to_dense()
 
 
 #
-# DomainMatrix.nullspace can have a normalized answer or a can return an
-# unnormalized answer. The unnormalized answer is not unique but we can make
-# it unique by making it primitive (remove gcd). The tests here all show the
+# DomainMatrix.nullspace can have a divided answer or can return an undivided
+# uncanonical answer. The uncanonical answer is not unique but we can make it
+# unique by making it primitive (remove gcd). The tests here all show the
 # primitive form. We test two things:
 #
 #   A.nullspace().primitive()[1] == answer.
-#   A.nullspace(normalize=True) == normalized(answer).
+#   A.nullspace(divide_last=True) == _divide_last(answer).
 #
 # The nullspace as returned by DomainMatrix and related classes is the
 # transpose of the nullspace as returned by Matrix. Matrix returns a list of
@@ -114,7 +114,7 @@ def _to_DM(A, ans):
         assert False # pragma: no cover
 
 
-def _normalize(null):
+def _divide_last(null):
     """Normalize the nullspace by the rightmost non-zero entry."""
     null = null.to_field()
 
@@ -143,10 +143,10 @@ def _check_primitive(null, null_ans):
     assert null_prim in (null_ans, -null_ans)
 
 
-def _check_normalized(null, null_ans):
-    """Check that the answer is normalized."""
+def _check_divided(null, null_ans):
+    """Check the divided answer."""
     null = _to_DM(null, null_ans)
-    null_ans_norm = _normalize(null_ans)
+    null_ans_norm = _divide_last(null_ans)
     assert null == null_ans_norm
 
 
@@ -162,41 +162,41 @@ def test_Matrix_nullspace(name, A, A_null):
         A_null_found = Matrix.zeros(A.cols, 0)
 
     # The Matrix result corresponds to the DomainMatrix result working over
-    # a field with normalize=True.
+    # a field with divide_last=True.
     A_null_found = A_null_found.to_DM().to_field().to_dense()
 
     # The Matrix result is transpose of DomainMatrix result.
     A_null_found = A_null_found.transpose()
 
-    _check_normalized(A_null_found, A_null)
+    _check_divided(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
 def test_dm_dense_nullspace(name, A, A_null):
     A = A.to_field().to_dense()
-    A_null_found = A.nullspace(normalize=True)
-    _check_normalized(A_null_found, A_null)
+    A_null_found = A.nullspace(divide_last=True)
+    _check_divided(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
 def test_dm_sparse_nullspace(name, A, A_null):
     A = A.to_field().to_sparse()
-    A_null_found = A.nullspace(normalize=True)
-    _check_normalized(A_null_found, A_null)
+    A_null_found = A.nullspace(divide_last=True)
+    _check_divided(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
 def test_ddm_nullspace(name, A, A_null):
     A = A.to_field().to_ddm()
     A_null_found, _ = A.nullspace()
-    _check_normalized(A_null_found, A_null)
+    _check_divided(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
 def test_sdm_nullspace(name, A, A_null):
     A = A.to_field().to_sdm()
     A_null_found, _ = A.nullspace()
-    _check_normalized(A_null_found, A_null)
+    _check_divided(A_null_found, A_null)
 
 
 @pytest.mark.parametrize('name, A, A_null', NULLSPACE_EXAMPLES)
