@@ -34,38 +34,31 @@ class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
 
     def SUBSCRIPTED_SYMBOL(self, token):
-        symbol, sub = token.value.replace('\\', '').split('_')
+        symbol, sub = token.value.split('_')
         if sub.startswith('{'):
             return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
         else:
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
-    def atom(self, token):
-        return token[0]
-
-    def expression(self, token):
-        return token[0]
-
-    def expression_core(self, token):
-        return token[0]
-
-    def atomic_expr(self, token):
-        return token[0]
-
     def number(self, token):
-        return token[0]
+        if "." not in token[0]:
+            return int(token[0])
+        else:
+            pass # TODO: Handle this case later
 
     def latex_string(self, token):
         return token[0]
 
     def infinity(self, token):
         return sympy.oo
+    
+    def add(self, token):
+        return sympy.Add(token[0], token[2], evaluate=False)
 
-    def oneletter_symbol(self, token):
-        return token[0]
+    def mul(self, token):
+        return sympy.Mul(token[0], token[2], evaluate=False)
 
-
-def parse_latex_lark(s: str, *, logger=False, print_debug_output=False):
+def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
     # last option is temporary, for quick prototyping
     # TODO: should we use pkg_resource to get grammar file?  I
     # think this would make sympy depend on setuptools which we
@@ -84,27 +77,28 @@ def parse_latex_lark(s: str, *, logger=False, print_debug_output=False):
     if logger:
         _lark.logger.setLevel(logging.DEBUG)
 
-    string = parser.parse(s)
-<<<<<<< HEAD
-    # print(string)
-    # print(string.pretty())
-    return string
-=======
+    parse_tree = parser.parse(s)
+
+    if not transform:
+        # exit early and return the parse tree
+        print("expression =", s)
+        # print(parse_tree)
+        print(parse_tree.pretty())
+        return parse_tree
 
     sympy_expression = ""
     try:
-        sympy_expression = TransformToSymPyExpr().transform(string)
+        sympy_expression = TransformToSymPyExpr().transform(parse_tree)
     except Exception as e:
         raise LaTeXParsingError(str(e))
 
     if print_debug_output:
         print("expression =", s)
         print("SymPy expression =", sympy_expression)
-        print(string)
-        print(string.pretty())
+        # print(parse_tree)
+        print(parse_tree.pretty())
 
     return sympy_expression
->>>>>>> 917ceb2df6 (Added code to show more descriptive output so that we can see what the state of the Transformer is.)
 
 
 def pretty_print_lark_trees(tree, indent=0, show_expr=True):
@@ -136,6 +130,5 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    parse_latex_lark(r"1", print_debug_output=True)
-    parse_latex_lark(r"\infty", print_debug_output=True)
-    parse_latex_lark(r"a_b", print_debug_output=True)
+    # parse_latex_lark(r"1 + 1", print_debug_output=True)
+    parse_latex_lark(r"1 * 1", print_debug_output=True)
