@@ -5,15 +5,20 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt
+from sympy.core.relational import Relational, Eq, Ge, Lt, Le
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
+from sympy.core.mul import Mul
+from sympy.core.add import Add
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
+from sympy.logic.boolalg import BooleanFunction
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.solvers.solveset import solvify, solveset
+from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
@@ -996,32 +1001,234 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A):
-        self.A = A
+    def __init__(self, A, basic, nonbasic):
+        m, n = len(basic), len(basic)+len(nonbasic)
+        if m != 0:
+            assert A.shape == (m, n)
+        self.A = A # TODO: Row reduce A
+        self.basic = {b: i for i, b in enumerate(basic)}
+        self.nonbasic = {nb: i for i, nb in enumerate(nonbasic)}
 
-    def assert_inequality(self, atom):
-        pass
+        self.lower = {}
+        self.upper = {}
+        self.beta = {} # assgined value for each variable
+
+        for var in nonbasic + basic:
+            self.lower[var] = -float("inf")
+            self.upper[var] = float("inf")
+            self.beta[var] = 0
+
+    @staticmethod
+    def preprocess(BF):
+        equations = []
+        count = 0
+        sub = {}
+        nonbasic = set()
+
+        def remove_constant_coeff(term):
+            if isinstance(term, Mul):
+                return Mul(*[arg for arg in term.args if not arg.is_constant()])
+            else:
+                return term
+        def do(b):
+            if isinstance(b, BooleanFunction):
+                return b.func(*[do(arg) for arg in b.args])
+            elif not isinstance(b, Relational):
+                return b
+            else:
+                expr, const = b.args
+                nonlocal nonbasic
+                if isinstance(expr, Add):
+                    nonbasic |= {remove_constant_coeff(arg) for arg in expr.args}
+                    if expr not in sub:
+                        nonlocal count
+                        count += 1
+                        sub[expr] = Symbol(f"s{count}")
+                        equations.append(Eq(sub[expr], expr))
+                    return b.func(sub[expr], const)
+                else:
+                    nonbasic.add(remove_constant_coeff(expr))
+                    return b
+
+
+
+        res = do(BF)
+
+        nonbasic = sorted(nonbasic, key=lambda v: str(v))
+        basic = list(sub.values())
+
+        A, _ = linear_eq_to_matrix(equations, nonbasic + basic)
+
+
+        return res, LRASolver(A, basic, nonbasic)
+
+
+    def assert_con(self, atom):
+
+
+        if isinstance(atom, AppliedBinaryRelation):
+            sym, c = atom.arguments
+            assert sym.is_symbol
+            assert c.is_constant()
+            if atom.function == Q.ge:
+                return self._assert_lower(sym, c)
+            if atom.function == Q.le:
+                return self._assert_upper(sym, c)
+        elif isinstance(atom, Relational):
+            sym, c = atom.args
+            assert sym.is_symbol
+            assert c.is_constant()
+
+            if atom.func == Ge:
+                return self._assert_lower(sym, c)
+
+            if atom.func == Le:
+                return self._assert_upper(sym, c)
+
+        raise ValueError(f"{atom} could not be asserted.")
+    def _assert_upper(self, xi, ci):
+        if ci >= self.upper[xi]:
+            return "SAT"
+        if ci < self.lower[xi]:
+            return "UNSAT", {xi >= self.lower[xi], xi <= ci}
+        self.upper[xi] = ci
+        if xi in self.nonbasic and self.beta[xi] > ci:
+            self._update(xi, ci)
+
+        return "OK"
+
+    def _assert_lower(self, xi, ci):
+        if ci <= self.lower[xi]:
+            return "SAT"
+        if ci > self.upper[xi]:
+            return "UNSAT", {xi <= self.upper[xi], xi >= ci}
+        self.lower[xi] = ci
+        if xi in self.nonbasic and self.beta[xi] < ci:
+            self._update(xi, ci)
+
+        return "OK"
 
     def check(self):
-        pass
+        A = self.A.copy()
+        while True:
+            assert all(((self.beta[nb] >= self.lower[nb]) == True) and ((self.beta[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
+            cand = [b for b in self.basic
+             if self.beta[b] < self.lower[b]
+             or self.beta[b] > self.upper[b]]
+            # [(self.beta[b], (self.lower[b], self.upper[b])) for b in self.basic]
+
+            if len(cand) == 0:
+                return "SAT", "PLACEHOLDER"
+
+            xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland'S rule better
+            i = self.basic[xi]
+
+            if self.beta[xi] < self.lower[xi]:
+                cand = [nb for nb, j in self.nonbasic.items()
+                        if (-A[i, j] > 0 and self.beta[nb] < self.upper[nb])
+                        or (-A[i, j] < 0 and self.beta[nb] > self.lower[nb])]
+                if len(cand) == 0:
+                    N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
+                    N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
+                    conflict = set()
+                    conflict |= {nb <= self.upper[nb] for nb in N_plus}
+                    conflict |= {nb >= self.lower[nb] for nb in N_minus}
+                    conflict.add(xi >= self.lower[xi])
+                    return "UNSAT", conflict
+                xj = sorted(cand, key=lambda v: str(v))[0]
+                A = self._pivot_and_update(A, xi, xj, self.lower[xi])
+                # self.basic[xj] = self.basic[xi]
+                # del self.basic[xi]
+                # self.nonbasic[xi] = self.nonbasic[xj]
+                # del self.nonbasic[xj]
+
+            if self.beta[xi] > self.upper[xi]:
+                cand = [nb for nb, j in self.nonbasic.items()
+                        if (A[i, j] < 0 and self.beta[nb] < self.upper[nb])
+                        or (A[i, j] > 0 and self.beta[nb] > self.lower[nb])]
+                if len(cand) == 0:
+                    # A[i, j] < 0  ==> beta(xj) >= u(xj) ==> beta(xj) = u(xj)
+                    N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
+                    N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
+                    # Might have made a mistake here; had to think through the logic myself
+                    conflict = set()
+                    conflict |= {nb <= self.upper[nb] for nb in N_minus}
+                    conflict |= {nb >= self.lower[nb] for nb in N_plus}
+                    conflict.add(xi <= self.upper[xi])
+                    return "UNSAT", conflict
+                xj = sorted(cand, key=lambda v: str(v))[0]
+                j = self.nonbasic[xj]
+                A = self._pivot_and_update(A, xi, xj, self.upper[xi])
+                # self.basic[xj] = self.basic[xi]
+                # del self.basic[xi]
+                # self.nonbasic[xi] = self.nonbasic[xj]
+                # del self.nonbasic[xj]
+
+
 
     def backtrack(self):
         pass
 
-    def _pivot(self):
-        pass
+    @staticmethod
+    def _pivot(M, i, j):
+        Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
+        if Mij == 0:
+            raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
+        A = M - Mj * (Mi / Mij)
+        A[i, :] = Mi / Mij
+        A[:, j] = -Mj / Mij
+        A[i, j] = 1 / Mij
+        return A
 
-    def _update(self):
-        pass
+        # """
+        # The pivot element `M[i, j]` is inverted and the rest of the matrix modified
+        # and returned as a new matrix; original is left unmodified.
+        # Example
+        # =======
+        # >>> from sympy.matrices.dense import Matrix
+        # >>> from sympy.solvers.inequalities import _pivot
+        # >>> from sympy import var
+        # >>> Matrix(3, 3, var('a:i'))
+        # Matrix([
+        # [a, b, c],
+        # [d, e, f],
+        # [g, h, i]])
+        # >>> _pivot(_, 1, 0)
+        # Matrix([
+        # [-a/d, -a*e/d + b, -a*f/d + c],
+        # [ 1/d,        e/d,        f/d],
+        # [-g/d,  h - e*g/d,  i - f*g/d]])
+        # """
 
-    def _pivot_and_update(self):
-        pass
 
-    def _assert_upper(self):
-        pass
+    def _update(self, xi, v):
+        # xi will always be a nonbasic variable
+        i = self.nonbasic[xi]
+        for j, b in enumerate(self.basic):
+            aji = self.A[j, i]
+            self.beta[b] = self.beta[b] + aji*(v -self.beta[xi])
+        self.beta[xi] = v
 
-    def _assert_lower(self):
-        pass
+    def _pivot_and_update(self, M, xi, xj, v):
+        # xi will always be basic and xj will always be nonbasic
+        i, j = self.basic[xi], self.nonbasic[xj]
+        assert M[i, j] != 0
+        theta = (v - self.beta[xi])/M[i, j] # maybe the negative will fix bug?
+        self.beta[xi] = v
+        self.beta[xj] = self.beta[xj] + theta
+        for xk in self.basic:
+            if xk != xi:
+                k = self.basic[xk]
+                akj = M[k, j]
+                self.beta[xk] = self.beta[xk] + akj*theta
+
+        self.basic[xj] = self.basic[xi]
+        del self.basic[xi]
+        self.nonbasic[xi] = self.nonbasic[xj]
+        del self.nonbasic[xj]
+        return self._pivot(M, i, j)
+
+
 
 
 
@@ -1058,7 +1265,27 @@ TiloRC marked this conversation as resolved.
     linprog_maximize_from_equations
     linprog_from_matrices
     """
-    pass
+
+    conjunction = And(*constraints)
+
+    preprocessed, lra = LRASolver.preprocess(conjunction)
+
+    if isinstance(preprocessed, And):
+        atoms = [arg for arg in preprocessed.args]
+    else:
+        atoms = [preprocessed]
+
+    for con in atoms:
+        res = lra.assert_con(con)
+        if res[0] == "UNSAT":
+            return res
+
+    assigments = {v: lra.beta[v] for v in lra.nonbasic | lra.basic}
+
+    if lra.check()[0] == "UNSAT":
+        return "UNSAT"
+
+    return "SAT", assigments
     # A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
     # try:
     #     _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)

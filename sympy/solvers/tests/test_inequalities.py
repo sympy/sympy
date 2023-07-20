@@ -5,7 +5,9 @@ from sympy.core.function import Function
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.matrices.dense import Matrix
+from sympy.assumptions.ask import Q
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
@@ -21,11 +23,12 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
                                         _solve_inequality,
-                                        find_feasible)
+                                        find_feasible,
+                                        LRASolver)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import solveset
-from sympy.abc import x, y
+from sympy.solvers.solveset import solveset, linear_eq_to_matrix
+from sympy.abc import x, y, z, a
 
 from sympy.core.mod import Mod
 
@@ -490,22 +493,102 @@ def test__pt():
 
 
 def test_find_feasible():
+
+
+    r1 = x<=0
+    r2 = y<=0
+    r3 = x+y>=2
+    feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
+    assert feasible == "UNSAT"
+
+    r1 = x + 2*y >= 2
+    r2 = x + y <= 2
+    r3 = x >= 3
+    feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
+    #assert feasible[0] == "UNSAT"
+
+
+    s1, s2 = symbols("s1 s2")
     r1 = x >= 0
     r2 = x <= -1
-    assert find_feasible([r1, r2], [x]) is None
+    assert find_feasible([r1, r2], "PLACEHOLDER") == ('UNSAT', {x <= -1, x >= 0})
 
-    feasible = find_feasible([r1], [x])
-    assert feasible is not None
-    assert r1.subs(feasible) == True
+    feasible = find_feasible([r1], "PLACEHOLDER")
+    assert feasible[0] == "SAT"
+    assert r1.subs(feasible[1]) == True
 
     r1 = x >= 0
     r2 = x >= 3
-    feasible = find_feasible([r1, r2], [x])
-    assert feasible is not None
-    assert (r1.subs(feasible) and r2.subs(feasible)) == True
+    feasible = find_feasible([r1, r2], "PLACEHOLDER")
+    assert feasible[0] == "SAT"
+    assert (r1.subs(feasible[1]) and r2.subs(feasible[1])) == True
 
-    r1 = x >= 0
-    r2 = x <= 3
-    feasible = find_feasible([r1, r2], [x])
-    assert feasible is not None
-    assert (r1.subs(feasible) and r2.subs(feasible)) == True
+    r1 = x+y >= 2
+    r2 = x+y <= 2
+    r3 = x <= 1
+    r4 = x >= 1
+    feasible = find_feasible([r1, r2, r3, r4], "PLACEHOLDER")
+    assert feasible[0] == "SAT"
+    assert feasible[1][x] == 1
+    assert feasible[1][y] == 0
+
+
+def test_LRA_solver():
+    s1, s2 = symbols("s1 s2")
+
+    # Test preprocessing
+    # Example is from section 3 of paper.
+    phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+    phi = Q.real(a) | phi # must handle non-relational predicate objects
+    phi_prime = Q.real(a) | (x >= 0) & (Eq(s1, 2) | (s2 > 4)) & ((s2 >= 6) | (s1 <= 2))
+    eqs = [Eq(s1, x + y), Eq(s2, x + 2*y - z)]
+    m, _ = linear_eq_to_matrix(eqs, [x, y, z, s1, s2])
+
+    preprocessed, lra = LRASolver.preprocess(phi)
+    assert preprocessed == phi_prime
+    assert lra.A == m
+    assert lra.basic == {s1: 0, s2: 1}
+    assert lra.nonbasic == {x: 0, y: 1, z: 2}
+
+    # Empty matrix should be handled.
+    # If the preprocessing step doesn't do anything, then the matrix is empty.
+    m = Matrix()
+    lra = LRASolver(m, [], [x, y])
+    assert lra.assert_con(Q.ge(x, 0)) == "OK"
+    assert lra.assert_con(Q.ge(x, -1)) == "SAT"
+    assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
+
+    m = Matrix()
+    lra = LRASolver(m, [], [x, y])
+    assert lra.assert_con(Q.le(x, -1)) == "OK"
+    assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
+
+    m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
+    assert LRASolver._pivot(m, 0, 0) == Matrix([[-1, 1, -1, 0], [-2, 3, -2, 1]])
+
+    # Example from page 89–90 of
+    # "A Fast Linear-Arithmetic Solver for DPLL(T)"
+    equations = [Eq(s1, -x + y), Eq(s2, x + y)]
+    A, _ = linear_eq_to_matrix(equations, [x, y, s1, s2])
+    A = -A # the identity matrix should be positive
+    lra = LRASolver(A, [s1, s2], [x, y])
+    assert lra.check()[0] == "SAT"
+    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:0, y:0, s1:0, s2:0}
+
+    assert lra.assert_con(x <= -4) == "OK"
+    assert lra.check()[0] == "SAT"
+    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1: 4, s2:-4}
+
+    assert lra.assert_con(x >= -8) == "OK"
+    assert lra.check()[0] == "SAT"
+    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1:4, s2:-4}
+
+    assert lra.assert_con(s1 <= 1) == "OK"
+    assert lra.check()[0] == "SAT"
+    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:-3, s1:1, s2:-7}
+
+    assert lra.assert_con(s2 >= -3) == "OK"
+    assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
+
+
+
