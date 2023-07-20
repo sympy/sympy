@@ -106,11 +106,9 @@ def _to_DM(A, ans):
     """Convert the answer to DomainMatrix."""
     if isinstance(A, DomainMatrix):
         return A.to_dense()
-    elif isinstance(A, Matrix):
-        return A.to_DM().to_dense()
-    elif isinstance(A, (DDM, list)):
+    elif isinstance(A, DDM):
         return DomainMatrix(list(A), A.shape, A.domain).to_dense()
-    elif isinstance(A, (SDM, dict)):
+    elif isinstance(A, SDM):
         return DomainMatrix(dict(A), A.shape, A.domain).to_dense()
     else:
         assert False # pragma: no cover

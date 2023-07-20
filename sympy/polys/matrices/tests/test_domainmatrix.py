@@ -631,6 +631,18 @@ def test_DomainMatrix_nullspace():
     Anull = DomainMatrix([[ZZ(-1), ZZ(1)]], (1, 2), ZZ)
     assert A.nullspace() == Anull
 
+    raises(DMNotAField, lambda: A.nullspace(normalize=True))
+
+    A = DomainMatrix([[ZZ(2), ZZ(2)], [ZZ(2), ZZ(2)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[ZZ(-2), ZZ(2)]], (1, 2), ZZ)
+
+    Arref, den, pivots = A.rref_den()
+    assert den == ZZ(2)
+    assert Arref.nullspace_from_rref() == Anull
+    assert Arref.nullspace_from_rref(pivots) == Anull
+    assert Arref.to_sparse().nullspace_from_rref() == Anull.to_sparse()
+    assert Arref.to_sparse().nullspace_from_rref(pivots) == Anull.to_sparse()
+
 
 def test_DomainMatrix_solve():
     # XXX: Maybe the _solve method should be changed...

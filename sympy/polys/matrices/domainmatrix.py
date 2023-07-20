@@ -2037,7 +2037,7 @@ class DomainMatrix:
         K = A.domain
 
         if normalize and not K.is_Field:
-            raise ValueError("Cannot normalize vectors over a non-field")
+            raise DMNotAField("Cannot normalize vectors over a non-field")
 
         if normalize:
             A_rref, pivots = A.rref()
