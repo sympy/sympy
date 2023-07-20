@@ -6,7 +6,15 @@ from typing import TYPE_CHECKING, Any, Sequence
 
 import pytest
 
-from sympy.core.backend import Rational, Symbol, cos, pi, sin, sqrt
+from sympy.core.backend import (
+    Rational,
+    Symbol,
+    USE_SYMENGINE,
+    cos,
+    pi,
+    sin,
+    sqrt,
+)
 from sympy.physics.mechanics import (
     Force,
     Point,
@@ -431,6 +439,7 @@ class TestWrappingPathway:
         ]
         assert pathway.compute_loads(self.F) == expected
 
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'pA_vec, pB_vec, pA_vec_expected, pB_vec_expected, pO_vec_expected',
         (
@@ -500,6 +509,7 @@ class TestWrappingPathway:
         ]
         assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
 
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_length(self) -> None:
         q = dynamicsymbols('q')
         pA_pos = self.r * self.N.x
@@ -509,6 +519,7 @@ class TestWrappingPathway:
         expected = self.r * sqrt(q**2)
         assert simplify(self.pathway.length - expected) == 0
 
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_extension_velocity(self) -> None:
         q = dynamicsymbols('q')
         qd = dynamicsymbols('q', 1)
@@ -519,6 +530,7 @@ class TestWrappingPathway:
         expected = self.r * (sqrt(q**2) / q) * qd
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_compute_loads(self) -> None:
         q = dynamicsymbols('q')
         pA_pos = self.r * self.N.x
