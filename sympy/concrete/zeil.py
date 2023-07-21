@@ -1,10 +1,10 @@
 from sympy.simplify.radsimp import numer, denom
-from sympy.polys.polytools import Poly, lcm, degree
+from sympy.polys.polytools import Poly, lcm
 from sympy.solvers.solvers import solve
 from sympy.core.symbol import symbols
 from sympy.core.mul import prod
 from sympy.concrete.gosper import gosper_normal
-from sympy import binomial
+
 
 def _zeil(f, k, n, N, order):
     k_quotient = (f.subs(k, k + 1) / f).combsimp()
