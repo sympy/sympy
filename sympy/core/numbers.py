@@ -4511,7 +4511,10 @@ def equal_valued(x, y):
         # y even integer
         if q != 1:
             return False
-        if p.bit_length() != man.bit_length() + exp:
+        # 'sage.rings.integer.Integer' object has no attribute 'bit_length'
+        # so man.bit_length raises an AttributeError when testing sage
+        bl = man.bit_length() if hasattr(man, "bit_length") else man.nbits()
+        if p.bit_length() != bl + exp:
             return False
         return man << exp == p
     else:
