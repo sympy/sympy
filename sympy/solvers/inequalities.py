@@ -1,6 +1,7 @@
 """Tools for solving inequalities and systems of inequalities. """
 import itertools
 
+from sympy import SYMPY_DEBUG
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
@@ -1109,6 +1110,13 @@ class LRASolver():
         return "OK"
 
     def check(self):
+
+        def _debug_internal_state_printer(cand):
+            if not SYMPY_DEBUG:
+                return
+            import sys
+            sys.stderr.write(str(cand) + "\n")
+
         A = self.A.copy()
         while True:
             assert all(((self.beta[nb] >= self.lower[nb]) == True) and ((self.beta[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
@@ -1116,6 +1124,8 @@ class LRASolver():
              if self.beta[b] < self.lower[b]
              or self.beta[b] > self.upper[b]]
             # [(self.beta[b], (self.lower[b], self.upper[b])) for b in self.basic]
+
+            _debug_internal_state_printer(cand)
 
             if len(cand) == 0:
                 return "SAT", "PLACEHOLDER"
@@ -1127,6 +1137,7 @@ class LRASolver():
                 cand = [nb for nb, j in self.nonbasic.items()
                         if (-A[i, j] < 0 and self.beta[nb] < self.upper[nb])
                         or (-A[i, j] > 0 and self.beta[nb] > self.lower[nb])]
+                _debug_internal_state_printer(cand)
                 if len(cand) == 0:
                     N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
                     N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
@@ -1146,6 +1157,8 @@ class LRASolver():
                 cand = [nb for nb, j in self.nonbasic.items()
                         if (A[i, j] < 0 and self.beta[nb] < self.upper[nb])
                         or (A[i, j] > 0 and self.beta[nb] > self.lower[nb])]
+                _debug_internal_state_printer(cand)
+
                 if len(cand) == 0:
                     # A[i, j] < 0  ==> beta(xj) >= u(xj) ==> beta(xj) = u(xj)
                     N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
