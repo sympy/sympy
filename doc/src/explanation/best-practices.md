@@ -908,7 +908,7 @@ nested FiniteSet containing a single FiniteSet, like $\{\{1\}\}$:
 
 ```py
 >>> FiniteSet(FiniteSet(1)) # We don't want this to be the same as {1}
-{{1}}
+FiniteSet({1})
 ```
 
 As to whether `args`, i.e., accepting a single collection, or `*args` should
