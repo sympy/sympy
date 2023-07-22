@@ -578,38 +578,42 @@ simplification using {meth}`~sympy.core.basic.Basic.replace`, or in general, man
 Instead of hard-coding {class}`~.Symbol` names inside of a function
 definition, make the symbols a parameter to the function.
 
+For example, consider a function `theta_operator` that computes the [theta
+operator](https://en.wikipedia.org/wiki/Theta_operator) $\theta =
+zD_z$:
+
 **Don't**
 
 ```py
 def theta_operator(expr):
-    t = symbols('t')
-    return t*expr.diff(t)
+    z = symbols('z')
+    return z*expr.diff(z)
 ```
 
 **Do**
 
 ```py
-def theta_operator(expr, t):
-    return t*expr.diff(t)
+def theta_operator(expr, z):
+    return z*expr.diff(z)
 ```
 
 A hard-coded symbol name has the disadvantage of requiring all expressions to
 use that exact symbol name. In the above example, it is not possible to
-compute $\theta = xD_x$ because it is hard-coded to $tD_t$. What's worse,
+compute $\theta = xD_x$ because it is hard-coded to $zD_z$. What's worse,
 trying to do so silently leads to a wrong result instead of an error, since
 `x` is treated as a constant expression:
 
 ```py
 >>> def theta_operator(expr):
-...     t = symbols('t')
-...     return t*expr.diff(t)
->>> theta_operator(x**2)
+...     z = symbols('z')
+...     return z*expr.diff(z)
+>>> theta_operator(x**2) # The expected answer is 2*x**2
 0
 ```
 
 This is particularly problematic if the function accepts arbitrary user input,
 as the user may be using a different variable name that makes more sense in
-their mathematical context. And if the user already used the symbol `t` but as
+their mathematical context. And if the user already used the symbol `z` but as
 a constant, they would need to swap things around with `subs` before being
 able to use the function.
 
@@ -618,19 +622,19 @@ symbols with assumptions are considered unequal to symbols without
 assumptions. If someone defined their expression using
 
 ```py
->>> t = symbols('t', positive=True)
+>>> z = symbols('z', positive=True)
 ```
 
 for example, to make further simplifications possible (see
 [](best-practices-defining-symbols) above), the function hard-coding
-`Symbol('t')` without assumptions would not work:
+`Symbol('z')` without assumptions would not work:
 
 ```py
->>> theta_operator(t**2)
+>>> theta_operator(z**2)
 0
 ```
 
-By making the symbol an argument, like `theta_operator(expr, t)`, these
+By making the symbol an argument, like `theta_operator(expr, z)`, these
 problems all go away.
 
 (best-practices-separate-sympy-and-non-sympy)=
@@ -642,10 +646,10 @@ TODO
 
 ### Be Careful Comparing and Sorting Symbolic Objects
 
-Be careful with programmatic code that compares numerical quantities, whether
+Be careful with programmatic code that compares numerical quantities, either
 using an inequality (`<`, `<=`, `>`, `>=`) or indirectly with something like
-`sort`. The issue is that if an inequality is unknown, it will produce a
-symbolic inequality, like
+`sort`. The issue is that if an inequality is unknown, the result will be
+symbolic, like
 
 ```
 >>> x > 0
@@ -688,14 +692,16 @@ TypeError: cannot determine truth value of Relational
 There are a few options for fixing this issue, and the correct one to choose
 depends on what you are doing:
 
-- **Disallow symbolic inputs.** If your function cannot possibly work on
+-  **Disallow symbolic inputs.** If your function cannot possibly work on
   symbolic inputs, you can explicitly disallow them. The primary benefit here
-  is to give a more readable error message to users. The
-  {attr}`~sympy.core.expr.Expr.is_number` can be used to check expression can
-  be evaluated to a specific number with `evalf()`. If you want to only accept
-  integers, you can check `isinstance(x, Integer)` (after calling `sympify`)
-  (beware that `is_integer` uses the assumptions system and may be True even
-  for symbolic objects, like `Symbol('x', integer=True)`).
+  is to give a more readable error message to users than `TypeError:  cannot
+  determine truth value of Relational`. The
+  {attr}`~sympy.core.expr.Expr.is_number` attribute can be used to check if an
+  expression can be evaluated to a specific number with `evalf()`. If you want
+  to only accept integers, you can check `isinstance(x, Integer)` (after
+  calling `sympify()` to convert Python ints). Beware that `is_integer` uses
+  the assumptions system and may be True even for symbolic objects, like
+  `Symbol('x', integer=True)`.
 
 - **Use the assumptions system.** If you do support symbolic inputs, you
   should use the assumptions system to check for things like `x > 0`, e.g.,
@@ -754,10 +760,18 @@ depends on what you are doing:
   [0, x]
   ```
 
-  Alternatively, try to write the function in a way so that the result does not depend on
-  the order that arguments are processed in.
+  Alternatively, try to write the function in a way so that the correctness of
+  the result does not depend on the order that arguments are processed in.
 
 ## Custom SymPy Objects
+
+SymPy is designed to be extended with custom classes, typically by subclassing
+{term}`Basic`, {term}`Expr`, or {term}`Function <Function (class)>`. All the
+symbolic classes in SymPy itself are written this way, and the points here
+apply equally to them as to user-defined classes.
+
+For an in-depth guide on how to write a function `Function` subclass, see the
+[guide on writing custom functions](custom-functions).
 
 ### Args Invariants
 
@@ -800,17 +814,18 @@ hold:
    `AttributeError` on a recursive call, because the non-`Basic` args will not
    have the `args` or `func` attributes.
 
-   Usually this means calling `_sympify()` on the inputs to the class so that
-   they are basic instances. If you want to store a string on a class, you
-   should either use a `Symbol` or `sympy.core.symbols.Str`.
-
 2. If an expression does not rebuild from its `args`, the line `return
    exr.func(*newargs)`, which should be a no-op if none of the args are
    changed by the replacement, will fail.
 
-   In some cases a class may accept args in multiple equivalent forms. It is
-   important that whatever form is stored in `args` is one of the ways that
-   can be used to reconstruct the class.
+Making all `args` instances of `Basic` usually just means calling `_sympify()`
+on the inputs to the class so that they are basic instances. If you want to
+store a string on a class, you should either use a `Symbol` or
+`sympy.core.symbols.Str`.
+
+In some cases a class may accept args in multiple equivalent forms. It is
+important that whatever form is stored in `args` is one of the ways that
+can be used to reconstruct the class.
 
 Note that most user-defined custom functions should be defined by subclassing
 `Function` (see the [guide to writing custom functions](custom-functions)).
@@ -840,11 +855,11 @@ written assuming the invariants that are true due to automatic evaluations,
 meaning that expressions created with `evaluate=False` can lead to wrong
 results from this code.
 
-Evaluation that can potentially be expensive (for
-instance, applying a symbolic identity) is itself bad because it can make
-creating an expression without even doing anything with it allow. This can
-also apply to checking for symbolic assumptions (like `x.is_integer`), so it
-is also better to avoid this.
+Evaluation that can potentially be expensive (for instance, applying a
+symbolic identity) is itself bad because it can make creating an expression
+without even doing anything with it allow. This also applies to checking for
+symbolic assumptions (like `x.is_integer`), so this should also be avoided in
+class constructors.
 
 **Don't**
 
@@ -867,6 +882,7 @@ class f(Function):
     def eval(cls, x):
         if isinstance(x, Integer): # Good (only evaluating on explicit integers)
             return 0
+
     # Good (applying simplification on assumptions in doit())
     def doit(self, deep=True, **hints):
         x = self.args[0]
@@ -875,6 +891,7 @@ class f(Function):
         if x.is_integer:
            return S(0)
         return self
+
     # Good (applying symbolic identities inside of simplification functions)
     def _eval_expand_func(self, **hints):
         x = self.args[0]
@@ -904,11 +921,11 @@ For example, take the {class}`~.FiniteSet` class. It is constructed like
 
 It might be tempting to also support `FiniteSet([1, 2, 3])`, to match the
 built-in `set`. However, doing so would make it impossible to represent a
-nested FiniteSet containing a single FiniteSet, like $\{\{1\}\}$:
+nested `FiniteSet` containing a single `FiniteSet`, like $\{\{1, 2, 3\}\}$:
 
 ```py
->>> FiniteSet(FiniteSet(1)) # We don't want this to be the same as {1}
-FiniteSet({1})
+>>> FiniteSet(FiniteSet(1, 2, 3)) # We don't want this to be the same as {1, 2, 3}
+FiniteSet({1, 2, 3})
 ```
 
 As to whether `args`, i.e., accepting a single collection, or `*args` should
