@@ -1,6 +1,5 @@
-from sympy.parsing.tests.test_latex import GOOD_PAIRS
 from sympy.testing.pytest import raises, XFAIL
-from sympy.external import import_module
+from sympy.parsing.latex.lark import parse_latex_lark
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
@@ -23,10 +22,6 @@ from sympy.series.limits import Limit
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
-lark = import_module("lark")
-
-if not lark:
-    disabled = True
 
 theta = Symbol('theta')
 f = Function('f')
@@ -73,44 +68,330 @@ def _binomial(n, k):
     return binomial(n, k, evaluate=False)
 
 
-def test_parseable():
-    from sympy.parsing.latex.lark import parse_latex_lark
-    for latex_str, sympy_expr in GOOD_PAIRS:
+# These LaTeX strings should parse to the corresponding SymPy expression
+SYMBOL_EXPRESSION_PAIRS = [
+    (r"x_0", Symbol('x_{0}')),
+    (r"x_{1}", Symbol('x_{1}')),
+    (r"x_a", Symbol('x_{a}')),
+    (r"x_{b}", Symbol('x_{b}')),
+    (r"h_\theta", Symbol('h_{theta}')),
+    (r"h_{\theta}", Symbol('h_{theta}')),
+    (r"y''_1", Symbol("y_{1}''")),
+    (r"y_1''", Symbol("y_{1}''")),
+    (r"\mathit{x}", Symbol('x')),
+    (r"\mathit{test}", Symbol('test')),
+    (r"\mathit{TEST}", Symbol('TEST')),
+    (r"\mathit{HELLO world}", Symbol('HELLO world'))
+]
+
+SIMPLE_EXPRESSION_PAIRS = [
+    (r"0", 0),
+    (r"1", 1),
+    (r"-3.14", -3.14),
+    (r"(-7.13)(1.5)", _Mul(-7.13, 1.5)),
+    (r"1+1", _Add(1, 1)),
+    (r"0+1", _Add(0, 1)),
+    (r"1*2", _Mul(1, 2)),
+    (r"0*1", _Mul(0, 1)),
+    (r"x", x),
+    (r"2x", 2 * x),
+    (r"3x - 1", _Add(_Mul(3, x), -1)),
+    (r"-c", -c),
+    (r"\infty", oo),
+    (r"a \cdot b", a * b),
+    (r"1 \times 2 ", _Mul(1, 2)),
+    (r"a / b", a / b),
+    (r"a \div b", a / b),
+    (r"a + b", a + b),
+    (r"a + b - a", _Add(a + b, -a)),
+    (r"(x + y) z", _Mul(_Add(x, y), z)),
+    (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'"))))
+]
+
+FRACTION_EXPRESSION_PAIRS = [
+    (r"\frac{a}{b}", a / b),
+    (r"\dfrac{a}{b}", a / b),
+    (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", _Pow(2, -1)),
+    (r"\frac12y", _Mul(_Pow(2, -1), y)),
+    (r"\frac1234", _Mul(_Pow(2, -1), 34)),
+    (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
+    (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
+    (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
+]
+
+RELATION_EXPRESSION_PAIRS = [
+    (r"x = y", Eq(x, y)),
+    (r"x \neq y", Ne(x, y)),
+    (r"x < y", Lt(x, y)),
+    (r"x > y", Gt(x, y)),
+    (r"x \leq y", Le(x, y)),
+    (r"x \geq y", Ge(x, y)),
+    (r"x \le y", Le(x, y)),
+    (r"x \ge y", Ge(x, y)),
+    (r"x < y", StrictLessThan(x, y)),
+    (r"x \leq y", LessThan(x, y)),
+    (r"x > y", StrictGreaterThan(x, y)),
+    (r"x \geq y", GreaterThan(x, y)),
+    (r"x \neq y", Unequality(x, y)), # same as 2nd one in the list
+    (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
+]
+
+POWER_EXPRESSION_PAIRS = [
+    (r"x^2", x ** 2),
+    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
+    (r"x^{3 + 1}", x ** _Add(3, 1)),
+    (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+]
+
+INTEGRAL_EXPRESSION_PAIRS = [
+    (r"\int x dx", Integral(x, x)),
+    (r"\int x \, dx", Integral(x, x)),
+    (r"\int x d\theta", Integral(x, theta)),
+    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
+    (r"\int x + a dx", Integral(_Add(x, a), x)),
+    (r"\int da", Integral(1, a)),
+    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(x, (x, a, b))),
+    (r"\int^b_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
+    (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
+    (r"\int (x+a)", Integral(_Add(x, a), x)),
+    (r"\int a + b + c dx", Integral(_Add(_Add(a, b), c), x)),
+    (r"\int \frac{dz}{z}", Integral(Pow(z, -1), z)),
+    (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
+    (r"\int \frac{1}{x} dx", Integral(Pow(x, -1), x)),
+    (r"\int \frac{1}{a} + \frac{1}{b} dx",
+     Integral(_Add(_Pow(a, -1), Pow(b, -1)), x)),
+    (r"\int \frac{3 \cdot d\theta}{\theta}",
+     Integral(3 * _Pow(theta, -1), theta)),
+    (r"\int \frac{1}{x} + 1 dx", Integral(_Add(_Pow(x, -1), 1), x))
+]
+
+DERIVATIVE_EXPRESSION_PAIRS = [
+    (r"\frac{d}{dx} x", Derivative(x, x)),
+    (r"\frac{d}{dt} x", Derivative(x, t)),
+    (r"\frac{d}{dx} [ \tan x ]", Derivative(tan(x), x)),
+    (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
+    (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
+]
+
+TRIGONOMETRIC_EXPRESSION_PAIRS = [
+    (r"\sin \theta", sin(theta)),
+    (r"\sin(\theta)", sin(theta)),
+    (r"\sin^{-1} a", asin(a)),
+    (r"\sin a \cos b", _Mul(sin(a), cos(b))),
+    (r"\sin \cos \theta", sin(cos(theta))),
+    (r"\sin(\cos \theta)", sin(cos(theta))),
+    (r"(\csc x)(\sec y)", csc(x) * sec(y)),
+    (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
+]
+
+LIMIT_EXPRESSION_PAIRS = [
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
+    (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo))
+]
+
+SQRT_EXPRESSION_PAIRS = [
+    (r"\sqrt{x}", sqrt(x)),
+    (r"\sqrt{x + b}", sqrt(_Add(x, b))),
+    (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
+    (r"\sqrt[y]{\sin x}", root(sin(x), y)),
+    (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
+    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
+]
+
+FACTORIAL_EXPRESSION_PAIRS = [
+    (r"x!", _factorial(x)),
+    (r"100!", _factorial(100)),
+    (r"\theta!", _factorial(theta)),
+    (r"(x + 1)!", _factorial(_Add(x, 1))),
+    (r"(x!)!", _factorial(_factorial(x))),
+    (r"x!!!", _factorial(_factorial(_factorial(x)))),
+    (r"5!7!", _Mul(_factorial(5), _factorial(7)))
+]
+
+SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 1}^{3} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(c, (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
+    (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
+     Sum(_Pow(_factorial(n), -1), (n, 0, oo)))
+]
+
+PRODUCT_EXPRESSION_PAIRS = [
+    (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
+    (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
+    (r"\prod^{c}_{a = b} x", Product(x, (a, b, c))),
+    (r"\prod^c_{a = b} x", Product(x, (a, b, c)))
+]
+
+APPLIED_FUNCTION_EXPRESSION_PAIRS = [
+    (r"f(x)", f(x)),
+    (r"f(x, y)", f(x, y)),
+    (r"f(x, y, z)", f(x, y, z)),
+    (r"f'_1(x)", Function("f_{1}'")(x)),
+    (r"f_{1}''(x+y)", Function("f_{1}''")(x + y)),
+    (r"h_{\theta}(x_0, x_1)",
+     Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}'))),
+    (r"\overline{z}", _Conjugate(z)),
+    (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
+    (r"\overline{x + y}", _Conjugate(_Add(x, y))),
+    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y))
+]
+
+COMMON_FUNCTION_EXPRESSION_PAIRS = [
+    (r"|x|", _Abs(x)),
+    (r"||x||", _Abs(Abs(x))),
+    (r"|x||y|", _Abs(x) * _Abs(y)),
+    (r"||x||y||", _Abs(_Abs(x) * _Abs(y))),
+    (r"\lfloor x \rfloor", floor(x)),
+    (r"\lceil x \rceil", ceiling(x)),
+    (r"\exp x", _exp(x)),
+    (r"\exp(x)", _exp(x)),
+    (r"\lg x", _log(x, 10)),
+    (r"\ln x", _log(x, E)),
+    (r"\ln xy", _log(x * y, E)),
+    (r"\log x", _log(x, E)),
+    (r"\log xy", _log(x * y, E)),
+    (r"\log_{2} x", _log(x, 2)),
+    (r"\log_{a} x", _log(x, a)),
+    (r"\log_{11} x", _log(x, 11)),
+    (r"\log_{a^2} x", _log(x, _Pow(a, 2))),
+    (r"\log_2 x", _log(x, 2)),
+    (r"\log_a x", _log(x, a))
+]
+
+SPACING_RELATED_EXPRESSION_PAIRS = [
+    (r"a \, b", _Mul(a, b)),
+    (r"a \thinspace b", _Mul(a, b)),
+    (r"a \: b", _Mul(a, b)),
+    (r"a \medspace b", _Mul(a, b)),
+    (r"a \; b", _Mul(a, b)),
+    (r"a \thickspace b", _Mul(a, b)),
+    (r"a \quad b", _Mul(a, b)),
+    (r"a \qquad b", _Mul(a, b)),
+    (r"a \! b", _Mul(a, b)),
+    (r"a \negthinspace b", _Mul(a, b)),
+    (r"a \negmedspace b", _Mul(a, b)),
+    (r"a \negthickspace b", _Mul(a, b))
+]
+
+BINOMIAL_EXPRESSION_PAIRS = [
+    (r"\binom{n}{k}", _binomial(n, k)),
+    (r"\tbinom{n}{k}", _binomial(n, k)),
+    (r"\dbinom{n}{k}", _binomial(n, k)),
+    (r"\binom{n}{0}", _binomial(n, 0)),
+    (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k)))
+]
+
+MISCELLANEOUS_EXPRESSION_PAIRS = [
+    (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
+    (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
+    (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
+    (r"\left[x + y\right] z", _Mul(_Add(x, y), z)),
+    (r"\left\{x + y\right\} z", _Mul(_Add(x, y), z)),
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')),
+    (r"[x]", x),
+    (r"[a + b]", _Add(a, b))
+]
+
+
+def test_symbol_expressions():
+    for latex_str, sympy_expr in SYMBOL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-# Temporary testing code to allow for quick prototyping
-def determine_parseable_lark():
-    from sympy.parsing.latex.lark import parse_latex_lark
-
-    # If the expression doesn't raise an error, it means that the expression is parsed into _something_, so it's not a
-    # complete failure for that test case. If even that doesn't happen, we add it into `complete_failure_list`
-    complete_failure_list = []
-    # If the expression parses into _something_, but the output doesn't equal the string given in the test case, then
-    # it's a partial failure. If that happens, we add it here.
-    partial_failure_list = []
-    # If the expression is correctly handled, we add it to this list.
-    success_list = []
-    # checks outputted sympy expression for equality with the test case.
-    for i, (latex_str, sympy_expr) in enumerate(GOOD_PAIRS):
-        try:
-            result = parse_latex_lark(latex_str)
-
-            if result != sympy_expr:
-                partial_failure_list.append(i)
-                parse_latex_lark(latex_str, print_debug_output=True)  # for debugging purposes
-            else:
-                success_list.append(i)
-        except Exception as e:
-            complete_failure_list.append(i)
-
-    return success_list, partial_failure_list, complete_failure_list
+def test_simple_expressions():
+    for latex_str, sympy_expr in SIMPLE_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
-if __name__ == "__main__":
-    successes, partial_failures, complete_failures = determine_parseable_lark()
+def test_fraction_expressions():
+    for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-    print("List of failures =", complete_failures)
-    print("Not even parsed =", len(complete_failures))
-    print("Parsing but not (fully) transformed =", len(partial_failures))
-    print("Passes =", len(successes))
+
+def test_relation_expressions():
+    for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_integral_expressions():
+    for latex_str, sympy_expr in INTEGRAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_derivative_expressions():
+    for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_trigonometric_expressions():
+    for latex_str, sympy_expr in TRIGONOMETRIC_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_limit_expressions():
+    for latex_str, sympy_expr in LIMIT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_square_root_expressions():
+    for latex_str, sympy_expr in SQRT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_factorial_expressions():
+    for latex_str, sympy_expr in FACTORIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_sum_expressions():
+    for latex_str, sympy_expr in SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_product_expressions():
+    for latex_str, sympy_expr in PRODUCT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_applied_function_expressions():
+    for latex_str, sympy_expr in APPLIED_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_common_function_expressions():
+    for latex_str, sympy_expr in COMMON_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_spacing():
+    for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_binomial_expressions():
+    for latex_str, sympy_expr in BINOMIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+
+def test_miscellaneous_expressions():
+    for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
