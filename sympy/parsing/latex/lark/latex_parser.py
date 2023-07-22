@@ -33,85 +33,119 @@ class TransformToSymPyExpr(Transformer):
     # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
     SYMBOL = sympy.Symbol
 
-    def SUBSCRIPTED_SYMBOL(self, token):
-        symbol, sub = token.value.split('_')
+    def SUBSCRIPTED_SYMBOL(self, tokens):
+        symbol, sub = tokens.value.split('_')
         if sub.startswith('{'):
             return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
         else:
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
-    def number(self, token):
-        if "." not in token[0]:
-            return int(token[0])
+    def number(self, tokens):
+        if "." not in tokens[0]:
+            return int(tokens[0])
         else:
             pass # TODO: Handle this case later
 
-    def latex_string(self, token):
-        return token[0]
+    def latex_string(self, tokens):
+        return tokens[0]
 
-    def infinity(self, token):
+    def infinity(self, tokens):
         return sympy.oo
 
-    def add(self, token):
-        return sympy.Add(token[0], token[2], evaluate=False)
+    def group_round_parentheses(self, tokens):
+        return tokens[1]
 
-    def mul(self, token):
-        return sympy.Mul(token[0], token[2], evaluate=False)
+    def group_square_brackets(self, tokens):
+        return tokens[1]
 
-    def sin(self, token):
-        return sympy.sin(token[1], evaluate=False)
+    def group_curly_parentheses(self, tokens):
+        return tokens[1]
 
-    def cos(self, token):
-        return sympy.cos(token[1], evaluate=False)
+    def relation(self, tokens):
+        pass
 
-    def tan(self, token):
-        return sympy.tan(token[1], evaluate=False)
+    def add(self, tokens):
+        return sympy.Add(tokens[0], tokens[2], evaluate=False)
 
-    def csc(self, token):
-        return sympy.csc(token[1], evaluate=False)
+    def mul(self, tokens):
+        return sympy.Mul(tokens[0], tokens[2], evaluate=False)
 
-    def sec(self, token):
-        return sympy.sec(token[1], evaluate=False)
+    # Function-related stuff
+    def sin(self, tokens):
+        return sympy.sin(tokens[1], evaluate=False)
 
-    def cot(self, token):
-        return sympy.cot(token[1], evaluate=False)
+    def cos(self, tokens):
+        return sympy.cos(tokens[1], evaluate=False)
 
-    def arcsin(self, token):
-        return sympy.asin(token[1], evaluate=False)
+    def tan(self, tokens):
+        return sympy.tan(tokens[1], evaluate=False)
 
-    def arccos(self, token):
-        return sympy.acos(token[1], evaluate=False)
+    def csc(self, tokens):
+        return sympy.csc(tokens[1], evaluate=False)
 
-    def arctan(self, token):
+    def sec(self, tokens):
+        return sympy.sec(tokens[1], evaluate=False)
+
+    def cot(self, tokens):
+        return sympy.cot(tokens[1], evaluate=False)
+
+    def arcsin(self, tokens):
+        return sympy.asin(tokens[1], evaluate=False)
+
+    def arccos(self, tokens):
+        return sympy.acos(tokens[1], evaluate=False)
+
+    def arctan(self, tokens):
         # TODO: should I use atan or atan2 here?
-        return sympy.atan(token[1], evaluate=False)
+        return sympy.atan(tokens[1], evaluate=False)
 
-    def arccsc(self, token):
-        return sympy.acsc(token[1], evaluate=False)
+    def arccsc(self, tokens):
+        return sympy.acsc(tokens[1], evaluate=False)
 
-    def arcsec(self, token):
-        return sympy.asec(token[1], evaluate=False)
+    def arcsec(self, tokens):
+        return sympy.asec(tokens[1], evaluate=False)
 
-    def arccot(self, token):
-        return sympy.acot(token[1], evaluate=False)
+    def arccot(self, tokens):
+        return sympy.acot(tokens[1], evaluate=False)
 
-    def sinh(self, token):
-        return sympy.sinh(token[1], evaluate=False)
+    def sinh(self, tokens):
+        return sympy.sinh(tokens[1], evaluate=False)
 
-    def cosh(self, token):
-        return sympy.cosh(token[1], evaluate=False)
+    def cosh(self, tokens):
+        return sympy.cosh(tokens[1], evaluate=False)
 
-    def tanh(self, token):
-        return sympy.tanh(token[1], evaluate=False)
+    def tanh(self, tokens):
+        return sympy.tanh(tokens[1], evaluate=False)
 
-    def asinh(self, token):
-        return sympy.asinh(token[1], evaluate=False)
+    def asinh(self, tokens):
+        return sympy.asinh(tokens[1], evaluate=False)
 
-    def acosh(self, token):
-        return sympy.acosh(token[1], evaluate=False)
+    def acosh(self, tokens):
+        return sympy.acosh(tokens[1], evaluate=False)
 
-    def atanh(self, token):
-        return sympy.atanh(token[1], evaluate=False)
+    def atanh(self, tokens):
+        return sympy.atanh(tokens[1], evaluate=False)
+
+    def floor(self, tokens):
+        return sympy.floor(tokens[1], evaluate=False)
+
+    def ceil(self, tokens):
+        return sympy.ceiling(tokens[1], evaluate=False)
+
+    def factorial(self, tokens):
+        return sympy.factorial(tokens[0], evaluate=False)
+
+    def conjugate(self, tokens):
+        pass
+
+    def sqrt(self, tokens):
+        pass
+
+    def exponential(self, tokens):
+        pass
+
+    def log(self, tokens):
+        pass
 
 def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
     # last option is temporary, for quick prototyping
