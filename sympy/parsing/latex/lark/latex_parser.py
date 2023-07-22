@@ -58,6 +58,61 @@ class TransformToSymPyExpr(Transformer):
     def mul(self, token):
         return sympy.Mul(token[0], token[2], evaluate=False)
 
+    def sin(self, token):
+        return sympy.sin(token[1], evaluate=False)
+
+    def cos(self, token):
+        return sympy.cos(token[1], evaluate=False)
+
+    def tan(self, token):
+        return sympy.tan(token[1], evaluate=False)
+
+    def csc(self, token):
+        return sympy.csc(token[1], evaluate=False)
+
+    def sec(self, token):
+        return sympy.sec(token[1], evaluate=False)
+
+    def cot(self, token):
+        return sympy.cot(token[1], evaluate=False)
+
+    def arcsin(self, token):
+        return sympy.asin(token[1], evaluate=False)
+
+    def arccos(self, token):
+        return sympy.acos(token[1], evaluate=False)
+
+    def arctan(self, token):
+        # TODO: should I use atan or atan2 here?
+        return sympy.atan(token[1], evaluate=False)
+
+    def arccsc(self, token):
+        return sympy.acsc(token[1], evaluate=False)
+
+    def arcsec(self, token):
+        return sympy.asec(token[1], evaluate=False)
+
+    def arccot(self, token):
+        return sympy.acot(token[1], evaluate=False)
+
+    def sinh(self, token):
+        return sympy.sinh(token[1], evaluate=False)
+
+    def cosh(self, token):
+        return sympy.cosh(token[1], evaluate=False)
+
+    def tanh(self, token):
+        return sympy.tanh(token[1], evaluate=False)
+
+    def asinh(self, token):
+        return sympy.asinh(token[1], evaluate=False)
+
+    def acosh(self, token):
+        return sympy.acosh(token[1], evaluate=False)
+
+    def atanh(self, token):
+        return sympy.atanh(token[1], evaluate=False)
+
 def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
     # last option is temporary, for quick prototyping
     # TODO: should we use pkg_resource to get grammar file?  I
@@ -140,4 +195,5 @@ if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
     # parse_latex_lark(r"1 + 1", print_debug_output=True)
-    parse_latex_lark(r"1 * 1", print_debug_output=True)
+    # parse_latex_lark(r"1 * 1", print_debug_output=True)
+    parse_latex_lark(r"\sin x", print_debug_output=True)
