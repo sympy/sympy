@@ -379,6 +379,7 @@ There are many disadvantages to using strings:
 - As mentioned, string inputs are not officially supported or tested, and so
   may go away at any time.
 
+(best-practices-exact-rational-numbers-vs-floats)=
 ### Exact Rational Numbers vs. Floats
 
 If a number is known to be exactly equal to some quantity, avoid defining it
@@ -430,8 +431,8 @@ x + 2/7
 This also applies to non-rational values which can be represented exactly. For
 example, one should avoid using `math.pi` and prefer `sympy.pi`, since the
 former is a numerical approximation to $\pi$ and the latter is exactly $\pi$
-(see also [](best-practices-separate-sympy-and-non-sympy) below; in general,
-one should avoid importing `math` when using SymPy).
+(see also [](best-practices-separate-symbolic-and-numeric-code) below; in
+general, one should avoid importing `math` when using SymPy).
 
 **Don't**
 
@@ -637,10 +638,153 @@ for example, to make further simplifications possible (see
 By making the symbol an argument, like `theta_operator(expr, z)`, these
 problems all go away.
 
-(best-practices-separate-sympy-and-non-sympy)=
-### Separate SymPy and non-SymPy Numerical Code
+(best-practices-separate-symbolic-and-numeric-code)=
+### Separate Symbolic and Numeric Code
 
-TODO
+SymPy sets itself apart from most of the rest of the libraries in the Python
+ecosystem in that it operates symbolically, whereas other libraries like NumPy
+operate numerically. These two paradigms are different enough that it's always
+best to keep them as separate as possible.
+
+Importantly, SymPy is not designed to work with NumPy arrays, and conversely,
+NumPy will not work directly with SymPy objects.
+
+```py
+>>> import numpy as np
+>>> x = Symbol('x')
+>>> np.sin(x) # NumPy functions do not know how to handle SymPy expressions
+Traceback (most recent call last):
+...
+TypeError: loop of ufunc does not support argument 0 of type Symbol which has no callable sin method
+```
+
+If you want to use both SymPy and NumPy, you should explicitly convert your
+SymPy expressions into NumPy functions using {func}`~.lambdify`. The typical
+workflow in SymPy is to model your problem symbolically using SymPy, then
+convert the result into a numerical function with `lambdify()` that can be
+evaluated on NumPy arrays. For advanced use-cases, `lambdify()`/NumPy may not
+be enough and you may instead need to use SymPy's more general [code
+generation](codegen_prose) routines to generate code for other fast numerical
+languages such as Fortran or C.
+
+```python
+>>> # First symbolically construct the expression you are interested in
+>>> from sympy import diff, sin, exp, lambdify, symbols
+>>> x = symbols('x')
+>>> expr = diff(sin(x)*exp(x**2), x)
+
+>>> # Then convert it to a numeric function with lambdify
+>>> f = lambdify(x, expr)
+
+>>> # Now use this function with NumPy
+>>> import numpy as np
+>>> a = np.linspace(0, 10)
+>>> f(a) # doctest: +SKIP
+[ 1.00000000e+00  1.10713341e+00  1.46699555e+00 ... -3.15033720e+44]
+```
+
+These are some antipatterns that should be generally avoided
+
+- **Using `import math`.** It is virtually never necessary to use the
+  [standard library `math`
+  module](https://docs.python.org/3/library/math.html) alongside SymPy (or
+  NumPy). Every function that is in `math` is already in SymPy. SymPy can
+  compute values numerically using {term}`evalf`, more precision than `math`.
+  Or better, SymPy will by default compute things symbolically. Functions and
+  constants in `math` are floats, which are inexact. SymPy always works better
+  with exact quantities when possible. For example,
+
+  ```py
+  >>> import math
+  >>> math.pi # a float
+  3.141592653589793
+  >>> import sympy
+  >>> sympy.sin(math.pi)
+  1.22464679914735e-16
+  ```
+
+  The result of `sympy.sin(math.pi)` is not `0` as you might expect, because
+  `math.pi` is only an approximation of $\pi$, equal to 16 digits. On the
+  other hand, `sympy.pi` is *exactly* equal to $\pi$ because it is represented
+  symbolically, so it is able to give the exact answer:
+
+  ```
+  >>> sympy.sin(sympy.pi)
+  0
+  ```
+
+  So in general, one should [prefer symbolic
+  representations](best-practices-exact-rational-numbers-vs-floats). But even
+  if you actually do want a float, you are better off using SymPy's `evalf()`
+  rather than `math`. This avoids the pitfall that `math` functions can only
+  operate on `float` objects, not symbolic expressions
+
+  ```py
+  >>> x = Symbol('x')
+  >>> math.sin(x)
+  Traceback (most recent call last):
+  ...
+  TypeError: Cannot convert expression to float
+  ```
+
+  And furthermore, SymPy's `evalf()` is more accurate than `math`, because it
+  uses arbitrary precision arithmetic, and allows you to specify any number
+  of digits.
+
+  ```py
+  >>> sympy.sin(1).evalf(30)
+  0.841470984807896506652502321630
+  >>> math.sin(1)
+  0.8414709848078965
+  ```
+
+- **Passing SymPy expressions to a NumPy function.** You should not pass a
+  SymPy expression to a NumPy function. This includes anything in the `numpy`
+  or `scipy` namespaces, as well as most functions from other Python libraries
+  such as `matplotlib`. These functions are only designed to work with NumPy
+  arrays with numeric values.
+
+- **Passing SymPy expressions to a lambdified function.** Similar to the
+  previous point, you should not pass SymPy expressions to a function created
+  with `lambdify`. In effect, the functions returned by `lambdify` *are* NumPy
+  functions, so the situation here is exactly the same. It is possible that in
+  some cases a function created from `lambdify()` will work with a SymPy
+  expression, but this is just an accident of the way it works. See [the "how
+  it works" section of the `lambdify()` documentation](lambdify-how-it-works)
+  for more details on why this happens.
+
+- **Storing SymPy expressions in a NumPy array.** While it is technically
+  possible to store SymPy expressions inside of a NumPy array, doing so
+  usually represents a mistake. A sign that this is happening is if the
+  `dtype` of the NumPy array is `object` (instead of a numeric dtype like
+  `float64` or `int64`).
+
+  Just as one should avoid using NumPy when doing symbolic calculations with
+  SymPy, one should stop using SymPy once the calculation have moved over to
+  the numeric side of things with NumPy.
+
+  A NumPy array that contains SymPy expressions effectively has the same
+  problem as trying to call NumPy functions directly on a SymPy expression.
+  They do not know how to operate on SymPy objects, so they will fail. This
+  applies even if the SymPy objects are all SymPy
+  [`Float`s](sympy.core.numbers.Float).
+
+  ```
+  >>> import numpy as np
+  >>> import sympy
+  >>> a = np.asarray([sympy.Float(1.0), sympy.Float(0.0)]) # Do not do this
+  >>> print(repr(a)) # Note that the dtype is 'object'
+  array([1.00000000000000, 0.0], dtype=object)
+  >>> np.sin(a)
+  Traceback (most recent call last):
+  ...
+  TypeError: loop of ufunc does not support argument 0 of type Float which has no callable sin method
+  ```
+
+  If you are doing this, you should probably either be using native NumPy
+  floats, or, if you really do want to store an array of SymPy expressions,
+  you should use SymPy's [`Matrix`](sympy.matrices.dense.Matrix) or
+  `NDimArray` classes.
 
 ## Advanced Usage
 
