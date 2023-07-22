@@ -694,6 +694,7 @@ def _get_doctest_blacklist():
             "examples/intermediate/mplot2d.py",
             "examples/intermediate/mplot3d.py",
             "doc/src/modules/numeric-computation.rst"
+            "doc/src/explanation/best-practices.md"
         ])
     else:
         if import_module('matplotlib') is None:
