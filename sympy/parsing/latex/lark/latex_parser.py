@@ -136,10 +136,15 @@ class TransformToSymPyExpr(Transformer):
         return sympy.factorial(tokens[0], evaluate=False)
 
     def conjugate(self, tokens):
-        pass
+        return sympy.conjugate(tokens[1], evaluate=False)
 
-    def sqrt(self, tokens):
-        pass
+    def square_root(self, tokens):
+        if len(tokens) == 2:
+            # then there was no square bracket argument
+            return sympy.sqrt(tokens[1], evaluate=False)
+        elif len(tokens) == 3:
+            # then there _was_ a square bracket argument
+            return sympy.Pow(tokens[2], sympy.Pow(tokens[1], -1, evaluate=False), evaluate=False)
 
     def exponential(self, tokens):
         pass
@@ -171,7 +176,7 @@ def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transfor
     if not transform:
         # exit early and return the parse tree
         print("expression =", s)
-        # print(parse_tree)
+        print(parse_tree)
         print(parse_tree.pretty())
         return parse_tree
 
@@ -228,6 +233,4 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    # parse_latex_lark(r"1 + 1", print_debug_output=True)
-    # parse_latex_lark(r"1 * 1", print_debug_output=True)
-    parse_latex_lark(r"\sin x", print_debug_output=True)
+    parse_latex_lark(r"\overline{z}", print_debug_output=True, transform=False)
