@@ -4,7 +4,7 @@
 %ignore "\\quad" | "\\qquad"
 %ignore "\\!" | "\\negthinspace" | "\\negmedspace" | "\\negthickspace"
 %ignore "\\vrule" | "\\vcenter" | "\\vbox" | "\\vskip" | "\\vspace" | "\\hfill"
-%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\" | "\\(" | "\\="
+%ignore "\\*" | "\\-" | "\\." | "\\/" | "\\\\" | "\\(" | "\\="
 
 %ignore "\\left" | "\\right"
 %ignore "\\limits" | "\\nolimits"
@@ -100,9 +100,45 @@ GTE: "\\geq" | "\\ge"
 DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
+// Greek symbols
+// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
+ALPHA: "\\alpha"
+BETA: "\\beta"
+GAMMA: "\\gamma"
+DELTA: "\\delta" // TODO: Should this be included? Delta usually denotes other things.
+EPSILON: "\\epsilon" |  "\\varepsilon"
+ZETA: "\\zeta"
+ETA: "\\eta"
+THETA: "\\theta" | "\\vartheta"
+// TODO: Should I add iota to the list?
+KAPPA: "\\kappa"
+LAMBDA: "\\lambda" // TODO: What about the uppercase variant?
+MU: "\\mu"
+NU: "\\nu"
+XI: "\\xi"
+// TODO: Should there be a separate note for transforming \pi into sympy.pi?
+RHO: "\\rho" | "\\varrho"
+// TODO: What should we do about sigma?
+TAU: "\\tau"
+UPSILON: "\\upsilon"
+PHI: "\\phi" | "\\varphi"
+CHI: "\\chi"
+PSI: "\\psi"
+OMEGA: "\\omega"
+
+GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
+    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+
 // DIFFERENTIAL: /d[ \t\r\n]*?([a-zA-Z]|\\[a-zA-Z]+)/
-SYMBOL.1: /[a-zA-Z]/
-SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+SYMBOL: /[a-zA-Z]/
+BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
+// best to define the variant with braces like that instead of shoving it all into one case like in
+// /([a-zA-Z])_/ L_BRACE? GREEK_SYMBOL R_BRACE? because then we can easily error out on input like
+// r"h_{\theta"
+GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
+
+SUBSCRIPTED_SYMBOL: BASIC_SUBSCRIPTED_SYMBOL | SYMBOL_WITH_GREEK_SUBSCRIPT | GREEK_SUBSCRIPTED_SYMBOL
 
 WORD: /[a-zA-Z]+/
 
@@ -117,183 +153,169 @@ FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
 //////////////////// grammar //////////////////////
 
-latex_string: relation | expression
+latex_string: relation | _expression
 
-oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL
+_oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
-number: INT | FLOAT
+number: /\.?\d/
 infinity: CMD_INFTY
 
-atomic_expr: oneletter_symbol
+_atomic_expr: _oneletter_symbol
     | multiletter_symbol
     | number
     | infinity
 
-atom: atomic_expr
+// atom: _atomic_expr
 
-group_round_parentheses: L_PAREN expression R_PAREN
-group_square_brackets: L_BRACKET expression R_BRACKET
-group_curly_parentheses: L_BRACE expression R_BRACE
+group_round_parentheses: L_PAREN _expression R_PAREN
+group_square_brackets: L_BRACKET _expression R_BRACKET
+group_curly_parentheses: L_BRACE _expression R_BRACE
 
-relation: expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) expression
+relation: _expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) _expression
 
-expression_core: atom
-  | group_round_parentheses
-  | group_curly_parentheses
+_expression_core: _atomic_expr | group_curly_parentheses
 
-add: expression ADD expression
-sub: expression SUB expression
-mul: expression MUL_SYMBOL expression
+add: _expression ADD _expression_mul
+sub: _expression? SUB _expression_mul
+mul: _expression_mul MUL_SYMBOL _expression_power
     | implicit_multiplication
-div: expression DIV_SYMBOL expression
+div: _expression_mul DIV_SYMBOL _expression_power
 
-implicit_multiplication: (oneletter_symbol oneletter_symbol | number oneletter_symbol)
-    | group_round_parentheses (group_round_parentheses | oneletter_symbol)
-    | function function
+implicit_multiplication: (_oneletter_symbol | number) _expression_mul
+    | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
+    | _function _function
+    | fraction _expression
 
-expression: expression_core
-    | add | sub | mul | div
-    | unary_neg
-    | superscript
+
+// multidigit_number: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
+
+_expression_func: _expression_core
+    | group_round_parentheses
     | fraction
     | binomial
-    | function
+    | _function
     | ambiguous_sub
     | integral
     | summation
     | product
-//    | limit
 
-//limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim expression
+_expression_power: _expression_func | superscript
 
-//group_curly_parentheses_lim: L_BRACE atomic_expr LIM_APPROACH_SYM  R_BRACE
+_expression_mul: _expression_power | mul | div
 
-unary_neg: SUB expression
+_expression: _expression_mul | add | sub | limit
 
-integral: FUNC_INT expression "d"oneletter_symbol
-    | FUNC_INT (UNDERSCORE (group_curly_parentheses | atomic_expr) CARET (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
-    | FUNC_INT (CARET (group_curly_parentheses | atomic_expr) UNDERSCORE (group_curly_parentheses | atomic_expr))? expression? "d"oneletter_symbol
+list_of_expressions: _expression | comma_operator
 
-group_curly_parentheses_special: L_BRACE (relation | atomic_expr) R_BRACE
+comma_operator: list_of_expressions "," _expression
 
-summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET (group_curly_parentheses | atomic_expr) expression
-    | FUNC_SUM CARET (group_curly_parentheses | atomic_expr) UNDERSCORE group_curly_parentheses_special expression
+limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
-product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET (group_curly_parentheses | atomic_expr) expression
-    | FUNC_PROD CARET (group_curly_parentheses | atomic_expr) UNDERSCORE group_curly_parentheses_special expression
+limit: FUNC_LIM (UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM _expression (CARET limit_dir)? R_BRACE)? _expression
 
-superscript.1: expression_core CARET expression
+//group_curly_parentheses_lim: L_BRACE _atomic_expr LIM_APPROACH_SYM  R_BRACE
 
-//subscript.1: expression_core UNDERSCORE expression
+// unary_neg: SUB _expression
 
-ambiguous_sub: oneletter_symbol number
+integral: FUNC_INT _expression "d"_oneletter_symbol
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? "d"_oneletter_symbol
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? "d"_oneletter_symbol
 
-fraction: basic_fraction
-    | simple_fraction
-    | general_fraction
+group_curly_parentheses_special: L_BRACE (relation | _atomic_expr) R_BRACE
 
-general_fraction.0: CMD_FRAC group_curly_parentheses group_curly_parentheses expression?
+summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET _expression_core _expression
+    | FUNC_SUM CARET _expression_core UNDERSCORE group_curly_parentheses_special _expression
 
-simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses expression?
-    | CMD_FRAC group_curly_parentheses DIGIT expression?
+product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET _expression_core _expression
+    | FUNC_PROD CARET _expression_core UNDERSCORE group_curly_parentheses_special _expression
 
-basic_fraction.2: CMD_FRAC DIGIT DIGIT expression?
+superscript: _expression_func CARET _expression_power
 
-function: abs | floor | ceil
-    | trigonometric_function | inverse_trigonometric_function
-    | hyperbolic_trigonometric_function | inverse_hyperbolic_trigonometric_function
+//subscript.1: _expression_core UNDERSCORE _expression
+
+ambiguous_sub: _oneletter_symbol number
+
+fraction: CMD_FRAC _expression_core _expression_core
+// basic_fraction
+//     | simple_fraction
+//    | general_fraction
+
+// general_fraction.0: CMD_FRAC group_curly_parentheses group_curly_parentheses _expression?
+
+// simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses _expression?
+//     | CMD_FRAC group_curly_parentheses DIGIT _expression?
+
+// basic_fraction.2: CMD_FRAC DIGIT DIGIT _expression?
+
+function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
+
+_function: function_applied
+    | abs | floor | ceil
+    | _trigonometric_function | _inverse_trigonometric_function
+    | _hyperbolic_trigonometric_function | _inverse_hyperbolic_trigonometric_function
     | exponential
     | log
     | square_root
     | factorial
     | conjugate
 
-exponential: FUNC_EXP expression
+exponential: FUNC_EXP _expression
 
-log: FUNC_LOG expression
-    | FUNC_LN expression
-    | FUNC_LG expression
-    | FUNC_LOG UNDERSCORE (DIGIT | oneletter_symbol) expression
-    | FUNC_LOG UNDERSCORE group_curly_parentheses expression
+log: FUNC_LOG _expression
+    | FUNC_LN _expression
+    | FUNC_LG _expression
+    | FUNC_LOG UNDERSCORE (DIGIT | _oneletter_symbol) _expression
+    | FUNC_LOG UNDERSCORE group_curly_parentheses _expression
 
 square_root: FUNC_SQRT group_curly_parentheses
     | FUNC_SQRT group_square_brackets group_curly_parentheses
 
-factorial: expression BANG
+factorial: _expression BANG
 
 conjugate: CMD_OVERLINE group_curly_parentheses
     | CMD_OVERLINE DIGIT
 
-trigonometric_function: sin | cos | tan | csc | sec | cot
+_trigonometric_function: sin | cos | tan | csc | sec | cot
 
-sin: FUNC_SIN expression
-cos: FUNC_COS expression
-tan: FUNC_TAN expression
-csc: FUNC_CSC expression
-sec: FUNC_SEC expression
-cot: FUNC_COT expression
+sin: FUNC_SIN _expression
+cos: FUNC_COS _expression
+tan: FUNC_TAN _expression
+csc: FUNC_CSC _expression
+sec: FUNC_SEC _expression
+cot: FUNC_COT _expression
 
-hyperbolic_trigonometric_function: sinh | cosh | tanh
+_hyperbolic_trigonometric_function: sinh | cosh | tanh
 
-sinh: FUNC_SINH expression
-cosh: FUNC_COSH expression
-tanh: FUNC_TANH expression
+sinh: FUNC_SINH _expression
+cosh: FUNC_COSH _expression
+tanh: FUNC_TANH _expression
 
-inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
+_inverse_trigonometric_function: arcsin | arccos | arctan | arccsc | arcsec | arccot
 
-arcsin: FUNC_ARCSIN expression
-arccos: FUNC_ARCCOS expression
-arctan: FUNC_ARCTAN expression
-arccsc: FUNC_ARCCSC expression
-arcsec: FUNC_ARCSEC expression
-arccot: FUNC_ARCCOT expression
+arcsin: FUNC_ARCSIN _expression
+arccos: FUNC_ARCCOS _expression
+arctan: FUNC_ARCTAN _expression
+arccsc: FUNC_ARCCSC _expression
+arcsec: FUNC_ARCSEC _expression
+arccot: FUNC_ARCCOT _expression
 
-inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
+_inverse_hyperbolic_trigonometric_function: asinh | acosh | atanh
 
-asinh: FUNC_ARSINH expression
-acosh: FUNC_ARCOSH expression
-atanh: FUNC_ARTANH expression
+asinh: FUNC_ARSINH _expression
+acosh: FUNC_ARCOSH _expression
+atanh: FUNC_ARTANH _expression
 
-abs: BAR expression BAR
-floor: L_FLOOR expression R_FLOOR
-ceil: L_CEIL expression R_CEIL
+abs: BAR _expression BAR
+floor: L_FLOOR _expression R_FLOOR
+ceil: L_CEIL _expression R_CEIL
 
 binomial: basic_binomial
     | simple_binomial
     | general_binomial
 
-general_binomial.0: CMD_BINOM group_curly_parentheses group_curly_parentheses expression?
+general_binomial.0: CMD_BINOM group_curly_parentheses group_curly_parentheses _expression?
 
-simple_binomial.1: CMD_BINOM DIGIT group_curly_parentheses expression?
-    | CMD_FRAC group_curly_parentheses DIGIT expression?
+simple_binomial.1: CMD_BINOM DIGIT group_curly_parentheses _expression?
+    | CMD_FRAC group_curly_parentheses DIGIT _expression?
 
-basic_binomial.2: CMD_BINOM DIGIT DIGIT expression?
-
-//sqrt: FUNC_SQRT (L_BRACKET expr R_BRACKET)? L_BRACE expr R_BRACE
-
-//summation: FUNC_SUM sub_equation sup_expression expr
-//         | FUNC_SUM sup_expression sub_equation expr
-
-//product: FUNC_PROD sub_equation sup_expression expr
-//       | FUNC_PROD sup_expression sub_equation expr
-
-//limit: FUNC_LIM sub_limit expr
-
-
-//expression = ... | application | ...
-
-//application = ... | function | ...
-
-//function = ... | trigonometric_function | ...
-
-//trigonometric_function = ... | sin | ...
-
-//sin: "\\sin" expression
-
-//expression_core: symbol
-//  | number
-//  | group_round_parentheses
-//  | group_curly_parenthese
-
-//expression: expression_core
-//  | add | mul | sub | div
+basic_binomial.2: CMD_BINOM DIGIT DIGIT _expression?
