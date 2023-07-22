@@ -955,6 +955,7 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    assert (tf1*tf2*tf3 / tf3*tf5) == Series(tf1, tf2, tf3, pow(tf3, -1), tf5)
     assert tf / (tf + tf1) == Feedback(tf, tf1)
     assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
