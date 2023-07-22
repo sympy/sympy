@@ -126,6 +126,9 @@ class TransformToSymPyExpr(Transformer):
     def atanh(self, tokens):
         return sympy.atanh(tokens[1], evaluate=False)
 
+    def abs(self, tokens):
+        return sympy.Abs(tokens[1], evaluate=False)
+
     def floor(self, tokens):
         return sympy.floor(tokens[1], evaluate=False)
 
@@ -147,7 +150,7 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Pow(tokens[2], sympy.Pow(tokens[1], -1, evaluate=False), evaluate=False)
 
     def exponential(self, tokens):
-        pass
+        return sympy.exp(tokens[1], evaluate=False)
 
     def log(self, tokens):
         pass
@@ -233,4 +236,4 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    parse_latex_lark(r"\overline{z}", print_debug_output=True, transform=False)
+    parse_latex_lark(r"\log_a x", print_debug_output=True)
