@@ -1369,7 +1369,7 @@ def test_issue_14336():
         x = Symbol("x")
         U -= U.intersect(Ne(x, 1).as_set())
         U -= U.intersect(S.true.as_set())
-    except RecursionError as _:
+    except RecursionError:
         assert False
 
 
