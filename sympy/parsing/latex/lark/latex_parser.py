@@ -75,7 +75,19 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def relation(self, tokens):
-        pass
+        relation_type = tokens[1].type
+        if relation_type == "EQUAL":
+            return sympy.Eq(tokens[0], tokens[2])
+        if relation_type == "NOT_EQUAL":
+            return sympy.Ne(tokens[0], tokens[2])
+        if relation_type == "LT":
+            return sympy.Lt(tokens[0], tokens[2])
+        if relation_type == "LTE":
+            return sympy.Le(tokens[0], tokens[2])
+        if relation_type == "GT":
+            return sympy.Gt(tokens[0], tokens[2])
+        if relation_type == "GTE":
+            return sympy.Ge(tokens[0], tokens[2])
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2], evaluate=False)
@@ -284,4 +296,5 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    parse_latex_lark(r"\log_{11} x", print_debug_output=True)
+    # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
+    parse_latex_lark(r"x + y \geq y\times z", print_debug_output=True)
