@@ -1593,8 +1593,8 @@ class DomainMatrix:
         >>> Minv_reduced.to_field() / den_reduced == Minv.to_field() / den
         True
 
-        The denominator is made canonical respect to units (e.g. a negative
-        denominator is made positive):
+        The denominator is made canonical with respect to units (e.g. a
+        negative denominator is made positive):
 
         >>> M = DM([[2, 2, 0]], ZZ)
         >>> den = ZZ(-4)
@@ -2020,9 +2020,9 @@ class DomainMatrix:
 
         divide_last : bool, optional
             If False (the default), the vectors are not normalized and the RREF
-            is computed using :meth:`rref_den` and discarding the denominator.
-            If ``divide_last=True`` is passed then each row is divided by its
-            final element (the domain must be a field in this case).
+            is computed using :meth:`rref_den` and the denominator is
+            discarded. If True, then each row is divided by its final element;
+            the domain must be a field in this case.
 
         See Also
         ========
