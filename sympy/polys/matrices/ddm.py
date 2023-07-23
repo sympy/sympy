@@ -631,9 +631,9 @@ class DDM(list):
             pivots = []
             last_pivot = -1
             for i in range(m):
+                ai = a[i]
                 for j in range(last_pivot+1, n):
-                    aij = a[i][j]
-                    if aij:
+                    if ai[j]:
                         last_pivot = j
                         pivots.append(j)
                         break

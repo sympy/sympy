@@ -1594,6 +1594,19 @@ def sdm_rref_den(A, K):
     # 2. Partially reduced rows having nonzeros after the pivot.
     # 3. The current denominator and divisor.
     #
+    # For example if the incremental RREF might be:
+    #
+    #   [2, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    #   [0, 0, 2, 0, 0, 0, 7, 0, 0, 0]
+    #   [0, 0, 0, 0, 0, 2, 0, 0, 0, 0]
+    #   [0, 0, 0, 0, 0, 0, 0, 2, 0, 0]
+    #   [0, 0, 0, 0, 0, 0, 0, 0, 2, 0]
+    #
+    # Here the second row is partially reduced and the other rows are fully
+    # reduced. The denominator would be 2 in this case. We distinguish the
+    # fully reduced rows because we can handle them more efficiently when
+    # adding a new row.
+    #
     # When adding a new row we need to multiply it by the current denominator.
     # Then we reduce the new row by cross cancellation with the previous rows.
     # Then if it is not reduced to zero we take its leading entry as the new
