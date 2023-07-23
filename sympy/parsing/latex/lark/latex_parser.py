@@ -86,6 +86,24 @@ class TransformToSymPyExpr(Transformer):
     def div(self, tokens):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
+    def superscript(self, tokens):
+        pass
+
+    def integral(self, tokens):
+        pass
+
+    def summation(self, tokens):
+        pass
+
+    def product(self, tokens):
+        pass
+
+    def limit(self, tokens):
+        pass
+
+    def function_applied(self, tokens):
+        pass
+
     # Function-related stuff
     def sin(self, tokens):
         return sympy.sin(tokens[1], evaluate=False)
