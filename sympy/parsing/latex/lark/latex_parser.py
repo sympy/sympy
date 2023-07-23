@@ -11,9 +11,9 @@ class LaTeXParsingError(Exception):
 
 
 class DummyTransformer:
-    # This class is needed to properly handle the case when Lark could not be found,
+    # This class is needed to properly handle the case where Lark could not be found,
     # because we need our custom TransformToSymPyExpr class to inherit from lark's
-    # Transformer class. TODO: Write more descriptive comment.
+    # Transformer class to properly do the transformation step.
     pass
 
 
@@ -32,6 +32,16 @@ class TransformToSymPyExpr(Transformer):
     FLOAT = float
     # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
     SYMBOL = sympy.Symbol
+    def GREEK_SYMBOL(self, tokens):
+        # we omit the first character because it is a backslash
+        variable_name = re.sub("var", "", tokens[1:])
+        # if the variable name has "var" in it, like "varphi" or "varepsilon", we remove that
+        if variable_name == "lambda":
+            # we do the same name change as sympy.abc because lambda is a Python keyword
+            return sympy.Symbol("lamda")
+        else:
+            return sympy.Symbol(variable_name)
+
 
     def SUBSCRIPTED_SYMBOL(self, tokens):
         symbol, sub = tokens.value.split('_')
@@ -39,6 +49,9 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
         else:
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
+
+    def multiletter_symbol(self, tokens):
+        return sympy.Symbol(tokens[2])
 
     def number(self, tokens):
         if "." not in tokens[0]:
@@ -69,6 +82,9 @@ class TransformToSymPyExpr(Transformer):
 
     def mul(self, tokens):
         return sympy.Mul(tokens[0], tokens[2], evaluate=False)
+
+    def div(self, tokens):
+        return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
     # Function-related stuff
     def sin(self, tokens):
@@ -153,7 +169,21 @@ class TransformToSymPyExpr(Transformer):
         return sympy.exp(tokens[1], evaluate=False)
 
     def log(self, tokens):
-        pass
+        if tokens[0].type == "FUNC_LG":
+            # we don't need to check if there's an underscore or not because having one
+            # in this case would be meaningless
+            # ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
+            return sympy.log(tokens[1], 10, evaluate=False)
+        elif tokens[0].type == "FUNC_LN":
+            return sympy.log(tokens[1], evaluate=False)
+        elif tokens[0].type == "FUNC_LOG":
+            # we check if a base was passed in or not
+            if "_" in tokens:
+                # then a base was specified
+                return sympy.log(tokens[3], tokens[2], evaluate=False) # fix the arguments
+            else:
+                # a base was not specified
+                return sympy.log(tokens[1], 10, evaluate=False) # TODO: should log be base 10 or base e?
 
 def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
     # last option is temporary, for quick prototyping
@@ -236,4 +266,4 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    parse_latex_lark(r"\log_a x", print_debug_output=True)
+    parse_latex_lark(r"\log_{11} x", print_debug_output=True)
