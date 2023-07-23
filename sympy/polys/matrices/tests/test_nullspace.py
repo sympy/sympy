@@ -92,11 +92,11 @@ NULLSPACE_EXAMPLES = [
             [0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
             [0, 0, 0, 1, 0, 0, 0, 0, 1, 0],
             [0, 0, 0, 0, 1, 0, 0, 0, 0, 1]], ZZ),
-        DM([[0, 0, -1, 0, 0, 0,  0,  0,  0,  0],
-            [1, 0,  0, 0, 0, 0, -1,  0,  0,  0],
-            [0, 1,  0, 0, 0, 0,  0, -1,  0,  0],
-            [0, 0,  0, 1, 0, 0,  0,  0, -1,  0],
-            [0, 0,  0, 0, 1, 0,  0,  0,  0, -1]], ZZ),
+        DM([[ 0,  0, 1,  0,  0, 0, 0, 0, 0, 0],
+            [-1,  0, 0,  0,  0, 0, 1, 0, 0, 0],
+            [ 0, -1, 0,  0,  0, 0, 0, 1, 0, 0],
+            [ 0,  0, 0, -1,  0, 0, 0, 0, 1, 0],
+            [ 0,  0, 0,  0, -1, 0, 0, 0, 0, 1]], ZZ),
     ),
 
 ]
@@ -137,10 +137,7 @@ def _check_primitive(null, null_ans):
     """Check that the primitive of the answer matches."""
     null = _to_DM(null, null_ans)
     cont, null_prim = null.primitive()
-    # Don't check both signs. Fix canonicalization.
-    # Maybe primitive should extract a minus sign or maybe there should be
-    # a .canonical() method or something.
-    assert null_prim in (null_ans, -null_ans)
+    assert null_prim == null_ans
 
 
 def _check_divided(null, null_ans):
@@ -154,18 +151,17 @@ def _check_divided(null, null_ans):
 def test_Matrix_nullspace(name, A, A_null):
     A = A.to_Matrix()
 
-    # We have to patch up the case where the nullspace is empty
     A_null_cols = A.nullspace()
+
+    # We have to patch up the case where the nullspace is empty
     if A_null_cols:
         A_null_found = Matrix.hstack(*A_null_cols)
     else:
         A_null_found = Matrix.zeros(A.cols, 0)
 
-    # The Matrix result corresponds to the DomainMatrix result working over
-    # a field with divide_last=True.
     A_null_found = A_null_found.to_DM().to_field().to_dense()
 
-    # The Matrix result is transpose of DomainMatrix result.
+    # The Matrix result is the transpose of DomainMatrix result.
     A_null_found = A_null_found.transpose()
 
     _check_divided(A_null_found, A_null)

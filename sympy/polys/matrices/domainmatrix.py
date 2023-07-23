@@ -2041,7 +2041,13 @@ class DomainMatrix:
         if divide_last:
             A_rref, pivots = A.rref()
         else:
-            A_rref, _, pivots = A.rref_den()
+            A_rref, den, pivots = A.rref_den()
+
+            # Ensure that the sign is canonical before discarding the
+            # denominator. Then M.nullspace().primitive() is canonical.
+            u = K.canonical_unit(den)
+            if u != K.one:
+                A_rref *= u
 
         A_null = A_rref.nullspace_from_rref(pivots)
 
