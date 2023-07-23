@@ -1361,7 +1361,7 @@ def test_issue_Symbol_inter():
 
 def test_issue_11827():
     assert S.Naturals0**4
-    
+
 
 def test_issue_14336():
     try:
@@ -1371,7 +1371,7 @@ def test_issue_14336():
         U -= U.intersect(S.true.as_set())
     except RecursionError as ex:
         assert False
-        
+
 
 def test_issue_10113():
     f = x**2/(x**2 - 4)
