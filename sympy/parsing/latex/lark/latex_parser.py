@@ -99,22 +99,22 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
     def superscript(self, tokens):
-        pass
+        print(tokens)
 
     def integral(self, tokens):
-        pass
+        print(tokens)
 
     def summation(self, tokens):
-        pass
+        print(tokens)
 
     def product(self, tokens):
-        pass
+        print(tokens)
 
     def limit(self, tokens):
-        pass
+        print(tokens)
 
     def function_applied(self, tokens):
-        pass
+        print(tokens)
 
     # Function-related stuff
     def sin(self, tokens):
@@ -297,4 +297,6 @@ if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
     # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
-    parse_latex_lark(r"x + y \geq y\times z", print_debug_output=True)
+    # parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
+    # parse_latex_lark(r"\int\! x^{-3}\,dx", print_debug_output=True)
+    parse_latex_lark(r"f(x, y)")
