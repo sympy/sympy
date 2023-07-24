@@ -1118,12 +1118,14 @@ class LRASolver():
             sys.stderr.write(str(cand) + "\n")
 
         M = self.A.copy()
+        basic = self.basic.copy()
+        nonbasic = self.nonbasic.copy()
         while True:
-            assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
-            cand = [b for b in self.basic
+            assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
+            cand = [b for b in basic
              if self.assign[b] < self.lower[b]
              or self.assign[b] > self.upper[b]]
-            # [(self.assign[b], (self.lower[b], self.upper[b])) for b in self.basic]
+            # [(self.assign[b], (self.lower[b], self.upper[b])) for b in basic]
 
             _debug_internal_state_printer(cand)
 
@@ -1131,38 +1133,38 @@ class LRASolver():
                 return "SAT", "PLACEHOLDER"
 
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland'S rule better
-            i = self.basic[xi]
+            i = basic[xi]
 
             if self.assign[xi] < self.lower[xi]:
-                cand = [nb for nb, j in self.nonbasic.items()
+                cand = [nb for nb, j in nonbasic.items()
                         if (M[i, j] > 0 and self.assign[nb] < self.upper[nb])
                         or (M[i, j] < 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
                 if len(cand) == 0:
-                    N_plus = {nb for nb, j in self.nonbasic.items() if M[i, j] > 0}
-                    N_minus = {nb for nb, j in self.nonbasic.items() if M[i, j] < 0}
+                    N_plus = {nb for nb, j in nonbasic.items() if M[i, j] > 0}
+                    N_minus = {nb for nb, j in nonbasic.items() if M[i, j] < 0}
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_plus}
                     conflict |= {nb >= self.lower[nb] for nb in N_minus}
                     conflict.add(xi >= self.lower[xi])
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
-                M = self._pivot_and_update(M, xi, xj, self.lower[xi])
-                # self.basic[xj] = self.basic[xi]
-                # del self.basic[xi]
-                # self.nonbasic[xi] = self.nonbasic[xj]
-                # del self.nonbasic[xj]
+                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
+                # basic[xj] = basic[xi]
+                # del basic[xi]
+                # nonbasic[xi] = nonbasic[xj]
+                # del nonbasic[xj]
 
             if self.assign[xi] > self.upper[xi]:
-                cand = [nb for nb, j in self.nonbasic.items()
+                cand = [nb for nb, j in nonbasic.items()
                         if (M[i, j] < 0 and self.assign[nb] < self.upper[nb])
                         or (M[i, j] > 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
 
                 if len(cand) == 0:
                     # M[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
-                    N_plus = {nb for nb, j in self.nonbasic.items() if M[i, j] > 0}
-                    N_minus = {nb for nb, j in self.nonbasic.items() if M[i, j] < 0}
+                    N_plus = {nb for nb, j in nonbasic.items() if M[i, j] > 0}
+                    N_minus = {nb for nb, j in nonbasic.items() if M[i, j] < 0}
                     # Might have made a mistake here; had to think through the logic myself
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_minus}
@@ -1170,12 +1172,12 @@ class LRASolver():
                     conflict.add(xi <= self.upper[xi])
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
-                j = self.nonbasic[xj]
-                M = self._pivot_and_update(M, xi, xj, self.upper[xi])
-                # self.basic[xj] = self.basic[xi]
-                # del self.basic[xi]
-                # self.nonbasic[xi] = self.nonbasic[xj]
-                # del self.nonbasic[xj]
+                j = nonbasic[xj]
+                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
+                # basic[xj] = basic[xi]
+                # del basic[xi]
+                # nonbasic[xi] = nonbasic[xj]
+                # del nonbasic[xj]
 
 
 
@@ -1222,23 +1224,23 @@ class LRASolver():
             self.assign[b] = self.assign[b] + aji*(v -self.assign[xi])
         self.assign[xi] = v
 
-    def _pivot_and_update(self, M, xi, xj, v):
+    def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
         # xi will always be basic and xj will always be nonbasic
-        i, j = self.basic[xi], self.nonbasic[xj]
+        i, j = basic[xi], nonbasic[xj]
         assert M[i, j] != 0
         theta = (v - self.assign[xi])/M[i, j] # maybe the negative will fix bug?
         self.assign[xi] = v
         self.assign[xj] = self.assign[xj] + theta
-        for xk in self.basic:
+        for xk in basic:
             if xk != xi:
-                k = self.basic[xk]
+                k = basic[xk]
                 akj = M[k, j]
                 self.assign[xk] = self.assign[xk] + akj*theta
 
-        self.basic[xj] = self.basic[xi]
-        del self.basic[xi]
-        self.nonbasic[xi] = self.nonbasic[xj]
-        del self.nonbasic[xj]
+        basic[xj] = basic[xi]
+        del basic[xi]
+        nonbasic[xi] = nonbasic[xj]
+        del nonbasic[xj]
         return self._pivot(M, i, j)
 
 
