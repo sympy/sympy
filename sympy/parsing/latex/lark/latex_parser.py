@@ -119,8 +119,11 @@ class TransformToSymPyExpr(Transformer):
     def limit(self, tokens):
         print(tokens)
 
-    def function_applied(self, tokens):
+    def list_of_expressions(self, tokens):
         print(tokens)
+
+    def function_applied(self, tokens):
+        return sympy.Function(tokens)(*tokens[2])
 
     # Function-related stuff
     def sin(self, tokens):
