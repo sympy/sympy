@@ -108,7 +108,52 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Pow(tokens[0], tokens[2], evaluate=False)
 
     def integral(self, tokens):
-        print(tokens)
+        underscore_index = None
+        caret_index = None
+
+        if "_" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the lower bound of the integral
+            underscore_index = tokens.index("_")
+
+        if "^" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the upper bound of the integral
+            caret_index = tokens.index("^")
+
+        lower_bound = tokens[underscore_index + 1] if underscore_index else None
+        upper_bound = tokens[caret_index + 1] if caret_index else None
+
+        differential_symbol_index = tokens.index("d")
+
+        differential_symbol = tokens[differential_symbol_index + 1]
+        # print('lower bound =', lower_bound)
+        # print('upper bound =', upper_bound)
+        # print('differential symbol =', differential_symbol)
+
+        if (lower_bound and not upper_bound) or (upper_bound and not lower_bound):
+            # one was given and the other wasn't
+            # TODO: this condition can be shortened by using XOR or XNOR. Should we do that?
+            raise LaTeXParsingError() # TODO: fill out descriptive error message
+
+        # check if any expression was given or not. If it wasn't, then the integrand is 1.
+        if underscore_index is not None and differential_symbol_index == underscore_index - 1:
+            integrand = 1
+        elif caret_index is not None and differential_symbol_index == caret_index - 1:
+            integrand = 1
+        elif differential_symbol_index == 1:
+            # this means we have something like \int dx, because the \int symbol will always be
+            # at index 0 in `tokens`
+            integrand = 1
+        else:
+            integrand = tokens[differential_symbol_index - 1]
+
+        if lower_bound:
+            # we can assume that either both the lower and upper bounds are given, or
+            # neither of them are
+            return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
+
+        return sympy.Integral(integrand, differential_symbol)
 
     def summation(self, tokens):
         print(tokens)
