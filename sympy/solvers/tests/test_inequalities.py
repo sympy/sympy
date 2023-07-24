@@ -540,7 +540,7 @@ def test_lp():
     constraints = [r1, r2, r3]
     objective = -x - y - 5*z
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, ][)
+    optimum, argmax = lp(objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
