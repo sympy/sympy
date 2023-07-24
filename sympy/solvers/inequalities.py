@@ -1361,20 +1361,13 @@ def _np(constr, syms, unbound):
 
     return np, r, xx
 
-def lp(min_max, f, constr, unbound, dual=True):
-    """Return the optimization (min or max) of primal f with the given
-    constraints; if all variables are nonnegative, pass `[]` for
-    unbound, otherwise include in `unbound` those variables that
-    are unbounded.
+def lp(min_max, f, constr, unbound=None):
+    """Return the optimization (min or max) of f with the given
+    constraints; if any variables are unbound, pass them as a list for
+    `unbound`.
 
-    In addition to the optimum, the values for the variables that
-    produce it rae also returned. If dual is True (default),
-    the dual function, corresponding dual constraints, and the values
-    that produce the optimum for the dual in the opposite sense (max
-    from primal is the min for the dual).
-
-    if `how=max` then the results corresponding to the maximization
-    of f and the minimization of the dual will be returned.
+    If `how=max` then the results corresponding to the maximization
+    of f will be returned.
 
     Examples
     ========
