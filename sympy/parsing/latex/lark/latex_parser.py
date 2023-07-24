@@ -165,10 +165,21 @@ class TransformToSymPyExpr(Transformer):
         print(tokens)
 
     def list_of_expressions(self, tokens):
-        print(tokens)
+        if len(tokens) == 1:
+            return tokens[0]
+        else:
+            return_list = []
+            for elem in tokens:
+                if isinstance(elem, _lark.lexer.Token):
+                    if elem.type != "COMMA":
+                        raise LaTeXParsingError() # TODO: write descriptive error message
+                else:
+                    return_list.append(elem)
+
+            return return_list
 
     def function_applied(self, tokens):
-        return sympy.Function(tokens)(*tokens[2])
+        return sympy.Function(tokens[0])(*tokens[2])
 
     # Function-related stuff
     def sin(self, tokens):
@@ -353,4 +364,4 @@ if __name__ == "__main__":
     # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
     # parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
     # parse_latex_lark(r"\int\! x^{-3}\,dx", print_debug_output=True)
-    parse_latex_lark(r"f(x, y)")
+    parse_latex_lark(r"f(x, y)", print_debug_output=True)
