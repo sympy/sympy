@@ -1130,7 +1130,6 @@ def _simplex(A, B, C, D=None):
     [x + 2*y - 4 <= 0, 4*x + 2*y - 12 <= 0, -x + y - 1 <= 0]
 
     Extract coefficients of f:
-    
     >>> c, d = linear_eq_to_matrix(f, x, y)
     >>> c*X - d == Matrix([f])
     True
