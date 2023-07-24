@@ -1111,23 +1111,49 @@ class LRASolver():
 
     def check(self):
 
-        def _debug_internal_state_printer(cand):
+        def _debug_internal_state_printer1(iteration, A, bas, nonbas):
             if not SYMPY_DEBUG:
                 return
             import sys
-            sys.stderr.write(str(cand) + "\n")
+            from sympy.matrices.dense import Matrix
+            from sympy import pprint
+
+            bvar = [None]*len(bas)
+            nbvar = [None]*len(nonbas)
+            for v, idx in bas.items():
+                bvar[idx] = v
+            for v, idx in nonbas.items():
+                nbvar[idx] = v
+
+            r1 = Matrix([nbvar +bvar])
+            c1 = Matrix(bvar)
+            corner = Matrix([[iteration]])
+
+            tableau = Matrix([[corner, r1], [c1, A]])
+            pprint(tableau)
+            sys.stderr.write("\n")
+            for v in self.upper:
+                sys.stderr.write(str(self.lower[v]) + " <= " + str(v) + " <= " + str(self.upper[v]) + "\n")
+
+        def _debug_internal_state_printer2(xi, xj):
+            if not SYMPY_DEBUG:
+                return
+            import sys
+
+            sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
 
         M = self.A.copy()
         basic = self.basic.copy()
         nonbasic = self.nonbasic.copy()
+        iteration = 0
         while True:
+            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, nonbasic)
             assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
              or self.assign[b] > self.upper[b]]
             # [(self.assign[b], (self.lower[b], self.upper[b])) for b in basic]
 
-            _debug_internal_state_printer(cand)
 
             if len(cand) == 0:
                 return "SAT", "PLACEHOLDER"
@@ -1139,7 +1165,6 @@ class LRASolver():
                 cand = [nb for nb, j in nonbasic.items()
                         if (M[i, j] > 0 and self.assign[nb] < self.upper[nb])
                         or (M[i, j] < 0 and self.assign[nb] > self.lower[nb])]
-                _debug_internal_state_printer(cand)
                 if len(cand) == 0:
                     N_plus = {nb for nb, j in nonbasic.items() if M[i, j] > 0}
                     N_minus = {nb for nb, j in nonbasic.items() if M[i, j] < 0}
@@ -1149,6 +1174,7 @@ class LRASolver():
                     conflict.add(xi >= self.lower[xi])
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
+                _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
                 # basic[xj] = basic[xi]
                 # del basic[xi]
@@ -1159,7 +1185,6 @@ class LRASolver():
                 cand = [nb for nb, j in nonbasic.items()
                         if (M[i, j] < 0 and self.assign[nb] < self.upper[nb])
                         or (M[i, j] > 0 and self.assign[nb] > self.lower[nb])]
-                _debug_internal_state_printer(cand)
 
                 if len(cand) == 0:
                     # M[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
@@ -1173,6 +1198,7 @@ class LRASolver():
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 j = nonbasic[xj]
+                _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
                 # basic[xj] = basic[xi]
                 # del basic[xi]
@@ -1221,7 +1247,7 @@ class LRASolver():
         i = self.nonbasic[xi]
         for j, b in enumerate(self.basic):
             aji = self.A[j, i]
-            self.assign[b] = self.assign[b] + aji*(v -self.assign[xi])
+            self.assign[b] = self.assign[b] + aji*(v - self.assign[xi])
         self.assign[xi] = v
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
