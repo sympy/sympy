@@ -11,7 +11,7 @@ from sympy.core.random import random, choice
 from sympy.ntheory.generate import randprime
 from sympy.assumptions.ask import Q
 from sympy.matrices.dense import Matrix, eye
-from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import root, sqrt
@@ -27,11 +27,9 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
                                         _solve_inequality,
-                                        linear_optimization,
+                                        lp,
                                         UnboundedLinearProgrammingError,
-                                        InfeasibleLinearProgrammingError,
-                                        _linear_programming_to_matrix,
-                                        linear_optimization_from_matrices)
+                                        InfeasibleLinearProgrammingError)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -503,36 +501,24 @@ def test__pt():
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
 
 
-def test_linear_optimization_from_matrices():
-    # There's no need to have many test cases because test_linprog_from_equations
-    # and test_find_feasible test the simplex function extensively.
-
-    # test matricies with wrong shapes
-    A = Matrix([[1,0], [0, 1]])
-    b = Matrix([[2],[4]])
-    f = Matrix([[3, 1, 3]])
-    raises(ValueError, lambda: linear_optimization_from_matrices(f, A, b))
-    b = Matrix([[2],[4], [5]])
-    f = Matrix([[3, 1]])
-    raises(ValueError, lambda: linear_optimization_from_matrices(f, A, b))
-    b = Matrix([[2],[4], [5]])
-    f = Matrix([[3, 1, 3]])
-    raises(ValueError, lambda: linear_optimization_from_matrices(f, A, b))
-
-
-def test_linear_optimization():
+def test_lp():
     np = import_module("numpy")
     scipy = import_module("scipy")
 
     def get_results_with_scipy(objective, constraints, variables):
         if scipy is not None and np is not None:
-            A, B, C, D, _ = _linear_programming_to_matrix(objective, constraints, variables)
+            from sympy.solvers.inequalities import _np
+            nonpos, rep, xx = _np(constraints, [])
+            assert not rep  # only testing nonneg variables
+            C, _D = linear_eq_to_matrix(objective, *variables)
+            A, B = linear_eq_to_matrix(nonpos, *variables)
+            assert _D[0] == 0  # scipy only deals with D = 0
 
-            assert D == ImmutableDenseMatrix([0]) # scipy can't handle non-zero D
+
 
             A_sci = Matrix([[A], [-eye(len(variables))]])
             B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
-            C_sci = -C
+            C_sci = C
             A_sci = np.array(A_sci.tolist())
             B_sci = np.array(B_sci.tolist())
             C_sci = np.array(C_sci.tolist())
@@ -545,16 +531,13 @@ def test_linear_optimization():
     constraints = [r1, r2, r3]
     objective = -x - y - 5 * z
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints)
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]
-    assert optimum == dual_optimum
 
     r1 = x - y + 2*z <= 3
     r2 = -x + 2*y - 3*z <= -2
@@ -562,16 +545,13 @@ def test_linear_optimization():
     constraints = [r1, r2, r3]
     objective = -x - y - 5*z
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]
-    assert optimum == dual_optimum
 
     r1 = x - y + 2*z <= -4
     r2 = -x + 2*y - 3*z <= 8
@@ -580,16 +560,13 @@ def test_linear_optimization():
     const = 2
     objective = -x-y-5*z+const # has constant term
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective-const, constraints, variables)
         assert optimum.evalf() == (sympify(-scipy_res.fun)+const)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]+const
-    assert optimum == dual_optimum
 
     # Section 4 Problem 1 from
     # http://web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
@@ -598,11 +575,10 @@ def test_linear_optimization():
     r1 = x1 - x2 - 2*x3 - x4 <= 4
     r2 = 2*x1 + x3 -4*x4 <= 2
     r3 = -2*x1 + x2 + x4 <= 1
-    optimum, argmax, argmin_dual = linear_optimization(
-        x1 - 2*x2 - 3*x3 - x4, [r1, r2, r3], [x1, x2, x3, x4])
+    optimum, argmax = lp(max,
+        x1 - 2*x2 - 3*x3 - x4, [r1, r2, r3], [])
     assert optimum == 4
     assert list(argmax.values()) == [7, 0, 0, 3]
-    assert list(argmin_dual.values()) == [1, 0, 0]
 
     # equality
     r1 = Eq(x,y)
@@ -611,16 +587,13 @@ def test_linear_optimization():
     constraints = [r1, r2, r3]
     objective = x
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]
-    assert optimum == dual_optimum
 
     # Binary predicate
     r1 = Q.ge(x, y)
@@ -628,15 +601,12 @@ def test_linear_optimization():
     constraints = [r1, r2]
     objective = x + y
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
     assert optimum == 8
     assert [x.subs(argmax), y.subs(argmax)] == [4, 4]
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]
-    assert optimum == dual_optimum
 
     # input contains Floats
     r1 = x - y + 2.0*z <= -4
@@ -645,35 +615,32 @@ def test_linear_optimization():
     constraints = [r1, r2, r3]
     objective = -x-y-5*z
     variables = [x, y, z]
-    optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
     assert objective.subs(argmax) == optimum
     for constr in constraints:
         assert constr.subs(argmax) == True
-    B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-    dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0,0]
-    assert optimum == dual_optimum
 
     # input contains non-float or non-Rational
     r1 = x - y + sqrt(2) * z <= -4
     r2 = -x + 2*y - 3*z <= 8
     r3 = 2*x + y - 7*z <= 10
-    raises(TypeError, lambda: linear_optimization(-x-y-5*z, [r1, r2, r3], [x, y, z]))
+    raises(TypeError, lambda: lp(max, -x-y-5*z, [r1, r2, r3], []))
 
     r1 = x >= 0
-    raises(UnboundedLinearProgrammingError, lambda: linear_optimization(x, [r1], [x]))
+    raises(UnboundedLinearProgrammingError, lambda: lp(max, x, [r1], []))
     r2 = x <= -1
-    raises(InfeasibleLinearProgrammingError, lambda: linear_optimization(x, [r1,r2], [x]))
+    raises(InfeasibleLinearProgrammingError, lambda: lp(max, x, [r1,r2], []))
 
     # strict inequalities are not allowed
     r1 = x > 0
-    raises(TypeError, lambda: linear_optimization(x, [r1], [x]))
+    raises(TypeError, lambda: lp(max, x, [r1], []))
 
     # not equals not allowed
     r1 = Ne(x, 0)
-    raises(TypeError, lambda: linear_optimization(x, [r1], [x]))
+    raises(TypeError, lambda: lp(max, x, [r1], []))
 
     def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
         def rand():
@@ -689,31 +656,51 @@ def test_linear_optimization():
 
     # testing random problems
     if scipy is not None and np is not None:
-        for _ in range(100):
+        for _ in range(50):
             objective, constraints, variables = make_random_problem()
             constraints = [c for c in constraints if isinstance(c, Relational)] # in case c auto simplifies to True or False
             if len(constraints) == 0:
                 continue
 
-            scipy_res = get_results_with_scipy(objective, constraints, variables)
+            # check lp maximization
+            # scipy minimizes, so negative objective for it
+            scipy_res = get_results_with_scipy(-objective, constraints, variables)
             if scipy_res.status == 0:
-                optimum, argmax, argmin_dual = linear_optimization(objective, constraints, variables)
-                scipy_op = -scipy_res.fun
+                optimum, argmax = lp(max, objective, constraints, [])
+                scipy_op = -scipy_res.fun  # negated to give actual max
                 assert abs(optimum.evalf() - scipy_op) < .1**10
                 assert objective.subs(argmax) == optimum
                 for constr in constraints:
                     assert constr.subs(argmax) == True
-                B = _linear_programming_to_matrix(objective, constraints, variables)[1]
-                dual_optimum = (Matrix([list(argmin_dual.values())]) * B)[0, 0]
-                assert dual_optimum == optimum
             elif scipy_res.status == 2:
                 # scipy: problem is infeasible
                 raises(InfeasibleLinearProgrammingError,
-                       lambda: linear_optimization(objective, constraints, variables))
+                       lambda: lp(max, objective, constraints, []))
             elif scipy_res.status == 3:
                 # scipy: problem is unbounded
                 raises(UnboundedLinearProgrammingError,
-                       lambda: linear_optimization(objective, constraints, variables))
+                       lambda: lp(max, objective, constraints, []))
+            else:
+                # scipy: either iteration limit reached or numerical difficulties
+                pass
+
+            # check lp minimization
+            scipy_res = get_results_with_scipy(objective, constraints, variables)
+            if scipy_res.status == 0:
+                optimum, argmax = lp(min, objective, constraints, [])
+                scipy_op = scipy_res.fun
+                assert abs(optimum.evalf() - scipy_op) < .1**10
+                assert objective.subs(argmax) == optimum
+                for constr in constraints:
+                    assert constr.subs(argmax) == True
+            elif scipy_res.status == 2:
+                # scipy: problem is infeasible
+                raises(InfeasibleLinearProgrammingError,
+                       lambda: lp(max, objective, constraints, []))
+            elif scipy_res.status == 3:
+                # scipy: problem is unbounded
+                raises(UnboundedLinearProgrammingError,
+                       lambda: lp(max, objective, constraints, []))
             else:
                 # scipy: either iteration limit reached or numerical difficulties
                 pass
