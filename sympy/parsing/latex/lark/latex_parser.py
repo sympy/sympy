@@ -92,6 +92,12 @@ class TransformToSymPyExpr(Transformer):
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2], evaluate=False)
 
+    def sub(self, tokens):
+        if len(tokens) == 2:
+            return -tokens[1]
+        elif len(tokens) == 3:
+            return sympy.Add(tokens[0], -tokens[2], evaluate=False)
+
     def mul(self, tokens):
         return sympy.Mul(tokens[0], tokens[2], evaluate=False)
 
@@ -99,7 +105,7 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
     def superscript(self, tokens):
-        print(tokens)
+        return sympy.Pow(tokens[0], tokens[2], evaluate=False)
 
     def integral(self, tokens):
         print(tokens)
