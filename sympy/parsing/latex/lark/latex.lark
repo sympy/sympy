@@ -205,10 +205,6 @@ _expression_mul: _expression_power | mul | div
 
 _expression: _expression_mul | add | sub | limit
 
-list_of_expressions: _expression | comma_operator
-
-comma_operator: list_of_expressions "," _expression
-
 limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
 limit: FUNC_LIM (UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM _expression (CARET limit_dir)? R_BRACE)? _expression
@@ -246,6 +242,8 @@ fraction: CMD_FRAC _expression_core _expression_core
 //     | CMD_FRAC group_curly_parentheses DIGIT _expression?
 
 // basic_fraction.2: CMD_FRAC DIGIT DIGIT _expression?
+
+list_of_expressions: _expression | list_of_expressions "," _expression
 
 function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
 
