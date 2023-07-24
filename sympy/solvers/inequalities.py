@@ -1012,12 +1012,12 @@ class LRASolver():
 
         self.lower = {}
         self.upper = {}
-        self.beta = {} # assgined value for each variable
+        self.assign = {} # assgined value for each variable
 
         for var in nonbasic + basic:
             self.lower[var] = -float("inf")
             self.upper[var] = float("inf")
-            self.beta[var] = 0
+            self.assign[var] = 0
 
     @staticmethod
     def preprocess(BF):
@@ -1093,7 +1093,7 @@ class LRASolver():
         if ci < self.lower[xi]:
             return "UNSAT", {xi >= self.lower[xi], xi <= ci}
         self.upper[xi] = ci
-        if xi in self.nonbasic and self.beta[xi] > ci:
+        if xi in self.nonbasic and self.assign[xi] > ci:
             self._update(xi, ci)
 
         return "OK"
@@ -1104,7 +1104,7 @@ class LRASolver():
         if ci > self.upper[xi]:
             return "UNSAT", {xi <= self.upper[xi], xi >= ci}
         self.lower[xi] = ci
-        if xi in self.nonbasic and self.beta[xi] < ci:
+        if xi in self.nonbasic and self.assign[xi] < ci:
             self._update(xi, ci)
 
         return "OK"
@@ -1119,11 +1119,11 @@ class LRASolver():
 
         A = self.A.copy()
         while True:
-            assert all(((self.beta[nb] >= self.lower[nb]) == True) and ((self.beta[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
+            assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
             cand = [b for b in self.basic
-             if self.beta[b] < self.lower[b]
-             or self.beta[b] > self.upper[b]]
-            # [(self.beta[b], (self.lower[b], self.upper[b])) for b in self.basic]
+             if self.assign[b] < self.lower[b]
+             or self.assign[b] > self.upper[b]]
+            # [(self.assign[b], (self.lower[b], self.upper[b])) for b in self.basic]
 
             _debug_internal_state_printer(cand)
 
@@ -1133,10 +1133,10 @@ class LRASolver():
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland'S rule better
             i = self.basic[xi]
 
-            if self.beta[xi] < self.lower[xi]:
+            if self.assign[xi] < self.lower[xi]:
                 cand = [nb for nb, j in self.nonbasic.items()
-                        if (A[i, j] > 0 and self.beta[nb] < self.upper[nb])
-                        or (A[i, j] < 0 and self.beta[nb] > self.lower[nb])]
+                        if (A[i, j] > 0 and self.assign[nb] < self.upper[nb])
+                        or (A[i, j] < 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
                 if len(cand) == 0:
                     N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
@@ -1153,14 +1153,14 @@ class LRASolver():
                 # self.nonbasic[xi] = self.nonbasic[xj]
                 # del self.nonbasic[xj]
 
-            if self.beta[xi] > self.upper[xi]:
+            if self.assign[xi] > self.upper[xi]:
                 cand = [nb for nb, j in self.nonbasic.items()
-                        if (A[i, j] < 0 and self.beta[nb] < self.upper[nb])
-                        or (A[i, j] > 0 and self.beta[nb] > self.lower[nb])]
+                        if (A[i, j] < 0 and self.assign[nb] < self.upper[nb])
+                        or (A[i, j] > 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
 
                 if len(cand) == 0:
-                    # A[i, j] < 0  ==> beta(xj) >= u(xj) ==> beta(xj) = u(xj)
+                    # A[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
                     N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
                     N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
                     # Might have made a mistake here; had to think through the logic myself
@@ -1219,21 +1219,21 @@ class LRASolver():
         i = self.nonbasic[xi]
         for j, b in enumerate(self.basic):
             aji = self.A[j, i]
-            self.beta[b] = self.beta[b] + aji*(v -self.beta[xi])
-        self.beta[xi] = v
+            self.assign[b] = self.assign[b] + aji*(v -self.assign[xi])
+        self.assign[xi] = v
 
     def _pivot_and_update(self, M, xi, xj, v):
         # xi will always be basic and xj will always be nonbasic
         i, j = self.basic[xi], self.nonbasic[xj]
         assert M[i, j] != 0
-        theta = (v - self.beta[xi])/M[i, j] # maybe the negative will fix bug?
-        self.beta[xi] = v
-        self.beta[xj] = self.beta[xj] + theta
+        theta = (v - self.assign[xi])/M[i, j] # maybe the negative will fix bug?
+        self.assign[xi] = v
+        self.assign[xj] = self.assign[xj] + theta
         for xk in self.basic:
             if xk != xi:
                 k = self.basic[xk]
                 akj = M[k, j]
-                self.beta[xk] = self.beta[xk] + akj*theta
+                self.assign[xk] = self.assign[xk] + akj*theta
 
         self.basic[xj] = self.basic[xi]
         del self.basic[xi]
@@ -1293,7 +1293,7 @@ TiloRC marked this conversation as resolved.
         if res[0] == "UNSAT":
             return res
 
-    assigments = {v: lra.beta[v] for v in lra.nonbasic | lra.basic}
+    assigments = {v: lra.assign[v] for v in lra.nonbasic | lra.basic}
 
     if lra.check()[0] == "UNSAT":
         return "UNSAT"

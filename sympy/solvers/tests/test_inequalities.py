@@ -573,19 +573,19 @@ def test_LRA_solver():
     A = -A # the identity matrix should be positive
     lra = LRASolver(A, [s1, s2], [x, y])
     assert lra.check()[0] == "SAT"
-    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:0, y:0, s1:0, s2:0}
+    assert {v: lra.assign[v] for v in lra.nonbasic | lra.basic} == {x:0, y:0, s1:0, s2:0}
 
     assert lra.assert_con(x <= -4) == "OK"
     assert lra.check()[0] == "SAT"
-    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1: 4, s2:-4}
+    assert {v: lra.assign[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1: 4, s2:-4}
 
     assert lra.assert_con(x >= -8) == "OK"
     assert lra.check()[0] == "SAT"
-    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1:4, s2:-4}
+    assert {v: lra.assign[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:0, s1:4, s2:-4}
 
     assert lra.assert_con(s1 <= 1) == "OK"
     assert lra.check()[0] == "SAT"
-    assert {v: lra.beta[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:-3, s1:1, s2:-7}
+    assert {v: lra.assign[v] for v in lra.nonbasic | lra.basic} == {x:-4, y:-3, s1:1, s2:-7}
 
     assert lra.assert_con(s2 >= -3) == "OK"
     assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
