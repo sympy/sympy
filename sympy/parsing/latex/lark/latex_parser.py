@@ -267,7 +267,7 @@ class TransformToSymPyExpr(Transformer):
         if tokens[0].type == "FUNC_LG":
             # we don't need to check if there's an underscore or not because having one
             # in this case would be meaningless
-            # ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
+            # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
             return sympy.log(tokens[1], 10, evaluate=False)
         elif tokens[0].type == "FUNC_LN":
             return sympy.log(tokens[1], evaluate=False)
@@ -278,10 +278,10 @@ class TransformToSymPyExpr(Transformer):
                 return sympy.log(tokens[3], tokens[2], evaluate=False) # fix the arguments
             else:
                 # a base was not specified
-                return sympy.log(tokens[1], 10, evaluate=False) # TODO: should log be base 10 or base e?
+                return sympy.log(tokens[1], evaluate=False)
 
 def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
-    # last option is temporary, for quick prototyping
+    # last options are temporary, for quick prototyping
     # TODO: should we use pkg_resource to get grammar file?  I
     # think this would make sympy depend on setuptools which we
     # would not like
@@ -362,6 +362,4 @@ if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
     # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
-    # parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
-    # parse_latex_lark(r"\int\! x^{-3}\,dx", print_debug_output=True)
-    parse_latex_lark(r"f(x, y)", print_debug_output=True)
+    parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
