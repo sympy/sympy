@@ -1117,7 +1117,7 @@ class LRASolver():
             import sys
             sys.stderr.write(str(cand) + "\n")
 
-        A = self.A.copy()
+        M = self.A.copy()
         while True:
             assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in self.nonbasic)
             cand = [b for b in self.basic
@@ -1135,19 +1135,19 @@ class LRASolver():
 
             if self.assign[xi] < self.lower[xi]:
                 cand = [nb for nb, j in self.nonbasic.items()
-                        if (A[i, j] > 0 and self.assign[nb] < self.upper[nb])
-                        or (A[i, j] < 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, j] > 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, j] < 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
                 if len(cand) == 0:
-                    N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
-                    N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
+                    N_plus = {nb for nb, j in self.nonbasic.items() if M[i, j] > 0}
+                    N_minus = {nb for nb, j in self.nonbasic.items() if M[i, j] < 0}
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_plus}
                     conflict |= {nb >= self.lower[nb] for nb in N_minus}
                     conflict.add(xi >= self.lower[xi])
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
-                A = self._pivot_and_update(A, xi, xj, self.lower[xi])
+                M = self._pivot_and_update(M, xi, xj, self.lower[xi])
                 # self.basic[xj] = self.basic[xi]
                 # del self.basic[xi]
                 # self.nonbasic[xi] = self.nonbasic[xj]
@@ -1155,14 +1155,14 @@ class LRASolver():
 
             if self.assign[xi] > self.upper[xi]:
                 cand = [nb for nb, j in self.nonbasic.items()
-                        if (A[i, j] < 0 and self.assign[nb] < self.upper[nb])
-                        or (A[i, j] > 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, j] < 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, j] > 0 and self.assign[nb] > self.lower[nb])]
                 _debug_internal_state_printer(cand)
 
                 if len(cand) == 0:
-                    # A[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
-                    N_plus = {nb for nb, j in self.nonbasic.items() if A[i, j] > 0}
-                    N_minus = {nb for nb, j in self.nonbasic.items() if A[i, j] < 0}
+                    # M[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
+                    N_plus = {nb for nb, j in self.nonbasic.items() if M[i, j] > 0}
+                    N_minus = {nb for nb, j in self.nonbasic.items() if M[i, j] < 0}
                     # Might have made a mistake here; had to think through the logic myself
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_minus}
@@ -1171,7 +1171,7 @@ class LRASolver():
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 j = self.nonbasic[xj]
-                A = self._pivot_and_update(A, xi, xj, self.upper[xi])
+                M = self._pivot_and_update(M, xi, xj, self.upper[xi])
                 # self.basic[xj] = self.basic[xi]
                 # del self.basic[xi]
                 # self.nonbasic[xi] = self.nonbasic[xj]
