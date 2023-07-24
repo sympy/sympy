@@ -1075,9 +1075,111 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     return row
 
 
-def _simplex(A, B, C, D=ImmutableMatrix([0])):
+def _simplex(A, B, C, D=None):
     """
-    Two phase simplex method with Bland's rule
+    Return (o, x, y) obtained from the two-phase simplex method
+    using Bland's rule where o is the minimum value of Cx - D
+    under constraints Ax <= B (with x >= 0) and the maximum
+    of y^TB - D under constraints y^{T}A >= C^{T} (with y >= 0).
+
+    Note: the nonnegative constraints for x and y supercede
+    any values of A and B that are inconsistent with that
+    assumption, so if a constraint of x >= -1 is represented
+    in A and B, no value will be obtained that is negative; if
+    a constraint of x <= -1 is represented, an error will be
+    raised since no solution is possible.
+
+    Examples
+    ========
+
+    >>> from sympy import linear_eq_to_matrix, Tuple, lambdify, Matrix
+    >>> from sympy.solvers.inequalities import _simplex
+    >>> from sympy.abc import x, y
+    >>> f = 3*x + 5*y + 7
+    >>> X = Matrix([x, y])
+    >>> e = lambdify((x, y), f)
+
+    Define a polygonal region:
+
+    >>> p = Tuple('(0,0),(0, 1),(2/3, 5/3),(8/3, 2/3),(3, 0)')
+
+    Sort vertices according to value of f at each vertex:
+
+    >>> sorted(p[0], key=lambda i: e(*i))
+    [(0, 0), (0, 1), (3, 0), (2/3, 5/3), (8/3, 2/3)]
+
+    Save the first and last vertices for later:
+
+    >>> small = _[0]; big = _[-1]
+
+    Now define that polygonal region in terms of inequalities:
+
+    >>> r = x + 2*y <= 4, 4*x + 2*y <= 12, x >= y - 1
+
+    Rearrange c into nonpostive expressions and determine
+    A and b (i.e. A*sym - b <= 0):
+
+    >>> np = [i.lts - i.gts for i in r]
+    >>> A, b = linear_eq_to_matrix(np, x, y)
+    >>> [i.tolist() for i in (A, b)]
+    [[[1, 2], [4, 2], [-1, 1]], [[4], [12], [1]]]
+
+    See the inequalities in standard form:
+
+    >>> [i <= 0 for i in A*X - b]
+    [x + 2*y - 4 <= 0, 4*x + 2*y - 12 <= 0, -x + y - 1 <= 0]
+
+    Extract coefficients of f:
+    
+    >>> c, d = linear_eq_to_matrix(f, x, y)
+    >>> c*X - d == Matrix([f])
+    True
+
+    Find the vertex at which f is minimal and the value of
+    f there:
+
+    >>> o, p, dp = _simplex(A, b, c, d); o, p
+    (7, [0, 0])
+    >>> e(*small), small
+    (7, (0, 0))
+
+    Now the vertex at which f attains its maximum can be obtained
+    from a call that changes the signs of c and d
+    to correspond to a negation of the function; the negative of the
+    optimum returned is the actual maximum value for f:
+
+    >>> _o, p, dp = _simplex(A, b, -c, -d); _o, p
+    (-55/3, [8/3, 2/3]
+    >>> e(*big), big
+    (55/3, (8/3, 2/3))
+
+    The third value returned is related to the dual of the
+    primal system defined by f and c. If the shape of A is m*n then the
+    number of variables in the primal case is n while it is
+    m for the dual.
+
+    Let the variables for the dual system be dsym:
+
+    >>> from sympy import symbols
+    >>> m, n = A.shape
+    >>> dsym = Matrix(symbols('y1:%s' % (m + 1)))
+
+    The dual function is d - y^{T}b and the constraints are expressed as y^{T}A >= c:
+
+    >>> df = (d - dsym.T*b)[0]; df
+    4*y1 + 12*y2 + y3 + 7
+    >>> dc = [i>=0 for i in dsym.T*A - c]; dc
+    [y1 + 4*y2 - y3 - 3 >= 0, 2*y1 + 2*y2 + y3 - 5 >= 0]
+
+    The minimum value of f corresponds to the maximum value of
+    the dual. We can confirm that by passing the matrices corresponding to the dual to `_simplex` to compute the minimum:
+
+    >>> dnp = [i.lts - i.gts for i in dc]
+    >>> dA, db = linear_eq_to_matrix(dnp, *dsym)
+    >>> dc, dd = linear_eq_to_matrix(df, *dsym)
+
+    *** To be continued -- it's confusing to me when simplex doesn't solve the
+    standard min or max problem. lp has the details worked out, however.
 
     References
     ==========
@@ -1087,18 +1189,18 @@ def _simplex(A, B, C, D=ImmutableMatrix([0])):
     """
     from sympy.matrices.dense import Matrix
 
-    if A and B:
-        M = Matrix([[A, B], [-C, D]])
-    else:
-        M = Matrix([[-C, D]]) # in case there are no constraints
+    A, B, C, D = [Matrix(i) for i in (A, B, C, D)]
+    M = Matrix([[A, B], [C, D]])
+    n = M.cols - 1
+    m = M.rows - 1
 
     if not all(i.is_Float or i.is_Rational for i in M):
             raise TypeError("Only rationals and floats are allowed in the Simplex method.")
 
     # It's important that False < True so that x variables are given priority
     # over the y variables during Bland's rule
-    r_orig = [(False, j) for j in range(M.cols - 1)] # what Ferguson's introduction calls 'x' variables
-    s_orig = [(True, i)  for i in range(M.rows - 1)] # what Ferguson's introduction calls 'y' variables
+    r_orig = [(False, j) for j in range(n)] # what Ferguson's introduction calls 'x' variables
+    s_orig = [(True, i)  for i in range(m)] # what Ferguson's introduction calls 'y' variables
 
     R = r_orig.copy()
     S = s_orig.copy()
@@ -1138,13 +1240,13 @@ def _simplex(A, B, C, D=ImmutableMatrix([0])):
 
         # Choose a pivot column, j0
         piv_cols = []
-        piv_cols = [j for j in range(C.cols) if C[j] < 0]
+        piv_cols = [j for j in range(n) if C[j] < 0]
         if not piv_cols:
             break
         j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
 
         # Choose a pivot row, i0
-        piv_rows = [i for i in range(A.rows) if A[i, j0] > 0]
+        piv_rows = [i for i in range(m) if A[i, j0] > 0]
         if not piv_rows:
             raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
         i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
@@ -1152,8 +1254,8 @@ def _simplex(A, B, C, D=ImmutableMatrix([0])):
         M = _pivot(M, i0, j0)
         R[j0], S[i0] = S[i0], R[j0]
 
-    argmax = [None]*(M.cols-1)
-    argmin_dual = [None]*(M.rows-1)
+    argmax = [None]*n
+    argmin_dual = [None]*m
 
     for i, var in enumerate(R):
         v = var[0]
@@ -1171,267 +1273,180 @@ def _simplex(A, B, C, D=ImmutableMatrix([0])):
         else:
             argmax[n] = M[i, -1]
 
-    return M[-1, -1], argmax, argmin_dual
+    return -M[-1, -1], argmax, argmin_dual
 
 
-def linear_optimization_from_matrices(f, A, b):
-    """
-    Because of the duality of linear programming, there are two valid ways to
-    interpret this function. The first is as a solver for the standard
-    maximization problem:
-        Maximize Cx constrained to Ax <= B and x >= 0.
-    The second as is a solver for the standard minimization problem:
-        Minimizing y^{T}B constrained to y^{T}A >= C^{T} and y >= 0.
-
-    x is a column vector of variables, and y is a column vector of dual
-    variables.
-
-    If we keep the maximization interpretation in mind, then matrix A and
-    column vector B represent a set of constraints. For example,
-        1*x + 0*y <= 2
-        0*x + 0*y <= 4
-    can be represented as:
-
-    >>> from sympy.matrices.dense import Matrix
-    >>> A = Matrix([[1, 0],
-    ...             [0, 1]])
-    >>> b = Matrix([[2],
-    ...             [4]])
-
-    In this interpretation, row vector C is an objective function to be
-    maximized. For example,
-        3x + y
-    can be represented as:
-
-    >>> f = Matrix([[3, 1]])
-
-    Parameters
-    ==========
-
-    Under the maximization interpretation, m is the number of constraints and n
-    is the number of variables.
-
-    f: Matrix with shape (1, n)
-        Must contain only Rational and float coefficients.
-
-    A : Matrix with shape (m, n)
-        Must contain only Rational and float coefficients.
-
-    b : Matrix with shape (m, 1)
-        Must contain only Rational and float coefficients.
-
-
-    Returns
-    =======
-
-    Returns `(optimum, argmax, and argmin_dual)`:
-
-    optimum : float or Rational
-        maximum value of objective function under the constraints
-
-    argmax : list of floats and/or Rationals
-        x
-
-    argmin_dual : list of floats and/or Rationals
-        y
-
-    Examples
-    ========
-
-    Suppose we want to maximize
-        3x + y
-    subject to
-        x + y <= 2
-
-    >>> from sympy.matrices.dense import Matrix
-    >>> from sympy.solvers.inequalities import linear_optimization_from_matrices
-    >>> f = Matrix([[3, 1]])
-    >>> A = Matrix([[1, 1]])
-    >>> b = Matrix([[2]])
-    >>> optimum, argmax, argmin_dual = linear_optimization_from_matrices(f, A, b)
-    >>> optimum
-    6
-    >>> argmax
-    [2, 0]
-    >>> argmin_dual
-    [3]
-
-    Suppose we want to maximize
-        3x + y
-    subject to
-        x <= 2
-        y <= 4
-
-    >>> f = Matrix([[3, 1]])
-    >>> A = Matrix([[1 ,0], [0, 1]])
-    >>> b = Matrix([[2], [4]])
-    >>> optimum, argmax, argmin_dual = linear_optimization_from_matrices(f, A, b)
-    >>> optimum
-    10
-    >>> argmax
-    [2, 4]
-    >>> argmin_dual
-    [3, 1]
-
-    See Also
-    ========
-
-    linprog_maximize_from_equations
-    find_feasible
-    """
-    from sympy.matrices.dense import Matrix
-
-    f, A, b = [Matrix(i) for i in (f, A, b)]
-
-    m, n = A.shape
-    if b.shape != (m, 1) or f.shape != (1, n):
-        raise ValueError(f"The shape of vector b ({b.shape}) or f ({f.shape})" \
-                         f"does not match the shape of matrix A ({A.shape}).")
-    return _simplex(A, b, f)
-
-
-def _linear_programming_to_matrix(f, cons, variables):
-    """
-    Converts a list of constraints and an objective function into the standard
-    form for linear programming.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.inequalities import _linear_programming_to_matrix
-    >>> from sympy.abc import x, y, z
-    >>> from sympy import Eq
-    >>> r1 = y + 2*z <= 3
-    >>> r2 = -x - 3*z <= -2
-    >>> r3 = 5 - y >= 2*x + 7*z
-    >>> A, B, C, D, constraints = _linear_programming_to_matrix(x + y + 5*z, [r1, r2, r3], [x, y, z])
-    >>> A
-    Matrix([
-    [ 0, 1,  2],
-    [-1, 0, -3],
-    [ 2, 1,  7]])
-    >>> B
-    Matrix([
-    [ 3],
-    [-2],
-    [ 5]])
-    >>> C
-    Matrix([[1, 1, 5]])
-    >>> constraints
-    [y + 2*z <= 3, -x - 3*z <= -2, 2*x + y + 7*z <= 5]
-    >>> A, B, C, D, constraints = _linear_programming_to_matrix(x*10, [Eq(x, 3)], [x])  # x = 3 become x >= 3 and x <= 3
-    >>> A
-    Matrix([
-    [ 1],
-    [-1]])
-    >>> B
-    Matrix([
-    [ 3],
-    [-3]])
-    >>> C
-    Matrix([[10]])
-    >>> constraints
-    [x <= 3, -x <= -3]
-    """
-    from sympy.matrices.dense import Matrix
-
-    eqns = []
-
-    for rel in cons:
-        if not isinstance(rel, (Relational, AppliedBinaryRelation)):
-            raise TypeError(f"{rel} is not relational.")
-        if type(rel) in [Lt, Gt] or isinstance(rel, AppliedBinaryRelation) and rel.function in [Q.lt, Q.gt]:
-            raise TypeError("Strict inequalities are not allowed in linear programming.")
-        if type(rel) == Ne or isinstance(rel, AppliedBinaryRelation) and rel.function == Q.ne:
-            raise TypeError("'not equal to' is not allowed in linear programming.")
-        # convert AppliedBinaryRelation to Relational
-        if isinstance(rel, AppliedBinaryRelation):
-            if rel.function == Q.le:
-                rel = Le(rel.lhs, rel.rhs, evaluate=False)
-            elif rel.function == Q.ge:
-                rel = Ge(rel.lhs, rel.rhs, evaluate=False)
-            elif rel.function == Q.eq:
-                rel = Eq(rel.lhs, rel.rhs, evaluate=False)
-        # sanity check
-        if not isinstance(rel, (Le, Ge, Eq)):
-            raise TypeError(f"Unrecognized relation: {rel}")
-        # make Relational canonical
-        rel = rel.canonical
-        # put in expression form
-        if not isinstance(rel, Eq):
-            eqns.append(rel.lts - rel.gts)
+def _np(constr, syms, unbound):
+    # return nonpositive expressions for the given constraints
+    r = {}  # replacements to handle change of variables
+    np = []  # nonpositive expressions
+    xx = set(syms)  # will contain all symbols when done
+    ui = numbered_symbols('u', cls=Dummy, start=1) # symbols to be introduced
+    unibounds = {}  # bound to be inferred from univariate constraints
+    for i in constr:
+        if isinstance(i, AppliedBinaryRelation):
+            if i.function == Q.le:
+                i = Le(i.lhs, i.rhs, evaluate=False)
+            elif i.function == Q.ge:
+                i = Le(i.rhs, i.lhs, evaluate=False)
+            elif i.function == Q.eq:
+                i = Eq(i.rhs, i.lhs, evaluate=False)
+            else:
+                assert None, i
+        assert not i.has(oo) and not i.has(-oo)
+        if i == True:
+            continue  # ignore
+        if i == False:
+            return  # no solution
+        if isinstance(i, Eq):  # could also collect k equalities and solve for k variables and eliminate them
+            L = i.lhs - i.rhs
+            np.extend([L, -L])
+        elif isinstance(i, (Le, Ge)):
+            i = i.canonical
+            npi = i.lts - i.gts
+            x = npi.free_symbols
+            if len(x) == 1:
+                x = x.pop()
+                if x in unbound:
+                    continue  # will handle later
+                ivl = Le(npi, 0, evaluate=False).as_set()
+                if x not in unibounds:
+                    unibounds[x] = ivl
+                else:
+                    unibounds[x] &= ivl
+            else:
+                np.append(npi)
         else:
-            # x = 3 can be represented as x <= 3 and x >= 3
-            eqns.append(rel.lhs - rel.rhs)
-            eqns.append(rel.rhs - rel.lhs)
+            assert None, 'only Le, Ge, Eq'
 
-    obj_const = f.subs({var: 0 for var in variables})
+    # add constraints for variables expressed in a univariate manner
+    for x in unibounds:
+        i = unibounds[x]
+        a, b = i.inf, i.sup
+        if a.is_infinite and b.is_infinite:
+            # this is unbound
+            u = next(ui)
+            v = next(ui)
+            r[x] = u - v
+            #np.extend([-u, -v])
+            xx.update([u, v])
+        elif a.is_infinite:
+            u = next(ui)
+            r[x] = b - u
+            #np.append(-u)
+            xx.add(u)
+        elif b.is_infinite and a:
+            u = next(ui)
+            #np.append(-u)
+            r[x] = u + a
+            xx.add(u)
+        elif b.is_infinite and not a:
+            # standard nonnegative relationship
+            pass#np.append(-x)
+        else:
+            u = next(ui)
+            xx.add(u)
+            # shift so u = x - a => x = u + a
+            r[x] = u + a
+            # add constraint for u <= b - a
+            # since when u = b-a then x = u + a = b - a + a = b:
+            # the upper limit for x
+            np.append(u - (b - a))
 
-    A, B = linear_eq_to_matrix(eqns, *variables)
-    C = linear_eq_to_matrix(f, *variables)[0]
-    D = ImmutableMatrix([obj_const])
+    # make change of variables for unbound variables
+    for i in unbound:
+        assert i not in unibounds
+        u, v = next(ui), next(ui)
+        r[i] = u - v
+        xx.update([u, v])
 
-    eqns = A*Matrix(variables)
-    standard_constraints = [eqns[i] <= B[i] for i in range(len(B))]
+    return np, r, xx
 
-    return A, B, C, D, standard_constraints
+def lp(min_max, f, constr, unbound, dual=True):
+    """Return the optimization (min or max) of primal f with the given
+    constraints; if all variables are nonnegative, pass `[]` for
+    unbound, otherwise include in `unbound` those variables that
+    are unbounded.
 
+    In addition to the optimum, the values for the variables that
+    produce it rae also returned. If dual is True (default),
+    the dual function, corresponding dual constraints, and the values
+    that produce the optimum for the dual in the opposite sense (max
+    from primal is the min for the dual).
 
-def linear_optimization(f, cons, variables):
-    """
-    Finds values for variables that minimize the linear objective
-    function `f` subject to linear constraints `cons`. All coefficients must be
-    Rational or floats.
-
-    Parameters
-    ==========
-
-    f : a linear objective function to minimize
-        If you want to minimize a function, f, simply make the objective
-        function -f.
-
-    cons : list of linear inequalities
-        Strict inequalities (>, <) and not equals (!=) are not allowed.
-
-    variables : a list of all variables included in constraints and objective
-
-    Returns
-    =======
-
-    Returns `(optimum, argmax, argmin_dual)`:
-
-    optimum : Rational or Float
-
-    argmax : dictionary of variables to Rationals or Floats
-
-    argmin_dual : dictionary of constraints to Rationals or Floats
-        Contains values for dual variables that minimize dual problem.
+    if `how=max` then the results corresponding to the maximization
+    of f and the minimization of the dual will be returned.
 
     Examples
     ========
 
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.inequalities import linear_optimization
-    >>> r1 = y+2*z <= 3
-    >>> r2 = -x-3*z <= -2
-    >>> r3 = 2*x+y+7*z <= 5
-    >>> optimum, argmax, argmin_dual  = linear_optimization(x+y+5*z, [r1,r2,r3], [x, y, z])
-    >>> optimum
-    11/3
-    >>> argmax
-    {x: 0, y: 1/3, z: 2/3}
-    >>> argmin_dual
-    {-x - 3*z <= -2: 2/3, y + 2*z <= 3: 0, 2*x + y + 7*z <= 5: 1}
+    >>> from sympy.solvers.inequalities import lp
+    >>> from sympy import symbols
+    >>> x1, x2, x3, x4 = symbols('x1:5')
+    >>> f = 5*x2 + x3 + 4*x4
+    >>> c = [x1 + 5 >= 5*x2 + 2*x3 + 5*x4, Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)]
+    >>> lp(min, f, c, unbound=[])
+    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+    >>> lp(max, f, c, unbound=[x3])
+    (6, {x1: 1, x2: 0, x3: -2, x4: 2})
 
-    See Also
-    ========
+    >>> lp(min, x - y, [x >= 3, x + y <= 7], [])
+    (-1, {x: 3, y: 4})
 
-    solve_univariate_inequality
-    linprog_from_matrices
-    find_feasible
+    >>> lp(max, x - y, [x >= 3, x + y <= 7], [])
+    (7, {x: 7, y: 0})
+
+    >>> lp(max, x - y, [x <= 3, x + y <= 7], [])
+    (3, {x: 3, y: 0})
+
+    XXX how to define error so it prints better (without the __main__)
+
+    >>> lp(min, x - y, [x <= 3, x + y <= 7], [])
+    Traceback (most recent call last):
+    ...
+    __main__.UnboundedLinearProgrammingError: Objective function can assume arbitrarily large values!
     """
-    A, B, C, D, standard_constraints = _linear_programming_to_matrix(f, cons, variables)
-    optimum, argmax, argmin_dual = _simplex(A, B, C, D)
-    argmax = {variables[i]: argmax[i] for i in range(len(variables))}
-    argmin_dual = {standard_constraints[i] : argmin_dual[i] for i in range(len(standard_constraints))}
-    return optimum, argmax, argmin_dual
+    how = min_max
+    exprs = Tuple(f, *constr)
+    F = exprs[0]
+    syms = exprs.free_symbols
+    if unbound is True:
+        unbound = syms
+    syms = list(ordered(syms))
+
+    # convert constraints to nonpositive expressions
+    np, r, xx = _np(constr, syms, unbound)
+
+    # do change of variables
+    f = f.xreplace(r)
+    np = [i.xreplace(r) for i in np]
+
+    # convert to matrices and solve
+    xx = list(ordered(xx))
+    A, B = linear_eq_to_matrix(np, xx)
+    C, D = linear_eq_to_matrix([f], xx)
+    if how == max:
+        _o, p, d = _simplex(A, B, -C, -D)
+        o = -_o
+    else:
+        o, p, d = _simplex(A, B, C, D)
+
+    # restore original variables
+    p = {k: v for k, v in zip(xx, p)}
+    if r:
+        u = set(xx) - set(syms)
+        p.update(Dict(r).xreplace({k: p.pop(k) for k in u}))
+        # the o returned needs to be translated back to the
+        # given function, not the one in terms of changes of
+        # variables
+        o = F.xreplace(p)
+
+    # make p canonical
+    p = {i: p[i] for i in ordered(p) if i}
+
+    # XXX not sure that dual should be returned since new variables may
+    # have been introduced; if the user wants the dual the should get it
+    # from the standard min/max problem representation -- this function
+    # does not enforce standard form, it gets the input into standard
+    # form for simplex
+    return o, p
