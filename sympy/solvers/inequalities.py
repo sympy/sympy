@@ -1195,7 +1195,6 @@ class LRASolver():
                     conflict.add(xi <= self.upper[xi])
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
-                j = nonbasic[xj]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
 
