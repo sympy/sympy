@@ -1097,7 +1097,7 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
-        return "OK"
+        return "OK", None
 
     def _assert_lower(self, xi, ci):
         if ci <= self.lower[xi]:
@@ -1108,7 +1108,7 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
 
-        return "OK"
+        return "OK", None
 
     def _update(self, xi, v):
         i = self.col_index[xi]
