@@ -18,7 +18,7 @@ from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
-from sympy.utilities.iterables import sift, iterable, numered_symbols
+from sympy.utilities.iterables import sift, iterable, numbered_symbols
 from sympy.utilities.misc import filldedent
 
 
@@ -1076,7 +1076,12 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     return row
 
 
-def _simplex(A, B, C, D=None, dual=False):
+def _is_feasible(A, B):
+    # return True if Ax <= B defines a simplex else False
+    return _simplex(A, B, [0]*A.cols, [0], _full=False)
+
+
+def _simplex(A, B, C, D=None, dual=False, _full=True):
     """
     Return ``(o, x, y)`` obtained from the two-phase simplex method
     using Bland's rule where ``o`` is the minimum value of primal, ``Cx - D``,
@@ -1202,6 +1207,8 @@ def _simplex(A, B, C, D=None, dual=False):
         # Choose pivot column, j0
         piv_cols = [j for j in range(A.cols) if A[k, j] < 0]
         if not piv_cols:
+            if not _full:
+                return False
             raise InfeasibleLinearProgrammingError('The constraint set is empty!')
         j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
 
@@ -1212,6 +1219,9 @@ def _simplex(A, B, C, D=None, dual=False):
 
         M = _pivot(M, i0, j0)
         R[j0], S[i0] = S[i0], R[j0]
+
+    if not _full:
+        return True
 
     # Phase 2: starting at a feasible solution, pivot until we reach optimal solution
     while True:
