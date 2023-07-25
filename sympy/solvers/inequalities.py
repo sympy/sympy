@@ -1373,7 +1373,7 @@ def lp(min_max, f, constr, unbound=None):
     ========
 
     >>> from sympy.solvers.inequalities import lp
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Eq
     >>> from sympy.abc import x, y
     >>> x1, x2, x3, x4 = symbols('x1:5')
     >>> f = 5*x2 + x3 + 4*x4
