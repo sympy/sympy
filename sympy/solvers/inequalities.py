@@ -1064,8 +1064,7 @@ class LRASolver():
 
         A = -A # identity matrix should be negative
 
-
-        return res, LRASolver(A, basic, nonbasic)
+        return res, LRASolver(A, basic, nonbasic), sub
 
 
     def assert_con(self, atom):
@@ -1267,7 +1266,8 @@ TiloRC marked this conversation as resolved.
 
     conjunction = And(*constraints)
 
-    preprocessed, lra = LRASolver.preprocess(conjunction)
+    preprocessed, lra, sub = LRASolver.preprocess(conjunction)
+    sub = {value: key for key, value in sub.items()}
 
     if isinstance(preprocessed, And):
         atoms = [arg for arg in preprocessed.args]
@@ -1277,11 +1277,14 @@ TiloRC marked this conversation as resolved.
     for con in atoms:
         res = lra.assert_con(con)
         if res[0] == "UNSAT":
-            return res
+            conflict = {clause.subs(sub) for clause in res[1]}
+            return ("UNSAT", conflict)
 
-    assigments = {v: lra.assign[v] for v in lra.all_var}
+    res = lra.check()
 
-    if lra.check()[0] == "UNSAT":
-        return "UNSAT"
+    if res[0] == "UNSAT":
+        conflict = {clause.subs(sub) for clause in res[1]}
+        return ("UNSAT", conflict)
 
+    assigments = {v: lra.assign[v] for v in lra.nonslack}
     return "SAT", assigments
