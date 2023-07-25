@@ -22,6 +22,7 @@ from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
+from sympy.matrices.dense import eye
 
 
 def solve_poly_inequality(poly, rel):
@@ -1006,6 +1007,8 @@ class LRASolver():
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
+        assert A[:, n-m:] == -eye(m)
+
         self.A = A # TODO: Row reduce A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
