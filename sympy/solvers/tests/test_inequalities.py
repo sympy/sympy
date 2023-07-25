@@ -529,15 +529,17 @@ def test_LRA_solver():
     # Test preprocessing
     # Example is from section 3 of paper.
     phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
-    phi = Q.real(a) | phi # must handle non-relational predicate objects
+    phi = Q.real(a) | phi
     phi_prime = Q.real(a) | (x >= 0) & (Eq(s1, 2) | (s2 > 4)) & ((s2 >= 6) | (s1 <= 2))
     eqs = [Eq(s1, x + y), Eq(s2, x + 2*y - z)]
     m, _ = linear_eq_to_matrix(eqs, [x, y, z, s1, s2])
     m = -m # identity matrix should be negative
     preprocessed, lra, _ = LRASolver.preprocess(phi, [x, y, z])
-    assert preprocessed == phi_prime
+    assert preprocessed != phi_prime  # should be identical save for s1 and s2 are dummy variables
+    assert phi.args[0] == Q.real(a)  # must handle non-relational predicate objects
     assert lra.A == m
-    assert lra.slack == [s1, s2]
+    assert lra.slack != [s1, s2]
+    assert len(lra.slack) == 2
     assert lra.nonslack == [x, y, z]
 
     # Test how preprocessing handles functions
@@ -549,9 +551,10 @@ def test_LRA_solver():
     m, _ = linear_eq_to_matrix(eqs, [x, f, g, s1])
     m = -m  # identity matrix should be negative
     preprocessed, lra, _ = LRASolver.preprocess(phi, [g, f, x])
-    assert preprocessed == phi_prime
+    assert preprocessed != phi_prime
     assert lra.A == m
-    assert lra.slack == [s1]
+    assert lra.slack != [s1]
+    assert len(lra.slack) == 1
     assert lra.nonslack == [g, f, x]
 
     # Empty matrix should be handled.

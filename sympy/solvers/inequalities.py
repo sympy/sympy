@@ -12,7 +12,6 @@ from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
@@ -1041,7 +1040,7 @@ class LRASolver():
                     if expr not in sub:
                         nonlocal count
                         count += 1
-                        sub[expr] = Symbol(f"s{count}")
+                        sub[expr] = Dummy(f"s{count}")
                         equations.append(Eq(sub[expr], expr))
                     return b.func(sub[expr], const)
                 else:
