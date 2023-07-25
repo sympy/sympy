@@ -1130,7 +1130,7 @@ def _simplex(A, B, C, D=None, dual=False, _full=True):
     >>> _simplex(a, b, -c, -d)
     (-3, [1/2], [2, 0])
 
-    The negated max shows that the max of F and the min of f are the same. The dual
+    The negated max shows that the max of ``F`` and the min of ``f`` are the same. The dual
     point `[1/2]` is the value of ``y`` that minimized ``F = c*y - d`` under
     constraints a*x <= b``:
 
@@ -1145,7 +1145,7 @@ def _simplex(A, B, C, D=None, dual=False, _full=True):
     nonzero value, hence is ``4*(1/2) + 1 = 3``.
 
     In this case
-    the values for x and y were the same when the dual representation was solved. This
+    the values for ``x`` and ``y`` were the same when the dual representation was solved. This
     is not always the case (though the value of the function will be the same).
 
     >>> A, B, C, D = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
@@ -1174,7 +1174,8 @@ def _simplex(A, B, C, D=None, dual=False, _full=True):
 
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
     if dual:
-        return _simplex(-A.T, C.T, B.T, -D)
+        _o, d, p = _simplex(-A.T, C.T, B.T, -D)
+        return -_o, d, p
 
     M = Matrix([[A, B], [C, D]])
     n = M.cols - 1
