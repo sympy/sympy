@@ -644,7 +644,7 @@ correctly when using `get_points()` to plot with Matplotlib.
 To avoid this problem, the method `get_segments()` could be used, which used
 adaptive sampling and which could be used with Matplotlib's `LineCollection`.
 However, this has been changed, and now `get_points()` can also use adaptive
-sampling. The {meth}`~.get_data()` method can also be used.
+sampling. The {meth}`~sympy.plotting.plot.Parametric2DLineSeries.get_data()` method can also be used.
 
 
 (deprecated-physics-mdft)=
