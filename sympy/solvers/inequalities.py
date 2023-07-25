@@ -1067,8 +1067,6 @@ class LRASolver():
 
 
     def assert_con(self, atom):
-
-
         if isinstance(atom, AppliedBinaryRelation):
             sym, c = atom.arguments
             assert sym.is_symbol
@@ -1084,7 +1082,6 @@ class LRASolver():
 
             if atom.func == Ge:
                 return self._assert_lower(sym, c)
-
             if atom.func == Le:
                 return self._assert_upper(sym, c)
 
@@ -1112,7 +1109,6 @@ class LRASolver():
         return "OK"
 
     def check(self):
-
         def _debug_internal_state_printer1(iteration, A, bas, variables):
             if not SYMPY_DEBUG:
                 return
@@ -1121,11 +1117,8 @@ class LRASolver():
             from sympy import pprint
 
             bvar = [None]*len(bas)
-            #nbvar = [None]*len(nonbas)
             for v, idx in bas.items():
                 bvar[idx] = v
-            #for v, idx in nonbas.items():
-            #    nbvar[idx] = v
 
             r1 = Matrix([variables])
             c1 = Matrix(bvar)
@@ -1156,8 +1149,6 @@ class LRASolver():
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
              or self.assign[b] > self.upper[b]]
-            # [(self.assign[b], (self.lower[b], self.upper[b])) for b in basic]
-
 
             if len(cand) == 0:
                 return "SAT", "PLACEHOLDER"
@@ -1180,10 +1171,6 @@ class LRASolver():
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
-                # basic[xj] = basic[xi]
-                # del basic[xi]
-                # nonbasic[xi] = nonbasic[xj]
-                # del nonbasic[xj]
 
             if self.assign[xi] > self.upper[xi]:
                 cand = [nb for nb in nonbasic
@@ -1191,10 +1178,8 @@ class LRASolver():
                         or (M[i, var_col[nb]] > 0 and self.assign[nb] > self.lower[nb])]
 
                 if len(cand) == 0:
-                    # M[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
                     N_plus = {nb for nb in nonbasic if M[i, var_col[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, var_col[nb]] < 0}
-                    # Might have made a mistake here; had to think through the logic myself
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_minus}
                     conflict |= {nb >= self.lower[nb] for nb in N_plus}
@@ -1204,12 +1189,6 @@ class LRASolver():
                 j = nonbasic[xj]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
-                # basic[xj] = basic[xi]
-                # del basic[xi]
-                # nonbasic[xi] = nonbasic[xj]
-                # del nonbasic[xj]
-
-
 
     def backtrack(self):
         pass
@@ -1225,29 +1204,7 @@ class LRASolver():
         A[i, j] = 1#1 / Mij
         return A
 
-        # """
-        # The pivot element `M[i, j]` is inverted and the rest of the matrix modified
-        # and returned as a new matrix; original is left unmodified.
-        # Example
-        # =======
-        # >>> from sympy.matrices.dense import Matrix
-        # >>> from sympy.solvers.inequalities import _pivot
-        # >>> from sympy import var
-        # >>> Matrix(3, 3, var('a:i'))
-        # Matrix([
-        # [a, b, c],
-        # [d, e, f],
-        # [g, h, i]])
-        # >>> _pivot(_, 1, 0)
-        # Matrix([
-        # [-a/d, -a*e/d + b, -a*f/d + c],
-        # [ 1/d,        e/d,        f/d],
-        # [-g/d,  h - e*g/d,  i - f*g/d]])
-        # """
-
-
     def _update(self, xi, v):
-        # xi will always be a nonbasic variable
         i = self.nonbasic[xi]
         for j, b in enumerate(self.basic):
             aji = self.A[j, i]
@@ -1255,10 +1212,9 @@ class LRASolver():
         self.assign[xi] = v
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
-        # xi will always be basic and xj will always be nonbasic
         i, j = basic[xi], nonbasic[xj]
         assert M[i, j] != 0
-        theta = (v - self.assign[xi])/M[i, j] # maybe the negative will fix bug?
+        theta = (v - self.assign[xi])/M[i, j]
         self.assign[xi] = v
         self.assign[xj] = self.assign[xj] + theta
         for xk in basic:
@@ -1266,7 +1222,6 @@ class LRASolver():
                 k = basic[xk]
                 akj = M[k, j]
                 self.assign[xk] = self.assign[xk] + akj*theta
-
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]
@@ -1332,9 +1287,3 @@ TiloRC marked this conversation as resolved.
         return "UNSAT"
 
     return "SAT", assigments
-    # A, B, C, _ = _linear_programming_to_matrix(constraints, sympify(0), variables)
-    # try:
-    #     _, feasible, _ = _simplex(A, B, C, skip_phase_2=True)
-    #     return {variables[i] : feasible[i] for i in range(len(variables))}
-    # except InfeasibleLinearProgrammingError:
-    #     return None
