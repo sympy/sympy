@@ -2868,6 +2868,96 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             raise ExactQuotientFailed(f, g)
 
+    def subresultants(self, g, x=None):
+        """
+        Computes the subresultant PRS of two polynomials ``self`` and ``g``.
+
+        Parameters
+        ==========
+
+        g : :py:class:`~.PolyElement`
+            The second polynomial.
+        x : generator or generator index
+            The variable with respect to which the subresultant sequence is computed.
+
+        Returns
+        =======
+
+        R : list
+            Returns a list polynomials representing the subresultant PRS.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y = ring("x, y", ZZ)
+
+        >>> f = x**2*y + x*y
+        >>> g = x + y
+        >>> f.subresultants(g) # first generator is chosen by default if not given
+        [x**2*y + x*y, x + y, y**3 - y**2]
+        >>> f.subresultants(g, 0) # generator index is given
+        [x**2*y + x*y, x + y, y**3 - y**2]
+        >>> f.subresultants(g, y) # generator is given
+        [x**2*y + x*y, x + y, x**3 + x**2]
+
+        """
+        f = self
+        x = f.ring.index(x)
+        n = f.degree(x)
+        m = g.degree(x)
+
+        if n < m:
+            f, g = g, f
+            n, m = m, n
+
+        if f == 0:
+            return [0, 0]
+
+        if g == 0:
+            return [f, 1]
+
+        R = [f, g]
+
+        d = n - m
+        b = (-1) ** (d + 1)
+
+        # Compute the pseudo-remainder for f and g
+        h = f.prem(g, x)
+        h = h * b
+
+        # Compute the coefficient of g with respect to x**m
+        lc = g.coeff_wrt(x, m)
+
+        c = lc ** d
+
+        S = [1, c]
+
+        c = -c
+
+        while h:
+            k = h.degree(x)
+
+            R.append(h)
+            f, g, m, d = g, h, k, m - k
+
+            b = -lc * c ** d
+            h = f.prem(g, x)
+            h = h.exquo(b)
+
+            lc = g.coeff_wrt(x, k)
+
+            if d > 1:
+                p = (-lc) ** d
+                q = c ** (d - 1)
+                c = p.exquo(q)
+            else:
+                c = -lc
+
+            S.append(-c)
+
+        return R
+
     # TODO: following methods should point to polynomial
     # representation independent algorithm implementations.
 
@@ -2876,9 +2966,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def gcdex(f, g):
         return f.ring.dmp_gcdex(f, g)
-
-    def subresultants(f, g):
-        return f.ring.dmp_subresultants(f, g)
 
     def resultant(f, g):
         return f.ring.dmp_resultant(f, g)
