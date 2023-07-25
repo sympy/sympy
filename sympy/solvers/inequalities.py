@@ -4,19 +4,21 @@ import itertools
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
+from sympy.core.containers import Dict, Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Lt, Ge, Eq, Le
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
-from sympy.utilities.iterables import sift, iterable
+from sympy.utilities.iterables import sift, iterable, numered_symbols
 from sympy.utilities.misc import filldedent
 
 
@@ -1074,110 +1076,88 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, S):
     return row
 
 
-def _simplex(A, B, C, D=None):
+def _simplex(A, B, C, D=None, dual=False):
     """
-    Return (o, x, y) obtained from the two-phase simplex method
-    using Bland's rule where o is the minimum value of Cx - D
-    under constraints Ax <= B (with x >= 0) and the maximum
-    of y^TB - D under constraints y^{T}A >= C^{T} (with y >= 0).
+    Return ``(o, x, y)`` obtained from the two-phase simplex method
+    using Bland's rule where ``o`` is the minimum value of primal, ``Cx - D``,
+    under constraints ``Ax <= B`` (with ``x >= 0``) and the maximum
+    of the dual, ``y^{T}B - D``, under constraints
+    ``A^{T}*y >= C^{T}`` (with ``y >= 0``). To compute the dual of
+    the system, pass `dual=True` and ``(o, y, x)`` will be returned.
 
-    Note: the nonnegative constraints for x and y supercede
-    any values of A and B that are inconsistent with that
-    assumption, so if a constraint of x >= -1 is represented
-    in A and B, no value will be obtained that is negative; if
-    a constraint of x <= -1 is represented, an error will be
+    Note: the nonnegative constraints for ``x`` and ``y`` supercede
+    any values of ``A`` and ``B`` that are inconsistent with that
+    assumption, so if a constraint of ``x >= -1`` is represented
+    in ``A`` and ``B``, no value will be obtained that is negative; if
+    a constraint of ``x <= -1`` is represented, an error will be
     raised since no solution is possible.
 
     Examples
     ========
 
-    >>> from sympy import linear_eq_to_matrix, Tuple, lambdify, Matrix
     >>> from sympy.solvers.inequalities import _simplex
-    >>> from sympy.abc import x, y
-    >>> f = 3*x + 5*y + 7
-    >>> X = Matrix([x, y])
-    >>> e = lambdify((x, y), f)
+    >>> from sympy import Matrix
 
-    Define a polygonal region:
+    Consider the simple minimization of ``f = x + y + 1`` under the constraint that
+    ``y + 2*x >= 4``. In the nonnegative quadrant, this inequality describes a
+    area above a triangle with vertices at (0, 4), (0, 0) and (2, 0). The minimum of
+    f occurs at (2, 0). Defining A, B, C, D for the standard minimization gives
 
-    >>> p = Tuple('(0,0),(0, 1),(2/3, 5/3),(8/3, 2/3),(3, 0)')
+    >>> A, B, C, D = [Matrix(i) for i in [[[2, 1]], [4], [[1, 1]], [-1]]]
 
-    Sort vertices according to value of f at each vertex:
+    Since `_simplex` will do a minimization for constraints given as ``A*x <= B``,
+    the signs of each are negated (``-Ax <= -B``):
 
-    >>> sorted(p[0], key=lambda i: e(*i))
-    [(0, 0), (0, 1), (3, 0), (2/3, 5/3), (8/3, 2/3)]
+    >>> _simplex(-A, -B, C, D)
+    (3, [2, 0], [1/2])
 
-    Save the first and last vertices for later:
+    The dual of minimizing ``f`` is maximizing ``F = c*y - d`` for ``a*y <= b`` where
+    ``a``, ``b``, ``c``, ``d`` are derived from the transpose of the matrix
+    representation of the standard minimization:
 
-    >>> small = _[0]; big = _[-1]
+    >>> tr = lambda a, b, c, d: [i.T for i in (a, c, b, d)]
+    >>> a, b, c, d = tr(A, B, C, D)
 
-    Now define that polygonal region in terms of inequalities:
+    This time ``a*x <= b`` is the expected inequality for the `_simplex` method, but
+    to maximize ``F``, the sign of ``c`` and ``d`` must be inverted (so that minimizing
+    the negative will give the negative of the maximum of ``F``):
 
-    >>> r = x + 2*y <= 4, 4*x + 2*y <= 12, x >= y - 1
+    >>> _simplex(a, b, -c, -d)
+    (-3, [1/2], [2, 0])
 
-    Rearrange c into nonpostive expressions and determine
-    A and b (i.e. A*sym - b <= 0):
+    The negated max shows that the max of F and the min of f are the same. The dual
+    point `[1/2]` is the value of ``y`` that minimized ``F = c*y - d`` under
+    constraints a*x <= b``:
 
-    >>> np = [i.lts - i.gts for i in r]
-    >>> A, b = linear_eq_to_matrix(np, x, y)
-    >>> [i.tolist() for i in (A, b)]
-    [[[1, 2], [4, 2], [-1, 1]], [[4], [12], [1]]]
+    >>> y = Matrix(['y'])
+    >>> (c*y - d)[0]
+    4*y + 1
+    >>> [i <= j for i, j in zip(a*y,b)]
+    [2*y <= 1, y <= 1]
 
-    See the inequalities in standard form:
+    In this 1-dimensional dual system, the more restrictive contraint is the first
+    which limits ``y`` between 0 and 1/2 and the maximum of ``F`` is attained at the
+    nonzero value, hence is ``4*(1/2) + 1 = 3``.
 
-    >>> [i <= 0 for i in A*X - b]
-    [x + 2*y - 4 <= 0, 4*x + 2*y - 12 <= 0, -x + y - 1 <= 0]
+    In this case
+    the values for x and y were the same when the dual representation was solved. This
+    is not always the case (though the value of the function will be the same).
 
-    Extract coefficients of f:
-    >>> c, d = linear_eq_to_matrix(f, x, y)
-    >>> c*X - d == Matrix([f])
+    >>> A, B, C, D = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
+    >>> _simplex(A, B, -C, -D)
+    (-6, [3, 2], [1, 0, 0, 0])
+    >>> _simplex(A, B, -C, -D, dual=True)  # dual point of [5, 0] != [3, 2]
+    (-6, [1, 0, 0, 0], [5, 0])
+
+    In both cases the function has the same value:
+
+    >>> Matrix(C)*Matrix([3, 2]) == Matrix(C)*Matrix([5, 0])
     True
 
-    Find the vertex at which f is minimal and the value of
-    f there:
+    See Also
+    ========
+    lp - poses min/max problem in form compatible with _simplex
 
-    >>> o, p, dp = _simplex(A, b, c, d); o, p
-    (7, [0, 0])
-    >>> e(*small), small
-    (7, (0, 0))
-
-    Now the vertex at which f attains its maximum can be obtained
-    from a call that changes the signs of c and d
-    to correspond to a negation of the function; the negative of the
-    optimum returned is the actual maximum value for f:
-
-    >>> _o, p, dp = _simplex(A, b, -c, -d); _o, p
-    (-55/3, [8/3, 2/3]
-    >>> e(*big), big
-    (55/3, (8/3, 2/3))
-
-    The third value returned is related to the dual of the
-    primal system defined by f and c. If the shape of A is m*n then the
-    number of variables in the primal case is n while it is
-    m for the dual.
-
-    Let the variables for the dual system be dsym:
-
-    >>> from sympy import symbols
-    >>> m, n = A.shape
-    >>> dsym = Matrix(symbols('y1:%s' % (m + 1)))
-
-    The dual function is d - y^{T}b and the constraints are expressed as y^{T}A >= c:
-
-    >>> df = (d - dsym.T*b)[0]; df
-    4*y1 + 12*y2 + y3 + 7
-    >>> dc = [i>=0 for i in dsym.T*A - c]; dc
-    [y1 + 4*y2 - y3 - 3 >= 0, 2*y1 + 2*y2 + y3 - 5 >= 0]
-
-    The minimum value of f corresponds to the maximum value of
-    the dual. We can confirm that by passing the matrices corresponding to the dual to `_simplex` to compute the minimum:
-
-    >>> dnp = [i.lts - i.gts for i in dc]
-    >>> dA, db = linear_eq_to_matrix(dnp, *dsym)
-    >>> dc, dd = linear_eq_to_matrix(df, *dsym)
-
-    *** To be continued -- it's confusing to me when simplex doesn't solve the
-    standard min or max problem. lp has the details worked out, however.
 
     References
     ==========
@@ -1187,7 +1167,10 @@ def _simplex(A, B, C, D=None):
     """
     from sympy.matrices.dense import Matrix
 
-    A, B, C, D = [Matrix(i) for i in (A, B, C, D)]
+    A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
+    if dual:
+        return _simplex(-A.T, C.T, B.T, -D)
+
     M = Matrix([[A, B], [C, D]])
     n = M.cols - 1
     m = M.rows - 1
@@ -1195,8 +1178,8 @@ def _simplex(A, B, C, D=None):
     if not all(i.is_Float or i.is_Rational for i in M):
             raise TypeError("Only rationals and floats are allowed in the Simplex method.")
 
-    # It's important that False < True so that x variables are given priority
-    # over the y variables during Bland's rule
+    # x variables are given priority over the y variables during Bland's rule
+    # since False < True
     r_orig = [(False, j) for j in range(n)] # what Ferguson's introduction calls 'x' variables
     s_orig = [(True, i)  for i in range(m)] # what Ferguson's introduction calls 'y' variables
 
@@ -1276,11 +1259,10 @@ def _simplex(A, B, C, D=None):
 
 def _np(constr, syms, unbound):
     # return nonpositive expressions for the given constraints
-    from sympy import numbered_symbols  # XXX top import
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
     xx = set(syms)  # will contain all symbols when done
-    ui = numbered_symbols('u', cls=Dummy, start=1) # symbols to be introduced
+    ui = numbered_symbols('u', start=1) # symbols to be introduced
     unibounds = {}  # bound to be inferred from univariate constraints
     for i in constr:
         if isinstance(i, AppliedBinaryRelation):
@@ -1361,13 +1343,14 @@ def _np(constr, syms, unbound):
 
     return np, r, xx
 
+
 def lp(min_max, f, constr, unbound=None):
-    """Return the optimization (min or max) of f with the given
+    """Return the optimization (min or max) of ``f`` with the given
     constraints; if any variables are unbound, pass them as a list for
     `unbound`.
 
     If `how=max` then the results corresponding to the maximization
-    of f will be returned.
+    of ``f`` will be returned.
 
     Examples
     ========
@@ -1378,18 +1361,18 @@ def lp(min_max, f, constr, unbound=None):
     >>> x1, x2, x3, x4 = symbols('x1:5')
     >>> f = 5*x2 + x3 + 4*x4
     >>> c = [x1 + 5 >= 5*x2 + 2*x3 + 5*x4, Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)]
-    >>> lp(min, f, c, unbound=[])
+    >>> lp(min, f, c)
     (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
     >>> lp(max, f, c, unbound=[x3])
     (6, {x1: 1, x2: 0, x3: -2, x4: 2})
 
-    >>> lp(min, x - y, [x >= 3, x + y <= 7], [])
+    >>> lp(min, x - y, [x >= 3, x + y <= 7])
     (-1, {x: 3, y: 4})
 
-    >>> lp(max, x - y, [x >= 3, x + y <= 7], [])
+    >>> lp(max, x - y, [x >= 3, x + y <= 7])
     (7, {x: 7, y: 0})
 
-    >>> lp(max, x - y, [x <= 3, x + y <= 7], [])
+    >>> lp(max, x - y, [x <= 3, x + y <= 7])
     (3, {x: 3, y: 0})
 
     XXX how to define error so it prints better (without the __main__)
@@ -1399,7 +1382,6 @@ def lp(min_max, f, constr, unbound=None):
     ...
     __main__.UnboundedLinearProgrammingError: Objective function can assume arbitrarily large values!
     """
-    from sympy import ordered, Dict, Tuple  # XXX change to top imports
     how = min_max
     exprs = Tuple(f, *constr)
     F = exprs[0]
