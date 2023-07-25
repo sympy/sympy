@@ -1148,7 +1148,8 @@ def _simplex(A, B, C, D=None, dual=False, _full=True):
     the values for ``x`` and ``y`` were the same when the dual representation was solved. This
     is not always the case (though the value of the function will be the same).
 
-    >>> A, B, C, D = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
+    >>> l = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
+    >>> A, B, C, D = [Matrix(i) for i in l]
     >>> _simplex(A, B, -C, -D)
     (-6, [3, 2], [1, 0, 0, 0])
     >>> _simplex(A, B, -C, -D, dual=True)  # dual point of [5, 0] != [3, 2]
@@ -1399,6 +1400,8 @@ def lp(min_max, f, constr, unbound=None):
     syms = exprs.free_symbols
     if unbound is True:
         unbound = syms
+    elif not unbound:
+        unbound = []
     syms = list(ordered(syms))
 
     # convert constraints to nonpositive expressions
