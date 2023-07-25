@@ -11,7 +11,7 @@ from sympy.core.random import random, choice
 from sympy.ntheory.generate import randprime
 from sympy.assumptions.ask import Q
 from sympy.matrices.dense import Matrix, eye
-from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import root, sqrt

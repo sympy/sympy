@@ -5,7 +5,7 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Lt, Gt, Eq, Le
+from sympy.core.relational import Relational, Lt, Ge, Eq, Le
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
