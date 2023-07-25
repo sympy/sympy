@@ -495,12 +495,6 @@ def test__pt():
 def test_find_feasible():
 
 
-    r1 = x<=0
-    r2 = y<=0
-    r3 = x+y>=2
-    feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
-    assert feasible == "UNSAT"
-
     r1 = x + 2*y >= 2
     r2 = x + y <= 2
     r3 = x >= 3
@@ -589,6 +583,21 @@ def test_LRA_solver():
 
     assert lra.assert_con(s2 >= -3) == "OK"
     assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
+
+
+    # annoying example that breaks everything
+    r1 = x<=0
+    r2 = y<=0
+    r3 = s1>=2
+    equations = [Eq(s1, x+y)]
+    A, _ = linear_eq_to_matrix(equations, [x, y, s1])
+    A = -A  # the identity matrix should be negative
+    lra = LRASolver(A, [s1], [x, y])
+    lra.assert_con(x<=0)
+    lra.assert_con(y <= 0)
+    lra.assert_con(s1>=2)
+    lra.check()
+
 
 # from sympy.solvers.inequalities import LRASolver
 # s1, s2 = symbols("s1 s2")

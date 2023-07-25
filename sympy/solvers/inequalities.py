@@ -1060,6 +1060,8 @@ class LRASolver():
 
         A, _ = linear_eq_to_matrix(equations, nonbasic + basic)
 
+        A = -A # identity matrix should be negative
+
 
         return res, LRASolver(A, basic, nonbasic)
 
