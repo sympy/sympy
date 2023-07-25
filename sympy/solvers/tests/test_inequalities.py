@@ -507,7 +507,13 @@ def test_lp():
 
     def get_results_with_scipy(objective, constraints, variables):
         if scipy is not None and np is not None:
-            A, B, C, D, _ = _linear_programming_to_matrix(objective, constraints, variables)
+            from sympy.solvers.inequalities import _np
+            nonpos, rep, xx = _np(constraints, [])
+            assert not rep  # only testing nonneg variables
+            C, _D = linear_eq_to_matrix(objective, *variables)
+            A, B = linear_eq_to_matrix(nonpos, *variables)
+            assert _D[0] == 0  # scipy only deals with D = 0
+            
 
 
             A_sci = Matrix([[A], [-eye(len(variables))]])
