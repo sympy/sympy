@@ -1111,7 +1111,7 @@ class LRASolver():
 
     def check(self):
 
-        def _debug_internal_state_printer1(iteration, A, bas, nonbas):
+        def _debug_internal_state_printer1(iteration, A, bas, variables):
             if not SYMPY_DEBUG:
                 return
             import sys
@@ -1119,13 +1119,13 @@ class LRASolver():
             from sympy import pprint
 
             bvar = [None]*len(bas)
-            nbvar = [None]*len(nonbas)
+            #nbvar = [None]*len(nonbas)
             for v, idx in bas.items():
                 bvar[idx] = v
-            for v, idx in nonbas.items():
-                nbvar[idx] = v
+            #for v, idx in nonbas.items():
+            #    nbvar[idx] = v
 
-            r1 = Matrix([nbvar +bvar])
+            r1 = Matrix([variables])
             c1 = Matrix(bvar)
             corner = Matrix([[iteration]])
 
@@ -1143,11 +1143,13 @@ class LRASolver():
             sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
 
         M = self.A.copy()
+        variables = list(self.nonbasic) + list(self.basic)
+        var_col = {v: i for i, v in enumerate(variables)}
         basic = self.basic.copy()
-        nonbasic = self.nonbasic.copy()
+        nonbasic = self.nonbasic.copy()#set(self.nonbasic.keys())
         iteration = 0
         while True:
-            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, nonbasic)
+            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, variables)
             assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
@@ -1162,12 +1164,12 @@ class LRASolver():
             i = basic[xi]
 
             if self.assign[xi] < self.lower[xi]:
-                cand = [nb for nb, j in nonbasic.items()
-                        if (M[i, j] > 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, j] < 0 and self.assign[nb] > self.lower[nb])]
+                cand = [nb for nb in nonbasic
+                        if (M[i, var_col[nb]] > 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, var_col[nb]] < 0 and self.assign[nb] > self.lower[nb])]
                 if len(cand) == 0:
-                    N_plus = {nb for nb, j in nonbasic.items() if M[i, j] > 0}
-                    N_minus = {nb for nb, j in nonbasic.items() if M[i, j] < 0}
+                    N_plus = {nb for nb in nonbasic if M[i, var_col[nb]] > 0}
+                    N_minus = {nb for nb in nonbasic if M[i, var_col[nb]] < 0}
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_plus}
                     conflict |= {nb >= self.lower[nb] for nb in N_minus}
@@ -1182,14 +1184,14 @@ class LRASolver():
                 # del nonbasic[xj]
 
             if self.assign[xi] > self.upper[xi]:
-                cand = [nb for nb, j in nonbasic.items()
-                        if (M[i, j] < 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, j] > 0 and self.assign[nb] > self.lower[nb])]
+                cand = [nb for nb in nonbasic
+                        if (M[i, var_col[nb]] < 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, var_col[nb]] > 0 and self.assign[nb] > self.lower[nb])]
 
                 if len(cand) == 0:
                     # M[i, j] < 0  ==> assign(xj) >= u(xj) ==> assign(xj) = u(xj)
-                    N_plus = {nb for nb, j in nonbasic.items() if M[i, j] > 0}
-                    N_minus = {nb for nb, j in nonbasic.items() if M[i, j] < 0}
+                    N_plus = {nb for nb in nonbasic if M[i, var_col[nb]] > 0}
+                    N_minus = {nb for nb in nonbasic if M[i, var_col[nb]] < 0}
                     # Might have made a mistake here; had to think through the logic myself
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_minus}
@@ -1217,8 +1219,8 @@ class LRASolver():
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
         A = M - Mj * (Mi / Mij)
         A[i, :] = Mi / Mij
-        A[:, j] = -Mj / Mij
-        A[i, j] = 1 / Mij
+        A[:, j] = (-Mj / Mij)*0
+        A[i, j] = 1#1 / Mij
         return A
 
         # """
@@ -1263,6 +1265,7 @@ class LRASolver():
                 akj = M[k, j]
                 self.assign[xk] = self.assign[xk] + akj*theta
 
+        # pivot
         basic[xj] = basic[xi]
         del basic[xi]
         nonbasic[xi] = nonbasic[xj]
