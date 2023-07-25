@@ -805,6 +805,9 @@ def test_deprecated_markers_annotations_rectangles_fill():
 
 
 def test_back_compatibility():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
     x = Symbol('x')
     y = Symbol('y')
     p = plot(sin(x), adaptive=False, n=5)
