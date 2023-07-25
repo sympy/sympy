@@ -497,7 +497,7 @@ def test_find_feasible():
     r2 = x + y <= 2
     r3 = x >= 3
     feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
-    assert feasible == "UNSAT"
+    assert feasible == ('UNSAT', {x >= 3, x + y <= 2, x + 2*y >= 2})
 
 
     s1, s2 = symbols("s1 s2")
@@ -520,9 +520,7 @@ def test_find_feasible():
     r3 = x <= 1
     r4 = x >= 1
     feasible = find_feasible([r1, r2, r3, r4], "PLACEHOLDER")
-    assert feasible[0] == "SAT"
-    assert feasible[1][x] == 1
-    assert feasible[1][y] == 0
+    assert feasible == ('SAT', {x: 1, y: 1})
 
 
 def test_LRA_solver():
