@@ -513,7 +513,7 @@ def test_lp():
             C, _D = linear_eq_to_matrix(objective, *variables)
             A, B = linear_eq_to_matrix(nonpos, *variables)
             assert _D[0] == 0  # scipy only deals with D = 0
-            
+
 
 
             A_sci = Matrix([[A], [-eye(len(variables))]])
