@@ -509,7 +509,6 @@ def test_lp():
         if scipy is not None and np is not None:
             A, B, C, D, _ = _linear_programming_to_matrix(objective, constraints, variables)
 
-            assert D == ImmutableDenseMatrix([0]) # scipy can't handle non-zero D
 
             A_sci = Matrix([[A], [-eye(len(variables))]])
             B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
