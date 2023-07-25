@@ -1090,7 +1090,7 @@ class LRASolver():
         raise ValueError(f"{atom} could not be asserted.")
     def _assert_upper(self, xi, ci):
         if ci >= self.upper[xi]:
-            return "SAT"
+            return "SAT", self.assign
         if ci < self.lower[xi]:
             return "UNSAT", {xi >= self.lower[xi], xi <= ci}
         self.upper[xi] = ci
@@ -1101,7 +1101,7 @@ class LRASolver():
 
     def _assert_lower(self, xi, ci):
         if ci <= self.lower[xi]:
-            return "SAT"
+            return "SAT", self.assign
         if ci > self.upper[xi]:
             return "UNSAT", {xi <= self.upper[xi], xi >= ci}
         self.lower[xi] = ci
@@ -1160,7 +1160,7 @@ class LRASolver():
              or self.assign[b] > self.upper[b]]
 
             if len(cand) == 0:
-                return "SAT", "PLACEHOLDER"
+                return "SAT", self.assign
 
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland'S rule better
             i = basic[xi]
