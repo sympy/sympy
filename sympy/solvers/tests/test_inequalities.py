@@ -496,22 +496,22 @@ def test_find_feasible():
     r1 = x + 2*y >= 2
     r2 = x + y <= 2
     r3 = x >= 3
-    feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
+    feasible = find_feasible([r1, r2, r3], [x, y])
     assert feasible == ('UNSAT', {x >= 3, x + y <= 2, x + 2*y >= 2})
 
 
     s1, s2 = symbols("s1 s2")
     r1 = x >= 0
     r2 = x <= -1
-    assert find_feasible([r1, r2], "PLACEHOLDER") == ('UNSAT', {x <= -1, x >= 0})
+    assert find_feasible([r1, r2], [x]) == ('UNSAT', {x <= -1, x >= 0})
 
-    feasible = find_feasible([r1], "PLACEHOLDER")
+    feasible = find_feasible([r1], [x])
     assert feasible[0] == "SAT"
     assert r1.subs(feasible[1]) == True
 
     r1 = x >= 0
     r2 = x >= 3
-    feasible = find_feasible([r1, r2], "PLACEHOLDER")
+    feasible = find_feasible([r1, r2], [x])
     assert feasible[0] == "SAT"
     assert (r1.subs(feasible[1]) and r2.subs(feasible[1])) == True
 
@@ -519,7 +519,7 @@ def test_find_feasible():
     r2 = x+y <= 2
     r3 = x <= 1
     r4 = x >= 1
-    feasible = find_feasible([r1, r2, r3, r4], "PLACEHOLDER")
+    feasible = find_feasible([r1, r2, r3, r4], [x, y])
     assert feasible == ('SAT', {x: 1, y: 1})
 
 
@@ -534,12 +534,25 @@ def test_LRA_solver():
     eqs = [Eq(s1, x + y), Eq(s2, x + 2*y - z)]
     m, _ = linear_eq_to_matrix(eqs, [x, y, z, s1, s2])
     m = -m # identity matrix should be negative
-
-    preprocessed, lra = LRASolver.preprocess(phi)
+    preprocessed, lra, _ = LRASolver.preprocess(phi, [x, y, z])
     assert preprocessed == phi_prime
     assert lra.A == m
     assert lra.slack == [s1, s2]
     assert lra.nonslack == [x, y, z]
+
+    # Test how preprocessing handles functions
+    g = Function('g')(x)
+    f = Function('f')()
+    phi = (g+x+f>=2)
+    phi_prime = (s1 >= 2)
+    eqs = [Eq(s1, g+x+f)]
+    m, _ = linear_eq_to_matrix(eqs, [x, f, g, s1])
+    m = -m  # identity matrix should be negative
+    preprocessed, lra, _ = LRASolver.preprocess(phi, [g, f, x])
+    assert preprocessed == phi_prime
+    assert lra.A == m
+    assert lra.slack == [s1]
+    assert lra.nonslack == [g, f, x]
 
     # Empty matrix should be handled.
     # If the preprocessing step doesn't do anything, then the matrix is empty.
