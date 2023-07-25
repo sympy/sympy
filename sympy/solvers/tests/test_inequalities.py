@@ -547,13 +547,13 @@ def test_LRA_solver():
     # If the preprocessing step doesn't do anything, then the matrix is empty.
     m = Matrix()
     lra = LRASolver(m, [], [x, y])
-    assert lra.assert_con(Q.ge(x, 0)) == "OK"
+    assert lra.assert_con(Q.ge(x, 0)) == ("OK", None)
     assert lra.assert_con(Q.ge(x, -1)) == ('SAT', {x: 0, y: 0})
     assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
 
     m = Matrix()
     lra = LRASolver(m, [], [x, y])
-    assert lra.assert_con(Q.le(x, -1)) == "OK"
+    assert lra.assert_con(Q.le(x, -1)) == ("OK", None)
     assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
 
     m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
@@ -568,19 +568,19 @@ def test_LRA_solver():
     assert lra.check() == ('SAT', {x: 0, y: 0, s1: 0, s2: 0})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:0, y:0, s1:0, s2:0}
 
-    assert lra.assert_con(x <= -4) == "OK"
+    assert lra.assert_con(x <= -4) == ("OK", None)
     assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1: 4, s2:-4}
 
-    assert lra.assert_con(x >= -8) == "OK"
+    assert lra.assert_con(x >= -8) == ("OK", None)
     assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1:4, s2:-4}
 
-    assert lra.assert_con(s1 <= 1) == "OK"
+    assert lra.assert_con(s1 <= 1) == ("OK", None)
     assert lra.check() == ('SAT', {x: -4, y: -3, s1: 1, s2: -7})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:-3, s1:1, s2:-7}
 
-    assert lra.assert_con(s2 >= -3) == "OK"
+    assert lra.assert_con(s2 >= -3) == ("OK", None)
     assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
 
 
@@ -594,7 +594,7 @@ def test_LRA_solver():
     lra.assert_con(x <= 0)
     lra.assert_con(y <= 0)
     lra.assert_con(s1 >= 2)
-    lra.check()
+    assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
 
 
 # from sympy.solvers.inequalities import LRASolver
