@@ -1149,8 +1149,8 @@ class LRASolver():
             sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
 
         M = self.A.copy()
-        basic = {s: i for i, s in enumerate(self.slack)}
-        nonbasic = {s: i for i, s in enumerate(self.nonslack)}
+        basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
+        nonbasic = set(self.nonslack)
         iteration = 0
         while True:
             iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
@@ -1199,7 +1199,7 @@ class LRASolver():
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
-        i, j = basic[xi], nonbasic[xj]
+        i, j = basic[xi], self.col_index[xj]
         assert M[i, j] != 0
         theta = (v - self.assign[xi])/M[i, j]
         self.assign[xi] = v
@@ -1212,8 +1212,8 @@ class LRASolver():
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]
-        nonbasic[xi] = nonbasic[xj]
-        del nonbasic[xj]
+        nonbasic.add(xi)
+        nonbasic.remove(xj)
         return self._pivot(M, i, j)
 
     @staticmethod
