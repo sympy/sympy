@@ -1292,8 +1292,6 @@ def _np(constr, syms, unbound):
                 i = Eq(i.rhs, i.lhs, evaluate=False)
             else:
                 assert None, i
-        assert not i.inf.is_infinite  # XXX should we allow x < oo to be used instead of unbound=[x]
-        assert not i.sup.is_infinite
         if i == True:
             continue  # ignore
         if i == False:
@@ -1318,6 +1316,7 @@ def _np(constr, syms, unbound):
                 np.append(npi)
         else:
             assert None, 'only Le, Ge, Eq'
+        assert not any(_.is_infinite for _ in i.args)  # XXX should x < oo indicate unbound?
 
     # add constraints for variables expressed in a univariate manner
     for x in unibounds:
