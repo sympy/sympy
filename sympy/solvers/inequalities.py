@@ -1002,19 +1002,21 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, basic, nonbasic):
-        m, n = len(basic), len(basic)+len(nonbasic)
+    def __init__(self, A, slack_variables, nonslack_variables):
+        m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
         self.A = A # TODO: Row reduce A
-        self.basic = {b: i for i, b in enumerate(basic)}
-        self.nonbasic = {nb: i for i, nb in enumerate(nonbasic)}
+        self.slack = slack_variables
+        self.nonslack = nonslack_variables
+        self.all_var = nonslack_variables + slack_variables
+        self.col_index = {v: i for i, v in enumerate(self.all_var)}
 
         self.lower = {}
         self.upper = {}
-        self.assign = {} # assgined value for each variable
+        self.assign = {}
 
-        for var in nonbasic + basic:
+        for var in self.all_var:
             self.lower[var] = -float("inf")
             self.upper[var] = float("inf")
             self.assign[var] = 0
@@ -1092,7 +1094,7 @@ class LRASolver():
         if ci < self.lower[xi]:
             return "UNSAT", {xi >= self.lower[xi], xi <= ci}
         self.upper[xi] = ci
-        if xi in self.nonbasic and self.assign[xi] > ci:
+        if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
         return "OK"
@@ -1103,10 +1105,20 @@ class LRASolver():
         if ci > self.upper[xi]:
             return "UNSAT", {xi <= self.upper[xi], xi >= ci}
         self.lower[xi] = ci
-        if xi in self.nonbasic and self.assign[xi] < ci:
+        if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
 
         return "OK"
+
+    def _update(self, xi, v):
+        i = self.col_index[xi]
+        for j, b in enumerate(self.slack):
+            aji = self.A[j, i]
+            self.assign[b] = self.assign[b] + aji*(v - self.assign[xi])
+        self.assign[xi] = v
+
+    def backtrack(self):
+        pass
 
     def check(self):
         def _debug_internal_state_printer1(iteration, A, bas, variables):
@@ -1134,17 +1146,14 @@ class LRASolver():
             if not SYMPY_DEBUG:
                 return
             import sys
-
             sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
 
         M = self.A.copy()
-        variables = list(self.nonbasic) + list(self.basic)
-        var_col = {v: i for i, v in enumerate(variables)}
-        basic = self.basic.copy()
-        nonbasic = self.nonbasic.copy()#set(self.nonbasic.keys())
+        basic = {s: i for i, s in enumerate(self.slack)}
+        nonbasic = {s: i for i, s in enumerate(self.nonslack)}
         iteration = 0
         while True:
-            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, variables)
+            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
             assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
@@ -1158,11 +1167,11 @@ class LRASolver():
 
             if self.assign[xi] < self.lower[xi]:
                 cand = [nb for nb in nonbasic
-                        if (M[i, var_col[nb]] > 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, var_col[nb]] < 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, self.col_index[nb]] > 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, self.col_index[nb]] < 0 and self.assign[nb] > self.lower[nb])]
                 if len(cand) == 0:
-                    N_plus = {nb for nb in nonbasic if M[i, var_col[nb]] > 0}
-                    N_minus = {nb for nb in nonbasic if M[i, var_col[nb]] < 0}
+                    N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
+                    N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_plus}
                     conflict |= {nb >= self.lower[nb] for nb in N_minus}
@@ -1174,12 +1183,12 @@ class LRASolver():
 
             if self.assign[xi] > self.upper[xi]:
                 cand = [nb for nb in nonbasic
-                        if (M[i, var_col[nb]] < 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, var_col[nb]] > 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, self.col_index[nb]] < 0 and self.assign[nb] < self.upper[nb])
+                        or (M[i, self.col_index[nb]] > 0 and self.assign[nb] > self.lower[nb])]
 
                 if len(cand) == 0:
-                    N_plus = {nb for nb in nonbasic if M[i, var_col[nb]] > 0}
-                    N_minus = {nb for nb in nonbasic if M[i, var_col[nb]] < 0}
+                    N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
+                    N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
                     conflict |= {nb <= self.upper[nb] for nb in N_minus}
                     conflict |= {nb >= self.lower[nb] for nb in N_plus}
@@ -1189,27 +1198,6 @@ class LRASolver():
                 j = nonbasic[xj]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
-
-    def backtrack(self):
-        pass
-
-    @staticmethod
-    def _pivot(M, i, j):
-        Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
-        if Mij == 0:
-            raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-        A = M - Mj * (Mi / Mij)
-        A[i, :] = Mi / Mij
-        A[:, j] = (-Mj / Mij)*0
-        A[i, j] = 1#1 / Mij
-        return A
-
-    def _update(self, xi, v):
-        i = self.nonbasic[xi]
-        for j, b in enumerate(self.basic):
-            aji = self.A[j, i]
-            self.assign[b] = self.assign[b] + aji*(v - self.assign[xi])
-        self.assign[xi] = v
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
         i, j = basic[xi], nonbasic[xj]
@@ -1228,6 +1216,17 @@ class LRASolver():
         nonbasic[xi] = nonbasic[xj]
         del nonbasic[xj]
         return self._pivot(M, i, j)
+
+    @staticmethod
+    def _pivot(M, i, j):
+        Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
+        if Mij == 0:
+            raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
+        A = M - Mj * (Mi / Mij)
+        A[i, :] = Mi / Mij
+        A[:, j] = (-Mj / Mij)*0
+        A[i, j] = 1#1 / Mij
+        return A
 
 
 
@@ -1281,7 +1280,7 @@ TiloRC marked this conversation as resolved.
         if res[0] == "UNSAT":
             return res
 
-    assigments = {v: lra.assign[v] for v in lra.nonbasic | lra.basic}
+    assigments = {v: lra.assign[v] for v in lra.all_var}
 
     if lra.check()[0] == "UNSAT":
         return "UNSAT"
