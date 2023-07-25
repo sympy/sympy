@@ -1031,11 +1031,6 @@ class LRASolver():
         sub = {}
         set_variables = set(variables) # this should fix time complexity problems
 
-        def remove_constant_coeff(term):
-            if isinstance(term, Mul):
-                return Mul(*[arg for arg in term.args if not arg not in set_variables])
-            else:
-                return term
         def do(b):
             if isinstance(b, BooleanFunction):
                 return b.func(*[do(arg) for arg in b.args])
