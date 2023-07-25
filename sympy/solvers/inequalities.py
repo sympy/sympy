@@ -5,10 +5,9 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Ge, Lt, Gt, Eq, Ne, Le
+from sympy.core.relational import Relational, Lt, Gt, Eq, Le
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
-from sympy.matrices.immutable import ImmutableMatrix
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
@@ -1277,6 +1276,7 @@ def _simplex(A, B, C, D=None):
 
 def _np(constr, syms, unbound):
     # return nonpositive expressions for the given constraints
+    from sympy import numbered_symbols  # XXX top import
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
     xx = set(syms)  # will contain all symbols when done
@@ -1292,7 +1292,8 @@ def _np(constr, syms, unbound):
                 i = Eq(i.rhs, i.lhs, evaluate=False)
             else:
                 assert None, i
-        assert not i.has(oo) and not i.has(-oo)
+        assert not i.inf.is_infinite  # XXX should we allow x < oo to be used instead of unbound=[x]
+        assert not i.sup.is_infinite
         if i == True:
             continue  # ignore
         if i == False:
@@ -1374,6 +1375,7 @@ def lp(min_max, f, constr, unbound=None):
 
     >>> from sympy.solvers.inequalities import lp
     >>> from sympy import symbols
+    >>> from sympy.abc import x, y
     >>> x1, x2, x3, x4 = symbols('x1:5')
     >>> f = 5*x2 + x3 + 4*x4
     >>> c = [x1 + 5 >= 5*x2 + 2*x3 + 5*x4, Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)]
@@ -1398,6 +1400,7 @@ def lp(min_max, f, constr, unbound=None):
     ...
     __main__.UnboundedLinearProgrammingError: Objective function can assume arbitrarily large values!
     """
+    from sympy import ordered, Dict, Tuple  # XXX change to top imports
     how = min_max
     exprs = Tuple(f, *constr)
     F = exprs[0]
@@ -1424,7 +1427,7 @@ def lp(min_max, f, constr, unbound=None):
         o, p, d = _simplex(A, B, C, D)
 
     # restore original variables
-    p = {k: v for k, v in zip(xx, p)}
+    p = dict(zip(xx, p))
     if r:
         u = set(xx) - set(syms)
         p.update(Dict(r).xreplace({k: p.pop(k) for k in u}))
