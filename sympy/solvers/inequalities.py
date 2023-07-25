@@ -1022,27 +1022,24 @@ class LRASolver():
             self.assign[var] = 0
 
     @staticmethod
-    def preprocess(BF):
+    def preprocess(BF, variables):
         equations = []
         count = 0
         sub = {}
-        nonbasic = set()
+        set_variables = set(variables) # this should fix time complexity problems
 
         def remove_constant_coeff(term):
             if isinstance(term, Mul):
-                return Mul(*[arg for arg in term.args if not arg.is_constant()])
+                return Mul(*[arg for arg in term.args if not arg not in set_variables])
             else:
                 return term
         def do(b):
             if isinstance(b, BooleanFunction):
                 return b.func(*[do(arg) for arg in b.args])
-            elif not isinstance(b, Relational):
-                return b
-            else:
+            elif isinstance(b, Relational):
                 expr, const = b.args
                 nonlocal nonbasic
                 if isinstance(expr, Add):
-                    nonbasic |= {remove_constant_coeff(arg) for arg in expr.args}
                     if expr not in sub:
                         nonlocal count
                         count += 1
@@ -1050,18 +1047,16 @@ class LRASolver():
                         equations.append(Eq(sub[expr], expr))
                     return b.func(sub[expr], const)
                 else:
-                    nonbasic.add(remove_constant_coeff(expr))
                     return b
-
-
+            else:
+                return b
 
         res = do(BF)
 
-        nonbasic = sorted(nonbasic, key=lambda v: str(v))
+        nonbasic = variables
         basic = list(sub.values())
 
-        A, _ = linear_eq_to_matrix(equations, nonbasic + basic)
-
+        A, _ = linear_eq_to_matrix(equations, variables + basic)
         A = -A # identity matrix should be negative
 
         return res, LRASolver(A, basic, nonbasic), sub
@@ -1266,7 +1261,7 @@ TiloRC marked this conversation as resolved.
 
     conjunction = And(*constraints)
 
-    preprocessed, lra, sub = LRASolver.preprocess(conjunction)
+    preprocessed, lra, sub = LRASolver.preprocess(conjunction, variables)
     sub = {value: key for key, value in sub.items()}
 
     if isinstance(preprocessed, And):
