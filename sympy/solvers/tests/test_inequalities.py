@@ -493,13 +493,11 @@ def test__pt():
 
 
 def test_find_feasible():
-
-
     r1 = x + 2*y >= 2
     r2 = x + y <= 2
     r3 = x >= 3
     feasible = find_feasible([r1, r2, r3], "PLACEHOLDER")
-    #assert feasible[0] == "UNSAT"
+    assert feasible == "UNSAT"
 
 
     s1, s2 = symbols("s1 s2")
@@ -537,6 +535,7 @@ def test_LRA_solver():
     phi_prime = Q.real(a) | (x >= 0) & (Eq(s1, 2) | (s2 > 4)) & ((s2 >= 6) | (s1 <= 2))
     eqs = [Eq(s1, x + y), Eq(s2, x + 2*y - z)]
     m, _ = linear_eq_to_matrix(eqs, [x, y, z, s1, s2])
+    m = -m # identity matrix should be negative
 
     preprocessed, lra = LRASolver.preprocess(phi)
     assert preprocessed == phi_prime
@@ -558,7 +557,7 @@ def test_LRA_solver():
     assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
 
     m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
-    #assert LRASolver._pivot(m, 0, 0) == Matrix([[-1, 1, -1, 0], [-2, 3, -2, 1]])
+    assert LRASolver._pivot(m, 0, 0) == Matrix([[1, 1, -1, 0], [0, 3, -2, 1]])
 
     # Example from page 89–90 of
     # "A Fast Linear-Arithmetic Solver for DPLL(T)"
@@ -585,17 +584,16 @@ def test_LRA_solver():
     assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
 
 
-    # annoying example that breaks everything
-    r1 = x<=0
-    r2 = y<=0
-    r3 = s1>=2
+    r1 = x <= 0
+    r2 = y <= 0
+    r3 = s1 >= 2
     equations = [Eq(s1, x+y)]
     A, _ = linear_eq_to_matrix(equations, [x, y, s1])
     A = -A  # the identity matrix should be negative
     lra = LRASolver(A, [s1], [x, y])
-    lra.assert_con(x<=0)
+    lra.assert_con(x <= 0)
     lra.assert_con(y <= 0)
-    lra.assert_con(s1>=2)
+    lra.assert_con(s1 >= 2)
     lra.check()
 
 
