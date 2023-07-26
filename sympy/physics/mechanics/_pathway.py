@@ -30,7 +30,7 @@ if TYPE_CHECKING:
         from sympy.core.expr import Expr as ExprType
 
 
-__all__ = ['LinearPathway', 'WrappingPathway']
+__all__ = ['LinearPathway', 'ObstacleSetPathway', 'WrappingPathway']
 
 
 class PathwayBase(ABC):
@@ -259,6 +259,94 @@ class LinearPathway(PathwayBase):
             Force(self.attachments[-1], force * relative_position / self.length),
         ]
         return loads
+
+
+class ObstacleSetPathway(PathwayBase):
+    """Obstacle-set pathway between a set of attachment points.
+
+    Explanation
+    ===========
+
+    An obstacle-set pathway forms a series of straight-line segment between
+    pairs of consecutive points in a set of points. It is similiar to multiple
+    linear pathways joined end-to-end. It will not interact with any other
+    objects in the system, i.e. an ``ObstacleSetPathway`` will intersect other
+    objects to ensure that the path between its pairs of points (its
+    attachments) is the shortest possible.
+
+    Examples
+    ========
+
+    As the ``_pathway.py`` module is experimental, it is not yet part of the
+    ``sympy.physics.mechanics`` namespace. ``ObstacleSetPathway`` must
+    therefore be imported directly from the
+    ``sympy.physics.mechanics._pathway`` module.
+
+    >>> from sympy.physics.mechanics._pathway import ObstacleSetPathway
+
+    To construct a pathway, three or more points are required to be passed to
+    the ``attachments`` parameter as a ``tuple``.
+
+    >>> from sympy.physics.mechanics import Point
+    >>> pA, pB, pC, pD = Point('pA'), Point('pB'), Point('pC'), Point('pD')
+    >>> obstacle_set_pathway = ObstacleSetPathway(pA, pB, pC, pD)
+    >>> obstacle_set_pathway
+    ObstacleSetPathway(pA, pB, pC, pD)
+
+    The pathway created above isn't very interesting without the positions and
+    velocities of its attachment points being described. Without this its not
+    possible to describe how the pathway moves, i.e. its length or its
+    extension velocity.
+
+    >>> from sympy import cos, sin
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> pO = Point('pO')
+    >>> pA.set_pos(pO, N.y)
+    >>> pB.set_pos(pO, -N.x)
+    >>> pC.set_pos(pA, cos(q) * N.x - (sin(q) + 1) * N.y)
+    >>> pD.set_pos(pA, sin(q) * N.x + (cos(q) - 1) * N.y)
+    >>> pB.pos_from(pA)
+    - N.x - N.y
+    >>> pC.pos_from(pA)
+    cos(q(t))*N.x + (-sin(q(t)) - 1)*N.y
+    >>> pD.pos_from(pA)
+    sin(q(t))*N.x + (cos(q(t)) - 1)*N.y
+
+    A pathway's length can be accessed via its ``length`` attribute.
+
+    >>> obstacle_set_pathway.length.simplify()
+    sqrt(2)*(sqrt(cos(q(t)) + 1) + 2)
+
+    A pathway's extension velocity can be accessed similarly via its
+    ``extension_velocity`` attribute.
+
+    >>> obstacle_set_pathway.extension_velocity.simplify()
+    -sqrt(2)*sin(q(t))*Derivative(q(t), t)/(2*sqrt(cos(q(t)) + 1))
+
+    Parameters
+    ==========
+
+    attachments : tuple[Point, Point]
+        The set of ``Point`` objects that define the segmented obstacle-set
+        pathway.
+
+    """
+
+    def __init__(self, *attachments: Point) -> None:
+        """Initializer for ``ObstacleSetPathway``.
+
+        Parameters
+        ==========
+
+        attachments : tuple[Point, ...]
+            The set of ``Point`` objects that define the segmented obstacle-set
+            pathway.
+
+        """
+        super().__init__(*attachments)
 
 
 class WrappingPathway(PathwayBase):
