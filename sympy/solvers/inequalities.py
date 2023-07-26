@@ -1250,7 +1250,7 @@ class LRASolver():
         A = M - Mj * (Mi / Mij)
         A[i, :] = Mi / Mij
         A[:, j] = (-Mj / Mij)*0
-        A[i, j] = 1#1 / Mij
+        A[i, j] = -1#1 / Mij
         return A
 
 
