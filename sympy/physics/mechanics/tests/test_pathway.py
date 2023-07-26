@@ -514,7 +514,7 @@ class TestWrappingPathway:
             Force(self.pB, pB_force_expected),
             Force(self.pO, pO_force_expected),
         ]
-        assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
+        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_length(self) -> None:
@@ -554,12 +554,12 @@ class TestWrappingPathway:
             Force(self.pO, pO_force),
         ]
 
-        loads = self._simplify_loads(self.pathway.compute_loads(self.F))
+        loads = _simplify_loads(self.pathway.compute_loads(self.F))
         assert loads == expected
 
-    @staticmethod
-    def _simplify_loads(loads: list[LoadBase]) -> list[LoadBase]:
-        return [
-            load.__class__(load.location, load.vector.simplify())
-            for load in loads
-        ]
+
+def _simplify_loads(loads: list[LoadBase]) -> list[LoadBase]:
+    return [
+        load.__class__(load.location, load.vector.simplify())
+        for load in loads
+    ]
