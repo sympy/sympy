@@ -1261,11 +1261,11 @@ def _simplex(A, B, C, D=None, dual=False):
 
 
 def _np(constr, unbound=None):
-    """return a (np, d, x) where np is a list of nonpositive expressions
+    """return a (np, d, aux) where np is a list of nonpositive expressions
     that represent the given constraints (possibly rewritten in terms of
-    auxilliary variables so that all variables return in x represent
-    nonnegative values); d is a dictionary mapping a given symbols to
-    an expression involving one or two auxilliary variables.
+    auxilliary variables) expressible with nonnegative symbols, and d is
+    a dictionary mapping a given symbols to an expression involving one
+    or two auxilliary variables.
 
     If any constraint is False/empty, return None.
 
@@ -1318,9 +1318,7 @@ def _np(constr, unbound=None):
                 if x in unbound:
                     continue  # will handle later
                 ivl = Le(npi, 0, evaluate=False).as_set()
-                if not ivl:
-                    return  # no solution
-                elif x not in univariate:
+                if x not in univariate:
                     univariate[x] = ivl
                 else:
                     univariate[x] &= ivl
@@ -1333,6 +1331,8 @@ def _np(constr, unbound=None):
     # inequalities
     for x in univariate:
         i = univariate[x]
+        if not i:
+            return None  # no solution possible
         a, b = i.inf, i.sup
         if a.is_infinite and b.is_infinite:
             # this is unbound
@@ -1428,7 +1428,7 @@ def lp(min_max, f, constr, unbound=None):
     # convert constraints to nonpositive expressions
     _ = _np(constr, unbound)
     if _ is None:
-        raise ValueError('inconsistent constraint(s)')
+        raise InfeasibleLinearProgrammingError('inconsistent/False constraint')
     np, r, aux = _
 
     # do change of variables
