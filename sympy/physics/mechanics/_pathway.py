@@ -386,6 +386,15 @@ class ObstacleSetPathway(PathwayBase):
             length += _point_pair_length(*attachment_pair)
         return length
 
+    @property
+    def extension_velocity(self) -> ExprType:
+        """Exact analytical expression for the pathway's extension velocity."""
+        extension_velocity = S.Zero
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            extension_velocity += _point_pair_extension_velocity(*attachment_pair)
+        return extension_velocity
+
 
 class WrappingPathway(PathwayBase):
     """Pathway that wraps a geometry object.
