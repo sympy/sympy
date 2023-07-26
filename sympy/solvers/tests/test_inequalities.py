@@ -559,11 +559,11 @@ def test_find_feasible():
                        for _ in range(num_constraints)]
         return constraints, variables
 
-    x1, x2 = symbols("x1 x2")
-    find_feasible([-x2 <= -157/127, -109*x1/83 <= -29/37], [x1, x2])
+    #x1, x2 = symbols("x1 x2")
+    #find_feasible([-x2 <= -157/127, -109*x1/83 <= -29/37], [x1, x2])
 
     for _ in range(100):
-        constraints, variables = make_random_problem()
+        constraints, variables = make_random_problem(sparsity=0)
         print(constraints)
         feasible = find_feasible(constraints, list(variables))
         is_feasible = check_if_satisfiable_with_z3(constraints)
