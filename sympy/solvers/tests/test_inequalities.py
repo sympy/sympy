@@ -518,7 +518,7 @@ def test_lp():
 
             A_sci = Matrix([[A], [-eye(len(variables))]])
             B_sci = Matrix([[B], [Matrix([0] * len(variables))]])
-            C_sci = -C
+            C_sci = C
             A_sci = np.array(A_sci.tolist())
             B_sci = np.array(B_sci.tolist())
             C_sci = np.array(C_sci.tolist())
