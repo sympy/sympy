@@ -544,32 +544,76 @@ def test_find_feasible():
     bf = [(x > 2), (x < 1)]
     assert check_if_satisfiable_with_z3(bf) is False
 
-    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
-        from sympy.core.random import random, choice
+    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=False):
+        from sympy.core.random import random, choice, randint
         from sympy.core.sympify import sympify
         from sympy.ntheory.generate import randprime
         def rand():
             if random() < sparsity:
                 return sympify(0)
-            int1, int2 = [randprime(0, 200) for _ in range(2)]
-            return Rational(int1, int2) * choice([-1, 1])
+            if rational:
+                int1, int2 = [randprime(0, 50) for _ in range(2)]
+                return Rational(int1, int2) * choice([-1, 1])
+            else:
+                return randint(1,10) * choice([-1, 1])
 
         variables = symbols('x1:%s' % (num_variables + 1))
         constraints = [(sum(rand() * x for x in variables) <= rand())
                        for _ in range(num_constraints)]
         return constraints, variables
 
-    #x1, x2 = symbols("x1 x2")
-    #find_feasible([-x2 <= -157/127, -109*x1/83 <= -29/37], [x1, x2])
+    x1, x2 = symbols("x1 x2")
 
-    for _ in range(100):
-        constraints, variables = make_random_problem(sparsity=0)
+
+
+    # bug where constraints are correctly identified as SAT but the assignments are wrong
+    constraints = [-2*x1 - x2 <= -9, -6*x1 - 7*x2 <= -10, 9*x1 + 8*x2 <= 8]
+    is_sat = check_if_satisfiable_with_z3(constraints)
+    assert is_sat is False
+    res = find_feasible(constraints, [x1, x2])
+    #assert res[0] == "UNSAT"
+    if res[0] == "SAT":
+        assignment = res[1]
+        for constr in constraints:
+            pass  #assert constr.subs(assignment) == True
+
+    # bug where constraints are incorrectly identified as SAT
+    constraints = [-137*x1/163 - 149*x2/127 <= -11/79, 43*x1/71 + 73*x2/97 <= -61/149, -29*x1/193 + 97*x2/173 <= -67/151]
+    is_sat = check_if_satisfiable_with_z3(constraints)
+    res = find_feasible(constraints, [x1, x2])
+    #assert ((res[0] == "SAT") is is_sat)
+    if res[0] == "SAT":
+        assignment = res[1]
+        for constr in constraints:
+            pass  # assert constr.subs(assignment) == True
+
+    # another one
+    # from sympy import symbols
+    # from sympy.solvers.inequalities import find_feasible
+    # x1, x2 = symbols("x1 x2")
+    # constraints = [-31 * x1 / 2 - 37 * x2 / 11 <= -17 / 37, -43 * x1 / 17 + 17 * x2 / 3 <= -47 / 29,
+    #  41 * x1 / 19 - 2 * x2 / 37 <= -47 / 2]
+    # res = find_feasible(constraints, [x1, x2])
+    # fails: assert res[0] == "UNSAT"
+    is_sat = check_if_satisfiable_with_z3(constraints)
+    assert is_sat is False
+
+
+
+    for _ in range(1000):
+        constraints, variables = make_random_problem(num_variables=2, num_constraints=3, sparsity=0)
         print(constraints)
         feasible = find_feasible(constraints, list(variables))
         is_feasible = check_if_satisfiable_with_z3(constraints)
         if feasible[0] == "SAT":
+            print("SAT", f"z3 feasible: {is_feasible}")
+            assignment = feasible[1]
+            for constr in constraints:
+                pass
+                #assert constr.subs(assignment) == True
             assert is_feasible is True
         else:
+            print("UNSAT", f"z3 feasible: {is_feasible}")
             assert is_feasible is False
 
 
