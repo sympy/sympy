@@ -22,6 +22,7 @@ from sympy.physics.vector import dynamicsymbols
 if TYPE_CHECKING:
     from sympy.core.backend import USE_SYMENGINE
     from sympy.physics.mechanics.loads import LoadBase
+    from sympy.physics.vector import Vector
 
     if USE_SYMENGINE:
         from sympy.core.backend import Basic as ExprType
@@ -258,7 +259,7 @@ class LinearPathway(PathwayBase):
             that this ``Expr`` represents an expansile force.
 
         """
-        relative_position = self.attachments[-1].pos_from(self.attachments[0])
+        relative_position = _point_pair_relative_position(*self.attachments)
         loads: list[LoadBase] = [
             Force(self.attachments[0], -force * relative_position / self.length),
             Force(self.attachments[-1], force * relative_position / self.length),
@@ -471,14 +472,19 @@ class WrappingPathway(PathwayBase):
         )
 
 
+def _point_pair_relative_position(point_1: Point, point_2: Point) -> Vector:
+    """The relative position between a pair of points."""
+    return point_2.pos_from(point_1)
+
+
 def _point_pair_length(point_1: Point, point_2: Point) -> ExprType:
     """The length of the direct linear path between two points."""
-    return point_2.pos_from(point_1).magnitude()
+    return _point_pair_relative_position(point_1, point_2).magnitude()
 
 
 def _point_pair_extension_velocity(point_1: Point, point_2: Point) -> ExprType:
     """The extension velocity of the direct linear path between two points."""
-    relative_position = point_2.pos_from(point_1)
+    relative_position = _point_pair_relative_position(point_1, point_2)
     if not relative_position:
         return S.Zero
     t = dynamicsymbols._t  # type: ignore
