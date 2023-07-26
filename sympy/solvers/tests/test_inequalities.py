@@ -523,6 +523,57 @@ def test_find_feasible():
     assert feasible == ('SAT', {x: 1, y: 1})
 
 
+    def check_if_satisfiable_with_z3(constraints):
+        from sympy.external.importtools import import_module
+        from sympy.printing.smtlib import smtlib_code
+        from sympy.logic.boolalg import And
+        boolean_formula = And(*constraints)
+        z3 = import_module("z3")
+        if z3:
+            smtlib_string = smtlib_code(boolean_formula)
+            s = z3.Solver()
+            s.from_string(smtlib_string)
+            res = str(s.check())
+            if res == 'sat':
+                return True
+            elif res == 'unsat':
+                return False
+            else:
+                raise ValueError(f"z3 was not able to check the satisfiability of {boolean_formula}")
+
+    bf = [(x > 2), (x < 1)]
+    assert check_if_satisfiable_with_z3(bf) is False
+
+    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
+        from sympy.core.random import random, choice
+        from sympy.core.sympify import sympify
+        from sympy.ntheory.generate import randprime
+        def rand():
+            if random() < sparsity:
+                return sympify(0)
+            int1, int2 = [randprime(0, 200) for _ in range(2)]
+            return Rational(int1, int2) * choice([-1, 1])
+
+        variables = symbols('x1:%s' % (num_variables + 1))
+        constraints = [(sum(rand() * x for x in variables) <= rand())
+                       for _ in range(num_constraints)]
+        return constraints, variables
+
+    x1, x2 = symbols("x1 x2")
+    find_feasible([-x2 <= -157/127, -109*x1/83 <= -29/37], [x1, x2])
+
+    for _ in range(100):
+        constraints, variables = make_random_problem()
+        print(constraints)
+        feasible = find_feasible(constraints, list(variables))
+        is_feasible = check_if_satisfiable_with_z3(constraints)
+        if feasible[0] == "SAT":
+            assert is_feasible is True
+        else:
+            assert is_feasible is False
+
+
+
 def test_LRA_solver():
     s1, s2 = symbols("s1 s2")
 
@@ -609,7 +660,6 @@ def test_LRA_solver():
     lra.assert_con(y <= 0)
     lra.assert_con(s1 >= 2)
     assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
-
 
 # from sympy.solvers.inequalities import LRASolver
 # s1, s2 = symbols("s1 s2")
