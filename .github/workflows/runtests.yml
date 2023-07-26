@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy
+      - run: pip install mpmath mypy hypothesis
 
       - name: Run mypy on the sympy package
         run: mypy sympy
