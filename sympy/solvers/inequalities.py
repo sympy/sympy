@@ -4,7 +4,7 @@ import itertools
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.containers import Dict, Tuple
+from sympy.core.containers import Dict
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Lt, Ge, Eq, Le
 from sympy.assumptions.ask import Q
@@ -1279,7 +1279,7 @@ def _np(constr, unbound=None):
     ([u1 - 2], {x: u1 + 3}, [u1])
     >>> _np([x <= 5])
     ([], {x: 5 - u1}, [u1])
-    >>> np([x >= 1])  # XXX I think this is not necessary since x >= 0
+    >>> _np([x >= 1])  # XXX I think this is not necessary since x >= 0
     ([], {x: u1 + 1}, [u1])
     """
     r = {}  # replacements to handle change of variables
