@@ -395,6 +395,83 @@ class ObstacleSetPathway(PathwayBase):
             extension_velocity += _point_pair_extension_velocity(*attachment_pair)
         return extension_velocity
 
+    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+        """Loads required by the equations of motion method classes.
+
+        Explanation
+        ===========
+
+        ``KanesMethod`` requires a list of ``Point``-``Vector`` tuples to be
+        passed to the ``loads`` parameters of its ``kanes_equations`` method
+        when constructing the equations of motion. This method acts as a
+        utility to produce the correctly-structred pairs of points and vectors
+        required so that these can be easily concatenated with other items in
+        the list of loads and passed to ``KanesMethod.kanes_equations``. These
+        loads are also in the correct form to also be passed to the other
+        equations of motion method classes, e.g. ``LagrangesMethod``.
+
+        Examples
+        ========
+
+        The below example shows how to generate the loads produced in an
+        actuator that follows an obstacle-set pathway between four points and
+        produces an expansile force ``F``. First, create a pair of reference
+        frames, ``A`` and ``B``, in which the four points ``pA``, ``pB``,
+        ``pC``, and ``pD`` will be located. The first two points in frame ``A``
+        and the second two in frame ``B``. Frame ``B`` will also be oriented
+        such that it relates to ``A`` via a rotation of ``q`` about an axis
+        ``N.z`` in a global frame (``N.z``, ``A.z``, and ``B.z`` are parallel).
+
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics._pathway import ObstacleSetPathway
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> q = dynamicsymbols('q')
+        >>> N = ReferenceFrame('N')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'axis', (0, N.x))
+        >>> B = A.orientnew('B', 'axis', (q, N.z))
+        >>> pO = Point('pO')
+        >>> pA, pB, pC, pD = Point('pA'), Point('pB'), Point('pC'), Point('pD')
+        >>> pA.set_pos(pO, A.x)
+        >>> pB.set_pos(pO, -A.y)
+        >>> pC.set_pos(pO, B.y)
+        >>> pD.set_pos(pO, B.x)
+        >>> obstacle_set_pathway = ObstacleSetPathway(pA, pB, pC, pD)
+
+        Now create a symbol ``F`` to describe the magnitude of the (expansile)
+        force that will be produced along the pathway. The list of loads that
+        ``KanesMethod`` requires can be produced by calling the pathway's
+        ``compute_loads`` method with ``F`` passed as the only argument.
+
+        >>> from sympy import Symbol
+        >>> F = Symbol('F')
+        >>> obstacle_set_pathway.compute_loads(F)
+        [(pA, sqrt(2)*F/2*A.x + sqrt(2)*F/2*A.y),
+         (pB, - sqrt(2)*F/2*A.x - sqrt(2)*F/2*A.y),
+         (pB, - F/sqrt(2*cos(q(t)) + 2)*A.y - F/sqrt(2*cos(q(t)) + 2)*B.y),
+         (pC, F/sqrt(2*cos(q(t)) + 2)*A.y + F/sqrt(2*cos(q(t)) + 2)*B.y),
+         (pC, - sqrt(2)*F/2*B.x + sqrt(2)*F/2*B.y),
+         (pD, sqrt(2)*F/2*B.x - sqrt(2)*F/2*B.y)]
+
+        Parameters
+        ==========
+
+        force : Expr
+            The force acting along the length of the pathway. It is assumed
+            that this ``Expr`` represents an expansile force.
+
+        """
+        loads: list[LoadBase] = []
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            relative_position = _point_pair_relative_position(*attachment_pair)
+            length = _point_pair_length(*attachment_pair)
+            loads.extend([
+                Force(attachment_pair[0], -force * relative_position / length),
+                Force(attachment_pair[1], force * relative_position / length),
+            ])
+        return loads
+
 
 class WrappingPathway(PathwayBase):
     """Pathway that wraps a geometry object.
