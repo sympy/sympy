@@ -354,11 +354,27 @@ def test_DomainMatrix_is_lower():
     assert B.is_lower is False
 
 
+def test_DomainMatrix_is_diagonal():
+    A = DM([[1, 0], [0, 4]], ZZ)
+    B = DM([[1, 2], [3, 4]], ZZ)
+    assert A.is_diagonal is A.to_sparse().is_diagonal is True
+    assert B.is_diagonal is B.to_sparse().is_diagonal is False
+
+
 def test_DomainMatrix_is_square():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)], [ZZ(5), ZZ(6)]], (3, 2), ZZ)
     assert A.is_square is True
     assert B.is_square is False
+
+
+def test_DomainMatrix_diagonal():
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(4)]
+    A = DM([[1, 2], [3, 4], [5, 6]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(4)]
+    A = DM([[1, 2, 3], [4, 5, 6]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(5)]
 
 
 def test_DomainMatrix_rank():
@@ -562,6 +578,9 @@ def test_DomainMatrix_scc():
     Asdm = As.rep
     for A in [Ad, As, Addm, Asdm]:
         assert Ad.scc() == [[1], [0, 2]]
+
+    A = DM([[ZZ(1), ZZ(2), ZZ(3)]], ZZ)
+    raises(DMNonSquareMatrixError, lambda: A.scc())
 
 
 def test_DomainMatrix_rref():
@@ -966,6 +985,27 @@ def test_DomainMatrix_charpoly():
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
     raises(DMNonSquareMatrixError, lambda: Ans.charpoly())
+
+
+def test_DomainMatrix_charpoly_factor_list():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.charpoly_factor_list() == []
+
+    A = DM([[1]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-1)], 1)
+    ]
+
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-5), ZZ(-2)], 1)
+    ]
+
+    A = DM([[1, 2, 0], [3, 4, 0], [0, 0, 1]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-1)], 1),
+        ([ZZ(1), ZZ(-5), ZZ(-2)], 1)
+    ]
 
 
 def test_DomainMatrix_eye():
