@@ -10,8 +10,7 @@ from sympy.ntheory import divisor_sigma
 def test_tau_hypothesis(n):
     div = divisors(n)
     tau_n = len(div)
-    if tau_n % 2 == 1:  # tau(n) odd iff n is perfect square
-        assert is_square(n)
+    assert is_square(n) == (tau_n % 2 == 1)
     sigmas = [divisor_sigma(i) for i in div]
     totients = [totient(n // i) for i in div]
     mul = [a * b for a, b in zip(sigmas, totients)]
