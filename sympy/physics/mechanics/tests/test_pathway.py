@@ -339,6 +339,31 @@ class TestObstacleSetPathway:
         expected = - (sqrt(2) * sin(self.q) * self.qd) / (2 * sqrt(cos(self.q) + 1))
         assert (pathway.extension_velocity - expected).simplify() == 0
 
+    def test_2D_pathway_compute_loads(self) -> None:
+        self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
+        self.pB.set_pos(
+            self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
+        )
+        self.pI.set_pos(
+            self.pO, sin(self.q) * self.N.x + (cos(self.q) - 1) * self.N.y
+        )
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        pO_pA_force_vec = sqrt(2) / 2 * (self.N.x + self.N.y)
+        pA_pB_force_vec = (
+            - sqrt(2 * cos(self.q) + 2) / 2 * self.N.x
+            + sqrt(2) * sin(self.q) / (2 * sqrt(cos(self.q) + 1)) * self.N.y
+        )
+        pB_pI_force_vec = cos(self.q + pi/4) * self.N.x - sin(self.q + pi/4) * self.N.y
+        expected = [
+            Force(self.pO, self.F * pO_pA_force_vec),
+            Force(self.pA, -self.F * pO_pA_force_vec),
+            Force(self.pA, self.F * pA_pB_force_vec),
+            Force(self.pB, -self.F * pA_pB_force_vec),
+            Force(self.pB, self.F * pB_pI_force_vec),
+            Force(self.pI, -self.F * pB_pI_force_vec),
+        ]
+        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
+
 
 class TestWrappingPathway:
 
