@@ -15,6 +15,10 @@ from collections import deque
 from math import sqrt as _sqrt
 
 
+from sympy import nsimplify
+from sympy.core.numbers import Rational
+from sympy.core.numbers import Float
+from sympy.core.symbol import Dummy
 from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
@@ -699,6 +703,7 @@ def intersection(*entities, pairwise=False, **kwargs):
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
             entities[i] = Point(e)
+        entities[i] = rational_entity(entities[i])
 
     if not pairwise:
         # find the intersection common to all objects
@@ -716,3 +721,35 @@ def intersection(*entities, pairwise=False, **kwargs):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
     return list(ordered(set(ans)))
+
+
+def rational_entity(entity):
+    """Returns the rationalized version of a geometric entity
+
+    Parameters
+    ==========
+    entity : A single geometric entity
+
+    Returns
+    ==========
+    entity : Rationalized geometric entity
+
+    Raises
+    ==========
+    TypeError : When passed an object which is not a geomtry entity
+
+    Examples
+    ==========
+    >>> from sympy import Dummy, Float, nsimplify
+    >>> from sympy.geometry import Ellipse, Point2D
+    >>> e1 = Ellipse(center=Point2D(0.23, 0), hradius=4.412, vradius=2.0)
+    >>> print(rational_entity(e1))
+    Ellipse(Point2D(23/100, 0), 1103/250, 2)
+
+    """
+    if not isinstance(entity,GeometryEntity):
+        raise TypeError("Expecting a geometry entity, but got type:  ",type(entity))
+    if not entity.has(Float):
+        return entity
+    y = Dummy()
+    return entity.replace(lambda x: x.is_Float, lambda x: nsimplify(x, rational=True)+y).xreplace({y: 0})
