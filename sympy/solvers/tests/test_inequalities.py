@@ -531,7 +531,7 @@ def test_lp():
     constraints = [r1, r2, r3]
     objective = -x - y - 5 * z
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints)
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
@@ -545,7 +545,7 @@ def test_lp():
     constraints = [r1, r2, r3]
     objective = -x - y - 5*z
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
@@ -560,7 +560,7 @@ def test_lp():
     const = 2
     objective = -x-y-5*z+const # has constant term
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective-const, constraints, variables)
         assert optimum.evalf() == (sympify(-scipy_res.fun)+const)
@@ -575,7 +575,7 @@ def test_lp():
     r1 = x1 - x2 - 2*x3 - x4 <= 4
     r2 = 2*x1 + x3 -4*x4 <= 2
     r3 = -2*x1 + x2 + x4 <= 1
-    optimum, argmax = lp(
+    optimum, argmax = lp(max,
         x1 - 2*x2 - 3*x3 - x4, [r1, r2, r3], [])
     assert optimum == 4
     assert list(argmax.values()) == [7, 0, 0, 3]
@@ -587,7 +587,7 @@ def test_lp():
     constraints = [r1, r2, r3]
     objective = x
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
@@ -601,7 +601,7 @@ def test_lp():
     constraints = [r1, r2]
     objective = x + y
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
@@ -615,7 +615,7 @@ def test_lp():
     constraints = [r1, r2, r3]
     objective = -x-y-5*z
     variables = [x, y, z]
-    optimum, argmax = lp(objective, constraints, [])
+    optimum, argmax = lp(max, objective, constraints, [])
     if scipy is not None and np is not None:
         scipy_res = get_results_with_scipy(objective, constraints, variables)
         assert optimum.evalf() == sympify(-scipy_res.fun)
@@ -627,20 +627,20 @@ def test_lp():
     r1 = x - y + sqrt(2) * z <= -4
     r2 = -x + 2*y - 3*z <= 8
     r3 = 2*x + y - 7*z <= 10
-    raises(TypeError, lambda: lp(-x-y-5*z, [r1, r2, r3], []))
+    raises(TypeError, lambda: lp(max, -x-y-5*z, [r1, r2, r3], []))
 
     r1 = x >= 0
-    raises(UnboundedLinearProgrammingError, lambda: lp(x, [r1], []))
+    raises(UnboundedLinearProgrammingError, lambda: lp(max, x, [r1], []))
     r2 = x <= -1
-    raises(InfeasibleLinearProgrammingError, lambda: lp(x, [r1,r2], []))
+    raises(InfeasibleLinearProgrammingError, lambda: lp(max, x, [r1,r2], []))
 
     # strict inequalities are not allowed
     r1 = x > 0
-    raises(TypeError, lambda: lp(x, [r1], []))
+    raises(TypeError, lambda: lp(max, x, [r1], []))
 
     # not equals not allowed
     r1 = Ne(x, 0)
-    raises(TypeError, lambda: lp(x, [r1], []))
+    raises(TypeError, lambda: lp(max, x, [r1], []))
 
     def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1):
         def rand():
@@ -656,16 +656,18 @@ def test_lp():
 
     # testing random problems
     if scipy is not None and np is not None:
-        for _ in range(100):
+        for _ in range(50):
             objective, constraints, variables = make_random_problem()
             constraints = [c for c in constraints if isinstance(c, Relational)] # in case c auto simplifies to True or False
             if len(constraints) == 0:
                 continue
 
-            scipy_res = get_results_with_scipy(objective, constraints, variables)
+            # check lp maximization
+            # scipy minimizes, so negative objective for it
+            scipy_res = get_results_with_scipy(-objective, constraints, variables)
             if scipy_res.status == 0:
-                optimum, argmax = lp(objective, constraints, [])
-                scipy_op = -scipy_res.fun
+                optimum, argmax = lp(max, objective, constraints, [])
+                scipy_op = -scipy_res.fun  # negated to give actual max
                 assert abs(optimum.evalf() - scipy_op) < .1**10
                 assert objective.subs(argmax) == optimum
                 for constr in constraints:
@@ -673,11 +675,32 @@ def test_lp():
             elif scipy_res.status == 2:
                 # scipy: problem is infeasible
                 raises(InfeasibleLinearProgrammingError,
-                       lambda: lp(objective, constraints, []))
+                       lambda: lp(max, objective, constraints, []))
             elif scipy_res.status == 3:
                 # scipy: problem is unbounded
                 raises(UnboundedLinearProgrammingError,
-                       lambda: lp(objective, constraints, []))
+                       lambda: lp(max, objective, constraints, []))
+            else:
+                # scipy: either iteration limit reached or numerical difficulties
+                pass
+
+            # check lp minimization
+            scipy_res = get_results_with_scipy(objective, constraints, variables)
+            if scipy_res.status == 0:
+                optimum, argmax = lp(min, objective, constraints, [])
+                scipy_op = scipy_res.fun
+                assert abs(optimum.evalf() - scipy_op) < .1**10
+                assert objective.subs(argmax) == optimum
+                for constr in constraints:
+                    assert constr.subs(argmax) == True
+            elif scipy_res.status == 2:
+                # scipy: problem is infeasible
+                raises(InfeasibleLinearProgrammingError,
+                       lambda: lp(max, objective, constraints, []))
+            elif scipy_res.status == 3:
+                # scipy: problem is unbounded
+                raises(UnboundedLinearProgrammingError,
+                       lambda: lp(max, objective, constraints, []))
             else:
                 # scipy: either iteration limit reached or numerical difficulties
                 pass
