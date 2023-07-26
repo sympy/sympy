@@ -1025,17 +1025,25 @@ class LRASolver():
 
     @staticmethod
     def preprocess(BF, variables):
+        from sympy.matrices.dense import Matrix
         equations = []
         count = 0
         sub = {}
         set_variables = set(variables) # this should fix time complexity problems
 
+        def to_standard_form(ineq, variables):
+            expr = ineq.args[0] - ineq.args[1]
+            A, B = linear_eq_to_matrix(expr, variables)
+            lhs = (A * Matrix(variables))[0, 0]
+            rhs = B[0, 0]
+            return ineq.func(lhs, rhs)
+
         def do(b):
             if isinstance(b, BooleanFunction):
                 return b.func(*[do(arg) for arg in b.args])
             elif isinstance(b, Relational):
+                b = to_standard_form(b, variables)
                 expr, const = b.args
-                nonlocal nonbasic
                 if isinstance(expr, Add):
                     if expr not in sub:
                         nonlocal count
@@ -1070,6 +1078,7 @@ class LRASolver():
                 return self._assert_upper(sym, c)
         elif isinstance(atom, Relational):
             sym, c = atom.args
+            print(sym)
             assert sym.is_symbol
             assert c.is_constant()
 
