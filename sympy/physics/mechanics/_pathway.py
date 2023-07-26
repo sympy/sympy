@@ -206,17 +206,7 @@ class LinearPathway(PathwayBase):
     @property
     def extension_velocity(self) -> ExprType:
         """Exact analytical expression for the pathway's extension velocity."""
-        relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        if not relative_position:
-            return S.Zero
-        t = dynamicsymbols._t  # type: ignore
-        # A reference frame is needed to differentiate ``relative_position`` to
-        # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
-        # ``relative_position`` is defined using.
-        frame = relative_position.args[0][1]
-        relative_velocity = relative_position.diff(t, frame)
-        extension_velocity = relative_velocity.dot(relative_position.normalize())
-        return extension_velocity
+        return _point_pair_extension_velocity(*self.attachments)
 
     def compute_loads(self, force: ExprType) -> list[LoadBase]:
         """Loads required by the equations of motion method classes.
@@ -484,3 +474,18 @@ class WrappingPathway(PathwayBase):
 def _point_pair_length(point_1: Point, point_2: Point) -> ExprType:
     """The length of the direct linear path between two points."""
     return point_2.pos_from(point_1).magnitude()
+
+
+def _point_pair_extension_velocity(point_1: Point, point_2: Point) -> ExprType:
+    """The extension velocity of the direct linear path between two points."""
+    relative_position = point_2.pos_from(point_1)
+    if not relative_position:
+        return S.Zero
+    t = dynamicsymbols._t  # type: ignore
+    # A reference frame is needed to differentiate ``relative_position`` to
+    # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
+    # ``relative_position`` is defined using.
+    frame = relative_position.args[0][1]
+    relative_velocity = relative_position.diff(t, frame)
+    extension_velocity = relative_velocity.dot(relative_position.normalize())
+    return extension_velocity
