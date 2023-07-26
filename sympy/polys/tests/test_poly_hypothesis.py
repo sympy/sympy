@@ -1,12 +1,13 @@
 from hypothesis import given
-from hypothesis import assume
 from hypothesis import strategies as st
 from sympy.abc import x
 from sympy.polys.polytools import Poly
 
 
-@given(coefficients1=st.lists(st.integers()),
-       coefficients2=st.lists(st.integers()).filter(lambda x: not all(i == 0 for i in x)))
+@given(
+    coefficients1=st.lists(st.integers()),
+    coefficients2=st.lists(st.integers()).filter(lambda x: not all(i == 0 for i in x)),
+)
 def test_poly_hypothesis(coefficients1, coefficients2):
     # Integer case
     f_z = Poly(coefficients1, x, domain="ZZ")
