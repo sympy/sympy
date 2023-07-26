@@ -300,6 +300,21 @@ class TestObstacleSetPathway:
         pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
         assert pathway.extension_velocity == 0
 
+    def test_static_pathway_compute_loads(self) -> None:
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        expected = [
+            Force(self.pO, -self.F * self.N.x),
+            Force(self.pA, self.F * self.N.x),
+            Force(self.pA, self.F * sqrt(2) / 2 * (self.N.x - self.N.y)),
+            Force(self.pB, self.F * sqrt(2) / 2 * (self.N.y - self.N.x)),
+            Force(self.pB, self.F * sqrt(2) / 2 * (self.N.y - self.N.z)),
+            Force(self.pI, self.F * sqrt(2) / 2 * (self.N.z - self.N.y)),
+        ]
+        assert pathway.compute_loads(self.F) == expected
+
 
 class TestWrappingPathway:
 
