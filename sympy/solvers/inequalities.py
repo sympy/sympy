@@ -1024,6 +1024,24 @@ class LRASolver():
             self.assign[var] = 0
 
     @staticmethod
+    def from_encoded_cnf(encoded_cnf):
+        reverse_encoding = {}
+
+        for prop, enc in encoded_cnf.encoding.items():
+            pass
+            # check if prop is inequality
+
+            # move expr to LHS and const to RHS
+            # lhs, rhs = prop.args
+
+            # add slack var if needed
+
+            # convert to boundry
+
+            # reverse_encoding[enc] = boundry
+
+
+    @staticmethod
     def preprocess(BF, variables):
         from sympy.matrices.dense import Matrix
         equations = []
