@@ -253,6 +253,28 @@ class TestObstacleSetPathway:
         with pytest.raises(TypeError):
             pathway.attachments[-1] = None  # type: ignore
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments, expected',
+        [
+            (
+                [Point(name) for name in ('pO', 'pA', 'pI')],
+                'ObstacleSetPathway(pO, pA, pI)'
+            ),
+            (
+                [Point(name) for name in ('pO', 'pA', 'pB', 'pI')],
+                'ObstacleSetPathway(pO, pA, pB, pI)'
+            ),
+            (
+                [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pI')],
+                'ObstacleSetPathway(pO, pA, pB, pC, pI)'
+            ),
+        ]
+    )
+    def test_repr(attachments: Sequence[Point], expected: str) -> None:
+        pathway = ObstacleSetPathway(*attachments)
+        assert repr(pathway) == expected
+
 
 class TestWrappingPathway:
 
