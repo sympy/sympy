@@ -286,6 +286,13 @@ class TestObstacleSetPathway:
         self.qd = dynamicsymbols('q', 1)
         self.F = Symbol('F')
 
+    def test_static_pathway_length(self) -> None:
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        assert pathway.length == 1 + 2 * sqrt(2)
+
 
 class TestWrappingPathway:
 
