@@ -1166,13 +1166,21 @@ class LRASolver():
             import sys
             sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
 
+        from sympy.matrices.dense import Matrix
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
         iteration = 0
         while True:
             iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
+
+            # nonbasic variables always must be within bounds
             assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
+
+            # assignments for x must always satisfy Ax = 0
+            X = Matrix([self.assign[v] for v in self.col_index])
+            assert all(val == 0 for val in M*X)
+
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
              or self.assign[b] > self.upper[b]]
