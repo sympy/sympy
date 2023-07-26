@@ -24,6 +24,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._geometry import Cylinder, GeometryBase, Sphere
 from sympy.physics.mechanics._pathway import (
     LinearPathway,
+    ObstacleSetPathway,
     PathwayBase,
     WrappingPathway,
 )
@@ -187,6 +188,12 @@ class TestLinearPathway:
             (self.pB, pI_force),
         ]
         assert self.pathway.compute_loads(self.F) == expected
+
+
+class TestObstacleSetPathway:
+
+    def test_is_pathway_base_subclass(self) -> None:
+        assert issubclass(ObstacleSetPathway, PathwayBase)
 
 
 class TestWrappingPathway:
