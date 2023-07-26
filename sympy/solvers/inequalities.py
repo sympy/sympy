@@ -1078,7 +1078,6 @@ class LRASolver():
                 return self._assert_upper(sym, c)
         elif isinstance(atom, Relational):
             sym, c = atom.args
-            print(sym)
             assert sym.is_symbol
             assert c.is_constant()
 
@@ -1139,6 +1138,7 @@ class LRASolver():
             tableau = Matrix([[corner, r1], [c1, A]])
             pprint(tableau)
             sys.stderr.write("\n")
+            sys.stderr.write(f"{self.assign}\n")
             for v in self.upper:
                 sys.stderr.write(str(self.lower[v]) + " <= " + str(v) + " <= " + str(self.upper[v]) + "\n")
 
