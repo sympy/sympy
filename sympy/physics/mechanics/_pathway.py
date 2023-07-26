@@ -201,8 +201,7 @@ class LinearPathway(PathwayBase):
     @property
     def length(self) -> ExprType:
         """Exact analytical expression for the pathway's length."""
-        length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
-        return length
+        return _point_pair_length(*self.attachments)
 
     @property
     def extension_velocity(self) -> ExprType:
@@ -480,3 +479,8 @@ class WrappingPathway(PathwayBase):
             f'{self.__class__.__name__}({attachments}, '
             f'geometry={self.geometry})'
         )
+
+
+def _point_pair_length(point_1: Point, point_2: Point) -> ExprType:
+    """The length of the direct linear path between two points."""
+    return point_2.pos_from(point_1).magnitude()
