@@ -216,6 +216,17 @@ class TestObstacleSetPathway:
         for attachment in instance.attachments:
             assert isinstance(attachment, Point)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [[Point('pO')], [Point('pO'), Point('pI')]],
+    )
+    def test_invalid_constructor_attachments_incorrect_number(
+        attachments: Sequence[Point],
+    ) -> None:
+        with pytest.raises(ValueError):
+            _ = ObstacleSetPathway(*attachments)
+
 
 class TestWrappingPathway:
 
