@@ -44,10 +44,7 @@ class PathwayBase(ABC):
 
     """
 
-    def __init__(
-        self,
-        *attachments: Point,
-    ) -> None:
+    def __init__(self, *attachments: Point) -> None:
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
@@ -183,10 +180,7 @@ class LinearPathway(PathwayBase):
 
     """
 
-    def __init__(
-        self,
-        *attachments: Point,
-    ) -> None:
+    def __init__(self, *attachments: Point) -> None:
         """Initializer for ``LinearPathway``.
 
         Parameters
