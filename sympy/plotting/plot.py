@@ -955,8 +955,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 x_coords.append(q[0])
                 y_coords.append(q[1])
 
-            # Sample irrespective of whether the line is flat till the
-            # depth of 6. We are not using linspace to avoid aliasing.
+            # Sample to depth of 6 (whether the line is flat or not)
+            # without using linspace (to avoid aliasing).
             elif depth < 6:
                 sample(p, new_point, depth + 1)
                 sample(new_point, q, depth + 1)
