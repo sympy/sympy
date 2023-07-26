@@ -327,6 +327,18 @@ class TestObstacleSetPathway:
         expected = 2 * sqrt(2) + sqrt(2 + 2*cos(self.q))
         assert (pathway.length - expected).simplify() == 0
 
+    def test_2D_pathway_extension_velocity(self) -> None:
+        self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
+        self.pB.set_pos(
+            self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
+        )
+        self.pI.set_pos(
+            self.pO, sin(self.q) * self.N.x + (cos(self.q) - 1) * self.N.y
+        )
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        expected = - (sqrt(2) * sin(self.q) * self.qd) / (2 * sqrt(cos(self.q) + 1))
+        assert (pathway.extension_velocity - expected).simplify() == 0
+
 
 class TestWrappingPathway:
 
