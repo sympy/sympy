@@ -195,6 +195,27 @@ class TestObstacleSetPathway:
     def test_is_pathway_base_subclass(self) -> None:
         assert issubclass(ObstacleSetPathway, PathwayBase)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'num_attachments, attachments',
+        [
+            (3, [Point(name) for name in ('pO', 'pA', 'pI')]),
+            (4, [Point(name) for name in ('pO', 'pA', 'pB', 'pI')]),
+            (5, [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pI')]),
+            (6, [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pD', 'pI')]),
+        ]
+    )
+    def test_valid_constructor(
+        num_attachments: int,
+        attachments: Sequence[Point],
+    ) -> None:
+        instance = ObstacleSetPathway(*attachments)
+        assert isinstance(instance, ObstacleSetPathway)
+        assert hasattr(instance, 'attachments')
+        assert len(instance.attachments) == num_attachments
+        for attachment in instance.attachments:
+            assert isinstance(attachment, Point)
+
 
 class TestWrappingPathway:
 
