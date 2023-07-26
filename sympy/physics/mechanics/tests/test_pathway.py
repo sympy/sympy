@@ -293,6 +293,13 @@ class TestObstacleSetPathway:
         pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
         assert pathway.length == 1 + 2 * sqrt(2)
 
+    def test_static_pathway_extension_velocity(self) -> None:
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        assert pathway.extension_velocity == 0
+
 
 class TestWrappingPathway:
 
