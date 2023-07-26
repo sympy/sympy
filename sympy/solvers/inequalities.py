@@ -1173,7 +1173,11 @@ def _simplex(A, B, C, D=None, dual=False):
         _o, d, p = _simplex(-A.T, C.T, B.T, -D)
         return -_o, d, p
 
-    M = Matrix([[A, B], [C, D]])
+    if A and B:
+        M = Matrix([[A, B], [C, D]])
+    else:
+        assert not A and not B  # no constraints
+        M = Matrix([[C, D]])
     n = M.cols - 1
     m = M.rows - 1
 
@@ -1279,7 +1283,7 @@ def _np(constr, unbound=None):
     ([u1 - 2], {x: u1 + 3}, [u1])
     >>> _np([x <= 5])
     ([], {x: 5 - u1}, [u1])
-    >>> _np([x >= 1])  # XXX I think this is not necessary since x >= 0
+    >>> _np([x >= 1])
     ([], {x: u1 + 1}, [u1])
     """
     r = {}  # replacements to handle change of variables
