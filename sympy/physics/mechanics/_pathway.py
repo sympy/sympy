@@ -377,6 +377,15 @@ class ObstacleSetPathway(PathwayBase):
                 raise TypeError(msg)
         self._attachments = tuple(attachments)
 
+    @property
+    def length(self) -> ExprType:
+        """Exact analytical expression for the pathway's length."""
+        length = S.Zero
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            length += _point_pair_length(*attachment_pair)
+        return length
+
 
 class WrappingPathway(PathwayBase):
     """Pathway that wraps a geometry object.
