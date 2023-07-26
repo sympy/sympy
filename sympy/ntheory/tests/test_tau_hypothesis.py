@@ -1,0 +1,18 @@
+from hypothesis import given
+from hypothesis import strategies as st
+from sympy import divisors
+from sympy.ntheory.primetest import is_square
+from sympy.ntheory import totient
+from sympy.ntheory import divisor_sigma
+
+
+@given(n=st.integers(1, 10**10))
+def test_tau_hypothesis(n):
+    div = divisors(n)
+    tau_n = len(div)
+    if tau_n % 2 == 1:  # tau(n) odd iff n is perfect square
+        assert is_square(n)
+    sigmas = [divisor_sigma(i) for i in div]
+    totients = [totient(n // i) for i in div]
+    mul = [a * b for a, b in zip(sigmas, totients)]
+    assert n * tau_n == sum(mul)
