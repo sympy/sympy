@@ -23,7 +23,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest
+      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest hypothesis
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -134,7 +134,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split
+      - run: pip install mpmath pytest pytest-split hypothesis
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
@@ -199,7 +199,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap lxml pytest                \
+                         aesara wurlitzer autowrap lxml pytest hypothesis     \
                          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
@@ -231,7 +231,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow pytest
+      - run: pip install mpmath numpy scipy tensorflow pytest hypothesis
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -247,7 +247,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine pytest
+      - run: pip install mpmath numpy symengine pytest hypothesis
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
@@ -269,7 +269,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split pytest-timeout
+      - run: pip install mpmath pytest pytest-split pytest-timeout hypothesis
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -295,7 +295,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split
+      - run: pip install mpmath pytest pytest-split hypothesis
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #
