@@ -4,8 +4,8 @@ from sympy.core.symbol import Symbol
 from sympy.functions import exp, cos, sin, tan, cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
-    intersection, centroid, Point3D, Line3D
-from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
+    intersection, centroid, Point3D, Line3D, Ellipse
+from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar, rational_entity
 from sympy.solvers.solvers import solve
 from sympy.testing.pytest import raises
 
@@ -55,6 +55,12 @@ def test_intersection():
             Segment((-1, 0), (1, 0)),
             Line((0, 0), slope=1), pairwise=True) == [
         Point(0, 0), Segment((0, 0), (1, 0))]
+
+
+def test_rational_entity():
+    raises(TypeError, lambda: rational_entity(2.32))
+    e1 = Ellipse(center=Point2D(0, 0), hradius=4.5, vradius=2.5)
+    assert rational_entity(e1) == Ellipse(Point2D(0, 0), 9/2, 5/2)
 
 
 def test_convex_hull():
