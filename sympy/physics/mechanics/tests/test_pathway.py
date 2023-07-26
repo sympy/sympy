@@ -275,6 +275,17 @@ class TestObstacleSetPathway:
         pathway = ObstacleSetPathway(*attachments)
         assert repr(pathway) == expected
 
+    @pytest.fixture(autouse=True)
+    def _obstacle_set_pathway_fixture(self) -> None:
+        self.N = ReferenceFrame('N')
+        self.pO = Point('pO')
+        self.pI = Point('pI')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.q = dynamicsymbols('q')
+        self.qd = dynamicsymbols('q', 1)
+        self.F = Symbol('F')
+
 
 class TestWrappingPathway:
 
