@@ -242,6 +242,17 @@ class TestObstacleSetPathway:
         with pytest.raises(TypeError):
             _ = WrappingPathway(*attachments)  # type: ignore
 
+    def test_properties_are_immutable(self) -> None:
+        pathway = ObstacleSetPathway(Point('pO'), Point('pA'), Point('pI'))
+        with pytest.raises(AttributeError):
+            pathway.attachments = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[0] = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[1] = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[-1] = None  # type: ignore
+
 
 class TestWrappingPathway:
 
