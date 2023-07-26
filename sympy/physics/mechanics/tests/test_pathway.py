@@ -227,6 +227,21 @@ class TestObstacleSetPathway:
         with pytest.raises(ValueError):
             _ = ObstacleSetPathway(*attachments)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (None, Point('pA'), Point('pI')),
+            (Point('pO'), None, Point('pI')),
+            (Point('pO'), Point('pA'), None),
+        ]
+    )
+    def test_invalid_constructor_attachments_not_point(
+        attachments: Sequence[Any],
+    ) -> None:
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(*attachments)  # type: ignore
+
 
 class TestWrappingPathway:
 
