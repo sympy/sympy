@@ -5,11 +5,9 @@ from sympy.abc import x
 from sympy.polys.polytools import Poly
 
 
-@given(coefficients1=st.lists(st.integers()), coefficients2=st.lists(st.integers()))
+@given(coefficients1=st.lists(st.integers()),
+       coefficients2=st.lists(st.integers()).filter(lambda x: not all(i == 0 for i in x)))
 def test_poly_hypothesis(coefficients1, coefficients2):
-    # non-zero division check.
-    assume(len(coefficients2) * [0] != coefficients2)
-
     # Integer case
     f_z = Poly(coefficients1, x, domain="ZZ")
     g_z = Poly(coefficients2, x, domain="ZZ")
