@@ -1178,15 +1178,14 @@ def _simplex(A, B, C, D=None, dual=False):
     m = M.rows - 1
 
     if not all(i.is_Float or i.is_Rational for i in M):
-            raise TypeError("Only rationals and floats are allowed in the Simplex method.")
+        # with literal Float and Rational we are guaranteed the
+        # ability of determining whether an expression is 0 or not
+        raise TypeError("Only rationals and floats are allowed in the Simplex method.")
 
     # x variables are given priority over the y variables during Bland's rule
     # since False < True
-    r_orig = [(False, j) for j in range(n)] # what Ferguson's introduction calls 'x' variables
-    s_orig = [(True, i)  for i in range(m)] # what Ferguson's introduction calls 'y' variables
-
-    R = r_orig.copy()
-    S = s_orig.copy()
+    X = [(False, j) for j in range(n)]
+    Y = [(True, i)  for i in range(m)]
 
     # Phase 1: find a feasible solution or determine none exist
     while True:
@@ -1196,24 +1195,26 @@ def _simplex(A, B, C, D=None, dual=False):
             # We have found a feasible solution
             break
 
-        # Find k, first row with a negative rightmost entry
+        # Find k: first row with a negative rightmost entry
         for k in range(B.rows):
             if B[k] < 0:
-                break
+                break  # use current value of k below
+        else:
+            pass  # XXX is it an error if none was found?
 
-        # Choose pivot column, j0
-        piv_cols = [j for j in range(A.cols) if A[k, j] < 0]
+        # Choose pivot column, c
+        piv_cols = [_ for _ in range(A.cols) if A[k, _] < 0]
         if not piv_cols:
             raise InfeasibleLinearProgrammingError('The constraint set is empty!')
-        j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
+        c = sorted(piv_cols, key=lambda _: X[_])[0] # Bland's rule
 
-        # Choose pivot row, i0
-        piv_rows = [i for i in range(A.rows) if A[i, j0] > 0 and B[i] > 0]
+        # Choose pivot row, r
+        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
         piv_rows.append(k)
-        i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
+        r = _choose_pivot_row(A, B, piv_rows, c, Y)
 
-        M = _pivot(M, i0, j0)
-        R[j0], S[i0] = S[i0], R[j0]
+        M = _pivot(M, r, c)
+        X[c], Y[r] = Y[r], X[c]
 
     # Phase 2: starting at a feasible solution, pivot until we reach optimal solution
     while True:
@@ -1221,36 +1222,32 @@ def _simplex(A, B, C, D=None, dual=False):
         A = M[:-1, :-1]
         C = M[-1, :-1]
 
-        # Choose a pivot column, j0
+        # Choose a pivot column, c
         piv_cols = []
-        piv_cols = [j for j in range(n) if C[j] < 0]
+        piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
-        j0 = sorted(piv_cols, key=lambda c: R[c])[0] # Bland's rule
+        c = sorted(piv_cols, key=lambda _: X[_])[0] # Bland's rule
 
-        # Choose a pivot row, i0
-        piv_rows = [i for i in range(m) if A[i, j0] > 0]
+        # Choose a pivot row, r
+        piv_rows = [_ for _ in range(m) if A[_, c] > 0]
         if not piv_rows:
             raise UnboundedLinearProgrammingError('Objective function can assume arbitrarily large values!')
-        i0 = _choose_pivot_row(A, B, piv_rows, j0, S)
+        r = _choose_pivot_row(A, B, piv_rows, c, Y)
 
-        M = _pivot(M, i0, j0)
-        R[j0], S[i0] = S[i0], R[j0]
+        M = _pivot(M, r, c)
+        X[c], Y[r] = Y[r], X[c]
 
     argmax = [None]*n
     argmin_dual = [None]*m
 
-    for i, var in enumerate(R):
-        v = var[0]
-        n = var[1]
+    for i, (v, n) in enumerate(X):
         if v == False:
             argmax[n] = 0
         else:
             argmin_dual[n] = M[-1, i]
 
-    for i, var in enumerate(S):
-        v = var[0]
-        n = var[1]
+    for i, (v, n) in enumerate(Y):
         if v == True:
             argmin_dual[n] = 0
         else:
@@ -1259,13 +1256,38 @@ def _simplex(A, B, C, D=None, dual=False):
     return -M[-1, -1], argmax, argmin_dual
 
 
-def _np(constr, syms, unbound):
-    # return nonpositive expressions for the given constraints
+def _np(constr, unbound=None):
+    """return a (np, d, x) where np is a list of nonpositive expressions
+    that represent the given constraints (possibly rewritten in terms of
+    auxilliary variables so that all variables return in x represent
+    nonnegative values); d is a dictionary mapping a given symbols to
+    an expression involving one or two auxilliary variables.
+
+    If any constraint is False/empty, return None.
+
+    Examples
+    ========
+
+    >>> from sympy import oo
+    >>> from sympy.solvers.inequalities import _np
+    >>> from sympy.abc import x, y
+    >>> _np([x >= y])
+    ([-x + y], {}, [])
+    >>> _np([x >= -oo])
+    ([], {x: u1 - u2}, [u1, u2])
+    >>> _np([x >= 3, x <= 5])
+    ([u1 - 2], {x: u1 + 3}, [u1])
+    >>> _np([x <= 5])
+    ([], {x: 5 - u1}, [u1])
+    >>> np([x >= 1])  # XXX I think this is not necessary since x >= 0
+    ([], {x: u1 + 1}, [u1])
+    """
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
-    xx = set(syms)  # will contain all symbols when done
+    aux = []  # will contain all symbols when done
     ui = numbered_symbols('u', start=1) # symbols to be introduced
-    unibounds = {}  # bound to be inferred from univariate constraints
+    univariate = {}  # bound to be inferred from univariate constraints
+    unbound = unbound or []  # symbols designated as unbound
     for i in constr:
         if isinstance(i, AppliedBinaryRelation):
             if i.function == Q.le:
@@ -1275,7 +1297,7 @@ def _np(constr, syms, unbound):
             elif i.function == Q.eq:
                 i = Eq(i.rhs, i.lhs, evaluate=False)
             else:
-                assert None, i
+                assert None, i  # not allowed
         if i == True:
             continue  # ignore
         if i == False:
@@ -1292,43 +1314,43 @@ def _np(constr, syms, unbound):
                 if x in unbound:
                     continue  # will handle later
                 ivl = Le(npi, 0, evaluate=False).as_set()
-                if x not in unibounds:
-                    unibounds[x] = ivl
+                if not ivl:
+                    return  # no solution
+                elif x not in univariate:
+                    univariate[x] = ivl
                 else:
-                    unibounds[x] &= ivl
+                    univariate[x] &= ivl
             else:
                 np.append(npi)
         else:
-            assert None, 'only Le, Ge, Eq'
-        assert not any(_.is_infinite for _ in i.args)  # XXX should x < oo indicate unbound?
+            assert None, i  # not allowed
 
-    # add constraints for variables expressed in a univariate manner
-    for x in unibounds:
-        i = unibounds[x]
+    # introduce auxilliary variables as needed for univariate
+    # inequalities
+    for x in univariate:
+        i = univariate[x]
         a, b = i.inf, i.sup
         if a.is_infinite and b.is_infinite:
             # this is unbound
             u = next(ui)
             v = next(ui)
             r[x] = u - v
-            #np.extend([-u, -v])
-            xx.update([u, v])
+            aux.extend([u, v])
         elif a.is_infinite:
             u = next(ui)
             r[x] = b - u
-            #np.append(-u)
-            xx.add(u)
-        elif b.is_infinite and a:
-            u = next(ui)
-            #np.append(-u)
-            r[x] = u + a
-            xx.add(u)
-        elif b.is_infinite and not a:
-            # standard nonnegative relationship
-            pass#np.append(-x)
+            aux.append(u)
+        elif b.is_infinite:
+            if a:
+                u = next(ui)
+                r[x] = a + u
+                aux.append(u)
+            else:
+                # standard nonnegative relationship
+                pass
         else:
             u = next(ui)
-            xx.add(u)
+            aux.append(u)
             # shift so u = x - a => x = u + a
             r[x] = u + a
             # add constraint for u <= b - a
@@ -1338,12 +1360,12 @@ def _np(constr, syms, unbound):
 
     # make change of variables for unbound variables
     for i in unbound:
-        assert i not in unibounds
+        assert i not in univariate
         u, v = next(ui), next(ui)
         r[i] = u - v
-        xx.update([u, v])
+        aux.extend([u, v])
 
-    return np, r, xx
+    return np, r, aux
 
 
 def lp(min_max, f, constr, unbound=None):
@@ -1385,24 +1407,32 @@ def lp(min_max, f, constr, unbound=None):
     __main__.UnboundedLinearProgrammingError: Objective function can assume arbitrarily large values!
     """
     how = min_max
-    exprs = Tuple(f, *constr)
-    F = exprs[0]
-    syms = exprs.free_symbols
+    F = sympify(f)
+    syms = F.free_symbols
+    for i, j in enumerate(constr):
+        constr[i] = sympify(j)
+        syms |= constr[i].free_symbols
     if unbound is True:
         unbound = syms
     elif not unbound:
         unbound = []
-    syms = list(ordered(syms))
+    elif not all(i in syms for i in unbound):
+        raise ValueError(filldedent('''
+            all symbols in unbound should appear
+            in the objective or constraints'''))
 
     # convert constraints to nonpositive expressions
-    np, r, xx = _np(constr, syms, unbound)
+    _ = _np(constr, unbound)
+    if _ is None:
+        raise ValueError('inconsistent constraint(s)')
+    np, r, aux = _
 
     # do change of variables
     f = f.xreplace(r)
     np = [i.xreplace(r) for i in np]
 
     # convert to matrices and solve
-    xx = list(ordered(xx))
+    xx = list(ordered(syms)) + aux
     A, B = linear_eq_to_matrix(np, xx)
     C, D = linear_eq_to_matrix([f], xx)
     if how == max:
@@ -1411,11 +1441,10 @@ def lp(min_max, f, constr, unbound=None):
     else:
         o, p, d = _simplex(A, B, C, D)
 
-    # restore original variables
+    # restore original variables and remove aux from p
     p = dict(zip(xx, p))
     if r:
-        u = set(xx) - set(syms)
-        p.update(Dict(r).xreplace({k: p.pop(k) for k in u}))
+        p.update(Dict(r).xreplace({k: p.pop(k) for k in aux}))
         # the o returned needs to be translated back to the
         # given function, not the one in terms of changes of
         # variables
