@@ -348,6 +348,35 @@ class ObstacleSetPathway(PathwayBase):
         """
         super().__init__(*attachments)
 
+    @property
+    def attachments(self) -> tuple[Point, ...]:
+        """The set of points defining a pathway's segmented path."""
+        return self._attachments
+
+    @attachments.setter
+    def attachments(self, attachments: tuple[Point, ...]) -> None:
+        if hasattr(self, '_attachments'):
+            msg = (
+                f'Can\'t set attribute `attachments` to {repr(attachments)} '
+                f'as it is immutable.'
+            )
+            raise AttributeError(msg)
+        if len(attachments) <= 2:
+            msg = (
+                f'Value {repr(attachments)} passed to `attachments` was an '
+                f'iterable of length {len(attachments)}, must be an iterable '
+                f'of length 3 or greater.'
+            )
+            raise ValueError(msg)
+        for i, point in enumerate(attachments):
+            if not isinstance(point, Point):
+                msg = (
+                    f'Value {repr(point)} passed to `attachments` at index '
+                    f'{i} was of type {type(point)}, must be {Point}.'
+                )
+                raise TypeError(msg)
+        self._attachments = tuple(attachments)
+
 
 class WrappingPathway(PathwayBase):
     """Pathway that wraps a geometry object.
