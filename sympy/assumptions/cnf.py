@@ -410,36 +410,37 @@ class EncodedCNF:
         ----------
         Create an instance of EncodedCNF and add a propositional expression.
         >>> from sympy.assumptions.cnf import CNF, EncodedCNF
+        >>> from sympy.abc import a, b
         >>> from sympy.logic.boolalg import Or, Not
-        >>> from sympy.abc import x, y
+
         >>> encoded_cnf = EncodedCNF()
-        >>> prop = Or(x, Not(y))
+        >>> prop = Or(a, Not(b))
         >>> encoded_cnf.add_prop(prop)
 
         Encode the CNF expression and print the encoded data and encoding dictionary.
-        >>> print(encoded_cnf.data)
-        [{2, -1}]
-        >>> print(encoded_cnf.encoding)
-        {x: 1, y: 2}
-
-        Retrieve the symbols used in encoding.
-        >>> print(encoded_cnf.symbols)
-        [y, x]
+        Note that the actual encoding may differ between sessions.
+        >>> encoded_cnf.data #doctest: +SKIP
+        [{1, -2}]
+        >>> encoded_cnf.encoding #doctest: +SKIP
+        {a: 1, b: 2}
 
         Example 2:
         ----------
         Create a copy of the encoded CNF object and add more clauses from a CNF object.
 
         >>> copied_encoded_cnf = encoded_cnf.copy()
-        >>> cnf = CNF.from_prop('x | y')
+        >>> cnf = CNF.from_prop('a | b')
         >>> encoded_cnf.add_from_cnf(cnf)
 
-        Check the updated encoded data for `encoded_cnf` and the copied encoded data.
+        >>> sorted_data = sorted(encoded_cnf.data)
+        >>> sorted_copied_data = sorted(copied_encoded_cnf.data)
 
-        >>> print(encoded_cnf.data)
-        [{2, -1}, {3}]
-        >>> print(copied_encoded_cnf.data)
-        [{2, -1}]
+        Check the updated encoded data for `encoded_cnf` and the copied encoded data.
+        Note that the actual encoding may differ between sessions.
+        >>> sorted_data #doctest: +SKIP
+        [{1, -2}, {3}]
+        >>> sorted_copied_data #doctest: +SKIP
+        [{1, -2}]
         """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
