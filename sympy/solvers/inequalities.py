@@ -22,7 +22,6 @@ from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
 from sympy.utilities.iterables import sift, iterable, numbered_symbols
 from sympy.utilities.misc import filldedent
 
-
 def solve_poly_inequality(poly, rel):
     """Solve a polynomial inequality with rational coefficients.
 
@@ -1264,8 +1263,9 @@ def _np(constr, unbound=None):
     """return a (np, d, aux) where np is a list of nonpositive expressions
     that represent the given constraints (possibly rewritten in terms of
     auxilliary variables) expressible with nonnegative symbols, and d is
-    a dictionary mapping a given symbols to an expression involving one
-    or two auxilliary variables.
+    a dictionary mapping a given symbols to an expression an auxilliary
+    variables. In some cases a symbol will be used as part of the
+    change of variables, e.g. x: x - u1 instead of x: u1 - u2.
 
     If any constraint is False/empty, return None.
 
@@ -1278,7 +1278,7 @@ def _np(constr, unbound=None):
     >>> _np([x >= y])
     ([-x + y], {}, [])
     >>> _np([x >= -oo])
-    ([], {x: u1 - u2}, [u1, u2])
+    ([], {x: x - u1}, [u1])
     >>> _np([x >= 3, x <= 5])
     ([u1 - 2], {x: u1 + 3}, [u1])
     >>> _np([x <= 5])
@@ -1365,9 +1365,9 @@ def _np(constr, unbound=None):
     # make change of variables for unbound variables
     for i in unbound:
         assert i not in univariate
-        u, v = next(ui), next(ui)
-        r[i] = u - v
-        aux.extend([u, v])
+        u = next(ui)
+        r[i] = i - u  # reusing i
+        aux.append(u)
 
     return np, r, aux
 
@@ -1467,8 +1467,13 @@ def lp(min_max, f, constr, unbound=None):
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
-    if r:
-        p.update(Dict(r).xreplace({k: p.pop(k) for k in aux}))
+    if r:  # p has original symbols and auxilliary symbols
+        # if r has x: x - u1 use values from p to update
+        r = {k: v.xreplace(p) for k,v in r.items()}
+        # then use the actual value of x (=x-u1) in p
+        p.update(r)
+        # and keep only non-aux variables
+        p = {k: v for k, v in p.items() if k not in aux}
 
     # not returning dual since there may be extra constraints
     # when a variable has finite bounds
@@ -1576,4 +1581,3 @@ def primal_dual(M, factor=True):
     F = eq(cT*x, d)
     f = eq(yT*b, d)
     return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, cT, Le))
-
