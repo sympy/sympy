@@ -1463,3 +1463,95 @@ def lp(min_max, f, constr, unbound=None):
     # does not enforce standard form, it gets the input into standard
     # form for simplex
     return o, p
+
+
+def primal_dual(M, factor=True):
+    """return primal and dual function and constraints
+    assuming that M = Matrix([[A, b], [c, d]]) and the
+    function c*x - d is being minimized with Ax >= b
+    for nonnegative values of x.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import primal_dual, lp
+    >>> from sympy import Matrix
+
+    The following matrix represents the primal task of
+    minimizing x + y + 7 for y >= x + 1 and y >= -2*x + 3.
+    The dual task seeks to maximize x + 3*y + 7 with
+    2*y - x <= 1 and and x + y <= 1:
+    
+
+    >>> M = Matrix([
+    ...     [-1, 1,  1],
+    ...     [ 2, 1,  3],
+    ...     [ 1, 1, -7]])
+    >>> p, d = primal_dual(M)
+
+    The minimum of the primal and maximum of the dual are the same
+    (though they occur at different points):
+
+    >>> lp(min, *p)
+    (28/3, {x1: 2/3, x3: 5/3})
+    >>> lp(max, *d)
+    (28/3, {y1: 1/3, y2: 2/3})
+
+    If the equivalent (but canonical) inequalities are 
+    desired, leave `factor=True`, otherwise the unmodified
+    inequalities for M will be returned.
+
+    >>> m = Matrix([
+    [-3, -2,  4, -2],
+    [ 2,  0,  0, -2],
+    [ 0,  1, -3,  0]])
+
+    >>> primal_dual(m, False)  # last condition is 2*x1 >= -2
+    ((x2 - 3*x3,
+        [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]), 
+    (-2*y1 - 2*y2,
+        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+
+    >>> primal_dual(m)  # condition now x1 >= -1
+    ((x2 - 3*x3,
+        [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]), 
+    (-2*y1 - 2*y2,
+        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+
+    If you pass the transpose of the matrix, the dual will be
+    identified as the standard minimization problem and the
+    dual as the standard maximization:
+
+    >>> primal_dual(m.T)
+    ((-2*x1 - 2*x2,
+        [-3*x1 + 2*x2 >= 0, -2*x1 >= 1, 4*x1 >= -3]),
+    (y2 - 3*y3,
+        [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
+
+    References
+    ==========
+
+    .. [1] David Galvin, Relations between Primal and Dual
+           www3.nd.edu/~dgalvin1/30210/30210_F07/presentations/dual_opt.pdf
+    """
+    m, n = [i - 1 for i in M.shape]
+    A = M[:m, :n]
+    b = M[:m, -1]
+    cT = M[-1, :-1]
+    d = M[-1, -1]
+    x = Matrix([i for i, j in zip(numbered_symbols('x', start=1), range(n))])
+    yT = Matrix([i for i, j in zip(numbered_symbols('y', start=1), range(m))]).T
+    def ineq(L, r, op):
+        rv = []
+        for r in (op(i, j) for i, j in zip(L, r)):
+            if factor:
+                f = factor_terms(r)
+                if f.lhs.is_Mul and f.rhs % f.lhs.args[0] == 0:
+                    assert len(f.lhs.args) == 2, f.lhs
+                    c = f.lhs.args[0]
+                    r = r.func(sign(c)*f.lhs.args[1], f.rhs//abs(c))
+            rv.append(r)
+        return rv
+    F = (cT*x)[0] - d
+    f = (yT*b)[0] - d
+    return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, cT, Le))
