@@ -522,6 +522,15 @@ def test_find_feasible():
     feasible = find_feasible([r1, r2, r3, r4], [x, y])
     assert feasible == ('SAT', {x: 1, y: 1})
 
+    # fixed bug from when pivot operation wasn't working
+    constraints = [-2*x - y <= -9, -6*x - 7*y <= -10, 9*x + 8*y <= 8]
+    res = find_feasible(constraints, [x, y])
+    assert res[0] == "UNSAT"
+    if res[0] == "SAT":
+        assignment = res[1]
+        for constr in constraints:
+            assert constr.subs(assignment) == True
+
 
     def check_if_satisfiable_with_z3(constraints):
         from sympy.external.importtools import import_module
@@ -544,7 +553,7 @@ def test_find_feasible():
     bf = [(x > 2), (x < 1)]
     assert check_if_satisfiable_with_z3(bf) is False
 
-    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=False):
+    def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True):
         from sympy.core.random import random, choice, randint
         from sympy.core.sympify import sympify
         from sympy.ntheory.generate import randprime
@@ -565,27 +574,15 @@ def test_find_feasible():
     x1, x2 = symbols("x1 x2")
 
 
-
-    # bug
-    constraints = [-2*x1 - x2 <= -9, -6*x1 - 7*x2 <= -10, 9*x1 + 8*x2 <= 8]
-    is_sat = check_if_satisfiable_with_z3(constraints)
-    assert is_sat is False
-    res = find_feasible(constraints, [x1, x2])
-    #assert res[0] == "UNSAT"
-    if res[0] == "SAT":
-        assignment = res[1]
-        for constr in constraints:
-            pass  #assert constr.subs(assignment) == True
-
     # bug
     constraints = [-137*x1/163 - 149*x2/127 <= -11/79, 43*x1/71 + 73*x2/97 <= -61/149, -29*x1/193 + 97*x2/173 <= -67/151]
     is_sat = check_if_satisfiable_with_z3(constraints)
     res = find_feasible(constraints, [x1, x2])
     #assert ((res[0] == "SAT") is is_sat)
-    if res[0] == "SAT":
-        assignment = res[1]
-        for constr in constraints:
-            pass  # assert constr.subs(assignment) == True
+    # if res[0] == "SAT":
+    #     assignment = res[1]
+    #     for constr in constraints:
+    #         pass  # assert constr.subs(assignment) == True
 
     # another one
     # from sympy import symbols
@@ -599,22 +596,20 @@ def test_find_feasible():
     assert is_sat is False
 
 
-
-    for _ in range(1000):
-        constraints, variables = make_random_problem(num_variables=2, num_constraints=3, sparsity=0)
-        print(constraints)
+    feasible_count = 0
+    for _ in range(100):
+        constraints, variables = make_random_problem(num_variables=3, num_constraints=6, sparsity=0)
         feasible = find_feasible(constraints, list(variables))
-        is_feasible = check_if_satisfiable_with_z3(constraints)
         if feasible[0] == "SAT":
-            print("SAT", f"z3 feasible: {is_feasible}")
+            feasible_count += 1
             assignment = feasible[1]
             for constr in constraints:
-                pass
-                #assert constr.subs(assignment) == True
-            assert is_feasible is True
+                assert constr.subs(assignment) == True
         else:
-            print("UNSAT", f"z3 feasible: {is_feasible}")
-            assert is_feasible is False
+            assert check_if_satisfiable_with_z3(constraints) is False
+            conflict_clause = list(feasible[1])
+            assert check_if_satisfiable_with_z3(conflict_clause) is False
+    print("\nnumber of feasible problems: ", feasible_count)
 
 
 
