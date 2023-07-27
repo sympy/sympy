@@ -712,7 +712,3 @@ def test_LRA_solver():
 # lra.assert_con(s1 <= 1)
 # lra.assert_con(s2 >= -3)
 # lra.check()
-
-
-
-
