@@ -513,8 +513,9 @@ some metric.
 
 `simplify()` is perfectly fine for interactive use, where you just want SymPy
 to do whatever it can to an expression. However, in programmatic usage, it's
-better to avoid `simplify()` and use more targeted simplification functions
-like {func}`~.cancel` or {func}`~.collect` instead.
+better to avoid `simplify()` and use more [targeted simplification
+functions](simplify-docs) instead (e.g., {func}`~.cancel`, {func}`~.expand`,
+or {func}`~.collect`).
 
 There are a few reasons why this is generally preferred:
 
@@ -533,15 +534,19 @@ There are a few reasons why this is generally preferred:
   - {func}`~.cancel` will always convert a rational function into the form
     $p/q$ where $p$ and $q$ are expanded polynomials with no common factors.
 
-  - The {func}`~.trigsimp` function is similarly heuristical in nature
-    (although targeted to only trigonometric functions), but the routines in
-    the {mod}`sympy.simplify.fu` submodule allow applying specific
-    trigonometric identities.
+  The documentation for each function describes exactly what behavior it will
+  have on the input expression.
 
 - A targeted simplification will not do something unexpected if the expression
   contains an unexpected form, or an unexpected subexpression. This is
   especially the case if simplification functions are applied with `deep=False`
   to only apply the simplification to the top-level expression.
+
+Some other simplification functions are heuristical in nature, and care should
+be taken with them as well. For example, the {func}`~.trigsimp` function is a
+heuristic targeted to trigonometric functions, but the routines in the
+{mod}`sympy.simplify.fu` submodule allow applying specific trigonometric
+identities.
 
 The [simplify section of the tutorial](tutorial-simplify) and the
 [simplify module reference](../modules/simplify/simplify.rst) list the various
