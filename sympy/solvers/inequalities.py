@@ -1501,9 +1501,9 @@ def primal_dual(M, factor=True):
     inequalities for M will be returned.
 
     >>> m = Matrix([
-    [-3, -2,  4, -2],
-    [ 2,  0,  0, -2],
-    [ 0,  1, -3,  0]])
+    ... [-3, -2,  4, -2],
+    ... [ 2,  0,  0, -2],
+    ... [ 0,  1, -3,  0]])
 
     >>> primal_dual(m, False)  # last condition is 2*x1 >= -2
     ((x2 - 3*x3,
