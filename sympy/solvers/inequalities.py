@@ -13,7 +13,7 @@ from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.function import expand_mul
-from sympy.functions.elementary.complexes import im, Abs
+from sympy.functions.elementary.complexes import im, Abs, sign
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
