@@ -13,6 +13,16 @@ from .intervalmath import interval
 import warnings
 
 
+__all__ = [
+    "List2DSeries", "LineOver1DRangeSeries", "Parametric2DLineSeries",
+    "Parametric3DLineSeries", "SurfaceOver2DRangeSeries", "ContourSeries",
+    "ParametricSurfaceSeries", "ImplicitSeries", "GenericDataSeries",
+    # for back-compatibility
+    "BaseSeries", "Line2DBaseSeries", "Line3DBaseSeries", "SurfaceBaseSeries",
+    "centers_of_segments", "centers_of_faces", "flat"
+]
+
+
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
 

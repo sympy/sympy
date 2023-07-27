@@ -33,11 +33,8 @@ from sympy.core.function import Function
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify
 from sympy.external import import_module
-from sympy.plotting.series import (
-    _set_discretization_points, BaseSeries, LineOver1DRangeSeries,
-    Parametric2DLineSeries, Parametric3DLineSeries, ParametricSurfaceSeries,
-    SurfaceOver2DRangeSeries, ContourSeries, GenericDataSeries
-)
+from sympy.plotting.series import *
+from sympy.plotting.series import _set_discretization_points
 from sympy.printing.latex import latex
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
