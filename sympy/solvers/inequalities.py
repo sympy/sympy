@@ -3,9 +3,10 @@ import itertools
 
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
-from sympy.core import Symbol, Dummy, sympify
+from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Lt, Ge, Eq, Le
+from sympy.core.symbol import Symbol, Dummy
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
@@ -1264,7 +1265,7 @@ def _np(constr, unbound=None):
     auxilliary variables) expressible with nonnegative symbols, and d is
     a dictionary mapping a given symbols to an expression an auxilliary
     variables. In some cases a symbol will be used as part of the
-    change of variables, e.g. x: x - u1 instead of x: u1 - u2.
+    change of variables, e.g. x: x - z1 instead of x: z1 - z2.
 
     If any constraint is False/empty, return None.
 
@@ -1277,18 +1278,18 @@ def _np(constr, unbound=None):
     >>> _np([x >= y])
     ([-x + y], {}, [])
     >>> _np([x >= -oo])
-    ([], {x: x - u1}, [u1])
+    ([], {x: _z1 - x}, [_z1])
     >>> _np([x >= 3, x <= 5])
-    ([u1 - 2], {x: u1 + 3}, [u1])
+    ([_z1 - 2], {x: _z1 + 3}, [_z1])
     >>> _np([x <= 5])
-    ([], {x: 5 - u1}, [u1])
+    ([], {x: 5 - _z1}, [_z1])
     >>> _np([x >= 1])
-    ([], {x: u1 + 1}, [u1])
+    ([], {x: _z1 + 1}, [_z1])
     """
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
     aux = []  # will contain all symbols when done
-    ui = numbered_symbols('u', start=1) # symbols to be introduced
+    ui = numbered_symbols('z', start=1, cls=Dummy) # symbols to be introduced
     univariate = {}  # bound to be inferred from univariate constraints
     unbound = unbound or []  # symbols designated as unbound
     for i in constr:
@@ -1360,7 +1361,7 @@ def _np(constr, unbound=None):
     # make change of variables for unbound variables
     for x in unbound:
         u = next(ui)
-        r[x] = x - u  # reusing x
+        r[x] = u - x  # reusing x
         aux.append(u)
 
     return np, r, aux
@@ -1462,9 +1463,9 @@ def lp(min_max, f, constr, unbound=None):
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
     if r:  # p has original symbols and auxilliary symbols
-        # if r has x: x - u1 use values from p to update
-        r = {k: v.xreplace(p) for k,v in r.items()}
-        # then use the actual value of x (=x-u1) in p
+        # if r has x: x - z1 use values from p to update
+        r = {k: v.xreplace(p) for k, v in r.items()}
+        # then use the actual value of x (= x - z1) in p
         p.update(r)
         # and keep only non-aux variables
         p = {k: v for k, v in p.items() if k not in aux}
