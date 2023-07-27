@@ -1496,7 +1496,7 @@ def primal_dual(M, factor=True):
     >>> lp(max, *d)
     (28/3, {y1: 1/3, y2: 2/3})
 
-    If the equivalent (but canonical) inequalities are 
+    If the equivalent (but canonical) inequalities are
     desired, leave `factor=True`, otherwise the unmodified
     inequalities for M will be returned.
 
