@@ -685,6 +685,7 @@ def test_LRA_solver():
     assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1:4, s2:-4}
 
+    # note that this is the first time a pivot is used
     assert lra.assert_con(s1 <= 1) == ("OK", None)
     assert lra.check() == ('SAT', {x: -4, y: -3, s1: 1, s2: -7})
     assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:-3, s1:1, s2:-7}
