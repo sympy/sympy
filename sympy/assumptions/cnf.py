@@ -403,6 +403,24 @@ class EncodedCNF:
     """
         Class for encoding the CNF expression.
 
+        Attributes
+        ----------
+        data : list of sets of integers
+            The CNF expression that has been encoded. Each set represents a clause
+            in the CNF expression, where the integers inside the set represent the
+            encoded symbols (variables) or their negations.
+
+        encoding : dict
+            A dictionary that maps symbols (variables) to their corresponding integer
+            encodings. The integers are used to represent the symbols in the 'data' list.
+
+        _symbols : list of symbols
+            A list containing the symbols (variables) that have been encoded. This list
+            is derived from the keys of the 'encoding' dictionary and may be useful for
+            other purposes or in future extensions of the class.
+
+            *Note that the order the symbols come in corresponds to their encoding.
+
         Examples
         ========
 
@@ -451,9 +469,6 @@ class EncodedCNF:
         self._symbols = list(encoding.keys())
 
     def from_cnf(self, cnf):
-        """
-        Encode the given CNF expression.
-        """
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
@@ -461,43 +476,25 @@ class EncodedCNF:
 
     @property
     def symbols(self):
-        """
-        Retrieve the symbols used in encoding.
-        """
         return self._symbols
 
     @property
     def variables(self):
-        """
-        Retrieve the variable range used in encoding.
-        """
         return range(1, len(self._symbols) + 1)
 
     def copy(self):
-        """
-        Create a copy of the EncodedCNF object.
-        """
         new_data = [set(clause) for clause in self.data]
         return EncodedCNF(new_data, dict(self.encoding))
 
     def add_prop(self, prop):
-        """
-        Add a propositional expression to the encoded CNF.
-        """
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
 
     def add_from_cnf(self, cnf):
-        """
-        Add clauses from a CNF object to the encoded CNF.
-        """
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
 
     def encode_arg(self, arg):
-        """
-        Encode a logical argument.
-        """
         literal = arg.lit
         value = self.encoding.get(literal, None)
         if value is None:
@@ -510,21 +507,26 @@ class EncodedCNF:
             return value
 
     def encode(self, clause):
-        """
-        Encode a clause of the CNF expression.
-        """
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
 
-    def decode(self, encoded_clause):
-        """
-        Decode an encoded clause into a human-readable clause.
-        """
+    def decode_literal(self, encoded_arg):
+        symbol = self._symbols[abs(encoded_arg) - 1]
+        literal = ~symbol if encoded_arg < 0 else symbol
+        return literal
+
+    def _decode_clause(self, encoded_clause):
         clause = []
         for encoded_arg in encoded_clause:
             if encoded_arg == 0:
-                clause.append(S.false)
+                clause.append(False)
             else:
-                symbol = self._symbols[abs(encoded_arg) - 1]
-                literal = Not(symbol) if encoded_arg < 0 else symbol
+                literal = self.decode_literal(encoded_arg)
                 clause.append(literal)
         return Or(*clause)
+
+    def decode(self):
+        decoded_cnf = []
+        for encoded_clause in self.data:
+            clause = self._decode_clause(encoded_clause)
+            decoded_cnf.append(clause)
+        return decoded_cnf
