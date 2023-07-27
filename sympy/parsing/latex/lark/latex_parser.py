@@ -32,6 +32,7 @@ class TransformToSymPyExpr(Transformer):
     FLOAT = float
     # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
     SYMBOL = sympy.Symbol
+
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash
         variable_name = re.sub("var", "", tokens[1:])
@@ -99,7 +100,12 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Add(tokens[0], -tokens[2], evaluate=False)
 
     def mul(self, tokens):
-        return sympy.Mul(tokens[0], tokens[2], evaluate=False)
+        if len(tokens) == 2:
+            return sympy.Mul(tokens[0], tokens[1], evaluate=False)
+        elif len(tokens) == 3:
+            return sympy.Mul(tokens[0], tokens[2], evaluate=False)
+        else:
+            raise LaTeXParsingError() # TODO: fill out descriptive error message
 
     def div(self, tokens):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
@@ -155,6 +161,9 @@ class TransformToSymPyExpr(Transformer):
 
         return sympy.Integral(integrand, differential_symbol)
 
+    def group_curly_parentheses_special(self, tokens):
+        print(tokens)
+
     def summation(self, tokens):
         print(tokens)
 
@@ -164,19 +173,31 @@ class TransformToSymPyExpr(Transformer):
     def limit(self, tokens):
         print(tokens)
 
+        left_brace_index = tokens.index("{")
+        right_brace_index = tokens.index("}")
+
+
+        # we handle the limit underscore, i.e. the "x \to 0" part
+
+        expression = tokens[right_brace_index + 1]
+
+        # return sympy.Limit(, , , direction)
+
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
-            return tokens[0]
+            # we return it like verbatim because the function_applied node expects
+            # a list
+            return tokens
         else:
-            return_list = []
-            for elem in tokens:
-                if isinstance(elem, _lark.lexer.Token):
-                    if elem.type != "COMMA":
-                        raise LaTeXParsingError() # TODO: write descriptive error message
-                else:
-                    return_list.append(elem)
+            def remove_tokens(args):
+                if isinstance(args, _lark.lexer.Token):
+                    if args.type != "COMMA":
+                        # unexpected token encountered
+                        raise LaTeXParsingError()  # TODO: write descriptive error message
+                    return False
+                return True
 
-            return return_list
+            return filter(remove_tokens, tokens)
 
     def function_applied(self, tokens):
         return sympy.Function(tokens[0])(*tokens[2])
@@ -308,6 +329,12 @@ def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transfor
         print(parse_tree.pretty())
         return parse_tree
 
+    if print_debug_output:
+        # print this stuff before attempting to run the transformer
+        print("expression =", s)
+        # print(parse_tree)
+        print(parse_tree.pretty())
+
     sympy_expression = ""
     try:
         sympy_expression = TransformToSymPyExpr().transform(parse_tree)
@@ -315,10 +342,7 @@ def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transfor
         raise LaTeXParsingError(str(e))
 
     if print_debug_output:
-        print("expression =", s)
         print("SymPy expression =", sympy_expression)
-        # print(parse_tree)
-        print(parse_tree.pretty())
 
     return sympy_expression
 
@@ -362,4 +386,7 @@ if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
     # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
-    parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
+    # parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
+    parse_latex_lark(r"f(x + y, 3z^2, \sin t)", print_debug_output=True)
+    # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
+    # parse_latex_lark(r"37.8", print_debug_output=True)
