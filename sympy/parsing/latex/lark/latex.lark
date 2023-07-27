@@ -244,7 +244,7 @@ fraction: CMD_FRAC _expression_core _expression_core
 
 // basic_fraction.2: CMD_FRAC DIGIT DIGIT _expression?
 
-list_of_expressions: _expression | list_of_expressions "," _expression
+list_of_expressions: _expression ("," _expression)*
 
 function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
 
