@@ -10,12 +10,10 @@ from sympy.polys.polytools import Poly
     coefficients3=st.lists(st.integers()),
 )
 def test_gcd_hypothesis(coefficients1, coefficients2, coefficients3):
-    # instantiate polynomials
     f = Poly(coefficients1, x, domain="ZZ")
     g = Poly(coefficients2, x, domain="ZZ")
     r = Poly(coefficients3, x, domain="ZZ")
 
-    # get gdc
     gcd_1 = f.gcd(g)
     gcd_2 = g.gcd(f)
 

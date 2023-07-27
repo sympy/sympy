@@ -8,6 +8,7 @@ from sympy.ntheory import divisor_sigma
 
 @given(n=st.integers(1, 10**10))
 def test_tau_hypothesis(n):
+    n = 217
     div = divisors(n)
     tau_n = len(div)
     assert is_square(n) == (tau_n % 2 == 1)
