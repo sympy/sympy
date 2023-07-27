@@ -1247,10 +1247,18 @@ class LRASolver():
         Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
         if Mij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
-        A = M - Mj * (Mi / Mij)
-        A[i, :] = Mi / Mij
-        A[:, j] = (-Mj / Mij)*0
-        A[i, j] = -1#1 / Mij
+        A = M.copy()
+        A[i, :] = -A[i, :]/Mij
+        for row in range(M.shape[0]):
+            if row != i:
+                A[row, :] = A[row, :] + A[row, j] *A[i, :]
+
+        # A = M - Mj * (Mi / Mij)
+        # A[i, :] = Mi / Mij
+        # A[:, j] = (-Mj / Mij)*0
+        # A[i, j] = -1#-1#1 / Mij
+
+        assert A.rref() == M.rref()
         return A
 
 
