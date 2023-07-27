@@ -151,10 +151,10 @@ class SDM(dict):
 
         sdm1 = self
         sdm2 = {}
-        for i1 in rowset & set(sdm1):
+        for i1 in rowset & sdm1.keys():
             row1 = sdm1[i1]
             row2 = {}
-            for j1 in colset & set(row1):
+            for j1 in colset & row1.keys():
                 row1_j1 = row1[j1]
                 for j2 in colmap[j1]:
                     row2[j2] = row1_j1
@@ -1049,6 +1049,21 @@ class SDM(dict):
         even if the matrix is not square.
         """
         return all(i >= j for i, row in self.items() for j in row)
+
+    def is_diagonal(self):
+        """
+        Says whether this matrix is diagonal. True can be returned
+        even if the matrix is not square.
+        """
+        return all(i == j for i, row in self.items() for j in row)
+
+    def diagonal(self):
+        """
+        Returns the diagonal of the matrix as a list.
+        """
+        m, n = self.shape
+        zero = self.domain.zero
+        return [row.get(i, zero) for i, row in self.items() if i < n]
 
     def lll(A, delta=QQ(3, 4)):
         return A.from_ddm(ddm_lll(A.to_ddm(), delta=delta))
