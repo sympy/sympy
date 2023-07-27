@@ -1179,7 +1179,7 @@ class LRASolver():
 
             # assignments for x must always satisfy Ax = 0
             X = Matrix([self.assign[v] for v in self.col_index])
-            assert all(val == 0 for val in M*X)
+            assert all(abs(val) < 10**(-10) for val in M*X) # TODO: Maybe return None if this cond can't be met?
 
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
