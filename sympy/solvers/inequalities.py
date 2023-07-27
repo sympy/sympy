@@ -1372,13 +1372,57 @@ def _np(constr, unbound=None):
     return np, r, aux
 
 
+def _linprog_max(objective, constraints, unbound=None):
+    """return A, B, C, D, r, x+aux, aux for maximizing
+    objective = Cx - D with constraints Ax <= B, introducing
+    introducing aux variables as necessary to make replacements
+    of symbols as given in r, {sym: aux expression}, so all
+    variables will take on nonnegative values.
+    """
+
+    # sympify input and collect free symbols
+    f = sympify(objective)
+    syms = f.free_symbols
+    for i, j in enumerate(constraints):
+        constraints[i] = sympify(j)
+        syms |= constraints[i].free_symbols
+    syms = list(ordered(syms))
+
+    # standardize input
+    if unbound is True:
+        unbound = syms
+    elif not unbound:
+        unbound = []
+    elif not all(i in syms for i in unbound):
+        raise ValueError(filldedent('''
+            all symbols in unbound should appear
+            in the objective or constraints'''))
+
+    # convert constraints to nonpositive expressions
+    _ = _np(constraints, unbound)
+    if _ is None:
+        raise InfeasibleLinearProgrammingError('inconsistent/False constraint')
+    np, r, aux = _
+
+    # do change of variables
+    F = f.xreplace(r)
+    np = [i.xreplace(r) for i in np]
+
+    # convert to matrices
+    xx = syms + aux
+    A, B = linear_eq_to_matrix(np, xx)
+    C, D = linear_eq_to_matrix([F], xx)
+    return A, B, C, D, r, xx, aux
+
+
 def lp(min_max, f, constr, unbound=None):
     """Return the optimization (min or max) of ``f`` with the given
     constraints; if any variables are unbound, pass them as a list for
     `unbound`.
 
-    If `how=max` then the results corresponding to the maximization
-    of ``f`` will be returned.
+    If `min_max=max` then the results corresponding to the maximization
+    of ``f`` will be returned, else the minimization. The constraints
+    can be given as Le, Ge or Eq expressions.
 
     Examples
     ========
@@ -1410,36 +1454,12 @@ def lp(min_max, f, constr, unbound=None):
     ...
     __main__.UnboundedLinearProgrammingError: Objective function can assume arbitrarily large values!
     """
-    how = min_max
-    F = sympify(f)
-    syms = F.free_symbols
-    for i, j in enumerate(constr):
-        constr[i] = sympify(j)
-        syms |= constr[i].free_symbols
-    if unbound is True:
-        unbound = syms
-    elif not unbound:
-        unbound = []
-    elif not all(i in syms for i in unbound):
-        raise ValueError(filldedent('''
-            all symbols in unbound should appear
-            in the objective or constraints'''))
+    A, B, C, D, r, xx, aux = _linprog_max(f, constr, unbound)
 
-    # convert constraints to nonpositive expressions
-    _ = _np(constr, unbound)
-    if _ is None:
-        raise InfeasibleLinearProgrammingError('inconsistent/False constraint')
-    np, r, aux = _
-
-    # do change of variables
-    f = f.xreplace(r)
-    np = [i.xreplace(r) for i in np]
-
-    # convert to matrices and solve
-    xx = list(ordered(syms)) + aux
-    A, B = linear_eq_to_matrix(np, xx)
-    C, D = linear_eq_to_matrix([f], xx)
-    if how == max:
+    if 'max' in str(min_max).lower():
+        # _simplex minimizes for Ax <= B so we
+        # have to change the sign of the function
+        # and negate the optimal value returned
         _o, p, d = _simplex(A, B, -C, -D)
         o = -_o
     else:
@@ -1449,19 +1469,9 @@ def lp(min_max, f, constr, unbound=None):
     p = dict(zip(xx, p))
     if r:
         p.update(Dict(r).xreplace({k: p.pop(k) for k in aux}))
-        # the o returned needs to be translated back to the
-        # given function, not the one in terms of changes of
-        # variables
-        o = F.xreplace(p)
 
-    # make p canonical
-    p = {i: p[i] for i in ordered(p) if i}
-
-    # XXX not sure that dual should be returned since new variables may
-    # have been introduced; if the user wants the dual the should get it
-    # from the standard min/max problem representation -- this function
-    # does not enforce standard form, it gets the input into standard
-    # form for simplex
+    # not returning dual since there may be extra constraints
+    # when a variable has finite bounds
     return o, p
 
 
@@ -1517,7 +1527,7 @@ def primal_dual(M, factor=True):
     (-2*y1 - 2*y2,
         [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
-    If you pass the transpose of the matrix, the dual will be
+    If you pass the transpose of the matrix, the primal will be
     identified as the standard minimization problem and the
     dual as the standard maximization:
 
@@ -1527,12 +1537,23 @@ def primal_dual(M, factor=True):
     (y2 - 3*y3,
         [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
 
+    A matrix must have some size or else None will be returned for
+    the functions:
+
+    >>> primal_dual(Matrix([[1, 2]]))
+    ((x1 - 2, []), (-2, []))
+
+    >>> primal_dual(Matrix([]))
+    ((None, []), (None, []))
+
     References
     ==========
 
     .. [1] David Galvin, Relations between Primal and Dual
            www3.nd.edu/~dgalvin1/30210/30210_F07/presentations/dual_opt.pdf
     """
+    if not M:
+        return (None, []), (None, [])
     m, n = [i - 1 for i in M.shape]
     A = M[:m, :n]
     b = M[:m, -1]
@@ -1551,6 +1572,8 @@ def primal_dual(M, factor=True):
                     r = r.func(sign(c)*f.lhs.args[1], f.rhs//abs(c))
             rv.append(r)
         return rv
-    F = (cT*x)[0] - d
-    f = (yT*b)[0] - d
+    eq = lambda x, d: x[0] - d if x else -d
+    F = eq(cT*x, d)
+    f = eq(yT*b, d)
     return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, cT, Le))
+
