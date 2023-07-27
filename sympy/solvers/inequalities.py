@@ -1481,7 +1481,6 @@ def primal_dual(M, factor=True):
     minimizing x + y + 7 for y >= x + 1 and y >= -2*x + 3.
     The dual task seeks to maximize x + 3*y + 7 with
     2*y - x <= 1 and and x + y <= 1:
-    
 
     >>> M = Matrix([
     ...     [-1, 1,  1],
