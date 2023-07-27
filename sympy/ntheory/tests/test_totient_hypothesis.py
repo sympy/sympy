@@ -2,7 +2,6 @@ from hypothesis import given
 from hypothesis import strategies as st
 from sympy.ntheory import totient
 from sympy import divisors
-import random
 
 
 @given(n=st.integers(1, 10**10))
