@@ -1301,7 +1301,7 @@ def _np(constr, unbound=None):
             elif i.function == Q.eq:
                 i = Eq(i.rhs, i.lhs, evaluate=False)
             else:
-                assert None, i  # not allowed
+                raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
         if i == True:
             continue  # ignore
         if i == False:
@@ -1325,7 +1325,7 @@ def _np(constr, unbound=None):
             else:
                 np.append(npi)
         else:
-            assert None, i  # not allowed
+            raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
