@@ -46,10 +46,11 @@ or functions are outlined in the documentation for those specific functions.
   There also exist some alternatives to {func}`~.symbols`. Two alternatives
   are using the {class}`~.Symbol` constructor directly and {mod}`sympy.abc`.
   These are both fine, but they are less general than {func}`~.symbols`, so
-  just using `symbols()` is generally preferred. For example,
-  {class}`~.Symbol` only supports creating one symbol at a time, and
-  {mod}`sympy.abc` allows importing common single letter symbol names and
-  doesn't allow including assumptions.
+  just using `symbols()` is generally preferred. {class}`~.Symbol` only
+  supports creating one symbol at a time. If you want to be sure you are only
+  creating one Symbol, this is better. {mod}`sympy.abc` allows importing
+  common single letter symbol names but doesn't support more general symbol
+  names and doesn't allow including assumptions.
 
   The {func}`~.var` function should be avoided, except when working
   interactively. It works like the {func}`~.symbols` function, except it
@@ -88,6 +89,20 @@ or functions are outlined in the documentation for those specific functions.
   is defined with no assumptions, because the integral only converges when `a`
   is positive. Setting `a` to be positive removes this piecewise.
 
+  When you do use assumptions, the best practice is to always use the same
+  assumptions for each symbol name. SymPy allows the same symbol name to be
+  defined with different assumptions, but these symbols will be considered
+  unequal to each other:
+
+  ```
+  >>> z1 = symbols('z')
+  >>> z2 = symbols('z', positive=True)
+  >>> z1 == z2
+  False
+  >>> z1 + z2
+  z + z
+  ```
+
 See also [](best-practices-avoid-string-inputs) and
 [](best-practices-dont-hardcode-symbol-names) for related best practices
 around defining symbols.
@@ -103,8 +118,8 @@ them.
 **Don't**
 
 ```py
->>> from sympy import simplify
->>> simplify("(x**2 + x)/x")
+>>> from sympy import expand
+>>> expand("(x**2 + x)/x")
 x + 1
 ```
 
@@ -113,7 +128,7 @@ x + 1
 ```py
 >>> from sympy import symbols
 >>> x = symbols('x')
->>> simplify((x**2 + x)/x)
+>>> expand((x**2 + x)/x)
 x + 1
 ```
 
@@ -128,22 +143,17 @@ all strings early and only use symbolic manipulation from there on.
 >>> from sympy import parse_expr
 >>> string_input = "(x**2 + x)/x"
 >>> expr = parse_expr(string_input)
->>> simplify(expr)
+>>> expand(expr)
 x + 1
 ```
 
 **Reason**
 
-Support for string input is in many ways accidental. It only happens because
-functions call `sympify()` on their input to ensure that it is a SymPy object,
-and `sympify()` translates strings. Support for this may go away in a future
-version of SymPy.
-
 There are many disadvantages to using strings:
 
-- They are not explicit. They make code much harder to read.
+- [They are not explicit.](https://peps.python.org/pep-0020/) They make code much harder to read.
 
-- `sympify()` automatically turns all undefined names into Symbols of
+- `sympify()` automatically turns all undefined names into Symbols or
   Functions, so if you have a typo, the string will still parse correctly, but
   the output will not be what you expect. For example
 
@@ -176,9 +186,8 @@ There are many disadvantages to using strings:
   considered unequal:
 
   ```
-  >>> from sympy import Symbol
-  >>> z1 = Symbol('z')
-  >>> z2 = Symbol('z', positive=True)
+  >>> z1 = symbols('z')
+  >>> z2 = symbols('z', positive=True)
   >>> z1 == z2
   False
   >>> z1 + z2
@@ -186,7 +195,8 @@ There are many disadvantages to using strings:
   ```
 
   It is generally recommended to avoid doing this, as it can lead to confusing
-  expressions like the one above.
+  expressions like the one above (see [](best-practices-defining-symbols)
+  abovee).
 
   However, strings always parse symbols into symbols without assumptions. So
   if you have a symbol with an assumption and later try to use the string
@@ -194,7 +204,7 @@ There are many disadvantages to using strings:
 
   ```py
   >>> from sympy import diff
-  >>> z = Symbol('z', positive=True)
+  >>> z = symbols('z', positive=True)
   >>> diff('z**2', z)
   0
   ```
@@ -207,7 +217,7 @@ There are many disadvantages to using strings:
   This sort of thing is particularly bad because it generally doesn't lead to
   any errors. It will just silently give the "wrong" answer because SymPy will
   be treating symbols that you thought were the same as different. The
-  solution is to not mix string inputs with non-string inputs.
+  situation is avoided by not using string inputs.
 
   If you are parsing strings, and you want some of the symbols in it to have
   certain assumptions, you should create those symbols and pass them to the
@@ -219,7 +229,7 @@ There are many disadvantages to using strings:
   >>> a, b, c = symbols('a b c', real=True)
   >>> # a, b, and c in expr are different symbols without assumptions
   >>> expr = parse_expr('a**2 + b - c')
-  >>> expr.subs({a: 1, b: 1, c: 1})
+  >>> expr.subs({a: 1, b: 1, c: 1}) # The substitution (apparently) doesn't work
   a**2 + b - c
   ```
 
@@ -265,18 +275,22 @@ There are many disadvantages to using strings:
 
   This doesn't work because `x_{2}` is not valid Python.
 
-  Symbol names do not have to be valid Python, if they are created from the
-  `Symbol` or `symbols` functions. It's often convenient to use non-Python
-  notation in Symbol names so that they will print nicely in LaTeX.
+  Symbol names do not have to be valid Python. If they are created from the
+  `Symbol` or `symbols` functions they can contain any string. It's often
+  convenient to use non-Python notation in Symbol names so that they will
+  print nicely in LaTeX, for example:
 
   ```py
-  >>> x2 = Symbol('x_{2}')
+  >>> from sympy import latex
+  >>> x2 = symbols('x_{2}')
   >>> solve(x2 - 1, x2)
   [1]
+  >>> latex(x2)
+  'x_{2}'
   ```
 
-  This is the best case scenario, where you get an error. It is also possible
-  you might get something unexpected:
+  Actually, the above is the best case scenario, where you get an error. It is
+  also possible you might get something unexpected:
 
   ```py
   >>> solve('x^1_2 - 1')
@@ -291,28 +305,28 @@ There are many disadvantages to using strings:
   ignored. It is always represented as a single symbol.
 
   ```py
-  >>> x12 = Symbol('x^1_2')
+  >>> x12 = symbols('x^1_2')
   >>> solve(x12 - 1, x12)
   [1]
   ```
-
 
 - If you use strings, syntax errors won't be caught until the line is run. If
   you build up the expressions, syntax errors will be caught immediately when
   Python compiles the script before any of it runs.
 
 - When you are using strings, it is tempting to build up expressions and do
-  symbolic manipulation via manipulation of strings. This is almost always a
-  bad idea. It is much better to use SymPy functions and operations to do
-  symbolic manipulation. You will avoid mistakes, and doing things with
-  strings will soon get too complex to handle. That's because there is no
-  notion of a symbolic expression in a string. To Python, `"(x + y)/z"` is no
-  different from `"/x+)(y z "`, which is the same string with the characters
-  in another order. But SymPy expressions know what type of expression they
-  are and how to traverse the expression tree (e.g., using `expr.args`), and
-  you can use operators like `+-*/`. And as to the previous point, if there is
-  an error, it will be difficult to track down because it won't be noticed
-  until you actually parse the string into an expression.
+  symbolic manipulation via manipulation of strings. This is always a bad idea
+  and a sign that you are using SymPy incorrectly. It is much better to use
+  SymPy functions and operations to do symbolic manipulation. You will avoid
+  mistakes, and doing things with strings will soon get too complex to handle.
+  That's because there is no notion of a symbolic expression in a string. To
+  Python, `"(x + y)/z"` is no different from `"/x+)(y z "`, which is the same
+  string with the characters in another order. But SymPy expressions know what
+  type of expression they are and how to traverse the expression tree (e.g.,
+  using `expr.args`), and you build then up with operators like `+`, `-`, `*`,
+  or `/`. And to the previous point, if there is an error, it will be
+  difficult to track down because it won't be noticed until you actually parse
+  the string into an expression.
 
   For example
 
@@ -338,8 +352,9 @@ There are many disadvantages to using strings:
   one color, whereas Python expressions will be highlighted according to their
   actual content.
 
-- As mentioned, string inputs are not officially supported or tested, and so
-  may go away at any time.
+- Support for string inputs in general SymPy functions (other than `sympify()`
+  or `parse_expr()`) [may go away in a future version of
+  SymPy](https://github.com/sympy/sympy/issues/11003).
 
 (best-practices-exact-rational-numbers-vs-floats)=
 ### Exact Rational Numbers vs. Floats
@@ -358,7 +373,9 @@ For example,
 **Do**
 
 ```py
->>> expression = x**2 + x/2 + 1
+>>> from sympy import Rational
+>>> expression = x**2 + Rational(1, 2)*x + 1
+>>> expression = x**2 + x/2 + 1 # Equivalently
 ```
 
 However, this isn't to say that you should never use floating-point numbers in
@@ -367,30 +384,7 @@ does support [arbitrary precision floating-point
 numbers](sympy.core.numbers.Float), but some operations may not perform as
 well with them.
 
-One should also take care to avoid writing `integer/integer` where both
-integers are explicit integers. This is because Python will evaluate this to a floating-point value before SymPy is able to parse it.
-
-**Don't**
-
-```py
->>> x + 2/7 # The exact value of 2/7 is lost
-x + 0.2857142857142857
-```
-
-In this case, use {class}`~.Rational` to create a rational number, or use
-`S()` shorthand if you want to save on typing.
-
-**Do**
-
-```py
->>> from sympy import Rational, S
->>> x + Rational(2, 7)
-x + 2/7
->>> x + S(2)/7 # Equivalently
-x + 2/7
-```
-
-This also applies to non-rational values which can be represented exactly. For
+This also applies to non-rational numbers which can be represented exactly. For
 example, one should avoid using `math.pi` and prefer `sympy.pi`, since the
 former is a numerical approximation to $\pi$ and the latter is exactly $\pi$
 (see also [](best-practices-separate-symbolic-and-numeric-code) below; in
@@ -418,6 +412,30 @@ pi
 
 Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\pi$.
 
+
+One should also take care to avoid writing `integer/integer` where both
+integers are explicit integers. This is because Python will evaluate this to a floating-point value before SymPy is able to parse it.
+
+**Don't**
+
+```py
+>>> x + 2/7 # The exact value of 2/7 is lost
+x + 0.2857142857142857
+```
+
+In this case, use {class}`~.Rational` to create a rational number, or use
+`S()` shorthand if you want to save on typing.
+
+**Do**
+
+```py
+>>> from sympy import Rational, S
+>>> x + Rational(2, 7)
+x + 2/7
+>>> x + S(2)/7 # Equivalently
+x + 2/7
+```
+
 **Reason**
 
 Exact values, if they are known, should be preferred over floats for the
@@ -426,10 +444,10 @@ following reasons:
 - An exact symbolic value can often be symbolically simplified or manipulated.
   A float represents an approximation to an exact real number, and therefore
   cannot be simplified exactly. For example, in the above example,
-  `sin(math.pi)` does not simplify to `0` because `math.pi` is not exactly
-  $\pi$. It is just a floating-point number that approximates $\pi$ to 15
-  digits (effectively, a close rational approximation to $\pi$, but not
-  exactly $\pi$).
+  `sin(math.pi)` does not produce `0` because `math.pi` is not exactly $\pi$.
+  It is just a floating-point number that approximates $\pi$ to 15 digits
+  (effectively, a close rational approximation to $\pi$, but not exactly
+  $\pi$).
 
 - Some algorithms will not be able to compute a result if there are
   floating-point values, but can if the values are rational numbers. This is
@@ -445,10 +463,12 @@ following reasons:
   >>> from sympy import factor
   >>> factor(x**2.0 - 1)
   x**2.0 - 1
+  >>> factor(x**2 - 1)
+  (x - 1)*(x + 1)
   ```
 
-- SymPy floats can have the same loss of significance cancellation issues that
-  can occur from using finite precision floating-point approximations:
+- SymPy Floats have the same loss of significance cancellation issues that can
+  occur from using finite precision floating-point approximations:
 
   ```py
   >>> from sympy import expand
@@ -472,9 +492,9 @@ following reasons:
 
 A `Float` number can be converted to its exact rational equivalent by passing
 it to `Rational`. Alternatively, you can use `nsimplify` to find the nicest
-rational approximation. This may often reproduce the number that was intended
-if the number is supposed to be rational (although again, it's best to just
-start with rational numbers in the first place, if you can):
+rational approximation. This can sometimes reproduce the number that was
+intended if the number is supposed to be rational (although again, it's best
+to just start with rational numbers in the first place, if you can):
 
 ```py
 >>> from sympy import nsimplify
@@ -486,9 +506,10 @@ start with rational numbers in the first place, if you can):
 
 ### Avoid `simplify()`
 
-{func}`~.simplify` is designed as a general purpose heuristic. It tries
-various simplification algorithms on the input expression and returns the
-result that seems the "simplest" based on some metric.
+{func}`~.simplify` (not to be confused with {func}`~.sympify`) is designed as
+a general purpose heuristic. It tries various simplification algorithms on the
+input expression and returns the result that seems the "simplest" based on
+some metric.
 
 `simplify()` is perfectly fine for interactive use, where you just want SymPy
 to do whatever it can to an expression. However, in programmatic usage, it's
