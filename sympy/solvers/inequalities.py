@@ -1334,11 +1334,7 @@ def _np(constr, unbound=None):
             return None  # no solution possible
         a, b = i.inf, i.sup
         if a.is_infinite and b.is_infinite:
-            # this is unbound
-            u = next(ui)
-            v = next(ui)
-            r[x] = u - v
-            aux.extend([u, v])
+            unbound.append(x)
         elif a.is_infinite:
             u = next(ui)
             r[x] = b - u
@@ -1362,10 +1358,9 @@ def _np(constr, unbound=None):
             np.append(u - (b - a))
 
     # make change of variables for unbound variables
-    for i in unbound:
-        assert i not in univariate
+    for x in unbound:
         u = next(ui)
-        r[i] = i - u  # reusing i
+        r[x] = x - u  # reusing x
         aux.append(u)
 
     return np, r, aux
