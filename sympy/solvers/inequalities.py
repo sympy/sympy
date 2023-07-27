@@ -1492,7 +1492,7 @@ def primal_dual(M, factor=True):
     (though they occur at different points):
 
     >>> lp(min, *p)
-    (28/3, {x1: 2/3, x3: 5/3})
+    (28/3, {x1: 2/3, x2: 5/3})
     >>> lp(max, *d)
     (28/3, {y1: 1/3, y2: 2/3})
 
