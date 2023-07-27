@@ -10,8 +10,9 @@ import re
 from hypothesis import settings
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
-settings.register_profile("no_deadline", deadline=None)
-settings.load_profile("no_deadline")
+
+settings.register_profile("sympy_hypothesis_profile", deadline=None)
+settings.load_profile("sympy_hypothesis_profile")
 
 def process_split(config, items):
     split = config.getoption("--split")
