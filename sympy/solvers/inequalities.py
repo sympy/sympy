@@ -4,7 +4,6 @@ import itertools
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.containers import Dict
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Lt, Ge, Eq, Le
 from sympy.assumptions.ask import Q
