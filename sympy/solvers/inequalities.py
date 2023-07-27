@@ -15,6 +15,7 @@ from sympy.core.sorting import ordered
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import im, Abs, sign
 from sympy.logic import And
+from sympy.matrices.dense import Matrix
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
@@ -1166,7 +1167,6 @@ def _simplex(A, B, C, D=None, dual=False):
     .. [1] Thomas S. Ferguson, LINEAR PROGRAMMING: A Concise Introduction
            web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
     """
-    from sympy.matrices.dense import Matrix
 
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
     if dual:
