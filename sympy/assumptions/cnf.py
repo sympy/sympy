@@ -401,65 +401,84 @@ class CNF:
 
 class EncodedCNF:
     """
-        Class for encoding the CNF expression.
+    Class for encoding the CNF expression.
 
-        Attributes
-        ----------
-        data : list of sets of integers
-            The CNF expression that has been encoded. Each set represents a clause
-            in the CNF expression, where the integers inside the set represent the
-            encoded symbols (variables) or their negations.
+    Parameters
+    ==========
+    data : list of sets of integers
+        The CNF expression that has been encoded. Each set represents a clause
+        in the CNF expression, where the integers inside the set represent the
+        encoded symbols (variables) or their negations.
 
-        encoding : dict
-            A dictionary that maps symbols (variables) to their corresponding integer
-            encodings. The integers are used to represent the symbols in the 'data' list.
+    encoding : dict
+        A dictionary that maps symbols (variables) to their corresponding integer
+        encodings. The integers are used to represent the symbols in the 'data' list.
 
-        _symbols : list of symbols
-            A list containing the symbols (variables) that have been encoded. This list
-            is derived from the keys of the 'encoding' dictionary and may be useful for
-            other purposes or in future extensions of the class.
+    _symbols : list of symbols
+        A list containing the symbols (variables) that have been encoded. This list
+        is derived from the keys of the 'encoding' dictionary and may be useful for
+        other purposes or in future extensions of the class.
 
-            *Note that the order the symbols come in corresponds to their encoding.
+        *Note that the order the symbols come in corresponds to their encoding.
 
-        Examples
-        ========
+    Examples
+    ========
 
-        Example 1:
-        ----------
-        Create an instance of EncodedCNF and add a propositional expression.
-        >>> from sympy.assumptions.cnf import CNF, EncodedCNF
-        >>> from sympy.abc import a, b
-        >>> from sympy.logic.boolalg import Or, Not
+    Example 1:
+    ----------
+    Create an instance of EncodedCNF and add a propositional expression.
+    >>> from sympy.assumptions.cnf import CNF, EncodedCNF
+    >>> from sympy.abc import a, b
+    >>> from sympy.logic.boolalg import Or, Not
 
-        >>> encoded_cnf = EncodedCNF()
-        >>> prop = Or(a, Not(b))
-        >>> encoded_cnf.add_prop(prop)
+    >>> encoded_cnf = EncodedCNF()
+    >>> prop = Or(a, Not(b))
+    >>> encoded_cnf.add_prop(prop)
 
-        Encode the CNF expression and print the encoded data and encoding dictionary.
-        Note that the actual encoding may differ between sessions.
-        >>> encoded_cnf.data #doctest: +SKIP
-        [{1, -2}]
-        >>> encoded_cnf.encoding #doctest: +SKIP
-        {a: 1, b: 2}
+    Encode the CNF expression and print the encoded data and encoding dictionary.
+    Note that the actual encoding may differ between sessions.
+    >>> encoded_cnf.data #doctest: +SKIP
+    [{1, -2}]
 
-        Example 2:
-        ----------
-        Create a copy of the encoded CNF object and add more clauses from a CNF object.
+    >>> encoded_cnf.encoding #doctest: +SKIP
+    {a: 1, b: 2}
 
-        >>> copied_encoded_cnf = encoded_cnf.copy()
-        >>> cnf = CNF.from_prop('a | b')
-        >>> encoded_cnf.add_from_cnf(cnf)
+    Example 2:
+    ----------
+    Decode the encoded CNF expression.
 
-        >>> sorted_data = sorted(encoded_cnf.data)
-        >>> sorted_copied_data = sorted(copied_encoded_cnf.data)
+    Decode just one literal.
+    >>> first_literal_encoding = list(encoded_cnf.data[0])[0]
 
-        Check the updated encoded data for `encoded_cnf` and the copied encoded data.
-        Note that the actual encoding may differ between sessions.
-        >>> sorted_data #doctest: +SKIP
-        [{1, -2}, {3}]
-        >>> sorted_copied_data #doctest: +SKIP
-        [{1, -2}]
-        """
+    Again, note that the actual encoding may differ between sessions.
+    >>> first_literal_encoding #doctest: +SKIP
+    2
+
+    But the decoded literal is the same, as expected.
+    >>> encoded_cnf.decode_literal(first_literal_encoding)
+    a
+
+    Decode the entire encoded CNF.
+    >>> encoded_cnf.decode()
+    [a | ~b]
+
+    Example 3:
+    ----------
+    Create a copy of the encoded CNF object and add more clauses from a CNF object.
+
+    >>> copied_encoded_cnf = encoded_cnf.copy()
+    >>> prop = Or(a, b)
+    >>> cnf = CNF.from_prop(prop)
+    >>> encoded_cnf.add_from_cnf(cnf)
+
+    Check the updated encoded data for `encoded_cnf` and the copied encoded data.
+    Again, note that the actual encoding may differ between sessions.
+    >>> encoded_cnf.data #doctest: +SKIP
+    [{1, -2}, {3}]
+
+    >>> copied_encoded_cnf.data #doctest: +SKIP
+    [{1, -2}]
+    """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
             data = []
