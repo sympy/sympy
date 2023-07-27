@@ -4,6 +4,10 @@ This page outlines some of the best practices for users of SymPy. The best
 practices here will help avoid some common bugs and pitfalls that can occur
 when using SymPy.
 
+This page primarily focuses on best practices that apply generally to all
+parts of SymPy. Best practices that are specific to certain SymPy submodules
+or functions are outlined in the documentation for those specific functions.
+
 ## Basic Usage
 
 (best-practices-defining-symbols)=
