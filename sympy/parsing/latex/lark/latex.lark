@@ -206,9 +206,9 @@ _expression_mul: _expression_power | mul | div
 
 _expression: _expression_mul | add | sub | limit
 
-limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
+_limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
-limit: FUNC_LIM (UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM _expression (CARET limit_dir)? R_BRACE)? _expression
+limit: FUNC_LIM UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM _expression (CARET _limit_dir)? R_BRACE _expression
 
 //group_curly_parentheses_lim: L_BRACE _atomic_expr LIM_APPROACH_SYM  R_BRACE
 
@@ -216,10 +216,12 @@ integral: FUNC_INT _expression "d"_oneletter_symbol
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? "d"_oneletter_symbol
     | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? "d"_oneletter_symbol
 
-group_curly_parentheses_special: L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
+// fix this thing, and the definitions of summation and product
+group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
+    | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
 
-summation: FUNC_SUM UNDERSCORE group_curly_parentheses_special CARET _expression_core _expression
-    | FUNC_SUM CARET _expression_core UNDERSCORE group_curly_parentheses_special _expression
+summation: FUNC_SUM group_curly_parentheses_special _expression
+    | FUNC_SUM group_curly_parentheses_special _expression
 
 product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET _expression_core _expression
     | FUNC_PROD CARET _expression_core UNDERSCORE group_curly_parentheses_special _expression
