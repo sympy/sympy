@@ -1,5 +1,9 @@
 """Tests for the ``sympy.physics._biomechanics.characteristic.py`` module."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
 from sympy.core.backend import Function, Symbol, exp
@@ -7,7 +11,11 @@ from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     fl_T_de_groote_2016,
 )
+from sympy.printing.c import C89CodePrinter, C99CodePrinter, C11CodePrinter
 from sympy.printing.latex import LatexPrinter
+
+if TYPE_CHECKING:
+    from sympy.printing.codeprinter import CodePrinter
 
 
 class TestTendonForceLengthDeGroote2016:
@@ -49,3 +57,24 @@ class TestTendonForceLengthDeGroote2016:
         output = printer.doprint(fl_T.doit())
         expected = r'c_{0} e^{c_{3} \left(- c_{1} + l_{T tilde}\right)} - c_{2}'
         assert output == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                C99CodePrinter,
+                '0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                C11CodePrinter,
+                '0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer: type[CodePrinter], expected: str) -> None:
+        fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
+        assert code_printer().doprint(fl_T) == expected
