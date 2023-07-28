@@ -17,6 +17,7 @@ from sympy.printing.cxx import (
     CXX11CodePrinter,
     CXX17CodePrinter,
 )
+from sympy.printing.fortran import FCodePrinter
 from sympy.printing.latex import LatexPrinter
 
 if TYPE_CHECKING:
@@ -89,6 +90,10 @@ class TestTendonForceLengthDeGroote2016:
             (
                 CXX17CodePrinter,
                 '0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                FCodePrinter,
+                '      0.2d0*2.1635839670136945d-15*exp(33.93669377311689d0*l_T_tilde) -\n      @ 0.25d0',
             ),
         ]
     )
