@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import Interval, numer, Rational, solveset, S
+from sympy import Interval, numer, Rational, solveset
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -14,7 +14,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions import arg, Abs
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
@@ -253,6 +252,8 @@ def phase_margin(system):
     .. [1] https://en.wikipedia.org/wiki/Phase_margin
 
     """
+    from sympy.functions import arg, Abs
+
     if not isinstance(system, SISOLinearTimeInvariant):
         raise ValueError("Margins are only applicable for SISO LTI systems.")
 
