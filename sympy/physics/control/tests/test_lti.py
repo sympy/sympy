@@ -1326,7 +1326,7 @@ def test_TransferFunction_phase_margin():
 
 def test_TransferFunction_gain_margin():
     tf1 = TransferFunction(s**2, 5*(s+1)*(s-5)*(s-10), s)
-    tf2 = TransferFunction(s**2 + 2*s + 1,1, s)
+    tf2 = TransferFunction(s**2 + 2*s + 1, 1, s)
     tf3 = TransferFunction(1, a*s+b, s)
 
     assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
