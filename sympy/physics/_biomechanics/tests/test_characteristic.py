@@ -158,3 +158,16 @@ class TestTendonForceLengthDeGroote2016:
             1.04314889144172,
         ])
         numpy.testing.assert_allclose(fl_T_callable(l_T_tilde), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self) -> None:
+        fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
+        fl_T_callable = jax.jit(lambdify(self.l_T_tilde, fl_T, 'jax'))
+        l_T_tilde = jax.numpy.array([0.95, 1.0, 1.01, 1.05])
+        expected = jax.numpy.array([
+            -0.2065693181344816,
+            -0.0130140550392216,
+            0.0827421191989246,
+            1.04314889144172,
+        ])
+        numpy.testing.assert_allclose(fl_T_callable(l_T_tilde), expected)
