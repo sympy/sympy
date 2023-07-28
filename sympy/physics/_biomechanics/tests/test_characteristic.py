@@ -19,6 +19,7 @@ from sympy.printing.cxx import (
 )
 from sympy.printing.fortran import FCodePrinter
 from sympy.printing.latex import LatexPrinter
+from sympy.printing.octave import OctaveCodePrinter
 
 if TYPE_CHECKING:
     from sympy.printing.codeprinter import CodePrinter
@@ -94,6 +95,10 @@ class TestTendonForceLengthDeGroote2016:
             (
                 FCodePrinter,
                 '      0.2d0*2.1635839670136945d-15*exp(33.93669377311689d0*l_T_tilde) -\n      @ 0.25d0',
+            ),
+            (
+                OctaveCodePrinter,
+                '0.2*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
             ),
         ]
     )
