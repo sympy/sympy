@@ -51,7 +51,7 @@ def dm_rref(M):
 
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref
         The ``DomainMatrix`` method that calls this function.
-    sympy.polys.matrices.domainmatrix.rref.dm_rref_den
+    sympy.polys.matrices.rref.dm_rref_den
         Alternative function for computing RREF with denominator.
     """
     K = M.domain
