@@ -46,6 +46,7 @@ class CharacteristicCurveFunction(Function):
 
     _ccode = _print_code
     _cxxcode = _print_code
+    _fcode = _print_code
 
 
 class fl_T_de_groote_2016(CharacteristicCurveFunction):
