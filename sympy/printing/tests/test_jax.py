@@ -349,3 +349,9 @@ def test_jax_print_methods():
     prntr = JaxPrinter()
     assert hasattr(prntr, '_print_acos')
     assert hasattr(prntr, '_print_log')
+
+
+def test_jax_printmethod():
+    printer = JaxPrinter()
+    assert hasattr(printer, 'printmethod')
+    assert printer.printmethod == '_jaxcode'
