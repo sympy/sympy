@@ -23,6 +23,27 @@ __all__ = ['fl_T_de_groote_2016']
 class CharacteristicCurveFunction(Function):
     """Base class for all musculotendon characteristic curve functions."""
 
+    def _print_code(self, printer: Printer) -> str:
+        """Print code for the function defining the curve using a printer.
+
+        Explanation
+        ===========
+
+        The order of operations may need to be controlled as constant folding
+        the numeric terms within the equations of a musculotendon
+        characteristic curve can sometimes results in a numerically-unstable
+        expression.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print a string representation of the
+            characteristic curve as valid code in the target language.
+
+        """
+        return printer.doprint(self.doit(deep=False, evaluate=False))
+
 
 class fl_T_de_groote_2016(CharacteristicCurveFunction):
     r"""Tendon force-length curve based on De Groote et al., 2016 [1].
