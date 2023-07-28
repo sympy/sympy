@@ -1372,16 +1372,17 @@ def _linprog_max(objective, constraints, unbound=None):
     objective = Cx - D with constraints Ax <= B, introducing
     introducing aux variables as necessary to make replacements
     of symbols as given in r, {sym: aux expression}, so all
-    variables will take on nonnegative values.
+    variables in xx will take on nonnegative values.
+
+    If constraints contain symbols not in objective, this will
+    cause problems if passed to _simplex which expects all
+    elements to be Float or Rational.
     """
 
     # sympify input and collect free symbols
     f = sympify(objective)
-    syms = f.free_symbols
-    for i, j in enumerate(constraints):
-        constraints[i] = sympify(j)
-        syms |= constraints[i].free_symbols
-    syms = list(ordered(syms))
+    syms = list(ordered(f.free_symbols))
+    constraints = [sympify(i) for i in constraints]
 
     # standardize input
     if unbound is True:
@@ -1391,7 +1392,7 @@ def _linprog_max(objective, constraints, unbound=None):
     elif not all(i in syms for i in unbound):
         raise ValueError(filldedent('''
             all symbols in unbound should appear
-            in the objective or constraints'''))
+            in the objective function.'''))
 
     # convert constraints to nonpositive expressions
     _ = _np(constraints, unbound)
