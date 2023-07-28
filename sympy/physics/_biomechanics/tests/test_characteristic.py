@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from sympy.core.backend import Function, Symbol, exp
+from sympy.core.numbers import Float
 from sympy.external import import_module
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
@@ -65,6 +66,17 @@ class TestTendonForceLengthDeGroote2016:
     def test_doit(self) -> None:
         fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants).doit()
         assert fl_T == self.c0*exp(self.c3*(self.l_T_tilde - self.c1)) - self.c2
+
+    def test_with_default_constants(self) -> None:
+        constants = (
+            Float('0.2'),
+            Float('0.995'),
+            Float('0.25'),
+            Float('33.93669377311689'),
+        )
+        fl_T_manual = fl_T_de_groote_2016(self.l_T_tilde, *constants)
+        fl_T_constants = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
+        assert fl_T_manual == fl_T_constants
 
     def test_function_print_latex(self) -> None:
         fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants)
