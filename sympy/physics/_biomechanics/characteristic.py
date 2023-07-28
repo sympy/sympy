@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from typing import Any
 
     from sympy.core.expr import Expr
+    from sympy.printing.printer import Printer
 
 
 __all__ = ['fl_T_de_groote_2016']
@@ -155,3 +156,17 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
         a3 = Mul(c0, a2, evaluate=False)
         expr = Add(a3, Mul(Integer(-1), c2), evaluate=False)
         return expr
+
+    def _latex(self, printer: Printer) -> str:
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        l_T_tilde = self.args[0]
+        _l_T_tilde = printer._print(l_T_tilde)
+        return r'\operatorname{fl}^T \left( %s \right)' % _l_T_tilde
