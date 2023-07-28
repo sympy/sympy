@@ -28,6 +28,7 @@ from sympy.printing.numpy import (
     SciPyPrinter,
 )
 from sympy.printing.pycode import PythonCodePrinter
+from sympy.utilities.lambdify import lambdify
 
 if TYPE_CHECKING:
     from sympy.printing.codeprinter import CodePrinter
@@ -139,3 +140,8 @@ class TestTendonForceLengthDeGroote2016:
     def test_print_code(self, code_printer: type[CodePrinter], expected: str) -> None:
         fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
         assert code_printer().doprint(fl_T) == expected
+
+    def test_lambdify(self) -> None:
+        fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
+        fl_T_callable = lambdify(self.l_T_tilde, fl_T)
+        assert fl_T_callable(1.0) == pytest.approx(-0.013014055039221595)
