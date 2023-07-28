@@ -256,6 +256,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics._biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
