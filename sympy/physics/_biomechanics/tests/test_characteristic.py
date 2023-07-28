@@ -12,6 +12,11 @@ from sympy.physics._biomechanics.characteristic import (
     fl_T_de_groote_2016,
 )
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, C11CodePrinter
+from sympy.printing.cxx import (
+    CXX98CodePrinter,
+    CXX11CodePrinter,
+    CXX17CodePrinter,
+)
 from sympy.printing.latex import LatexPrinter
 
 if TYPE_CHECKING:
@@ -72,6 +77,18 @@ class TestTendonForceLengthDeGroote2016:
             (
                 C11CodePrinter,
                 '0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                CXX98CodePrinter,
+                '0.20000000000000001*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                CXX11CodePrinter,
+                '0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                CXX17CodePrinter,
+                '0.20000000000000001*std::exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
             ),
         ]
     )
