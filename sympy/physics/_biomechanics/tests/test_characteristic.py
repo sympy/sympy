@@ -25,3 +25,8 @@ class TestTendonForceLengthDeGroote2016:
         assert issubclass(fl_T_de_groote_2016, Function)
         assert issubclass(fl_T_de_groote_2016, CharacteristicCurveFunction)
         assert fl_T_de_groote_2016.__name__ == 'fl_T_de_groote_2016'
+
+    def test_instance(self) -> None:
+        fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants)
+        assert isinstance(fl_T, fl_T_de_groote_2016)
+        assert str(fl_T) == 'fl_T_de_groote_2016(l_T_tilde, c_0, c_1, c_2, c_3)'
