@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from sympy.core.backend import Function, Symbol, exp
+from sympy.core.function import Function
+from sympy.core.symbol import Symbol
 from sympy.core.numbers import Float
-from sympy.external import import_module
+from sympy.external.importtools import import_module
+from sympy.functions.elementary.exponential import exp
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     fl_T_de_groote_2016,
