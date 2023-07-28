@@ -12,6 +12,7 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.matrices import ImmutableMatrix, eye
@@ -252,7 +253,7 @@ def phase_margin(system):
     .. [1] https://en.wikipedia.org/wiki/Phase_margin
 
     """
-    from sympy.functions import arg, Abs
+    from sympy.functions import arg
 
     if not isinstance(system, SISOLinearTimeInvariant):
         raise ValueError("Margins are only applicable for SISO LTI systems.")
