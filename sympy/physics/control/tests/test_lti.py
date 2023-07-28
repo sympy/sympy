@@ -1314,22 +1314,28 @@ def test_TransferFunction_backward_diff():
 
     assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
 
-def test_TransferFunction_phase_margin():
+def test_TransferFunction_pm():
+    # Test for phase margin
     tf1 = TransferFunction(10, p**3 + 1, p)
     tf2 = TransferFunction(s**2, 10, s)
     tf3 = TransferFunction(1, a*s+b, s)
 
-    assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
-    assert phase_margin(tf2) == 0
+    pm1 = phase_margin(tf1)
+    pm2 = phase_margin(tf2)
+    assert pm1 == -180 + 180*atan(3*sqrt(11))/pi
+    assert pm2 == 0
 
     raises(ValueError, lambda: phase_margin(tf3))
 
-def test_TransferFunction_gain_margin():
+def test_TransferFunction_gm():
+    # Test for gain margin
     tf1 = TransferFunction(s**2, 5*(s+1)*(s-5)*(s-10), s)
     tf2 = TransferFunction(s**2 + 2*s + 1, 1, s)
     tf3 = TransferFunction(1, a*s+b, s)
 
-    assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
-    assert gain_margin(tf2) == oo
+    gm1 = gain_margin(tf1)
+    gm2 = gain_margin(tf2)
+    assert gm1 == -20*log(S(7)/540)/log(10)
+    assert gm2 == oo
 
     raises(ValueError, lambda: gain_margin(tf3))
