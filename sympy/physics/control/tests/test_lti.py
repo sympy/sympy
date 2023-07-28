@@ -1320,8 +1320,8 @@ def test_TransferFunction_phase_margin():
     tf2 = TransferFunction(s**2, 10, s)
     tf3 = TransferFunction(1, a*s+b, s)
 
-    assert phase_margin == -180 + 180*atan(3*sqrt(11))/pi
-    assert phase_margin == 0
+    assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
+    assert phase_margin(tf2) == 0
 
     raises(ValueError, lambda: phase_margin(tf3))
 
