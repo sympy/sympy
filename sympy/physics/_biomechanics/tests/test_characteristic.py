@@ -7,6 +7,7 @@ from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     fl_T_de_groote_2016,
 )
+from sympy.printing.latex import LatexPrinter
 
 
 class TestTendonForceLengthDeGroote2016:
@@ -34,3 +35,10 @@ class TestTendonForceLengthDeGroote2016:
     def test_doit(self) -> None:
         fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants).doit()
         assert fl_T == self.c0*exp(self.c3*(self.l_T_tilde - self.c1)) - self.c2
+
+    def test_function_print_latex(self) -> None:
+        fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants)
+        printer = LatexPrinter()
+        output = printer.doprint(fl_T)
+        expected = r'\operatorname{fl}^T \left( l_{T tilde} \right)'
+        assert output == expected
