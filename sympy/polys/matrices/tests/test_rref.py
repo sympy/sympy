@@ -611,8 +611,6 @@ def _check_divide(result, rref_ans, den_ans):
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
 def test_Matrix_rref(name, A, A_rref, den):
-    if 'large' in name:
-        pytest.skip("too slow")
     A = A.to_Matrix()
     _check_divide(A.rref(), A_rref, den)
 
