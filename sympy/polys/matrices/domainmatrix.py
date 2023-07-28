@@ -1635,11 +1635,11 @@ class DomainMatrix:
         >>> Minv, den = M.inv_den()
         >>> Minv.to_Matrix()
         Matrix([
-        [4, -4,  4],
-        [0,  4, -4],
-        [0,  0,  4]])
+        [1, -1,  1],
+        [0,  1, -1],
+        [0,  0,  1]])
         >>> den
-        8
+        2
         >>> Minv_reduced, den_reduced = Minv.cancel_denom(den)
         >>> Minv_reduced.to_Matrix()
         Matrix([

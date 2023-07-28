@@ -39,12 +39,17 @@ def dm_rref(M):
     Examples
     ========
 
-    >>> from sympy import Matrix
-    >>> from sympy.polys.matrices import dm_rref
-    >>> dm_rref(Matrix([[1, 2], [3, 4]]))
-    (Matrix([
+    >>> from sympy import QQ
+    >>> from sympy.polys.matrices import DM
+    >>> from sympy.polys.matrices.rref import dm_rref
+    >>> M = DM([[1, 2], [3, 4]], QQ)
+    >>> M_rref, pivots = dm_rref(M)
+    >>> M_rref.to_Matrix()
+    Matrix([
     [1, 0],
-    [0, 1]]), [0, 1])
+    [0, 1]])
+    >>> pivots
+    (0, 1)
 
     See Also
     ========
@@ -85,16 +90,19 @@ def dm_rref_den(M):
     Examples
     ========
 
-    >>> from sympy import Matrix
-    >>> from sympy.polys.matrices import dm_rref_den
-    >>> dm_rref_den(Matrix([[1, 2], [3, 4]]))
-    (Matrix([
-    [1, 0],
-    [0, 1]]), [0, 1])
-    >>> dm_rref_den(Matrix([[1, 2], [3, 4]]), iszerofunc=lambda x: x % 3 == 0)
-    (Matrix([
-    [1, 0],
-    [0, 1]]), [0, 1])
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DM
+    >>> from sympy.polys.matrices.rref import dm_rref_den
+    >>> M = DM([[1, 2], [3, 4]], ZZ)
+    >>> M_rref, den, pivots = dm_rref_den(M)
+    >>> M_rref.to_Matrix()
+    Matrix([
+    [-2,  0],
+    [ 0, -2]])
+    >>> den
+    -2
+    >>> pivots
+    (0, 1)
 
     See Also
     ========
