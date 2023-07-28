@@ -79,6 +79,10 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
         """
         pass
 
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
     def doit(
         self,
         deep: bool = True,
