@@ -36,6 +36,7 @@ if jax:
     deafult_float_info = jax.numpy.finfo(jax.numpy.array([]).dtype)
     JAX_DEFAULT_EPSILON = deafult_float_info.eps
 
+
 def test_jax_piecewise_regression():
     """
     NumPyPrinter needs to print Piecewise()'s choicelist as a list to avoid
@@ -330,9 +331,11 @@ def test_issue_17006():
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n), 'jax'))
 
+
 def test_jax_array():
     assert JaxPrinter().doprint(Array(((1, 2), (3, 5)))) == 'jax.numpy.array([[1, 2], [3, 5]])'
     assert JaxPrinter().doprint(Array((1, 2))) == 'jax.numpy.array((1, 2))'
+
 
 def test_jax_known_funcs_consts():
     assert _jax_known_constants['NaN'] == 'jax.numpy.nan'
@@ -340,6 +343,7 @@ def test_jax_known_funcs_consts():
 
     assert _jax_known_functions['acos'] == 'jax.numpy.arccos'
     assert _jax_known_functions['log'] == 'jax.numpy.log'
+
 
 def test_jax_print_methods():
     prntr = JaxPrinter()
