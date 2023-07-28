@@ -9,7 +9,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 
 from sympy.abc import x, i, j, a, b, c, d
-from sympy.core import Pow
+from sympy.core import Function, Pow, Symbol
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
@@ -355,3 +355,16 @@ def test_jax_printmethod():
     printer = JaxPrinter()
     assert hasattr(printer, 'printmethod')
     assert printer.printmethod == '_jaxcode'
+
+
+def test_jax_custom_print_method():
+
+    class expm1(Function):
+
+        def _jaxcode(self, printer):
+            x, = self.args
+            function = f'expm1({printer._print(x)})'
+            return printer._module_format(printer._module + '.' + function)
+
+    printer = JaxPrinter()
+    assert printer.doprint(expm1(Symbol('x'))) == 'jax.numpy.expm1(x)'
