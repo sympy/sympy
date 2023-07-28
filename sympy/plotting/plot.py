@@ -206,8 +206,9 @@ class Plot:
     How the plotting module works:
 
     1. Whenever a plotting function is called, the provided expressions are
-       processed and a list of instances of the :class:`BaseSeries` class is
-       created, containing the necessary information to plot the expressions
+       processed and a list of instances of the
+       :class:`~sympy.plotting.series.BaseSeries` class is created, containing
+       the necessary information to plot the expressions
        (e.g. the expression, ranges, series name, ...). Eventually, these
        objects will generate the numerical data to be plotted.
     2. A subclass of :class:`~.Plot` class is instantiaed (referred to as
@@ -221,7 +222,8 @@ class Plot:
        in the Plot instance.
 
     The backend should check if it supports the data series that it is given
-    (e.g. :class:`TextBackend` supports only :class:`LineOver1DRangeSeries`).
+    (e.g. :class:`TextBackend` supports only
+    :class:`~sympy.plotting.series.LineOver1DRangeSeries`).
 
     It is the backend responsibility to know how to use the class of data series
     that it's given. Note that the current implementation of the ``*Series``
