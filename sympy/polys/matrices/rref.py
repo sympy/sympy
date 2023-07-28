@@ -157,7 +157,7 @@ def _dm_rref_den_ZZ(Mz):
         M_rref_z, den, pivots = _dm_rref_den_gj_ff(Mz)
 
     else:
-        assert False
+        assert False  # pragma: no cover
 
     return M_rref_z, den, pivots
 
@@ -179,11 +179,11 @@ def _dm_rref_QQ(Mq):
 
     elif method == 'rref_den_QQ':
         # Use fraction-free Gauss-Jordan over QQ
-        M_rref_q, den, pivots = Mq.rref_den()
+        M_rref_q, den, pivots = _dm_rref_den_gj_ff(Mq)
         M_rref_q /= den
 
     else:
-        assert False
+        assert False  # pragma: no cover
 
     return M_rref_q, pivots
 
@@ -210,7 +210,7 @@ def _dm_rref_den_QQ(Mq):
         den = QQ.convert_from(den, ZZ)
 
     else:
-        assert False
+        assert False  # pragma: no cover
 
     return M_rref_q, den, pivots
 
@@ -251,7 +251,7 @@ def _dm_rref_den_ZZ_fastest_method(Mz):
     if density < 5:
         return 'rref_QQ'
     elif density > 5 + PARAM/nrows_nz:
-        return 'rref_den_ZZ'
+        return 'rref_den_ZZ'  # pragma: no cover
 
     # Maximum bitsize of any entry.
     elements = _dm_elements(Mz)
