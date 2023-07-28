@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sympy.core.function import Function
+from sympy.core.numbers import Float
 from sympy.functions.elementary.exponential import exp
 
 from sympy import Integer, Mul, Add
@@ -53,6 +54,36 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def with_default_constants(cls, l_T_tilde: Any) -> fl_T_de_groote_2016:
+        r"""Alternative constructor that will use the recommended constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the tendon force-length function using the
+        four constant values specified in the original publication.
+
+        These have the values:
+
+        $c_0 = 0.2$
+        $c_1 = 0.995$
+        $c_2 = 0.25$
+        $c_3 = 33.93669377311689$
+
+        Parameters
+        ==========
+
+        l_T_tilde : Any (sympifiable)
+            Normalized tendon force-length.
+
+        """
+        c0 = Float('0.2')
+        c1 = Float('0.995')
+        c2 = Float('0.25')
+        c3 = Float('33.93669377311689')
+        return cls(l_T_tilde, c0, c1, c2, c3)
 
     @classmethod
     def eval(cls, l_T_tilde: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
