@@ -2,7 +2,7 @@
 
 import pytest
 
-from sympy.core.backend import Symbol
+from sympy.core.backend import Function, Symbol, exp
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     fl_T_de_groote_2016,
@@ -30,3 +30,7 @@ class TestTendonForceLengthDeGroote2016:
         fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants)
         assert isinstance(fl_T, fl_T_de_groote_2016)
         assert str(fl_T) == 'fl_T_de_groote_2016(l_T_tilde, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self) -> None:
+        fl_T = fl_T_de_groote_2016(self.l_T_tilde, *self.constants).doit()
+        assert fl_T == self.c0*exp(self.c3*(self.l_T_tilde - self.c1)) - self.c2
