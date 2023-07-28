@@ -7,7 +7,6 @@ from textwrap import dedent
 from sympy.core import Mul, S, Tuple, sympify
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
-from sympy import *
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence, iterable
 
