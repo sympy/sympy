@@ -602,19 +602,23 @@ def test_DomainMatrix_rref():
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
     assert pivots == (0, 1)
+    assert A.rref_gj_div() == (Ar, pivots)
 
     A = DomainMatrix([[QQ(0), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
     assert pivots == (0, 1)
+    assert A.rref_gj_div() == (Ar, pivots)
 
     A = DomainMatrix([[QQ(0), QQ(2)], [QQ(0), QQ(4)]], (2, 2), QQ)
     Ar, pivots = A.rref()
     assert Ar == DomainMatrix([[QQ(0), QQ(1)], [QQ(0), QQ(0)]], (2, 2), QQ)
     assert pivots == (1,)
+    assert A.rref_gj_div() == (Ar, pivots)
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     raises(DMNotAField, lambda: Az.rref())
+    raises(DMNotAField, lambda: Az.rref_gj_div())
 
 
 def test_DomainMatrix_columnspace():
