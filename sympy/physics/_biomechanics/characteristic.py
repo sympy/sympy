@@ -45,6 +45,7 @@ class CharacteristicCurveFunction(Function):
         return printer.doprint(self.doit(deep=False, evaluate=False))
 
     _ccode = _print_code
+    _cxxcode = _print_code
 
 
 class fl_T_de_groote_2016(CharacteristicCurveFunction):
