@@ -35,6 +35,8 @@ from .sdm import SDM
 
 from .domainscalar import DomainScalar
 
+from .rref import dm_rref, dm_rref_den
+
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
 from sympy.polys.densearith import dup_mul
@@ -1849,17 +1851,15 @@ class DomainMatrix:
         r"""
         Returns reduced-row echelon form and list of pivots for the DomainMatrix
 
+        The domain must be a field. Use :meth:`rref_den` to compute the RREF
+        with denominator for non-field domains or convert to a field with
+        :meth:`to_field`.
+
         Returns
         =======
 
         (DomainMatrix, list)
             reduced-row echelon form and list of pivots for the DomainMatrix
-
-        Raises
-        ======
-
-        ValueError
-            If the domain of DomainMatrix not a Field
 
         Examples
         ========
@@ -1880,30 +1880,25 @@ class DomainMatrix:
         See Also
         ========
 
-        convert_to, lu
         rref_den
+            RREF with denominator
+        sympy.polys.matrices.rref.dm_rref
+            The function that implements this.
 
         """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        rref_ddm, pivots = self.rep.rref()
-        return self.from_rep(rref_ddm), tuple(pivots)
+        return dm_rref(self)
 
     def rref_den(self):
         r"""
         Returns reduced-row echelon form with denominator and list of pivots.
 
+        Requires exact division in the ground domain (``exquo``).
+
         Returns
         =======
 
-        (DomainMatrix, list)
-            reduced-row echelon form and list of pivots for the DomainMatrix
-
-        Raises
-        ======
-
-        ValueError
-            If the domain of DomainMatrix not a Field
+        (DomainMatrix, scalar, list)
+            Reduced-row echelon form, denominator and list of pivot indices.
 
         Examples
         ========
@@ -1930,9 +1925,64 @@ class DomainMatrix:
         See Also
         ========
 
-        convert_to, lu
         rref
+            RREF without denominator for field domains.
+        sympy.polys.matrices.rref.dm_rref
+            The function that implements this.
 
+        """
+        return dm_rref_den(self)
+
+    def rref_gj_div(self):
+        """Compute RREF using Gauss-Jordan elimination with division.
+
+        The domain must be a field.
+
+        Returns
+        =======
+
+        (DomainMatrix, list)
+            reduced-row echelon form and list of pivots for the DomainMatrix
+
+        See Also
+        ========
+
+        rref
+            Compute RREF choosing the most efficient algorithm (possibly uses
+            this algorithm).
+        rref_den
+            Compute RREF with denominator using the most efficient algorithm
+            (possibly uses this algorithm).
+        sympy.polys.matrices.dense.ddm_irref
+            The underlying algorithm in the dense case.
+        sympy.polys.matrices.sdm.sdm_irref
+            The underlying algorithm in the sparse case.
+        """
+        if not self.domain.is_Field:
+            raise DMNotAField('Not a field')
+        rref_ddm, pivots = self.rep.rref()
+        return self.from_rep(rref_ddm), tuple(pivots)
+
+    def rref_den_gj_ff(self):
+        """Compute RREF with denominator using fraction-free Gauss-Jordan.
+
+        Requires exact division in the ground domain (``exquo``).
+
+        Returns
+        =======
+
+        (DomainMatrix, scalar, list)
+            Reduced-row echelon form, denominator and list of pivot indices.
+
+        See Also
+        ========
+
+        rref_den
+            Compute RREF with denominator using the most efficient algorithm
+            (possibly uses this algorithm).
+        rref_gj_div
+            Compute RREF using Gauss-Jordan elimination with division (only
+            for field domains).
         """
         rref_ddm, denom, pivots = self.rep.rref_den()
         return self.from_rep(rref_ddm), denom, tuple(pivots)
