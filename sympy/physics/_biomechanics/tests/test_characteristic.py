@@ -145,3 +145,16 @@ class TestTendonForceLengthDeGroote2016:
         fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
         fl_T_callable = lambdify(self.l_T_tilde, fl_T)
         assert fl_T_callable(1.0) == pytest.approx(-0.013014055039221595)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self) -> None:
+        fl_T = fl_T_de_groote_2016.with_default_constants(self.l_T_tilde)
+        fl_T_callable = lambdify(self.l_T_tilde, fl_T, 'numpy')
+        l_T_tilde = numpy.array([0.95, 1.0, 1.01, 1.05])
+        expected = numpy.array([
+            -0.2065693181344816,
+            -0.0130140550392216,
+            0.0827421191989246,
+            1.04314889144172,
+        ])
+        numpy.testing.assert_allclose(fl_T_callable(l_T_tilde), expected)
