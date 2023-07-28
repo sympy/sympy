@@ -5,9 +5,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sympy.core.function import Function
+from sympy.functions.elementary.exponential import exp
+
+from sympy import Integer, Mul, Add
 
 if TYPE_CHECKING:
     from typing import Any
+
+    from sympy.core.expr import Expr
 
 
 __all__ = ['fl_T_de_groote_2016']
@@ -73,3 +78,45 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
 
         """
         pass
+
+    def doit(
+        self,
+        deep: bool = True,
+        evaluate : bool = True,
+        **hints: Any,
+    ) -> Expr:
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_T_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        l_T_tilde, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            l_T_tilde = l_T_tilde.doit(deep=deep, **hints)
+            c0, c1, c2, c3 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1, c2, c3 = constants
+
+        if evaluate:
+            return c0 * exp(c3 * (l_T_tilde - c1)) - c2
+
+        a0 = Mul(Integer(-1), c1)
+        a1 = Add(l_T_tilde, a0, evaluate=False)
+        a2 = exp(Mul(c3, a1, evaluate=False), evaluate=False)
+        a3 = Mul(c0, a2, evaluate=False)
+        expr = Add(a3, Mul(Integer(-1), c2), evaluate=False)
+        return expr
