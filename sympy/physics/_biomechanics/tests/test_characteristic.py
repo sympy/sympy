@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from sympy.core.backend import Function, Symbol, exp
+from sympy.external import import_module
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     fl_T_de_groote_2016,
@@ -20,9 +21,22 @@ from sympy.printing.cxx import (
 from sympy.printing.fortran import FCodePrinter
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.octave import OctaveCodePrinter
+from sympy.printing.numpy import (
+    CuPyPrinter,
+    JaxPrinter,
+    NumPyPrinter,
+    SciPyPrinter,
+)
+from sympy.printing.pycode import PythonCodePrinter
 
 if TYPE_CHECKING:
     from sympy.printing.codeprinter import CodePrinter
+
+jax = import_module('jax')
+numpy = import_module('numpy')
+
+if jax:
+    jax.config.update('jax_enable_x64', True)
 
 
 class TestTendonForceLengthDeGroote2016:
@@ -99,6 +113,26 @@ class TestTendonForceLengthDeGroote2016:
             (
                 OctaveCodePrinter,
                 '0.2*exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                PythonCodePrinter,
+                '0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                NumPyPrinter,
+                '0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                SciPyPrinter,
+                '0.2*numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                CuPyPrinter,
+                '0.2*cupy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
+            ),
+            (
+                JaxPrinter,
+                '0.2*jax.numpy.exp(33.93669377311689*(l_T_tilde - 0.995)) - 0.25',
             ),
         ]
     )
