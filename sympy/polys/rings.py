@@ -31,6 +31,7 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
+from sympy.polys.monomials import (monomial_gcd, monomial_gcd_list)
 
 @public
 def ring(symbols, domain, order=lex):
@@ -2957,6 +2958,155 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             S.append(-c)
 
         return R
+
+    def sparse_free_sym(self):
+        """
+        Examples
+        ========
+
+        >>> from sympy import ZZ, ring
+        >>> R, x, y = ring('x, y, ZZ)
+        >>> p = y**2+2-y**3+4*y
+        >>> sparse_free_sym(p)
+        1
+
+        """
+        p = self
+        exponents = list(map(sum, zip(*p)))
+        free_sym = {n for n, e in enumerate(exponents) if e}
+        return min(free_sym)
+
+    def ground_gcd(self, domain):
+        """
+        Returns the greatest common divisor (GCD) of multiple polynomials
+        represented by their terms.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> coefficients = [3, 12, 6]
+        >>> ground_gcd(coefficients, ZZ)
+        3
+
+        """
+        coefficients = self
+        coefficients = list(coefficients)
+        gcd = domain.gcd
+        d = coefficients[0]
+
+        for coefficient in coefficients[1:]:
+            d = gcd(d, coefficient)
+
+            if d == domain.one:
+                break
+
+        return d
+
+    def gcd_terms(self, ring, domain):
+        """
+        Returns the greatest common divisor (GCD) of a list of polynomials p in
+        a given ring and domain.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ, symbols, ring, domain
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = x**2 - y**2, x - y
+        >>> ring = p[0].ring
+        >>> domain = ring.domain
+        >>> gcd_terms(p, ring, domain)
+        1
+
+        """
+
+        p = self
+        monomials = set()
+        coefficients = set()
+
+        for pi in p:
+            for monomial, coefficient in pi.terms():
+                monomials.add(monomial)
+                coefficients.add(coefficient)
+
+        monomial_gcd = monomial_gcd(monomials)
+        coefficient_gcd = coefficients.ground_gcd(domain)
+        term_gcd = ring({monomial_gcd: coefficient_gcd})
+
+        return term_gcd
+
+    def sparse_gcd(self):
+        """
+        Returns the greatest common divisor (GCD) of a set of polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ, ring
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = x**2 - y**2, x - y
+        >>> sparse_gcd(p)
+        x - y
+
+        """
+        p = self
+        ring = p[0].ring
+        domain = ring.domain
+
+        if any(len(pi) == 1 for pi in p):
+            return p.gcd_terms(ring, domain)
+
+        p, monomial_gcd = monomial_gcd_list(p)
+
+        p, common_symbols = p.gcd_coeffs()
+
+        gcd = p[0]
+        for pi in p[1:]:
+            gcd = gcd.sparse_prs_gcd(pi)
+
+        if monomial_gcd is not None:
+            gcd = gcd * monomial_gcd
+
+        return gcd
+
+    def sparse_prs_gcd(self, p2):
+        """
+        Returns the greatest common divisor (GCD) of two polynomials using the
+        Polynomial Resultant Sequences (PRS) method.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ, ring
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p1 = K.from_sympy(sum(x[:8]))
+        >>> p2 = K.from_sympy(sum(x[2:]))
+        >>> p1
+        x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
+        >>> p2
+        x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
+        >>> sparse_prs_gcd(p1, p2))
+        1
+
+        """
+        p1 = self
+        x = p1.sparse_free_sym()
+
+        c1, pp1 = p1.primitive()
+        c2, pp2 = p2.primitive()
+
+        h = pp1.subresultants(pp2, x)[-1]
+        c = ([c1, c2]).sparse_gcd()
+
+        domain = p1.ring.to_domain()
+        if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))):
+            h = -h
+
+        _, h = h.primitive()
+        h = h * c
+
+        return h
 
     # TODO: following methods should point to polynomial
     # representation independent algorithm implementations.

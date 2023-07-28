@@ -1,12 +1,13 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 
-from itertools import combinations_with_replacement, product
+from itertools import combinations_with_replacement, product, chain
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
+from sympy import *
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence, iterable
 
@@ -390,6 +391,42 @@ def term_div(a, b, domain):
             return monom, domain.quo(a_lc, b_lc)
         else:
             return None
+
+def monomial_zero(ring):
+    """
+    Returns the zero monomial for the given polynomial ring.
+    """
+    return ring({(): ring.domain.one})
+
+def monomial_gcd_list(p):
+    """
+    Returns the greatest common divisor (GCD) of a list of polynomials p with respect to the monomials.
+
+    Examples
+    ========
+
+
+    """
+    ring = p[0].ring
+    zero_monom = monomial_zero(ring)
+
+    # Check if the zero monomial is present in any of the polynomials
+    for poly in p:
+        if zero_monom in poly:
+            # If the zero monomial is present, we can immediately return
+            return p, None
+
+    # If the zero monomial is not present, proceed with finding the GCD
+    monomials = chain(*p)
+    monomial_gcd = tuple(map(min, zip(*monomials)))
+
+    if monomial_gcd == zero_monom:
+        return p, None
+    else:
+        d = ring({monomial_gcd: ring.domain.one})
+        p = [pi.exquo(d) for pi in p]
+        return p, d
+
 
 class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
