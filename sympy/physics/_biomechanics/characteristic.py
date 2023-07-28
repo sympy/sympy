@@ -1,6 +1,13 @@
 """Implementations of characteristic curves for musculotendon models."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sympy.core.function import Function
+
+if TYPE_CHECKING:
+    from typing import Any
 
 
 __all__ = ['fl_T_de_groote_2016']
@@ -41,3 +48,28 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def eval(cls, l_T_tilde: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        l_T_tilde : Any (sympifiable)
+            Normalized tendon force-length.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.2``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``0.995``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``0.25``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``33.93669377311689``.
+
+        """
+        pass
