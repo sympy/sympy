@@ -48,6 +48,7 @@ class CharacteristicCurveFunction(Function):
     _cxxcode = _print_code
     _fcode = _print_code
     _octave = _print_code
+    _pythoncode = _print_code
 
 
 class fl_T_de_groote_2016(CharacteristicCurveFunction):
