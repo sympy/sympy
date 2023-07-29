@@ -27,6 +27,8 @@ from sympy.polys.matrices.exceptions import DMNotAField
 from sympy.polys.domains import ZZ, QQ
 
 from sympy.polys.matrices.sdm import SDM, sdm_irref, sdm_rref_den
+from sympy.polys.matrices.ddm import DDM
+from sympy.polys.matrices.dense import ddm_irref
 
 
 def dm_rref(M):
@@ -64,8 +66,19 @@ def dm_rref(M):
     if not K.is_Field:
         raise DMNotAField("Use .rref_den() or convert to a field with .to_field()")
 
-    # The sparse implementations are always faster
     dense = M.rep.fmt == 'dense'
+
+    # Do not switch to the sparse implementation for EX because the domain does
+    # not have proper canonicalization and the sparse implementation gives
+    # equivalent but non-identical results over EX from performing arithmetic
+    # in a different order. Specifically test_issue_23718 ends up getting a
+    # more complicated expression when using the sparse implementation.
+    # Probably the best fix for this is something else but for now we stick
+    # with the dense implementation for EX if the matrix is already dense.
+    if K.is_EX and dense:
+        return _dm_rref_gj_div_dense(M)
+
+    # The sparse implementations are always faster when we can use them.
     if dense:
         M = M.to_sparse()
 
@@ -136,6 +149,15 @@ def _dm_rref_gj_div(M):
     M_rref_sdm = SDM(M_rref_d, M.shape, M.domain)
     pivots = tuple(pivots)
     return M.from_rep(M_rref_sdm), pivots
+
+
+def _dm_rref_gj_div_dense(M):
+    """Compute RREF using dense Gauss-Jordan elimination with division."""
+    ddm = M.rep.copy()
+    pivots = ddm_irref(ddm)
+    M_rref_ddm = DDM(ddm, M.shape, M.domain)
+    pivots = tuple(pivots)
+    return M.from_rep(M_rref_ddm), pivots
 
 
 def _dm_rref_den_gj_ff(M):
