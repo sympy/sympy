@@ -27,7 +27,7 @@ from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
-from sympy.polys.monomials import monomial_extract
+from sympy.polys.monomials import monomial_extract, monomial_gcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
@@ -2986,7 +2986,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Examples
         ========
 
-        >>> from sympy import ZZ, QQ, ring
+        >>> from sympy import ZZ
         >>> coeffs = [3, 12, 6]
         >>> coeffs.ground_gcd(ZZ)
         3
@@ -3013,16 +3013,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Examples
         ========
 
-        >>> from sympy import ZZ, symbols, ring, domain
+        >>> from sympy import ZZ, ring, domain
         >>> R, x, y = ring("x, y", ZZ)
         >>> p = x**2 - y**2, x - y
         >>> ring = p[0].ring
         >>> domain = ring.domain
-        >>> gcd_terms(p, ring, domain)
+        >>> p.gcd_terms(ring, domain)
         1
 
         """
-
         p = self
         monomials = set()
         coeffs = set()
@@ -3041,19 +3040,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def gcd_coeffs(self):
         """
         Simplify a list of polynomials whose gcd is wanted. Returns a possibly
-        longer list of simpler polynomials having the same gcd as the input. This
-        is done by eliminating symbols that can not be part of the gcd because they
-        do not
-        appear in each item of the input. In the output list, all items have
-        exactly the same symbols. The set of those symbols is also returned.
+        longer list of simpler polynomials having the same gcd as the input.
 
-        Example
-        =======
+        This is done by eliminating symbols that can not be part of the gcd
+        because they do not appear in each item of the input. In the output
+        list, all items have exactly the same symbols. The set of those symbols
+        is also returned.
+
+        Examples
+        ========
+
         >>> from sympy import ring, ZZ
         >>> R, x, y = ring("x, y", ZZ)
         >>> f = x**2 - y**2
         >>> g = x - y
-        >>> gcd_coeffs([f, g])
+        >>> p = [f, g]
+        >>> p.gcd_coeffs()
         ([1], None)
 
         """
@@ -3066,7 +3068,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             # Find the intersection of symbols for each poly:
             common = p[0].sparse_free_sym()
-            nsyms = len(common)
             allsame = True
             for pi in p[1:]:
 
@@ -3109,7 +3110,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
         >>> p = x**2 - y**2, x - y
-        >>> sparse_gcd(p)
+        >>> p.gcd_sparse()
         x - y
 
         """
@@ -3145,6 +3146,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> R, x, y = ring("x, y", ZZ)
         >>> f = 4*x**3 + 8*x**2 + 12*x + 16
         >>> g = 2*x**2 + 6*x + 10
+        >>> f.gcd_prs_sparse(g)
         2
 
         """

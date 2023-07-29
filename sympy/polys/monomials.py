@@ -421,6 +421,7 @@ def monomial_extract(p):
     >>> from sympy.polys.monomials import monomial_extract
     >>> from sympy import ZZ, ring
 
+    >>> R, x, y = ring("x, y", ZZ)
     >>> f = R(0)
     >>> g = x*y
     >>> p = [f, g]
