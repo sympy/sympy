@@ -96,7 +96,7 @@ def dm_rref(M):
     return M_rref, pivots
 
 
-def dm_rref_den(M):
+def dm_rref_den(M, keep_domain=True):
     """
     Compute the reduced row echelon form of a matrix with denominator.
 
@@ -117,6 +117,14 @@ def dm_rref_den(M):
     >>> pivots
     (0, 1)
 
+    Parameters
+    ==========
+
+    keep_domain : bool, optional
+        If ``True`` then the domain of the matrix is preserved. If ``False``
+        then the domain might be preserved or it might be changed to an
+        associated field or ring (if that is potentially faster).
+
     See Also
     ========
 
@@ -131,9 +139,9 @@ def dm_rref_den(M):
         M = M.to_sparse()
 
     if K.is_ZZ:
-        M_rref, den, pivots = _dm_rref_den_ZZ(M)
+        M_rref, den, pivots = _dm_rref_den_ZZ(M, keep_domain=keep_domain)
     elif K.is_QQ:
-        M_rref, den, pivots = _dm_rref_den_QQ(M)
+        M_rref, den, pivots = _dm_rref_den_QQ(M, keep_domain=keep_domain)
     else:
         M_rref, den, pivots = _dm_rref_den_gj_ff(M)
 
@@ -168,28 +176,31 @@ def _dm_rref_den_gj_ff(M):
     return M.from_rep(M_rref_sdm), den, pivots
 
 
-def _dm_rref_den_ZZ(Mz):
+def _dm_rref_den_ZZ(Mz, keep_domain=True):
     """Compute RREF over ZZ using the fastest method."""
     # Choose the fastest method
     method = _dm_rref_den_ZZ_fastest_method(Mz)
 
     if method == 'rref_QQ':
         # Use Gauss-Jordan over QQ for sparse matrices.
-        M_rref_q, pivots = _dm_rref_gj_div(Mz.convert_to(QQ))
-        _, M_rref_z = M_rref_q.clear_denoms(convert=True)
+        M_rref, pivots = _dm_rref_gj_div(Mz.convert_to(QQ))
+
+        if keep_domain:
+            _, M_rref = M_rref.clear_denoms(convert=True)
+
         if pivots:
-            den = M_rref_z[0, pivots[0]].element
+            den = M_rref[0, pivots[0]].element
         else:
             den = ZZ.one
 
     elif method == 'rref_den_ZZ':
         # Otherwise use fraction-free Gauss-Jordan over ZZ.
-        M_rref_z, den, pivots = _dm_rref_den_gj_ff(Mz)
+        M_rref, den, pivots = _dm_rref_den_gj_ff(Mz)
 
     else:
         assert False  # pragma: no cover
 
-    return M_rref_z, den, pivots
+    return M_rref, den, pivots
 
 
 def _dm_rref_QQ(Mq):
@@ -218,31 +229,33 @@ def _dm_rref_QQ(Mq):
     return M_rref_q, pivots
 
 
-def _dm_rref_den_QQ(Mq):
+def _dm_rref_den_QQ(Mq, keep_domain=True):
     """Compute RREF over QQ using the fastest method."""
     # Choose the fastest method
     method = _dm_rref_QQ_fastest_method(Mq)
 
     if method == 'rref_QQ':
         # Use Gauss-Jordan with division over QQ.
-        M_rref_q, pivots = _dm_rref_gj_div(Mq)
+        M_rref, pivots = _dm_rref_gj_div(Mq)
         den = QQ.one
 
     elif method == 'rref_den_QQ':
         # Use fraction-free Gauss-Jordan over QQ.
-        M_rref_q, den, pivots = _dm_rref_den_gj_ff(Mq)
+        M_rref, den, pivots = _dm_rref_den_gj_ff(Mq)
 
     elif method == 'rref_ZZ_clear_denoms':
         # Clear small denominators and use fraction-free Gauss-Jordan over ZZ.
         _, Mz = Mq.clear_denoms(convert=True)
-        M_rref_z, den, pivots = _dm_rref_den_gj_ff(Mz)
-        M_rref_q = M_rref_z.convert_to(QQ)
-        den = QQ.convert_from(den, ZZ)
+        M_rref, den, pivots = _dm_rref_den_gj_ff(Mz)
+
+        if keep_domain:
+            M_rref = M_rref.convert_to(QQ)
+            den = QQ.convert_from(den, ZZ)
 
     else:
         assert False  # pragma: no cover
 
-    return M_rref_q, den, pivots
+    return M_rref, den, pivots
 
 
 def _dm_rref_den_ZZ_fastest_method(Mz):
