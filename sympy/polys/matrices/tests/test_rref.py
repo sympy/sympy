@@ -1,4 +1,4 @@
-from sympy import ZZ, QQ, ZZ_I, EX, Matrix, eye, zeros, symbols, sqrt
+from sympy import ZZ, QQ, ZZ_I, EX, Matrix, eye, zeros, symbols
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_irref_den, ddm_irref
 from sympy.polys.matrices.ddm import DDM
