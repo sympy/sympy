@@ -27,11 +27,11 @@ from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
+from sympy.polys.monomials import monomial_extract
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
-from sympy.polys.monomials import (monomial_gcd, monomial_gcd_list)
 
 @public
 def ring(symbols, domain, order=lex):
@@ -2961,13 +2961,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def sparse_free_sym(self):
         """
+        Find the smallest index of the free symbolic variable in a given
+        polynomial.
+
         Examples
         ========
 
         >>> from sympy import ZZ, ring
-        >>> R, x, y = ring('x, y, ZZ)
-        >>> p = y**2+2-y**3+4*y
-        >>> sparse_free_sym(p)
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = y**2 + 2 - y**3 + 4*y
+        >>> p.sparse_free_sym()
         1
 
         """
@@ -2976,27 +2979,26 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         free_sym = {n for n, e in enumerate(exponents) if e}
         return min(free_sym)
 
-    def ground_gcd(self, domain):
+    def gcd_ground(self, domain):
         """
-        Returns the greatest common divisor (GCD) of multiple polynomials
-        represented by their terms.
+        Compute the greatest common divisor (GCD) of elements in the ground domain.
 
         Examples
         ========
 
-        >>> from sympy import ZZ
-        >>> coefficients = [3, 12, 6]
-        >>> ground_gcd(coefficients, ZZ)
+        >>> from sympy import ZZ, QQ, ring
+        >>> coeffs = [3, 12, 6]
+        >>> coeffs.ground_gcd(ZZ)
         3
 
         """
-        coefficients = self
-        coefficients = list(coefficients)
+        coeffs = self
+        coeffs = list(coeffs)
         gcd = domain.gcd
-        d = coefficients[0]
+        d = coeffs[0]
 
-        for coefficient in coefficients[1:]:
-            d = gcd(d, coefficient)
+        for coeff in coeffs[1:]:
+            d = gcd(d, coeff)
 
             if d == domain.one:
                 break
@@ -3023,20 +3025,81 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         p = self
         monomials = set()
-        coefficients = set()
+        coeffs = set()
 
         for pi in p:
-            for monomial, coefficient in pi.terms():
+            for monomial, coeff in pi.terms():
                 monomials.add(monomial)
-                coefficients.add(coefficient)
+                coeffs.add(coeff)
 
         monomial_gcd = monomial_gcd(monomials)
-        coefficient_gcd = coefficients.ground_gcd(domain)
-        term_gcd = ring({monomial_gcd: coefficient_gcd})
+        coeff_gcd = coeffs.gcd_ground(domain)
+        term_gcd = ring({monomial_gcd: coeff_gcd})
 
         return term_gcd
 
-    def sparse_gcd(self):
+    def gcd_coeffs(self):
+        """
+        Simplify a list of polynomials whose gcd is wanted. Returns a possibly
+        longer list of simpler polynomials having the same gcd as the input. This
+        is done by eliminating symbols that can not be part of the gcd because they
+        do not
+        appear in each item of the input. In the output list, all items have
+        exactly the same symbols. The set of those symbols is also returned.
+
+        Example
+        =======
+        >>> from sympy import ring, ZZ
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> f = x**2 - y**2
+        >>> g = x - y
+        >>> gcd_coeffs([f, g])
+        ([1], None)
+
+        """
+        p = self
+        all_coeffs = p
+
+        while True:
+            # Quick exits are most efficient if we start from the simplest polys
+            p = sorted(set(all_coeffs), key=len)
+
+            # Find the intersection of symbols for each poly:
+            common = p[0].sparse_free_sym()
+            nsyms = len(common)
+            allsame = True
+            for pi in p[1:]:
+
+                # Quick exit
+                if not common:
+                    R = p[0].ring
+                    K = R.domain
+                    gcd = p.gcd_terms(R, K)
+                    return [gcd], None
+
+                syms = pi.sparse_free_sym()
+                if allsame and syms != common:
+                    allsame = False
+                common &= syms
+
+            # The loop is complete if they all have the same symbols.
+            if allsame:
+                return p, common
+
+            # Extract coefficients as polys containing only the common symbols.
+            all_coeffs = []
+            for i, pi in enumerate(p):
+                coeffs_i = pi.coeff_wrt(pi.sparse_free_sym - common)
+                all_coeffs.extend(coeffs_i)
+
+                # Quick exit:
+                if len(coeffs_i) == 1:
+                    R = p[0].ring
+                    K = R.domain
+                    gcd = (all_coeffs + p[i+1:]).gcd_terms(R, K)
+                    return [gcd], None
+
+    def gcd_sparse(self):
         """
         Returns the greatest common divisor (GCD) of a set of polynomials.
 
@@ -3057,7 +3120,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if any(len(pi) == 1 for pi in p):
             return p.gcd_terms(ring, domain)
 
-        p, monomial_gcd = monomial_gcd_list(p)
+        p, monomial_gcd = monomial_extract(p)
 
         p, common_symbols = p.gcd_coeffs()
 
@@ -3070,7 +3133,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return gcd
 
-    def sparse_prs_gcd(self, p2):
+    def gcd_prs_sparse(self, p2):
         """
         Returns the greatest common divisor (GCD) of two polynomials using the
         Polynomial Resultant Sequences (PRS) method.
@@ -3080,14 +3143,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
-        >>> p1 = K.from_sympy(sum(x[:8]))
-        >>> p2 = K.from_sympy(sum(x[2:]))
-        >>> p1
-        x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7
-        >>> p2
-        x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9
-        >>> sparse_prs_gcd(p1, p2))
-        1
+        >>> f = 4*x**3 + 8*x**2 + 12*x + 16
+        >>> g = 2*x**2 + 6*x + 10
+        2
 
         """
         p1 = self
@@ -3097,7 +3155,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         c2, pp2 = p2.primitive()
 
         h = pp1.subresultants(pp2, x)[-1]
-        c = ([c1, c2]).sparse_gcd()
+        c = ([c1, c2]).gcd_sparse()
 
         domain = p1.ring.to_domain()
         if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))):

@@ -255,24 +255,38 @@ def monomial_pow(A, n):
     """Return the n-th pow of the monomial. """
     return tuple([ a*n for a in A ])
 
-def monomial_gcd(A, B):
+def monomial_gcd(*args):
     """
-    Greatest common divisor of tuples representing monomials.
+    Computes the greatest common divisor (GCD) of the exponents for each
+    variable in the monomials.
 
-    Examples
-    ========
+    Parameters
+    ==========
 
-    Lets compute GCD of `x*y**4*z` and `x**3*y**2`::
+    *args : tuple of tuples or multiple tuples
+        If a single argument is provided, it should be a tuple of tuples
+        representing monomials.
+        If two arguments are provided, they should be two tuples representing
+        monomials.
 
-        >>> from sympy.polys.monomials import monomial_gcd
+    Returns
+    =======
 
-        >>> monomial_gcd((1, 4, 1), (3, 2, 0))
-        (1, 2, 0)
-
-    which gives `x*y**2`.
+    tuple
+        The greatest common divisor of the exponents for each variable in the
+        monomials.
 
     """
-    return tuple([ min(a, b) for a, b in zip(A, B) ])
+    if len(args) == 1:
+        monomials = args[0]
+        monomial_gcd = tuple(map(min, zip(*monomials)))
+    elif len(args) == 2:
+        A, B = args
+        monomial_gcd = tuple([min(a, b) for a, b in zip(A, B)])
+    else:
+        raise ValueError("monomial_gcd() accepts either a tuple of tuples or two tuples as arguments.")
+
+    return monomial_gcd
 
 def monomial_lcm(A, B):
     """
@@ -395,15 +409,29 @@ def monomial_zero(ring):
     """
     Returns the zero monomial for the given polynomial ring.
     """
-    return ring({(): ring.domain.one})
+    return tuple([0] * ring.ngens)
 
-def monomial_gcd_list(p):
+def monomial_extract(p):
     """
-    Returns the greatest common divisor (GCD) of a list of polynomials p with respect to the monomials.
+    Extracts any common monomial from the polynomials in p.
 
     Examples
     ========
 
+    >>> from sympy.polys.monomials import monomial_extract
+    >>> from sympy import ZZ, ring
+
+    >>> f = R(0)
+    >>> g = x*y
+    >>> p = [f, g]
+    >>> monomial_extract(p)
+    ([0, x**2 + y**2], None)
+
+    >>> f = x**2*y + x*y**2
+    >>> g = x**2 + x*y
+    >>> p = [f, g]
+    >>> monomial_extract(p)
+    ([x*y + y**2, x + y], x)
 
     """
     ring = p[0].ring
