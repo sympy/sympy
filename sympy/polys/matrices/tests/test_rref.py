@@ -1,4 +1,4 @@
-from sympy import ZZ, QQ, ZZ_I, Matrix, eye, zeros
+from sympy import ZZ, QQ, ZZ_I, EX, Matrix, eye, zeros, symbols, sqrt
 from sympy.polys.matrices import DM, DomainMatrix
 from sympy.polys.matrices.dense import ddm_irref_den, ddm_irref
 from sympy.polys.matrices.ddm import DDM
@@ -13,6 +13,14 @@ import pytest
 # give different results if the order of the rows is changed. The tests below
 # show all results on lowest terms as should be returned by cancel_denom.
 #
+# The EX domain is also a case where the dense and sparse implementations
+# can give results in different forms: the results should be equivalent but
+# are not canonical because EX does not have a canonical form.
+#
+
+
+a, b, c, d = symbols('a, b, c, d')
+
 
 qq_large_1 = DM([
 [  (1,2),  (1,3),  (1,5),  (1,7), (1,11), (1,13), (1,17), (1,19), (1,23), (1,29), (1,31)],
@@ -556,6 +564,17 @@ RREF_EXAMPLES = [
         ZZ_I(1),
     ),
 
+    (
+        # EX: test_issue_23718
+        'EX_1',
+        DM([
+        [a, b, 1],
+        [c, d, 1]], EX),
+        DM([[a*d - b*c,         0, -b + d],
+            [        0, a*d - b*c,  a - c]], EX),
+        EX(a*d - b*c),
+    ),
+
 ]
 
 
@@ -611,8 +630,12 @@ def _check_divide(result, rref_ans, den_ans):
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
 def test_Matrix_rref(name, A, A_rref, den):
+    K = A.domain
     A = A.to_Matrix()
-    _check_divide(A.rref(), A_rref, den)
+    A_rref_found, pivots = A.rref()
+    if K.is_EX:
+        A_rref_found = A_rref_found.expand()
+    _check_divide((A_rref_found, pivots), A_rref, den)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
