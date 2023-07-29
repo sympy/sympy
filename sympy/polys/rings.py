@@ -3013,8 +3013,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Examples
         ========
 
-        >>> from sympy import ZZ, ring, domain
+        >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> p = x**2 - y**2, x - y
         >>> ring = p[0].ring
         >>> domain = ring.domain
@@ -3031,9 +3032,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 monomials.add(monomial)
                 coeffs.add(coeff)
 
-        monomial_gcd = monomial_gcd(monomials)
+        monom_gcd = monomial_gcd(monomials)
         coeff_gcd = coeffs.gcd_ground(domain)
-        term_gcd = ring({monomial_gcd: coeff_gcd})
+        term_gcd = ring({monom_gcd: coeff_gcd})
 
         return term_gcd
 
@@ -3052,6 +3053,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy import ring, ZZ
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> f = x**2 - y**2
         >>> g = x - y
         >>> p = [f, g]
@@ -3109,6 +3111,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> p = x**2 - y**2, x - y
         >>> p.gcd_sparse()
         x - y
@@ -3127,14 +3130,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         gcd = p[0]
         for pi in p[1:]:
-            gcd = gcd.sparse_prs_gcd(pi)
+            gcd = gcd.gcd_prs(pi)
 
         if monomial_gcd is not None:
             gcd = gcd * monomial_gcd
 
         return gcd
 
-    def gcd_prs_sparse(self, p2):
+    def gcd_prs(self, p2):
         """
         Returns the greatest common divisor (GCD) of two polynomials using the
         Polynomial Resultant Sequences (PRS) method.
@@ -3144,9 +3147,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
+
         >>> f = 4*x**3 + 8*x**2 + 12*x + 16
         >>> g = 2*x**2 + 6*x + 10
-        >>> f.gcd_prs_sparse(g)
+        >>> f.gcd_prs(g)
         2
 
         """

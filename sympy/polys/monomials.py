@@ -276,6 +276,15 @@ def monomial_gcd(*args):
         The greatest common divisor of the exponents for each variable in the
         monomials.
 
+    Examples
+    ========
+
+    >>> from sympy.polys.monomials import monomial_gcd
+    >>> monomial_gcd((1, 4, 1), (3, 2, 0))
+    (1, 2, 0)
+    >>> monomial_gcd({(1, 0), (0, 2), (2, 0), (0, 1)})
+    (0, 0)
+
     """
     if len(args) == 1:
         monomials = args[0]
