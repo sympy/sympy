@@ -280,14 +280,14 @@ def _rref_dm(dM):
     K = dM.domain
 
     if K.is_ZZ:
-        dM_rref_z, den, pivots = dM.rref_den()
-        dM_rref_q = dM_rref_z.to_field() / den
+        dM_rref, den, pivots = dM.rref_den(keep_domain=False)
+        dM_rref = dM_rref.to_field() / den
     elif K.is_QQ:
-        dM_rref_q, pivots = dM.rref()
+        dM_rref, pivots = dM.rref()
     else:
         assert False  # pragma: no cover
 
-    M_rref = dM_rref_q.to_Matrix()
+    M_rref = dM_rref.to_Matrix()
 
     return M_rref, pivots
 

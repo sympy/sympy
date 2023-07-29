@@ -1847,7 +1847,7 @@ class DomainMatrix:
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self):
+    def rref(self, keep_domain=True):
         r"""
         Returns reduced-row echelon form and list of pivots for the DomainMatrix
 
@@ -1888,7 +1888,7 @@ class DomainMatrix:
         """
         return dm_rref(self)
 
-    def rref_den(self):
+    def rref_den(self, keep_domain=True):
         r"""
         Returns reduced-row echelon form with denominator and list of pivots.
 
@@ -1922,16 +1922,40 @@ class DomainMatrix:
         >>> A_rref.to_field() / denom == A.convert_to(QQ).rref()[0]
         True
 
+        Parameters
+        ==========
+
+        keep_domain : bool, optional
+            If True (the default), the domain of the returned matrix and
+            denominator are the same as the domain of the input matrix. If
+            False, the domain of the returned matrix might be changed to an
+            associated ring or field.
+
+        Notes
+        =====
+
+        In some cases it is more efficient to change to a different domain when
+        computing the RREF. For example, if the input is a sparse matrix over
+        :ref:`ZZ` it might be more efficient to convert to :ref:`QQ` and
+        compute the RREF using division. If ``keep_domain`` is ``True``, then
+        in this case the result would be converted back to :ref:`ZZ` by
+        clearing denominators. This conversion is potentially expensive, so if
+        the caller does not need the result to be in :ref:`ZZ`, it is more
+        efficient to set ``keep_domain`` to ``False`` and let the result be in
+        :ref:`QQ`. Similarly, if the input is a matrix over :ref:`QQ` then if
+        ``keep_domain`` is ``False`` the result might be returned over
+        :ref:`QQ` or :ref:`ZZ` depending on which algorithm is used.
+
         See Also
         ========
 
         rref
             RREF without denominator for field domains.
-        sympy.polys.matrices.rref.dm_rref
+        sympy.polys.matrices.rref.dm_rref_den
             The function that implements this.
 
         """
-        return dm_rref_den(self)
+        return dm_rref_den(self, keep_domain=keep_domain)
 
     def rref_gj_div(self):
         """Compute RREF using Gauss-Jordan elimination with division.
