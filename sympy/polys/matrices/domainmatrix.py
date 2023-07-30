@@ -2122,8 +2122,6 @@ class DomainMatrix:
         ...    [QQ(2), QQ(-2)],
         ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
-        DomainMatrix([[2, 2]], (1, 2), QQ)
-        >>> A.nullspace(divide_last=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
         The returned matrix is a basis for the nullspace:
@@ -2137,8 +2135,8 @@ class DomainMatrix:
         True
 
         Nullspace can also be computed for non-field rings. If the ring is not
-        a field then normalization is not done. Setting normalize to True will
-        raise an error.
+        a field then division is not used. Setting ``divide_last`` to True will
+        raise an error in this case:
 
         >>> from sympy import ZZ
         >>> B = DM([[6, -3],
