@@ -79,7 +79,30 @@ class ImplicitSeries(BaseSeries):
                     str(self.var_y),
                     str((self.start_y, self.end_y)))
 
-    def get_raster(self):
+    def get_data(self):
+        """Returns numerical data.
+
+        Returns
+        =======
+
+        If the series is evaluated with the `adaptive=True` it returns:
+
+        interval_list : list
+            List of bounding rectangular intervals to be postprocessed and
+            eventually used with Matplotlib's ``fill`` command.
+        dummy : str
+            A string containing ``"fill"``.
+
+        Otherwise, it returns 2D numpy arrays to be used with Matplotlib's
+        ``contour`` or ``contourf`` commands:
+
+        x_array : np.ndarray
+        y_array : np.ndarray
+        z_array : np.ndarray
+        plot_type : str
+            A string specifying which plot command to use, ``"contour"``
+            or ``"contourf"``.
+        """
         func = experimental_lambdify((self.var_x, self.var_y), self.expr,
                                     use_interval=True)
         xinterval = interval(self.start_x, self.end_x)
@@ -99,6 +122,14 @@ class ImplicitSeries(BaseSeries):
             return self._get_raster_interval(func)
         else:
             return self._get_meshes_grid()
+
+    def get_raster(self):
+        """Returns numerical data.
+
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
+        """
+        return self.get_data()
 
     def _get_raster_interval(self, func):
         """ Uses interval math to adaptively mesh and obtain the plot"""

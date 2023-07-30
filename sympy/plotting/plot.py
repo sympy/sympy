@@ -809,7 +809,7 @@ class Line2DBaseSeries(BaseSeries):
                 List of z-coordinates in case of Parametric3DLineSeries
         """
         np = import_module('numpy')
-        points = self.get_points()
+        points = self._get_data_helper()
         if self.steps is True:
             if len(points) == 2:
                 x = np.array((points[0], points[0])).T.flatten()[1:]
@@ -897,9 +897,12 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             str(self.expr), str(self.var), str((self.start, self.end)))
 
     def get_points(self):
-        """ Return lists of coordinates for plotting. Depending on the
+        """Return lists of coordinates for plotting. Depending on the
         ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
+
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
 
         Returns
         =======
@@ -908,12 +911,16 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
             y : list
                 List of y-coordinates
+        """
+        return self._get_data_helper()
 
+    def _get_data_helper(self):
+        if self.only_integers or not self.adaptive:
+            return self._uniform_sampling()
+        return self._adaptive_sampling()
 
-        Explanation
-        ===========
-
-        The adaptive sampling is done by recursively checking if three
+    def _adaptive_sampling(self):
+        """The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
 
@@ -922,73 +929,69 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
         .. [1] Adaptive polygonal approximation of parametric curves,
                Luiz Henrique de Figueiredo.
-
         """
-        if self.only_integers or not self.adaptive:
-            return self._uniform_sampling()
-        else:
-            f = lambdify([self.var], self.expr)
-            x_coords = []
-            y_coords = []
-            np = import_module('numpy')
-            def sample(p, q, depth):
-                """ Samples recursively if three points are almost collinear.
-                For depth < 6, points are added irrespective of whether they
-                satisfy the collinearity condition or not. The maximum depth
-                allowed is 12.
-                """
-                # Randomly sample to avoid aliasing.
-                random = 0.45 + np.random.rand() * 0.1
+        f = lambdify([self.var], self.expr)
+        x_coords = []
+        y_coords = []
+        np = import_module('numpy')
+        def sample(p, q, depth):
+            """ Samples recursively if three points are almost collinear.
+            For depth < 6, points are added irrespective of whether they
+            satisfy the collinearity condition or not. The maximum depth
+            allowed is 12.
+            """
+            # Randomly sample to avoid aliasing.
+            random = 0.45 + np.random.rand() * 0.1
+            if self.xscale == 'log':
+                xnew = 10**(np.log10(p[0]) + random * (np.log10(q[0]) -
+                                                        np.log10(p[0])))
+            else:
+                xnew = p[0] + random * (q[0] - p[0])
+            ynew = f(xnew)
+            new_point = np.array([xnew, ynew])
+
+            # Maximum depth
+            if depth > self.depth:
+                x_coords.append(q[0])
+                y_coords.append(q[1])
+
+            # Sample to depth of 6 (whether the line is flat or not)
+            # without using linspace (to avoid aliasing).
+            elif depth < 6:
+                sample(p, new_point, depth + 1)
+                sample(new_point, q, depth + 1)
+
+            # Sample ten points if complex values are encountered
+            # at both ends. If there is a real value in between, then
+            # sample those points further.
+            elif p[1] is None and q[1] is None:
                 if self.xscale == 'log':
-                    xnew = 10**(np.log10(p[0]) + random * (np.log10(q[0]) -
-                                                           np.log10(p[0])))
+                    xarray = np.logspace(p[0], q[0], 10)
                 else:
-                    xnew = p[0] + random * (q[0] - p[0])
-                ynew = f(xnew)
-                new_point = np.array([xnew, ynew])
+                    xarray = np.linspace(p[0], q[0], 10)
+                yarray = list(map(f, xarray))
+                if not all(y is None for y in yarray):
+                    for i in range(len(yarray) - 1):
+                        if not (yarray[i] is None and yarray[i + 1] is None):
+                            sample([xarray[i], yarray[i]],
+                                [xarray[i + 1], yarray[i + 1]], depth + 1)
 
-                # Maximum depth
-                if depth > self.depth:
-                    x_coords.append(q[0])
-                    y_coords.append(q[1])
+            # Sample further if one of the end points in None (i.e. a
+            # complex value) or the three points are not almost collinear.
+            elif (p[1] is None or q[1] is None or new_point[1] is None
+                    or not flat(p, new_point, q)):
+                sample(p, new_point, depth + 1)
+                sample(new_point, q, depth + 1)
+            else:
+                x_coords.append(q[0])
+                y_coords.append(q[1])
 
-                # Sample irrespective of whether the line is flat till the
-                # depth of 6. We are not using linspace to avoid aliasing.
-                elif depth < 6:
-                    sample(p, new_point, depth + 1)
-                    sample(new_point, q, depth + 1)
-
-                # Sample ten points if complex values are encountered
-                # at both ends. If there is a real value in between, then
-                # sample those points further.
-                elif p[1] is None and q[1] is None:
-                    if self.xscale == 'log':
-                        xarray = np.logspace(p[0], q[0], 10)
-                    else:
-                        xarray = np.linspace(p[0], q[0], 10)
-                    yarray = list(map(f, xarray))
-                    if not all(y is None for y in yarray):
-                        for i in range(len(yarray) - 1):
-                            if not (yarray[i] is None and yarray[i + 1] is None):
-                                sample([xarray[i], yarray[i]],
-                                    [xarray[i + 1], yarray[i + 1]], depth + 1)
-
-                # Sample further if one of the end points in None (i.e. a
-                # complex value) or the three points are not almost collinear.
-                elif (p[1] is None or q[1] is None or new_point[1] is None
-                        or not flat(p, new_point, q)):
-                    sample(p, new_point, depth + 1)
-                    sample(new_point, q, depth + 1)
-                else:
-                    x_coords.append(q[0])
-                    y_coords.append(q[1])
-
-            f_start = f(self.start)
-            f_end = f(self.end)
-            x_coords.append(self.start)
-            y_coords.append(f_start)
-            sample(np.array([self.start, f_start]),
-                   np.array([self.end, f_end]), 0)
+        f_start = f(self.start)
+        f_end = f(self.end)
+        x_coords.append(self.start)
+        y_coords.append(f_start)
+        sample(np.array([self.start, f_start]),
+                np.array([self.end, f_end]), 0)
 
         return (x_coords, y_coords)
 
@@ -1040,18 +1043,13 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         np = import_module('numpy')
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
-    def _uniform_sampling(self):
-        param = self.get_parameter_points()
-        fx = vectorized_lambdify([self.var], self.expr_x)
-        fy = vectorized_lambdify([self.var], self.expr_y)
-        list_x = fx(param)
-        list_y = fy(param)
-        return (list_x, list_y)
-
     def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
         ``adaptive`` option, this function will either use an adaptive algorithm
         or it will uniformly sample the expression over the provided range.
+
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
 
         Returns
         =======
@@ -1061,11 +1059,24 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             y : list
                 List of y-coordinates
 
+        """
+        return self._get_data_helper()[:-1]
 
-        Explanation
-        ===========
+    def _get_data_helper(self):
+        if not self.adaptive:
+            return self._uniform_sampling()
+        return self._adaptive_sampling()
 
-        The adaptive sampling is done by recursively checking if three
+    def _uniform_sampling(self):
+        param = self.get_parameter_points()
+        fx = vectorized_lambdify([self.var], self.expr_x)
+        fy = vectorized_lambdify([self.var], self.expr_y)
+        list_x = fx(param)
+        list_y = fy(param)
+        return (list_x, list_y, param)
+
+    def _adaptive_sampling(self):
+        """The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
 
@@ -1074,15 +1085,12 @@ class Parametric2DLineSeries(Line2DBaseSeries):
 
         .. [1] Adaptive polygonal approximation of parametric curves,
             Luiz Henrique de Figueiredo.
-
         """
-        if not self.adaptive:
-            return self._uniform_sampling()
-
         f_x = lambdify([self.var], self.expr_x)
         f_y = lambdify([self.var], self.expr_y)
         x_coords = []
         y_coords = []
+        param = []
 
         def sample(param_p, param_q, p, q, depth):
             """ Samples recursively if three points are almost collinear.
@@ -1102,6 +1110,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             if depth > self.depth:
                 x_coords.append(q[0])
                 y_coords.append(q[1])
+                param.append(param_p)
 
             # Sample irrespective of whether the line is flat till the
             # depth of 6. We are not using linspace to avoid aliasing.
@@ -1137,6 +1146,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             else:
                 x_coords.append(q[0])
                 y_coords.append(q[1])
+                param.append(param_p)
 
         f_start_x = f_x(self.start)
         f_start_y = f_y(self.start)
@@ -1146,9 +1156,10 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         end = [f_end_x, f_end_y]
         x_coords.append(f_start_x)
         y_coords.append(f_start_y)
+        param.append(start)
         sample(self.start, self.end, start, end, 0)
 
-        return x_coords, y_coords
+        return x_coords, y_coords, param
 
 
 ### 3D lines
@@ -1197,6 +1208,23 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         return np.linspace(self.start, self.end, num=self.nb_of_points)
 
     def get_points(self):
+        """Return the x,y,z coordinates for plotting the line.
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
+        """
+        return self.get_data()[:-1]
+
+    def get_data(self):
+        """Return coordinates for plotting the line.
+
+        Returns
+        =======
+
+        x: np.ndarray
+        y: np.ndarray
+        z: np.ndarray
+        param : np.ndarray
+        """
         np = import_module('numpy')
         param = self.get_parameter_points()
         fx = vectorized_lambdify([self.var], self.expr_x)
@@ -1218,7 +1246,7 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self._xlim = (np.amin(list_x), np.amax(list_x))
         self._ylim = (np.amin(list_y), np.amax(list_y))
         self._zlim = (np.amin(list_z), np.amax(list_z))
-        return list_x, list_y, list_z
+        return list_x, list_y, list_z, param
 
 
 ### Surfaces
@@ -1286,6 +1314,24 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        """Return the x,y,z coordinates for plotting the surface.
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
+        """
+        return self.get_data()
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+        mesh_x : np.ndarray
+            Discretized x-domain.
+        mesh_y : np.ndarray
+            Discretized y-domain.
+        mesh_z : np.ndarray
+            Results of the evaluation.
+        """
         np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
@@ -1341,6 +1387,28 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                                        num=self.nb_of_points_v))
 
     def get_meshes(self):
+        """Return the x,y,z coordinates for plotting the surface.
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
+        """
+        return self.get_data()[:3]
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+        mesh_x : np.ndarray
+            Discretized x-domain.
+        mesh_y : np.ndarray
+            Discretized y-domain.
+        mesh_z : np.ndarray
+            Results of the evaluation.
+        mesh_u : np.ndarray
+            Discretized u range.
+        mesh_v : np.ndarray
+            Discretized v range.
+        """
         np = import_module('numpy')
 
         mesh_u, mesh_v = self.get_parameter_meshes()
@@ -1364,7 +1432,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
         self._ylim = (np.amin(mesh_y), np.amax(mesh_y))
         self._zlim = (np.amin(mesh_z), np.amax(mesh_z))
 
-        return mesh_x, mesh_y, mesh_z
+        return mesh_x, mesh_y, mesh_z, mesh_u, mesh_v
 
 
 ### Contours
@@ -1402,6 +1470,24 @@ class ContourSeries(BaseSeries):
                     str((self.start_y, self.end_y)))
 
     def get_meshes(self):
+        """Return the x,y,z coordinates for plotting the surface.
+        This function is available for back-compatibility purposes. Consider
+        using ``get_data()`` instead.
+        """
+        return self.get_data()[:3]
+
+    def get_data(self):
+        """Return arrays of coordinates for plotting.
+
+        Returns
+        =======
+        mesh_x : np.ndarray
+            Discretized x-domain.
+        mesh_y : np.ndarray
+            Discretized y-domain.
+        mesh_z : np.ndarray
+            Results of the evaluation.
+        """
         np = import_module('numpy')
         mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
                                                  num=self.nb_of_points_x),
@@ -1556,7 +1642,10 @@ class MatplotlibBackend(Plot):
         for s in series:
             # Create the collections
             if s.is_2Dline:
-                x, y = s.get_data()
+                if s.is_parametric:
+                    x, y, param = s.get_data()
+                else:
+                    x, y = s.get_data()
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
                     segments = self.get_segments(x, y)
@@ -1567,9 +1656,9 @@ class MatplotlibBackend(Plot):
                     lbl = _str_or_latex(s.label)
                     line, = ax.plot(x, y, label=lbl, color=s.line_color)
             elif s.is_contour:
-                ax.contour(*s.get_meshes())
+                ax.contour(*s.get_data())
             elif s.is_3Dline:
-                x, y, z = s.get_data()
+                x, y, z, param = s.get_data()
                 if (isinstance(s.line_color, (int, float)) or
                         callable(s.line_color)):
                     art3d = mpl_toolkits.mplot3d.art3d
@@ -1585,7 +1674,10 @@ class MatplotlibBackend(Plot):
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
             elif s.is_3Dsurface:
-                x, y, z = s.get_meshes()
+                if s.is_parametric:
+                    x, y, z, u, v = s.get_data()
+                else:
+                    x, y, z = s.get_data()
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
@@ -1600,7 +1692,7 @@ class MatplotlibBackend(Plot):
                 ylims.append(s._ylim)
                 zlims.append(s._zlim)
             elif s.is_implicit:
-                points = s.get_raster()
+                points = s.get_data()
                 if len(points) == 2:
                     # interval math plotting
                     x, y = _matplotlib_list(points[0])
