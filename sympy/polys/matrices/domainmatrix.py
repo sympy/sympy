@@ -1847,19 +1847,13 @@ class DomainMatrix:
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self, keep_domain=True):
+    def rref(self, *, method='auto'):
         r"""
         Returns reduced-row echelon form and list of pivots for the DomainMatrix
 
         The domain must be a field. Use :meth:`rref_den` to compute the RREF
         with denominator for non-field domains or convert to a field with
         :meth:`to_field`.
-
-        Returns
-        =======
-
-        (DomainMatrix, list)
-            reduced-row echelon form and list of pivots for the DomainMatrix
 
         Examples
         ========
@@ -1877,6 +1871,29 @@ class DomainMatrix:
         >>> rref_pivots
         (0, 1, 2)
 
+        Parameters
+        ==========
+
+        method : str, optional (default: 'auto')
+            The method to use to compute the RREF. The default is ``'auto'``,
+            which will attempt to choose the fastest method. The other options
+            are ``'GJ'``, which uses Gauss-Jordan elimination, ``'FF'``, which
+            uses fast fraction-free elimination, and ``'CD'``, which will
+            clear denominators before using Gauss-Jordan elimination. The
+            domain of the returned matrix will always be in the associated
+            field.
+
+            The sparse implementations are always used by default but if the
+            method is e.g. ``'GJ_dense'`` then the dense implementation will
+            be used. The returned matrix will always have the same format
+            (sparse or dense) as the input.
+
+        Returns
+        =======
+
+        (DomainMatrix, list)
+            reduced-row echelon form and list of pivots for the DomainMatrix
+
         See Also
         ========
 
@@ -1886,19 +1903,13 @@ class DomainMatrix:
             The function that implements this.
 
         """
-        return dm_rref(self)
+        return dm_rref(self, method=method)
 
-    def rref_den(self, keep_domain=True):
+    def rref_den(self, *, method='auto', keep_domain=True):
         r"""
         Returns reduced-row echelon form with denominator and list of pivots.
 
         Requires exact division in the ground domain (``exquo``).
-
-        Returns
-        =======
-
-        (DomainMatrix, scalar, list)
-            Reduced-row echelon form, denominator and list of pivot indices.
 
         Examples
         ========
@@ -1925,11 +1936,36 @@ class DomainMatrix:
         Parameters
         ==========
 
+        method : str, optional (default: 'auto')
+            The method to use to compute the RREF. The default is ``'auto'``,
+            which will attempt to choose the fastest method. The other options
+            are ``'GJ'``, which uses Gauss-Jordan elimination, ``'FF'``, which
+            uses fast fraction-free elimination, and ``'CD'``, which will
+            clear denominators before using Gauss-Jordan elimination.
+
+            The underlying algorithms might compute the RREF in a different
+            domain if it is more efficient to do so. By default the result will
+            be converted back to the original domain either by clearing
+            denominators or divding denominators back in. If this is not
+            desired, set ``keep_domain`` to ``False`` and then the result may
+            be in a different domain than the input.
+
+            The sparse implementations are always used by default but if the
+            method is e.g. ``'GJ_dense'`` then the dense implementation will
+            be used. The returned matrix will always have the same format
+            (sparse or dense) as the input.
+
         keep_domain : bool, optional
             If True (the default), the domain of the returned matrix and
             denominator are the same as the domain of the input matrix. If
             False, the domain of the returned matrix might be changed to an
             associated ring or field.
+
+        Returns
+        =======
+
+        (DomainMatrix, scalar, list)
+            Reduced-row echelon form, denominator and list of pivot indices.
 
         Notes
         =====
@@ -1955,7 +1991,7 @@ class DomainMatrix:
             The function that implements this.
 
         """
-        return dm_rref_den(self, keep_domain=keep_domain)
+        return dm_rref_den(self, method=method, keep_domain=keep_domain)
 
     def rref_gj_div(self):
         """Compute RREF using Gauss-Jordan elimination with division.
