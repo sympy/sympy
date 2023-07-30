@@ -35,7 +35,7 @@ R_PAREN: ")"
 // limit, integral, sum, and product symbols
 FUNC_LIM:  "\\lim"
 LIM_APPROACH_SYM: "\\to" | "\\rightarrow" | "\\Rightarrow" | "\\longrightarrow" | "\\Longrightarrow"
-FUNC_INT:  "\\int"
+FUNC_INT:  "\\int" | "\\intop"
 FUNC_SUM:  "\\sum"
 FUNC_PROD: "\\prod"
 
@@ -75,7 +75,7 @@ FUNC_SQRT: "\\sqrt"
 CMD_TIMES: "\\times"
 CMD_CDOT:  "\\cdot"
 CMD_DIV:   "\\div"
-CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac"
+CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_OVERLINE: "\\overline"
 
