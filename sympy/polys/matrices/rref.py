@@ -27,9 +27,7 @@
 #   https://github.com/sympy/sympy/issues/25410
 #   https://github.com/sympy/sympy/pull/25443
 
-from sympy.polys.matrices.exceptions import DMNotAField
-
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ
 
 from sympy.polys.matrices.sdm import SDM, sdm_irref, sdm_rref_den
 from sympy.polys.matrices.ddm import DDM
@@ -207,8 +205,6 @@ def dm_rref_den(M, *, method='auto', keep_domain=True):
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
         The ``DomainMatrix`` method that calls this function.
     """
-    K = M.domain
-
     is_dense = M.rep.fmt == 'dense'
 
     if method == 'auto':
