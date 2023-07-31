@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
 from sympy.core.numbers import Float
 from sympy.functions.elementary.exponential import exp
@@ -190,12 +191,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         if evaluate:
             return c0 * exp(c3 * (l_T_tilde - c1)) - c2
 
-        a0 = Mul(Integer(-1), c1)
-        a1 = Add(l_T_tilde, a0, evaluate=False)
-        a2 = exp(Mul(c3, a1, evaluate=False), evaluate=False)
-        a3 = Mul(c0, a2, evaluate=False)
-        expr = Add(a3, Mul(Integer(-1), c2), evaluate=False)
-        return expr
+        return c0 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1)) - c2
 
     def _latex(self, printer: Printer) -> str:
         """Print a LaTeX representation of the function defining the curve.
