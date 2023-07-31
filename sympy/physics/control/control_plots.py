@@ -5,17 +5,19 @@ from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
-from sympy.physics.control.lti import SISOLinearTimeInvariant
+from sympy.physics.control.lti import SISOLinearTimeInvariant,TransferFunction
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+
+from sympy import Matrix,solve,Wild,symbols,shape
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot','pade_approximate_time_delay']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -44,7 +46,8 @@ def _check_system(system):
     if sys.has(exp):
         # Should test that exp is not part of a constant, in which case
         # no exception is required, compare exp(s) with s*exp(1)
-        raise NotImplementedError("Time delay terms are not supported.")
+        raise NotImplementedError("Time delay terms are not supported."
+                                  "use pade_approximate_time_delay(system) to approximate time delays")
 
 
 def pole_zero_numerical_data(system):
@@ -959,3 +962,72 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+def pade_approximate_time_delay(system,order=2):
+    """
+    Returns the system with all time delay terms replaced by their Pade approximant.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The system for which the time delay term is to be approximated.
+    order : Integer
+        The order of Pade approximant used
+
+    Returns
+    =======
+
+    SISOLinearTimeInvariant :
+        the system with no time delay terms
+
+    Raises
+    ======
+
+    NotImplementedError
+        When a SISO LTI system is not passed.
+
+    ValueError
+        when no time delay terms are present in the system
+
+    Examples
+    ========
+    >>> from sympy.abc import s
+    >>> from sympy import Symbol,pprint,exp
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> T = Symbol('T')
+    >>> tf1 = TransferFunction(exp(-T*s),1,s)
+    >>> pprint(pade_approximate_time_delay(tf1))   # doctest: +SKIP
+        2 2
+    12*T*s  - 72*T*s + 144
+    ----------------------
+        2 2
+    12*T*s  + 72*T*s + 144
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Pad%C3%A9_approximant
+
+    """
+    if not isinstance(system, SISOLinearTimeInvariant):
+        raise NotImplementedError("Only SISO LTI systems are currently supported.")
+    sys = system.to_expr()
+    t = Wild("T")
+    gtd_expr = exp(-t * system.var)
+    td_terms = sys.find(gtd_expr)
+    if(len(td_terms)==0):
+        raise ValueError("No time delay terms in system")
+    taylor = gtd_expr.series(system.var, n=2*order+1).removeO().as_poly(system.var)
+    n = order + 1
+    c = taylor.all_coeffs()[-1:-2 * n:-1]
+    c_mat = Matrix([c[i::-1] + [0 for j in range(len(c) - 1 - i)] for i in range(0, len(c))])
+    a = symbols('a0:{0}'.format(n))
+    b = symbols('b1:{0}'.format(n))
+    bvec = Matrix(shape(c_mat)[1], 1, [1] + [*b] + [0 for j in range(shape(c_mat)[1] - n)])
+    avec = Matrix(shape(c_mat)[0], 1, [*a] + [0 for j in range(shape(c_mat)[0] - n)])
+    pade_approximant = sum([co * system.var ** i for i, co in enumerate(avec)]) / sum([co * system.var ** i for i, co in enumerate(bvec)])
+    pade_system = (c_mat * bvec) - avec
+    pade_coeffs = solve(pade_system, *a, *b)
+    pade_holder = pade_approximant.subs(pade_coeffs)
+    pade_sys = sys.replace(exp,lambda arg: pade_holder.subs(t,arg/(-system.var)))
+    return TransferFunction.from_rational_expression(pade_sys,var=system.var)

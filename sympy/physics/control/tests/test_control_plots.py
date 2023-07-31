@@ -2,7 +2,7 @@ from math import isclose
 from sympy.core.numbers import I
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import (Abs, arg)
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.abc import s, p, a
 from sympy.external import import_module
 from sympy.physics.control.control_plots import \
@@ -10,11 +10,11 @@ from sympy.physics.control.control_plots import \
     step_response_plot, impulse_response_numerical_data,
     impulse_response_plot, ramp_response_numerical_data,
     ramp_response_plot, bode_magnitude_numerical_data,
-    bode_phase_numerical_data, bode_plot)
+    bode_phase_numerical_data, bode_plot, pade_approximate_time_delay)
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
 from sympy.testing.pytest import raises, skip
-
+from sympy.simplify.simplify import simplify
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
         catch=(RuntimeError,))
@@ -29,7 +29,7 @@ tf5 = TransferFunction(5, s**2 + 2*s + 10, s)
 tf6 = TransferFunction(1, 1, s)
 tf7 = TransferFunction(4*s*3 + 9*s**2 + 0.1*s + 11, 8*s**6 + 9*s**4 + 11, s)
 tf8 = TransferFunction(5, s**2 + (2+I)*s + 10, s)
-
+tf9 = TransferFunction(exp(-p*s),1,s)
 ser1 = Series(tf4, TransferFunction(1, p - 5, p))
 ser2 = Series(tf3, TransferFunction(p, p + 2, p))
 
@@ -70,6 +70,7 @@ def test_errors():
     raises(NotImplementedError, lambda: ramp_response_plot(expr))
     raises(NotImplementedError, lambda: ramp_response_numerical_data(tfm))
     raises(NotImplementedError, lambda: bode_plot(tfm))
+    raises(NotImplementedError, lambda: pade_approximate_time_delay(tfm))
 
     # More than 1 variables
     tf_a = TransferFunction(a, s + 1, s)
@@ -95,6 +96,8 @@ def test_errors():
     raises(ValueError, lambda: bode_plot(tf1,freq_unit = 'hz'))
     raises(ValueError, lambda: bode_plot(tf1,phase_unit = 'degree'))
 
+    # No time delay terms
+    raises(ValueError, lambda: pade_approximate_time_delay(tf1))
 
 def test_pole_zero():
     if not numpy:
@@ -297,3 +300,24 @@ def test_ramp_response():
     assert ramp_res_tester(tf4, 10, exp4, 3)
     assert ramp_res_tester(tf5, 10, exp5, 9)
     assert ramp_res_tester(tf6, 10, exp6)
+def test_pade_approximant():
+    T = p
+    pade1 = pade_approximate_time_delay(tf9,1)
+    pade2 = pade_approximate_time_delay(tf9, 2)
+    pade3 = pade_approximate_time_delay(tf9, 3)
+    pade4 = pade_approximate_time_delay(tf9, 4)
+    pade5 = pade_approximate_time_delay(tf9, 5)
+
+    exp1 = (2-(T*s))/(2+(T*s))
+    exp2 = (12-6*(T*s)+(T*s)**2)/(12+6*(T*s)+(T*s)**2)
+    exp3 = (120 - 60 * (T * s) + 12 * (T * s) ** 2 - (T * s) ** 3) /\
+           (120 + 60 * (T * s) + 12 * (T * s) ** 2 + (T * s) ** 3)
+    exp4 = (1680-840*(T*s)+180*(T*s)**2-20*(T*s)**3+(T*s)**4)/(1680+840*(T*s)+180*(T*s)**2+20*(T*s)**3+(T*s)**4)
+    exp5 = (30240-15120*(T*s)+3360*(T*s)**2-420*(T*s)**3+30*(T*s)**4-(T*s)**5)/ \
+           (30240+15120*(T*s)+3360*(T*s)**2+420*(T*s)**3+30*(T*s)**4+(T*s)**5)
+
+    assert simplify(exp1 - pade1.to_expr()) == 0
+    assert simplify(exp2 - pade2.to_expr()) == 0
+    assert simplify(exp3 - pade3.to_expr()) == 0
+    assert simplify(exp4 - pade4.to_expr()) == 0
+    assert simplify(exp5 - pade5.to_expr()) == 0
