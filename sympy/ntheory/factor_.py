@@ -8,7 +8,6 @@ import math
 
 from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
@@ -209,6 +208,12 @@ def trailing(n):
     7
     >>> trailing(63)
     0
+
+    See Also
+    ========
+
+    multiplicity
+
     """
     n = abs(int(n))
     if not n:
@@ -217,32 +222,28 @@ def trailing(n):
     if low_byte:
         return small_trailing[low_byte]
 
+    t = 8
+    n >>= 8
     # 2**m is quick for z up through 2**30
-    z = bitcount(n) - 1
-    if isinstance(z, SYMPY_INTS):
-        if n == 1 << z:
-            return z
+    z = n.bit_length() - 1
+    if n == 1 << z:
+        return z + t
 
     if z < 300:
         # fixed 8-byte reduction
-        t = 8
-        n >>= 8
         while not n & 0xff:
             n >>= 8
             t += 8
-        return t + small_trailing[n & 0xff]
-
-    # binary reduction important when there might be a large
-    # number of trailing 0s
-    t = 0
-    p = 8
-    while not n & 1:
-        while not n & ((1 << p) - 1):
+    else:
+        # binary reduction important when there might be a large
+        # number of trailing 0s
+        p = z >> 1
+        while not n & 0xff:
+            while n & ((1 << p) - 1):
+                p >>= 1
             n >>= p
             t += p
-            p *= 2
-        p //= 2
-    return t
+    return t + small_trailing[n & 0xff]
 
 
 def multiplicity(p, n):
@@ -271,6 +272,11 @@ def multiplicity(p, n):
     52818775009509558395695966887
     >>> _ == multiplicity_in_factorial(p, n)
     True
+
+    See Also
+    ========
+
+    trailing
 
     """
     try:
