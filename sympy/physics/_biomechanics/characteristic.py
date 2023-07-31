@@ -57,6 +57,8 @@ class CharacteristicCurveFunction(Function):
     _cxxcode = _print_code
     _fcode = _print_code
     _jaxcode = _print_code
+    _lambdacode = _print_code
+    _mpmathcode = _print_code
     _octave = _print_code
     _pythoncode = _print_code
     _numpycode = _print_code
