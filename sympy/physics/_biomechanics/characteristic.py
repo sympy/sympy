@@ -23,6 +23,15 @@ __all__ = ['TendonForceLengthDeGroote2016']
 class CharacteristicCurveFunction(Function):
     """Base class for all musculotendon characteristic curve functions."""
 
+    @classmethod
+    def eval(cls):
+        msg = (
+            f'Cannot directly instantiate {cls.__name__!r}, instances of '
+            f'characteristic curves must be of a concrete subclass.'
+
+        )
+        raise TypeError(msg)
+
     def _print_code(self, printer: Printer) -> str:
         """Print code for the function defining the curve using a printer.
 
