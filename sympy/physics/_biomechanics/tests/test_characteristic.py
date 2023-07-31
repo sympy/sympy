@@ -185,6 +185,12 @@ class TestTendonForceLengthDeGroote2016:
         fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
         assert code_printer().doprint(fl_T) == expected
 
+    def test_derivative_print_code(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        dfl_T_dl_T_tilde = fl_T.diff(self.l_T_tilde)
+        expected = '6.787338754623378*math.exp(33.93669377311689*(l_T_tilde - 0.995))'
+        assert PythonCodePrinter().doprint(dfl_T_dl_T_tilde) == expected
+
     def test_lambdify(self) -> None:
         fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
         fl_T_callable = lambdify(self.l_T_tilde, fl_T)
