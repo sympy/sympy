@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.function import Function
-from sympy.core.numbers import Float
+from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.numbers import Float, Integer
 from sympy.functions.elementary.exponential import exp
 
 from sympy import Integer, Mul, Add
@@ -207,15 +207,17 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         l_T_tilde, c0, c1, c2, c3 = self.args
         if argindex == 1:
-            return c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+            return c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 2:
-            return exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+            return exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 3:
-            return -c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+            return -c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 4:
             return Integer(-1)
         elif argindex == 5:
-            return c0 * (l_T_tilde - c1) * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+            return c0 * (l_T_tilde - c1) * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+
+        raise ArgumentIndexError(self, argindex)
 
     def _latex(self, printer: Printer) -> str:
         """Print a LaTeX representation of the function defining the curve.
