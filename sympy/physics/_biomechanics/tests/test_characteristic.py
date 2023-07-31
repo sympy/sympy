@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Float
@@ -68,6 +69,10 @@ class TestTendonForceLengthDeGroote2016:
     def test_doit(self) -> None:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants).doit()
         assert fl_T == self.c0*exp(self.c3*(self.l_T_tilde - self.c1)) - self.c2
+
+    def test_doit_evaluate_false(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants).doit(evaluate=False)
+        assert fl_T == self.c0*exp(self.c3*UnevaluatedExpr(self.l_T_tilde - self.c1)) - self.c2
 
     def test_with_default_constants(self) -> None:
         constants = (
