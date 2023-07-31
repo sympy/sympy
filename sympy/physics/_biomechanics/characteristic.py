@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from sympy.printing.printer import Printer
 
 
-__all__ = ['fl_T_de_groote_2016']
+__all__ = ['TendonForceLengthDeGroote2016']
 
 
 class CharacteristicCurveFunction(Function):
@@ -55,7 +55,7 @@ class CharacteristicCurveFunction(Function):
     _scipycode = _print_code
 
 
-class fl_T_de_groote_2016(CharacteristicCurveFunction):
+class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     r"""Tendon force-length curve based on De Groote et al., 2016 [1].
 
     Explanation
@@ -88,7 +88,7 @@ class fl_T_de_groote_2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_T_tilde: Any) -> fl_T_de_groote_2016:
+    def with_default_constants(cls, l_T_tilde: Any) -> TendonForceLengthDeGroote2016:
         r"""Alternative constructor that will use the recommended constants.
 
         Explanation
