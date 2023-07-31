@@ -117,7 +117,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         ==========
 
         l_T_tilde : Any (sympifiable)
-            Normalized tendon force-length.
+            Normalized tendon length.
 
         """
         c0 = Float('0.2')
@@ -134,7 +134,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         ==========
 
         l_T_tilde : Any (sympifiable)
-            Normalized tendon force-length.
+            Normalized tendon length.
         c0 : Any (sympifiable)
             The first constant in the characteristic equation. The published
             value is ``0.2``.
