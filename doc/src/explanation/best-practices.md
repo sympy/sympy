@@ -562,7 +562,7 @@ simplification using {meth}`~sympy.core.basic.Basic.replace`, or in general, man
 
 
 (best-practices-dont-hardcode-symbol-names)=
-### Don't Hardcode Symbol Names in Functions
+### Don't Hardcode Symbol Names in Python Functions
 
 Instead of hard-coding {class}`~.Symbol` names inside of a function
 definition, make the symbols a parameter to the function.
