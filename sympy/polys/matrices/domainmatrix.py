@@ -39,10 +39,11 @@ from sympy.polys.domains import ZZ, EXRAW, QQ
 
 from sympy.polys.densearith import dup_mul
 from sympy.polys.densetools import (
-    dup_content,
-    dup_clear_denoms,
-    dup_primitive,
+    dup_mul_ground,
     dup_quo_ground,
+    dup_content,
+    dup_primitive,
+    dup_clear_denoms,
 )
 from sympy.polys.factortools import dup_factor_list
 from sympy.polys.polyutils import _sort_factors
@@ -1648,6 +1649,14 @@ class DomainMatrix:
         >>> Minv_reduced.to_field() / den_reduced == Minv.to_field() / den
         True
 
+        The denominator is made canonical with respect to units (e.g. a
+        negative denominator is made positive):
+
+        >>> M = DM([[2, 2, 0]], ZZ)
+        >>> den = ZZ(-4)
+        >>> M.cancel_denom(den)
+        (DomainMatrix([[-1, -1, 0]], (1, 3), ZZ), 2)
+
         Any factor common to _all_ elements will be cancelled but there can
         still be factors in common between _some_ elements of the matrix and
         the denominator. To cancel factors between each element and the
@@ -1684,26 +1693,36 @@ class DomainMatrix:
 
         elements, data = M.to_flat_nz()
 
+        # First canonicalize the denominator (e.g. multiply by -1).
+        if K.is_negative(denom):
+            u = -K.one
+        else:
+            u = K.canonical_unit(denom)
+
         # Often after e.g. solve_den the denominator will be much more
         # complicated than the elements of the numerator. Hopefully it will be
         # quicker to find the gcd of the numerator and if there is no content
         # then we do not need to look at the denominator at all.
         content = dup_content(elements, K)
-
-        if K.is_one(content):
-            return (M.copy(), denom)
-
         common = K.gcd(content, denom)
 
-        if K.is_one(common):
+        if not K.is_one(content):
+
+            common = K.gcd(content, denom)
+
+            if not K.is_one(common):
+                elements = dup_quo_ground(elements, common, K)
+                denom = K.quo(denom, common)
+
+        if not K.is_one(u):
+            elements = dup_mul_ground(elements, u, K)
+            denom = u * denom
+        elif K.is_one(common):
             return (M.copy(), denom)
 
-        elements_cancelled = dup_quo_ground(elements, common, K)
-        denom_cancelled = K.quo(denom, common)
+        M_cancelled = M.from_flat_nz(elements, data, K)
 
-        M_cancelled = M.from_flat_nz(elements_cancelled, data, K)
-
-        return M_cancelled, denom_cancelled
+        return M_cancelled, denom
 
     def cancel_denom_elementwise(self, denom):
         """
@@ -1974,7 +1993,7 @@ class DomainMatrix:
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
 
-    def nullspace(self):
+    def nullspace(self, divide_last=False):
         r"""
         Returns the nullspace for the DomainMatrix
 
@@ -1988,17 +2007,129 @@ class DomainMatrix:
         ========
 
         >>> from sympy import QQ
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [QQ(1), QQ(-1)],
-        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([
+        ...    [QQ(2), QQ(-2)],
+        ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
+        DomainMatrix([[2, 2]], (1, 2), QQ)
+        >>> A.nullspace(divide_last=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
+        The returned matrix is a basis for the nullspace:
+
+        >>> A_null = A.nullspace().transpose()
+        >>> A * A_null
+        DomainMatrix([[0], [0]], (2, 1), QQ)
+        >>> rows, cols = A.shape
+        >>> nullity = rows - A.rank()
+        >>> A_null.shape == (cols, nullity)
+        True
+
+        Nullspace can also be computed for non-field rings. If the ring is not
+        a field then normalization is not done. Setting normalize to True will
+        raise an error.
+
+        >>> from sympy import ZZ
+        >>> B = DM([[6, -3],
+        ...         [4, -2]], ZZ)
+        >>> B.nullspace()
+        DomainMatrix([[3, 6]], (1, 2), ZZ)
+        >>> B.nullspace(divide_last=True)
+        Traceback (most recent call last):
+        ...
+        DMNotAField: Cannot normalize vectors over a non-field
+
+        Over a ring with ``gcd`` defined the nullspace can potentially be
+        reduced with :meth:`primitive`:
+
+        >>> B.nullspace().primitive()
+        (3, DomainMatrix([[1, 2]], (1, 2), ZZ))
+
+        A matrix over a ring can often be normalized by converting it to a
+        field but it is often a bad idea to do so:
+
+        >>> from sympy.abc import a, b, c
+        >>> from sympy import Matrix
+        >>> M = Matrix([[        a*b,       b + c,        c],
+        ...             [      a - b,         b*c,     c**2],
+        ...             [a*b + a - b, b*c + b + c, c**2 + c]])
+        >>> M.to_DM().domain
+        ZZ[a,b,c]
+        >>> M.to_DM().nullspace().to_Matrix().transpose()
+        Matrix([
+        [                             c**3],
+        [            -a*b*c**2 + a*c - b*c],
+        [a*b**2*c - a*b - a*c + b**2 + b*c]])
+
+        The unnormalized form here is nicer than the normalized form that
+        spreads a large denominator throughout the matrix:
+
+        >>> M.to_DM().to_field().nullspace(divide_last=True).to_Matrix().transpose()
+        Matrix([
+        [                   c**3/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [(-a*b*c**2 + a*c - b*c)/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [                                                          1]])
+
+        Parameters
+        ==========
+
+        divide_last : bool, optional
+            If False (the default), the vectors are not normalized and the RREF
+            is computed using :meth:`rref_den` and the denominator is
+            discarded. If True, then each row is divided by its final element;
+            the domain must be a field in this case.
+
+        See Also
+        ========
+
+        nullspace_from_rref
+        rref
+        rref_den
+        rowspace
         """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        return self.from_rep(self.rep.nullspace()[0])
+        A = self
+        K = A.domain
+
+        if divide_last and not K.is_Field:
+            raise DMNotAField("Cannot normalize vectors over a non-field")
+
+        if divide_last:
+            A_rref, pivots = A.rref()
+        else:
+            A_rref, den, pivots = A.rref_den()
+
+            # Ensure that the sign is canonical before discarding the
+            # denominator. Then M.nullspace().primitive() is canonical.
+            u = K.canonical_unit(den)
+            if u != K.one:
+                A_rref *= u
+
+        A_null = A_rref.nullspace_from_rref(pivots)
+
+        return A_null
+
+    def nullspace_from_rref(self, pivots=None):
+        """
+        Compute nullspace from rref and pivots.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must be in reduced row echelon form already. Otherwise the
+        result will be incorrect. Use :meth:`rref` or :meth:`rref_den` first
+        to get the reduced row echelon form or use :meth:`nullspace` instead.
+
+        See Also
+        ========
+
+        nullspace
+        rref
+        rref_den
+        sympy.polys.matrices.sdm.SDM.nullspace_from_rref
+        sympy.polys.matrices.ddm.DDM.nullspace_from_rref
+        """
+        null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
+        return self.from_rep(null_rep)
 
     def inv(self):
         r"""
