@@ -9,8 +9,6 @@ from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer
 from sympy.functions.elementary.exponential import exp
 
-from sympy import Integer, Mul, Add
-
 if TYPE_CHECKING:
     from typing import Any
 
