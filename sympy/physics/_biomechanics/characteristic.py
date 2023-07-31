@@ -193,6 +193,30 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
         return c0 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1)) - c2
 
+    def fdiff(self, argindex: int = 1) -> Expr:
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        l_T_tilde, c0, c1, c2, c3 = self.args
+        if argindex == 1:
+            return c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+        elif argindex == 2:
+            return exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+        elif argindex == 3:
+            return -c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+        elif argindex == 4:
+            return Integer(-1)
+        elif argindex == 5:
+            return c0 * (l_T_tilde - c1) * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))
+
     def _latex(self, printer: Printer) -> str:
         """Print a LaTeX representation of the function defining the curve.
 
