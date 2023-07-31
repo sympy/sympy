@@ -75,7 +75,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
     The function is defined by the equation:
 
-    $fl^T = c_0 \exp{c_3 \tilde{l}^T - c_1} - c_2$
+    $fl^T = c_0 \exp{c_3 \left( \tilde{l}^T - c_1 \right)} - c_2$
 
     with constant values of $c_0 = 0.2$, $c_1 = 0.995$, $c_2 = 0.25$, and
     $c_3 = 33.93669377311689$.
