@@ -506,7 +506,7 @@ def _inv(M, method=None, iszerofunc=_iszero, try_block_diag=False):
 
         return diag(*r)
 
-    # Default: Use DomainMatrix if the domain is not EX, RR or CC.
+    # Default: Use DomainMatrix if the domain is not EX.
     # If DM is requested explicitly then use it even if the domain is EX.
     if method is None and iszerofunc is _iszero:
         dM = _try_DM(M, use_EX=False)
