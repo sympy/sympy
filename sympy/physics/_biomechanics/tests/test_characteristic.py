@@ -23,6 +23,7 @@ from sympy.printing.cxx import (
     CXX17CodePrinter,
 )
 from sympy.printing.fortran import FCodePrinter
+from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.latex import LatexPrinter
 from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.numpy import (
@@ -31,7 +32,7 @@ from sympy.printing.numpy import (
     NumPyPrinter,
     SciPyPrinter,
 )
-from sympy.printing.pycode import PythonCodePrinter
+from sympy.printing.pycode import MpmathPrinter, PythonCodePrinter
 from sympy.utilities.lambdify import lambdify
 
 if TYPE_CHECKING:
@@ -178,6 +179,16 @@ class TestTendonForceLengthDeGroote2016:
             (
                 JaxPrinter,
                 '-0.25 + 0.2*jax.numpy.exp(33.93669377311689*(l_T_tilde - 0.995))',
+            ),
+            (
+                MpmathPrinter,
+                'mpmath.mpf((1, 1, -2, 1)) + mpmath.mpf((0, 3602879701896397, -54, 52))'
+                '*mpmath.exp(mpmath.mpf((0, 9552330089424741, -48, 54))*(l_T_tilde + '
+                'mpmath.mpf((1, 8962163258467287, -53, 53))))',
+            ),
+            (
+                LambdaPrinter,
+                '-0.25 + 0.2*math.exp(33.93669377311689*(l_T_tilde - 0.995))',
             ),
         ]
     )
