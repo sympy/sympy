@@ -8,8 +8,8 @@ import pytest
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
+from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Symbol
-from sympy.core.numbers import Float
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp
 from sympy.physics._biomechanics.characteristic import (
@@ -84,6 +84,31 @@ class TestTendonForceLengthDeGroote2016:
         fl_T_manual = TendonForceLengthDeGroote2016(self.l_T_tilde, *constants)
         fl_T_constants = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
         assert fl_T_manual == fl_T_constants
+
+    def test_differentiate_wrt_l_T_tilde(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        expected = self.c0 * self.c3 * exp(self.c3 * UnevaluatedExpr(-self.c1 + self.l_T_tilde))
+        assert fl_T.diff(self.l_T_tilde) == expected
+
+    def test_differentiate_wrt_c0(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        expected = exp(self.c3 * UnevaluatedExpr(-self.c1 + self.l_T_tilde))
+        assert fl_T.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        expected = -self.c0 * self.c3 * exp(self.c3 * UnevaluatedExpr(self.l_T_tilde - self.c1))
+        assert fl_T.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        expected = Integer(-1)
+        assert fl_T.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        expected = self.c0 * (self.l_T_tilde - self.c1) * exp(self.c3 * UnevaluatedExpr(self.l_T_tilde - self.c1))
+        assert fl_T.diff(self.c3) == expected
 
     def test_function_print_latex(self) -> None:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
