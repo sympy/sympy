@@ -5,6 +5,8 @@ to 2D Cables.
 
 from sympy.core.sympify import sympify
 from sympy.core.symbol import Symbol
+from sympy import sin, cos, pi, atan
+from sympy.functions.elementary.miscellaneous import sqrt
 
 class Cable:
     """
@@ -60,6 +62,7 @@ class Cable:
         self._loads_position = {}
         self._length = 0
         self._reaction_loads = {}
+        self._tension = {}
 
         if support_1[0] == support_2[0]:
             raise ValueError("Supports can not have the same label")
@@ -147,6 +150,10 @@ class Cable:
         initialized to 0.
         """
         return self._reaction_loads
+
+    @property
+    def tension(self):
+        return self._tension
 
     def apply_length(self, length):
         """
@@ -383,3 +390,95 @@ class Cable:
                 else:
                     self._loads['point_load'].pop(i)
                     self._loads_position.pop(i)
+
+    def solve(self):
+        """
+        This method solves for the reaction forces at the supports, the tension developed in
+        the cable, and updates the length of the cable.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.continuum_mechanics.cable import Cable
+        >>> c = Cable(("A", 0, 10), ("B", 10, 10))
+        >>> c.apply_load(-1, ('Z', 2, 7.26, 3, 270))
+        >>> c.apply_load(-1, ('X', 4, 6, 8, 270))
+        >>> c.solve()
+        >>> c.tension
+        {A_Z: 8.91403453669861, X_B: 19*sqrt(13)/10, Z_X: 4.79150773600774}
+        >>> c.reaction_loads
+        {R_A_x: -5.25547445255474, R_A_y: 7.2, R_B_x: 5.25547445255474, R_B_y: 3.8}
+        >>> c.length
+        5.7560958484519 + 2*sqrt(13)
+        """
+
+        if len(self._loads_position) != 0:
+            sorted_position = sorted(self._loads_position.items(), key = lambda item : item[1][0])
+
+            sorted_position.append(self._support_labels[1])
+            sorted_position.insert(0, self._support_labels[0])
+
+            self._tension.clear()
+            moment_sum = 0
+            moment_sum_2 = 0
+            F_x = 0
+            F_y = 0
+            self._length = 0
+
+            for i in range(1, len(sorted_position)-1):
+                if i == 1:
+                    self._length+=sqrt((self._left_support[0] - self._loads_position[sorted_position[i][0]][0])**2 + (self._left_support[1] - self._loads_position[sorted_position[i][0]][1])**2)
+
+                else:
+                    self._length+=sqrt((self._loads_position[sorted_position[i-1][0]][0] - self._loads_position[sorted_position[i][0]][0])**2 + (self._loads_position[sorted_position[i-1][0]][1] - self._loads_position[sorted_position[i][0]][1])**2)
+
+                if i == len(sorted_position)-2:
+                    self._length+=sqrt((self._right_support[0] - self._loads_position[sorted_position[i][0]][0])**2 + (self._right_support[1] - self._loads_position[sorted_position[i][0]][1])**2)
+
+                moment_sum += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._left_support[1] - self._loads_position[sorted_position[i][0]][1])
+                moment_sum += self._loads['point_load'][sorted_position[i][0]][0] * sin(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._left_support[0] - self._loads_position[sorted_position[i][0]][0])
+
+                F_x += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180)
+                F_y += self._loads['point_load'][sorted_position[i][0]][0] * sin(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180)
+
+                label = Symbol(sorted_position[i][0]+"_"+sorted_position[i+1][0])
+                y2 = self._loads_position[sorted_position[i][0]][1]
+                x2 = self._loads_position[sorted_position[i][0]][0]
+                y1 = 0
+                x1 = 0
+
+                if i == len(sorted_position)-2:
+                    x1 = self._right_support[0]
+                    y1 = self._right_support[1]
+
+                else:
+                    x1 = self._loads_position[sorted_position[i+1][0]][0]
+                    y1 = self._loads_position[sorted_position[i+1][0]][1]
+
+                theta = atan((y1 - y2)/(x1 - x2))
+
+                tension = -(moment_sum)/(abs(self._left_support[1] - self._loads_position[sorted_position[i][0]][1])*cos(theta) + abs(self._left_support[0] - self._loads_position[sorted_position[i][0]][0])*sin(theta))
+                self._tension[label] = tension
+                moment_sum_2 += self._loads['point_load'][sorted_position[i][0]][0] * cos(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[1] - self._loads_position[sorted_position[i][0]][1])
+                moment_sum_2 += self._loads['point_load'][sorted_position[i][0]][0] * sin(pi * self._loads['point_load'][sorted_position[i][0]][1] / 180) * abs(self._right_support[0] - self._loads_position[sorted_position[i][0]][0])
+
+            label = Symbol(sorted_position[0][0]+"_"+sorted_position[1][0])
+            y2 = self._loads_position[sorted_position[1][0]][1]
+            x2 = self._loads_position[sorted_position[1][0]][0]
+            x1 = self._left_support[0]
+            y1 = self._left_support[1]
+
+            theta = -atan((y2 - y1)/(x2 - x1))
+            tension = -(moment_sum_2)/(abs(self._right_support[1] - self._loads_position[sorted_position[1][0]][1])*cos(theta) + abs(self._right_support[0] - self._loads_position[sorted_position[1][0]][0])*sin(theta))
+            self._tension[label] = tension
+
+            theta = pi/2 - theta
+            label = self._support_labels[0]
+            self._reaction_loads[Symbol("R_"+label+"_x")] = -sin(theta) * tension
+            F_x += -sin(theta) * tension
+            self._reaction_loads[Symbol("R_"+label+"_y")] = cos(theta) * tension
+            F_y += cos(theta) * tension
+
+            label = self._support_labels[1]
+            self._reaction_loads[Symbol("R_"+label+"_x")] = -F_x
+            self._reaction_loads[Symbol("R_"+label+"_y")] = -F_y
