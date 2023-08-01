@@ -153,7 +153,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
     @classmethod
     def with_default_constants(cls, l_T_tilde: Any) -> TendonForceLengthDeGroote2016:
-        r"""Alternative constructor that will use the recommended constants.
+        r"""Recommended constructor that will use the published constants.
 
         Explanation
         ===========
