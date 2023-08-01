@@ -402,15 +402,24 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     if not M.is_square:
         raise NonSquareMatrixError()
-    if M.is_lower or M.is_upper:
-        diagonal_elements = M.diagonal()
-        x = uniquely_named_symbol(x, diagonal_elements, modify=lambda s: '_' + s)
-        m = 1
-        for i in diagonal_elements:
-            m = m * (x - simplify(i))
-        return PurePoly(m, x)
 
-    berk_vector = _berkowitz_vector(M)
+    # Use DomainMatrix. We are already going to convert this to a Poly so there
+    # is no need to worry about expanding powers etc. Also since this algorithm
+    # does not require division or zero detection it is fine to use EX.
+    #
+    # Note that to_DM() will fall back on EXRAW rather than EX. EXRAW is a lot
+    # faster because it does not call cancel for each arithmetic operation but
+    # it might generate a large unsimplified result that would be slow to
+    # convert to Poly. In some cases EX might actually be faster because the
+    # intermediate simplification might be faster than trying to simplify at
+    # the end.
+    dM = M.to_DM()
+    K = dM.domain
+
+    cp = dM.charpoly()
+
+    berk_vector = [K.to_sympy(c) for c in cp]
+
     x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
 
     return PurePoly([simplify(a) for a in berk_vector], x)
