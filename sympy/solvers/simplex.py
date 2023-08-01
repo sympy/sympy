@@ -27,7 +27,7 @@ from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
-from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.matrices.matrices import MatrixBase
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -566,7 +566,7 @@ def _lp_args(min_max, *args):
     if not args or len(args) > 4:
         raise ValueError('expecting 1 - 4 args')
     LP = [sympify(i) for i in args]
-    if len(LP) > 2 and all(isinstance(i, (list, ImmutableDenseMatrix)) for i in LP):
+    if len(LP) > 2 and all(isinstance(i, (list, MatrixBase)) for i in LP):
         if len(LP) == 3:
             LP.append([0])
         a, b, c, d = [Matrix(i) for i in LP]
