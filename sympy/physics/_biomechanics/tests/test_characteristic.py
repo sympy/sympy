@@ -113,17 +113,13 @@ class TestTendonForceLengthDeGroote2016:
 
     def test_function_print_latex(self) -> None:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
-        printer = LatexPrinter()
-        output = printer.doprint(fl_T)
         expected = r'\operatorname{fl}^T \left( l_{T tilde} \right)'
-        assert output == expected
+        assert LatexPrinter().doprint(fl_T) == expected
 
     def test_expression_print_latex(self) -> None:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
-        printer = LatexPrinter()
-        output = printer.doprint(fl_T.doit())
         expected = r'c_{0} e^{c_{3} \left(- c_{1} + l_{T tilde}\right)} - c_{2}'
-        assert output == expected
+        assert LatexPrinter().doprint(fl_T.doit()) == expected
 
     @pytest.mark.parametrize(
         'code_printer, expected',
