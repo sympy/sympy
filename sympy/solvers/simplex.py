@@ -1,15 +1,17 @@
 """Tools for solving optimizing a function for a given simplex defined by inequalities. """
 
 from sympy.core import sympify
+from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Le, Ge, Eq
-
+from sympy.core.relational import Lt, Gt, Le, Ge, Eq
 from sympy.core.symbol import Dummy
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.assumptions.ask import Q
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
-from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -193,7 +195,7 @@ def _simplex(A, B, C, D=None, dual=False):
     ==========
 
     .. [1] Thomas S. Ferguson, LINEAR PROGRAMMING: A Concise Introduction
-           web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_LP.pdf
+           web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_lp_args.pdf
     """
 
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
@@ -293,7 +295,7 @@ def _simplex(A, B, C, D=None, dual=False):
     return -M[-1, -1], argmax, argmin_dual
 
 
-def _np(constr, unbound=None):
+def _rel_as_nonpos(constr):
     """return a (np, d, aux) where np is a list of nonpositive
     expressions that represent the given constraints (possibly rewritten
     in terms of auxilliary variables) expressible with nonnegative
@@ -302,23 +304,27 @@ def _np(constr, unbound=None):
     will be used as part of the change of variables, e.g. x: x - z1
     instead of x: z1 - z2.
 
-    If any constraint is False/empty, return None.
+    If any constraint is False/empty, return None. Any constraint
+    involving a relationship with oo will create unbounded symbols
+    for all symbols present in the expression, e.g. ``x + y < oo``
+    will allow ``x`` and ``y`` to take on any value. (This is the
+    only type relationship which can be expressed as strict.)
 
     Examples
     ========
 
     >>> from sympy import oo
-    >>> from sympy.solvers.simplex import _np
+    >>> from sympy.solvers.simplex import _rel_as_nonpos
     >>> from sympy.abc import x, y
-    >>> _np([x >= y])
+    >>> _rel_as_nonpos([x >= y])
     ([-x + y], {}, [])
-    >>> _np([x >= -oo])
+    >>> _rel_as_nonpos([x > -oo])
     ([], {x: _z1 - x}, [_z1])
-    >>> _np([x >= 3, x <= 5])
+    >>> _rel_as_nonpos([x >= 3, x <= 5])
     ([_z1 - 2], {x: _z1 + 3}, [_z1])
-    >>> _np([x <= 5])
+    >>> _rel_as_nonpos([x <= 5])
     ([], {x: 5 - _z1}, [_z1])
-    >>> _np([x >= 1])
+    >>> _rel_as_nonpos([x >= 1])
     ([], {x: _z1 + 1}, [_z1])
     """
     r = {}  # replacements to handle change of variables
@@ -328,7 +334,7 @@ def _np(constr, unbound=None):
     ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
     univariate = {}  # {x: interval} for univariate constraints
 
-    unbound = unbound or []  # symbols designated as unbound
+    unbound = set()  # symbols designated as unbound
     for i in constr:
         if isinstance(i, AppliedBinaryRelation):
             if i.function == Q.le:
@@ -348,8 +354,16 @@ def _np(constr, unbound=None):
             # k variables and eliminate them
             L = i.lhs - i.rhs
             np.extend([L, -L])
+            continue
+
+        i = i.canonical  # +/-oo, if present will be on the rhs
+        if isinstance(i, (Le, Ge, Lt, Gt)) and i.rhs.is_infinite:
+            if isinstance(i, (Lt, Le)) and i.rhs is S.NegativeInfinity:
+                return False
+            if isinstance(i, (Gt, Ge)) and i.rhs is S.Infinity:
+                return False
+            unbound.update(i.lhs.free_symbols) # x < oo, x > -oo
         elif isinstance(i, (Le, Ge)):
-            i = i.canonical
             npi = i.lts - i.gts
             x = npi.free_symbols
             if len(x) == 1:
@@ -406,7 +420,7 @@ def _np(constr, unbound=None):
     return np, r, aux
 
 
-def _linprog_max(objective, constraints, unbound=None):
+def _lp_matrices(objective, constraints):
     """return A, B, C, D, r, x+aux, aux for maximizing
     objective = Cx - D with constraints Ax <= B, introducing
     introducing aux variables as necessary to make replacements
@@ -423,18 +437,8 @@ def _linprog_max(objective, constraints, unbound=None):
     syms = list(ordered(f.free_symbols))
     constraints = [sympify(i) for i in constraints]
 
-    # standardize input
-    if unbound is True:
-        unbound = syms
-    elif not unbound:
-        unbound = []
-    elif not all(i in syms for i in unbound):
-        raise ValueError(filldedent('''
-            all symbols in unbound should appear
-            in the objective function.'''))
-
     # convert constraints to nonpositive expressions
-    _ = _np(constraints, unbound)
+    _ = _rel_as_nonpos(constraints)
     if _ is None:
         raise InfeasibleLPError(
             'inconsistent/False constraint')
@@ -451,20 +455,22 @@ def _linprog_max(objective, constraints, unbound=None):
     return A, B, C, D, r, xx, aux
 
 
-def lp(min_max, f, constr, unbound=None):
+def _lp(min_max, f, constr):
     """Return the optimization (min or max) of ``f`` with the given
-    constraints; if any variables are unbound, pass them as a list for
-    `unbound`.
+    constraints. Unless constrained, variables will assume only
+    nonnegative values in the solution. A constraint like ``x <= 2``
+    will permit ``x`` to have negative values while ``x < oo`` will
+    allow it to have any real value.
 
-    If `min_max=max` then the results corresponding to the maximization
-    of ``f`` will be returned, else the minimization. The constraints
-    can be given as Le, Ge or Eq expressions.
+    If `min_max` is 'max' then the results corresponding to the
+    maximization of ``f`` will be returned, else the minimization.
+    The constraints can be given as Le, Ge or Eq expressions.
 
     Examples
     ========
 
-    >>> from sympy.solvers.simplex import lp
-    >>> from sympy import symbols, Eq
+    >>> from sympy.solvers.simplex import _lp as lp
+    >>> from sympy import symbols, Eq, oo
     >>> from sympy.abc import x, y
     >>> x1, x2, x3, x4 = symbols('x1:5')
     >>> f = 5*x2 + x3 + 4*x4 - x1
@@ -473,7 +479,7 @@ def lp(min_max, f, constr, unbound=None):
     ...      Eq(-x1 + x3 + 2*x4, 1)]
     >>> lp(min, f, c)
     (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
-    >>> lp(max, f, c, unbound=[x3])
+    >>> lp(max, f, c + [x3 < oo])  # x3 can have any value
     (5, {x1: 1, x2: 0, x3: -2, x4: 2})
 
     >>> lp(min, x - y, [x >= 3, x + y <= 7])
@@ -485,21 +491,24 @@ def lp(min_max, f, constr, unbound=None):
     >>> lp(max, x - y, [x <= 3, x + y <= 7])
     (3, {x: 3, y: 0})
 
-    >>> lp(min, x - y, [x <= 3, x + y <= 7], [])
+    >>> lp(min, x - y, [x <= 3, x + y <= 7])
     Traceback (most recent call last):
     ...
     UnboundedLPError: Objective function can assume arbitrarily large values!
     """
-    A, B, C, D, r, xx, aux = _linprog_max(f, constr, unbound)
+    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
-    if 'max' in str(min_max).lower():
+    how = str(min_max).lower()
+    if 'max' in how:
         # _simplex minimizes for Ax <= B so we
         # have to change the sign of the function
         # and negate the optimal value returned
         _o, p, d = _simplex(A, B, -C, -D)
         o = -_o
-    else:
+    elif 'min' in how:
         o, p, d = _simplex(A, B, C, D)
+    else:
+        raise ValueError('expecting min or max')
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
@@ -516,16 +525,104 @@ def lp(min_max, f, constr, unbound=None):
     return o, p
 
 
-def primal_dual(M, factor=True):
-    """return primal and dual function and constraints
-    assuming that ``M = Matrix([[A, b], [c, d]])`` and the
-    function ``c*x - d`` is being minimized with ``Ax >= b``
-    for nonnegative values of ``x``.
+def _lp_args(min_max, *args):
+    """return standard input for lp from how and args. The
+    method ``how`` is interpreted as being either min or max,
+    and args (up to 4) are interpreted and returned as an
+    object function and list of appropriate inequalities.
+    """
+    how = str(min_max).lower()
+    if 'max' in how:
+        how = 'max'
+    elif 'min' in how:
+        how = 'min'
+    else:
+        raise ValueError('expecting min or max for `how`')
+    if not args or len(args) > 4:
+        raise ValueError('expecting 1 - 4 args')
+    LP = [sympify(i) for i in args]
+    if len(LP) > 2 and all(isinstance(i, (list, ImmutableDenseMatrix)) for i in LP):
+        if len(LP) == 3:
+            LP.append([0])
+        a, b, c, d = [Matrix(i) for i in LP]
+        LP = [Matrix([[a, b], [c, d]])]
+    if len(LP) == 1:
+        m = Matrix(LP[0])
+        if how == 'min':
+            p = primal_dual(m)[0]
+        elif how == 'max':
+            p = primal_dual(m.T)[1]
+        return (how,) + p
+    if len(LP) == 2:
+        LP.append([])
+    f, ineq, unbound = LP
+    if not isinstance(f, Expr):
+        raise ValueError('expecting Expr')
+    if not isinstance(ineq, list):
+        raise ValueError('expecting list of inequalities')
+    if not isinstance(unbound, list):
+        raise ValueError('expecting list of unbound symbols')
+    return how, f, ineq
+
+
+def lpmin(*args):
+    """return minimization of linear equation ``f = c*x - d``
+    under constraints ``A*x >= b`` in nonpositive variables ``x``.
+    Input can be the ``Matrix([[A, b], [c, d]])``, the individual
+    matrices ``A, b, c, d`` or the function ``f`` and a list of
+    constraints expressed using Ge, Le or Eq.
 
     Examples
     ========
 
-    >>> from sympy.solvers.simplex import primal_dual, lp
+    >>> from sympy.solvers.simplex import lpmin, primal_dual
+    >>> from sympy import Matrix
+    >>> L = [[1, 1]], [1], [[1, 1]], [2]
+    >>> a, b, c, d = [Matrix(i) for i in L]
+    >>> m = Matrix([[a, b], [c, d]])
+    >>> f, constr = primal_dual(m)[0]
+    >>> ans = lpmin(f, constr); ans
+    (-1, {x1: 1, x2: 0})
+    >>> assert lpmin(m) == lpmin(*L) == lpmin(a, b, c, d) == ans
+    """
+    return _lp(*_lp_args(min, *args))
+
+
+def lpmax(*args):
+    """return maximization of linear equation ``f = c*y - d``
+    under constraints ``A*y <= b`` in nonpositive variables ``y``.
+    Input can be the ``Matrix([[A, b], [c, d]])``, the individual
+    matrices ``A, b, c, d`` or the function ``f`` and a list of
+    constraints expressed using Ge, Le or Eq.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import lpmax, primal_dual
+    >>> from sympy import Matrix
+    >>> L = [[1, 1], [1, 1]], [1, 1], [[1, 1]], [2]
+    >>> a, b, c, d = [Matrix(i) for i in L]
+    >>> m = Matrix([[a, b], [c, d]])
+    >>> f, constr = primal_dual(m)[1]
+    >>> ans = lpmax(f, constr); ans
+    (-1, {y1: 1, y2: 0})
+    >>> assert lpmax(m) == lpmax(*L) == lpmax(a, b, c, d) == ans
+    """
+    return _lp(*_lp_args(max, *args))
+
+
+def primal_dual(M, factor=True):
+    """return primal and dual function and constraints
+    assuming that ``M = Matrix([[A, b], [c, d]])`` and the
+    function ``c*x - d`` is being minimized with ``Ax >= b``
+    for nonnegative values of ``x``. The dual and its
+    constraints will be for maximizing `b.T*y - d` subject
+    to ``A.T*y <= c.T``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import primal_dual, lpmin, lpmax
     >>> from sympy import Matrix
 
     The following matrix represents the primal task of
@@ -542,9 +639,9 @@ def primal_dual(M, factor=True):
     The minimum of the primal and maximum of the dual are the same
     (though they occur at different points):
 
-    >>> lp(min, *p)
+    >>> lpmin(*p)
     (28/3, {x1: 2/3, x2: 5/3})
-    >>> lp(max, *d)
+    >>> lpmax(*d)
     (28/3, {y1: 1/3, y2: 2/3})
 
     If the equivalent (but canonical) inequalities are
