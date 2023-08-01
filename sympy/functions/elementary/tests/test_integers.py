@@ -203,6 +203,13 @@ def test_floor():
     assert (floor(y) < n) == (y < n)
     assert (floor(y) > n) == (y >= n + 1)
 
+    Neven = Symbol('N', even=True)
+    Nodd = Symbol('N', odd=True)
+    assert floor(Neven/2) == Neven/2
+    assert floor(Nodd/2) == Nodd/2 - S.Half
+    assert floor((Neven - 1)/2) == Neven/2 - 1
+    assert floor((Nodd - 1)/2) == Nodd/2 - S.Half
+
 
 def test_ceiling():
 
@@ -387,6 +394,13 @@ def test_ceiling():
     assert (ceiling(y) >= n) == (y > n - 1)
     assert (ceiling(y) < n) == (y <= n - 1)
     assert (ceiling(y) > n) == (y > n)
+
+    Neven = Symbol('N', even=True)
+    Nodd = Symbol('N', odd=True)
+    assert ceiling(Neven/2) == Neven/2
+    assert ceiling(Nodd/2) == Nodd/2 + S.Half
+    assert ceiling((Neven - 1)/2) == Neven/2
+    assert ceiling((Nodd - 1)/2) == Nodd/2 - S.Half
 
 
 def test_frac():

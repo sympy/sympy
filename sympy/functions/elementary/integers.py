@@ -76,6 +76,12 @@ class RoundFunction(Function):
         elif isinstance(spart, (floor, ceiling)):
             return ipart + spart
         else:
+            numer, denom = spart.as_numer_denom()
+            if denom == 2:
+                if numer.is_even:
+                    return ipart + spart
+                if numer.is_odd:
+                    return ipart + spart + cls._dir/S(2)
             return ipart + cls(spart, evaluate=False)
 
     @classmethod
@@ -196,6 +202,16 @@ class floor(RoundFunction):
 
     def _eval_rewrite_as_frac(self, arg, **kwargs):
         return arg - frac(arg)
+
+    def _eval_simplify(self, **kwargs):
+        arg = self.args[0]
+        numer, denom = arg.as_numer_denom()
+        if denom == 2:
+            if numer.is_even:
+                return arg
+            if numer.is_odd:
+                return arg - S.Half
+        return self
 
     def __le__(self, other):
         other = S(other)
@@ -364,6 +380,15 @@ class ceiling(RoundFunction):
 
     def _eval_is_nonpositive(self):
         return self.args[0].is_nonpositive
+
+    def _eval_simplify(self, **kwargs):
+        num, den = self.args[0].as_numer_denom()
+        if den == 2:
+            if num.is_even:
+                return self.args[0]
+            if num.is_odd:
+                return self.args[0] + S.Half
+        return self
 
     def __lt__(self, other):
         other = S(other)
