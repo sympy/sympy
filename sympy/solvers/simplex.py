@@ -1,4 +1,20 @@
-"""Tools for solving optimizing a function for a given simplex defined by inequalities. """
+"""Tools for optimizing a linear function for a given simplex.
+
+If a problem is in standard form for a) the minimization of a linear
+objective, ``f = c*x - d``, with constraints ``A*x >= b`` or b) the
+maximization of ``f`` with constraints ``A*x <= b`` and all ``x``
+can only be nonnegative in either case, then the corresponding
+matrices can be sent directly to `lpmin` or `lpmax`.
+
+The primal and dual corresponding to a given matrix for the
+standard minimization can be generated with `primal_dual`.
+
+If some variables can be negative, or are unbounded in some manner,
+the objective function and the constraints expressed as non-strict
+inequalities can be sent to the desired function and they will
+be solved using a standardized form consistent with the given
+constraints.
+"""
 
 from sympy.core import sympify
 from sympy.core.expr import Expr
@@ -421,21 +437,27 @@ def _rel_as_nonpos(constr):
 
 
 def _lp_matrices(objective, constraints):
-    """return A, B, C, D, r, x+aux, aux for maximizing
+    """return A, B, C, D, r, x+X, X for maximizing
     objective = Cx - D with constraints Ax <= B, introducing
-    introducing aux variables as necessary to make replacements
-    of symbols as given in r, {sym: aux expression}, so all
-    variables in xx will take on nonnegative values.
+    introducing auxilliary variables, X, as necessary to make
+    replacements of symbols as given in r, {xi: expression with Xj},
+    so all variables in x+X will take on nonnegative values.
 
-    If constraints contain symbols not in objective, this will
-    cause problems if passed to _simplex which expects all
-    elements to be Float or Rational.
+    If symbols not in objective will be set to 0.
     """
 
     # sympify input and collect free symbols
     f = sympify(objective)
-    syms = list(ordered(f.free_symbols))
+    syms = f.free_symbols
     constraints = [sympify(i) for i in constraints]
+
+    # set to 0 any symbol not in the objective: it's
+    # value does not matter
+    cfree = set()
+    for i in constraints:
+        cfree |= i.free_symbols
+    zero = dict(zip(cfree - syms, [0]*len(cfree)))
+    constraints = [i.xreplace(zero) for i in constraints]
 
     # convert constraints to nonpositive expressions
     _ = _rel_as_nonpos(constraints)
@@ -449,7 +471,7 @@ def _lp_matrices(objective, constraints):
     np = [i.xreplace(r) for i in np]
 
     # convert to matrices
-    xx = syms + aux
+    xx = list(ordered(syms)) + aux
     A, B = linear_eq_to_matrix(np, xx)
     C, D = linear_eq_to_matrix([F], xx)
     return A, B, C, D, r, xx, aux
@@ -479,22 +501,18 @@ def _lp(min_max, f, constr):
     ...      Eq(-x1 + x3 + 2*x4, 1)]
     >>> lp(min, f, c)
     (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+
+    By passing max, the maximum value for f under the constraints
+    is returned if possible:
+
     >>> lp(max, f, c + [x3 < oo])  # x3 can have any value
     (5, {x1: 1, x2: 0, x3: -2, x4: 2})
 
-    >>> lp(min, x - y, [x >= 3, x + y <= 7])
-    (-1, {x: 3, y: 4})
+    Symbols not in the objective function will not be reported
+    and are treated as 0:
 
-    >>> lp(max, x - y, [x >= 3, x + y <= 7])
-    (7, {x: 7, y: 0})
-
-    >>> lp(max, x - y, [x <= 3, x + y <= 7])
-    (3, {x: 3, y: 0})
-
-    >>> lp(min, x - y, [x <= 3, x + y <= 7])
-    Traceback (most recent call last):
-    ...
-    UnboundedLPError: Objective function can assume arbitrarily large values!
+    >>> lp(min, x, [y + x >= -3])  # same as lp(min, x, [x >= -3])
+    (-3, {x: -3})
     """
     A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
@@ -530,6 +548,13 @@ def _lp_args(min_max, *args):
     method ``how`` is interpreted as being either min or max,
     and args (up to 4) are interpreted and returned as an
     object function and list of appropriate inequalities.
+
+    1 arg: Matrix/list
+    2 args: Expr, list of constraints
+    3 args: 3 lists/matrices: A, B, C, D=0
+    4 args: 4 lists/matrices: A, B, C, D
+
+    return: ('max' or 'min', objective, constraints)
     """
     how = str(min_max).lower()
     if 'max' in how:
@@ -567,7 +592,8 @@ def _lp_args(min_max, *args):
 
 def lpmin(*args):
     """return minimization of linear equation ``f = c*x - d``
-    under constraints ``A*x >= b`` in nonpositive variables ``x``.
+    under constraints ``A*x >= b``.
+
     Input can be the ``Matrix([[A, b], [c, d]])``, the individual
     matrices ``A, b, c, d`` or the function ``f`` and a list of
     constraints expressed using Ge, Le or Eq.
@@ -580,7 +606,12 @@ def lpmin(*args):
     >>> L = [[1, 1]], [1], [[1, 1]], [2]
     >>> a, b, c, d = [Matrix(i) for i in L]
     >>> m = Matrix([[a, b], [c, d]])
-    >>> f, constr = primal_dual(m)[0]
+
+    This is the symbolic form of the problem:
+
+    >>> p = f, constr = primal_dual(m)[0]; p
+    (x1 + x2 - 2, [x1 + x2 >= 1])
+
     >>> ans = lpmin(f, constr); ans
     (-1, {x1: 1, x2: 0})
     >>> assert lpmin(m) == lpmin(*L) == lpmin(a, b, c, d) == ans
@@ -590,7 +621,8 @@ def lpmin(*args):
 
 def lpmax(*args):
     """return maximization of linear equation ``f = c*y - d``
-    under constraints ``A*y <= b`` in nonpositive variables ``y``.
+    under constraints ``A*y <= b``.
+
     Input can be the ``Matrix([[A, b], [c, d]])``, the individual
     matrices ``A, b, c, d`` or the function ``f`` and a list of
     constraints expressed using Ge, Le or Eq.
@@ -600,15 +632,58 @@ def lpmax(*args):
 
     >>> from sympy.solvers.simplex import lpmax, primal_dual
     >>> from sympy import Matrix
-    >>> L = [[1, 1], [1, 1]], [1, 1], [[1, 1]], [2]
+    >>> L = [[3, 1], [2, 0]], [-1, 2], [[1, -1]], [1]
     >>> a, b, c, d = [Matrix(i) for i in L]
     >>> m = Matrix([[a, b], [c, d]])
-    >>> f, constr = primal_dual(m)[1]
+
+    To interpret the matrix as a maximization we have to
+    transpose it and consider the dual of the transpose.
+
+    >>> dual = f, constr = primal_dual(m.T)[1]; dual
+    (y1 - y2 - 1, [3*y1 + y2 <= -1, y1 <= 1])
+
     >>> ans = lpmax(f, constr); ans
-    (-1, {y1: 1, y2: 0})
+    (-4/3, {y1: -1/3, y2: 0})
     >>> assert lpmax(m) == lpmax(*L) == lpmax(a, b, c, d) == ans
     """
     return _lp(*_lp_args(max, *args))
+
+
+def _abcd(M, list=True):
+    """return parts of M as matrices or lists
+
+    NOTE: passing these matrices directly to _simplex
+    may give a different answer then when passing them
+    to lpmax or lpmin because the _simplex routine
+    only allows for non-negative values while constraints
+    may permit negatives, e.g. x <= 3 without the constraint
+    of x >= 0 will allow for negative values.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.solvers.simplex import _abcd
+    >>> m = Matrix(3, 3, range(9))
+    >>> L = _abcd(m); L
+    ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
+    >>> _abcd(m, False)
+    (Matrix([
+    [0, 1],
+    [3, 4]]), Matrix([
+    [2],
+    [5]]), Matrix([[6, 7]]), Matrix([[8]]))
+    >>> assert tuple(Matrix(i) for i in L) == _
+    """
+    def aslist(i):
+        l = i.tolist()
+        if len(l[0]) == 1:  # col vector
+            return [i[0] for i in l]
+        return l
+    m = M[:-1, :-1], M[:-1, -1], M[-1, :-1], M[-1:, -1:]
+    if not list:
+        return m
+    return tuple([aslist(i) for i in m])
 
 
 def primal_dual(M, factor=True):
@@ -693,10 +768,8 @@ def primal_dual(M, factor=True):
     if not M:
         return (None, []), (None, [])
     m, n = [i - 1 for i in M.shape]
-    A = M[:m, :n]
-    b = M[:m, -1]
-    cT = M[-1, :-1]
-    d = M[-1, -1]
+    A, b, c, d = _abcd(M, list=False)
+    d = d[0]
     _ = lambda x: numbered_symbols(x, start=1)
     x = Matrix([i for i, j in zip(_('x'), range(n))])
     yT = Matrix([i for i, j in zip(_('y'), range(m))]).T
@@ -707,11 +780,11 @@ def primal_dual(M, factor=True):
                 f = factor_terms(r)
                 if f.lhs.is_Mul and f.rhs % f.lhs.args[0] == 0:
                     assert len(f.lhs.args) == 2, f.lhs
-                    c = f.lhs.args[0]
-                    r = r.func(sign(c)*f.lhs.args[1], f.rhs//abs(c))
+                    k = f.lhs.args[0]
+                    r = r.func(sign(k)*f.lhs.args[1], f.rhs//abs(k))
             rv.append(r)
         return rv
     eq = lambda x, d: x[0] - d if x else -d
-    F = eq(cT*x, d)
+    F = eq(c*x, d)
     f = eq(yT*b, d)
-    return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, cT, Le))
+    return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, c, Le))
