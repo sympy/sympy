@@ -48,7 +48,7 @@ if jax:
 class TestTendonForceLengthDeGroote2016:
 
     @pytest.fixture(autouse=True)
-    def _TendonForceLengthDeGroote2016_fixture(self) -> None:
+    def _tendon_force_length_arguments_fixture(self) -> None:
         self.l_T_tilde = Symbol('l_T_tilde')
         self.c0 = Symbol('c_0')
         self.c1 = Symbol('c_1')
