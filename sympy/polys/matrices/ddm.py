@@ -218,9 +218,7 @@ class DDM(list):
         sympy.polys.matrices.sdm.SDM.to_flat_nz
         sympy.polys.matrices.domainmatrix.DomainMatrix.to_flat_nz
         """
-        elements = self.to_list_flat()
-        data = self.shape
-        return elements, data
+        return self.to_sdm().to_flat_nz()
 
     @classmethod
     def from_flat_nz(cls, elements, data, domain):
@@ -246,8 +244,7 @@ class DDM(list):
         sympy.polys.matrices.sdm.SDM.from_flat_nz
         sympy.polys.matrices.domainmatrix.DomainMatrix.from_flat_nz
         """
-        shape = data
-        return cls.from_list_flat(elements, shape, domain)
+        return SDM.from_flat_nz(elements, data, domain).to_ddm()
 
     def to_dok(self):
         """
@@ -543,6 +540,16 @@ class DDM(list):
     def applyfunc(self, func, domain):
         elements = (list(map(func, row)) for row in self)
         return DDM(elements, self.shape, domain)
+
+    def nnz(a):
+        """Number of non-zero entries in :py:class:`~.DDM` matrix.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.nnz
+        """
+        return sum(sum(map(bool, row)) for row in a)
 
     def scc(a):
         """Strongly connected components of a square matrix *a*.

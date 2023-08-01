@@ -42,8 +42,10 @@ from sympy.polys.densetools import (
     dup_mul_ground,
     dup_quo_ground,
     dup_content,
-    dup_primitive,
+    dup_convert,
     dup_clear_denoms,
+    dup_primitive,
+    dup_transform,
 )
 from sympy.polys.factortools import dup_factor_list
 from sympy.polys.polyutils import _sort_factors
@@ -938,6 +940,21 @@ class DomainMatrix:
         to_dok
         """
         return cls.from_rep(SDM.from_dok(dok, shape, domain))
+
+    def nnz(self):
+        """
+        Number of nonzero elements in the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[1, 0], [0, 4]], ZZ)
+        >>> A.nnz()
+        2
+        """
+        return self.rep.nnz()
 
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
@@ -3133,6 +3150,84 @@ class DomainMatrix:
         charpoly_factor_list
         charpoly_factor_blocks
         sympy.polys.matrices.dense.ddm_berk
+        """
+        M = self
+        K = M.domain
+
+        # It seems that the sparse implementation is always faster for random
+        # matrices with fewer than 50% non-zero entries. This does not seem to
+        # depend on domain, size, bit count etc.
+        density = self.nnz() / self.shape[0]**2
+        if density < 0.5:
+            M = M.to_sparse()
+        else:
+            M = M.to_dense()
+
+        # Clearing denominators is always more efficient if it can be done.
+        # Doing it here after block decomposition is good because each block
+        # might have a smaller denominator. However it might be better for
+        # charpoly and charpoly_factor_list to restore the denominators only at
+        # the very end so that they can call e.g. dup_factor_list before
+        # restoring the denominators. The methods would need to be changed to
+        # return (poly, denom) pairs to make that work though.
+        clear_denoms = K.is_Field and K.has_assoc_Ring
+
+        if clear_denoms:
+            clear_denoms = True
+            d, M = M.clear_denoms(convert=True)
+            d = d.element
+            K_f = K
+            K_r = M.domain
+
+        # Berkowitz algorithm over K_r.
+        cp = M.charpoly_berk()
+
+        if clear_denoms:
+            # Restore the denominator in the charpoly over K_f.
+            #
+            # If M = N/d then p_M(x) = p_N(x*d)/d^n.
+            cp = dup_convert(cp, K_f, K_r)
+            p = [K_f.one, K_f.zero]
+            q = [K_f.one/d]
+            cp = dup_transform(cp, p, q, K_f)
+
+        return cp
+
+    def charpoly_berk(self):
+        """Compute the characteristic polynomial using the Berkowitz algorithm.
+
+        This method directly calls the underlying implementation of the
+        Berkowitz algorithm (:meth:`sympy.polys.matrices.dense.ddm_berk` or
+        :meth:`sympy.polys.matrices.sparse.sdm_berk`).
+
+        This is used by :meth:`charpoly` and other methods as the base case for
+        for computing the characteristic polynomial. However those methods will
+        apply other optimizations such as block decomposition, clearing
+        denominators and converting between dense and sparse representations
+        before calling this method. It is more efficient to call those methods
+        instead of this one but this method is provided for lower-level access.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.charpoly_berk()
+        [1, -25, 203, -495, -324]
+
+        See Also
+        ========
+
+        charpoly
+        charpoly_base
+        charpoly_factor_list
+        charpoly_factor_blocks
+        sympy.polys.matrices.dense.ddm_berk
+        sympy.polys.matrices.sparse.sdm_berk
         """
         return self.rep.charpoly()
 

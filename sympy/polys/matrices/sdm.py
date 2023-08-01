@@ -771,6 +771,25 @@ class SDM(dict):
         Ak = unop_dict(A, lambda e: K.convert_from(e, Kold))
         return A.new(Ak, A.shape, K)
 
+    def nnz(A):
+        """Number of non-zero elements in the :py:class:`~.SDM` matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{1: ZZ(2)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.nnz()
+        2
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.nnz
+        """
+        return sum(map(len, A.values()))
+
     def scc(A):
         """Strongly connected components of a square matrix *A*.
 
@@ -1871,7 +1890,7 @@ def sdm_berk(M, n, K):
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.polys.matrices.dense import ddm_berk
+    >>> from sympy.polys.matrices.sdm import sdm_berk
     >>> from sympy.polys.domains import ZZ
     >>> M = {0: {0: ZZ(1), 1:ZZ(2)}, 1: {0:ZZ(3), 1:ZZ(4)}}
     >>> sdm_berk(M, 2, ZZ)
