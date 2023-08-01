@@ -625,9 +625,12 @@ def test_DomainMatrix_rref():
     methods = ('auto', 'GJ', 'FF', 'CD', 'GJ_dense', 'FF_dense', 'CD_dense')
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     for method in methods:
-        Az, pivots = Az.rref(method=method)
+        Ar, pivots = Az.rref(method=method)
         assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
         assert pivots == (0, 1)
+
+    raises(ValueError, lambda: Az.rref(method='foo'))
+    raises(ValueError, lambda: Az.rref_den(method='foo'))
 
 
 def test_DomainMatrix_columnspace():
