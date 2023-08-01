@@ -1,6 +1,5 @@
 from sympy.physics.continuum_mechanics.cable import Cable
 from sympy.core.symbol import Symbol
-from sympy.simplify.simplify import simplify
 
 def test_cable():
     c = Cable(('A', 0, 10), ('B', 10, 10))
@@ -57,12 +56,12 @@ def test_cable():
     c.apply_load(-1, ('X', 4, 6, 8, 270))
     c.solve()
     #assert c.tension == {Symbol("Z_X"): 4.79150773600774, Symbol("X_B"): 6.78571428571429, Symbol("A_Z"): 6.89488895397307}
-    assert c.tension[Symbol("A_Z")] == 6.89488895397307
-    assert c.tension[Symbol("Z_X")] == 4.79150773600774
-    assert c.tension[Symbol("X_B")] == 6.78571428571429
+    assert abs(c.tension[Symbol("A_Z")] - 6.89488895397307) < 10e-12
+    assert abs(c.tension[Symbol("Z_X")] - 4.79150773600774) < 10e-12
+    assert abs(c.tension[Symbol("X_B")] - 6.78571428571429) < 10e-12
     #assert c.reaction_loads == {Symbol("R_A_x"): -4.06504065040650, Symbol("R_A_y"): 5.56910569105691, Symbol("R_B_x"): 4.06504065040650, Symbol("R_B_y"): 5.43089430894309}
-    assert c.reaction_loads[Symbol("R_A_x")] == -4.06504065040650
-    assert c.reaction_loads[Symbol("R_A_y")] == 5.56910569105691
-    assert c.reaction_loads[Symbol("R_B_x")] == 4.06504065040650
-    assert c.reaction_loads[Symbol("R_B_y")] == 5.43089430894309
-    assert c.length == 8.25609584845190
+    assert abs(c.reaction_loads[Symbol("R_A_x")] + 4.06504065040650) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_A_y")] - 5.56910569105691) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_B_x")] - 4.06504065040650) < 10e-12
+    assert abs(c.reaction_loads[Symbol("R_B_y")] - 5.43089430894309) < 10e-12
+    assert abs(c.length - 8.25609584845190) < 10e-12
