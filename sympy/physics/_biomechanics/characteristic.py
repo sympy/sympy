@@ -87,6 +87,60 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     force when the tendon is in an unstrained state. It also produces a force
     of 1 normalized unit when the tendon is under a 5% strain.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``TendonForceLengthDeGroote2016`` is using
+    the ``with_default_constants`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized tendon length. We'll create a
+    ``Symbol`` called ``l_T_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
+    >>> l_T_tilde = Symbol('l_T_tilde')
+    >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
+    >>> fl_T
+    TendonForceLengthDeGroote2016(l_T_tilde, 0.2, 0.995, 0.25,
+    33.93669377311689)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> fl_T = TendonForceLengthDeGroote2016(l_T_tilde, c0, c1, c2, c3)
+    >>> fl_T
+    TendonForceLengthDeGroote2016(l_T_tilde, c0, c1, c2, c3)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``l_T`` and
+    ``l_T_slack``, representing tendon length and tendon slack length
+    respectively. We can then represent ``l_T_tilde`` as an expression, the
+    ratio of these.
+
+    >>> l_T, l_T_slack = symbols('l_T l_T_slack')
+    >>> l_T_tilde = l_T / l_T_slack
+    >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
+    >>> fl_T
+    TendonForceLengthDeGroote2016(l_T/l_T_slack, 0.2, 0.995, 0.25,
+    33.93669377311689)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fl_T.doit(evaluate=False)
+    -0.25 + 0.2*exp(33.93669377311689*(l_T/l_T_slack - 0.995))
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_T using the ``diff`` method on an instance with the single positional
+    argument ``l_T``.
+
+    >>> fl_T.diff(l_T)
+    6.787338754623378*exp(33.93669377311689*(l_T/l_T_slack - 0.995))/l_T_slack
+
     References
     ==========
 
