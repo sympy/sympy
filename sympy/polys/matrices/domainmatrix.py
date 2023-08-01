@@ -38,11 +38,11 @@ from .domainscalar import DomainScalar
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
 from sympy.polys.densearith import dup_mul
+from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
     dup_quo_ground,
     dup_content,
-    dup_convert,
     dup_clear_denoms,
     dup_primitive,
     dup_transform,
@@ -3140,8 +3140,15 @@ class DomainMatrix:
         """
         Base case for :meth:`charpoly_factor_blocks` after block decomposition.
 
-        Calls the underlying implementation of the Berkowitz algorithm
-        (:meth:`sympy.polys.matrices.dense.ddm_berk`).
+        This method is used internally by :meth:`charpoly_factor_blocks` as the
+        base case for computing the characteristic polynomial of a block. It is
+        more efficient to call :meth:`charpoly_factor_blocks`, :meth:`charpoly`
+        or :meth:`charpoly_factor_list` rather than call this method directly.
+
+        This will use either the dense or the sparse implementation depending
+        on the sparsity of the matrix and will clear denominators if possible
+        before calling :meth:`charpoly_berk` to compute the characteristic
+        polynomial using the Berkowitz algorithm.
 
         See Also
         ========
@@ -3149,7 +3156,7 @@ class DomainMatrix:
         charpoly
         charpoly_factor_list
         charpoly_factor_blocks
-        sympy.polys.matrices.dense.ddm_berk
+        charpoly_berk
         """
         M = self
         K = M.domain
@@ -3186,7 +3193,7 @@ class DomainMatrix:
             # Restore the denominator in the charpoly over K_f.
             #
             # If M = N/d then p_M(x) = p_N(x*d)/d^n.
-            cp = dup_convert(cp, K_f, K_r)
+            cp = dup_convert(cp, K_r, K_f)
             p = [K_f.one, K_f.zero]
             q = [K_f.one/d]
             cp = dup_transform(cp, p, q, K_f)
@@ -3198,14 +3205,15 @@ class DomainMatrix:
 
         This method directly calls the underlying implementation of the
         Berkowitz algorithm (:meth:`sympy.polys.matrices.dense.ddm_berk` or
-        :meth:`sympy.polys.matrices.sparse.sdm_berk`).
+        :meth:`sympy.polys.matrices.sdm.sdm_berk`).
 
         This is used by :meth:`charpoly` and other methods as the base case for
         for computing the characteristic polynomial. However those methods will
         apply other optimizations such as block decomposition, clearing
         denominators and converting between dense and sparse representations
         before calling this method. It is more efficient to call those methods
-        instead of this one but this method is provided for lower-level access.
+        instead of this one but this method is provided for direct access to
+        the Berkowitz algorithm.
 
         Examples
         ========
@@ -3227,7 +3235,7 @@ class DomainMatrix:
         charpoly_factor_list
         charpoly_factor_blocks
         sympy.polys.matrices.dense.ddm_berk
-        sympy.polys.matrices.sparse.sdm_berk
+        sympy.polys.matrices.sdm.sdm_berk
         """
         return self.rep.charpoly()
 
