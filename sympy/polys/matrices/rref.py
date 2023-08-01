@@ -61,6 +61,9 @@ def dm_rref(M, *, method='auto'):
     Parameters
     ==========
 
+    M : DomainMatrix
+        The matrix to compute the reduced row echelon form of.
+
     method : str, optional (``'auto'``, ``'GJ'``, ``'FF'``, ``'CD'``,
         ``'GJ_dense'``, ``'FF_dense'``, ``'CD_dense'``)
 
@@ -83,18 +86,16 @@ def dm_rref(M, *, method='auto'):
         ``method='GJ_dense'``, ``method='FF_dense'``, or ``method='CD_dense'``.
         With ``method='auto'`` only the sparse implementations are used.
 
-        In all cases the result is returned over the field associated with the
-        domain of the matrix and the format of the returned matrix (sparse or
-        dense) is always the same as the format of the input matrix.
 
     Returns
     =======
 
-    M_rref : DomainMatrix
-        The reduced row echelon form of the matrix over the field associated
-        with the domain of the matrix.
-    pivots : tuple
-        The indices of the pivot columns.
+    (M_rref, pivots) : tuple
+        If ``denominator=False`` then ``M_rref`` is the reduced row echelon
+        form of the matrix over the field associated with the domain of the
+        matrix and ``pivots`` is the indices of the pivot columns. The format
+        of the returned matrix (sparse or dense) is the same as the format of
+        the input matrix.
 
     See Also
     ========
@@ -104,71 +105,73 @@ def dm_rref(M, *, method='auto'):
     sympy.polys.matrices.rref.dm_rref_den
         Alternative function for computing RREF with denominator.
     """
-    K = M.domain
+    method, use_fmt = _dm_rref_choose_method(M, method, denominator=False)
 
-    is_dense = M.rep.fmt == 'dense'
+    M, old_fmt = _dm_to_fmt(M, use_fmt)
 
-    # Do not switch to the sparse implementation for EX because the domain does
-    # not have proper canonicalization and the sparse implementation gives
-    # equivalent but non-identical results over EX from performing arithmetic
-    # in a different order. Specifically test_issue_23718 ends up getting a
-    # more complicated expression when using the sparse implementation.
-    # Probably the best fix for this is something else but for now we stick
-    # with the dense implementation for EX if the matrix is already dense.
-    if method == 'auto' and K.is_EX and is_dense:
-        return _dm_rref_GJ_dense(M)
+    if method == 'GJ':
+        # Use Gauss-Jordan with division over the associated field.
+        Mf = _to_field(M)
+        M_rref, pivots = _dm_rref_GJ(Mf)
 
-    if method == 'auto':
-        method, use_dense = _dm_rref_choose_method(M)
-    else:
-        use_dense = method.endswith('_dense')
-        if use_dense:
-            method = method[:-len('_dense')]
+    elif method == 'FF':
+        # Use fraction-free GJ over the current domain.
+        M_rref_f, den, pivots = _dm_rref_den_FF(M)
+        M_rref = _to_field(M_rref_f) / den
 
-    if use_dense:
-        if not is_dense:
-            M = M.to_dense()
-
-        M_rref, pivots = _dm_rref(M, method, use_dense)
-
-        if not is_dense:
-            M_rref = M_rref.to_sparse()
+    elif method == 'CD':
+        # Clear denominators and use fraction-free GJ in the associated ring.
+        _, Mr = M.clear_denoms(convert=True)
+        M_rref_f, den, pivots = _dm_rref_den_FF(Mr)
+        M_rref = _to_field(M_rref_f) / den
 
     else:
-        if is_dense:
-            M = M.to_sparse()
+        raise ValueError(f"Unknown method for rref: {method}")
 
-        M_rref, pivots = _dm_rref(M, method, use_dense)
+    M_rref, _ = _dm_to_fmt(M_rref, old_fmt)
 
-        if is_dense:
-            M_rref = M_rref.to_dense()
+    # Invariants:
+    #   - M_rref is in the same format (sparse or dense) as the input matrix.
+    #   - M_rref is in the associated field domain and any denominator was
+    #     divided in (so is implicitly 1 now).
 
     return M_rref, pivots
 
 
-def dm_rref_den(M, *, method='auto', keep_domain=True):
+def dm_rref_den(M, *, keep_domain=True, method='auto'):
     """
-    Compute the reduced row echelon form of a matrix with denominator.
+    Compute the reduced row echelon form of a ``DomainMatrix``.
+
+    Chooses the best algorithm depending on the domain, shape, and sparsity of
+    the matrix as well as things like the bit count in the case of ZZ or QQ.
+    The result is returned over the field associated with the domain of the
+    matrix.
 
     Examples
     ========
 
-    >>> from sympy import ZZ
+    >>> from sympy import QQ
     >>> from sympy.polys.matrices import DM
-    >>> from sympy.polys.matrices.rref import dm_rref_den
-    >>> M = DM([[1, 2], [3, 4]], ZZ)
-    >>> M_rref, den, pivots = dm_rref_den(M)
+    >>> from sympy.polys.matrices.rref import dm_rref
+    >>> M = DM([[1, 2], [3, 4]], QQ)
+    >>> M_rref, pivots = dm_rref(M)
     >>> M_rref.to_Matrix()
     Matrix([
-    [-2,  0],
-    [ 0, -2]])
-    >>> den
-    -2
+    [1, 0],
+    [0, 1]])
     >>> pivots
     (0, 1)
 
     Parameters
     ==========
+
+    M : DomainMatrix
+        The matrix to compute the reduced row echelon form of.
+
+    keep_domain : bool, optional (default=True)
+        If ``True`` then the domain of the matrix is preserved in the result.
+        If ``False`` then the result might be over a different domain if the
+        domain was changed during the computation.
 
     method : str, optional (``'auto'``, ``'GJ'``, ``'FF'``, ``'CD'``,
         ``'GJ_dense'``, ``'FF_dense'``, ``'CD_dense'``)
@@ -181,63 +184,126 @@ def dm_rref_den(M, *, method='auto', keep_domain=True):
         With ``method='GJ'`` the matrix is converted to the associated field
         domain and Gauss-Jordan elimination with division is used. With
         ``method='FF'`` fraction-free Gauss-Jordan elimination is used in the
-        current domain. With ``method='CD'`` the denominators are cleared and
-        fraction-free Gauss-Jordan elimination is used in the associated ring.
-
-        If the method used is not ``'FF'`` then the computed result might be
-        in a different domain than the input matrix. By default the result is
-        converted back to the domain of the input matrix. To keep the result
-        in whichever domain it is computed in set ``keep_domain=False``.
+        current domain and the result is converted to the associated field
+        domain at the end. With ``method='CD'`` the denominators are cleared
+        and fraction-free Gauss-Jordan elimination is used in the associated
+        ring before converting to the associated field domain and dividing at
+        the end.
 
         By default the sparse implementations of the different algorithms are
-        used. To use the dense implementations instead use e.g.
-        ``method='GJ_dense'``. With ``method='auto'`` only the sparse
-        implementations are used.
+        used. To use the dense implementations instead use
+        ``method='GJ_dense'``, ``method='FF_dense'``, or ``method='CD_dense'``.
+        With ``method='auto'`` only the sparse implementations are used.
 
-    keep_domain : bool, optional
-        If ``True`` then the domain of the matrix is preserved. If ``False``
-        then the domain might be preserved or it might be changed to an
-        associated field or ring (if that is potentially faster).
+    Returns
+    =======
+
+    (M_rref, denom, pivots) : tuple
+        If ``denominator=True`` then ``M_rref`` is the reduced row echelon
+        form, ``denom`` is the denominator and ``pivots`` is the indices of
+        the pivot columns. ``M_rref`` and ``denom`` are in the same domain as
+        the input matrix unless ``keep_domain=False`` in which case they are
+        possibly in an associated ring or field. The format of the returned
+        matrix (sparse or dense) will be the same as the format of the input
+        matrix.
 
     See Also
     ========
 
-    sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
+    sympy.polys.matrices.domainmatrix.DomainMatrix.rref
         The ``DomainMatrix`` method that calls this function.
+    sympy.polys.matrices.rref.dm_rref
+        Alternative function for computing RREF without denominator.
     """
-    is_dense = M.rep.fmt == 'dense'
+    method, use_fmt = _dm_rref_choose_method(M, method, denominator=True)
 
-    if method == 'auto':
-        method, use_dense = _dm_rref_den_choose_method(M)
+    M, old_fmt = _dm_to_fmt(M, use_fmt)
+
+    if method == 'FF':
+        # Use fraction-free GJ over the current domain.
+        M_rref, den, pivots = _dm_rref_den_FF(M)
+
+    elif method == 'GJ':
+        # Use Gauss-Jordan with division over the associated field.
+        M_rref_f, pivots = _dm_rref_GJ(_to_field(M))
+
+        # Convert back to the ring?
+        if keep_domain and M_rref_f.domain != M.domain:
+            _, M_rref = M_rref_f.clear_denoms(convert=True)
+
+            if pivots:
+                den = M_rref[0, pivots[0]].element
+            else:
+                den = M_rref.domain.one
+        else:
+            # Possibly an associated field
+            M_rref = M_rref_f
+            den = M_rref.domain.one
+
+    elif method == 'CD':
+        # Clear denominators and use fraction-free GJ in the associated ring.
+        _, Mr = M.clear_denoms(convert=True)
+
+        M_rref_r, den, pivots = _dm_rref_den_FF(Mr)
+
+        if keep_domain and M_rref_r.domain != M.domain:
+            # Convert back to the field
+            M_rref = _to_field(M_rref_r) / den
+            den = M.domain.one
+        else:
+            # Possibly an associated ring
+            M_rref = M_rref_r
+
+            if pivots:
+                den = M_rref[0, pivots[0]].element
+            else:
+                den = M_rref.domain.one
     else:
-        use_dense = method.endswith('_dense')
-        if use_dense:
-            method = method[:-len('_dense')]
+        raise ValueError(f"Unknown method for rref: {method}")
 
-    if use_dense:
-        if not is_dense:
-            M = M.to_dense()
+    M_rref, _ = _dm_to_fmt(M_rref, old_fmt)
 
-        result = _dm_rref_den(M, method, keep_domain, use_dense)
-        M_rref, den, pivots = result
-
-        if not is_dense:
-            M_rref = M_rref.to_sparse()
-
-    else:
-        if is_dense:
-            M = M.to_sparse()
-
-        result = _dm_rref_den(M, method, keep_domain, use_dense)
-        M_rref, den, pivots = result
-
-        if is_dense:
-            M_rref = M_rref.to_dense()
+    # Invariants:
+    #   - M_rref is in the same format (sparse or dense) as the input matrix.
+    #   - If keep_domain=True then M_rref and den are in the same domain as the
+    #     input matrix
+    #   - If keep_domain=False then M_rref might be in an associated ring or
+    #     field domain but den is always in the same domain as M_rref.
 
     return M_rref, den, pivots
 
 
+def _dm_to_fmt(M, fmt):
+    """Convert a matrix to the given format and return the old format."""
+    old_fmt = M.rep.fmt
+    if old_fmt == fmt:
+        pass
+    elif fmt == 'dense':
+        M = M.to_dense()
+    elif fmt == 'sparse':
+        M = M.to_sparse()
+    else:
+        raise ValueError(f'Unknown format: {fmt}') # pragma: no cover
+    return M, old_fmt
+
+
 # These are the four basic implementations that we want to choose between:
+
+
+def _dm_rref_GJ(M):
+    """Compute RREF using Gauss-Jordan elimination with division."""
+    if M.rep.fmt == 'sparse':
+        return _dm_rref_GJ_sparse(M)
+    else:
+        return _dm_rref_GJ_dense(M)
+
+
+def _dm_rref_den_FF(M):
+    """Compute RREF using fraction-free Gauss-Jordan elimination."""
+    if M.rep.fmt == 'sparse':
+        return _dm_rref_den_FF_sparse(M)
+    else:
+        return _dm_rref_den_FF_dense(M)
 
 
 def _dm_rref_GJ_sparse(M):
@@ -274,131 +340,49 @@ def _dm_rref_den_FF_dense(M):
     return M.from_rep(M_rref_ddm), den, pivots
 
 
-def _dm_rref_GJ(M, use_dense):
-    """Compute RREF using Gauss-Jordan with division."""
-    if use_dense:
-        return _dm_rref_GJ_dense(M)
-    else:
-        return _dm_rref_GJ_sparse(M)
-
-
-def _dm_rref_den_FF(M, use_dense):
-    """Compute RREF using fraction-free Gauss-Jordan."""
-    if use_dense:
-        return _dm_rref_den_FF_dense(M)
-    else:
-        return _dm_rref_den_FF_sparse(M)
-
-
-def _dm_rref(M, method, use_dense):
-    """Compute RREF using the given method."""
-
-    if method == 'GJ':
-        # Use Gauss-Jordan with division over the associated field.
-        M_rref_f, pivots = _dm_rref_GJ(_to_field(M), use_dense)
-    elif method == 'FF':
-        # Use fraction-free GJ over the current domain.
-        M_rref_r, den, pivots = _dm_rref_den_FF(M, use_dense)
-        M_rref_f = M_rref_r.to_field() / den
-    elif method == 'CD':
-        # Clear denominators and use fraction-free GJ in the associated ring.
-        _, Mr = M.clear_denoms(convert=True)
-        M_rref_r, den, pivots = _dm_rref_den_FF(Mr, use_dense)
-        M_rref_f = M_rref_r.to_field() / den
-    else:
-        raise ValueError(f"Unknown method for rref: {method}")
-
-    return M_rref_f, pivots
-
-
-def _dm_rref_den(M, method, keep_domain, use_dense):
-    """Compute RREF with denominator using the given method."""
-    K = M.domain
-
-    if method == 'GJ':
-        # Use Gauss-Jordan with division over the associated field.
-        M_rref, pivots = _dm_rref_GJ(_to_field(M), use_dense)
-
-        if keep_domain and M_rref.domain != K:
-            _, M_rref = M_rref.clear_denoms(convert=True)
-
-        if pivots:
-            den = M_rref[0, pivots[0]].element
-        else:
-            den = K.one
-
-    elif method == 'FF':
-        # Use fraction-free GJ over the current domain.
-        M_rref, den, pivots = _dm_rref_den_FF(M, use_dense)
-
-    elif method == 'CD':
-        # Clear denominators and use fraction-free GJ in the associated ring.
-        _, Mr = M.clear_denoms(convert=True)
-        M_rref, den, pivots = _dm_rref_den_FF(Mr, use_dense)
-
-        if keep_domain and M_rref.domain != K:
-            M_rref = M_rref.to_field() / den
-            den = K.one
-
-    else:
-        raise ValueError(f"Unknown method for rref: {method}")
-
-    return M_rref, den, pivots
-
-
-def _dm_rref_choose_method(M):
+def _dm_rref_choose_method(M, method, *, denominator=False):
     """Choose the fastest method for computing RREF for M."""
 
-    # The sparse implementations are always faster
-    use_dense = False
+    if method != 'auto':
+        if method.endswith('_dense'):
+            method = method[:-len('_dense')]
+            use_fmt = 'dense'
+        else:
+            use_fmt = 'sparse'
 
-    K = M.domain
-
-    if K.is_ZZ:
-        method = _dm_rref_choose_method_ZZ(M)
-    elif K.is_QQ:
-        method = _dm_rref_choose_method_QQ(M)
     else:
-        # This is definitely suboptimal. More work is needed to determine the
-        # best method for computing RREF over domains that are not QQ.
-        method = 'GJ'
+        # The sparse implementations are always faster
+        use_fmt = 'sparse'
 
-    return method, use_dense
+        K = M.domain
 
+        if K.is_ZZ:
+            method = _dm_rref_choose_method_ZZ(M, denominator=denominator)
+        elif K.is_QQ:
+            method = _dm_rref_choose_method_QQ(M, denominator=denominator)
+        elif K.is_EX and M.rep.fmt == 'dense' and not denominator:
+            # Do not switch to the sparse implementation for EX because the
+            # domain does not have proper canonicalization and the sparse
+            # implementation gives equivalent but non-identical results over EX
+            # from performing arithmetic in a different order. Specifically
+            # test_issue_23718 ends up getting a more complicated expression
+            # when using the sparse implementation. Probably the best fix for
+            # this is something else but for now we stick with the dense
+            # implementation for EX if the matrix is already dense.
+            method = 'GJ'
+            use_fmt = 'dense'
+        else:
+            # This is definitely suboptimal. More work is needed to determine
+            # the best method for computing RREF over different domains.
+            if denominator:
+                method = 'FF'
+            else:
+                method = 'GJ'
 
-def _dm_rref_den_choose_method(M):
-    """Choose the fastest method for computing RREF for M with denominator."""
-
-    # The sparse implementations are always faster
-    use_dense = False
-
-    K = M.domain
-
-    if K.is_ZZ:
-        method = _dm_rref_den_choose_method_ZZ(M)
-    elif K.is_QQ:
-        method = _dm_rref_den_choose_method_QQ(M)
-    else:
-        # More work is needed to determine the best method for computing RREF
-        # over domains that are not ZZ or QQ.
-        method = 'FF'
-
-    return method, use_dense
-
-
-def _dm_rref_choose_method_ZZ(M):
-    """Choose the fastest method for computing RREF over ZZ."""
-    # Fastest method for rref is the same as for rref_den.
-    return _dm_rref_den_choose_method_ZZ(M)
+    return method, use_fmt
 
 
-def _dm_rref_den_choose_method_QQ(M):
-    """Choose the fastest method for computing RREF with denominator over QQ."""
-    # Fastest method for rref_den is the same as for rref.
-    return _dm_rref_choose_method_QQ(M)
-
-
-def _dm_rref_choose_method_QQ(Mq):
+def _dm_rref_choose_method_QQ(M, *, denominator=False):
     """Choose the fastest method for computing RREF over QQ."""
     # The same sorts of considerations apply here as in the case of ZZ. Here
     # though a new more significant consideration is what sort of denominators
@@ -407,7 +391,7 @@ def _dm_rref_choose_method_QQ(Mq):
     # First compute the density. This is the average number of non-zero entries
     # per row but only counting rows that have at least one non-zero entry
     # since RREF can ignore fully zero rows.
-    density, _, ncols = _dm_row_density(Mq)
+    density, _, ncols = _dm_row_density(M)
 
     # For sparse matrices use Gauss-Jordan elimination over QQ regardless.
     if density < min(5, ncols/2):
@@ -419,7 +403,7 @@ def _dm_rref_choose_method_QQ(Mq):
     # The threshold here is empirical: we prefer rref over QQ if clearing
     # denominators would result in a numerator matrix having 5x the bit size of
     # the current numerators.
-    numers, denoms = _dm_QQ_numers_denoms(Mq)
+    numers, denoms = _dm_QQ_numers_denoms(M)
     numer_bits = max([n.bit_length() for n in numers], default=1)
 
     denom_lcm = ZZ.one
@@ -443,8 +427,8 @@ def _dm_rref_choose_method_QQ(Mq):
         return 'FF'
 
 
-def _dm_rref_den_choose_method_ZZ(M):
-    """Choose the fastest method for computing RREF with denominator over ZZ."""
+def _dm_rref_choose_method_ZZ(M, *, denominator=False):
+    """Choose the fastest method for computing RREF over ZZ."""
     # In the extreme of very sparse matrices and low bit counts it is faster to
     # use Gauss-Jordan elimination over QQ rather than fraction-free
     # Gauss-Jordan over ZZ. In the opposite extreme of dense matrices and high
