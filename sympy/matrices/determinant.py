@@ -418,11 +418,21 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     cp = dM.charpoly()
 
-    berk_vector = [K.to_sympy(c) for c in cp]
+    x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
 
-    x = uniquely_named_symbol(x, berk_vector, modify=lambda s: '_' + s)
+    if simplify is not _simplify:
+        # XXX: Converting back to Expr is expensive. We only do it if the
+        # caller supplied a custom simplify function for backwards
+        # compatibility.
+        berk_vector = [K.to_sympy(c) for c in cp]
+        berk_vector = [simplify(a) for a in berk_vector]
+        p = PurePoly(berk_vector, x)
 
-    return PurePoly([simplify(a) for a in berk_vector], x)
+    else:
+        # Convert from the list of domain elements directly to Poly.
+        p = PurePoly(cp, x, domain=K)
+
+    return p
 
 
 def _cofactor(M, i, j, method="berkowitz"):
