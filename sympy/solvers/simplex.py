@@ -1,19 +1,18 @@
 """Tools for optimizing a linear function for a given simplex.
 
-If a problem is in standard form for a) the minimization of a linear
-objective, ``f = c*x - d``, with constraints ``A*x >= b`` or b) the
-maximization of ``f`` with constraints ``A*x <= b`` and all ``x``
-can only be nonnegative in either case, then the corresponding
-matrices can be sent directly to `lpmin` or `lpmax`.
+The minimization of a linear objective, ``f = c*x - d``, with constraints
+``A*x >= b`` or b) the maximization of ``f`` with constraints ``A*x <= b``
+can be solved with calls to `lpmin` or `lpmax`, in matrix form or
+in symbolic form (a function and a list of constraints).
 
 The primal and dual corresponding to a given matrix for the
 standard minimization can be generated with `primal_dual`.
 
-If some variables can be negative, or are unbounded in some manner,
-the objective function and the constraints expressed as non-strict
-inequalities can be sent to the desired function and they will
-be solved using a standardized form consistent with the given
-constraints.
+Constraints that are univariate will affect the range of values
+returned by the optimization, e.g. ``x <= 3`` will permit negative
+values of x unless there is a corresponding ``x >= 0`` condition.
+If there are no univariate conditions, only nonnegative
+solutions will be found.
 """
 
 from sympy.core import sympify
@@ -804,6 +803,10 @@ def primal_dual(M, factor=True):
     def ineq(L, r, op):
         rv = []
         for r in (op(i, j) for i, j in zip(L, r)):
+            if r == True:
+                continue
+            elif r == False:
+                return [False]
             if factor:
                 f = factor_terms(r)
                 if f.lhs.is_Mul and f.rhs % f.lhs.args[0] == 0:
