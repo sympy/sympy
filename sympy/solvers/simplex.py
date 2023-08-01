@@ -144,7 +144,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> from sympy import Matrix
 
     Consider the simple minimization of ``f = x + y + 1`` under the
-    constraint that    ``y + 2*x >= 4``. In the nonnegative quadrant,
+    constraint that ``y + 2*x >= 4``. In the nonnegative quadrant,
     this inequality describes a area above a triangle with vertices at
     (0, 4), (0, 0) and (2, 0). The minimum of ``f`` occurs at (2, 0).
     Define A, B, C, D for the standard minimization:
@@ -152,7 +152,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> A, B, C, D = [Matrix(i) for i in [[[2, 1]], [4], [[1, 1]], [-1]]]
 
     Since `_simplex` will do a minimization for constraints given as
-    ``A*x <= B``, the signs of each are negated (``-Ax <= -B``):
+    ``A*x <= B``, the signs of each are negated (``-Ax >= -B``):
 
     >>> _simplex(-A, -B, C, D)
     (3, [2, 0], [1/2])
@@ -172,9 +172,9 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> _simplex(a, b, -c, -d)
     (-3, [1/2], [2, 0])
 
-    The negated max shows that the max of ``F`` and the min of ``f`` are
-    the same. The dual point `[1/2]` is the value of ``y`` that minimized
-    ``F = c*y - d`` under constraints a*x <= b``:
+    The negative of ``F`` and the min of ``f`` are the same. The dual
+    point `[1/2]` is the value of ``y`` that minimized ``F = c*y - d``
+    under constraints a*x <= b``:
 
     >>> y = Matrix(['y'])
     >>> (c*y - d)[0]
@@ -204,8 +204,9 @@ def _simplex(A, B, C, D=None, dual=False):
 
     See Also
     ========
-    lp - poses min/max problem in form compatible with _simplex
-
+    _lp - poses min/max problem in form compatible with _simplex
+    lpmin - minimization which calls _lp
+    lpmax - maximimzation which calls _lp
 
     References
     ==========
@@ -346,11 +347,10 @@ def _rel_as_nonpos(constr):
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
     aux = []  # auxilliary symbols added
-
     ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
     univariate = {}  # {x: interval} for univariate constraints
-
     unbound = set()  # symbols designated as unbound
+
     for i in constr:
         if isinstance(i, AppliedBinaryRelation):
             if i.function == Q.le:
@@ -649,7 +649,7 @@ def lpmax(*args):
     return _lp(*_lp_args(max, *args))
 
 
-def _abcd(M, list=True):
+def _abcd(M, list=False):
     """return parts of M as matrices or lists
 
     NOTE: passing these matrices directly to _simplex
@@ -665,9 +665,9 @@ def _abcd(M, list=True):
     >>> from sympy import Matrix
     >>> from sympy.solvers.simplex import _abcd
     >>> m = Matrix(3, 3, range(9))
-    >>> L = _abcd(m); L
+    >>> L = _abcd(m, list=True); L
     ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
-    >>> _abcd(m, False)
+    >>> _abcd(m)
     (Matrix([
     [0, 1],
     [3, 4]]), Matrix([
@@ -684,6 +684,30 @@ def _abcd(M, list=True):
     if not list:
         return m
     return tuple([aslist(i) for i in m])
+
+
+def _m(a, b, c, d=None):
+    """return Matrix([[a, b], [c, d]]) from matrices
+    in Matrix or list form.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.solvers.simplex import _abcd, _m
+    >>> m = Matrix(3, 3, range(9))
+    >>> L = _abcd(m, list=True); L
+    ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
+    >>> _abcd(m)
+    (Matrix([
+    [0, 1],
+    [3, 4]]), Matrix([
+    [2],
+    [5]]), Matrix([[6, 7]]), Matrix([[8]]))
+    >>> assert m == _m(*L) == _m(*_)
+    """
+    a, b, c, d = [Matrix(i) for i in (a, b, c, d or [0])]
+    return Matrix([[a, b], [c, d]])
 
 
 def primal_dual(M, factor=True):
@@ -767,8 +791,12 @@ def primal_dual(M, factor=True):
     """
     if not M:
         return (None, []), (None, [])
+    if not hasattr(M, 'shape'):
+        if len(M) not in (3, 4):
+            raise ValueError('expecting Matrix or 3 or 4 lists')
+        M = _m(*M)
     m, n = [i - 1 for i in M.shape]
-    A, b, c, d = _abcd(M, list=False)
+    A, b, c, d = _abcd(M)
     d = d[0]
     _ = lambda x: numbered_symbols(x, start=1)
     x = Matrix([i for i, j in zip(_('x'), range(n))])

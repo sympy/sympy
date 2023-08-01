@@ -9,7 +9,8 @@ from sympy.assumptions.ask import Q
 from sympy.matrices.dense import Matrix, eye
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.solvers.simplex import (_lp as lp, primal_dual,
-    UnboundedLPError, InfeasibleLPError, lpmin, lpmax)
+    UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
+    _m, _abcd, _simplex)
 
 from sympy.external.importtools import import_module
 
@@ -225,6 +226,15 @@ def test_lp():
             else:
                 # scipy: either iteration limit reached or numerical difficulties
                 pass
+
+
+def test_simplex():
+    L = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
+    A, B, C, D = _abcd(_m(*L), list=False)
+    assert _simplex(A, B, -C, -D) == (-6, [3, 2], [1, 0, 0, 0])
+    assert _simplex(A, B, -C, -D, dual=True) == (-6, [1, 0, 0, 0], [5, 0])
+
+    assert _simplex([[]],[],[[1]],[0]) == (0, [0], [])
 
 
 def test_lpmin_lpmax():
