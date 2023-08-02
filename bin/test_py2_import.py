@@ -16,6 +16,7 @@ sys.path.append(parentdir)
 
 try:
     import sympy
+    _ = sympy.core.Atom
 except ImportError as exc:
     message = str(exc)
     # e.g. "Python version 3.5 or above is required for SymPy."

@@ -1,0 +1,40 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    - id: check-added-large-files
+    - id: check-case-conflict
+    - id: check-merge-conflict
+    - id: check-symlinks
+    - id: check-toml
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
+-   repo: https://github.com/PyCQA/flake8
+    rev: '6.0.0'
+    hooks:
+    - id: flake8
+    additional_dependencies:
+    - flake8-bugbear
+    - flake8-comprehensions
+    - flake8-tidy-imports
+    - flake8-typing-imports
+-   repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.254'
+    hooks:
+    - id: ruff
+- repo: local
+  hooks:
+    - id: basic-code-quality-tests
+      name: basic-code-quality-tests
+      entry: bin/test quality
+      language: python
+      pass_filenames: false
+      additional_dependencies:
+      - mpmath
+- repo: local
+  hooks:
+    - id: test-all-modules-are-listed-in-setup.py
+      name: test-all-modules-are-listed-in-setup.py
+      entry: bin/test_setup.py
+      language: python
+      pass_filenames: false

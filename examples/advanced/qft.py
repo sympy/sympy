@@ -16,7 +16,7 @@ SymPy, but that's a long journey.
 """
 
 from sympy import Basic, Symbol, Matrix, \
-    ones, sqrt, pprint, Eq, sympify
+    ones, sqrt, pprint, Eq, sympify, zeros
 
 from sympy.physics import msigma, mgamma
 
@@ -103,9 +103,6 @@ def main():
     k = (k1, k2, k3)
     kp = (kp1, kp2, kp3)
 
-    mu = Symbol("mu")
-
-    e = (pslash(p) + m*ones(4))*(pslash(k) - m*ones(4))
     f = pslash(p) + m*ones(4)
     g = pslash(p) - m*ones(4)
 

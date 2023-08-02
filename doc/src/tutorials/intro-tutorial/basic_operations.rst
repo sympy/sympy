@@ -200,4 +200,3 @@ dictionary of ``sympy_name:numerical_function`` pairs.  For example
     0.1
 
 .. TODO: Write an advanced numerics section
-

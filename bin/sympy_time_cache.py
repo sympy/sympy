@@ -121,8 +121,6 @@ old_import = __builtins__.__import__
 __builtins__.__import__ = new_import
 old_sum = sum
 
-from sympy import *
-
 sum = old_sum
 
 sageall = pp.child(0)

@@ -55,6 +55,7 @@ git_whitelist = {
     'codecov.yml',
     'MANIFEST.in',
     'banner.svg',
+    '.pre-commit-config.yaml',
     # Code of conduct
     'CODE_OF_CONDUCT.md',
     # Contributing guide

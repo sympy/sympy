@@ -32,7 +32,6 @@ def new_import(name, globals={}, locals={}, fromlist=[]):
 old_import = __builtins__.__import__
 
 __builtins__.__import__ = new_import
-from sympy import *
 
 parents = {}
 is_parent = {}

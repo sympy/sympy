@@ -23,22 +23,13 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest
+      - run: pip install pre-commit
 
-      - name: Basic code quality tests
-        run: bin/test quality
-
-      - name: Run flake8 on the sympy package
-        run: flake8 sympy
-
-      - name: Run Ruff on the sympy package
-        run: ruff check .
+      - name: Run linters on the sympy package with pre-commit
+        run: pre-commit run -a
 
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
-
-      - name: Test all modules are listed in setup.py
-        run: bin/test_setup.py
 
       # -- temporarily disabled -- #
       # These checks were too difficult for new contributors. They will

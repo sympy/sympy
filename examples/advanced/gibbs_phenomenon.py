@@ -13,8 +13,8 @@ See:
  * https://en.wikipedia.org/wiki/Gibbs_phenomena
 """
 
-from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
-    sin, cos, sign, lambdify, Integral, S
+from sympy import var, sqrt, integrate, conjugate, Abs, pprint, pi,\
+    sin, cos, lambdify, Integral
 
 x = var("x", real=True)
 

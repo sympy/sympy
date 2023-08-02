@@ -129,7 +129,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 --------------------------------------------------------------------------------
 
-The files under the directory sympy/parsing/latex 
+The files under the directory sympy/parsing/latex
 are directly copied from latex2sympy project and are licensed as:
 
 Copyright 2016, latex2sympy

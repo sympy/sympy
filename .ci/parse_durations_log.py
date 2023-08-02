@@ -15,7 +15,7 @@ def read_log():
         if start_token_seen:
             try:
                 dur, kind, test_id = line.split()
-            except:
+            except ValueError:
                 return
             else:
                 if dur[0] not in '0123456789':

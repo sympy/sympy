@@ -5,7 +5,7 @@
 Demonstrates simple plotting.
 """
 
-from sympy import Symbol, cos, sin, log, tan
+from sympy import cos, sin, log, tan
 from sympy.plotting import PygletPlot
 from sympy.abc import x, y
 

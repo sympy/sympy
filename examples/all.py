@@ -43,7 +43,6 @@ this_file = os.path.abspath(__file__)
 sympy_dir = os.path.join(os.path.dirname(this_file), "..")
 sympy_dir = os.path.normpath(sympy_dir)
 sys.path.insert(0, sympy_dir)
-import sympy
 
 TERMINAL_EXAMPLES = [
     "beginner.basic",
@@ -147,7 +146,7 @@ def run_example(example, *, reporter=None):
         return True
     except KeyboardInterrupt as e:
         raise e
-    except:
+    except Exception:
         if reporter:
             reporter.write("[FAIL]", "Red", align="right")
         traceback.print_exc()

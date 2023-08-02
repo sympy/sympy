@@ -81,7 +81,6 @@ class Ricci:
 
     def dd(self, mu, nu):
         R = self.R
-        x = self.x
         r = 0
         for lam in [0, 1, 2, 3]:
             r += R.uddd(lam, mu, lam, nu)
@@ -137,7 +136,6 @@ def eq1():
 def eq2():
     r = Symbol("r")
     e = Rmn.dd(1, 1)
-    C = Symbol("CC")
     e = e.subs(nu(r), -lam(r))
     pprint(dsolve(e, lam(r)))
 

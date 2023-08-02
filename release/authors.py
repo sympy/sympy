@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 from pathlib import Path
 from subprocess import check_output
 import unicodedata
@@ -119,7 +118,7 @@ def get_previous_version_tag(version):
             # never happens, so just error
             cmdline = f'git rev-list --parents -n 1 {curtag}'
             print(cmdline)
-            parents = check_output(cmdline.split()).decode('utf-8').strip().split()
+            check_output(cmdline.split()).decode('utf-8').strip().split()
             # rev-list prints the current commit and then all its parents
             # If the tagged commit *is* a merge commit, just comment this
             # out, and manually make sure `get_previous_version_tag` is correct

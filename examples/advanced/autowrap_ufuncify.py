@@ -73,7 +73,7 @@ def main():
 
         # We can also attach the autowrapped legendre polynomial to a sympy
         # function and plot values as they are calculated by the binary function
-        plot1 = plt.pyplot.plot(grid, polyvector, hold=True)
+        plt.pyplot.plot(grid, polyvector, hold=True)
 
 
     print("Here's a plot with values calculated by the wrapped binary functions")

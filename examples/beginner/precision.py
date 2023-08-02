@@ -5,7 +5,6 @@
 Demonstrates SymPy's arbitrary integer precision abilities
 """
 
-import sympy
 from sympy import Mul, Pow, S
 
 
