@@ -82,8 +82,7 @@ in the above documents. Note that we do not follow PEP 257 or the
 www.python.org documentation recommendations.
 
 If you are contributing to SymPy for the first time, please read our
-`Introduction to Contributing
-<https://github.com/sympy/sympy/wiki/Introduction-to-contributing>`_ page as
+:doc:`introduction-to-contributing` page as
 well as this guide.
 
 Types of Documentation
@@ -151,8 +150,6 @@ The SymPy Wiki can be edited by anyone without review. It contains various
 types of documentation, including:
 
 * High-level developer documentation (for example: https://github.com/sympy/sympy/wiki/Args-Invariant)
-* Guides for new contributors (for example: https://github.com/sympy/sympy/wiki/Introduction-to-contributing)
-* Development policies (for example: https://github.com/sympy/sympy/wiki/Python-version-support-policy)
 * Release notes (for example: https://github.com/sympy/sympy/wiki/Release-Notes-for-1.5)
 * Various pages that different contributors have added
 
