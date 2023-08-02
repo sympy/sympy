@@ -83,7 +83,7 @@ def are_coplanar(*e):
     Returns
     =======
 
-    Boolean
+    bool
 
     Examples
     ========
@@ -367,8 +367,8 @@ def convex_hull(*args, polygon=True):
     Optional parameters
     ===================
 
-    polygon : Boolean. If True, returns a Polygon, if false a tuple, see below.
-              Default is True.
+    polygon : bool, default: True
+        If True, returns a Polygon, if False a tuple.
 
     Returns
     =======

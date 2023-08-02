@@ -1099,7 +1099,7 @@ class Series(SISOLinearTimeInvariant):
 
     args : SISOLinearTimeInvariant
         SISO systems in a series configuration.
-    evaluate : Boolean, Keyword
+    evaluate : bool, Keyword
         When passed ``True``, returns the equivalent
         ``Series(*args).doit()``. Set to ``False`` by default.
 
@@ -1359,7 +1359,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
     args : MIMOLinearTimeInvariant
         MIMO systems in a series configuration.
-    evaluate : Boolean, Keyword
+    evaluate : bool, Keyword
         When passed ``True``, returns the equivalent
         ``MIMOSeries(*args).doit()``. Set to ``False`` by default.
 
@@ -1556,7 +1556,7 @@ class Parallel(SISOLinearTimeInvariant):
 
     args : SISOLinearTimeInvariant
         SISO systems in a parallel arrangement.
-    evaluate : Boolean, Keyword
+    evaluate : bool, Keyword
         When passed ``True``, returns the equivalent
         ``Parallel(*args).doit()``. Set to ``False`` by default.
 
@@ -1788,7 +1788,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
     args : MIMOLinearTimeInvariant
         MIMO Systems in a parallel arrangement.
-    evaluate : Boolean, Keyword
+    evaluate : bool, Keyword
         When passed ``True``, returns the equivalent
         ``MIMOParallel(*args).doit()``. Set to ``False`` by default.
 

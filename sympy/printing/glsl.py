@@ -32,7 +32,7 @@ class GLSLPrinter(CodePrinter):
     Rudimentary, generic GLSL printing tools.
 
     Additional settings:
-    'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
+    'use_operators': bool (should the printer use operators for +,-,*, or functions?)
     """
     _not_supported: set[Basic] = set()
     printmethod = "_glsl"

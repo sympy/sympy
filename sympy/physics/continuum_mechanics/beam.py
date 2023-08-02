@@ -2118,7 +2118,7 @@ class Beam:
         Parameters
         ==========
 
-        pictorial: Boolean (default=True)
+        pictorial: bool, default: True
             Setting ``pictorial=True`` would simply create a pictorial (scaled) view
             of the beam diagram not with the exact dimensions.
             Although setting ``pictorial=False`` would create a beam diagram with

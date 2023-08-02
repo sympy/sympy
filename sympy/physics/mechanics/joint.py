@@ -518,9 +518,8 @@ class Joint(ABC):
             Default is 'q'.
         offset : Integer
             Count offset when creating new dynamicsymbols. The default is 0.
-        number_single : Boolean
-            Boolean whether if n_coords == 1, number should still be used. The
-            default is False.
+        number_single : bool, default: False
+            Whether if n_coords == 1, number should still be used.
 
         """
 

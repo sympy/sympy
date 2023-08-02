@@ -572,11 +572,10 @@ class PlotGrid:
         Keyword arguments
         =================
 
-        show : Boolean
-            The default value is set to ``True``. Set show to ``False`` and
-            the function will not display the subplot. The returned instance
-            of the ``PlotGrid`` class can then be used to save or display the
-            plot by calling the ``save()`` and ``show()`` methods
+        show : bool, default: True
+            Set to ``False`` and the function will not display the subplot. The
+            returned instance of the ``PlotGrid`` class can then be used to save
+            or display the plot by calling the ``save()`` and ``show()`` methods
             respectively.
         size : (float, float), optional
             A tuple in the form (width, height) in inches to specify the size of

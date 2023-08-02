@@ -2085,7 +2085,8 @@ def Gumbel(name, beta, mu, minimum=False):
 
     mu : Real number, `\mu`, a location
     beta : Real number, `\beta > 0`, a scale
-    minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
+    minimum : bool, default: False
+        Set to True for enabling minimum distribution
 
     Returns
     =======

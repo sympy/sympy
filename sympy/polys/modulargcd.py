@@ -656,9 +656,8 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, i, p, ground=False):
         index of the variable which has to be reconstructed
     p : Integer
         prime number, modulus of `h_p`
-    ground : Boolean
-        indicates whether `x_i` is in the ground domain, default is
-        ``False``
+    ground : bool, default: False
+        indicates whether `x_i` is in the ground domain
 
     Returns
     =======
