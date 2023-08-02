@@ -179,22 +179,18 @@ _implicit_multiplication: (_oneletter_symbol | number) _expression_mul
     | _function _function
     | _fraction _expression
 
-
 _expression_func: _expression_core
     | group_round_parentheses
     | _fraction
     | _binomial
     | _function
     | ambiguous_sub
-    | integral
-    | summation
-    | product
 
 _expression_power: _expression_func | superscript
 
-_expression_mul: _expression_power | mul | div
+_expression_mul: _expression_power | mul | div | integral | summation | product | limit
 
-_expression: _expression_mul | add | sub | limit
+_expression: _expression_mul | add | sub
 
 _limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
@@ -206,15 +202,14 @@ integral: FUNC_INT _expression DIFFERENTIAL _oneletter_symbol
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
     | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
 
-// fix this thing, and the definitions of summation and product
 group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
     | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
 
 summation: FUNC_SUM group_curly_parentheses_special _expression
     | FUNC_SUM group_curly_parentheses_special _expression
 
-product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET _expression_core _expression
-    | FUNC_PROD CARET _expression_core UNDERSCORE group_curly_parentheses_special _expression
+product: FUNC_PROD group_curly_parentheses_special _expression
+    | FUNC_PROD group_curly_parentheses_special _expression
 
 superscript: _expression_func CARET _expression_power
 
