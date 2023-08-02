@@ -1225,6 +1225,10 @@ class Series(SISOLinearTimeInvariant):
     def __truediv__(self, other):
         if isinstance(other, TransferFunction):
             return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        elif isinstance(other, Series):
+            tf_self = self.rewrite(TransferFunction)
+            tf_other = other.rewrite(TransferFunction)
+            return (tf_self) / (tf_other)
         elif (isinstance(other, Parallel) and len(other.args) == 2
             and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
 
