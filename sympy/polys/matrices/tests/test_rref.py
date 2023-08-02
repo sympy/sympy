@@ -645,31 +645,14 @@ def test_dm_dense_rref(name, A, A_rref, den):
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
-def test_dm_dense_rref_gj_div(name, A, A_rref, den):
-    A = A.to_field()
-    _check_divide(A.rref_gj_div(), A_rref, den)
-
-
-@pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
 def test_dm_dense_rref_den(name, A, A_rref, den):
     _check_cancel(A.rref_den(), A_rref, den)
-
-
-@pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
-def test_dm_dense_rref_den_gj_ff(name, A, A_rref, den):
-    _check_cancel(A.rref_den_gj_ff(), A_rref, den)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
 def test_dm_sparse_rref(name, A, A_rref, den):
     A = A.to_field().to_sparse()
     _check_divide(A.rref(), A_rref, den)
-
-
-@pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
-def test_dm_sparse_rref_gj_div(name, A, A_rref, den):
-    A = A.to_field().to_sparse()
-    _check_divide(A.rref_gj_div(), A_rref, den)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
@@ -700,12 +683,6 @@ def test_dm_sparse_rref_den_keep_domain_GJ(name, A, A_rref, den):
     A_rref_f, den_f, pivots_f = A.rref_den(keep_domain=False, method='GJ')
     A_rref_f = A_rref_f.to_field() / den_f
     _check_divide((A_rref_f, pivots_f), A_rref, den)
-
-
-@pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)
-def test_dm_sparse_rref_den_gj_ff(name, A, A_rref, den):
-    A = A.to_sparse()
-    _check_cancel(A.rref_den_gj_ff(), A_rref, den)
 
 
 @pytest.mark.parametrize('name, A, A_rref, den', RREF_EXAMPLES)

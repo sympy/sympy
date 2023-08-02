@@ -47,9 +47,6 @@ In general, we represent a matrix without concerning about the :py:class:`~.Doma
 .. automodule:: sympy.polys.matrices.sdm
    :members:
 
-.. automodule:: sympy.polys.matrices.rref
-   :members:
-
 .. currentmodule:: sympy.polys.matrices.normalforms
 
 .. autofunction:: smith_normal_form
