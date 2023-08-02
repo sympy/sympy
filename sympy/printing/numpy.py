@@ -483,6 +483,7 @@ class JaxPrinter(NumPyPrinter):
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
 
     # These need specific override to allow for the lack of "jax.numpy.reduce"
     def _print_And(self, expr):

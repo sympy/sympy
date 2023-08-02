@@ -1,6 +1,5 @@
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
-
-from sympy.polys.domains import FF, ZZ, QQ, EXRAW
+from sympy import FF, ZZ, QQ, QQ_I, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
@@ -354,11 +353,27 @@ def test_DomainMatrix_is_lower():
     assert B.is_lower is False
 
 
+def test_DomainMatrix_is_diagonal():
+    A = DM([[1, 0], [0, 4]], ZZ)
+    B = DM([[1, 2], [3, 4]], ZZ)
+    assert A.is_diagonal is A.to_sparse().is_diagonal is True
+    assert B.is_diagonal is B.to_sparse().is_diagonal is False
+
+
 def test_DomainMatrix_is_square():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)], [ZZ(5), ZZ(6)]], (3, 2), ZZ)
     assert A.is_square is True
     assert B.is_square is False
+
+
+def test_DomainMatrix_diagonal():
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(4)]
+    A = DM([[1, 2], [3, 4], [5, 6]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(4)]
+    A = DM([[1, 2, 3], [4, 5, 6]], ZZ)
+    assert A.diagonal() == A.to_sparse().diagonal() == [ZZ(1), ZZ(5)]
 
 
 def test_DomainMatrix_rank():
@@ -529,6 +544,11 @@ def test_DomainMatrix_cancel_denom():
 
     A = DM([[1, 2], [3, 4]], ZZ)
     assert A.cancel_denom(ZZ(2)) == (A, ZZ(2))
+    assert A.cancel_denom(ZZ(-2)) == (-A, ZZ(2))
+
+    # Test canonicalization of denominator over Gaussian rationals.
+    A = DM([[1, 2], [3, 4]], QQ_I)
+    assert A.cancel_denom(QQ_I(0,2)) == (QQ_I(0,-1)*A, QQ_I(2))
 
     raises(ZeroDivisionError, lambda: A.cancel_denom(ZZ(0)))
 
@@ -563,8 +583,12 @@ def test_DomainMatrix_scc():
     for A in [Ad, As, Addm, Asdm]:
         assert Ad.scc() == [[1], [0, 2]]
 
+    A = DM([[ZZ(1), ZZ(2), ZZ(3)]], ZZ)
+    raises(DMNonSquareMatrixError, lambda: A.scc())
+
 
 def test_DomainMatrix_rref():
+    # More tests in test_rref.py
     A = DomainMatrix([], (0, 1), QQ)
     assert A.rref() == (A, ())
 
@@ -622,8 +646,21 @@ def test_DomainMatrix_nullspace():
     Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), QQ)
     assert A.nullspace() == Anull
 
-    Az = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
-    raises(DMNotAField, lambda: Az.nullspace())
+    A = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[ZZ(-1), ZZ(1)]], (1, 2), ZZ)
+    assert A.nullspace() == Anull
+
+    raises(DMNotAField, lambda: A.nullspace(divide_last=True))
+
+    A = DomainMatrix([[ZZ(2), ZZ(2)], [ZZ(2), ZZ(2)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[ZZ(-2), ZZ(2)]], (1, 2), ZZ)
+
+    Arref, den, pivots = A.rref_den()
+    assert den == ZZ(2)
+    assert Arref.nullspace_from_rref() == Anull
+    assert Arref.nullspace_from_rref(pivots) == Anull
+    assert Arref.to_sparse().nullspace_from_rref() == Anull.to_sparse()
+    assert Arref.to_sparse().nullspace_from_rref(pivots) == Anull.to_sparse()
 
 
 def test_DomainMatrix_solve():
@@ -966,6 +1003,27 @@ def test_DomainMatrix_charpoly():
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
     raises(DMNonSquareMatrixError, lambda: Ans.charpoly())
+
+
+def test_DomainMatrix_charpoly_factor_list():
+    A = DomainMatrix([], (0, 0), ZZ)
+    assert A.charpoly_factor_list() == []
+
+    A = DM([[1]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-1)], 1)
+    ]
+
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-5), ZZ(-2)], 1)
+    ]
+
+    A = DM([[1, 2, 0], [3, 4, 0], [0, 0, 1]], ZZ)
+    assert A.charpoly_factor_list() == [
+        ([ZZ(1), ZZ(-1)], 1),
+        ([ZZ(1), ZZ(-5), ZZ(-2)], 1)
+    ]
 
 
 def test_DomainMatrix_eye():
