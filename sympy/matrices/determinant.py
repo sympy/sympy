@@ -421,7 +421,7 @@ def _charpoly(M, x='lambda', simplify=_simplify):
 
     x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
 
-    if K.is_EX or simplify is not _simplify:
+    if K.is_EXRAW or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
         # caller supplied a custom simplify function for backwards
         # compatibility or otherwise if the domain was EX. For any other domain
