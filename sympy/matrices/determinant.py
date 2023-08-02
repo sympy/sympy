@@ -7,6 +7,7 @@ from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.functions.combinatorial.numbers import nC
+from sympy.polys.domains import EX
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.ddm import DDM
 
@@ -407,23 +408,29 @@ def _charpoly(M, x='lambda', simplify=_simplify):
     # is no need to worry about expanding powers etc. Also since this algorithm
     # does not require division or zero detection it is fine to use EX.
     #
-    # Note that to_DM() will fall back on EXRAW rather than EX. EXRAW is a lot
-    # faster because it does not call cancel for each arithmetic operation but
-    # it might generate a large unsimplified result that would be slow to
-    # convert to Poly. In some cases EX might actually be faster because the
-    # intermediate simplification might be faster than trying to simplify at
-    # the end.
+    # M.to_DM() will fall back on EXRAW rather than EX. EXRAW is a lot faster
+    # for elementary arithmetic because it does not call cancel for each
+    # operation but it might generate a large unsimplified result that would be
+    # slow to simplify and convert to Poly. EX makes individual operations
+    # slower but can be faster overall because the intermediate simplification
+    # might be faster than trying to simplify at the end.
     dM = M.to_DM()
+
+    # Maybe to_DM() should have an option to do this automatically?
+    if dM.domain.is_EXRAW:
+        dM = dM.convert_to(EX)
+
     K = dM.domain
 
     cp = dM.charpoly()
 
     x = uniquely_named_symbol(x, M, modify=lambda s: '_' + s)
 
-    if simplify is not _simplify:
+    if K.is_EX or simplify is not _simplify:
         # XXX: Converting back to Expr is expensive. We only do it if the
         # caller supplied a custom simplify function for backwards
-        # compatibility.
+        # compatibility or otherwise if the domain was EX. For any other domain
+        # there should be no benefit in simplifying at this stage.
         berk_vector = [K.to_sympy(c) for c in cp]
         berk_vector = [simplify(a) for a in berk_vector]
         p = PurePoly(berk_vector, x)
