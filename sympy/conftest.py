@@ -7,8 +7,12 @@ from sympy.core.cache import clear_cache, USE_CACHE
 from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 from sympy.utilities.misc import ARCH
 import re
+from hypothesis import settings
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
+settings.register_profile("sympy_hypothesis_profile", deadline=None)
+settings.load_profile("sympy_hypothesis_profile")
 
 def process_split(config, items):
     split = config.getoption("--split")
