@@ -7,12 +7,16 @@ from sympy.core.cache import clear_cache, USE_CACHE
 from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 from sympy.utilities.misc import ARCH
 import re
-from hypothesis import settings
+
+try:
+    import hypothesis
+    hypothesis.settings.register_profile("sympy_hypothesis_profile", deadline=None)
+    hypothesis.settings.load_profile("sympy_hypothesis_profile")
+except ImportError:
+    raise ImportError("hypothesis is a required dependency to run the SymPy test suite. "
+                      "Install it with 'pip install hypothesis' or 'conda install -c conda-forge hypothesis'")
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
-
-settings.register_profile("sympy_hypothesis_profile", deadline=None)
-settings.load_profile("sympy_hypothesis_profile")
 
 def process_split(config, items):
     split = config.getoption("--split")
