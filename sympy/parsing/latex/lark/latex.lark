@@ -142,14 +142,7 @@ SUBSCRIPTED_SYMBOL: BASIC_SUBSCRIPTED_SYMBOL | SYMBOL_WITH_GREEK_SUBSCRIPT | GRE
 
 WORD: /[a-zA-Z]+/
 
-%import common.INT -> UNSIGNED_INT
 %import common.DIGIT -> DIGIT
-%import common.SIGNED_INT -> SIGNED_INT
-%import common.SIGNED_FLOAT -> SIGNED_FLOAT
-%import common.DECIMAL -> UNSIGNED_FLOAT
-
-INT: SIGNED_INT | UNSIGNED_INT
-FLOAT: SIGNED_FLOAT | UNSIGNED_FLOAT
 
 //////////////////// grammar //////////////////////
 
@@ -157,15 +150,13 @@ latex_string: relation | _expression
 
 _oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
-number: /\.?\d/
+number: /\d+(\.\d*)?/
 infinity: CMD_INFTY
 
 _atomic_expr: _oneletter_symbol
     | multiletter_symbol
     | number
     | infinity
-
-// atom: _atomic_expr
 
 group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
@@ -175,9 +166,9 @@ relation: _expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) _expression
 
 _expression_core: _atomic_expr | group_curly_parentheses
 
-// unary_neg: SUB _expression
 add: _expression ADD _expression_mul
-sub: _expression? SUB _expression_mul
+sub: _expression SUB _expression_mul
+    | SUB _expression_mul
 mul: _expression_mul MUL_SYMBOL _expression_power
     | _implicit_multiplication
 div: _expression_mul DIV_SYMBOL _expression_power
@@ -185,15 +176,13 @@ div: _expression_mul DIV_SYMBOL _expression_power
 _implicit_multiplication: (_oneletter_symbol | number) _expression_mul
     | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
     | _function _function
-    | fraction _expression
+    | _fraction _expression
 
-
-// multidigit_number: /\d{2,}/ | /\d+\./ | /\d+\.\d+/ | /\.\d+/
 
 _expression_func: _expression_core
     | group_round_parentheses
-    | fraction
-    | binomial
+    | _fraction
+    | _binomial
     | _function
     | ambiguous_sub
     | integral
@@ -228,21 +217,18 @@ product: FUNC_PROD UNDERSCORE group_curly_parentheses_special CARET _expression_
 
 superscript: _expression_func CARET _expression_power
 
-//subscript.1: _expression_core UNDERSCORE _expression
-
 ambiguous_sub: _oneletter_symbol number
 
-fraction: CMD_FRAC _expression_core _expression_core
-// basic_fraction
-//     | simple_fraction
-//    | general_fraction
+_fraction: basic_fraction
+    | simple_fraction
+    | general_fraction
 
-// general_fraction.0: CMD_FRAC group_curly_parentheses group_curly_parentheses _expression?
+general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
 
-// simple_fraction.1: CMD_FRAC DIGIT group_curly_parentheses _expression?
-//     | CMD_FRAC group_curly_parentheses DIGIT _expression?
+simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
+    | CMD_FRAC group_curly_parentheses DIGIT
 
-// basic_fraction.2: CMD_FRAC DIGIT DIGIT _expression?
+basic_fraction: CMD_FRAC DIGIT DIGIT
 
 list_of_expressions: _expression ("," _expression)*
 
@@ -308,13 +294,13 @@ abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
 ceil: L_CEIL _expression R_CEIL
 
-binomial: basic_binomial
+_binomial: basic_binomial
     | simple_binomial
     | general_binomial
 
-general_binomial.0: CMD_BINOM group_curly_parentheses group_curly_parentheses _expression?
+general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
-simple_binomial.1: CMD_BINOM DIGIT group_curly_parentheses _expression?
-    | CMD_FRAC group_curly_parentheses DIGIT _expression?
+simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
+    | CMD_BINOM group_curly_parentheses DIGIT
 
-basic_binomial.2: CMD_BINOM DIGIT DIGIT _expression?
+basic_binomial: CMD_BINOM DIGIT DIGIT
