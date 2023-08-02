@@ -1156,8 +1156,8 @@ https://nedbatchelder.com/blog/200710/flaws_in_coverage_measurement.html.
 
 ## Hypothesis Testing
 Property based tests can now be created using the [Hypothesis](https://hypothesis.readthedocs.io/en/latest/quickstart.html)
-library. Tests should be added to the `test_hypothesis.py` file in the various testing suits. If the file does not exist,
-create one. Below is an example of hypothesis test for modular arithmetic:
+library. Tests should be added to the `test_hypothesis.py` file in the respective `tests` subdirectory. If the file does
+not exist, create one. Below is an example of hypothesis test for modular arithmetic:
 ```py
 from hypothesis import given
 from hypothesis import strategies as st
