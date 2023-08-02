@@ -171,7 +171,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also :term:`immutabile` in the :doc:`glossary`.
+    See also :term:`immutable` in the :doc:`glossary`.
 
 .. _symbols:
 
