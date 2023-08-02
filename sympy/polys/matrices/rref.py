@@ -34,75 +34,23 @@ from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.dense import ddm_irref, ddm_irref_den
 
 
-def dm_rref(M, *, method='auto'):
+def _dm_rref(M, *, method='auto'):
     """
     Compute the reduced row echelon form of a ``DomainMatrix``.
 
+    This function is the implementation of :meth:`DomainMatrix.rref`.
+
     Chooses the best algorithm depending on the domain, shape, and sparsity of
-    the matrix as well as things like the bit count in the case of ZZ or QQ.
-    The result is returned over the field associated with the domain of the
-    matrix.
-
-    Examples
-    ========
-
-    >>> from sympy import QQ
-    >>> from sympy.polys.matrices import DM
-    >>> from sympy.polys.matrices.rref import dm_rref
-    >>> M = DM([[1, 2], [3, 4]], QQ)
-    >>> M_rref, pivots = dm_rref(M)
-    >>> M_rref.to_Matrix()
-    Matrix([
-    [1, 0],
-    [0, 1]])
-    >>> pivots
-    (0, 1)
-
-    Parameters
-    ==========
-
-    M : DomainMatrix
-        The matrix to compute the reduced row echelon form of.
-
-    method : str, optional (``'auto'``, ``'GJ'``, ``'FF'``, ``'CD'``,
-        ``'GJ_dense'``, ``'FF_dense'``, ``'CD_dense'``)
-
-        The algorithm to use. The default is ``'auto'`` which chooses the best
-        algorithm depending on the domain, shape, and sparsity of the matrix as
-        well as properties of the elements e.g. the bit count in the case of
-        :ref:`ZZ` or :ref:`QQ`.
-
-        With ``method='GJ'`` the matrix is converted to the associated field
-        domain and Gauss-Jordan elimination with division is used. With
-        ``method='FF'`` fraction-free Gauss-Jordan elimination is used in the
-        current domain and the result is converted to the associated field
-        domain at the end. With ``method='CD'`` the denominators are cleared
-        and fraction-free Gauss-Jordan elimination is used in the associated
-        ring before converting to the associated field domain and dividing at
-        the end.
-
-        By default the sparse implementations of the different algorithms are
-        used. To use the dense implementations instead use
-        ``method='GJ_dense'``, ``method='FF_dense'``, or ``method='CD_dense'``.
-        With ``method='auto'`` only the sparse implementations are used.
-
-
-    Returns
-    =======
-
-    (M_rref, pivots) : tuple
-        If ``denominator=False`` then ``M_rref`` is the reduced row echelon
-        form of the matrix over the field associated with the domain of the
-        matrix and ``pivots`` is the indices of the pivot columns. The format
-        of the returned matrix (sparse or dense) is the same as the format of
-        the input matrix.
+    the matrix as well as things like the bit count in the case of :ref:`ZZ` or
+    :ref:`QQ`. The result is returned over the field associated with the domain
+    of the Matrix.
 
     See Also
     ========
 
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref
         The ``DomainMatrix`` method that calls this function.
-    sympy.polys.matrices.rref.dm_rref_den
+    sympy.polys.matrices.rref._dm_rref_den
         Alternative function for computing RREF with denominator.
     """
     method, use_fmt = _dm_rref_choose_method(M, method, denominator=False)
@@ -138,81 +86,24 @@ def dm_rref(M, *, method='auto'):
     return M_rref, pivots
 
 
-def dm_rref_den(M, *, keep_domain=True, method='auto'):
+def _dm_rref_den(M, *, keep_domain=True, method='auto'):
     """
-    Compute the reduced row echelon form of a ``DomainMatrix``.
+    Compute the reduced row echelon form of a ``DomainMatrix`` with denominator.
+
+    This function is the implementation of :meth:`DomainMatrix.rref_den`.
 
     Chooses the best algorithm depending on the domain, shape, and sparsity of
-    the matrix as well as things like the bit count in the case of ZZ or QQ.
-    The result is returned over the field associated with the domain of the
-    matrix.
-
-    Examples
-    ========
-
-    >>> from sympy import QQ
-    >>> from sympy.polys.matrices import DM
-    >>> from sympy.polys.matrices.rref import dm_rref
-    >>> M = DM([[1, 2], [3, 4]], QQ)
-    >>> M_rref, pivots = dm_rref(M)
-    >>> M_rref.to_Matrix()
-    Matrix([
-    [1, 0],
-    [0, 1]])
-    >>> pivots
-    (0, 1)
-
-    Parameters
-    ==========
-
-    M : DomainMatrix
-        The matrix to compute the reduced row echelon form of.
-
-    keep_domain : bool, optional (default=True)
-        If ``True`` then the domain of the matrix is preserved in the result.
-        If ``False`` then the result might be over a different domain if the
-        domain was changed during the computation.
-
-    method : str, optional (``'auto'``, ``'GJ'``, ``'FF'``, ``'CD'``,
-        ``'GJ_dense'``, ``'FF_dense'``, ``'CD_dense'``)
-
-        The algorithm to use. The default is ``'auto'`` which chooses the best
-        algorithm depending on the domain, shape, and sparsity of the matrix as
-        well as properties of the elements e.g. the bit count in the case of
-        :ref:`ZZ` or :ref:`QQ`.
-
-        With ``method='GJ'`` the matrix is converted to the associated field
-        domain and Gauss-Jordan elimination with division is used. With
-        ``method='FF'`` fraction-free Gauss-Jordan elimination is used in the
-        current domain and the result is converted to the associated field
-        domain at the end. With ``method='CD'`` the denominators are cleared
-        and fraction-free Gauss-Jordan elimination is used in the associated
-        ring before converting to the associated field domain and dividing at
-        the end.
-
-        By default the sparse implementations of the different algorithms are
-        used. To use the dense implementations instead use
-        ``method='GJ_dense'``, ``method='FF_dense'``, or ``method='CD_dense'``.
-        With ``method='auto'`` only the sparse implementations are used.
-
-    Returns
-    =======
-
-    (M_rref, denom, pivots) : tuple
-        If ``denominator=True`` then ``M_rref`` is the reduced row echelon
-        form, ``denom`` is the denominator and ``pivots`` is the indices of
-        the pivot columns. ``M_rref`` and ``denom`` are in the same domain as
-        the input matrix unless ``keep_domain=False`` in which case they are
-        possibly in an associated ring or field. The format of the returned
-        matrix (sparse or dense) will be the same as the format of the input
-        matrix.
+    the matrix as well as things like the bit count in the case of :ref:`ZZ` or
+    :ref:`QQ`. The result is returned over the same domain as the input matrix
+    unless ``keep_domain=False`` in which case the result might be over an
+    associated ring or field domain.
 
     See Also
     ========
 
-    sympy.polys.matrices.domainmatrix.DomainMatrix.rref
+    sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
         The ``DomainMatrix`` method that calls this function.
-    sympy.polys.matrices.rref.dm_rref
+    sympy.polys.matrices.rref._dm_rref
         Alternative function for computing RREF without denominator.
     """
     method, use_fmt = _dm_rref_choose_method(M, method, denominator=True)

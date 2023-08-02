@@ -35,7 +35,7 @@ from .sdm import SDM
 
 from .domainscalar import DomainScalar
 
-from .rref import dm_rref, dm_rref_den
+from .rref import _dm_rref, _dm_rref_den
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
@@ -1849,11 +1849,14 @@ class DomainMatrix:
 
     def rref(self, *, method='auto'):
         r"""
-        Returns reduced-row echelon form and list of pivots for the DomainMatrix
+        Returns reduced-row echelon form (RREF) and list of pivots.
 
-        The domain must be a field. Use :meth:`rref_den` to compute the RREF
-        with denominator for non-field domains or convert to a field with
-        :meth:`to_field`.
+        If the domain is not a field then it will be converted to a field. See
+        :meth:`rref_den` for the fraction-free version of this routine that
+        returns RREF with denominator instead.
+
+        The domain must either be a field or have an associated fraction field
+        (see :meth:`to_field`).
 
         Examples
         ========
@@ -1877,16 +1880,37 @@ class DomainMatrix:
         method : str, optional (default: 'auto')
             The method to use to compute the RREF. The default is ``'auto'``,
             which will attempt to choose the fastest method. The other options
-            are ``'GJ'``, which uses Gauss-Jordan elimination, ``'FF'``, which
-            uses fast fraction-free elimination, and ``'CD'``, which will
-            clear denominators before using Gauss-Jordan elimination. The
-            domain of the returned matrix will always be in the associated
-            field.
+            are:
 
-            The sparse implementations are always used by default but if the
-            method is e.g. ``'GJ_dense'`` then the dense implementation will
-            be used. The returned matrix will always have the same format
-            (sparse or dense) as the input.
+            - ``A.rref(method='GJ')`` uses Gauss-Jordan elimination with
+              division. If the domain is not a field then it will be converted
+              to a field with :meth:`to_field` first and RREF will be computed
+              by inverting the pivot elements in each row. This is most
+              efficient for very sparse matrices or for matrices whose elements
+              have complex denominators.
+
+            - ``A.rref(method='FF')`` uses fraction-free Gauss-Jordan
+              elimination. Elimination is performed using exact division
+              (``exquo``) to control the growth of the coefficients. In this
+              case the current domain is always used for elimination but if
+              the domain is not a field then it will be converted to a field
+              at the end and divided by the denominator. This is most efficient
+              for dense matrices or for matrices with simple denominators.
+
+            - ``A.rref(method='CD')`` clears the denominators before using
+              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              This is most efficient for dense matrices with very simple
+              denominators.
+
+            - ``A.rref(method='GJ_dense')``, ``A.rref(method='FF_dense')``, and
+              ``A.rref(method='CD_dense')`` are the same as the above methods
+              except that the dense implementations of the algorithms are used.
+              By default ``A.rref(method='auto')`` will usually choose the
+              sparse implementations for RREF.
+
+            Regardless of which algorithm is used the returned matrix will
+            always have the same format (sparse or dense) as the input and its
+            domain will always be the field of fractions of the input domain.
 
         Returns
         =======
@@ -1899,11 +1923,20 @@ class DomainMatrix:
 
         rref_den
             RREF with denominator
-        sympy.polys.matrices.rref.dm_rref
-            The function that implements this.
+        sympy.polys.matrices.sdm.sdm_irref
+            Sparse implementation of ``method='GJ'``.
+        sympy.polys.matrices.sdm.sdm_rref_den
+            Sparse implementation of ``method='FF'`` and ``method='CD'``.
+        sympy.polys.matrices.dense.ddm_irref
+            Dense implementation of ``method='GJ'``.
+        sympy.polys.matrices.dense.ddm_irref_den
+            Dense implementation of ``method='FF'`` and ``method='CD'``.
+        clear_denoms
+            Clear denominators from a matrix, used by ``method='CD'`` and
+            by ``method='GJ'`` when the original domain is not a field.
 
         """
-        return dm_rref(self, method=method)
+        return _dm_rref(self, method=method)
 
     def rref_den(self, *, method='auto', keep_domain=True):
         r"""
@@ -1939,113 +1972,77 @@ class DomainMatrix:
         method : str, optional (default: 'auto')
             The method to use to compute the RREF. The default is ``'auto'``,
             which will attempt to choose the fastest method. The other options
-            are ``'GJ'``, which uses Gauss-Jordan elimination, ``'FF'``, which
-            uses fast fraction-free elimination, and ``'CD'``, which will
-            clear denominators before using Gauss-Jordan elimination.
+            are:
 
-            The underlying algorithms might compute the RREF in a different
-            domain if it is more efficient to do so. By default the result will
-            be converted back to the original domain either by clearing
-            denominators or divding denominators back in. If this is not
-            desired, set ``keep_domain`` to ``False`` and then the result may
-            be in a different domain than the input.
+            - ``A.rref(method='FF')`` uses fraction-free Gauss-Jordan
+              elimination. Elimination is performed using exact division
+              (``exquo``) to control the growth of the coefficients. In this
+              case the current domain is always used for elimination and the
+              result is always returned as a matrix over the current domain.
+              This is most efficient for dense matrices or for matrices with
+              simple denominators.
 
-            The sparse implementations are always used by default but if the
-            method is e.g. ``'GJ_dense'`` then the dense implementation will
-            be used. The returned matrix will always have the same format
-            (sparse or dense) as the input.
+            - ``A.rref(method='CD')`` clears denominators before using
+              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              The result will be converted back to the original domain unless
+              ``keep_domain=False`` is passed in which case the result will be
+              over the ring used for elimination. This is most efficient for
+              dense matrices with very simple denominators.
+
+            - ``A.rref(method='GJ')`` uses Gauss-Jordan elimination with
+              division. If the domain is not a field then it will be converted
+              to a field with :meth:`to_field` first and RREF will be computed
+              by inverting the pivot elements in each row. The result is
+              converted back to the original domain by clearing denominators
+              unless ``keep_domain=False`` is passed in which case the result
+              will be over the field used for elimination. This is most
+              efficient for very sparse matrices or for matrices whose elements
+              have complex denominators.
+
+            - ``A.rref(method='GJ_dense')``, ``A.rref(method='FF_dense')``, and
+              ``A.rref(method='CD_dense')`` are the same as the above methods
+              except that the dense implementations of the algorithms are used.
+              By default ``A.rref(method='auto')`` will usually choose the
+              sparse implementations for RREF.
+
+            Regardless of which algorithm is used the returned matrix will
+            always have the same format (sparse or dense) as the input and if
+            ``keep_domain=True`` its domain will always be the same as the
+            input.
 
         keep_domain : bool, optional
             If True (the default), the domain of the returned matrix and
             denominator are the same as the domain of the input matrix. If
             False, the domain of the returned matrix might be changed to an
-            associated ring or field.
+            associated ring or field if the algorithm used a different domain.
+            This is useful for efficiency if the caller does not need the
+            result to be in the original domain e.g. it avoids clearing
+            denominators in the case of ``A.rref(method='GJ')``.
 
         Returns
         =======
 
         (DomainMatrix, scalar, list)
             Reduced-row echelon form, denominator and list of pivot indices.
-
-        Notes
-        =====
-
-        In some cases it is more efficient to change to a different domain when
-        computing the RREF. For example, if the input is a sparse matrix over
-        :ref:`ZZ` it might be more efficient to convert to :ref:`QQ` and
-        compute the RREF using division. If ``keep_domain`` is ``True``, then
-        in this case the result would be converted back to :ref:`ZZ` by
-        clearing denominators. This conversion is potentially expensive, so if
-        the caller does not need the result to be in :ref:`ZZ`, it is more
-        efficient to set ``keep_domain`` to ``False`` and let the result be in
-        :ref:`QQ`. Similarly, if the input is a matrix over :ref:`QQ` then if
-        ``keep_domain`` is ``False`` the result might be returned over
-        :ref:`QQ` or :ref:`ZZ` depending on which algorithm is used.
 
         See Also
         ========
 
         rref
             RREF without denominator for field domains.
-        sympy.polys.matrices.rref.dm_rref_den
-            The function that implements this.
-
-        """
-        return dm_rref_den(self, method=method, keep_domain=keep_domain)
-
-    def rref_gj_div(self):
-        """Compute RREF using Gauss-Jordan elimination with division.
-
-        The domain must be a field.
-
-        Returns
-        =======
-
-        (DomainMatrix, list)
-            reduced-row echelon form and list of pivots for the DomainMatrix
-
-        See Also
-        ========
-
-        rref
-            Compute RREF choosing the most efficient algorithm (possibly uses
-            this algorithm).
-        rref_den
-            Compute RREF with denominator using the most efficient algorithm
-            (possibly uses this algorithm).
-        sympy.polys.matrices.dense.ddm_irref
-            The underlying algorithm in the dense case.
         sympy.polys.matrices.sdm.sdm_irref
-            The underlying algorithm in the sparse case.
+            Sparse implementation of ``method='GJ'``.
+        sympy.polys.matrices.sdm.sdm_rref_den
+            Sparse implementation of ``method='FF'`` and ``method='CD'``.
+        sympy.polys.matrices.dense.ddm_irref
+            Dense implementation of ``method='GJ'``.
+        sympy.polys.matrices.dense.ddm_irref_den
+            Dense implementation of ``method='FF'`` and ``method='CD'``.
+        clear_denoms
+            Clear denominators from a matrix, used by ``method='CD'``.
+
         """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        rref_ddm, pivots = self.rep.rref()
-        return self.from_rep(rref_ddm), tuple(pivots)
-
-    def rref_den_gj_ff(self):
-        """Compute RREF with denominator using fraction-free Gauss-Jordan.
-
-        Requires exact division in the ground domain (``exquo``).
-
-        Returns
-        =======
-
-        (DomainMatrix, scalar, list)
-            Reduced-row echelon form, denominator and list of pivot indices.
-
-        See Also
-        ========
-
-        rref_den
-            Compute RREF with denominator using the most efficient algorithm
-            (possibly uses this algorithm).
-        rref_gj_div
-            Compute RREF using Gauss-Jordan elimination with division (only
-            for field domains).
-        """
-        rref_ddm, denom, pivots = self.rep.rref_den()
-        return self.from_rep(rref_ddm), denom, tuple(pivots)
+        return _dm_rref_den(self, method=method, keep_domain=keep_domain)
 
     def columnspace(self):
         r"""
