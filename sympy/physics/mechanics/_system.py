@@ -24,6 +24,7 @@ from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.iterables import iterable
+from sympy.physics.mechanics._actuator import ActuatorBase
 
 __all__ = ['System']
 
@@ -87,6 +88,8 @@ class System(_Methods):
         Tuple of all joints that connect bodies in the system.
     loads : tuple of LoadBase subclasses
         Tuple of all loads that have been applied to the system.
+    actuators : tuple of ActuatorBase subclasses
+        Tuple of all actuators present in the system.
     holonomic_constraints : Matrix
         Matrix with the holonomic constraints as rows.
     nonholonomic_constraints : Matrix
@@ -274,6 +277,7 @@ class System(_Methods):
         self._bodies = []
         self._joints = []
         self._loads = []
+        self._actuators = []
         self._eom_method = None
 
     @classmethod
@@ -346,6 +350,19 @@ class System(_Methods):
     def loads(self, loads):
         loads = self._objects_to_list(loads)
         self._loads = [_parse_load(load) for load in loads]
+
+    @property
+    def actuators(self):
+        """Tuple of actuators present in the system."""
+        return tuple(self._actuators)
+
+    @actuators.setter
+    @_reset_eom_method
+    def actuators(self, actuators):
+        actuators = self._objects_to_list(actuators)
+        self._check_objects(actuators, [], ActuatorBase, 'Actuators',
+                            'actuators')
+        self._actuators = actuators
 
     @property
     def q(self):
@@ -657,6 +674,21 @@ class System(_Methods):
         self.add_loads(*gravity(acceleration, *self.bodies))
 
     @_reset_eom_method
+    def add_actuators(self, *actuators):
+        """Add actuator(s) to the system.
+
+        Parameters
+        ==========
+
+        *actuators : subclass of ActuatorBase
+            One or more actuators.
+
+        """
+        self._check_objects(actuators, self.actuators, ActuatorBase,
+                            'Actuators', 'actuators')
+        self._actuators.extend(actuators)
+
+    @_reset_eom_method
     def add_joints(self, *joints):
         """Add joint(s) to the system.
 
@@ -796,7 +828,9 @@ class System(_Methods):
 
         """
         # KanesMethod does not accept empty iterables
-        loads = self.loads if self.loads else None
+        loads = self.loads + tuple(
+            load for act in self.actuators for load in act.to_loads())
+        loads = loads if loads else None
         if issubclass(eom_method, KanesMethod):
             disallowed_kwargs = {
                 "frame", "q_ind", "u_ind", "kd_eqs", "q_dependent",
