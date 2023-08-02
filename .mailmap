@@ -30,7 +30,7 @@
 #   unrecognised author/email metadata.
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
@@ -49,7 +49,7 @@
 #   The mailmap file was reordered
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
