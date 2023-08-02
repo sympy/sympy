@@ -1050,6 +1050,12 @@ class Permutation(Atom):
         p._size = len(perm)
         return p
 
+    def copy(self):
+        return self.__class__(self.array_form)
+
+    def __getnewargs__(self):
+        return (self.array_form,)
+
     def _hashable_content(self):
         # the array_form (a list) is the Permutation arg, so we need to
         # return a tuple, instead

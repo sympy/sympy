@@ -33,7 +33,8 @@ from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_bird, _det_laplace, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -58,7 +59,7 @@ from .graph import (
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
-    _pinv_solve, _solve, _solve_least_squares)
+    _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
@@ -109,6 +110,12 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
         return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
+    def _eval_det_bird(self):
+        return _det_bird(self)
+
+    def _eval_det_laplace(self):
+        return _det_laplace(self)
+
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
@@ -140,6 +147,8 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
     _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_bird.__doc__            = _det_bird.__doc__
+    _eval_det_laplace.__doc__            = _det_laplace.__doc__
     _eval_det_lu.__doc__                 = _det_LU.__doc__
     _eval_determinant.__doc__            = _det.__doc__
     adjugate.__doc__                     = _adjugate.__doc__
@@ -442,7 +451,6 @@ class MatrixCalculus(MatrixCommon):
 
     def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
-        ``args`` will be passed to the ``integrate`` function.
 
         Examples
         ========
@@ -2274,6 +2282,9 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
+    def cramer_solve(self, rhs, det_method="laplace"):
+        return _cramer_solve(self, rhs, det_method=det_method)
+
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
 
@@ -2344,6 +2355,7 @@ class MatrixBase(MatrixDeprecated,
     QRsolve.__doc__                = _QRsolve.__doc__
     gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
     pinv_solve.__doc__             = _pinv_solve.__doc__
+    cramer_solve.__doc__           = _cramer_solve.__doc__
     solve.__doc__                  = _solve.__doc__
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 

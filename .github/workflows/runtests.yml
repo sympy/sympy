@@ -282,7 +282,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
         experimental: [false]
         group: [1, 2, 3, 4]
         # Maybe use this to add 3.12 when the time comes:
@@ -308,7 +308,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12.0-alpha - 3.12', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
@@ -361,7 +361,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '2.7'
+          python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
 
   # -------------------- Check the list of files for sdist --------- #
