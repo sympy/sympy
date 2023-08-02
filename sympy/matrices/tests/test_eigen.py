@@ -2,7 +2,6 @@ from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
