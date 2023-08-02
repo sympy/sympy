@@ -9,6 +9,7 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
@@ -36,12 +37,16 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
+from sympy.polys.densearith import dup_mul
 from sympy.polys.densetools import (
-    dup_content,
-    dup_clear_denoms,
-    dup_primitive,
+    dup_mul_ground,
     dup_quo_ground,
+    dup_content,
+    dup_primitive,
+    dup_clear_denoms,
 )
+from sympy.polys.factortools import dup_factor_list
+from sympy.polys.polyutils import _sort_factors
 
 
 def DM(rows, domain):
@@ -966,7 +971,58 @@ class DomainMatrix:
         return self.rep.is_lower()
 
     @property
+    def is_diagonal(self):
+        """
+        True if the matrix is diagonal.
+
+        Can return true for non-square matrices. A matrix is diagonal if
+        ``M[i,j] == 0`` whenever ``i != j``.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> M = DM([[ZZ(1), ZZ(0)], [ZZ(0), ZZ(1)]], ZZ)
+        >>> M.is_diagonal
+        True
+
+        See Also
+        ========
+
+        is_upper
+        is_lower
+        is_square
+        diagonal
+        """
+        return self.rep.is_diagonal()
+
+    def diagonal(self):
+        """
+        Get the diagonal entries of the matrix as a list.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> M = DM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], ZZ)
+        >>> M.diagonal()
+        [1, 4]
+
+        See Also
+        ========
+
+        is_diagonal
+        diag
+        """
+        return self.rep.diagonal()
+
+    @property
     def is_square(self):
+        """
+        True if the matrix is square.
+        """
         return self.shape[0] == self.shape[1]
 
     def rank(self):
@@ -1491,8 +1547,9 @@ class DomainMatrix:
         sympy.utilities.iterables.strongly_connected_components
 
         """
-        rows, cols = self.shape
-        assert rows == cols
+        if not self.is_square:
+            raise DMNonSquareMatrixError('Matrix must be square for scc')
+
         return self.rep.scc()
 
     def clear_denoms(self, convert=False):
@@ -1592,6 +1649,14 @@ class DomainMatrix:
         >>> Minv_reduced.to_field() / den_reduced == Minv.to_field() / den
         True
 
+        The denominator is made canonical with respect to units (e.g. a
+        negative denominator is made positive):
+
+        >>> M = DM([[2, 2, 0]], ZZ)
+        >>> den = ZZ(-4)
+        >>> M.cancel_denom(den)
+        (DomainMatrix([[-1, -1, 0]], (1, 3), ZZ), 2)
+
         Any factor common to _all_ elements will be cancelled but there can
         still be factors in common between _some_ elements of the matrix and
         the denominator. To cancel factors between each element and the
@@ -1628,26 +1693,36 @@ class DomainMatrix:
 
         elements, data = M.to_flat_nz()
 
+        # First canonicalize the denominator (e.g. multiply by -1).
+        if K.is_negative(denom):
+            u = -K.one
+        else:
+            u = K.canonical_unit(denom)
+
         # Often after e.g. solve_den the denominator will be much more
         # complicated than the elements of the numerator. Hopefully it will be
         # quicker to find the gcd of the numerator and if there is no content
         # then we do not need to look at the denominator at all.
         content = dup_content(elements, K)
-
-        if K.is_one(content):
-            return (M.copy(), denom)
-
         common = K.gcd(content, denom)
 
-        if K.is_one(common):
+        if not K.is_one(content):
+
+            common = K.gcd(content, denom)
+
+            if not K.is_one(common):
+                elements = dup_quo_ground(elements, common, K)
+                denom = K.quo(denom, common)
+
+        if not K.is_one(u):
+            elements = dup_mul_ground(elements, u, K)
+            denom = u * denom
+        elif K.is_one(common):
             return (M.copy(), denom)
 
-        elements_cancelled = dup_quo_ground(elements, common, K)
-        denom_cancelled = K.quo(denom, common)
+        M_cancelled = M.from_flat_nz(elements, data, K)
 
-        M_cancelled = M.from_flat_nz(elements_cancelled, data, K)
-
-        return M_cancelled, denom_cancelled
+        return M_cancelled, denom
 
     def cancel_denom_elementwise(self, denom):
         """
@@ -1918,7 +1993,7 @@ class DomainMatrix:
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
 
-    def nullspace(self):
+    def nullspace(self, divide_last=False):
         r"""
         Returns the nullspace for the DomainMatrix
 
@@ -1932,17 +2007,129 @@ class DomainMatrix:
         ========
 
         >>> from sympy import QQ
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([
-        ...    [QQ(1), QQ(-1)],
-        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([
+        ...    [QQ(2), QQ(-2)],
+        ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
+        DomainMatrix([[2, 2]], (1, 2), QQ)
+        >>> A.nullspace(divide_last=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
+        The returned matrix is a basis for the nullspace:
+
+        >>> A_null = A.nullspace().transpose()
+        >>> A * A_null
+        DomainMatrix([[0], [0]], (2, 1), QQ)
+        >>> rows, cols = A.shape
+        >>> nullity = rows - A.rank()
+        >>> A_null.shape == (cols, nullity)
+        True
+
+        Nullspace can also be computed for non-field rings. If the ring is not
+        a field then normalization is not done. Setting normalize to True will
+        raise an error.
+
+        >>> from sympy import ZZ
+        >>> B = DM([[6, -3],
+        ...         [4, -2]], ZZ)
+        >>> B.nullspace()
+        DomainMatrix([[3, 6]], (1, 2), ZZ)
+        >>> B.nullspace(divide_last=True)
+        Traceback (most recent call last):
+        ...
+        DMNotAField: Cannot normalize vectors over a non-field
+
+        Over a ring with ``gcd`` defined the nullspace can potentially be
+        reduced with :meth:`primitive`:
+
+        >>> B.nullspace().primitive()
+        (3, DomainMatrix([[1, 2]], (1, 2), ZZ))
+
+        A matrix over a ring can often be normalized by converting it to a
+        field but it is often a bad idea to do so:
+
+        >>> from sympy.abc import a, b, c
+        >>> from sympy import Matrix
+        >>> M = Matrix([[        a*b,       b + c,        c],
+        ...             [      a - b,         b*c,     c**2],
+        ...             [a*b + a - b, b*c + b + c, c**2 + c]])
+        >>> M.to_DM().domain
+        ZZ[a,b,c]
+        >>> M.to_DM().nullspace().to_Matrix().transpose()
+        Matrix([
+        [                             c**3],
+        [            -a*b*c**2 + a*c - b*c],
+        [a*b**2*c - a*b - a*c + b**2 + b*c]])
+
+        The unnormalized form here is nicer than the normalized form that
+        spreads a large denominator throughout the matrix:
+
+        >>> M.to_DM().to_field().nullspace(divide_last=True).to_Matrix().transpose()
+        Matrix([
+        [                   c**3/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [(-a*b*c**2 + a*c - b*c)/(a*b**2*c - a*b - a*c + b**2 + b*c)],
+        [                                                          1]])
+
+        Parameters
+        ==========
+
+        divide_last : bool, optional
+            If False (the default), the vectors are not normalized and the RREF
+            is computed using :meth:`rref_den` and the denominator is
+            discarded. If True, then each row is divided by its final element;
+            the domain must be a field in this case.
+
+        See Also
+        ========
+
+        nullspace_from_rref
+        rref
+        rref_den
+        rowspace
         """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        return self.from_rep(self.rep.nullspace()[0])
+        A = self
+        K = A.domain
+
+        if divide_last and not K.is_Field:
+            raise DMNotAField("Cannot normalize vectors over a non-field")
+
+        if divide_last:
+            A_rref, pivots = A.rref()
+        else:
+            A_rref, den, pivots = A.rref_den()
+
+            # Ensure that the sign is canonical before discarding the
+            # denominator. Then M.nullspace().primitive() is canonical.
+            u = K.canonical_unit(den)
+            if u != K.one:
+                A_rref *= u
+
+        A_null = A_rref.nullspace_from_rref(pivots)
+
+        return A_null
+
+    def nullspace_from_rref(self, pivots=None):
+        """
+        Compute nullspace from rref and pivots.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must be in reduced row echelon form already. Otherwise the
+        result will be incorrect. Use :meth:`rref` or :meth:`rref_den` first
+        to get the reduced row echelon form or use :meth:`nullspace` instead.
+
+        See Also
+        ========
+
+        nullspace
+        rref
+        rref_den
+        sympy.polys.matrices.sdm.SDM.nullspace_from_rref
+        sympy.polys.matrices.ddm.DDM.nullspace_from_rref
+        """
+        null_rep, nonpivots = self.rep.nullspace_from_rref(pivots)
+        return self.from_rep(null_rep)
 
     def inv(self):
         r"""
@@ -2743,21 +2930,19 @@ class DomainMatrix:
 
     def charpoly(self):
         r"""
-        Returns the coefficients of the characteristic polynomial
-        of the DomainMatrix. These elements will be domain elements.
-        The domain of the elements will be same as domain of the DomainMatrix.
+        Characteristic polynomial of a square matrix.
+
+        Computes the characteristic polynomial in a fully expanded form using
+        division free arithmetic. If a factorization of the characteristic
+        polynomial is needed then it is more efficient to call
+        :meth:`charpoly_factor_list` than calling :meth:`charpoly` and then
+        factorizing the result.
 
         Returns
         =======
 
-        list
+        list: list of DomainElement
             coefficients of the characteristic polynomial
-
-        Raises
-        ======
-
-        DMNonSquareMatrixError
-            If the DomainMatrix is not a not Square DomainMatrix
 
         Examples
         ========
@@ -2771,10 +2956,184 @@ class DomainMatrix:
         >>> A.charpoly()
         [1, -5, -2]
 
+        See Also
+        ========
+
+        charpoly_factor_list
+            Compute the factorisation of the characteristic polynomial.
+        charpoly_factor_blocks
+            A partial factorisation of the characteristic polynomial that can
+            be computed more efficiently than either the full factorisation or
+            the fully expanded polynomial.
         """
-        m, n = self.shape
-        if m != n:
+        M = self
+        K = M.domain
+
+        factors = M.charpoly_factor_blocks()
+
+        cp = [K.one]
+
+        for f, mult in factors:
+            for _ in range(mult):
+                cp = dup_mul(cp, f, K)
+
+        return cp
+
+    def charpoly_factor_list(self):
+        """
+        Full factorization of the characteristic polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], ZZ)
+
+        Compute the factorization of the characteristic polynomial:
+
+        >>> M.charpoly_factor_list()
+        [([1, -9], 2), ([1, -7, -4], 1)]
+
+        Use :meth:`charpoly` to get the unfactorized characteristic polynomial:
+
+        >>> M.charpoly()
+        [1, -25, 203, -495, -324]
+
+        The same calculations with ``Matrix``:
+
+        >>> M.to_Matrix().charpoly().as_expr()
+        lambda**4 - 25*lambda**3 + 203*lambda**2 - 495*lambda - 324
+        >>> M.to_Matrix().charpoly().as_expr().factor()
+        (lambda - 9)**2*(lambda**2 - 7*lambda - 4)
+
+        Returns
+        =======
+
+        list: list of pairs (factor, multiplicity)
+            A full factorization of the characteristic polynomial.
+
+        See Also
+        ========
+
+        charpoly
+            Expanded form of the characteristic polynomial.
+        charpoly_factor_blocks
+            A partial factorisation of the characteristic polynomial that can
+            be computed more efficiently.
+        """
+        M = self
+        K = M.domain
+
+        # It is more efficient to start from the partial factorization provided
+        # for free by M.charpoly_factor_blocks than the expanded M.charpoly.
+        factors = M.charpoly_factor_blocks()
+
+        factors_irreducible = []
+
+        for factor_i, mult_i in factors:
+
+            _, factors_list = dup_factor_list(factor_i, K)
+
+            for factor_j, mult_j in factors_list:
+                factors_irreducible.append((factor_j, mult_i * mult_j))
+
+        return _collect_factors(factors_irreducible)
+
+    def charpoly_factor_blocks(self):
+        """
+        Partial factorisation of the characteristic polynomial.
+
+        This factorisation arises from a block structure of the matrix (if any)
+        and so the factors are not guaranteed to be irreducible. The
+        :meth:`charpoly_factor_blocks` method is the most efficient way to get
+        a representation of the characteristic polynomial but the result is
+        neither fully expanded nor fully factored.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import ZZ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], ZZ)
+
+        This computes a partial factorization using only the block structure of
+        the matrix to reveal factors:
+
+        >>> M.charpoly_factor_blocks()
+        [([1, -18, 81], 1), ([1, -7, -4], 1)]
+
+        These factors correspond to the two diagonal blocks in the matrix:
+
+        >>> DM([[6, -1], [9, 12]], ZZ).charpoly()
+        [1, -18, 81]
+        >>> DM([[1, 2], [5, 6]], ZZ).charpoly()
+        [1, -7, -4]
+
+        Use :meth:`charpoly_factor_list` to get a complete factorization into
+        irreducibles:
+
+        >>> M.charpoly_factor_list()
+        [([1, -9], 2), ([1, -7, -4], 1)]
+
+        Use :meth:`charpoly` to get the expanded characteristic polynomial:
+
+        >>> M.charpoly()
+        [1, -25, 203, -495, -324]
+
+        Returns
+        =======
+
+        list: list of pairs (factor, multiplicity)
+            A partial factorization of the characteristic polynomial.
+
+        See Also
+        ========
+
+        charpoly
+            Compute the fully expanded characteristic polynomial.
+        charpoly_factor_list
+            Compute a full factorization of the characteristic polynomial.
+        """
+        M = self
+
+        if not M.is_square:
             raise DMNonSquareMatrixError("not square")
+
+        # scc returns indices that permute the matrix into block triangular
+        # form and can extract the diagonal blocks. M.charpoly() is equal to
+        # the product of the diagonal block charpolys.
+        components = M.scc()
+
+        block_factors = []
+
+        for indices in components:
+            block = M.extract(indices, indices)
+            block_factors.append((block.charpoly_base(), 1))
+
+        return _collect_factors(block_factors)
+
+    def charpoly_base(self):
+        """
+        Base case for :meth:`charpoly_factor_blocks` after block decomposition.
+
+        Calls the underlying implementation of the Berkowitz algorithm
+        (:meth:`sympy.polys.matrices.dense.ddm_berk`).
+
+        See Also
+        ========
+
+        charpoly
+        charpoly_factor_list
+        charpoly_factor_blocks
+        sympy.polys.matrices.dense.ddm_berk
+        """
         return self.rep.charpoly()
 
     @classmethod
@@ -2992,3 +3351,20 @@ class DomainMatrix:
         """
         reduced, transform = A.rep.lll_transform(delta=delta)
         return DomainMatrix.from_rep(reduced), DomainMatrix.from_rep(transform)
+
+
+def _collect_factors(factors_list):
+    """
+    Collect repeating factors and sort.
+
+    >>> from sympy.polys.matrices.domainmatrix import _collect_factors
+    >>> _collect_factors([([1, 2], 2), ([1, 4], 3), ([1, 2], 5)])
+    [([1, 4], 3), ([1, 2], 7)]
+    """
+    factors = Counter()
+    for factor, exponent in factors_list:
+        factors[tuple(factor)] += exponent
+
+    factors_list = [(list(f), e) for f, e in factors.items()]
+
+    return _sort_factors(factors_list)

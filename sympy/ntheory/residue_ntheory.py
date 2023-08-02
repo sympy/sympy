@@ -1616,7 +1616,7 @@ def polynomial_congruence(expr, m):
     Parameters
     ==========
 
-    coefficients : Coefficients of the Polynomial
+    expr : integer coefficient polynomial
     m : positive integer
 
     Examples
