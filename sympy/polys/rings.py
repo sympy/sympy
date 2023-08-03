@@ -6,6 +6,7 @@ from typing import Any
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
+from itertools import chain
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
@@ -2959,7 +2960,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return R
 
-    def sparse_free_sym(self):
+    def main_variable(self):
         """
         Find the smallest index of the free symbolic variable in a given
         polynomial.
@@ -2970,7 +2971,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> from sympy import ZZ, ring
         >>> R, x, y = ring("x, y", ZZ)
         >>> p = y**2 + 2 - y**3 + 4*y
-        >>> p.sparse_free_sym()
+        >>> p.main_variable()
         1
 
         """
@@ -2978,6 +2979,65 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         exponents = list(map(sum, zip(*p)))
         free_sym = {n for n, e in enumerate(exponents) if e}
         return min(free_sym)
+def monomial_extract(p):
+    """
+    Extracts any common monomial from the polynomials in p.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.monomials import monomial_extract
+    >>> from sympy import ZZ, ring
+
+    >>> R, x, y = ring("x, y", ZZ)
+    >>> f = R(0)
+    >>> g = x*y
+    >>> p = [f, g]
+    >>> monomial_extract(p)
+    ([0, 1], x*y)
+
+    >>> f = x**2*y + x*y**2
+    >>> g = x**2 + x*y
+    >>> p = [f, g]
+    >>> monomial_extract(p)
+    ([x*y + y**2, x + y], x)
+
+    """
+    ring = p[0].ring
+    zero_monom = ring.zero_monom
+
+    # Check the first few monomials to see if there is a gcd revealed quickly
+    check_monom = min(len(p), 3)
+    monom = [poly for poly in p]
+    i_gcd = tuple(map(min, zip(*monom)))
+
+    if i_gcd == zero_monom:
+        # If the gcd is already reduced to the zero monom, we can immediately return
+        return p, None
+
+    # Loop over the remaining monomials if necessary
+    for poly in p[check_monom:]:
+        if zero_monom in poly:
+            # If the zero monomial is present, we can immediately return
+            return p, None
+
+        monomial = poly.monomial()
+        monom_gcd = tuple(min(mg, m) for mg, m in zip(i_gcd, monomial))
+
+        if monom_gcd == zero_monom:
+            return p, None
+
+    # If we reach here, it means we didn't find a quick gcd, so we use the exhaustive approach
+
+    monomials = chain(*p)
+    monom_gcd = tuple(map(min, zip(*monomials)))
+
+    if monom_gcd == zero_monom:
+        return p, None
+    else:
+        d = ring({monom_gcd: ring.domain.one})
+        p = [ring.monomial_ldiv((pi.coeffs()), (d.coeffs())) for pi in p]
+        return p, d
 
     def gcd_ground(self, domain):
         """
@@ -3069,7 +3129,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p = sorted(set(all_coeffs), key=len)
 
             # Find the intersection of symbols for each poly:
-            common = p[0].sparse_free_sym()
+            common = p[0].main_variable()
             allsame = True
             for pi in p[1:]:
 
@@ -3080,7 +3140,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     gcd = p.gcd_terms(R, K)
                     return [gcd], None
 
-                syms = pi.sparse_free_sym()
+                syms = pi.main_variable()
                 if allsame and syms != common:
                     allsame = False
                 common &= syms
@@ -3092,7 +3152,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             # Extract coefficients as polys containing only the common symbols.
             all_coeffs = []
             for i, pi in enumerate(p):
-                coeffs_i = pi.coeff_wrt(pi.sparse_free_sym - common)
+                coeffs_i = pi.coeff_wrt(pi.main_variable - common)
                 all_coeffs.extend(coeffs_i)
 
                 # Quick exit:
@@ -3155,7 +3215,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         p1 = self
-        x = p1.sparse_free_sym()
+        x = p1.main_variable()
 
         c1, pp1 = p1.primitive()
         c2, pp2 = p2.primitive()
