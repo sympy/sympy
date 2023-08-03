@@ -701,6 +701,14 @@ def test_LRA_solver():
     lra.assert_con(s1 >= 2)
     assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
 
+
+    # test potential edge case
+    r1 = x <= 1
+    r2 = -x <= -5
+    lra = LRASolver(Matrix(), [], [x])
+    lra.assert_con(x <= 1)
+    lra.assert_con(-x <= -5)
+
 # from sympy.solvers.inequalities import LRASolver
 # s1, s2 = symbols("s1 s2")
 # equations = [Eq(s1, -x + y), Eq(s2, x + y)]
