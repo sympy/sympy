@@ -219,10 +219,10 @@ fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
-_basic_fraction: CMD_FRAC DIGIT DIGIT
+_basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
 
 _simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
-    | CMD_FRAC group_curly_parentheses DIGIT
+    | CMD_FRAC group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL)
 
 _general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
 
@@ -230,10 +230,10 @@ binomial: _basic_binomial
     | _simple_binomial
     | _general_binomial
 
-_basic_binomial: CMD_BINOM DIGIT DIGIT
+_basic_binomial: CMD_BINOM DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
 
 _simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
-    | CMD_BINOM group_curly_parentheses DIGIT
+    | CMD_BINOM group_curly_parentheses (DIGIT | SYMBOL | GREEK_SYMBOL)
 
 _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
