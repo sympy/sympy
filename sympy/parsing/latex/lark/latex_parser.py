@@ -28,10 +28,8 @@ else:
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic
 class TransformToSymPyExpr(Transformer):
-    INT = int
-    FLOAT = float
-    # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
     SYMBOL = sympy.Symbol
+    DIGIT = int
 
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash
@@ -55,10 +53,11 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Symbol(tokens[2])
 
     def number(self, tokens):
-        if "." not in tokens[0]:
-            return int(tokens[0])
+        if "." in tokens[0]:
+            # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
+            return sympy.core.numbers.Float(tokens[0])
         else:
-            pass # TODO: Handle this case later
+            return int(tokens[0])
 
     def latex_string(self, tokens):
         return tokens[0]
@@ -113,6 +112,23 @@ class TransformToSymPyExpr(Transformer):
     def superscript(self, tokens):
         return sympy.Pow(tokens[0], tokens[2], evaluate=False)
 
+    def basic_fraction(self, tokens):
+        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
+
+    def simple_fraction(self, tokens):
+        # this node doesn't need any special handling code because everything is processed before we reach here.
+        # For example, if we have `\frac1{2}`, then `DIGIT` is called and returns 1, and `group_curly_parentheses`
+        # is called and `2` is returned. So, from the POV of this function, we only ever encounter the following
+        # parameters and in this order: [CMD_FRAC, numerator, denominator]
+        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
+
+    def general_fraction(self, tokens):
+        # this node doesn't need any special handling code because everything is processed before we reach here.
+        # For example, if we have `\frac{1}{a + b}`, then `DIGIT` is called and returns 1, and `add` is called and
+        # `a + b` is returned. So, from the POV of this function, we only ever encounter the following
+        # parameters and in this order: [CMD_FRAC, numerator, denominator]
+        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
+
     def integral(self, tokens):
         underscore_index = None
         caret_index = None
@@ -142,7 +158,7 @@ class TransformToSymPyExpr(Transformer):
             # TODO: this condition can be shortened by using XOR or XNOR. Should we do that?
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
-        # check if any expression was given or not. If it wasn't, then the integrand is 1.
+        # check if any expression was given or not. If it wasn't, then set the integrand to 1.
         if underscore_index is not None and differential_symbol_index == underscore_index - 1:
             integrand = 1
         elif caret_index is not None and differential_symbol_index == caret_index - 1:
@@ -162,26 +178,62 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Integral(integrand, differential_symbol)
 
     def group_curly_parentheses_special(self, tokens):
-        print(tokens)
+        underscore_index = tokens.index("_")
+        caret_index = tokens.index("^")
+
+        # given the type of expressions we are parsing, we can assume that the lower limit
+        # will always use braces around its arguments. This is because we don't support
+        # converting unconstrained sums into SymPy expressions.
+
+        # first we isolate the bottom limit
+        left_brace_index = tokens.index("{", underscore_index)
+        right_brace_index = tokens.index("}", underscore_index)
+
+        bottom_limit = tokens[left_brace_index + 1: right_brace_index]
+
+        # print(f"bottom limit = {bottom_limit}")
+
+        # next, we isolate the upper limit
+        top_limit = tokens[caret_index + 1:]
+
+        # the code below will be useful for supporting things like `\sum_{n = 0}^{n = 5} n^2`
+        # if "{" in top_limit:
+        #     left_brace_index = tokens.index("{", caret_index)
+        #     if left_brace_index != -1:
+        #         # then there's a left brace in the string, and we need to find the closing right brace
+        #         right_brace_index = tokens.index("}", caret_index)
+        #         top_limit = tokens[left_brace_index + 1: right_brace_index]
+
+        # print(f"top  limit = {top_limit}")
+
+        index_variable = bottom_limit[0]
+        lower_limit = bottom_limit[-1]
+        upper_limit = top_limit[0] # for now, it'll always be 0
+
+        # print(f"return value = ({index_variable}, {lower_limit}, {upper_limit})")
+
+        return index_variable, lower_limit, upper_limit
 
     def summation(self, tokens):
-        print(tokens)
+        # print(tokens)
+        return sympy.Sum(tokens[2], tokens[1])
 
     def product(self, tokens):
         print(tokens)
+        return sympy.Product(tokens[2], tokens[1])
 
     def limit(self, tokens):
         print(tokens)
 
-        left_brace_index = tokens.index("{")
-        right_brace_index = tokens.index("}")
-
-
-        # we handle the limit underscore, i.e. the "x \to 0" part
-
-        expression = tokens[right_brace_index + 1]
-
-        # return sympy.Limit(, , , direction)
+        # left_brace_index = tokens.index("{")
+        # right_brace_index = tokens.index("}")
+        #
+        #
+        # # we handle the limit underscore, i.e. the "x \to 0" part
+        #
+        # expression = tokens[right_brace_index + 1]
+        #
+        # # return sympy.Limit(, , , direction)
 
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
@@ -192,7 +244,7 @@ class TransformToSymPyExpr(Transformer):
             def remove_tokens(args):
                 if isinstance(args, _lark.lexer.Token):
                     if args.type != "COMMA":
-                        # unexpected token encountered
+                        # an unexpected token was encountered
                         raise LaTeXParsingError()  # TODO: write descriptive error message
                     return False
                 return True
@@ -346,6 +398,11 @@ def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transfor
 
     return sympy_expression
 
+def pr_ltx(s: str):
+    parse_latex_lark(s, print_debug_output=True, transform=False)
+
+def trfm_ltx(s: str):
+    parse_latex_lark(s, print_debug_output=True)
 
 def pretty_print_lark_trees(tree, indent=0, show_expr=True):
     if isinstance(tree, _lark.Token):
@@ -384,9 +441,6 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    # parse_latex_lark(r"\frac{1}{7\cdot 6} + 7", print_debug_output=True)
-    # parse_latex_lark(r"\log_{11} x", print_debug_output=True)
-    # parse_latex_lark(r"\sum_{n = 1}^{9} n", print_debug_output=True)
-    parse_latex_lark(r"f(x + y, 3z^2, \sin t)", print_debug_output=True)
     # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
-    # parse_latex_lark(r"37.8", print_debug_output=True)
+
+
