@@ -1,7 +1,11 @@
 ### The base class for all series
 from collections.abc import Callable
+from sympy.concrete import Sum, Product
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.function import arity
+from sympy.core.symbol import Symbol
+from sympy.functions import atan2, zeta, frac, ceiling, floor
 from sympy.core.relational import (Equality, GreaterThan, StrictGreaterThan,
     LessThan, StrictLessThan)
 from sympy.core.sympify import sympify
@@ -16,8 +20,8 @@ import warnings
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
 
-    Explanation
-    ===========
+    Notes
+    =====
 
     The backend should check if it supports the data series that is given.
     (e.g. TextBackend supports only LineOver1DRangeSeries).
@@ -29,6 +33,8 @@ class BaseSeries:
     not obliged to use that api (e.g. LineOver1DRangeSeries belongs to the
     is_2Dline group and presents the get_points method, but the
     TextBackend does not use the get_points method).
+
+    BaseSeries
     """
 
     # Some flags follow. The rationale for using flags instead of checking base
@@ -65,6 +71,9 @@ class BaseSeries:
     # Different from is_contour as the colormap in backend will be
     # different
 
+    is_interactive = False
+    # An interactive series can update its data.
+
     is_parametric = False
     # The calculation of aesthetics expects:
     #   - get_parameter_points returning one or two np.arrays (1D or 2D)
@@ -73,24 +82,745 @@ class BaseSeries:
     is_generic = False
     # Represent generic user-provided numerical data
 
-    def __init__(self):
-        super().__init__()
+    is_vector = False
+    is_2Dvector = False
+    is_3Dvector = False
+    is_slice = False
+    # Represents a 2D or 3D vector data series
+
+    _N = 100
+    # default number of discretization points for uniform sampling. Each
+    # subclass can set its number.
+
+    def __init__(self, *args, **kwargs):
+        kwargs = _set_discretization_points(kwargs.copy(), type(self))
+        # discretize the domain using only integer numbers
+        self.only_integers = kwargs.get("only_integers", False)
+        # represents the evaluation modules to be used by lambdify
+        self.modules = kwargs.get("modules", None)
+        # plot functions might create data series that might not be useful to
+        # be shown on the legend, for example wireframe lines on 3D plots.
+        self.show_in_legend = kwargs.get("show_in_legend", True)
+        # line and surface series can show data with a colormap, hence a
+        # colorbar is essential to understand the data. However, sometime it
+        # is useful to hide it on series-by-series base. The following keyword
+        # controls wheter the series should show a colorbar or not.
+        self.colorbar = kwargs.get("colorbar", True)
+        # Some series might use a colormap as default coloring. Setting this
+        # attribute to False will inform the backends to use solid color.
+        self.use_cm = kwargs.get("use_cm", False)
+        # If True, the backend will attempt to render it on a polar-projection
+        # axis, or using a polar discretization if a 3D plot is requested
+        self.is_polar = kwargs.get("is_polar", False)
+        # If True, the rendering will use points, not lines.
+        self.is_point = kwargs.get("is_point", False)
+        # some backend is able to render latex, other needs standard text
+        self._label = self._latex_label = ""
+
+        self._ranges = []
+        self._n = [
+            int(kwargs.get("n1", self._N)),
+            int(kwargs.get("n2", self._N)),
+            int(kwargs.get("n3", self._N))
+        ]
+        self._scales = [
+            kwargs.get("xscale", "linear"),
+            kwargs.get("yscale", "linear"),
+            kwargs.get("zscale", "linear")
+        ]
+
+        # enable interactive widget plots
+        self._params = kwargs.get("params", dict())
+        if not isinstance(self._params, dict):
+            raise TypeError("`params` must be a dictionary mapping symbols "
+                "to numeric values.")
+        if len(self._params) > 0:
+            self.is_interactive = True
+
+        # contains keyword arguments that will be passed to the rendering
+        # function of the chosen plotting library
+        self.rendering_kw = kwargs.get("rendering_kw", dict())
+
+        # numerical transformation functions to be applied to the output data:
+        # x, y, z (coordinates), p (parameter on parametric plots)
+        self._tx = kwargs.get("tx", None)
+        self._ty = kwargs.get("ty", None)
+        self._tz = kwargs.get("tz", None)
+        self._tp = kwargs.get("tp", None)
+        if not all(callable(t) or (t is None) for t in
+            [self._tx, self._ty, self._tz, self._tp]):
+            raise TypeError("`tx`, `ty`, `tz`, `tp` must be functions.")
+
+        # list of numerical functions representing the expressions to evaluate
+        self._functions = []
+        # signature for the numerical functions
+        self._signature = []
+        # some expressions don't like to be evaluated over complex data.
+        # if that's the case, set this to True
+        self._force_real_eval = kwargs.get("force_real_eval", None)
+        # this attribute will eventually contain a dictionary with the
+        # discretized ranges
+        self._discretized_domain = None
+        # wheter the series contains any interactive range, which is a range
+        # where the minimum and maximum values can be changed with an
+        # interactive widget
+        self._interactive_ranges = False
+        # NOTE: consider a generic summation, for example:
+        #   s = Sum(cos(pi * x), (x, 1, y))
+        # This gets lambdified to something:
+        #   sum(cos(pi*x) for x in range(1, y+1))
+        # Hence, y needs to be an integer, otherwise it raises:
+        #   TypeError: 'complex' object cannot be interpreted as an integer
+        # This list will contains symbols that are upper bound to summations
+        # or products
+        self._needs_to_be_int = []
+        # a color function will be responsible to set the line/surface color
+        # according to some logic. Each data series will et an appropriate 
+        # default value.
+        self.color_func = None
+        # NOTE: color_func usually receives numerical functions that are going
+        # to be evaluated over the coordinates of the computed points (or the
+        # discretized meshes).
+        # However, if an expression is given to color_func, then it will be
+        # lambdified with symbols in self._signature, and it will be evaluated
+        # with the same data used to evaluate the plotted expression.
+        self._eval_color_func_with_signature = False
+
+    def _block_lambda_functions(self, *exprs):
+        """Some data series can be used to plot numerical functions, others
+        cannot. Execute this method inside the `__init__` to prevent the
+        processing of numerical functions.
+        """
+        if any(callable(e) for e in exprs):
+            raise TypeError(type(self).__name__ + " requires a symbolic "
+                "expression.")
+
+    def _check_fs(self):
+        """ Checks if there are enogh parameters and free symbols.
+        """
+        exprs, ranges = self.expr, self.ranges
+        params, label = self.params, self.label
+        exprs = exprs if hasattr(exprs, "__iter__") else [exprs]
+        if any(callable(e) for e in exprs):
+            return
+
+        # from the expression's free symbols, remove the ones used in
+        # the parameters and the ranges
+        fs = _get_free_symbols(exprs)
+        fs = fs.difference(params.keys())
+        if ranges is not None:
+            fs = fs.difference([r[0] for r in ranges])
+
+        if len(fs) > 0:
+            raise ValueError(
+                "Incompatible expression and parameters.\n"
+                + "Expression: {}\n".format(
+                    (exprs, ranges, label) if ranges is not None else (exprs, label))
+                + "params: {}\n".format(params)
+                + "Specify what these symbols represent: {}\n".format(fs)
+                + "Are they ranges or parameters?"
+            )
+
+        # verify that all symbols are known (they either represent plotting
+        # ranges or parameters)
+        range_symbols = [r[0] for r in ranges]
+        for r in ranges:
+            fs = set().union(*[e.free_symbols for e in r[1:]])
+            if any(t in fs for t in range_symbols):
+                # ranges can't depend on each other, for example this are
+                # not allowed:
+                # (x, 0, y), (y, 0, 3)
+                # (x, 0, y), (y, x + 2, 3)
+                raise ValueError("Range symbols can't be included into "
+                    "minimum and maximum of a range. "
+                    "Received range: %s" % str(r))
+            if len(fs) > 0:
+                self._interactive_ranges = True
+            remaining_fs = fs.difference(params.keys())
+            if len(remaining_fs) > 0:
+                raise ValueError(
+                    "Unkown symbols found in plotting range: %s. " % (r,) +
+                    "Are the following parameters? %s" % remaining_fs)
+
+    def _create_lambda_func(self):
+        """Create the lambda functions to be used by the uniform meshing
+        strategy.
+
+        Notes
+        =====
+        The old sympy.plotting used experimental_lambdify. It created one
+        lambda function each time an evaluation was requested. If that failed,
+        it went on to create a different lambda function and evaluated it,
+        and so on.
+
+        This new module changes strategy: it creates right away the default
+        lambda function as well as the backup one. The reason is that the
+        series could be interactive, hence the numerical function will be
+        evaluated multiple times. So, let's create the functions just once.
+
+        This approach works fine for the majority of cases, in which the
+        symbolic expression is relatively short, hence the lambdification
+        is fast. If the expression is very long, this approach takes twice
+        the time to create the lambda functions. Be aware of that!
+        """
+        exprs = self.expr if hasattr(self.expr, "__iter__") else [self.expr]
+        if not any(callable(e) for e in exprs):
+            fs = _get_free_symbols(exprs)
+            self._signature = sorted(fs, key=lambda t: t.name)
+
+            # Generate a list of lambda functions, two for each expression:
+            # 1. the default one.
+            # 2. the backup one, in case of failures with the default one.
+            self._functions = []
+            for e in exprs:
+                # TODO: set cse=True once this issue is solved:
+                # https://github.com/sympy/sympy/issues/24246
+                self._functions.append([
+                    lambdify(self._signature, e, modules=self.modules),
+                    lambdify(self._signature, e, modules="sympy", dummify=True),
+                ])
+        else:
+            self._signature = sorted([r[0] for r in self.ranges], key=lambda t: t.name)
+            self._functions = [(e, None) for e in exprs]
+
+        # deal with symbolic color_func
+        if isinstance(self.color_func, Expr):
+            self.color_func = lambdify(self._signature, self.color_func)
+            self._eval_color_func_with_signature = True
+
+    def _update_range_value(self, t):
+        """If the value of a plotting range is a symbolic expression,
+        substitute the parameters in order to get a numerical value.
+        """
+        if not self._interactive_ranges:
+            return complex(t)
+        return complex(t.subs(self.params))
+
+    def _create_discretized_domain(self):
+        """Discretize the ranges for uniform meshing strategy.
+        """
+        # NOTE: the goal is to create a dictionary stored in
+        # self._discretized_domain, mapping symbols to a numpy array
+        # representing the discretization
+        discr_symbols = []
+        discretizations = []
+
+        # create a 1D discretization
+        for i, r in enumerate(self.ranges):
+            discr_symbols.append(r[0])
+            c_start = self._update_range_value(r[1])
+            c_end = self._update_range_value(r[2])
+            start = c_start.real if c_start.imag == c_end.imag == 0 else c_start
+            end = c_end.real if c_start.imag == c_end.imag == 0 else c_end
+            needs_integer_discr = self.only_integers or (r[0] in self._needs_to_be_int)
+            d = BaseSeries._discretize(start, end, self.n[i],
+                scale=self.scales[i],
+                only_integers=needs_integer_discr)
+
+            if ((not self._force_real_eval) and (not needs_integer_discr) and
+                (d.dtype != "complex")):
+                d = d + 1j * c_start.imag
+
+            if needs_integer_discr:
+                d = d.astype(int)
+
+            discretizations.append(d)
+
+        # create 2D or 3D
+        self._create_discretized_domain_helper(discr_symbols, discretizations)
+
+    def _create_discretized_domain_helper(self, discr_symbols, discretizations):
+        """Create 2D or 3D discretized grids.
+
+        Subclasses should override this method in order to implement a
+        different behaviour.
+        """
+        np = import_module('numpy')
+
+        # discretization suitable for 2D line plots, 3D surface plots,
+        # contours plots, vector plots
+        # NOTE: why indexing='ij'? Because it produces consistent results with
+        # np.mgrid. This is important as Mayavi requires this indexing
+        # to correctly compute 3D streamlines. While VTK is able to compute
+        # streamlines regardless of the indexing, with indexing='xy' it
+        # produces "strange" results with "voids" into the
+        # discretization volume. indexing='ij' solves the problem.
+        # Also note that matplotlib 2D streamlines requires indexing='xy'.
+        indexing = "xy"
+        if self.is_3Dvector or (self.is_3Dsurface and self.is_implicit):
+            indexing = "ij"
+        meshes = np.meshgrid(*discretizations, indexing=indexing)
+        self._discretized_domain = {k: v for k, v in zip(discr_symbols, meshes)}
+
+    def _evaluate(self, cast_to_real=True):
+        """Evaluation of the symbolic expression (or expressions) with the
+        uniform meshing strategy, based on current values of the parameters.
+        """
+        np = import_module('numpy')
+
+        # create lambda functions
+        if not self._functions:
+            self._create_lambda_func()
+        # create (or update) the discretized domain
+        if (not self._discretized_domain) or self._interactive_ranges:
+            self._create_discretized_domain()
+        # ensure that discretized domains are returned with the proper order
+        discr = [self._discretized_domain[s[0]] for s in self.ranges]
+
+        args = self._aggregate_args()
+
+        results = []
+        for f in self._functions:
+            r = _uniform_eval(*f, *args)
+            # the evaluation might produce an int/float. Need this correction.
+            r = self._correct_shape(np.array(r), discr[0])
+            # sometime the evaluation is performed over arrays of type object.
+            # hence, `result` might be of type object, which don't work well
+            # with numpy real and imag functions.
+            r = r.astype(complex)
+            results.append(r)
+
+        if cast_to_real:
+            discr = [np.real(d.astype(complex)) for d in discr]
+        return [*discr, *results]
+
+    def _aggregate_args(self):
+        """Create a list of arguments to be passed to the lambda function,
+        sorted accoring to self._signature.
+        """
+        args = []
+        for s in self._signature:
+            if s in self._params.keys():
+                args.append(
+                    int(self._params[s]) if s in self._needs_to_be_int else
+                    self._params[s] if self._force_real_eval
+                    else complex(self._params[s]))
+            else:
+                args.append(self._discretized_domain[s])
+        return args
+
+    @property
+    def expr(self):
+        """Return the expression (or expressions) of the series."""
+        return self._expr
+
+    @expr.setter
+    def expr(self, e):
+        """Set the expression (or expressions) of the series."""
+        is_iter = hasattr(e, "__iter__")
+        is_callable = callable(e) if not is_iter else any(callable(t) for t in e)
+        if is_callable:
+            self._expr = e
+        else:
+            self._expr = sympify(e) if not is_iter else Tuple(*e)
+            
+            # look for the upper bound of summations and products
+            s = set()
+            for e in self._expr.atoms(Sum, Product):
+                for a in e.args[1:]:
+                    if isinstance(a[-1], Symbol):
+                        s.add(a[-1])
+            self._needs_to_be_int = list(s)
+
+            # list of sympy functions that when lambdified, the corresponding
+            # numpy functions don't like complex-type arguments
+            pf = [ceiling, floor, atan2, frac, zeta]
+            if self._force_real_eval is not True:
+                check_res = [self._expr.has(f) for f in pf]
+                self._force_real_eval = any(check_res)
+                if self._force_real_eval and ((self.modules is None) or
+                    (isinstance(self.modules, str) and "numpy" in self.modules)):
+                    funcs = [f for f, c in zip(pf, check_res) if c]
+                    warnings.warn("NumPy is unable to evaluate with complex "
+                        "numbers some of the functions included in this "
+                        "symbolic expression: %s. " % funcs +
+                        "Hence, the evaluation will use real numbers. "
+                        "If you believe the resulting plot is incorrect, "
+                        "change the evaluation module by setting the "
+                        "`modules` keyword argument.")
+            if self._functions:
+                # update lambda functions
+                self._create_lambda_func()
 
     @property
     def is_3D(self):
-        flags3D = [
-            self.is_3Dline,
-            self.is_3Dsurface
-        ]
+        flags3D = [self.is_3Dline, self.is_3Dsurface, self.is_3Dvector]
         return any(flags3D)
 
     @property
     def is_line(self):
-        flagslines = [
-            self.is_2Dline,
-            self.is_3Dline
-        ]
+        flagslines = [self.is_2Dline, self.is_3Dline]
         return any(flagslines)
+
+    def _line_surface_color(self, prop, val):
+        """This method enables back-compatibility with old sympy.plotting"""
+        # NOTE: color_func is set inside the init method of the series.
+        # If line_color/surface_color is not a callable, then color_func will
+        # be set to None.
+        setattr(self, prop, val)
+        if callable(val) or isinstance(val, Expr):
+            self.color_func = val
+            setattr(self, prop, None)
+        elif val is not None:
+            self.color_func = None
+
+    @property
+    def line_color(self):
+        return self._line_color
+
+    @line_color.setter
+    def line_color(self, val):
+        self._line_surface_color("_line_color", val)
+
+    @property
+    def n(self):
+        """Returns a list [n1, n2, n3] of numbers of discratization points.
+        """
+        return self._n
+
+    @n.setter
+    def n(self, v):
+        """Set the numbers of discretization points. ``v`` must be an int or
+        a list.
+
+        Let ``s`` be a series. Then:
+
+        * to set the number of discretization points along the x direction (or
+          first parameter): ``s.n = 10``
+        * to set the number of discretization points along the x and y
+          directions (or first and second parameters): ``s.n = [10, 15]``
+        * to set the number of discretization points along the x, y and z
+          directions: ``s.n = [10, 15, 20]``
+
+        The following is highly unreccomended, because it prevents
+        the execution of necessary code in order to keep updated data:
+        ``s.n[1] = 15``
+        """
+        if not hasattr(v, "__iter__"):
+            self._n[0] = v
+        else:
+            self._n[:len(v)] = v
+        if self._discretized_domain:
+            # update the discretized domain
+            self._create_discretized_domain()
+
+    @property
+    def params(self):
+        """Get or set the current parameters dictionary.
+
+        Parameters
+        ==========
+
+        p : dict
+
+            * key: symbol associated to the parameter
+            * val: the numeric value
+        """
+        return self._params
+
+    @params.setter
+    def params(self, p):
+        self._params = p
+
+    def _post_init(self):
+        exprs = self.expr if hasattr(self.expr, "__iter__") else [self.expr]
+        if any(callable(e) for e in exprs) and self.params:
+            raise TypeError("`params` was provided, hence an interactive plot "
+                "is expected. However, interactive plots do not support "
+                "user-provided numerical functions.")
+
+        # if the expressions is a lambda function and no label has been
+        # provided, then its better to do the following in order to avoid
+        # suprises on the backend
+        if any(callable(e) for e in exprs):
+            if self._label == str(self.expr):
+                self.label = ""
+
+        self._check_fs()
+
+        if hasattr(self, "adaptive") and self.adaptive and self.params:
+            warnings.warn("`params` was provided, hence an interactive plot "
+                "is expected. However, interactive plots do not support "
+                "adaptive evaluation. Automatically switched to "
+                "adaptive=False.")
+            self.adaptive = False
+
+    @property
+    def scales(self):
+        return self._scales
+
+    @scales.setter
+    def scales(self, v):
+        if isinstance(v, str):
+            self._scales[0] = v
+        else:
+            self._scales[:len(v)] = v
+
+    @property
+    def surface_color(self):
+        return self._surface_color
+
+    @surface_color.setter
+    def surface_color(self, val):
+        self._line_surface_color("_surface_color", val)
+
+    @property
+    def rendering_kw(self):
+        return self._rendering_kw
+
+    @rendering_kw.setter
+    def rendering_kw(self, kwargs):
+        if isinstance(kwargs, dict):
+            self._rendering_kw = kwargs
+        else:
+            self._rendering_kw = dict()
+            if kwargs is not None:
+                warnings.warn(
+                    "`rendering_kw` must be a dictionary, instead an "
+                    "object of type %s was received. " % type(kwargs) +
+                    "Automatically setting `rendering_kw` to an empty "
+                    "dictionary")
+
+    @staticmethod
+    def _discretize(start, end, N, scale="linear", only_integers=False):
+        """Discretize a 1D domain.
+
+        Returns
+        =======
+
+        domain : np.ndarray with dtype=float or complex
+            The domain's dtype will be float or complex (depending on the
+            type of start/end) even if only_integers=True. It is left for
+            the downstream code to perform further casting, if necessary.
+        """
+        np = import_module('numpy')
+
+        if only_integers is True:
+            start, end = int(start), int(end)
+            N = end - start + 1
+
+        if scale == "linear":
+            return np.linspace(start, end, N)
+        return np.geomspace(start, end, N)
+
+    @staticmethod
+    def _correct_shape(a, b):
+        """Convert ``a`` to a np.ndarray of the same shape of ``b``.
+
+        Parameters
+        ==========
+
+        a : int, float, complex, np.ndarray
+            Usually, this is the result of a numerical evaluation of a
+            symbolic expression. Even if a discretized domain was used to
+            evaluate the function, the result can be a scalar (int, float,
+            complex). Think for example to ``expr = Float(2)`` and
+            ``f = lambdify(x, expr)``. No matter the shape of the numerical
+            array representing x, the result of the evaluation will be
+            a single value.
+
+        b : np.ndarray
+            It represents the correct shape that ``a`` should have.
+
+        Returns
+        =======
+        new_a : np.ndarray
+            An array with the correct shape.
+        """
+        np = import_module('numpy')
+
+        if not isinstance(a, np.ndarray):
+            a = np.array(a)
+        if a.shape != b.shape:
+            if a.shape == ():
+                a = a * np.ones_like(b)
+            else:
+                a = a.reshape(b.shape)
+        return a
+
+    def eval_color_func(self, *args):
+        """Evaluate the color function.
+
+        Parameters
+        ==========
+
+        args : tuple
+            Arguments to be passed to the coloring function. Can be coordinates
+            or parameters or both.
+
+        Notes
+        =====
+
+        The backend will request the data series to generate the numerical
+        data. Depending on the data series, either the data series itself or
+        the backend will eventually execute this function to generate the
+        appropriate coloring value.
+        """
+        np = import_module('numpy')
+        if self.color_func is None:
+            # NOTE: with the line_color and surface_color attributes
+            # (back-compatibility with the old sympy.plotting module) it is
+            # possible to create a plot with a callable line_color (or
+            # surface_color). For example:
+            # p = plot(sin(x), line_color=lambda x, y: -y)
+            # This creates a ColoredLineOver1DRangeSeries with line_color=None
+            # and color_func=lambda x, y: -y, which efffectively is a
+            # parametric series. Later we could change it to a string value:
+            # p[0].line_color = "red"
+            # However, this sets ine_color="red" and color_func=None, but the
+            # series is still ColoredLineOver1DRangeSeries (a parametric
+            # series), which will render using a color_func...
+            warnings.warn("This is likely not the result you were "
+                "looking for. Please, re-execute the plot command, this time "
+                "with the appropriate an appropriate value to line_color "
+                "or surface_color.")
+            return np.ones_like(args[0])
+
+        if self._eval_color_func_with_signature:
+            args = self._aggregate_args()
+            color = self.color_func(*args)
+            _re, _im = np.real(color), np.imag(color)
+            _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+            return _re
+
+        nargs = arity(self.color_func)
+        if nargs == 1:
+            if self.is_2Dline and self.is_parametric:
+                if len(args) == 2:
+                    # ColoredLineOver1DRangeSeries
+                    return self._correct_shape(self.color_func(args[0]), args[0])
+                # Parametric2DLineSeries
+                return self._correct_shape(self.color_func(args[2]), args[2])
+            elif self.is_3Dline and self.is_parametric:
+                return self._correct_shape(self.color_func(args[3]), args[3])
+            elif self.is_3Dsurface and self.is_parametric:
+                return self._correct_shape(self.color_func(args[3]), args[3])
+            return self._correct_shape(self.color_func(args[0]), args[0])
+        elif nargs == 2:
+            if self.is_3Dsurface and self.is_parametric:
+                return self._correct_shape(self.color_func(*args[3:]), args[3])
+            return self._correct_shape(self.color_func(*args[:2]), args[0])
+        return self._correct_shape(self.color_func(*args[:nargs]), args[0])
+
+    def get_data(self):
+        """Compute and returns the numerical data.
+
+        The number of parameters returned by this method depends on the
+        specific instance. If ``s`` is the series, make sure to read
+        ``help(s.get_data)`` to understand what it returns.
+        """
+        raise NotImplementedError
+
+    def _get_wrapped_label(self, label, wrapper):
+        """Given a latex representation of an expression, wrap it inside
+        some characters. Matplotlib needs "$%s%$", K3D-Jupyter needs "%s".
+        """
+        return wrapper % label
+
+    def get_label(self, use_latex=False, wrapper="$%s$"):
+        """Return the label to be used to display the expression.
+
+        Parameters
+        ==========
+        use_latex : bool
+            If False, the string representation of the expression is returned.
+            If True, the latex representation is returned.
+        wrapper : str
+            The backend might need the latex representation to be wrapped by
+            some characters. Default to ``"$%s$"``.
+
+        Returns
+        =======
+        label : str
+        """
+        if use_latex is False:
+            return self._label
+        if self._label == str(self.expr):
+            # when the backend requests a latex label and user didn't provide
+            # any label
+            return self._get_wrapped_label(self._latex_label, wrapper)
+        return self._latex_label
+
+    @property
+    def label(self):
+        return self.get_label()
+
+    @label.setter
+    def label(self, val):
+        """Set the labels associated to this series."""
+        # NOTE: the init method of any series requires a label. If the user do
+        # not provide it, the preprocessing function will set label=None, which
+        # informs the series to initialize two attributes:
+        # _label contains the string representation of the expression.
+        # _latex_label contains the latex representation of the expression.
+        self._label = self._latex_label = val
+
+    @property
+    def ranges(self):
+        return self._ranges
+
+    @ranges.setter
+    def ranges(self, val):
+        new_vals = []
+        for v in val:
+            if v is not None:
+                new_vals.append(tuple([sympify(t) for t in v]))
+        self._ranges = new_vals
+
+    def _apply_transform(self, *args):
+        """Apply transformations to the results of numerical evaluation.
+
+        Parameters
+        ==========
+        args : tuple
+            Results of numerical evaluation.
+
+        Returns
+        =======
+        transformed_args : tuple
+            Tuple containing the transformed results.
+        """
+        t = lambda x, transform: x if transform is None else transform(x)
+        x, y, z = None, None, None
+        if len(args) == 2:
+            x, y = args
+            return t(x, self._tx), t(y, self._ty)
+        elif (len(args) == 3) and isinstance(self, Parametric2DLineSeries):
+            x, y, u = args
+            return (t(x, self._tx), t(y, self._ty), t(u, self._tp))
+        elif len(args) == 3:
+            x, y, z = args
+            return t(x, self._tx), t(y, self._ty), t(z, self._tz)
+        elif (len(args) == 4) and isinstance(self, Parametric3DLineSeries):
+            x, y, z, u = args
+            return (t(x, self._tx), t(y, self._ty), t(z, self._tz), t(u, self._tp))
+        elif len(args) == 4: # 2D vector plot
+            x, y, u, v = args
+            return (
+                t(x, self._tx), t(y, self._ty),
+                t(u, self._tx), t(v, self._ty)
+            )
+        elif (len(args) == 5) and isinstance(self, ParametricSurfaceSeries):
+            x, y, z, u, v = args
+            return (t(x, self._tx), t(y, self._ty), t(z, self._tz), u, v)
+        elif (len(args) == 6) and self.is_3Dvector: # 3D vector plot
+            x, y, z, u, v, w = args
+            return (
+                t(x, self._tx), t(y, self._ty), t(z, self._tz),
+                t(u, self._tx), t(v, self._ty), t(w, self._tz)
+            )
+        elif len(args) == 6: # complex plot
+            x, y, _abs, _arg, img, colors = args
+            return (
+                x, y, t(_abs, self._tz), _arg, img, colors)
+        return args
+
+    def _str_helper(self, s):
+        pre, post = "", ""
+        if self.is_interactive:
+            pre = "interactive "
+            post = " and parameters " + str(tuple(self.params.keys()))
+        return pre + s + post
 
 
 ### 2D lines
