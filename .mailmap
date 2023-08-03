@@ -30,7 +30,7 @@
 #   unrecognised author/email metadata.
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
@@ -49,7 +49,7 @@
 #   The mailmap file was reordered
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
@@ -666,6 +666,7 @@ Hubert Tsang <intsangity@gmail.com>
 Hugo van Kemenade <hugovk@users.noreply.github.com> Hugo <hugovk@users.noreply.github.com>
 Huijun Mai <m.maihuijun@gmail.com>
 Ian Swire <oversizedpenguin@gmail.com>
+Idan Pazi <idan.kp@gmail.com>
 Ihor Olkhovatyi <98093195+NaturalStupldity@users.noreply.github.com>
 Ilya Pchelintsev <ilya.pchelintsev@outlook.com> ILLIA PCHALINTSAU <ilya.pchelintsev@outlook.com>
 Imran Ahmed Manzoor <imran.manzoor31@gmail.com>
@@ -1132,7 +1133,6 @@ Ray Cathcart <github@cathcart.us> <pix2@_nospam_.cathcart.us>
 Raymond Wong <rayman_407@yahoo.com> <rayman@CoolGuy.(none)>
 Raymond Wong <rayman_407@yahoo.com> <rayman@CoolGuyJr.(none)>
 Raymond Wong <rayman_407@yahoo.com> <rayman@CoolGuyJr>
-RaynGoslenko <olkhovatyi@knu.ua>
 Rehas Sachdeva <aquannie@gmail.com>
 Remco de Boer <29308176+redeboer@users.noreply.github.com> Remco de Boer <redeboer@gmx.com>
 Remco de Boer <29308176+redeboer@users.noreply.github.com> Remco de Boer <redeboer@outlook.com>
