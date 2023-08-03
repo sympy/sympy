@@ -1,20 +1,70 @@
 ### The base class for all series
 from collections.abc import Callable
+from sympy.calculus.util import continuous_domain
 from sympy.concrete import Sum, Product
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import arity
 from sympy.core.symbol import Symbol
-from sympy.functions import atan2, zeta, frac, ceiling, floor
+from sympy.functions import atan2, zeta, frac, ceiling, floor, im
 from sympy.core.relational import (Equality, GreaterThan, StrictGreaterThan,
     LessThan, StrictLessThan)
 from sympy.core.sympify import sympify
 from sympy.external import import_module
+from sympy.plotting.utils import _get_free_symbols, extract_solution
+from sympy.sets.sets import Set, Interval, Union
+from sympy.simplify.simplify import nsimplify
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from .experimental_lambdify import (vectorized_lambdify, lambdify,
+from .experimental_lambdify import (vectorized_lambdify,
+    #lambdify,
     experimental_lambdify)
+from sympy.utilities.lambdify import lambdify
 from .intervalmath import interval
 import warnings
+
+
+def _uniform_eval(f1, f2, *args, modules=None,
+    force_real_eval=False, has_sum=False):
+    """
+    Note: this is an experimental function, as such it is prone to changes.
+    Please, do not use it in your code.
+    """
+    np = import_module('numpy')
+
+    def wrapper_func(func, *args):
+        try:
+            return complex(func(*args))
+        except (ZeroDivisionError, OverflowError):
+            return complex(np.nan, np.nan)
+
+    # NOTE: np.vectorize is much slower than numpy vectorized operations.
+    # However, this modules must be able to evaluate functions also with
+    # mpmath or sympy.
+    wrapper_func = np.vectorize(wrapper_func, otypes=[complex])
+
+    skip_fast_eval = False
+    if modules == "sympy":
+        skip_fast_eval = True
+
+    try:
+        if skip_fast_eval:
+            raise Exception
+        return wrapper_func(f1, *args)
+    except Exception as err:
+        if f2 is None:
+            raise RuntimeError(
+                "Impossible to evaluate the provided numerical function "
+                "because the following exception was raised:\n"
+                "{}: {}".format(type(err).__name__, err))
+        if not skip_fast_eval:
+            warnings.warn(
+                "The evaluation with %s failed.\n" % (
+                    "NumPy/SciPy" if not modules else modules) +
+                "{}: {}\n".format(type(err).__name__, err) +
+                "Trying to evaluate the expression with Sympy, but it might "
+                "be a slow operation."
+            )
+        return wrapper_func(f2, *args)
 
 
 class BaseSeries:
@@ -823,6 +873,63 @@ class BaseSeries:
         return pre + s + post
 
 
+def _detect_poles_numerical_helper(x, y, eps=0.01, expr=None, symb=None, symbolic=False):
+    """Compute the steepness of each segment. If it's greater than a
+    threshold, set the right-point y-value non NaN and record the
+    corresponding x-location for further processing.
+
+    Returns
+    =======
+    x : np.ndarray
+        Unchanged x-data.
+    yy : np.ndarray
+        Modified y-data with NaN values.
+    """
+    np = import_module('numpy')
+
+    yy = y.copy()
+    threshold = np.pi / 2 - eps
+    for i in range(len(x) - 1):
+        dx = x[i + 1] - x[i]
+        dy = abs(y[i + 1] - y[i])
+        angle = np.arctan(dy / dx)
+        if abs(angle) >= threshold:
+            yy[i + 1] = np.nan
+
+    return x, yy
+
+def _detect_poles_symbolic_helper(expr, symb, start, end):
+    """Attempts to compute symbolic discontinuities.
+
+    Returns
+    =======
+    pole : list
+        List of symbolic poles, possibily empty.
+    """
+    poles = []
+    interval = Interval(nsimplify(start), nsimplify(end))
+    res = continuous_domain(expr, symb, interval)
+    res = res.simplify()
+    if res == interval:
+        pass
+    elif (isinstance(res, Union) and
+        all(isinstance(t, Interval) for t in res.args)):
+        poles = []
+        for s in res.args:
+            if s.left_open:
+                poles.append(s.left)
+            if s.right_open:
+                poles.append(s.right)
+        poles = list(set(poles))
+    else:
+        raise ValueError(
+            f"Could not parse the following object: {res} .\n"
+            "Please, submit this as a bug. Consider also to set "
+            "`detect_poles=True`."
+        )
+    return poles
+
+
 ### 2D lines
 class Line2DBaseSeries(BaseSeries):
     """A base class for 2D lines.
@@ -833,42 +940,113 @@ class Line2DBaseSeries(BaseSeries):
     """
 
     is_2Dline = True
+    _N = 1000
 
-    _dim = 2
-
-    def __init__(self):
-        super().__init__()
-        self.label = None
-        self.steps = False
-        self.only_integers = False
-        self.line_color = None
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.steps = kwargs.get("steps", False)
+        self.is_point = kwargs.get("is_point", False)
+        self.is_filled = kwargs.get("is_filled", True)
+        self.adaptive = kwargs.get("adaptive", True)
+        self.depth = kwargs.get('depth', 12)
+        self.use_cm = kwargs.get("use_cm", False)
+        self.color_func = kwargs.get("color_func", None)
+        self.line_color = kwargs.get("line_color", None)
+        self.detect_poles = kwargs.get("detect_poles", False)
+        self.eps = kwargs.get("eps", 0.01)
+        self.is_polar = kwargs.get("is_polar", False)
+        self.unwrap = kwargs.get("unwrap", False)
+        # when detect_poles="symbolic", stores the location of poles so that
+        # they can be appropriately rendered
+        self.poles_locations = []
+        exclude = kwargs.get("exclude", [])
+        if isinstance(exclude, Set):
+            exclude = list(extract_solution(exclude, n=100))
+        if not hasattr(exclude, "__iter__"):
+            exclude = [exclude]
+        exclude = [float(e) for e in exclude]
+        self.exclude = sorted(exclude)
 
     def get_data(self):
-        """ Return lists of coordinates for plotting the line.
+        """Return coordinates for plotting the line.
 
         Returns
         =======
-            x : list
-                List of x-coordinates
 
-            y : list
-                List of y-coordinates
+        x: np.ndarray
+            x-coordinates
 
-            z : list
-                List of z-coordinates in case of Parametric3DLineSeries
+        y: np.ndarray
+            y-coordinates
+
+        z: np.ndarray (optional)
+            z-coordinates in case of Parametric3DLineSeries,
+            Parametric3DLineInteractiveSeries
+
+        param : np.ndarray (optional)
+            The parameter in case of Parametric2DLineSeries,
+            Parametric3DLineSeries or AbsArgLineSeries (and their
+            corresponding interactive series).
         """
         np = import_module('numpy')
         points = self._get_data_helper()
-        if self.steps is True:
+
+        if (isinstance(self, LineOver1DRangeSeries) and
+            (self.detect_poles == "symbolic")):
+            poles = _detect_poles_symbolic_helper(
+                self.expr.subs(self.params), *self.ranges[0])
+            poles = np.array([float(t) for t in poles])
+            t = lambda x, transform: x if transform is None else transform(x)
+            self.poles_locations = t(np.array(poles), self._tx)
+
+        # postprocessing
+        points = self._apply_transform(*points)
+
+        if self.is_2Dline and self.detect_poles:
             if len(points) == 2:
-                x = np.array((points[0], points[0])).T.flatten()[1:]
-                y = np.array((points[1], points[1])).T.flatten()[:-1]
+                x, y = points
+                x, y = _detect_poles_numerical_helper(
+                    x, y, self.eps)
                 points = (x, y)
             else:
+                x, y, p = points
+                x, y = _detect_poles_numerical_helper(x, y, self.eps)
+                points = (x, y, p)
+
+        if self.unwrap:
+            kw = {}
+            if self.unwrap is not True:
+                kw = self.unwrap
+            if self.is_2Dline:
+                if len(points) == 2:
+                    x, y = points
+                    y = np.unwrap(y, **kw)
+                    points = (x, y)
+                else:
+                    x, y, p = points
+                    y = np.unwrap(y, **kw)
+                    points = (x, y, p)
+
+        if self.steps is True:
+            if self.is_2Dline:
+                x, y = points[0], points[1]
+                x = np.array((x, x)).T.flatten()[1:]
+                y = np.array((y, y)).T.flatten()[:-1]
+                if self.is_parametric:
+                    points = (x, y, points[2])
+                else:
+                    points = (x, y)
+            elif self.is_3Dline:
                 x = np.repeat(points[0], 3)[2:]
                 y = np.repeat(points[1], 3)[:-2]
                 z = np.repeat(points[2], 3)[1:-1]
-                points = (x, y, z)
+                if len(points) > 3:
+                    points = (x, y, z, points[3])
+                else:
+                    points = (x, y, z)
+
+        if len(self.exclude) > 0:
+            points = self._insert_exclusions(points)
         return points
 
     def get_segments(self):
@@ -886,6 +1064,90 @@ class Line2DBaseSeries(BaseSeries):
         points = type(self).get_data(self)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
+    
+    def _insert_exclusions(self, points):
+        """Add NaN to each of the exclusion point. Practically, this adds a
+        NaN to the exlusion point, plus two other nearby points evaluated with
+        the numerical functions associated to this data series.
+        These nearby points are important when the number of discretization
+        points is low, or the scale is logarithm.
+
+        NOTE: it would be easier to just add exclusion points to the
+        discretized domain before evaluation, then after evaluation add NaN
+        to the exclusion points. But that's only work with adaptive=False.
+        The following approach work even with adaptive=True.
+        """
+        np = import_module("numpy")
+        points = list(points)
+        n = len(points)
+        # index of the x-coordinate (for 2d plots) or parameter (for 2d/3d
+        # parametric plots)
+        k = n - 1
+        if n == 2:
+            k = 0
+        # indeces of the other coordinates
+        j_indeces = sorted(set(range(n)).difference([k]))
+        # TODO: for now, I assume that numpy functions are going to succeed
+        funcs = [f[0] for f in self._functions]
+
+        for e in self.exclude:
+            res = points[k] - e >= 0
+            # if res contains both True and False, ie, if e is found
+            if any(res) and any(~res):
+                idx = np.nanargmax(res)
+                # select the previous point with respect to e
+                idx -= 1
+                # TODO: what if points[k][idx]==e or points[k][idx+1]==e?
+
+                if idx > 0 and idx < len(points[k]) - 1:
+                    delta_prev = abs(e - points[k][idx])
+                    delta_post = abs(e - points[k][idx + 1])
+                    delta = min(delta_prev, delta_post) / 100
+                    prev = e - delta
+                    post = e + delta
+
+                    # add points to the x-coord or the parameter
+                    points[k] = np.concatenate(
+                        (points[k][:idx], [prev, e, post], points[k][idx+1:]))
+
+                    # add points to the other coordinates
+                    c = 0
+                    for j in j_indeces:
+                        values = funcs[c](np.array([prev, post]))
+                        c += 1
+                        points[j] = np.concatenate(
+                            (points[j][:idx], [values[0], np.nan, values[1]], points[j][idx+1:]))
+        return points
+
+    @property
+    def var(self):
+        return None if not self.ranges else self.ranges[0][0]
+
+    @property
+    def start(self):
+        if not self.ranges:
+            return None
+        try:
+            return self._cast(self.ranges[0][1])
+        except:
+            return self.ranges[0][1]
+
+    @property
+    def end(self):
+        if not self.ranges:
+            return None
+        try:
+            return self._cast(self.ranges[0][2])
+        except:
+            return self.ranges[0][2]
+    
+    @property
+    def xscale(self):
+        return self._scales[0]
+    
+    @xscale.setter
+    def xscale(self, v):
+        self.scales = v
 
     def get_color_array(self):
         np = import_module('numpy')
@@ -927,19 +1189,41 @@ class List2DSeries(Line2DBaseSeries):
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a SymPy expression over a range."""
+    
+    def __init__(self, expr, var_start_end, label="", **kwargs):
+        super().__init__(**kwargs)
+        self.expr = expr if callable(expr) else sympify(expr)
+        self._label = str(self.expr) if label is None else label
+        self._latex_label = latex(self.expr) if label is None else label
+        self.ranges = [var_start_end]
+        self._cast = complex
+        # for complex-related data series, this determines what data to return
+        # on the y-axis
+        self._return = kwargs.get("return", None)
+        self._post_init()
 
-    def __init__(self, expr, var_start_end, **kwargs):
-        super().__init__()
-        self.expr = sympify(expr)
-        self.label = kwargs.get('label', None) or self.expr
-        self.var = sympify(var_start_end[0])
-        self.start = float(var_start_end[1])
-        self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('n', 300)
-        self.adaptive = kwargs.get('adaptive', True)
-        self.depth = kwargs.get('depth', 12)
-        self.line_color = kwargs.get('line_color', None)
-        self.xscale = kwargs.get('xscale', 'linear')
+        if not self._interactive_ranges:
+            # NOTE: the following check is only possible when the minimum and
+            # maximum values of a plotting range are numeric
+            start, end = [complex(t) for t in self.ranges[0][1:]]
+            if im(start) != im(end):
+                raise ValueError(
+                    "%s requires the imaginary " % self.__class__.__name__ +
+                    "part of the start and end values of the range "
+                    "to be the same.")
+        
+        if self.adaptive and self._return:
+            warnings.warn("The adaptive algorithm is unable to deal with "
+                "complex numbers. Automatically switching to uniform meshing.")
+            self.adaptive = False
+    
+    @property
+    def nb_of_points(self):
+        return self.n[0]
+    
+    @nb_of_points.setter
+    def nb_of_points(self, v):
+        self.n = v
 
     def __str__(self):
         return 'cartesian line: %s for %s over %s' % (
@@ -962,13 +1246,24 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 List of y-coordinates
         """
         return self._get_data_helper()
-
-    def _get_data_helper(self):
-        if self.only_integers or not self.adaptive:
-            return self._uniform_sampling()
-        return self._adaptive_sampling()
-
+    
     def _adaptive_sampling(self):
+        try:
+            f = lambdify([self.var], self.expr, self.modules)
+            x, y = self._adaptive_sampling_helper(f)
+        except Exception as err:
+            warnings.warn(
+                "The evaluation with %s failed.\n" % (
+                    "NumPy/SciPy" if not self.modules else self.modules) +
+                "{}: {}\n".format(type(err).__name__, err) +
+                "Trying to evaluate the expression with Sympy, but it might "
+                "be a slow operation."
+            )
+            f = lambdify([self.var], self.expr, "sympy")
+            x, y = self._adaptive_sampling_helper(f)
+        return x, y
+
+    def _adaptive_sampling_helper(self, f):
         """The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -979,7 +1274,6 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         .. [1] Adaptive polygonal approximation of parametric curves,
                Luiz Henrique de Figueiredo.
         """
-        f = lambdify([self.var], self.expr)
         x_coords = []
         y_coords = []
         np = import_module('numpy')
@@ -1035,32 +1329,50 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 x_coords.append(q[0])
                 y_coords.append(q[1])
 
-        f_start = f(self.start)
-        f_end = f(self.end)
-        x_coords.append(self.start)
+        f_start = f(self.start.real)
+        f_end = f(self.end.real)
+        x_coords.append(self.start.real)
         y_coords.append(f_start)
-        sample(np.array([self.start, f_start]),
-                np.array([self.end, f_end]), 0)
+        sample(np.array([self.start.real, f_start]),
+                np.array([self.end.real, f_end]), 0)
 
         return (x_coords, y_coords)
 
     def _uniform_sampling(self):
         np = import_module('numpy')
-        if self.only_integers is True:
-            if self.xscale == 'log':
-                list_x = np.logspace(int(self.start), int(self.end),
-                        num=int(self.end) - int(self.start) + 1)
-            else:
-                list_x = np.linspace(int(self.start), int(self.end),
-                    num=int(self.end) - int(self.start) + 1)
+
+        x, result = self._evaluate()
+        _re, _im = np.real(result), np.imag(result)
+        _re = self._correct_shape(_re, x)
+        _im = self._correct_shape(_im, x)
+        return x, _re, _im
+
+    def _get_data_helper(self):
+        """Returns coordinates that needs to be postprocessed.
+        """
+        if self.adaptive:
+            return self._adaptive_sampling()
+        
+        np = import_module('numpy')
+        x, _re, _im = self._uniform_sampling()
+
+        if self._return is None:
+            # The evaluation could produce complex numbers. Set real elements
+            # to NaN where there are non-zero imaginary elements
+            _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+        elif self._return == "real":
+            pass
+        elif self._return == "imag":
+            _re = _im
+        elif self._return == "abs":
+            _re = np.sqrt(_re**2 + _im**2)
+        elif self._return == "arg":
+            _re = np.arctan2(_im, _re)
         else:
-            if self.xscale == 'log':
-                list_x = np.logspace(self.start, self.end, num=self.nb_of_points)
-            else:
-                list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
-        f = vectorized_lambdify([self.var], self.expr)
-        list_y = f(list_x)
-        return (list_x, list_y)
+            raise ValueError("`_return` not recognized. "
+                "Received: %s" % self._return)
+
+        return x, _re
 
 
 class Parametric2DLineSeries(Line2DBaseSeries):
