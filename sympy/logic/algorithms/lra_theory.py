@@ -111,7 +111,7 @@ class LRASolver():
         for var in self.all_var:
             self.lower[var] = (-float("inf"), 0)
             self.upper[var] = (float("inf"), 0)
-            self.assign[var] = 0
+            self.assign[var] = (0, 0)
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf):
@@ -238,12 +238,14 @@ class LRASolver():
 
         if boundry.equality:
             res1 = self._assert_lower(sym, c)
+            if res1[0] == "UNSAT":
+                return res1
             res2 = self._assert_upper(sym, c)
-            if "UNSAT" in [res1, res2]:
-                return "UNSAT"
-            if "OK" in [res1, res2]:
+            if res1[0] == "UNSAT":
+                return res2
+            if "OK" in [res1[0], res2[0]]:
                 return "OK"
-            return "SAT"
+            return res2 # SAT
         elif boundry.upper:
             return self._assert_upper(sym, c)
         else:
@@ -279,19 +281,11 @@ class LRASolver():
             self.result = "SAT", self.assign
             return self.result
         if ci < self.lower[xi]:
-            self.result = "UNSAT", {xi >= self.lower[xi][0], xi <= ci[0]}
+            self.result = "UNSAT", "WIP"#{(xi, self.lower[xi]), (xi <= ci)}
             return self.result
         self.upper[xi] = ci
-        if xi in self.nonslack and (self.assign[xi], 0) > ci:
-            if ci[1] == 0:
-                v = ci[0]
-            elif ci[0] - 1 > self.lower[xi][0]:
-                v = ci[0] - 1
-            else:
-                diff = ci[0] - self.lower[xi][0]
-                assert diff != 0
-                v = ci[0] - diff/2
-            self._update(xi, v)
+        if xi in self.nonslack and self.assign[xi] > ci:
+            self._update(xi, ci)
 
         return "OK", None
 
@@ -301,20 +295,11 @@ class LRASolver():
             self.result = "SAT", self.assign
             return self.result
         if ci > self.upper[xi]:
-            self.result = "UNSAT", {xi <= self.upper[xi], xi >= ci}
+            self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
             return self.result
         self.lower[xi] = ci
-        if xi in self.nonslack and (self.assign[xi], 0) < ci:
-            if ci[1] == 0:
-                v = ci[0]
-            elif ci[0] + 1 < self.upper[xi][0]:
-                v = ci[0] + 1
-            else:
-                diff = self.upper[xi][0] - ci[0]
-                assert diff != 0
-                v = ci[0] + diff / 2
-
-            self._update(xi, v)
+        if xi in self.nonslack and self.assign[xi] < ci:
+            self._update(xi, ci)
 
         return "OK", None
 
@@ -322,8 +307,22 @@ class LRASolver():
         i = self.col_index[xi]
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
-            self.assign[b] = self.assign[b] + aji*(v - self.assign[xi])
+            lhs = self.assign[b][0] + aji*(v[0] - self.assign[xi][0])
+            rhs = self.assign[b][1] + aji*(v[1] - self.assign[xi][1])
+            self.assign[b] = (lhs, rhs)
         self.assign[xi] = v
+
+    def get_assignment(self, xi):
+        pass # not sure if it's possible to get a rational assignment when involving strict inequalities
+        # low, high, assign = self.lower[xi], self.high[xi], self.assign
+        # if low[0] == float("inf") and high[0] == float("inf"):
+        #     return 0
+        # if low[0] == float("inf"):
+        #     return high[0] - 1
+        # if high[0] == float("inf"):
+        #     return low[0] + 1
+
+
 
     def backtrack(self):
         pass
@@ -373,7 +372,8 @@ class LRASolver():
                 assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
-                X = Matrix([self.assign[v] for v in self.col_index])
+                # probably have to turn this off when dealing with strict ineq
+                X = Matrix([self.assign[v][0] for v in self.col_index])
                 assert all(abs(val) < 10**(-10) for val in M*X)
 
             cand = [b for b in basic
@@ -394,10 +394,10 @@ class LRASolver():
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
-                    conflict |= {nb <= self.upper[nb] for nb in N_plus}
-                    conflict |= {nb >= self.lower[nb] for nb in N_minus}
-                    conflict.add(xi >= self.lower[xi])
-                    return "UNSAT", conflict
+                    #conflict |= {nb <= self.upper[nb] for nb in N_plus}
+                    #conflict |= {nb >= self.lower[nb] for nb in N_minus}
+                    #conflict.add(xi >= self.lower[xi])
+                    return "UNSAT", "WIP"#conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
@@ -422,14 +422,15 @@ class LRASolver():
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
         i, j = basic[xi], self.col_index[xj]
         assert M[i, j] != 0
-        theta = (v - self.assign[xi])/M[i, j]
+        theta_lhs = (v[0] - self.assign[xi][0])/M[i, j]
+        theta_rhs = (v[1] - self.assign[xi][1])/M[i, j]
         self.assign[xi] = v
-        self.assign[xj] = self.assign[xj] + theta
+        self.assign[xj] = self.assign[xj] + (theta_lhs, theta_rhs)
         for xk in basic:
             if xk != xi:
                 k = basic[xk]
                 akj = M[k, j]
-                self.assign[xk] = self.assign[xk] + akj*theta
+                self.assign[xk] = self.assign[xk] + (akj*theta_lhs, akj*theta_rhs)
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]
