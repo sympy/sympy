@@ -219,12 +219,23 @@ fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
-_general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
+_basic_fraction: CMD_FRAC DIGIT DIGIT
 
 _simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
     | CMD_FRAC group_curly_parentheses DIGIT
 
-_basic_fraction: CMD_FRAC DIGIT DIGIT
+_general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
+
+binomial: _basic_binomial
+    | _simple_binomial
+    | _general_binomial
+
+_basic_binomial: CMD_BINOM DIGIT DIGIT
+
+_simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
+    | CMD_BINOM group_curly_parentheses DIGIT
+
+_general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
 list_of_expressions: _expression ("," _expression)*
 
@@ -289,14 +300,3 @@ atanh: FUNC_ARTANH _expression
 abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
 ceil: L_CEIL _expression R_CEIL
-
-binomial: _basic_binomial
-    | _simple_binomial
-    | _general_binomial
-
-_general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
-
-_simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
-    | CMD_BINOM group_curly_parentheses DIGIT
-
-_basic_binomial: CMD_BINOM DIGIT DIGIT
