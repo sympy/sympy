@@ -1,6 +1,5 @@
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
-
-from sympy.polys.domains import FF, ZZ, QQ, EXRAW
+from sympy import FF, ZZ, QQ, QQ_I, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
@@ -545,6 +544,11 @@ def test_DomainMatrix_cancel_denom():
 
     A = DM([[1, 2], [3, 4]], ZZ)
     assert A.cancel_denom(ZZ(2)) == (A, ZZ(2))
+    assert A.cancel_denom(ZZ(-2)) == (-A, ZZ(2))
+
+    # Test canonicalization of denominator over Gaussian rationals.
+    A = DM([[1, 2], [3, 4]], QQ_I)
+    assert A.cancel_denom(QQ_I(0,2)) == (QQ_I(0,-1)*A, QQ_I(2))
 
     raises(ZeroDivisionError, lambda: A.cancel_denom(ZZ(0)))
 
@@ -584,6 +588,7 @@ def test_DomainMatrix_scc():
 
 
 def test_DomainMatrix_rref():
+    # More tests in test_rref.py
     A = DomainMatrix([], (0, 1), QQ)
     assert A.rref() == (A, ())
 
@@ -609,7 +614,19 @@ def test_DomainMatrix_rref():
     assert pivots == (1,)
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    raises(DMNotAField, lambda: Az.rref())
+    Ar, pivots = Az.rref()
+    assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
+    assert pivots == (0, 1)
+
+    methods = ('auto', 'GJ', 'FF', 'CD', 'GJ_dense', 'FF_dense', 'CD_dense')
+    Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    for method in methods:
+        Ar, pivots = Az.rref(method=method)
+        assert Ar == DomainMatrix([[QQ(1), QQ(0)], [QQ(0), QQ(1)]], (2, 2), QQ)
+        assert pivots == (0, 1)
+
+    raises(ValueError, lambda: Az.rref(method='foo'))
+    raises(ValueError, lambda: Az.rref_den(method='foo'))
 
 
 def test_DomainMatrix_columnspace():
@@ -641,8 +658,21 @@ def test_DomainMatrix_nullspace():
     Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), QQ)
     assert A.nullspace() == Anull
 
-    Az = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
-    raises(DMNotAField, lambda: Az.nullspace())
+    A = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[ZZ(-1), ZZ(1)]], (1, 2), ZZ)
+    assert A.nullspace() == Anull
+
+    raises(DMNotAField, lambda: A.nullspace(divide_last=True))
+
+    A = DomainMatrix([[ZZ(2), ZZ(2)], [ZZ(2), ZZ(2)]], (2, 2), ZZ)
+    Anull = DomainMatrix([[ZZ(-2), ZZ(2)]], (1, 2), ZZ)
+
+    Arref, den, pivots = A.rref_den()
+    assert den == ZZ(2)
+    assert Arref.nullspace_from_rref() == Anull
+    assert Arref.nullspace_from_rref(pivots) == Anull
+    assert Arref.to_sparse().nullspace_from_rref() == Anull.to_sparse()
+    assert Arref.to_sparse().nullspace_from_rref(pivots) == Anull.to_sparse()
 
 
 def test_DomainMatrix_solve():
