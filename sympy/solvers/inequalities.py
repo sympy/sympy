@@ -1002,11 +1002,14 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables):
+    def __init__(self, A, slack_variables, nonslack_variables, run_checks=False):
+        self.run_checks = run_checks
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
-        assert A[:, n-m:] == -eye(m)
+
+        if self.run_checks:
+            assert A[:, n-m:] == -eye(m)
 
         self.A = A # TODO: Row reduce A
         self.slack = slack_variables
@@ -1174,12 +1177,13 @@ class LRASolver():
         while True:
             iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
 
-            # nonbasic variables always must be within bounds
-            assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
+            if self.run_checks:
+                # nonbasic variables always must be within bounds
+                assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
 
-            # assignments for x must always satisfy Ax = 0
-            X = Matrix([self.assign[v] for v in self.col_index])
-            assert all(abs(val) < 10**(-10) for val in M*X) # TODO: Maybe return None if this cond can't be met?
+                # assignments for x must always satisfy Ax = 0
+                X = Matrix([self.assign[v] for v in self.col_index])
+                assert all(abs(val) < 10**(-10) for val in M*X)
 
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
@@ -1253,10 +1257,6 @@ class LRASolver():
             if row != i:
                 A[row, :] = A[row, :] + A[row, j] *A[i, :]
 
-        # A = M - Mj * (Mi / Mij)
-        # A[i, :] = Mi / Mij
-        # A[:, j] = (-Mj / Mij)*0
-        # A[i, j] = -1#-1#1 / Mij
 
         assert A.rref() == M.rref()
         return A
