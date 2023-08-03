@@ -424,8 +424,6 @@ class EncodedCNF:
     Examples
     ========
 
-    Example 1:
-    ----------
     Create an instance of EncodedCNF and add a propositional expression.
     >>> from sympy.assumptions.cnf import CNF, EncodedCNF
     >>> from sympy.abc import a, b
@@ -443,8 +441,6 @@ class EncodedCNF:
     >>> encoded_cnf.encoding #doctest: +SKIP
     {a: 1, b: 2}
 
-    Example 2:
-    ----------
     Decode the encoded CNF expression.
 
     Decode just one literal.
@@ -462,8 +458,6 @@ class EncodedCNF:
     >>> encoded_cnf.decode()
     [a | ~b]
 
-    Example 3:
-    ----------
     Create a copy of the encoded CNF object and add more clauses from a CNF object.
 
     >>> copied_encoded_cnf = encoded_cnf.copy()
