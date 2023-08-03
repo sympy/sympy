@@ -112,21 +112,7 @@ class TransformToSymPyExpr(Transformer):
     def superscript(self, tokens):
         return sympy.Pow(tokens[0], tokens[2], evaluate=False)
 
-    def basic_fraction(self, tokens):
-        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
-
-    def simple_fraction(self, tokens):
-        # this node doesn't need any special handling code because everything is processed before we reach here.
-        # For example, if we have `\frac1{2}`, then `DIGIT` is called and returns 1, and `group_curly_parentheses`
-        # is called and `2` is returned. So, from the POV of this function, we only ever encounter the following
-        # parameters and in this order: [CMD_FRAC, numerator, denominator]
-        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
-
-    def general_fraction(self, tokens):
-        # this node doesn't need any special handling code because everything is processed before we reach here.
-        # For example, if we have `\frac{1}{a + b}`, then `DIGIT` is called and returns 1, and `add` is called and
-        # `a + b` is returned. So, from the POV of this function, we only ever encounter the following
-        # parameters and in this order: [CMD_FRAC, numerator, denominator]
+    def fraction(self, tokens):
         return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
     def integral(self, tokens):
@@ -442,5 +428,7 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
+    parse_latex_lark(r"\frac{1}{n!}", print_debug_output=True)
+
 
 

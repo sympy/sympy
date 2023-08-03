@@ -177,11 +177,11 @@ div: _expression_mul DIV_SYMBOL _expression_power
 _implicit_multiplication: (_oneletter_symbol | number) _expression_mul
     | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
     | _function _function
-    | _fraction _expression
+    | fraction _expression
 
 _expression_func: _expression_core
     | group_round_parentheses
-    | _fraction
+    | fraction
     | _binomial
     | _function
     | ambiguous_sub
@@ -215,16 +215,16 @@ superscript: _expression_func CARET _expression_power
 
 ambiguous_sub: _oneletter_symbol number
 
-_fraction: basic_fraction
-    | simple_fraction
-    | general_fraction
+fraction: _basic_fraction
+    | _simple_fraction
+    | _general_fraction
 
-general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
+_general_fraction: CMD_FRAC group_curly_parentheses group_curly_parentheses
 
-simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
+_simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
     | CMD_FRAC group_curly_parentheses DIGIT
 
-basic_fraction: CMD_FRAC DIGIT DIGIT
+_basic_fraction: CMD_FRAC DIGIT DIGIT
 
 list_of_expressions: _expression ("," _expression)*
 
