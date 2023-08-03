@@ -115,6 +115,9 @@ class TransformToSymPyExpr(Transformer):
     def fraction(self, tokens):
         return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
+    def binomial(self, tokens):
+        return sympy.binomial(tokens[1], tokens[2], evaluate=False)
+
     def integral(self, tokens):
         underscore_index = None
         caret_index = None
@@ -428,7 +431,4 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
-    parse_latex_lark(r"\frac{1}{n!}", print_debug_output=True)
-
-
-
+    parse_latex_lark(r"\binom17", print_debug_output=True)
