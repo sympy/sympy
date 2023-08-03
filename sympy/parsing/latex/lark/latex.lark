@@ -182,7 +182,7 @@ _implicit_multiplication: (_oneletter_symbol | number) _expression_mul
 _expression_func: _expression_core
     | group_round_parentheses
     | fraction
-    | _binomial
+    | binomial
     | _function
     | ambiguous_sub
 
@@ -290,13 +290,13 @@ abs: BAR _expression BAR
 floor: L_FLOOR _expression R_FLOOR
 ceil: L_CEIL _expression R_CEIL
 
-_binomial: basic_binomial
-    | simple_binomial
-    | general_binomial
+binomial: _basic_binomial
+    | _simple_binomial
+    | _general_binomial
 
-general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
+_general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
-simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
+_simple_binomial: CMD_BINOM DIGIT group_curly_parentheses
     | CMD_BINOM group_curly_parentheses DIGIT
 
-basic_binomial: CMD_BINOM DIGIT DIGIT
+_basic_binomial: CMD_BINOM DIGIT DIGIT
