@@ -184,7 +184,11 @@ If you prefer to use `pip` and `venv`, you can use something like
 cd sympy
 python -m venv .venv
 source .venv/bin/activate
-pip install sympy["dev"]
+pip install -e .[dev]
+```
+Depending on your shell, you may need to install using
+```bash
+pip install -e ".[dev]"
 ```
 
 You can add any other packages to this command that you might find useful for
