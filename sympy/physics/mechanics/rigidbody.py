@@ -112,7 +112,7 @@ class RigidBody(BodyBase):
         # check if I is of the form (Dyadic, Point)
         if len(I) != 2 or not isinstance(I[0], Dyadic) or not isinstance(I[1], Point):
             raise TypeError("RigidBody inertia must be a tuple of the form (Dyadic, Point).")
-        
+
         self._inertia = Inertia(I[0], I[1])
         # have I S/O, want I S/S*
         # I S/O = I S/S* + I S*/O; I S/S* = I S/O - I S*/O
