@@ -356,5 +356,8 @@ if __name__ == '__main__':
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
             ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

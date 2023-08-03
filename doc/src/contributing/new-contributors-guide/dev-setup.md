@@ -175,7 +175,7 @@ You may want to take advantage of using virtual environments to isolate your dev
 If you use `conda`, you can use it to create a virtual environment:
 
 ```bash
-$ conda create -n sympy-dev python=3 mpmath flake8 pytest -c conda-forge hypothesis
+$ conda create -n sympy-dev -c conda-forge hypothesis python=3 mpmath flake8 pytest
 ```
 
 If you prefer to use `pip` and `venv`, you can use something like
@@ -184,7 +184,7 @@ If you prefer to use `pip` and `venv`, you can use something like
 cd sympy
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install sympy["dev"]
 ```
 
 You can add any other packages to this command that you might find useful for
