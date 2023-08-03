@@ -28,7 +28,7 @@ from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
-from sympy.polys.monomials import monomial_extract, monomial_gcd
+from sympy.polys.monomials import monomial_gcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public, subsets
 from sympy.utilities.iterables import is_sequence
@@ -2980,65 +2980,65 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         free_sym = {n for n, e in enumerate(exponents) if e}
         return min(free_sym)
 
-def monomial_extract(p):
-    """
-    Extracts any common monomial from the polynomials in p.
+    def monomial_extract(p):
+        """
+        Extracts any common monomial from the polynomials in p.
 
-    Examples
-    ========
+        Examples
+        ========
 
-    >>> from sympy.polys.monomials import monomial_extract
-    >>> from sympy import ZZ, ring
+        >>> from sympy.polys.monomials import monomial_extract
+        >>> from sympy import ZZ, ring
 
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> f = R(0)
-    >>> g = x*y
-    >>> p = [f, g]
-    >>> monomial_extract(p)
-    ([0, 1], x*y)
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> f = R(0)
+        >>> g = x*y
+        >>> p = [f, g]
+        >>> monomial_extract(p)
+        ([0, 1], x*y)
 
-    >>> f = x**2*y + x*y**2
-    >>> g = x**2 + x*y
-    >>> p = [f, g]
-    >>> monomial_extract(p)
-    ([x*y + y**2, x + y], x)
+        >>> f = x**2*y + x*y**2
+        >>> g = x**2 + x*y
+        >>> p = [f, g]
+        >>> monomial_extract(p)
+        ([x*y + y**2, x + y], x)
 
-    """
-    ring = p[0].ring
-    zero_monom = ring.zero_monom
+        """
+        ring = p[0].ring
+        zero_monom = ring.zero_monom
 
-    # Check the first few monomials to see if there is a gcd revealed quickly
-    check_monom = min(len(p), 3)
-    monom = [poly for poly in p]
-    i_gcd = tuple(map(min, zip(*monom)))
+        # Check the first few monomials to see if there is a gcd revealed quickly
+        check_monom = min(len(p), 3)
+        monom = [poly for poly in p]
+        i_gcd = tuple(map(min, zip(*monom)))
 
-    if i_gcd == zero_monom:
-        # If the gcd is already reduced to the zero monom, we can immediately return
-        return p, None
-
-    # Loop over the remaining monomials if necessary
-    for poly in p[check_monom:]:
-        if zero_monom in poly:
-            # If the zero monomial is present, we can immediately return
+        if i_gcd == zero_monom:
+            # If the gcd is already reduced to the zero monom, we can immediately return
             return p, None
 
-        monomial = poly.monomial()
-        monom_gcd = tuple(min(mg, m) for mg, m in zip(i_gcd, monomial))
+        # Loop over the remaining monomials if necessary
+        for poly in p[check_monom:]:
+            if zero_monom in poly:
+                # If the zero monomial is present, we can immediately return
+                return p, None
+
+            monomial = poly.monomial()
+            monom_gcd = tuple(min(mg, m) for mg, m in zip(i_gcd, monomial))
+
+            if monom_gcd == zero_monom:
+                return p, None
+
+        # If we reach here, it means we didn't find a quick gcd, so we use the exhaustive approach
+
+        monomials = chain(*p)
+        monom_gcd = tuple(map(min, zip(*monomials)))
 
         if monom_gcd == zero_monom:
             return p, None
-
-    # If we reach here, it means we didn't find a quick gcd, so we use the exhaustive approach
-
-    monomials = chain(*p)
-    monom_gcd = tuple(map(min, zip(*monomials)))
-
-    if monom_gcd == zero_monom:
-        return p, None
-    else:
-        d = ring({monom_gcd: ring.domain.one})
-        p = [ring.monomial_ldiv((pi.coeffs()), (d.coeffs())) for pi in p]
-        return p, d
+        else:
+            d = ring({monom_gcd: ring.domain.one})
+            p = [ring.monomial_ldiv((pi.coeffs()), (d.coeffs())) for pi in p]
+            return p, d
 
     def gcd_ground(self, domain):
         """
@@ -3185,7 +3185,7 @@ def monomial_extract(p):
         if any(len(pi) == 1 for pi in p):
             return p.gcd_terms(ring, domain)
 
-        p, monomial_gcd = monomial_extract(p)
+        p, monomial_gcd = p.monomial_extract()
 
         p, common_symbols = p.gcd_coeffs()
 
