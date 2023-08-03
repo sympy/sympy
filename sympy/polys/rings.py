@@ -2979,6 +2979,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         exponents = list(map(sum, zip(*p)))
         free_sym = {n for n, e in enumerate(exponents) if e}
         return min(free_sym)
+
 def monomial_extract(p):
     """
     Extracts any common monomial from the polynomials in p.

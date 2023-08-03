@@ -1,7 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
 
-from itertools import combinations_with_replacement, product, chain
+from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
@@ -413,56 +413,6 @@ def term_div(a, b, domain):
             return monom, domain.quo(a_lc, b_lc)
         else:
             return None
-
-def monomial_zero(ring):
-    """
-    Returns the zero monomial for the given polynomial ring.
-    """
-    return tuple([0] * ring.ngens)
-
-def monomial_extract(p):
-    """
-    Extracts any common monomial from the polynomials in p.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.monomials import monomial_extract
-    >>> from sympy import ZZ, ring
-
-    >>> R, x, y = ring("x, y", ZZ)
-    >>> f = R(0)
-    >>> g = x*y
-    >>> p = [f, g]
-    >>> monomial_extract(p)
-    ([0, x**2 + y**2], None)
-
-    >>> f = x**2*y + x*y**2
-    >>> g = x**2 + x*y
-    >>> p = [f, g]
-    >>> monomial_extract(p)
-    ([x*y + y**2, x + y], x)
-
-    """
-    ring = p[0].ring
-    zero_monom = monomial_zero(ring)
-
-    # Check if the zero monomial is present in any of the polynomials
-    for poly in p:
-        if zero_monom in poly:
-            # If the zero monomial is present, we can immediately return
-            return p, None
-
-    # If the zero monomial is not present, proceed with finding the GCD
-    monomials = chain(*p)
-    monomial_gcd = tuple(map(min, zip(*monomials)))
-
-    if monomial_gcd == zero_monom:
-        return p, None
-    else:
-        d = ring({monomial_gcd: ring.domain.one})
-        p = [pi.exquo(d) for pi in p]
-        return p, d
 
 
 class MonomialOps:
