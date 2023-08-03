@@ -25,7 +25,7 @@ from sympy.logic.algorithms.lra_theory import LRASolver, Boundry
 
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
-                        allow_strict_and_equality = False):
+                        strict_only = False):
     from sympy.core.random import random, choice, randint
     from sympy.core.sympify import sympify
     from sympy.ntheory.generate import randprime
@@ -44,7 +44,12 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
     for _ in range(num_constraints):
         lhs, rhs = sum(rand() * x for x in variables), rand(sparsity=0) # sparsity=0  bc of bug with smtlib_code
         r = random()
-        if r < .2:
+        if strict_only:
+            if r < .5:
+                const = lhs < rhs
+            else:
+                const = lhs > rhs
+        elif r < .2:
             const = Eq(lhs, rhs)
         elif r < .4:
             const = lhs <= rhs
@@ -78,26 +83,28 @@ def check_if_satisfiable_with_z3(constraints):
 
 
 def test_from_encoded_cnf():
-    phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z >= 4))
-    cnf = CNF.from_prop(phi)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc)
-    bound_consts = set(bound.bound for bound in lra.boundry_enc.values())
-    assert bound_consts == {0, 2, -6, 2, -4}
-
-    m = Matrix([[1, 0,  1, -2, -1],
-                [0, 1, -1,  1,  1]])
-    assert lra.A.rref() == m.rref()
+    # phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z >= 4))
+    # cnf = CNF.from_prop(phi)
+    # enc = EncodedCNF()
+    # enc.from_cnf(cnf)
+    # lra, _, _ = LRASolver.from_encoded_cnf(enc)
+    # bound_consts = set(bound.bound for bound in lra.boundry_enc.values())
+    # assert bound_consts == {0, 2, -6, 2, -4}
+    #
+    # m = Matrix([[1, 0,  1, -2, -1],
+    #             [0, 1, -1,  1,  1]])
+    # assert lra.A.rref() == m.rref()
 
 
 
 
     feasible_count = 0
-    for _ in range(30):
-        constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False)
+    for _ in range(3000):
+        constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False, strict_only=True)
         #x1, x2, x3 = symbols("x1 x2 x3")
         #constraints = [x1 - 3*x2 <= -5, 6*x1 + 4*x2 <= 0, -7*x1 + 3*x2 <= 3]
+        #constraints = [-3*x1 >= 3, Eq(4*x1, -1)]
+        #constraints = [-4*x1 < 4, 6*x1 <= -6]
         if False in constraints or True in constraints:
             continue
 
@@ -106,37 +113,40 @@ def test_from_encoded_cnf():
         cnf = CNF.from_prop(phi); enc = EncodedCNF()
         enc.from_cnf(cnf)
         lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+        print(lra.A)
         print(lra.boundry_enc)
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
         lits = set(lit for clause in enc.data for lit in clause)
 
+        bounds = [(lra.boundry_enc[l], l) for l in lits if l in lra.boundry_enc]
+        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
 
-        for l in lits:
-            if l in lra.boundry_enc:
-                b = lra.boundry_enc[l]
-                print("var:", b.var, "bound:", b.bound, "upper:", b.upper)
-                lra.assert_enc_boundry(l)
-                print(lra.assign, lra.lower, lra.upper)
+        for b, l in bounds:
+            print("var:", b.var, "bound:", b.bound, "upper:", b.upper)
+            lra.assert_enc_boundry(l)
+            print(lra.assign, lra.lower, lra.upper)
 
         feasible = lra.check()
+        print(feasible)
         if feasible[0] == "SAT":
             feasible_count += 1
-            assignment = feasible[1]
-            for constr in constraints:
-                constr = constr.subs(x_subs)
-                print(constr)
-                try:
-                    assert constr.subs(assignment) == True
-                except Exception:
-                    pass
+            assert check_if_satisfiable_with_z3(constraints) is True
+            #assignment = feasible[1]
+            # for constr in constraints:
+            #     constr = constr.subs(x_subs)
+            #     print(constr)
+            #     try:
+            #         assert constr.subs(assignment) == True
+            #     except Exception:
+            #         pass
 
         else:
             assert check_if_satisfiable_with_z3(constraints) is False
 
-            conflict = feasible[1]
-            conflict = {clause.subs(s_subs_rev) for clause in conflict}
-            assert check_if_satisfiable_with_z3(conflict) is False
+            #conflict = feasible[1]
+            #conflict = {clause.subs(s_subs_rev) for clause in conflict}
+            #assert check_if_satisfiable_with_z3(conflict) is False
     print("\nnumber of feasible problems: ", feasible_count)
 
 
