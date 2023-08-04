@@ -19,8 +19,7 @@ from sympy.plotting.plot import (
     Plot, plot, plot_parametric, plot3d_parametric_line, plot3d,
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
-    unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
-    TextBackend, BaseBackend)
+    unset_show, plot_contour, PlotGrid, MatplotlibBackend, TextBackend)
 from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
@@ -33,18 +32,22 @@ matplotlib = import_module(
     'matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
 
 
-class DummyBackendNotOk(BaseBackend):
+class DummyBackendNotOk(Plot):
     """ Used to verify if users can create their own backends.
     This backend is meant to raise NotImplementedError for methods `show`,
     `save`, `close`.
     """
-    pass
+    def __new__(cls, *args, **kwargs):
+        return object.__new__(cls)
 
 
-class DummyBackendOk(BaseBackend):
+class DummyBackendOk(Plot):
     """ Used to verify if users can create their own backends.
     This backend is meant to pass all tests.
     """
+    def __new__(cls, *args, **kwargs):
+        return object.__new__(cls)
+
     def show(self):
         pass
 
@@ -528,8 +531,10 @@ def test_empty_Plot():
 
     # No exception showing an empty plot
     plot()
+    # Plot is only a base class: doesn't implement any logic for showing
+    # images
     p = Plot()
-    p.show()
+    raises(NotImplementedError, lambda: p.show())
 
 
 def test_issue_17405():
@@ -623,11 +628,11 @@ def test_issue_13516():
     assert len(pt[0].get_data()[0]) >= 30
 
     pd = plot(sin(x), backend="default", show=False)
-    assert pd.backend == DefaultBackend
+    assert pd.backend == MatplotlibBackend
     assert len(pd[0].get_data()[0]) >= 30
 
     p = plot(sin(x), show=False)
-    assert p.backend == DefaultBackend
+    assert p.backend == MatplotlibBackend
     assert len(p[0].get_data()[0]) >= 30
 
 
@@ -639,10 +644,10 @@ def test_plot_limits():
     p = plot(x, x**2, (x, -10, 10))
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 10) < 2
     assert abs(xmax - 10) < 2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 10) < 10
     assert abs(ymax - 100) < 10
 
@@ -658,26 +663,26 @@ def test_plot3d_parametric_line_limits():
     p = plot3d_parametric_line(v1, v2)
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 2) < 1e-2
     assert abs(xmax - 2) < 1e-2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 2) < 1e-2
     assert abs(ymax - 2) < 1e-2
-    zmin, zmax = backend.ax[0].get_zlim()
+    zmin, zmax = backend.ax.get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
 
     p = plot3d_parametric_line(v2, v1)
     backend = p._backend
 
-    xmin, xmax = backend.ax[0].get_xlim()
+    xmin, xmax = backend.ax.get_xlim()
     assert abs(xmin + 2) < 1e-2
     assert abs(xmax - 2) < 1e-2
-    ymin, ymax = backend.ax[0].get_ylim()
+    ymin, ymax = backend.ax.get_ylim()
     assert abs(ymin + 2) < 1e-2
     assert abs(ymax - 2) < 1e-2
-    zmin, zmax = backend.ax[0].get_zlim()
+    zmin, zmax = backend.ax.get_zlim()
     assert abs(zmin + 10) < 1e-2
     assert abs(zmax - 10) < 1e-2
 
@@ -707,8 +712,7 @@ def test_issue_20113():
     x = Symbol('x')
 
     # verify the capability to use custom backends
-    with raises(TypeError):
-        plot(sin(x), backend=Plot, show=False)
+    plot(sin(x), backend=Plot, show=False)
     p2 = plot(sin(x), backend=MatplotlibBackend, show=False)
     assert p2.backend == MatplotlibBackend
     assert len(p2[0].get_data()[0]) >= 30
@@ -774,10 +778,10 @@ def test_generic_data_series():
         annotations=[{"text": "test", "xy": (0, 0)}],
         fill={"x": [0, 1, 2, 3], "y1": [0, 1, 2, 3]},
         rectangles=[{"xy": (0, 0), "width": 5, "height": 1}])
-    assert len(p._backend.ax[0].collections) == 1
-    assert len(p._backend.ax[0].patches) == 1
-    assert len(p._backend.ax[0].lines) == 2
-    assert len(p._backend.ax[0].texts) == 1
+    assert len(p._backend.ax.collections) == 1
+    assert len(p._backend.ax.patches) == 1
+    assert len(p._backend.ax.lines) == 2
+    assert len(p._backend.ax.texts) == 1
 
 
 def test_deprecated_markers_annotations_rectangles_fill():
@@ -798,3 +802,31 @@ def test_deprecated_markers_annotations_rectangles_fill():
     with warns_deprecated_sympy():
         p.rectangles = [{"xy": (0, 0), "width": 5, "height": 1}]
     assert len(p._series) == 5
+
+
+def test_back_compatibility():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    y = Symbol('y')
+    p = plot(sin(x), adaptive=False, n=5)
+    assert len(p[0].get_points()) == 2
+    assert len(p[0].get_data()) == 2
+    p = plot_parametric(cos(x), sin(x), (x, 0, 2), adaptive=False, n=5)
+    assert len(p[0].get_points()) == 2
+    assert len(p[0].get_data()) == 3
+    p = plot3d_parametric_line(cos(x), sin(x), x, (x, 0, 2),
+        adaptive=False, n=5)
+    assert len(p[0].get_points()) == 3
+    assert len(p[0].get_data()) == 4
+    p = plot3d(cos(x**2 + y**2), (x, -pi, pi), (y, -pi, pi), n=5)
+    assert len(p[0].get_meshes()) == 3
+    assert len(p[0].get_data()) == 3
+    p = plot_contour(cos(x**2 + y**2), (x, -pi, pi), (y, -pi, pi), n=5)
+    assert len(p[0].get_meshes()) == 3
+    assert len(p[0].get_data()) == 3
+    p = plot3d_parametric_surface(x * cos(y), x * sin(y), x * cos(4 * y) / 2,
+        (x, 0, pi), (y, 0, 2*pi), n=5)
+    assert len(p[0].get_meshes()) == 3
+    assert len(p[0].get_data()) == 5
