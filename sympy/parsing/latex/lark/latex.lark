@@ -139,8 +139,6 @@ SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE 
 // r"h_{\theta"
 GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
-SUBSCRIPTED_SYMBOL: BASIC_SUBSCRIPTED_SYMBOL | SYMBOL_WITH_GREEK_SUBSCRIPT | GREEK_SUBSCRIPTED_SYMBOL
-
 WORD: /[a-zA-Z]+/
 
 %import common.DIGIT -> DIGIT
@@ -149,7 +147,11 @@ WORD: /[a-zA-Z]+/
 
 latex_string: relation | _expression
 
-_oneletter_symbol: SYMBOL | SUBSCRIPTED_SYMBOL | GREEK_SYMBOL
+_oneletter_symbol: SYMBOL
+    | BASIC_SUBSCRIPTED_SYMBOL
+    | SYMBOL_WITH_GREEK_SUBSCRIPT
+    | GREEK_SUBSCRIPTED_SYMBOL
+    | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
 number: /\d+(\.\d*)?/
 infinity: CMD_INFTY

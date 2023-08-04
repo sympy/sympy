@@ -49,20 +49,30 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
     def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
-        print(tokens)
+        print("GREEK_SUBSCRIPTED_SYMBOL =", tokens)
+        greek_letter, sub = tokens.value.split('_')
+
+        greek_letter = re.sub("var", "", greek_letter[1:])
+        if greek_letter == "lambda":
+            # we do the same name change as sympy.abc because lambda is a Python keyword
+            greek_letter = "lamda"
+
+        if sub.startswith('{'):
+            return sympy.Symbol('%s_{%s}' % (greek_letter, sub[1:-1]))
+        else:
+            return sympy.Symbol('%s_{%s}' % (greek_letter, sub))
 
     def SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
-        print(tokens)
         symbol, sub = tokens.value.split('_')
         if sub.startswith('{'):
-            greek_letter = sub[1:-1]
+            greek_letter = sub[2:-1]
             greek_letter = re.sub("var", "", greek_letter)
             if greek_letter == "lambda":
                 # we do the same name change as sympy.abc because lambda is a Python keyword
                 greek_letter = "lamda"
             return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
         else:
-            greek_letter = sub
+            greek_letter = sub[1:]
             greek_letter = re.sub("var", "", greek_letter)
             if greek_letter == "lambda":
                 # we do the same name change as sympy.abc because lambda is a Python keyword
@@ -75,9 +85,6 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol("lamda")
         else:
             return sympy.Symbol(variable_name)
-
-    # def oneletter_symbol(self, tokens):
-    #     print(tokens)
 
     def multiletter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
@@ -475,9 +482,5 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
-    # parse_latex_lark(r"\theta_2", print_debug_output=True)
-    # parse_latex_lark(r"h_{\theta}", print_debug_output=True)
-    # parse_latex_lark(r"h_\theta", print_debug_output=True)
-    parse_latex_lark(r"\int_0^7 dx", print_debug_output=True)
+    parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
 
