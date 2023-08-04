@@ -246,6 +246,7 @@ function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
 _function: function_applied
     | abs | floor | ceil
     | _trigonometric_function | _inverse_trigonometric_function
+    | _trigonometric_function_power
     | _hyperbolic_trigonometric_function | _inverse_hyperbolic_trigonometric_function
     | exponential
     | log
@@ -277,6 +278,15 @@ tan: FUNC_TAN _expression
 csc: FUNC_CSC _expression
 sec: FUNC_SEC _expression
 cot: FUNC_COT _expression
+
+_trigonometric_function_power: sin_power | cos_power | tan_power | csc_power | sec_power | cot_power
+
+sin_power: FUNC_SIN CARET _expression_core _expression
+cos_power: FUNC_COS CARET _expression_core _expression
+tan_power: FUNC_TAN CARET _expression_core _expression
+csc_power: FUNC_CSC CARET _expression_core _expression
+sec_power: FUNC_SEC CARET _expression_core _expression
+cot_power: FUNC_COT CARET _expression_core _expression
 
 _hyperbolic_trigonometric_function: sinh | cosh | tanh
 

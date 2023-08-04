@@ -331,6 +331,48 @@ class TransformToSymPyExpr(Transformer):
     def cot(self, tokens):
         return sympy.cot(tokens[1], evaluate=False)
 
+    def sin_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.asin(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.sin(tokens[-1], evaluate=False), exponent, evaluate=False)
+
+    def cos_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.acos(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.cos(tokens[-1], evaluate=False), exponent, evaluate=False)
+
+    def tan_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.atan(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.tan(tokens[-1], evaluate=False), exponent, evaluate=False)
+
+    def csc_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.acsc(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.csc(tokens[-1], evaluate=False), exponent, evaluate=False)
+
+    def sec_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.asec(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.sec(tokens[-1], evaluate=False), exponent, evaluate=False)
+
+    def cot_power(self, tokens):
+        exponent = tokens[2]
+        if exponent == -1:
+            return sympy.acot(tokens[-1], evaluate=False)
+        else:
+            return sympy.Pow(sympy.cot(tokens[-1], evaluate=False), exponent, evaluate=False)
+
     def arcsin(self, tokens):
         return sympy.asin(tokens[1], evaluate=False)
 
@@ -338,7 +380,6 @@ class TransformToSymPyExpr(Transformer):
         return sympy.acos(tokens[1], evaluate=False)
 
     def arctan(self, tokens):
-        # TODO: should I use atan or atan2 here?
         return sympy.atan(tokens[1], evaluate=False)
 
     def arccsc(self, tokens):
@@ -499,6 +540,7 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
-    parse_latex_lark(r"\lim\limits_{h \to x^2} f(h, 3)", print_debug_output=True)
+    parse_latex_lark(r"\sin^2 x", print_debug_output=True)
+    parse_latex_lark(r"\sin^{-1} x", print_debug_output=True)
+    parse_latex_lark(r"\sin^{n - k} x", print_debug_output=True)
 
