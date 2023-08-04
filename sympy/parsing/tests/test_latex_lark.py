@@ -1,4 +1,4 @@
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import XFAIL
 from sympy.parsing.latex.lark import parse_latex_lark
 
 from sympy.concrete.products import Product
