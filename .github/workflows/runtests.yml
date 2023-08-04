@@ -199,7 +199,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap lxml pytest                \
+                         aesara wurlitzer autowrap lxml pytest lark           \
                          'antlr4-python3-runtime==4.11.*'
 
       # Not available in pypy or cpython 3.11 (yet).
