@@ -112,9 +112,9 @@ FRACTION_EXPRESSION_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
-    (r"\frac12", _Pow(2, -1)),
-    (r"\frac12y", _Mul(_Pow(2, -1), y)),
-    (r"\frac1234", _Mul(_Pow(2, -1), 34)),
+    (r"\frac12", _Mul(1, _Pow(2, -1))),
+    (r"\frac12y", _Mul(_Mul(1, _Pow(2, -1)), y)),
+    (r"\frac1234", _Mul(_Mul(1, _Pow(2, -1)), 34)),
     (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
