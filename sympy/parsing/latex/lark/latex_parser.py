@@ -196,7 +196,6 @@ class TransformToSymPyExpr(Transformer):
             # then one was given and the other wasn't
             # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
             # to True if the lower_bound is 0
-            # TODO: this condition can be shortened by using XOR or XNOR. Should we do that?
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
@@ -256,25 +255,43 @@ class TransformToSymPyExpr(Transformer):
         return index_variable, lower_limit, upper_limit
 
     def summation(self, tokens):
-        # print(tokens)
         return sympy.Sum(tokens[2], tokens[1])
 
     def product(self, tokens):
-        print(tokens)
         return sympy.Product(tokens[2], tokens[1])
 
-    def limit(self, tokens):
-        print(tokens)
+    def limit_dir_expr(self, tokens):
+        caret_index = tokens.index("^")
 
-        # left_brace_index = tokens.index("{")
-        # right_brace_index = tokens.index("}")
-        #
-        #
-        # # we handle the limit underscore, i.e. the "x \to 0" part
-        #
-        # expression = tokens[right_brace_index + 1]
-        #
-        # # return sympy.Limit(, , , direction)
+        if "{" in tokens:
+            left_curly_brace_index = tokens.index("{", caret_index)
+            direction = tokens[left_curly_brace_index + 1]
+        else:
+            direction = tokens[caret_index + 1]
+
+        # print(direction)
+
+        if direction == "+":
+            return tokens[0], "+"
+        elif direction == "-":
+            return tokens[0], "-"
+        else:
+            return tokens[0], "+-"
+
+    def group_curly_parentheses_lim(self, tokens):
+        limit_variable = tokens[1]
+        if isinstance(tokens[3], tuple):
+            destination, direction = tokens[3]
+        else:
+            destination = tokens[3]
+            direction = "+-"
+
+        return limit_variable, destination, direction
+
+    def limit(self, tokens):
+        limit_variable, destination, direction = tokens[2]
+
+        return sympy.Limit(tokens[-1], limit_variable, destination, direction)
 
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
@@ -482,5 +499,6 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
-    parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
+    # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
+    parse_latex_lark(r"\lim\limits_{h \to x^2} f(h, 3)", print_debug_output=True)
 
