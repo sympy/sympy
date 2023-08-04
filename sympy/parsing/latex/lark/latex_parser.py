@@ -349,7 +349,7 @@ class TransformToSymPyExpr(Transformer):
             return sympy.sqrt(tokens[1], evaluate=False)
         elif len(tokens) == 3:
             # then there _was_ a square bracket argument
-            return sympy.Pow(tokens[2], sympy.Pow(tokens[1], -1, evaluate=False), evaluate=False)
+            return sympy.root(tokens[2], tokens[1], evaluate=False)
 
     def exponential(self, tokens):
         return sympy.exp(tokens[1], evaluate=False)
