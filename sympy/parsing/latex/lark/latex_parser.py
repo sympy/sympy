@@ -164,22 +164,38 @@ class TransformToSymPyExpr(Transformer):
         lower_bound = tokens[underscore_index + 1] if underscore_index else None
         upper_bound = tokens[caret_index + 1] if caret_index else None
 
-        differential_symbol_index = tokens.index("d")
+        if "d" in tokens:
+            differential_symbol_index = tokens.index("d")
+        elif r"\text{d}" in tokens:
+            differential_symbol_index = tokens.index(r"\text{d}")
+        elif r"\mathrm{d}" in tokens:
+            differential_symbol_index = tokens.index(r"\mathrm{d}")
+        else:
+            # differential symbol was not found
+            raise LaTeXParsingError() # TODO: fill out descriptive error message
 
         differential_symbol = tokens[differential_symbol_index + 1]
+
         # print('lower bound =', lower_bound)
         # print('upper bound =', upper_bound)
         # print('differential symbol =', differential_symbol)
 
-        if (lower_bound and not upper_bound) or (upper_bound and not lower_bound):
-            # one was given and the other wasn't
+        # print()
+        # print('underscore index =', underscore_index)
+        # print('caret index =', caret_index)
+        # print('differential symbol index =', differential_symbol_index)
+
+        if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
+            # then one was given and the other wasn't
+            # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
+            # to True if the lower_bound is 0
             # TODO: this condition can be shortened by using XOR or XNOR. Should we do that?
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
-        if underscore_index is not None and differential_symbol_index == underscore_index - 1:
+        if underscore_index is not None and underscore_index == differential_symbol_index - 2:
             integrand = 1
-        elif caret_index is not None and differential_symbol_index == caret_index - 1:
+        elif caret_index is not None and caret_index == differential_symbol_index - 2:
             integrand = 1
         elif differential_symbol_index == 1:
             # this means we have something like \int dx, because the \int symbol will always be
@@ -188,7 +204,7 @@ class TransformToSymPyExpr(Transformer):
         else:
             integrand = tokens[differential_symbol_index - 1]
 
-        if lower_bound:
+        if lower_bound is not None:
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
             return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
@@ -461,5 +477,7 @@ if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
     # parse_latex_lark(r"\theta_2", print_debug_output=True)
-    parse_latex_lark(r"h_{\theta}", print_debug_output=True)
-    parse_latex_lark(r"h_\theta", print_debug_output=True)
+    # parse_latex_lark(r"h_{\theta}", print_debug_output=True)
+    # parse_latex_lark(r"h_\theta", print_debug_output=True)
+    parse_latex_lark(r"\int_0^7 dx", print_debug_output=True)
+
