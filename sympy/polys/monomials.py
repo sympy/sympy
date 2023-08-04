@@ -255,7 +255,26 @@ def monomial_pow(A, n):
     """Return the n-th pow of the monomial. """
     return tuple([ a*n for a in A ])
 
-def monomial_gcd(*args):
+def monomial_gcd(A, B):
+    """
+    Greatest common divisor of tuples representing monomials.
+
+    Examples
+    ========
+
+    Lets compute GCD of `x*y**4*z` and `x**3*y**2`::
+
+        >>> from sympy.polys.monomials import monomial_gcd
+
+        >>> monomial_gcd((1, 4, 1), (3, 2, 0))
+        (1, 2, 0)
+
+    which gives `x*y**2`.
+
+    """
+    return tuple([ min(a, b) for a, b in zip(A, B) ])
+
+def monomial_ngcd(*args):
     """
     Computes the greatest common divisor (GCD) of the exponents for each
     variable in the monomials.
@@ -263,11 +282,9 @@ def monomial_gcd(*args):
     Parameters
     ==========
 
-    *args : tuple of tuples or multiple tuples
+    *args : tuple of tuples
         If a single argument is provided, it should be a tuple of tuples
         representing monomials.
-        If two arguments are provided, they should be two tuples representing
-        monomials.
 
     Returns
     =======
@@ -279,23 +296,18 @@ def monomial_gcd(*args):
     Examples
     ========
 
-    >>> from sympy.polys.monomials import monomial_gcd
-    >>> monomial_gcd((1, 4, 1), (3, 2, 0))
-    (1, 2, 0)
-    >>> monomial_gcd({(1, 0), (0, 2), (2, 0), (0, 1)})
+    >>> from sympy.polys.monomials import monomial_ngcd
+    >>> monomial_ngcd({(1, 0), (0, 2), (2, 0), (0, 1)})
     (0, 0)
 
     """
     if len(args) == 1:
         monomials = args[0]
-        monomial_gcd = tuple(map(min, zip(*monomials)))
-    elif len(args) == 2:
-        A, B = args
-        monomial_gcd = tuple([min(a, b) for a, b in zip(A, B)])
+        monomial_ngcd = tuple(map(min, zip(*monomials)))
     else:
-        raise ValueError("monomial_gcd() accepts either a tuple of tuples or two tuples as arguments.")
+        raise ValueError("monomial_ngcd() accepts a tuple of tuples as arguments.")
 
-    return monomial_gcd
+    return monomial_ngcd
 
 def monomial_lcm(A, B):
     """
