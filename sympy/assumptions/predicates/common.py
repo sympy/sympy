@@ -17,6 +17,7 @@ class CommutativePredicate(Predicate):
     # TODO: Add examples
     name = 'commutative'
     handler = Dispatcher("CommutativeHandler", doc="Handler for key 'commutative'.")
+    nargs = 1
 
 
 binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
@@ -69,6 +70,7 @@ class IsTruePredicate(Predicate):
         "IsTrueHandler",
         doc="Wrapper allowing to query the truth value of a boolean expression."
     )
+    nargs = 1
 
     def __call__(self, arg):
         # No need to wrap another predicate

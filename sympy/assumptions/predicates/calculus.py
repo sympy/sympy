@@ -44,6 +44,7 @@ class FinitePredicate(Predicate):
         doc=("Handler for Q.finite. Test that an expression is bounded respect"
         " to all its variables.")
     )
+    nargs = 1
 
 
 class InfinitePredicate(Predicate):
@@ -60,6 +61,7 @@ class InfinitePredicate(Predicate):
         "InfiniteHandler",
         doc="""Handler for Q.infinite key."""
     )
+    nargs = 1
 
 
 class PositiveInfinitePredicate(Predicate):
@@ -70,6 +72,7 @@ class PositiveInfinitePredicate(Predicate):
     """
     name = 'positive_infinite'
     handler = Dispatcher("PositiveInfiniteHandler")
+    nargs = 1
 
 
 class NegativeInfinitePredicate(Predicate):
@@ -80,3 +83,4 @@ class NegativeInfinitePredicate(Predicate):
     """
     name = 'negative_infinite'
     handler = Dispatcher("NegativeInfiniteHandler")
+    nargs = 1

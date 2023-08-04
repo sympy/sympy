@@ -46,6 +46,7 @@ class NegativePredicate(Predicate):
         doc=("Handler for Q.negative. Test that an expression is strictly less"
         " than zero.")
     )
+    nargs = 1
 
 
 class NonNegativePredicate(Predicate):
@@ -86,6 +87,7 @@ class NonNegativePredicate(Predicate):
         "NonNegativeHandler",
         doc=("Handler for Q.nonnegative.")
     )
+    nargs = 1
 
 
 class NonZeroPredicate(Predicate):
@@ -134,6 +136,7 @@ class NonZeroPredicate(Predicate):
         doc=("Handler for key 'zero'. Test that an expression is not identically"
         " zero.")
     )
+    nargs = 1
 
 
 class ZeroPredicate(Predicate):
@@ -167,6 +170,7 @@ class ZeroPredicate(Predicate):
         "ZeroHandler",
         doc="Handler for key 'zero'."
     )
+    nargs = 1
 
 
 class NonPositivePredicate(Predicate):
@@ -208,6 +212,7 @@ class NonPositivePredicate(Predicate):
         "NonPositiveHandler",
         doc="Handler for key 'nonpositive'."
     )
+    nargs = 1
 
 
 class PositivePredicate(Predicate):
@@ -254,6 +259,7 @@ class PositivePredicate(Predicate):
         doc=("Handler for key 'positive'. Test that an expression is strictly"
         " greater than zero.")
     )
+    nargs = 1
 
 
 class ExtendedPositivePredicate(Predicate):
@@ -280,6 +286,7 @@ class ExtendedPositivePredicate(Predicate):
     """
     name = 'extended_positive'
     handler = Dispatcher("ExtendedPositiveHandler")
+    nargs = 1
 
 
 class ExtendedNegativePredicate(Predicate):
@@ -306,6 +313,7 @@ class ExtendedNegativePredicate(Predicate):
     """
     name = 'extended_negative'
     handler = Dispatcher("ExtendedNegativeHandler")
+    nargs = 1
 
 
 class ExtendedNonZeroPredicate(Predicate):
@@ -332,6 +340,7 @@ class ExtendedNonZeroPredicate(Predicate):
     """
     name = 'extended_nonzero'
     handler = Dispatcher("ExtendedNonZeroHandler")
+    nargs = 1
 
 
 class ExtendedNonPositivePredicate(Predicate):
@@ -360,6 +369,7 @@ class ExtendedNonPositivePredicate(Predicate):
     """
     name = 'extended_nonpositive'
     handler = Dispatcher("ExtendedNonPositiveHandler")
+    nargs = 1
 
 
 class ExtendedNonNegativePredicate(Predicate):
@@ -388,3 +398,4 @@ class ExtendedNonNegativePredicate(Predicate):
     """
     name = 'extended_nonnegative'
     handler = Dispatcher("ExtendedNonNegativeHandler")
+    nargs = 1

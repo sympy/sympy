@@ -2409,6 +2409,62 @@ def test_relational():
 
 
 def test_issue_25221():
-    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
+    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
+
+# test that all builtin predicates throw an error when called with a nonsensical arity
+def test_issue_25276():
+    raises(TypeError, lambda: Q.finite(x,y))
+    raises(TypeError, lambda: Q.infinite(x,y))
+    raises(TypeError, lambda: Q.positive_infinite(x,y))
+    raises(TypeError, lambda: Q.negative_infinite(x,y))
+    raises(TypeError, lambda: Q.commutative(x,y))
+    raises(TypeError, lambda: Q.is_true(x,y))
+    raises(TypeError, lambda: Q.square(x,y))
+    raises(TypeError, lambda: Q.symmetric(x,y))
+    raises(TypeError, lambda: Q.invertible(x,y))
+    raises(TypeError, lambda: Q.orthogonal(x,y))
+    raises(TypeError, lambda: Q.unitary(x,y))
+    raises(TypeError, lambda: Q.fullrank(x,y))
+    raises(TypeError, lambda: Q.positive_definite(x,y))
+    raises(TypeError, lambda: Q.upper_triangular(x,y))
+    raises(TypeError, lambda: Q.lower_triangular(x,y))
+    raises(TypeError, lambda: Q.diagonal(x,y))
+    raises(TypeError, lambda: Q.integer_elements(x,y))
+    raises(TypeError, lambda: Q.real_elements(x,y))
+    raises(TypeError, lambda: Q.complex_elements(x,y))
+    raises(TypeError, lambda: Q.singular(x,y))
+    raises(TypeError, lambda: Q.normal(x,y))
+    raises(TypeError, lambda: Q.triangular(x,y))
+    raises(TypeError, lambda: Q.unit_triangular(x,y))
+    raises(TypeError, lambda: Q.prime(x,y))
+    raises(TypeError, lambda: Q.composite(x,y))
+    raises(TypeError, lambda: Q.even(x,y))
+    raises(TypeError, lambda: Q.odd(x,y))
+    raises(TypeError, lambda: Q.negative(x,y))
+    raises(TypeError, lambda: Q.nonnegative(x,y))
+    raises(TypeError, lambda: Q.nonzero(x,y))
+    raises(TypeError, lambda: Q.zero(x,y))
+    raises(TypeError, lambda: Q.nonpositive(x,y))
+    raises(TypeError, lambda: Q.positive(x,y))
+    raises(TypeError, lambda: Q.extended_positive(x,y))
+    raises(TypeError, lambda: Q.extended_negative(x,y))
+    raises(TypeError, lambda: Q.extended_nonzero(x,y))
+    raises(TypeError, lambda: Q.extended_nonpositive(x,y))
+    raises(TypeError, lambda: Q.extended_nonnegative(x,y))
+    raises(TypeError, lambda: Q.integer(x,y))
+    raises(TypeError, lambda: Q.rational(x,y))
+    raises(TypeError, lambda: Q.irrational(x,y))
+    raises(TypeError, lambda: Q.real(x,y))
+    raises(TypeError, lambda: Q.extended_real(x,y))
+    raises(TypeError, lambda: Q.hermitian(x,y))
+    raises(TypeError, lambda: Q.complex(x,y))
+    raises(TypeError, lambda: Q.imaginary(x,y))
+    raises(TypeError, lambda: Q.antihermitian(x,y))
+    raises(TypeError, lambda: Q.algebraic(x,y))
+    raises(TypeError, lambda: Q.transcendental(x,y))
+
+    # one to test that error is also thrown for other aritys
+    raises(TypeError, lambda: Q.transcendental(x,y,z))
+    raises(TypeError, lambda: Q.transcendental())
