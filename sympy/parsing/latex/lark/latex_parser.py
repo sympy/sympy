@@ -536,11 +536,3 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
         output += ")"
 
     return output
-
-
-if __name__ == "__main__":
-    # temporary, for sanity testing and catching errors in the lark grammar.
-    parse_latex_lark(r"\sin^2 x", print_debug_output=True)
-    parse_latex_lark(r"\sin^{-1} x", print_debug_output=True)
-    parse_latex_lark(r"\sin^{n - k} x", print_debug_output=True)
-
