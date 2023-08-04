@@ -32,29 +32,58 @@ class TransformToSymPyExpr(Transformer):
     DIGIT = int
 
     def GREEK_SYMBOL(self, tokens):
-        # we omit the first character because it is a backslash
+        # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
+        # like "varphi" or "varepsilon", we remove that
         variable_name = re.sub("var", "", tokens[1:])
-        # if the variable name has "var" in it, like "varphi" or "varepsilon", we remove that
         if variable_name == "lambda":
             # we do the same name change as sympy.abc because lambda is a Python keyword
             return sympy.Symbol("lamda")
         else:
             return sympy.Symbol(variable_name)
 
-
-    def SUBSCRIPTED_SYMBOL(self, tokens):
+    def BASIC_SUBSCRIPTED_SYMBOL(self, tokens):
         symbol, sub = tokens.value.split('_')
         if sub.startswith('{'):
             return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
         else:
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
+    def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
+        print(tokens)
+
+    def SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
+        print(tokens)
+        symbol, sub = tokens.value.split('_')
+        if sub.startswith('{'):
+            greek_letter = sub[1:-1]
+            greek_letter = re.sub("var", "", greek_letter)
+            if greek_letter == "lambda":
+                # we do the same name change as sympy.abc because lambda is a Python keyword
+                greek_letter = "lamda"
+            return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
+        else:
+            greek_letter = sub
+            greek_letter = re.sub("var", "", greek_letter)
+            if greek_letter == "lambda":
+                # we do the same name change as sympy.abc because lambda is a Python keyword
+                greek_letter = "lamda"
+            return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
+
+        variable_name = re.sub("var", "", tokens[1:])
+        if variable_name == "lambda":
+            # we do the same name change as sympy.abc because lambda is a Python keyword
+            return sympy.Symbol("lamda")
+        else:
+            return sympy.Symbol(variable_name)
+
+    # def oneletter_symbol(self, tokens):
+    #     print(tokens)
+
     def multiletter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
 
     def number(self, tokens):
         if "." in tokens[0]:
-            # TODO: Decide whether to use Python floats or SymPy floats (sympy.core.numbers.Float)
             return sympy.core.numbers.Float(tokens[0])
         else:
             return int(tokens[0])
@@ -431,4 +460,6 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
 if __name__ == "__main__":
     # temporary, for sanity testing and catching errors in the lark grammar.
     # parse_latex_lark(r"\lim\limits_{h \to 0^{+}} f(h, 3)", print_debug_output=True)
-    parse_latex_lark(r"\binom17", print_debug_output=True)
+    # parse_latex_lark(r"\theta_2", print_debug_output=True)
+    parse_latex_lark(r"h_{\theta}", print_debug_output=True)
+    parse_latex_lark(r"h_\theta", print_debug_output=True)
