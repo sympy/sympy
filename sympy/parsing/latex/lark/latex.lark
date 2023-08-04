@@ -192,13 +192,13 @@ _expression_mul: _expression_power | mul | div | integral | summation | product 
 
 _expression: _expression_mul | add | sub
 
-limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
+_limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
-limit_dir_expr: _expression CARET limit_dir
+limit_dir_expr: _expression CARET _limit_dir
 
-limit: FUNC_LIM group_curly_parentheses_lim _expression
+group_curly_parentheses_lim: L_BRACE _expression LIM_APPROACH_SYM (limit_dir_expr | _expression) R_BRACE
 
-group_curly_parentheses_lim: UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM (limit_dir_expr | _expression) R_BRACE
+limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim _expression
 
 integral: FUNC_INT _expression DIFFERENTIAL _oneletter_symbol
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol

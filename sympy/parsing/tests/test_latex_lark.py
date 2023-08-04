@@ -204,7 +204,7 @@ LIMIT_EXPRESSION_PAIRS = [
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
     (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
-    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Pow(x, -1), x, oo))
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo))
 ]
 
 SQRT_EXPRESSION_PAIRS = [
