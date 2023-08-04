@@ -23,6 +23,12 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 
+lark = import_module("lark")
+
+# disable tests if lark is not present
+if not lark:
+    disabled = True
+
 theta = Symbol('theta')
 f = Function('f')
 
