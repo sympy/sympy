@@ -1012,7 +1012,7 @@ class Xor(BooleanFunction):
             for j in range(i + 1, len(rel)):
                 rj, cj = rel[j][:2]
                 if cj == nc:
-                    odd = ~odd
+                    odd = not odd
                     break
                 elif cj == c:
                     break
