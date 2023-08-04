@@ -139,8 +139,6 @@ SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE 
 // r"h_{\theta"
 GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 
-WORD: /[a-zA-Z]+/
-
 %import common.DIGIT -> DIGIT
 
 //////////////////// grammar //////////////////////
@@ -152,7 +150,7 @@ _oneletter_symbol: SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
     | GREEK_SYMBOL
-multiletter_symbol: CMD_MATHIT L_BRACE WORD R_BRACE
+multiletter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
 number: /\d+(\.\d*)?/
 infinity: CMD_INFTY
 
@@ -194,11 +192,13 @@ _expression_mul: _expression_power | mul | div | integral | summation | product 
 
 _expression: _expression_mul | add | sub
 
-_limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
+limit_dir: "+" | "-" | L_BRACE ("+" | "-") R_BRACE
 
-limit: FUNC_LIM UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM _expression (CARET _limit_dir)? R_BRACE _expression
+limit_dir_expr: _expression CARET limit_dir
 
-//group_curly_parentheses_lim: L_BRACE _atomic_expr LIM_APPROACH_SYM  R_BRACE
+limit: FUNC_LIM group_curly_parentheses_lim _expression
+
+group_curly_parentheses_lim: UNDERSCORE L_BRACE _expression LIM_APPROACH_SYM (limit_dir_expr | _expression) R_BRACE
 
 integral: FUNC_INT _expression DIFFERENTIAL _oneletter_symbol
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol

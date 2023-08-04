@@ -316,7 +316,7 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
 
 
 def test_symbol_expressions():
-    expected_failures = {6, 7, 11}
+    expected_failures = {6, 7}
     for i, (latex_str, sympy_expr) in enumerate(SYMBOL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
