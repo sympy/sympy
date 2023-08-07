@@ -92,10 +92,13 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
                 module_version_attr='version', module_version_attr_call_args=())
     flint = None
 
-    # Warn if user explicitly asked for gmpy but it isn't available.
-    if gmpy is None and GROUND_TYPES in ('gmpy', 'gmpy2'):
-        from warnings import warn
-        warn("gmpy library is not installed, switching to 'python' ground types")
+    if gmpy is None:
+        # Warn if user explicitly asked for gmpy but it isn't available.
+        if GROUND_TYPES != 'auto':
+            from warnings import warn
+            warn("gmpy library is not installed, switching to 'python' ground types")
+
+        # Fall back to Python if gmpy2 is not available
         GROUND_TYPES = 'python'
     else:
         GROUND_TYPES = 'gmpy'
