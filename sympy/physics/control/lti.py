@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import ImmutableMatrix, eye
+from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
@@ -22,7 +22,7 @@ from sympy.series import limit
 from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'gbt', 'bilinear', 'forward_diff', 'backward_diff']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff']
 
 
 def _roots(poly, var):
@@ -3217,3 +3217,257 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """Expands the transfer function matrix"""
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var)
+
+class StateSpace(LinearTimeInvariant):
+    r"""
+    State space model (ssm) of a linear, time invariant control system.
+
+    Represents the standard state-space model with A, B, C, D as state-space matrices.
+    This makes the linear control system:
+        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
+        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
+    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+
+    Parameters
+    ==========
+
+    A : Matrix
+        The State matrix of the state space model.
+    B : Matrix
+        The Input-to-State matrix of the state space model.
+    C : Matrix
+        The State-to-Output matrix of the state space model.
+    D : Matrix
+        The Feedthrough matrix of the state space model.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import StateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> StateSpace(A, B, C, D)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
+
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> StateSpace(A, B)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+
+
+    See Also
+    ========
+
+    TransferFunction, TransferFunctionMatrix
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/State-space_representation
+    .. [2] https://in.mathworks.com/help/control/ref/ss.html
+
+    """
+    def __new__(cls, A=None, B=None, C=None, D=None):
+        if(A == None and B == None and C == None and D == None):
+            A = B = C = D = zeros(1)
+        elif(B == None and C == None and D == None):
+            B = zeros(A.rows,1)
+            C = zeros(1, A.cols)
+            D = zeros(1)
+        elif(C == None and D == None):
+            C = zeros(1, A.cols)
+            D = zeros(1, B.cols)
+        elif(D == None):
+            D = zeros(C.rows, B.cols)
+
+        A = _sympify(A)
+        B = _sympify(B)
+        C = _sympify(C)
+        D = _sympify(D)
+
+        if (isinstance(A, ImmutableMatrix) and isinstance(B, ImmutableDenseMatrix) and
+            isinstance(C, ImmutableDenseMatrix) and isinstance(D, ImmutableDenseMatrix)):
+            # Check State Matrix is square
+            if A.rows != A.cols:
+                raise ShapeError("Matrix A must be a square matrix.")
+
+            # Check State and Input matrices have same rows
+            if A.rows != B.rows:
+                raise ShapeError("Matrices A and B must have the same number of rows.")
+
+            # Check Ouput and Feedthrough matrices have same rows
+            if C.rows != D.rows:
+                raise ShapeError("Matrices C and D must have the same number of rows.")
+
+            # Check State and Ouput matrices have same columns
+            if A.cols != C.cols:
+                raise ShapeError("Matrices A and C must have the same number of columns.")
+
+            # Check Input and Feedthrough matrices have same columns
+            if B.cols != D.cols:
+                raise ShapeError("Matrices B and D must have the same number of columns.")
+
+            obj = super(StateSpace, cls).__new__(cls, A, B, C, D)
+            obj._A = A
+            obj._B = B
+            obj._C = C
+            obj._D = D
+
+            # Determine if the system is SISO or MIMO
+            num_outputs = D.rows
+            num_inputs = D.cols
+            if num_inputs == 1 and num_outputs == 1:
+                obj._is_SISO = True
+                obj._clstype = SISOLinearTimeInvariant
+            else:
+                obj._is_SISO = False
+                obj._clstype = MIMOLinearTimeInvariant
+
+            return obj
+
+        else:
+            raise TypeError("A, B, C and D inputs must all be sympy Matrices.")
+
+    @property
+    def State_Matrix(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.State_Matrix
+        Matrix([
+        [1, 2],
+        [1, 0]])
+
+        """
+        return self._A
+
+    @property
+    def Input_Matrix(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.Input_Matrix
+        Matrix([
+        [1],
+        [1]])
+
+        """
+        return self._B
+
+    @property
+    def Output_Matrix(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.Output_Matrix
+        Matrix([[0, 0]])
+
+        """
+        return self._C
+
+    @property
+    def num_states(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_states
+        2
+
+        """
+        return self._A.rows
+
+    @property
+    def num_inputs(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_inputs
+        1
+
+        """
+        return self._D.cols
+
+    @property
+    def num_outputs(self):
+        """
+        Returns the state matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.num_outputs
+        1
+
+        """
+        return self._D.rows
