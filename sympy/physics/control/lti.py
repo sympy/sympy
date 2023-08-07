@@ -3368,7 +3368,7 @@ class StateSpace(LinearTimeInvariant):
     @property
     def Input_Matrix(self):
         """
-        Returns the state matrix of the model.
+        Returns the input matrix of the model.
 
         Examples
         ========
@@ -3391,7 +3391,7 @@ class StateSpace(LinearTimeInvariant):
     @property
     def Output_Matrix(self):
         """
-        Returns the state matrix of the model.
+        Returns the output matrix of the model.
 
         Examples
         ========
@@ -3404,7 +3404,7 @@ class StateSpace(LinearTimeInvariant):
         >>> D = Matrix([0])
         >>> ss = StateSpace(A, B, C, D)
         >>> ss.Output_Matrix
-        Matrix([[0, 0]])
+        Matrix([[0, 1]])
 
         """
         return self._C
@@ -3412,7 +3412,7 @@ class StateSpace(LinearTimeInvariant):
     @property
     def num_states(self):
         """
-        Returns the state matrix of the model.
+        Returns the number of states of the model.
 
         Examples
         ========
@@ -3433,7 +3433,7 @@ class StateSpace(LinearTimeInvariant):
     @property
     def num_inputs(self):
         """
-        Returns the state matrix of the model.
+        Returns the number of inputs of the model.
 
         Examples
         ========
@@ -3454,7 +3454,7 @@ class StateSpace(LinearTimeInvariant):
     @property
     def num_outputs(self):
         """
-        Returns the state matrix of the model.
+        Returns the number of outputs of the model.
 
         Examples
         ========
