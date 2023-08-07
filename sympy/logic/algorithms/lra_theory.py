@@ -66,12 +66,35 @@ class Boundry:
     """
     Represents an upper or lower bound or an equality between a symbol and some constant.
     """
-    def __init__(self, var, const, upper, equality, strict=False):
+    def __init__(self, var, const, upper, equality, strict=None):
         self.var = var
-        self.bound = const
+        if isinstance(const, tuple):
+            s = const[1] != 0
+            if strict:
+                assert s == strict
+            self.bound = const[0]
+            self.strict = s
+        else:
+            self.bound = const
+            self.strict = strict
         self.upper = upper
         self.equality = equality
         self.strict = strict
+        assert self.strict is not None
+
+    def get_inequality(self):
+        if self.equality:
+            return Eq(self.var, self.bound)
+        elif self.upper and self.strict:
+            return self.var < self.bound
+        elif not self.upper and self.strict:
+            return self.var > self.bound
+        elif self.upper:
+            return self.var <= self.bound
+        else:
+            return self.var >= self.bound
+
+
 
 class LRASolver():
     """
@@ -276,6 +299,8 @@ class LRASolver():
 
         raise ValueError(f"{atom} could not be asserted.")
     def _assert_upper(self, xi, ci):
+        if self.result:
+            assert self.result[0] != "UNSAT"
         self.result = None
         if ci >= self.upper[xi]:
             self.result = "SAT", self.assign
@@ -290,11 +315,14 @@ class LRASolver():
         return "OK", None
 
     def _assert_lower(self, xi, ci):
+        if self.result:
+            assert self.result[0] != "UNSAT"
         self.result = None
         if ci <= self.lower[xi]:
             self.result = "SAT", self.assign
             return self.result
         if ci > self.upper[xi]:
+            #b1 = Boundry(xi, self.upper[xi], equality=False, upper=True)
             self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
             return self.result
         self.lower[xi] = ci
@@ -411,10 +439,10 @@ class LRASolver():
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
-                    conflict |= {nb <= self.upper[nb] for nb in N_minus}
-                    conflict |= {nb >= self.lower[nb] for nb in N_plus}
-                    conflict.add(xi <= self.upper[xi])
-                    return "UNSAT", conflict
+                    #conflict |= {nb <= self.upper[nb] for nb in N_minus}
+                    #conflict |= {nb >= self.lower[nb] for nb in N_plus}
+                    #conflict.add(xi <= self.upper[xi])
+                    return "UNSAT", "WIP"#conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
@@ -425,12 +453,12 @@ class LRASolver():
         theta_lhs = (v[0] - self.assign[xi][0])/M[i, j]
         theta_rhs = (v[1] - self.assign[xi][1])/M[i, j]
         self.assign[xi] = v
-        self.assign[xj] = self.assign[xj] + (theta_lhs, theta_rhs)
+        self.assign[xj] = (self.assign[xj][0] + theta_lhs, self.assign[xj][1] + theta_rhs)
         for xk in basic:
             if xk != xi:
                 k = basic[xk]
                 akj = M[k, j]
-                self.assign[xk] = self.assign[xk] + (akj*theta_lhs, akj*theta_rhs)
+                self.assign[xk] = (self.assign[xk][0] + akj*theta_lhs, self.assign[xk][1] + akj*theta_rhs)
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]

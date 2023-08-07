@@ -25,7 +25,7 @@ from sympy.logic.algorithms.lra_theory import LRASolver, Boundry
 
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
-                        strict_only = False):
+                        disable_strict = False, disable_nonstrict=False, disable_equality=False):
     from sympy.core.random import random, choice, randint
     from sympy.core.sympify import sympify
     from sympy.ntheory.generate import randprime
@@ -44,22 +44,15 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
     for _ in range(num_constraints):
         lhs, rhs = sum(rand() * x for x in variables), rand(sparsity=0) # sparsity=0  bc of bug with smtlib_code
         r = random()
-        if strict_only:
-            if r < .5:
-                const = lhs < rhs
-            else:
-                const = lhs > rhs
-        elif r < .2:
-            const = Eq(lhs, rhs)
-        elif r < .4:
-            const = lhs <= rhs
-        elif r < .6:
-            const = lhs >= rhs
-        elif r < .8:
-            const = lhs < rhs
-        else:
-            const = lhs > rhs
-        constraints.append(const)
+        options = []
+        if not disable_equality:
+            options += [Eq(lhs, rhs)]
+        if not disable_nonstrict:
+            options += [lhs <= rhs, lhs >= rhs]
+        if not disable_strict:
+            options += [lhs < rhs, lhs > rhs]
+
+        constraints.append(choice(options))
 
     return constraints
 
@@ -99,12 +92,13 @@ def test_from_encoded_cnf():
 
 
     feasible_count = 0
-    for _ in range(3000):
-        constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False, strict_only=True)
+    for _ in range(300):
+        constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
         #x1, x2, x3 = symbols("x1 x2 x3")
         #constraints = [x1 - 3*x2 <= -5, 6*x1 + 4*x2 <= 0, -7*x1 + 3*x2 <= 3]
         #constraints = [-3*x1 >= 3, Eq(4*x1, -1)]
         #constraints = [-4*x1 < 4, 6*x1 <= -6]
+        #constraints = [-3*x2 >= 7, 6*x1 <= -5, -3*x2 <= -4]
         if False in constraints or True in constraints:
             continue
 
@@ -123,6 +117,9 @@ def test_from_encoded_cnf():
         bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
+            if lra.result and lra.result[0] == "UNSAT":
+                print("Constraints are unsatisfiable")
+                break
             print("var:", b.var, "bound:", b.bound, "upper:", b.upper)
             lra.assert_enc_boundry(l)
             print(lra.assign, lra.lower, lra.upper)
