@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
+from sympy.matrices import ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
