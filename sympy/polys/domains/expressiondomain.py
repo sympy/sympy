@@ -165,6 +165,9 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return hash("EX")
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return a.as_expr()
