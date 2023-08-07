@@ -6,7 +6,7 @@ from typing import Any
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -422,14 +422,11 @@ class Domain:
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
-        if HAS_GMPY:
-            integers = ZZ
-            if isinstance(element, integers.tp):
-                return self.convert_from(element, integers)
-
-            rationals = QQ
-            if isinstance(element, rationals.tp):
-                return self.convert_from(element, rationals)
+        if GROUND_TYPES != 'python':
+            if isinstance(element, ZZ.tp):
+                return self.convert_from(element, ZZ)
+            if isinstance(element, QQ.tp):
+                return self.convert_from(element, QQ)
 
         if isinstance(element, float):
             parent = RealField(tol=False)
