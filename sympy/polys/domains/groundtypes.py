@@ -60,7 +60,7 @@ elif GROUND_TYPES == 'flint':
         return a.gcd(b)
 
     def gcdex(a, b):
-        x, y, g = a.gcdex(b)
+        x, y, g = python_gcdex(a, b)
         return _fmpz(x), _fmpz(y), _fmpz(g)
 
     def lcm(a, b):

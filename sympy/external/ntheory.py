@@ -11,17 +11,17 @@ import mpmath.libmp as mlib
 
 def factorial(x):
     """Return x!."""
-    return int(mlib.ifac(x))
+    return int(mlib.ifac(int(x)))
 
 
 def sqrt(x):
     """Integer square root of x."""
-    return int(mlib.sqrt(x))
+    return int(mlib.isqrt(int(x)))
 
 
 def sqrtrem(x):
     """Integer square root of x and remainder."""
-    s, r = mlib.sqrtrem(x)
+    s, r = mlib.sqrtrem(int(x))
     return (int(s), int(r))
 
 
@@ -80,7 +80,7 @@ def is_square(x):
         return False  # e.g. 97, 388
     if 0xdef9ae771ffe3b9d67dec & (1 << (m % 85)):
         return False  # e.g. 793, 1408
-    return mlib.sqrtrem(x)[1] == 0
+    return mlib.sqrtrem(int(x))[1] == 0
 
 
 def invert(x, m):
