@@ -151,7 +151,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         This function uses ``math.log`` which is based on ``float`` so it will
         fail for large integer arguments.
         """
-        return self.dtype(math.log(int(a), b))
+        return self.dtype(int(math.log(int(a), b)))
 
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
@@ -197,7 +197,10 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         p, q = K0.to_rational(a)
 
         if q == 1:
-            return MPZ(p)
+            # XXX: If MPZ is flint.fmpz and p is a gmpy2.mpz, then we need
+            # to convert via int because fmpz and mpz do not know about each
+            # other.
+            return MPZ(int(p))
 
     def from_GaussianIntegerRing(K1, a, K0):
         if a.y == 0:
