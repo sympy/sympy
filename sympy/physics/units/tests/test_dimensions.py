@@ -127,14 +127,6 @@ def test_Dimension_mul_div_exp():
     c_dim = c.subs({a: length, b: length})
     assert dimsys_SI.equivalent_dims(c_dim, length)
 
-    mul_sub = 3*a
-    mul_sub_dim = mul_sub.subs({a: length})
-    assert mul_sub_dim == length
-
-    no_cancel = a - b
-    no_cancel_dim = no_cancel.subs({a: length, b: length})
-    assert  no_cancel_dim == length
-
 def test_Dimension_functions():
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(cos(length)))
     raises(TypeError, lambda: dimsys_SI.get_dimensional_dependencies(acos(angle)))

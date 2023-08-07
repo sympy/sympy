@@ -282,6 +282,8 @@ def ddm_irref_den(a, K):
         A version of this routine that uses field division.
     sdm_irref
         A sparse version of :func:`ddm_irref`.
+    sdm_rref_den
+        A sparse version of :func:`ddm_irref_den`.
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
         Higher level interface.
 
