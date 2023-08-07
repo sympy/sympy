@@ -1,4 +1,4 @@
-from sympy import exp, powsimp, symbols, Float
+from sympy import symbols
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.testing.pytest import raises
 

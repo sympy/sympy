@@ -362,7 +362,7 @@ class Basic(Printable):
 
         args = self._sorted_args
         args = len(args), tuple([inner_key(arg) for arg in args])
-        return self.class_key(), args, S.One.sort_key(), S.One
+        return self.class_key(), args, S.One.sort_key(), S.One.sort_key()
 
     def _do_eq_sympify(self, other):
         """Returns a boolean indicating whether a == b when either a
