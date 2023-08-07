@@ -13,7 +13,7 @@ class LaTeXParsingError(Exception):
 _lark = import_module('lark')
 
 if _lark is not None:
-    from lark import Transformer
+    from lark import Transformer  # type: ignore
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
