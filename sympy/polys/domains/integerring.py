@@ -50,6 +50,17 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def __init__(self):
         """Allow instantiation of this domain. """
 
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, IntegerRing):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Compute a hash value for this domain. """
+        return hash('ZZ')
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))

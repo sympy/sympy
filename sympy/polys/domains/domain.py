@@ -817,6 +817,7 @@ class Domain:
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
+        # XXX: Remove this.
         return isinstance(other, Domain) and self.dtype == other.dtype
 
     def __ne__(self, other):
