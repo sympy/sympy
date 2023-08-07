@@ -2091,7 +2091,7 @@ class Atom(Basic):
 
     @cacheit
     def sort_key(self, order=None):
-        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+        return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One.sort_key()
 
     def _eval_simplify(self, **kwargs):
         return self

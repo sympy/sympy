@@ -467,7 +467,7 @@ class Dummy(Symbol):
     @cacheit
     def sort_key(self, order=None):
         return self.class_key(), (
-            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
+            2, (self.name, self.dummy_index)), S.One.sort_key(), S.One.sort_key()
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
