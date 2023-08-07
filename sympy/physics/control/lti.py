@@ -3350,8 +3350,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
@@ -3373,8 +3373,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
@@ -3396,8 +3396,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
@@ -3417,8 +3417,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
@@ -3438,8 +3438,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
@@ -3459,8 +3459,8 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
         >>> A = Matrix([[1, 2], [1, 0]])
         >>> B = Matrix([1, 1])
         >>> C = Matrix([[0, 1]])
