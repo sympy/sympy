@@ -74,7 +74,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
            and self.tolerance == other.tolerance)
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.precision, self.tolerance))
+        return hash((self.__class__.__name__, self._dtype, self.precision, self.tolerance))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
