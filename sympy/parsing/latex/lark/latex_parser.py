@@ -73,13 +73,6 @@ class TransformToSymPyExpr(Transformer):
                 greek_letter = "lamda"
             return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
 
-        variable_name = re.sub("var", "", tokens[1:])
-        if variable_name == "lambda":
-            # we do the same name change as sympy.abc because lambda is a Python keyword
-            return sympy.Symbol("lamda")
-        else:
-            return sympy.Symbol(variable_name)
-
     def multiletter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
 
@@ -303,10 +296,10 @@ class TransformToSymPyExpr(Transformer):
 
             return filter(remove_tokens, tokens)
 
+    # Function-related stuff
     def function_applied(self, tokens):
         return sympy.Function(tokens[0])(*tokens[2])
 
-    # Function-related stuff
     def sin(self, tokens):
         return sympy.sin(tokens[1], evaluate=False)
 
