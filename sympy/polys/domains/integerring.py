@@ -1,6 +1,6 @@
 """Implementation of :class:`IntegerRing` class. """
 
-from sympy.external.gmpy import MPZ, HAS_GMPY
+from sympy.external.gmpy import MPZ, GROUND_TYPES
 
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
@@ -206,7 +206,8 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
-        if HAS_GMPY:
+        # XXX: This conditional logic should be handled somewhere else.
+        if GROUND_TYPES == 'gmpy':
             return s, t, h
         else:
             return h, s, t
