@@ -113,12 +113,15 @@ elif GROUND_TYPES == 'flint':
         from warnings import warn
         warn("python_flint is not installed, switching to 'python' ground types")
         GROUND_TYPES = 'python'
+    else:
+        GROUND_TYPES = 'flint'
 
 elif GROUND_TYPES == 'python':
 
     # The user asked for Python so ignore gmpy2/flint
     gmpy = None
     flint = None
+    GROUND_TYPES = 'python'
 
 else:
 
@@ -126,9 +129,9 @@ else:
     from warnings import warn
     warn("SYMPY_GROUND_TYPES environment variable unrecognised. "
          "Should be 'python', 'auto', 'gmpy', or 'gmpy2'")
-    GROUND_TYPES = 'python'
     gmpy = None
     flint = None
+    GROUND_TYPES = 'python'
 
 
 #
@@ -162,9 +165,9 @@ elif GROUND_TYPES == 'flint':
 
     HAS_GMPY = 0
     GROUND_TYPES = 'flint'
-    SYMPY_INTS = (int, flint.fmpz)
-    MPZ = flint.fmpz
-    MPQ = flint.fmpq
+    SYMPY_INTS = (int, flint.fmpz) # type: ignore
+    MPZ = flint.fmpz # type: ignore
+    MPQ = flint.fmpq # type: ignore
 
     factorial = python_factorial
     sqrt = python_sqrt
