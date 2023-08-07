@@ -869,6 +869,7 @@ def test_dup_ff_div_gmpy2():
     if GROUND_TYPES != 'gmpy2':
         return
 
+    from gmpy2 import mpq
     from sympy.polys.domains import GMPYRationalField
     K = GMPYRationalField()
 
