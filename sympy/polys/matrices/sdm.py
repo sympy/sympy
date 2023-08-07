@@ -1269,10 +1269,7 @@ def sdm_transpose(M):
 
 
 def sdm_dotvec(A, B, K):
-    total = K.zero
-    for j in A.keys() & B.keys():
-        total += A[j] * B[j]
-    return total
+    return K.sum(A[j] * B[j] for j in A.keys() & B.keys())
 
 
 def sdm_matvecmul(A, B, K):
@@ -1918,11 +1915,8 @@ def sdm_berk(M, n, K):
         return {0: one}
     elif n == 1:
         pdict = {0: one}
-        M0 = M.get(0)
-        if M0 is not None:
-            M00 = M0.get(0, zero)
-            if M00:
-                pdict[1] = -M00
+        if M00 := M.get(0, {}).get(0, zero):
+            pdict[1] = -M00
 
     # M = [[a, R],
     #      [C, A]]
@@ -1986,12 +1980,9 @@ def sdm_berk(M, n, K):
 
     Tq = {}
 
-    qi_min = min(q)
-    qi_max = max(q)
-    for i in range(qi_min, min(qi_max+len(Tvals), n+1)):
+    for i in range(min(q), min(max(q)+len(Tvals), n+1)):
         Ti = dict(enumerate(Tvals, i-len(Tvals)+1))
-        Tqi = sdm_dotvec(Ti, q, K)
-        if Tqi:
+        if Tqi := sdm_dotvec(Ti, q, K):
             Tq[i] = Tqi
 
     return Tq
