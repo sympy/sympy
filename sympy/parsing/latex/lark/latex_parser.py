@@ -43,7 +43,6 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol('%s_{%s}' % (symbol, sub))
 
     def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
-        print("GREEK_SUBSCRIPTED_SYMBOL =", tokens)
         greek_letter, sub = tokens.value.split('_')
 
         greek_letter = re.sub("var", "", greek_letter[1:])
@@ -208,8 +207,6 @@ class TransformToSymPyExpr(Transformer):
         right_brace_index = tokens.index("}", underscore_index)
 
         bottom_limit = tokens[left_brace_index + 1: right_brace_index]
-
-        # print(f"bottom limit = {bottom_limit}")
 
         # next, we isolate the upper limit
         top_limit = tokens[caret_index + 1:]
