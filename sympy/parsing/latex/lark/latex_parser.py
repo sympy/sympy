@@ -10,7 +10,7 @@ class LaTeXParsingError(Exception):
     pass
 
 
-_lark = import_module('lark')
+_lark = import_module("lark")
 
 if _lark is not None:
     from lark import Transformer  # type: ignore
@@ -36,41 +36,41 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Symbol(variable_name)
 
     def BASIC_SUBSCRIPTED_SYMBOL(self, tokens):
-        symbol, sub = tokens.value.split('_')
-        if sub.startswith('{'):
-            return sympy.Symbol('%s_{%s}' % (symbol, sub[1:-1]))
+        symbol, sub = tokens.value.split("_")
+        if sub.startswith("{"):
+            return sympy.Symbol("%s_{%s}" % (symbol, sub[1:-1]))
         else:
-            return sympy.Symbol('%s_{%s}' % (symbol, sub))
+            return sympy.Symbol("%s_{%s}" % (symbol, sub))
 
     def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
-        greek_letter, sub = tokens.value.split('_')
+        greek_letter, sub = tokens.value.split("_")
 
         greek_letter = re.sub("var", "", greek_letter[1:])
         if greek_letter == "lambda":
             # we do the same name change as sympy.abc because lambda is a Python keyword
             greek_letter = "lamda"
 
-        if sub.startswith('{'):
-            return sympy.Symbol('%s_{%s}' % (greek_letter, sub[1:-1]))
+        if sub.startswith("{"):
+            return sympy.Symbol("%s_{%s}" % (greek_letter, sub[1:-1]))
         else:
-            return sympy.Symbol('%s_{%s}' % (greek_letter, sub))
+            return sympy.Symbol("%s_{%s}" % (greek_letter, sub))
 
     def SYMBOL_WITH_GREEK_SUBSCRIPT(self, tokens):
-        symbol, sub = tokens.value.split('_')
-        if sub.startswith('{'):
+        symbol, sub = tokens.value.split("_")
+        if sub.startswith("{"):
             greek_letter = sub[2:-1]
             greek_letter = re.sub("var", "", greek_letter)
             if greek_letter == "lambda":
                 # we do the same name change as sympy.abc because lambda is a Python keyword
                 greek_letter = "lamda"
-            return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
+            return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
         else:
             greek_letter = sub[1:]
             greek_letter = re.sub("var", "", greek_letter)
             if greek_letter == "lambda":
                 # we do the same name change as sympy.abc because lambda is a Python keyword
                 greek_letter = "lamda"
-            return sympy.Symbol('%s_{%s}' % (symbol, greek_letter))
+            return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
 
     def multiletter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
@@ -171,7 +171,8 @@ class TransformToSymPyExpr(Transformer):
 
         if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
             # then one was given and the other wasn't
-            # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
+            
+            # we can"t simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
             # to True if the lower_bound is 0
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
@@ -223,7 +224,7 @@ class TransformToSymPyExpr(Transformer):
 
         index_variable = bottom_limit[0]
         lower_limit = bottom_limit[-1]
-        upper_limit = top_limit[0]  # for now, it'll always be 0
+        upper_limit = top_limit[0]  # for now, the index will always be 0
 
         # print(f"return value = ({index_variable}, {lower_limit}, {upper_limit})")
 
@@ -430,13 +431,13 @@ class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
         import lark
 
-        with open(os.path.join(os.path.dirname(__file__), 'latex.lark'), encoding="utf-8") as f:
+        with open(os.path.join(os.path.dirname(__file__), "latex.lark"), encoding="utf-8") as f:
             latex_grammar = f.read()
 
         self.parser = lark.Lark(
-            latex_grammar, parser='earley', start='latex_string',
-            lexer='auto',
-            ambiguity='explicit',
+            latex_grammar, parser="earley", start="latex_string",
+            lexer="auto",
+            ambiguity="explicit",
             debug=True,
             propagate_positions=False,
             maybe_placeholders=False,
