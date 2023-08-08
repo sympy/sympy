@@ -3506,7 +3506,8 @@ class StateSpace(LinearTimeInvariant):
 
     def observability_matrix(self):
         """
-        Returns the observability matrix of the state space model.
+        Returns the observability matrix of the state space model:
+            [C, C * A^1, C * A^2, .. , C * A^(n-1)]; A in R^(n x n), C in R^(m x k)
 
         Examples
         ========
@@ -3580,3 +3581,80 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self.observability_matrix().rank() == self.num_states
+
+    def controllability_matrix(self):
+        """
+        Returns the controllability matrix of the system:
+            [B, A * B, A^2 * B, .. , A^(n-1) * B]; A in R^(n x n), B in R^(n x m)
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.controllability_matrix()
+        Matrix([
+        [0.5, -0.75],
+        [  0,   0.5]])
+
+        References
+        ==========
+        .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.ctrb.html
+
+        """
+        co = self._B
+        n = self._A.shape[0]
+        for i in range(1, n):
+            co = co.row_join(((self._A)**i) * self._B)
+
+        return co
+
+    def controllable_subspace(self):
+        """
+        Returns the controllable subspace of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> co_subspace = ss.controllable_subspace()
+        >>> co_subspace
+        [Matrix([
+        [0.5],
+        [  0]]), Matrix([
+        [-0.75],
+        [  0.5]])]
+
+        """
+        return self.controllability_matrix().columnspace()
+
+    def is_controllable(self):
+        """
+        Returns if the state space model is controllable.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.is_controllable()
+        True
+
+        """
+        return self.controllability_matrix().rank() == self.num_states
