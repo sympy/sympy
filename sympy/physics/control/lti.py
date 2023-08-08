@@ -3471,3 +3471,9 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self._D.rows
+
+    def __neg__(self):
+        """
+        Returns the negation of the state space model.
+        """
+        return StateSpace(self._A, self._B, -self._C, -self._D)
