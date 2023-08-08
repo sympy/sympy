@@ -170,15 +170,6 @@ class TransformToSymPyExpr(Transformer):
 
         differential_symbol = tokens[differential_symbol_index + 1]
 
-        # print('lower bound =', lower_bound)
-        # print('upper bound =', upper_bound)
-        # print('differential symbol =', differential_symbol)
-
-        # print()
-        # print('underscore index =', underscore_index)
-        # print('caret index =', caret_index)
-        # print('differential symbol index =', differential_symbol_index)
-
         if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
             # then one was given and the other wasn't
             # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
@@ -235,7 +226,7 @@ class TransformToSymPyExpr(Transformer):
 
         index_variable = bottom_limit[0]
         lower_limit = bottom_limit[-1]
-        upper_limit = top_limit[0] # for now, it'll always be 0
+        upper_limit = top_limit[0]  # for now, it'll always be 0
 
         # print(f"return value = ({index_variable}, {lower_limit}, {upper_limit})")
 
@@ -255,8 +246,6 @@ class TransformToSymPyExpr(Transformer):
             direction = tokens[left_curly_brace_index + 1]
         else:
             direction = tokens[caret_index + 1]
-
-        # print(direction)
 
         if direction == "+":
             return tokens[0], "+"
@@ -440,59 +429,82 @@ class TransformToSymPyExpr(Transformer):
                 return sympy.log(tokens[1], evaluate=False)
 
 
-def parse_latex_lark(s: str, *, logger=False, print_debug_output=False, transform=True):
-    # last options are temporary, for quick prototyping
-    # TODO: should we use pkg_resource to get grammar file?  I
-    # think this would make sympy depend on setuptools which we
-    # would not like
+class LarkLatexParser:
+    def __init__(self, logger=False, print_debug_output=False, transform=True):
+        import lark
 
+        with open(os.path.join(os.path.dirname(__file__), 'latex.lark'), encoding="utf-8") as f:
+            latex_grammar = f.read()
+
+        self.parser = lark.Lark(
+            latex_grammar, parser='earley', start='latex_string',
+            lexer='auto',
+            ambiguity='explicit',
+            debug=True,
+            propagate_positions=False,
+            maybe_placeholders=False,
+            keep_all_tokens=True)
+
+        self.logger = logger
+        self.print_debug_output = print_debug_output
+        self.transform = transform
+
+        self.transform_to_sympy_expr = TransformToSymPyExpr()
+
+    def doparse(self, s: str):
+        import lark
+
+        if self.logger:
+            lark.logger.setLevel(logging.DEBUG)
+
+        parse_tree = self.parser.parse(s)
+
+        if not self.transform:
+            # exit early and return the parse tree
+            lark.logger.debug("expression =", s)
+            lark.logger.debug(parse_tree)
+            lark.logger.debug(parse_tree.pretty())
+            return parse_tree
+
+        if self.print_debug_output:
+            # print this stuff before attempting to run the transformer
+            lark.logger.debug("expression =", s)
+            # print(parse_tree)
+            lark.logger.debug(parse_tree.pretty())
+
+        sympy_expression = self.transform_to_sympy_expr.transform(parse_tree)
+
+        if self.print_debug_output:
+            lark.logger.debug("SymPy expression =", sympy_expression)
+
+        return sympy_expression
+
+
+if _lark is not None:
+    _lark_latex_parser = LarkLatexParser()
+
+
+def parse_latex_lark(s: str):
+    """
+    Experimental LaTeX parser using PyLark.
+
+    This function is still under development and its API may change with the
+    next releases of SymPy.
+    """
     if _lark is None:
         raise ImportError("PyLark is probably not installed")
-
-    with open(os.path.join(os.path.dirname(__file__), 'latex.lark')) as f:
-        latex_grammar = f.read()
-
-    parser = _lark.Lark(latex_grammar, parser='earley', start='latex_string',
-                        lexer='auto',
-                        ambiguity='explicit',
-                        debug=True,
-                        propagate_positions=False,
-                        maybe_placeholders=False,
-                        keep_all_tokens=True)
-
-    if logger:
-        _lark.logger.setLevel(logging.DEBUG)
-
-    parse_tree = parser.parse(s)
-
-    if not transform:
-        # exit early and return the parse tree
-        print("expression =", s)
-        print(parse_tree)
-        print(parse_tree.pretty())
-        return parse_tree
-
-    if print_debug_output:
-        # print this stuff before attempting to run the transformer
-        print("expression =", s)
-        # print(parse_tree)
-        print(parse_tree.pretty())
-
-    sympy_expression = TransformToSymPyExpr().transform(parse_tree)
-
-    if print_debug_output:
-        print("SymPy expression =", sympy_expression)
-
-    return sympy_expression
+    return _lark_latex_parser.doparse(s)
 
 
 def pr_ltx(s: str):
-    parse_latex_lark(s, print_debug_output=True, transform=False)
+    LarkLatexParser(print_debug_output=True, transform=False).doparse(s)
+
 
 def trfm_ltx(s: str):
-    parse_latex_lark(s, print_debug_output=True)
+    LarkLatexParser(print_debug_output=True).doparse(s)
 
-def pretty_print_lark_trees(tree, indent=0, show_expr=True):
+
+def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
     if isinstance(tree, _lark.Token):
         return tree.value
 
@@ -517,9 +529,9 @@ def pretty_print_lark_trees(tree, indent=0, show_expr=True):
         output += str(data) + "("
 
     if is_ambig:
-        output += "\n" + "\n".join([" "*new_indent + pretty_print_lark_trees(i, new_indent, show_expr) for i in tree.children])
+        output += "\n" + "\n".join([" " * new_indent + _pretty_print_lark_trees(i, new_indent, show_expr) for i in tree.children])
     else:
-        output += ",".join([pretty_print_lark_trees(i, new_indent, show_expr) for i in tree.children])
+        output += ",".join([_pretty_print_lark_trees(i, new_indent, show_expr) for i in tree.children])
 
     if show_node:
         output += ")"
