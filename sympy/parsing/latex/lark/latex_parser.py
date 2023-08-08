@@ -483,13 +483,13 @@ if _lark is not None:
 
 def parse_latex_lark(s: str):
     """
-    Experimental LaTeX parser using PyLark.
+    Experimental LaTeX parser using Lark.
 
     This function is still under development and its API may change with the
     next releases of SymPy.
     """
     if _lark is None:
-        raise ImportError("PyLark is probably not installed")
+        raise ImportError("Lark is probably not installed")
     return _lark_latex_parser.doparse(s)
 
 
