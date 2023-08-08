@@ -3503,3 +3503,80 @@ class StateSpace(LinearTimeInvariant):
         G = (G.simplify())[0]
 
         return TransferFunction.from_rational_expression(G)
+
+    def observability_matrix(self):
+        """
+        Returns the observability matrix of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ob = ss.observability_matrix()
+        >>> ob
+        Matrix([
+        [0, 1],
+        [1, 0]])
+
+        References
+        ==========
+        .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
+
+        """
+        n = self.num_states
+        ob = self._C
+        for i in range(1,n):
+            ob = ob.col_join(self._C * self._A**i)
+
+        return ob
+
+    def observable_subspace(self):
+        """
+        Returns the observable subspace of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ob_subspace = ss.observable_subspace()
+        >>> ob_subspace
+        [Matrix([
+        [0],
+        [1]]), Matrix([
+        [1],
+        [0]])]
+
+        """
+        return self.observability_matrix().columnspace()
+
+    def is_observable(self):
+        """
+        Returns if the state space model is observable.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.is_observable()
+        True
+
+        """
+        return self.observability_matrix().rank() == self.num_states
