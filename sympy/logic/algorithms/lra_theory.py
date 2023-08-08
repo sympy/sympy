@@ -129,7 +129,7 @@ class LRASolver():
         self.upper = {}
         self.assign = {}
 
-        self.result = None # always one of: (True, Assignment), (False, Clause), None
+        self.result = None # always one of: (True, Assignment), (False, ConflictClause), None
 
         for var in self.all_var:
             self.lower[var] = (-float("inf"), 0)
@@ -303,8 +303,7 @@ class LRASolver():
             assert self.result[0] != "UNSAT"
         self.result = None
         if ci >= self.upper[xi]:
-            self.result = "SAT", self.assign
-            return self.result
+            return "OK", None
         if ci < self.lower[xi]:
             self.result = "UNSAT", "WIP"#{(xi, self.lower[xi]), (xi <= ci)}
             return self.result
@@ -319,8 +318,7 @@ class LRASolver():
             assert self.result[0] != "UNSAT"
         self.result = None
         if ci <= self.lower[xi]:
-            self.result = "SAT", self.assign
-            return self.result
+            return "OK", None
         if ci > self.upper[xi]:
             #b1 = Boundry(xi, self.upper[xi], equality=False, upper=True)
             self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
