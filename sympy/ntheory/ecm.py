@@ -341,7 +341,7 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
                 n //= prime
     while(n > 1):
         try:
-            factor = _ecm_one_factor(n, B1, B2, max_curve, seed + n)
+            factor = _ecm_one_factor(n, B1, B2, max_curve, seed)
         except ValueError:
             raise ValueError("Increase the bounds")
         _factors.add(factor)
