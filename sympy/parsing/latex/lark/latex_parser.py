@@ -418,7 +418,7 @@ class TransformToSymPyExpr(Transformer):
         elif tokens[0].type == "FUNC_LN":
             return sympy.log(tokens[1], evaluate=False)
         elif tokens[0].type == "FUNC_LOG":
-            # we check if a base was passed in or not
+            # we check if a base was specified or not
             if "_" in tokens:
                 # then a base was specified
                 return sympy.log(tokens[3], tokens[2], evaluate=False) # fix the arguments
