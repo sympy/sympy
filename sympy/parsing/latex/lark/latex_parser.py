@@ -100,16 +100,18 @@ class TransformToSymPyExpr(Transformer):
         relation_type = tokens[1].type
         if relation_type == "EQUAL":
             return sympy.Eq(tokens[0], tokens[2])
-        if relation_type == "NOT_EQUAL":
+        elif relation_type == "NOT_EQUAL":
             return sympy.Ne(tokens[0], tokens[2])
-        if relation_type == "LT":
+        elif relation_type == "LT":
             return sympy.Lt(tokens[0], tokens[2])
-        if relation_type == "LTE":
+        elif relation_type == "LTE":
             return sympy.Le(tokens[0], tokens[2])
-        if relation_type == "GT":
+        elif relation_type == "GT":
             return sympy.Gt(tokens[0], tokens[2])
-        if relation_type == "GTE":
+        elif relation_type == "GTE":
             return sympy.Ge(tokens[0], tokens[2])
+        else:
+            raise LaTeXParsingError() # TODO: Fill descriptive error message.
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2], evaluate=False)
@@ -189,11 +191,14 @@ class TransformToSymPyExpr(Transformer):
             integrand = tokens[differential_symbol_index - 1]
 
         if lower_bound is not None:
+            # we have an definite integral
+            
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
             return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
-
-        return sympy.Integral(integrand, differential_symbol)
+        else:
+            # we have an indefinite integral
+            return sympy.Integral(integrand, differential_symbol)
 
     def group_curly_parentheses_special(self, tokens):
         underscore_index = tokens.index("_")
@@ -269,7 +274,7 @@ class TransformToSymPyExpr(Transformer):
 
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
-            # we return it like verbatim because the function_applied node expects
+            # we return it verbatim because the function_applied node expects
             # a list
             return tokens
         else:
@@ -283,7 +288,6 @@ class TransformToSymPyExpr(Transformer):
 
             return filter(remove_tokens, tokens)
 
-    # Function-related stuff
     def function_applied(self, tokens):
         return sympy.Function(tokens[0])(*tokens[2])
 
