@@ -20,6 +20,7 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset, linear_eq_to_matrix
 from sympy.abc import x, y, z, a
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.core.sympify import sympify
 
 from sympy.logic.algorithms.lra_theory import LRASolver, Boundry
 
@@ -74,6 +75,21 @@ def check_if_satisfiable_with_z3(constraints):
         else:
             raise ValueError(f"z3 was not able to check the satisfiability of {boolean_formula}")
 
+def find_rational_assignment(constr, assignment, iter=20):
+    eps = sympify(1)
+
+    for _ in range(iter):
+        assign = {key: val[0] + val[1]*eps for key, val in assignment.items()}
+        try:
+            for cons in constr:
+                assert cons.subs(assign) == True
+            return assign
+        except AssertionError:
+            eps = eps/2
+
+    return None
+
+
 
 def test_from_encoded_cnf():
     # phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z >= 4))
@@ -89,23 +105,47 @@ def test_from_encoded_cnf():
     # assert lra.A.rref() == m.rref()
 
 
+    from sympy.core.relational import StrictLessThan, StrictGreaterThan
 
+    special_cases = []; x1, x2, x3 = symbols("x1 x2 x3")
+    #special_cases.append([x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3]) bug with smtlib_code
+    special_cases.append([-3 * x1 >= 3, Eq(4 * x1, -1)])
+    special_cases.append([-4 * x1 < 4, 6 * x1 <= -6])
+    special_cases.append([-3 * x2 >= 7, 6 * x1 <= -5, -3 * x2 <= -4])
+    special_cases.append([-2 * x1 - 2 * x2 >= 7, -9 * x1 >= 7, -6 * x1 >= 5])
+    special_cases.append([2 * x1 > -3, -9 * x1 < -6, 9 * x1 <= 6])
 
     feasible_count = 0
-    for _ in range(300):
-        constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
-        #x1, x2, x3 = symbols("x1 x2 x3")
-        #constraints = [x1 - 3*x2 <= -5, 6*x1 + 4*x2 <= 0, -7*x1 + 3*x2 <= 3]
-        #constraints = [-3*x1 >= 3, Eq(4*x1, -1)]
-        #constraints = [-4*x1 < 4, 6*x1 <= -6]
-        #constraints = [-3*x2 >= 7, 6*x1 <= -5, -3*x2 <= -4]
+    for i in range(300):
+        if i % 8 == 0:
+            constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False)
+        elif i % 8 == 1:
+            constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_equality=True,
+                                              disable_nonstrict=True)
+        elif i % 8 == 2:
+            constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=True)
+        elif i % 8 == 3:
+            constraints = make_random_problem(num_variables=3, num_constraints=12, rational=False)
+        else:
+            constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
+
+        if i < len(special_cases):
+            constraints = special_cases[i-1]
+
+        #constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
+        #                                  disable_equality=True)
+        #constraints = [-2*x1 < -4, 9*x1 > -9]
+
         if False in constraints or True in constraints:
             continue
 
         print(constraints)
         phi = And(*constraints)
+        if phi == False:
+            continue
         cnf = CNF.from_prop(phi); enc = EncodedCNF()
         enc.from_cnf(cnf)
+        assert all(0 not in clause for clause in enc.data)
         lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
         print(lra.A)
         print(lra.boundry_enc)
@@ -120,7 +160,7 @@ def test_from_encoded_cnf():
             if lra.result and lra.result[0] == "UNSAT":
                 print("Constraints are unsatisfiable")
                 break
-            print("var:", b.var, "bound:", b.bound, "upper:", b.upper)
+            print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
             lra.assert_enc_boundry(l)
             print(lra.assign, lra.lower, lra.upper)
 
@@ -129,21 +169,23 @@ def test_from_encoded_cnf():
         if feasible[0] == "SAT":
             feasible_count += 1
             assert check_if_satisfiable_with_z3(constraints) is True
-            #assignment = feasible[1]
-            # for constr in constraints:
-            #     constr = constr.subs(x_subs)
-            #     print(constr)
-            #     try:
-            #         assert constr.subs(assignment) == True
-            #     except Exception:
-            #         pass
+            cons_funcs = [cons.func for cons in constraints]
+            assignment = feasible[1]
+            constraints = [constr.subs(x_subs) for constr in constraints]
+            if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
+                assignment = {key: value[0] for key, value in assignment.items()}
+                for cons in constraints:
+                    assert cons.subs(assignment) == True
 
+            else:
+                rat_assignment = find_rational_assignment(constraints, assignment)
+                assert rat_assignment is not None
         else:
             assert check_if_satisfiable_with_z3(constraints) is False
 
-            #conflict = feasible[1]
-            #conflict = {clause.subs(s_subs_rev) for clause in conflict}
-            #assert check_if_satisfiable_with_z3(conflict) is False
+            conflict = feasible[1]
+            conflict = {clause.subs(s_subs_rev) for clause in conflict}
+            assert check_if_satisfiable_with_z3(conflict) is False
     print("\nnumber of feasible problems: ", feasible_count)
 
 

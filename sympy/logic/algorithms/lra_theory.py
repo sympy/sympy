@@ -305,7 +305,12 @@ class LRASolver():
         if ci >= self.upper[xi]:
             return "OK", None
         if ci < self.lower[xi]:
-            self.result = "UNSAT", "WIP"#{(xi, self.lower[xi]), (xi <= ci)}
+            assert (self.lower[xi][1] >= 0) is True
+            assert (ci[1] <= 0) is True
+            lit1 = xi >= self.lower[xi][0] if self.lower[xi][1] == 0 else xi > self.lower[xi][0]
+            lit2 = xi <= ci[0] if ci[1] == 0 else xi < ci[0]
+            conflict = {lit1, lit2}
+            self.result = "UNSAT", conflict#{(xi, self.lower[xi]), (xi <= ci)}
             return self.result
         self.upper[xi] = ci
         if xi in self.nonslack and self.assign[xi] > ci:
@@ -320,8 +325,14 @@ class LRASolver():
         if ci <= self.lower[xi]:
             return "OK", None
         if ci > self.upper[xi]:
+            assert (self.upper[xi][1] <= 0) is True
+            assert (ci[1] >= 0) is True
+            lit1 = xi <= self.upper[xi][0] if self.upper[xi][1] == 0 else xi < self.upper[xi][0]
+            lit2 = xi >= ci[0] if ci[1] == 0 else xi > ci[0]
+            conflict = {lit1, lit2}
+            self.result = "UNSAT", conflict
             #b1 = Boundry(xi, self.upper[xi], equality=False, upper=True)
-            self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
+            #self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
             return self.result
         self.lower[xi] = ci
         if xi in self.nonslack and self.assign[xi] < ci:
@@ -402,6 +413,15 @@ class LRASolver():
                 X = Matrix([self.assign[v][0] for v in self.col_index])
                 assert all(abs(val) < 10**(-10) for val in M*X)
 
+                # check upper and lower match this format:
+                # x <= rat + delta iff x < rat
+                # x >= rat - delta iff x > rat
+                # this wouldn't make sense:
+                # x <= rat - delta
+                # x >= rat + delta
+                assert all(self.upper[x][1] <= 0 for x in self.upper)
+                assert all(self.lower[x][1] >= 0 for x in self.upper)
+
             cand = [b for b in basic
              if self.assign[b] < self.lower[b]
              or self.assign[b] > self.upper[b]]
@@ -420,10 +440,18 @@ class LRASolver():
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
-                    #conflict |= {nb <= self.upper[nb] for nb in N_plus}
+                    upper = [(nb, self.upper[nb]) for nb in N_plus]
+                    lower = [(nb, self.lower[nb]) for nb in N_minus]
+                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
+                            for nb, up in upper}
+                    conflict |= {nb >= lo[0] if lo[1] == 0 else nb > lo[0]
+                                 for nb, lo in lower}
+                    conflict.add(xi >= self.lower[xi][0] if self.lower[xi][1] == 0 else xi > self.lower[xi][0])
+                    #conflict |= {nb <= self.upper[nb][0] if self.upper[nb][1] == 0 else nb < self.upper[nb][0]
+                    #             for nb in N_plus}
                     #conflict |= {nb >= self.lower[nb] for nb in N_minus}
                     #conflict.add(xi >= self.lower[xi])
-                    return "UNSAT", "WIP"#conflict
+                    return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
@@ -437,10 +465,19 @@ class LRASolver():
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
                     conflict = set()
+                    upper = [(nb, self.upper[nb]) for nb in N_minus]
+                    lower = [(nb, self.lower[nb]) for nb in N_plus]
+                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
+                                 for nb, up in upper}
+                    conflict |= {nb >= lo[0] if lo[1] == 0 else nb > lo[0]
+                                 for nb, lo in lower}
+                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
+                                 for nb, up in upper}
+                    conflict.add(xi <= self.upper[xi][0] if self.upper[xi][1] == 0 else xi < self.upper[xi][0])
                     #conflict |= {nb <= self.upper[nb] for nb in N_minus}
                     #conflict |= {nb >= self.lower[nb] for nb in N_plus}
                     #conflict.add(xi <= self.upper[xi])
-                    return "UNSAT", "WIP"#conflict
+                    return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
