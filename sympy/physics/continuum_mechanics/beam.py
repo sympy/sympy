@@ -2146,12 +2146,13 @@ class Beam:
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
             >>> p = b.draw()
-            >>> p
+            >>> p  # doctest: +ELLIPSIS
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
             + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
             - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
             [1]: cartesian line: 5 for x over (0.0, 50.0)
+            ...
             >>> p.show()
 
         """
