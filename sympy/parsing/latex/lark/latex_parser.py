@@ -173,7 +173,7 @@ class TransformToSymPyExpr(Transformer):
 
         if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
             # then one was given and the other wasn't
-            
+
             # we can"t simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
             # to True if the lower_bound is 0
             raise LaTeXParsingError() # TODO: fill out descriptive error message
@@ -192,7 +192,7 @@ class TransformToSymPyExpr(Transformer):
 
         if lower_bound is not None:
             # we have an definite integral
-            
+
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
             return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
