@@ -3477,3 +3477,29 @@ class StateSpace(LinearTimeInvariant):
         Returns the negation of the state space model.
         """
         return StateSpace(self._A, self._B, -self._C, -self._D)
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        """
+        Returns the equivalent Transfer Function of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.rewrite(TransferFunction)
+        TransferFunction(12*s + 59, s**2 + 6*s + 8, s)
+
+        """
+        s = Symbol('s')
+        n = self._A.shape[0]
+        I = eye(n)
+        G = self._C*(s*I - self._A).inv()*self._B + self._D
+        G = (G.simplify())[0]
+
+        return TransferFunction.from_rational_expression(G)
