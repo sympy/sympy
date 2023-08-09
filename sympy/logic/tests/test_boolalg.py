@@ -580,25 +580,18 @@ def test_to_CNF():
     assert CNF.CNF_to_cnf(CNF.to_CNF(A & B)) == to_cnf(A & B)
 
 
-def _setup_encoded_cnf():
+def test_encoded_cnf():
     encoded_cnf = EncodedCNF()
     prop = Or(Or(a, Not(b)), Or(Not(c), b))
     encoded_cnf.add_prop(prop)
     expected_literals = list(encoded_cnf.encoding.keys())
-    return encoded_cnf, expected_literals
 
-
-def test_decode_literal():
-    encoded_cnf, expected_literals = _setup_encoded_cnf()
-
+    # Test decode_literal()
     for i in range(len(expected_literals)):
         decoded_literal = encoded_cnf.decode_literal(i + 1)
         assert decoded_literal == expected_literals[i], f"Expected: {expected_literals[i]}, Decoded: {decoded_literal}"
 
-
-def test_decode():
-    encoded_cnf, _ = _setup_encoded_cnf()
-
+    # Test decode()
     decoded_prop = encoded_cnf.decode()[0]
     original_prop = Or(Or(a, Not(b)), Or(Not(c), b))
     assert decoded_prop == original_prop, "Decoded prop is not equal to the original prop"
