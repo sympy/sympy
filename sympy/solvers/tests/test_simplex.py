@@ -13,7 +13,7 @@ from sympy.solvers.simplex import (_lp as lp, primal_dual,
 
 from sympy.external.importtools import import_module
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 from sympy.abc import x, y, z
 
@@ -198,9 +198,6 @@ def test_lp():
                 # scipy: either iteration limit reached or numerical difficulties
                 pass
 
-
-@XFAIL
-def test_simplex_equalities1():
     # equality
     r1 = Eq(x, y)
     r2 = Eq(y, z)
@@ -218,13 +215,6 @@ def test_simplex_equalities1():
         assert constr.subs(argmax) == True
 
 
-@XFAIL
-def test_simplex_equalities2():
-    assert lpmax(x - y, [x <= y + 2, Eq(x, y + 2)]) != (0, {x: 0, y: 0})
-    assert lpmax(x - y, [x <= y + 2, Eq(x, 2)]) != (0, {x: 0, y: 0})
-    assert lpmax(y, [Eq(y, 2)]) != (0, {y: 0})
-
-
 def test_simplex():
     L = [[1, 1], [-1, 1], [0, 1], [-1, 0]], [5, 1, 2, -1], [[1, 1]], [-1]
     A, B, C, D = _abcd(_m(*L), list=False)
@@ -235,6 +225,9 @@ def test_simplex():
 
     # handling of Eq (or Eq-like x<=y, x>=y conditions)
     assert lpmax(x - y, [x <= y + 2, x >= y + 2]) == (2, {x: 2, y: 0})
+    assert lpmax(x - y, [x <= y + 2, Eq(x, y + 2)]) == (2, {x: 2, y: 0})
+    assert lpmax(x - y, [x <= y + 2, Eq(x, 2)]) == (2, {x: 2, y: 0})
+    assert lpmax(y, [Eq(y, 2)]) == (2, {y: 2})
 
     # the conditions are equivalent to Eq(x, y + 2)
     # so x should go to 0 and solution should be y = -2
