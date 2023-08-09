@@ -6,7 +6,7 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import HAS_GMPY, jacobi, is_square as gmpy_is_square
+from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
@@ -621,9 +621,8 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    if HAS_GMPY == 2:
-        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
-        return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
+    if _gmpy is not None:
+        return _gmpy.is_strong_prp(n, 2) and _gmpy.is_strong_selfridge_prp(n)
 
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:

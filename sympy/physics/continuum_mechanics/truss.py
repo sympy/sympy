@@ -806,9 +806,10 @@ class Truss:
             >>> t.apply_support(("A","pinned"), ("D","roller"))
             >>> t.apply_load(("G", 3, 90), ("E", 3, 90), ("F", 2, 90))
             >>> p = t.draw()
-            >>> p
+            >>> p  # doctest: +ELLIPSIS
             Plot object containing:
             [0]: cartesian line: 1 for x over (1.0, 1.0)
+            ...
             >>> p.show()
         """
         if not numpy:

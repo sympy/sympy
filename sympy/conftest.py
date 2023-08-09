@@ -4,15 +4,18 @@ from sympy.external.importtools import version_tuple
 
 import pytest
 from sympy.core.cache import clear_cache, USE_CACHE
-from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.misc import ARCH
 import re
 from hypothesis import settings
 
+
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
 
 settings.register_profile("sympy_hypothesis_profile", deadline=None)
 settings.load_profile("sympy_hypothesis_profile")
+
 
 def process_split(config, items):
     split = config.getoption("--split")
@@ -36,11 +39,13 @@ def pytest_report_header(config):
     s += "cache:        %s\n" % USE_CACHE
     version = ''
     if GROUND_TYPES =='gmpy':
-        if HAS_GMPY == 1:
-            import gmpy
-        elif HAS_GMPY == 2:
-            import gmpy2 as gmpy
-        version = gmpy.version()
+        import gmpy2
+        version = gmpy2.version()
+    elif GROUND_TYPES == 'flint':
+        # XXX: flint does not have a version() function
+        #import flint
+        #version = flint.version()
+        version = 'unknown'
     s += "ground types: %s %s\n" % (GROUND_TYPES, version)
     return s
 

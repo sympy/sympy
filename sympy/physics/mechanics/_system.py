@@ -850,7 +850,7 @@ class System(_Methods):
                       "velocity_constraints": velocity_constraints,
                       "forcelist": loads, "bodies": self.bodies,
                       "explicit_kinematics": False, **kwargs}
-            self._eom_method = KanesMethod(**kwargs)
+            self._eom_method = eom_method(**kwargs)
         elif issubclass(eom_method, LagrangesMethod):
             disallowed_kwargs = {
                 "frame", "qs", "forcelist", "bodies", "hol_coneqs",

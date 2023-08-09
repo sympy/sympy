@@ -5,7 +5,7 @@ Tests for the basic functionality of the SDM class.
 from itertools import product
 
 from sympy.core.singleton import S
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises
 
 from sympy.polys.domains import QQ, ZZ, EXRAW
@@ -28,7 +28,7 @@ def test_SDM():
 def test_DDM_str():
     sdm = SDM({0:{0:ZZ(1)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
     assert str(sdm) == '{0: {0: 1}, 1: {1: 1}}'
-    if HAS_GMPY: # pragma: no cover
+    if GROUND_TYPES == 'gmpy': # pragma: no cover
         assert repr(sdm) == 'SDM({0: {0: mpz(1)}, 1: {1: mpz(1)}}, (2, 2), ZZ)'
     else:        # pragma: no cover
         assert repr(sdm) == 'SDM({0: {0: 1}, 1: {1: 1}}, (2, 2), ZZ)'
