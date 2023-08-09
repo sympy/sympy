@@ -27,8 +27,7 @@ from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
 from sympy.matrices.matrices import MatrixBase
-from sympy.solvers.solveset import linear_eq_to_matrix
-from sympy.solvers.solvers import solve
+from sympy.solvers.solveset import linear_eq_to_matrix, linsolve
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
 
@@ -402,11 +401,18 @@ def _rel_as_nonpos(constr):
             raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
 
     # resolve equalities
+    linsol = {}
     if equal:
-        linsol = solve(equal, dict=True)
-        assert len(linsol) == 1, 'must be linear'
-        linsol = linsol[0]
+        xeq = set()
+        for i in equal:
+            xeq |= i.free_symbols
+        xeq = list(xeq)
+        system = linear_eq_to_matrix(i, xeq)
+        sol = linsolve(system, xeq)
+        assert len(sol) == 1
+        linsol = dict(zip(xeq, list(sol)[0]))
         r.update(linsol)
+        constr = [i.xreplace(r) for i in constr]
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
@@ -414,7 +420,7 @@ def _rel_as_nonpos(constr):
         i = univariate[x]
         if not i:
             return None  # no solution possible
-        if x in linsol:
+        if x in linsol and linsol[x].is_number:
             if linsol[x] not in i:
                 return None  # inconsistent with equalities
             continue  # no aux needed, we know value
@@ -445,7 +451,7 @@ def _rel_as_nonpos(constr):
 
     # make change of variables for unbound variables
     for x in unbound:
-        if x in linsol:
+        if x in linsol and linsol[x].is_number:
             continue
         u = next(ui)
         r[x] = u - x  # reusing x
@@ -479,6 +485,16 @@ def _lp_matrices(objective, constraints):
     # do change of variables
     F = f.xreplace(r)
     np = [i.xreplace(r) for i in np]
+
+    # set to 0 any symbol not in the objective: it's
+    # value does not matter
+    cfree = set()
+    for i in np:
+        cfree |= i.free_symbols
+    zero = dict(zip(cfree - set(syms), [S.Zero]*len(cfree)))
+    r.update(zero)
+    np = [i.xreplace(zero) for i in np]
+
 
     # convert to matrices
     xx = list(ordered(syms)) + aux
