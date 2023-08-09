@@ -6,7 +6,7 @@ can be solved with calls to `lpmin` or `lpmax`, in matrix form or
 in symbolic form (a function and a list of constraints).
 
 The primal and dual corresponding to a given matrix for the
-standard minimization can be generated with `primal_dual`.
+standard minimization can be generated with `_primal_dual`.
 
 Constraints that are univariate will affect the range of values
 returned by the optimization, e.g. ``x <= 3`` will permit negative
@@ -568,9 +568,9 @@ def _lp_args(min_max, *args):
     if len(LP) == 1:
         m = Matrix(LP[0])
         if how == 'min':
-            p = primal_dual(m)[0]
+            p = _primal_dual(m)[0]
         elif how == 'max':
-            p = primal_dual(m.T)[1]
+            p = _primal_dual(m.T)[1]
         return (how,) + p
     if len(LP) == 2:
         LP.append([])
@@ -684,7 +684,7 @@ def lpmin(*args):
     Examples
     ========
 
-    >>> from sympy.solvers.simplex import lpmin, primal_dual
+    >>> from sympy.solvers.simplex import lpmin, _primal_dual
     >>> from sympy import Matrix
     >>> L = [[1, 1]], [1], [[1, 1]], [2]
     >>> a, b, c, d = [Matrix(i) for i in L]
@@ -692,7 +692,7 @@ def lpmin(*args):
 
     This is the symbolic form of the problem:
 
-    >>> p = f, constr = primal_dual(m)[0]; p
+    >>> p = f, constr = _primal_dual(m)[0]; p
     (x1 + x2 - 2, [x1 + x2 >= 1])
 
     >>> ans = lpmin(f, constr); ans
@@ -713,7 +713,7 @@ def lpmax(*args):
     Examples
     ========
 
-    >>> from sympy.solvers.simplex import lpmax, primal_dual
+    >>> from sympy.solvers.simplex import lpmax, _primal_dual
     >>> from sympy import Matrix
     >>> L = [[3, 1], [2, 0]], [-1, 2], [[1, -1]], [1]
     >>> a, b, c, d = [Matrix(i) for i in L]
@@ -722,7 +722,7 @@ def lpmax(*args):
     To interpret the matrix as a maximization we have to
     transpose it and consider the dual of the transpose.
 
-    >>> dual = f, constr = primal_dual(m.T)[1]; dual
+    >>> dual = f, constr = _primal_dual(m.T)[1]; dual
     (y1 - y2 - 1, [3*y1 + y2 <= -1, y1 <= 1])
 
     >>> ans = lpmax(f, constr); ans
@@ -793,7 +793,7 @@ def _m(a, b, c, d=None):
     return Matrix([[a, b], [c, d]])
 
 
-def primal_dual(M, factor=True):
+def _primal_dual(M, factor=True):
     """return primal and dual function and constraints
     assuming that ``M = Matrix([[A, b], [c, d]])`` and the
     function ``c*x - d`` is being minimized with ``Ax >= b``
@@ -804,7 +804,7 @@ def primal_dual(M, factor=True):
     Examples
     ========
 
-    >>> from sympy.solvers.simplex import primal_dual, lpmin, lpmax
+    >>> from sympy.solvers.simplex import _primal_dual, lpmin, lpmax
     >>> from sympy import Matrix
 
     The following matrix represents the primal task of
@@ -816,7 +816,7 @@ def primal_dual(M, factor=True):
     ...     [-1, 1,  1],
     ...     [ 2, 1,  3],
     ...     [ 1, 1, -7]])
-    >>> p, d = primal_dual(M)
+    >>> p, d = _primal_dual(M)
 
     The minimum of the primal and maximum of the dual are the same
     (though they occur at different points):
@@ -835,13 +835,13 @@ def primal_dual(M, factor=True):
     ... [ 2,  0,  0, -2],
     ... [ 0,  1, -3,  0]])
 
-    >>> primal_dual(m, False)  # last condition is 2*x1 >= -2
+    >>> _primal_dual(m, False)  # last condition is 2*x1 >= -2
     ((x2 - 3*x3,
         [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]),
     (-2*y1 - 2*y2,
         [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
-    >>> primal_dual(m)  # condition now x1 >= -1
+    >>> _primal_dual(m)  # condition now x1 >= -1
     ((x2 - 3*x3,
         [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]),
     (-2*y1 - 2*y2,
@@ -851,7 +851,7 @@ def primal_dual(M, factor=True):
     identified as the standard minimization problem and the
     dual as the standard maximization:
 
-    >>> primal_dual(m.T)
+    >>> _primal_dual(m.T)
     ((-2*x1 - 2*x2,
         [-3*x1 + 2*x2 >= 0, -2*x1 >= 1, 4*x1 >= -3]),
     (y2 - 3*y3,
@@ -860,10 +860,10 @@ def primal_dual(M, factor=True):
     A matrix must have some size or else None will be returned for
     the functions:
 
-    >>> primal_dual(Matrix([[1, 2]]))
+    >>> _primal_dual(Matrix([[1, 2]]))
     ((x1 - 2, []), (-2, []))
 
-    >>> primal_dual(Matrix([]))
+    >>> _primal_dual(Matrix([]))
     ((None, []), (None, []))
 
     References
