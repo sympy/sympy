@@ -898,7 +898,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_primitive(f):
-        return f.ring.domain.is_one(f.content())
+        return f.ring.domain.is_one(f.content(f.ring.domain))
 
     @property
     def is_linear(f):
@@ -1954,7 +1954,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def content(self, f):
+    def content(self, domain):
         """Returns GCD of polynomial's coefficients.
 
         Examples
@@ -1964,15 +1964,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> R, x = ring("x", ZZ)
 
         >>> f = 3*x**2 + 12*x + 6
-        >>> ZZ.content(f)
+        >>> f.content(ZZ)
         3
 
         >>> f = [3, 12, 6]
-        >>> ZZ.content(f)
+        >>> f.content(ZZ)
         3
 
         """
-        domain = self
+        f = self
         if not isinstance(f, list):
             f = f.listcoeffs()
 
@@ -1990,7 +1990,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def primitive(f):
         """Returns content and a primitive polynomial. """
-        cont = f.content()
+        domain = f.ring.domain
+        cont = f.content(domain)
         return cont, f.quo_ground(cont)
 
     def monic(f):
@@ -2077,8 +2078,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def extract_ground(self, g):
         f = self
-        fc = f.content()
-        gc = g.content()
+        domain = f.ring.domain
+        fc = f.content(domain)
+        gc = g.content(domain)
 
         gcd = f.ring.domain.gcd(fc, gc)
 
