@@ -1955,14 +1955,37 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def content(f):
-        """Returns GCD of polynomial's coefficients. """
-        domain = f.ring.domain
-        cont = domain.zero
-        gcd = domain.gcd
+    def content(self, f):
+        """Returns GCD of polynomial's coefficients.
 
-        for coeff in f.itercoeffs():
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x = ring("x", ZZ)
+
+        >>> f = 3*x**2 + 12*x + 6
+        >>> ZZ.content(f)
+        3
+
+        >>> f = [3, 12, 6]
+        >>> ZZ.content(f)
+        3
+
+        """
+        domain = self
+        if not isinstance(f, list):
+            f = f.listcoeffs()
+
+        coeffs = [int(x) for x in f]
+        gcd = domain.gcd
+        cont = coeffs[0]
+
+        for coeff in coeffs[1:]:
             cont = gcd(cont, coeff)
+
+            if cont == domain.one:
+                break
 
         return cont
 
@@ -3028,18 +3051,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
-def monomial_extract(p):
+def monomial_extract(polynomials):
     """
     Extracts any common monomial from the polynomials in p.
 
     Examples
     ========
 
-    >>> from sympy import ZZ, ring, monomial_extract
+    >>> from sympy.polys.rings import monomial_extract
+    >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
     >>> f = x + y
-    >>> g = g = x**2*y + x*y
+    >>> g = x**2*y + x*y
     >>> p = [f, g]
     >>> monomial_extract(p)
     ([x + y, x**2*y + x*y], None)
@@ -3048,62 +3072,22 @@ def monomial_extract(p):
     >>> g = x**2*y + x*y
     >>> p = [f, g]
     >>> monomial_extract(p)
-    ([x**2*y, x**2*y + x*y], x*y)
+    ([x, x + 1], x*y)
 
     """
-    ring = p[0].ring
-    zero_monom = ring.zero_monom
-
-    monomials = chain(*p)
-    monom_gcd = tuple(map(min, zip(*monomials)))
+    ring = polynomials[0].ring
+    zero_monoms = ring.zero_monom
+    monoms = chain(*polynomials)
+    monom_gcd = tuple(map(min, zip(*monoms)))
 
     # If the zero monomial is present, we can immediately return
-    if monom_gcd == zero_monom:
-        return p, None
+    if (any(zero_monoms in poly for poly in polynomials)
+        or monom_gcd == ring.zero_monom):
+        return polynomials, None
     else:
-        # Loop over a few monomials to quickly check if gcd is zero
-        for i, monom in enumerate(monomials):
-            if i >= 2:
-                break
-            gcd_monom = tuple(map(min, zip(monom_gcd, monom)))
-            if gcd_monom == zero_monom:
-                return p, None
-
         d = ring({monom_gcd: ring.domain.one})
-        _d = degree_list(d.as_expr())
-        print(_d)
-        p_result = []
-        for pi in p:
-            pi = degree_list(pi.as_expr())
-            print(pi)
-            p_result.append(ring.monomial_ldiv(pi, _d))
-        p_result = p
+        p = [pi.exquo(d) for pi in polynomials] # TODO: Use monomial_ldiv
         return p, d
-
-def gcd_ground(coeffs, domain):
-    """
-    Compute the greatest common divisor (GCD) of elements in the ground domain.
-
-    Examples
-    ========
-
-    >>> from sympy import ZZ
-    >>> coeffs = [3, 12, 6]
-    >>> gcd_ground(coeffs, ZZ)
-    3
-
-    """
-    coeffs = list(coeffs)
-    gcd = domain.gcd
-    d = coeffs[0]
-
-    for coeff in coeffs[1:]:
-        d = gcd(d, coeff)
-
-        if d == domain.one:
-            break
-
-    return d
 
 def gcd_coeffs(p):
     """
@@ -3118,6 +3102,7 @@ def gcd_coeffs(p):
     Examples
     ========
 
+    >>> from sympy.polys.rings import gcd_coeffs
     >>> from sympy import ring, ZZ
     >>> R, x, y = ring("x, y", ZZ)
 
@@ -3168,41 +3153,42 @@ def gcd_coeffs(p):
                 gcd = gcd_terms((all_coeffs + p[i+1:]), R, K)
                 return [gcd], None
 
-def gcd_sparse(p):
+def gcd_prs(polynomials):
     """
     Returns the greatest common divisor (GCD) of a set of polynomials.
 
     Examples
     ========
 
+    >>> from sympy.polys.rings import gcd_prs
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
     >>> p = x - y, x - y
-    >>> gcd_sparse(p)
+    >>> gcd_prs(p)
     x - y
 
     """
-    ring = p[0].ring
+    ring = polynomials[0].ring
     domain = ring.domain
 
-    if any(len(pi) == 1 for pi in p):
+    if any(len(pi) == 1 for pi in polynomials):
         return gcd_terms(p, ring, domain)
 
-    p, monomial_gcd = monomial_extract(p)
+    p, monomial_gcd = monomial_extract(polynomials)
 
-    p, common_symbols = gcd_coeffs(p)
+    p, common_symbols = gcd_coeffs(polynomials)
 
     gcd = p[0]
     for pi in p[1:]:
-        gcd = gcd_prs(gcd, pi)
+        gcd = _gcd_prs(gcd, pi)
 
     if monomial_gcd is not None:
         gcd = gcd * monomial_gcd
 
     return gcd
 
-def gcd_prs(p1, p2):
+def _gcd_prs(p1, p2):
     """
     Returns the greatest common divisor (GCD) of two polynomials using the
     Polynomial Resultant Sequences (PRS) method.
@@ -3210,12 +3196,13 @@ def gcd_prs(p1, p2):
     Examples
     ========
 
+    >>> from sympy.polys.rings import _gcd_prs
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
     >>> f = 4*x**3 + 8*x**2 + 12*x + 16
     >>> g = 2*x**2 + 6*x + 10
-    >>> gcd_prs(f, g)
+    >>> _gcd_prs(f, g)
     2
 
     """
@@ -3225,7 +3212,7 @@ def gcd_prs(p1, p2):
     c2, pp2 = p2.primitive()
 
     h = pp1.subresultants(pp2, x)[-1]
-    c = gcd_sparse(([c1, c2]))
+    c = gcd_prs(([c1, c2]))
 
     domain = p1.ring.to_domain()
     if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))):
@@ -3244,6 +3231,7 @@ def gcd_terms(p, ring, domain):
     Examples
     ========
 
+    >>> from sympy.polys.rings import gcd_terms
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
@@ -3263,7 +3251,7 @@ def gcd_terms(p, ring, domain):
             coeffs.add(coeff)
 
     monom_gcd = monomial_ngcd(monomials)
-    coeff_gcd = gcd_ground(coeffs, domain)
+    coeff_gcd = list(coeffs).content(domain)
     term_gcd = ring({monom_gcd: coeff_gcd})
 
     return term_gcd
