@@ -25,7 +25,7 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
 from sympy.matrices.matrices import MatrixBase
-from sympy.solvers.solveset import linear_eq_to_matrix, linsolve
+from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
 
@@ -437,17 +437,11 @@ def _lp_matrices(objective, constraints):
     syms = F.free_symbols
     np = [sympify(i) for i in constraints]
 
-    # resolve equalities
-    linsol = {}
-    equal = [i for i in np if isinstance(i, Eq)]
-    if equal:
-        xeq = list(ordered(set.union(*[i.free_symbols for i in equal], set())))  # XXX should syms be used to favor those that appear?
-        sol = linsolve(equal, xeq)
-        if not sol:
-            raise InfeasibleLPError('inconsistent equalities')
-        linsol = dict(zip(xeq, list(sol)[0]))
-        np = [i.xreplace(linsol) for i in np]
-        del xeq
+    # change Eq(x, y) to x - y <= 0 and y - x <= 0
+    for i in range(len(np)):
+        if isinstance(np[i], Eq):
+            np[i] = np[i].lhs - np[i].rhs <= 0
+            np.append(-np[i].lhs <= 0)
 
     # set to 0 any symbol not in objective and constraints
     npfree = set.union(*[i.free_symbols for i in np], set())
@@ -489,26 +483,32 @@ def _lp(min_max, f, constr):
     ========
 
     >>> from sympy.solvers.simplex import _lp as lp
-    >>> from sympy import symbols, Eq, oo
+    >>> from sympy import Eq
     >>> from sympy.abc import x, y, z
     >>> f = x + y - 2*z
-    >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6, -9*x - 3*y + 6*z <= 6] #, Eq(x + y, 4)]  #XX adding this equality does not yield solution with x+y=4
+    >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
     >>> lp(min, f, c)
     (-6/5, {x: 0, y: 0, z: 3/5})
 
     By passing max, the maximum value for f under the constraints
-    is returned if possible:
+    is returned (if possible):
 
     >>> lp(max, f, c)
     (3/4, {x: 0, y: 3/4, z: 0})
+
+    Constraints that are equalities will require that the solution
+    also satisfy them:
+
+    >>> lp(max, f, c + [Eq(y - 9*x, 1)])
+    (5/7, {x: 0, y: 1, z: 1/7})
 
     Symbols not in the objective function will not be reported
     and are treated as 0:
 
     >>> lp(min, x, [y + x >= -3])  # same as lp(min, x, [x >= -3])
-    (-3, {x: -3})
+    (-3, {x: -3, y: 0})
     """
-    got = A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
+    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
     how = str(min_max).lower()
     if 'max' in how:
@@ -599,14 +599,17 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     ========
 
     >>> from sympy.solvers.simplex import linprog
-    >>> from sympy import symbols, Eq, oo, linear_eq_to_matrix as M
-    >>> from sympy.abc import x, y
+    >>> from sympy import symbols, Eq, linear_eq_to_matrix as M, Matrix
     >>> x = x1, x2, x3, x4 = symbols('x1:5')
+    >>> X = Matrix(x)
     >>> c, d = cd = M(5*x2 + x3 + 4*x4 - x1, x)
     >>> a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
     >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
+    >>> constr = [i <= j for i,j in zip(a*X, b)]
+    >>> constr += [Eq(i, j) for i,j in zip(aeq*X, beq)]
     >>> linprog(cd, a, b, aeq, beq)
-    (0, {x1: 0, x2: 0, x3: 0, x4: 0})
+    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+    >>> assert all(i.subs(_[1]) for i in constr)
 
     """
 
@@ -617,7 +620,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
         C, D = [Matrix(i) for i in cd]
     elif isinstance(cd, list) and len(cd) == A.cols:
-        C, D = Matrix(cd), Matix([0])
+        C, D = Matrix(cd), Matrix([0])
     else:
         raise ValueError('expecting one or two matrices/lists for cd')
     xit = numbered_symbols('x', start=1)
