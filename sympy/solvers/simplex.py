@@ -28,6 +28,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
 from sympy.matrices.matrices import MatrixBase
 from sympy.solvers.solveset import linear_eq_to_matrix
+from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
 
@@ -350,7 +351,8 @@ def _rel_as_nonpos(constr):
     univariate = {}  # {x: interval} for univariate constraints
     unbound = set()  # symbols designated as unbound
 
-    for i in constr:
+    # convert AppliedBinary to Relational
+    for j, i in enumerate(constr):
         if isinstance(i, AppliedBinaryRelation):
             if i.function == Q.le:
                 i = Le(i.lhs, i.rhs, evaluate=False)
@@ -360,6 +362,11 @@ def _rel_as_nonpos(constr):
                 i = Eq(i.rhs, i.lhs, evaluate=False)
             else:
                 raise TypeError('only Ge, Le, or Eq allowed, not %s' % i)
+            constr[j] = i
+
+    # separate Eq
+    equal = []
+    for i in constr:
         if i == True:
             continue  # ignore
         if i == False:
@@ -367,8 +374,7 @@ def _rel_as_nonpos(constr):
         if isinstance(i, Eq):
             # could also collect k equalities and solve for
             # k variables and eliminate them
-            L = i.lhs - i.rhs
-            np.extend([L, -L])
+            equal.append(i)
             continue
 
         i = i.canonical  # +/-oo, if present will be on the rhs
@@ -395,12 +401,23 @@ def _rel_as_nonpos(constr):
         else:
             raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
 
+    # resolve equalities
+    if equal:
+        linsol = solve(equal, dict=True)
+        assert len(linsol) == 1, 'must be linear'
+        linsol = linsol[0]
+        r.update(linsol)
+
     # introduce auxilliary variables as needed for univariate
     # inequalities
     for x in univariate:
         i = univariate[x]
         if not i:
             return None  # no solution possible
+        if x in linsol:
+            if linsol[x] not in i:
+                return None  # inconsistent with equalities
+            continue  # no aux needed, we know value
         a, b = i.inf, i.sup
         if a.is_infinite and b.is_infinite:
             unbound.append(x)
@@ -428,6 +445,8 @@ def _rel_as_nonpos(constr):
 
     # make change of variables for unbound variables
     for x in unbound:
+        if x in linsol:
+            continue
         u = next(ui)
         r[x] = u - x  # reusing x
         aux.append(u)
@@ -449,14 +468,6 @@ def _lp_matrices(objective, constraints):
     f = sympify(objective)
     syms = f.free_symbols
     constraints = [sympify(i) for i in constraints]
-
-    # set to 0 any symbol not in the objective: it's
-    # value does not matter
-    cfree = set()
-    for i in constraints:
-        cfree |= i.free_symbols
-    zero = dict(zip(cfree - syms, [0]*len(cfree)))
-    constraints = [i.xreplace(zero) for i in constraints]
 
     # convert constraints to nonpositive expressions
     _ = _rel_as_nonpos(constraints)
