@@ -3410,6 +3410,27 @@ class StateSpace(LinearTimeInvariant):
         return self._C
 
     @property
+    def feedforward_matrix(self):
+        """
+        Returns the feedforward matrix of the model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 2], [1, 0]])
+        >>> B = Matrix([1, 1])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.feedforward_matrix
+        Matrix([[0]])
+
+        """
+        return self._D
+
+    @property
     def num_states(self):
         """
         Returns the number of states of the model.
