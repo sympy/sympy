@@ -22,8 +22,6 @@ from sympy.core.relational import Lt, Gt, Le, Ge, Eq
 from sympy.core.symbol import Dummy
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
-from sympy.assumptions.ask import Q
-from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix
 from sympy.matrices.matrices import MatrixBase
@@ -349,19 +347,6 @@ def _rel_as_nonpos(constr):
     ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
     univariate = {}  # {x: interval} for univariate constraints
     unbound = set()  # symbols designated as unbound
-
-    # convert AppliedBinary to Relational
-    for j, i in enumerate(constr):
-        if isinstance(i, AppliedBinaryRelation):
-            if i.function == Q.le:
-                i = Le(i.lhs, i.rhs, evaluate=False)
-            elif i.function == Q.ge:
-                i = Le(i.rhs, i.lhs, evaluate=False)
-            elif i.function == Q.eq:
-                i = Eq(i.rhs, i.lhs, evaluate=False)
-            else:
-                raise TypeError('only Ge, Le, or Eq allowed, not %s' % i)
-            constr[j] = i
 
     # separate Eq
     equal = []
