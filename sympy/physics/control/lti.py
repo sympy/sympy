@@ -3514,16 +3514,17 @@ class StateSpace(LinearTimeInvariant):
         >>> D = Matrix([0])
         >>> ss = StateSpace(A, B, C, D)
         >>> ss.rewrite(TransferFunction)
-        TransferFunction(12*s + 59, s**2 + 6*s + 8, s)
+        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
 
         """
         s = Symbol('s')
         n = self._A.shape[0]
         I = eye(n)
         G = self._C*(s*I - self._A).inv()*self._B + self._D
-        G = (G.simplify())[0]
-
-        return TransferFunction.from_rational_expression(G)
+        G = G.simplify()
+        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
 
     def observability_matrix(self):
         """
