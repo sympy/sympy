@@ -305,7 +305,8 @@ def monomial_ngcd(*args):
         monomials = args[0]
         monomial_ngcd = tuple(map(min, zip(*monomials)))
     else:
-        raise ValueError("monomial_ngcd() accepts a tuple of tuples as arguments.")
+        monomials = args
+        monomial_ngcd = tuple(map(min, zip(*monomials)))
 
     return monomial_ngcd
 
