@@ -3343,7 +3343,7 @@ class StateSpace(LinearTimeInvariant):
             raise TypeError("A, B, C and D inputs must all be sympy Matrices.")
 
     @property
-    def State_Matrix(self):
+    def state_matrix(self):
         """
         Returns the state matrix of the model.
 
@@ -3357,7 +3357,7 @@ class StateSpace(LinearTimeInvariant):
         >>> C = Matrix([[0, 1]])
         >>> D = Matrix([0])
         >>> ss = StateSpace(A, B, C, D)
-        >>> ss.State_Matrix
+        >>> ss.state_matrix
         Matrix([
         [1, 2],
         [1, 0]])
@@ -3366,7 +3366,7 @@ class StateSpace(LinearTimeInvariant):
         return self._A
 
     @property
-    def Input_Matrix(self):
+    def input_matrix(self):
         """
         Returns the input matrix of the model.
 
@@ -3380,7 +3380,7 @@ class StateSpace(LinearTimeInvariant):
         >>> C = Matrix([[0, 1]])
         >>> D = Matrix([0])
         >>> ss = StateSpace(A, B, C, D)
-        >>> ss.Input_Matrix
+        >>> ss.input_matrix
         Matrix([
         [1],
         [1]])
@@ -3389,7 +3389,7 @@ class StateSpace(LinearTimeInvariant):
         return self._B
 
     @property
-    def Output_Matrix(self):
+    def output_matrix(self):
         """
         Returns the output matrix of the model.
 
@@ -3403,7 +3403,7 @@ class StateSpace(LinearTimeInvariant):
         >>> C = Matrix([[0, 1]])
         >>> D = Matrix([0])
         >>> ss = StateSpace(A, B, C, D)
-        >>> ss.Output_Matrix
+        >>> ss.output_matrix
         Matrix([[0, 1]])
 
         """
