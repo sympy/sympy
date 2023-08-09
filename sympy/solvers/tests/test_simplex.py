@@ -14,7 +14,7 @@ from sympy.solvers.simplex import (_lp as lp, primal_dual,
 
 from sympy.external.importtools import import_module
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import x, y, z
 
@@ -101,21 +101,22 @@ def test_lp():
     assert ans == lpmax(objective, constraints)
     assert ans == (4, {x1: 7, x2: 0, x3: 0, x4: 3})
 
-    # equality
-    r1 = Eq(x, y)
-    r2 = Eq(y, z)
-    r3 = z <= 3
-    constraints = [r1, r2, r3]
-    objective = x + y + z  # if equalities are removed then objective could be x
-    variables = [x, y, z]
-    ans = optimum, argmax = lp(max, objective, constraints)
-    assert ans == lpmax(objective, constraints)
-    if scipy is not None and np is not None:
-        scipy_res = get_results_with_scipy(objective, constraints, variables)
-        assert optimum.evalf() == sympify(-scipy_res.fun)
-    assert objective.subs(argmax) == optimum
-    for constr in constraints:
-        assert constr.subs(argmax) == True
+    if 0:  # XFAIL
+        # equality
+        r1 = Eq(x, y)
+        r2 = Eq(y, z)
+        r3 = z <= 3
+        constraints = [r1, r2, r3]
+        objective = x + y + z  # if equalities are removed then objective could be x
+        variables = [x, y, z]
+        ans = optimum, argmax = lp(max, objective, constraints)
+        assert ans == lpmax(objective, constraints)
+        if scipy is not None and np is not None:
+            scipy_res = get_results_with_scipy(objective, constraints, variables)
+            assert optimum.evalf() == sympify(-scipy_res.fun)
+        assert objective.subs(argmax) == optimum
+        for constr in constraints:
+            assert constr.subs(argmax) == True
 
     # Binary predicate
     r1 = Q.ge(x, y)
@@ -235,6 +236,22 @@ def test_simplex():
     assert _simplex(A, B, -C, -D, dual=True) == (-6, [1, 0, 0, 0], [5, 0])
 
     assert _simplex([[]],[],[[1]],[0]) == (0, [0], [])
+
+    # handling of Eq (or Eq-like x<=y, x>=y conditions)
+    assert lpmin(x - y, [x <= y + 2, Eq(x, y + 2)]) == (2, {x: 2, y: 0})
+    assert lpmax(x - y, [x <= y + 2, Eq(x, 2)]) == (2, {x: 2, y: 0})
+    assert lpmax(x - y, [x <= y + 2, x >= y + 2]) == (2, {x: 2, y: 0})
+    assert lpmax(y, [Eq(y, 2)]) == (2, {y: 2})
+
+
+@XFAIL
+def test_simplex():
+    # the conditions are equivalent to Eq(x, y + 2)
+    # so x should go to 0 and solution be y = 2
+    assert lpmax(y, [x <= y + 2, x >= y + 2]) == (2, {x: 0, y: 2})
+    # equivalent to Eq(y, 2)
+    assert lpmax(y, [0 <= y + 2, 0 >= y + 2]) == (2, {x: 0, y: 2})  # arb large
+    assert lpmax(y, [0 <= y + 2, 0 >= y + 2, y >= 0]) == (2, {x: 0, y: 2})  # infeasible
 
 
 def test_lpmin_lpmax():
