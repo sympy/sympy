@@ -7,7 +7,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import randprime
 from sympy.matrices.dense import Matrix, eye
 from sympy.solvers.solveset import linear_eq_to_matrix
-from sympy.solvers.simplex import (_lp as lp, primal_dual,
+from sympy.solvers.simplex import (_lp as lp, _primal_dual,
     UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
     _m, _abcd, _simplex)
 
@@ -242,7 +242,7 @@ def test_lpmin_lpmax():
     L = [[1, 1]], [1], [[1, 1]], [2]
     a, b, c, d = [Matrix(i) for i in L]
     m = Matrix([[a, b], [c, d]])
-    f, constr = primal_dual(m)[0]
+    f, constr = _primal_dual(m)[0]
     ans = lpmin(f, constr)
     assert ans == (-1, {x1: 1, x2: 0})
     assert lpmin(m) == lpmin(*L) == lpmin(a, b, c, d) == ans
@@ -250,7 +250,7 @@ def test_lpmin_lpmax():
     L = [[1, 1], [1, 1]], [1, 1], [[1, 1]], [2]
     a, b, c, d = [Matrix(i) for i in L]
     m = Matrix([[a, b], [c, d]])
-    f, constr = primal_dual(m)[1]
+    f, constr = _primal_dual(m)[1]
     ans = lpmax(f, constr)
     assert ans == (-1, {y1: 1, y2: 0})
     assert lpmax(m) == lpmax(*L) == lpmax(a, b, c, d) == ans
