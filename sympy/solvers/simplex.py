@@ -407,9 +407,9 @@ def _rel_as_nonpos(constr):
         for i in equal:
             xeq |= i.free_symbols
         xeq = list(xeq)
-        system = linear_eq_to_matrix(i, xeq)
-        sol = linsolve(system, xeq)
-        assert len(sol) == 1
+        sol = linsolve(equal, xeq)
+        if not sol:
+            return  # no solution to these equalities
         linsol = dict(zip(xeq, list(sol)[0]))
         r.update(linsol)
         constr = [i.xreplace(r) for i in constr]
@@ -614,6 +614,92 @@ def _lp_args(min_max, *args):
     if not isinstance(unbound, list):
         raise ValueError('expecting list of unbound symbols')
     return how, f, ineq
+
+
+def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
+    """Return the minimization of ``c*x - d`` with the given
+    constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless constrained,
+    variables will assume only nonnegative values in the solution.
+    A constraint like ``x <= 2`` will permit ``x`` to have
+    negative values while ``x < oo`` will allow it to have any real
+    value.
+
+    If ``cd`` is a single matrix then ``d`` will be zero; otherwise
+    it should be tuple with two matrices: ``c`` and ``d``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import linprog
+    >>> from sympy import symbols, Eq, oo, linear_eq_to_matrix as M
+    >>> from sympy.abc import x, y
+    >>> x = x1, x2, x3, x4 = symbols('x1:5')
+    >>> cd = M(5*x2 + x3 + 4*x4 - x1, x)
+    >>> a,b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
+    >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
+    >>> linprog(cd, a, b, aeq, beq)
+    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+
+    """
+
+    # convert scipy-like matrices to expressions
+
+    if isinstance(cd, MatrixBase):
+        C, D = cd, Matrix([0])
+    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
+        C, D = [Matrix(i) for i in cd]
+    elif isinstance(cd, list) and len(cd) == A.cols:
+        C, D = Matrix(cd), Matix([0])
+    else:
+        raise ValueError('expecting one or two matrices/lists for cd')
+    xit = numbered_symbols('x', start=1)
+    x = [i[1] for i in enumerate(zip(range(A.cols), xit))]
+    if A is None:
+        assert b is None, 'A and b must both be given'
+        A, b = Matrix(0,0,[]),Matrix(0,0,[])
+    else:
+        A, b = [Matrix(i) for i in (A, b)]
+    constr = [i <= j for i, j in zip(A*x, b)]
+    if A_eq is None:
+        assert b_eq is None, 'A_eq and b_eq must both be given'
+    else:
+        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        constr.extend([Eq(i, j) for i, j in zip(A_eq*x, b_eq)])
+    if bounds is None:
+        bounds = (0, None)
+    if type(bounds) is tuple and len(bounds) == 2:
+        bounds = [bounds]*A.rows
+    elif len(bounds) == A.rows and all(type(i) is tuple and len(i) == 2 for i in bounds):
+        pass # individual bounds
+    elif type(bounds) is dict and all(type(i) is tuple and len(i) == 2 for i in bounds.values()):
+        # sparse bounds
+        db = bounds
+        bounds = [(None, None)]*A.rows
+        while db:
+            i, b = db.popitem()
+            bounds[i] = b
+    else:
+        assert None, 'unexpected bounds'
+    for i, (lo,hi) in enumerate(bounds):
+        if lo == 0 and hi is None:
+            pass  # default
+        elif lo is not None:
+            if hi is None:
+                constr.append(x[i] >= lo)
+            else:
+                constr.append(x[i] <= hi)
+                constr.append(x[i] >= lo)
+        elif lo is None and hi is not None:
+            constr.append(x[i] <= hi)
+        elif lo is None and hi is None:
+            # unbounded
+            constr.append(x[i] <= S.Infinity)
+    f = C*x - D
+
+    # convert f and const to standard matrices and
+    # auxilliary variables as needed
+
+    return _lp(min, f, constr)
 
 
 def lpmin(*args):
