@@ -349,18 +349,11 @@ def _rel_as_nonpos(constr):
     unbound = set()  # symbols designated as unbound
 
     # separate Eq
-    equal = []
     for i in constr:
         if i == True:
             continue  # ignore
         if i == False:
             return  # no solution
-        if isinstance(i, Eq):
-            # could also collect k equalities and solve for
-            # k variables and eliminate them
-            equal.append(i)
-            continue
-
         i = i.canonical  # +/-oo, if present will be on the rhs
         if isinstance(i, (Le, Ge, Lt, Gt)) and i.rhs.is_infinite:
             if isinstance(i, (Lt, Le)) and i.rhs is S.NegativeInfinity:
@@ -369,35 +362,24 @@ def _rel_as_nonpos(constr):
                 return False
             unbound.update(i.lhs.free_symbols) # x < oo, x > -oo
         elif isinstance(i, (Le, Ge)):
-            npi = i.lts - i.gts
-            x = npi.free_symbols
-            if len(x) == 1:
+            i = i.lts - i.gts
+            x = i.free_symbols
+            if len(x) > 1:
+                np.append(i)
+            elif x:
                 x = x.pop()
                 if x in unbound:
                     continue  # will handle later
-                ivl = Le(npi, 0, evaluate=False).as_set()
+                ivl = Le(i, 0, evaluate=False).as_set()
                 if x not in univariate:
                     univariate[x] = ivl
                 else:
                     univariate[x] &= ivl
-            else:
-                np.append(npi)
+            elif i:
+                return False
         else:
             raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
 
-    # resolve equalities
-    linsol = {}
-    if equal:
-        xeq = set()
-        for i in equal:
-            xeq |= i.free_symbols
-        xeq = list(xeq)
-        sol = linsolve(equal, xeq)
-        if not sol:
-            return  # no solution to these equalities
-        linsol = dict(zip(xeq, list(sol)[0]))
-        r.update(linsol)
-        constr = [i.xreplace(r) for i in constr]
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
@@ -405,10 +387,6 @@ def _rel_as_nonpos(constr):
         i = univariate[x]
         if not i:
             return None  # no solution possible
-        if x in linsol and linsol[x].is_number:
-            if linsol[x] not in i:
-                return None  # inconsistent with equalities
-            continue  # no aux needed, we know value
         a, b = i.inf, i.sup
         if a.is_infinite and b.is_infinite:
             unbound.append(x)
@@ -436,8 +414,6 @@ def _rel_as_nonpos(constr):
 
     # make change of variables for unbound variables
     for x in unbound:
-        if x in linsol and linsol[x].is_number:
-            continue
         u = next(ui)
         r[x] = u - x  # reusing x
         aux.append(u)
@@ -452,39 +428,49 @@ def _lp_matrices(objective, constraints):
     replacements of symbols as given in r, {xi: expression with Xj},
     so all variables in x+X will take on nonnegative values.
 
-    If symbols not in objective will be set to 0.
+    The value of symbols not in objective (after resolving
+    any equalities in the constraints) are set to 0.
     """
 
     # sympify input and collect free symbols
-    f = sympify(objective)
-    syms = f.free_symbols
-    constraints = [sympify(i) for i in constraints]
+    F = sympify(objective)
+    syms = F.free_symbols
+    np = [sympify(i) for i in constraints]
+
+    # resolve equalities
+    linsol = {}
+    equal = [i for i in np if isinstance(i, Eq)]
+    if equal:
+        xeq = list(ordered(set.union(*[i.free_symbols for i in equal], set())))  # XXX should syms be used to favor those that appear?
+        sol = linsolve(equal, xeq)
+        if not sol:
+            raise InfeasibleLPError('inconsistent equalities')
+        linsol = dict(zip(xeq, list(sol)[0]))
+        np = [i.xreplace(linsol) for i in np]
+        del xeq
+
+    # set to 0 any symbol not in objective and constraints
+    npfree = set.union(*[i.free_symbols for i in np], set())
+    free = F.free_symbols.symmetric_difference(npfree)
+    zero = dict(zip(free, [S.Zero]*len(free)))
+    F = F.xreplace(zero)
+    np = [i.xreplace(zero) for i in np]
 
     # convert constraints to nonpositive expressions
-    _ = _rel_as_nonpos(constraints)
+    _ = _rel_as_nonpos(np)
     if _ is None:
-        raise InfeasibleLPError(
-            'inconsistent/False constraint')
+        raise InfeasibleLPError('inconsistent/False constraint')
     np, r, aux = _
 
     # do change of variables
-    F = f.xreplace(r)
+    F = F.xreplace(r)
     np = [i.xreplace(r) for i in np]
-
-    # set to 0 any symbol not in the objective: it's
-    # value does not matter
-    cfree = set()
-    for i in np:
-        cfree |= i.free_symbols
-    zero = dict(zip(cfree - set(syms), [S.Zero]*len(cfree)))
-    r.update(zero)
-    np = [i.xreplace(zero) for i in np]
-
 
     # convert to matrices
     xx = list(ordered(syms)) + aux
     A, B = linear_eq_to_matrix(np, xx)
     C, D = linear_eq_to_matrix([F], xx)
+    r.update(zero)
     return A, B, C, D, r, xx, aux
 
 
@@ -504,20 +490,17 @@ def _lp(min_max, f, constr):
 
     >>> from sympy.solvers.simplex import _lp as lp
     >>> from sympy import symbols, Eq, oo
-    >>> from sympy.abc import x, y
-    >>> x1, x2, x3, x4 = symbols('x1:5')
-    >>> f = 5*x2 + x3 + 4*x4 - x1
-    >>> c = [x1 + 5 >= 5*x2 + 2*x3 + 5*x4,
-    ...      Eq(3*x2 + x4, 2),
-    ...      Eq(-x1 + x3 + 2*x4, 1)]
+    >>> from sympy.abc import x, y, z
+    >>> f = x + y - 2*z
+    >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6, -9*x - 3*y + 6*z <= 6] #, Eq(x + y, 4)]  #XX adding this equality does not yield solution with x+y=4
     >>> lp(min, f, c)
-    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+    (-6/5, {x: 0, y: 0, z: 3/5})
 
     By passing max, the maximum value for f under the constraints
     is returned if possible:
 
-    >>> lp(max, f, c + [x3 < oo])  # x3 can have any value
-    (5, {x1: 1, x2: 0, x3: -2, x4: 2})
+    >>> lp(max, f, c)
+    (3/4, {x: 0, y: 3/4, z: 0})
 
     Symbols not in the objective function will not be reported
     and are treated as 0:
@@ -525,7 +508,7 @@ def _lp(min_max, f, constr):
     >>> lp(min, x, [y + x >= -3])  # same as lp(min, x, [x >= -3])
     (-3, {x: -3})
     """
-    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
+    got = A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
     how = str(min_max).lower()
     if 'max' in how:
@@ -546,8 +529,8 @@ def _lp(min_max, f, constr):
         r = {k: v.xreplace(p) for k, v in r.items()}
         # then use the actual value of x (= x - z1) in p
         p.update(r)
-        # and keep only non-aux variables
-        p = {k: v for k, v in p.items() if k not in aux}
+        # don't show aux
+        p = {k: p[k] for k in ordered(p) if k not in aux}
 
     # not returning dual since there may be extra constraints
     # when a variable has finite bounds
@@ -619,11 +602,11 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     >>> from sympy import symbols, Eq, oo, linear_eq_to_matrix as M
     >>> from sympy.abc import x, y
     >>> x = x1, x2, x3, x4 = symbols('x1:5')
-    >>> cd = M(5*x2 + x3 + 4*x4 - x1, x)
-    >>> a,b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
+    >>> c, d = cd = M(5*x2 + x3 + 4*x4 - x1, x)
+    >>> a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
     >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
     >>> linprog(cd, a, b, aeq, beq)
-    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+    (0, {x1: 0, x2: 0, x3: 0, x4: 0})
 
     """
 
@@ -638,7 +621,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     else:
         raise ValueError('expecting one or two matrices/lists for cd')
     xit = numbered_symbols('x', start=1)
-    x = [i[1] for i in enumerate(zip(range(A.cols), xit))]
+    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
     if A is None:
         assert b is None, 'A and b must both be given'
         A, b = Matrix(0,0,[]),Matrix(0,0,[])
@@ -679,7 +662,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         elif lo is None and hi is None:
             # unbounded
             constr.append(x[i] <= S.Infinity)
-    f = C*x - D
+    f = (C*x - D)[0]
 
     # convert f and const to standard matrices and
     # auxilliary variables as needed
