@@ -588,12 +588,22 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     """Return the minimization of ``c*x - d`` with the given
     constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless constrained,
     variables will assume only nonnegative values in the solution.
-    A constraint like ``x <= 2`` will permit ``x`` to have
-    negative values while ``x < oo`` will allow it to have any real
-    value.
 
     If ``cd`` is a single matrix then ``d`` will be zero; otherwise
     it should be tuple with two matrices: ``c`` and ``d``.
+
+    By default, all variables will be nonnegative. If ``bounds``
+    is given as a single tuple, ``(lo, hi)`` then all variables
+    will be constrained to be between ``lo`` and ``hi``. Use
+    None for a ``lo`` or ``hi`` if it is unconstrained, e.g.
+    ``(None, 0)`` indicates nonpositive values. To set
+    individual ranges, pass a list in length the same as the
+    number of columns in ``A``, each element being a tuple; if
+    only a few variables take on non-default values they can be
+    passed as a dictionary with keys giving the corresponding
+    column to which the variable is assigned, e.g. ``bounds={2:
+    (1, 4)}`` would limit the 3rd variable to have a value in
+    range ``[1, 4]``.
 
     Examples
     ========
@@ -615,6 +625,21 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     # convert scipy-like matrices to expressions
 
+    ## the inequalities
+    if A is None:
+        if b is not None:
+            raise ValueError('A and b must both be given')
+        A, b = Matrix(0, 0, []),Matrix(0, 0, [])
+    else:
+        A, b = [Matrix(i) for i in (A, b)]
+
+    ## create variables to recreate the symbolic constraints
+    ## and objective
+    xit = numbered_symbols('x', start=1)
+    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
+    constr = [i <= j for i, j in zip(A*x, b)]
+
+    ## the objective
     if isinstance(cd, MatrixBase):
         C, D = cd, Matrix([0])
     elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
@@ -623,34 +648,32 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         C, D = Matrix(cd), Matrix([0])
     else:
         raise ValueError('expecting one or two matrices/lists for cd')
-    xit = numbered_symbols('x', start=1)
-    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
-    if A is None:
-        assert b is None, 'A and b must both be given'
-        A, b = Matrix(0,0,[]),Matrix(0,0,[])
-    else:
-        A, b = [Matrix(i) for i in (A, b)]
-    constr = [i <= j for i, j in zip(A*x, b)]
+    f = (C*x - D)[0]
+
+    ## the equalities
     if A_eq is None:
-        assert b_eq is None, 'A_eq and b_eq must both be given'
+        if not b_eq is None:
+            raise ValueError('A_eq and b_eq must both be given')
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
         constr.extend([Eq(i, j) for i, j in zip(A_eq*x, b_eq)])
+
+    ## the bounds are interpreted
     if bounds is None:
         bounds = (0, None)
     if type(bounds) is tuple and len(bounds) == 2:
-        bounds = [bounds]*A.rows
-    elif len(bounds) == A.rows and all(type(i) is tuple and len(i) == 2 for i in bounds):
+        bounds = [bounds]*A.cols
+    elif len(bounds) == A.cols and all(type(i) is tuple and len(i) == 2 for i in bounds):
         pass # individual bounds
     elif type(bounds) is dict and all(type(i) is tuple and len(i) == 2 for i in bounds.values()):
         # sparse bounds
         db = bounds
-        bounds = [(None, None)]*A.rows
+        bounds = [(0, None)]*A.cols
         while db:
             i, b = db.popitem()
             bounds[i] = b
     else:
-        assert None, 'unexpected bounds'
+        raise ValueError('unexpected bounds %s' % bounds)
     for i, (lo,hi) in enumerate(bounds):
         if lo == 0 and hi is None:
             pass  # default
@@ -665,10 +688,8 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         elif lo is None and hi is None:
             # unbounded
             constr.append(x[i] <= S.Infinity)
-    f = (C*x - D)[0]
 
-    # convert f and const to standard matrices and
-    # auxilliary variables as needed
+    # solve the symbolic system
 
     return _lp(min, f, constr)
 

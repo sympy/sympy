@@ -2,6 +2,7 @@ from sympy.core.numbers import Rational
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
+from sympy.core.singleton import S
 from sympy.core.random import random, choice
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.generate import randprime
@@ -9,7 +10,7 @@ from sympy.matrices.dense import Matrix, eye
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.solvers.simplex import (_lp as lp, _primal_dual,
     UnboundedLPError, InfeasibleLPError, lpmin, lpmax,
-    _m, _abcd, _simplex)
+    _m, _abcd, _simplex, linprog)
 
 from sympy.external.importtools import import_module
 
@@ -254,3 +255,33 @@ def test_lpmin_lpmax():
     ans = lpmax(f, constr)
     assert ans == (-1, {y1: 1, y2: 0})
     assert lpmax(m) == lpmax(*L) == lpmax(a, b, c, d) == ans
+
+
+def test_linprog():
+    v = x, y, z = symbols('x1:4')
+    f = x + y - 2*z
+    cd = linear_eq_to_matrix(f, v)
+    ineq = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
+    ab = linear_eq_to_matrix([i.lts - i.gts for i in ineq], v)
+    ans = (-S(6)/5, {x: 0, y: 0, z: S(3)/5})
+    assert lpmin(f, ineq) == ans
+    assert linprog(cd, *ab) == ans, linprog(cd, *ab)
+
+    eq = [Eq(y - 9*x, 1)]
+    abeq = linear_eq_to_matrix([i.lhs - i.rhs for i in eq], v)
+    ans = (-S(2)/5, {x: 0, y: 1, z: S(7)/10})
+    assert lpmin(f, ineq + eq) == ans
+    assert linprog(cd, *ab, *abeq) == ans
+
+    eq = [z - y <= S.Half]
+    abeq = linear_eq_to_matrix([i.lhs - i.rhs for i in eq], v)
+    ans = (-S(10)/9, {x: 0, y: S(1)/9, z: S(11)/18})
+    assert lpmin(f, ineq + eq) == ans
+    assert linprog(cd, *ab, *abeq) == ans
+
+    bounds = [(0, None), (0, None), (None, S.Half)]
+    ans = (-1, {x: 0, y: 0, z: S.Half})
+    assert lpmin(f, ineq + [z <= S.Half]) == ans
+    assert linprog(cd, *ab, bounds=bounds) == ans
+    assert linprog(cd, *ab, bounds={v.index(z): bounds[-1]}) == ans
+    eq = [z - y <= S.Half]
