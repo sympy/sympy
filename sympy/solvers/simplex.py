@@ -348,7 +348,7 @@ def _rel_as_nonpos(constr):
     univariate = {}  # {x: interval} for univariate constraints
     unbound = set()  # symbols designated as unbound
 
-    # separate Eq
+    # separate out univariates
     for i in constr:
         if i == True:
             continue  # ignore
@@ -629,7 +629,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if A is None:
         if b is not None:
             raise ValueError('A and b must both be given')
-        A, b = Matrix(0, 0, []),Matrix(0, 0, [])
+        A, b = Matrix(0, 0, []), Matrix(0, 0, [])
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
@@ -696,7 +696,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
 def lpmin(*args):
     """return minimization of linear equation ``f = c*x - d``
-    under constraints ``A*x >= b``.
+    under linear constraints ``A*x >= b``.
 
     Input can be the ``Matrix([[A, b], [c, d]])``, the individual
     matrices ``A, b, c, d`` or the function ``f`` and a list of
@@ -725,7 +725,7 @@ def lpmin(*args):
 
 def lpmax(*args):
     """return maximization of linear equation ``f = c*y - d``
-    under constraints ``A*y <= b``.
+    under linear constraints ``A*y <= b``.
 
     Input can be the ``Matrix([[A, b], [c, d]])``, the individual
     matrices ``A, b, c, d`` or the function ``f`` and a list of
