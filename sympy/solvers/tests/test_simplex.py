@@ -231,11 +231,14 @@ def test_simplex():
     assert lpmax(y, [Eq(y, 2)]) == (2, {y: 2})
 
     # the conditions are equivalent to Eq(x, y + 2)
-    # so x should go to 0 and solution should be y = -2
-    assert lpmax(y, [x <= y + 2, x >= y + 2]) == (-2, {x: 0, y: -2})
+    assert lpmin(y, [x <= y + 2, x >= y + 2]) == (0, {x: 2, y: 0})
     # equivalent to Eq(y, -2)
     assert lpmax(y, [0 <= y + 2, 0 >= y + 2]) == (-2, {y: -2})
     assert lpmax(y, [0 <= y + 2, 0 >= y + 2, y <= 0]) == (-2, {y: -2})
+
+    # extra symbols symbols
+    assert lpmin(x, [y >= 1, x >= y]) == (1, {x: 1, y: 1})
+    assert lpmin(x, [y >= 1, x >= y + z]) == (1, {x: 1, y: 1, z: 0})
 
 
 def test_lpmin_lpmax():
@@ -258,30 +261,41 @@ def test_lpmin_lpmax():
 
 
 def test_linprog():
-    v = x, y, z = symbols('x1:4')
-    f = x + y - 2*z
-    cd = linear_eq_to_matrix(f, v)
-    ineq = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
-    ab = linear_eq_to_matrix([i.lts - i.gts for i in ineq], v)
-    ans = (-S(6)/5, {x: 0, y: 0, z: S(3)/5})
-    assert lpmin(f, ineq) == ans
-    assert linprog(cd, *ab) == ans, linprog(cd, *ab)
+    for do in range(2):
+        if not do:
+            M = lambda a, b: linear_eq_to_matrix(a, b)
+        else:
+            # check matrices as list
+            M = lambda a, b: [
+                i.tolist() for i in linear_eq_to_matrix(a, b)]
 
-    eq = [Eq(y - 9*x, 1)]
-    abeq = linear_eq_to_matrix([i.lhs - i.rhs for i in eq], v)
-    ans = (-S(2)/5, {x: 0, y: 1, z: S(7)/10})
-    assert lpmin(f, ineq + eq) == ans
-    assert linprog(cd, *ab, *abeq) == ans
+        v = x, y, z = symbols('x1:4')
+        f = x + y - 2*z
+        cd = M(f, v)
+        ineq = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
+        ab = M([i.lts - i.gts for i in ineq], v)
+        ans = (-S(6)/5, {x: 0, y: 0, z: S(3)/5})
+        assert lpmin(f, ineq) == ans
+        assert linprog(cd, *ab) == ans
+        assert linprog(cd[0], *ab) == ans  # d = 0
 
-    eq = [z - y <= S.Half]
-    abeq = linear_eq_to_matrix([i.lhs - i.rhs for i in eq], v)
-    ans = (-S(10)/9, {x: 0, y: S(1)/9, z: S(11)/18})
-    assert lpmin(f, ineq + eq) == ans
-    assert linprog(cd, *ab, *abeq) == ans
+        f += 1
+        cd = M(f, v)
+        eq = [Eq(y - 9*x, 1)]
+        abeq = M([i.lhs - i.rhs for i in eq], v)
+        ans = (1 - S(2)/5, {x: 0, y: 1, z: S(7)/10})
+        assert lpmin(f, ineq + eq) == ans
+        assert linprog(cd, *ab, *abeq) == ans
 
-    bounds = [(0, None), (0, None), (None, S.Half)]
-    ans = (-1, {x: 0, y: 0, z: S.Half})
-    assert lpmin(f, ineq + [z <= S.Half]) == ans
-    assert linprog(cd, *ab, bounds=bounds) == ans
-    assert linprog(cd, *ab, bounds={v.index(z): bounds[-1]}) == ans
-    eq = [z - y <= S.Half]
+        eq = [z - y <= S.Half]
+        abeq = M([i.lhs - i.rhs for i in eq], v)
+        ans = (1 - S(10)/9, {x: 0, y: S(1)/9, z: S(11)/18})
+        assert lpmin(f, ineq + eq) == ans
+        assert linprog(cd, *ab, *abeq) == ans
+
+        bounds = [(0, None), (0, None), (None, S.Half)]
+        ans = (0, {x: 0, y: 0, z: S.Half})
+        assert lpmin(f, ineq + [z <= S.Half]) == ans
+        assert linprog(cd, *ab, bounds=bounds) == ans
+        assert linprog(cd, *ab, bounds={v.index(z): bounds[-1]}) == ans
+        eq = [z - y <= S.Half]
