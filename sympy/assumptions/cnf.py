@@ -403,7 +403,7 @@ class EncodedCNF:
     """
     Class for encoding the CNF expression.
 
-    Parameters
+    Attributes
     ==========
     data : list of sets of integers
         The CNF expression that has been encoded. Each set represents a clause
@@ -419,57 +419,36 @@ class EncodedCNF:
         is derived from the keys of the 'encoding' dictionary and may be useful for
         other purposes or in future extensions of the class.
 
-        *Note that the order the symbols come in corresponds to their encoding.
+        Note that the order the symbols come in corresponds to their encoding.
 
     Examples
     ========
 
-    Create an instance of EncodedCNF and add a propositional expression.
+    Note that the actual encoding is not deterministic.
     >>> from sympy.assumptions.cnf import CNF, EncodedCNF
     >>> from sympy.abc import a, b
     >>> from sympy.logic.boolalg import Or, Not
-
     >>> encoded_cnf = EncodedCNF()
     >>> prop = Or(a, Not(b))
-    >>> encoded_cnf.add_prop(prop)
-
-    Encode the CNF expression and print the encoded data and encoding dictionary.
-    Note that the actual encoding may differ between sessions.
+    >>> cnf = CNF.from_prop(prop)
+    >>> encoded_cnf.add_from_cnf(cnf)
     >>> encoded_cnf.data #doctest: +SKIP
     [{1, -2}]
-
     >>> encoded_cnf.encoding #doctest: +SKIP
     {a: 1, b: 2}
-
-    Decode the encoded CNF expression.
-
-    Decode just one literal.
     >>> first_literal_encoding = list(encoded_cnf.data[0])[0]
-
-    Again, note that the actual encoding may differ between sessions.
     >>> first_literal_encoding #doctest: +SKIP
     2
-
-    But the decoded literal is the same, as expected.
     >>> encoded_cnf.decode_literal(first_literal_encoding)
     a
-
-    Decode the entire encoded CNF.
     >>> encoded_cnf.decode()
     [a | ~b]
-
-    Create a copy of the encoded CNF object and add more clauses from a CNF object.
-
     >>> copied_encoded_cnf = encoded_cnf.copy()
     >>> prop = Or(a, b)
     >>> cnf = CNF.from_prop(prop)
     >>> encoded_cnf.add_from_cnf(cnf)
-
-    Check the updated encoded data for `encoded_cnf` and the copied encoded data.
-    Again, note that the actual encoding may differ between sessions.
     >>> encoded_cnf.data #doctest: +SKIP
     [{1, -2}, {3}]
-
     >>> copied_encoded_cnf.data #doctest: +SKIP
     [{1, -2}]
     """

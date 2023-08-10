@@ -583,7 +583,8 @@ def test_to_CNF():
 def test_encoded_cnf():
     encoded_cnf = EncodedCNF()
     prop = Or(Or(a, Not(b)), Or(Not(c), b))
-    encoded_cnf.add_prop(prop)
+    cnf = CNF.from_prop(prop)
+    encoded_cnf.add_from_cnf(cnf)
     expected_literals = list(encoded_cnf.encoding.keys())
 
     # Test decode_literal()
