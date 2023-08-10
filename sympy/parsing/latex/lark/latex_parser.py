@@ -471,7 +471,7 @@ class LarkLatexParser:
         if self.print_debug_output:
             # print this stuff before attempting to run the transformer
             lark.logger.debug("expression =", s)
-            # print(parse_tree)
+            # print the `parse_tree` variable
             lark.logger.debug(parse_tree.pretty())
 
         sympy_expression = self.transform_to_sympy_expr.transform(parse_tree)
