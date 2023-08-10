@@ -434,21 +434,14 @@ def _lp_matrices(objective, constraints):
 
     # sympify input and collect free symbols
     F = sympify(objective)
-    syms = F.free_symbols
     np = [sympify(i) for i in constraints]
+    syms = set.union(*[i.free_symbols for i in [F] + np], set())
 
     # change Eq(x, y) to x - y <= 0 and y - x <= 0
     for i in range(len(np)):
         if isinstance(np[i], Eq):
             np[i] = np[i].lhs - np[i].rhs <= 0
             np.append(-np[i].lhs <= 0)
-
-    # set to 0 any symbol not in objective and constraints
-    npfree = set.union(*[i.free_symbols for i in np], set())
-    free = F.free_symbols.symmetric_difference(npfree)
-    zero = dict(zip(free, [S.Zero]*len(free)))
-    F = F.xreplace(zero)
-    np = [i.xreplace(zero) for i in np]
 
     # convert constraints to nonpositive expressions
     _ = _rel_as_nonpos(np)
@@ -464,7 +457,6 @@ def _lp_matrices(objective, constraints):
     xx = list(ordered(syms)) + aux
     A, B = linear_eq_to_matrix(np, xx)
     C, D = linear_eq_to_matrix([F], xx)
-    r.update(zero)
     return A, B, C, D, r, xx, aux
 
 
@@ -502,11 +494,11 @@ def _lp(min_max, f, constr):
     >>> lp(max, f, c + [Eq(y - 9*x, 1)])
     (5/7, {x: 0, y: 1, z: 1/7})
 
-    Symbols not in the objective function will not be reported
-    and are treated as 0:
+    All symbols are reported, even if they are not in the objective
+    function:
 
-    >>> lp(min, x, [y + x >= -3])  # same as lp(min, x, [x >= -3])
-    (-3, {x: -3, y: 0})
+    >>> lp(min, x, [y + x >= 3])
+    (0, {x: 0, y: 3})
     """
     A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
@@ -593,11 +585,12 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     it should be tuple with two matrices: ``c`` and ``d``.
 
     By default, all variables will be nonnegative. If ``bounds``
-    is given as a single tuple, ``(lo, hi)`` then all variables
+    is given as a single tuple, ``(lo, hi)``, then all variables
     will be constrained to be between ``lo`` and ``hi``. Use
-    None for a ``lo`` or ``hi`` if it is unconstrained, e.g.
+    None for a ``lo`` or ``hi`` if it is unconstrained in the
+    negative or positive direction, respectively, e.g.
     ``(None, 0)`` indicates nonpositive values. To set
-    individual ranges, pass a list in length the same as the
+    individual ranges, pass a list with length equal to the
     number of columns in ``A``, each element being a tuple; if
     only a few variables take on non-default values they can be
     passed as a dictionary with keys giving the corresponding
@@ -644,7 +637,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         C, D = cd, Matrix([0])
     elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
         C, D = [Matrix(i) for i in cd]
-    elif isinstance(cd, list) and len(cd) == A.cols:
+    elif isinstance(cd, list) and isinstance(cd[0], list) and len(cd[0]) == A.cols:
         C, D = Matrix(cd), Matrix([0])
     else:
         raise ValueError('expecting one or two matrices/lists for cd')
