@@ -11,8 +11,7 @@ class ClosureFailure(Exception):
 
     >>> from sympy.polys import Poly, cyclotomic_poly, ZZ
     >>> from sympy.polys.matrices import DomainMatrix
-    >>> from sympy.polys.numberfields.modules import PowerBasis, to_col, ClosureFailure
-    >>> from sympy.testing.pytest import raises
+    >>> from sympy.polys.numberfields.modules import PowerBasis, to_col
     >>> T = Poly(cyclotomic_poly(5))
     >>> A = PowerBasis(T)
     >>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
