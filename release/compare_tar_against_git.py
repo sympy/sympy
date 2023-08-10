@@ -53,6 +53,7 @@ git_whitelist = {
     'CODEOWNERS',
     'asv.conf.actions.json',
     'codecov.yml',
+    'requirements-tests.txt',
     'MANIFEST.in',
     'banner.svg',
     # Code of conduct
