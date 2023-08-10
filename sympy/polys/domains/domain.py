@@ -1101,12 +1101,20 @@ class Domain:
 
         Since the default :py:attr:`~.Domain.dtype` for :ref:`ZZ` is ``int``
         (or ``mpz``) division as ``a / b`` should not be used as it would give
-        a ``float``.
+        a ``float`` which is not a domain element.
 
-        >>> ZZ(4) / ZZ(2)
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
         2.0
-        >>> ZZ(5) / ZZ(2)
+        >>> ZZ(5) / ZZ(2) # doctest: +SKIP
         2.5
+
+        On the other hand with `SYMPY_GROUND_TYPES=flint` elements of :ref:`ZZ`
+        are ``flint.fmpz`` and division would raise an exception:
+
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        TypeError: unsupported operand type(s) for /: 'fmpz' and 'fmpz'
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
         :py:meth:`~.Domain.exquo` should be used instead.

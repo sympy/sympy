@@ -28,8 +28,10 @@ class ClosureFailure(Exception):
     but ``B`` cannot represent an element with an odd coefficient:
 
     >>> a2 = A(to_col([1, 2, 2, 2]))
-    >>> print(raises(ClosureFailure, lambda: B.represent(a2)))
-    <ExceptionInfo ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')>
+    >>> B.represent(a2)
+    Traceback (most recent call last):
+    ...
+    ClosureFailure: Element in QQ-span but not ZZ-span of this basis.
 
     """
     pass

@@ -225,7 +225,7 @@ jobs:
   # -------------------- FLINT tests -------------------------------- #
 
   python-flint:
-    # needs: code-quality
+    needs: code-quality
 
     # Currently wheels are available for python-flint only on Windows and OSX
     # so we use OSX rather than Ubuntu for this job.
@@ -239,9 +239,6 @@ jobs:
       - run: pip install -r requirements-test.txt
       - run: pip install python-flint
       # Test modules that most directly use python-flint
-      - run: pwd
-      - run: ls -l
-      - run: ls sympy
       - run: |
           pytest --doctest-plus --doctest-glob='*.rst'    \
                     sympy/polys                           \
