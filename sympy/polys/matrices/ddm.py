@@ -95,6 +95,8 @@ class DDM(list):
     """
 
     fmt = 'dense'
+    is_DFM = False
+    is_DDM = True
 
     def __init__(self, rowslist, shape, domain):
         super().__init__(rowslist)
@@ -329,6 +331,55 @@ class DDM(list):
         sympy.polys.matrices.sdm.SDM.to_ddm
         """
         return SDM.from_list(self, self.shape, self.domain)
+
+    def to_dfm(self):
+        """
+        Convert to a :class:`~.DFM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_dfm()
+        [[1, 2], [3, 4]]
+        >>> type(A.to_dfm())
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        DFM
+        sympy.polys.matrices.dfm.DFM.to_ddm
+        """
+        return DFM(list(self), self.shape, self.domain)
+
+    def to_dfm_or_ddm(self):
+        """
+        Convert to :class:`~.DFM` if possible or otherwise return self.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_dfm_or_ddm()
+        [[1, 2], [3, 4]]
+        >>> type(A.to_dfm_or_ddm())
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        DFM
+        DDM
+        sympy.polys.matrices.dfm.DFM.to_ddm
+        """
+        if DFM._supports_domain(self.domain):
+            return self.to_dfm()
+        return self
 
     def convert_to(self, K):
         Kold = self.domain
@@ -759,3 +810,4 @@ class DDM(list):
 
 
 from .sdm import SDM
+from .dfm import DFM

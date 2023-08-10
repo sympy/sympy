@@ -67,6 +67,8 @@ class SDM(dict):
     """
 
     fmt = 'sparse'
+    is_DFM = False
+    is_DDM = False
 
     def __init__(self, elemsdict, shape, domain):
         super().__init__(elemsdict)
@@ -516,6 +518,22 @@ class SDM(dict):
 
     def to_sdm(M):
         return M
+
+    def to_dfm(M):
+        """
+        Convert a :py:class:`~.SDM` object to a :py:class:`~.DFM` object
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{}}, (2, 2), QQ)
+        >>> A.to_dfm()
+        [[0, 2], [0, 0]]
+
+        """
+        return M.to_ddm().to_dfm()
 
     @classmethod
     def zeros(cls, shape, domain):
