@@ -776,6 +776,89 @@ def lpmax(f, constr):
     return _lp(max, f, constr)
 
 
+def _handle_bounds(univariate):
+    # introduce auxilliary variables as needed for univariate
+    # inequalities
+    r = {}
+    np = []
+    aux = []
+    unbound = []
+    R = [0]*len(univariate)  # a (growing) row of zeros
+    def n():
+        return len(R) - 1
+    def Arow(inc=1):
+        R.extend([0]*inc)
+        return R[:]
+    row = []
+    for x, (a, b) in enumerate(univariate):
+        if a is None and b is None:
+            unbound.append(x)
+        elif a is None:
+            #r[x] = b - u
+            A = Arow()
+            A[x] = 1
+            A[n()] = 1
+            B = [b]
+            row.append((A,B))
+            A = [0]*len(A)
+            A[x] = -1
+            A[n()] = -1
+            B = [-b]
+            row.append((A,B))
+        elif b is None:
+            if a:
+                # r[x] = a + u
+                A = Arow()
+                A[x] = 1
+                A[n()] = -1
+                B = [a]
+                row.append((A,B))
+                A = [0]*len(A)
+                A[x] = -1
+                A[n()] = 1
+                B = [-a]
+                row.append((A,B))
+            else:
+                # standard nonnegative relationship
+                pass
+        else:
+            # r[x] = u + a
+            A = Arow()
+            A[x] = 1
+            A[n()] = -1
+            B = [a]
+            row.append((A,B))
+            A = [0]*len(A)
+            A[x] = -1
+            A[n()] = 1
+            B = [-a]
+            row.append((A,B))
+            # u <= b - a
+            A = [0]*len(A)
+            A[x] = 0
+            A[n()] = 1
+            B = [b - a]
+            row.append((A,B))
+
+    # make change of variables for unbound variables
+    for x in unbound:
+        # r[x] = u - v
+        A = Arow(2)
+        B = [0]
+        A[x] = 1
+        A[n()] = 1
+        A[n()-1] = -1
+        row.append((A,B))
+        A = [0]*len(A)
+        A[x] = -1
+        A[n()] = -1
+        A[n()-1] = 1
+        row.append((A,B))
+
+    return Matrix([i[0]+[0]*(len(R) - len(i)) for i in row]
+        ), Matrix([i[1] for i in row])
+
+
 def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     """Return the minimization of ``c*x - d`` with the given
     constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless bounds
@@ -811,8 +894,8 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     >>> constr = [i <= j for i,j in zip(a*X, b)]
     >>> constr += [Eq(i, j) for i,j in zip(aeq*X, beq)]
     >>> linprog(cd, a, b, aeq, beq)
-    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
-    >>> assert all(i.subs(_[1]) for i in constr)
+    (9/2, [0, 1/2, 0, 1/2])
+    >>> assert all(i.subs(dict(zip(x, _[1]))) for i in constr)
 
     See Also
     ========
@@ -844,59 +927,40 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     ## the objective
     if isinstance(cd, MatrixBase):
         C, D = cd, Matrix([0])
-    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
+    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)
+            ) for i in cd):
         C, D = [Matrix(i) for i in cd]
-    elif isinstance(cd, list) and isinstance(cd[0], list) and len(cd[0]) == A.cols:
+    elif isinstance(cd, list) and isinstance(cd[0], list) and len(
+            cd[0]) == A.cols:
         C, D = Matrix(cd), Matrix([0])
     else:
         raise ValueError('expecting one or two matrices/lists for cd')
 
-    ## create variables to re-create the symbolic constraints
-    ## and objective if necessary, else to return solution
-    xit = numbered_symbols('x', start=1)
-    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
-
-    ## test for quick exit when all bounds indicate nonnegatives
-    if bounds in (None, (0, None)) or set(bounds) == {(0, None)}:
-        o, p, d = _simplex(A, b, C, D)
-        return o, dict(zip(x, p))
-
-    ## recreate the objective and constraints so aux variables
-    ## can be created to handle the bounds
-    ### TODO: handle aux variable creation here?
-    constr = [i <= j for i, j in zip(A*x, b)]
-    f = (C*x - D)[0]
-
-    ## the bounds are interpreted
-    if bounds is None:
-        bounds = (0, None)
-    if type(bounds) is tuple and len(bounds) == 2:
-        bounds = [bounds]*A.cols
-    elif len(bounds) == A.cols and all(type(i) is tuple and len(i) == 2 for i in bounds):
-        pass # individual bounds
-    elif type(bounds) is dict and all(type(i) is tuple and len(i) == 2 for i in bounds.values()):
-        # sparse bounds
-        db = bounds
-        bounds = [(0, None)]*A.cols
-        while db:
-            i, b = db.popitem()
-            bounds[i] = b
+    if not (bounds is None or bounds == (0, None)):
+        ## the bounds are interpreted
+        if type(bounds) is tuple and len(bounds) == 2:
+            bounds = [bounds]*A.cols
+        elif len(bounds) == A.cols and all(
+                type(i) is tuple and len(i) == 2 for i in bounds):
+            pass # individual bounds
+        elif type(bounds) is dict and all(
+                type(i) is tuple and len(i) == 2
+                for i in bounds.values()):
+            # sparse bounds
+            db = bounds
+            bounds = [(0, None)]*A.cols
+            while db:
+                i, j = db.popitem()
+                bounds[i] = j
+        else:
+            raise ValueError('unexpected bounds %s' % bounds)
+        if bounds:A_, b_ = _handle_bounds(bounds)
+        aux = A_.cols - A.cols
+        A = Matrix([[A, A.zeros(A.rows, aux)],[A_]])
+        b = b.col_join(b_)
+        C = C.row_join(Matrix.zeros(1, aux))
     else:
-        raise ValueError('unexpected bounds %s' % bounds)
-    for i, (lo,hi) in enumerate(bounds):
-        if lo == 0 and hi is None:
-            constr.append(x[i] >= 0)
-        elif lo is not None:
-            if hi is None:
-                constr.append(x[i] >= lo)
-            else:
-                constr.append(x[i] <= hi)
-                constr.append(x[i] >= lo)
-        elif lo is None and hi is not None:
-            constr.append(x[i] <= hi)
-        elif lo is None and hi is None:
-            constr.append(x[i] <= S.Infinity)
+        aux = -A.cols  # set so -aux will give all cols below
 
-    ## solve the symbolic system with aux variable handling
-
-    return _lp(min, f, constr)
+    o, p, d = _simplex(A, b, C, D)
+    return o, p[:-aux]  # don't include aux variable values
