@@ -20,8 +20,6 @@ from sympy.printing.precedence import precedence
 from sympy.sets.sets import Set, Interval, Union
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from .experimental_lambdify import (vectorized_lambdify,
-    experimental_lambdify)
 from sympy.utilities.lambdify import lambdify
 from .intervalmath import interval
 import warnings
