@@ -243,21 +243,19 @@ def test_simplex():
 
 def test_lpmin_lpmax():
     x1, x2, y1, y2 = symbols('x1 x2 y1 y2')
-    L = [[1, 1]], [1], [[1, 1]], [2]
+    L = [[1, -1]], [1], [[1, 1]], [2]
     a, b, c, d = [Matrix(i) for i in L]
     m = Matrix([[a, b], [c, d]])
     f, constr = _primal_dual(m)[0]
     ans = lpmin(f, constr)
     assert ans == (-1, {x1: 1, x2: 0})
-    assert lpmin(m) == lpmin(*L) == lpmin(a, b, c, d) == ans
 
-    L = [[1, 1], [1, 1]], [1, 1], [[1, 1]], [2]
+    L = [[1, -1], [1, 1]], [1, 1], [[1, 1]], [2]
     a, b, c, d = [Matrix(i) for i in L]
     m = Matrix([[a, b], [c, d]])
     f, constr = _primal_dual(m)[1]
     ans = lpmax(f, constr)
     assert ans == (-1, {y1: 1, y2: 0})
-    assert lpmax(m) == lpmax(*L) == lpmax(a, b, c, d) == ans
 
 
 def test_linprog():
@@ -276,7 +274,7 @@ def test_linprog():
         ab = M([i.lts - i.gts for i in ineq], v)
         ans = (-S(6)/5, {x: 0, y: 0, z: S(3)/5})
         assert lpmin(f, ineq) == ans
-        assert linprog(cd, *ab) == ans
+        assert linprog(cd, *ab) == ans,(linprog(cd, *ab),x,y,z)
         assert linprog(cd[0], *ab) == ans  # d = 0
 
         f += 1
