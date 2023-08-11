@@ -20,7 +20,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, MatplotlibBackend, TextBackend)
-from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
+from sympy.testing.pytest import skip, raises, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
 
