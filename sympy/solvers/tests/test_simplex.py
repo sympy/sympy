@@ -265,8 +265,8 @@ def test_linprog():
             M = lambda a, b: linear_eq_to_matrix(a, b)
         else:
             # check matrices as list
-            M = lambda a, b: [
-                i.tolist() for i in linear_eq_to_matrix(a, b)]
+            M = lambda a, b: tuple([
+                i.tolist() for i in linear_eq_to_matrix(a, b)])
 
         v = x, y, z = symbols('x1:4')
         f = x + y - 2*z
@@ -299,3 +299,11 @@ def test_linprog():
         assert linprog(cd, *ab, bounds=bounds) == ans
         assert linprog(cd, *ab, bounds={v.index(z): bounds[-1]}) == ans
         eq = [z - y <= S.Half]
+
+    assert linprog([[1]], [], [], bounds=(2, 3)) == (2, [2])
+    assert linprog([1], [], [], bounds=(2, 3)) == (2, [2])
+    assert linprog([1], bounds=(2, 3)) == (2, [2])
+    assert linprog([1, -1], [[1, 1]], [2], bounds={1:(None, None)}
+        ) == (-2, [0, 2])
+    assert linprog([1, -1], [[1, 1]], [5], bounds={1:(3, None)}
+        ) == (-5, [0, 5])
