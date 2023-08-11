@@ -829,6 +829,18 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     else:
         A, b = [Matrix(i) for i in (A, b)]
 
+    ## the equalities
+    if A_eq is None:
+        if not b_eq is None:
+            raise ValueError('A_eq and b_eq must both be given')
+    else:
+        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        # if x == y then x <= y and x >= y (-x <= -y)
+        A = A.col_join(A_eq)
+        A = A.col_join(-A_eq)
+        b = b.col_join(b_eq)
+        b = b.col_join(-b_eq)
+
     ## the objective
     if isinstance(cd, MatrixBase):
         C, D = cd, Matrix([0])
@@ -844,23 +856,16 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     xit = numbered_symbols('x', start=1)
     x = Matrix([i[1] for i in zip(range(A.cols), xit)])
 
-    ## test for quick exit
-    defbounds = bounds in (None, (0, None)) or set(bounds) == {(0, None)}
-    if all(i is None for i in (A_eq, b_eq)) and defbounds:
+    ## test for quick exit when all bounds indicate nonnegatives
+    if bounds in (None, (0, None)) or set(bounds) == {(0, None)}:
         o, p, d = _simplex(A, b, C, D)
         return o, dict(zip(x, p))
 
-    ## recreate the objective and constraints
+    ## recreate the objective and constraints so aux variables
+    ## can be created to handle the bounds
+    ### TODO: handle aux variable creation here?
     constr = [i <= j for i, j in zip(A*x, b)]
     f = (C*x - D)[0]
-
-    ## the equalities
-    if A_eq is None:
-        if not b_eq is None:
-            raise ValueError('A_eq and b_eq must both be given')
-    else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
-        constr.extend([Eq(i, j) for i, j in zip(A_eq*x, b_eq)])
 
     ## the bounds are interpreted
     if bounds is None:
@@ -880,9 +885,6 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         raise ValueError('unexpected bounds %s' % bounds)
     for i, (lo,hi) in enumerate(bounds):
         if lo == 0 and hi is None:
-            # this must be made explicit since
-            # if a matrix row were x <= 3, it is interpreted
-            # as meaning And(x >= 0, x <= 3)
             constr.append(x[i] >= 0)
         elif lo is not None:
             if hi is None:
@@ -893,9 +895,8 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         elif lo is None and hi is not None:
             constr.append(x[i] <= hi)
         elif lo is None and hi is None:
-            # unbounded
             constr.append(x[i] <= S.Infinity)
 
-    # solve the symbolic system
+    ## solve the symbolic system with aux variable handling
 
     return _lp(min, f, constr)
