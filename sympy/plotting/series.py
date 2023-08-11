@@ -67,6 +67,28 @@ def _uniform_eval(f1, f2, *args, modules=None,
         return wrapper_func(f2, *args)
 
 
+def _adaptive_eval(f, x):
+    """Evaluate f(x) with an adaptive algorithm. Post-process the result.
+    If a symbolic expression is evaluated with SymPy, it might returns
+    another symbolic expression, containing additions, ...
+    Force evaluation to a float.
+
+    Parameters
+    ==========
+    f : callable
+    x : float
+    """
+    np = import_module('numpy')
+
+    y = f(x)
+    if isinstance(y, Expr) and (not y.is_Number):
+        y = y.evalf()
+    y = complex(y)
+    if y.imag > 1e-08:
+        return np.nan
+    return y.real
+
+
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
 
@@ -225,7 +247,7 @@ class BaseSeries:
         # or products
         self._needs_to_be_int = []
         # a color function will be responsible to set the line/surface color
-        # according to some logic. Each data series will et an appropriate 
+        # according to some logic. Each data series will et an appropriate
         # default value.
         self.color_func = None
         # NOTE: color_func usually receives numerical functions that are going
@@ -463,7 +485,7 @@ class BaseSeries:
             self._expr = e
         else:
             self._expr = sympify(e) if not is_iter else Tuple(*e)
-            
+
             # look for the upper bound of summations and products
             s = set()
             for e in self._expr.atoms(Sum, Product):
@@ -940,6 +962,7 @@ class Line2DBaseSeries(BaseSeries):
     """
 
     is_2Dline = True
+    _dim = 2
     _N = 1000
 
     def __init__(self, **kwargs):
@@ -1064,7 +1087,7 @@ class Line2DBaseSeries(BaseSeries):
         points = type(self).get_data(self)
         points = np.ma.array(points).T.reshape(-1, 1, self._dim)
         return np.ma.concatenate([points[:-1], points[1:]], axis=1)
-    
+
     def _insert_exclusions(self, points):
         """Add NaN to each of the exclusion point. Practically, this adds a
         NaN to the exlusion point, plus two other nearby points evaluated with
@@ -1140,11 +1163,11 @@ class Line2DBaseSeries(BaseSeries):
             return self._cast(self.ranges[0][2])
         except:
             return self.ranges[0][2]
-    
+
     @property
     def xscale(self):
         return self._scales[0]
-    
+
     @xscale.setter
     def xscale(self, v):
         self.scales = v
@@ -1189,7 +1212,7 @@ class List2DSeries(Line2DBaseSeries):
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
     """Representation for a line consisting of a SymPy expression over a range."""
-    
+
     def __init__(self, expr, var_start_end, label="", **kwargs):
         super().__init__(**kwargs)
         self.expr = expr if callable(expr) else sympify(expr)
@@ -1211,16 +1234,16 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     "%s requires the imaginary " % self.__class__.__name__ +
                     "part of the start and end values of the range "
                     "to be the same.")
-        
+
         if self.adaptive and self._return:
             warnings.warn("The adaptive algorithm is unable to deal with "
                 "complex numbers. Automatically switching to uniform meshing.")
             self.adaptive = False
-    
+
     @property
     def nb_of_points(self):
         return self.n[0]
-    
+
     @nb_of_points.setter
     def nb_of_points(self, v):
         self.n = v
@@ -1246,7 +1269,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 List of y-coordinates
         """
         return self._get_data_helper()
-    
+
     def _adaptive_sampling(self):
         try:
             f = lambdify([self.var], self.expr, self.modules)
@@ -1274,9 +1297,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         .. [1] Adaptive polygonal approximation of parametric curves,
                Luiz Henrique de Figueiredo.
         """
+        np = import_module('numpy')
+
         x_coords = []
         y_coords = []
-        np = import_module('numpy')
         def sample(p, q, depth):
             """ Samples recursively if three points are almost collinear.
             For depth < 6, points are added irrespective of whether they
@@ -1290,7 +1314,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                                                         np.log10(p[0])))
             else:
                 xnew = p[0] + random * (q[0] - p[0])
-            ynew = f(xnew)
+            ynew = _adaptive_eval(f, xnew)
             new_point = np.array([xnew, ynew])
 
             # Maximum depth
@@ -1329,8 +1353,8 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 x_coords.append(q[0])
                 y_coords.append(q[1])
 
-        f_start = f(self.start.real)
-        f_end = f(self.end.real)
+        f_start = _adaptive_eval(f, self.start.real)
+        f_end = _adaptive_eval(f, self.end.real)
         x_coords.append(self.start.real)
         y_coords.append(f_start)
         sample(np.array([self.start.real, f_start]),
@@ -1350,9 +1374,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def _get_data_helper(self):
         """Returns coordinates that needs to be postprocessed.
         """
-        if self.adaptive:
+        if self.adaptive and (not self.only_integers):
             return self._adaptive_sampling()
-        
+
         np = import_module('numpy')
         x, _re, _im = self._uniform_sampling()
 
@@ -1375,34 +1399,90 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return x, _re
 
 
-class Parametric2DLineSeries(Line2DBaseSeries):
-    """Representation for a line consisting of two parametric SymPy expressions
-    over a range."""
-
+class ParametricLineBaseSeries(Line2DBaseSeries):
     is_parametric = True
 
-    def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
-        super().__init__()
-        self.expr_x = sympify(expr_x)
-        self.expr_y = sympify(expr_y)
-        self.label = kwargs.get('label', None) or \
-                            Tuple(self.expr_x, self.expr_y)
-        self.var = sympify(var_start_end[0])
-        self.start = float(var_start_end[1])
-        self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('n', 300)
-        self.adaptive = kwargs.get('adaptive', True)
-        self.depth = kwargs.get('depth', 12)
-        self.line_color = kwargs.get('line_color', None)
+    def _set_parametric_line_label(self, label):
+        """Logic to set the correct label to be shown on the plot.
+        If `use_cm=True` there will be a colorbar, so we show the parameter.
+        If `use_cm=False`, there might be a legend, so we show the expressions.
 
-    def __str__(self):
-        return 'parametric cartesian line: (%s, %s) for %s over %s' % (
-            str(self.expr_x), str(self.expr_y), str(self.var),
-            str((self.start, self.end)))
+        Parameters
+        ==========
+        label : str
+            label passed in by the pre-processor or the user
+        """
+        self._label = str(self.var) if label is None else label
+        self._latex_label = latex(self.var) if label is None else label
+        if (self.use_cm is False) and (self._label == str(self.var)):
+            self._label = str(self.expr)
+            self._latex_label = latex(self.expr)
+        # if the expressions is a lambda function and use_cm=False and no label
+        # has been provided, then its better to do the following in order to
+        # avoid suprises on the backend
+        if any(callable(e) for e in self.expr) and (not self.use_cm):
+            if self._label == str(self.expr):
+                self._label = ""
+
+    def get_label(self, use_latex=False, wrapper="$%s$"):
+        # parametric lines returns the representation of the parameter to be
+        # shown on the colorbar if `use_cm=True`, otherwise it returns the
+        # representation of the expression to be placed on the legend.
+        if self.use_cm:
+            if str(self.var) == self._label:
+                if use_latex:
+                    return self._get_wrapped_label(latex(self.var), wrapper)
+                return str(self.var)
+            # here the user has provided a custom label
+            return self._label
+        if use_latex:
+            if self._label != str(self.expr):
+                return self._latex_label
+            return self._get_wrapped_label(self._latex_label, wrapper)
+        return self._label
+
+    def _get_data_helper(self):
+        """Returns coordinates that needs to be postprocessed.
+        Depending on the `adaptive` option, this function will either use an
+        adaptive algorithm or it will uniformly sample the expression over the
+        provided range.
+        """
+        if self.adaptive:
+            np = import_module("numpy")
+            coords = self._adaptive_sampling()
+            coords = [np.array(t) for t in coords]
+        else:
+            coords = self._uniform_sampling()
+
+        if self.is_2Dline and self.is_polar:
+            # when plot_polar is executed with polar_axis=True
+            np = import_module('numpy')
+            x, y, _ = coords
+            r = np.sqrt(x**2 + y**2)
+            t = np.arctan2(y, x)
+            coords = [t, r, coords[-1]]
+
+        if callable(self.color_func):
+            coords = list(coords)
+            coords[-1] = self.eval_color_func(*coords)
+
+        return coords
+
+    def _uniform_sampling(self):
+        """Returns coordinates that needs to be postprocessed."""
+        np = import_module('numpy')
+
+        results = self._evaluate()
+        for i, r in enumerate(results):
+            _re, _im = np.real(r), np.imag(r)
+            _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+            results[i] = _re
+
+        return [*results[1:], results[0]]
 
     def get_parameter_points(self):
         np = import_module('numpy')
-        return np.linspace(self.start, self.end, num=self.nb_of_points)
+        return self.get_data()[-1]
 
     def get_points(self):
         """ Return lists of coordinates for plotting. Depending on the
@@ -1416,27 +1496,63 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         =======
             x : list
                 List of x-coordinates
-
             y : list
                 List of y-coordinates
-
+            z : list
+                List of z-coordinates, only for 3D parametric line plot.
         """
         return self._get_data_helper()[:-1]
 
-    def _get_data_helper(self):
-        if not self.adaptive:
-            return self._uniform_sampling()
-        return self._adaptive_sampling()
+    @property
+    def nb_of_points(self):
+        return self.n[0]
 
-    def _uniform_sampling(self):
-        param = self.get_parameter_points()
-        fx = vectorized_lambdify([self.var], self.expr_x)
-        fy = vectorized_lambdify([self.var], self.expr_y)
-        list_x = fx(param)
-        list_y = fy(param)
-        return (list_x, list_y, param)
+    @nb_of_points.setter
+    def nb_of_points(self, v):
+        self.n = v
+
+
+class Parametric2DLineSeries(ParametricLineBaseSeries):
+    """Representation for a line consisting of two parametric SymPy expressions
+    over a range."""
+
+    is_2Dline = True
+
+    def __init__(self, expr_x, expr_y, var_start_end, label="", **kwargs):
+        super().__init__(**kwargs)
+        self.expr_x = expr_x if callable(expr_x) else sympify(expr_x)
+        self.expr_y = expr_y if callable(expr_y) else sympify(expr_y)
+        self.expr = (self.expr_x, self.expr_y)
+        self.ranges = [var_start_end]
+        self._cast = float
+        self.use_cm = kwargs.get("use_cm", True)
+        self._set_parametric_line_label(label)
+        self._post_init()
+
+    def __str__(self):
+        return 'parametric cartesian line: (%s, %s) for %s over %s' % (
+            str(self.expr_x), str(self.expr_y), str(self.var),
+            str((self.start, self.end)))
 
     def _adaptive_sampling(self):
+        try:
+            f_x = lambdify([self.var], self.expr_x)
+            f_y = lambdify([self.var], self.expr_y)
+            x, y, p = self._adaptive_sampling_helper(f_x, f_y)
+        except Exception as err:
+            warnings.warn(
+                "The evaluation with %s failed.\n" % (
+                    "NumPy/SciPy" if not self.modules else self.modules) +
+                "{}: {}\n".format(type(err).__name__, err) +
+                "Trying to evaluate the expression with Sympy, but it might "
+                "be a slow operation."
+            )
+            f_x = lambdify([self.var], self.expr_x, "sympy")
+            f_y = lambdify([self.var], self.expr_y, "sympy")
+            x, y, p = self._adaptive_sampling_helper(f_x, f_y)
+        return x, y, p
+
+    def _adaptive_sampling_helper(self, f_x, f_y):
         """The adaptive sampling is done by recursively checking if three
         points are almost collinear. If they are not collinear, then more
         points are added between those points.
@@ -1447,8 +1563,6 @@ class Parametric2DLineSeries(Line2DBaseSeries):
         .. [1] Adaptive polygonal approximation of parametric curves,
             Luiz Henrique de Figueiredo.
         """
-        f_x = lambdify([self.var], self.expr_x)
-        f_y = lambdify([self.var], self.expr_y)
         x_coords = []
         y_coords = []
         param = []
@@ -1463,8 +1577,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             np = import_module('numpy')
             random = 0.45 + np.random.rand() * 0.1
             param_new = param_p + random * (param_q - param_p)
-            xnew = f_x(param_new)
-            ynew = f_y(param_new)
+            xnew = _adaptive_eval(f_x, param_new)
+            ynew = _adaptive_eval(f_y, param_new)
             new_point = np.array([xnew, ynew])
 
             # Maximum depth
@@ -1485,8 +1599,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             elif ((p[0] is None and q[1] is None) or
                     (p[1] is None and q[1] is None)):
                 param_array = np.linspace(param_p, param_q, 10)
-                x_array = list(map(f_x, param_array))
-                y_array = list(map(f_y, param_array))
+                x_array = [_adaptive_eval(f_x, t) for t in param_array]
+                y_array = [_adaptive_eval(f_y, t) for t in param_array]
                 if not all(x is None and y is None
                            for x, y in zip(x_array, y_array)):
                     for i in range(len(y_array) - 1):
@@ -1509,15 +1623,15 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 y_coords.append(q[1])
                 param.append(param_p)
 
-        f_start_x = f_x(self.start)
-        f_start_y = f_y(self.start)
+        f_start_x = _adaptive_eval(f_x, self.start)
+        f_start_y = _adaptive_eval(f_y, self.start)
         start = [f_start_x, f_start_y]
-        f_end_x = f_x(self.end)
-        f_end_y = f_y(self.end)
+        f_end_x = _adaptive_eval(f_x, self.end)
+        f_end_y = _adaptive_eval(f_y, self.end)
         end = [f_end_x, f_end_y]
         x_coords.append(f_start_x)
         y_coords.append(f_start_y)
-        param.append(start)
+        param.append(self.start)
         sample(self.start, self.end, start, end, 0)
 
         return x_coords, y_coords, param
@@ -1537,24 +1651,26 @@ class Line3DBaseSeries(Line2DBaseSeries):
         super().__init__()
 
 
-class Parametric3DLineSeries(Line3DBaseSeries):
+class Parametric3DLineSeries(ParametricLineBaseSeries):
     """Representation for a 3D line consisting of three parametric SymPy
     expressions and a range."""
 
-    is_parametric = True
+    is_2Dline = False
+    is_3Dline = True
 
-    def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
-        super().__init__()
-        self.expr_x = sympify(expr_x)
-        self.expr_y = sympify(expr_y)
-        self.expr_z = sympify(expr_z)
-        self.label = kwargs.get('label', None) or \
-                        Tuple(self.expr_x, self.expr_y)
-        self.var = sympify(var_start_end[0])
-        self.start = float(var_start_end[1])
-        self.end = float(var_start_end[2])
-        self.nb_of_points = kwargs.get('n', 300)
-        self.line_color = kwargs.get('line_color', None)
+    def __init__(self, expr_x, expr_y, expr_z, var_start_end, label="", **kwargs):
+        super().__init__(**kwargs)
+        self.expr_x = expr_x if callable(expr_x) else sympify(expr_x)
+        self.expr_y = expr_y if callable(expr_y) else sympify(expr_y)
+        self.expr_z = expr_z if callable(expr_z) else sympify(expr_z)
+        self.expr = (self.expr_x, self.expr_y, self.expr_z)
+        self.ranges = [var_start_end]
+        self._cast = float
+        self.adaptive = False
+        self.use_cm = kwargs.get("use_cm", True)
+        self._set_parametric_line_label(label)
+        self._post_init()
+        # TODO: remove this
         self._xlim = None
         self._ylim = None
         self._zlim = None
@@ -1564,50 +1680,14 @@ class Parametric3DLineSeries(Line3DBaseSeries):
             str(self.expr_x), str(self.expr_y), str(self.expr_z),
             str(self.var), str((self.start, self.end)))
 
-    def get_parameter_points(self):
-        np = import_module('numpy')
-        return np.linspace(self.start, self.end, num=self.nb_of_points)
-
-    def get_points(self):
-        """Return the x,y,z coordinates for plotting the line.
-        This function is available for back-compatibility purposes. Consider
-        using ``get_data()`` instead.
-        """
-        return self.get_data()[:-1]
-
     def get_data(self):
-        """Return coordinates for plotting the line.
-
-        Returns
-        =======
-
-        x: np.ndarray
-        y: np.ndarray
-        z: np.ndarray
-        param : np.ndarray
-        """
-        np = import_module('numpy')
-        param = self.get_parameter_points()
-        fx = vectorized_lambdify([self.var], self.expr_x)
-        fy = vectorized_lambdify([self.var], self.expr_y)
-        fz = vectorized_lambdify([self.var], self.expr_z)
-
-        list_x = fx(param)
-        list_y = fy(param)
-        list_z = fz(param)
-
-        list_x = np.array(list_x, dtype=np.float64)
-        list_y = np.array(list_y, dtype=np.float64)
-        list_z = np.array(list_z, dtype=np.float64)
-
-        list_x = np.ma.masked_invalid(list_x)
-        list_y = np.ma.masked_invalid(list_y)
-        list_z = np.ma.masked_invalid(list_z)
-
-        self._xlim = (np.amin(list_x), np.amax(list_x))
-        self._ylim = (np.amin(list_y), np.amax(list_y))
-        self._zlim = (np.amin(list_z), np.amax(list_z))
-        return list_x, list_y, list_z, param
+        # TODO: remove this
+        np = import_module("numpy")
+        x, y, z, p = super().get_data()
+        self._xlim = (np.amin(x), np.amax(x))
+        self._ylim = (np.amin(y), np.amax(y))
+        self._zlim = (np.amin(z), np.amax(z))
+        return x, y, z, p
 
 
 ### Surfaces
@@ -2132,12 +2212,9 @@ def centers_of_faces(array):
 def flat(x, y, z, eps=1e-3):
     """Checks whether three points are almost collinear"""
     np = import_module('numpy')
-    # Workaround plotting piecewise (#8577):
-    #   workaround for `lambdify` in `.experimental_lambdify` fails
-    #   to return numerical values in some cases. Lower-level fix
-    #   in `lambdify` is possible.
-    vector_a = (x - y).astype(np.float64)
-    vector_b = (z - y).astype(np.float64)
+    # Workaround plotting piecewise (#8577)
+    vector_a = (x - y).astype(float)
+    vector_b = (z - y).astype(float)
     dot_product = np.dot(vector_a, vector_b)
     vector_a_norm = np.linalg.norm(vector_a)
     vector_b_norm = np.linalg.norm(vector_b)
