@@ -433,6 +433,8 @@ class EncodedCNF:
     >>> encoded_cnf = EncodedCNF()
     >>> prop = Or(a, Not(b))
     >>> cnf = CNF.from_prop(prop)
+    >>> cnf.clauses #doctest: +SKIP
+    {frozenset({Literal(a, True), Literal(b, False)})}
     >>> encoded_cnf.add_from_cnf(cnf)
     >>> encoded_cnf.data #doctest: +SKIP
     [{1, -2}]
