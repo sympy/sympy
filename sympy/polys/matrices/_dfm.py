@@ -20,22 +20,26 @@
 # matrix representation.
 #
 
+from sympy.external.importtools import import_module
+from sympy.utilities.decorator import doctest_depends_on
+
 from sympy.polys.domains import ZZ, QQ
 from .exceptions import DMBadInputError
 
-import flint
+flint = import_module('flint')
 
 
 __all__ = ['DFM']
 
 
+@doctest_depends_on(ground_types=['flint'])
 class DFM:
     """
     Dense FLINT matrix. This class is a wrapper for matrices from python-flint.
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.matrices.dfm import DFM
-    >>> dfm = DFM([[1, 2], [3, 4]], (2, 2), ZZ)
+    >>> dfm = DFM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     >>> dfm
     [[1, 2], [3, 4]]
     >>> dfm.rep
@@ -50,8 +54,8 @@ class DFM:
     automatically as the internal representation of :class:`DomainMatrix`in
     dense format if the domain is supported by python-flint.
 
-    >>> from sympy.polys.matrices.domainmatrix import DomainMatrix
-    >>> dM = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+    >>> from sympy.polys.matrices.domainmatrix import DM
+    >>> dM = DM([[1, 2], [3, 4]], ZZ)
     >>> dM.rep
     [[1, 2], [3, 4]]
 
@@ -194,6 +198,20 @@ class DFM:
         except ValueError:
             raise IndexError(f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}")
 
+    def setitem(self, i, j, value):
+        """Set the ``(i, j)``-th entry."""
+        # XXX: flint matrices do not support negative indices
+        # XXX: They also raise ValueError instead of IndexError
+        m, n = self.shape
+        if i < 0:
+            i += m
+        if j < 0:
+            j += n
+        try:
+            self.rep[i, j] = value
+        except ValueError:
+            raise IndexError(f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}")
+
     def extract(self, rowslist, colslist):
         """Extract a submatrix."""
         # XXX: flint matrices do not support fancy indexing
@@ -332,12 +350,12 @@ class DFM:
     def lll(self, delta=QQ(3, 4)):
         """Return an LLL-reduced basis for the matrix."""
         # XXX: Use the flint lll method!!!
-        return self.to_ddm().lll().to_dfm()
+        return self.to_ddm().lll(delta=delta).to_dfm()
 
     def lll_transform(self, delta=QQ(3, 4)):
         """Return the LLL-reduced basis and transform matrix."""
         # XXX: Use the flint lll_transform method!!!
-        y, T = self.to_ddm().lll_transform()
+        y, T = self.to_ddm().lll_transform(delta=delta)
         return y.to_dfm(), T.to_dfm()
 
 

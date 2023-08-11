@@ -63,6 +63,8 @@ representation is friendlier.
 """
 from itertools import chain
 
+from sympy.utilities.decorator import doctest_depends_on
+
 from .exceptions import DMBadInputError, DMShapeError, DMDomainError
 
 from sympy.polys.domains import QQ
@@ -332,6 +334,7 @@ class DDM(list):
         """
         return SDM.from_list(self, self.shape, self.domain)
 
+    @doctest_depends_on(ground_types=['flint'])
     def to_dfm(self):
         """
         Convert to a :class:`~.DFM`.
@@ -355,6 +358,7 @@ class DDM(list):
         """
         return DFM(list(self), self.shape, self.domain)
 
+    @doctest_depends_on(ground_types=['flint'])
     def to_dfm_or_ddm(self):
         """
         Convert to :class:`~.DFM` if possible or otherwise return self.

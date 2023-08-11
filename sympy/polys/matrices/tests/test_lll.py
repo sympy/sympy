@@ -107,14 +107,14 @@ def test_lll_wrong_delta():
     for wrong_delta in [QQ(-1, 4), QQ(0, 1), QQ(1, 4), QQ(1, 1), QQ(100, 1)]:
         raises(DMValueError, lambda: _ddm_lll(dummy_matrix.rep, delta=wrong_delta))
         raises(DMValueError, lambda: ddm_lll(dummy_matrix.rep, delta=wrong_delta))
-        raises(DMRankError, lambda: dummy_matrix.rep.lll(delta=wrong_delta))
+        raises(DMValueError, lambda: dummy_matrix.rep.lll(delta=wrong_delta))
         raises(DMValueError, lambda: dummy_matrix.rep.to_sdm().lll(delta=wrong_delta))
-        raises(DMRankError, lambda: dummy_matrix.lll(delta=wrong_delta))
+        raises(DMValueError, lambda: dummy_matrix.lll(delta=wrong_delta))
         raises(DMValueError, lambda: _ddm_lll(dummy_matrix.rep, delta=wrong_delta, return_transform=True))
         raises(DMValueError, lambda: ddm_lll_transform(dummy_matrix.rep, delta=wrong_delta))
-        raises(DMRankError, lambda: dummy_matrix.rep.lll_transform(delta=wrong_delta))
+        raises(DMValueError, lambda: dummy_matrix.rep.lll_transform(delta=wrong_delta))
         raises(DMValueError, lambda: dummy_matrix.rep.to_sdm().lll_transform(delta=wrong_delta))
-        raises(DMRankError, lambda: dummy_matrix.lll_transform(delta=wrong_delta))
+        raises(DMValueError, lambda: dummy_matrix.lll_transform(delta=wrong_delta))
 
 
 def test_lll_wrong_shape():

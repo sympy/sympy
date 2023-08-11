@@ -13,6 +13,8 @@ from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
+from sympy.utilities.decorator import doctest_depends_on
+
 from sympy.core.sympify import _sympify
 
 from ..domains import Domain
@@ -669,6 +671,7 @@ class DomainMatrix:
         """
         return self.rep.to_sdm()
 
+    @doctest_depends_on(ground_types=['flint'])
     def to_dfm(self):
         """
         Return a :class:`~.DFM` representation of *self*.
