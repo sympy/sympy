@@ -117,7 +117,6 @@ modules = [
     'sympy.plotting.backends.textbackend',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
-    'sympy.plotting.utils',
     'sympy.polys',
     'sympy.polys.agca',
     'sympy.polys.benchmarks',
