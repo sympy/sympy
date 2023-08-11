@@ -238,14 +238,16 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-test.txt
       - run: pip install python-flint
-      # Test modules that most directly use python-flint
-      - run: |
-          pytest --doctest-plus --doctest-glob='*.rst'    \
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
                     sympy/polys                           \
-                    doc/src/modules/polys                 \
                     sympy/ntheory                         \
-                    doc/src/modules/ntheory.rst           \
                     sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
                     doc/src/modules/matrices              \
                     doc/src/tutorials/intro-tutorial/     \
         env:

@@ -7,6 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
 from .exceptions import DMBadInputError, DMDomainError, DMShapeError
@@ -519,6 +520,7 @@ class SDM(dict):
     def to_sdm(M):
         return M
 
+    @doctest_depends_on(ground_types=['flint'])
     def to_dfm(M):
         """
         Convert a :py:class:`~.SDM` object to a :py:class:`~.DFM` object
