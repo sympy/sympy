@@ -5,14 +5,18 @@ from sympy.concrete import Sum, Product
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import arity
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.functions import atan2, zeta, frac, ceiling, floor, im
 from sympy.core.relational import (Equality, GreaterThan, StrictGreaterThan,
-    LessThan, StrictLessThan)
+    LessThan, StrictLessThan, Relational, Ne)
 from sympy.core.sympify import sympify
 from sympy.external import import_module
+from sympy.logic.boolalg import BooleanFunction
 from sympy.plotting.utils import _get_free_symbols, extract_solution
 from sympy.printing.latex import latex
+from sympy.printing.pycode import PythonCodePrinter
+from sympy.printing.precedence import precedence
 from sympy.sets.sets import Set, Interval, Union
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -21,6 +25,22 @@ from .experimental_lambdify import (vectorized_lambdify,
 from sympy.utilities.lambdify import lambdify
 from .intervalmath import interval
 import warnings
+
+
+class IntervalMathPrinter(PythonCodePrinter):
+    """A printer to be used inside `plot_implicit` when `adaptive=True`,
+    in which case the interval arithmetic module is going to be used, which
+    requires the following edits.
+    """
+    def _print_And(self, expr):
+        PREC = precedence(expr)
+        return " & ".join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
+
+    def _print_Or(self, expr):
+        PREC = precedence(expr)
+        return " | ".join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
 
 def _uniform_eval(f1, f2, *args, modules=None,
@@ -2104,37 +2124,113 @@ class GenericDataSeries(BaseSeries):
 
 
 class ImplicitSeries(BaseSeries):
-    """ Representation for Implicit plot """
-    is_implicit = True
+    """Representation for 2D Implicit plot."""
 
-    def __init__(self, expr, var_start_end_x, var_start_end_y,
-            has_equality, use_interval_math, depth, nb_of_points,
-            line_color):
-        super().__init__()
-        self.expr = sympify(expr)
-        self.label = self.expr
-        self.var_x = sympify(var_start_end_x[0])
-        self.start_x = float(var_start_end_x[1])
-        self.end_x = float(var_start_end_x[2])
-        self.var_y = sympify(var_start_end_y[0])
-        self.start_y = float(var_start_end_y[1])
-        self.end_y = float(var_start_end_y[2])
-        self.get_points = self.get_raster
-        self.has_equality = has_equality  # If the expression has equality, i.e.
-                                         #Eq, Greaterthan, LessThan.
-        self.nb_of_points = nb_of_points
-        self.use_interval_math = use_interval_math
+    is_implicit = True
+    use_cm = False
+    _N = 100
+
+    def __init__(self, expr, var_start_end_x, var_start_end_y, label="", **kwargs):
+        super().__init__(**kwargs)
+        self._block_lambda_functions(expr)
+        # these are needed for adaptive evaluation
+        expr, has_equality = self._has_equality(sympify(expr))
+        self._adaptive_expr = expr
+        self.has_equality = has_equality
+        self.ranges = [var_start_end_x, var_start_end_y]
+        self.var_x, self.start_x, self.end_x = self.ranges[0]
+        self.var_y, self.start_y, self.end_y = self.ranges[1]
+        self._label = str(expr) if label is None else label
+        self._latex_label = latex(expr) if label is None else label
+        self.adaptive = kwargs.get("adaptive", False)
+        self._color = kwargs.get("color", kwargs.get("line_color", None))
+
+        if ((isinstance(expr, BooleanFunction) or isinstance(expr, Ne))
+            and (not self.adaptive)):
+            self.adaptive = True
+            msg = "contains Boolean functions. "
+            if isinstance(expr, Ne):
+                msg = "is an unequality. "
+            warnings.warn(
+                "The provided expression " + msg
+                + "In order to plot the expression, the algorithm "
+                + "automatically switched to an adaptive sampling."
+            )
+
+        if isinstance(expr, BooleanFunction):
+            self._non_adaptive_expr = None
+            self._is_equality = False
+        else:
+            # these are needed for uniform meshing evaluation
+            expr, is_equality = self._preprocess_meshgrid_expression(expr, self.adaptive)
+            self._non_adaptive_expr = expr
+            self._is_equality = is_equality
+
+        if self.is_interactive and self.adaptive:
+            raise NotImplementedError("Interactive plot with `adaptive=True` "
+                "is not supported.")
+
+        # Check whether the depth is greater than 4 or less than 0.
+        depth = kwargs.get("depth", 0)
+        if depth > 4:
+            depth = 4
+        elif depth < 0:
+            depth = 0
         self.depth = 4 + depth
-        self.line_color = line_color
+        self._post_init()
+
+    @property
+    def expr(self):
+        if self.adaptive:
+            return self._adaptive_expr
+        return self._non_adaptive_expr
+
+    @property
+    def line_color(self):
+        return self._color
+
+    @line_color.setter
+    def line_color(self, v):
+        self._color = v
+
+    def _has_equality(self, expr):
+        # Represents whether the expression contains an Equality, GreaterThan
+        # or LessThan
+        has_equality = False
+
+        def arg_expand(bool_expr):
+            """Recursively expands the arguments of an Boolean Function"""
+            for arg in bool_expr.args:
+                if isinstance(arg, BooleanFunction):
+                    arg_expand(arg)
+                elif isinstance(arg, Relational):
+                    arg_list.append(arg)
+
+        arg_list = []
+        if isinstance(expr, BooleanFunction):
+            arg_expand(expr)
+            # Check whether there is an equality in the expression provided.
+            if any(isinstance(e, (Equality, GreaterThan, LessThan)) for e in arg_list):
+                has_equality = True
+        elif not isinstance(expr, Relational):
+            expr = Equality(expr, 0)
+            has_equality = True
+        elif isinstance(expr, (Equality, GreaterThan, LessThan)):
+            has_equality = True
+
+        return expr, has_equality
 
     def __str__(self):
-        return ('Implicit equation: %s for '
-                '%s over %s and %s over %s') % (
-                    str(self.expr),
-                    str(self.var_x),
-                    str((self.start_x, self.end_x)),
-                    str(self.var_y),
-                    str((self.start_y, self.end_y)))
+        f = lambda t: float(t) if len(t.free_symbols) == 0 else t
+
+        return self._str_helper(
+            "Implicit expression: %s for %s over %s and %s over %s") % (
+            str(self._adaptive_expr),
+            str(self.var_x),
+            str((f(self.start_x), f(self.end_x))),
+            str(self.var_y),
+            str((f(self.start_y), f(self.end_y))),
+        )
 
     def get_data(self):
         """Returns numerical data.
@@ -2160,81 +2256,114 @@ class ImplicitSeries(BaseSeries):
             A string specifying which plot command to use, ``"contour"``
             or ``"contourf"``.
         """
-        func = experimental_lambdify((self.var_x, self.var_y), self.expr,
-                                    use_interval=True)
-        xinterval = interval(self.start_x, self.end_x)
-        yinterval = interval(self.start_y, self.end_y)
+        if self.adaptive:
+            data = self._adaptive_eval()
+            if data is not None:
+                return data
+
+        return self._get_meshes_grid()
+
+    def _adaptive_eval(self):
+        """
+        References
+        ==========
+
+        .. [1] Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for
+        Mathematical Formulae with Two Free Variables.
+
+        .. [2] Jeffrey Allen Tupper. Graphing Equations with Generalized Interval
+        Arithmetic. Master's thesis. University of Toronto, 1996
+        """
+        import sympy.plotting.intervalmath.lib_interval as li
+
+        user_functions = {}
+        printer = IntervalMathPrinter({
+            'fully_qualified_modules': False, 'inline': True,
+            'allow_unknown_functions': True,
+            'user_functions': user_functions})
+
+        keys = [t for t in dir(li) if ("__" not in t) and (t not in ["import_module", "interval"])]
+        vals = [getattr(li, k) for k in keys]
+        d = dict(zip(keys, vals))
+        func = lambdify((self.var_x, self.var_y), self.expr, modules=[d], printer=printer)
+        data = None
+
         try:
-            func(xinterval, yinterval)
-        except AttributeError:
+            data = self._get_raster_interval(func)
+        except NameError as err:
+            warnings.warn(
+                "Adaptive meshing could not be applied to the"
+                " expression, as some functions are not yet implemented"
+                " in the interval math module:\n\n"
+                "NameError: %s\n\n" % err +
+                "Proceeding with uniform meshing."
+                )
+            self.adaptive = False
+        except (AttributeError, TypeError):
             # XXX: AttributeError("'list' object has no attribute 'is_real'")
             # That needs fixing somehow - we shouldn't be catching
             # AttributeError here.
-            if self.use_interval_math:
-                warnings.warn("Adaptive meshing could not be applied to the"
-                            " expression. Using uniform meshing.", stacklevel=7)
-            self.use_interval_math = False
+            warnings.warn(
+                "Adaptive meshing could not be applied to the"
+                " expression. Using uniform meshing.")
+            self.adaptive = False
 
-        if self.use_interval_math:
-            return self._get_raster_interval(func)
-        else:
-            return self._get_meshes_grid()
-
-    def get_raster(self):
-        """Returns numerical data.
-
-        This function is available for back-compatibility purposes. Consider
-        using ``get_data()`` instead.
-        """
-        return self.get_data()
+        return data
 
     def _get_raster_interval(self, func):
-        """ Uses interval math to adaptively mesh and obtain the plot"""
+        """Uses interval math to adaptively mesh and obtain the plot"""
+        np = import_module('numpy')
+
         k = self.depth
         interval_list = []
-        #Create initial 32 divisions
-        np = import_module('numpy')
-        xsample = np.linspace(self.start_x, self.end_x, 33)
-        ysample = np.linspace(self.start_y, self.end_y, 33)
+        sx, sy = [float(t) for t in [self.start_x, self.start_y]]
+        ex, ey = [float(t) for t in [self.end_x, self.end_y]]
+        # Create initial 32 divisions
+        xsample = np.linspace(sx, ex, 33)
+        ysample = np.linspace(sy, ey, 33)
 
-        #Add a small jitter so that there are no false positives for equality.
+        # Add a small jitter so that there are no false positives for equality.
         # Ex: y==x becomes True for x interval(1, 2) and y interval(1, 2)
-        #which will draw a rectangle.
-        jitterx = (np.random.rand(
-            len(xsample)) * 2 - 1) * (self.end_x - self.start_x) / 2**20
-        jittery = (np.random.rand(
-            len(ysample)) * 2 - 1) * (self.end_y - self.start_y) / 2**20
+        # which will draw a rectangle.
+        jitterx = (
+            (np.random.rand(len(xsample)) * 2 - 1)
+            * (ex - sx)
+            / 2 ** 20
+        )
+        jittery = (
+            (np.random.rand(len(ysample)) * 2 - 1)
+            * (ey - sy)
+            / 2 ** 20
+        )
         xsample += jitterx
         ysample += jittery
 
-        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1],
-                           xsample[1:])]
-        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1],
-                           ysample[1:])]
+        xinter = [interval(x1, x2) for x1, x2 in zip(xsample[:-1], xsample[1:])]
+        yinter = [interval(y1, y2) for y1, y2 in zip(ysample[:-1], ysample[1:])]
         interval_list = [[x, y] for x in xinter for y in yinter]
         plot_list = []
 
-        #recursive call refinepixels which subdivides the intervals which are
-        #neither True nor False according to the expression.
+        # recursive call refinepixels which subdivides the intervals which are
+        # neither True nor False according to the expression.
         def refine_pixels(interval_list):
-            """ Evaluates the intervals and subdivides the interval if the
+            """Evaluates the intervals and subdivides the interval if the
             expression is partially satisfied."""
             temp_interval_list = []
             plot_list = []
             for intervals in interval_list:
 
-                #Convert the array indices to x and y values
+                # Convert the array indices to x and y values
                 intervalx = intervals[0]
                 intervaly = intervals[1]
                 func_eval = func(intervalx, intervaly)
-                #The expression is valid in the interval. Change the contour
-                #array values to 1.
+                # The expression is valid in the interval. Change the contour
+                # array values to 1.
                 if func_eval[1] is False or func_eval[0] is False:
                     pass
                 elif func_eval == (True, True):
                     plot_list.append([intervalx, intervaly])
                 elif func_eval[1] is None or func_eval[0] is None:
-                    #Subdivide
+                    # Subdivide
                     avgx = intervalx.mid
                     avgy = intervaly.mid
                     a = interval(intervalx.start, avgx)
@@ -2251,10 +2380,10 @@ class ImplicitSeries(BaseSeries):
             interval_list, plot_list_temp = refine_pixels(interval_list)
             plot_list.extend(plot_list_temp)
             k = k - 1
-        #Check whether the expression represents an equality
-        #If it represents an equality, then none of the intervals
-        #would have satisfied the expression due to floating point
-        #differences. Add all the undecided values to the plot.
+        # Check whether the expression represents an equality
+        # If it represents an equality, then none of the intervals
+        # would have satisfied the expression due to floating point
+        # differences. Add all the undecided values to the plot.
         if self.has_equality:
             for intervals in interval_list:
                 intervalx = intervals[0]
@@ -2262,7 +2391,7 @@ class ImplicitSeries(BaseSeries):
                 func_eval = func(intervalx, intervaly)
                 if func_eval[1] and func_eval[0] is not False:
                     plot_list.append([intervalx, intervaly])
-        return plot_list, 'fill'
+        return plot_list, "fill"
 
     def _get_meshes_grid(self):
         """Generates the mesh for generating a contour.
@@ -2270,32 +2399,65 @@ class ImplicitSeries(BaseSeries):
         In the case of equality, ``contour`` function of matplotlib can
         be used. In other cases, matplotlib's ``contourf`` is used.
         """
-        equal = False
-        if isinstance(self.expr, Equality):
-            expr = self.expr.lhs - self.expr.rhs
-            equal = True
-
-        elif isinstance(self.expr, (GreaterThan, StrictGreaterThan)):
-            expr = self.expr.lhs - self.expr.rhs
-
-        elif isinstance(self.expr, (LessThan, StrictLessThan)):
-            expr = self.expr.rhs - self.expr.lhs
-        else:
-            raise NotImplementedError("The expression is not supported for "
-                                    "plotting in uniform meshed plot.")
         np = import_module('numpy')
-        xarray = np.linspace(self.start_x, self.end_x, self.nb_of_points)
-        yarray = np.linspace(self.start_y, self.end_y, self.nb_of_points)
-        x_grid, y_grid = np.meshgrid(xarray, yarray)
 
-        func = vectorized_lambdify((self.var_x, self.var_y), expr)
-        z_grid = func(x_grid, y_grid)
-        z_grid[np.ma.where(z_grid < 0)] = -1
-        z_grid[np.ma.where(z_grid > 0)] = 1
-        if equal:
-            return xarray, yarray, z_grid, 'contour'
-        else:
-            return xarray, yarray, z_grid, 'contourf'
+        xarray, yarray, z_grid = self._evaluate()
+        _re, _im = np.real(z_grid), np.imag(z_grid)
+        _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+        if self._is_equality:
+            return xarray, yarray, _re, 'contour'
+        return xarray, yarray, _re, 'contourf'
+
+    @staticmethod
+    def _preprocess_meshgrid_expression(expr, adaptive):
+        """If the expression is a Relational, rewrite it as a single
+        expression.
+
+        Returns
+        =======
+
+        expr : Expr
+            The rewritten expression
+
+        equality : Boolean
+            Wheter the original expression was an Equality or not.
+        """
+        equality = False
+        if isinstance(expr, Equality):
+            expr = expr.lhs - expr.rhs
+            equality = True
+        elif isinstance(expr, (GreaterThan, StrictGreaterThan)):
+            expr = expr.lhs - expr.rhs
+        elif isinstance(expr, (LessThan, StrictLessThan)):
+            expr = expr.rhs - expr.lhs
+        elif not adaptive:
+            raise NotImplementedError(
+                "The expression is not supported for "
+                "plotting in uniform meshed plot."
+            )
+        return expr, equality
+
+    def get_label(self, use_latex=False, wrapper="$%s$"):
+        """Return the label to be used to display the expression.
+
+        Parameters
+        ==========
+        use_latex : bool
+            If False, the string representation of the expression is returned.
+            If True, the latex representation is returned.
+        wrapper : str
+            The backend might need the latex representation to be wrapped by
+            some characters. Default to ``"$%s$"``.
+
+        Returns
+        =======
+        label : str
+        """
+        if use_latex is False:
+            return self._label
+        if self._label == str(self._adaptive_expr):
+            return self._get_wrapped_label(self._latex_label, wrapper)
+        return self._latex_label
 
 
 ##############################################################################
