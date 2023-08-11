@@ -351,22 +351,12 @@ def test_plot_and_save_4():
     # Examples from the 'advanced' notebook
     ###
 
-    # XXX: This raises the warning "The evaluation of the expression is
-    # problematic. We are trying a failback method that may still work. Please
-    # report this as a bug." It has to use the fallback because using evalf()
-    # is the only way to evaluate the integral. We should perhaps just remove
-    # that warning.
     with TemporaryDirectory(prefix='sympy_') as tmpdir:
-        with warns(
-            UserWarning,
-            match="The evaluation of the expression is problematic",
-            test_stacklevel=False,
-        ):
-            i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
-            p = plot(i, (y, 1, 5))
-            filename = 'test_advanced_integral.png'
-            p.save(os.path.join(tmpdir, filename))
-            p._backend.close()
+        i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
+        p = plot(i, (y, 1, 5))
+        filename = 'test_advanced_integral.png'
+        p.save(os.path.join(tmpdir, filename))
+        p._backend.close()
 
 
 def test_plot_and_save_5():
