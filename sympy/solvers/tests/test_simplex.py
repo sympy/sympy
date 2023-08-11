@@ -152,7 +152,8 @@ def test_lp():
     if scipy is not None and np is not None:
         for _ in range(50):
             objective, constraints, variables = make_random_problem()
-            constraints = [c for c in constraints if isinstance(c, Relational)] # in case c auto simplifies to True or False
+            # in case c auto simplifies to True or False
+            constraints = [c for c in constraints if isinstance(c, Relational)]
             if len(constraints) == 0:
                 continue
 
@@ -272,28 +273,29 @@ def test_linprog():
         cd = M(f, v)
         ineq = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
         ab = M([i.lts - i.gts for i in ineq], v)
-        ans = (-S(6)/5, {x: 0, y: 0, z: S(3)/5})
-        assert lpmin(f, ineq) == ans
-        assert linprog(cd, *ab) == ans,(linprog(cd, *ab),x,y,z)
+        ans = (-S(6)/5, [0, 0, S(3)/5])
+        assert lpmin(f, ineq) == (ans[0], dict(zip(v, ans[1])))
+        assert linprog(cd, *ab) == ans
         assert linprog(cd[0], *ab) == ans  # d = 0
 
         f += 1
         cd = M(f, v)
         eq = [Eq(y - 9*x, 1)]
         abeq = M([i.lhs - i.rhs for i in eq], v)
-        ans = (1 - S(2)/5, {x: 0, y: 1, z: S(7)/10})
-        assert lpmin(f, ineq + eq) == ans
+        ans = (1 - S(2)/5, [0, 1, S(7)/10])
+        assert lpmin(f, ineq + eq) == (ans[0], dict(zip(v, ans[1])))
         assert linprog(cd, *ab, *abeq) == ans
 
         eq = [z - y <= S.Half]
         abeq = M([i.lhs - i.rhs for i in eq], v)
-        ans = (1 - S(10)/9, {x: 0, y: S(1)/9, z: S(11)/18})
-        assert lpmin(f, ineq + eq) == ans
+        ans = (1 - S(10)/9, [0, S(1)/9, S(11)/18])
+        assert lpmin(f, ineq + eq) == (ans[0], dict(zip(v, ans[1])))
         assert linprog(cd, *ab, *abeq) == ans
 
         bounds = [(0, None), (0, None), (None, S.Half)]
-        ans = (0, {x: 0, y: 0, z: S.Half})
-        assert lpmin(f, ineq + [z <= S.Half]) == ans
+        ans = (0, [0, 0, S.Half])
+        assert lpmin(f, ineq + [z <= S.Half]) == (
+            ans[0], dict(zip(v, ans[1])))
         assert linprog(cd, *ab, bounds=bounds) == ans
         assert linprog(cd, *ab, bounds={v.index(z): bounds[-1]}) == ans
         eq = [z - y <= S.Half]
