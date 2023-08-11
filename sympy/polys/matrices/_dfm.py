@@ -76,7 +76,10 @@ class DFM:
         flint_mat = cls._get_flint_func(domain)
 
         if 0 not in shape:
-            rep = flint_mat(rowslist)
+            try:
+                rep = flint_mat(rowslist)
+            except (ValueError, TypeError):
+                raise DMBadInputError(f"Input should be a list of list of {domain}")
         else:
             rep = flint_mat(*shape)
 
@@ -154,9 +157,24 @@ class DFM:
         """Return self."""
         return self
 
+    @classmethod
+    def from_ddm(cls, ddm):
+        """Convert from a DDM."""
+        return cls.from_list(ddm.to_list(), ddm.shape, ddm.domain)
+
+    @classmethod
+    def from_list(cls, rowslist, shape, domain):
+        """Construct from a nested list."""
+        return cls(rowslist, shape, domain)
+
     def to_list(self):
         """Convert to a nested list."""
         return self.rep.tolist()
+
+    @classmethod
+    def from_list_flat(cls, elements, shape, domain):
+        """Inverse of :meth:`to_list_flat`."""
+        return DDM.from_list_flat(elements, shape, domain).to_dfm()
 
     def to_list_flat(self):
         """Convert to a flat list."""
@@ -260,7 +278,14 @@ class DFM:
     def zeros(cls, shape, domain):
         """Return a zero DFM matrix."""
         func = cls._get_flint_func(domain)
-        return cls(func(*shape), shape, domain)
+        return cls._new(func(*shape), shape, domain)
+
+    @classmethod
+    def ones(cls, shape, domain):
+        """Return a one DFM matrix."""
+        func = cls._get_flint_func(domain)
+        lol = DDM.ones(shape, domain).to_list()
+        return cls._new(func(lol), shape, domain)
 
     @classmethod
     def eye(cls, n, domain):
@@ -268,6 +293,11 @@ class DFM:
         # XXX: DDM and SDM have inconsistent signatures for eye because SDM
         # assumes a shape argument while DDM expects an integer size.
         return DDM.eye(n, domain).to_dfm()
+
+    @classmethod
+    def diag(cls, elements, domain):
+        """Return a diagonal matrix."""
+        return DDM.diag(elements, domain).to_dfm()
 
     def applyfunc(self, func, domain):
         """Apply a function to each entry of a DFM matrix."""

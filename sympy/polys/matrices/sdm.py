@@ -585,13 +585,18 @@ class SDM(dict):
         {0: {0: 1}, 1: {1: 1}}
 
         """
-        rows, cols = shape
+        if isinstance(shape, int):
+            rows, cols = shape, shape
+        else:
+            rows, cols = shape
         one = domain.one
         sdm = {i: {i: one} for i in range(min(rows, cols))}
-        return cls(sdm, shape, domain)
+        return cls(sdm, (rows, cols), domain)
 
     @classmethod
-    def diag(cls, diagonal, domain, shape):
+    def diag(cls, diagonal, domain, shape=None):
+        if shape is None:
+            shape = (len(diagonal), len(diagonal))
         sdm = {i: {i: v} for i, v in enumerate(diagonal) if v}
         return cls(sdm, shape, domain)
 
@@ -616,11 +621,15 @@ class SDM(dict):
     def __add__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented
+        elif A.shape != B.shape:
+            raise DMShapeError("Matrix size mismatch: %s + %s" % (A.shape, B.shape))
         return A.add(B)
 
     def __sub__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented
+        elif A.shape != B.shape:
+            raise DMShapeError("Matrix size mismatch: %s - %s" % (A.shape, B.shape))
         return A.sub(B)
 
     def __neg__(A):
@@ -730,7 +739,6 @@ class SDM(dict):
         {0: {0: 3, 1: 2}, 1: {0: 1, 1: 4}}
 
         """
-
         Csdm = binop_dict(A, B, add, pos, pos)
         return A.new(Csdm, A.shape, A.domain)
 
