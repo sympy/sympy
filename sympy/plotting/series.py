@@ -42,29 +42,21 @@ def _uniform_eval(f1, f2, *args, modules=None,
     # mpmath or sympy.
     wrapper_func = np.vectorize(wrapper_func, otypes=[complex])
 
-    skip_fast_eval = False
-    if modules == "sympy":
-        skip_fast_eval = True
-
-    try:
-        if skip_fast_eval:
-            raise Exception
-        return wrapper_func(f1, *args)
-    except Exception as err:
+    def _eval_with_sympy():
         if f2 is None:
             raise RuntimeError(
                 "Impossible to evaluate the provided numerical function "
                 "because the following exception was raised:\n"
                 "{}: {}".format(type(err).__name__, err))
-        if not skip_fast_eval:
-            warnings.warn(
-                "The evaluation with %s failed.\n" % (
-                    "NumPy/SciPy" if not modules else modules) +
-                "{}: {}\n".format(type(err).__name__, err) +
-                "Trying to evaluate the expression with Sympy, but it might "
-                "be a slow operation."
-            )
         return wrapper_func(f2, *args)
+
+    if modules == "sympy":
+        return _eval_with_sympy()
+
+    try:
+        return wrapper_func(f1, *args)
+    except Exception as err:
+        return _eval_with_sympy()
 
 
 def _adaptive_eval(f, x):
@@ -1696,9 +1688,35 @@ class SurfaceBaseSeries(BaseSeries):
 
     is_3Dsurface = True
 
-    def __init__(self):
-        super().__init__()
-        self.surface_color = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(**kwargs)
+        self.use_cm = kwargs.get("use_cm", False)
+        # NOTE: why should SurfaceOver2DRangeSeries support is polar?
+        # After all, the same result can be achieve with
+        # ParametricSurfaceSeries. For example:
+        # sin(r) for (r, 0, 2 * pi) and (theta, 0, pi/2) can be parameterized
+        # as (r * cos(theta), r * sin(theta), sin(t)) for (r, 0, 2 * pi) and
+        # (theta, 0, pi/2).
+        # Because it is faster to evaluate (important for interactive plots).
+        self.is_polar = kwargs.get("is_polar", False)
+        self.surface_color = kwargs.get("surface_color", None)
+        self.color_func = kwargs.get("color_func", lambda x, y, z: z)
+        if callable(self.surface_color):
+            self.color_func = self.surface_color
+            self.surface_color = None
+
+    def _set_surface_label(self, label):
+        exprs = self.expr
+        self._label = str(exprs) if label is None else label
+        self._latex_label = latex(exprs) if label is None else label
+        # if the expressions is a lambda function and no label
+        # has been provided, then its better to do the following to avoid
+        # suprises on the backend
+        is_lambda = (callable(exprs) if not hasattr(exprs, "__iter__")
+            else any(callable(e) for e in exprs))
+        if is_lambda and (self._label == str(exprs)):
+                self._label = ""
+                self._latex_label = ""
 
     def get_color_array(self):
         np = import_module('numpy')
@@ -1729,21 +1747,70 @@ class SurfaceBaseSeries(BaseSeries):
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     """Representation for a 3D surface consisting of a SymPy expression and 2D
     range."""
-    def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
-        super().__init__()
-        self.expr = sympify(expr)
-        self.var_x = sympify(var_start_end_x[0])
-        self.start_x = float(var_start_end_x[1])
-        self.end_x = float(var_start_end_x[2])
-        self.var_y = sympify(var_start_end_y[0])
-        self.start_y = float(var_start_end_y[1])
-        self.end_y = float(var_start_end_y[2])
-        self.nb_of_points_x = kwargs.get('n1', 50)
-        self.nb_of_points_y = kwargs.get('n2', 50)
-        self.surface_color = kwargs.get('surface_color', None)
 
+    def __init__(self, expr, var_start_end_x, var_start_end_y, label="", **kwargs):
+        super().__init__(**kwargs)
+        self.expr = expr if callable(expr) else sympify(expr)
+        self.ranges = [var_start_end_x, var_start_end_y]
+        self._set_surface_label(label)
+        self._post_init()
+        # TODO: remove this
         self._xlim = (self.start_x, self.end_x)
         self._ylim = (self.start_y, self.end_y)
+
+    @property
+    def var_x(self):
+        return self.ranges[0][0]
+
+    @property
+    def var_y(self):
+        return self.ranges[1][0]
+
+    @property
+    def start_x(self):
+        try:
+            return float(self.ranges[0][1])
+        except:
+            return self.ranges[0][1]
+
+    @property
+    def end_x(self):
+        try:
+            return float(self.ranges[0][2])
+        except:
+            return self.ranges[0][2]
+
+    @property
+    def start_y(self):
+        try:
+            return float(self.ranges[1][1])
+        except:
+            return self.ranges[1][1]
+
+    @property
+    def end_y(self):
+        try:
+            return float(self.ranges[1][2])
+        except:
+            return self.ranges[1][2]
+
+    @property
+    def nb_of_points_x(self):
+        return self.n[0]
+
+    @nb_of_points_x.setter
+    def nb_of_points_x(self, v):
+        n = self.n
+        self.n = [v, n[1:]]
+
+    @property
+    def nb_of_points_y(self):
+        return self.n[1]
+
+    @nb_of_points_y.setter
+    def nb_of_points_y(self, v):
+        n = self.n
+        self.n = [n[0], v, n[2]]
 
     def __str__(self):
         return ('cartesian surface: %s for'
@@ -1774,16 +1841,24 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
             Results of the evaluation.
         """
         np = import_module('numpy')
-        mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
-                                                 num=self.nb_of_points_x),
-                                     np.linspace(self.start_y, self.end_y,
-                                                 num=self.nb_of_points_y))
-        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
-        mesh_z = f(mesh_x, mesh_y)
-        mesh_z = np.array(mesh_z, dtype=np.float64)
-        mesh_z = np.ma.masked_invalid(mesh_z)
-        self._zlim = (np.amin(mesh_z), np.amax(mesh_z))
-        return mesh_x, mesh_y, mesh_z
+
+        results = self._evaluate()
+        # mask out complex values
+        for i, r in enumerate(results):
+            _re, _im = np.real(r), np.imag(r)
+            _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+            results[i] = _re
+
+        x, y, z = results
+        if self.is_polar and self.is_3Dsurface:
+            r = x.copy()
+            x = r * np.cos(y)
+            y = r * np.sin(y)
+
+        # TODO: remove this
+        self._zlim = (np.amin(z), np.amax(z))
+
+        return self._apply_transform(x, y, z)
 
 
 class ParametricSurfaceSeries(SurfaceBaseSeries):
@@ -1792,22 +1867,71 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
     is_parametric = True
 
-    def __init__(
-        self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
-            **kwargs):
-        super().__init__()
-        self.expr_x = sympify(expr_x)
-        self.expr_y = sympify(expr_y)
-        self.expr_z = sympify(expr_z)
-        self.var_u = sympify(var_start_end_u[0])
-        self.start_u = float(var_start_end_u[1])
-        self.end_u = float(var_start_end_u[2])
-        self.var_v = sympify(var_start_end_v[0])
-        self.start_v = float(var_start_end_v[1])
-        self.end_v = float(var_start_end_v[2])
-        self.nb_of_points_u = kwargs.get('n1', 50)
-        self.nb_of_points_v = kwargs.get('n2', 50)
-        self.surface_color = kwargs.get('surface_color', None)
+    def __init__(self, expr_x, expr_y, expr_z,
+        var_start_end_u, var_start_end_v, label="", **kwargs):
+        super().__init__(**kwargs)
+        self.expr_x = expr_x if callable(expr_x) else sympify(expr_x)
+        self.expr_y = expr_y if callable(expr_y) else sympify(expr_y)
+        self.expr_z = expr_z if callable(expr_z) else sympify(expr_z)
+        self.expr = (self.expr_x, self.expr_y, self.expr_z)
+        self.ranges = [var_start_end_u, var_start_end_v]
+        self.color_func = kwargs.get("color_func", lambda x, y, z, u, v: z)
+        self._set_surface_label(label)
+        self._post_init()
+
+    @property
+    def var_u(self):
+        return self.ranges[0][0]
+
+    @property
+    def var_v(self):
+        return self.ranges[1][0]
+
+    @property
+    def start_u(self):
+        try:
+            return float(self.ranges[0][1])
+        except:
+            return self.ranges[0][1]
+
+    @property
+    def end_u(self):
+        try:
+            return float(self.ranges[0][2])
+        except:
+            return self.ranges[0][2]
+
+    @property
+    def start_v(self):
+        try:
+            return float(self.ranges[1][1])
+        except:
+            return self.ranges[1][1]
+
+    @property
+    def end_v(self):
+        try:
+            return float(self.ranges[1][2])
+        except:
+            return self.ranges[1][2]
+
+    @property
+    def nb_of_points_u(self):
+        return self.n[0]
+
+    @nb_of_points_u.setter
+    def nb_of_points_u(self, v):
+        n = self.n
+        self.n = [v, n[1:]]
+
+    @property
+    def nb_of_points_v(self):
+        return self.n[1]
+
+    @nb_of_points_v.setter
+    def nb_of_points_v(self, v):
+        n = self.n
+        self.n = [n[0], v, n[2]]
 
     def __str__(self):
         return ('parametric cartesian surface: (%s, %s, %s) for'
@@ -1821,11 +1945,7 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
                     str((self.start_v, self.end_v)))
 
     def get_parameter_meshes(self):
-        np = import_module('numpy')
-        return np.meshgrid(np.linspace(self.start_u, self.end_u,
-                                       num=self.nb_of_points_u),
-                           np.linspace(self.start_v, self.end_v,
-                                       num=self.nb_of_points_v))
+        return self.get_data()[3:]
 
     def get_meshes(self):
         """Return the x,y,z coordinates for plotting the surface.
@@ -1839,67 +1959,52 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
 
         Returns
         =======
-        mesh_x : np.ndarray
-            Discretized x-domain.
-        mesh_y : np.ndarray
-            Discretized y-domain.
-        mesh_z : np.ndarray
-            Results of the evaluation.
-        mesh_u : np.ndarray
+        x : np.ndarray [n2 x n1]
+            x-coordinates.
+        y : np.ndarray [n2 x n1]
+            y-coordinates.
+        z : np.ndarray [n2 x n1]
+            z-coordinates.
+        mesh_u : np.ndarray [n2 x n1]
             Discretized u range.
-        mesh_v : np.ndarray
+        mesh_v : np.ndarray [n2 x n1]
             Discretized v range.
         """
         np = import_module('numpy')
 
-        mesh_u, mesh_v = self.get_parameter_meshes()
-        fx = vectorized_lambdify((self.var_u, self.var_v), self.expr_x)
-        fy = vectorized_lambdify((self.var_u, self.var_v), self.expr_y)
-        fz = vectorized_lambdify((self.var_u, self.var_v), self.expr_z)
+        results = self._evaluate()
+        # mask out complex values
+        for i, r in enumerate(results):
+            _re, _im = np.real(r), np.imag(r)
+            _re[np.invert(np.isclose(_im, np.zeros_like(_im)))] = np.nan
+            results[i] = _re
 
-        mesh_x = fx(mesh_u, mesh_v)
-        mesh_y = fy(mesh_u, mesh_v)
-        mesh_z = fz(mesh_u, mesh_v)
+        # TODO: remove this
+        x, y, z = results[2:]
+        self._xlim = (np.amin(x), np.amax(x))
+        self._ylim = (np.amin(y), np.amax(y))
+        self._zlim = (np.amin(z), np.amax(z))
 
-        mesh_x = np.array(mesh_x, dtype=np.float64)
-        mesh_y = np.array(mesh_y, dtype=np.float64)
-        mesh_z = np.array(mesh_z, dtype=np.float64)
-
-        mesh_x = np.ma.masked_invalid(mesh_x)
-        mesh_y = np.ma.masked_invalid(mesh_y)
-        mesh_z = np.ma.masked_invalid(mesh_z)
-
-        self._xlim = (np.amin(mesh_x), np.amax(mesh_x))
-        self._ylim = (np.amin(mesh_y), np.amax(mesh_y))
-        self._zlim = (np.amin(mesh_z), np.amax(mesh_z))
-
-        return mesh_x, mesh_y, mesh_z, mesh_u, mesh_v
+        return self._apply_transform(*results[2:], *results[:2])
 
 
 ### Contours
-class ContourSeries(BaseSeries):
+class ContourSeries(SurfaceOver2DRangeSeries):
     """Representation for a contour plot."""
-    # The code is mostly repetition of SurfaceOver2DRange.
-    # Presently used in contour_plot function
 
+    is_3Dsurface = False
     is_contour = True
 
-    def __init__(self, expr, var_start_end_x, var_start_end_y):
-        super().__init__()
-        self.nb_of_points_x = 50
-        self.nb_of_points_y = 50
-        self.expr = sympify(expr)
-        self.var_x = sympify(var_start_end_x[0])
-        self.start_x = float(var_start_end_x[1])
-        self.end_x = float(var_start_end_x[2])
-        self.var_y = sympify(var_start_end_y[0])
-        self.start_y = float(var_start_end_y[1])
-        self.end_y = float(var_start_end_y[2])
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_filled = kwargs.get("is_filled", True)
+        self.show_clabels = kwargs.get("clabels", True)
 
-        self.get_points = self.get_meshes
-
-        self._xlim = (self.start_x, self.end_x)
-        self._ylim = (self.start_y, self.end_y)
+        # NOTE: contour plots are used by plot_contour, plot_vector and
+        # plot_complex_vector. By implementing contour_kw we are able to
+        # quickly target the contour plot.
+        self.rendering_kw = kwargs.get("contour_kw",
+            kwargs.get("rendering_kw", dict()))
 
     def __str__(self):
         return ('contour: %s for '
@@ -1909,33 +2014,6 @@ class ContourSeries(BaseSeries):
                     str((self.start_x, self.end_x)),
                     str(self.var_y),
                     str((self.start_y, self.end_y)))
-
-    def get_meshes(self):
-        """Return the x,y,z coordinates for plotting the surface.
-        This function is available for back-compatibility purposes. Consider
-        using ``get_data()`` instead.
-        """
-        return self.get_data()[:3]
-
-    def get_data(self):
-        """Return arrays of coordinates for plotting.
-
-        Returns
-        =======
-        mesh_x : np.ndarray
-            Discretized x-domain.
-        mesh_y : np.ndarray
-            Discretized y-domain.
-        mesh_z : np.ndarray
-            Results of the evaluation.
-        """
-        np = import_module('numpy')
-        mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
-                                                 num=self.nb_of_points_x),
-                                     np.linspace(self.start_y, self.end_y,
-                                                 num=self.nb_of_points_y))
-        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
-        return (mesh_x, mesh_y, f(mesh_x, mesh_y))
 
 
 class GenericDataSeries(BaseSeries):
