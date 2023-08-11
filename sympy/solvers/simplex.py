@@ -22,7 +22,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import Matrix, zeros
 from sympy.matrices.matrices import MatrixBase
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
@@ -776,21 +776,19 @@ def lpmax(f, constr):
     return _lp(max, f, constr)
 
 
-def _handle_bounds(univariate):
+def _handle_bounds(bounds):
     # introduce auxilliary variables as needed for univariate
     # inequalities
-    r = {}
-    np = []
-    aux = []
+
     unbound = []
-    R = [0]*len(univariate)  # a (growing) row of zeros
+    R = [0]*len(bounds)  # a (growing) row of zeros
     def n():
         return len(R) - 1
     def Arow(inc=1):
         R.extend([0]*inc)
         return R[:]
     row = []
-    for x, (a, b) in enumerate(univariate):
+    for x, (a, b) in enumerate(bounds):
         if a is None and b is None:
             unbound.append(x)
         elif a is None:
@@ -855,7 +853,8 @@ def _handle_bounds(univariate):
         A[n()-1] = 1
         row.append((A,B))
 
-    return Matrix([i[0]+[0]*(len(R) - len(i)) for i in row]
+    pad = len(R) - len(row[-1])
+    return Matrix([i[0]+[0]*pad for i in row]
         ), Matrix([i[1] for i in row])
 
 
@@ -866,6 +865,9 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     If ``cd`` is a single matrix then ``d`` will be zero; otherwise
     it should be tuple with two matrices: ``c`` and ``d``.
+
+    If ``A`` is not given, then the dimension of the system will
+    be determined by the columns in ``C``.
 
     By default, all variables will be nonnegative. If ``bounds``
     is given as a single tuple, ``(lo, hi)``, then all variables
@@ -904,13 +906,37 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     # convert scipy-like matrices to expressions
 
+    ## the objective
+    C = None
+    if isinstance(cd, MatrixBase):
+        C, D = cd, Matrix([0])
+    elif type(cd) is tuple and len(cd) == 2 and all(isinstance(i, (MatrixBase, list)
+            ) for i in cd):
+        C, D = [Matrix(i) for i in cd]
+    elif isinstance(cd, list) and (
+            not cd or  # error below
+            len(cd) == 1 and type(cd[0]) is list or  # like [[1, 2, 3]]
+            not any(type(i) is list for i in cd)):  # like [1, 2, 3]
+        if not cd:
+            raise ValueError('there must be an objective')
+        C, D = Matrix(cd), Matrix([0])
+        if C.cols == 1:  # in case row was passed as [1, 2, 3]
+            C = C.T
+    else:
+        raise ValueError('expecting one or two matrices/lists for cd, not %s' % cd)
+
     ## the inequalities
-    if A is None:
-        if b is not None:
+    if not A:
+        if b:
             raise ValueError('A and b must both be given')
-        A, b = Matrix(0, 0, []), Matrix(0, 0, [])
+        # the governing equations will be simple constraints
+        # on variables
+        A, b = zeros(0, C.cols), zeros(C.cols, 1)
     else:
         A, b = [Matrix(i) for i in (A, b)]
+
+    if A.cols != C.cols:
+        raise ValueError('number of columns in A and C must match')
 
     ## the equalities
     if A_eq is None:
@@ -924,19 +950,7 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         b = b.col_join(b_eq)
         b = b.col_join(-b_eq)
 
-    ## the objective
-    if isinstance(cd, MatrixBase):
-        C, D = cd, Matrix([0])
-    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)
-            ) for i in cd):
-        C, D = [Matrix(i) for i in cd]
-    elif isinstance(cd, list) and isinstance(cd[0], list) and len(
-            cd[0]) == A.cols:
-        C, D = Matrix(cd), Matrix([0])
-    else:
-        raise ValueError('expecting one or two matrices/lists for cd')
-
-    if not (bounds is None or bounds == (0, None)):
+    if not (bounds is None or bounds == {} or bounds == (0, None)):
         ## the bounds are interpreted
         if type(bounds) is tuple and len(bounds) == 2:
             bounds = [bounds]*A.cols
@@ -951,14 +965,18 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
             bounds = [(0, None)]*A.cols
             while db:
                 i, j = db.popitem()
-                bounds[i] = j
+                bounds[i] = j  # IndexError if out-of-bounds indices
         else:
             raise ValueError('unexpected bounds %s' % bounds)
-        if bounds:A_, b_ = _handle_bounds(bounds)
+        A_, b_ = _handle_bounds(bounds)
         aux = A_.cols - A.cols
-        A = Matrix([[A, A.zeros(A.rows, aux)],[A_]])
-        b = b.col_join(b_)
-        C = C.row_join(Matrix.zeros(1, aux))
+        if A:
+            A = Matrix([[A, zeros(A.rows, aux)],[A_]])
+            b = b.col_join(b_)
+        else:
+            A = A_
+            b = b_
+        C = C.row_join(zeros(1, aux))
     else:
         aux = -A.cols  # set so -aux will give all cols below
 
