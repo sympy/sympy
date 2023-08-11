@@ -10,8 +10,7 @@ from sympy.external.gmpy import GROUND_TYPES
 if GROUND_TYPES == "flint":
     # When python-flint is installed we will try to use it for dense matrices
     # if the domain is supported by python-flint.
-    from ._dfm import DFM as DFM_flint
-    DFM = DFM_flint
+    from ._dfm import DFM
 
 else:
     # Other code should be able to import this and it should just present as a
@@ -27,4 +26,6 @@ else:
         def _supports_domain(cls, domain):
             return False
 
-    DFM = DFM_dummy
+    # mypy really struggles with this kind of conditional type assignment.
+    # Maybe there is a better way to annotate this rather than type: ignore.
+    DFM = DFM_dummy # type: ignore

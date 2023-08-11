@@ -337,7 +337,7 @@ class DDM(list):
     @doctest_depends_on(ground_types=['flint'])
     def to_dfm(self):
         """
-        Convert to a :class:`~.DFM`.
+        Convert to :class:`~.DDM` to :class:`~.DFM`.
 
         Examples
         ========
@@ -354,7 +354,7 @@ class DDM(list):
         ========
 
         DFM
-        sympy.polys.matrices.dfm.DFM.to_ddm
+        sympy.polys.matrices._dfm.DFM.to_ddm
         """
         return DFM(list(self), self.shape, self.domain)
 
@@ -379,7 +379,7 @@ class DDM(list):
 
         DFM
         DDM
-        sympy.polys.matrices.dfm.DFM.to_ddm
+        sympy.polys.matrices._dfm.DFM.to_ddm
         """
         if DFM._supports_domain(self.domain):
             return self.to_dfm()
