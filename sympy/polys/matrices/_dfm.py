@@ -49,18 +49,19 @@ class DFM:
     <class 'flint._flint.fmpz_mat'>
 
     Usually, the DFM class is not instantiated directly, but is created as the
-    internal representation of :class:`DomainMatrix`. When `SYMPY_GROUND_TYPES`
-    is set to `flint` and `python-flint` is installed, the DFM class is used
-    automatically as the internal representation of :class:`DomainMatrix`in
-    dense format if the domain is supported by python-flint.
+    internal representation of :class:`~.DomainMatrix`. When
+    `SYMPY_GROUND_TYPES` is set to `flint` and `python-flint` is installed, the
+    :class:`DFM` class is used automatically as the internal representation of
+    :class:`~.DomainMatrix` in dense format if the domain is supported by
+    python-flint.
 
     >>> from sympy.polys.matrices.domainmatrix import DM
     >>> dM = DM([[1, 2], [3, 4]], ZZ)
     >>> dM.rep
     [[1, 2], [3, 4]]
 
-    A :class:`DomainMatrix` can be converted to a DFM by calling the
-    :meth:`to_dfm` method::
+    A :class:`~.DomainMatrix` can be converted to :class:`DFM` by calling the
+    :meth:`to_dfm` method:
 
     >>> dM.to_dfm()
     [[1, 2], [3, 4]]

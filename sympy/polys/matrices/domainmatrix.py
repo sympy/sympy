@@ -693,7 +693,7 @@ class DomainMatrix:
 
         to_ddm
         to_dense
-        sympy.polys.matrices.dfm.DFM.to_ddm
+        DFM
         """
         return self.rep.to_dfm()
 
