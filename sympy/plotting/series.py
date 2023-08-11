@@ -85,6 +85,19 @@ def _adaptive_eval(f, x):
     return y.real
 
 
+def _get_wrapper_for_expr(ret):
+    wrapper = "%s"
+    if ret == "real":
+        wrapper = "re(%s)"
+    elif ret == "imag":
+        wrapper = "im(%s)"
+    elif ret == "abs":
+        wrapper = "abs(%s)"
+    elif ret == "arg":
+        wrapper = "arg(%s)"
+    return wrapper
+
+
 class BaseSeries:
     """Base class for the data objects containing stuff to be plotted.
 
@@ -1245,8 +1258,22 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         self.n = v
 
     def __str__(self):
-        return 'cartesian line: %s for %s over %s' % (
-            str(self.expr), str(self.var), str((self.start, self.end)))
+        def f(t):
+            if isinstance(t, complex):
+                if t.imag != 0:
+                    return t
+                return t.real
+            return t
+        pre = "interactive " if self.is_interactive else ""
+        post = ""
+        if self.is_interactive:
+            post = " and parameters " + str(tuple(self.params.keys()))
+        wrapper = _get_wrapper_for_expr(self._return)
+        return pre + "cartesian line: %s for %s over %s" % (
+            wrapper % self.expr,
+            str(self.var),
+            str((f(self.start), f(self.end))),
+        ) + post
 
     def get_points(self):
         """Return lists of coordinates for plotting. Depending on the
