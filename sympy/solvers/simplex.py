@@ -254,8 +254,8 @@ def _simplex(A, B, C, D=None, dual=False):
         # Choose pivot column, c
         piv_cols = [_ for _ in range(A.cols) if A[k, _] < 0]
         if not piv_cols:
-            raise InfeasibleLPError(
-                'The constraint set is empty!')
+            raise InfeasibleLPError(filldedent("""
+                The constraint set is empty!"""))
         c = sorted(piv_cols, key=lambda _: X[_])[0] # Bland's rule
 
         # Choose pivot row, r
@@ -308,426 +308,7 @@ def _simplex(A, B, C, D=None, dual=False):
     return -M[-1, -1], argmax, argmin_dual
 
 
-def _rel_as_nonpos(constr):
-    """return a (np, d, aux) where np is a list of nonpositive
-    expressions that represent the given constraints (possibly rewritten
-    in terms of auxilliary variables) expressible with nonnegative
-    symbols, and d is a dictionary mapping a given symbols to an
-    expression with an auxilliary variable. In some cases a symbol
-    will be used as part of the change of variables, e.g. x: x - z1
-    instead of x: z1 - z2.
-
-    If any constraint is False/empty, return None. Any constraint
-    involving a relationship with oo will create unbounded symbols
-    for all symbols present in the expression, e.g. ``x + y < oo``
-    will allow ``x`` and ``y`` to take on any value. (This is the
-    only type relationship which can be expressed as strict.)
-
-    Examples
-    ========
-
-    >>> from sympy import oo
-    >>> from sympy.solvers.simplex import _rel_as_nonpos
-    >>> from sympy.abc import x, y
-    >>> _rel_as_nonpos([x >= y])
-    ([-x + y], {}, [])
-    >>> _rel_as_nonpos([x > -oo])
-    ([], {x: _z1 - x}, [_z1])
-    >>> _rel_as_nonpos([x >= 3, x <= 5])
-    ([_z1 - 2], {x: _z1 + 3}, [_z1])
-    >>> _rel_as_nonpos([x <= 5])
-    ([], {x: 5 - _z1}, [_z1])
-    >>> _rel_as_nonpos([x >= 1])
-    ([], {x: _z1 + 1}, [_z1])
-    """
-    r = {}  # replacements to handle change of variables
-    np = []  # nonpositive expressions
-    aux = []  # auxilliary symbols added
-    ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
-    univariate = {}  # {x: interval} for univariate constraints
-    unbound = set()  # symbols designated as unbound
-
-    # separate out univariates
-    for i in constr:
-        if i == True:
-            continue  # ignore
-        if i == False:
-            return  # no solution
-        i = i.canonical  # +/-oo, if present will be on the rhs
-        if isinstance(i, (Le, Ge, Lt, Gt)) and i.rhs.is_infinite:
-            if isinstance(i, (Lt, Le)) and i.rhs is S.NegativeInfinity:
-                return False
-            if isinstance(i, (Gt, Ge)) and i.rhs is S.Infinity:
-                return False
-            unbound.update(i.lhs.free_symbols) # x < oo, x > -oo
-        elif isinstance(i, (Le, Ge)):
-            i = i.lts - i.gts
-            freei = i.free_symbols
-            if len(freei) > 1:
-                np.append(i)
-            elif freei:
-                x = freei.pop()
-                if x in unbound:
-                    continue  # will handle later
-                ivl = Le(i, 0, evaluate=False).as_set()
-                if x not in univariate:
-                    univariate[x] = ivl
-                else:
-                    univariate[x] &= ivl
-            elif i:
-                return False
-        else:
-            raise TypeError('only Ge, Le, or Eq is allowed, not %s' % i)
-
-    # introduce auxilliary variables as needed for univariate
-    # inequalities
-    for x in univariate:
-        i = univariate[x]
-        if not i:
-            return None  # no solution possible
-        a, b = i.inf, i.sup
-        if a.is_infinite and b.is_infinite:
-            unbound.append(x)
-        elif a.is_infinite:
-            u = next(ui)
-            r[x] = b - u
-            aux.append(u)
-        elif b.is_infinite:
-            if a:
-                u = next(ui)
-                r[x] = a + u
-                aux.append(u)
-            else:
-                # standard nonnegative relationship
-                pass
-        else:
-            u = next(ui)
-            aux.append(u)
-            # shift so u = x - a => x = u + a
-            r[x] = u + a
-            # add constraint for u <= b - a
-            # since when u = b-a then x = u + a = b - a + a = b:
-            # the upper limit for x
-            np.append(u - (b - a))
-
-    # make change of variables for unbound variables
-    for x in unbound:
-        u = next(ui)
-        r[x] = u - x  # reusing x
-        aux.append(u)
-
-    return np, r, aux
-
-
-def _lp_matrices(objective, constraints):
-    """return A, B, C, D, r, x+X, X for maximizing
-    objective = Cx - D with constraints Ax <= B, introducing
-    introducing auxilliary variables, X, as necessary to make
-    replacements of symbols as given in r, {xi: expression with Xj},
-    so all variables in x+X will take on nonnegative values.
-
-    Every univariate condition creates a semi-infinite
-    condition, e.g. a single ``x <= 3`` creates the
-    interval ``[-oo, 3]`` while ``x <= 3`` and ``x >= 2``
-    create an interval ``[2, 3]``. Variables not in a univariate
-    expression will take on nonnegative values.
-    """
-
-    # sympify input and collect free symbols
-    F = sympify(objective)
-    np = [sympify(i) for i in constraints]
-    syms = set.union(*[i.free_symbols for i in [F] + np], set())
-
-    # change Eq(x, y) to x - y <= 0 and y - x <= 0
-    for i in range(len(np)):
-        if isinstance(np[i], Eq):
-            np[i] = np[i].lhs - np[i].rhs <= 0
-            np.append(-np[i].lhs <= 0)
-
-    # convert constraints to nonpositive expressions
-    _ = _rel_as_nonpos(np)
-    if _ is None:
-        raise InfeasibleLPError('inconsistent/False constraint')
-    np, r, aux = _
-
-    # do change of variables
-    F = F.xreplace(r)
-    np = [i.xreplace(r) for i in np]
-
-    # convert to matrices
-    xx = list(ordered(syms)) + aux
-    A, B = linear_eq_to_matrix(np, xx)
-    C, D = linear_eq_to_matrix([F], xx)
-    return A, B, C, D, r, xx, aux
-
-
-def _lp(min_max, f, constr):
-    """Return the optimization (min or max) of ``f`` with the given
-    constraints. Unless constrained, variables will assume only
-    nonnegative values in the solution. A constraint like ``x <= 2``
-    will permit ``x`` to have values in range ``[-oo, 2]`` while
-    ``x < oo`` will allow it to have any real value.
-
-    If `min_max` is 'max' then the results corresponding to the
-    maximization of ``f`` will be returned, else the minimization.
-    The constraints can be given as Le, Ge or Eq expressions.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.simplex import _lp as lp
-    >>> from sympy import Eq
-    >>> from sympy.abc import x, y, z
-    >>> f = x + y - 2*z
-    >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
-    >>> lp(min, f, c)
-    (-6/5, {x: 0, y: 0, z: 3/5})
-
-    By passing max, the maximum value for f under the constraints
-    is returned (if possible):
-
-    >>> lp(max, f, c)
-    (3/4, {x: 0, y: 3/4, z: 0})
-
-    Constraints that are equalities will require that the solution
-    also satisfy them:
-
-    >>> lp(max, f, c + [Eq(y - 9*x, 1)])
-    (5/7, {x: 0, y: 1, z: 1/7})
-
-    All symbols are reported, even if they are not in the objective
-    function:
-
-    >>> lp(min, x, [y + x >= 3])
-    (0, {x: 0, y: 3})
-    """
-    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
-
-    how = str(min_max).lower()
-    if 'max' in how:
-        # _simplex minimizes for Ax <= B so we
-        # have to change the sign of the function
-        # and negate the optimal value returned
-        _o, p, d = _simplex(A, B, -C, -D)
-        o = -_o
-    elif 'min' in how:
-        o, p, d = _simplex(A, B, C, D)
-    else:
-        raise ValueError('expecting min or max')
-
-    # restore original variables and remove aux from p
-    p = dict(zip(xx, p))
-    if r:  # p has original symbols and auxilliary symbols
-        # if r has x: x - z1 use values from p to update
-        r = {k: v.xreplace(p) for k, v in r.items()}
-        # then use the actual value of x (= x - z1) in p
-        p.update(r)
-        # don't show aux
-        p = {k: p[k] for k in ordered(p) if k not in aux}
-
-    # not returning dual since there may be extra constraints
-    # when a variable has finite bounds
-    return o, p
-
-
-def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
-    """Return the minimization of ``c*x - d`` with the given
-    constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless constrained,
-    variables will assume only nonnegative values in the solution.
-
-    If ``cd`` is a single matrix then ``d`` will be zero; otherwise
-    it should be tuple with two matrices: ``c`` and ``d``.
-
-    By default, all variables will be nonnegative. If ``bounds``
-    is given as a single tuple, ``(lo, hi)``, then all variables
-    will be constrained to be between ``lo`` and ``hi``. Use
-    None for a ``lo`` or ``hi`` if it is unconstrained in the
-    negative or positive direction, respectively, e.g.
-    ``(None, 0)`` indicates nonpositive values. To set
-    individual ranges, pass a list with length equal to the
-    number of columns in ``A``, each element being a tuple; if
-    only a few variables take on non-default values they can be
-    passed as a dictionary with keys giving the corresponding
-    column to which the variable is assigned, e.g. ``bounds={2:
-    (1, 4)}`` would limit the 3rd variable to have a value in
-    range ``[1, 4]``.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.simplex import linprog
-    >>> from sympy import symbols, Eq, linear_eq_to_matrix as M, Matrix
-    >>> x = x1, x2, x3, x4 = symbols('x1:5')
-    >>> X = Matrix(x)
-    >>> c, d = cd = M(5*x2 + x3 + 4*x4 - x1, x)
-    >>> a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
-    >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
-    >>> constr = [i <= j for i,j in zip(a*X, b)]
-    >>> constr += [Eq(i, j) for i,j in zip(aeq*X, beq)]
-    >>> linprog(cd, a, b, aeq, beq)
-    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
-    >>> assert all(i.subs(_[1]) for i in constr)
-
-    """
-
-    # convert scipy-like matrices to expressions
-
-    ## the inequalities
-    if A is None:
-        if b is not None:
-            raise ValueError('A and b must both be given')
-        A, b = Matrix(0, 0, []), Matrix(0, 0, [])
-    else:
-        A, b = [Matrix(i) for i in (A, b)]
-
-    ## the objective
-    if isinstance(cd, MatrixBase):
-        C, D = cd, Matrix([0])
-    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
-        C, D = [Matrix(i) for i in cd]
-    elif isinstance(cd, list) and isinstance(cd[0], list) and len(cd[0]) == A.cols:
-        C, D = Matrix(cd), Matrix([0])
-    else:
-        raise ValueError('expecting one or two matrices/lists for cd')
-
-    ## create variables to re-create the symbolic constraints
-    ## and objective if necessary, else to return solution
-    xit = numbered_symbols('x', start=1)
-    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
-
-    ## test for quick exit
-    defbounds = bounds in (None, (0, None)) or set(bounds) == {(0, None)}
-    if all(i is None for i in (A_eq, b_eq)) and defbounds:
-        o, p, d = _simplex(A, b, C, D)
-        return o, dict(zip(x, p))
-
-    ## recreate the objective and constraints
-    constr = [i <= j for i, j in zip(A*x, b)]
-    f = (C*x - D)[0]
-
-    ## the equalities
-    if A_eq is None:
-        if not b_eq is None:
-            raise ValueError('A_eq and b_eq must both be given')
-    else:
-        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
-        constr.extend([Eq(i, j) for i, j in zip(A_eq*x, b_eq)])
-
-    ## the bounds are interpreted
-    if bounds is None:
-        bounds = (0, None)
-    if type(bounds) is tuple and len(bounds) == 2:
-        bounds = [bounds]*A.cols
-    elif len(bounds) == A.cols and all(type(i) is tuple and len(i) == 2 for i in bounds):
-        pass # individual bounds
-    elif type(bounds) is dict and all(type(i) is tuple and len(i) == 2 for i in bounds.values()):
-        # sparse bounds
-        db = bounds
-        bounds = [(0, None)]*A.cols
-        while db:
-            i, b = db.popitem()
-            bounds[i] = b
-    else:
-        raise ValueError('unexpected bounds %s' % bounds)
-    for i, (lo,hi) in enumerate(bounds):
-        if lo == 0 and hi is None:
-            # this must be made explicit since
-            # if a matrix row were x <= 3, it is interpreted
-            # as meaning And(x >= 0, x <= 3)
-            constr.append(x[i] >= 0)
-        elif lo is not None:
-            if hi is None:
-                constr.append(x[i] >= lo)
-            else:
-                constr.append(x[i] <= hi)
-                constr.append(x[i] >= lo)
-        elif lo is None and hi is not None:
-            constr.append(x[i] <= hi)
-        elif lo is None and hi is None:
-            # unbounded
-            constr.append(x[i] <= S.Infinity)
-
-    # solve the symbolic system
-
-    return _lp(min, f, constr)
-
-
-def lpmin(f, constr):
-    """return minimum of linear equation ``f`` under
-    linear constraints expressed using Ge, Le or Eq.
-
-    All variables will take on nonnegative values unless
-    a univariate constraint indicates other ranges for
-    a symbol, e.g, ``x <= 3`` will allow for negative
-    values of x, while a second constraint of ``x >= 2``
-    will constrain ``x`` to the interval ``[2, 3]``.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.simplex import lpmin
-    >>> from sympy import Eq
-    >>> from sympy.abc import x, y
-    >>> lpmin(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
-    (1/3, {x: 1/3, y: 5/9})
-
-    Negative values for variables are permitted unless explicitly
-    exluding them.
-
-    >>> lpmin(x, [x >= 0, x <= 3])
-    (0, {x: 0})
-
-     Without indicating that ``x`` is nonnegative, there
-    is no minimum for this objective:
-
-    >>> lpmin(x, [x <= 3])
-    Traceback (most recent call last):
-    ...
-    sympy.solvers.simplex.UnboundedLPError:
-    Objective function can assume arbitrarily large values!
-
-    See Also
-    ========
-    linprog, lpmax
-    """
-    return _lp(min, f, constr)
-
-
-def lpmax(f, constr):
-    """return maximum of linear equation ``f`` under
-    linear constraints expressed using Ge, Le or Eq.
-
-    All variables will take on nonnegative values unless
-    a univariate constraint indicates other ranges for
-    a symbol, e.g, ``x <= 3`` will allow for negative
-    values of x, while a second constraint of ``x >= 2``
-    will constrain ``x`` to the interval ``[2, 3]``.
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.simplex import lpmax
-    >>> from sympy import Eq
-    >>> from sympy.abc import x, y
-    >>> lpmax(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
-    (4/5, {x: 4/5, y: 2/5})
-
-    Univariate conditions will allow negative values unless a
-    constraint like ``x >= 0`` were included:
-
-    >>> lpmax(x, [x <= -1])
-    (-1, {x: -1})
-    >>> lpmax(x, [x <= -1, x >= 0])
-    Traceback (most recent call last):
-    ...
-    sympy.solvers.simplex.InfeasibleLPError: inconsistent/False constraint
-
-    See Also
-    ========
-    linprog, lpmin
-    """
-    return _lp(max, f, constr)
-
+## routines that use _simplex or support those that do
 
 def _abcd(M, list=False):
     """return parts of M as matrices or lists
@@ -893,3 +474,428 @@ def _primal_dual(M, factor=True):
     F = eq(c*x, d)
     f = eq(yT*b, d)
     return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, c, Le))
+
+
+def _rel_as_nonpos(constr):
+    """return a (np, d, aux) where np is a list of nonpositive
+    expressions that represent the given constraints (possibly rewritten
+    in terms of auxilliary variables) expressible with nonnegative
+    symbols, and d is a dictionary mapping a given symbols to an
+    expression with an auxilliary variable. In some cases a symbol
+    will be used as part of the change of variables, e.g. x: x - z1
+    instead of x: z1 - z2.
+
+    If any constraint is False/empty, return None. Any constraint
+    involving a relationship with oo will create unbounded symbols
+    for all symbols present in the expression, e.g. ``x + y < oo``
+    will allow ``x`` and ``y`` to take on any value. (This is the
+    only type relationship which can be expressed as strict.)
+
+    Examples
+    ========
+
+    >>> from sympy import oo
+    >>> from sympy.solvers.simplex import _rel_as_nonpos
+    >>> from sympy.abc import x, y
+    >>> _rel_as_nonpos([x >= y])
+    ([-x + y], {}, [])
+    >>> _rel_as_nonpos([x > -oo])
+    ([], {x: _z1 - x}, [_z1])
+    >>> _rel_as_nonpos([x >= 3, x <= 5])
+    ([_z1 - 2], {x: _z1 + 3}, [_z1])
+    >>> _rel_as_nonpos([x <= 5])
+    ([], {x: 5 - _z1}, [_z1])
+    >>> _rel_as_nonpos([x >= 1])
+    ([], {x: _z1 + 1}, [_z1])
+    """
+    r = {}  # replacements to handle change of variables
+    np = []  # nonpositive expressions
+    aux = []  # auxilliary symbols added
+    ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
+    univariate = {}  # {x: interval} for univariate constraints
+    unbound = set()  # symbols designated as unbound
+
+    # separate out univariates
+    for i in constr:
+        if i == True:
+            continue  # ignore
+        if i == False:
+            return  # no solution
+        i = i.canonical  # +/-oo, if present will be on the rhs
+        if isinstance(i, (Le, Ge, Lt, Gt)) and i.rhs.is_infinite:
+            if isinstance(i, (Lt, Le)) and i.rhs is S.NegativeInfinity:
+                return False
+            if isinstance(i, (Gt, Ge)) and i.rhs is S.Infinity:
+                return False
+            unbound.update(i.lhs.free_symbols) # x < oo, x > -oo
+        elif isinstance(i, (Le, Ge)):
+            i = i.lts - i.gts
+            freei = i.free_symbols
+            if len(freei) > 1:
+                np.append(i)
+            elif freei:
+                x = freei.pop()
+                if x in unbound:
+                    continue  # will handle later
+                ivl = Le(i, 0, evaluate=False).as_set()
+                if x not in univariate:
+                    univariate[x] = ivl
+                else:
+                    univariate[x] &= ivl
+            elif i:
+                return False
+        else:
+            raise TypeError('only Ge or Le is allowed, not %s' % i)
+
+    # introduce auxilliary variables as needed for univariate
+    # inequalities
+    for x in univariate:
+        i = univariate[x]
+        if not i:
+            return None  # no solution possible
+        a, b = i.inf, i.sup
+        if a.is_infinite and b.is_infinite:
+            unbound.append(x)
+        elif a.is_infinite:
+            u = next(ui)
+            r[x] = b - u
+            aux.append(u)
+        elif b.is_infinite:
+            if a:
+                u = next(ui)
+                r[x] = a + u
+                aux.append(u)
+            else:
+                # standard nonnegative relationship
+                pass
+        else:
+            u = next(ui)
+            aux.append(u)
+            # shift so u = x - a => x = u + a
+            r[x] = u + a
+            # add constraint for u <= b - a
+            # since when u = b-a then x = u + a = b - a + a = b:
+            # the upper limit for x
+            np.append(u - (b - a))
+
+    # make change of variables for unbound variables
+    for x in unbound:
+        u = next(ui)
+        r[x] = u - x  # reusing x
+        aux.append(u)
+
+    return np, r, aux
+
+
+def _lp_matrices(objective, constraints):
+    """return A, B, C, D, r, x+X, X for maximizing
+    objective = Cx - D with constraints Ax <= B, introducing
+    introducing auxilliary variables, X, as necessary to make
+    replacements of symbols as given in r, {xi: expression with Xj},
+    so all variables in x+X will take on nonnegative values.
+
+    Every univariate condition creates a semi-infinite
+    condition, e.g. a single ``x <= 3`` creates the
+    interval ``[-oo, 3]`` while ``x <= 3`` and ``x >= 2``
+    create an interval ``[2, 3]``. Variables not in a univariate
+    expression will take on nonnegative values.
+    """
+
+    # sympify input and collect free symbols
+    F = sympify(objective)
+    np = [sympify(i) for i in constraints]
+    syms = set.union(*[i.free_symbols for i in [F] + np], set())
+
+    # change Eq(x, y) to x - y <= 0 and y - x <= 0
+    for i in range(len(np)):
+        if isinstance(np[i], Eq):
+            np[i] = np[i].lhs - np[i].rhs <= 0
+            np.append(-np[i].lhs <= 0)
+
+    # convert constraints to nonpositive expressions
+    _ = _rel_as_nonpos(np)
+    if _ is None:
+        raise InfeasibleLPError(filldedent("""
+            Inconsistent/False constraint"""))
+    np, r, aux = _
+
+    # do change of variables
+    F = F.xreplace(r)
+    np = [i.xreplace(r) for i in np]
+
+    # convert to matrices
+    xx = list(ordered(syms)) + aux
+    A, B = linear_eq_to_matrix(np, xx)
+    C, D = linear_eq_to_matrix([F], xx)
+    return A, B, C, D, r, xx, aux
+
+
+def _lp(min_max, f, constr):
+    """Return the optimization (min or max) of ``f`` with the given
+    constraints. Unless constrained, variables will assume only
+    nonnegative values in the solution. A constraint like ``x <= 2``
+    will permit ``x`` to have values in range ``[-oo, 2]`` while
+    ``x < oo`` will allow it to have any real value.
+
+    If `min_max` is 'max' then the results corresponding to the
+    maximization of ``f`` will be returned, else the minimization.
+    The constraints can be given as Le, Ge or Eq expressions.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import _lp as lp
+    >>> from sympy import Eq
+    >>> from sympy.abc import x, y, z
+    >>> f = x + y - 2*z
+    >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
+    >>> lp(min, f, c)
+    (-6/5, {x: 0, y: 0, z: 3/5})
+
+    By passing max, the maximum value for f under the constraints
+    is returned (if possible):
+
+    >>> lp(max, f, c)
+    (3/4, {x: 0, y: 3/4, z: 0})
+
+    Constraints that are equalities will require that the solution
+    also satisfy them:
+
+    >>> lp(max, f, c + [Eq(y - 9*x, 1)])
+    (5/7, {x: 0, y: 1, z: 1/7})
+
+    All symbols are reported, even if they are not in the objective
+    function:
+
+    >>> lp(min, x, [y + x >= 3])
+    (0, {x: 0, y: 3})
+    """
+    A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
+
+    how = str(min_max).lower()
+    if 'max' in how:
+        # _simplex minimizes for Ax <= B so we
+        # have to change the sign of the function
+        # and negate the optimal value returned
+        _o, p, d = _simplex(A, B, -C, -D)
+        o = -_o
+    elif 'min' in how:
+        o, p, d = _simplex(A, B, C, D)
+    else:
+        raise ValueError('expecting min or max')
+
+    # restore original variables and remove aux from p
+    p = dict(zip(xx, p))
+    if r:  # p has original symbols and auxilliary symbols
+        # if r has x: x - z1 use values from p to update
+        r = {k: v.xreplace(p) for k, v in r.items()}
+        # then use the actual value of x (= x - z1) in p
+        p.update(r)
+        # don't show aux
+        p = {k: p[k] for k in ordered(p) if k not in aux}
+
+    # not returning dual since there may be extra constraints
+    # when a variable has finite bounds
+    return o, p
+
+
+def lpmin(f, constr):
+    """return minimum of linear equation ``f`` under
+    linear constraints expressed using Ge, Le or Eq.
+
+    All variables will take on nonnegative values unless
+    a univariate constraint indicates other ranges for
+    a symbol, e.g, ``x <= 3`` will allow for negative
+    values of x, while a second constraint of ``x >= 2``
+    will constrain ``x`` to the interval ``[2, 3]``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import lpmin
+    >>> from sympy import Eq
+    >>> from sympy.abc import x, y
+    >>> lpmin(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
+    (1/3, {x: 1/3, y: 5/9})
+
+    Negative values for variables are permitted unless explicitly
+    exluding them.
+
+    >>> lpmin(x, [x >= 0, x <= 3])
+    (0, {x: 0})
+
+     Without indicating that ``x`` is nonnegative, there
+    is no minimum for this objective:
+
+    >>> lpmin(x, [x <= 3])
+    Traceback (most recent call last):
+    ...
+    sympy.solvers.simplex.UnboundedLPError:
+    Objective function can assume arbitrarily large values!
+
+    See Also
+    ========
+    linprog, lpmax
+    """
+    return _lp(min, f, constr)
+
+
+def lpmax(f, constr):
+    """return maximum of linear equation ``f`` under
+    linear constraints expressed using Ge, Le or Eq.
+
+    All variables will take on nonnegative values unless
+    a univariate constraint indicates other ranges for
+    a symbol, e.g, ``x <= 3`` will allow for negative
+    values of x, while a second constraint of ``x >= 2``
+    will constrain ``x`` to the interval ``[2, 3]``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import lpmax
+    >>> from sympy import Eq
+    >>> from sympy.abc import x, y
+    >>> lpmax(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
+    (4/5, {x: 4/5, y: 2/5})
+
+    Univariate conditions will allow negative values unless a
+    constraint like ``x >= 0`` were included:
+
+    >>> lpmax(x, [x <= -1])
+    (-1, {x: -1})
+    >>> lpmax(x, [x <= -1, x >= 0])
+    Traceback (most recent call last):
+    ...
+    sympy.solvers.simplex.InfeasibleLPError: inconsistent/False constraint
+
+    See Also
+    ========
+    linprog, lpmin
+    """
+    return _lp(max, f, constr)
+
+
+def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
+    """Return the minimization of ``c*x - d`` with the given
+    constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless bounds
+    are given, variables will have nonnegative values in the solution.
+
+    If ``cd`` is a single matrix then ``d`` will be zero; otherwise
+    it should be tuple with two matrices: ``c`` and ``d``.
+
+    By default, all variables will be nonnegative. If ``bounds``
+    is given as a single tuple, ``(lo, hi)``, then all variables
+    will be constrained to be between ``lo`` and ``hi``. Use
+    None for a ``lo`` or ``hi`` if it is unconstrained in the
+    negative or positive direction, respectively, e.g.
+    ``(None, 0)`` indicates nonpositive values. To set
+    individual ranges, pass a list with length equal to the
+    number of columns in ``A``, each element being a tuple; if
+    only a few variables take on non-default values they can be
+    passed as a dictionary with keys giving the corresponding
+    column to which the variable is assigned, e.g. ``bounds={2:
+    (1, 4)}`` would limit the 3rd variable to have a value in
+    range ``[1, 4]``.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.simplex import linprog
+    >>> from sympy import symbols, Eq, linear_eq_to_matrix as M, Matrix
+    >>> x = x1, x2, x3, x4 = symbols('x1:5')
+    >>> X = Matrix(x)
+    >>> c, d = cd = M(5*x2 + x3 + 4*x4 - x1, x)
+    >>> a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
+    >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
+    >>> constr = [i <= j for i,j in zip(a*X, b)]
+    >>> constr += [Eq(i, j) for i,j in zip(aeq*X, beq)]
+    >>> linprog(cd, a, b, aeq, beq)
+    (9/2, {x1: 0, x2: 1/2, x3: 0, x4: 1/2})
+    >>> assert all(i.subs(_[1]) for i in constr)
+
+    See Also
+    ========
+    lpmin, lpmax
+    """
+
+    # convert scipy-like matrices to expressions
+
+    ## the inequalities
+    if A is None:
+        if b is not None:
+            raise ValueError('A and b must both be given')
+        A, b = Matrix(0, 0, []), Matrix(0, 0, [])
+    else:
+        A, b = [Matrix(i) for i in (A, b)]
+
+    ## the objective
+    if isinstance(cd, MatrixBase):
+        C, D = cd, Matrix([0])
+    elif len(cd) == 2 and all(isinstance(i, (MatrixBase, list)) for i in cd):
+        C, D = [Matrix(i) for i in cd]
+    elif isinstance(cd, list) and isinstance(cd[0], list) and len(cd[0]) == A.cols:
+        C, D = Matrix(cd), Matrix([0])
+    else:
+        raise ValueError('expecting one or two matrices/lists for cd')
+
+    ## create variables to re-create the symbolic constraints
+    ## and objective if necessary, else to return solution
+    xit = numbered_symbols('x', start=1)
+    x = Matrix([i[1] for i in zip(range(A.cols), xit)])
+
+    ## test for quick exit
+    defbounds = bounds in (None, (0, None)) or set(bounds) == {(0, None)}
+    if all(i is None for i in (A_eq, b_eq)) and defbounds:
+        o, p, d = _simplex(A, b, C, D)
+        return o, dict(zip(x, p))
+
+    ## recreate the objective and constraints
+    constr = [i <= j for i, j in zip(A*x, b)]
+    f = (C*x - D)[0]
+
+    ## the equalities
+    if A_eq is None:
+        if not b_eq is None:
+            raise ValueError('A_eq and b_eq must both be given')
+    else:
+        A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
+        constr.extend([Eq(i, j) for i, j in zip(A_eq*x, b_eq)])
+
+    ## the bounds are interpreted
+    if bounds is None:
+        bounds = (0, None)
+    if type(bounds) is tuple and len(bounds) == 2:
+        bounds = [bounds]*A.cols
+    elif len(bounds) == A.cols and all(type(i) is tuple and len(i) == 2 for i in bounds):
+        pass # individual bounds
+    elif type(bounds) is dict and all(type(i) is tuple and len(i) == 2 for i in bounds.values()):
+        # sparse bounds
+        db = bounds
+        bounds = [(0, None)]*A.cols
+        while db:
+            i, b = db.popitem()
+            bounds[i] = b
+    else:
+        raise ValueError('unexpected bounds %s' % bounds)
+    for i, (lo,hi) in enumerate(bounds):
+        if lo == 0 and hi is None:
+            # this must be made explicit since
+            # if a matrix row were x <= 3, it is interpreted
+            # as meaning And(x >= 0, x <= 3)
+            constr.append(x[i] >= 0)
+        elif lo is not None:
+            if hi is None:
+                constr.append(x[i] >= lo)
+            else:
+                constr.append(x[i] <= hi)
+                constr.append(x[i] >= lo)
+        elif lo is None and hi is not None:
+            constr.append(x[i] <= hi)
+        elif lo is None and hi is None:
+            # unbounded
+            constr.append(x[i] <= S.Infinity)
+
+    # solve the symbolic system
+
+    return _lp(min, f, constr)
