@@ -1,5 +1,6 @@
 from sympy.core.function import AppliedUndef
 from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import FiniteSet
 from sympy.tensor.indexed import Indexed
 
 
