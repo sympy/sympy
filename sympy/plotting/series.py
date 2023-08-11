@@ -2359,8 +2359,8 @@ def _set_discretization_points(kwargs, pt):
 
     if pt in [LineOver1DRangeSeries, Parametric2DLineSeries,
         Parametric3DLineSeries]:
-        if "n1" in kwargs.keys():
-            kwargs["n"] = kwargs["n1"]
+        if "n" in kwargs.keys():
+            kwargs["n1"] = kwargs["n"]
     elif pt in [
         SurfaceOver2DRangeSeries, ContourSeries, ParametricSurfaceSeries]:
         if "n" in kwargs.keys():
