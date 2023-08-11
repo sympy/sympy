@@ -1954,7 +1954,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def content(self, domain):
+    def content(self, domain=None):
         """Returns GCD of polynomial's coefficients.
 
         Examples
@@ -1964,7 +1964,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> R, x = ring("x", ZZ)
 
         >>> f = 3*x**2 + 12*x + 6
-        >>> f.content(ZZ)
+        >>> f.content()
         3
 
         >>> f = [3, 12, 6]
@@ -1977,6 +1977,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             f = f.listcoeffs()
 
         coeffs = [int(x) for x in f]
+
+        if domain is None:
+            from sympy.polys.domains import ZZ
+            domain = ZZ
+
         gcd = domain.gcd
         cont = coeffs[0]
 
@@ -1986,7 +1991,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if cont == domain.one:
                 break
 
-        return cont
+        return int(cont)
 
     def primitive(f):
         """Returns content and a primitive polynomial. """
