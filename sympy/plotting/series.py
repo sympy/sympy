@@ -12,6 +12,7 @@ from sympy.core.relational import (Equality, GreaterThan, StrictGreaterThan,
 from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.plotting.utils import _get_free_symbols, extract_solution
+from sympy.printing.latex import latex
 from sympy.sets.sets import Set, Interval, Union
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -42,12 +43,15 @@ def _uniform_eval(f1, f2, *args, modules=None,
     # mpmath or sympy.
     wrapper_func = np.vectorize(wrapper_func, otypes=[complex])
 
-    def _eval_with_sympy():
+    def _eval_with_sympy(err=None):
         if f2 is None:
-            raise RuntimeError(
-                "Impossible to evaluate the provided numerical function "
-                "because the following exception was raised:\n"
-                "{}: {}".format(type(err).__name__, err))
+            msg = "Impossible to evaluate the provided numerical function"
+            if err is None:
+                msg += "."
+            else:
+                msg += "because the following exception was raised:\n"
+                "{}: {}".format(type(err).__name__, err)
+            raise RuntimeError(msg)
         return wrapper_func(f2, *args)
 
     if modules == "sympy":
@@ -56,7 +60,7 @@ def _uniform_eval(f1, f2, *args, modules=None,
     try:
         return wrapper_func(f1, *args)
     except Exception as err:
-        return _eval_with_sympy()
+        return _eval_with_sympy(err)
 
 
 def _adaptive_eval(f, x):
@@ -194,7 +198,7 @@ class BaseSeries:
         ]
 
         # enable interactive widget plots
-        self._params = kwargs.get("params", dict())
+        self._params = kwargs.get("params", {})
         if not isinstance(self._params, dict):
             raise TypeError("`params` must be a dictionary mapping symbols "
                 "to numeric values.")
@@ -203,7 +207,7 @@ class BaseSeries:
 
         # contains keyword arguments that will be passed to the rendering
         # function of the chosen plotting library
-        self.rendering_kw = kwargs.get("rendering_kw", dict())
+        self.rendering_kw = kwargs.get("rendering_kw", {})
 
         # numerical transformation functions to be applied to the output data:
         # x, y, z (coordinates), p (parameter on parametric plots)
@@ -414,7 +418,7 @@ class BaseSeries:
         if self.is_3Dvector or (self.is_3Dsurface and self.is_implicit):
             indexing = "ij"
         meshes = np.meshgrid(*discretizations, indexing=indexing)
-        self._discretized_domain = {k: v for k, v in zip(discr_symbols, meshes)}
+        self._discretized_domain = dict(zip(discr_symbols, meshes))
 
     def _evaluate(self, cast_to_real=True):
         """Evaluation of the symbolic expression (or expressions) with the
@@ -637,7 +641,7 @@ class BaseSeries:
         if isinstance(kwargs, dict):
             self._rendering_kw = kwargs
         else:
-            self._rendering_kw = dict()
+            self._rendering_kw = {}
             if kwargs is not None:
                 warnings.warn(
                     "`rendering_kw` must be a dictionary, instead an "
@@ -1144,7 +1148,7 @@ class Line2DBaseSeries(BaseSeries):
             return None
         try:
             return self._cast(self.ranges[0][1])
-        except:
+        except TypeError:
             return self.ranges[0][1]
 
     @property
@@ -1153,7 +1157,7 @@ class Line2DBaseSeries(BaseSeries):
             return None
         try:
             return self._cast(self.ranges[0][2])
-        except:
+        except TypeError:
             return self.ranges[0][2]
 
     @property
@@ -1473,7 +1477,6 @@ class ParametricLineBaseSeries(Line2DBaseSeries):
         return [*results[1:], results[0]]
 
     def get_parameter_points(self):
-        np = import_module('numpy')
         return self.get_data()[-1]
 
     def get_points(self):
@@ -1770,28 +1773,28 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
     def start_x(self):
         try:
             return float(self.ranges[0][1])
-        except:
+        except TypeError:
             return self.ranges[0][1]
 
     @property
     def end_x(self):
         try:
             return float(self.ranges[0][2])
-        except:
+        except TypeError:
             return self.ranges[0][2]
 
     @property
     def start_y(self):
         try:
             return float(self.ranges[1][1])
-        except:
+        except TypeError:
             return self.ranges[1][1]
 
     @property
     def end_y(self):
         try:
             return float(self.ranges[1][2])
-        except:
+        except TypeError:
             return self.ranges[1][2]
 
     @property
@@ -1891,28 +1894,28 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
     def start_u(self):
         try:
             return float(self.ranges[0][1])
-        except:
+        except TypeError:
             return self.ranges[0][1]
 
     @property
     def end_u(self):
         try:
             return float(self.ranges[0][2])
-        except:
+        except TypeError:
             return self.ranges[0][2]
 
     @property
     def start_v(self):
         try:
             return float(self.ranges[1][1])
-        except:
+        except TypeError:
             return self.ranges[1][1]
 
     @property
     def end_v(self):
         try:
             return float(self.ranges[1][2])
-        except:
+        except TypeError:
             return self.ranges[1][2]
 
     @property
@@ -2004,7 +2007,7 @@ class ContourSeries(SurfaceOver2DRangeSeries):
         # plot_complex_vector. By implementing contour_kw we are able to
         # quickly target the contour plot.
         self.rendering_kw = kwargs.get("contour_kw",
-            kwargs.get("rendering_kw", dict()))
+            kwargs.get("rendering_kw", {}))
 
     def __str__(self):
         return ('contour: %s for '
