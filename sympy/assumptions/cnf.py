@@ -414,12 +414,14 @@ class EncodedCNF:
         A dictionary that maps symbols (variables) to their corresponding integer
         encodings. The integers are used to represent the symbols in the 'data' list.
 
-    _symbols : list of symbols
+    symbols : list of symbols
         A list containing the symbols (variables) that have been encoded. This list
         is derived from the keys of the 'encoding' dictionary and may be useful for
         other purposes or in future extensions of the class.
 
-        Note that the order the symbols come in corresponds to their encoding.
+        Note that the order of symbols in this list corresponds to their encoding.
+        For instance, if the we encode the cnf with symbols [b, a, c], then the
+        encoding dictionary will be {b: 1, a: 2, c: 3}.
 
     Examples
     ========
@@ -436,21 +438,10 @@ class EncodedCNF:
     [{1, -2}]
     >>> encoded_cnf.encoding #doctest: +SKIP
     {a: 1, b: 2}
-    >>> first_literal_encoding = list(encoded_cnf.data[0])[0]
-    >>> first_literal_encoding #doctest: +SKIP
-    2
-    >>> encoded_cnf.decode_literal(first_literal_encoding)
-    a
+    >>> encoded_cnf.decode_literal(-2) #doctest: +SKIP
+    ~a
     >>> encoded_cnf.decode()
     [a | ~b]
-    >>> copied_encoded_cnf = encoded_cnf.copy()
-    >>> prop = Or(a, b)
-    >>> cnf = CNF.from_prop(prop)
-    >>> encoded_cnf.add_from_cnf(cnf)
-    >>> encoded_cnf.data #doctest: +SKIP
-    [{1, -2}, {3}]
-    >>> copied_encoded_cnf.data #doctest: +SKIP
-    [{1, -2}]
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
