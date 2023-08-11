@@ -101,12 +101,17 @@ class DDM(list):
     is_DDM = True
 
     def __init__(self, rowslist, shape, domain):
-        super().__init__(rowslist)
-        self.shape = self.rows, self.cols = m, n = shape
-        self.domain = domain
-
-        if not (len(self) == m and all(len(row) == n for row in self)):
+        if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):
+            raise DMBadInputError("rowslist must be a list of lists")
+        m, n = shape
+        if len(rowslist) != m or any(len(row) != n for row in rowslist):
             raise DMBadInputError("Inconsistent row-list/shape")
+
+        super().__init__(rowslist)
+        self.shape = (m, n)
+        self.rows = m
+        self.cols = n
+        self.domain = domain
 
     def getitem(self, i, j):
         return self[i][j]
@@ -127,7 +132,51 @@ class DDM(list):
             ddm.append([rowi[j] for j in cols])
         return DDM(ddm, (len(rows), len(cols)), self.domain)
 
+    @classmethod
+    def from_list(cls, rowslist, shape, domain):
+        """
+        Create a :class:`DDM` from a list of lists.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM.from_list([[ZZ(0), ZZ(1)], [ZZ(-1), ZZ(0)]], (2, 2), ZZ)
+        >>> A
+        [[0, 1], [-1, 0]]
+        >>> A == DDM([[ZZ(0), ZZ(1)], [ZZ(-1), ZZ(0)]], (2, 2), ZZ)
+        True
+
+        See Also
+        ========
+
+        from_list_flat
+        """
+        return cls(rowslist, shape, domain)
+
+    @classmethod
+    def from_ddm(cls, other):
+        return other.copy()
+
     def to_list(self):
+        """
+        Convert to a list of lists.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_list()
+        [[1, 2], [3, 4]]
+
+        See Also
+        ========
+
+        to_list_flat
+        """
         return list(self)
 
     def to_list_flat(self):
@@ -194,7 +243,7 @@ class DDM(list):
 
     def to_flat_nz(self):
         """
-        Convert to a flat list of possibly nonzero elements and data.
+        Convert to a flat list of nonzero elements and data.
 
         Explanation
         ===========
@@ -222,9 +271,7 @@ class DDM(list):
         sympy.polys.matrices.sdm.SDM.to_flat_nz
         sympy.polys.matrices.domainmatrix.DomainMatrix.to_flat_nz
         """
-        elements = self.to_list_flat()
-        data = self.shape
-        return elements, data
+        return self.to_sdm().to_flat_nz()
 
     @classmethod
     def from_flat_nz(cls, elements, data, domain):
@@ -250,8 +297,7 @@ class DDM(list):
         sympy.polys.matrices.sdm.SDM.from_flat_nz
         sympy.polys.matrices.domainmatrix.DomainMatrix.from_flat_nz
         """
-        shape = data
-        return cls.from_list_flat(elements, shape, domain)
+        return SDM.from_flat_nz(elements, data, domain).to_ddm()
 
     def to_dok(self):
         """
@@ -389,7 +435,7 @@ class DDM(list):
         Kold = self.domain
         if K == Kold:
             return self.copy()
-        rows = ([K.convert_from(e, Kold) for e in row] for row in self)
+        rows = [[K.convert_from(e, Kold) for e in row] for row in self]
         return DDM(rows, self.shape, K)
 
     def __str__(self):
@@ -413,26 +459,30 @@ class DDM(list):
     def zeros(cls, shape, domain):
         z = domain.zero
         m, n = shape
-        rowslist = ([z] * n for _ in range(m))
+        rowslist = [[z] * n for _ in range(m)]
         return DDM(rowslist, shape, domain)
 
     @classmethod
     def ones(cls, shape, domain):
         one = domain.one
         m, n = shape
-        rowlist = ([one] * n for _ in range(m))
+        rowlist = [[one] * n for _ in range(m)]
         return DDM(rowlist, shape, domain)
 
     @classmethod
     def eye(cls, size, domain):
+        if isinstance(size, tuple):
+            m, n = size
+        elif isinstance(size, int):
+            m = n = size
         one = domain.one
-        ddm = cls.zeros((size, size), domain)
-        for i in range(size):
+        ddm = cls.zeros((m, n), domain)
+        for i in range(min(m, n)):
             ddm[i][i] = one
         return ddm
 
     def copy(self):
-        copyrows = (row[:] for row in self)
+        copyrows = [row[:] for row in self]
         return DDM(copyrows, self.shape, self.domain)
 
     def transpose(self):
@@ -596,7 +646,7 @@ class DDM(list):
         return DDM(Anew, (rows, cols), A.domain)
 
     def applyfunc(self, func, domain):
-        elements = (list(map(func, row)) for row in self)
+        elements = [list(map(func, row)) for row in self]
         return DDM(elements, self.shape, domain)
 
     def scc(a):
@@ -618,6 +668,25 @@ class DDM(list):
 
         """
         return a.to_sdm().scc()
+
+    @classmethod
+    def diag(cls, values, domain):
+        """Returns a square diagonal matrix with *values* on the diagonal.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+        >>> DDM.diag([ZZ(1), ZZ(2), ZZ(3)], ZZ)
+        [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.diag
+        """
+        return SDM.diag(values, domain).to_ddm()
 
     def rref(a):
         """Reduced-row echelon form of a and list of pivots.
