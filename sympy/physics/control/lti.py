@@ -3520,7 +3520,7 @@ class StateSpace(LinearTimeInvariant):
         s = Symbol('s')
         n = self._A.shape[0]
         I = eye(n)
-        G = self._C*(s*I - self._A).inv()*self._B + self._D
+        G = self._C*(s*I - self._A).solve(self._B) + self._D
         G = G.simplify()
         to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
         tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
