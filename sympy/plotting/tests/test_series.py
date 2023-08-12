@@ -9,7 +9,7 @@ from sympy.plotting.series import (
     SurfaceOver2DRangeSeries, ContourSeries, ParametricSurfaceSeries,
     ImplicitSeries, _set_discretization_points
 )
-from sympy.testing.pytest import raises, warns, XFAIL, skip
+from sympy.testing.pytest import raises, warns, XFAIL, skip, ignore_warnings
 
 np = import_module('numpy')
 
@@ -109,11 +109,7 @@ def test_detect_poles():
             adaptive=False, n=1000, detect_poles=False)
         s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2), (v, -2, 2),
             adaptive=False, n=1000, detect_poles=True)
-    with warns(
-            RuntimeWarning,
-            match="divide by zero encountered in scalar divide",
-            test_stacklevel=False,
-        ):
+    with ignore_warnings(RuntimeWarning):
         xx1, yy1, pp1 = s1.get_data()
         assert not np.isnan(yy1).any()
         xx2, yy2, pp2 = s2.get_data()
@@ -132,11 +128,7 @@ def test_detect_poles():
         s2 = Parametric2DLineSeries(r.subs(u, -2), i.subs(u, -2),
             (v, -2, 2), params={x: 1},
             adaptive=False, n1=1000, detect_poles=True)
-    with warns(
-            RuntimeWarning,
-            match="divide by zero encountered in scalar divide",
-            test_stacklevel=False,
-        ):
+    with ignore_warnings(RuntimeWarning):
         xx1, yy1, pp1 = s1.get_data()
         assert not np.isnan(yy1).any()
         xx2, yy2, pp2 = s2.get_data()
@@ -1394,11 +1386,7 @@ def test_complex_range_line_plot_1():
     s3 = LineOver1DRangeSeries(expr2, (x, -10, 10), adaptive=False, n=30,
         params={u: 1})
 
-    with warns(
-            RuntimeWarning,
-            match="invalid value encountered in sqrt",
-            test_stacklevel=False,
-        ):
+    with ignore_warnings(RuntimeWarning):
         data1 = s1.get_data()
     data2 = s2.get_data()
     data3 = s3.get_data()
@@ -1456,15 +1444,11 @@ def test_force_real_eval():
         force_real_eval=False)
     s2 = LineOver1DRangeSeries(expr, (x, -10, 10), adaptive=False, n=10,
         force_real_eval=True)
-    with warns(
-            RuntimeWarning,
-            match="invalid value encountered in sqrt",
-            test_stacklevel=False,
-        ):
-        d1 = s1.get_data()
+    d1 = s1.get_data()
+    with ignore_warnings(RuntimeWarning):
         d2 = s2.get_data()
-        assert not np.allclose(d1[1], 0)
-        assert np.allclose(d2[1], 0)
+    assert not np.allclose(d1[1], 0)
+    assert np.allclose(d2[1], 0)
 
 
 def test_contour_series_show_clabels():
