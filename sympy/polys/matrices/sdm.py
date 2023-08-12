@@ -1197,7 +1197,7 @@ class SDM(dict):
         Poly(x**2 - 5*x - 2, x, domain='QQ')
 
         """
-        return A.to_ddm().charpoly()
+        return A.to_dfm_or_ddm().charpoly()
 
     def is_zero_matrix(self):
         """

@@ -770,3 +770,15 @@ def test_XXM_inv_ZZ(DM):
     # XXX: Maybe this should return a DM over QQ instead?
     # XXX: Handle unimodular matrices?
     raises(DMDomainError, lambda: dM1.inv())
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_charpoly_ZZ(DM):
+    dM1 = DM([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    assert dM1.charpoly() == [1, -16, -12, 3]
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_charpoly_QQ(DM):
+    dM1 = DM([[(1,2), (2,3)], [(3,4), (4,5)]])
+    assert dM1.charpoly() == [QQ(1,1), QQ(-13,10), QQ(-1,10)]
