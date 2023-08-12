@@ -20,6 +20,25 @@
 # matrix representation.
 #
 
+# TODO:
+#
+# Implement the following methods that are provided by python-flint:
+#
+# - hnf (Hermite normal form)
+# - snf (Smith normal form)
+# - minpoly
+# - is_hnf
+# - is_snf
+# - rank
+#
+# The other types DDM and SDM do not have these methods and the algorithms
+# for hnf, snf and rank are already implemented. Algorithms for minpoly,
+# is_hnf and is_snf would need to be added.
+#
+# Add more methods to python-flint to expose more of Flint's functionality
+# and also to make some of the above methods simpler or more efficient e.g.
+# slicing, fancy indexing etc.
+
 from sympy.external.importtools import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
