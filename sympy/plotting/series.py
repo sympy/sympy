@@ -1320,7 +1320,10 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
 
     def _adaptive_sampling(self):
         try:
-            f = lambdify([self.var], self.expr, self.modules)
+            if callable(self.expr):
+                f = self.expr
+            else:
+                f = lambdify([self.var], self.expr, self.modules)
             x, y = self._adaptive_sampling_helper(f)
         except Exception as err:
             warnings.warn(
@@ -1422,10 +1425,11 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
     def _get_data_helper(self):
         """Returns coordinates that needs to be postprocessed.
         """
-        if self.adaptive and (not self.only_integers):
-            return self._adaptive_sampling()
-
         np = import_module('numpy')
+        if self.adaptive and (not self.only_integers):
+            x, y = self._adaptive_sampling()
+            return [np.array(t) for t in [x, y]]
+
         x, _re, _im = self._uniform_sampling()
 
         if self._return is None:
@@ -1577,14 +1581,22 @@ class Parametric2DLineSeries(ParametricLineBaseSeries):
         self._post_init()
 
     def __str__(self):
-        return 'parametric cartesian line: (%s, %s) for %s over %s' % (
-            str(self.expr_x), str(self.expr_y), str(self.var),
-            str((self.start, self.end)))
+        return self._str_helper(
+            "parametric cartesian line: (%s, %s) for %s over %s" % (
+            str(self.expr_x),
+            str(self.expr_y),
+            str(self.var),
+            str((self.start, self.end))
+        ))
 
     def _adaptive_sampling(self):
         try:
-            f_x = lambdify([self.var], self.expr_x)
-            f_y = lambdify([self.var], self.expr_y)
+            if callable(self.expr_x) and callable(self.expr_y):
+                f_x = self.expr_x
+                f_y = self.expr_y
+            else:
+                f_x = lambdify([self.var], self.expr_x)
+                f_y = lambdify([self.var], self.expr_y)
             x, y, p = self._adaptive_sampling_helper(f_x, f_y)
         except Exception as err:
             warnings.warn(
@@ -1723,9 +1735,14 @@ class Parametric3DLineSeries(ParametricLineBaseSeries):
         self._zlim = None
 
     def __str__(self):
-        return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
-            str(self.expr_x), str(self.expr_y), str(self.expr_z),
-            str(self.var), str((self.start, self.end)))
+        return self._str_helper(
+            "3D parametric cartesian line: (%s, %s, %s) for %s over %s" % (
+            str(self.expr_x),
+            str(self.expr_y),
+            str(self.expr_z),
+            str(self.var),
+            str((self.start, self.end))
+        ))
 
     def get_data(self):
         # TODO: remove this
@@ -1868,13 +1885,13 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
         self.n = [n[0], v, n[2]]
 
     def __str__(self):
-        return ('cartesian surface: %s for'
-                ' %s over %s and %s over %s') % (
-                    str(self.expr),
-                    str(self.var_x),
-                    str((self.start_x, self.end_x)),
-                    str(self.var_y),
-                    str((self.start_y, self.end_y)))
+        series_type = "cartesian surface" if self.is_3Dsurface else "contour"
+        return self._str_helper(
+            series_type + ": %s for" " %s over %s and %s over %s" % (
+            str(self.expr),
+            str(self.var_x), str((self.start_x, self.end_x)),
+            str(self.var_y), str((self.start_y, self.end_y)),
+        ))
 
     def get_meshes(self):
         """Return the x,y,z coordinates for plotting the surface.
@@ -1989,15 +2006,13 @@ class ParametricSurfaceSeries(SurfaceBaseSeries):
         self.n = [n[0], v, n[2]]
 
     def __str__(self):
-        return ('parametric cartesian surface: (%s, %s, %s) for'
-                ' %s over %s and %s over %s') % (
-                    str(self.expr_x),
-                    str(self.expr_y),
-                    str(self.expr_z),
-                    str(self.var_u),
-                    str((self.start_u, self.end_u)),
-                    str(self.var_v),
-                    str((self.start_v, self.end_v)))
+        return self._str_helper(
+            "parametric cartesian surface: (%s, %s, %s) for"
+            " %s over %s and %s over %s" % (
+            str(self.expr_x), str(self.expr_y), str(self.expr_z),
+            str(self.var_u), str((self.start_u, self.end_u)),
+            str(self.var_v), str((self.start_v, self.end_v)),
+        ))
 
     def get_parameter_meshes(self):
         return self.get_data()[3:]
@@ -2060,15 +2075,6 @@ class ContourSeries(SurfaceOver2DRangeSeries):
         # quickly target the contour plot.
         self.rendering_kw = kwargs.get("contour_kw",
             kwargs.get("rendering_kw", {}))
-
-    def __str__(self):
-        return ('contour: %s for '
-                '%s over %s and %s over %s') % (
-                    str(self.expr),
-                    str(self.var_x),
-                    str((self.start_x, self.end_x)),
-                    str(self.var_y),
-                    str((self.start_y, self.end_y)))
 
 
 class GenericDataSeries(BaseSeries):
