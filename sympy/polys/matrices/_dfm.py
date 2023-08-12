@@ -175,7 +175,19 @@ class DFM:
         return self
 
     def to_dfm_or_ddm(self):
-        """Return self."""
+        """
+        Convert to a :class:`DFM`.
+
+        This :class:`DFM` method exists to parallel the :class:`~.DDM` and
+        :class:`~.SDM` methods. For :class:`DFM` it will always return self.
+
+        See Also
+        ========
+
+        to_ddm
+        to_sdm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm_or_ddm
+        """
         return self
 
     @classmethod
@@ -416,9 +428,33 @@ class DFM:
         return self.to_ddm().scc()
 
     def det(self):
-        """Return the determinant of the matrix."""
-        # XXX: Use the flint det method!!!
-        return self.to_ddm().det()
+        """Return the determinant of the matrix.
+
+        Calls the ``.det()`` method of the underlying FLINT matrix.
+
+        For :ref:`ZZ` or :ref:`QQ` this calls ``fmpz_mat_det`` or
+        ``fmpq_mat_det`` respectively.
+
+        At the time of writing the implementation of ``fmpz_mat_det`` uses one
+        of several algorithms depending on the size of the matrix and bit size
+        of the entries. The algorithms used are:
+
+        - Cofactor for very small (up to 4x4) matrices.
+        - Bareiss for small (up to 25x25) matrices.
+        - Modular algorithms for larger matrices (up to 60x60) or for larger
+          matrices with large bit sizes.
+        - Modular "accelerated" for larger matrices (60x60 upwards) if the bit
+          size is smaller than the dimensions of the matrix.
+
+        The implementation of ``fmpq_mat_det`` clears denominators from each
+        row (not the whole matrix) and then calls ``fmpz_mat_det`` and divides
+        by the product of the denominators.
+        """
+        # XXX: At least the first three algorithms described above should also
+        # be implemented in the pure Python DDM and SDM classes which at the
+        # time of writng just use Bareiss for all matrices and domains.
+        # Probably in Python the thresholds would be different though.
+        return self.rep.det()
 
     def inv(self):
         """Return the inverse of the matrix."""

@@ -192,6 +192,8 @@ def test_to_XXM():
         assert A.to_sdm() == A_sdm
         if GROUND_TYPES != 'flint':
             raises(NotImplementedError, lambda: A.to_dfm())
+            assert A.to_dfm_or_ddm() == A_ddm
+
         # Add e.g. DDM.to_DM()?
         # assert A.to_DM() == A_dm
 
@@ -204,9 +206,12 @@ def test_to_XXM():
                 else:
                     A_K = A.convert_to(K)
                     if DFM._supports_domain(K):
-                        assert A_K.to_dfm() == A_dfm.convert_to(K)
+                        A_dfm_K = A_dfm.convert_to(K)
+                        assert A_K.to_dfm() == A_dfm_K
+                        assert A_K.to_dfm_or_ddm() == A_dfm_K
                     else:
                         raises(NotImplementedError, lambda: A_K.to_dfm())
+                        assert A_K.to_dfm_or_ddm() == A_ddm.convert_to(K)
 
 
 def test_DFM_domains():
@@ -307,8 +312,24 @@ def DMZ_dfm(lol):
     return _DMZ(lol, 'DFM')
 
 
+def DMQ_ddm(lol):
+    """Make a DDM from lol."""
+    return _DMQ(lol, 'DDM')
+
+
+def DMQ_sdm(lol):
+    """Make a SDM from lol."""
+    return _DMQ(lol, 'SDM')
+
+
+def DMQ_dfm(lol):
+    """Make a DFM from lol."""
+    return _DMQ(lol, 'DFM')
+
+
 DM_all = [DM_ddm, DM_sdm, DM_dfm]
 DMZ_all = [DMZ_ddm, DMZ_sdm, DMZ_dfm]
+DMQ_all = [DMQ_ddm, DMQ_sdm, DMQ_dfm]
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -709,3 +730,15 @@ def test_XXM_diagonal(DM):
 def test_XXM_is_zero_matrix(DM):
     assert DM([[0, 0, 0], [0, 0, 0]]).is_zero_matrix() is True
     assert DM([[1, 0, 0], [0, 0, 0]]).is_zero_matrix() is False
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_det_ZZ(DM):
+    assert DM([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).det() == 0
+    assert DM([[1, 2, 3], [4, 5, 6], [7, 8, 10]]).det() == -3
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_det_QQ(DM):
+    dM1 = DM([[(1,2), (2,3)], [(3,4), (4,5)]])
+    assert dM1.det() == QQ(-1,10)

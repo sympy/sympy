@@ -518,6 +518,9 @@ class SDM(dict):
         return DDM(M.to_list(), M.shape, M.domain)
 
     def to_sdm(M):
+        """
+        Convert to :py:class:`~.SDM` format (returns self).
+        """
         return M
 
     @doctest_depends_on(ground_types=['flint'])
@@ -534,8 +537,39 @@ class SDM(dict):
         >>> A.to_dfm()
         [[0, 2], [0, 0]]
 
+        See Also
+        ========
+
+        to_ddm
+        to_dfm_or_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm
         """
         return M.to_ddm().to_dfm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(M):
+        """
+        Convert to :py:class:`~.DFM` if possible, else :py:class:`~.DDM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{}}, (2, 2), QQ)
+        >>> A.to_dfm_or_ddm()
+        [[0, 2], [0, 0]]
+        >>> type(A.to_dfm_or_ddm())  # depends on the ground types
+        <class 'sympy.polys.matrices.dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm
+        to_dfm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm_or_ddm
+        """
+        return M.to_ddm().to_dfm_or_ddm()
 
     @classmethod
     def zeros(cls, shape, domain):
@@ -891,7 +925,14 @@ class SDM(dict):
         -2
 
         """
-        return A.to_ddm().det()
+        # It would be better to have a sparse implementation of det for use
+        # with very sparse matrices. Extremely sparse matrices probably just
+        # have determinant zero and we could probably detect that very quickly.
+        # In the meantime, we convert to a dense matrix and use ddm_idet.
+        #
+        # If GROUND_TYPES=flint though then we will use Flint's implementation
+        # if possible (dfm).
+        return A.to_dfm_or_ddm().det()
 
     def lu(A):
         """

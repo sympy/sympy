@@ -613,13 +613,7 @@ class DomainMatrix:
         if rep.fmt == 'dense':
             return self
 
-        rep_dense = rep.to_ddm()
-        K = rep_dense.domain
-
-        if DFM._supports_domain(K):
-            rep_dense = rep_dense.to_dfm()
-
-        return self.from_rep(rep_dense)
+        return self.from_rep(rep.to_dfm_or_ddm())
 
     def to_ddm(self):
         """
@@ -696,6 +690,42 @@ class DomainMatrix:
         DFM
         """
         return self.rep.to_dfm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(self):
+        """
+        Return a :class:`~.DFM` or :class:`~.DDM` representation of *self*.
+
+        Explanation
+        ===========
+
+        The :class:`~.DFM` representation can only be used if the ground types
+        are ``flint`` and the ground domain is supported by ``python-flint``.
+        This method will return a :class:`~.DFM` representation if possible,
+        but will return a :class:`~.DDM` representation otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> dfm = A.to_dfm_or_ddm()
+        >>> dfm
+        [[1, 0], [0, 2]]
+        >>> type(dfm)  # Depends on the ground domain and ground types
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm: Always return a :class:`~.DDM` representation.
+        to_dfm: Returns a :class:`~.DFM` representation or raise an error.
+        to_dense: Convert internally to a :class:`~.DFM` or :class:`~.DDM`
+        DFM: The :class:`~.DFM` dense FLINT matrix representation.
+        DDM: The Python :class:`~.DDM` dense domain matrix representation.
+        """
+        return self.rep.to_dfm_or_ddm()
 
     @classmethod
     def _unify_domain(cls, *matrices):

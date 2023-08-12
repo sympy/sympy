@@ -355,6 +355,21 @@ class DDM(list):
         return DDM(lol, shape, domain)
 
     def to_ddm(self):
+        """
+        Convert to a :class:`DDM`.
+
+        This just returns ``self`` but exists to parallel the corresponding
+        method in other matrix types like :class:`~.SDM`.
+
+        See Also
+        ========
+
+        to_sdm
+        to_dfm
+        to_dfm_or_ddm
+        sympy.polys.matrices.sdm.SDM.to_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_ddm
+        """
         return self
 
     def to_sdm(self):
@@ -423,9 +438,9 @@ class DDM(list):
         See Also
         ========
 
-        DFM
-        DDM
-        sympy.polys.matrices._dfm.DFM.to_ddm
+        to_dfm
+        to_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm_or_ddm
         """
         if DFM._supports_domain(self.domain):
             return self.to_dfm()
