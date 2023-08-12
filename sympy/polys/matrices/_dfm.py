@@ -30,7 +30,9 @@ from .exceptions import (
     DMDomainError,
     DMNonSquareMatrixError,
     DMNonInvertibleMatrixError,
+    DMRankError,
     DMShapeError,
+    DMValueError,
 )
 
 flint = import_module('flint')
@@ -702,7 +704,23 @@ class DFM:
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""
-        # XXX: Use the flint nullspace method!!!
+        # Code to compute nullspace using flint:
+        #
+        # V, nullity = self.rep.nullspace()
+        # V_dfm = self._new_rep(V)._extract(range(self.rows), range(nullity))
+        #
+        # XXX: That gives the nullspace but does not give us nonpivots. So we
+        # use the slower DDM method anyway. It would be better to change the
+        # signature of the nullspace method to not return nonpivots.
+        #
+        # XXX: Also python-flint exposes a nullspace method for fmpz_mat but
+        # not for fmpq_mat. This is the reverse of the situation for DDM etc
+        # which only allow nullspace over a field. The nullspace method for
+        # DDM, SDM etc should be changed to allow nullspace over ZZ as well.
+        # The DomainMatrix nullspace method does allow the domain to be a ring
+        # but does not directly call the lower-level nullspace methods and uses
+        # rref_den instead. Nullspace methods should also be added to all
+        # matrix types in python-flint.
         ddm, nonpivots = self.to_ddm().nullspace()
         return ddm.to_dfm(), nonpivots
 
@@ -716,16 +734,98 @@ class DFM:
         """Return a particular solution to the system."""
         return self.to_ddm().particular().to_dfm()
 
-    def lll(self, delta=QQ(3, 4)):
-        """Return an LLL-reduced basis for the matrix."""
-        # XXX: Use the flint lll method!!!
-        return self.to_ddm().lll(delta=delta).to_dfm()
+    def _lll(self, transform=False, delta=0.99, eta=0.51, rep='zbasis', gram='approx'):
+        """Call the fmpz_mat.lll() method but check rank to avoid segfaults."""
 
-    def lll_transform(self, delta=QQ(3, 4)):
-        """Return the LLL-reduced basis and transform matrix."""
-        # XXX: Use the flint lll_transform method!!!
-        y, T = self.to_ddm().lll_transform(delta=delta)
-        return y.to_dfm(), T.to_dfm()
+        # XXX: There are tests that pass e.g. QQ(5,6) for delta. That fails
+        # with a TypeError in flint because if QQ is fmpq then conversion with
+        # float fails. We handle that here but there are two better fixes:
+        #
+        # - Make python-flint's fmpq convert with float(x)
+        # - Change the tests because delta should just be a float.
+
+        def to_float(x):
+            if QQ.of_type(x):
+                return float(x.numerator) / float(x.denominator)
+            else:
+                return float(x)
+
+        delta = to_float(delta)
+        eta = to_float(eta)
+
+        if not 0.25 < delta < 1:
+            raise DMValueError("delta must be between 0.25 and 1")
+
+        # XXX: The flint lll method segfaults if the matrix is not full rank.
+        m, n = self.shape
+        if self.rep.rank() != m:
+            raise DMRankError("Matrix must have full row rank for Flint LLL.")
+
+        # Actually call the flint method.
+        return self.rep.lll(transform=transform, delta=delta, eta=eta, rep=rep, gram=gram)
+
+    def lll(self, delta=0.75):
+        """Compute LLL-reduced basis using FLINT.
+
+        See :meth:`lll_transform` for more information.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, QQ
+        >>> M = Matrix([[1, 2, 3], [4, 5, 6]])
+        >>> M.to_DM().to_dfm().lll()
+        [[2, 1, 0], [-1, 1, 3]]
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll
+            Higher level interface to compute LLL-reduced basis.
+        lll_transform
+            Compute LLL-reduced basis and transform matrix.
+        """
+        if self.domain != ZZ:
+            raise DMDomainError("ZZ expected, got %s" % self.domain)
+        elif self.rows > self.cols:
+            raise DMShapeError("Matrix must not have more rows than columns.")
+
+        rep = self._lll(delta=delta)
+        return self._new_rep(rep)
+
+    def lll_transform(self, delta=0.75):
+        """Compute LLL-reduced basis and transform using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, QQ
+        >>> M = Matrix([[1, 2, 3], [4, 5, 6]]).to_DM().to_dfm()
+        >>> M_lll, T = M.lll_transform()
+        >>> M_lll
+        [[2, 1, 0], [-1, 1, 3]]
+        >>> T
+        [[-2, 1], [3, -1]]
+        >>> T.matmul(M) == M_lll
+        True
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lll
+            Higher level interface to compute LLL-reduced basis.
+        lll
+            Compute LLL-reduced basis without transform matrix.
+        """
+        if self.domain != ZZ:
+            raise DMDomainError("ZZ expected, got %s" % self.domain)
+        elif self.rows > self.cols:
+            raise DMShapeError("Matrix must not have more rows than columns.")
+
+        rep, T = self._lll(transform=True, delta=delta)
+        basis = self._new_rep(rep)
+        T_dfm = self._new(T, (self.rows, self.rows), self.domain)
+        return basis, T_dfm
 
 
 # Avoid circular imports
