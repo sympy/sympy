@@ -1301,6 +1301,8 @@ def test_particular_case_1_with_adaptive_false():
     # evaluated with the same algorithm. In particular, uniform evaluation
     # is going to use np.vectorize, which correctly evaluates the following
     # mathematical function.
+    if not np:
+        skip("numpy not installed.")
 
     def do_test(a, b):
         d1 = a.get_data()
