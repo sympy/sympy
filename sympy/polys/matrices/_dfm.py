@@ -30,6 +30,7 @@ from .exceptions import (
     DMDomainError,
     DMNonSquareMatrixError,
     DMNonInvertibleMatrixError,
+    DMShapeError,
 )
 
 flint = import_module('flint')
@@ -211,7 +212,7 @@ class DFM:
             raise DMBadInputError(f"Incorrect number of elements for shape {shape}")
         except TypeError:
             raise DMBadInputError(f"Input should be a list of {domain}")
-        return cls(func(*shape, elements), shape, domain)
+        return cls(rep, shape, domain)
 
     def to_list_flat(self):
         """Convert to a flat list."""
@@ -492,9 +493,53 @@ class DFM:
         return self.rep.det()
 
     @doctest_depends_on(ground_types='flint')
+    def charpoly(self):
+        """
+        Compute the characteristic polynomial of the matrix using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> dfm = M.to_DM().to_dfm()  # need ground types = 'flint'
+        >>> dfm
+        [[1, 2], [3, 4]]
+        >>> dfm.charpoly()
+        [1, -5, -2]
+
+        Notes
+        =====
+
+        Calls the ``.charpoly()`` method of the underlying FLINT matrix.
+
+        For :ref:`ZZ` or :ref:`QQ` this calls ``fmpz_mat_charpoly`` or
+        ``fmpq_mat_charpoly`` respectively.
+
+        At the time of writing the implementation of ``fmpq_mat_charpoly``
+        clears a denominator from the whole matrix and then calls
+        ``fmpz_mat_charpoly``. The coefficients of the characteristic
+        polynomial are then multiplied by powers of the denominator.
+
+        The ``fmpz_mat_charpoly`` method uses a modular algorithm with CRT
+        reconstruction. The modular algorithm uses ``nmod_mat_charpoly`` which
+        uses Berkowitz for small matrices and non-prime moduli or otherwise
+        the Danilevsky method.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.charpoly
+            Higher level interface to compute the characteristic polynomial of
+            a matrix.
+        """
+        # FLINT polynomial coefficients are in reverse order compared to SymPy.
+        return self.rep.charpoly().coeffs()[::-1]
+
+    @doctest_depends_on(ground_types='flint')
     def inv(self):
         """
-        Compute the inverse of the matrix using FLINT.
+        Compute the inverse of a matrix using FLINT.
 
         Examples
         ========
@@ -564,59 +609,96 @@ class DFM:
             # what happens here.
             raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
-    @doctest_depends_on(ground_types='flint')
-    def charpoly(self):
-        """
-        Compute the characteristic polynomial of the matrix using FLINT.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> M = Matrix([[1, 2], [3, 4]])
-        >>> dfm = M.to_DM().to_dfm()  # need ground types = 'flint'
-        >>> dfm
-        [[1, 2], [3, 4]]
-        >>> dfm.charpoly()
-        [1, -5, -2]
-
-        Notes
-        =====
-
-        Calls the ``.charpoly()`` method of the underlying FLINT matrix.
-
-        For :ref:`ZZ` or :ref:`QQ` this calls ``fmpz_mat_charpoly`` or
-        ``fmpq_mat_charpoly`` respectively.
-
-        At the time of writing the implementation of ``fmpq_mat_charpoly``
-        clears a denominator from the whole matrix and then calls
-        ``fmpz_mat_charpoly``. The coefficients of the characteristic
-        polynomial are then multiplied by powers of the denominator.
-
-        The ``fmpz_mat_charpoly`` method uses a modular algorithm with CRT
-        reconstruction. The modular algorithm uses ``nmod_mat_charpoly`` which
-        uses Berkowitz for small matrices and non-prime moduli or otherwise
-        the Danilevsky method.
-
-        See Also
-        ========
-
-        sympy.polys.matrices.domainmatrix.DomainMatrix.charpoly
-            Higher level interface to compute the characteristic polynomial of
-            a matrix.
-        """
-        # FLINT polynomial coefficients are in reverse order compared to SymPy.
-        return self.rep.charpoly().coeffs()[::-1]
-
     def lu(self):
         """Return the LU decomposition of the matrix."""
         L, U, swaps = self.to_ddm().lu()
         return L.to_dfm(), U.to_dfm(), swaps
 
+    # XXX: The lu_solve function should be renamed to solve. Whether or not it
+    # uses an LU decomposition is an implementation detail. A method called
+    # lu_solve would make sense for a situation in which an LU decomposition is
+    # reused several times to solve iwth different rhs but that would imply a
+    # different call signature.
+    #
+    # The underlying python-flint method has an algorithm= argument so we could
+    # use that and have e.g. solve_lu and solve_modular or perhaps also a
+    # method= argument to choose between the two. Flint itself has more
+    # possible algorithms to choose from than are exposed by python-flint.
+
+    @doctest_depends_on(ground_types='flint')
     def lu_solve(self, rhs):
-        """Solve a linear system using LU decomposition."""
-        # XXX: Use the flint solve method!!!
-        return self.to_ddm().lu_solve(rhs.to_ddm()).to_dfm()
+        """
+        Solve a matrix equation using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, QQ
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> dfm = M.to_DM().to_dfm().convert_to(QQ)
+        >>> dfm
+        [[1, 2], [3, 4]]
+        >>> rhs = Matrix([1, 2]).to_DM().to_dfm().convert_to(QQ)
+        >>> dfm.lu_solve(rhs)
+        [[0], [1/2]]
+
+        Notes
+        =====
+
+        Calls the ``.solve()`` method of the underlying FLINT matrix.
+
+        For now this will raise an error if the domain is :ref:`ZZ` but will
+        use the FLINT method for :ref:`QQ`.
+
+        The FLINT methods for :ref:`ZZ` and :ref:`QQ` are ``fmpz_mat_solve``
+        and ``fmpq_mat_solve`` respectively. The ``fmpq_mat_solve`` method
+        uses one of two algorithms:
+
+        - For small matrices (<25 rows) it clears denominators between the
+          matrix and rhs and uses ``fmpz_mat_solve``.
+        - For larger matrices it uses ``fmpq_mat_solve_dixon`` which is a
+          modular approach with CRT reconstruction over :ref:`QQ`.
+
+        The ``fmpz_mat_solve`` method uses one of four algorithms:
+
+        - For very small (<= 3x3) matrices it uses a Cramer's rule.
+        - For small (<= 15x15) matrices it uses a fraction-free LU solve.
+        - Otherwise it uses either Dixon or another multimodular approach.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.lu_solve
+            Higher level interface to solve a matrix equation.
+        """
+        if not self.domain == rhs.domain:
+            raise DMDomainError("Domains must match: %s != %s" % (self.domain, rhs.domain))
+
+        # XXX: As for inv we should consider whether to return a matrix over
+        # over an associated field or attempt to find a solution in the ring.
+        # For now we follow the existing DomainMatrix convention...
+        if not self.domain.is_Field:
+            raise DMDomainError("Field expected, got %s" % self.domain)
+
+        m, n = self.shape
+        j, k = rhs.shape
+        if m != j:
+            raise DMShapeError("Matrix size mismatch: %s * %s vs %s * %s" % (m, n, j, k))
+        sol_shape = (n, k)
+
+        # XXX: The Flint solve method only handles square matrices. Probably
+        # Flint has functions that could be used to solve non-square systems
+        # but they are not exposed in python-flint yet. Alternatively we could
+        # put something here using the features that are available like rref.
+        if m != n:
+            return self.to_ddm().lu_solve(rhs.to_ddm()).to_dfm()
+
+        try:
+            sol = self.rep.solve(rhs.rep)
+        except ZeroDivisionError:
+            raise DMNonInvertibleMatrixError("Matrix det == 0; not invertible.")
+
+        return self._new(sol, sol_shape, self.domain)
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""
