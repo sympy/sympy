@@ -266,8 +266,9 @@ all built-in names and to autocomplete.  Also, see `this page
 trick for getting tab completion in the regular Python console.
 
 .. note::
-    See also `What is the best way to create symbols?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+
+   See also the :ref:`best-practices-defining-symbols` section of the
+   :doc:`best-practices` page.
 
 .. _calling-functions:
 

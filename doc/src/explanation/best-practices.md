@@ -623,22 +623,31 @@ for example, to make further simplifications possible (see
 0
 ```
 
-By making the symbol an argument, like `theta_operator(expr, z)`, these
-problems all go away.
+By making the symbol an argument to the function, like `theta_operator(expr,
+z)`, these problems all go away.
 
 (best-practices-separate-symbolic-and-numeric-code)=
 ### Separate Symbolic and Numeric Code
 
 SymPy sets itself apart from most of the rest of the libraries in the Python
-ecosystem in that it operates symbolically, whereas other libraries like NumPy
-operate numerically. These two paradigms are different enough that it's always
-best to keep them as separate as possible.
+ecosystem in that it operates symbolically, whereas other libraries, like
+NumPy, operate numerically. These two paradigms are different enough that it's
+always best to keep them as separate as possible.
 
 Importantly, SymPy is not designed to work with NumPy arrays, and conversely,
 NumPy will not work directly with SymPy objects.
 
 ```py
 >>> import numpy as np
+>>> import sympy
+>>> a = np.array([0., 1., 2.])
+>>> sympy.sin(a)
+Traceback (most recent call last):
+...
+AttributeError: 'ImmutableDenseNDimArray' object has no attribute 'as_coefficient'
+```
+
+```py
 >>> x = Symbol('x')
 >>> np.sin(x) # NumPy functions do not know how to handle SymPy expressions
 Traceback (most recent call last):
@@ -656,12 +665,12 @@ generation](codegen_prose) routines to generate code for other fast numerical
 languages such as Fortran or C.
 
 ```python
->>> # First symbolically construct the expression you are interested in
+>>> # First symbolically construct the expression you are interested in with SymPy
 >>> from sympy import diff, sin, exp, lambdify, symbols
 >>> x = symbols('x')
 >>> expr = diff(sin(x)*exp(x**2), x)
 
->>> # Then convert it to a numeric function with lambdify
+>>> # Then convert it to a numeric function with lambdify()
 >>> f = lambdify(x, expr)
 
 >>> # Now use this function with NumPy
@@ -673,14 +682,15 @@ languages such as Fortran or C.
 
 These are some antipatterns that should be generally avoided
 
-- **Using `import math`.** It is virtually never necessary to use the
+- **Do not use `import math`.** It is virtually never necessary to use the
   [standard library `math`
   module](https://docs.python.org/3/library/math.html) alongside SymPy (or
   NumPy). Every function that is in `math` is already in SymPy. SymPy can
-  compute values numerically using {term}`evalf`, more precision than `math`.
-  Or better, SymPy will by default compute things symbolically. Functions and
-  constants in `math` are floats, which are inexact. SymPy always works better
-  with exact quantities when possible. For example,
+  compute values numerically using {term}`evalf`, which provides more
+  precision and accuracy than `math`. Or better, SymPy will by default compute
+  things symbolically. Functions and constants in `math` are floats, which are
+  inexact. SymPy always works better with exact quantities when possible. For
+  example,
 
   ```py
   >>> import math
@@ -726,13 +736,18 @@ These are some antipatterns that should be generally avoided
   0.8414709848078965
   ```
 
-- **Passing SymPy expressions to a NumPy function.** You should not pass a
+  Even when using NumPy, `math` should be avoided. NumPy functions are faster
+  than their `math` equivalents, support a larger range of numerical dtypes,
+  and can operate on arrays of values, whereas `math` functions can only
+  operate on a single scalar at a time.
+
+- **Don't pass SymPy expressions to a NumPy function.** You should not pass a
   SymPy expression to a NumPy function. This includes anything in the `numpy`
   or `scipy` namespaces, as well as most functions from other Python libraries
   such as `matplotlib`. These functions are only designed to work with NumPy
   arrays with numeric values.
 
-- **Passing SymPy expressions to a lambdified function.** Similar to the
+- **Don't pass SymPy expressions to a lambdified function.** Similar to the
   previous point, you should not pass SymPy expressions to a function created
   with `lambdify`. In effect, the functions returned by `lambdify` *are* NumPy
   functions, so the situation here is exactly the same. It is possible that in
@@ -741,10 +756,10 @@ These are some antipatterns that should be generally avoided
   it works" section of the `lambdify()` documentation](lambdify-how-it-works)
   for more details on why this happens.
 
-- **Storing SymPy expressions in a NumPy array.** While it is technically
-  possible to store SymPy expressions inside of a NumPy array, doing so
-  usually represents a mistake. A sign that this is happening is if the
-  `dtype` of the NumPy array is `object` (instead of a numeric dtype like
+- **Avoid storing SymPy expressions in a NumPy array.** While it is
+  technically possible to store SymPy expressions inside of a NumPy array,
+  doing so usually represents a mistake. A sign that this is happening is if
+  the `dtype` of the NumPy array is `object` (instead of a numeric dtype like
   `float64` or `int64`).
 
   Just as one should avoid using NumPy when doing symbolic calculations with
