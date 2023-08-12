@@ -63,15 +63,16 @@ Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
 
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Lt, Gt, Le, Ge, Eq
-from sympy.core.symbol import Dummy
+from sympy.core.relational import Le, Ge, Eq
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix, zeros
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
+
 
 class UnboundedLPError(Exception):
     """
@@ -88,6 +89,7 @@ class UnboundedLPError(Exception):
 
     There's no upper limit that 2x can take.
     """
+
     pass
 
 
@@ -108,6 +110,7 @@ class InfeasibleLPError(Exception):
 
     No x can satisfy those constraints.
     """
+
     pass
 
 
@@ -133,7 +136,7 @@ def _pivot(M, i, j):
     [ 1/d,        e/d,        f/d],
     [-g/d,  h - e*g/d,  i - f*g/d]])
     """
-    Mi, Mj, Mij = M[i,:], M[:,j], M[i,j]
+    Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
     if Mij == 0:
         raise ZeroDivisionError(
             "Tried to pivot about zero-valued entry.")
@@ -285,31 +288,32 @@ def _simplex(A, B, C, D=None, dual=False):
         M = Matrix([[A, B], [C, D]])
     else:
         if A or B:
-            raise ValueError('must give A and B')
+            raise ValueError("must give A and B")
         # no constraints given
         M = Matrix([[C, D]])
     n = M.cols - 1
     m = M.rows - 1
 
-    # XXX can this be eliminated and just let a TypeError
-    # rise *if* there is a problem instead of if there *might*
-    # be a problem
     if not all(i.is_Float or i.is_Rational for i in M):
         # with literal Float and Rational we are guaranteed the
         # ability of determining whether an expression is 0 or not
         raise TypeError(filldedent("""
-            Only rationals and floats are allowed in the Simplex method.
-            """))
+            Only rationals and floats are allowed.
+            """
+            )
+        )
 
     # x variables have priority over y variables during Bland's rule
     # since False < True
     X = [(False, j) for j in range(n)]
-    Y = [(True, i)  for i in range(m)]
+    Y = [(True, i) for i in range(m)]
 
     # Phase 1: find a feasible solution or determine none exist
-    # keep track of last pivot row and column
-    # How big of loop through previous pivots can a system have? XXX
+
+    ## keep track of last pivot row and column: how big of a loop
+    ## through previous pivots can a system have? XXX
     last = None
+
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -322,7 +326,7 @@ def _simplex(A, B, C, D=None, dual=False):
             if B[k] < 0:
                 break  # use current value of k below
         else:
-            pass  # XXX is it an error if none was found?
+            pass  # error will raise below
 
         # Choose pivot column, c
         piv_cols = [_ for _ in range(A.cols) if A[k, _] < 0]
@@ -357,7 +361,7 @@ def _simplex(A, B, C, D=None, dual=False):
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
-        _, c = min((X[i], i) for i in piv_cols) # Bland's rule
+        _, c = min((X[i], i) for i in piv_cols)  # Bland's rule
 
         # Choose a pivot row, r
         piv_rows = [_ for _ in range(m) if A[_, c] > 0]
@@ -370,8 +374,8 @@ def _simplex(A, B, C, D=None, dual=False):
         M = _pivot(M, r, c)
         X[c], Y[r] = Y[r], X[c]
 
-    argmax = [None]*n
-    argmin_dual = [None]*m
+    argmax = [None] * n
+    argmin_dual = [None] * m
 
     for i, (v, n) in enumerate(X):
         if v == False:
@@ -389,6 +393,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
 
 ## routines that use _simplex or support those that do
+
 
 def _abcd(M, list=False):
     """return parts of M as matrices or lists
@@ -423,11 +428,13 @@ def _abcd(M, list=False):
     >>> L = a, b, c, d = _abcd(m, list=True); L
     ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
     """
+
     def aslist(i):
         l = i.tolist()
         if len(l[0]) == 1:  # col vector
             return [i[0] for i in l]
         return l
+
     m = M[:-1, :-1], M[:-1, -1], M[-1, :-1], M[-1:, -1:]
     if not list:
         return m
@@ -539,16 +546,17 @@ def _primal_dual(M, factor=True):
     """
     if not M:
         return (None, []), (None, [])
-    if not hasattr(M, 'shape'):
+    if not hasattr(M, "shape"):
         if len(M) not in (3, 4):
-            raise ValueError('expecting Matrix or 3 or 4 lists')
+            raise ValueError("expecting Matrix or 3 or 4 lists")
         M = _m(*M)
     m, n = [i - 1 for i in M.shape]
     A, b, c, d = _abcd(M)
     d = d[0]
     _ = lambda x: numbered_symbols(x, start=1)
-    x = Matrix([i for i, j in zip(_('x'), range(n))])
-    yT = Matrix([i for i, j in zip(_('y'), range(m))]).T
+    x = Matrix([i for i, j in zip(_("x"), range(n))])
+    yT = Matrix([i for i, j in zip(_("y"), range(m))]).T
+
     def ineq(L, r, op):
         rv = []
         for r in (op(i, j) for i, j in zip(L, r)):
@@ -561,13 +569,14 @@ def _primal_dual(M, factor=True):
                 if f.lhs.is_Mul and f.rhs % f.lhs.args[0] == 0:
                     assert len(f.lhs.args) == 2, f.lhs
                     k = f.lhs.args[0]
-                    r = r.func(sign(k)*f.lhs.args[1], f.rhs//abs(k))
+                    r = r.func(sign(k) * f.lhs.args[1], f.rhs // abs(k))
             rv.append(r)
         return rv
+
     eq = lambda x, d: x[0] - d if x else -d
-    F = eq(c*x, d)
-    f = eq(yT*b, d)
-    return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, c, Le))
+    F = eq(c * x, d)
+    f = eq(yT * b, d)
+    return (F, ineq(A * x, b, Ge)), (f, ineq(yT * A, c, Le))
 
 
 def _rel_as_nonpos(constr, syms):
@@ -591,7 +600,6 @@ def _rel_as_nonpos(constr, syms):
     Examples
     ========
 
-    >>> from sympy import oo
     >>> from sympy.solvers.simplex import _rel_as_nonpos
     >>> from sympy.abc import x, y
     >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
@@ -606,7 +614,7 @@ def _rel_as_nonpos(constr, syms):
     r = {}  # replacements to handle change of variables
     np = []  # nonpositive expressions
     aux = []  # auxilliary symbols added
-    ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
+    ui = numbered_symbols("z", start=1, cls=Dummy)  # auxilliary symbols
     univariate = {}  # {x: interval} for univariate constraints
     unbound = []  # symbols designated as unbound
     syms = set(syms)  # the expected syms of the system
@@ -617,15 +625,15 @@ def _rel_as_nonpos(constr, syms):
             continue  # ignore
         if i == False:
             return  # no solution
-        i = i.canonical  # +/-oo, if present will be on the rhs
-        if i.rhs.is_infinite:
-            raise ValueError('only finite bounds are permitted')
+        if i.has(S.Infinity, S.NegativeInfinity):
+            raise ValueError("only finite bounds are permitted")
         if isinstance(i, (Le, Ge)):
             i = i.lts - i.gts
             freei = i.free_symbols
             if freei - syms:
                 raise ValueError(
-                    'unexpected symbol(s) in constraint: %s' % (freei - syms))
+                    "unexpected symbol(s) in constraint: %s" % (freei - syms)
+                )
             if len(freei) > 1:
                 np.append(i)
             elif freei:
@@ -640,7 +648,7 @@ def _rel_as_nonpos(constr, syms):
             elif i:
                 return False
         else:
-            raise TypeError('only Ge or Le is allowed, not %s' % i)
+            raise TypeError("only Ge or Le is allowed, not %s" % i)
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
@@ -769,16 +777,16 @@ def _lp(min_max, f, constr):
     A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
     how = str(min_max).lower()
-    if 'max' in how:
+    if "max" in how:
         # _simplex minimizes for Ax <= B so we
         # have to change the sign of the function
         # and negate the optimal value returned
         _o, p, d = _simplex(A, B, -C, -D)
         o = -_o
-    elif 'min' in how:
+    elif "min" in how:
         o, p, d = _simplex(A, B, C, D)
     else:
-        raise ValueError('expecting min or max')
+        raise ValueError("expecting min or max")
 
     # restore original variables and remove aux from p
     p = dict(zip(xx, p))
@@ -807,17 +815,17 @@ def lpmin(f, constr):
     >>> from sympy.solvers.simplex import lpmin
     >>> from sympy import Eq
     >>> from sympy.abc import x, y
-    >>> lpmin(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
+    >>> lpmin(x, [2*x - 3*y >= -1, Eq(x + 3*y, 2), x <= 2*y])
     (1/3, {x: 1/3, y: 5/9})
 
     Negative values for variables are permitted unless explicitly
-    exluding them, so minimizing ``x`` for ``x <= 3`` is an
+    exluding, so minimizing ``x`` for ``x <= 3`` is an
     unbounded problem while the following has a bounded solution:
 
     >>> lpmin(x, [x >= 0, x <= 3])
     (0, {x: 0})
 
-     Without indicating that ``x`` is nonnegative, there
+    Without indicating that ``x`` is nonnegative, there
     is no minimum for this objective:
 
     >>> lpmin(x, [x <= 3])
@@ -848,11 +856,15 @@ def lpmax(f, constr):
     >>> lpmax(x, [2*x - 3*y >= -1, Eq(x+ 3*y,2), x <= 2*y])
     (4/5, {x: 4/5, y: 2/5})
 
-    Univariate conditions will allow negative values unless a
-    constraint like ``x >= 0`` were included:
+    Negative values for variables are permitted unless explicitly
+    exluding:
 
     >>> lpmax(x, [x <= -1])
     (-1, {x: -1})
+
+    If a non-negative constraint is added for x, there is no
+    possible solution:
+
     >>> lpmax(x, [x <= -1, x >= 0])
     Traceback (most recent call last):
     ...
@@ -870,28 +882,31 @@ def _handle_bounds(bounds):
     # inequalities
 
     unbound = []
-    R = [0]*len(bounds)  # a (growing) row of zeros
+    R = [0] * len(bounds)  # a (growing) row of zeros
+
     def n():
         return len(R) - 1
+
     def Arow(inc=1):
-        R.extend([0]*inc)
+        R.extend([0] * inc)
         return R[:]
+
     row = []
     for x, (a, b) in enumerate(bounds):
         if a is None and b is None:
             unbound.append(x)
         elif a is None:
-            #r[x] = b - u
+            # r[x] = b - u
             A = Arow()
             A[x] = 1
             A[n()] = 1
             B = [b]
-            row.append((A,B))
-            A = [0]*len(A)
+            row.append((A, B))
+            A = [0] * len(A)
             A[x] = -1
             A[n()] = -1
             B = [-b]
-            row.append((A,B))
+            row.append((A, B))
         elif b is None:
             if a:
                 # r[x] = a + u
@@ -899,12 +914,12 @@ def _handle_bounds(bounds):
                 A[x] = 1
                 A[n()] = -1
                 B = [a]
-                row.append((A,B))
-                A = [0]*len(A)
+                row.append((A, B))
+                A = [0] * len(A)
                 A[x] = -1
                 A[n()] = 1
                 B = [-a]
-                row.append((A,B))
+                row.append((A, B))
             else:
                 # standard nonnegative relationship
                 pass
@@ -914,18 +929,18 @@ def _handle_bounds(bounds):
             A[x] = 1
             A[n()] = -1
             B = [a]
-            row.append((A,B))
-            A = [0]*len(A)
+            row.append((A, B))
+            A = [0] * len(A)
             A[x] = -1
             A[n()] = 1
             B = [-a]
-            row.append((A,B))
+            row.append((A, B))
             # u <= b - a
-            A = [0]*len(A)
+            A = [0] * len(A)
             A[x] = 0
             A[n()] = 1
             B = [b - a]
-            row.append((A,B))
+            row.append((A, B))
 
     # make change of variables for unbound variables
     for x in unbound:
@@ -934,13 +949,13 @@ def _handle_bounds(bounds):
         B = [0]
         A[x] = 1
         A[n()] = 1
-        A[n()-1] = -1
-        row.append((A,B))
-        A = [0]*len(A)
+        A[n() - 1] = -1
+        row.append((A, B))
+        A = [0] * len(A)
         A[x] = -1
         A[n()] = -1
-        A[n()-1] = 1
-        row.append((A,B))
+        A[n() - 1] = 1
+        row.append((A, B))
 
     pad = len(R) - len(row[-1])
     return Matrix([i[0]+[0]*pad for i in row]
@@ -995,12 +1010,12 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if C.rows != 1 and C.cols == 1:
         C = C.T
     if C.rows != 1:
-        raise ValueError('C must be a single row.')
+        raise ValueError("C must be a single row.")
 
     ## the inequalities
     if not A:
         if b:
-            raise ValueError('A and b must both be given')
+            raise ValueError("A and b must both be given")
         # the governing equations will be simple constraints
         # on variables
         A, b = zeros(0, C.cols), zeros(C.cols, 1)
@@ -1008,12 +1023,12 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         A, b = [Matrix(i) for i in (A, b)]
 
     if A.cols != C.cols:
-        raise ValueError('number of columns in A and C must match')
+        raise ValueError("number of columns in A and C must match")
 
     ## the equalities
     if A_eq is None:
         if not b_eq is None:
-            raise ValueError('A_eq and b_eq must both be given')
+            raise ValueError("A_eq and b_eq must both be given")
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
         # if x == y then x <= y and x >= y (-x <= -y)
@@ -1025,7 +1040,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     if not (bounds is None or bounds == {} or bounds == (0, None)):
         ## the bounds are interpreted
         if type(bounds) is tuple and len(bounds) == 2:
-            bounds = [bounds]*A.cols
+            bounds = [bounds] * A.cols
         elif len(bounds) == A.cols and all(
                 type(i) is tuple and len(i) == 2 for i in bounds):
             pass # individual bounds
@@ -1034,16 +1049,16 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
                 for i in bounds.values()):
             # sparse bounds
             db = bounds
-            bounds = [(0, None)]*A.cols
+            bounds = [(0, None)] * A.cols
             while db:
                 i, j = db.popitem()
                 bounds[i] = j  # IndexError if out-of-bounds indices
         else:
-            raise ValueError('unexpected bounds %s' % bounds)
+            raise ValueError("unexpected bounds %s" % bounds)
         A_, b_ = _handle_bounds(bounds)
         aux = A_.cols - A.cols
         if A:
-            A = Matrix([[A, zeros(A.rows, aux)],[A_]])
+            A = Matrix([[A, zeros(A.rows, aux)], [A_]])
             b = b.col_join(b_)
         else:
             A = A_
@@ -1053,4 +1068,4 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
         aux = -A.cols  # set so -aux will give all cols below
 
     o, p, d = _simplex(A, b, C)
-    return o, p[:-aux]  # don't include aux variable values
+    return o, p[:-aux]  # don't include aux values
