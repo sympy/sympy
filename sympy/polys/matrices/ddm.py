@@ -842,6 +842,8 @@ class DDM(list):
         m, n = a.shape
         m2, o = b.shape
         a._check(a, 'lu_solve', b, m, m2)
+        if not a.domain.is_Field:
+            raise DMDomainError("lu_solve requires a field")
 
         L, U, swaps = a.lu()
         x = a.zeros((n, o), a.domain)
