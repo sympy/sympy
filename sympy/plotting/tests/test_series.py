@@ -16,6 +16,9 @@ np = import_module('numpy')
 
 def test_adaptive():
     # verify that adaptive-related keywords produces the expected results
+    if not np:
+        skip("numpy not installed.")
+
     x, y = symbols("x, y")
 
     s1 = LineOver1DRangeSeries(sin(x), (x, -10, 10), "", adaptive=True,
@@ -143,6 +146,9 @@ def test_detect_poles():
 def test_number_discretization_points():
     # verify that the different ways to set the number of discretization
     # points are consistent with each other.
+    if not np:
+        skip("numpy not installed.")
+
     x, y, z = symbols("x:z")
 
     for pt in [LineOver1DRangeSeries, Parametric2DLineSeries,
@@ -498,6 +504,9 @@ def test_is_filled_2d():
 
 
 def test_steps():
+    if not np:
+        skip("numpy not installed.")
+
     x, u = symbols("x, u")
 
     def do_test(s1, s2):
