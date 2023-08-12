@@ -772,7 +772,7 @@ class DFM:
         Examples
         ========
 
-        >>> from sympy import Matrix, QQ
+        >>> from sympy import Matrix
         >>> M = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> M.to_DM().to_dfm().lll()
         [[2, 1, 0], [-1, 1, 3]]
@@ -799,7 +799,7 @@ class DFM:
         Examples
         ========
 
-        >>> from sympy import Matrix, QQ
+        >>> from sympy import Matrix
         >>> M = Matrix([[1, 2, 3], [4, 5, 6]]).to_DM().to_dfm()
         >>> M_lll, T = M.lll_transform()
         >>> M_lll

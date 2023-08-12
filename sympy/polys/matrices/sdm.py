@@ -15,7 +15,6 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
-from .lll import ddm_lll, ddm_lll_transform
 
 
 class SDM(dict):
@@ -1244,8 +1243,8 @@ class SDM(dict):
         """
         Returns the LLL-reduced basis and transformation matrix.
         """
-        reduced, transform = ddm_lll_transform(A.to_ddm(), delta=delta)
-        return A.from_ddm(reduced), A.from_ddm(transform)
+        reduced, transform = A.to_dfm_or_ddm().lll_transform(delta=delta)
+        return reduced.to_sdm(), transform.to_sdm()
 
 
 def binop_dict(A, B, fab, fa, fb):
