@@ -557,10 +557,49 @@ class DFM:
             # what happens here.
             raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
+    @doctest_depends_on(ground_types='flint')
     def charpoly(self):
-        """Return the characteristic polynomial of the matrix."""
-        # XXX: Use the flint charpoly method!!!
-        return self.to_ddm().charpoly()
+        """
+        Compute the characteristic polynomial of the matrix using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> dfm = M.to_DM().to_dfm()  # need ground types = 'flint'
+        >>> dfm
+        [[1, 2], [3, 4]]
+        >>> dfm.charpoly()
+        [1, -5, -2]
+
+        Notes
+        =====
+
+        Calls the ``.charpoly()`` method of the underlying FLINT matrix.
+
+        For :ref:`ZZ` or :ref:`QQ` this calls ``fmpz_mat_charpoly`` or
+        ``fmpq_mat_charpoly`` respectively.
+
+        At the time of writing the implementation of ``fmpq_mat_charpoly``
+        clears a denominator from the whole matrix and then calls
+        ``fmpz_mat_charpoly``. The coefficients of the characteristic
+        polynomial are then multiplied by powers of the denominator.
+
+        The ``fmpz_mat_charpoly`` method uses a modular algorithm with CRT
+        reconstruction. The modular algorithm uses ``nmod_mat_charpoly`` which
+        uses Berkowitz for small matrices and non-prime moduli or otherwise
+        the Danilevsky method.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.charpoly
+            Higher level interface to compute the characteristic polynomial of
+            a matrix.
+        """
+        # FLINT polynomial coefficients are in reverse order compared to SymPy.
+        return self.rep.charpoly().coeffs()[::-1]
 
     def lu(self):
         """Return the LU decomposition of the matrix."""
