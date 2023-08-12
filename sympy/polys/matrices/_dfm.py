@@ -204,11 +204,18 @@ class DFM:
     @classmethod
     def from_list_flat(cls, elements, shape, domain):
         """Inverse of :meth:`to_list_flat`."""
-        return DDM.from_list_flat(elements, shape, domain).to_dfm()
+        func = cls._get_flint_func(domain)
+        try:
+            rep = func(*shape, elements)
+        except ValueError:
+            raise DMBadInputError(f"Incorrect number of elements for shape {shape}")
+        except TypeError:
+            raise DMBadInputError(f"Input should be a list of {domain}")
+        return cls(func(*shape, elements), shape, domain)
 
     def to_list_flat(self):
         """Convert to a flat list."""
-        return self.to_ddm().to_list_flat()
+        return self.rep.entries()
 
     def to_flat_nz(self):
         """Convert to a flat list of non-zeros."""
