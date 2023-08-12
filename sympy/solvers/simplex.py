@@ -1,18 +1,64 @@
 """Tools for optimizing a linear function for a given simplex.
 
-The minimization of a linear objective, ``f = c*x - d``, with constraints
-``A*x >= b`` or b) the maximization of ``f`` with constraints ``A*x <= b``
-can be solved with calls to `lpmin` or `lpmax`, in matrix form or
-in symbolic form (a function and a list of constraints).
+For the linear objective function ``f`` with linear constraints
+expressed using `Le`, `Ge` or `Eq` can be found with ``lpmin`` or
+``lpmax``. The symbols are **unbounded** unless specifically
+constrained.
 
-The primal and dual corresponding to a given matrix for the
-standard minimization can be generated with `_primal_dual`.
+As an alternative, the matrices describing the objective and the
+constraints, and an optional list of bounds can be passed to
+``linprog`` which will solve for the minimization of ``C*x``
+under constraints ``A*x <= b`` and/or ``Aeq*x = beq``, and
+individual bounds for variables given as ``(lo, hi)``. The values
+returned are **nonnegative** unless bounds are provided that
+indicate otherwise.
 
-Constraints that are univariate will affect the range of values
-returned by the optimization, e.g. ``x <= 3`` will permit negative
-values of x unless there is a corresponding ``x >= 0`` condition.
-If there are no univariate conditions, only nonnegative
-solutions will be found.
+Errors that might be raised are UnboundedLPError when there is no
+finite solution for the system or InfeasibleLPError when the
+constraints represent impossible conditions (i.e. a non-existant
+ simplex).
+
+Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
+
+    >>> from sympy.solvers.simplex import lpmin, linprog
+    >>> from sympy.abc import x
+
+    The function and a list with the constraint is passed directly
+    to `lpmin`:
+
+    >>> lpmin(x, [x >= 1])
+    (1, {x: 1})
+
+    For `linprog` the matrix for the objective is `[1]` and the
+    uivariate constraint can be passed as a bound with None acting
+    as infinity:
+
+    >>> linprog([1], bounds=(1, None))
+    (1, [1])
+
+    Or the matrices, corresponding to ``x >= 1`` expressed as
+    ``-x <= -1`` as required by the routine, can be passed:
+
+    >>> linprog([1], [-1], [-1])
+    (1, [1])
+
+    If there is no limit for the objective, an error is raised.
+    In this case there is a valid region of interest (simplex)
+    but no limit to how small ``x`` can be:
+
+    >>> lpmin(x, [])
+    Traceback (most recent call last):
+    ...
+    sympy.solvers.simplex.UnboundedLPError:
+    Objective function can assume arbitrarily large values!
+
+    An error is raised if there is no possible solution:
+
+    >>> lpmin(x,[x<=1,x>=2])
+    Traceback (most recent call last):
+    ...
+    sympy.solvers.simplex.InfeasibleLPError:
+    Inconsistent/False constraint
 """
 
 from sympy.core import sympify
@@ -524,20 +570,23 @@ def _primal_dual(M, factor=True):
     return (F, ineq(A*x, b, Ge)), (f, ineq(yT*A, c, Le))
 
 
-def _rel_as_nonpos(constr):
-    """return a (np, d, aux) where np is a list of nonpositive
-    expressions that represent the given constraints (possibly rewritten
-    in terms of auxilliary variables) expressible with nonnegative
-    symbols, and d is a dictionary mapping a given symbols to an
-    expression with an auxilliary variable. In some cases a symbol
-    will be used as part of the change of variables, e.g. x: x - z1
-    instead of x: z1 - z2.
+def _rel_as_nonpos(constr, syms):
+    """return `(np, d, aux)` where `np` is a list of nonpositive
+    expressions that represent the given constraints (possibly
+    rewritten in terms of auxilliary variables) expressible with
+    nonnegative symbols, and `d` is a dictionary mapping a given
+    symbols to an expression with an auxilliary variable. In some
+    cases a symbol will be used as part of the change of variables,
+    e.g. x: x - z1 instead of x: z1 - z2.
 
-    If any constraint is False/empty, return None. Any constraint
-    involving a relationship with oo will create unbounded symbols
-    for all symbols present in the expression, e.g. ``x + y < oo``
-    will allow ``x`` and ``y`` to take on any value. (This is the
-    only type relationship which can be expressed as strict.)
+    If any constraint is False/empty, return None. All variables in
+    ``constr`` are assumed to be unbounded unless explicitly indicated
+    otherwise with a univariate constraint, e.g. ``x >= 0`` will
+    restrict ``x`` to nonnegative values.
+
+    The ``syms`` must be included so all symbols can be given an
+    unbounded assumption if they are not otherwise bound with
+    univariate conditions like ``x <= 3``.
 
     Examples
     ========
@@ -545,15 +594,13 @@ def _rel_as_nonpos(constr):
     >>> from sympy import oo
     >>> from sympy.solvers.simplex import _rel_as_nonpos
     >>> from sympy.abc import x, y
-    >>> _rel_as_nonpos([x >= y])
+    >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
     ([-x + y], {}, [])
-    >>> _rel_as_nonpos([x > -oo])
-    ([], {x: _z1 - x}, [_z1])
-    >>> _rel_as_nonpos([x >= 3, x <= 5])
+    >>> _rel_as_nonpos([x >= 3, x <= 5], [x])
     ([_z1 - 2], {x: _z1 + 3}, [_z1])
-    >>> _rel_as_nonpos([x <= 5])
+    >>> _rel_as_nonpos([x <= 5], [x])
     ([], {x: 5 - _z1}, [_z1])
-    >>> _rel_as_nonpos([x >= 1])
+    >>> _rel_as_nonpos([x >= 1], [x])
     ([], {x: _z1 + 1}, [_z1])
     """
     r = {}  # replacements to handle change of variables
@@ -561,7 +608,8 @@ def _rel_as_nonpos(constr):
     aux = []  # auxilliary symbols added
     ui = numbered_symbols('z', start=1, cls=Dummy) # auxilliary symbols
     univariate = {}  # {x: interval} for univariate constraints
-    unbound = set()  # symbols designated as unbound
+    unbound = []  # symbols designated as unbound
+    syms = set(syms)  # the expected syms of the system
 
     # separate out univariates
     for i in constr:
@@ -570,15 +618,14 @@ def _rel_as_nonpos(constr):
         if i == False:
             return  # no solution
         i = i.canonical  # +/-oo, if present will be on the rhs
-        if isinstance(i, (Le, Ge, Lt, Gt)) and i.rhs.is_infinite:
-            if isinstance(i, (Lt, Le)) and i.rhs is S.NegativeInfinity:
-                return False
-            if isinstance(i, (Gt, Ge)) and i.rhs is S.Infinity:
-                return False
-            unbound.update(i.lhs.free_symbols) # x < oo, x > -oo
-        elif isinstance(i, (Le, Ge)):
+        if i.rhs.is_infinite:
+            raise ValueError('only finite bounds are permitted')
+        if isinstance(i, (Le, Ge)):
             i = i.lts - i.gts
             freei = i.free_symbols
+            if freei - syms:
+                raise ValueError(
+                    'unexpected symbol(s) in constraint: %s' % (freei - syms))
             if len(freei) > 1:
                 np.append(i)
             elif freei:
@@ -597,14 +644,15 @@ def _rel_as_nonpos(constr):
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
-    for x in univariate:
-        i = univariate[x]
+    for x in syms:
+        i = univariate.get(x, True)
         if not i:
             return None  # no solution possible
-        a, b = i.inf, i.sup
-        if a.is_infinite and b.is_infinite:
+        if i == True:
             unbound.append(x)
-        elif a.is_infinite:
+            continue
+        a, b = i.inf, i.sup
+        if a.is_infinite:
             u = next(ui)
             r[x] = b - u
             aux.append(u)
@@ -661,7 +709,7 @@ def _lp_matrices(objective, constraints):
             np.append(-np[i].lhs <= 0)
 
     # convert constraints to nonpositive expressions
-    _ = _rel_as_nonpos(np)
+    _ = _rel_as_nonpos(np, syms)
     if _ is None:
         raise InfeasibleLPError(filldedent("""
             Inconsistent/False constraint"""))
@@ -680,10 +728,7 @@ def _lp_matrices(objective, constraints):
 
 def _lp(min_max, f, constr):
     """Return the optimization (min or max) of ``f`` with the given
-    constraints. Unless constrained, variables will assume only
-    nonnegative values in the solution. A constraint like ``x <= 2``
-    will permit ``x`` to have values in range ``[-oo, 2]`` while
-    ``x < oo`` will allow it to have any real value.
+    constraints. All variables are unbounded unless constrained.
 
     If `min_max` is 'max' then the results corresponding to the
     maximization of ``f`` will be returned, else the minimization.
@@ -697,6 +742,7 @@ def _lp(min_max, f, constr):
     >>> from sympy.abc import x, y, z
     >>> f = x + y - 2*z
     >>> c = [7*x + 4*y - 7*z <= 3, 3*x - y + 10*z <= 6]
+    >>> c += [i >= 0 for i in (x, y, z)]
     >>> lp(min, f, c)
     (-6/5, {x: 0, y: 0, z: 3/5})
 
@@ -715,9 +761,11 @@ def _lp(min_max, f, constr):
     All symbols are reported, even if they are not in the objective
     function:
 
-    >>> lp(min, x, [y + x >= 3])
+    >>> lp(min, x, [y + x >= 3, x >= 0])
     (0, {x: 0, y: 3})
     """
+    # get the matrix components for the system expressed
+    # in terms of only nonnegative variables
     A, B, C, D, r, xx, aux = _lp_matrices(f, constr)
 
     how = str(min_max).lower()
@@ -751,11 +799,7 @@ def lpmin(f, constr):
     """return minimum of linear equation ``f`` under
     linear constraints expressed using Ge, Le or Eq.
 
-    All variables will take on nonnegative values unless
-    a univariate constraint indicates other ranges for
-    a symbol, e.g, ``x <= 3`` will allow for negative
-    values of x, while a second constraint of ``x >= 2``
-    will constrain ``x`` to the interval ``[2, 3]``.
+    All variables are unbounded unless constrained.
 
     Examples
     ========
@@ -767,7 +811,8 @@ def lpmin(f, constr):
     (1/3, {x: 1/3, y: 5/9})
 
     Negative values for variables are permitted unless explicitly
-    exluding them.
+    exluding them, so minimizing ``x`` for ``x <= 3`` is an
+    unbounded problem while the following has a bounded solution:
 
     >>> lpmin(x, [x >= 0, x <= 3])
     (0, {x: 0})
@@ -792,11 +837,7 @@ def lpmax(f, constr):
     """return maximum of linear equation ``f`` under
     linear constraints expressed using Ge, Le or Eq.
 
-    All variables will take on nonnegative values unless
-    a univariate constraint indicates other ranges for
-    a symbol, e.g, ``x <= 3`` will allow for negative
-    values of x, while a second constraint of ``x >= 2``
-    will constrain ``x`` to the interval ``[2, 3]``.
+    All variables are unbounded unless constrained.
 
     Examples
     ========
