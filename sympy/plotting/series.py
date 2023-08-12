@@ -2130,18 +2130,43 @@ class ImplicitSeries(BaseSeries):
 
     def __init__(self, expr, var_start_end_x, var_start_end_y, label="", **kwargs):
         super().__init__(**kwargs)
+        self.adaptive = kwargs.get("adaptive", False)
+        self.expr = expr
+        self._label = str(expr) if label is None else label
+        self._latex_label = latex(expr) if label is None else label
+        self.ranges = [var_start_end_x, var_start_end_y]
+        self.var_x, self.start_x, self.end_x = self.ranges[0]
+        self.var_y, self.start_y, self.end_y = self.ranges[1]
+        self._color = kwargs.get("color", kwargs.get("line_color", None))
+
+        if self.is_interactive and self.adaptive:
+            raise NotImplementedError("Interactive plot with `adaptive=True` "
+                "is not supported.")
+
+        # Check whether the depth is greater than 4 or less than 0.
+        depth = kwargs.get("depth", 0)
+        if depth > 4:
+            depth = 4
+        elif depth < 0:
+            depth = 0
+        self.depth = 4 + depth
+        self._post_init()
+
+    @property
+    def expr(self):
+        if self.adaptive:
+            return self._adaptive_expr
+        return self._non_adaptive_expr
+
+    @expr.setter
+    def expr(self, expr):
         self._block_lambda_functions(expr)
         # these are needed for adaptive evaluation
         expr, has_equality = self._has_equality(sympify(expr))
         self._adaptive_expr = expr
         self.has_equality = has_equality
-        self.ranges = [var_start_end_x, var_start_end_y]
-        self.var_x, self.start_x, self.end_x = self.ranges[0]
-        self.var_y, self.start_y, self.end_y = self.ranges[1]
-        self._label = str(expr) if label is None else label
-        self._latex_label = latex(expr) if label is None else label
-        self.adaptive = kwargs.get("adaptive", False)
-        self._color = kwargs.get("color", kwargs.get("line_color", None))
+        self._label = str(expr)
+        self._latex_label = latex(expr)
 
         if isinstance(expr, (BooleanFunction, Ne)) and (not self.adaptive):
             self.adaptive = True
@@ -2163,25 +2188,6 @@ class ImplicitSeries(BaseSeries):
             self._non_adaptive_expr = expr
             self._is_equality = is_equality
 
-        if self.is_interactive and self.adaptive:
-            raise NotImplementedError("Interactive plot with `adaptive=True` "
-                "is not supported.")
-
-        # Check whether the depth is greater than 4 or less than 0.
-        depth = kwargs.get("depth", 0)
-        if depth > 4:
-            depth = 4
-        elif depth < 0:
-            depth = 0
-        self.depth = 4 + depth
-        self._post_init()
-
-    @property
-    def expr(self):
-        if self.adaptive:
-            return self._adaptive_expr
-        return self._non_adaptive_expr
-
     @property
     def line_color(self):
         return self._color
@@ -2189,6 +2195,8 @@ class ImplicitSeries(BaseSeries):
     @line_color.setter
     def line_color(self, v):
         self._color = v
+
+    color = line_color
 
     def _has_equality(self, expr):
         # Represents whether the expression contains an Equality, GreaterThan
