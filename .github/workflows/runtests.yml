@@ -202,8 +202,8 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml                              \
-                         'antlr4-python3-runtime==4.11.*'                     \
+                         wurlitzer autowrap lxml lark                         \
+                         'antlr4-python3-runtime==4.11.*'
                          #
 
       # Not available in pypy or cpython 3.11 (yet).
