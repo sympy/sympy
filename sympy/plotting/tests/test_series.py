@@ -1400,13 +1400,13 @@ def test_complex_range_line_plot_1():
             test_stacklevel=False,
         ):
         data1 = s1.get_data()
-        data2 = s2.get_data()
-        data3 = s3.get_data()
+    data2 = s2.get_data()
+    data3 = s3.get_data()
 
-        assert not np.isnan(data1[1]).any()
-        assert not np.isnan(data2[1]).any()
-        assert not np.isnan(data3[1]).any()
-        assert np.allclose(data2[0], data3[0]) and np.allclose(data2[1], data3[1])
+    assert not np.isnan(data1[1]).any()
+    assert not np.isnan(data2[1]).any()
+    assert not np.isnan(data3[1]).any()
+    assert np.allclose(data2[0], data3[0]) and np.allclose(data2[1], data3[1])
 
 
 @XFAIL
