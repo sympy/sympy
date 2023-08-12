@@ -335,7 +335,7 @@ def test_DDM_inv():
     raises(DMShapeError, lambda: A.inv())
 
     A = DDM([[ZZ(2)]], (1, 1), ZZ)
-    raises(ValueError, lambda: A.inv())
+    raises(DMDomainError, lambda: A.inv())
 
     A = DDM([], (0, 0), QQ)
     assert A.inv() == A

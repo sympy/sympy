@@ -65,7 +65,12 @@ from itertools import chain
 
 from sympy.utilities.decorator import doctest_depends_on
 
-from .exceptions import DMBadInputError, DMShapeError, DMDomainError
+from .exceptions import (
+    DMBadInputError,
+    DMDomainError,
+    DMNonSquareMatrixError,
+    DMShapeError,
+)
 
 from sympy.polys.domains import QQ
 
@@ -805,7 +810,7 @@ class DDM(list):
         """Determinant of a"""
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Determinant of non-square matrix")
+            raise DMNonSquareMatrixError("Determinant of non-square matrix")
         b = a.copy()
         K = b.domain
         deta = ddm_idet(b, K)
@@ -815,7 +820,7 @@ class DDM(list):
         """Inverse of a"""
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Determinant of non-square matrix")
+            raise DMNonSquareMatrixError("Determinant of non-square matrix")
         ainv = a.copy()
         K = a.domain
         ddm_iinv(ainv, a, K)
@@ -848,7 +853,7 @@ class DDM(list):
         K = a.domain
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Charpoly of non-square matrix")
+            raise DMNonSquareMatrixError("Charpoly of non-square matrix")
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
