@@ -20,7 +20,7 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, MatplotlibBackend, TextBackend)
-from sympy.testing.pytest import skip, raises, warns_deprecated_sympy
+from sympy.testing.pytest import skip, warns, raises, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
 
@@ -421,8 +421,13 @@ def test_plot_and_save_6():
         x2 = 5*x**2 * exp_polar(I*pi)/2
         m2 = meijerg(((1/2,), ()), ((5, 0, 1/2), ()), x2)
         expr = (m1 + m2) / (48 * pi)
-        p = plot(expr, (x, 1e-6, 1e-2))
-        p.save(os.path.join(tmpdir, filename))
+        with warns(
+            UserWarning,
+            match="The evaluation with NumPy/SciPy failed",
+            test_stacklevel=False,
+        ):
+            p = plot(expr, (x, 1e-6, 1e-2))
+            p.save(os.path.join(tmpdir, filename))
 
 
 def test_plotgrid_and_save():
@@ -585,10 +590,15 @@ def test_issue_11461():
 
     x = Symbol('x')
     p = plot(real_root((log(x/(x-2))), 3), show=False)
-    # Random number of segments, probably more than 100, but we want to see
-    # that there are segments generated, as opposed to when the bug was present
-    # and that there are no exceptions.
-    assert len(p[0].get_data()[0]) >= 30
+    with warns(
+        RuntimeWarning,
+        match="invalid value encountered in",
+        test_stacklevel=False,
+    ):
+        # Random number of segments, probably more than 100, but we want to see
+        # that there are segments generated, as opposed to when the bug was present
+        # and that there are no exceptions.
+        assert len(p[0].get_data()[0]) >= 30
 
 
 def test_issue_11764():
