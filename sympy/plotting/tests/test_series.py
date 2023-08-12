@@ -299,6 +299,9 @@ def test_lin_log_scale():
 
 def test_rendering_kw():
     # verify that each series exposes the `rendering_kw` attribute
+    if not np:
+        skip("numpy not installed.")
+
     u, v, x, y, z = symbols("u, v, x:z")
 
     s = List2DSeries([1, 2, 3], [4, 5, 6])
@@ -480,6 +483,8 @@ def test_only_integers():
 def test_is_point_is_filled():
     # verify that `is_point` and `is_filled` are attributes and that they
     # they receive the correct values
+    if not np:
+        skip("numpy not installed.")
 
     x, u = symbols("x, u")
 
@@ -770,6 +775,8 @@ def test_str():
 
 def test_use_cm():
     # verify that the `use_cm` attribute is implemented.
+    if not np:
+        skip("numpy not installed.")
 
     u, x, y, z = symbols("u, x:z")
 
@@ -964,6 +971,8 @@ def test_series_labels():
     # verify that series return the correct label, depending on the plot
     # type and input arguments. If the user set custom label on a data series,
     # it should returned un-modified.
+    if not np:
+        skip("numpy not installed.")
 
     x, y, z, u, v = symbols("x, y, z, u, v")
     wrapper = "$%s$"
