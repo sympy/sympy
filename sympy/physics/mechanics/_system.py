@@ -242,30 +242,30 @@ class System(_Methods):
 
     """
 
-    def __init__(self, origin=None, frame=None):
+    def __init__(self, frame=None, origin=None):
         """Initialize the system.
 
         Parameters
         ==========
 
-        origin : Point, optional
-            The origin of the system. If none is supplied, a new origin will be
-            created.
         frame : ReferenceFrame, optional
             The inertial frame of the system. If none is supplied, a new frame
             will be created.
+        origin : Point, optional
+            The origin of the system. If none is supplied, a new origin will be
+            created.
 
         """
-        if origin is None:
-            origin = Point('inertial_origin')
-        elif not isinstance(origin, Point):
-            raise TypeError('Origin must be an instance of Point.')
-        self._origin = origin
         if frame is None:
             frame = ReferenceFrame('inertial_frame')
         elif not isinstance(frame, ReferenceFrame):
             raise TypeError('Frame must be an instance of ReferenceFrame.')
         self._frame = frame
+        if origin is None:
+            origin = Point('inertial_origin')
+        elif not isinstance(origin, Point):
+            raise TypeError('Origin must be an instance of Point.')
+        self._origin = origin
         self._origin.set_vel(self._frame, 0)
         self._q_ind = Matrix(1, 0, []).T
         self._q_dep = Matrix(1, 0, []).T
@@ -286,7 +286,7 @@ class System(_Methods):
         if isinstance(newtonian, Particle):
             raise TypeError('A Particle has no frame so cannot act as '
                             'the Newtonian.')
-        system = cls(origin=newtonian.masscenter, frame=newtonian.frame)
+        system = cls(frame=newtonian.frame, origin=newtonian.masscenter)
         system.add_bodies(newtonian)
         return system
 
