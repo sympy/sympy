@@ -73,6 +73,7 @@ class DFM:
     is_DDM = False
 
     def __new__(cls, rowslist, shape, domain):
+        """Construct from a nested list."""
         flint_mat = cls._get_flint_func(domain)
 
         if 0 not in shape:
@@ -87,12 +88,17 @@ class DFM:
 
     @classmethod
     def _new(cls, rep, shape, domain):
+        """Internal constructor from a flint matrix."""
         cls._check(rep, shape, domain)
         obj = object.__new__(cls)
         obj.rep = rep
         obj.shape = obj.rows, obj.cols = shape
         obj.domain = domain
         return obj
+
+    def _new_rep(self, rep):
+        """Create a new DFM with the same shape and domain but a new rep."""
+        return self._new(rep, self.shape, self.domain)
 
     @classmethod
     def _check(cls, rep, shape, domain):
@@ -108,16 +114,23 @@ class DFM:
 
     @classmethod
     def _supports_domain(cls, domain):
+        """Return True if the given domain is supported by DFM."""
         return domain in (ZZ, QQ)
 
     @classmethod
     def _get_flint_func(cls, domain):
+        """Return the flint matrix class for the given domain."""
         if domain == ZZ:
             return flint.fmpz_mat
         elif domain == QQ:
             return flint.fmpq_mat
         else:
             raise NotImplementedError("Only ZZ and QQ are supported by DFM")
+
+    @property
+    def _func(self):
+        """Callable to create a flint matrix of the same domain."""
+        return self._get_flint_func(self.domain)
 
     def __str__(self):
         """Return ``str(self)``."""
@@ -136,18 +149,26 @@ class DFM:
         # with the same entries will compare equal.
         return self.domain == other.domain and self.rep == other.rep
 
+    @classmethod
+    def from_list(cls, rowslist, shape, domain):
+        """Construct from a nested list."""
+        return cls(rowslist, shape, domain)
+
+    def to_list(self):
+        """Convert to a nested list."""
+        return self.rep.tolist()
+
     def copy(self):
         """Return a copy of self."""
-        # XXX: fmpz_mat and fmpq_mat do not have a copy method
-        return self.to_ddm().to_dfm()
+        return self._new_rep(self._func(self.rep))
 
     def to_ddm(self):
         """Convert to a DDM."""
-        return DDM(self.rep.tolist(), self.shape, self.domain)
+        return DDM.from_list(self.to_list(), self.shape, self.domain)
 
     def to_sdm(self):
         """Convert to a SDM."""
-        return self.to_ddm().to_sdm()
+        return SDM.from_list(self.to_list(), self.shape, self.domain)
 
     def to_dfm(self):
         """Return self."""
@@ -161,15 +182,6 @@ class DFM:
     def from_ddm(cls, ddm):
         """Convert from a DDM."""
         return cls.from_list(ddm.to_list(), ddm.shape, ddm.domain)
-
-    @classmethod
-    def from_list(cls, rowslist, shape, domain):
-        """Construct from a nested list."""
-        return cls(rowslist, shape, domain)
-
-    def to_list(self):
-        """Convert to a nested list."""
-        return self.rep.tolist()
 
     @classmethod
     def from_list_flat(cls, elements, shape, domain):
@@ -195,13 +207,17 @@ class DFM:
 
     def convert_to(self, domain):
         """Convert to a new domain."""
-        # XXX: fmpz_mat and fmpq_mat do not have conversion methods. You can do
-        # fmpq_mat(fmpz_mat) but not fmpz_mat(fmpq_mat). The domain will be
-        # checked in __new__.
-        #
-        # It is the responsibility of the caller to ensure that the conversion
-        # is possible (i.e. DomainMatrix should have checked already).
-        return self.to_ddm().convert_to(domain).to_dfm()
+        if domain == self.domain:
+            return self.copy()
+        elif domain == QQ and self.domain == ZZ:
+            return self._new(flint.fmpq_mat(self.rep), self.shape, domain)
+        elif domain == ZZ and self.domain == QQ:
+            # XXX: python-flint has no fmpz_mat.from_fmpq_mat
+            return self.to_ddm().convert_to(domain).to_dfm()
+        else:
+            # It is the callers responsibility to convert to DDM before calling
+            # this method if the domain is not supported by DFM.
+            raise NotImplementedError("Only ZZ and QQ are supported by DFM")
 
     def getitem(self, i, j):
         """Get the ``(i, j)``-th entry."""
@@ -231,44 +247,85 @@ class DFM:
         except ValueError:
             raise IndexError(f"Invalid indices ({i}, {j}) for Matrix of shape {self.shape}")
 
+    def _extract(self, i_indices, j_indices):
+        """Extract a submatrix with no checking."""
+        # Indices must be positive and in range.
+        M = self.rep
+        lol = [[M[i, j] for j in j_indices] for i in i_indices]
+        shape = (len(i_indices), len(j_indices))
+        return self.from_list(lol, shape, self.domain)
+
     def extract(self, rowslist, colslist):
         """Extract a submatrix."""
-        # XXX: flint matrices do not support fancy indexing
-        return self.to_ddm().extract(rowslist, colslist).to_dfm()
+        # XXX: flint matrices do not support fancy indexing or negative indices
+        #
+        # Check and convert negative indices before calling _extract.
+        m, n = self.shape
+
+        new_rows = []
+        new_cols = []
+
+        for i in rowslist:
+            if i < 0:
+                i_pos = i + m
+            else:
+                i_pos = i
+            if not 0 <= i_pos < m:
+                raise IndexError(f"Invalid row index {i} for Matrix of shape {self.shape}")
+            new_rows.append(i_pos)
+
+        for j in colslist:
+            if j < 0:
+                j_pos = j + n
+            else:
+                j_pos = j
+            if not 0 <= j_pos < n:
+                raise IndexError(f"Invalid column index {j} for Matrix of shape {self.shape}")
+            new_cols.append(j_pos)
+
+        return self._extract(new_rows, new_cols)
 
     def extract_slice(self, rowslice, colslice):
-        """Extract a submatrix."""
+        """Slice a DFM."""
         # XXX: flint matrices do not support slicing
-        return self.to_ddm().extract_slice(rowslice, colslice).to_dfm()
+        m, n = self.shape
+        i_indices = range(m)[rowslice]
+        j_indices = range(n)[colslice]
+        return self._extract(i_indices, j_indices)
 
     def neg(self):
         """Negate a DFM matrix."""
-        return self._new(-self.rep, self.shape, self.domain)
+        return self._new_rep(-self.rep)
 
     def add(self, other):
         """Add two DFM matrices."""
-        return self._new(self.rep + other.rep, self.shape, self.domain)
+        return self._new_rep(self.rep + other.rep)
 
     def sub(self, other):
         """Subtract two DFM matrices."""
-        return self._new(self.rep - other.rep, self.shape, self.domain)
+        return self._new_rep(self.rep - other.rep)
 
     def mul(self, other):
         """Multiply a DFM matrix from the right by a scalar."""
-        return self._new(self.rep * other, self.shape, self.domain)
+        return self._new_rep(self.rep * other)
 
     def rmul(self, other):
         """Multiply a DFM matrix from the left by a scalar."""
-        return self._new(other * self.rep, self.shape, self.domain)
+        return self._new_rep(other * self.rep)
 
     def mul_elementwise(self, other):
         """Elementwise multiplication of two DFM matrices."""
+        # XXX: flint matrices do not support elementwise multiplication
         return self.to_ddm().mul_elementwise(other.to_ddm()).to_dfm()
 
     def matmul(self, other):
         """Multiply two DFM matrices."""
         shape = (self.rows, other.cols)
         return self._new(self.rep * other.rep, shape, self.domain)
+
+    # XXX: For the most part DomainMatrix does not expect DDM, SDM, or DFM to
+    # have arithmetic operators defined. The only exception is negation.
+    # Perhaps that should be removed.
 
     def __neg__(self):
         """Negate a DFM matrix."""
@@ -280,18 +337,20 @@ class DFM:
         func = cls._get_flint_func(domain)
         return cls._new(func(*shape), shape, domain)
 
+    # XXX: flint matrices do not have anything like ones or eye
+    # In the methods below we convert to DDM and then back to DFM which is
+    # probably about as efficient as implementing these methods directly.
+
     @classmethod
     def ones(cls, shape, domain):
         """Return a one DFM matrix."""
-        func = cls._get_flint_func(domain)
-        lol = DDM.ones(shape, domain).to_list()
-        return cls._new(func(lol), shape, domain)
+        # XXX: flint matrices do not have anything like ones
+        return DDM.ones(shape, domain).to_dfm()
 
     @classmethod
     def eye(cls, n, domain):
         """Return the identity matrix of size n."""
-        # XXX: DDM and SDM have inconsistent signatures for eye because SDM
-        # assumes a shape argument while DDM expects an integer size.
+        # XXX: flint matrices do not have anything like eye
         return DDM.eye(n, domain).to_dfm()
 
     @classmethod
@@ -305,8 +364,7 @@ class DFM:
 
     def transpose(self):
         """Transpose a DFM matrix."""
-        m, n = self.shape
-        return self._new(self.rep.transpose(), (n, m), self.domain)
+        return self._new(self.rep.transpose(), (self.cols, self.rows), self.domain)
 
     def hstack(self, *others):
         """Horizontally stack matrices."""
@@ -318,23 +376,40 @@ class DFM:
 
     def diagonal(self):
         """Return the diagonal of a DFM matrix."""
-        return self.to_ddm().diagonal()
+        M = self.rep
+        m, n = self.shape
+        return [M[i, i] for i in range(min(m, n))]
 
     def is_upper(self):
         """Return ``True`` if the matrix is upper triangular."""
-        return self.to_ddm().is_upper()
+        M = self.rep
+        for i in range(self.rows):
+            for j in range(i):
+                if M[i, j]:
+                    return False
+        return True
 
     def is_lower(self):
         """Return ``True`` if the matrix is lower triangular."""
-        return self.to_ddm().is_lower()
+        M = self.rep
+        for i in range(self.rows):
+            for j in range(i + 1, self.cols):
+                if M[i, j]:
+                    return False
+        return True
 
     def is_diagonal(self):
         """Return ``True`` if the matrix is diagonal."""
-        return self.to_ddm().is_diagonal()
+        return self.is_upper() and self.is_lower()
 
     def is_zero_matrix(self):
         """Return ``True`` if the matrix is the zero matrix."""
-        return self.to_ddm().is_zero_matrix()
+        M = self.rep
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if M[i, j]:
+                    return False
+        return True
 
     def scc(self):
         """Return the strongly connected components of the matrix."""
@@ -362,15 +437,18 @@ class DFM:
 
     def lu_solve(self, rhs):
         """Solve a linear system using LU decomposition."""
+        # XXX: Use the flint solve method!!!
         return self.to_ddm().lu_solve(rhs.to_ddm()).to_dfm()
 
     def nullspace(self):
         """Return a basis for the nullspace of the matrix."""
+        # XXX: Use the flint nullspace method!!!
         ddm, nonpivots = self.to_ddm().nullspace()
         return ddm.to_dfm(), nonpivots
 
     def nullspace_from_rref(self, pivots=None):
         """Return a basis for the nullspace of the matrix."""
+        # XXX: Use the flint nullspace method!!!
         sdm, nonpivots = self.to_sdm().nullspace_from_rref(pivots=pivots)
         return sdm.to_dfm(), nonpivots
 
@@ -392,3 +470,4 @@ class DFM:
 
 # Avoid circular imports
 from sympy.polys.matrices.ddm import DDM
+from sympy.polys.matrices.ddm import SDM
