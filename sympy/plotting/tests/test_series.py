@@ -1,13 +1,13 @@
 from sympy import (
     latex, exp, symbols, I, pi, sin, cos, tan, log, sqrt,
     re, im, arg, frac, Sum, S, Abs, lambdify,
-    Function, dsolve, Eq, floor
+    Function, dsolve, Eq, floor, Tuple
 )
 from sympy.external import import_module
 from sympy.plotting.series import (
     LineOver1DRangeSeries, Parametric2DLineSeries, Parametric3DLineSeries,
     SurfaceOver2DRangeSeries, ContourSeries, ParametricSurfaceSeries,
-    ImplicitSeries, _set_discretization_points
+    ImplicitSeries, _set_discretization_points, List2DSeries
 )
 from sympy.testing.pytest import raises, warns, XFAIL, skip, ignore_warnings
 
@@ -163,6 +163,28 @@ def test_number_discretization_points():
     LineOver1DRangeSeries(cos(x), (x, -5, 5), adaptive=False, n=1e04).get_data()
 
 
+def test_list2dseries():
+    if not np:
+        skip("numpy not installed.")
+
+    xx = np.linspace(-3, 3, 10)
+    yy1 = np.cos(xx)
+    yy2 = np.linspace(-3, 3, 20)
+
+    # same number of elements: everything is fine
+    s = List2DSeries(xx, yy1)
+    assert not s.is_parametric
+    # different number of elements: error
+    raises(ValueError, lambda: List2DSeries(xx, yy2))
+
+    # no color func: returns only x, y components and s in not parametric
+    s = List2DSeries(xx, yy1)
+    xxs, yys = s.get_data()
+    assert np.allclose(xx, xxs)
+    assert np.allclose(yy1, yys)
+    assert not s.is_parametric
+
+
 def test_interactive_vs_noninteractive():
     # verify that if a *Series class receives a `params` dictionary, it sets
     # is_interactive=True
@@ -278,6 +300,9 @@ def test_lin_log_scale():
 def test_rendering_kw():
     # verify that each series exposes the `rendering_kw` attribute
     u, v, x, y, z = symbols("u, v, x:z")
+
+    s = List2DSeries([1, 2, 3], [4, 5, 6])
+    assert isinstance(s.rendering_kw, dict)
 
     s = LineOver1DRangeSeries(1, (x, -5, 5))
     assert isinstance(s.rendering_kw, dict)
@@ -465,6 +490,13 @@ def test_is_point_is_filled():
         is_point=True, is_filled=False)
     assert s.is_point and (not s.is_filled)
 
+    s = List2DSeries([0, 1, 2], [3, 4, 5],
+        is_point=False, is_filled=True)
+    assert (not s.is_point) and s.is_filled
+    s = List2DSeries([0, 1, 2], [3, 4, 5],
+        is_point=True, is_filled=False)
+    assert s.is_point and (not s.is_filled)
+
     s = Parametric2DLineSeries(cos(x), sin(x), (x, -5, 5),
         is_point=False, is_filled=True)
     assert (not s.is_point) and s.is_filled
@@ -520,6 +552,10 @@ def test_steps():
         adaptive=False, n=40, steps=False)
     s2 = LineOver1DRangeSeries(cos(x), (x, -5, 5), "",
         adaptive=False, n=40, steps=True)
+    do_test(s1, s2)
+
+    s1 = List2DSeries([0, 1, 2], [3, 4, 5], steps=False)
+    s2 = List2DSeries([0, 1, 2], [3, 4, 5], steps=True)
     do_test(s1, s2)
 
     s1 = Parametric2DLineSeries(cos(x), sin(x), (x, -5, 5),
@@ -596,6 +632,39 @@ def test_interactive_data():
     s2 = LineOver1DRangeSeries(expr, (z, -3, 3),
         adaptive=False, n=50, modules="mpmath")
     do_test(s1.get_data(), s2.get_data())
+
+
+def test_list2dseries_interactive():
+    if not np:
+        skip("numpy not installed.")
+
+    x, y, u = symbols("x, y, u")
+
+    s = List2DSeries([1, 2, 3], [1, 2, 3])
+    assert not s.is_interactive
+
+    # symbolic expressions as coordinates, but no ``params``
+    raises(ValueError, lambda: List2DSeries([cos(x)], [sin(x)]))
+
+    # too few parameters
+    raises(ValueError,
+        lambda: List2DSeries([cos(x), y], [sin(x), 2], params={u: 1}))
+
+    s = List2DSeries([cos(x)], [sin(x)], params={x: 1})
+    assert s.is_interactive
+
+    s = List2DSeries([x, 2, 3, 4], [4, 3, 2, x], params={x: 3})
+    xx, yy = s.get_data()
+    assert np.allclose(xx, [3, 2, 3, 4])
+    assert np.allclose(yy, [4, 3, 2, 3])
+    assert not s.is_parametric
+
+    # numeric lists + params is present -> interactive series and
+    # lists are converted to Tuple.
+    s = List2DSeries([1, 2, 3], [1, 2, 3], params={x: 1})
+    assert s.is_interactive
+    assert isinstance(s.list_x, Tuple)
+    assert isinstance(s.list_y, Tuple)
 
 
 def test_mpmath():
@@ -703,6 +772,11 @@ def test_use_cm():
     # verify that the `use_cm` attribute is implemented.
 
     u, x, y, z = symbols("u, x:z")
+
+    s = List2DSeries([1, 2, 3, 4], [5, 6, 7, 8], use_cm=True)
+    assert s.use_cm
+    s = List2DSeries([1, 2, 3, 4], [5, 6, 7, 8], use_cm=False)
+    assert not s.use_cm
 
     s = Parametric2DLineSeries(cos(x), sin(x), (x, -4, 3), use_cm=True)
     assert s.use_cm
@@ -824,6 +898,17 @@ def test_apply_transforms():
     assert np.isclose(x4[0], -360) and np.isclose(x4[-1], 360)
     assert (y4.min() < -52) and (y4.max() > 52)
 
+    xx = np.linspace(-2*np.pi, 2*np.pi, 10)
+    yy = np.cos(xx)
+    s1 = List2DSeries(xx, yy)
+    s2 = List2DSeries(xx, yy, tx=np.rad2deg, ty=np.rad2deg)
+    x1, y1 = s1.get_data()
+    x2, y2 = s2.get_data()
+    assert np.isclose(x1[0], -2*np.pi) and np.isclose(x1[-1], 2*np.pi)
+    assert (y1.min() < -0.9) and (y1.max() > 0.9)
+    assert np.isclose(x2[0], -360) and np.isclose(x2[-1], 360)
+    assert (y2.min() < -52) and (y2.max() > 52)
+
     s1 = Parametric2DLineSeries(
         sin(x), cos(x), (x, -pi, pi), adaptive=False, n=10)
     s2 = Parametric2DLineSeries(
@@ -890,6 +975,10 @@ def test_series_labels():
     assert s1.get_label(True) == wrapper % latex(expr)
     assert s2.get_label(False) == "test"
     assert s2.get_label(True) == "test"
+
+    s1 = List2DSeries([0, 1, 2, 3], [0, 1, 2, 3], "test")
+    assert s1.get_label(False) == "test"
+    assert s1.get_label(True) == "test"
 
     expr = (cos(x), sin(x))
     s1 = Parametric2DLineSeries(*expr, (x, -2, 2), None, use_cm=True)
@@ -1004,6 +1093,20 @@ def test_color_func():
 
     x, y, z, u, v = symbols("x, y, z, u, v")
 
+    # color func: returns x, y, color and s is parametric
+    xx = np.linspace(-3, 3, 10)
+    yy1 = np.cos(xx)
+    s = List2DSeries(xx, yy1, color_func=lambda x, y: 2 * x, use_cm=True)
+    xxs, yys, col = s.get_data()
+    assert np.allclose(xx, xxs)
+    assert np.allclose(yy1, yys)
+    assert np.allclose(2 * xx, col)
+    assert s.is_parametric
+
+    s = List2DSeries(xx, yy1, color_func=lambda x, y: 2 * x, use_cm=False)
+    assert len(s.get_data()) == 2
+    assert not s.is_parametric
+
     s = Parametric2DLineSeries(cos(x), sin(x), (x, 0, 2*pi),
         adaptive=False, n=10, color_func=lambda t: t)
     xx, yy, col = s.get_data()
@@ -1067,6 +1170,20 @@ def test_color_func():
     col = s.eval_color_func(xx, yy, zz, uu, vv)
     assert np.allclose(xx * yy * zz * uu * vv, col)
 
+    # Interactive Series
+    s = List2DSeries([0, 1, 2, x], [x, 2, 3, 4],
+        color_func=lambda x, y: 2 * x, params={x: 1}, use_cm=True)
+    xx, yy, col = s.get_data()
+    assert np.allclose(xx, [0, 1, 2, 1])
+    assert np.allclose(yy, [1, 2, 3, 4])
+    assert np.allclose(2 * xx, col)
+    assert s.is_parametric and s.use_cm
+
+    s = List2DSeries([0, 1, 2, x], [x, 2, 3, 4],
+        color_func=lambda x, y: 2 * x, params={x: 1}, use_cm=False)
+    assert len(s.get_data()) == 2
+    assert not s.is_parametric
+
 
 def test_color_func_scalar_val():
     # verify that eval_color_func returns a numpy array even when color_func
@@ -1121,6 +1238,11 @@ def test_color_func_expression():
     # the following statement should not raise errors
     s.get_data()
     assert callable(s.color_func)
+
+    xx = [1, 2, 3, 4, 5]
+    yy = [1, 2, 3, 4, 5]
+    raises(TypeError,
+        lambda : List2DSeries(xx, yy, use_cm=True, color_func=sin(x)))
 
 
 def test_line_surface_color():
@@ -1236,6 +1358,7 @@ def test_expr_is_lambda_function():
     s1.get_data()
     assert s1.label == ""
 
+    raises(TypeError, lambda: List2DSeries(lambda t: t, lambda t: t))
     raises(TypeError, lambda : ImplicitSeries(lambda t: np.sin(t),
         ("x", -5, 5), ("y", -6, 6)))
 

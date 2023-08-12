@@ -1230,18 +1230,61 @@ class Line2DBaseSeries(BaseSeries):
 class List2DSeries(Line2DBaseSeries):
     """Representation for a line consisting of list of points."""
 
-    def __init__(self, list_x, list_y):
+    def __init__(self, list_x, list_y, label="", **kwargs):
+        super().__init__(**kwargs)
         np = import_module('numpy')
-        super().__init__()
-        self.list_x = np.array(list_x)
-        self.list_y = np.array(list_y)
-        self.label = 'list'
+        if len(list_x) != len(list_y):
+            raise ValueError(
+                "The two lists of coordinates must have the same "
+                "number of elements.\n"
+                "Received: len(list_x) = {} ".format(len(list_x)) +
+                "and len(list_y) = {}".format(len(list_y))
+            )
+        self._block_lambda_functions(list_x, list_y)
+        check = lambda l: [isinstance(t, Expr) and (not t.is_number) for t in l]
+        if any(check(list_x) + check(list_y)) or self.params:
+            if not self.params:
+                raise ValueError("Some or all elements of the provided lists "
+                    "are symbolic expressions, but the ``params`` dictionary "
+                    "was not provided: those elements can't be evaluated.")
+            self.list_x = Tuple(*list_x)
+            self.list_y = Tuple(*list_y)
+        else:
+            self.list_x = np.array(list_x, dtype=np.float64)
+            self.list_y = np.array(list_y, dtype=np.float64)
+
+        self._expr = (self.list_x, self.list_y)
+        if not any(isinstance(t, np.ndarray) for t in [self.list_x, self.list_y]):
+            self._check_fs()
+        self.is_polar = kwargs.get("is_polar", False)
+        self.label = label
+        self.rendering_kw = kwargs.get("rendering_kw", {})
+        if self.use_cm and self.color_func:
+            self.is_parametric = True
+            if isinstance(self.color_func, Expr):
+                raise TypeError(
+                    "%s don't support symbolic " % self.__class__.__name__ +
+                    "expression for `color_func`.")
 
     def __str__(self):
-        return 'list plot'
+        return "2D list plot"
 
-    def get_points(self):
-        return (self.list_x, self.list_y)
+    def _get_data_helper(self):
+        """Returns coordinates that needs to be postprocessed."""
+        lx, ly = self.list_x, self.list_y
+
+        if not self.is_interactive:
+            return self._eval_color_func_and_return(lx, ly)
+
+        np = import_module('numpy')
+        lx = np.array([t.evalf(subs=self.params) for t in lx], dtype=float)
+        ly = np.array([t.evalf(subs=self.params) for t in ly], dtype=float)
+        return self._eval_color_func_and_return(lx, ly)
+
+    def _eval_color_func_and_return(self, *data):
+        if self.use_cm and callable(self.color_func):
+            return [*data, self.eval_color_func(*data)]
+        return data
 
 
 class LineOver1DRangeSeries(Line2DBaseSeries):
