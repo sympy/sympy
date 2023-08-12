@@ -2511,7 +2511,7 @@ def _set_discretization_points(kwargs, pt):
         The type of the series, which indicates the kind of plot we are
         trying to create.
     """
-    deprecated_keywords = {
+    replace_old_keywords = {
         "nb_of_points": "n",
         "nb_of_points_x": "n1",
         "nb_of_points_y": "n2",
@@ -2519,7 +2519,7 @@ def _set_discretization_points(kwargs, pt):
         "nb_of_points_v": "n2",
         "points": "n"
     }
-    for k, v in deprecated_keywords.items():
+    for k, v in replace_old_keywords.items():
         if k in kwargs.keys():
             kwargs[v] = kwargs.pop(k)
 
@@ -2527,8 +2527,14 @@ def _set_discretization_points(kwargs, pt):
         Parametric3DLineSeries]:
         if "n" in kwargs.keys():
             kwargs["n1"] = kwargs["n"]
-    elif pt in [
-        SurfaceOver2DRangeSeries, ContourSeries, ParametricSurfaceSeries]:
+            if hasattr(kwargs["n"], "__iter__") and (len(kwargs["n"]) > 0):
+                kwargs["n1"] = kwargs["n"][0]
+    elif pt in [SurfaceOver2DRangeSeries, ContourSeries,
+        ParametricSurfaceSeries, ImplicitSeries]:
         if "n" in kwargs.keys():
-            kwargs["n1"] = kwargs["n2"] = kwargs["n"]
+            if hasattr(kwargs["n"], "__iter__") and (len(kwargs["n"]) > 1):
+                kwargs["n1"] = kwargs["n"][0]
+                kwargs["n2"] = kwargs["n"][1]
+            else:
+                kwargs["n1"] = kwargs["n2"] = kwargs["n"]
     return kwargs
