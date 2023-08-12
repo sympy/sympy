@@ -560,7 +560,7 @@ class SDM(dict):
         >>> A.to_dfm_or_ddm()
         [[0, 2], [0, 0]]
         >>> type(A.to_dfm_or_ddm())  # depends on the ground types
-        <class 'sympy.polys.matrices.dfm.DFM'>
+        <class 'sympy.polys.matrices._dfm.DFM'>
 
         See Also
         ========
@@ -909,7 +909,7 @@ class SDM(dict):
         {0: {0: -2, 1: 1}, 1: {0: 3/2, 1: -1/2}}
 
         """
-        return A.from_ddm(A.to_ddm().inv())
+        return A.to_dfm_or_ddm().inv().to_sdm()
 
     def det(A):
         """

@@ -24,7 +24,13 @@ from sympy.external.importtools import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.polys.domains import ZZ, QQ
-from .exceptions import DMBadInputError
+
+from .exceptions import (
+    DMBadInputError,
+    DMDomainError,
+    DMNonSquareMatrixError,
+    DMNonInvertibleMatrixError,
+)
 
 flint = import_module('flint')
 
@@ -427,8 +433,24 @@ class DFM:
         """Return the strongly connected components of the matrix."""
         return self.to_ddm().scc()
 
+    @doctest_depends_on(ground_types='flint')
     def det(self):
-        """Return the determinant of the matrix.
+        """
+        Compute the determinant of the matrix using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> dfm = M.to_DM().to_dfm()
+        >>> dfm
+        [[1, 2], [3, 4]]
+        >>> dfm.det()
+        -2
+
+        Notes
+        =====
 
         Calls the ``.det()`` method of the underlying FLINT matrix.
 
@@ -449,6 +471,12 @@ class DFM:
         The implementation of ``fmpq_mat_det`` clears denominators from each
         row (not the whole matrix) and then calls ``fmpz_mat_det`` and divides
         by the product of the denominators.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.det
+            Higher level interface to compute the determinant of a matrix.
         """
         # XXX: At least the first three algorithms described above should also
         # be implemented in the pure Python DDM and SDM classes which at the
@@ -456,10 +484,78 @@ class DFM:
         # Probably in Python the thresholds would be different though.
         return self.rep.det()
 
+    @doctest_depends_on(ground_types='flint')
     def inv(self):
-        """Return the inverse of the matrix."""
-        # XXX: Use the flint inv method!!!
-        return self.to_ddm().inv().to_dfm()
+        """
+        Compute the inverse of the matrix using FLINT.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, QQ
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> dfm = M.to_DM().to_dfm().convert_to(QQ)
+        >>> dfm
+        [[1, 2], [3, 4]]
+        >>> dfm.inv()
+        [[-2, 1], [3/2, -1/2]]
+        >>> dfm.matmul(dfm.inv())
+        [[1, 0], [0, 1]]
+
+        Notes
+        =====
+
+        Calls the ``.inv()`` method of the underlying FLINT matrix.
+
+        For now this will raise an error if the domain is :ref:`ZZ` but will
+        use the FLINT method for :ref:`QQ`.
+
+        The FLINT methods for :ref:`ZZ` and :ref:`QQ` are ``fmpz_mat_inv`` and
+        ``fmpq_mat_inv`` respectively. The ``fmpz_mat_inv`` method computes an
+        inverse with denominator. This is implemented by calling
+        ``fmpz_mat_solve`` (see notes in :meth:`lu_solve` about the algorithm).
+
+        The ``fmpq_mat_inv`` method clears denominators from each row and then
+        multiplies those into the rhs identity matrix before calling
+        ``fmpz_mat_solve``.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.inv
+            Higher level method for computing the inverse of a matrix.
+        """
+        # TODO: Implement similar algorithms for DDM and SDM.
+        #
+        # XXX: The flint fmpz_mat and fmpq_mat inv methods both return fmpq_mat
+        # by default. The fmpz_mat method has an optional argument to return
+        # fmpz_mat instead for unimodular matrices.
+        #
+        # The convention in DomainMatrix is to raise an error if the matrix is
+        # not over a field regardless of whether the matrix is invertible over
+        # its domain or over any associated field. Maybe DomainMatrix.inv
+        # should be changed to always return a matrix over an associated field
+        # except with a unimodular argument for returning an inverse over a
+        # ring if possible.
+        #
+        # For now we follow the existing DomainMatrix convention...
+        K = self.domain
+        m, n = self.shape
+
+        if m != n:
+            raise DMNonSquareMatrixError("cannot invert a non-square matrix")
+
+        if K == ZZ:
+            raise DMDomainError("field expected, got %s" % K)
+        elif K == QQ:
+            try:
+                return self._new_rep(self.rep.inv())
+            except ZeroDivisionError:
+                raise DMNonInvertibleMatrixError("matrix is not invertible")
+        else:
+            # If more domains are added for DFM then we will need to consider
+            # what happens here.
+            raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
     def charpoly(self):
         """Return the characteristic polynomial of the matrix."""

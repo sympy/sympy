@@ -18,7 +18,13 @@ from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import ZZ, QQ, GF, ZZ_I, symbols
 
-from sympy.polys.matrices.exceptions import DMBadInputError
+from sympy.polys.matrices.exceptions import (
+    DMBadInputError,
+    DMDomainError,
+    DMNonSquareMatrixError,
+    DMNonInvertibleMatrixError,
+)
+
 from sympy.polys.matrices.domainmatrix import DM, DomainMatrix, DDM, SDM, DFM
 
 from sympy.testing.pytest import raises, skip
@@ -742,3 +748,25 @@ def test_XXM_det_ZZ(DM):
 def test_XXM_det_QQ(DM):
     dM1 = DM([[(1,2), (2,3)], [(3,4), (4,5)]])
     assert dM1.det() == QQ(-1,10)
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_inv_QQ(DM):
+    dM1 = DM([[(1,2), (2,3)], [(3,4), (4,5)]])
+    dM2 = DM([[(-8,1), (20,3)], [(15,2), (-5,1)]])
+    assert dM1.inv() == dM2
+    assert dM1.matmul(dM2) == DM([[1, 0], [0, 1]])
+
+    dM3 = DM([[(1,2), (2,3)], [(1,4), (1,3)]])
+    raises(DMNonInvertibleMatrixError, lambda: dM3.inv())
+
+    dM4 = DM([[(1,2), (2,3), (3,4)], [(1,4), (1,3), (1,2)]])
+    raises(DMNonSquareMatrixError, lambda: dM4.inv())
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_inv_ZZ(DM):
+    dM1 = DM([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
+    # XXX: Maybe this should return a DM over QQ instead?
+    # XXX: Handle unimodular matrices?
+    raises(DMDomainError, lambda: dM1.inv())
