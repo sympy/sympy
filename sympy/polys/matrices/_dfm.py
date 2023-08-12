@@ -783,6 +783,7 @@ class DFM:
         # Actually call the flint method.
         return self.rep.lll(transform=transform, delta=delta, eta=eta, rep=rep, gram=gram)
 
+    @doctest_depends_on(ground_types='flint')
     def lll(self, delta=0.75):
         """Compute LLL-reduced basis using FLINT.
 
@@ -812,6 +813,7 @@ class DFM:
         rep = self._lll(delta=delta)
         return self._new_rep(rep)
 
+    @doctest_depends_on(ground_types='flint')
     def lll_transform(self, delta=0.75):
         """Compute LLL-reduced basis and transform using FLINT.
 
