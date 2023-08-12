@@ -113,14 +113,13 @@ def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
             min_rows.append(i)
 
     # If there are ties, pick using Bland's rule
-    row = sorted(min_rows, key= lambda r: Y[r])[0]
+    _, row = min((Y[i], i) for i in min_rows)
     return row
 
 
 def _simplex(A, B, C, D=None, dual=False):
-    """
-    Return ``(o, x, y)`` obtained from the two-phase simplex method
-    using Bland's rule where ``o`` is the minimum value of primal,
+    """Return ``(o, x, y)`` obtained from the two-phase simplex method
+    using Bland's rule: ``o`` is the minimum value of primal,
     ``Cx - D``, under constraints ``Ax <= B`` (with ``x >= 0``) and
     the maximum of the dual, ``y^{T}B - D``, under constraints
     ``A^{T}*y >= C^{T}`` (with ``y >= 0``). To compute the dual of
@@ -140,15 +139,31 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> from sympy import Matrix
 
     Consider the simple minimization of ``f = x + y + 1`` under the
-    constraint that ``y + 2*x >= 4``. In the nonnegative quadrant,
-    this inequality describes a area above a triangle with vertices at
-    (0, 4), (0, 0) and (2, 0). The minimum of ``f`` occurs at (2, 0).
-    Define A, B, C, D for the standard minimization:
+    constraint that ``y + 2*x >= 4``. This is the "standard form" of
+    a minimization.
 
-    >>> A, B, C, D = [Matrix(i) for i in [[[2, 1]], [4], [[1, 1]], [-1]]]
+    In the nonnegative quadrant, this inequality describes a area above
+    a triangle with vertices at (0, 4), (0, 0) and (2, 0). The minimum
+    of ``f`` occurs at (2, 0). Define A, B, C, D for the standard
+    minimization:
+
+    >>> A = Matrix([[2, 1]])
+    >>> B = Matrix([4])
+    >>> C = Matrix([[1, 1]])
+    >>> D = Matrix([-1])
+
+    Confirm that this is the system of interest:
+
+    >>> from sympy.abc import x, y
+    >>> X = Matrix([x, y])
+    >>> (C*X - D)[0]
+    x + y + 1
+    >>> [i >= j for i, j in zip(A*X, B)]
+    [2*x + y >= 4]
 
     Since `_simplex` will do a minimization for constraints given as
-    ``A*x <= B``, the signs of each are negated (``-Ax >= -B``):
+    ``A*x <= B``, the signs of ``A`` and ``B`` must be negated since
+    the currently correspond to a greater-than inequality:
 
     >>> _simplex(-A, -B, C, D)
     (3, [2, 0], [1/2])
@@ -162,7 +177,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
     This time ``a*x <= b`` is the expected inequality for the `_simplex`
     method, but to maximize ``F``, the sign of ``c`` and ``d`` must be
-    inverted (so that minimizing the negative will give the negative of
+    changed (so that minimizing the negative will give the negative of
     the maximum of ``F``):
 
     >>> _simplex(a, b, -c, -d)
@@ -219,7 +234,9 @@ def _simplex(A, B, C, D=None, dual=False):
     if A and B:
         M = Matrix([[A, B], [C, D]])
     else:
-        assert not A and not B  # no constraints
+        if A or B:
+            raise ValueError('must give A and B')
+        # no constraints given
         M = Matrix([[C, D]])
     n = M.cols - 1
     m = M.rows - 1
@@ -256,7 +273,7 @@ def _simplex(A, B, C, D=None, dual=False):
         if not piv_cols:
             raise InfeasibleLPError(filldedent("""
                 The constraint set is empty!"""))
-        c = sorted(piv_cols, key=lambda _: X[_])[0] # Bland's rule
+        _, c = min((X[i], i) for i in piv_cols) # Bland's rule
 
         # Choose pivot row, r
         piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
@@ -277,7 +294,7 @@ def _simplex(A, B, C, D=None, dual=False):
         piv_cols = [_ for _ in range(n) if C[_] < 0]
         if not piv_cols:
             break
-        c = sorted(piv_cols, key=lambda _: X[_])[0] # Bland's rule
+        _, c = min((X[i], i) for i in piv_cols) # Bland's rule
 
         # Choose a pivot row, r
         piv_rows = [_ for _ in range(m) if A[_, c] > 0]
@@ -318,16 +335,30 @@ def _abcd(M, list=False):
 
     >>> from sympy import Matrix
     >>> from sympy.solvers.simplex import _abcd
-    >>> m = Matrix(3, 3, range(9))
-    >>> L = _abcd(m, list=True); L
-    ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
-    >>> _abcd(m)
-    (Matrix([
+
+    >>> m = Matrix(3, 3, range(9)); m
+    Matrix([
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8]])
+    >>> a, b, c, d = _abcd(m)
+    >>> a
+    Matrix([
     [0, 1],
-    [3, 4]]), Matrix([
+    [3, 4]])
+    >>> b
+    Matrix([
     [2],
-    [5]]), Matrix([[6, 7]]), Matrix([[8]]))
-    >>> assert tuple(Matrix(i) for i in L) == _
+    [5]])
+    >>> c
+    Matrix([[6, 7]])
+    >>> d
+    Matrix([[8]])
+
+    The matrices can be returned as compact lists, too:
+
+    >>> L = a, b, c, d = _abcd(m, list=True); L
+    ([[0, 1], [3, 4]], [2, 5], [[6, 7]], [8])
     """
     def aslist(i):
         l = i.tolist()
@@ -858,16 +889,13 @@ def _handle_bounds(bounds):
         ), Matrix([i[1] for i in row])
 
 
-def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
-    """Return the minimization of ``c*x - d`` with the given
+def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
+    """Return the minimization of ``c*x`` with the given
     constraints ``A*x <= b`` and ``A_eq*x = b_eq``. Unless bounds
     are given, variables will have nonnegative values in the solution.
 
-    If ``cd`` is a single matrix then ``d`` will be zero; otherwise
-    it should be tuple with two matrices: ``c`` and ``d``.
-
     If ``A`` is not given, then the dimension of the system will
-    be determined by the columns in ``C``.
+    be determined by the length of ``C``.
 
     By default, all variables will be nonnegative. If ``bounds``
     is given as a single tuple, ``(lo, hi)``, then all variables
@@ -890,12 +918,12 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     >>> from sympy import symbols, Eq, linear_eq_to_matrix as M, Matrix
     >>> x = x1, x2, x3, x4 = symbols('x1:5')
     >>> X = Matrix(x)
-    >>> c, d = cd = M(5*x2 + x3 + 4*x4 - x1, x)
+    >>> c, d = M(5*x2 + x3 + 4*x4 - x1, x)
     >>> a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], x)
     >>> aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], x)
     >>> constr = [i <= j for i,j in zip(a*X, b)]
     >>> constr += [Eq(i, j) for i,j in zip(aeq*X, beq)]
-    >>> linprog(cd, a, b, aeq, beq)
+    >>> linprog(c, a, b, aeq, beq)
     (9/2, [0, 1/2, 0, 1/2])
     >>> assert all(i.subs(dict(zip(x, _[1]))) for i in constr)
 
@@ -904,26 +932,12 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     lpmin, lpmax
     """
 
-    # convert scipy-like matrices to expressions
-
     ## the objective
-    C = None
-    if isinstance(cd, MatrixBase):
-        C, D = cd, Matrix([0])
-    elif type(cd) is tuple and len(cd) == 2 and all(isinstance(i, (MatrixBase, list)
-            ) for i in cd):
-        C, D = [Matrix(i) for i in cd]
-    elif isinstance(cd, list) and (
-            not cd or  # error below
-            len(cd) == 1 and type(cd[0]) is list or  # like [[1, 2, 3]]
-            not any(type(i) is list for i in cd)):  # like [1, 2, 3]
-        if not cd:
-            raise ValueError('there must be an objective')
-        C, D = Matrix(cd), Matrix([0])
-        if C.cols == 1:  # in case row was passed as [1, 2, 3]
-            C = C.T
-    else:
-        raise ValueError('expecting one or two matrices/lists for cd, not %s' % cd)
+    C = Matrix(c)
+    if C.rows != 1 and C.cols == 1:
+        C = C.T
+    if C.rows != 1:
+        raise ValueError('C must be a single row.')
 
     ## the inequalities
     if not A:
@@ -980,5 +994,5 @@ def linprog(cd, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
     else:
         aux = -A.cols  # set so -aux will give all cols below
 
-    o, p, d = _simplex(A, b, C, D)
+    o, p, d = _simplex(A, b, C)
     return o, p[:-aux]  # don't include aux variable values
