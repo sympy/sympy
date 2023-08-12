@@ -1235,9 +1235,15 @@ class SDM(dict):
         return [row.get(i, zero) for i, row in self.items() if i < n]
 
     def lll(A, delta=QQ(3, 4)):
-        return A.from_ddm(ddm_lll(A.to_ddm(), delta=delta))
+        """
+        Returns the LLL-reduced basis for the :py:class:`~.SDM` matrix.
+        """
+        return A.to_dfm_or_ddm().lll(delta=delta).to_sdm()
 
     def lll_transform(A, delta=QQ(3, 4)):
+        """
+        Returns the LLL-reduced basis and transformation matrix.
+        """
         reduced, transform = ddm_lll_transform(A.to_ddm(), delta=delta)
         return A.from_ddm(reduced), A.from_ddm(transform)
 
