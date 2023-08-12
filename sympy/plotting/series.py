@@ -69,6 +69,14 @@ def _uniform_eval(f1, f2, *args, modules=None,
                 msg += "because the following exception was raised:\n"
                 "{}: {}".format(type(err).__name__, err)
             raise RuntimeError(msg)
+        if err:
+            warnings.warn(
+                "The evaluation with %s failed.\n" % (
+                    "NumPy/SciPy" if not modules else modules) +
+                "{}: {}\n".format(type(err).__name__, err) +
+                "Trying to evaluate the expression with Sympy, but it might "
+                "be a slow operation."
+            )
         return wrapper_func(f2, *args)
 
     if modules == "sympy":
@@ -996,7 +1004,7 @@ class Line2DBaseSeries(BaseSeries):
         self.steps = kwargs.get("steps", False)
         self.is_point = kwargs.get("is_point", False)
         self.is_filled = kwargs.get("is_filled", True)
-        self.adaptive = kwargs.get("adaptive", True)
+        self.adaptive = kwargs.get("adaptive", False)
         self.depth = kwargs.get('depth', 12)
         self.use_cm = kwargs.get("use_cm", False)
         self.color_func = kwargs.get("color_func", None)
