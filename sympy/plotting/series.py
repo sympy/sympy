@@ -2143,8 +2143,7 @@ class ImplicitSeries(BaseSeries):
         self.adaptive = kwargs.get("adaptive", False)
         self._color = kwargs.get("color", kwargs.get("line_color", None))
 
-        if ((isinstance(expr, BooleanFunction) or isinstance(expr, Ne))
-            and (not self.adaptive)):
+        if isinstance(expr, (BooleanFunction, Ne)) and (not self.adaptive):
             self.adaptive = True
             msg = "contains Boolean functions. "
             if isinstance(expr, Ne):
