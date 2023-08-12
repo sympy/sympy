@@ -23,7 +23,6 @@ from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.matrices.dense import Matrix, zeros
-from sympy.matrices.matrices import MatrixBase
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.utilities.iterables import numbered_symbols
 from sympy.utilities.misc import filldedent
@@ -131,6 +130,11 @@ def _simplex(A, B, C, D=None, dual=False):
     in ``A`` and ``B``, no value will be obtained that is negative; if
     a constraint of ``x <= -1`` is represented, an error will be
     raised since no solution is possible.
+
+    This routine relies on the ability of determining whether an
+    expression is 0 or not. This is guaranteed if the input contains
+    only Float or Rational entries. It will raise a TypeError if
+    a relationship does not evaluate to True or False.
 
     Examples
     ========
@@ -241,6 +245,9 @@ def _simplex(A, B, C, D=None, dual=False):
     n = M.cols - 1
     m = M.rows - 1
 
+    # XXX can this be eliminated and just let a TypeError
+    # rise *if* there is a problem instead of if there *might*
+    # be a problem
     if not all(i.is_Float or i.is_Rational for i in M):
         # with literal Float and Rational we are guaranteed the
         # ability of determining whether an expression is 0 or not
@@ -254,6 +261,9 @@ def _simplex(A, B, C, D=None, dual=False):
     Y = [(True, i)  for i in range(m)]
 
     # Phase 1: find a feasible solution or determine none exist
+    # keep track of last pivot row and column
+    # How big of loop through previous pivots can a system have? XXX
+    last = None
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -280,6 +290,13 @@ def _simplex(A, B, C, D=None, dual=False):
         piv_rows.append(k)
         r = _choose_pivot_row(A, B, piv_rows, c, Y)
 
+        # check for oscillation
+        if (r, c) == last:
+            raise InfeasibleLPError(filldedent("""
+                Oscillation: this can happen when there are variables
+                in the constraints (A) that are not in the objective
+                (C)."""))
+        last = r, c
         M = _pivot(M, r, c)
         X[c], Y[r] = Y[r], X[c]
 
