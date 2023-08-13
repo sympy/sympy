@@ -22,7 +22,7 @@ from sympy.abc import x, y, z, a
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.core.sympify import sympify
 
-from sympy.logic.algorithms.lra_theory import LRASolver, Boundry
+from sympy.logic.algorithms.lra_theory import LRASolver, Boundry, standardize_binrel
 
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
@@ -106,6 +106,7 @@ def test_from_encoded_cnf():
 
 
     from sympy.core.relational import StrictLessThan, StrictGreaterThan
+    import itertools
 
     special_cases = []; x1, x2, x3 = symbols("x1 x2 x3")
     #special_cases.append([x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3]) bug with smtlib_code
@@ -132,9 +133,17 @@ def test_from_encoded_cnf():
         if i < len(special_cases):
             constraints = special_cases[i-1]
 
-        #constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
-        #                                  disable_equality=True)
+        # constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
+        #                                  disable_nonstrict=False, disable_equality=False)
         #constraints = [-2*x1 < -4, 9*x1 > -9]
+        #constraints = [-6*x1 >= -1, -8*x1 + x2 >= 5, -8*x1 + 7*x2 < 4, x1 > 7]
+        #constraints = [Eq(x1, 2), Eq(5*x1, -2), Eq(-7*x2, -6), Eq(9*x1 + 10*x2, 9)]
+        #constraints = [Eq(3*x1, 6), Eq(x1 - 8*x2, -9), Eq(-7*x1 + 5*x2, 3), Eq(3*x2, 7)]
+        #constraints = [-4*x1 < 4, 6*x1 <= -6]
+        #constraints = [-3*x1 + 8*x2 >= -8, -10*x2 > 9, 8*x1 - 4*x2 < 8, 10*x1 - 9*x2 >= -9]
+        #constraints= [x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7]
+        #constraints = [-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9]
+        #constraints = [9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7]
 
         if False in constraints or True in constraints:
             continue
@@ -184,10 +193,18 @@ def test_from_encoded_cnf():
             assert check_if_satisfiable_with_z3(constraints) is False
 
             conflict = feasible[1]
+            conflict = {lra.boundry_enc[l].get_inequality() for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
+
+            # check that conflict clause is probably minimal
+            for subset in itertools.combinations(conflict, len(conflict)-1):
+                assert check_if_satisfiable_with_z3(subset) is True
+
     print("\nnumber of feasible problems: ", feasible_count)
 
+
+# TODO: test pivot method
 
 def test_preprocessing():
     s1, s2 = symbols("s1 s2")

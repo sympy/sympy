@@ -62,11 +62,49 @@ def sep_const_terms(expr):
     return sum(var), sum(const)
 
 
+def standardize_binrel(prop):
+    assert prop.function in [Q.ge, Q.gt, Q.le, Q.lt, Q.eq]
+
+    expr = prop.lhs - prop.rhs
+    if prop.function in [Q.ge, Q.gt]:
+        expr = -expr
+    var, const = sep_const_terms(expr)
+
+    if prop.function == Q.eq:
+        return Q.eq(var, const)
+    if prop.function in [Q.gt, Q.lt]:
+        return Q.lt(var, const)
+    else:
+        return Q.le(var, const)
+
+
+# def preprocess_encoded_cnf(enc_cnf):
+#     new_enc = {}
+#     new_data = []
+#     for prop, enc in enc_cnf.encoding:
+#         prop = standardize_binrel(prop)
+#
+#         if prop.function == Q.eq:
+#
+#
+#         if prop not in new_enc:
+#             prop = []
+#         new_enc[prop].append(enc)
+#
+#
+#     enc_cnf.encoding = {standardize_binrel(prop) if isinstance(prop, AppliedBinaryRelation) else prop: enc
+#                         for prop, enc in enc_cnf.encoding}
+
+
 class Boundry:
     """
     Represents an upper or lower bound or an equality between a symbol and some constant.
     """
     def __init__(self, var, const, upper, equality, strict=None):
+        if not equality in [True, False]:
+            assert equality in [True, False]
+
+
         self.var = var
         if isinstance(const, tuple):
             s = const[1] != 0
@@ -77,7 +115,7 @@ class Boundry:
         else:
             self.bound = const
             self.strict = strict
-        self.upper = upper
+        self.upper = upper if not equality else None
         self.equality = equality
         self.strict = strict
         assert self.strict is not None
@@ -93,6 +131,12 @@ class Boundry:
             return self.var <= self.bound
         else:
             return self.var >= self.bound
+
+    def __eq__(self, other):
+        other = (other.var, other.bound, other.strict, other.upper, other.equality)
+        return (self.var, self.bound, self.strict, self.upper, self.equality) == other
+    def __hash__(self):
+        return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
 
@@ -118,6 +162,7 @@ class LRASolver():
             assert A[:, n-m:] == -eye(m)
 
         self.boundry_enc = boundry_enc
+        self.boundry_rev_enc = {value: key for key, value in boundry_enc.items()}
 
         self.A = A # TODO: Row reduce A
         self.slack = slack_variables
@@ -127,13 +172,17 @@ class LRASolver():
 
         self.lower = {}
         self.upper = {}
+        self.low_origin = {}
+        self.up_origin = {}
         self.assign = {}
 
         self.result = None # always one of: (True, Assignment), (False, ConflictClause), None
 
         for var in self.all_var:
             self.lower[var] = (-float("inf"), 0)
+            self.low_origin[var] = False
             self.upper[var] = (float("inf"), 0)
+            self.up_origin[var] = False
             self.assign[var] = (0, 0)
 
     @staticmethod
@@ -151,7 +200,14 @@ class LRASolver():
         x_subs = {}
 
         # sorted here to remove nondeterminism
-        for prop, enc in sorted(encoded_cnf.encoding.items(), key=lambda x: str(x)):
+        # TODO: get rid of this to speed things up
+        ordered_encoded_cnf = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
+
+        # check that preprocessing has been done
+        # TODO: get rid of this to speed things up
+        #assert all(standardize_binrel(prop) == prop for prop, enc in encoding)
+
+        for prop, enc in ordered_encoded_cnf:
             if not isinstance(prop, AppliedBinaryRelation):
                 continue
             assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
@@ -260,10 +316,10 @@ class LRASolver():
             c = (c, 0)
 
         if boundry.equality:
-            res1 = self._assert_lower(sym, c)
+            res1 = self._assert_lower(sym, c,from_equality=True)
             if res1[0] == "UNSAT":
                 return res1
-            res2 = self._assert_upper(sym, c)
+            res2 = self._assert_upper(sym, c,from_equality=True)
             if res1[0] == "UNSAT":
                 return res2
             if "OK" in [res1[0], res2[0]]:
@@ -298,7 +354,7 @@ class LRASolver():
                 return self._assert_upper(sym, c)
 
         raise ValueError(f"{atom} could not be asserted.")
-    def _assert_upper(self, xi, ci):
+    def _assert_upper(self, xi, ci, from_equality=False):
         if self.result:
             assert self.result[0] != "UNSAT"
         self.result = None
@@ -307,18 +363,25 @@ class LRASolver():
         if ci < self.lower[xi]:
             assert (self.lower[xi][1] >= 0) is True
             assert (ci[1] <= 0) is True
-            lit1 = xi >= self.lower[xi][0] if self.lower[xi][1] == 0 else xi > self.lower[xi][0]
-            lit2 = xi <= ci[0] if ci[1] == 0 else xi < ci[0]
-            conflict = {lit1, lit2}
-            self.result = "UNSAT", conflict#{(xi, self.lower[xi]), (xi <= ci)}
+
+
+            lit1 = Boundry(var=xi, const=self.lower[xi][0], strict=self.lower[xi][1] != 0, upper=False,
+                           equality=self.low_origin[xi])
+            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+
+            conflict = {self.boundry_rev_enc[lit1], self.boundry_rev_enc[lit2]}
+            self.result = "UNSAT", conflict
+            assert lit1 in self.boundry_rev_enc
+            assert lit2 in self.boundry_rev_enc
             return self.result
         self.upper[xi] = ci
+        self.up_origin[xi] = from_equality
         if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
         return "OK", None
 
-    def _assert_lower(self, xi, ci):
+    def _assert_lower(self, xi, ci, from_equality=False):
         if self.result:
             assert self.result[0] != "UNSAT"
         self.result = None
@@ -327,14 +390,16 @@ class LRASolver():
         if ci > self.upper[xi]:
             assert (self.upper[xi][1] <= 0) is True
             assert (ci[1] >= 0) is True
-            lit1 = xi <= self.upper[xi][0] if self.upper[xi][1] == 0 else xi < self.upper[xi][0]
-            lit2 = xi >= ci[0] if ci[1] == 0 else xi > ci[0]
-            conflict = {lit1, lit2}
+
+            lit1 = Boundry(var=xi, const=self.upper[xi][0], strict=self.upper[xi][1] != 0, upper=True,
+                           equality=self.up_origin[xi])
+            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
+
+            conflict = {self.boundry_rev_enc[lit1], self.boundry_rev_enc[lit2]}
             self.result = "UNSAT", conflict
-            #b1 = Boundry(xi, self.upper[xi], equality=False, upper=True)
-            #self.result = "UNSAT", "WIP"#{xi <= self.upper[xi], xi >= ci}
             return self.result
         self.lower[xi] = ci
+        self.low_origin[xi] = from_equality
         if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
 
@@ -350,14 +415,7 @@ class LRASolver():
         self.assign[xi] = v
 
     def get_assignment(self, xi):
-        pass # not sure if it's possible to get a rational assignment when involving strict inequalities
-        # low, high, assign = self.lower[xi], self.high[xi], self.assign
-        # if low[0] == float("inf") and high[0] == float("inf"):
-        #     return 0
-        # if low[0] == float("inf"):
-        #     return high[0] - 1
-        # if high[0] == float("inf"):
-        #     return low[0] + 1
+        pass
 
 
 
@@ -405,7 +463,7 @@ class LRASolver():
             iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
 
             if self.run_checks:
-                # nonbasic variables always must be within bounds
+                # nonbasic variables must always be within bounds
                 assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
@@ -429,7 +487,7 @@ class LRASolver():
             if len(cand) == 0:
                 return "SAT", self.assign
 
-            xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland'S rule better
+            xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland's rule better
             i = basic[xi]
 
             if self.assign[xi] < self.lower[xi]:
@@ -439,18 +497,16 @@ class LRASolver():
                 if len(cand) == 0:
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
-                    conflict = set()
                     upper = [(nb, self.upper[nb]) for nb in N_plus]
                     lower = [(nb, self.lower[nb]) for nb in N_minus]
-                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
+
+                    conflict = set()
+                    conflict |= {Boundry(nb, up[0], True, self.up_origin[nb], up[1] != 0)
                             for nb, up in upper}
-                    conflict |= {nb >= lo[0] if lo[1] == 0 else nb > lo[0]
+                    conflict |= {Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
                                  for nb, lo in lower}
-                    conflict.add(xi >= self.lower[xi][0] if self.lower[xi][1] == 0 else xi > self.lower[xi][0])
-                    #conflict |= {nb <= self.upper[nb][0] if self.upper[nb][1] == 0 else nb < self.upper[nb][0]
-                    #             for nb in N_plus}
-                    #conflict |= {nb >= self.lower[nb] for nb in N_minus}
-                    #conflict.add(xi >= self.lower[xi])
+                    conflict.add(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
+                    conflict = set(self.boundry_rev_enc[c] for c in conflict)
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -464,19 +520,17 @@ class LRASolver():
                 if len(cand) == 0:
                     N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
                     N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
-                    conflict = set()
                     upper = [(nb, self.upper[nb]) for nb in N_minus]
                     lower = [(nb, self.lower[nb]) for nb in N_plus]
-                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
+
+                    conflict = set()
+                    conflict |= {Boundry(nb, up[0], True, self.up_origin[nb], up[1] != 0)
                                  for nb, up in upper}
-                    conflict |= {nb >= lo[0] if lo[1] == 0 else nb > lo[0]
+                    conflict |= {Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
                                  for nb, lo in lower}
-                    conflict |= {nb <= up[0] if up[1] == 0 else nb < up[0]
-                                 for nb, up in upper}
-                    conflict.add(xi <= self.upper[xi][0] if self.upper[xi][1] == 0 else xi < self.upper[xi][0])
-                    #conflict |= {nb <= self.upper[nb] for nb in N_minus}
-                    #conflict |= {nb >= self.lower[nb] for nb in N_plus}
-                    #conflict.add(xi <= self.upper[xi])
+                    conflict.add(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
+
+                    conflict = set(self.boundry_rev_enc[c] for c in conflict)
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
