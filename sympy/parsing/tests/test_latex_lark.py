@@ -235,13 +235,13 @@ FACTORIAL_EXPRESSION_PAIRS = [
 ]
 
 SUM_EXPRESSION_PAIRS = [
-    (r"\sum_{k = 1}^{3} c", Sum(c, (k, 1, 3))),
-    (r"\sum_{k = 1}^3 c", Sum(c, (k, 1, 3))),
-    (r"\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
-    (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
-    (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
+    (r"\sum_{k = 1}^{3} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(_Mul(1, k ** 2), (k, 1, 10))),
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
-     Sum(_Mul(1, _Pow(_factorial(n), -1)), (n, 0, oo)))
+     Sum(_Mul(1, _Mul(1, _Pow(_factorial(n), -1))), (n, 0, oo)))
 ]
 
 PRODUCT_EXPRESSION_PAIRS = [
