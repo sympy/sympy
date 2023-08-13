@@ -8,6 +8,7 @@ from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, oo)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.symbol import Symbol
@@ -156,30 +157,30 @@ POWER_EXPRESSION_PAIRS = [
 ]
 
 INTEGRAL_EXPRESSION_PAIRS = [
-    (r"\int x dx", Integral(x, x)),
-    (r"\int x \, dx", Integral(x, x)),
-    (r"\int x d\theta", Integral(x, theta)),
-    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
-    (r"\int x + a dx", Integral(_Add(x, a), x)),
-    (r"\int da", Integral(1, a)),
-    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
-    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
-    (r"\int_a^b x dx", Integral(x, (x, a, b))),
-    (r"\int^b_a x dx", Integral(x, (x, a, b))),
-    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
-    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
-    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
-    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
+    (r"\int x dx", Integral(_Mul(1, x), x)),
+    (r"\int x \, dx", Integral(_Mul(1, x), x)),
+    (r"\int x d\theta", Integral(_Mul(1, x), theta)),
+    (r"\int (x^2 - y)dx", Integral(_Mul(1, x ** 2 - y), x)),
+    (r"\int x + a dx", Integral(_Mul(1, _Add(x, a)), x)),
+    (r"\int da", Integral(_Mul(1, 1), a)),
+    (r"\int_0^7 dx", Integral(_Mul(1, 1), (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(_Mul(1, x), (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^b_a x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(_Mul(1, x), (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(_Mul(1, x), (x, a, b))),
     (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
-    (r"\int a + b + c dx", Integral(_Add(_Add(a, b), c), x)),
+    (r"\int a + b + c dx", Integral(_Mul(1, _Add(_Add(a, b), c)), x)),
     (r"\int \frac{dz}{z}", Integral(Pow(z, -1), z)),
     (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
-    (r"\int \frac{1}{x} dx", Integral(_Mul(1, Pow(x, -1)), x)),
+    (r"\int \frac{1}{x} dx", Integral(_Mul(1, _Mul(1, Pow(x, -1))), x)),
     (r"\int \frac{1}{a} + \frac{1}{b} dx",
-     Integral(_Add(_Mul(1, _Pow(a, -1)), _Mul(1, Pow(b, -1))), x)),
+     Integral(_Mul(1, _Add(_Mul(1, _Pow(a, -1)), _Mul(1, Pow(b, -1)))), x)),
     (r"\int \frac{3 \cdot d\theta}{\theta}",
      Integral(3 * _Pow(theta, -1), theta)),
-    (r"\int \frac{1}{x} + 1 dx", Integral(_Add(_Mul(1, _Pow(x, -1)), 1), x))
+    (r"\int \frac{1}{x} + 1 dx", Integral(_Mul(1, _Add(_Mul(1, _Pow(x, -1)), 1)), x))
 ]
 
 DERIVATIVE_EXPRESSION_PAIRS = [
@@ -327,7 +328,8 @@ def test_symbol_expressions():
     for i, (latex_str, sympy_expr) in enumerate(SYMBOL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_simple_expressions():
@@ -335,17 +337,20 @@ def test_simple_expressions():
     for i, (latex_str, sympy_expr) in enumerate(SIMPLE_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_fraction_expressions():
     for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_relation_expressions():
     for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_integral_expressions():
@@ -353,13 +358,15 @@ def test_integral_expressions():
     for i, (latex_str, sympy_expr) in enumerate(INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 # feature yet to be added
 @XFAIL
 def test_derivative_expressions():
     for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_trigonometric_expressions():
@@ -367,32 +374,38 @@ def test_trigonometric_expressions():
     for i, (latex_str, sympy_expr) in enumerate(TRIGONOMETRIC_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_limit_expressions():
     for latex_str, sympy_expr in LIMIT_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_square_root_expressions():
     for latex_str, sympy_expr in SQRT_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_factorial_expressions():
     for latex_str, sympy_expr in FACTORIAL_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_sum_expressions():
     for latex_str, sympy_expr in SUM_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_product_expressions():
     for latex_str, sympy_expr in PRODUCT_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 @XFAIL
 def test_applied_function_expressions():
@@ -401,26 +414,31 @@ def test_applied_function_expressions():
     for i, (latex_str, sympy_expr) in enumerate(APPLIED_FUNCTION_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_common_function_expressions():
     for latex_str, sympy_expr in COMMON_FUNCTION_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 # unhandled bug causing these to fail
 @XFAIL
 def test_spacing():
     for latex_str, sympy_expr in SPACING_RELATED_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_binomial_expressions():
     for latex_str, sympy_expr in BINOMIAL_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 # sus expressions
 @XFAIL
 def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
-        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
