@@ -16,6 +16,7 @@ from .ntheory import (
     legendre as python_legendre,
     jacobi as python_jacobi,
     kronecker as python_kronecker,
+    iroot as python_iroot,
 )
 
 
@@ -71,6 +72,9 @@ __all__ = [
 
     # kronecker from gmpy or sympy
     'kronecker',
+
+    # iroot from gmpy or sympy
+    'iroot',
 ]
 
 
@@ -161,6 +165,14 @@ if GROUND_TYPES == 'gmpy':
     jacobi = gmpy.jacobi
     kronecker = gmpy.kronecker
 
+    def iroot(x, n):
+        if n < 2**63:
+            # Currently it works only for n < 2**63, else it produces TypeError
+            # sympy issue: https://github.com/sympy/sympy/issues/18374
+            # gmpy2 issue: https://github.com/aleaxit/gmpy/issues/257
+            return gmpy.iroot(x, n)
+        return python_iroot(x, n)
+
 elif GROUND_TYPES == 'flint':
 
     HAS_GMPY = 0
@@ -179,6 +191,7 @@ elif GROUND_TYPES == 'flint':
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker
+    iroot = python_iroot
 
 elif GROUND_TYPES == 'python':
 
@@ -198,6 +211,7 @@ elif GROUND_TYPES == 'python':
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker
+    iroot = python_iroot
 
 else:
     assert False
