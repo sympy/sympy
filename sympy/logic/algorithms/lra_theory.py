@@ -557,6 +557,46 @@ class LRASolver():
 
     @staticmethod
     def _pivot(M, i, j):
+        """
+        Performs a pivot operation about entry i, j of M by performing
+        a series of row operations on a copy of M and returing the result.
+        The original M is left unmodified.
+
+        Conceptually, M represents a system of equations and pivoting
+        can be thought of as rearranging equation i to be in terms of
+        variable j and then substiututing in the rest of the equations
+        to get rid of other occurances of variable j.
+
+        Example
+        =======
+
+        >>> from sympy.matrices.dense import Matrix
+        >>> from sympy.logic.algorithms.lra_theory import LRASolver
+        >>> from sympy import var
+        >>> Matrix(3, 3, var('a:i'))
+        Matrix([
+        [a, b, c],
+        [d, e, f],
+        [g, h, i]])
+
+        This matrix is equivalent to:
+        0 = a*x + b*y + c*z
+        0 = d*x + e*y + f*z
+        0 = g*x + h*y + i*z
+
+        >>> LRASolver._pivot(_, 1, 0)
+        Matrix([
+        [ 0, -a*e/d + b, -a*f/d + c],
+        [-1,       -e/d,       -f/d],
+        [ 0,  h - e*g/d,  i - f*g/d]])
+
+        We rearage equation 1 in terms of variable 0 (x)
+        and substitute to remove x from the other equations.
+
+        0 = 0 + (-a*e/d + b)*y + (-a*f/d + c)*z
+        0 = -x + (-e/d)*y + (-f/d)*z
+        0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
+        """
         Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
         if Mij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
