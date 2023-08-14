@@ -330,6 +330,16 @@ class LRASolver():
         return LRASolver(A, basic, nonbasic, boundry_enc=encoding), x_subs, s_subs
 
     def assert_enc_boundry(self, enc_boundry):
+        """
+        Assert an upper or lower bound or equality between
+        a variable and a constant. Update the state
+        accordingly.
+
+        Parameters
+        ==========
+
+        enc_boundry : int
+        """
         boundry = self.boundry_enc[enc_boundry]
         sym, c = boundry.var, boundry.bound
 
@@ -423,6 +433,10 @@ class LRASolver():
         pass
 
     def check(self):
+        """
+        Searches for an assignment for all variables that satisfies all their
+        upper bounds or determines that such an assignment does not exist.
+        """
         if self.result:
             return self.result
 
