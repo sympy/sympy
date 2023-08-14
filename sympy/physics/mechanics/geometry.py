@@ -41,7 +41,7 @@ class GeometryBase(ABC):
     """
 
     @abstractmethod
-    def _point_is_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point: Point) -> bool:
         """Returns ``True`` if a point is on the geometry's surface.
 
         Parameters
@@ -150,7 +150,7 @@ class Sphere(GeometryBase):
     def point(self, point: Point) -> None:
         self._point = point
 
-    def _point_is_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point: Point) -> bool:
         """Returns ``True`` if a point is on the sphere's surface.
 
         Parameters
@@ -239,7 +239,7 @@ class Sphere(GeometryBase):
 
         """
         for point in (point_1, point_2):
-            if not self._point_is_on_surface(point):
+            if not self.point_on_surface(point):
                 msg = (
                     f'Geodesic length cannot be calculated as point {point} '
                     f'with radius {point.pos_from(self.point).magnitude()} '
@@ -360,7 +360,7 @@ class Cylinder(GeometryBase):
     def axis(self, axis: Vector) -> None:
         self._axis = axis
 
-    def _point_is_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point: Point) -> bool:
         """Returns ``True`` if a point is on the cylinder's surface.
 
         Parameters
@@ -452,7 +452,7 @@ class Cylinder(GeometryBase):
 
         """
         for point in (point_1, point_2):
-            if not self._point_is_on_surface(point):
+            if not self.point_on_surface(point):
                 msg = (
                     f'Geodesic length cannot be calculated as point {point} '
                     f'with radius {point.pos_from(self.point).magnitude()} '

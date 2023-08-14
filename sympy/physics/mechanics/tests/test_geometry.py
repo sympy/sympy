@@ -128,7 +128,7 @@ class TestCylinder:
             (r*(cos(q)*N.y + sin(q)*N.z), True)
         ]
     )
-    def test_point_is_on_surface(position: Vector, expected: bool) -> None:
+    def test_point_on_surface(position: Vector, expected: bool) -> None:
         r = Symbol('r')
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
@@ -136,7 +136,7 @@ class TestCylinder:
         p1 = Point('p1')
         p1.set_pos(pO, position)
 
-        assert cylinder._point_is_on_surface(p1) is expected
+        assert cylinder.point_on_surface(p1) is expected
 
     @staticmethod
     @pytest.mark.parametrize('position', [S.Zero, Integer(2)*r*N.y])
