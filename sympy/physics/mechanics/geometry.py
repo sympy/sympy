@@ -125,7 +125,7 @@ class Sphere(GeometryBase):
         radius : Symbol
             The radius of the sphere.
         point : Point
-            A point through which the sphere is centered.
+            A point on which the sphere is centered.
 
         """
         self.radius = radius
