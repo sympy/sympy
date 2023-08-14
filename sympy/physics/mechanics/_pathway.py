@@ -1,13 +1,4 @@
-"""Implementations of pathways for use by actuators.
-
-Notes
-=====
-
-This module is experimental and so is named with a leading underscore to
-indicate that the API is not yet stabilized and could be subject to breaking
-changes.
-
-"""
+"""Implementations of pathways for use by actuators."""
 
 from __future__ import annotations
 
@@ -29,7 +20,7 @@ if TYPE_CHECKING:
         from sympy.core.expr import Expr as ExprType
 
 
-__all__ = ['LinearPathway', 'WrappingPathway']
+__all__ = ['PathwayBase', 'LinearPathway', 'WrappingPathway']
 
 
 class PathwayBase(ABC):
@@ -131,11 +122,7 @@ class LinearPathway(PathwayBase):
     Examples
     ========
 
-    As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearPathway`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._pathway`` module.
-
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
+    >>> from sympy.physics.mechanics.pathway import LinearPathway
 
     To construct a pathway, two points are required to be passed to the
     ``attachments`` parameter as a ``tuple``.
@@ -155,7 +142,7 @@ class LinearPathway(PathwayBase):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.set_pos(pA, q*N.x)
     >>> pB.pos_from(pA)
     q(t)*N.x
 
@@ -178,7 +165,7 @@ class LinearPathway(PathwayBase):
     ==========
 
     attachments : tuple[Point, Point]
-        The pair of ``Point`` objects between which the linear pathway spans.
+        Pair of ``Point`` objects between which the linear pathway spans.
 
     """
 
@@ -192,8 +179,7 @@ class LinearPathway(PathwayBase):
         ==========
 
         attachments : tuple[Point, Point]
-            The pair of ``Point`` objects between which the linear pathway
-            spans.
+            Pair of ``Point`` objects between which the linear pathway spans.
 
         """
         super().__init__(*attachments)
@@ -243,12 +229,12 @@ class LinearPathway(PathwayBase):
         ``x`` direction of the global frame ``N``.
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._pathway import LinearPathway
+        >>> from sympy.physics.mechanics.pathway import LinearPathway
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
         >>> pA, pB = Point('pA'), Point('pB')
-        >>> pB.set_pos(pA, q * N.x)
+        >>> pB.set_pos(pA, q*N.x)
         >>> linear_pathway = LinearPathway(pA, pB)
 
         Now create a symbol ``F`` to describe the magnitude of the (expansile)
@@ -265,14 +251,14 @@ class LinearPathway(PathwayBase):
         ==========
 
         force : Expr
-            The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. It
+            is assumed that this ``Expr`` represents an expansile force.
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         loads: list[LoadBase] = [
-            Force(self.attachments[0], -force * relative_position / self.length),
-            Force(self.attachments[-1], force * relative_position / self.length),
+            Force(self.attachments[0], -force*relative_position/self.length),
+            Force(self.attachments[-1], force*relative_position/self.length),
         ]
         return loads
 
@@ -293,18 +279,11 @@ class WrappingPathway(PathwayBase):
     Examples
     ========
 
-    As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``WrappingPathway`` must therefore
-    be imported directly from the ``sympy.physics.mechanics._pathway`` module.
-
-    >>> from sympy.physics.mechanics._pathway import WrappingPathway
+    >>> from sympy.physics.mechanics.pathway import WrappingPathway
 
     To construct a wrapping pathway, a geometry object, which the pathway can
-    wrap, is required. Similar to above, the ``wrapping_geometry.py`` module is
-    also experimental so geometry classes needed to be imported directly from
-    the ``sympy.physics.mechanics.wrapping_geometry.py`` module. Let's create a
-    wrapping pathway that wraps around a cylinder. To do this we need to import
-    the ``Cylinder`` class.
+    wrap, is required. Let's create a wrapping pathway that wraps around a
+    cylinder. To do this we need to import the ``Cylinder`` class.
 
     >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
 
@@ -313,9 +292,9 @@ class WrappingPathway(PathwayBase):
     argument. We'll use a cylinder with radius ``r`` and its axis parallel to
     ``N.x`` passing through a point ``pO``.
 
-    >>> from sympy import Symbol
+    >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Point, ReferenceFrame
-    >>> r = Symbol('r')
+    >>> r = symbols('r')
     >>> N = ReferenceFrame('N')
     >>> pA, pB, pO = Point('pA'), Point('pB'), Point('pO')
     >>> cylinder = Cylinder(r, pO, N.x)
@@ -328,13 +307,13 @@ class WrappingPathway(PathwayBase):
     ==========
 
     attachment_1 : Point
-        The first of the pair of ``Point`` objects between which the wrapping
+        First of the pair of ``Point`` objects between which the wrapping
         pathway spans.
     attachment_2 : Point
-        The second of the pair of ``Point`` objects between which the wrapping
+        Second of the pair of ``Point`` objects between which the wrapping
         pathway spans.
     geometry : GeometryBase
-        The geometry about which the pathway wraps.
+        Geometry about which the pathway wraps.
 
     """
 
@@ -350,13 +329,13 @@ class WrappingPathway(PathwayBase):
         ==========
 
         attachment_1 : Point
-            The first of the pair of ``Point`` objects between which the
-            wrapping pathway spans.
+            First of the pair of ``Point`` objects between which the wrapping
+            pathway spans.
         attachment_2 : Point
-            The second of the pair of ``Point`` objects between which the
-            wrapping pathway spans.
+            Second of the pair of ``Point`` objects between which the wrapping
+            pathway spans.
         geometry : GeometryBase
-            The geometry about which the pathway wraps.
+            Geometry about which the pathway wraps.
 
         """
         super().__init__(attachment_1, attachment_2)
@@ -364,7 +343,7 @@ class WrappingPathway(PathwayBase):
 
     @property
     def geometry(self) -> GeometryBase:
-        """The geometry around which the pathway wraps."""
+        """Geometry around which the pathway wraps."""
         return self._geometry
 
     @geometry.setter
@@ -417,11 +396,11 @@ class WrappingPathway(PathwayBase):
         parallel to the ``N.z`` direction of the global frame ``N`` that also
         passes through a point ``pO``.
 
-        >>> from sympy import Symbol
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
         >>> N = ReferenceFrame('N')
-        >>> r = Symbol('r', positive=True)
+        >>> r = symbol('r', positive=True)
         >>> pO = Point('pO')
         >>> cylinder = Cylinder(r, pO, N.z)
 
@@ -432,12 +411,12 @@ class WrappingPathway(PathwayBase):
 
         >>> from sympy import cos, sin
         >>> from sympy.physics.mechanics import dynamicsymbols
-        >>> from sympy.physics.mechanics._pathway import WrappingPathway
+        >>> from sympy.physics.mechanics.pathway import WrappingPathway
         >>> q = dynamicsymbols('q')
         >>> pA = Point('pA')
         >>> pB = Point('pB')
-        >>> pA.set_pos(pO, r * N.x)
-        >>> pB.set_pos(pO, r * (cos(q) * N.x + sin(q) * N.y))
+        >>> pA.set_pos(pO, r*N.x)
+        >>> pB.set_pos(pO, r*(cos(q)*N.x + sin(q)*N.y))
         >>> pB.pos_from(pA)
         (r*cos(q(t)) - r)*N.x + r*sin(q(t))*N.y
         >>> pathway = WrappingPathway(pA, pB, cylinder)
@@ -457,8 +436,8 @@ class WrappingPathway(PathwayBase):
         ==========
 
         force : Expr
-            The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. It
+            is assumed that this ``Expr`` represents an expansile force.
 
         """
         pA, pB = self.attachments
