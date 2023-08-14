@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    'GeometryBase',
     'Cylinder',
     'Sphere',
 ]
