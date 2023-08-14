@@ -369,7 +369,7 @@ class LRASolver():
                            equality=self.low_origin[xi])
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
 
-            conflict = {self.boundry_rev_enc[lit1], self.boundry_rev_enc[lit2]}
+            conflict = {-self.boundry_rev_enc[lit1], -self.boundry_rev_enc[lit2]}
             self.result = "UNSAT", conflict
             assert lit1 in self.boundry_rev_enc
             assert lit2 in self.boundry_rev_enc
@@ -395,7 +395,7 @@ class LRASolver():
                            equality=self.up_origin[xi])
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
 
-            conflict = {self.boundry_rev_enc[lit1], self.boundry_rev_enc[lit2]}
+            conflict = {-self.boundry_rev_enc[lit1],-self.boundry_rev_enc[lit2]}
             self.result = "UNSAT", conflict
             return self.result
         self.lower[xi] = ci
@@ -506,7 +506,7 @@ class LRASolver():
                     conflict |= {Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
-                    conflict = set(self.boundry_rev_enc[c] for c in conflict)
+                    conflict = set(-self.boundry_rev_enc[c] for c in conflict)
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -530,7 +530,7 @@ class LRASolver():
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
 
-                    conflict = set(self.boundry_rev_enc[c] for c in conflict)
+                    conflict = set(-self.boundry_rev_enc[c] for c in conflict)
                     return "UNSAT", conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
