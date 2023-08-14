@@ -180,9 +180,9 @@ class Sphere(GeometryBase):
 
         .. math::
 
-            l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
+           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
 
-        where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
+        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
         sphere's center to the first and second points on the sphere's surface
         respectively.
 
@@ -391,9 +391,9 @@ class Cylinder(GeometryBase):
 
         .. math::
 
-            l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
+           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
 
-        where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
+        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
         cylinder's center to the first and second points on the cylinder's
         surface respectively.
 
