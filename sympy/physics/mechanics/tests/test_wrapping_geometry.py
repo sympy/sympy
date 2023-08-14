@@ -85,7 +85,7 @@ class TestSphere:
     )
     def test_geodesic_length(position_1: Vector, position_2: Vector,
                              expected: ExprType) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
 
