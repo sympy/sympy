@@ -1,13 +1,4 @@
-"""Implementations of geometry objects for use by wrapping pathways.
-
-Notes
-=====
-
-This module is experimental and so is named with a leading underscore to
-indicate that the API is not yet stabilized and could be subject to breaking
-changes.
-
-"""
+"""Geometry objects for use by wrapping pathways."""
 
 from __future__ import annotations
 
@@ -50,7 +41,7 @@ class GeometryBase(ABC):
 
     @abstractmethod
     def _point_is_on_surface(self, point: Point) -> bool:
-        """Determine if a point is on the geometry's surface.
+        """Returns ``True`` if a point is on the geometry's surface.
 
         Parameters
         ==========
@@ -63,7 +54,8 @@ class GeometryBase(ABC):
 
     @abstractmethod
     def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
-        """The shortest distance between two points on a geometry's surface.
+        """Returns the shortest distance between two points on a geometry's
+        surface.
 
         Parameters
         ==========
@@ -93,20 +85,15 @@ class Sphere(GeometryBase):
     Examples
     ========
 
-    As the ``_geometry.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``Sphere`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._geometry`` module.
-
-    >>> from sympy.physics.mechanics._geometry import Sphere
+    >>> from sympy.physics.mechanics.geometry import Sphere
 
     To create a ``Sphere`` instance, a ``Symbol`` denoting its radius and
     ``Point`` at which its center will be located are needed:
 
-    >>> from sympy import Symbol
+    >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Point
-    >>> r = Symbol('r')
+    >>> r = symbols('r')
     >>> pO = Point('pO')
-
 
     A sphere with radius ``r`` centered on ``pO`` can be instantiated with:
 
@@ -117,7 +104,7 @@ class Sphere(GeometryBase):
     ==========
 
     radius : Symbol
-        The radius of the sphere. This symbol must represent a value that is
+        Radius of the sphere. This symbol must represent a value that is
         positive and constant, i.e. it cannot be a dynamic symbol.
     point : Point
         A point at which the sphere is centered.
@@ -138,7 +125,7 @@ class Sphere(GeometryBase):
         radius : Symbol
             The radius of the sphere.
         point : Point
-            A point through which the sphere's axis passes.
+            A point through which the sphere is centered.
 
         """
         self.radius = radius
@@ -146,7 +133,7 @@ class Sphere(GeometryBase):
 
     @property
     def radius(self) -> Symbol:
-        """The radius of the sphere."""
+        """Radius of the sphere."""
         return self._radius
 
     @radius.setter
@@ -163,7 +150,7 @@ class Sphere(GeometryBase):
         self._point = point
 
     def _point_is_on_surface(self, point: Point) -> bool:
-        """Determine if a point is on the sphere's surface.
+        """Returns ``True`` if a point is on the sphere's surface.
 
         Parameters
         ==========
@@ -175,13 +162,14 @@ class Sphere(GeometryBase):
         """
         point_vector = point.pos_from(self.point)
         if isinstance(point_vector, Vector):
-            point_radius = dot(point_vector, point_vector)
+            point_radius_squared = dot(point_vector, point_vector)
         else:
-            point_radius = point_vector**2
-        return Eq(point_radius, self.radius**2) == True
+            point_radius_squared = point_vector**2
+        return Eq(point_radius_squared, self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
-        r"""The shortest distance between two points on a geometry's surface.
+        r"""Retrns the shortest distance between two points on the sphere's
+        surface.
 
         Explanation
         ===========
@@ -190,6 +178,7 @@ class Sphere(GeometryBase):
         sphere, connecting two points can be calculated using the formula:
 
         .. math::
+
             l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
 
         where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
@@ -206,11 +195,11 @@ class Sphere(GeometryBase):
         sphere's surface. Firstly, a ``Sphere`` instance must be created along
         with two points that will lie on its surface:
 
-        >>> from sympy import Symbol
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._geometry import Sphere
+        >>> from sympy.physics.mechanics.geometry import Sphere
         >>> N = ReferenceFrame('N')
-        >>> r = Symbol('r')
+        >>> r = symbols('r')
         >>> pO = Point('pO')
         >>> pO.set_vel(N, 0)
         >>> sphere = Sphere(r, pO)
@@ -222,10 +211,10 @@ class Sphere(GeometryBase):
         surface in the ``N.y + N.z`` direction from ``pO``. These positions can
         be set with:
 
-        >>> p1.set_pos(pO, r * N.x)
+        >>> p1.set_pos(pO, r*N.x)
         >>> p1.pos_from(pO)
         r*N.x
-        >>> p2.set_pos(pO, r * (N.y + N.z).normalize())
+        >>> p2.set_pos(pO, r*(N.y + N.z).normalize())
         >>> p2.pos_from(pO)
         sqrt(2)*r/2*N.y + sqrt(2)*r/2*N.z
 
@@ -235,17 +224,17 @@ class Sphere(GeometryBase):
         >>> sphere.geodesic_length(p1, p2)
         pi*r/2
 
-        If the ``geodesic_length`` method is passed an argument ``Point`` that
-        doesn't lie on the sphere's surface then a ``ValueError`` is raised
-        because it's not possible to calculate a value in this case.
+        If the ``geodesic_length`` method is passed an argument, the ``Point``
+        that doesn't lie on the sphere's surface then a ``ValueError`` is
+        raised because it's not possible to calculate a value in this case.
 
         Parameters
         ==========
 
         point_1 : Point
-            The point from which the geodesic length should be calculated.
+            Point from which the geodesic length should be calculated.
         point_2 : Point
-            The point to which the geodesic length should be calculated.
+            Point to which the geodesic length should be calculated.
 
         """
         for point in (point_1, point_2):
@@ -260,7 +249,7 @@ class Sphere(GeometryBase):
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
         central_angle = acos(point_2_vector.dot(point_1_vector))
-        geodesic_length = self.radius * central_angle
+        geodesic_length = self.radius*central_angle
         return geodesic_length
 
     def __repr__(self) -> str:
@@ -288,20 +277,16 @@ class Cylinder(GeometryBase):
     Examples
     ========
 
-    As the ``_geometry.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``Cylinder`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._geometry`` module.
-
-    >>> from sympy.physics.mechanics._geometry import Cylinder
+    >>> from sympy.physics.mechanics.geometry import Cylinder
 
     To create a ``Cylinder`` instance, a ``Symbol`` denoting its radius, a
     ``Vector`` defining its axis, and a ``Point`` through which its axis passes
     are needed:
 
-    >>> from sympy import Symbol
+    >>> from sympy import symbols
     >>> from sympy.physics.mechanics import Point, ReferenceFrame
     >>> N = ReferenceFrame('N')
-    >>> r = Symbol('r')
+    >>> r = symbols('r')
     >>> pO = Point('pO')
     >>> ax = N.x
 
@@ -349,7 +334,7 @@ class Cylinder(GeometryBase):
 
     @property
     def radius(self) -> Symbol:
-        """The radius of the cylinder."""
+        """Radius of the cylinder."""
         return self._radius
 
     @radius.setter
@@ -367,7 +352,7 @@ class Cylinder(GeometryBase):
 
     @property
     def axis(self) -> Vector:
-        """The axis along which the cylinder is aligned."""
+        """Axis along which the cylinder is aligned."""
         return self._axis
 
     @axis.setter
@@ -375,7 +360,7 @@ class Cylinder(GeometryBase):
         self._axis = axis
 
     def _point_is_on_surface(self, point: Point) -> bool:
-        """Determine if a point is on the cylinder's surface.
+        """Returns ``True`` if a point is on the cylinder's surface.
 
         Parameters
         ==========
@@ -389,10 +374,10 @@ class Cylinder(GeometryBase):
         parallel = relative_position.dot(self.axis) * self.axis
         point_vector = relative_position - parallel
         if isinstance(point_vector, Vector):
-            point_radius = dot(point_vector, point_vector)
+            point_radius_squared = dot(point_vector, point_vector)
         else:
-            point_radius = point_vector**2
-        return Eq(trigsimp(point_radius), self.radius**2) == True
+            point_radius_squared = point_vector**2
+        return Eq(trigsimp(point_radius_squared), self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
         r"""The shortest distance between two points on a geometry's surface.
@@ -404,6 +389,7 @@ class Cylinder(GeometryBase):
         cylinder, connecting two points can be calculated using the formula:
 
         .. math::
+
             l = \acos{\mathbf{v}_1 \dot \mathbf{v}_2}
 
         where $mathbf{v}_1$ and $mathbf{v}_2$ are the unit vectors from the
@@ -417,12 +403,12 @@ class Cylinder(GeometryBase):
         cylinder's surface. Firstly, a ``Cylinder`` instance must be created
         along with two points that will lie on its surface:
 
-        >>> from sympy import Symbol, cos, sin
+        >>> from sympy import symbols, cos, sin
         >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
-        ... dynamicsymbols)
-        >>> from sympy.physics.mechanics._geometry import Cylinder
+        ...     dynamicsymbols)
+        >>> from sympy.physics.mechanics.geometry import Cylinder
         >>> N = ReferenceFrame('N')
-        >>> r = Symbol('r')
+        >>> r = symbols('r')
         >>> pO = Point('pO')
         >>> pO.set_vel(N, 0)
         >>> cylinder = Cylinder(r, pO, N.x)
@@ -439,7 +425,7 @@ class Cylinder(GeometryBase):
         >>> p1.set_pos(pO, N.x + r*N.y)
         >>> p1.pos_from(pO)
         N.x + r*N.y
-        >>> p2.set_pos(pO, r * (cos(q)*N.y + sin(q)*N.z).normalize())
+        >>> p2.set_pos(pO, r*(cos(q)*N.y + sin(q)*N.z).normalize())
         >>> p2.pos_from(pO).simplify()
         r*cos(q(t))*N.y + r*sin(q(t))*N.z
 
@@ -459,9 +445,9 @@ class Cylinder(GeometryBase):
         ==========
 
         point_1 : Point
-            The point from which the geodesic length should be calculated.
+            Point from which the geodesic length should be calculated.
         point_2 : Point
-            The point to which the geodesic length should be calculated.
+            Point to which the geodesic length should be calculated.
 
         """
         for point in (point_1, point_2):
@@ -481,13 +467,13 @@ class Cylinder(GeometryBase):
         point_1_relative_position = point_1.pos_from(self.point)
         point_1_perpendicular_vector = (
             point_1_relative_position
-            - point_1_relative_position.dot(self.axis) * self.axis
+            - point_1_relative_position.dot(self.axis)*self.axis
         ).normalize()
 
         point_2_relative_position = point_2.pos_from(self.point)
         point_2_perpendicular_vector = (
             point_2_relative_position
-            - point_2_relative_position.dot(self.axis) * self.axis
+            - point_2_relative_position.dot(self.axis)*self.axis
         ).normalize()
 
         central_angle = _directional_atan(
@@ -497,7 +483,7 @@ class Cylinder(GeometryBase):
             cancel(point_1_perpendicular_vector.dot(point_2_perpendicular_vector)),
         )
 
-        planar_arc_length = self.radius * central_angle
+        planar_arc_length = self.radius*central_angle
         geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
 
