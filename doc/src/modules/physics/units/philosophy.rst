@@ -275,7 +275,7 @@ Literature
 ==========
 
 .. [Page52] C. H. Page, `Classes of units in the SI
-    <https://pubs.aip.org/aapt/ajp/article-abstract/46/1/78/1050826/Classes-of-units-in-the-SI>`_,
+    <https://doi.org/10.1119/1.1927482>`_,
     Am. J. of Phys. 20, 1 (1952): 1.
 
 .. [Page78] C. H. Page, `Units and Dimensions in Physics
