@@ -8,7 +8,7 @@ import pytest
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
@@ -457,3 +457,12 @@ class TestFiberForceLengthPassiveDeGroote2016:
     def test_doit_evaluate_false(self) -> None:
         fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
         assert fl_M == (exp((self.c1*UnevaluatedExpr(self.l_M_tilde - 1))/c0) - 1)/(exp(self.c1) - 1)
+
+    def test_with_default_constants(self) -> None:
+        constants = (
+            Rational(3, 5),
+            Integer(4),
+        )
+        fl_M_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
+        fl_M_constants = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        assert fl_M_manual == fl_M_constants
