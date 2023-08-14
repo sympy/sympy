@@ -264,3 +264,14 @@ class TestTendonForceLengthInverseDeGroote2016:
     def test_doit_evaluate_false(self) -> None:
         fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants).doit(evaluate=False)
         assert fl_T_inv == log(UnevaluatedExpr((self.fl_T + self.c2) / self.c0)) / self.c3 + self.c1
+
+    def test_with_default_constants(self) -> None:
+        constants = (
+            Float('0.2'),
+            Float('0.995'),
+            Float('0.25'),
+            Float('33.93669377311689'),
+        )
+        fl_T_inv_manual = TendonForceLengthInverseDeGroote2016(self.fl_T, *constants)
+        fl_T_inv_constants = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        assert fl_T_inv_manual == fl_T_inv_constants
