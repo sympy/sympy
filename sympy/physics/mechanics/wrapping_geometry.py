@@ -8,7 +8,7 @@ from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
-from sympy.physics.vector import Vector, dot, Point
+from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
 
 
