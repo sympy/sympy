@@ -2,5 +2,5 @@
 Geometry (Docstrings)
 =====================
 
-.. automodule:: sympy.physics.mechanics.geometry
+.. automodule:: sympy.physics.mechanics.wrapping_geometry
    :members:

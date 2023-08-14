@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics.mechanics.geometry.py`` module."""
+"""Tests for the ``sympy.physics.mechanics.wrapping_geometry.py`` module."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from sympy.core.backend import (
 )
 from sympy.core.relational import Eq
 from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics.geometry import Cylinder, Sphere
+from sympy.physics.mechanics.wrapping_geometry import Cylinder, Sphere
 from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:

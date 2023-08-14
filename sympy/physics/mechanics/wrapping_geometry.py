@@ -76,7 +76,7 @@ class Sphere(GeometryBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.geometry import Sphere
+    >>> from sympy.physics.mechanics.wrapping_geometry import Sphere
 
     To create a ``Sphere`` instance, a ``Symbol`` denoting its radius and
     ``Point`` at which its center will be located are needed:
@@ -182,7 +182,7 @@ class Sphere(GeometryBase):
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics.geometry import Sphere
+        >>> from sympy.physics.mechanics.wrapping_geometry import Sphere
         >>> N = ReferenceFrame('N')
         >>> r = symbols('r')
         >>> pO = Point('pO')
@@ -262,7 +262,7 @@ class Cylinder(GeometryBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.geometry import Cylinder
+    >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
 
     To create a ``Cylinder`` instance, a ``Symbol`` denoting its radius, a
     ``Vector`` defining its axis, and a ``Point`` through which its axis passes
@@ -393,7 +393,7 @@ class Cylinder(GeometryBase):
         >>> from sympy import symbols, cos, sin
         >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
         ...     dynamicsymbols)
-        >>> from sympy.physics.mechanics.geometry import Cylinder
+        >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
         >>> N = ReferenceFrame('N')
         >>> r = symbols('r')
         >>> pO = Point('pO')
