@@ -11,6 +11,7 @@ from sympy.core.backend import (
     Rational,
     S,
     Symbol,
+    USE_SYMENGINE,
     acos,
     cos,
     pi,
@@ -23,7 +24,6 @@ from sympy.physics.mechanics._geometry import Cylinder, Sphere
 from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:
-    from sympy.core.backend import USE_SYMENGINE
     from sympy.physics.mechanics import Vector
 
     if USE_SYMENGINE:
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
         from sympy.core.expr import Expr as ExprType
 
 
-r = Symbol('r')
+r = Symbol('r', positive=True)
 x = Symbol('x')
 q = dynamicsymbols('q')
 N = ReferenceFrame('N')
@@ -42,7 +42,7 @@ class TestSphere:
 
     @staticmethod
     def test_valid_constructor() -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
         assert isinstance(sphere, Sphere)
@@ -54,7 +54,7 @@ class TestSphere:
     @staticmethod
     @pytest.mark.parametrize('position', [S.Zero, Integer(2) * r * N.x])
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
 
@@ -84,7 +84,7 @@ class TestSphere:
         ]
     )
     def test_geodesic_length(position_1: Vector, position_2: Vector, expected: ExprType) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         sphere = Sphere(r, pO)
 
@@ -95,13 +95,105 @@ class TestSphere:
 
         assert simplify(Eq(sphere.geodesic_length(p1, p2), expected))
 
+    @staticmethod
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
+    @pytest.mark.parametrize(
+        'position_1, position_2, vector_1, vector_2',
+        [
+            (r * N.x, r * N.y, N.y, N.x),
+            (r * N.x, -r * N.y, -N.y, N.x),
+            (
+                r * N.y,
+                sqrt(2)/2 * r * N.x - sqrt(2)/2 * r * N.y,
+                N.x,
+                sqrt(2)/2 * N.x + sqrt(2)/2 * N.y,
+            ),
+            (
+                r * N.x,
+                r / 2 * N.x + sqrt(3)/2 * r * N.y,
+                N.y,
+                sqrt(3)/2 * N.x - 1/2 * N.y,
+            ),
+            (
+                r * N.x,
+                sqrt(2)/2 * r * N.x + sqrt(2)/2 * r * N.y,
+                N.y,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+        ]
+    )
+    def test_geodesic_end_vectors(
+        position_1: Vector,
+        position_2: Vector,
+        vector_1: Vector,
+        vector_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        expected = (vector_1, vector_2)
+
+        assert sphere._geodesic_end_vectors(p1, p2) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position',
+        [r * N.x, r * cos(q) * N.x + r * sin(q) * N.y]
+    )
+    def test_geodesic_end_vectors_invalid_coincident(position: Vector) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position)
+        p2 = Point('p2')
+        p2.set_pos(pO, position)
+
+        with pytest.raises(ValueError):
+            _ = sphere._geodesic_end_vectors(p1, p2)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position_1, position_2',
+        [
+            (r * N.x, -r * N.x),
+            (-r * N.y, r * N.y),
+            (
+                r * cos(q) * N.x + r * sin(q) * N.y,
+                -r * cos(q) * N.x - r * sin(q) * N.y,
+            )
+        ]
+    )
+    def test_geodesic_end_vectors_invalid_diametrically_opposite(
+        position_1: Vector,
+        position_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        sphere = Sphere(r, pO)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        with pytest.raises(ValueError):
+            _ = sphere._geodesic_end_vectors(p1, p2)
+
 
 class TestCylinder:
 
     @staticmethod
     def test_valid_constructor() -> None:
         N = ReferenceFrame('N')
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
         assert isinstance(cylinder, Cylinder)
@@ -128,7 +220,7 @@ class TestCylinder:
         ]
     )
     def test_point_is_on_surface(position: Vector, expected: bool) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
 
@@ -140,7 +232,7 @@ class TestCylinder:
     @staticmethod
     @pytest.mark.parametrize('position', [S.Zero, Integer(2) * r * N.y])
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, N.x)
 
@@ -179,7 +271,7 @@ class TestCylinder:
         position_2: Vector,
         expected: ExprType,
     ) -> None:
-        r = Symbol('r')
+        r = Symbol('r', positive=True)
         pO = Point('pO')
         cylinder = Cylinder(r, pO, axis)
 
@@ -189,3 +281,106 @@ class TestCylinder:
         p2.set_pos(pO, position_2)
 
         assert simplify(Eq(cylinder.geodesic_length(p1, p2), expected))
+
+    @staticmethod
+    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
+    @pytest.mark.parametrize(
+        'axis, position_1, position_2, vector_1, vector_2',
+        [
+            (N.z, r * N.x, r * N.y, N.y, N.x),
+            (N.z, r * N.x, -r * N.x, N.y, N.y),
+            (N.z, -r * N.x, r * N.x, -N.y, -N.y),
+            (-N.z, r * N.x, -r * N.x, -N.y, -N.y),
+            (-N.z, -r * N.x, r * N.x, N.y, N.y),
+            (N.z, r * N.x, -r * N.y, N.y, -N.x),
+            (
+                N.z,
+                r * N.y,
+                sqrt(2)/2 * r * N.x - sqrt(2)/2 * r * N.y,
+                - N.x,
+                - sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r / 2 * N.x + sqrt(3)/2 * r * N.y,
+                N.y,
+                sqrt(3)/2 * N.x - 1/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                sqrt(2)/2 * r * N.x + sqrt(2)/2 * r * N.y,
+                N.y,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.y,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r * N.x + N.z,
+                N.z,
+                -N.z,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r * N.y + pi/2 * r * N.z,
+                sqrt(2)/2 * N.y + sqrt(2)/2 * N.z,
+                sqrt(2)/2 * N.x - sqrt(2)/2 * N.z,
+            ),
+            (
+                N.z,
+                r * N.x,
+                r * cos(q) * N.x + r * sin(q) * N.y,
+                N.y,
+                sin(q) * N.x - cos(q) * N.y,
+            ),
+        ]
+    )
+    def test_geodesic_end_vectors(
+        axis: Vector,
+        position_1: Vector,
+        position_2: Vector,
+        vector_1: Vector,
+        vector_2: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position_1)
+        p2 = Point('p2')
+        p2.set_pos(pO, position_2)
+
+        expected = (vector_1, vector_2)
+        end_vectors = tuple(
+            end_vector.simplify()
+            for end_vector in cylinder._geodesic_end_vectors(p1, p2)
+        )
+
+        assert end_vectors == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, position',
+        [
+            (N.z, r * N.x),
+            (N.z, r * cos(q) * N.x + r * sin(q) * N.y + N.z),
+        ]
+    )
+    def test_geodesic_end_vectors_invalid_coincident(
+        axis: Vector,
+        position: Vector,
+    ) -> None:
+        r = Symbol('r', positive=True)
+        pO = Point('pO')
+        cylinder = Cylinder(r, pO, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(pO, position)
+        p2 = Point('p2')
+        p2.set_pos(pO, position)
+
+        with pytest.raises(ValueError):
+            _ = cylinder._geodesic_end_vectors(p1, p2)
