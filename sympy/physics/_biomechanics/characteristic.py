@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 
 if TYPE_CHECKING:
     from typing import Any
