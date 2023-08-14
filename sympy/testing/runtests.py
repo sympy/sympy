@@ -37,7 +37,7 @@ from inspect import unwrap
 
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
-from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
@@ -2206,10 +2206,7 @@ class PyTestReporter(Reporter):
         self.write("cache:              %s\n" % USE_CACHE)
         version = ''
         if GROUND_TYPES =='gmpy':
-            if HAS_GMPY == 1:
-                import gmpy
-            elif HAS_GMPY == 2:
-                import gmpy2 as gmpy
+            import gmpy2 as gmpy
             version = gmpy.version()
         self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
         numpy = import_module('numpy')

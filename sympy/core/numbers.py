@@ -19,7 +19,7 @@ from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import (SYMPY_INTS, HAS_GMPY, gmpy,
+from sympy.external.gmpy import (SYMPY_INTS, gmpy, flint,
                                  gcd as number_gcd, lcm as number_lcm)
 from sympy.multipledispatch import dispatch
 import mpmath
@@ -4528,23 +4528,35 @@ def equal_valued(x, y):
 def _eval_is_eq(self, other): # noqa: F811
     return False
 
+
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
 _sympy_converter[fractions.Fraction] = sympify_fractions
 
-if HAS_GMPY:
+
+if gmpy is not None:
+
     def sympify_mpz(x):
         return Integer(int(x))
 
-    # XXX: The sympify_mpq function here was never used because it is
-    # overridden by the other sympify_mpq function below. Maybe it should just
-    # be removed or maybe it should be used for something...
     def sympify_mpq(x):
         return Rational(int(x.numerator), int(x.denominator))
 
     _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
     _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+
+
+if flint is not None:
+
+    def sympify_fmpz(x):
+        return Integer(int(x))
+
+    def sympify_fmpq(x):
+        return Rational(int(x.numerator), int(x.denominator))
+
+    _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
+    _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
 
 
 def sympify_mpmath_mpq(x):

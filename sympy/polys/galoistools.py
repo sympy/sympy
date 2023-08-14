@@ -1404,7 +1404,8 @@ def gf_random(n, p, K):
     [1, 2, 3, 2, 1, 1, 1, 2, 0, 4, 2]
 
     """
-    return [K.one] + [ K(int(uniform(0, p))) for i in range(0, n) ]
+    pi = int(p)
+    return [K.one] + [ K(int(uniform(0, pi))) for i in range(0, n) ]
 
 
 def gf_irreducible(n, p, K):

@@ -12,9 +12,8 @@ Introduction
 SymPy runs under the `Python Programming Language <https://www.python.org/>`_,
 so there are some things that may behave differently than they do in other,
 independent computer algebra systems like Maple or Mathematica. These are some
-of the gotchas and pitfalls that you may encounter when using SymPy. See also
-the `FAQ <https://github.com/sympy/sympy/wiki/Faq>`_, the :ref:`introductory
-tutorial<intro-tutorial>`, the remainder of the SymPy Docs, and the `official
+of the gotchas and pitfalls that you may encounter when using SymPy. See also the :ref:`introductory
+tutorial <intro-tutorial>`, the remainder of the SymPy Docs, and the `official
 Python Tutorial <https://docs.python.org/3/tutorial/>`_.
 
 
@@ -74,8 +73,7 @@ equation reduces to 0.
 
 .. note::
 
-    See also `Why does SymPy say that two equal expressions are unequal?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+    See also :term:`Structural Equality` in the :doc:`glossary`.
 
 
 Variables
@@ -173,8 +171,7 @@ If you define a circular relationship, you will get a
 
 
 .. note::
-    See also `Why doesn't changing one variable change another that depends on it?
-    <https://github.com/sympy/sympy/wiki/Faq>`_ in the FAQ.
+    See also :term:`immutable` in the :doc:`glossary`.
 
 .. _symbols:
 
