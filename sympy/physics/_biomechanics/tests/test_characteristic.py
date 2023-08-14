@@ -465,3 +465,24 @@ class TestFiberForceLengthPassiveDeGroote2016:
         fl_M_pas_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
         fl_M_pas_constants = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
         assert fl_M_pas_manual == fl_M_pas_constants
+
+    def test_differentiate_wrt_l_M_tilde(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = self.c1*exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0)/(self.c0*(exp(self.c1) - 1))
+        assert fl_M_pas.diff(self.l_M_tilde) == expected
+
+    def test_differentiate_wrt_c0(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = (
+            -self.c1*exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0)
+            *UnevaluatedExpr(self.l_M_tilde - 1)/(self.c0**2*(exp(self.c1) - 1))
+        )
+        assert fl_M_pas.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = (
+            -exp(self.c1)*(-1 + exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0))/(exp(self.c1) - 1)**2
+            + exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0)*(self.l_M_tilde - 1)/(self.c0*(exp(self.c1) - 1))
+        )
+        assert fl_M_pas.diff(self.c1) == expected
