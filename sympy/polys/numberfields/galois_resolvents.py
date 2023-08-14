@@ -330,7 +330,10 @@ class Resolvent:
             return a
         # If we use python's built-in `round()`, we lose precision.
         # If we use `ZZ` directly, we may add or subtract 1.
-        return ZZ(a.context.nint(a))
+        #
+        # XXX: We have to convert to int before converting to ZZ because
+        # flint.fmpz cannot convert a mpmath mpf.
+        return ZZ(int(a.context.nint(a)))
 
     def round_roots_to_integers_for_poly(self, T):
         """
