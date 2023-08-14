@@ -48,6 +48,12 @@ class GeometryBase(ABC):
 
     """
 
+    @property
+    @abstractmethod
+    def point(cls) -> Point:
+        """The point with which the geometry is associated."""
+        pass
+
     @abstractmethod
     def _point_is_on_surface(self, point: Point) -> bool:
         """Determine if a point is on the geometry's surface.
@@ -72,6 +78,25 @@ class GeometryBase(ABC):
             The point from which the geodesic length should be calculated.
         point_2 : Point
             The point to which the geodesic length should be calculated.
+
+        """
+        pass
+
+    @abstractmethod
+    def _geodesic_end_vectors(
+        self,
+        point_1: Point,
+        point_2: Point,
+    ) -> tuple[Vector, Vector]:
+        """The vectors parallel to the geodesic at the two end points.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic originates.
+        point_2 : Point
+            The point at which the geodesic terminates.
 
         """
         pass
@@ -263,6 +288,40 @@ class Sphere(GeometryBase):
         geodesic_length = self.radius * central_angle
         return geodesic_length
 
+    def _geodesic_end_vectors(
+        self,
+        point_1: Point,
+        point_2: Point,
+    ) -> tuple[Vector, Vector]:
+        """The vectors parallel to the geodesic at the two end points.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic originates.
+        point_2 : Point
+            The point at which the geodesic terminates.
+
+        """
+        pA, pB = point_1, point_2
+        pO = self.point
+        pA_vec = pA.pos_from(pO)
+        pB_vec = pB.pos_from(pO)
+
+        if pA_vec.cross(pB_vec) == 0:
+            msg = (
+                f'Can\'t compute geodesic end vectors for the pair of points '
+                f'{pA} and {pB} on a sphere {self} as they are diametrically '
+                f'opposed, thus the geodesic is not defined.'
+            )
+            raise ValueError(msg)
+
+        return (
+            pA_vec.cross(pB.pos_from(pA)).cross(pA_vec).normalize(),
+            pB_vec.cross(pA.pos_from(pB)).cross(pB_vec).normalize(),
+        )
+
     def __repr__(self) -> str:
         """Representation of a ``Sphere``."""
         return (
@@ -372,7 +431,7 @@ class Cylinder(GeometryBase):
 
     @axis.setter
     def axis(self, axis: Vector) -> None:
-        self._axis = axis
+        self._axis = axis.normalize()
 
     def _point_is_on_surface(self, point: Point) -> bool:
         """Determine if a point is on the cylinder's surface.
@@ -500,6 +559,60 @@ class Cylinder(GeometryBase):
         planar_arc_length = self.radius * central_angle
         geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
+
+    def _geodesic_end_vectors(
+        self,
+        point_1: Point,
+        point_2: Point,
+    ) -> tuple[Vector, Vector]:
+        """The vectors parallel to the geodesic at the two end points.
+
+        Parameters
+        ==========
+
+        point_1 : Point
+            The point from which the geodesic originates.
+        point_2 : Point
+            The point at which the geodesic terminates.
+
+        """
+        point_1_from_origin_point = point_1.pos_from(self.point)
+        point_2_from_origin_point = point_2.pos_from(self.point)
+
+        if point_1_from_origin_point == point_2_from_origin_point:
+            msg = (
+                f'Cannot compute geodesic end vectors for coincident points '
+                f'{point_1} and {point_2} as no geodesic exists.'
+            )
+            raise ValueError(msg)
+
+        point_1_parallel = point_1_from_origin_point.dot(self.axis) * self.axis
+        point_2_parallel = point_2_from_origin_point.dot(self.axis) * self.axis
+        point_1_normal = (point_1_from_origin_point - point_1_parallel)
+        point_2_normal = (point_2_from_origin_point - point_2_parallel)
+
+        if point_1_normal == point_2_normal:
+            point_1_perpendicular = Vector(0)
+            point_2_perpendicular = Vector(0)
+        else:
+            point_1_perpendicular = self.axis.cross(point_1_normal).normalize()
+            point_2_perpendicular = -self.axis.cross(point_2_normal).normalize()
+
+        geodesic_length = self.geodesic_length(point_1, point_2)
+        relative_position = point_2.pos_from(point_1)
+        parallel_length = relative_position.dot(self.axis)
+        planar_arc_length = sqrt(geodesic_length**2 - parallel_length**2)
+
+        point_1_vector = (
+            planar_arc_length * point_1_perpendicular
+            + parallel_length * self.axis
+        ).normalize()
+        point_2_vector = (
+            planar_arc_length * point_2_perpendicular
+            - parallel_length * self.axis
+        ).normalize()
+
+        return (point_1_vector, point_2_vector)
 
     def __repr__(self) -> str:
         """Representation of a ``Cylinder``."""
