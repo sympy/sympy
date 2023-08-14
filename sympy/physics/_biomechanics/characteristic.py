@@ -16,7 +16,10 @@ if TYPE_CHECKING:
     from sympy.printing.printer import Printer
 
 
-__all__ = ['TendonForceLengthDeGroote2016']
+__all__ = [
+    'TendonForceLengthDeGroote2016',
+    'TendonForceLengthInverseDeGroote2016',
+]
 
 
 class CharacteristicCurveFunction(Function):
@@ -286,3 +289,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         l_T_tilde = self.args[0]
         _l_T_tilde = printer._print(l_T_tilde)
         return r'\operatorname{fl}^T \left( %s \right)' % _l_T_tilde
+
+
+class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
+    pass
