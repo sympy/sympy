@@ -445,6 +445,15 @@ class TestFiberForceLengthPassiveDeGroote2016:
         assert FiberForceLengthPassiveDeGroote2016.__name__ == 'FiberForceLengthPassiveDeGroote2016'
 
     def test_instance(self) -> None:
-        fl_M = TendonForceLengthInverseDeGroote2016(self.l_M_tilde, *self.constants)
+        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
         assert isinstance(fl_M, FiberForceLengthPassiveDeGroote2016)
         assert str(fl_M) == 'FiberForceLengthPassiveDeGroote2016(fl_T, c_0, c_1)'
+
+
+    def test_doit(self) -> None:
+        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit()
+        assert fl_M == (exp((self.c1*(self.l_M_tilde - 1))/self.c0) - 1)/(exp(self.c1) - 1)
+
+    def test_doit_evaluate_false(self) -> None:
+        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
+        assert fl_M == (exp((self.c1*UnevaluatedExpr(self.l_M_tilde - 1))/c0) - 1)/(exp(self.c1) - 1)
