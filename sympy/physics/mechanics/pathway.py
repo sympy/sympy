@@ -242,8 +242,8 @@ class LinearPathway(PathwayBase):
         ``KanesMethod`` requires can be produced by calling the pathway's
         ``compute_loads`` method with ``F`` passed as the only argument.
 
-        >>> from sympy import Symbol
-        >>> F = Symbol('F')
+        >>> from sympy import symbols
+        >>> F = symbols('F')
         >>> linear_pathway.compute_loads(F)
         [(pA, - F*q(t)/sqrt(q(t)**2)*N.x), (pB, F*q(t)/sqrt(q(t)**2)*N.x)]
 
@@ -400,7 +400,7 @@ class WrappingPathway(PathwayBase):
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
         >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
         >>> N = ReferenceFrame('N')
-        >>> r = symbol('r', positive=True)
+        >>> r = symbols('r', positive=True)
         >>> pO = Point('pO')
         >>> cylinder = Cylinder(r, pO, N.z)
 
@@ -426,7 +426,7 @@ class WrappingPathway(PathwayBase):
         ``KanesMethod`` requires can be produced by calling the pathway's
         ``compute_loads`` method with ``F`` passed as the only argument.
 
-        >>> F = Symbol('F')
+        >>> F = symbols('F')
         >>> loads = pathway.compute_loads(F)
         >>> [load.__class__(load.location, load.vector.simplify()) for load in loads]
         [(pA, F*N.y), (pB, F*sin(q(t))*N.x - F*cos(q(t))*N.y),
