@@ -123,7 +123,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     ratio of these.
 
     >>> l_T, l_T_slack = symbols('l_T l_T_slack')
-    >>> l_T_tilde = l_T / l_T_slack
+    >>> l_T_tilde = l_T/l_T_slack
     >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
     >>> fl_T
     TendonForceLengthDeGroote2016(l_T/l_T_slack, 0.2, 0.995, 0.25,
@@ -246,9 +246,9 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
             c0, c1, c2, c3 = constants
 
         if evaluate:
-            return c0 * exp(c3 * (l_T_tilde - c1)) - c2
+            return c0*exp(c3*(l_T_tilde - c1)) - c2
 
-        return c0 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1)) - c2
+        return c0*exp(c3*UnevaluatedExpr(l_T_tilde - c1)) - c2
 
     def fdiff(self, argindex: int = 1) -> Expr:
         """Derivative of the function with respect to a single argument.
@@ -264,15 +264,15 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         l_T_tilde, c0, c1, c2, c3 = self.args
         if argindex == 1:
-            return c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 2:
-            return exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 3:
-            return -c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return -c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
         elif argindex == 4:
             return Integer(-1)
         elif argindex == 5:
-            return c0 * (l_T_tilde - c1) * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*(l_T_tilde - c1)*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
 
         raise ArgumentIndexError(self, argindex)
 
@@ -428,9 +428,9 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
                 c0, c1, c2, c3 = constants
 
             if evaluate:
-                return log((fl_T + c2) / c0) / c3 + c1
+                return log((fl_T + c2)/c0)/c3 + c1
 
-            return log(UnevaluatedExpr((fl_T + c2) / c0)) / c3 + c1
+            return log(UnevaluatedExpr((fl_T + c2)/c0))/c3 + c1
 
         def fdiff(self, argindex: int = 1) -> Expr:
             """Derivative of the function with respect to a single argument.
@@ -446,15 +446,15 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
             """
             fl_T, c0, c1, c2, c3 = self.args
             if argindex == 1:
-                return 1 / (c3 * (fl_T + c2))  # type: ignore
+                return 1/(c3*(fl_T + c2))  # type: ignore
             elif argindex == 2:
-                return -1 / (c0 * c3)  # type: ignore
+                return -1/(c0*c3)  # type: ignore
             elif argindex == 3:
                 return Integer(1)
             elif argindex == 4:
-                return 1 / (c3 * (fl_T + c2))  # type: ignore
+                return 1/(c3*(fl_T + c2))  # type: ignore
             elif argindex == 5:
-                return -log(UnevaluatedExpr((fl_T + c2) / c0)) / c3**2  # type: ignore
+                return -log(UnevaluatedExpr((fl_T + c2)/c0))/c3**2  # type: ignore
 
             raise ArgumentIndexError(self, argindex)
 
