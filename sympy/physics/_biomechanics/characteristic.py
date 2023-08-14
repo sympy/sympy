@@ -365,3 +365,32 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
             c2 = Float('0.25')
             c3 = Float('33.93669377311689')
             return cls(fl_T, c0, c1, c2, c3)
+
+        @classmethod
+        def eval(cls, fl_T: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
+            """Evaluation of basic inputs.
+
+            Parameters
+            ==========
+
+            fl_T : Any (sympifiable)
+                Normalized tendon force as a function of tendon length.
+            c0 : Any (sympifiable)
+                The first constant in the characteristic equation. The published
+                value is ``0.2``.
+            c1 : Any (sympifiable)
+                The second constant in the characteristic equation. The published
+                value is ``0.995``.
+            c2 : Any (sympifiable)
+                The third constant in the characteristic equation. The published
+                value is ``0.25``.
+            c3 : Any (sympifiable)
+                The fourth constant in the characteristic equation. The published
+                value is ``33.93669377311689``.
+
+            """
+            pass
+
+        def _eval_evalf(self, prec):
+            """Evaluate the expression numerically using ``evalf``."""
+            return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
