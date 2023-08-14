@@ -300,3 +300,7 @@ class TestTendonForceLengthInverseDeGroote2016:
         fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
         expected = -log(UnevaluatedExpr((self.fl_T + self.c2) / self.c0)) / self.c3**2
         assert fl_T_inv.diff(self.c3) == expected
+
+    def test_inverse(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        assert fl_T_inv.inverse() is TendonForceLengthDeGroote2016
