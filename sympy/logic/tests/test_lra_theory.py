@@ -193,7 +193,7 @@ def test_from_encoded_cnf():
             assert check_if_satisfiable_with_z3(constraints) is False
 
             conflict = feasible[1]
-            conflict = {lra.boundry_enc[l].get_inequality() for l in conflict}
+            conflict = {lra.boundry_enc[-l].get_inequality() for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
 
