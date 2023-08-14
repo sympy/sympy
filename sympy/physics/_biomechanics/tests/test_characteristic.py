@@ -314,3 +314,80 @@ class TestTendonForceLengthInverseDeGroote2016:
         fl_T = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
         expected = r'c_{1} + \frac{\log{\left(\frac{c_{2} + fl_{T}}{c_{0}} \right)}}{c_{3}}'
         assert LatexPrinter().doprint(fl_T.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '0.995 + 0.029466630034306838*log(5.0*fl_T + 1.25)',
+            ),
+            (
+                C99CodePrinter,
+                '0.995 + 0.029466630034306838*log(5.0*fl_T + 1.25)',
+            ),
+            (
+                C11CodePrinter,
+                '0.995 + 0.029466630034306838*log(5.0*fl_T + 1.25)',
+            ),
+            (
+                CXX98CodePrinter,
+                '0.995 + 0.029466630034306838*log(5.0*fl_T + 1.25)',
+            ),
+            (
+                CXX11CodePrinter,
+                '0.995 + 0.029466630034306838*std::log(5.0*fl_T + 1.25)',
+            ),
+            (
+                CXX17CodePrinter,
+                '0.995 + 0.029466630034306838*std::log(5.0*fl_T + 1.25)',
+            ),
+            (
+                FCodePrinter,
+                '      0.995d0 + 0.02946663003430684d0*log(5.0d0*fl_T + 1.25d0)',
+            ),
+            (
+                OctaveCodePrinter,
+                '0.995 + 0.02946663003430684*log(5.0*fl_T + 1.25)',
+            ),
+            (
+                PythonCodePrinter,
+                '0.995 + 0.02946663003430684*math.log(5.0*fl_T + 1.25)',
+            ),
+            (
+                NumPyPrinter,
+                '0.995 + 0.02946663003430684*numpy.log(5.0*fl_T + 1.25)',
+            ),
+            (
+                SciPyPrinter,
+                '0.995 + 0.02946663003430684*numpy.log(5.0*fl_T + 1.25)',
+            ),
+            (
+                CuPyPrinter,
+                '0.995 + 0.02946663003430684*cupy.log(5.0*fl_T + 1.25)',
+            ),
+            (
+                JaxPrinter,
+                '0.995 + 0.02946663003430684*jax.numpy.log(5.0*fl_T + 1.25)',
+            ),
+            (
+                MpmathPrinter,
+                'mpmath.mpf((0, 8962163258467287, -53, 53))'
+                ' + mpmath.mpf((0, 33972711434846347, -60, 55))'
+                '*mpmath.log(mpmath.mpf((0, 5, 0, 3))*fl_T + mpmath.mpf((0, 5, -2, 3)))',
+            ),
+            (
+                LambdaPrinter,
+                '0.995 + 0.02946663003430684*math.log(5.0*fl_T + 1.25)',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer: type[CodePrinter], expected: str) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        assert code_printer().doprint(fl_T_inv) == expected
+
+    def test_derivative_print_code(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        dfl_T_inv_dfl_T = fl_T_inv.diff(self.fl_T)
+        expected = '1/(33.93669377311689*fl_T + 8.484173443279222)'
+        assert PythonCodePrinter().doprint(dfl_T_inv_dfl_T) == expected
