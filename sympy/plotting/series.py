@@ -191,7 +191,6 @@ class BaseSeries:
     is_vector = False
     is_2Dvector = False
     is_3Dvector = False
-    is_slice = False
     # Represents a 2D or 3D vector data series
 
     _N = 100
@@ -217,9 +216,9 @@ class BaseSeries:
         self.use_cm = kwargs.get("use_cm", False)
         # If True, the backend will attempt to render it on a polar-projection
         # axis, or using a polar discretization if a 3D plot is requested
-        self.is_polar = kwargs.get("is_polar", False)
+        self.is_polar = kwargs.get("is_polar", kwargs.get("polar", False))
         # If True, the rendering will use points, not lines.
-        self.is_point = kwargs.get("is_point", False)
+        self.is_point = kwargs.get("is_point", kwargs.get("point", False))
         # some backend is able to render latex, other needs standard text
         self._label = self._latex_label = ""
 
@@ -1002,8 +1001,8 @@ class Line2DBaseSeries(BaseSeries):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.steps = kwargs.get("steps", False)
-        self.is_point = kwargs.get("is_point", False)
-        self.is_filled = kwargs.get("is_filled", True)
+        self.is_point = kwargs.get("is_point", kwargs.get("point", False))
+        self.is_filled = kwargs.get("is_filled", kwargs.get("fill", True))
         self.adaptive = kwargs.get("adaptive", False)
         self.depth = kwargs.get('depth', 12)
         self.use_cm = kwargs.get("use_cm", False)
@@ -1011,7 +1010,7 @@ class Line2DBaseSeries(BaseSeries):
         self.line_color = kwargs.get("line_color", None)
         self.detect_poles = kwargs.get("detect_poles", False)
         self.eps = kwargs.get("eps", 0.01)
-        self.is_polar = kwargs.get("is_polar", False)
+        self.is_polar = kwargs.get("is_polar", kwargs.get("polar", False))
         self.unwrap = kwargs.get("unwrap", False)
         # when detect_poles="symbolic", stores the location of poles so that
         # they can be appropriately rendered
@@ -1256,7 +1255,7 @@ class List2DSeries(Line2DBaseSeries):
         self._expr = (self.list_x, self.list_y)
         if not any(isinstance(t, np.ndarray) for t in [self.list_x, self.list_y]):
             self._check_fs()
-        self.is_polar = kwargs.get("is_polar", False)
+        self.is_polar = kwargs.get("is_polar", kwargs.get("polar", False))
         self.label = label
         self.rendering_kw = kwargs.get("rendering_kw", {})
         if self.use_cm and self.color_func:
@@ -1813,7 +1812,7 @@ class SurfaceBaseSeries(BaseSeries):
         # as (r * cos(theta), r * sin(theta), sin(t)) for (r, 0, 2 * pi) and
         # (theta, 0, pi/2).
         # Because it is faster to evaluate (important for interactive plots).
-        self.is_polar = kwargs.get("is_polar", False)
+        self.is_polar = kwargs.get("is_polar", kwargs.get("polar", False))
         self.surface_color = kwargs.get("surface_color", None)
         self.color_func = kwargs.get("color_func", lambda x, y, z: z)
         if callable(self.surface_color):
@@ -2110,7 +2109,7 @@ class ContourSeries(SurfaceOver2DRangeSeries):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.is_filled = kwargs.get("is_filled", True)
+        self.is_filled = kwargs.get("is_filled", kwargs.get("fill", True))
         self.show_clabels = kwargs.get("clabels", True)
 
         # NOTE: contour plots are used by plot_contour, plot_vector and
