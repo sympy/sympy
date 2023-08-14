@@ -457,3 +457,15 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
                 return -log(UnevaluatedExpr((fl_T + c2) / c0)) / c3**2  # type: ignore
 
             raise ArgumentIndexError(self, argindex)
+
+        def inverse(self, argindex: int = 1) -> Function:
+            """Inverse function.
+
+            Parameters
+            ==========
+
+            argindex : int
+                Value to start indexing the arguments at. Default is ``1``.
+
+            """
+            return TendonForceLengthDeGroote2016
