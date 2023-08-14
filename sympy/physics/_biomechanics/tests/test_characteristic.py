@@ -391,3 +391,38 @@ class TestTendonForceLengthInverseDeGroote2016:
         dfl_T_inv_dfl_T = fl_T_inv.diff(self.fl_T)
         expected = '1/(33.93669377311689*fl_T + 8.484173443279222)'
         assert PythonCodePrinter().doprint(dfl_T_inv_dfl_T) == expected
+
+    def test_lambdify(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv_callable = lambdify(self.fl_T, fl_T_inv)
+        assert fl_T_inv_callable(0.0) == pytest.approx(1.0015752885)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv_callable = lambdify(self.fl_T, fl_T_inv, 'numpy')
+        fl_T = numpy.array([-0.2, -0.01, 0.0, 1.01, 1.02, 1.05])
+        expected = numpy.array([
+            0.9541505769,
+            1.0003724019,
+            1.0015752885,
+            1.0492347951,
+            1.0494677341,
+            1.0501557022,
+        ])
+        numpy.testing.assert_allclose(fl_T_inv_callable(fl_T), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv_callable = jax.jit(lambdify(self.fl_T, fl_T_inv, 'jax'))
+        fl_T = jax.numpy.array([-0.2, -0.01, 0.0, 1.01, 1.02, 1.05])
+        expected = jax.numpy.array([
+            0.9541505769,
+            1.0003724019,
+            1.0015752885,
+            1.0492347951,
+            1.0494677341,
+            1.0501557022,
+        ])
+        numpy.testing.assert_allclose(fl_T_inv_callable(fl_T), expected)
