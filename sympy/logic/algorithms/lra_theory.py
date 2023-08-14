@@ -325,10 +325,8 @@ class LRASolver():
             strict = prop.function in [Q.gt, Q.lt]
             b = Boundry(var, -const, upper, equality, strict)
             encoding[enc] = b
-            print(enc, prop, "-->", "var:", b.var, "bound:", b.bound, "upper:", b.upper)
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        print(A, x_subs, s_subs)
         return LRASolver(A, basic, nonbasic, boundry_enc=encoding), x_subs, s_subs
 
     @staticmethod
