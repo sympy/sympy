@@ -329,56 +329,6 @@ class LRASolver():
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         return LRASolver(A, basic, nonbasic, boundry_enc=encoding), x_subs, s_subs
 
-    @staticmethod
-    def preprocess(BF, variables):
-        """
-        Note that this function is only for testing.
-
-        It's a bit easier to use than from_encoded_cnf, but it has some bugs which from_encoded_cnf doesn't have.
-        Also, from_encoded_cnf is faster.
-        """
-        from sympy.matrices.dense import Matrix
-        equations = []
-        count = 0
-        sub = {}
-        set_variables = set(variables) # this should fix time complexity problems
-
-        def to_standard_form(ineq, variables):
-            expr = ineq.args[0] - ineq.args[1]
-            A, B = linear_eq_to_matrix(expr, variables)
-            lhs = (A * Matrix(variables))[0, 0]
-            rhs = B[0, 0]
-            return ineq.func(lhs, rhs)
-
-        def do(b):
-            if isinstance(b, BooleanFunction):
-                return b.func(*[do(arg) for arg in b.args])
-            elif isinstance(b, Relational):
-                b = to_standard_form(b, variables)
-                expr, const = b.args
-                if isinstance(expr, Add):
-                    if expr not in sub:
-                        nonlocal count
-                        count += 1
-                        sub[expr] = Dummy(f"s{count}")
-                        equations.append(Eq(sub[expr], expr))
-                    return b.func(sub[expr], const)
-                else:
-                    return b
-            else:
-                return b
-
-        res = do(BF)
-
-        nonbasic = variables
-        basic = list(sub.values())
-
-        A, _ = linear_eq_to_matrix(equations, variables + basic)
-        A = -A # identity matrix should be negative
-
-        return res, LRASolver(A, basic, nonbasic), sub
-
-
     def assert_enc_boundry(self, enc_boundry):
         boundry = self.boundry_enc[enc_boundry]
         sym, c = boundry.var, boundry.bound
@@ -404,30 +354,6 @@ class LRASolver():
         else:
             return self._assert_lower(sym, c)
 
-
-
-
-
-    def assert_con(self, atom):
-        if isinstance(atom, AppliedBinaryRelation):
-            sym, c = atom.arguments
-            assert sym.is_symbol
-            assert c.is_constant()
-            if atom.function == Q.ge:
-                return self._assert_lower(sym, c)
-            if atom.function == Q.le:
-                return self._assert_upper(sym, c)
-        elif isinstance(atom, Relational):
-            sym, c = atom.args
-            assert sym.is_symbol
-            assert c.is_constant()
-
-            if atom.func == Ge:
-                return self._assert_lower(sym, c)
-            if atom.func == Le:
-                return self._assert_upper(sym, c)
-
-        raise ValueError(f"{atom} could not be asserted.")
     def _assert_upper(self, xi, ci, from_equality=False):
         if self.result:
             assert self.result[0] != "UNSAT"
