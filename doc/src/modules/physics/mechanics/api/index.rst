@@ -12,4 +12,4 @@ Mechanics API Reference
    linearize.rst
    expr_manip.rst
    printing.rst
-   geometry.rst
+   wrapping_geometry.rst
