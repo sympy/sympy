@@ -15,6 +15,7 @@ from sympy.functions.elementary.exponential import exp
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     TendonForceLengthDeGroote2016,
+    TendonForceLengthInverseDeGroote2016,
 )
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, C11CodePrinter
 from sympy.printing.cxx import (
@@ -232,3 +233,15 @@ class TestTendonForceLengthDeGroote2016:
             1.04314889144172,
         ])
         numpy.testing.assert_allclose(fl_T_callable(l_T_tilde), expected)
+
+
+class TestTendonForceLengthInverseDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _tendon_force_length_inverse_arguments_fixture(self) -> None:
+        self.fl_T = Symbol('fl_T')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.c2 = Symbol('c_2')
+        self.c3 = Symbol('c_3')
+        self.constants = (self.c0, self.c1, self.c2, self.c3)
