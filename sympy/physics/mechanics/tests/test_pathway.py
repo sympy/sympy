@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics.mechanics._pathway.py`` module."""
+"""Tests for the ``sympy.physics.mechanics.pathway.py`` module."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from sympy.physics.mechanics import (
 )
 from sympy.physics.mechanics.wrapping_geometry import (Cylinder, GeometryBase,
                                                        Sphere)
-from sympy.physics.mechanics._pathway import (
+from sympy.physics.mechanics.pathway import (
     LinearPathway,
     PathwayBase,
     WrappingPathway,
