@@ -335,3 +335,33 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
                engineering, 44(10), (2016) pp. 2922-2936
 
         """
+
+        @classmethod
+        def with_default_constants(cls, fl_T: Any) -> TendonForceLengthInverseDeGroote2016:
+            r"""Recommended constructor that will use the published constants.
+
+            Explanation
+            ===========
+
+            Returns a new instance of the inverse tendon force-length function
+            using the four constant values specified in the original publication.
+
+            These have the values:
+
+            $c_0 = 0.2$
+            $c_1 = 0.995$
+            $c_2 = 0.25$
+            $c_3 = 33.93669377311689$
+
+            Parameters
+            ==========
+
+            fl_T : Any (sympifiable)
+                Normalized tendon force as a function of tendon length.
+
+            """
+            c0 = Float('0.2')
+            c1 = Float('0.995')
+            c2 = Float('0.25')
+            c3 = Float('33.93669377311689')
+            return cls(fl_T, c0, c1, c2, c3)
