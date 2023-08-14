@@ -320,7 +320,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         $c_3 = 33.93669377311689$. This function is the exact analytical inverse
         of the related tendon force-length curve ``TendonForceLengthDeGroote2016``.
 
-        While it is possible to change the constant values, the were carefully
+        While it is possible to change the constant values, these were carefully
         selected in the original publication to give the characteristic curve
         specific and required properties. For example, the function produces no
         force when the tendon is in an unstrained state. It also produces a force
