@@ -2541,7 +2541,7 @@ def necklaces(n, k, free=False):
 
     .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
         Generating necklaces, Journal of Algorithms 13 (1992), 414-430;
-        https://www.sciencedirect.com/science/article/abs/pii/019667749290047G
+        https://doi.org/10.1016/0196-6774(92)90047-G
 
     """
     # The FKM algorithm
