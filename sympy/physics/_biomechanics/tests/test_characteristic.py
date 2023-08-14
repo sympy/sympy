@@ -437,3 +437,9 @@ class TestFiberForceLengthPassiveDeGroote2016:
         self.c0 = Symbol('c_0')
         self.c1 = Symbol('c_1')
         self.constants = (self.c0, self.c1)
+
+    @staticmethod
+    def test_class() -> None:
+        assert issubclass(FiberForceLengthPassiveDeGroote2016, Function)
+        assert issubclass(FiberForceLengthPassiveDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceLengthPassiveDeGroote2016.__name__ == 'FiberForceLengthPassiveDeGroote2016'
