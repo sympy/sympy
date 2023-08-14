@@ -11,7 +11,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Symbol
 from sympy.external.importtools import import_module
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import exp, log
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     TendonForceLengthDeGroote2016,
@@ -256,3 +256,11 @@ class TestTendonForceLengthInverseDeGroote2016:
         fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
         assert isinstance(fl_T_inv, TendonForceLengthInverseDeGroote2016)
         assert str(fl_T_inv) == 'TendonForceLengthInverseDeGroote2016(fl_T, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants).doit()
+        assert fl_T_inv == log((self.fl_T + self.c2) / self.c0) / self.c3 + self.c1
+
+    def test_doit_evaluate_false(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants).doit(evaluate=False)
+        assert fl_T_inv == log(UnevaluatedExpr((self.fl_T + self.c2) / self.c0)) / self.c3 + self.c1
