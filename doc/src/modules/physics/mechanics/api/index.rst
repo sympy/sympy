@@ -13,3 +13,4 @@ Mechanics API Reference
    expr_manip.rst
    printing.rst
    wrapping_geometry.rst
+   pathway.rst
