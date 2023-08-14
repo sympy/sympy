@@ -794,9 +794,9 @@ These are some antipatterns that should be generally avoided
 ### Be Careful Comparing and Sorting Symbolic Objects
 
 Be careful with programmatic code that compares numerical quantities, either
-using an inequality (`<`, `<=`, `>`, `>=`) or indirectly with something like
-`sort`. The issue is that if an inequality is unknown, the result will be
-symbolic, like
+directly using an inequality (`<`, `<=`, `>`, `>=`) or indirectly with
+something like `sorted`. The issue is that if an inequality is unknown, the
+result will be symbolic, like
 
 ```
 >>> x > 0
@@ -868,7 +868,7 @@ depends on what you are doing:
 
 - **Return a Piecewise result.** If the result of a function depends on an
   inequality or other boolean condition, you can use {class}`~.Piecewise` to
-  return a result that applies to both possibilities symbolically. This is
+  return a result that represents both possibilities symbolically. This is
   generally preferred when possible, as it offers the most flexibility. This
   is because the result is represented symbolically, meaning, for instance,
   one can later substitute specific values for the symbols and it will
@@ -887,10 +887,12 @@ depends on what you are doing:
   this can be represented symbolically as
 
   ```py
-  >>> from sympy import Piecewise
+  >>> from sympy import Piecewise, pprint
   >>> expr = Piecewise((1, x > 0), (0, True))
-  >>> expr
-  Piecewise((1, x > 0), (0, True))
+  >>> pprint(expr, use_unicode=True)
+  ⎧1  for x > 0
+  ⎨
+  ⎩0  otherwise
   >>> expr.subs(x, 1)
   1
   >>> expr.subs(x, -1)
@@ -917,9 +919,10 @@ SymPy is designed to be extended with custom classes, typically by subclassing
 symbolic classes in SymPy itself are written this way, and the points here
 apply equally to them as to user-defined classes.
 
-For an in-depth guide on how to write a function `Function` subclass, see the
-[guide on writing custom functions](custom-functions).
+For an in-depth guide on how to write a `Function` subclass, see the [guide on
+writing custom functions](custom-functions).
 
+(best-practices-args-invariants)=
 ### Args Invariants
 
 Custom SymPy objects should always satisfy the following invariants:
@@ -929,7 +932,8 @@ Custom SymPy objects should always satisfy the following invariants:
 
 The first says that all elements of {term}`args` should be instances of
 {term}`Basic`. The second says that an expression should be rebuildable from
-its `args` (note that {term}`func` is usually the same as `type(expr)`).
+its `args` (note that {term}`func` is usually the same as `type(expr)`, though
+it may not always be).
 
 These two invariants are assumed throughout SymPy, and are essential for any
 function that manipulates expressions.
@@ -957,13 +961,13 @@ rebuilding it except any instances of `x` are replaced by `y`.
 It's easy to see how this function would break if the args invariants did not
 hold:
 
-1. If an expression has args that are not `Basic`, they will fail with
-   `AttributeError` on a recursive call, because the non-`Basic` args will not
-   have the `args` or `func` attributes.
+1. If an expression had args that were not `Basic`, they would fail with
+   `AttributeError` on a recursive call, because the non-`Basic` args would not
+   have the `.args` or `.func` attributes.
 
-2. If an expression does not rebuild from its `args`, the line `return
-   exr.func(*newargs)`, which should be a no-op if none of the args are
-   changed by the replacement, will fail.
+2. If an expression did not rebuild from its `args`, the line `return
+   exr.func(*newargs)` would fail, even in the trivial case where none of the
+   args are changed by the replacement, which should effectively be a no-op.
 
 Making all `args` instances of `Basic` usually just means calling `_sympify()`
 on the inputs to the class so that they are basic instances. If you want to
@@ -971,14 +975,27 @@ store a string on a class, you should either use a `Symbol` or
 `sympy.core.symbols.Str`.
 
 In some cases a class may accept args in multiple equivalent forms. It is
-important that whatever form is stored in `args` is one of the ways that
-can be used to reconstruct the class.
+important that whatever form is stored in `args` is one of the ways that can
+be used to reconstruct the class. It is okay to normalize `args` as long as
+that normalized form is accepted as input. For example, `Integral` always
+stores the variable argument as a tuple to make things easier to process
+internally, but this form is also accepted by the class constructor:
+
+```py
+>>> from sympy import Integral
+>>> expr = Integral(sin(x), x)
+>>> expr.args # args are normalized
+(sin(x), (x,))
+>>> Integral(sin(x), (x,)) # Also accepted
+Integral(sin(x), x)
+```
 
 Note that most user-defined custom functions should be defined by subclassing
 `Function` (see the [guide to writing custom functions](custom-functions)).
 The `Function` class automatically takes care of both of the args invariants,
 so if you are using it, you do not need to worry about this.
 
+(best-practices-avoid-automatic-evaluation)=
 ### Avoid Too Much Automatic Evaluation
 
 When defining a custom function, avoid doing too much automatic evaluation
@@ -996,11 +1013,13 @@ be defined on SymPy objects).
 
 The [custom functions guide](custom-functions-automatic-evaluation) goes over
 this in depth (but note that this guideline applies equally to all SymPy
-objects, not just functions). But in a nutshell, the reason for this is that the only way to prevent automatic evaluation is to use
-`evaluate=False`, which is fragile. Additionally, code will invariably be
-written assuming the invariants that are true due to automatic evaluations,
-meaning that expressions created with `evaluate=False` can lead to wrong
-results from this code.
+objects, not just functions). But in a nutshell, the reason for this is that
+the only way to prevent automatic evaluation is to use `evaluate=False`, which
+is fragile. Additionally, code will invariably be written assuming the
+invariants that are true due to automatic evaluations, meaning that
+expressions created with `evaluate=False` can lead to wrong results from this
+code. This also means that removing automatic evaluation later can be
+difficult.
 
 Evaluation that can potentially be expensive (for instance, applying a
 symbolic identity) is itself bad because it can make creating an expression
@@ -1075,14 +1094,13 @@ nested `FiniteSet` containing a single `FiniteSet`, like $\{\{1, 2, 3\}\}$:
 FiniteSet({1, 2, 3})
 ```
 
-As to whether `args`, i.e., accepting a single collection, or `*args` should
-be used, if it is only possible for there to be a finite number of arguments,
-`*args` is generally better, as this makes things easier to deal with using
-the object's {term}`args`, since `obj.args` will be the direct arguments of
-the class. However, if it is possible that you might want to support a
-symbolic infinite collection in addition to finite ones, like
-{class}`~.Integers` or {class}`~.Range`, then it is better to use `args` as
-this will be impossible to do with `*args`.
+As to whether `args` or `*args` should be used, if it is only possible for
+there to be a finite number of arguments, `*args` is generally better, as this
+makes things easier to deal with using the object's {term}`args`, since
+`obj.args` will be the direct arguments of the class. However, if it is
+possible that you might want to support a symbolic infinite collection in
+addition to finite ones, like {class}`~.Integers` or {class}`~.Range`, then it
+is better to use `args` as this will be impossible to do with `*args`.
 
 (best-practices-extra-attributes)=
 ### Avoid Storing Extra Attributes on an Object
@@ -1106,9 +1124,9 @@ the specific details of your situation:
   of your object.
 
   As long as the data is representable using other SymPy objects, it can be
-  stored in `args`. Note that an object's `args` should be usable to recreate
-  the object (e.g., something like `YourObject(*instance.args)` should
-  recreate `instance`).
+  stored in `args`. Note that an object's `args` should be usable to [recreate
+  the object](best-practices-args-invariants) (e.g., something like
+  `YourObject(*instance.args)` should recreate `instance`).
 
   Additionally, it should be mentioned that it is not a good idea to subclass
   `Symbol` if you plan to store anything extra in `args`. `Symbol` is designed
@@ -1120,7 +1138,7 @@ the specific details of your situation:
   to print things, or use a [custom printer](module-printing).
 
 - **Store the data about the object separately.** This is the best approach if
-  the extra data is not directly related to an objects mathematical
+  the extra data is not directly related to an object's mathematical
   properties.
 
   Remember that SymPy objects are hashable, so they can easily be used as
@@ -1148,11 +1166,12 @@ the specific details of your situation:
   solution is much more complicated than the others, and should only be used
   when it is necessary. In some extreme cases, it is not possible to represent
   every mathematical aspect of an object using `args` alone. This can happen,
-  for example, because of the limitation that `args` should only contain
-  `Basic` instances. It is still possible to create custom SymPy objects in
-  these situations by using a custom {term}`func` that is different from
-  `type(expr)` (in this case, you would override `__eq__` on the `func`
-  [rather than on the class](best-practices-eq)).
+  for example, because of the limitation that [`args` should only contain
+  `Basic` instances](best-practices-args-invariants). It is still possible to
+  create custom SymPy objects in these situations by using a custom
+  {term}`func` that is different from `type(expr)` (in this case, you would
+  override `__eq__` on the `func` [rather than on the
+  class](best-practices-eq)).
 
   However, this sort of situation is rare.
 
@@ -1184,9 +1203,9 @@ There are several reasons for this
   determine](https://en.wikipedia.org/wiki/Richardson%27s_theorem).
 
 - Python itself automatically uses `==` in various places and assumes that it
-  returns a boolean and is inexpensive to compute. For example, `a in b` uses
-  `==`, where `b` is a builtin Python container like `list`, `dict`, or
-  `set`.[^dict-footnote]
+  returns a boolean and is inexpensive to compute. For example, if `b` is a
+  builtin Python container like `list`, `dict`, or `set`, then `a in b` uses
+  `==`.[^dict-footnote]
 
 [^dict-footnote]: Python dicts and sets use `hash`, but fallback to using `==`
     when there is a hash collision.
@@ -1198,8 +1217,8 @@ There are several reasons for this
 
 In affect, *structural equality* means that if `a == b` is `True`, then `a`
 and `b` are for all intents and purposes the same object. This is because all
-SymPy objects are {term}`immutable`. Any SymPy function may freely `a` with
-`b` in any subexpression.
+SymPy objects are {term}`immutable`. When `a == `, any SymPy function may
+freely replace `a` with `b` in any subexpression.
 
 The default `__eq__` method on {term}`Basic` checks if the two objects have
 the same type and the same `args`. There are also many parts of SymPy that
@@ -1217,19 +1236,20 @@ and the preferred alternatives:
 - To make `==` apply some smarter equality check than purely structural
   equality. As noted above, this is a bad idea because too many things
   implicitly assume `==` works structurally only. Instead, use a function or
-  method to implement the smarter equality (for example, the `equals` method).
+  method to implement the smarter equality checking (for example, the `equals`
+  method).
 
   Another option is to define a {term}`canonicalization <canonicalize>` method
   that puts objects into canonical form (e.g., via `doit`), so that, for
   instance, `x.doit() == y.doit()` is true whenever `x` and `y` are
   mathematically equal. This is not always possible because not every type of
-  object has a commutable canonical form, but it is a convenient approach when
+  object has a computable canonical form, but it is a convenient approach when
   one does exist.
 
 - To make `==` check for some additional attributes beyond those stored in the
-  `args` of an expression. [](best-practices-extra-attributes) for more
-  details on why it's a bad idea to directly store extra attributes on a SymPy
-  object, and what the best alternatives are.
+  `args` of an expression. See the [](best-practices-extra-attributes) section
+  above for more details on why it's a bad idea to directly store extra
+  attributes on a SymPy object, and what the best alternatives are.
 
 - To make `==` compare equal to some non-SymPy object. It is preferable to
   extend `sympify` to be able to convert this object into the SymPy object.
@@ -1251,11 +1271,12 @@ there are two important things to keep in mind:
 should always pull apart the arguments of a function directly instead.** The
 reason is that creating a new expression could itself result in an assumptions
 query. This can easily lead to infinite recursion. And even when it doesn't,
-creating a new expression which itself could lead to many recursive
+creating a new expression that itself could lead to many recursive
 assumptions queries is bad for performance compared to querying the desired
 property more directly.
 
-This generally means using methods like {meth}`~.as_independent` and checking
+This generally means using methods like {meth}`~.as_independent` or
+`{meth}`~.as_coeff_mul` and checking
 the `args` of expressions directly (see the [custom functions
 guide](custom-functions-assumptions) for an example).
 
