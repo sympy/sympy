@@ -469,3 +469,17 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
 
             """
             return TendonForceLengthDeGroote2016
+
+        def _latex(self, printer: Printer) -> str:
+            """Print a LaTeX representation of the function defining the curve.
+
+            Parameters
+            ==========
+
+            printer : Printer
+                The printer to be used to print the LaTeX string representation.
+
+            """
+            fl_T = self.args[0]
+            _fl_T = printer._print(fl_T)
+            return r'\left( \operatorname{fl}^T \right)^{-1} \left( %s \right)' % _fl_T
