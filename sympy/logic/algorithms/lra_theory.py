@@ -187,6 +187,78 @@ class LRASolver():
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf):
+        """
+        Creates an LRASolver from an EncodedCNF object.
+
+        Example
+        -------
+
+        This example comes from the example in section 3 of Dutertre's and de Moura's paper.
+
+        >>> from sympy.core.relational import Eq
+        >>> from sympy.matrices.dense import Matrix
+        >>> from sympy.assumptions.cnf import CNF, EncodedCNF
+        >>> from sympy.assumptions.ask import Q
+        >>> from sympy.logic.algorithms.lra_theory import LRASolver
+        >>> from sympy.abc import a, x, y, z
+        >>> phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+        >>> cnf = CNF.from_prop(phi)
+        >>> enc = EncodedCNF()
+        >>> enc.from_cnf(cnf)
+        >>> enc.data
+        [{1, 5}, {3}, {4}, {2, 6}]
+        >>> enc.encoding
+        {Q.gt(x + 2*y - z, 4): 1,
+         Q.le(x + y, 2): 2,
+         Q.prime(a): 3,
+         Q.ge(x, 0): 4,
+         Q.eq(x + y, 2): 5,
+         Q.ge(x + 2*y - z, 6): 6}
+        >>> lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+
+        Each nonslack variable gets replaced with a dummy variable. Here x, y, and z get replaced
+        with _x1, _x2, _x3 respectively.
+
+        >>> x_subs
+        {x: _x1, y: _x2, z: _x3}
+
+        We convert any constraints with multiple nonslack variables into single variable constraints
+        by substituting with slack variables. Here x + y gets substituted with _s1 and x + 2 * y - z gets
+        substituted with -_s2.
+
+        >>> s_subs
+        {_x1 + _x2: _s1, -_x1 - 2*_x2 + _x3: _s2}
+
+        Each row of the matrix A represents an equallity between a slack variable and some nonslack varaibles.
+
+        >>> lra.A
+        Matrix([
+        [ 1,  1, 0, -1,  0],
+        [-1, -2, 1,  0, -1]])
+
+        To make it very clear what those equalities are, we can multiply A by a vector containing each varaiable.
+        The result will be a list of quantities that are equal to zero.
+
+        >>> lra.A * Matrix(lra.all_var)
+        Matrix([
+        [        -_s1 + _x1 + _x2],
+        [-_s2 - _x1 - 2*_x2 + _x3]])
+
+        By substituting terms with multiple constraints with slack variables, each constraint in phi
+        is transformed into an upper or lower bound or equality between a single variable and some
+        constant. Rather than returning a new encoded cnf object with a new encoding, the new lra
+        object has its own encoding stored in `lra.boundry_enc` and `lra.boundry_rev_enc`.
+
+        As boundry objects can't be printed nicely, here's what that looks like if the boundries are
+        converted into inequalities.
+
+        >>> {key: value.get_inequality() for key, value in lra.boundry_enc.items()}
+        {5: Eq(_s1, 2), 6: _s2 <= -6, 4: _x1 >= 0, 1: _s2 < -4, 2: _s1 <= 2}
+
+        Notice that there are no encodings for 3. This is because predicates such as
+        Q.prime which the LRASolver has no understanding of are ignored.
+        """
+
         # TODO: Preprecessing needs to be done to encoded_cnf
         # x - y > 0 should be the same as x > y
         encoding = {}  # maps int to Boundry
@@ -220,6 +292,8 @@ class LRASolver():
             var, var_coeff = sep_const_coeff(var)
             const = const / var_coeff
 
+            # replace each term in expr with dummy _xi variable
+            # e.g.: -x -2*y + z --> [_x3, -_x1, -2*_x2]
             terms = []
             for term in list_terms(var):
                 assert not isinstance(term, Add)
@@ -230,6 +304,8 @@ class LRASolver():
                     nonbasic.append(x_subs[term])
                 terms.append(term_coeff * x_subs[term])
 
+            # If there are multiple variable terms, replace them with a dummy _si variable.
+            # If needed (no other expr has this sum of variable terms), create a new Dummy _si varaible.
             if len(terms) > 1:
                 var = sum(terms)
                 if var not in s_subs:
