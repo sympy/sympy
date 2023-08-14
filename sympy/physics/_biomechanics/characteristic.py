@@ -431,3 +431,29 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
                 return log((fl_T + c2) / c0) / c3 + c1
 
             return log(UnevaluatedExpr((fl_T + c2) / c0)) / c3 + c1
+
+        def fdiff(self, argindex: int = 1) -> Expr:
+            """Derivative of the function with respect to a single argument.
+
+            Parameters
+            ==========
+
+            argindex : int
+                The index of the function's arguments with respect to which the
+                derivative should be taken. Argument indexes start at ``1``.
+                Default is ``1``.
+
+            """
+            fl_T, c0, c1, c2, c3 = self.args
+            if argindex == 1:
+                return 1 / (c3 * (fl_T + c2))  # type: ignore
+            elif argindex == 2:
+                return -1 / (c0 * c3)  # type: ignore
+            elif argindex == 3:
+                return Integer(1)
+            elif argindex == 4:
+                return 1 / (c3 * (fl_T + c2))  # type: ignore
+            elif argindex == 5:
+                return -log(UnevaluatedExpr((fl_T + c2) / c0)) / c3**2  # type: ignore
+
+            raise ArgumentIndexError(self, argindex)
