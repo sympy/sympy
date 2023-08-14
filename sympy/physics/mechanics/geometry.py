@@ -106,7 +106,8 @@ class Sphere(GeometryBase):
 
     radius : Symbol
         Radius of the sphere. This symbol must represent a value that is
-        positive and constant, i.e. it cannot be a dynamic symbol.
+        positive and constant, i.e. it cannot be a dynamic symbol, nor can it
+        be an expression.
     point : Point
         A point at which the sphere is centered.
 
@@ -158,7 +159,9 @@ class Sphere(GeometryBase):
 
         point : Point
             The point for which it's to be ascertained if it's on the sphere's
-            surface or not.
+            surface or not. This point's position relative to the sphere's
+            center must be a simple expression involving the radius of the
+            sphere, otherwise this check will likely not work.
 
         """
         point_vector = point.pos_from(self.point)
@@ -176,18 +179,9 @@ class Sphere(GeometryBase):
         ===========
 
         The geodesic length, i.e. the shortest arc along the surface of a
-        sphere, connecting two points can be calculated using the formula:
-
-        .. math::
-
-           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
-
-        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
-        sphere's center to the first and second points on the sphere's surface
-        respectively.
-
-        Note that the actual path that the geodesic will take is undefined when
-        the two points are directly opposite one another.
+        sphere, connecting two points. Note that the actual path that the
+        geodesic will take is undefined when the two points are directly
+        opposite one another.
 
         Examples
         ========
@@ -368,7 +362,9 @@ class Cylinder(GeometryBase):
 
         point : Point
             The point for which it's to be ascertained if it's on the
-            cylinder's surface or not.
+            cylinder's surface or not. This point's position relative to the
+            cylinder's axis must be a simple expression involving the radius of
+            the sphere, otherwise this check will likely not work.
 
         """
         relative_position = point.pos_from(self.point)
