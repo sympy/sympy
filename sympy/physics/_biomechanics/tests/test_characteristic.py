@@ -111,6 +111,10 @@ class TestTendonForceLengthDeGroote2016:
         expected = self.c0 * (self.l_T_tilde - self.c1) * exp(self.c3 * UnevaluatedExpr(self.l_T_tilde - self.c1))
         assert fl_T.diff(self.c3) == expected
 
+    def test_inverse(self) -> None:
+        fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
+        assert fl_T.inverse() is TendonForceLengthInverseDeGroote2016
+
     def test_function_print_latex(self) -> None:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants)
         expected = r'\operatorname{fl}^T \left( l_{T tilde} \right)'
