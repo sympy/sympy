@@ -3,23 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
-from sympy.physics.vector import Vector, dot
+from sympy.physics.vector import Vector, dot, Point
 from sympy.simplify.simplify import trigsimp
-
-if TYPE_CHECKING:
-    from sympy.core.backend import USE_SYMENGINE, Symbol
-    from sympy.physics.mechanics import Point
-
-    if USE_SYMENGINE:
-        from sympy.core.backend import Basic as ExprType
-    else:
-        from sympy.core.expr import Expr as ExprType
 
 
 __all__ = [
@@ -41,7 +31,7 @@ class GeometryBase(ABC):
     """
 
     @abstractmethod
-    def point_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point):
         """Returns ``True`` if a point is on the geometry's surface.
 
         Parameters
@@ -54,7 +44,7 @@ class GeometryBase(ABC):
         pass
 
     @abstractmethod
-    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
+    def geodesic_length(self, point_1, point_2):
         """Returns the shortest distance between two points on a geometry's
         surface.
 
@@ -69,7 +59,7 @@ class GeometryBase(ABC):
         """
         pass
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Default representation of a geometry object."""
         return f'{self.__class__.__name__}()'
 
@@ -118,7 +108,7 @@ class Sphere(GeometryBase):
 
     """
 
-    def __init__(self, radius: Symbol, point: Point) -> None:
+    def __init__(self, radius, point):
         """Initializer for ``Sphere``.
 
         Parameters
@@ -134,24 +124,24 @@ class Sphere(GeometryBase):
         self.point = point
 
     @property
-    def radius(self) -> Symbol:
+    def radius(self):
         """Radius of the sphere."""
         return self._radius
 
     @radius.setter
-    def radius(self, radius: Symbol) -> None:
+    def radius(self, radius):
         self._radius = radius
 
     @property
-    def point(self) -> Point:
+    def point(self):
         """A point through which the cylinder's axis passes."""
         return self._point
 
     @point.setter
-    def point(self, point: Point) -> None:
+    def point(self, point):
         self._point = point
 
-    def point_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point):
         """Returns ``True`` if a point is on the sphere's surface.
 
         Parameters
@@ -171,7 +161,7 @@ class Sphere(GeometryBase):
             point_radius_squared = point_vector**2
         return Eq(point_radius_squared, self.radius**2) == True
 
-    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
+    def geodesic_length(self, point_1, point_2):
         r"""Returns the shortest distance between two points on the sphere's
         surface.
 
@@ -247,7 +237,7 @@ class Sphere(GeometryBase):
         geodesic_length = self.radius*central_angle
         return geodesic_length
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``Sphere``."""
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
@@ -308,7 +298,7 @@ class Cylinder(GeometryBase):
 
     """
 
-    def __init__(self, radius: Symbol, point: Point, axis: Vector) -> None:
+    def __init__(self, radius, point, axis):
         """Initializer for ``Cylinder``.
 
         Parameters
@@ -328,33 +318,33 @@ class Cylinder(GeometryBase):
         self.axis = axis
 
     @property
-    def radius(self) -> Symbol:
+    def radius(self):
         """Radius of the cylinder."""
         return self._radius
 
     @radius.setter
-    def radius(self, radius: Symbol) -> None:
+    def radius(self, radius):
         self._radius = radius
 
     @property
-    def point(self) -> Point:
+    def point(self):
         """A point through which the cylinder's axis passes."""
         return self._point
 
     @point.setter
-    def point(self, point: Point) -> None:
+    def point(self, point):
         self._point = point
 
     @property
-    def axis(self) -> Vector:
+    def axis(self):
         """Axis along which the cylinder is aligned."""
         return self._axis
 
     @axis.setter
-    def axis(self, axis: Vector) -> None:
+    def axis(self, axis):
         self._axis = axis
 
-    def point_on_surface(self, point: Point) -> bool:
+    def point_on_surface(self, point):
         """Returns ``True`` if a point is on the cylinder's surface.
 
         Parameters
@@ -376,7 +366,7 @@ class Cylinder(GeometryBase):
             point_radius_squared = point_vector**2
         return Eq(trigsimp(point_radius_squared), self.radius**2) == True
 
-    def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
+    def geodesic_length(self, point_1, point_2):
         r"""The shortest distance between two points on a geometry's surface.
 
         Explanation
@@ -484,7 +474,7 @@ class Cylinder(GeometryBase):
         geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``Cylinder``."""
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
@@ -492,7 +482,7 @@ class Cylinder(GeometryBase):
         )
 
 
-def _directional_atan(numerator: ExprType, denominator: ExprType) -> ExprType:
+def _directional_atan(numerator, denominator):
     """Compute atan in a directional sense as required for geodesics.
 
     Explanation
