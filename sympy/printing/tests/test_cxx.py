@@ -54,8 +54,8 @@ def test_CXX17CodePrinter():
     assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
 
     # Automatic rewrite
-    assert CXX17CodePrinter().doprint(frac(x)) == 'x - std::floor(x)'
-    assert CXX17CodePrinter().doprint(riemann_xi(x)) == '(1.0/2.0)*std::pow(M_PI, -1.0/2.0*x)*x*(x - 1)*std::tgamma((1.0/2.0)*x)*std::riemann_zeta(x)'
+    assert CXX17CodePrinter().doprint(frac(x)) == '(x - std::floor(x))'
+    assert CXX17CodePrinter().doprint(riemann_xi(x)) == '((1.0/2.0)*std::pow(M_PI, -1.0/2.0*x)*x*(x - 1)*std::tgamma((1.0/2.0)*x)*std::riemann_zeta(x))'
 
 
 def test_cxxcode():
