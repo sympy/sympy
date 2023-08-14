@@ -486,3 +486,13 @@ class TestFiberForceLengthPassiveDeGroote2016:
             + exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0)*(self.l_M_tilde - 1)/(self.c0*(exp(self.c1) - 1))
         )
         assert fl_M_pas.diff(self.c1) == expected
+
+    def test_function_print_latex(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = r'\operatorname{fl}^M_{pas} \left( l_{M tilde} \right)'
+        assert LatexPrinter().doprint(fl_M_pas) == expected
+
+    def test_expression_print_latex(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = r'\frac{e^{\frac{c_{1} \left(l_{M tilde} - 1\right)}{c_{0}}} - 1}{e^{c_{1}} - 1}'
+        assert LatexPrinter().doprint(fl_M_pas.doit()) == expected
