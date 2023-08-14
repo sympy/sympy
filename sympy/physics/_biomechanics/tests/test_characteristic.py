@@ -304,3 +304,13 @@ class TestTendonForceLengthInverseDeGroote2016:
     def test_inverse(self) -> None:
         fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
         assert fl_T_inv.inverse() is TendonForceLengthDeGroote2016
+
+    def test_function_print_latex(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = r'\left( \operatorname{fl}^T \right)^{-1} \left( fl_{T} \right)'
+        assert LatexPrinter().doprint(fl_T_inv) == expected
+
+    def test_expression_print_latex(self) -> None:
+        fl_T = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = r'c_{1} + \frac{\log{\left(\frac{c_{2} + fl_{T}}{c_{0}} \right)}}{c_{3}}'
+        assert LatexPrinter().doprint(fl_T.doit()) == expected
