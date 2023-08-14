@@ -433,7 +433,7 @@ class TestFiberForceLengthPassiveDeGroote2016:
 
     @pytest.fixture(autouse=True)
     def _fiber_force_length_passive_arguments_fixture(self) -> None:
-        self.fl_T = Symbol('l_M_tilde')
+        self.l_M_tilde = Symbol('l_M_tilde')
         self.c0 = Symbol('c_0')
         self.c1 = Symbol('c_1')
         self.constants = (self.c0, self.c1)
@@ -445,24 +445,23 @@ class TestFiberForceLengthPassiveDeGroote2016:
         assert FiberForceLengthPassiveDeGroote2016.__name__ == 'FiberForceLengthPassiveDeGroote2016'
 
     def test_instance(self) -> None:
-        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
-        assert isinstance(fl_M, FiberForceLengthPassiveDeGroote2016)
-        assert str(fl_M) == 'FiberForceLengthPassiveDeGroote2016(fl_T, c_0, c_1)'
-
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        assert isinstance(fl_M_pas, FiberForceLengthPassiveDeGroote2016)
+        assert str(fl_M_pas) == 'FiberForceLengthPassiveDeGroote2016(l_M_tilde, c_0, c_1)'
 
     def test_doit(self) -> None:
-        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit()
-        assert fl_M == (exp((self.c1*(self.l_M_tilde - 1))/self.c0) - 1)/(exp(self.c1) - 1)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit()
+        assert fl_M_pas == (exp((self.c1*(self.l_M_tilde - 1))/self.c0) - 1)/(exp(self.c1) - 1)
 
     def test_doit_evaluate_false(self) -> None:
-        fl_M = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
-        assert fl_M == (exp((self.c1*UnevaluatedExpr(self.l_M_tilde - 1))/c0) - 1)/(exp(self.c1) - 1)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
+        assert fl_M_pas == (exp((self.c1*UnevaluatedExpr(self.l_M_tilde - 1))/self.c0) - 1)/(exp(self.c1) - 1)
 
     def test_with_default_constants(self) -> None:
         constants = (
             Rational(3, 5),
             Integer(4),
         )
-        fl_M_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
-        fl_M_constants = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
-        assert fl_M_manual == fl_M_constants
+        fl_M_pas_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
+        fl_M_pas_constants = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        assert fl_M_pas_manual == fl_M_pas_constants
