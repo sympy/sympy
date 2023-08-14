@@ -14,6 +14,7 @@ from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
+    FiberForceLengthPassiveDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -426,3 +427,13 @@ class TestTendonForceLengthInverseDeGroote2016:
             1.0501557022,
         ])
         numpy.testing.assert_allclose(fl_T_inv_callable(fl_T), expected)
+
+
+class TestFiberForceLengthPassiveDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _fiber_force_length_passive_arguments_fixture(self) -> None:
+        self.fl_T = Symbol('l_M_tilde')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.constants = (self.c0, self.c1)
