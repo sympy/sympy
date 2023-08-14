@@ -483,3 +483,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
             fl_T = self.args[0]
             _fl_T = printer._print(fl_T)
             return r'\left( \operatorname{fl}^T \right)^{-1} \left( %s \right)' % _fl_T
+
+
+class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
+    pass
