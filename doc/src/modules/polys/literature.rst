@@ -52,7 +52,7 @@ a theoretical foundation for implementing polynomials manipulation module.
     Algorithms, Springer, Second Edition, 1997
 
 .. [Ajwa95] I.A. Ajwa, Z. Liu, P.S. Wang, Groebner Bases Algorithm,
-    https://citeseer.ist.psu.edu/myciteseer/login, 1995
+    https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=2bb46c0852bf74c9d74d1a12af6d11f69f7e8363, 1995
 
 .. [Bose03] N.K. Bose, B. Buchberger, J.P. Guiver, Multidimensional
     Systems Theory and Applications, Springer, 2003
