@@ -275,3 +275,28 @@ class TestTendonForceLengthInverseDeGroote2016:
         fl_T_inv_manual = TendonForceLengthInverseDeGroote2016(self.fl_T, *constants)
         fl_T_inv_constants = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
         assert fl_T_inv_manual == fl_T_inv_constants
+
+    def test_differentiate_wrt_fl_T(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = 1 / (self.c3 * (self.fl_T + self.c2))
+        assert fl_T_inv.diff(self.fl_T) == expected
+
+    def test_differentiate_wrt_c0(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = -1 / (self.c0 * self.c3)
+        assert fl_T_inv.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = Integer(1)
+        assert fl_T_inv.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = 1 / (self.c3 * (self.fl_T + self.c2))
+        assert fl_T_inv.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self) -> None:
+        fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants)
+        expected = -log(UnevaluatedExpr((self.fl_T + self.c2) / self.c0)) / self.c3**2
+        assert fl_T_inv.diff(self.c3) == expected
