@@ -168,7 +168,7 @@ class Sphere(GeometryBase):
         return Eq(point_radius_squared, self.radius**2) == True
 
     def geodesic_length(self, point_1: Point, point_2: Point) -> ExprType:
-        r"""Retrns the shortest distance between two points on the sphere's
+        r"""Returns the shortest distance between two points on the sphere's
         surface.
 
         Explanation
