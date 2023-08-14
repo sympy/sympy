@@ -1,5 +1,5 @@
 from sympy.ntheory.generate import Sieve, sieve
-from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
+from sympy.ntheory.primetest import (mr, _lucas_selfridge_params, _lucas_extrastrong_params, is_lucas_prp, is_square,
                                      is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
                                      is_gaussian_prime)
 
@@ -24,6 +24,27 @@ def test_euler_pseudoprimes():
     assert is_euler_pseudoprime(8841, 29) == False
     assert is_euler_pseudoprime(8421, 29) == False
     assert is_euler_pseudoprime(9997, 19) == True
+
+
+def test_lucas_selfridge_params():
+    assert _lucas_selfridge_params(3) == (5, 1, -1)
+    assert _lucas_selfridge_params(5) == (-7, 1, 2)
+    assert _lucas_selfridge_params(7) == (5, 1, -1)
+    assert _lucas_selfridge_params(9) == (0, 0, 0)
+    assert _lucas_selfridge_params(11) == (13, 1, -3)
+    assert _lucas_selfridge_params(19) == (-7, 1, 2)
+    assert _lucas_selfridge_params(29) == (-11, 1, 3)
+
+
+def test_lucas_extrastrong_params():
+    assert _lucas_extrastrong_params(3) == (5, 3, 1)
+    assert _lucas_extrastrong_params(5) == (12, 4, 1)
+    assert _lucas_extrastrong_params(7) == (5, 3, 1)
+    assert _lucas_extrastrong_params(9) == (0, 0, 0)
+    assert _lucas_extrastrong_params(11) == (21, 5, 1)
+    assert _lucas_extrastrong_params(59) == (32, 6, 1)
+    assert _lucas_extrastrong_params(479) == (117, 11, 1)
+
 
 def test_is_extra_strong_lucas_prp():
     assert is_extra_strong_lucas_prp(4) == False

@@ -352,8 +352,7 @@ beyond Python and mpmath.
 
 - **git**: The [SymPy source code](https://github.com/sympy/sympy) uses the
   [git](https://git-scm.com/) version control system. See the [installation
-  guide](installation-git) and [development
-  workflow](https://github.com/sympy/sympy/wiki/Development-workflow#set-up-git)
+  guide](installation-git) and the [contributor guide](devsetup)
   for instructions on how to get the development version of SymPy from git.
 
 ### Running the Tests
@@ -379,6 +378,9 @@ library code should be imported with `import_module()`.
   built-in Python [pickle](https://docs.python.org/3/library/pickle.html).
   Some tests in `sympy.utilities.tests.test_pickling.py` depend on cloudpickle
   to run. It is not otherwise required for any SymPy function.
+
+- **hypothesis**: [Hypothesis](https://github.com/HypothesisWorks/hypothesis/tree/master)
+  is a required dependency for the SymPy test suit.
 
 ### Building the Documentation
 
