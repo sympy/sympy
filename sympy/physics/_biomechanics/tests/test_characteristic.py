@@ -443,3 +443,8 @@ class TestFiberForceLengthPassiveDeGroote2016:
         assert issubclass(FiberForceLengthPassiveDeGroote2016, Function)
         assert issubclass(FiberForceLengthPassiveDeGroote2016, CharacteristicCurveFunction)
         assert FiberForceLengthPassiveDeGroote2016.__name__ == 'FiberForceLengthPassiveDeGroote2016'
+
+    def test_instance(self) -> None:
+        fl_M = TendonForceLengthInverseDeGroote2016(self.l_M_tilde, *self.constants)
+        assert isinstance(fl_M, FiberForceLengthPassiveDeGroote2016)
+        assert str(fl_M) == 'FiberForceLengthPassiveDeGroote2016(fl_T, c_0, c_1)'
