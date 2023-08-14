@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point
-from sympy.physics.mechanics._geometry import GeometryBase
+from sympy.physics.mechanics.wrapping_geometry import GeometryBase
 from sympy.physics.vector import dynamicsymbols
 
 if TYPE_CHECKING:
@@ -300,13 +300,13 @@ class WrappingPathway(PathwayBase):
     >>> from sympy.physics.mechanics._pathway import WrappingPathway
 
     To construct a wrapping pathway, a geometry object, which the pathway can
-    wrap, is required. Similar to above, the ``_geometry.py`` module is also
-    experimental so geometry classes needed to be imported directly from the
-    ``sympy.physics.mechanics._geometry.py`` module. Let's create a wrapping
-    pathway that wraps around a cylinder. To do this we need to import the
-    ``Cylinder`` class.
+    wrap, is required. Similar to above, the ``wrapping_geometry.py`` module is
+    also experimental so geometry classes needed to be imported directly from
+    the ``sympy.physics.mechanics.wrapping_geometry.py`` module. Let's create a
+    wrapping pathway that wraps around a cylinder. To do this we need to import
+    the ``Cylinder`` class.
 
-    >>> from sympy.physics.mechanics._geometry import Cylinder
+    >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
 
     To construct a wrapping pathway, like other pathways, a pair of points must
     be passed, followed by an instance of a geometry class as a keyword
@@ -419,7 +419,7 @@ class WrappingPathway(PathwayBase):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._geometry import Cylinder
+        >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
         >>> N = ReferenceFrame('N')
         >>> r = Symbol('r', positive=True)
         >>> pO = Point('pO')
