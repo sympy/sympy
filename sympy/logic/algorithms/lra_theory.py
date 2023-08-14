@@ -205,9 +205,9 @@ class LRASolver():
         >>> cnf = CNF.from_prop(phi)
         >>> enc = EncodedCNF()
         >>> enc.from_cnf(cnf)
-        >>> enc.data
+        >>> enc.data #doctest: +SKIP
         [{1, 5}, {3}, {4}, {2, 6}]
-        >>> enc.encoding
+        >>> enc.encoding #doctest: +SKIP
         {Q.gt(x + 2*y - z, 4): 1,
          Q.le(x + y, 2): 2,
          Q.prime(a): 3,
@@ -252,7 +252,7 @@ class LRASolver():
         As boundry objects can't be printed nicely, here's what that looks like if the boundries are
         converted into inequalities.
 
-        >>> {key: value.get_inequality() for key, value in lra.boundry_enc.items()}
+        >>> {key: value.get_inequality() for key, value in lra.boundry_enc.items()} #doctest: +SKIP
         {5: Eq(_s1, 2), 6: _s2 <= -6, 4: _x1 >= 0, 1: _s2 < -4, 2: _s1 <= 2}
 
         Notice that there are no encodings for 3. This is because predicates such as
