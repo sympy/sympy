@@ -59,11 +59,18 @@ def test_detect_poles():
     s3 = LineOver1DRangeSeries(tan(x), (x, -pi, pi),
         adaptive=False, n=1000, detect_poles=True, eps=1e-06)
     xx3, yy3 = s3.get_data()
+    s4 = LineOver1DRangeSeries(tan(x), (x, -pi, pi),
+        adaptive=False, n=1000, detect_poles="symbolic")
+    xx4, yy4 = s4.get_data()
 
-    assert np.allclose(xx1, xx2) and np.allclose(xx1, xx3)
+    assert np.allclose(xx1, xx2) and np.allclose(xx1, xx3) and np.allclose(xx1, xx4)
     assert not np.any(np.isnan(yy1))
     assert not np.any(np.isnan(yy3))
     assert np.any(np.isnan(yy2))
+    assert np.any(np.isnan(yy4))
+    assert len(s2.poles_locations) == len(s3.poles_locations) == 0
+    assert len(s4.poles_locations) == 2
+    assert np.allclose(np.abs(s4.poles_locations), np.pi / 2)
 
     with warns(
             UserWarning,
@@ -74,11 +81,16 @@ def test_detect_poles():
             adaptive=False, n=1000, detect_poles=False)
         s2 = LineOver1DRangeSeries(frac(x), (x, -10, 10),
             adaptive=False, n=1000, detect_poles=True, eps=0.05)
+        s3 = LineOver1DRangeSeries(frac(x), (x, -10, 10),
+            adaptive=False, n=1000, detect_poles="symbolic")
         xx1, yy1 = s1.get_data()
         xx2, yy2 = s2.get_data()
-        assert np.allclose(xx1, xx2)
+        xx3, yy3 = s3.get_data()
+        assert np.allclose(xx1, xx2) and np.allclose(xx1, xx3)
         assert not np.any(np.isnan(yy1))
-        assert np.any(np.isnan(yy2))
+        assert np.any(np.isnan(yy2)) and np.any(np.isnan(yy2))
+        assert not np.allclose(yy1, yy2, equal_nan=True)
+        assert len(s3.poles_locations) == 0
 
     s1 = LineOver1DRangeSeries(tan(u * x), (x, -pi, pi), params={u: 1},
         adaptive=False, n=1000, detect_poles=False)
@@ -90,11 +102,18 @@ def test_detect_poles():
     s3 = LineOver1DRangeSeries(tan(u * x), (x, -pi, pi), params={u: 1},
         adaptive=False, n=1000, detect_poles=True, eps=1e-06)
     xx3, yy3 = s3.get_data()
+    s4 = LineOver1DRangeSeries(tan(u * x), (x, -pi, pi), params={u: 1},
+        adaptive=False, n=1000, detect_poles="symbolic")
+    xx4, yy4 = s4.get_data()
 
-    assert np.allclose(xx1, xx2) and np.allclose(xx1, xx3)
+    assert np.allclose(xx1, xx2) and np.allclose(xx1, xx3) and np.allclose(xx1, xx4)
     assert not np.any(np.isnan(yy1))
     assert not np.any(np.isnan(yy3))
     assert np.any(np.isnan(yy2))
+    assert np.any(np.isnan(yy4))
+    assert len(s2.poles_locations) == len(s3.poles_locations) == 0
+    assert len(s4.poles_locations) == 2
+    assert np.allclose(np.abs(s4.poles_locations), np.pi / 2)
 
     with warns(
             UserWarning,
