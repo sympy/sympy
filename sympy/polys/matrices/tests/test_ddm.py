@@ -1,5 +1,5 @@
 from sympy.testing.pytest import raises
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys import ZZ, QQ
 
@@ -39,7 +39,7 @@ def test_DDM_getsetitem():
 
 def test_DDM_str():
     ddm = DDM([[ZZ(0), ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ)
-    if HAS_GMPY: # pragma: no cover
+    if GROUND_TYPES == 'gmpy': # pragma: no cover
         assert str(ddm) == '[[0, 1], [2, 3]]'
         assert repr(ddm) == 'DDM([[mpz(0), mpz(1)], [mpz(2), mpz(3)]], (2, 2), ZZ)'
     else:        # pragma: no cover
@@ -284,10 +284,11 @@ def test_DDM_rref():
 
 
 def test_DDM_nullspace():
-     A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
-     Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
-     nonpivots = [1]
-     assert A.nullspace() == (Anull, nonpivots)
+    # more tests are in test_nullspace.py
+    A = DDM([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
+    Anull = DDM([[QQ(-1), QQ(1)]], (1, 2), QQ)
+    nonpivots = [1]
+    assert A.nullspace() == (Anull, nonpivots)
 
 
 def test_DDM_particular():

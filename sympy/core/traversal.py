@@ -27,10 +27,7 @@ def iterargs(expr):
     args = [expr]
     for i in args:
         yield i
-        try:
-            args.extend(i.args)
-        except TypeError:
-            pass  # for cases like f being an arg
+        args.extend(i.args)
 
 
 def iterfreeargs(expr, _first=True):
@@ -61,10 +58,7 @@ def iterfreeargs(expr, _first=True):
             for i in iterfreeargs(i.as_dummy(), _first=False):
                 if not i.has(*void):
                     yield i
-        try:
-            args.extend(i.args)
-        except TypeError:
-            pass  # for cases like f being an arg
+        args.extend(i.args)
 
 
 class preorder_traversal:
