@@ -276,6 +276,18 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
         raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex: int = 1) -> Function:
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return TendonForceLengthInverseDeGroote2016
+
     def _latex(self, printer: Printer) -> str:
         """Print a LaTeX representation of the function defining the curve.
 
