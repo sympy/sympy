@@ -32,6 +32,24 @@ class PathwayBase(ABC):
     Instances of this class cannot be directly instantiated by users. However,
     it can be used to created custom pathway types through subclassing.
 
+    All pathways use the same sign conventions for the relative speed of and
+    forces acting on the attachment points. Take attachment points ``a1`` and
+    ``a2`` that move along the same line and have an equal and opposite force
+    of magnitude ``F``. If we define the positive sense of the velocity of each
+    point to the right (positive ``v1`` or ``v2`` describe rightward motion)
+    and the equal and opposite force ``F`` has a sign convention such that
+    positive force is in the same direction for ``a2`` and opposite direction
+    as ``a1``, respectively, then we have the following sign convention::
+
+       a1          a2
+       o<--- F --->o
+       |           |
+       --> v1      --> v2
+
+    We define the relative speed, or extension velocity,  as ``v2 - v1`` with a
+    positive ``F`` tending to move ``a2`` the right and ``a1`` to the left,
+    i.e. expanding if ``a2``'s position is to the right of ``a1``'s.
+
     """
 
     def __init__(
