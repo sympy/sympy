@@ -304,4 +304,34 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
 
 class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
-    pass
+        r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1].
+
+        Explanation
+        ===========
+
+        Gives the normalized tendon length that produces a specific normalized
+        tendon force.
+
+        The function is defined by the equation:
+
+        ${fl^T}^{-1} = frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1$
+
+        with constant values of $c_0 = 0.2$, $c_1 = 0.995$, $c_2 = 0.25$, and
+        $c_3 = 33.93669377311689$. This function is the exact analytical inverse
+        of the related tendon force-length curve ``TendonForceLengthDeGroote2016``.
+
+        While it is possible to change the constant values, the were carefully
+        selected in the original publication to give the characteristic curve
+        specific and required properties. For example, the function produces no
+        force when the tendon is in an unstrained state. It also produces a force
+        of 1 normalized unit when the tendon is under a 5% strain.
+
+        References
+        ==========
+
+        .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+               of direct collocation optimal control problem formulations for
+               solving the muscle redundancy problem, Annals of biomedical
+               engineering, 44(10), (2016) pp. 2922-2936
+
+        """
