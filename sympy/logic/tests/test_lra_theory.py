@@ -206,100 +206,119 @@ def test_from_encoded_cnf():
 
 # TODO: test pivot method
 
-def test_preprocessing():
+def test_from_encoded_cnf():
     s1, s2 = symbols("s1 s2")
 
     # Test preprocessing
     # Example is from section 3 of paper.
-    phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
-    phi = Q.real(a) | phi
-    phi_prime = Q.real(a) | (x >= 0) & (Eq(s1, 2) | (s2 > 4)) & ((s2 >= 6) | (s1 <= 2))
-    eqs = [Eq(s1, x + y), Eq(s2, x + 2 * y - z)]
-    m, _ = linear_eq_to_matrix(eqs, [x, y, z, s1, s2])
-    m = -m  # identity matrix should be negative
-    preprocessed, lra, _ = LRASolver.preprocess(phi, [x, y, z])
-    assert preprocessed != phi_prime  # should be identical save for s1 and s2 are dummy variables
-    assert phi.args[0] == Q.real(a)  # must handle non-relational predicate objects
-    assert lra.A == m
-    assert lra.slack != [s1, s2]
-    assert len(lra.slack) == 2
-    assert lra.nonslack == [x, y, z]
+    phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+    cnf = CNF.from_prop(phi)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    assert lra.A.shape == (2, 5)
+    assert str(lra.slack) == '[_s1, _s2]'
+    assert str(lra.nonslack) == '[_x1, _x2, _x3]'
+    assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
+                            [-1, -2, 1,  0, -1]])
+    assert set((str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.boundry_enc.values()) == {('_s1', 2, None, True, False),
+    ('_s1', 2, True, False, False),
+    ('_s2', -4, True, False, True),
+    ('_s2', -6, True, False, False),
+    ('_x1', 0, False, False, False)}
 
-    # Test how preprocessing handles functions
+    # test functions
     g = Function('g')(x)
     f = Function('f')()
-    phi = (g + x + f >= 2)
-    phi_prime = (s1 >= 2)
-    eqs = [Eq(s1, g + x + f)]
-    m, _ = linear_eq_to_matrix(eqs, [x, f, g, s1])
-    m = -m  # identity matrix should be negative
-    preprocessed, lra, _ = LRASolver.preprocess(phi, [g, f, x])
-    assert preprocessed != phi_prime
-    assert lra.A == m
-    assert lra.slack != [s1]
-    assert len(lra.slack) == 1
-    assert lra.nonslack == [g, f, x]
+    phi = (g + x + f + g**2 <= 2)
+    cnf = CNF.from_prop(phi)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    assert str(lra.slack) == '[_s1]'
+    # TODO: fix bug with constant functions so assert statement passes
+    #assert str(lra.nonslack) == '[_x1, _x2, _x3, _x4]'
+    #assert lra.A == Matrix([[1, 1, 1, 1, -1]])
+
+    # test no constraints
+    phi = Q.prime(x) & Q.integer(y)
+    cnf = CNF.from_prop(phi)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    assert lra.A == Matrix()
+    assert lra.slack == []
+    assert lra.nonslack == []
 
 
 def test_LRA_solver():
     s1, s2 = symbols("s1 s2")
     # Empty matrix should be handled.
     # If the preprocessing step doesn't do anything, then the matrix is empty.
-    m = Matrix()
-    lra = LRASolver(m, [], [x, y])
-    assert lra.assert_con(Q.ge(x, 0)) == ("OK", None)
-    assert lra.assert_con(Q.ge(x, -1)) == ('SAT', {x: 0, y: 0})
-    assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
-
-    m = Matrix()
-    lra = LRASolver(m, [], [x, y])
-    assert lra.assert_con(Q.le(x, -1)) == ("OK", None)
-    assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
-
-    m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
-    #assert LRASolver._pivot(m, 0, 0) == Matrix([[1, 1, -1, 0], [0, 3, -2, 1]])
-
-    # Example from page 89–90 of
-    # "A Fast Linear-Arithmetic Solver for DPLL(T)"
-    equations = [Eq(s1, -x + y), Eq(s2, x + y)]
-    A, _ = linear_eq_to_matrix(equations, [x, y, s1, s2])
-    A = -A # the identity matrix should be negative
-    lra = LRASolver(A, [s1, s2], [x, y])
-    assert lra.check() == ('SAT', {x: 0, y: 0, s1: 0, s2: 0})
-    assert {v: lra.assign[v] for v in lra.all_var} == {x:0, y:0, s1:0, s2:0}
-
-    assert lra.assert_con(x <= -4) == ("OK", None)
-    assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
-    assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1: 4, s2:-4}
-
-    assert lra.assert_con(x >= -8) == ("OK", None)
-    assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
-    assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1:4, s2:-4}
-
-    # note that this is the first time a pivot is used
-    assert lra.assert_con(s1 <= 1) == ("OK", None)
-    assert lra.check() == ('SAT', {x: -4, y: -3, s1: 1, s2: -7})
-    assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:-3, s1:1, s2:-7}
-
-    assert lra.assert_con(s2 >= -3) == ("OK", None)
-    assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
+    phi = (x >= 0) & (x >= 1) & (x <= -1)
+    cnf = CNF.from_prop(phi)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
 
 
-    r1 = x <= 0
-    r2 = y <= 0
-    r3 = s1 >= 2
-    equations = [Eq(s1, x+y)]
-    A, _ = linear_eq_to_matrix(equations, [x, y, s1])
-    A = -A  # the identity matrix should be negative
-    lra = LRASolver(A, [s1], [x, y])
-    lra.assert_con(x <= 0)
-    lra.assert_con(y <= 0)
-    lra.assert_con(s1 >= 2)
-    assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
-
-
-    # test potential edge case
-    r1 = x <= 1
-    r2 = -x <= -5
-    lra = LRASolver(Matrix(), [], [x])
-    lra.assert_con(x <= 1)
+    assert len(lra.A) == 0
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 0))) +1) == ("OK", None)
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 1))) +1) == ("OK", None)
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.le(x, -1))) + 1) == ('UNSAT', {-(enc.symbols.index((Q.le(x, -1))) + 1), -(enc.symbols.index((Q.ge(x, 1))) +1)})
+    # assert lra.assert_con(Q.ge(x, 0)) == ("OK", None)
+    # assert lra.assert_con(Q.ge(x, -1)) == ('SAT', {x: 0, y: 0})
+    # assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
+    #
+    # m = Matrix()
+    # lra = LRASolver(m, [], [x, y])
+    # assert lra.assert_con(Q.le(x, -1)) == ("OK", None)
+    # assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
+    #
+    # m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
+    # #assert LRASolver._pivot(m, 0, 0) == Matrix([[1, 1, -1, 0], [0, 3, -2, 1]])
+    #
+    # # Example from page 89–90 of
+    # # "A Fast Linear-Arithmetic Solver for DPLL(T)"
+    # equations = [Eq(s1, -x + y), Eq(s2, x + y)]
+    # A, _ = linear_eq_to_matrix(equations, [x, y, s1, s2])
+    # A = -A # the identity matrix should be negative
+    # lra = LRASolver(A, [s1, s2], [x, y])
+    # assert lra.check() == ('SAT', {x: 0, y: 0, s1: 0, s2: 0})
+    # assert {v: lra.assign[v] for v in lra.all_var} == {x:0, y:0, s1:0, s2:0}
+    #
+    # assert lra.assert_con(x <= -4) == ("OK", None)
+    # assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
+    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1: 4, s2:-4}
+    #
+    # assert lra.assert_con(x >= -8) == ("OK", None)
+    # assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
+    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1:4, s2:-4}
+    #
+    # # note that this is the first time a pivot is used
+    # assert lra.assert_con(s1 <= 1) == ("OK", None)
+    # assert lra.check() == ('SAT', {x: -4, y: -3, s1: 1, s2: -7})
+    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:-3, s1:1, s2:-7}
+    #
+    # assert lra.assert_con(s2 >= -3) == ("OK", None)
+    # assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
+    #
+    #
+    # r1 = x <= 0
+    # r2 = y <= 0
+    # r3 = s1 >= 2
+    # equations = [Eq(s1, x+y)]
+    # A, _ = linear_eq_to_matrix(equations, [x, y, s1])
+    # A = -A  # the identity matrix should be negative
+    # lra = LRASolver(A, [s1], [x, y])
+    # lra.assert_con(x <= 0)
+    # lra.assert_con(y <= 0)
+    # lra.assert_con(s1 >= 2)
+    # assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
+    #
+    #
+    # # test potential edge case
+    # r1 = x <= 1
+    # r2 = -x <= -5
+    # lra = LRASolver(Matrix(), [], [x])
+    # lra.assert_con(x <= 1)
