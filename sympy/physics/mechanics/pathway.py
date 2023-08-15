@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
 from sympy.physics.vector import dynamicsymbols
 
