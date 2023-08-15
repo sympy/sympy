@@ -663,3 +663,7 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
             - self.c0*log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1**2
         )
         assert fl_M_pas_inv.diff(self.c1) == expected
+
+    def test_inverse(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        assert fl_M_pas_inv.inverse() is FiberForceLengthPassiveDeGroote2016
