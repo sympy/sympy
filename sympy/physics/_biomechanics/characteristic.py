@@ -783,3 +783,17 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
         """
         return FiberForceLengthPassiveDeGroote2016
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        fl_M_pas = self.args[0]
+        _fl_M_pas = printer._print(fl_M_pas)
+        return r'\left( \operatorname{fl}^M_{pas} \right)^{-1} \left( %s \right)' % _fl_M_pas
