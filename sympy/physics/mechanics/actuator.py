@@ -83,11 +83,7 @@ class ForceActuator(ActuatorBase):
     Examples
     ========
 
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``ForceActuator`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import ForceActuator
+    >>> from sympy.physics.mechanics.actuator import ForceActuator
 
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
@@ -224,7 +220,7 @@ class ForceActuator(ActuatorBase):
         multiplied by the length.
 
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics._actuator import ForceActuator
+        >>> from sympy.physics.mechanics.actuator import ForceActuator
         >>> stiffness = Symbol('k')
         >>> spring_force = -stiffness * pathway.length
         >>> spring = ForceActuator(spring_force, pathway)
@@ -279,11 +275,7 @@ class LinearSpring(ForceActuator):
     Examples
     ========
 
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearSpring`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import LinearSpring
+    >>> from sympy.physics.mechanics.actuator import LinearSpring
 
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
@@ -446,11 +438,7 @@ class LinearDamper(ForceActuator):
     Examples
     ========
 
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearDamper`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import LinearDamper
+    >>> from sympy.physics.mechanics.actuator import LinearDamper
 
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
@@ -568,11 +556,7 @@ class TorqueActuator(ActuatorBase):
     Examples
     ========
 
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``TorqueActuator`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import TorqueActuator
+    >>> from sympy.physics.mechanics.actuator import TorqueActuator
 
     To construct a torque actuator, an expression (or symbol) must be supplied
     to represent the torque it can produce, alongside a vector specifying the
@@ -650,7 +634,7 @@ class TorqueActuator(ActuatorBase):
 
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
         ... RigidBody)
-        >>> from sympy.physics.mechanics._actuator import TorqueActuator
+        >>> from sympy.physics.mechanics.actuator import TorqueActuator
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> parent = RigidBody('parent', frame=N)
@@ -816,7 +800,7 @@ class TorqueActuator(ActuatorBase):
         >>> from sympy import Symbol
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
         ... RigidBody)
-        >>> from sympy.physics.mechanics._actuator import TorqueActuator
+        >>> from sympy.physics.mechanics.actuator import TorqueActuator
         >>> torque = Symbol('T')
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')

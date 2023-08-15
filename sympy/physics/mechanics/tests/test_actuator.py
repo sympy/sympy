@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics.mechanics._actuator.py`` module."""
+"""Tests for the ``sympy.physics.mechanics.actuator.py`` module."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from sympy.physics.mechanics import (
     Vector,
     dynamicsymbols,
 )
-from sympy.physics.mechanics._actuator import (
+from sympy.physics.mechanics.actuator import (
     ActuatorBase,
     ForceActuator,
     LinearDamper,
