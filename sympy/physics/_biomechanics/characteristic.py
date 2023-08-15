@@ -563,3 +563,40 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     def _eval_evalf(self, prec: int) -> float:
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(
+        self,
+        deep: bool = True,
+        evaluate : bool = True,
+        **hints: Any,
+    ) -> Expr:
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_T_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        l_M_tilde, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            l_M_tilde = l_M_tilde.doit(deep=deep, **hints)
+            c0, c1 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1 = constants
+
+        if evaluate:
+            return (exp((c1*(l_M_tilde - 1))/c0) - 1)/(exp(c1) - 1)
+
+        return (exp((c1*UnevaluatedExpr(l_M_tilde - 1))/c0) - 1)/(exp(c1) - 1)
