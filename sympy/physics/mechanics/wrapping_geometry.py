@@ -154,7 +154,7 @@ class WrappingSphere(WrappingGeometryBase):
 
     @property
     def point(self):
-        """A point through which the cylinder's axis passes."""
+        """A point on which the sphere is centered."""
         return self._point
 
     @point.setter
