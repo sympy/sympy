@@ -22,7 +22,7 @@ from sympy.physics.mechanics import (
     Torque,
     Vector,
 )
-from sympy.physics.mechanics._pathway import PathwayBase
+from sympy.physics.mechanics.pathway import PathwayBase
 
 if USE_SYMENGINE:
     from sympy.core.backend import Basic as ExprType
@@ -101,7 +101,7 @@ class ForceActuator(ActuatorBase):
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
 
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
+    >>> from sympy.physics.mechanics.pathway import LinearPathway
 
     To construct an actuator, an expression (or symbol) must be supplied to
     represent the force it can produce, alongside a pathway specifying its line
@@ -220,7 +220,7 @@ class ForceActuator(ActuatorBase):
         coordinate ``q`` in the ``x`` direction of the global frame ``N``.
 
         >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._pathway import LinearPathway
+        >>> from sympy.physics.mechanics.pathway import LinearPathway
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
@@ -301,7 +301,7 @@ class LinearSpring(ForceActuator):
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
 
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
+    >>> from sympy.physics.mechanics.pathway import LinearPathway
 
     To construct a linear spring, an expression (or symbol) must be supplied to
     represent the stiffness (spring constant) of the spring, alongside a
@@ -473,7 +473,7 @@ class LinearDamper(ForceActuator):
     This is similarly the case for imports from the ``_pathway.py`` module like
     ``LinearPathway``.
 
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
+    >>> from sympy.physics.mechanics.pathway import LinearPathway
 
     To construct a linear damper, an expression (or symbol) must be supplied to
     represent the damping coefficient of the damper (we'll use the symbol
