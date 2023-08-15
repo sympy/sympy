@@ -260,13 +260,21 @@ def test_simplex():
     assert lpmin(x, [y >= 1, x >= y + z, x >= 0, z >= 0]
         ) == (1, {x: 1, y: 1, z: 0})
 
-    # detect oscillation (loop length 1)
+    # detect oscillation
+    # o1
     v = x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
     raises(InfeasibleLPError, lambda: lpmin(
         9*x2 - 8*x3 + 3*x4 + 6,
         [5*x2 - 2*x3 <= 0,
         -x1 - 8*x2 + 9*x3 <= -3,
         10*x1 - x2+ 9*x4 <= -4] + [i >= 0 for i in v]))
+    # o2
+    M = linear_eq_to_matrix
+    c, d = M(5*x2 + x3 + 4*x4 - x1, v)
+    a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], v)
+    aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], v)
+    assert linprog(c, a, b, aeq, beq, bounds=(0,1)) == (
+        S(9)/2, [0, S(1)/2, 0, S(1)/2])
 
 
 def test_lpmin_lpmax():

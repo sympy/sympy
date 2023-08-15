@@ -310,8 +310,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
     # Phase 1: find a feasible solution or determine none exist
 
-    ## keep track of last pivot row and column: how big of a loop
-    ## through previous pivots can a system have? XXX
+    ## keep track of last pivot row and column
     last = None
 
     while True:
@@ -342,11 +341,24 @@ def _simplex(A, B, C, D=None, dual=False):
 
         # check for oscillation
         if (r, c) == last:
-            raise InfeasibleLPError(filldedent("""
-                Oscillation: this can happen when there are variables
-                in the constraints (A) that are not in the objective
-                (C)."""))
+            # not sure what to do here; it looks like there will be
+            # oscillations; see o1 test added at this commit to
+            # see a system with no solution and the o2 for one
+            # with a solution. In the case of o2, the solution
+            # from linprog is the same as the one from lpmin, but
+            # the matrices created in the lpmin case are different
+            # than those created without replacements in linprog and
+            # the matrices in the linprog case lead to oscillations.
+            # If the matrices could be re-written in linprog like
+            # lpmin does, this behavior could be avoided and then
+            # perhaps the oscillating case would only occur when
+            # there is no solution. For now, the output is checked
+            # before exit if oscillations were detected and an
+            # error is raised there if the solution was invalid.
+            last = True
+            break
         last = r, c
+
         M = _pivot(M, r, c)
         X[c], Y[r] = Y[r], X[c]
 
@@ -389,6 +401,11 @@ def _simplex(A, B, C, D=None, dual=False):
         else:
             argmax[n] = M[i, -1]
 
+    if last and not all(i >= 0 for i in argmax):
+        raise InfeasibleLPError(filldedent("""
+            Oscillating system led to invalid solution.
+            If you believe there was a valid solution, please
+            report this as a bug."""))
     return -M[-1, -1], argmax, argmin_dual
 
 
@@ -648,7 +665,9 @@ def _rel_as_nonpos(constr, syms):
             elif i:
                 return False
         else:
-            raise TypeError("only Ge or Le is allowed, not %s" % i)
+            raise TypeError(filldedent("""
+                only equalities like Eq(x, y) or non-strict
+                inequalities like x >= y are allowed in lp, not %s""" % i))
 
     # introduce auxilliary variables as needed for univariate
     # inequalities
@@ -957,8 +976,7 @@ def _handle_bounds(bounds):
         A[n() - 1] = 1
         row.append((A, B))
 
-    pad = len(R) - len(row[-1])
-    return Matrix([i[0]+[0]*pad for i in row]
+    return Matrix([r+[0]*(len(R) - len(r)) for r,_ in row]
         ), Matrix([i[1] for i in row])
 
 
