@@ -444,11 +444,8 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
             if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
-                target_expr = expr.rewrite(target_f)
-                if target_expr.func in (Add, Mul, Pow):
-                    return '(' + self._print(target_expr) + ')'
-                else:
-                    return self._print(target_expr)
+                return '(' + self._print(expr.rewrite(target_f)) + ')'
+
         if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
