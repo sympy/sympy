@@ -1,12 +1,11 @@
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
-from sympy.logic.boolalg import BooleanFunction
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from sympy.core.relational import Relational, Eq, Ge, Lt, Le
+from sympy.core.relational import Eq
 from sympy import SYMPY_DEBUG
 
 
@@ -23,6 +22,8 @@ def sep_const_terms(expr):
         else:
             var.append(t)
     return sum(var), sum(const)
+
+
 def sep_const_coeff(expr):
     if isinstance(expr, Add):
         return expr, 1
@@ -46,6 +47,7 @@ def list_terms(expr):
         return [expr]
 
     return expr.args
+
 
 def sep_const_terms(expr):
     if isinstance(expr, Add):
@@ -76,24 +78,6 @@ def standardize_binrel(prop):
         return Q.lt(var, const)
     else:
         return Q.le(var, const)
-
-
-# def preprocess_encoded_cnf(enc_cnf):
-#     new_enc = {}
-#     new_data = []
-#     for prop, enc in enc_cnf.encoding:
-#         prop = standardize_binrel(prop)
-#
-#         if prop.function == Q.eq:
-#
-#
-#         if prop not in new_enc:
-#             prop = []
-#         new_enc[prop].append(enc)
-#
-#
-#     enc_cnf.encoding = {standardize_binrel(prop) if isinstance(prop, AppliedBinaryRelation) else prop: enc
-#                         for prop, enc in enc_cnf.encoding}
 
 
 class Boundry:
@@ -135,6 +119,7 @@ class Boundry:
     def __eq__(self, other):
         other = (other.var, other.bound, other.strict, other.upper, other.equality)
         return (self.var, self.bound, self.strict, self.upper, self.equality) == other
+
     def __hash__(self):
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
@@ -427,8 +412,6 @@ class LRASolver():
     def get_assignment(self, xi):
         pass
 
-
-
     def backtrack(self):
         pass
 
@@ -619,7 +602,6 @@ class LRASolver():
         for row in range(M.shape[0]):
             if row != i:
                 A[row, :] = A[row, :] + A[row, j] *A[i, :]
-
 
         assert A.rref() == M.rref()
         return A

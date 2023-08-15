@@ -1,29 +1,15 @@
-from sympy.concrete.summations import Sum
 from sympy.core.function import Function
-from sympy.core.numbers import (I, Rational, oo, pi)
-from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
-from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.symbol import symbols
 from sympy.matrices.dense import Matrix
 from sympy.matrices.dense import randMatrix
 from sympy.assumptions.ask import Q
-from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.miscellaneous import (root, sqrt)
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin, tan)
-from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import (And, Or)
-from sympy.polys.polytools import (Poly, PurePoly)
-from sympy.sets.sets import (FiniteSet, Interval, Union)
-from sympy.polys.rootoftools import rootof
-from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import solveset, linear_eq_to_matrix
+from sympy.logic.boolalg import And
 from sympy.abc import x, y, z, a
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.core.sympify import sympify
 
-from sympy.logic.algorithms.lra_theory import LRASolver, Boundry, standardize_binrel
+from sympy.logic.algorithms.lra_theory import LRASolver
 
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
@@ -89,8 +75,6 @@ def find_rational_assignment(constr, assignment, iter=20):
             eps = eps/2
 
     return None
-
-
 
 
 def test_from_encoded_cnf():
@@ -209,6 +193,8 @@ def test_LRA_solver():
     # r2 = -x <= -5
     # lra = LRASolver(Matrix(), [], [x])
     # lra.assert_con(x <= 1)
+
+
 def test_random_problems():
     from sympy.core.relational import StrictLessThan, StrictGreaterThan
     import itertools
@@ -305,7 +291,6 @@ def test_random_problems():
             # check that conflict clause is probably minimal
             for subset in itertools.combinations(conflict, len(conflict)-1):
                 assert check_if_satisfiable_with_z3(subset) is True
-
 
 
 def test_pivot():
