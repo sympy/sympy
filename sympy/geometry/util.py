@@ -15,7 +15,6 @@ from collections import deque
 from math import sqrt as _sqrt
 
 from sympy import nsimplify
-from sympy.core.symbol import Dummy
 from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
@@ -28,6 +27,8 @@ from sympy.core.singleton import S
 from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.utilities.iterables import is_sequence
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 def find(x, equation):
@@ -695,13 +696,18 @@ def intersection(*entities, pairwise=False, **kwargs):
     if len(entities) <= 1:
         return []
 
-    # entities may be an immutable tuple
     entities = list(entities)
-    y = Dummy()
+    prec = None
     for i, e in enumerate(entities):
         if not isinstance(e, GeometryEntity):
-            entities[i] = Point(e)
-        entities[i] = entities[i].replace(lambda x: x.is_Float, lambda x: nsimplify(x, rational=True) + y).xreplace({y: 0})
+            # entities may be an immutable tuple
+            e = Point(e)
+        # convert to exact Rationals
+        d = {}
+        for f in e.atoms(Float):
+            prec = f._prec if prec is None else min(f._prec, prec)
+            d.setdefault(f, nsimplify(f, rational=True))
+        entities[i] = e.xreplace(d)
 
     if not pairwise:
         # find the intersection common to all objects
@@ -711,11 +717,16 @@ def intersection(*entities, pairwise=False, **kwargs):
             for x in res:
                 newres.extend(x.intersection(entity))
             res = newres
-        return res
+    else:
+        # find all pairwise intersections
+        ans = []
+        for j in range(len(entities)):
+            for k in range(j + 1, len(entities)):
+                ans.extend(intersection(entities[j], entities[k]))
+        res = list(ordered(set(ans)))
 
-    # find all pairwise intersections
-    ans = []
-    for j in range(len(entities)):
-        for k in range(j + 1, len(entities)):
-            ans.extend(intersection(entities[j], entities[k]))
-    return list(ordered(set(ans)))
+    # convert back to Floats
+    if prec is not None:
+        p = prec_to_dps(prec)
+        res = [i.n(p) for i in res]
+    return res
