@@ -17,7 +17,9 @@ from sympy.core.backend import (
 from sympy.physics.mechanics import (
     Force,
     KanesMethod,
+    LinearPathway,
     Particle,
+    PathwayBase,
     PinJoint,
     Point,
     ReferenceFrame,
@@ -32,7 +34,6 @@ from sympy.physics.mechanics._actuator import (
     LinearSpring,
     TorqueActuator,
 )
-from sympy.physics.mechanics.pathway import LinearPathway, PathwayBase
 
 if USE_SYMENGINE:
     from sympy.core.backend import Basic as ExprType
