@@ -5,6 +5,7 @@ from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import randMatrix
 from sympy.assumptions.ask import Q
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
@@ -24,12 +25,12 @@ from sympy.core.sympify import sympify
 
 from sympy.logic.algorithms.lra_theory import LRASolver, Boundry, standardize_binrel
 
+from sympy.core.random import random, choice, randint
+from sympy.core.sympify import sympify
+from sympy.ntheory.generate import randprime
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
                         disable_strict = False, disable_nonstrict=False, disable_equality=False):
-    from sympy.core.random import random, choice, randint
-    from sympy.core.sympify import sympify
-    from sympy.ntheory.generate import randprime
     def rand(sparsity=sparsity):
         if random() < sparsity:
             print("sparity")
@@ -306,4 +307,13 @@ def test_random_problems():
                 assert check_if_satisfiable_with_z3(subset) is True
 
 
-# TODO: test pivot method
+
+def test_pivot():
+    for _ in range(10):
+        m = randMatrix(5)
+        rref = m.rref()
+        for _ in range(5):
+            i, j = randint(0, 4), randint(0, 4)
+            if m[i, j] != 0:
+                assert LRASolver._pivot(m, i, j).rref() == rref
+
