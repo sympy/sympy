@@ -2487,10 +2487,8 @@ class ImplicitSeries(BaseSeries):
         if isinstance(expr, Equality):
             expr = expr.lhs - expr.rhs
             equality = True
-        elif isinstance(expr, (GreaterThan, StrictGreaterThan)):
-            expr = expr.lhs - expr.rhs
-        elif isinstance(expr, (LessThan, StrictLessThan)):
-            expr = expr.rhs - expr.lhs
+        elif isinstance(expr, Relational):
+            expr = expr.gts - expr.lts
         elif not adaptive:
             raise NotImplementedError(
                 "The expression is not supported for "
