@@ -393,6 +393,11 @@ def test_TransferFunction_multiplication_and_division():
         Series(G1, G2, TransferFunction(-1, 1, s), Series(G5, G6))
     assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
 
+    # division - See ``test_Feedback_functions()`` for division by Parallel objects.
+    assert G5/G6 == Series(G5, pow(G6, -1))
+    assert -G3/G4 == Series(-G3, pow(G4, -1))
+    assert (G5*G6)/G7 == Series(G5, G6, pow(G7, -1))
+
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
     raises(ValueError, lambda: G1 * c)
@@ -407,8 +412,6 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G5 / s**2)
     raises(ValueError, lambda: (s - 4*s**2) / G2)
     raises(ValueError, lambda: 0 / G4)
-    raises(ValueError, lambda: G5 / G6)
-    raises(ValueError, lambda: -G3 /G4)
     raises(ValueError, lambda: G7 / (1 + G6))
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
@@ -952,6 +955,8 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    assert (tf1*tf2*tf3 / tf3*tf5) == Series(tf1, tf2, tf3, pow(tf3, -1), tf5)
+    assert (tf1*tf2*tf3) / (tf3*tf5) == Series((tf1*tf2*tf3).doit(), pow((tf3*tf5).doit(),-1))
     assert tf / (tf + tf1) == Feedback(tf, tf1)
     assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
@@ -962,7 +967,6 @@ def test_Feedback_functions():
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
     raises(TypeError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
-    raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
     raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
