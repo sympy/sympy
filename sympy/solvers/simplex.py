@@ -403,7 +403,7 @@ def _simplex(A, B, C, D=None, dual=False):
         else:
             argmax[n] = M[i, -1]
 
-    if last and not all(i >= 0 for i in argmax):
+    if last and not all(i >= 0 for i in argmax + argmin_dual):
         raise InfeasibleLPError(filldedent("""
             Oscillating system led to invalid solution.
             If you believe there was a valid solution, please
