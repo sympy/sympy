@@ -140,7 +140,7 @@ class TestSphere:
 
         expected = (vector_1, vector_2)
 
-        assert sphere._geodesic_end_vectors(p1, p2) == expected
+        assert sphere.geodesic_end_vectors(p1, p2) == expected
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -158,7 +158,7 @@ class TestSphere:
         p2.set_pos(pO, position)
 
         with pytest.raises(ValueError):
-            _ = sphere._geodesic_end_vectors(p1, p2)
+            _ = sphere.geodesic_end_vectors(p1, p2)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -186,7 +186,7 @@ class TestSphere:
         p2.set_pos(pO, position_2)
 
         with pytest.raises(ValueError):
-            _ = sphere._geodesic_end_vectors(p1, p2)
+            _ = sphere.geodesic_end_vectors(p1, p2)
 
 
 class TestCylinder:
@@ -357,7 +357,7 @@ class TestCylinder:
         expected = (vector_1, vector_2)
         end_vectors = tuple(
             end_vector.simplify()
-            for end_vector in cylinder._geodesic_end_vectors(p1, p2)
+            for end_vector in cylinder.geodesic_end_vectors(p1, p2)
         )
 
         assert end_vectors == expected
@@ -384,4 +384,4 @@ class TestCylinder:
         p2.set_pos(pO, position)
 
         with pytest.raises(ValueError):
-            _ = cylinder._geodesic_end_vectors(p1, p2)
+            _ = cylinder.geodesic_end_vectors(p1, p2)
