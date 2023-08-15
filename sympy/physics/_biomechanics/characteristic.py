@@ -1,22 +1,13 @@
 """Implementations of characteristic curves for musculotendon models."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
-
-if TYPE_CHECKING:
-    from typing import Any
-
-    from sympy.core.expr import Expr
-    from sympy.printing.printer import Printer
 
 
 __all__ = [
+    'FiberForceLengthPassiveDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
@@ -34,7 +25,7 @@ class CharacteristicCurveFunction(Function):
         )
         raise TypeError(msg)
 
-    def _print_code(self, printer: Printer) -> str:
+    def _print_code(self, printer):
         """Print code for the function defining the curve using a printer.
 
         Explanation
@@ -123,7 +114,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     ratio of these.
 
     >>> l_T, l_T_slack = symbols('l_T l_T_slack')
-    >>> l_T_tilde = l_T / l_T_slack
+    >>> l_T_tilde = l_T/l_T_slack
     >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
     >>> fl_T
     TendonForceLengthDeGroote2016(l_T/l_T_slack, 0.2, 0.995, 0.25,
@@ -155,7 +146,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_T_tilde: Any) -> TendonForceLengthDeGroote2016:
+    def with_default_constants(cls, l_T_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -185,7 +176,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         return cls(l_T_tilde, c0, c1, c2, c3)
 
     @classmethod
-    def eval(cls, l_T_tilde: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
+    def eval(cls, l_T_tilde, c0, c1, c2, c3):
         """Evaluation of basic inputs.
 
         Parameters
@@ -213,12 +204,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
-    def doit(
-        self,
-        deep: bool = True,
-        evaluate : bool = True,
-        **hints: Any,
-    ) -> Expr:
+    def doit(self, deep=True, evaluate=True, **hints):
         """Evaluate the expression defining the function.
 
         Parameters
@@ -246,11 +232,11 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
             c0, c1, c2, c3 = constants
 
         if evaluate:
-            return c0 * exp(c3 * (l_T_tilde - c1)) - c2
+            return c0*exp(c3*(l_T_tilde - c1)) - c2
 
-        return c0 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1)) - c2
+        return c0*exp(c3*UnevaluatedExpr(l_T_tilde - c1)) - c2
 
-    def fdiff(self, argindex: int = 1) -> Expr:
+    def fdiff(self, argindex=1):
         """Derivative of the function with respect to a single argument.
 
         Parameters
@@ -264,19 +250,19 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         l_T_tilde, c0, c1, c2, c3 = self.args
         if argindex == 1:
-            return c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 2:
-            return exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 3:
-            return -c0 * c3 * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return -c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 4:
             return Integer(-1)
         elif argindex == 5:
-            return c0 * (l_T_tilde - c1) * exp(c3 * UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*(l_T_tilde - c1)*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
 
         raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex: int = 1) -> Function:
+    def inverse(self, argindex=1):
         """Inverse function.
 
         Parameters
@@ -288,7 +274,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         return TendonForceLengthInverseDeGroote2016
 
-    def _latex(self, printer: Printer) -> str:
+    def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
         Parameters
@@ -304,182 +290,331 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
 
 class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
-        r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1].
+    r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the normalized tendon length that produces a specific normalized
+    tendon force.
+
+    The function is defined by the equation:
+
+    ${fl^T}^{-1} = frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1$
+
+    with constant values of $c_0 = 0.2$, $c_1 = 0.995$, $c_2 = 0.25$, and
+    $c_3 = 33.93669377311689$. This function is the exact analytical inverse
+    of the related tendon force-length curve ``TendonForceLengthDeGroote2016``.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces no
+    force when the tendon is in an unstrained state. It also produces a force
+    of 1 normalized unit when the tendon is under a 5% strain.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    @classmethod
+    def with_default_constants(cls, fl_T):
+        r"""Recommended constructor that will use the published constants.
 
         Explanation
         ===========
 
-        Gives the normalized tendon length that produces a specific normalized
-        tendon force.
+        Returns a new instance of the inverse tendon force-length function
+        using the four constant values specified in the original publication.
 
-        The function is defined by the equation:
+        These have the values:
 
-        ${fl^T}^{-1} = frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1$
+        $c_0 = 0.2$
+        $c_1 = 0.995$
+        $c_2 = 0.25$
+        $c_3 = 33.93669377311689$
 
-        with constant values of $c_0 = 0.2$, $c_1 = 0.995$, $c_2 = 0.25$, and
-        $c_3 = 33.93669377311689$. This function is the exact analytical inverse
-        of the related tendon force-length curve ``TendonForceLengthDeGroote2016``.
-
-        While it is possible to change the constant values, the were carefully
-        selected in the original publication to give the characteristic curve
-        specific and required properties. For example, the function produces no
-        force when the tendon is in an unstrained state. It also produces a force
-        of 1 normalized unit when the tendon is under a 5% strain.
-
-        References
+        Parameters
         ==========
 
-        .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
-               of direct collocation optimal control problem formulations for
-               solving the muscle redundancy problem, Annals of biomedical
-               engineering, 44(10), (2016) pp. 2922-2936
+        fl_T : Any (sympifiable)
+            Normalized tendon force as a function of tendon length.
 
         """
+        c0 = Float('0.2')
+        c1 = Float('0.995')
+        c2 = Float('0.25')
+        c3 = Float('33.93669377311689')
+        return cls(fl_T, c0, c1, c2, c3)
 
-        @classmethod
-        def with_default_constants(cls, fl_T: Any) -> TendonForceLengthInverseDeGroote2016:
-            r"""Recommended constructor that will use the published constants.
+    @classmethod
+    def eval(cls, fl_T, c0, c1, c2, c3):
+        """Evaluation of basic inputs.
 
-            Explanation
-            ===========
+        Parameters
+        ==========
 
-            Returns a new instance of the inverse tendon force-length function
-            using the four constant values specified in the original publication.
+        fl_T : Any (sympifiable)
+            Normalized tendon force as a function of tendon length.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.2``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``0.995``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``0.25``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``33.93669377311689``.
 
-            These have the values:
+        """
+        pass
 
-            $c_0 = 0.2$
-            $c_1 = 0.995$
-            $c_2 = 0.25$
-            $c_3 = 33.93669377311689$
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
-            Parameters
-            ==========
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
 
-            fl_T : Any (sympifiable)
-                Normalized tendon force as a function of tendon length.
+        Parameters
+        ==========
 
-            """
-            c0 = Float('0.2')
-            c1 = Float('0.995')
-            c2 = Float('0.25')
-            c3 = Float('33.93669377311689')
-            return cls(fl_T, c0, c1, c2, c3)
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_T_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
 
-        @classmethod
-        def eval(cls, fl_T: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
-            """Evaluation of basic inputs.
+        """
+        fl_T, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            fl_T = fl_T.doit(deep=deep, **hints)
+            c0, c1, c2, c3 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1, c2, c3 = constants
 
-            Parameters
-            ==========
+        if evaluate:
+            return log((fl_T + c2)/c0)/c3 + c1
 
-            fl_T : Any (sympifiable)
-                Normalized tendon force as a function of tendon length.
-            c0 : Any (sympifiable)
-                The first constant in the characteristic equation. The published
-                value is ``0.2``.
-            c1 : Any (sympifiable)
-                The second constant in the characteristic equation. The published
-                value is ``0.995``.
-            c2 : Any (sympifiable)
-                The third constant in the characteristic equation. The published
-                value is ``0.25``.
-            c3 : Any (sympifiable)
-                The fourth constant in the characteristic equation. The published
-                value is ``33.93669377311689``.
+        return log(UnevaluatedExpr((fl_T + c2)/c0))/c3 + c1
 
-            """
-            pass
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
 
-        def _eval_evalf(self, prec):
-            """Evaluate the expression numerically using ``evalf``."""
-            return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+        Parameters
+        ==========
 
-        def doit(
-            self,
-            deep: bool = True,
-            evaluate : bool = True,
-            **hints: Any,
-        ) -> Expr:
-            """Evaluate the expression defining the function.
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
 
-            Parameters
-            ==========
+        """
+        fl_T, c0, c1, c2, c3 = self.args
+        if argindex == 1:
+            return 1/(c3*(fl_T + c2))
+        elif argindex == 2:
+            return -1/(c0*c3)
+        elif argindex == 3:
+            return Integer(1)
+        elif argindex == 4:
+            return 1/(c3*(fl_T + c2))
+        elif argindex == 5:
+            return -log(UnevaluatedExpr((fl_T + c2)/c0))/c3**2
 
-            deep : bool
-                Whether ``doit`` should be recursively called. Default is ``True``.
-            evaluate : bool.
-                Whether the SymPy expression should be evaluated as it is
-                constructed. If ``False``, then no constant folding will be
-                conducted which will leave the expression in a more numerically-
-                stable for values of ``l_T_tilde`` that correspond to a sensible
-                operating range for a musculotendon. Default is ``True``.
-            **kwargs : dict[str, Any]
-                Additional keyword argument pairs to be recursively passed to
-                ``doit``.
+        raise ArgumentIndexError(self, argindex)
 
-            """
-            fl_T, *constants = self.args
-            if deep:
-                hints['evaluate'] = evaluate
-                fl_T = fl_T.doit(deep=deep, **hints)
-                c0, c1, c2, c3 = [c.doit(deep=deep, **hints) for c in constants]
-            else:
-                c0, c1, c2, c3 = constants
+    def inverse(self, argindex=1):
+        """Inverse function.
 
-            if evaluate:
-                return log((fl_T + c2) / c0) / c3 + c1
+        Parameters
+        ==========
 
-            return log(UnevaluatedExpr((fl_T + c2) / c0)) / c3 + c1
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
 
-        def fdiff(self, argindex: int = 1) -> Expr:
-            """Derivative of the function with respect to a single argument.
+        """
+        return TendonForceLengthDeGroote2016
 
-            Parameters
-            ==========
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
 
-            argindex : int
-                The index of the function's arguments with respect to which the
-                derivative should be taken. Argument indexes start at ``1``.
-                Default is ``1``.
+        Parameters
+        ==========
 
-            """
-            fl_T, c0, c1, c2, c3 = self.args
-            if argindex == 1:
-                return 1 / (c3 * (fl_T + c2))  # type: ignore
-            elif argindex == 2:
-                return -1 / (c0 * c3)  # type: ignore
-            elif argindex == 3:
-                return Integer(1)
-            elif argindex == 4:
-                return 1 / (c3 * (fl_T + c2))  # type: ignore
-            elif argindex == 5:
-                return -log(UnevaluatedExpr((fl_T + c2) / c0)) / c3**2  # type: ignore
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
 
-            raise ArgumentIndexError(self, argindex)
+        """
+        fl_T = self.args[0]
+        _fl_T = printer._print(fl_T)
+        return r'\left( \operatorname{fl}^T \right)^{-1} \left( %s \right)' % _fl_T
 
-        def inverse(self, argindex: int = 1) -> Function:
-            """Inverse function.
 
-            Parameters
-            ==========
+class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
+    r"""Passive muscle fiber force-length curve based on De Groote et al., 2016
+    [1].
 
-            argindex : int
-                Value to start indexing the arguments at. Default is ``1``.
+    Explanation
+    ===========
 
-            """
-            return TendonForceLengthDeGroote2016
+    The function is defined by the equation:
 
-        def _latex(self, printer: Printer) -> str:
-            """Print a LaTeX representation of the function defining the curve.
+    $fl^M_{pas} = \frac{\frac{\exp{c_1 \left(\tilde{l^M} - 1\right)}}{c_0} - 1}{\exp{c_1} - 1}$
 
-            Parameters
-            ==========
+    with constant values of $c_0 = 0.6$ and $c_1 = 4.0$.
 
-            printer : Printer
-                The printer to be used to print the LaTeX string representation.
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    passive fiber force very close to 0 for all normalized fiber lengths
+    between 0 and 1.
 
-            """
-            fl_T = self.args[0]
-            _fl_T = printer._print(fl_T)
-            return r'\left( \operatorname{fl}^T \right)^{-1} \left( %s \right)' % _fl_T
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    @classmethod
+    def with_default_constants(cls, l_M_tilde):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the muscle fiber passive force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c_0 = 0.6$
+        $c_1 = 4.0$
+
+        Parameters
+        ==========
+
+        l_M_tilde : Any (sympifiable)
+            Normalized muscle fiber length.
+
+        """
+        c0 = Rational(3, 5)
+        c1 = Integer(4)
+        return cls(l_M_tilde, c0, c1)
+
+    @classmethod
+    def eval(cls, l_M_tilde, c0, c1):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        l_M_tilde : Any (sympifiable)
+            Normalized muscle fiber length.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.6``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``4.0``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_T_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        l_M_tilde, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            l_M_tilde = l_M_tilde.doit(deep=deep, **hints)
+            c0, c1 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1 = constants
+
+        if evaluate:
+            return (exp((c1*(l_M_tilde - 1))/c0) - 1)/(exp(c1) - 1)
+
+        return (exp((c1*UnevaluatedExpr(l_M_tilde - 1))/c0) - 1)/(exp(c1) - 1)
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        l_M_tilde, c0, c1 = self.args
+        if argindex == 1:
+            return c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)/(c0*(exp(c1) - 1))
+        elif argindex == 2:
+            return (
+                -c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)
+                *UnevaluatedExpr(l_M_tilde - 1)/(c0**2*(exp(c1) - 1))
+            )
+        elif argindex == 3:
+            return (
+                -exp(c1)*(-1 + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0))/(exp(c1) - 1)**2
+                + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)*(l_M_tilde - 1)/(c0*(exp(c1) - 1))
+            )
+
+        raise ArgumentIndexError(self, argindex)
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        l_M_tilde = self.args[0]
+        _l_M_tilde = printer._print(l_M_tilde)
+        return r'\operatorname{fl}^M_{pas} \left( %s \right)' % _l_M_tilde
