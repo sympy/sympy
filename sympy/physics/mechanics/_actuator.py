@@ -12,9 +12,8 @@ changes.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
 
-from sympy.core.backend import S, USE_SYMENGINE, sympify
+from sympy.core.backend import S, sympify
 from sympy.physics.mechanics import (
     PinJoint,
     ReferenceFrame,
@@ -23,14 +22,6 @@ from sympy.physics.mechanics import (
     Vector,
 )
 from sympy.physics.mechanics.pathway import PathwayBase
-
-if USE_SYMENGINE:
-    from sympy.core.backend import Basic as ExprType
-else:
-    from sympy.core.expr import Expr as ExprType
-
-if TYPE_CHECKING:
-    from sympy.physics.mechanics.loads import LoadBase
 
 
 __all__ = [
@@ -52,12 +43,12 @@ class ActuatorBase(ABC):
 
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initializer for ``ActuatorBase``."""
         pass
 
     @abstractmethod
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -75,7 +66,7 @@ class ActuatorBase(ABC):
         """
         pass
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Default representation of an actuator."""
         return f'{self.__class__.__name__}()'
 
@@ -138,11 +129,7 @@ class ForceActuator(ActuatorBase):
 
     """
 
-    def __init__(
-        self,
-        force: ExprType,
-        pathway: PathwayBase,
-    ) -> None:
+    def __init__(self, force, pathway):
         """Initializer for ``ForceActuator``.
 
         Parameters
@@ -160,12 +147,12 @@ class ForceActuator(ActuatorBase):
         self.pathway = pathway
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The magnitude of the force produced by the actuator."""
         return self._force
 
     @force.setter
-    def force(self, force: ExprType) -> None:
+    def force(self, force):
         if hasattr(self, '_force'):
             msg = (
                 f'Can\'t set attribute `force` to {repr(force)} as it is '
@@ -175,12 +162,12 @@ class ForceActuator(ActuatorBase):
         self._force = sympify(force, strict=True)
 
     @property
-    def pathway(self) -> PathwayBase:
+    def pathway(self):
         """The ``Pathway`` defining the actuator's line of action."""
         return self._pathway
 
     @pathway.setter
-    def pathway(self, pathway: PathwayBase) -> None:
+    def pathway(self, pathway):
         if hasattr(self, '_pathway'):
             msg = (
                 f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
@@ -195,7 +182,7 @@ class ForceActuator(ActuatorBase):
             raise TypeError(msg)
         self._pathway = pathway
 
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -270,7 +257,7 @@ class ForceActuator(ActuatorBase):
         """
         return self.pathway.compute_loads(self.force)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``ForceActuator``."""
         return f'{self.__class__.__name__}({self.force}, {self.pathway})'
 
@@ -372,12 +359,7 @@ class LinearSpring(ForceActuator):
 
     """
 
-    def __init__(
-        self,
-        stiffness: ExprType,
-        pathway: PathwayBase,
-        equilibrium_length: ExprType = S.Zero,
-    ) -> None:
+    def __init__(self, stiffness, pathway, equilibrium_length=S.Zero):
         """Initializer for ``LinearSpring``.
 
         Parameters
@@ -399,21 +381,21 @@ class LinearSpring(ForceActuator):
         self.equilibrium_length = equilibrium_length
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The spring force produced by the linear spring."""
         return -self.stiffness * (self.pathway.length - self.equilibrium_length)
 
     @force.setter
-    def force(self, force: Any) -> None:
+    def force(self, force):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     @property
-    def stiffness(self) -> ExprType:
+    def stiffness(self):
         """The spring constant for the linear spring."""
         return self._stiffness
 
     @stiffness.setter
-    def stiffness(self, stiffness: ExprType):
+    def stiffness(self, stiffness):
         if hasattr(self, '_stiffness'):
             msg = (
                 f'Can\'t set attribute `stiffness` to {repr(stiffness)} as it '
@@ -423,12 +405,12 @@ class LinearSpring(ForceActuator):
         self._stiffness = sympify(stiffness, strict=True)
 
     @property
-    def equilibrium_length(self) -> ExprType:
+    def equilibrium_length(self):
         """The length of the spring at which it produces no force."""
         return self._equilibrium_length
 
     @equilibrium_length.setter
-    def equilibrium_length(self, equilibrium_length: ExprType) -> None:
+    def equilibrium_length(self, equilibrium_length):
         if hasattr(self, '_equilibrium_length'):
             msg = (
                 f'Can\'t set attribute `equilibrium_length` to '
@@ -437,7 +419,7 @@ class LinearSpring(ForceActuator):
             raise AttributeError(msg)
         self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``LinearSpring``."""
         string = f'{self.__class__.__name__}({self.stiffness}, {self.pathway}'
         if self.equilibrium_length == S.Zero:
@@ -529,7 +511,7 @@ class LinearDamper(ForceActuator):
 
     """
 
-    def __init__(self, damping: ExprType, pathway: PathwayBase) -> None:
+    def __init__(self, damping, pathway):
         """Initializer for ``LinearDamper``.
 
         Parameters
@@ -546,21 +528,21 @@ class LinearDamper(ForceActuator):
         self.pathway = pathway
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The damping force produced by the linear damper."""
         return -self.damping * self.pathway.extension_velocity
 
     @force.setter
-    def force(self, force: Any) -> None:
+    def force(self, force):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     @property
-    def damping(self) -> ExprType:
+    def damping(self):
         """The damping constant for the linear damper."""
         return self._damping
 
     @damping.setter
-    def damping(self, damping: ExprType) -> None:
+    def damping(self, damping):
         if hasattr(self, '_damping'):
             msg = (
                 f'Can\'t set attribute `damping` to {repr(damping)} as it is '
@@ -569,7 +551,7 @@ class LinearDamper(ForceActuator):
             raise AttributeError(msg)
         self._damping = sympify(damping, strict=True)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``LinearDamper``."""
         return f'{self.__class__.__name__}({self.damping}, {self.pathway})'
 
@@ -629,13 +611,7 @@ class TorqueActuator(ActuatorBase):
 
     """
 
-    def __init__(
-        self,
-        torque: ExprType,
-        axis: Vector,
-        target_frame: ReferenceFrame | RigidBody,
-        reaction_frame: ReferenceFrame | RigidBody | None = None,
-    ) -> None:
+    def __init__(self, torque, axis, target_frame, reaction_frame=None):
         """Initializer for ``TorqueActuator``.
 
         Parameters
@@ -656,15 +632,11 @@ class TorqueActuator(ActuatorBase):
         """
         self.torque = torque
         self.axis = axis
-        self.target_frame = target_frame  # type: ignore
-        self.reaction_frame = reaction_frame  # type: ignore
+        self.target_frame = target_frame
+        self.reaction_frame = reaction_frame
 
     @classmethod
-    def at_pin_joint(
-        cls,
-        torque: ExprType,
-        pin_joint: PinJoint,
-    ) -> TorqueActuator:
+    def at_pin_joint(cls, torque, pin_joint):
         """Alternate construtor to instantiate from a ``PinJoint`` instance.
 
         Examples
@@ -736,12 +708,12 @@ class TorqueActuator(ActuatorBase):
         )
 
     @property
-    def torque(self) -> ExprType:
+    def torque(self):
         """The magnitude of the torque produced by the actuator."""
         return self._torque
 
     @torque.setter
-    def torque(self, torque: ExprType) -> None:
+    def torque(self, torque):
         if hasattr(self, '_torque'):
             msg = (
                 f'Can\'t set attribute `torque` to {repr(torque)} as it is '
@@ -751,12 +723,12 @@ class TorqueActuator(ActuatorBase):
         self._torque = sympify(torque, strict=True)
 
     @property
-    def axis(self) -> Vector:
+    def axis(self):
         """The axis about which the torque acts."""
         return self._axis
 
     @axis.setter
-    def axis(self, axis: Vector) -> None:
+    def axis(self, axis):
         if hasattr(self, '_axis'):
             msg = (
                 f'Can\'t set attribute `axis` to {repr(axis)} as it is '
@@ -772,12 +744,12 @@ class TorqueActuator(ActuatorBase):
         self._axis = axis
 
     @property
-    def target_frame(self) -> ReferenceFrame:
+    def target_frame(self):
         """The primary reference frames on which the torque will act."""
         return self._target_frame
 
     @target_frame.setter
-    def target_frame(self, target_frame: ReferenceFrame) -> None:
+    def target_frame(self, target_frame):
         if hasattr(self, '_target_frame'):
             msg = (
                 f'Can\'t set attribute `target_frame` to {repr(target_frame)} '
@@ -795,12 +767,12 @@ class TorqueActuator(ActuatorBase):
         self._target_frame = target_frame
 
     @property
-    def reaction_frame(self) -> ReferenceFrame | None:
+    def reaction_frame(self):
         """The primary reference frames on which the torque will act."""
         return self._reaction_frame
 
     @reaction_frame.setter
-    def reaction_frame(self, reaction_frame: ReferenceFrame | None) -> None:
+    def reaction_frame(self, reaction_frame):
         if hasattr(self, '_reaction_frame'):
             msg = (
                 f'Can\'t set attribute `reaction_frame` to '
@@ -820,7 +792,7 @@ class TorqueActuator(ActuatorBase):
             raise TypeError(msg)
         self._reaction_frame = reaction_frame
 
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -873,14 +845,14 @@ class TorqueActuator(ActuatorBase):
         [(N, T*N.z)]
 
         """
-        loads: list[LoadBase] = [
+        loads = [
             Torque(self.target_frame, self.torque * self.axis),
         ]
         if self.reaction_frame is not None:
             loads.append(Torque(self.reaction_frame, -self.torque * self.axis))
         return loads
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``TorqueActuator``."""
         string = (
             f'{self.__class__.__name__}({self.torque}, axis={self.axis}, '
