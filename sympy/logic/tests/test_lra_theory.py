@@ -148,7 +148,7 @@ def test_LRA_solver():
     # m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
     # #assert LRASolver._pivot(m, 0, 0) == Matrix([[1, 1, -1, 0], [0, 3, -2, 1]])
     #
-    # # Example from page 89–90 of
+    # # Example from page 89-90 of
     # # "A Fast Linear-Arithmetic Solver for DPLL(T)"
     # equations = [Eq(s1, -x + y), Eq(s2, x + y)]
     # A, _ = linear_eq_to_matrix(equations, [x, y, s1, s2])
