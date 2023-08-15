@@ -103,16 +103,16 @@ class LinearPathway(PathwayBase):
     the shortest possible.
 
     A linear pathway is made up of two points that can move relative to each
-    other and a pair of equal and opposite forces acting on the points. If the
-    positive time varying Euclidean distance between the two points is defined,
-    then the "extension velocity" is the time derivative of this distance and
-    is positive when the two points are moving away from each other and
-    negative when moving closer to each other. The direction for the force
-    acting on either point is determined by constructing a unit vector directed
-    from the other point to this point. This establishes a sign convention such
-    that a positive force magnitude tends to push the points apart. The
-    following diagram shows the positive force sense and the distance between
-    the points::
+    other, and a pair of equal and opposite forces acting on the points. If the
+    positive time-varying Euclidean distance between the two points is defined,
+    then the "extension velocity" is the time derivative of this distance. The
+    extension velocity is positive when the two points are moving away from
+    each other and negative when moving closer to each other. The direction for
+    the force acting on either point is determined by constructing a unit
+    vector directed from the other point to this point. This establishes a sign
+    convention such that a positive force magnitude tends to push the points
+    apart. The following diagram shows the positive force sense and the
+    distance between the points::
 
        P           Q
        o<--- F --->o
@@ -248,8 +248,11 @@ class LinearPathway(PathwayBase):
         ==========
 
         force : Expr
-            Magnitude of the force acting along the length of the pathway. It
-            is assumed that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. As
+            per the sign conventions for the pathway length, pathway extension
+            velocity, and pair of point forces, if this ``Expr`` is positive
+            then the force will act to push the pair of points away from one
+            another (it is expansile).
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
@@ -272,6 +275,26 @@ class WrappingPathway(PathwayBase):
     two points. It will not interact with any other objects in the system, i.e.
     a ``WrappingPathway`` will intersect other objects to ensure that the path
     between its two ends (its attachments) is the shortest possible.
+
+    To explain the sign conventions used for pathway length, extension
+    velocity, and direction of applied forces, we can ignore the geometry with
+    which the wrapping pathway interacts. A wrapping pathway is made up of two
+    points that can move relative to each other, and a pair of equal and
+    opposite forces acting on the points. If the positive time-varying
+    Euclidean distance between the two points is defined, then the "extension
+    velocity" is the time derivative of this distance. The extension velocity
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
 
     Examples
     ========
