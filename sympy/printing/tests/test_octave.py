@@ -495,8 +495,8 @@ def test_specfun():
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
 
     # Automatic rewrite
-    assert octave_code(Ei(x)) == 'logint(exp(x))'
-    assert octave_code(dirichlet_eta(x)) == '((x == 1).*(log(2)) + (~(x == 1)).*((1 - 2.^(1 - x)).*zeta(x)))'
+    assert octave_code(Ei(x)) == '(logint(exp(x)))'
+    assert octave_code(dirichlet_eta(x)) == '(((x == 1).*(log(2)) + (~(x == 1)).*((1 - 2.^(1 - x)).*zeta(x))))'
     assert octave_code(riemann_xi(x)) == '(pi.^(-x/2).*x.*(x - 1).*gamma(x/2).*zeta(x)/2)'
 
 
