@@ -12,7 +12,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
+from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
@@ -725,6 +725,64 @@ class TransferFunction(SISOLinearTimeInvariant):
         tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
         return TransferFunction(num_, den_, self.var)
+
+    def _eval_rewrite_as_StateSpace(self, *args):
+        """
+        Returns the equivalent space space model of the transfer function model.
+        The state space model will be returned in the controllable cannonical form.
+
+        Unlike the space state to transfer function model conversion, the transfer function
+        to state space model conversion is not unique. There can be multiple state space
+        representations of a given transfer function model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> tf = TransferFunction(s**2 + 1, s**3 + 2*s + 10, s)
+        >>> tf.rewrite(StateSpace)
+        StateSpace(Matrix([
+        [  0,  1, 0],
+        [  0,  0, 1],
+        [-10, -2, 0]]), Matrix([
+        [0],
+        [0],
+        [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]))
+
+        """
+        if not self.is_proper:
+            raise ValueError("Transfer Function must be proper.")
+
+        num_poly = Poly(self.num, self.var)
+        den_poly = Poly(self.den, self.var)
+        n = den_poly.degree()
+
+        num_coeffs = num_poly.all_coeffs()
+        den_coeffs = den_poly.all_coeffs()
+        diff = n - num_poly.degree()
+        num_coeffs = [0]*diff + num_coeffs
+
+        a = den_coeffs[1:]
+        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
+        vert = zeros(n-1, 1)
+        mat = eye(n-1)
+        A = vert.row_join(mat)
+        A = A.col_join(a_mat)
+
+        B = zeros(n, 1)
+        B[n-1] = 1
+
+        i = n
+        C = []
+        while(i > 0):
+            C.append(num_coeffs[i] - den_coeffs[i]*num_coeffs[0])
+            i -= 1
+        C = Matrix([C])
+
+        D = Matrix([num_coeffs[0]])
+
+        return StateSpace(A, B, C, D)
 
     def expand(self):
         """
@@ -3299,7 +3357,7 @@ class StateSpace(LinearTimeInvariant):
         C = _sympify(C)
         D = _sympify(D)
 
-        if (isinstance(A, ImmutableMatrix) and isinstance(B, ImmutableDenseMatrix) and
+        if (isinstance(A, ImmutableDenseMatrix) and isinstance(B, ImmutableDenseMatrix) and
             isinstance(C, ImmutableDenseMatrix) and isinstance(D, ImmutableDenseMatrix)):
             # Check State Matrix is square
             if A.rows != A.cols:
