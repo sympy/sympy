@@ -63,7 +63,14 @@ representation is friendlier.
 """
 from itertools import chain
 
-from .exceptions import DMBadInputError, DMShapeError, DMDomainError
+from sympy.utilities.decorator import doctest_depends_on
+
+from .exceptions import (
+    DMBadInputError,
+    DMDomainError,
+    DMNonSquareMatrixError,
+    DMShapeError,
+)
 
 from sympy.polys.domains import QQ
 
@@ -95,14 +102,21 @@ class DDM(list):
     """
 
     fmt = 'dense'
+    is_DFM = False
+    is_DDM = True
 
     def __init__(self, rowslist, shape, domain):
-        super().__init__(rowslist)
-        self.shape = self.rows, self.cols = m, n = shape
-        self.domain = domain
-
-        if not (len(self) == m and all(len(row) == n for row in self)):
+        if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):
+            raise DMBadInputError("rowslist must be a list of lists")
+        m, n = shape
+        if len(rowslist) != m or any(len(row) != n for row in rowslist):
             raise DMBadInputError("Inconsistent row-list/shape")
+
+        super().__init__(rowslist)
+        self.shape = (m, n)
+        self.rows = m
+        self.cols = n
+        self.domain = domain
 
     def getitem(self, i, j):
         return self[i][j]
@@ -123,7 +137,51 @@ class DDM(list):
             ddm.append([rowi[j] for j in cols])
         return DDM(ddm, (len(rows), len(cols)), self.domain)
 
+    @classmethod
+    def from_list(cls, rowslist, shape, domain):
+        """
+        Create a :class:`DDM` from a list of lists.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM.from_list([[ZZ(0), ZZ(1)], [ZZ(-1), ZZ(0)]], (2, 2), ZZ)
+        >>> A
+        [[0, 1], [-1, 0]]
+        >>> A == DDM([[ZZ(0), ZZ(1)], [ZZ(-1), ZZ(0)]], (2, 2), ZZ)
+        True
+
+        See Also
+        ========
+
+        from_list_flat
+        """
+        return cls(rowslist, shape, domain)
+
+    @classmethod
+    def from_ddm(cls, other):
+        return other.copy()
+
     def to_list(self):
+        """
+        Convert to a list of lists.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_list()
+        [[1, 2], [3, 4]]
+
+        See Also
+        ========
+
+        to_list_flat
+        """
         return list(self)
 
     def to_list_flat(self):
@@ -190,7 +248,7 @@ class DDM(list):
 
     def to_flat_nz(self):
         """
-        Convert to a flat list of possibly nonzero elements and data.
+        Convert to a flat list of nonzero elements and data.
 
         Explanation
         ===========
@@ -302,6 +360,21 @@ class DDM(list):
         return DDM(lol, shape, domain)
 
     def to_ddm(self):
+        """
+        Convert to a :class:`DDM`.
+
+        This just returns ``self`` but exists to parallel the corresponding
+        method in other matrix types like :class:`~.SDM`.
+
+        See Also
+        ========
+
+        to_sdm
+        to_dfm
+        to_dfm_or_ddm
+        sympy.polys.matrices.sdm.SDM.to_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_ddm
+        """
         return self
 
     def to_sdm(self):
@@ -327,11 +400,62 @@ class DDM(list):
         """
         return SDM.from_list(self, self.shape, self.domain)
 
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm(self):
+        """
+        Convert to :class:`~.DDM` to :class:`~.DFM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_dfm()
+        [[1, 2], [3, 4]]
+        >>> type(A.to_dfm())
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        DFM
+        sympy.polys.matrices._dfm.DFM.to_ddm
+        """
+        return DFM(list(self), self.shape, self.domain)
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(self):
+        """
+        Convert to :class:`~.DFM` if possible or otherwise return self.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> from sympy import QQ
+        >>> A = DDM([[1, 2], [3, 4]], (2, 2), QQ)
+        >>> A.to_dfm_or_ddm()
+        [[1, 2], [3, 4]]
+        >>> type(A.to_dfm_or_ddm())
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_dfm
+        to_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm_or_ddm
+        """
+        if DFM._supports_domain(self.domain):
+            return self.to_dfm()
+        return self
+
     def convert_to(self, K):
         Kold = self.domain
         if K == Kold:
             return self.copy()
-        rows = ([K.convert_from(e, Kold) for e in row] for row in self)
+        rows = [[K.convert_from(e, Kold) for e in row] for row in self]
         return DDM(rows, self.shape, K)
 
     def __str__(self):
@@ -355,26 +479,30 @@ class DDM(list):
     def zeros(cls, shape, domain):
         z = domain.zero
         m, n = shape
-        rowslist = ([z] * n for _ in range(m))
+        rowslist = [[z] * n for _ in range(m)]
         return DDM(rowslist, shape, domain)
 
     @classmethod
     def ones(cls, shape, domain):
         one = domain.one
         m, n = shape
-        rowlist = ([one] * n for _ in range(m))
+        rowlist = [[one] * n for _ in range(m)]
         return DDM(rowlist, shape, domain)
 
     @classmethod
     def eye(cls, size, domain):
+        if isinstance(size, tuple):
+            m, n = size
+        elif isinstance(size, int):
+            m = n = size
         one = domain.one
-        ddm = cls.zeros((size, size), domain)
-        for i in range(size):
+        ddm = cls.zeros((m, n), domain)
+        for i in range(min(m, n)):
             ddm[i][i] = one
         return ddm
 
     def copy(self):
-        copyrows = (row[:] for row in self)
+        copyrows = [row[:] for row in self]
         return DDM(copyrows, self.shape, self.domain)
 
     def transpose(self):
@@ -538,7 +666,7 @@ class DDM(list):
         return DDM(Anew, (rows, cols), A.domain)
 
     def applyfunc(self, func, domain):
-        elements = (list(map(func, row)) for row in self)
+        elements = [list(map(func, row)) for row in self]
         return DDM(elements, self.shape, domain)
 
     def nnz(a):
@@ -570,6 +698,25 @@ class DDM(list):
 
         """
         return a.to_sdm().scc()
+
+    @classmethod
+    def diag(cls, values, domain):
+        """Returns a square diagonal matrix with *values* on the diagonal.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import DDM
+        >>> DDM.diag([ZZ(1), ZZ(2), ZZ(3)], ZZ)
+        [[1, 0, 0], [0, 2, 0], [0, 0, 3]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.diag
+        """
+        return SDM.diag(values, domain).to_ddm()
 
     def rref(a):
         """Reduced-row echelon form of a and list of pivots.
@@ -673,7 +820,7 @@ class DDM(list):
         """Determinant of a"""
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Determinant of non-square matrix")
+            raise DMNonSquareMatrixError("Determinant of non-square matrix")
         b = a.copy()
         K = b.domain
         deta = ddm_idet(b, K)
@@ -683,7 +830,7 @@ class DDM(list):
         """Inverse of a"""
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Determinant of non-square matrix")
+            raise DMNonSquareMatrixError("Determinant of non-square matrix")
         ainv = a.copy()
         K = a.domain
         ddm_iinv(ainv, a, K)
@@ -705,6 +852,8 @@ class DDM(list):
         m, n = a.shape
         m2, o = b.shape
         a._check(a, 'lu_solve', b, m, m2)
+        if not a.domain.is_Field:
+            raise DMDomainError("lu_solve requires a field")
 
         L, U, swaps = a.lu()
         x = a.zeros((n, o), a.domain)
@@ -716,7 +865,7 @@ class DDM(list):
         K = a.domain
         m, n = a.shape
         if m != n:
-            raise DMShapeError("Charpoly of non-square matrix")
+            raise DMNonSquareMatrixError("Charpoly of non-square matrix")
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
@@ -766,3 +915,4 @@ class DDM(list):
 
 
 from .sdm import SDM
+from .dfm import DFM

@@ -8,6 +8,10 @@ import pytest
 from sympy.testing.pytest import raises
 
 
+# Examples are given as adjugate matrix and determinant adj_det should match
+# these exactly but inv_den only matches after cancel_denom.
+
+
 INVERSE_EXAMPLES = [
 
     (
@@ -86,7 +90,8 @@ def test_Matrix_inv(name, A, A_inv, den):
 @pytest.mark.parametrize('name, A, A_inv, den', INVERSE_EXAMPLES)
 def test_dm_inv_den(name, A, A_inv, den):
     if den != 0:
-        assert A.inv_den() == (A_inv, den)
+        A_inv_f, den_f = A.inv_den()
+        assert A_inv_f.cancel_denom(den_f) == A_inv.cancel_denom(den)
     else:
         raises(DMNonInvertibleMatrixError, lambda: A.inv_den())
 

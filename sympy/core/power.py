@@ -14,7 +14,7 @@ from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
-from sympy.external.gmpy import HAS_GMPY, gmpy, sqrt
+from sympy.external.gmpy import gmpy, sqrt
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
@@ -103,16 +103,14 @@ def integer_nthroot(y, n):
         raise ValueError("y must be nonnegative")
     if n < 1:
         raise ValueError("n must be positive")
-    if HAS_GMPY and n < 2**63:
-        # Currently it works only for n < 2**63, else it produces TypeError
+    if gmpy is not None and n < 2**63:
+        # gmpy.iroot works only for n < 2**63, else it produces TypeError
         # sympy issue: https://github.com/sympy/sympy/issues/18374
         # gmpy2 issue: https://github.com/aleaxit/gmpy/issues/257
-        if HAS_GMPY >= 2:
-            x, t = gmpy.iroot(y, n)
-        else:
-            x, t = gmpy.root(y, n)
+        x, t = gmpy.iroot(y, n)
         return as_int(x), bool(t)
-    return _integer_nthroot_python(y, n)
+    else:
+        return _integer_nthroot_python(y, n)
 
 def _integer_nthroot_python(y, n):
     if y in (0, 1):

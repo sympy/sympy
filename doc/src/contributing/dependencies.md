@@ -379,6 +379,9 @@ library code should be imported with `import_module()`.
   Some tests in `sympy.utilities.tests.test_pickling.py` depend on cloudpickle
   to run. It is not otherwise required for any SymPy function.
 
+- **hypothesis**: [Hypothesis](https://github.com/HypothesisWorks/hypothesis/tree/master)
+  is a required dependency for the SymPy test suit.
+
 ### Building the Documentation
 
 Building the documentation requires several additional dependencies. [This
