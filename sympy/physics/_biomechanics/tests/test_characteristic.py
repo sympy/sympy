@@ -613,7 +613,13 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
 
     @pytest.fixture(autouse=True)
     def _fiber_force_length_passive_arguments_fixture(self):
-        self.l_M_tilde = Symbol('l_M_tilde')
+        self.fl_M_pas = Symbol('fl_M_pas')
         self.c0 = Symbol('c_0')
         self.c1 = Symbol('c_1')
         self.constants = (self.c0, self.c1)
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceLengthPassiveInverseDeGroote2016, Function)
+        assert issubclass(FiberForceLengthPassiveInverseDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceLengthPassiveInverseDeGroote2016.__name__ == 'FiberForceLengthPassiveInverseDeGroote2016'
