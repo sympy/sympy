@@ -296,4 +296,3 @@ def test_pivot():
             i, j = randint(0, 4), randint(0, 4)
             if m[i, j] != 0:
                 assert LRASolver._pivot(m, i, j).rref() == rref
-
