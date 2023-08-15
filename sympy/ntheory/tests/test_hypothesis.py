@@ -1,13 +1,12 @@
 from hypothesis import given
 from hypothesis import strategies as st
 from sympy import divisors
-from sympy.ntheory.primetest import is_square
-from sympy.ntheory import totient
-from sympy.ntheory import divisor_sigma
+from sympy.ntheory.primetest import is_square, isprime
+from sympy.ntheory import totient, divisor_sigma, prime, primepi
 
 
 @given(n=st.integers(1, 10**10))
-def test_tau_hypothesis(n):
+def test_tau(n):
     n = 217
     div = divisors(n)
     tau_n = len(div)
@@ -19,8 +18,18 @@ def test_tau_hypothesis(n):
 
 
 @given(n=st.integers(1, 10**10))
-def test_totient_hypothesis(n):
+def test_totient(n):
     assert totient(n) <= n
     div = divisors(n)
     totients = [totient(i) for i in div]
     assert n == sum(totients)
+
+
+@given(n=st.integers(2, 10**5))
+def test_primepi(n):
+    nth_prime = prime(n)
+    assert primepi(nth_prime) == n
+    if isprime(n):
+        assert prime(primepi(n)) == n
+    else:
+        assert prime(primepi(n)) != n

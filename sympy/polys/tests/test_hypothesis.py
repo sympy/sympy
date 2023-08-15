@@ -1,15 +1,28 @@
-from hypothesis import given
+from hypothesis import given, assume
 from hypothesis import strategies as st
 from sympy.abc import x
 from sympy.polys.polytools import Poly
 
 
+@st.composite
+def coeffecients(draw: st.DrawFn, set_type: str):
+    l = (
+        draw(st.lists(st.integers()))
+        if set_type == "ZZ"
+        else draw(st.lists(st.floats()))
+    )
+    assume(any(l))
+    if len(l) > 0:
+        assume(l[0] != 0)
+    return l
+
+
 @given(
-    coefficients1=st.lists(st.integers()),
-    coefficients2=st.lists(st.integers()),
-    coefficients3=st.lists(st.integers()),
+    coefficients1=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ"),
+    coefficients3=coeffecients(set_type="ZZ"),
 )
-def test_gcd_hypothesis(coefficients1, coefficients2, coefficients3):
+def test_gcd(coefficients1, coefficients2, coefficients3):
     f = Poly(coefficients1, x, domain="ZZ")
     g = Poly(coefficients2, x, domain="ZZ")
     r = Poly(coefficients3, x, domain="ZZ")
@@ -26,10 +39,10 @@ def test_gcd_hypothesis(coefficients1, coefficients2, coefficients3):
 
 
 @given(
-    coefficients1=st.lists(st.integers()),
-    coefficients2=st.lists(st.integers()).filter(lambda x: any(x)),
+    coefficients1=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ"),
 )
-def test_poly_hypothesis(coefficients1, coefficients2):
+def test_division(coefficients1, coefficients2):
     # Integer case
     f_z = Poly(coefficients1, x, domain="ZZ")
     g_z = Poly(coefficients2, x, domain="ZZ")
@@ -41,3 +54,48 @@ def test_poly_hypothesis(coefficients1, coefficients2):
     g_q = Poly(coefficients2, x, domain="QQ")
     remainder_q = f_q.rem(g_q)
     assert g_q.degree() >= remainder_q.degree() or remainder_q.degree() == 0
+
+
+@given(
+    coefficients1=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ"),
+)
+def test_multiplication(coefficients1, coefficients2):
+    f = Poly(coefficients1, x, domain="ZZ")
+    g = Poly(coefficients2, x, domain="ZZ")
+    h = f * g
+    assert h.degree() == f.degree() + g.degree()
+    assert h.LC() == f.LC() * g.LC()
+
+
+@given(
+    coefficients1=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ"),
+)
+def test_addition(coefficients1, coefficients2):
+    f = Poly(coefficients1, x, domain="ZZ")
+    g = Poly(coefficients2, x, domain="ZZ")
+    h = f + g
+    if h.degree != -float("inf"):
+        assert h.degree() == max(f.degree(), g.degree())
+
+
+@given(
+    coefficients1=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ"),
+)
+def test_lcm(coefficients1, coefficients2):
+    f = Poly(coefficients1, x, domain="ZZ")
+    g = Poly(coefficients2, x, domain="ZZ")
+    assert f.lcm(g) == (f * g).quo(f.gcd(g))
+
+
+@given(
+    coefficients=coeffecients(set_type="ZZ"),
+    value=st.integers(),
+)
+def test_dispersion(coefficients, value):
+    f = Poly(coefficients, x, domain="ZZ")
+    g = Poly([value], x, domain="ZZ")
+    assert f.dispersion() == f.dispersion(f)
+    assert f.dispersion(g) == 0
