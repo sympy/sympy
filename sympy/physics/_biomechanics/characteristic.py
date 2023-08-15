@@ -1,19 +1,9 @@
 """Implementations of characteristic curves for musculotendon models."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
-
-if TYPE_CHECKING:
-    from typing import Any
-
-    from sympy.core.expr import Expr
-    from sympy.printing.printer import Printer
 
 
 __all__ = [
@@ -35,7 +25,7 @@ class CharacteristicCurveFunction(Function):
         )
         raise TypeError(msg)
 
-    def _print_code(self, printer: Printer) -> str:
+    def _print_code(self, printer):
         """Print code for the function defining the curve using a printer.
 
         Explanation
@@ -156,7 +146,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_T_tilde: Any) -> TendonForceLengthDeGroote2016:
+    def with_default_constants(cls, l_T_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -186,7 +176,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         return cls(l_T_tilde, c0, c1, c2, c3)
 
     @classmethod
-    def eval(cls, l_T_tilde: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
+    def eval(cls, l_T_tilde, c0, c1, c2, c3):
         """Evaluation of basic inputs.
 
         Parameters
@@ -210,16 +200,11 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         pass
 
-    def _eval_evalf(self, prec: int) -> float:
+    def _eval_evalf(self, prec):
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
-    def doit(
-        self,
-        deep: bool = True,
-        evaluate : bool = True,
-        **hints: Any,
-    ) -> Expr:
+    def doit(self, deep=True, evaluate=True, **hints):
         """Evaluate the expression defining the function.
 
         Parameters
@@ -251,7 +236,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
         return c0*exp(c3*UnevaluatedExpr(l_T_tilde - c1)) - c2
 
-    def fdiff(self, argindex: int = 1) -> Expr:
+    def fdiff(self, argindex=1):
         """Derivative of the function with respect to a single argument.
 
         Parameters
@@ -265,19 +250,19 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         l_T_tilde, c0, c1, c2, c3 = self.args
         if argindex == 1:
-            return c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 2:
-            return exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 3:
-            return -c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return -c0*c3*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
         elif argindex == 4:
             return Integer(-1)
         elif argindex == 5:
-            return c0*(l_T_tilde - c1)*exp(c3*UnevaluatedExpr(l_T_tilde - c1))  # type: ignore
+            return c0*(l_T_tilde - c1)*exp(c3*UnevaluatedExpr(l_T_tilde - c1))
 
         raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex: int = 1) -> Function:
+    def inverse(self, argindex=1):
         """Inverse function.
 
         Parameters
@@ -289,7 +274,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         return TendonForceLengthInverseDeGroote2016
 
-    def _latex(self, printer: Printer) -> str:
+    def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
         Parameters
@@ -338,7 +323,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, fl_T: Any) -> TendonForceLengthInverseDeGroote2016:
+    def with_default_constants(cls, fl_T):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -368,7 +353,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         return cls(fl_T, c0, c1, c2, c3)
 
     @classmethod
-    def eval(cls, fl_T: Any, c0: Any, c1: Any, c2: Any, c3: Any) -> Any:  # type: ignore
+    def eval(cls, fl_T, c0, c1, c2, c3):
         """Evaluation of basic inputs.
 
         Parameters
@@ -392,16 +377,11 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         """
         pass
 
-    def _eval_evalf(self, prec: int) -> float:
+    def _eval_evalf(self, prec):
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
-    def doit(
-        self,
-        deep: bool = True,
-        evaluate : bool = True,
-        **hints: Any,
-    ) -> Expr:
+    def doit(self, deep=True, evaluate=True, **hints):
         """Evaluate the expression defining the function.
 
         Parameters
@@ -433,7 +413,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
 
         return log(UnevaluatedExpr((fl_T + c2)/c0))/c3 + c1
 
-    def fdiff(self, argindex: int = 1) -> Expr:
+    def fdiff(self, argindex=1):
         """Derivative of the function with respect to a single argument.
 
         Parameters
@@ -447,19 +427,19 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         """
         fl_T, c0, c1, c2, c3 = self.args
         if argindex == 1:
-            return 1/(c3*(fl_T + c2))  # type: ignore
+            return 1/(c3*(fl_T + c2))
         elif argindex == 2:
-            return -1/(c0*c3)  # type: ignore
+            return -1/(c0*c3)
         elif argindex == 3:
             return Integer(1)
         elif argindex == 4:
-            return 1/(c3*(fl_T + c2))  # type: ignore
+            return 1/(c3*(fl_T + c2))
         elif argindex == 5:
-            return -log(UnevaluatedExpr((fl_T + c2)/c0))/c3**2  # type: ignore
+            return -log(UnevaluatedExpr((fl_T + c2)/c0))/c3**2
 
         raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex: int = 1) -> Function:
+    def inverse(self, argindex=1):
         """Inverse function.
 
         Parameters
@@ -471,7 +451,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         """
         return TendonForceLengthDeGroote2016
 
-    def _latex(self, printer: Printer) -> str:
+    def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
         Parameters
@@ -516,7 +496,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_M_tilde: Any) -> FiberForceLengthPassiveDeGroote2016:
+    def with_default_constants(cls, l_M_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -543,7 +523,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
         return cls(l_M_tilde, c0, c1)
 
     @classmethod
-    def eval(cls, l_M_tilde: Any, c0: Any, c1: Any) -> Any:  # type: ignore
+    def eval(cls, l_M_tilde, c0, c1):
         """Evaluation of basic inputs.
 
         Parameters
@@ -561,16 +541,11 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
         """
         pass
 
-    def _eval_evalf(self, prec: int) -> float:
+    def _eval_evalf(self, prec):
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
-    def doit(
-        self,
-        deep: bool = True,
-        evaluate : bool = True,
-        **hints: Any,
-    ) -> Expr:
+    def doit(self, deep=True, evaluate=True, **hints):
         """Evaluate the expression defining the function.
 
         Parameters
@@ -602,7 +577,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
 
         return (exp((c1*UnevaluatedExpr(l_M_tilde - 1))/c0) - 1)/(exp(c1) - 1)
 
-    def fdiff(self, argindex: int = 1) -> Expr:
+    def fdiff(self, argindex=1):
         """Derivative of the function with respect to a single argument.
 
         Parameters
@@ -616,21 +591,21 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
         """
         l_M_tilde, c0, c1 = self.args
         if argindex == 1:
-            return c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)/(c0*(exp(c1) - 1))  # type: ignore
+            return c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)/(c0*(exp(c1) - 1))
         elif argindex == 2:
             return (
-                -c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)  # type: ignore
-                *UnevaluatedExpr(l_M_tilde - 1)/(c0**2*(exp(c1) - 1))  # type: ignore
+                -c1*exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)
+                *UnevaluatedExpr(l_M_tilde - 1)/(c0**2*(exp(c1) - 1))
             )
         elif argindex == 3:
             return (
-                -exp(c1)*(-1 + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0))/(exp(c1) - 1)**2  # type: ignore
-                + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)*(l_M_tilde - 1)/(c0*(exp(c1) - 1))  # type: ignore
+                -exp(c1)*(-1 + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0))/(exp(c1) - 1)**2
+                + exp(c1*UnevaluatedExpr(l_M_tilde - 1)/c0)*(l_M_tilde - 1)/(c0*(exp(c1) - 1))
             )
 
         raise ArgumentIndexError(self, argindex)
 
-    def _latex(self, printer: Printer) -> str:
+    def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
         Parameters
