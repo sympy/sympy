@@ -24,7 +24,7 @@ from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.iterables import iterable
-from sympy.physics.mechanics._actuator import ActuatorBase
+from sympy.physics.mechanics.actuator import ActuatorBase
 
 __all__ = ['System']
 

@@ -8,7 +8,7 @@ from sympy.physics.mechanics import (
 from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
-from sympy.physics.mechanics._actuator import TorqueActuator
+from sympy.physics.mechanics.actuator import TorqueActuator
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
