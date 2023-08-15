@@ -221,6 +221,32 @@ UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
     (r"\int \frac{1}{x} + 1 dx", Integral(_Mul(1, _Add(_Mul(1, _Pow(x, -1)), 1)), x))
 ]
 
+EVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
+    (r"\int x dx", Integral(x, x)),
+    (r"\int x \, dx", Integral(x, x)),
+    (r"\int x d\theta", Integral(x, theta)),
+    (r"\int (x^2 - y)dx", Integral(x ** 2 - y, x)),
+    (r"\int x + a dx", Integral(x + a, x)),
+    (r"\int da", Integral(1, a)),
+    (r"\int_0^7 dx", Integral(1, (x, 0, 7))),
+    (r"\int\limits_{0}^{1} x dx", Integral(x, (x, 0, 1))),
+    (r"\int_a^b x dx", Integral(x, (x, a, b))),
+    (r"\int^b_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^b x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_a x dx", Integral(x, (x, a, b))),
+    (r"\int_{a}^{b} x dx", Integral(x, (x, a, b))),
+    (r"\int^{b}_{a} x dx", Integral(x, (x, a, b))),
+    (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
+    (r"\int a + b + c dx", Integral(a + b + c, x)),
+    (r"\int \frac{dz}{z}", Integral(Pow(z, -1), z)),
+    (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
+    (r"\int \frac{1}{x} dx", Integral(1 / x, x)),
+    (r"\int \frac{1}{a} + \frac{1}{b} dx", Integral(1 / a + 1 / b, x)),
+    (r"\int \frac{3 \cdot d\theta}{\theta}",
+     Integral(3 * _Pow(theta, -1), theta)),
+    (r"\int \frac{1}{x} + 1 dx", Integral(1 / x + 1, x))
+]
+
 DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d}{dx} x", Derivative(x, x)),
     (r"\frac{d}{dt} x", Derivative(x, t)),
@@ -241,22 +267,28 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
 ]
 
 UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
-    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
-    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
-    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
-    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
-    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
-    (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
-    (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
-    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
-    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir='-')),
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir="+-")),
+    (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir="+")),
+    (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir="-")),
+    (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir="+")),
+    (r"\lim_{x \to 3^-} a", Limit(a, x, 3, dir="-")),
     (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo))
+]
+
+EVALUATED_LIMIT_EXPRESSION_PAIRS = [
+    (r"\lim_{x \to \infty} \frac{1}{x}", Limit(1 / x, x, oo))
 ]
 
 UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{x}", sqrt(x)),
     (r"\sqrt{x + b}", sqrt(_Add(x, b))),
-    (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
+    (r"\sqrt[3]{\sin x}", _Pow(sin(x), _Pow(3, -1))),
+    # the above test needed to be handled differently than the ones below because root
+    # acts differently if its second argument is a number
     (r"\sqrt[y]{\sin x}", root(sin(x), y)),
     (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
     (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
@@ -264,11 +296,11 @@ UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
 
 EVALUATED_SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{x}", sqrt(x)),
-    (r"\sqrt{x + b}", sqrt(_Add(x, b))),
+    (r"\sqrt{x + b}", sqrt(x + b)),
     (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
     (r"\sqrt[y]{\sin x}", root(sin(x), y)),
     (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
-    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
+    (r"\sqrt{\frac{12}{6}}", sqrt(2))
 ]
 
 UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
@@ -281,6 +313,16 @@ UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
     (r"5!7!", _Mul(_factorial(5), _factorial(7)))
 ]
 
+EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
+    (r"x!", factorial(x)),
+    (r"100!", factorial(100)),
+    (r"\theta!", factorial(theta)),
+    (r"(x + 1)!", factorial(x + 1)),
+    (r"(x!)!", factorial(factorial(x))),
+    (r"x!!!", factorial(factorial(factorial(x)))),
+    (r"5!7!", factorial(5) * factorial(7))
+]
+
 UNEVALUATED_SUM_EXPRESSION_PAIRS = [
     (r"\sum_{k = 1}^{3} c", Sum(_Mul(1, c), (k, 1, 3))),
     (r"\sum_{k = 1}^3 c", Sum(_Mul(1, c), (k, 1, 3))),
@@ -289,6 +331,15 @@ UNEVALUATED_SUM_EXPRESSION_PAIRS = [
     (r"\sum_{k = 1}^{10} k^2", Sum(_Mul(1, k ** 2), (k, 1, 10))),
     (r"\sum_{n = 0}^{\infty} \frac{1}{n!}",
      Sum(_Mul(1, _Mul(1, _Pow(_factorial(n), -1))), (n, 0, oo)))
+]
+
+EVALUATED_SUM_EXPRESSION_PAIRS = [
+    (r"\sum_{k = 1}^{3} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^3 c", Sum(c, (k, 1, 3))),
+    (r"\sum^{3}_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum^3_{k = 1} c", Sum(c, (k, 1, 3))),
+    (r"\sum_{k = 1}^{10} k^2", Sum(k ** 2, (k, 1, 10))),
+    (r"\sum_{n = 0}^{\infty} \frac{1}{n!}", Sum(1 / factorial(n), (n, 0, oo)))
 ]
 
 UNEVALUATED_PRODUCT_EXPRESSION_PAIRS = [
@@ -308,7 +359,7 @@ APPLIED_FUNCTION_EXPRESSION_PAIRS = [
      Function('h_{theta}')(Symbol('x_{0}'), Symbol('x_{1}')))
 ]
 
-COMMON_FUNCTION_EXPRESSION_PAIRS = [
+UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"|x|", _Abs(x)),
     (r"||x||", _Abs(Abs(x))),
     (r"|x||y|", _Abs(x) * _Abs(y)),
@@ -334,6 +385,32 @@ COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y))
 ]
 
+EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
+    (r"|x|", Abs(x)),
+    (r"||x||", Abs(Abs(x))),
+    (r"|x||y|", Abs(x) * Abs(y)),
+    (r"||x||y||", Abs(Abs(x) * Abs(y))),
+    (r"\lfloor x \rfloor", floor(x)),
+    (r"\lceil x \rceil", ceiling(x)),
+    (r"\exp x", exp(x)),
+    (r"\exp(x)", exp(x)),
+    (r"\lg x", log(x, 10)),
+    (r"\ln x", log(x)),
+    (r"\ln xy", log(x * y)),
+    (r"\log x", log(x)),
+    (r"\log xy", log(x * y)),
+    (r"\log_{2} x", log(x, 2)),
+    (r"\log_{a} x", log(x, a)),
+    (r"\log_{11} x", log(x, 11)),
+    (r"\log_{a^2} x", log(x, _Pow(a, 2))),
+    (r"\log_2 x", log(x, 2)),
+    (r"\log_a x", log(x, a)),
+    (r"\overline{z}", conjugate(z)),
+    (r"\overline{\overline{z}}", conjugate(conjugate(z))),
+    (r"\overline{x + y}", conjugate(x + y)),
+    (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y))
+]
+
 SPACING_RELATED_EXPRESSION_PAIRS = [
     (r"a \, b", _Mul(a, b)),
     (r"a \thinspace b", _Mul(a, b)),
@@ -349,12 +426,20 @@ SPACING_RELATED_EXPRESSION_PAIRS = [
     (r"a \negthickspace b", _Mul(a, b))
 ]
 
-BINOMIAL_EXPRESSION_PAIRS = [
+UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
     (r"\binom{n}{k}", _binomial(n, k)),
     (r"\tbinom{n}{k}", _binomial(n, k)),
     (r"\dbinom{n}{k}", _binomial(n, k)),
     (r"\binom{n}{0}", _binomial(n, 0)),
     (r"x^\binom{n}{k}", _Pow(x, _binomial(n, k)))
+]
+
+EVALUATED_BINOMIAL_EXPRESSION_PAIRS = [
+    (r"\binom{n}{k}", binomial(n, k)),
+    (r"\tbinom{n}{k}", binomial(n, k)),
+    (r"\dbinom{n}{k}", binomial(n, k)),
+    (r"\binom{n}{0}", binomial(n, 0)),
+    (r"x^\binom{n}{k}", x ** binomial(n, k))
 ]
 
 MISCELLANEOUS_EXPRESSION_PAIRS = [
@@ -425,6 +510,11 @@ def test_integral_expressions():
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_INTEGRAL_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 # feature yet to be added
 @XFAIL
 def test_derivative_expressions():
@@ -453,17 +543,26 @@ def test_square_root_expressions():
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+    for latex_str, sympy_expr in EVALUATED_SQRT_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_factorial_expressions():
     for latex_str, sympy_expr in UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+    for latex_str, sympy_expr in EVALUATED_FACTORIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_sum_expressions():
     for latex_str, sympy_expr in UNEVALUATED_SUM_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_SUM_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_product_expressions():
@@ -483,9 +582,12 @@ def test_applied_function_expressions():
 
 
 def test_common_function_expressions():
-    for latex_str, sympy_expr in COMMON_FUNCTION_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 # unhandled bug causing these to fail
 @XFAIL
@@ -496,9 +598,12 @@ def test_spacing():
 
 
 def test_binomial_expressions():
-    for latex_str, sympy_expr in BINOMIAL_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_BINOMIAL_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_BINOMIAL_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 # sus expressions
 @XFAIL
