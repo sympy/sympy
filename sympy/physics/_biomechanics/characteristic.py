@@ -746,3 +746,28 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
             return c0*log(fl_M_pas*(exp(c1) - 1) + 1)/c1 + 1
 
         return c0*log(UnevaluatedExpr(fl_M_pas*(exp(c1) - 1)) + 1)/c1 + 1
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        fl_M_pas, c0, c1 = self.args
+        if argindex == 1:
+            return c0*(exp(c1) - 1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+        elif argindex == 2:
+            return log(fl_M_pas*(exp(c1) - 1) + 1)/c1
+        elif argindex == 3:
+            return (
+                c0*fl_M_pas*exp(c1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+                - c0*log(fl_M_pas*(exp(c1) - 1) + 1)/c1**2
+            )
+
+        raise ArgumentIndexError(self, argindex)
