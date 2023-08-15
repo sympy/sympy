@@ -21,8 +21,11 @@ from sympy.physics.mechanics import (
     ReferenceFrame,
     dynamicsymbols,
 )
-from sympy.physics.mechanics.wrapping_geometry import (Cylinder, GeometryBase,
-                                                       Sphere)
+from sympy.physics.mechanics.wrapping_geometry import (
+    Cylinder,
+    GeometryBase,
+    Sphere,
+)
 from sympy.physics.mechanics._pathway import (
     LinearPathway,
     PathwayBase,
