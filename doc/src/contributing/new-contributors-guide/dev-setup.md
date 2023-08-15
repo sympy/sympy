@@ -23,7 +23,7 @@ second contribution.
 ## Install Git
 
 SymPy is available on [GitHub](https://github.com/sympy/sympy) and uses
-[Git](https://git-scm.com) for source control. The workflow is such that
+[Git](https://git-scm.com/) for source control. The workflow is such that
 code is pulled and pushed to and from the main repository. Install the respective version
 of Git for your operating system to start development.
 

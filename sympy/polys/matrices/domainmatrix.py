@@ -13,6 +13,8 @@ from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
+from sympy.utilities.decorator import doctest_depends_on
+
 from sympy.core.sympify import _sympify
 
 from ..domains import Domain
@@ -29,10 +31,6 @@ from .exceptions import (
     DMNonInvertibleMatrixError
 )
 
-from .ddm import DDM
-
-from .sdm import SDM
-
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
@@ -47,6 +45,14 @@ from sympy.polys.densetools import (
 )
 from sympy.polys.factortools import dup_factor_list
 from sympy.polys.polyutils import _sort_factors
+
+from .ddm import DDM
+
+from .sdm import SDM
+
+from .dfm import DFM
+
+from .rref import _dm_rref, _dm_rref_den
 
 
 def DM(rows, domain):
@@ -116,7 +122,7 @@ class DomainMatrix:
     Poly
 
     """
-    rep: tUnion[SDM, DDM]
+    rep: tUnion[SDM, DDM, DFM]
     shape: tTuple[int, int]
     domain: Domain
 
@@ -138,7 +144,7 @@ class DomainMatrix:
             If any of rows, shape and domain are not provided
 
         """
-        if isinstance(rows, (DDM, SDM)):
+        if isinstance(rows, (DDM, SDM, DFM)):
             raise TypeError("Use from_rep to initialise from SDM/DDM")
         elif isinstance(rows, list):
             rep = DDM(rows, shape, domain)
@@ -156,17 +162,22 @@ class DomainMatrix:
             else:
                 raise ValueError("fmt should be 'sparse' or 'dense'")
 
+        # Use python-flint for dense matrices if possible
+        if rep.fmt == 'dense' and DFM._supports_domain(domain):
+            rep = rep.to_dfm()
+
         return cls.from_rep(rep)
 
-    def __getnewargs__(self):
+    def __reduce__(self):
         rep = self.rep
-        if isinstance(rep, DDM):
-            arg = list(rep)
-        elif isinstance(rep, SDM):
+        if rep.fmt == 'dense':
+            arg = self.to_list()
+        elif rep.fmt == 'sparse':
             arg = dict(rep)
         else:
             raise RuntimeError # pragma: no cover
-        return arg, self.shape, self.domain
+        args = (arg, rep.shape, rep.domain)
+        return (self.__class__, args)
 
     def __getitem__(self, key):
         i, j = key
@@ -252,7 +263,7 @@ class DomainMatrix:
         as this is supposed to be an efficient internal routine.
 
         """
-        if not isinstance(rep, (DDM, SDM)):
+        if not (isinstance(rep, (DDM, SDM)) or (DFM is not None and isinstance(rep, DFM))):
             raise TypeError("rep should be of type DDM or SDM")
         self = super().__new__(cls)
         self.rep = rep
@@ -514,9 +525,21 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
-        if K is None:
+        if K == self.domain:
             return self.copy()
-        return self.from_rep(self.rep.convert_to(K))
+
+        rep = self.rep
+
+        # The DFM, DDM and SDM types do not do any implicit conversions so we
+        # manage switching between DDM and DFM here.
+        if rep.is_DFM and not DFM._supports_domain(K):
+            rep_K = rep.to_ddm().convert_to(K)
+        elif rep.is_DDM and DFM._supports_domain(K):
+            rep_K = rep.convert_to(K).to_dfm()
+        else:
+            rep_K = rep.convert_to(K)
+
+        return self.from_rep(rep_K)
 
     def to_sympy(self):
         return self.convert_to(EXRAW)
@@ -566,7 +589,7 @@ class DomainMatrix:
         if self.rep.fmt == 'sparse':
             return self
 
-        return self.from_rep(SDM.from_ddm(self.rep))
+        return self.from_rep(self.rep.to_sdm())
 
     def to_dense(self):
         """
@@ -585,10 +608,12 @@ class DomainMatrix:
         [[1, 0], [0, 2]]
 
         """
-        if self.rep.fmt == 'dense':
+        rep = self.rep
+
+        if rep.fmt == 'dense':
             return self
 
-        return self.from_rep(SDM.to_ddm(self.rep))
+        return self.from_rep(rep.to_dfm_or_ddm())
 
     def to_ddm(self):
         """
@@ -639,6 +664,68 @@ class DomainMatrix:
         sympy.polys.matrices.sdm.SDM.to_ddm
         """
         return self.rep.to_sdm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm(self):
+        """
+        Return a :class:`~.DFM` representation of *self*.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> dfm = A.to_dfm()
+        >>> dfm
+        [[1, 0], [0, 2]]
+        >>> type(dfm)
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm
+        to_dense
+        DFM
+        """
+        return self.rep.to_dfm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(self):
+        """
+        Return a :class:`~.DFM` or :class:`~.DDM` representation of *self*.
+
+        Explanation
+        ===========
+
+        The :class:`~.DFM` representation can only be used if the ground types
+        are ``flint`` and the ground domain is supported by ``python-flint``.
+        This method will return a :class:`~.DFM` representation if possible,
+        but will return a :class:`~.DDM` representation otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> dfm = A.to_dfm_or_ddm()
+        >>> dfm
+        [[1, 0], [0, 2]]
+        >>> type(dfm)  # Depends on the ground domain and ground types
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm: Always return a :class:`~.DDM` representation.
+        to_dfm: Returns a :class:`~.DFM` representation or raise an error.
+        to_dense: Convert internally to a :class:`~.DFM` or :class:`~.DDM`
+        DFM: The :class:`~.DFM` dense FLINT matrix representation.
+        DDM: The Python :class:`~.DDM` dense domain matrix representation.
+        """
+        return self.rep.to_dfm_or_ddm()
 
     @classmethod
     def _unify_domain(cls, *matrices):
@@ -829,7 +916,8 @@ class DomainMatrix:
 
         to_list_flat
         """
-        return cls.from_rep(DDM.from_list_flat(elements, shape, domain))
+        ddm = DDM.from_list_flat(elements, shape, domain)
+        return cls.from_rep(ddm.to_dfm_or_ddm())
 
     def to_flat_nz(self):
         """
@@ -1163,6 +1251,9 @@ class DomainMatrix:
         if a.rep.fmt != b.rep.fmt:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
             raise DMFormatError(msg)
+        if type(a.rep) != type(b.rep):
+            msg = "Type mismatch: %s %s %s" % (type(a.rep), op, type(b.rep))
+            raise DMFormatError(msg)
 
     def add(A, B):
         r"""
@@ -1319,15 +1410,10 @@ class DomainMatrix:
         >>> A = DomainMatrix([
         ...    [ZZ(1), ZZ(2)],
         ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-        >>> B = DomainMatrix([
-        ...    [ZZ(1), ZZ(1)],
-        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> b = ZZ(2)
 
-        >>> A.mul(B)
-        DomainMatrix([[DomainMatrix([[1, 1], [0, 1]], (2, 2), ZZ),
-        DomainMatrix([[2, 2], [0, 2]], (2, 2), ZZ)],
-        [DomainMatrix([[3, 3], [0, 3]], (2, 2), ZZ),
-        DomainMatrix([[4, 4], [0, 4]], (2, 2), ZZ)]], (2, 2), ZZ)
+        >>> A.mul(b)
+        DomainMatrix([[2, 4], [6, 8]], (2, 2), ZZ)
 
         See Also
         ========
@@ -1633,11 +1719,11 @@ class DomainMatrix:
         >>> Minv, den = M.inv_den()
         >>> Minv.to_Matrix()
         Matrix([
-        [4, -4,  4],
-        [0,  4, -4],
-        [0,  0,  4]])
+        [1, -1,  1],
+        [0,  1, -1],
+        [0,  0,  1]])
         >>> den
-        8
+        2
         >>> Minv_reduced, den_reduced = Minv.cancel_denom(den)
         >>> Minv_reduced.to_Matrix()
         Matrix([
@@ -1845,21 +1931,16 @@ class DomainMatrix:
         M_primitive = self.from_flat_nz(prims, data, K)
         return content, M_primitive
 
-    def rref(self):
+    def rref(self, *, method='auto'):
         r"""
-        Returns reduced-row echelon form and list of pivots for the DomainMatrix
+        Returns reduced-row echelon form (RREF) and list of pivots.
 
-        Returns
-        =======
+        If the domain is not a field then it will be converted to a field. See
+        :meth:`rref_den` for the fraction-free version of this routine that
+        returns RREF with denominator instead.
 
-        (DomainMatrix, list)
-            reduced-row echelon form and list of pivots for the DomainMatrix
-
-        Raises
-        ======
-
-        ValueError
-            If the domain of DomainMatrix not a Field
+        The domain must either be a field or have an associated fraction field
+        (see :meth:`to_field`).
 
         Examples
         ========
@@ -1877,21 +1958,43 @@ class DomainMatrix:
         >>> rref_pivots
         (0, 1, 2)
 
-        See Also
-        ========
+        Parameters
+        ==========
 
-        convert_to, lu
-        rref_den
+        method : str, optional (default: 'auto')
+            The method to use to compute the RREF. The default is ``'auto'``,
+            which will attempt to choose the fastest method. The other options
+            are:
 
-        """
-        if not self.domain.is_Field:
-            raise DMNotAField('Not a field')
-        rref_ddm, pivots = self.rep.rref()
-        return self.from_rep(rref_ddm), tuple(pivots)
+            - ``A.rref(method='GJ')`` uses Gauss-Jordan elimination with
+              division. If the domain is not a field then it will be converted
+              to a field with :meth:`to_field` first and RREF will be computed
+              by inverting the pivot elements in each row. This is most
+              efficient for very sparse matrices or for matrices whose elements
+              have complex denominators.
 
-    def rref_den(self):
-        r"""
-        Returns reduced-row echelon form with denominator and list of pivots.
+            - ``A.rref(method='FF')`` uses fraction-free Gauss-Jordan
+              elimination. Elimination is performed using exact division
+              (``exquo``) to control the growth of the coefficients. In this
+              case the current domain is always used for elimination but if
+              the domain is not a field then it will be converted to a field
+              at the end and divided by the denominator. This is most efficient
+              for dense matrices or for matrices with simple denominators.
+
+            - ``A.rref(method='CD')`` clears the denominators before using
+              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              This is most efficient for dense matrices with very simple
+              denominators.
+
+            - ``A.rref(method='GJ_dense')``, ``A.rref(method='FF_dense')``, and
+              ``A.rref(method='CD_dense')`` are the same as the above methods
+              except that the dense implementations of the algorithms are used.
+              By default ``A.rref(method='auto')`` will usually choose the
+              sparse implementations for RREF.
+
+            Regardless of which algorithm is used the returned matrix will
+            always have the same format (sparse or dense) as the input and its
+            domain will always be the field of fractions of the input domain.
 
         Returns
         =======
@@ -1899,11 +2002,31 @@ class DomainMatrix:
         (DomainMatrix, list)
             reduced-row echelon form and list of pivots for the DomainMatrix
 
-        Raises
-        ======
+        See Also
+        ========
 
-        ValueError
-            If the domain of DomainMatrix not a Field
+        rref_den
+            RREF with denominator
+        sympy.polys.matrices.sdm.sdm_irref
+            Sparse implementation of ``method='GJ'``.
+        sympy.polys.matrices.sdm.sdm_rref_den
+            Sparse implementation of ``method='FF'`` and ``method='CD'``.
+        sympy.polys.matrices.dense.ddm_irref
+            Dense implementation of ``method='GJ'``.
+        sympy.polys.matrices.dense.ddm_irref_den
+            Dense implementation of ``method='FF'`` and ``method='CD'``.
+        clear_denoms
+            Clear denominators from a matrix, used by ``method='CD'`` and
+            by ``method='GJ'`` when the original domain is not a field.
+
+        """
+        return _dm_rref(self, method=method)
+
+    def rref_den(self, *, method='auto', keep_domain=True):
+        r"""
+        Returns reduced-row echelon form with denominator and list of pivots.
+
+        Requires exact division in the ground domain (``exquo``).
 
         Examples
         ========
@@ -1927,15 +2050,83 @@ class DomainMatrix:
         >>> A_rref.to_field() / denom == A.convert_to(QQ).rref()[0]
         True
 
+        Parameters
+        ==========
+
+        method : str, optional (default: 'auto')
+            The method to use to compute the RREF. The default is ``'auto'``,
+            which will attempt to choose the fastest method. The other options
+            are:
+
+            - ``A.rref(method='FF')`` uses fraction-free Gauss-Jordan
+              elimination. Elimination is performed using exact division
+              (``exquo``) to control the growth of the coefficients. In this
+              case the current domain is always used for elimination and the
+              result is always returned as a matrix over the current domain.
+              This is most efficient for dense matrices or for matrices with
+              simple denominators.
+
+            - ``A.rref(method='CD')`` clears denominators before using
+              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              The result will be converted back to the original domain unless
+              ``keep_domain=False`` is passed in which case the result will be
+              over the ring used for elimination. This is most efficient for
+              dense matrices with very simple denominators.
+
+            - ``A.rref(method='GJ')`` uses Gauss-Jordan elimination with
+              division. If the domain is not a field then it will be converted
+              to a field with :meth:`to_field` first and RREF will be computed
+              by inverting the pivot elements in each row. The result is
+              converted back to the original domain by clearing denominators
+              unless ``keep_domain=False`` is passed in which case the result
+              will be over the field used for elimination. This is most
+              efficient for very sparse matrices or for matrices whose elements
+              have complex denominators.
+
+            - ``A.rref(method='GJ_dense')``, ``A.rref(method='FF_dense')``, and
+              ``A.rref(method='CD_dense')`` are the same as the above methods
+              except that the dense implementations of the algorithms are used.
+              By default ``A.rref(method='auto')`` will usually choose the
+              sparse implementations for RREF.
+
+            Regardless of which algorithm is used the returned matrix will
+            always have the same format (sparse or dense) as the input and if
+            ``keep_domain=True`` its domain will always be the same as the
+            input.
+
+        keep_domain : bool, optional
+            If True (the default), the domain of the returned matrix and
+            denominator are the same as the domain of the input matrix. If
+            False, the domain of the returned matrix might be changed to an
+            associated ring or field if the algorithm used a different domain.
+            This is useful for efficiency if the caller does not need the
+            result to be in the original domain e.g. it avoids clearing
+            denominators in the case of ``A.rref(method='GJ')``.
+
+        Returns
+        =======
+
+        (DomainMatrix, scalar, list)
+            Reduced-row echelon form, denominator and list of pivot indices.
+
         See Also
         ========
 
-        convert_to, lu
         rref
+            RREF without denominator for field domains.
+        sympy.polys.matrices.sdm.sdm_irref
+            Sparse implementation of ``method='GJ'``.
+        sympy.polys.matrices.sdm.sdm_rref_den
+            Sparse implementation of ``method='FF'`` and ``method='CD'``.
+        sympy.polys.matrices.dense.ddm_irref
+            Dense implementation of ``method='GJ'``.
+        sympy.polys.matrices.dense.ddm_irref_den
+            Dense implementation of ``method='FF'`` and ``method='CD'``.
+        clear_denoms
+            Clear denominators from a matrix, used by ``method='CD'``.
 
         """
-        rref_ddm, denom, pivots = self.rep.rref_den()
-        return self.from_rep(rref_ddm), denom, tuple(pivots)
+        return _dm_rref_den(self, method=method, keep_domain=keep_domain)
 
     def columnspace(self):
         r"""
@@ -2012,8 +2203,6 @@ class DomainMatrix:
         ...    [QQ(2), QQ(-2)],
         ...    [QQ(4), QQ(-4)]], QQ)
         >>> A.nullspace()
-        DomainMatrix([[2, 2]], (1, 2), QQ)
-        >>> A.nullspace(divide_last=True)
         DomainMatrix([[1, 1]], (1, 2), QQ)
 
         The returned matrix is a basis for the nullspace:
@@ -2027,8 +2216,8 @@ class DomainMatrix:
         True
 
         Nullspace can also be computed for non-field rings. If the ring is not
-        a field then normalization is not done. Setting normalize to True will
-        raise an error.
+        a field then division is not used. Setting ``divide_last`` to True will
+        raise an error in this case:
 
         >>> from sympy import ZZ
         >>> B = DM([[6, -3],
@@ -3201,7 +3390,7 @@ class DomainMatrix:
         DomainMatrix([[1, 1, 1], [1, 1, 1]], (2, 3), QQ)
 
         """
-        return cls.from_rep(DDM.ones(shape, domain))
+        return cls.from_rep(DDM.ones(shape, domain).to_dfm_or_ddm())
 
     def __eq__(A, B):
         r"""
