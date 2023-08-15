@@ -20,24 +20,6 @@ class PathwayBase(ABC):
     Instances of this class cannot be directly instantiated by users. However,
     it can be used to created custom pathway types through subclassing.
 
-    All pathways use the same sign conventions for the relative speed of and
-    forces acting on the attachment points. Take attachment points ``a1`` and
-    ``a2`` that move along the same line and have an equal and opposite force
-    of magnitude ``F``. If we define the positive sense of the velocity of each
-    point to the right (positive ``v1`` or ``v2`` describe rightward motion)
-    and the equal and opposite force ``F`` has a sign convention such that
-    positive force is in the same direction for ``a2`` and opposite direction
-    as ``a1``, respectively, then we have the following sign convention::
-
-       a1          a2
-       o<--- F --->o
-       |           |
-       --> v1      --> v2
-
-    We define the relative speed, or extension velocity,  as ``v2 - v1`` with a
-    positive ``F`` tending to move ``a2`` the right and ``a1`` to the left,
-    i.e. expanding if ``a2``'s position is to the right of ``a1``'s.
-
     """
 
     def __init__(
@@ -124,6 +106,23 @@ class LinearPathway(PathwayBase):
     other objects in the system, i.e. a ``LinearPathway`` will intersect other
     objects to ensure that the path between its two ends (its attachments) is
     the shortest possible.
+
+    A linear pathway is made up of two points that can move relative to each
+    other and a pair of equal and opposite forces acting on the points. If the
+    positive time varying Euclidean distance between the two points is defined,
+    then the "extension velocity" is the time derivative of this distance and
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
 
     Examples
     ========
