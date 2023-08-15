@@ -518,7 +518,7 @@ class LRASolver():
                     conflict |= {Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
-                    conflict = set(-self.boundry_rev_enc[c] for c in conflict)
+                    conflict = {-self.boundry_rev_enc[c] for c in conflict}
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -542,7 +542,7 @@ class LRASolver():
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
 
-                    conflict = set(-self.boundry_rev_enc[c] for c in conflict)
+                    conflict = {-self.boundry_rev_enc[c] for c in conflict}
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
