@@ -30,7 +30,6 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
     constraints = []
     for _ in range(num_constraints):
         lhs, rhs = sum(rand() * x for x in variables), rand(sparsity=0) # sparsity=0  bc of bug with smtlib_code
-        r = random()
         options = []
         if not disable_equality:
             options += [Eq(lhs, rhs)]
