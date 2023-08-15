@@ -15,8 +15,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
-from sympy.physics.mechanics import Force, Point
-from sympy.physics.mechanics._geometry import GeometryBase
+from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
 from sympy.physics.vector import dynamicsymbols
 
 if TYPE_CHECKING:
@@ -299,29 +298,21 @@ class WrappingPathway(PathwayBase):
 
     >>> from sympy.physics.mechanics._pathway import WrappingPathway
 
-    To construct a wrapping pathway, a geometry object, which the pathway can
-    wrap, is required. Similar to above, the ``_geometry.py`` module is also
-    experimental so geometry classes needed to be imported directly from the
-    ``sympy.physics.mechanics._geometry.py`` module. Let's create a wrapping
-    pathway that wraps around a cylinder. To do this we need to import the
-    ``Cylinder`` class.
-
-    >>> from sympy.physics.mechanics._geometry import Cylinder
-
     To construct a wrapping pathway, like other pathways, a pair of points must
-    be passed, followed by an instance of a geometry class as a keyword
-    argument. We'll use a cylinder with radius ``r`` and its axis parallel to
-    ``N.x`` passing through a point ``pO``.
+    be passed, followed by an instance of a wrapping geometry class as a
+    keyword argument. We'll use a cylinder with radius ``r`` and its axis
+    parallel to ``N.x`` passing through a point ``pO``.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
+    ...     WrappingCylinder)
     >>> r = Symbol('r')
     >>> N = ReferenceFrame('N')
     >>> pA, pB, pO = Point('pA'), Point('pB'), Point('pO')
-    >>> cylinder = Cylinder(r, pO, N.x)
+    >>> cylinder = WrappingCylinder(r, pO, N.x)
     >>> wrapping_pathway = WrappingPathway(pA, pB, cylinder)
     >>> wrapping_pathway
-    WrappingPathway(pA, pB, geometry=Cylinder(radius=r, point=pO,
+    WrappingPathway(pA, pB, geometry=WrappingCylinder(radius=r, point=pO,
         axis=N.x))
 
     Parameters
@@ -333,7 +324,7 @@ class WrappingPathway(PathwayBase):
     attachment_2 : Point
         The second of the pair of ``Point`` objects between which the wrapping
         pathway spans.
-    geometry : GeometryBase
+    geometry : WrappingGeometryBase
         The geometry about which the pathway wraps.
 
     """
@@ -342,7 +333,7 @@ class WrappingPathway(PathwayBase):
         self,
         attachment_1: Point,
         attachment_2: Point,
-        geometry: GeometryBase,
+        geometry: WrappingGeometryBase,
     ) -> None:
         """Initializer for ``WrappingPathway``.
 
@@ -355,7 +346,7 @@ class WrappingPathway(PathwayBase):
         attachment_2 : Point
             The second of the pair of ``Point`` objects between which the
             wrapping pathway spans.
-        geometry : GeometryBase
+        geometry : WrappingGeometryBase
             The geometry about which the pathway wraps.
 
         """
@@ -363,22 +354,22 @@ class WrappingPathway(PathwayBase):
         self.geometry = geometry
 
     @property
-    def geometry(self) -> GeometryBase:
+    def geometry(self) -> WrappingGeometryBase:
         """The geometry around which the pathway wraps."""
         return self._geometry
 
     @geometry.setter
-    def geometry(self, geometry: GeometryBase) -> None:
+    def geometry(self, geometry: WrappingGeometryBase) -> None:
         if hasattr(self, '_geometry'):
             msg = (
                 f'Can\'t set attribute `geometry` to {repr(geometry)} as it '
                 f'is immutable.'
             )
             raise AttributeError(msg)
-        if not isinstance(geometry, GeometryBase):
+        if not isinstance(geometry, WrappingGeometryBase):
             msg = (
                 f'Value {repr(geometry)} passed to `geometry` was of type '
-                f'{type(geometry)}, must be {GeometryBase}.'
+                f'{type(geometry)}, must be {WrappingGeometryBase}.'
             )
             raise TypeError(msg)
         self._geometry = geometry
@@ -418,12 +409,12 @@ class WrappingPathway(PathwayBase):
         passes through a point ``pO``.
 
         >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._geometry import Cylinder
+        >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
+        ...     WrappingCylinder)
         >>> N = ReferenceFrame('N')
         >>> r = Symbol('r', positive=True)
         >>> pO = Point('pO')
-        >>> cylinder = Cylinder(r, pO, N.z)
+        >>> cylinder = WrappingCylinder(r, pO, N.z)
 
         Create the pathway of the actuator using the ``WrappingPathway`` class,
         defined to span between two points ``pA`` and ``pB``. Both points lie
@@ -463,7 +454,7 @@ class WrappingPathway(PathwayBase):
         """
         pA, pB = self.attachments
         pO = self.geometry.point
-        pA_force, pB_force = self.geometry._geodesic_end_vectors(pA, pB)
+        pA_force, pB_force = self.geometry.geodesic_end_vectors(pA, pB)
         pO_force = -(pA_force + pB_force)
 
         loads: list[LoadBase] = [
