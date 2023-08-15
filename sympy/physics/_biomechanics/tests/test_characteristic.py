@@ -607,3 +607,13 @@ class TestFiberForceLengthPassiveDeGroote2016:
             0.5043387669,
         ])
         numpy.testing.assert_allclose(fl_M_pas_callable(l_M_tilde), expected)
+
+
+class TestFiberForceLengthPassiveInverseDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _fiber_force_length_passive_arguments_fixture(self):
+        self.l_M_tilde = Symbol('l_M_tilde')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.constants = (self.c0, self.c1)
