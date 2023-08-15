@@ -486,4 +486,30 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
-    pass
+    r"""Passive muscle fiber force-length curve based on De Groote et al., 2016
+    [1].
+
+    Explanation
+    ===========
+
+    The function is defined by the equation:
+
+    $fl^M_{pas} = \frac{\frac{\exp{c_1 \left(\tilde{l^M} - 1\right)}}{c_0} - 1}{\exp{c_1} - 1}$
+
+    with constant values of $c_0 = 0.6$ and $c_1 = 4.0$.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    passive fiber force very close to 0 for all normalized fiber lengths
+    between 0 and 1.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
