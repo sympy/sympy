@@ -236,6 +236,8 @@ def test_random_problems():
         # constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
         #                                  disable_nonstrict=False, disable_equality=False)
 
+        #constraints = [-3*x2 >= 7, 6*x1 <= -5, -3*x2 <= -4]
+
         if False in constraints or True in constraints:
             continue
 
@@ -257,7 +259,7 @@ def test_random_problems():
         bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
 
         for b, l in bounds:
-            if lra.result and lra.result[0] == "UNSAT":
+            if lra.result and lra.result[0] == False:
                 print("Constraints are unsatisfiable")
                 break
             print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
@@ -266,7 +268,7 @@ def test_random_problems():
 
         feasible = lra.check()
         print(feasible)
-        if feasible[0] == "SAT":
+        if feasible[0] == True:
             feasible_count += 1
             assert check_if_satisfiable_with_z3(constraints) is True
             cons_funcs = [cons.func for cons in constraints]

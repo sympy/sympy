@@ -345,14 +345,10 @@ class LRASolver():
 
         if boundry.equality:
             res1 = self._assert_lower(sym, c,from_equality=True)
-            if res1[0] == "UNSAT":
+            if res1 and res1[0] == False:
                 return res1
             res2 = self._assert_upper(sym, c,from_equality=True)
-            if res1[0] == "UNSAT":
-                return res2
-            if "OK" in [res1[0], res2[0]]:
-                return "OK"
-            return res2 # SAT
+            return res2
         elif boundry.upper:
             return self._assert_upper(sym, c)
         else:
@@ -360,10 +356,10 @@ class LRASolver():
 
     def _assert_upper(self, xi, ci, from_equality=False):
         if self.result:
-            assert self.result[0] != "UNSAT"
+            assert self.result[0] != False
         self.result = None
         if ci >= self.upper[xi]:
-            return "OK", None
+            return None
         if ci < self.lower[xi]:
             assert (self.lower[xi][1] >= 0) is True
             assert (ci[1] <= 0) is True
@@ -374,7 +370,7 @@ class LRASolver():
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
 
             conflict = {-self.boundry_rev_enc[lit1], -self.boundry_rev_enc[lit2]}
-            self.result = "UNSAT", conflict
+            self.result = False, conflict
             assert lit1 in self.boundry_rev_enc
             assert lit2 in self.boundry_rev_enc
             return self.result
@@ -383,14 +379,14 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
-        return "OK", None
+        return None
 
     def _assert_lower(self, xi, ci, from_equality=False):
         if self.result:
-            assert self.result[0] != "UNSAT"
+            assert self.result[0] != False
         self.result = None
         if ci <= self.lower[xi]:
-            return "OK", None
+            return None
         if ci > self.upper[xi]:
             assert (self.upper[xi][1] <= 0) is True
             assert (ci[1] >= 0) is True
@@ -400,14 +396,14 @@ class LRASolver():
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
 
             conflict = {-self.boundry_rev_enc[lit1],-self.boundry_rev_enc[lit2]}
-            self.result = "UNSAT", conflict
+            self.result = False, conflict
             return self.result
         self.lower[xi] = ci
         self.low_origin[xi] = from_equality
         if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
 
-        return "OK", None
+        return None
 
     def _update(self, xi, v):
         i = self.col_index[xi]
@@ -506,7 +502,7 @@ class LRASolver():
              or self.assign[b] > self.upper[b]]
 
             if len(cand) == 0:
-                return "SAT", self.assign
+                return True, self.assign
 
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland's rule better
             i = basic[xi]
@@ -528,7 +524,7 @@ class LRASolver():
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
                     conflict = set(-self.boundry_rev_enc[c] for c in conflict)
-                    return "UNSAT", conflict
+                    return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
@@ -552,7 +548,7 @@ class LRASolver():
                     conflict.add(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
 
                     conflict = set(-self.boundry_rev_enc[c] for c in conflict)
-                    return "UNSAT", conflict
+                    return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
