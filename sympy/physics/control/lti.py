@@ -262,12 +262,12 @@ def phase_margin(system):
     repl = I*_w
     expr = system.to_expr()
     len_free_symbols = len(expr.free_symbols)
-    if len_free_symbols > 1:
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
         raise ValueError("Extra degree of freedom found. Make sure"
             " that there are no free symbols in the dynamical system other"
             " than the variable of Laplace transform.")
-    if expr.has(exp):
-        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
 
     w_expr = expr.subs({system.var: repl})
 
@@ -337,12 +337,12 @@ def gain_margin(system):
     repl = I*_w
     expr = system.to_expr()
     len_free_symbols = len(expr.free_symbols)
-    if len_free_symbols > 1:
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
         raise ValueError("Extra degree of freedom found. Make sure"
             " that there are no free symbols in the dynamical system other"
             " than the variable of Laplace transform.")
-    if expr.has(exp):
-        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
 
     w_expr = expr.subs({system.var: repl})
 
