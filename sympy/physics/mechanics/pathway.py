@@ -20,10 +20,7 @@ class PathwayBase(ABC):
 
     """
 
-    def __init__(
-        self,
-        *attachments: Point,
-    ):
+    def __init__(self, *attachments):
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
