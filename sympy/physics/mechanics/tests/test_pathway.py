@@ -1,7 +1,5 @@
 """Tests for the ``sympy.physics.mechanics.pathway.py`` module."""
 
-from __future__ import annotations
-
 import pytest
 
 from sympy.core.backend import (
@@ -64,9 +62,7 @@ class TestLinearPathway:
             (Point('pA'), Point('pB'), Point('pZ')),
         ]
     )
-    def test_invalid_attachments_incorrect_number(
-        attachments,
-    ):
+    def test_invalid_attachments_incorrect_number(attachments):
         with pytest.raises(ValueError):
             _ = LinearPathway(*attachments)
 
@@ -226,10 +222,7 @@ class TestWrappingPathway:
             (Point('pA'), Point('pB'), Point('pZ')),
         ]
     )
-    def test_invalid_constructor_attachments_incorrect_number(
-        self,
-        attachments,
-    ):
+    def test_invalid_constructor_attachments_incorrect_number(self, attachments):
         with pytest.raises(TypeError):
             _ = WrappingPathway(*attachments, self.cylinder)
 
@@ -241,9 +234,7 @@ class TestWrappingPathway:
             (Point('pA'), None),
         ]
     )
-    def test_invalid_constructor_attachments_not_point(
-        attachments,
-    ):
+    def test_invalid_constructor_attachments_not_point(attachments):
         with pytest.raises(TypeError):
             _ = WrappingPathway(*attachments)
 
@@ -260,10 +251,7 @@ class TestWrappingPathway:
             ReferenceFrame('N').x,
         ]
     )
-    def test_invalid_geometry_not_geometry(
-        self,
-        geometry,
-    ):
+    def test_invalid_geometry_not_geometry(self, geometry):
         with pytest.raises(TypeError):
             _ = WrappingPathway(self.pA, self.pB, geometry)
 
@@ -289,29 +277,24 @@ class TestWrappingPathway:
         return sum(mag*unit for (mag, unit) in zip(pos, frame))
 
     @pytest.mark.parametrize(
-        'pA_vec, pB_vec, expected_factor',
+        'pA_vec, pB_vec, factor',
         [
             ((1, 0, 0), (0, 1, 0), pi/2),
             ((0, 1, 0), (sqrt(2)/2, -sqrt(2)/2, 0), 3*pi/4),
             ((1, 0, 0), (Rational(1, 2), sqrt(3)/2, 0), pi/3),
         ]
     )
-    def test_static_pathway_on_sphere_length(
-        self,
-        pA_vec,
-        pB_vec,
-        expected_factor,
-    ):
+    def test_static_pathway_on_sphere_length(self, pA_vec, pB_vec, factor):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
         self.pB.set_pos(self.pO, self.r*pB_vec)
         pathway = WrappingPathway(self.pA, self.pB, self.sphere)
-        expected = expected_factor*self.r
+        expected = factor*self.r
         assert simplify(pathway.length - expected) == 0
 
     @pytest.mark.parametrize(
-        'pA_vec, pB_vec, expected_factor',
+        'pA_vec, pB_vec, factor',
         [
             ((1, 0, 0), (0, 1, 0), Rational(1, 2)*pi),
             ((1, 0, 0), (-1, 0, 0), pi),
@@ -330,18 +313,13 @@ class TestWrappingPathway:
             ),
         ]
     )
-    def test_static_pathway_on_cylinder_length(
-        self,
-        pA_vec,
-        pB_vec,
-        expected_factor,
-    ):
+    def test_static_pathway_on_cylinder_length(self, pA_vec, pB_vec, factor):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
         self.pB.set_pos(self.pO, self.r*pB_vec)
         pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
-        expected = expected_factor*sqrt(self.r**2)
+        expected = factor*sqrt(self.r**2)
         assert simplify(pathway.length - expected) == 0
 
     @pytest.mark.parametrize(
@@ -352,11 +330,7 @@ class TestWrappingPathway:
             ((1, 0, 0), (Rational(1, 2), sqrt(3)*Rational(1, 2), 0)),
         ]
     )
-    def test_static_pathway_on_sphere_extension_velocity(
-        self,
-        pA_vec,
-        pB_vec,
-    ):
+    def test_static_pathway_on_sphere_extension_velocity(self, pA_vec, pB_vec):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -376,11 +350,7 @@ class TestWrappingPathway:
             ((1, 0, 0), (Rational(1, 2), sqrt(3)/2, 1)),
         ]
     )
-    def test_static_pathway_on_cylinder_extension_velocity(
-        self,
-        pA_vec,
-        pB_vec,
-    ):
+    def test_static_pathway_on_cylinder_extension_velocity(self, pA_vec, pB_vec):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
