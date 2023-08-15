@@ -209,7 +209,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
         """
         pass
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf(self, prec: int) -> float:
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
@@ -391,7 +391,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
         """
         pass
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf(self, prec: int) -> float:
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
 
