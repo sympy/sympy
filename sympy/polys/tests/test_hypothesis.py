@@ -5,14 +5,16 @@ from sympy.polys.polytools import Poly
 
 
 @st.composite
-def coeffecients(draw: st.DrawFn, set_type: str):
+def coeffecients(draw: st.DrawFn, set_type: str, empty=True):
     l = (
         draw(st.lists(st.integers()))
         if set_type == "ZZ"
         else draw(st.lists(st.floats()))
     )
-    assume(any(l))
+    if not empty:
+        assume(len(l) > 0)
     if len(l) > 0:
+        assume(any(l))
         assume(l[0] != 0)
     return l
 
@@ -40,7 +42,7 @@ def test_gcd(coefficients1, coefficients2, coefficients3):
 
 @given(
     coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ", empty=False),
 )
 def test_division(coefficients1, coefficients2):
     # Integer case
@@ -82,7 +84,7 @@ def test_addition(coefficients1, coefficients2):
 
 @given(
     coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ"),
+    coefficients2=coeffecients(set_type="ZZ", empty=False),
 )
 def test_lcm(coefficients1, coefficients2):
     f = Poly(coefficients1, x, domain="ZZ")
