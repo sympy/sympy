@@ -124,7 +124,6 @@ class Boundry:
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
-
 class LRASolver():
     """
     Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
@@ -601,6 +600,6 @@ class LRASolver():
         A[i, :] = -A[i, :]/Mij
         for row in range(M.shape[0]):
             if row != i:
-                A[row, :] = A[row, :] + A[row, j] *A[i, :]
+                A[row, :] = A[row, :] + A[row, j] * A[i, :]
 
         return A
