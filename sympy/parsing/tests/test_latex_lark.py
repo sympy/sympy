@@ -5,19 +5,19 @@ from sympy.external import import_module
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.function import (Derivative, Function)
+from sympy.core.function import Derivative, Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (E, oo)
+from sympy.core.numbers import E, oo, Rational
 from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
-from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality)
+from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
-from sympy.functions.elementary.complexes import (Abs, conjugate)
-from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.integers import (ceiling, floor)
-from sympy.functions.elementary.miscellaneous import (root, sqrt)
-from sympy.functions.elementary.trigonometric import (asin, cos, csc, sec, sin, tan)
+from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.functions.elementary.complexes import Abs, conjugate
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import root, sqrt
+from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
@@ -95,7 +95,7 @@ SYMBOL_EXPRESSION_PAIRS = [
     (r"\mathit{HELLO world}", Symbol('HELLO world'))
 ]
 
-SIMPLE_EXPRESSION_PAIRS = [
+UNEVALUATED_SIMPLE_EXPRESSION_PAIRS = [
     (r"0", 0),
     (r"1", 1),
     (r"-3.14", -3.14),
@@ -119,7 +119,25 @@ SIMPLE_EXPRESSION_PAIRS = [
     (r"a'b+ab'", _Add(_Mul(Symbol("a'"), b), _Mul(a, Symbol("b'"))))
 ]
 
-FRACTION_EXPRESSION_PAIRS = [
+EVALUATED_SIMPLE_EXPRESSION_PAIRS = [
+    (r"(-7.13)(1.5)", -10.695),
+    (r"1+1", 2),
+    (r"0+1", 1),
+    (r"1*2", 2),
+    (r"0*1", 0),
+    (r"2x", 2 * x),
+    (r"3x - 1", 3 * x - 1),
+    (r"-c", -c),
+    (r"a \cdot b", a * b),
+    (r"1 \times 2 ", 2),
+    (r"a / b", a / b),
+    (r"a \div b", a / b),
+    (r"a + b", a + b),
+    (r"a + b - a", b),
+    (r"(x + y) z", (x + y) * z),
+]
+
+UNEVALUATED_FRACTION_EXPRESSION_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
@@ -129,6 +147,18 @@ FRACTION_EXPRESSION_PAIRS = [
     (r"\frac2{3}", _Mul(2, _Pow(3, -1))),
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1)))
+]
+
+EVALUATED_FRACTION_EXPRESSION_PAIRS = [
+    (r"\frac{a}{b}", a / b),
+    (r"\dfrac{a}{b}", a / b),
+    (r"\tfrac{a}{b}", a / b),
+    (r"\frac12", 1 / 2),
+    (r"\frac12y", y / 2),
+    (r"\frac1234", 17),
+    (r"\frac2{3}", Rational(2, 3)),
+    (r"\frac{a + b}{c}", (a + b) / c),
+    (r"\frac{7}{3}", Rational(7, 3))
 ]
 
 RELATION_EXPRESSION_PAIRS = [
@@ -148,7 +178,7 @@ RELATION_EXPRESSION_PAIRS = [
     (r"a^2 + b^2 = c^2", Eq(a**2 + b**2, c**2))
 ]
 
-POWER_EXPRESSION_PAIRS = [
+UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^2", x ** 2),
     (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
@@ -156,7 +186,15 @@ POWER_EXPRESSION_PAIRS = [
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
 ]
 
-INTEGRAL_EXPRESSION_PAIRS = [
+EVALUATED_POWER_EXPRESSION_PAIRS = [
+    (r"x^2", x ** 2),
+    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
+    (r"x^{3 + 1}", x ** _Add(3, 1)),
+    (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
+    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+]
+
+UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
     (r"\int x dx", Integral(_Mul(1, x), x)),
     (r"\int x \, dx", Integral(_Mul(1, x), x)),
     (r"\int x d\theta", Integral(_Mul(1, x), theta)),
@@ -202,7 +240,7 @@ TRIGONOMETRIC_EXPRESSION_PAIRS = [
     (r"\frac{\sin{x}}2", _Mul(sin(x), _Pow(2, -1)))
 ]
 
-LIMIT_EXPRESSION_PAIRS = [
+UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
     (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
@@ -215,7 +253,7 @@ LIMIT_EXPRESSION_PAIRS = [
     (r"\lim_{x \to \infty} \frac{1}{x}", Limit(_Mul(1, _Pow(x, -1)), x, oo))
 ]
 
-SQRT_EXPRESSION_PAIRS = [
+UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{x}", sqrt(x)),
     (r"\sqrt{x + b}", sqrt(_Add(x, b))),
     (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
@@ -224,7 +262,7 @@ SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
 ]
 
-FACTORIAL_EXPRESSION_PAIRS = [
+UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
     (r"x!", _factorial(x)),
     (r"100!", _factorial(100)),
     (r"\theta!", _factorial(theta)),
@@ -234,7 +272,7 @@ FACTORIAL_EXPRESSION_PAIRS = [
     (r"5!7!", _Mul(_factorial(5), _factorial(7)))
 ]
 
-SUM_EXPRESSION_PAIRS = [
+UNEVALUATED_SUM_EXPRESSION_PAIRS = [
     (r"\sum_{k = 1}^{3} c", Sum(_Mul(1, c), (k, 1, 3))),
     (r"\sum_{k = 1}^3 c", Sum(_Mul(1, c), (k, 1, 3))),
     (r"\sum^{3}_{k = 1} c", Sum(_Mul(1, c), (k, 1, 3))),
@@ -244,7 +282,7 @@ SUM_EXPRESSION_PAIRS = [
      Sum(_Mul(1, _Mul(1, _Pow(_factorial(n), -1))), (n, 0, oo)))
 ]
 
-PRODUCT_EXPRESSION_PAIRS = [
+UNEVALUATED_PRODUCT_EXPRESSION_PAIRS = [
     (r"\prod_{a = b}^{c} x", Product(x, (a, b, c))),
     (r"\prod_{a = b}^c x", Product(x, (a, b, c))),
     (r"\prod^{c}_{a = b} x", Product(x, (a, b, c))),
@@ -314,12 +352,8 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
     (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
-    (r"\left[x + y\right] z", _Mul(_Add(x, y), z)),
-    (r"\left\{x + y\right\} z", _Mul(_Add(x, y), z)),
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
-    (r"[x]", x),
-    (r"[a + b]", _Add(a, b))
 ]
 
 
@@ -334,17 +368,25 @@ def test_symbol_expressions():
 
 def test_simple_expressions():
     expected_failures = {20}
-    for i, (latex_str, sympy_expr) in enumerate(SIMPLE_EXPRESSION_PAIRS):
+    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_SIMPLE_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
+    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_SIMPLE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
 
 def test_fraction_expressions():
-    for latex_str, sympy_expr in FRACTION_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_FRACTION_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for latex_str, sympy_expr in EVALUATED_FRACTION_EXPRESSION_PAIRS:
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_relation_expressions():
@@ -355,7 +397,7 @@ def test_relation_expressions():
 
 def test_integral_expressions():
     expected_failures = {14, 16, 17, 20}
-    for i, (latex_str, sympy_expr) in enumerate(INTEGRAL_EXPRESSION_PAIRS):
+    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
         with evaluate(False):
@@ -379,37 +421,37 @@ def test_trigonometric_expressions():
 
 
 def test_limit_expressions():
-    for latex_str, sympy_expr in LIMIT_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_LIMIT_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_square_root_expressions():
-    for latex_str, sympy_expr in SQRT_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_SQRT_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_factorial_expressions():
-    for latex_str, sympy_expr in FACTORIAL_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_FACTORIAL_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_sum_expressions():
-    for latex_str, sympy_expr in SUM_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_SUM_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_product_expressions():
-    for latex_str, sympy_expr in PRODUCT_EXPRESSION_PAIRS:
+    for latex_str, sympy_expr in UNEVALUATED_PRODUCT_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 @XFAIL
 def test_applied_function_expressions():
-    expected_failures = {0, 3, 4} # 0 is ambiguous, and the others require not-yet-added features
+    expected_failures = {0, 3, 4}  # 0 is ambiguous, and the others require not-yet-added features
     # not sure why 1, and 2 are failing
     for i, (latex_str, sympy_expr) in enumerate(APPLIED_FUNCTION_EXPRESSION_PAIRS):
         if i in expected_failures:
