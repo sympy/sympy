@@ -3,22 +3,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point
 from sympy.physics.mechanics.wrapping_geometry import GeometryBase
 from sympy.physics.vector import dynamicsymbols
-
-if TYPE_CHECKING:
-    from sympy.core.backend import USE_SYMENGINE
-    from sympy.physics.mechanics.loads import LoadBase
-
-    if USE_SYMENGINE:
-        from sympy.core.backend import Basic as ExprType
-    else:
-        from sympy.core.expr import Expr as ExprType
-
 
 __all__ = ['PathwayBase', 'LinearPathway', 'WrappingPathway']
 
@@ -55,17 +44,17 @@ class PathwayBase(ABC):
     def __init__(
         self,
         *attachments: Point,
-    ) -> None:
+    ):
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
     @property
-    def attachments(self) -> tuple[Point, ...]:
+    def attachments(self):
         """The pair of points defining a pathway's ends."""
         return self._attachments
 
     @attachments.setter
-    def attachments(self, attachments: tuple[Point, ...]) -> None:
+    def attachments(self, attachments):
         if hasattr(self, '_attachments'):
             msg = (
                 f'Can\'t set attribute `attachments` to {repr(attachments)} '
@@ -90,18 +79,18 @@ class PathwayBase(ABC):
 
     @property
     @abstractmethod
-    def length(self) -> ExprType:
+    def length(self):
         """An expression representing the pathway's length."""
         pass
 
     @property
     @abstractmethod
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """An expression representing the pathway's extension velocity."""
         pass
 
     @abstractmethod
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -119,7 +108,7 @@ class PathwayBase(ABC):
         """
         pass
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Default representation of a pathway."""
         attachments = ', '.join(str(a) for a in self.attachments)
         return f'{self.__class__.__name__}({attachments})'
@@ -187,10 +176,7 @@ class LinearPathway(PathwayBase):
 
     """
 
-    def __init__(
-        self,
-        *attachments: Point,
-    ) -> None:
+    def __init__(self, *attachments):
         """Initializer for ``LinearPathway``.
 
         Parameters
@@ -203,18 +189,18 @@ class LinearPathway(PathwayBase):
         super().__init__(*attachments)
 
     @property
-    def length(self) -> ExprType:
+    def length(self):
         """Exact analytical expression for the pathway's length."""
         length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
         return length
 
     @property
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
         if not relative_position:
             return S.Zero
-        t = dynamicsymbols._t  # type: ignore
+        t = dynamicsymbols._t
         # A reference frame is needed to differentiate ``relative_position`` to
         # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
         # ``relative_position`` is defined using.
@@ -223,7 +209,7 @@ class LinearPathway(PathwayBase):
         extension_velocity = relative_velocity.dot(relative_position.normalize())
         return extension_velocity
 
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -274,7 +260,7 @@ class LinearPathway(PathwayBase):
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        loads: list[LoadBase] = [
+        loads = [
             Force(self.attachments[0], -force*relative_position/self.length),
             Force(self.attachments[-1], force*relative_position/self.length),
         ]
@@ -335,12 +321,7 @@ class WrappingPathway(PathwayBase):
 
     """
 
-    def __init__(
-        self,
-        attachment_1: Point,
-        attachment_2: Point,
-        geometry: GeometryBase,
-    ) -> None:
+    def __init__(self, attachment_1, attachment_2, geometry):
         """Initializer for ``WrappingPathway``.
 
         Parameters
@@ -360,12 +341,12 @@ class WrappingPathway(PathwayBase):
         self.geometry = geometry
 
     @property
-    def geometry(self) -> GeometryBase:
+    def geometry(self):
         """Geometry around which the pathway wraps."""
         return self._geometry
 
     @geometry.setter
-    def geometry(self, geometry: GeometryBase) -> None:
+    def geometry(self, geometry):
         if hasattr(self, '_geometry'):
             msg = (
                 f'Can\'t set attribute `geometry` to {repr(geometry)} as it '
@@ -381,16 +362,16 @@ class WrappingPathway(PathwayBase):
         self._geometry = geometry
 
     @property
-    def length(self) -> ExprType:
+    def length(self):
         """Exact analytical expression for the pathway's length."""
         return self.geometry.geodesic_length(*self.attachments)
 
     @property
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
-        return self.length.diff(dynamicsymbols._t)  # type: ignore
+        return self.length.diff(dynamicsymbols._t)
 
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -463,14 +444,14 @@ class WrappingPathway(PathwayBase):
         pA_force, pB_force = self.geometry._geodesic_end_vectors(pA, pB)
         pO_force = -(pA_force + pB_force)
 
-        loads: list[LoadBase] = [
+        loads = [
             Force(pA, force * pA_force),
             Force(pB, force * pB_force),
             Force(pO, force * pO_force),
         ]
         return loads
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``WrappingPathway``."""
         attachments = ', '.join(str(a) for a in self.attachments)
         return (
