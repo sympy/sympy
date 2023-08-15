@@ -260,8 +260,7 @@ class ForceActuator(ActuatorBase):
         the ``to_loads`` method.
 
         >>> damper.to_loads()
-        [(pA, c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x),
-         (pB, - c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x)]
+        [(pA, c*Derivative(q(t), t)*N.x), (pB, - c*Derivative(q(t), t)*N.x)]
 
         """
         return self.pathway.compute_loads(self.force)
@@ -498,7 +497,7 @@ class LinearDamper(ForceActuator):
     direction of length change.
 
     >>> damper.force
-    -c*q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    -c*sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========
