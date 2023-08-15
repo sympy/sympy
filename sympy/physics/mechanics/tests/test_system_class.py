@@ -19,7 +19,7 @@ u = dynamicsymbols('u:6')  # type: ignore
 class TestSystemBase:
     @pytest.fixture()
     def _empty_system_setup(self):
-        self.system = System(Point('origin'), ReferenceFrame('frame'))
+        self.system = System(ReferenceFrame('frame'), Point('origin'))
 
     def _empty_system_check(self, exclude=()):
         matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'kdes',
@@ -35,7 +35,7 @@ class TestSystemBase:
             assert self.system.eom_method is None
 
     def _create_filled_system(self, with_speeds=True):
-        self.system = System(Point('origin'), ReferenceFrame('frame'))
+        self.system = System(ReferenceFrame('frame'), Point('origin'))
         u = dynamicsymbols('u:6') if with_speeds else qd
         self.bodies = symbols('rb1:5', cls=RigidBody)
         self.joints = (
@@ -110,7 +110,7 @@ class TestSystem(TestSystemBase):
         if origin is None and frame is None:
             self.system = System()
         else:
-            self.system = System(origin, frame)
+            self.system = System(frame, origin)
         if origin is None:
             assert self.system.origin.name == 'inertial_origin'
         else:
