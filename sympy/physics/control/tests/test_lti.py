@@ -1325,8 +1325,8 @@ def test_TransferFunction_phase_margin():
     assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
     assert phase_margin(tf2) == 0
 
-    raises(ValueError, lambda: phase_margin(tf3))
     raises(NotImplementedError, lambda: phase_margin(tf4))
+    raises(ValueError, lambda: phase_margin(tf3))
     raises(ValueError, lambda: phase_margin(MIMOSeries(tf_m)))
 
 def test_TransferFunction_gain_margin():
@@ -1340,6 +1340,6 @@ def test_TransferFunction_gain_margin():
     assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
     assert gain_margin(tf2) == oo
 
-    raises(ValueError, lambda: gain_margin(tf3))
     raises(NotImplementedError, lambda: gain_margin(tf4))
+    raises(ValueError, lambda: gain_margin(tf3))
     raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))
