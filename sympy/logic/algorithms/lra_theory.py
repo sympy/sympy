@@ -418,6 +418,21 @@ class LRASolver():
         """
         Searches for an assignment for all variables that satisfies all their
         upper bounds or determines that such an assignment does not exist.
+
+        Returns
+        =======
+
+        (True, assignment) or (False, explanation)
+
+        assignment : dict of _xi and _si variables to assigned value
+            Assigned values are tuples that represent a rational number
+            plus some infinatesimal delta. (Delta is needed so that strict
+            inequalities can be handled).
+
+        explanation : set of ints
+            Integers are negative and represent negations of some
+            AppliedBinaryRelation. Which relation a given int
+            encodes can be found in `self.boundry_enc`.
         """
         if self.result:
             return self.result
