@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
-from sympy.core.numbers import Float, Integer
+from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
 
 if TYPE_CHECKING:
@@ -513,3 +513,30 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def with_default_constants(cls, l_M_tilde: Any) -> FiberForceLengthPassiveDeGroote2016:
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the muscle fiber passive force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c_0 = 0.6$
+        $c_1 = 4.0$
+
+        Parameters
+        ==========
+
+        l_M_tilde : Any (sympifiable)
+            Normalized muscle fiber length.
+
+        """
+        c0 = Rational(3, 5)
+        c1 = Integer(4)
+        return cls(l_M_tilde, c0, c1)
