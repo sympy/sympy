@@ -572,3 +572,40 @@ class TestFiberForceLengthPassiveDeGroote2016:
         fl_M_pas_dl_M_tilde = fl_M_pas.diff(self.l_M_tilde)
         expected = '4*math.exp((20/3)*(l_M_tilde - 1))/(-3/5 + (3/5)*math.exp(4))'
         assert PythonCodePrinter().doprint(fl_M_pas_dl_M_tilde) == expected
+
+    def test_lambdify(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas_callable = lambdify(self.l_M_tilde, fl_M_pas)
+        assert fl_M_pas_callable(1.0) == pytest.approx(0.0)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas_callable = lambdify(self.l_M_tilde, fl_M_pas, 'numpy')
+        l_M_tilde = numpy.array([0.5, 0.8, 0.9, 1.0, 1.1, 1.2, 1.5])
+        expected = numpy.array([
+            -0.0179917778,
+            -0.0137393336,
+            -0.0090783522,
+            0.0,
+            0.0176822155,
+            0.0521224686,
+            0.5043387669,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_callable(l_M_tilde), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas_callable = jax.jit(lambdify(self.l_M_tilde, fl_M_pas, 'jax'))
+        l_M_tilde = jax.numpy.array([0.5, 0.8, 0.9, 1.0, 1.1, 1.2, 1.5])
+        expected = jax.numpy.array([
+            -0.0179917778,
+            -0.0137393336,
+            -0.0090783522,
+            0.0,
+            0.0176822155,
+            0.0521224686,
+            0.5043387669,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_callable(l_M_tilde), expected)
