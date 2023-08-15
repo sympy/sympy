@@ -7,6 +7,7 @@ musculoskeletal models involding musculotendons and activation dynamics.
 """
 
 from .characteristic import (
+   FiberForceLengthPassiveDeGroote2016,
    TendonForceLengthDeGroote2016,
    TendonForceLengthInverseDeGroote2016,
 )
@@ -14,6 +15,7 @@ from .characteristic import (
 
 __all__ = [
    # Musculotendon characteristic curve functions
+   'FiberForceLengthPassiveDeGroote2016',
    'TendonForceLengthDeGroote2016',
    'TendonForceLengthInverseDeGroote2016',
 ]

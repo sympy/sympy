@@ -3378,6 +3378,12 @@ def test_sympy__physics___biomechanics__characteristic__TendonForceLengthInverse
     assert _test_args(TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3))
 
 
+def test_sympy__physics___biomechanics__characteristic__FiberForceLengthPassiveDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+    l_M_tilde, c0, c1 = symbols('l_M_tilde, c0, c1')
+    assert _test_args(FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1))
+
+
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
     assert _test_args(Pauli(1))
