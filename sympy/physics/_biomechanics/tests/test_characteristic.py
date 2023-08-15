@@ -496,3 +496,79 @@ class TestFiberForceLengthPassiveDeGroote2016:
         fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = r'\frac{e^{\frac{c_{1} \left(l_{M tilde} - 1\right)}{c_{0}}} - 1}{e^{c_{1}} - 1}'
         assert LatexPrinter().doprint(fl_M_pas.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '(-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4))',
+            ),
+            (
+                C99CodePrinter,
+                '(-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4))',
+            ),
+            (
+                C11CodePrinter,
+                '(-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4))',
+            ),
+            (
+                CXX98CodePrinter,
+                '(-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4))',
+            ),
+            (
+                CXX11CodePrinter,
+                '(-1 + std::exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + std::exp(4))',
+            ),
+            (
+                CXX17CodePrinter,
+                '(-1 + std::exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + std::exp(4))',
+            ),
+            (
+                FCodePrinter,
+                '      (-1 + exp(6.6666666666666667d0*(l_M_tilde - 1)))/(-1 +\n'
+                '      @ 54.598150033144239d0)',
+            ),
+            (
+                OctaveCodePrinter,
+                '(-1 + exp(20*(l_M_tilde - 1)/3))/(-1 + exp(4))',
+            ),
+            (
+                PythonCodePrinter,
+                '(-1 + math.exp((20/3)*(l_M_tilde - 1)))/(-1 + math.exp(4))',
+            ),
+            (
+                NumPyPrinter,
+                '(-1 + numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + numpy.exp(4))',
+            ),
+            (
+                SciPyPrinter,
+                '(-1 + numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + numpy.exp(4))',
+            ),
+            (
+                CuPyPrinter,
+                '(-1 + cupy.exp((20/3)*(l_M_tilde - 1)))/(-1 + cupy.exp(4))',
+            ),
+            (
+                JaxPrinter,
+                '(-1 + jax.numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + jax.numpy.exp(4))',
+            ),
+            (
+                MpmathPrinter,
+                '(-1 + mpmath.exp((mpmath.mpf(20)/mpmath.mpf(3))*(l_M_tilde - 1)))/(-1 + mpmath.exp(4))',
+            ),
+            (
+                LambdaPrinter,
+                '(-1 + math.exp((20/3)*(l_M_tilde - 1)))/(-1 + math.exp(4))',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer: type[CodePrinter], expected: str) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        assert code_printer().doprint(fl_M_pas) == expected
+
+    def test_derivative_print_code(self) -> None:
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas_dl_M_tilde = fl_M_pas.diff(self.l_M_tilde)
+        expected = '4*math.exp((20/3)*(l_M_tilde - 1))/(-3/5 + (3/5)*math.exp(4))'
+        assert PythonCodePrinter().doprint(fl_M_pas_dl_M_tilde) == expected
