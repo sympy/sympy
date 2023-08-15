@@ -276,9 +276,9 @@ def _simplex(A, B, C, D=None, dual=False):
     ==========
 
     .. [1] Thomas S. Ferguson, LINEAR PROGRAMMING: A Concise Introduction
-           web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_lp_args.pdf
-    """
+           web.tecnico.ulisboa.pt/mcasquilho/acad/or/ftp/FergusonUCLA_lp.pdf
 
+    """
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
     if dual:
         _o, d, p = _simplex(-A.T, C.T, B.T, -D)
