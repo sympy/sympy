@@ -11,6 +11,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     FiberForceLengthPassiveDeGroote2016,
+    FiberForceLengthPassiveInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -479,6 +480,10 @@ class TestFiberForceLengthPassiveDeGroote2016:
             + exp(self.c1*UnevaluatedExpr(self.l_M_tilde - 1)/self.c0)*(self.l_M_tilde - 1)/(self.c0*(exp(self.c1) - 1))
         )
         assert fl_M_pas.diff(self.c1) == expected
+
+    def test_inverse(self):
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        assert fl_M_pas.inverse() is FiberForceLengthPassiveInverseDeGroote2016
 
     def test_function_print_latex(self):
         fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
