@@ -23,7 +23,8 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install mpmath flake8 flake8-comprehensions ruff pytest hypothesis
+      - run: pip install -r requirements-test.txt
+      - run: pip install flake8 flake8-comprehensions ruff
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -134,7 +135,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split hypothesis
+      - run: pip install -r requirements-test.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
@@ -192,15 +193,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - run: pip install -r requirements-test.txt
+
       # Install the non-Python dependencies
       - run: sudo apt-get update
       - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy  \
-                         aesara wurlitzer autowrap lxml pytest hypothesis lark \
+      - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
+                         wurlitzer autowrap lxml lark                         \
                          'antlr4-python3-runtime==4.11.*'
+                         #
 
       # Not available in pypy or cpython 3.11 (yet).
       - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
@@ -218,6 +222,38 @@ jobs:
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
+  # -------------------- FLINT tests -------------------------------- #
+
+  python-flint:
+    needs: code-quality
+
+    # Currently wheels are available for python-flint only on Windows and OSX
+    # so we use OSX rather than Ubuntu for this job.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-test.txt
+      - run: pip install python-flint
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/polys                           \
+                    sympy/ntheory                         \
+                    sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/matrices              \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
   # -------------------- Tensorflow tests -------------------------- #
 
   tensorflow:
@@ -231,7 +267,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow pytest hypothesis
+      - run: pip install -r requirements-test.txt
+      - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -247,7 +284,8 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine pytest hypothesis
+      - run: pip install -r requirements-test.txt
+      - run: pip install numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
@@ -269,7 +307,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split pytest-timeout hypothesis
+      - run: pip install -r requirements-test.txt
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -295,7 +333,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath pytest pytest-split hypothesis
+      - run: pip install -r requirements-test.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #
