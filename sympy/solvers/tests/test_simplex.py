@@ -268,13 +268,21 @@ def test_simplex():
         [5*x2 - 2*x3 <= 0,
         -x1 - 8*x2 + 9*x3 <= -3,
         10*x1 - x2+ 9*x4 <= -4] + [i >= 0 for i in v]))
-    # o2
+    # o2 - equations fed to lpmin are changed into a matrix
+    # system that doesn't oscillate and has the same solution
+    # as below
     M = linear_eq_to_matrix
-    c, d = M(5*x2 + x3 + 4*x4 - x1, v)
-    a, b = M([5*x2 + 2*x3 + 5*x4 - (x1 + 5)], v)
-    aeq, beq = M([Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)], v)
-    assert linprog(c, a, b, aeq, beq, bounds=(0,1)) == (
-        S(9)/2, [0, S(1)/2, 0, S(1)/2])
+    f = 5*x2 + x3 + 4*x4 - x1
+    L = 5*x2 + 2*x3 + 5*x4 - (x1 + 5)
+    cond = [L <= 0] + [Eq(3*x2 + x4, 2), Eq(-x1 + x3 + 2*x4, 1)]
+    c, d = M(f, v)
+    a, b = M(L, v)
+    aeq, beq = M(cond[1:], v)
+    ans = (S(9)/2, [0, S(1)/2, 0, S(1)/2])
+    assert linprog(c, a, b, aeq, beq, bounds=(0, 1)) == ans
+    lpans = lpmin(f, cond + [x1 >= 0, x1 <= 1,
+        x2 >= 0, x2 <= 1, x3 >= 0, x3 <= 1, x4 >= 0, x4 <= 1])
+    assert (lpans[0], list(lpans[1].values())) == ans
 
 
 def test_lpmin_lpmax():
