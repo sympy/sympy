@@ -26,6 +26,7 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, MultivariatePolynomialError)
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
+from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
@@ -898,7 +899,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_primitive(f):
-        return f.ring.domain.is_one(f.content(f.ring.domain))
+        return f.ring.domain.is_one(f.content())
 
     @property
     def is_linear(f):
@@ -1954,49 +1955,21 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def content(self, domain=None):
-        """Returns GCD of polynomial's coefficients.
-
-        Examples
-        ========
-
-        >>> from sympy.polys import ring, ZZ
-        >>> R, x = ring("x", ZZ)
-
-        >>> f = 3*x**2 + 12*x + 6
-        >>> f.content()
-        3
-
-        >>> f = [3, 12, 6]
-        >>> f.content(ZZ)
-        3
-
-        """
-        f = self
-        if not isinstance(f, list):
-            f = f.listcoeffs()
-
-        coeffs = [int(x) for x in f]
-
+    def content(f, domain=None):
+        """Returns GCD of polynomial's coefficients. """
         if domain is None:
-            from sympy.polys.domains import ZZ
-            domain = ZZ
-
+            domain = f.ring.domain
+        cont = domain.zero
         gcd = domain.gcd
-        cont = coeffs[0]
 
-        for coeff in coeffs[1:]:
+        for coeff in f.itercoeffs():
             cont = gcd(cont, coeff)
-
-            if cont == domain.one:
-                break
 
         return int(cont)
 
     def primitive(f):
         """Returns content and a primitive polynomial. """
-        domain = f.ring.domain
-        cont = f.content(domain)
+        cont = f.content()
         return cont, f.quo_ground(cont)
 
     def monic(f):
@@ -2083,9 +2056,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def extract_ground(self, g):
         f = self
-        domain = f.ring.domain
-        fc = f.content(domain)
-        gc = g.content(domain)
+        fc = f.content()
+        gc = g.content()
 
         gcd = f.ring.domain.gcd(fc, gc)
 
@@ -3185,7 +3157,7 @@ def gcd_prs(polynomials):
     if any(len(pi) == 1 for pi in polynomials):
         return gcd_terms(polynomials, ring, domain)
 
-    p, monomial_gcd = monomial_extract(polynomials)
+    p, monom_gcd = monomial_extract(polynomials)
 
     p, common_symbols = gcd_coeffs(polynomials)
 
@@ -3193,8 +3165,8 @@ def gcd_prs(polynomials):
     for pi in p[1:]:
         gcd = _gcd_prs(gcd, pi)
 
-    if monomial_gcd is not None:
-        gcd = gcd * monomial_gcd
+    if monom_gcd is not None:
+        gcd = gcd * monom_gcd
 
     return gcd
 
@@ -3210,7 +3182,7 @@ def _gcd_prs(p1, p2):
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
-    >>> f = 4*x**3 + 8*x**2 + 12*x + 16
+    >>> f = 4*x**2 + 8*x + 10
     >>> g = 2*x**2 + 6*x + 10
     >>> _gcd_prs(f, g)
     2
@@ -3220,9 +3192,12 @@ def _gcd_prs(p1, p2):
 
     c1, pp1 = p1.primitive()
     c2, pp2 = p2.primitive()
+    from sympy.polys.domains import ZZ
+    R, _ = ring('_', ZZ)
+    c1, c2 = R(c1), R(c2)
 
     h = pp1.subresultants(pp2, x)[-1]
-    c = gcd_prs(([c1, c2]))
+    c = gcd_prs([c1, c2])
 
     domain = p1.ring.to_domain()
     if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))):
@@ -3261,7 +3236,14 @@ def gcd_terms(polynomials, ring, domain):
             coeffs.add(coeff)
 
     monom_gcd = monomial_ngcd(monomials)
-    coeff_gcd = list(coeffs).content(domain)
+
+    x = Symbol('x')
+    fpe = Poly.from_list(list(coeffs), x).as_expr()
+    sym = list(fpe.free_symbols)
+    R = domain[sym]
+    fpe = R.from_sympy(fpe)
+
+    coeff_gcd = fpe.content(domain)
     term_gcd = ring({monom_gcd: coeff_gcd})
 
     return term_gcd
