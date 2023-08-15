@@ -1319,19 +1319,27 @@ def test_TransferFunction_phase_margin():
     tf1 = TransferFunction(10, p**3 + 1, p)
     tf2 = TransferFunction(s**2, 10, s)
     tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
 
     assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
     assert phase_margin(tf2) == 0
 
     raises(ValueError, lambda: phase_margin(tf3))
+    raises(NotImplementedError, lambda: phase_margin(tf4))
+    raises(ValueError, lambda: phase_margin(MIMOSeries(tf_m)))
 
 def test_TransferFunction_gain_margin():
     # Test for gain margin
     tf1 = TransferFunction(s**2, 5*(s+1)*(s-5)*(s-10), s)
     tf2 = TransferFunction(s**2 + 2*s + 1, 1, s)
     tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
 
     assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
     assert gain_margin(tf2) == oo
 
     raises(ValueError, lambda: gain_margin(tf3))
+    raises(NotImplementedError, lambda: gain_margin(tf4))
+    raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))
