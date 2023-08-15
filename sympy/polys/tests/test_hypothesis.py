@@ -78,7 +78,7 @@ def test_addition(coefficients1, coefficients2):
     f = Poly(coefficients1, x, domain="ZZ")
     g = Poly(coefficients2, x, domain="ZZ")
     h = f + g
-    if h.degree != -float("inf"):
+    if h.degree() != -float("inf"):
         assert h.degree() == max(f.degree(), g.degree())
 
 
