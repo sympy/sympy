@@ -305,7 +305,5 @@ def test_random_problems():
             for subset in itertools.combinations(conflict, len(conflict)-1):
                 assert check_if_satisfiable_with_z3(subset) is True
 
-    print("\nnumber of feasible problems: ", feasible_count)
-
 
 # TODO: test pivot method
