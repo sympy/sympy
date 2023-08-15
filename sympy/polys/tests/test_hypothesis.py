@@ -5,12 +5,8 @@ from sympy.polys.polytools import Poly
 
 
 @st.composite
-def coeffecients(draw: st.DrawFn, set_type: str, empty=True):
-    l = (
-        draw(st.lists(st.integers()))
-        if set_type == "ZZ"
-        else draw(st.lists(st.floats()))
-    )
+def coefficients(draw: st.DrawFn, empty=True):
+    l = draw(st.lists(st.integers()))
     if not empty:
         assume(len(l) > 0)
     if len(l) > 0:
@@ -20,9 +16,9 @@ def coeffecients(draw: st.DrawFn, set_type: str, empty=True):
 
 
 @given(
-    coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ"),
-    coefficients3=coeffecients(set_type="ZZ"),
+    coefficients1=coefficients(),
+    coefficients2=coefficients(),
+    coefficients3=coefficients(),
 )
 def test_gcd(coefficients1, coefficients2, coefficients3):
     f = Poly(coefficients1, x, domain="ZZ")
@@ -41,8 +37,8 @@ def test_gcd(coefficients1, coefficients2, coefficients3):
 
 
 @given(
-    coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ", empty=False),
+    coefficients1=coefficients(),
+    coefficients2=coefficients(empty=False),
 )
 def test_division(coefficients1, coefficients2):
     # Integer case
@@ -59,8 +55,8 @@ def test_division(coefficients1, coefficients2):
 
 
 @given(
-    coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ"),
+    coefficients1=coefficients(),
+    coefficients2=coefficients(),
 )
 def test_multiplication(coefficients1, coefficients2):
     f = Poly(coefficients1, x, domain="ZZ")
@@ -71,8 +67,8 @@ def test_multiplication(coefficients1, coefficients2):
 
 
 @given(
-    coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ"),
+    coefficients1=coefficients(),
+    coefficients2=coefficients(),
 )
 def test_addition(coefficients1, coefficients2):
     f = Poly(coefficients1, x, domain="ZZ")
@@ -83,8 +79,8 @@ def test_addition(coefficients1, coefficients2):
 
 
 @given(
-    coefficients1=coeffecients(set_type="ZZ"),
-    coefficients2=coeffecients(set_type="ZZ", empty=False),
+    coefficients1=coefficients(),
+    coefficients2=coefficients(empty=False),
 )
 def test_lcm(coefficients1, coefficients2):
     f = Poly(coefficients1, x, domain="ZZ")
@@ -93,7 +89,7 @@ def test_lcm(coefficients1, coefficients2):
 
 
 @given(
-    coefficients=coeffecients(set_type="ZZ"),
+    coefficients=coefficients(),
     value=st.integers(),
 )
 def test_dispersion(coefficients, value):
