@@ -865,22 +865,20 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
     x, y = LineOver1DRangeSeries(phase,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
 
+    half = None
     if phase_unwrap:
         if(phase_unit == 'rad'):
-            for i in range(1, len(y)):
-                diff = y[i] - y[i - 1]
-                if diff > pi:      # Jump from -pi to pi
-                    y[i] = (y[i] - 2*pi)
-                elif diff < -pi:   # Jump from pi to -pi
-                    y[i] = (y[i] + 2*pi)
-
+            half = pi
         elif(phase_unit == 'deg'):
-            for i in range(1, len(y)):
-                diff = y[i] - y[i - 1]
-                if diff > 180:      # Jump from -180 to 180
-                    y[i] = (y[i] - 360)
-                elif diff < -180:   # Jump from 180 to -180
-                    y[i] = (y[i] + 360)
+            half = 180
+    if half:
+        unit = 2*half
+        for i in range(1, len(y)):
+            diff = y[i] - y[i - 1]
+            if diff > half:      # Jump from -half to half
+                y[i] = (y[i] - unit)
+            elif diff < -half:   # Jump from half to -half
+                y[i] = (y[i] + unit)
 
     return x, y
 
