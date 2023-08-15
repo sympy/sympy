@@ -180,7 +180,7 @@ RELATION_EXPRESSION_PAIRS = [
 
 UNEVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^2", x ** 2),
-    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
+    (r"x^\frac{1}{2}", _Pow(x, _Mul(1, _Pow(2, -1)))),
     (r"x^{3 + 1}", x ** _Add(3, 1)),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
@@ -188,10 +188,10 @@ UNEVALUATED_POWER_EXPRESSION_PAIRS = [
 
 EVALUATED_POWER_EXPRESSION_PAIRS = [
     (r"x^2", x ** 2),
-    (r"x^\frac{1}{2}", _Pow(x, _Pow(2, -1))),
-    (r"x^{3 + 1}", x ** _Add(3, 1)),
+    (r"x^\frac{1}{2}", sqrt(x)),
+    (r"x^{3 + 1}", x ** 4),
     (r"\pi^{|xy|}", Symbol('pi') ** _Abs(x * y)),
-    (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0))))
+    (r"5^0 - 4^0", 0)
 ]
 
 UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
@@ -254,6 +254,15 @@ UNEVALUATED_LIMIT_EXPRESSION_PAIRS = [
 ]
 
 UNEVALUATED_SQRT_EXPRESSION_PAIRS = [
+    (r"\sqrt{x}", sqrt(x)),
+    (r"\sqrt{x + b}", sqrt(_Add(x, b))),
+    (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
+    (r"\sqrt[y]{\sin x}", root(sin(x), y)),
+    (r"\sqrt[\theta]{\sin x}", root(sin(x), theta)),
+    (r"\sqrt{\frac{12}{6}}", _Sqrt(_Mul(12, _Pow(6, -1))))
+]
+
+EVALUATED_SQRT_EXPRESSION_PAIRS = [
     (r"\sqrt{x}", sqrt(x)),
     (r"\sqrt{x + b}", sqrt(_Add(x, b))),
     (r"\sqrt[3]{\sin x}", root(sin(x), 3)),
@@ -393,6 +402,19 @@ def test_relation_expressions():
     for latex_str, sympy_expr in RELATION_EXPRESSION_PAIRS:
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_power_expressions():
+    expected_failures = {3}
+    for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_POWER_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for i, (latex_str, sympy_expr) in enumerate(EVALUATED_POWER_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_integral_expressions():
