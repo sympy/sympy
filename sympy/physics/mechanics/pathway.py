@@ -158,7 +158,7 @@ class LinearPathway(PathwayBase):
     ``extension_velocity`` attribute.
 
     >>> linear_pathway.extension_velocity
-    q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========
