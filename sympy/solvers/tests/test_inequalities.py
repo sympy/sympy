@@ -5,9 +5,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, symbols)
-from sympy.matrices.dense import Matrix
-from sympy.assumptions.ask import Q
+from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
@@ -22,13 +20,11 @@ from sympy.solvers.inequalities import (reduce_inequalities,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
-                                        _solve_inequality,
-                                        find_feasible,
-                                        LRASolver)
+                                        _solve_inequality)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import solveset, linear_eq_to_matrix
-from sympy.abc import x, y, z, a
+from sympy.solvers.solveset import solveset
+from sympy.abc import x, y
 
 from sympy.core.mod import Mod
 
@@ -490,4 +486,3 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
-
