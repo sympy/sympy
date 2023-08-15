@@ -66,7 +66,7 @@ class WrappingGeometryBase(ABC):
         pass
 
     @abstractmethod
-    def geodesic_end_vectors(self, point_1, point_2,):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
