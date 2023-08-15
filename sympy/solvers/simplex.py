@@ -341,7 +341,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
         # check for oscillation
         if (r, c) == last:
-            # not sure what to do here; it looks like there will be
+            # Not sure what to do here; it looks like there will be
             # oscillations; see o1 test added at this commit to
             # see a system with no solution and the o2 for one
             # with a solution. In the case of o2, the solution
@@ -355,6 +355,8 @@ def _simplex(A, B, C, D=None, dual=False):
             # there is no solution. For now, the output is checked
             # before exit if oscillations were detected and an
             # error is raised there if the solution was invalid.
+            #
+            # cf section 6 of Ferguson for a non-cycling modification
             last = True
             break
         last = r, c
