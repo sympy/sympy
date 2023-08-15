@@ -326,7 +326,7 @@ class WrappingPathway(PathwayBase):
     attachment_2 : Point
         Second of the pair of ``Point`` objects between which the wrapping
         pathway spans.
-    geometry : GeometryBase
+    geometry : WrappingGeometryBase
         Geometry about which the pathway wraps.
 
     """
