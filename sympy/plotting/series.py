@@ -8,7 +8,7 @@ from sympy.core.function import arity
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.functions import atan2, zeta, frac, ceiling, floor, im
-from sympy.core.relational import (Equality, GreaterThan, StrictGreaterThan,
+from sympy.core.relational import (Equality, GreaterThan,
     LessThan, StrictLessThan, Relational, Ne)
 from sympy.core.sympify import sympify
 from sympy.external import import_module
