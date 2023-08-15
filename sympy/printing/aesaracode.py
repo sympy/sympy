@@ -278,7 +278,8 @@ class AesaraPrinter(Printer):
         See the corresponding `documentation page`__ for more information on
         broadcasting in Aesara.
 
-        .. __: https://aesara.readthedocs.io/en/latest/tutorial/broadcasting.html
+
+        .. __: https://aesara.readthedocs.io/en/latest/reference/tensor/shapes.html#broadcasting
 
         Parameters
         ==========

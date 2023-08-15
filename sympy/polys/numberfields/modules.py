@@ -1355,7 +1355,10 @@ class ModuleElement(IntegerPowerable):
         """
         Get a copy of this element's column, optionally converting to a domain.
         """
-        return self.col.convert_to(domain)
+        if domain is None:
+            return self.col.copy()
+        else:
+            return self.col.convert_to(domain)
 
     @property
     def coeffs(self):
