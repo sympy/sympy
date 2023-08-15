@@ -8,6 +8,7 @@ from sympy.functions.elementary.exponential import exp, log
 
 __all__ = [
     'FiberForceLengthPassiveDeGroote2016',
+    'FiberForceLengthPassiveInverseDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
@@ -618,3 +619,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
         l_M_tilde = self.args[0]
         _l_M_tilde = printer._print(l_M_tilde)
         return r'\operatorname{fl}^M_{pas} \left( %s \right)' % _l_M_tilde
+
+
+class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
+    pass
