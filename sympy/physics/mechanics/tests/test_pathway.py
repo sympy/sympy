@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Sequence
-
 import pytest
 
 from sympy.core.backend import (
@@ -30,15 +28,10 @@ from sympy.physics.mechanics.pathway import (
 )
 from sympy.simplify.simplify import simplify
 
-if TYPE_CHECKING:
-    from sympy.core.expr import Expr
-    from sympy.core.numbers import Number
-    from sympy.physics.mechanics.loads import LoadBase
-
 
 class TestLinearPathway:
 
-    def test_is_pathway_base_subclass(self) -> None:
+    def test_is_pathway_base_subclass(self):
         assert issubclass(LinearPathway, PathwayBase)
 
     @staticmethod
@@ -48,7 +41,7 @@ class TestLinearPathway:
             ((Point('pA'), Point('pB')), {}),
         ]
     )
-    def test_valid_constructor(args: tuple, kwargs: dict) -> None:
+    def test_valid_constructor(args, kwargs):
         pointA, pointB = args
         instance = LinearPathway(*args, **kwargs)
         assert isinstance(instance, LinearPathway)
@@ -70,10 +63,10 @@ class TestLinearPathway:
         ]
     )
     def test_invalid_attachments_incorrect_number(
-        attachments: tuple[Point, ...],
-    ) -> None:
+        attachments,
+    ):
         with pytest.raises(ValueError):
-            _ = LinearPathway(*attachments)  # type: ignore
+            _ = LinearPathway(*attachments)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -83,12 +76,12 @@ class TestLinearPathway:
             (Point('pA'), None),
         ]
     )
-    def test_invalid_attachments_not_point(attachments: Sequence[Any]) -> None:
+    def test_invalid_attachments_not_point(attachments):
         with pytest.raises(TypeError):
-            _ = LinearPathway(*attachments)  # type: ignore
+            _ = LinearPathway(*attachments)
 
     @pytest.fixture(autouse=True)
-    def _linear_pathway_fixture(self) -> None:
+    def _linear_pathway_fixture(self):
         self.N = ReferenceFrame('N')
         self.pA = Point('pA')
         self.pB = Point('pB')
@@ -101,29 +94,29 @@ class TestLinearPathway:
         self.q3d = dynamicsymbols('q3', 1)
         self.F = Symbol('F')
 
-    def test_properties_are_immutable(self) -> None:
+    def test_properties_are_immutable(self):
         instance = LinearPathway(self.pA, self.pB)
         with pytest.raises(AttributeError):
-            instance.attachments = None  # type: ignore
+            instance.attachments = None
         with pytest.raises(TypeError):
-            instance.attachments[0] = None  # type: ignore
+            instance.attachments[0] = None
         with pytest.raises(TypeError):
-            instance.attachments[1] = None  # type: ignore
+            instance.attachments[1] = None
 
-    def test_repr(self) -> None:
+    def test_repr(self):
         pathway = LinearPathway(self.pA, self.pB)
         expected = 'LinearPathway(pA, pB)'
         assert repr(pathway) == expected
 
-    def test_static_pathway_length(self) -> None:
+    def test_static_pathway_length(self):
         self.pB.set_pos(self.pA, 2*self.N.x)
         assert self.pathway.length == 2
 
-    def test_static_pathway_extension_velocity(self) -> None:
+    def test_static_pathway_extension_velocity(self):
         self.pB.set_pos(self.pA, 2*self.N.x)
         assert self.pathway.extension_velocity == 0
 
-    def test_static_pathway_compute_loads(self) -> None:
+    def test_static_pathway_compute_loads(self):
         self.pB.set_pos(self.pA, 2*self.N.x)
         expected = [
             (self.pA, - self.F*self.N.x),
@@ -131,17 +124,17 @@ class TestLinearPathway:
         ]
         assert self.pathway.compute_loads(self.F) == expected
 
-    def test_2D_pathway_length(self) -> None:
+    def test_2D_pathway_length(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = 2*sqrt(self.q1**2)
         assert self.pathway.length == expected
 
-    def test_2D_pathway_extension_velocity(self) -> None:
+    def test_2D_pathway_extension_velocity(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = 2*self.q1*self.q1d/sqrt(self.q1**2)
         assert self.pathway.extension_velocity == expected
 
-    def test_2D_pathway_compute_loads(self) -> None:
+    def test_2D_pathway_compute_loads(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = [
             (self.pA, - self.F*(self.q1 / sqrt(self.q1**2))*self.N.x),
@@ -149,7 +142,7 @@ class TestLinearPathway:
         ]
         assert self.pathway.compute_loads(self.F) == expected
 
-    def test_3D_pathway_length(self) -> None:
+    def test_3D_pathway_length(self):
         self.pB.set_pos(
             self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -157,7 +150,7 @@ class TestLinearPathway:
         expected = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
         assert simplify(self.pathway.length - expected) == 0
 
-    def test_3D_pathway_extension_velocity(self) -> None:
+    def test_3D_pathway_extension_velocity(self):
         self.pB.set_pos(
             self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -170,7 +163,7 @@ class TestLinearPathway:
         )
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
-    def test_3D_pathway_compute_loads(self) -> None:
+    def test_3D_pathway_compute_loads(self):
         self.pB.set_pos(
             self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -195,11 +188,11 @@ class TestLinearPathway:
 
 class TestWrappingPathway:
 
-    def test_is_pathway_base_subclass(self) -> None:
+    def test_is_pathway_base_subclass(self):
         assert issubclass(WrappingPathway, PathwayBase)
 
     @pytest.fixture(autouse=True)
-    def _wrapping_pathway_fixture(self) -> None:
+    def _wrapping_pathway_fixture(self):
         self.pA = Point('pA')
         self.pB = Point('pB')
         self.r = Symbol('r', positive=True)
@@ -211,7 +204,7 @@ class TestWrappingPathway:
         self.pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
         self.F = Symbol('F')
 
-    def test_valid_constructor(self) -> None:
+    def test_valid_constructor(self):
         instance = WrappingPathway(self.pA, self.pB, self.cylinder)
         assert isinstance(instance, WrappingPathway)
         assert hasattr(instance, 'attachments')
@@ -233,10 +226,10 @@ class TestWrappingPathway:
     )
     def test_invalid_constructor_attachments_incorrect_number(
         self,
-        attachments: Sequence[Point],
-    ) -> None:
+        attachments,
+    ):
         with pytest.raises(TypeError):
-            _ = WrappingPathway(*attachments, self.cylinder)  # type: ignore
+            _ = WrappingPathway(*attachments, self.cylinder)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -247,14 +240,14 @@ class TestWrappingPathway:
         ]
     )
     def test_invalid_constructor_attachments_not_point(
-        attachments: Sequence[Any],
-    ) -> None:
+        attachments,
+    ):
         with pytest.raises(TypeError):
-            _ = WrappingPathway(*attachments)  # type: ignore
+            _ = WrappingPathway(*attachments)
 
-    def test_invalid_constructor_geometry_is_not_supplied(self) -> None:
+    def test_invalid_constructor_geometry_is_not_supplied(self):
         with pytest.raises(TypeError):
-            _ = WrappingPathway(self.pA, self.pB)  # type: ignore
+            _ = WrappingPathway(self.pA, self.pB)
 
     @pytest.mark.parametrize(
         'geometry',
@@ -267,22 +260,22 @@ class TestWrappingPathway:
     )
     def test_invalid_geometry_not_geometry(
         self,
-        geometry: Any,
-    ) -> None:
+        geometry,
+    ):
         with pytest.raises(TypeError):
             _ = WrappingPathway(self.pA, self.pB, geometry)
 
-    def test_attachments_property_is_immutable(self) -> None:
+    def test_attachments_property_is_immutable(self):
         with pytest.raises(TypeError):
-            self.pathway.attachments[0] = self.pB  # type: ignore
+            self.pathway.attachments[0] = self.pB
         with pytest.raises(TypeError):
-            self.pathway.attachments[1] = self.pA  # type: ignore
+            self.pathway.attachments[1] = self.pA
 
-    def test_geometry_property_is_immutable(self) -> None:
+    def test_geometry_property_is_immutable(self):
         with pytest.raises(AttributeError):
-            self.pathway.geometry = None  # type: ignore
+            self.pathway.geometry = None
 
-    def test_repr(self) -> None:
+    def test_repr(self):
         expected = (
             f'WrappingPathway(pA, pB, '
             f'geometry={self.cylinder!r})'
@@ -303,10 +296,10 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_sphere_length(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-        expected_factor: Expr,
-    ) -> None:
+        pA_vec,
+        pB_vec,
+        expected_factor,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -337,10 +330,10 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_cylinder_length(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-        expected_factor: Expr,
-    ) -> None:
+        pA_vec,
+        pB_vec,
+        expected_factor,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -359,9 +352,9 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_sphere_extension_velocity(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-    ) -> None:
+        pA_vec,
+        pB_vec,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -383,9 +376,9 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_cylinder_extension_velocity(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-    ) -> None:
+        pA_vec,
+        pB_vec,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -415,12 +408,12 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_sphere_compute_loads(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-        pA_vec_expected: tuple[int | Number, int | Number, int | Number],
-        pB_vec_expected: tuple[int | Number, int | Number, int | Number],
-        pO_vec_expected: tuple[int | Number, int | Number, int | Number],
-    ) -> None:
+        pA_vec,
+        pB_vec,
+        pA_vec_expected,
+        pB_vec_expected,
+        pO_vec_expected,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
@@ -491,21 +484,24 @@ class TestWrappingPathway:
     )
     def test_static_pathway_on_cylinder_compute_loads(
         self,
-        pA_vec: tuple[int | Number, int | Number, int | Number],
-        pB_vec: tuple[int | Number, int | Number, int | Number],
-        pA_vec_expected: tuple[int | Number, int | Number, int | Number],
-        pB_vec_expected: tuple[int | Number, int | Number, int | Number],
-        pO_vec_expected: tuple[int | Number, int | Number, int | Number],
-    ) -> None:
+        pA_vec,
+        pB_vec,
+        pA_vec_expected,
+        pB_vec_expected,
+        pO_vec_expected,
+    ):
         pA_vec = self._expand_pos_to_vec(pA_vec, self.N)
         pB_vec = self._expand_pos_to_vec(pB_vec, self.N)
         self.pA.set_pos(self.pO, self.r*pA_vec)
         self.pB.set_pos(self.pO, self.r*pB_vec)
         pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
 
-        pA_force_expected = self.F*self._expand_pos_to_vec(pA_vec_expected, self.N)
-        pB_force_expected = self.F*self._expand_pos_to_vec(pB_vec_expected, self.N)
-        pO_force_expected = self.F*self._expand_pos_to_vec(pO_vec_expected, self.N)
+        pA_force_expected = self.F*self._expand_pos_to_vec(pA_vec_expected,
+                                                           self.N)
+        pB_force_expected = self.F*self._expand_pos_to_vec(pB_vec_expected,
+                                                           self.N)
+        pO_force_expected = self.F*self._expand_pos_to_vec(pO_vec_expected,
+                                                           self.N)
         expected = [
             Force(self.pA, pA_force_expected),
             Force(self.pB, pB_force_expected),
@@ -514,7 +510,7 @@ class TestWrappingPathway:
         assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
-    def test_2D_pathway_on_cylinder_length(self) -> None:
+    def test_2D_pathway_on_cylinder_length(self):
         q = dynamicsymbols('q')
         pA_pos = self.r*self.N.x
         pB_pos = self.r*(cos(q)*self.N.x + sin(q)*self.N.y)
@@ -524,7 +520,7 @@ class TestWrappingPathway:
         assert simplify(self.pathway.length - expected) == 0
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
-    def test_2D_pathway_on_cylinder_extension_velocity(self) -> None:
+    def test_2D_pathway_on_cylinder_extension_velocity(self):
         q = dynamicsymbols('q')
         qd = dynamicsymbols('q', 1)
         pA_pos = self.r*self.N.x
@@ -535,7 +531,7 @@ class TestWrappingPathway:
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
-    def test_2D_pathway_on_cylinder_compute_loads(self) -> None:
+    def test_2D_pathway_on_cylinder_compute_loads(self):
         q = dynamicsymbols('q')
         pA_pos = self.r*self.N.x
         pB_pos = self.r*(cos(q)*self.N.x + sin(q)*self.N.y)
@@ -555,7 +551,7 @@ class TestWrappingPathway:
         assert loads == expected
 
     @staticmethod
-    def _simplify_loads(loads: list[LoadBase]) -> list[LoadBase]:
+    def _simplify_loads(loads):
         return [
             load.__class__(load.location, load.vector.simplify())
             for load in loads
