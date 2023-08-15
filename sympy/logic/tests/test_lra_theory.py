@@ -19,7 +19,6 @@ def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rationa
                         disable_strict = False, disable_nonstrict=False, disable_equality=False):
     def rand(sparsity=sparsity):
         if random() < sparsity:
-            print("sparity")
             return sympify(0)
         if rational:
             int1, int2 = [randprime(0, 50) for _ in range(2)]
@@ -236,12 +235,10 @@ def test_random_problems():
         # constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
         #                                  disable_nonstrict=False, disable_equality=False)
 
-        #constraints = [-3*x2 >= 7, 6*x1 <= -5, -3*x2 <= -4]
 
         if False in constraints or True in constraints:
             continue
 
-        print(constraints)
         phi = And(*constraints)
         if phi == False:
             continue
@@ -249,8 +246,6 @@ def test_random_problems():
         enc.from_cnf(cnf)
         assert all(0 not in clause for clause in enc.data)
         lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
-        print(lra.A)
-        print(lra.boundry_enc)
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
         lits = set(lit for clause in enc.data for lit in clause)
@@ -260,14 +255,12 @@ def test_random_problems():
 
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
-                print("Constraints are unsatisfiable")
                 break
-            print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
+            #print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
             lra.assert_enc_boundry(l)
-            print(lra.assign, lra.lower, lra.upper)
+            #print(lra.assign, lra.lower, lra.upper)
 
         feasible = lra.check()
-        print(feasible)
         if feasible[0] == True:
             feasible_count += 1
             assert check_if_satisfiable_with_z3(constraints) is True
