@@ -691,3 +691,26 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
         c0 = Rational(3, 5)
         c1 = Integer(4)
         return cls(fl_M_pas, c0, c1)
+
+    @classmethod
+    def eval(cls, fl_M_pas, c0, c1):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        fl_M_pas : Any (sympifiable)
+            Normalized passive muscle fiber force.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.6``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``4.0``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
