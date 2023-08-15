@@ -19,8 +19,13 @@ from sympy.core.backend import (
     sqrt,
 )
 from sympy.core.relational import Eq
-from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
-from sympy.physics.mechanics.wrapping_geometry import Cylinder, Sphere
+from sympy.physics.mechanics import (
+    Point,
+    ReferenceFrame,
+    WrappingCylinder,
+    WrappingSphere,
+    dynamicsymbols,
+)
 from sympy.simplify.simplify import simplify
 
 if TYPE_CHECKING:
@@ -38,14 +43,14 @@ q = dynamicsymbols('q')
 N = ReferenceFrame('N')
 
 
-class TestSphere:
+class TestWrappingSphere:
 
     @staticmethod
     def test_valid_constructor() -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
-        assert isinstance(sphere, Sphere)
+        sphere = WrappingSphere(r, pO)
+        assert isinstance(sphere, WrappingSphere)
         assert hasattr(sphere, 'radius')
         assert sphere.radius == r
         assert hasattr(sphere, 'point')
@@ -56,7 +61,7 @@ class TestSphere:
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
+        sphere = WrappingSphere(r, pO)
 
         p1 = Point('p1')
         p1.set_pos(pO, position)
@@ -87,7 +92,7 @@ class TestSphere:
                              expected: ExprType) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
+        sphere = WrappingSphere(r, pO)
 
         p1 = Point('p1')
         p1.set_pos(pO, position_1)
@@ -131,7 +136,7 @@ class TestSphere:
     ) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
+        sphere = WrappingSphere(r, pO)
 
         p1 = Point('p1')
         p1.set_pos(pO, position_1)
@@ -150,7 +155,7 @@ class TestSphere:
     def test_geodesic_end_vectors_invalid_coincident(position: Vector) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
+        sphere = WrappingSphere(r, pO)
 
         p1 = Point('p1')
         p1.set_pos(pO, position)
@@ -178,7 +183,7 @@ class TestSphere:
     ) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        sphere = Sphere(r, pO)
+        sphere = WrappingSphere(r, pO)
 
         p1 = Point('p1')
         p1.set_pos(pO, position_1)
@@ -189,15 +194,15 @@ class TestSphere:
             _ = sphere.geodesic_end_vectors(p1, p2)
 
 
-class TestCylinder:
+class TestWrappingCylinder:
 
     @staticmethod
     def test_valid_constructor() -> None:
         N = ReferenceFrame('N')
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, N.x)
-        assert isinstance(cylinder, Cylinder)
+        cylinder = WrappingCylinder(r, pO, N.x)
+        assert isinstance(cylinder, WrappingCylinder)
         assert hasattr(cylinder, 'radius')
         assert cylinder.radius == r
         assert hasattr(cylinder, 'point')
@@ -223,7 +228,7 @@ class TestCylinder:
     def test_point_is_on_surface(position: Vector, expected: bool) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, N.x)
+        cylinder = WrappingCylinder(r, pO, N.x)
 
         p1 = Point('p1')
         p1.set_pos(pO, position)
@@ -235,7 +240,7 @@ class TestCylinder:
     def test_geodesic_length_point_not_on_surface_invalid(position: Vector) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, N.x)
+        cylinder = WrappingCylinder(r, pO, N.x)
 
         p1 = Point('p1')
         p1.set_pos(pO, position)
@@ -274,7 +279,7 @@ class TestCylinder:
     ) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, axis)
+        cylinder = WrappingCylinder(r, pO, axis)
 
         p1 = Point('p1')
         p1.set_pos(pO, position_1)
@@ -347,7 +352,7 @@ class TestCylinder:
     ) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, axis)
+        cylinder = WrappingCylinder(r, pO, axis)
 
         p1 = Point('p1')
         p1.set_pos(pO, position_1)
@@ -376,7 +381,7 @@ class TestCylinder:
     ) -> None:
         r = Symbol('r', positive=True)
         pO = Point('pO')
-        cylinder = Cylinder(r, pO, axis)
+        cylinder = WrappingCylinder(r, pO, axis)
 
         p1 = Point('p1')
         p1.set_pos(pO, position)
