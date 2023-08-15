@@ -1,27 +1,21 @@
 """Tools for solving inequalities and systems of inequalities. """
 import itertools
 
-from sympy import SYMPY_DEBUG
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.relational import Relational, Eq, Ge, Lt, Le
-from sympy.assumptions.ask import Q
-from sympy.assumptions.relation.binrel import AppliedBinaryRelation
+from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-from sympy.core.add import Add
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
-from sympy.logic.boolalg import BooleanFunction
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.solvers.solveset import solvify, solveset, linear_eq_to_matrix
+from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
-from sympy.matrices.dense import eye
 
 
 def solve_poly_inequality(poly, rel):
@@ -988,4 +982,3 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # restore original symbols and return
     return rv.xreplace({v: k for k, v in recast.items()})
-
