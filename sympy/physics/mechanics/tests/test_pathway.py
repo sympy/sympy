@@ -17,10 +17,12 @@ from sympy.physics.mechanics import (
     Force,
     Point,
     ReferenceFrame,
+    WrappingCylinder,
+    WrappingGeometryBase,
+    WrappingSphere,
     dynamicsymbols,
 )
-from sympy.physics.mechanics.wrapping_geometry import (Cylinder, GeometryBase,
-                                                       Sphere)
+
 from sympy.physics.mechanics.pathway import (
     LinearPathway,
     PathwayBase,
@@ -199,8 +201,8 @@ class TestWrappingPathway:
         self.pO = Point('pO')
         self.N = ReferenceFrame('N')
         self.ax = self.N.z
-        self.sphere = Sphere(self.r, self.pO)
-        self.cylinder = Cylinder(self.r, self.pO, self.ax)
+        self.sphere = WrappingSphere(self.r, self.pO)
+        self.cylinder = WrappingCylinder(self.r, self.pO, self.ax)
         self.pathway = WrappingPathway(self.pA, self.pB, self.cylinder)
         self.F = Symbol('F')
 
@@ -214,7 +216,7 @@ class TestWrappingPathway:
         assert isinstance(instance.attachments[1], Point)
         assert instance.attachments[1] == self.pB
         assert hasattr(instance, 'geometry')
-        assert isinstance(instance.geometry, GeometryBase)
+        assert isinstance(instance.geometry, WrappingGeometryBase)
         assert instance.geometry == self.cylinder
 
     @pytest.mark.parametrize(

@@ -13,13 +13,13 @@ from sympy.simplify.simplify import trigsimp
 
 
 __all__ = [
-    'GeometryBase',
-    'Cylinder',
-    'Sphere',
+    'WrappingGeometryBase',
+    'WrappingCylinder',
+    'WrappingSphere',
 ]
 
 
-class GeometryBase(ABC):
+class WrappingGeometryBase(ABC):
     """Abstract base class for all geometry classes to inherit from.
 
     Notes
@@ -66,7 +66,7 @@ class GeometryBase(ABC):
         pass
 
     @abstractmethod
-    def _geodesic_end_vectors(self, point_1, point_2,):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
@@ -85,7 +85,7 @@ class GeometryBase(ABC):
         return f'{self.__class__.__name__}()'
 
 
-class Sphere(GeometryBase):
+class WrappingSphere(WrappingGeometryBase):
     """A solid spherical object.
 
     Explanation
@@ -97,20 +97,18 @@ class Sphere(GeometryBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.wrapping_geometry import Sphere
-
-    To create a ``Sphere`` instance, a ``Symbol`` denoting its radius and
-    ``Point`` at which its center will be located are needed:
+    To create a ``WrappingSphere`` instance, a ``Symbol`` denoting its radius
+    and ``Point`` at which its center will be located are needed:
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Point
+    >>> from sympy.physics.mechanics import Point, WrappingSphere
     >>> r = symbols('r')
     >>> pO = Point('pO')
 
     A sphere with radius ``r`` centered on ``pO`` can be instantiated with:
 
-    >>> Sphere(r, pO)
-    Sphere(radius=r, point=pO)
+    >>> WrappingSphere(r, pO)
+    WrappingSphere(radius=r, point=pO)
 
     Parameters
     ==========
@@ -125,12 +123,13 @@ class Sphere(GeometryBase):
     See Also
     ========
 
-    Cylinder: Cylindrical geometry where the wrapping direction can be defined.
+    WrappingCylinder: Cylindrical geometry where the wrapping direction can be
+        defined.
 
     """
 
     def __init__(self, radius, point):
-        """Initializer for ``Sphere``.
+        """Initializer for ``WrappingSphere``.
 
         Parameters
         ==========
@@ -155,7 +154,7 @@ class Sphere(GeometryBase):
 
     @property
     def point(self):
-        """A point through which the cylinder's axis passes."""
+        """A point on which the sphere is centered."""
         return self._point
 
     @point.setter
@@ -190,25 +189,32 @@ class Sphere(GeometryBase):
         ===========
 
         The geodesic length, i.e. the shortest arc along the surface of a
-        sphere, connecting two points. Note that the actual path that the
-        geodesic will take is undefined when the two points are directly
-        opposite one another.
+        sphere, connecting two points can be calculated using the formula:
+
+        .. math::
+
+           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
+
+        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
+        sphere's center to the first and second points on the sphere's surface
+        respectively. Note that the actual path that the geodesic will take is
+        undefined when the two points are directly opposite one another.
 
         Examples
         ========
 
         A geodesic length can only be calculated between two points on the
-        sphere's surface. Firstly, a ``Sphere`` instance must be created along
-        with two points that will lie on its surface:
+        sphere's surface. Firstly, a ``WrappingSphere`` instance must be
+        created along with two points that will lie on its surface:
 
         >>> from sympy import symbols
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics.wrapping_geometry import Sphere
+        >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
+        ...     WrappingSphere)
         >>> N = ReferenceFrame('N')
         >>> r = symbols('r')
         >>> pO = Point('pO')
         >>> pO.set_vel(N, 0)
-        >>> sphere = Sphere(r, pO)
+        >>> sphere = WrappingSphere(r, pO)
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
 
@@ -258,7 +264,7 @@ class Sphere(GeometryBase):
         geodesic_length = self.radius*central_angle
         return geodesic_length
 
-    def _geodesic_end_vectors(self, point_1, point_2):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
@@ -289,14 +295,14 @@ class Sphere(GeometryBase):
         )
 
     def __repr__(self):
-        """Representation of a ``Sphere``."""
+        """Representation of a ``WrappingSphere``."""
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
             f'point={self.point})'
         )
 
 
-class Cylinder(GeometryBase):
+class WrappingCylinder(WrappingGeometryBase):
     """A solid (infinite) cylindrical object.
 
     Explanation
@@ -313,14 +319,13 @@ class Cylinder(GeometryBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
-
-    To create a ``Cylinder`` instance, a ``Symbol`` denoting its radius, a
-    ``Vector`` defining its axis, and a ``Point`` through which its axis passes
-    are needed:
+    To create a ``WrappingCylinder`` instance, a ``Symbol`` denoting its
+    radius, a ``Vector`` defining its axis, and a ``Point`` through which its
+    axis passes are needed:
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
+    ...     WrappingCylinder)
     >>> N = ReferenceFrame('N')
     >>> r = symbols('r')
     >>> pO = Point('pO')
@@ -329,8 +334,8 @@ class Cylinder(GeometryBase):
     A cylinder with radius ``r``, and axis parallel to ``N.x`` passing through
     ``pO`` can be instantiated with:
 
-    >>> Cylinder(r, pO, ax)
-    Cylinder(radius=r, point=pO, axis=N.x)
+    >>> WrappingCylinder(r, pO, ax)
+    WrappingCylinder(radius=r, point=pO, axis=N.x)
 
     Parameters
     ==========
@@ -345,12 +350,13 @@ class Cylinder(GeometryBase):
     See Also
     ========
 
-    Sphere: Spherical geometry where the wrapping direction is always geodetic.
+    WrappingSphere: Spherical geometry where the wrapping direction is always
+        geodetic.
 
     """
 
     def __init__(self, radius, point, axis):
-        """Initializer for ``Cylinder``.
+        """Initializer for ``WrappingCylinder``.
 
         Parameters
         ==========
@@ -418,38 +424,34 @@ class Cylinder(GeometryBase):
         return Eq(trigsimp(point_radius_squared), self.radius**2) == True
 
     def geodesic_length(self, point_1, point_2):
-        r"""The shortest distance between two points on a geometry's surface.
+        """The shortest distance between two points on a geometry's surface.
 
         Explanation
         ===========
 
         The geodesic length, i.e. the shortest arc along the surface of a
-        cylinder, connecting two points can be calculated using the formula:
-
-        .. math::
-
-           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
-
-        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
-        cylinder's center to the first and second points on the cylinder's
-        surface respectively.
+        cylinder, connecting two points. It can be calculated using Pythagoras'
+        theorem. The first short side is the distance between the two points on
+        the cylinder's surface parallel to the cylinder's axis. The second
+        short side is the arc of a circle between the two points of the
+        cylinder's surface perpendicular to the cylinder's axis. The resulting
+        hypotenuse is the geodesic length.
 
         Examples
         ========
 
         A geodesic length can only be calculated between two points on the
-        cylinder's surface. Firstly, a ``Cylinder`` instance must be created
-        along with two points that will lie on its surface:
+        cylinder's surface. Firstly, a ``WrappingCylinder`` instance must be
+        created along with two points that will lie on its surface:
 
         >>> from sympy import symbols, cos, sin
         >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
-        ...     dynamicsymbols)
-        >>> from sympy.physics.mechanics.wrapping_geometry import Cylinder
+        ...     WrappingCylinder, dynamicsymbols)
         >>> N = ReferenceFrame('N')
         >>> r = symbols('r')
         >>> pO = Point('pO')
         >>> pO.set_vel(N, 0)
-        >>> cylinder = Cylinder(r, pO, N.x)
+        >>> cylinder = WrappingCylinder(r, pO, N.x)
         >>> p1 = Point('p1')
         >>> p2 = Point('p2')
 
@@ -525,7 +527,7 @@ class Cylinder(GeometryBase):
         geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
 
-    def _geodesic_end_vectors(self, point_1, point_2):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
@@ -576,7 +578,7 @@ class Cylinder(GeometryBase):
         return (point_1_vector, point_2_vector)
 
     def __repr__(self):
-        """Representation of a ``Cylinder``."""
+        """Representation of a ``WrappingCylinder``."""
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
             f'point={self.point}, axis={self.axis})'

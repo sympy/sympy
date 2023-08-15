@@ -1528,7 +1528,8 @@ class SymPyDocTests:
                             executables=(),
                             modules=(),
                             disable_viewers=(),
-                            python_version=(3, 5)):
+                            python_version=(3, 5),
+                            ground_types=None):
         """
         Checks if the dependencies for the test are installed.
 
@@ -1572,6 +1573,10 @@ class SymPyDocTests:
         if python_version:
             if sys.version_info < python_version:
                 raise DependencyError("Requires Python >= " + '.'.join(map(str, python_version)))
+
+        if ground_types is not None:
+            if GROUND_TYPES not in ground_types:
+                raise DependencyError("Requires ground_types in " + str(ground_types))
 
         if 'pyglet' in modules:
             # monkey-patch pyglet s.t. it does not open a window during
