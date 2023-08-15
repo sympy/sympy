@@ -96,8 +96,8 @@ def crt(m, v, symmetric=False, check=True):
             result, mm = result
 
     if symmetric:
-        return symmetric_residue(result, mm), mm
-    return result, mm
+        return int(symmetric_residue(result, mm)), int(mm)
+    return int(result), int(mm)
 
 
 def crt1(m):
@@ -166,8 +166,8 @@ def crt2(m, v, mm, e, s, symmetric=False):
     result = gf_crt2(v, m, mm, e, s, ZZ)
 
     if symmetric:
-        return symmetric_residue(result, mm), mm
-    return result, mm
+        return int(symmetric_residue(result, mm)), int(mm)
+    return int(result), int(mm)
 
 
 def solve_congruence(*remainder_modulus_pairs, **hint):
