@@ -753,3 +753,38 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
         dfl_M_pas_inv_dfl_T = fl_M_pas_inv.diff(self.fl_M_pas)
         expected = '(-3/5 + (3/5)*math.exp(4))/(4*fl_M_pas*(-1 + math.exp(4)) + 4)'
         assert PythonCodePrinter().doprint(dfl_M_pas_inv_dfl_T) == expected
+
+    def test_lambdify(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv)
+        assert fl_M_pas_inv_callable(0.0) == pytest.approx(1.0)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv, 'numpy')
+        fl_M_pas = numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
+        expected = numpy.array([
+            0.8848253714,
+            1.0,
+            1.0643754386,
+            1.1092744701,
+            1.1954331425,
+            1.2774998934,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_inv_callable(fl_M_pas), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = jax.jit(lambdify(self.fl_M_pas, fl_M_pas_inv, 'jax'))
+        fl_M_pas = jax.numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
+        expected = jax.numpy.array([
+            0.8848253714,
+            1.0,
+            1.0643754386,
+            1.1092744701,
+            1.1954331425,
+            1.2774998934,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_inv_callable(fl_M_pas), expected)
