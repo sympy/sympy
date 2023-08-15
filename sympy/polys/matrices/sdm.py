@@ -7,6 +7,7 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
+from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import _strongly_connected_components
 
 from .exceptions import DMBadInputError, DMDomainError, DMShapeError
@@ -14,7 +15,6 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
-from .lll import ddm_lll, ddm_lll_transform
 
 
 class SDM(dict):
@@ -67,6 +67,8 @@ class SDM(dict):
     """
 
     fmt = 'sparse'
+    is_DFM = False
+    is_DDM = False
 
     def __init__(self, elemsdict, shape, domain):
         super().__init__(elemsdict)
@@ -515,7 +517,58 @@ class SDM(dict):
         return DDM(M.to_list(), M.shape, M.domain)
 
     def to_sdm(M):
+        """
+        Convert to :py:class:`~.SDM` format (returns self).
+        """
         return M
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm(M):
+        """
+        Convert a :py:class:`~.SDM` object to a :py:class:`~.DFM` object
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{}}, (2, 2), QQ)
+        >>> A.to_dfm()
+        [[0, 2], [0, 0]]
+
+        See Also
+        ========
+
+        to_ddm
+        to_dfm_or_ddm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm
+        """
+        return M.to_ddm().to_dfm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(M):
+        """
+        Convert to :py:class:`~.DFM` if possible, else :py:class:`~.DDM`.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> from sympy import QQ
+        >>> A = SDM({0:{1:QQ(2)}, 1:{}}, (2, 2), QQ)
+        >>> A.to_dfm_or_ddm()
+        [[0, 2], [0, 0]]
+        >>> type(A.to_dfm_or_ddm())  # depends on the ground types
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm
+        to_dfm
+        sympy.polys.matrices.domainmatrix.DomainMatrix.to_dfm_or_ddm
+        """
+        return M.to_ddm().to_dfm_or_ddm()
 
     @classmethod
     def zeros(cls, shape, domain):
@@ -565,13 +618,18 @@ class SDM(dict):
         {0: {0: 1}, 1: {1: 1}}
 
         """
-        rows, cols = shape
+        if isinstance(shape, int):
+            rows, cols = shape, shape
+        else:
+            rows, cols = shape
         one = domain.one
         sdm = {i: {i: one} for i in range(min(rows, cols))}
-        return cls(sdm, shape, domain)
+        return cls(sdm, (rows, cols), domain)
 
     @classmethod
-    def diag(cls, diagonal, domain, shape):
+    def diag(cls, diagonal, domain, shape=None):
+        if shape is None:
+            shape = (len(diagonal), len(diagonal))
         sdm = {i: {i: v} for i, v in enumerate(diagonal) if v}
         return cls(sdm, shape, domain)
 
@@ -596,11 +654,15 @@ class SDM(dict):
     def __add__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented
+        elif A.shape != B.shape:
+            raise DMShapeError("Matrix size mismatch: %s + %s" % (A.shape, B.shape))
         return A.add(B)
 
     def __sub__(A, B):
         if not isinstance(B, SDM):
             return NotImplemented
+        elif A.shape != B.shape:
+            raise DMShapeError("Matrix size mismatch: %s - %s" % (A.shape, B.shape))
         return A.sub(B)
 
     def __neg__(A):
@@ -710,7 +772,6 @@ class SDM(dict):
         {0: {0: 3, 1: 2}, 1: {0: 1, 1: 4}}
 
         """
-
         Csdm = binop_dict(A, B, add, pos, pos)
         return A.new(Csdm, A.shape, A.domain)
 
@@ -847,7 +908,7 @@ class SDM(dict):
         {0: {0: -2, 1: 1}, 1: {0: 3/2, 1: -1/2}}
 
         """
-        return A.from_ddm(A.to_ddm().inv())
+        return A.to_dfm_or_ddm().inv().to_sdm()
 
     def det(A):
         """
@@ -863,7 +924,14 @@ class SDM(dict):
         -2
 
         """
-        return A.to_ddm().det()
+        # It would be better to have a sparse implementation of det for use
+        # with very sparse matrices. Extremely sparse matrices probably just
+        # have determinant zero and we could probably detect that very quickly.
+        # In the meantime, we convert to a dense matrix and use ddm_idet.
+        #
+        # If GROUND_TYPES=flint though then we will use Flint's implementation
+        # if possible (dfm).
+        return A.to_dfm_or_ddm().det()
 
     def lu(A):
         """
@@ -1128,7 +1196,7 @@ class SDM(dict):
         Poly(x**2 - 5*x - 2, x, domain='QQ')
 
         """
-        return A.to_ddm().charpoly()
+        return A.to_dfm_or_ddm().charpoly()
 
     def is_zero_matrix(self):
         """
@@ -1166,11 +1234,17 @@ class SDM(dict):
         return [row.get(i, zero) for i, row in self.items() if i < n]
 
     def lll(A, delta=QQ(3, 4)):
-        return A.from_ddm(ddm_lll(A.to_ddm(), delta=delta))
+        """
+        Returns the LLL-reduced basis for the :py:class:`~.SDM` matrix.
+        """
+        return A.to_dfm_or_ddm().lll(delta=delta).to_sdm()
 
     def lll_transform(A, delta=QQ(3, 4)):
-        reduced, transform = ddm_lll_transform(A.to_ddm(), delta=delta)
-        return A.from_ddm(reduced), A.from_ddm(transform)
+        """
+        Returns the LLL-reduced basis and transformation matrix.
+        """
+        reduced, transform = A.to_dfm_or_ddm().lll_transform(delta=delta)
+        return reduced.to_sdm(), transform.to_sdm()
 
 
 def binop_dict(A, B, fab, fa, fb):
