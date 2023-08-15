@@ -38,6 +38,7 @@ from __future__ import annotations
 from operator import mul
 from .exceptions import (
     DMShapeError,
+    DMDomainError,
     DMNonInvertibleMatrixError,
     DMNonSquareMatrixError,
 )
@@ -282,6 +283,8 @@ def ddm_irref_den(a, K):
         A version of this routine that uses field division.
     sdm_irref
         A sparse version of :func:`ddm_irref`.
+    sdm_rref_den
+        A sparse version of :func:`ddm_irref_den`.
     sympy.polys.matrices.domainmatrix.DomainMatrix.rref_den
         Higher level interface.
 
@@ -523,7 +526,7 @@ def ddm_iinv(ainv, a, K):
     ddm_irref: the underlying routine.
     """
     if not K.is_Field:
-        raise ValueError('Not a field')
+        raise DMDomainError('Not a field')
 
     # a is (m x n)
     m = len(a)

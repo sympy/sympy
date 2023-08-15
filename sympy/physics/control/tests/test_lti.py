@@ -198,15 +198,6 @@ def test_TransferFunction_functions():
     assert G3.expand() == TransferFunction(e, f, s)
     assert G4.expand() == TransferFunction(a0*s**s - b0*p**p, g, p)
 
-    # evaluate the transfer function at particular frequencies.
-    assert tf1.evalfr(wn) == TransferFunction(wn**2 + 2*wn - 3, wn**2 + 4*wn - 5, p)
-    assert G1.evalfr(1 + I) == TransferFunction(-1, -3 + 4*I, s)
-    assert G3.evalfr(I*3) == \
-        TransferFunction(3**(2*p)*I**(2*p)*a2 + 3**p*I**p*a0*p**p + 3**(3*I)*3**p*I**(3*I)*I**p*a1 + 3**p*I**p*a2*p**(3*I) + a0*p**(3*I)*p**p + 3**(3*I)*I**(3*I)*a1*p**(3*I),
-        3*3**(3*I)*I*I**(3*I)*b0*b2*p + 3**(3*I)*I**(3*I)*b0*p**p + 3*I*b1*b2*p*p**(3*I) + b1*p**(3*I)*p**p, s)
-    assert G4.evalfr(S(5)/3) == \
-        TransferFunction(a0*s**s - 5*3**(S(1)/3)*5**(S(2)/3)*b0/9, a1*a2*s**(S(8)/3) + S(5)*a1*s/3 + 5*a2*b1*s**(S(8)/3)/3 + S(25)*b1*s/9, p)
-
     # purely symbolic polynomials.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0

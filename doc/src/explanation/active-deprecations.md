@@ -637,14 +637,15 @@ Plotly, Mayavi, K3D only require lists of coordinates), this has been moved
 inside the `MatplotlibBackend` class.
 
 Note that previously, the method
-{meth}`~sympy.plotting.plot.LineOver1DRangeSeries.get_points` always returned
+{meth}`~sympy.plotting.series.LineOver1DRangeSeries.get_points` always returned
 uniformly sampled points, which meant that some functions were not plotted
 correctly when using `get_points()` to plot with Matplotlib.
 
 To avoid this problem, the method `get_segments()` could be used, which used
 adaptive sampling and which could be used with Matplotlib's `LineCollection`.
 However, this has been changed, and now `get_points()` can also use adaptive
-sampling. The {meth}`~sympy.plotting.plot.Line2DBaseSeries.get_data()` method can also be used.
+sampling. The {meth}`~sympy.plotting.series.Line2DBaseSeries.get_data()` method
+can also be used.
 
 
 (deprecated-physics-mdft)=
