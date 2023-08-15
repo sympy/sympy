@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    'FiberForceLengthPassiveDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
