@@ -9,21 +9,6 @@ from sympy.core.relational import Eq
 from sympy import SYMPY_DEBUG
 
 
-def sep_const_terms(expr):
-    if isinstance(expr, Add):
-        terms = expr.args
-    else:
-        terms = [expr]
-
-    var, const = [], []
-    for t in terms:
-        if t.is_constant():
-            const.append(t)
-        else:
-            var.append(t)
-    return sum(var), sum(const)
-
-
 def sep_const_coeff(expr):
     if isinstance(expr, Add):
         return expr, 1
@@ -522,8 +507,8 @@ class LRASolver():
                         if (M[i, self.col_index[nb]] > 0 and self.assign[nb] < self.upper[nb])
                         or (M[i, self.col_index[nb]] < 0 and self.assign[nb] > self.lower[nb])]
                 if len(cand) == 0:
-                    N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
-                    N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
+                    N_plus = [nb for nb in nonbasic if M[i, self.col_index[nb]] > 0]
+                    N_minus = [nb for nb in nonbasic if M[i, self.col_index[nb]] < 0]
                     upper = [(nb, self.upper[nb]) for nb in N_plus]
                     lower = [(nb, self.lower[nb]) for nb in N_minus]
 
@@ -545,8 +530,8 @@ class LRASolver():
                         or (M[i, self.col_index[nb]] > 0 and self.assign[nb] > self.lower[nb])]
 
                 if len(cand) == 0:
-                    N_plus = {nb for nb in nonbasic if M[i, self.col_index[nb]] > 0}
-                    N_minus = {nb for nb in nonbasic if M[i, self.col_index[nb]] < 0}
+                    N_plus = [nb for nb in nonbasic if M[i, self.col_index[nb]] > 0]
+                    N_minus = [nb for nb in nonbasic if M[i, self.col_index[nb]] < 0]
                     upper = [(nb, self.upper[nb]) for nb in N_minus]
                     lower = [(nb, self.lower[nb]) for nb in N_plus]
 
