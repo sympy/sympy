@@ -628,3 +628,17 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
             )
 
         raise ArgumentIndexError(self, argindex)
+
+    def _latex(self, printer: Printer) -> str:
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        l_M_tilde = self.args[0]
+        _l_M_tilde = printer._print(l_M_tilde)
+        return r'\operatorname{fl}^M_{pas} \left( %s \right)' % _l_M_tilde
