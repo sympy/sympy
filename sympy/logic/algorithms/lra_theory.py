@@ -609,7 +609,7 @@ class LRASolver():
         0 = -x + (-e/d)*y + (-f/d)*z
         0 = 0 + (h - e*g/d)*y + (i - f*g/d)*z
         """
-        Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
+        _, _, Mij = M[i, :], M[:, j], M[i, j]
         if Mij == 0:
             raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
         A = M.copy()
