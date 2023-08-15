@@ -32,7 +32,7 @@ from sympy.physics.mechanics.actuator import (
     LinearSpring,
     TorqueActuator,
 )
-from sympy.physics.mechanics.pathway import LinearPathway, PathwayBase
+from sympy.physics.mechanics.pathway import LinearPathway
 if USE_SYMENGINE:
     from sympy.core.backend import Basic as ExprType
 else:
