@@ -333,6 +333,16 @@ class LRASolver():
         ==========
 
         enc_boundry : int
+
+        Returns
+        =======
+
+        None or (False, explanation)
+
+        explanation : set of ints
+            Integers are negative and represent negations of some
+            AppliedBinaryRelation. Which relation a given int
+            encodes can be found in `self.boundry_enc`.
         """
         boundry = self.boundry_enc[enc_boundry]
         sym, c = boundry.var, boundry.bound
