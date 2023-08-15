@@ -603,5 +603,4 @@ class LRASolver():
             if row != i:
                 A[row, :] = A[row, :] + A[row, j] *A[i, :]
 
-        assert A.rref() == M.rref()
         return A
