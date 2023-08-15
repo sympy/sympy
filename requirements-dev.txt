@@ -5,3 +5,4 @@ pytest-timeout
 pytest-split
 pytest-doctestplus
 hypothesis
+flake8
