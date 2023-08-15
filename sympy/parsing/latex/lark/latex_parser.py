@@ -114,30 +114,30 @@ class TransformToSymPyExpr(Transformer):
             raise LaTeXParsingError() # TODO: Fill descriptive error message.
 
     def add(self, tokens):
-        return tokens[0] + tokens[2]
+        return sympy.Add(tokens[0], tokens[2])
 
     def sub(self, tokens):
         if len(tokens) == 2:
             return -tokens[1]
         elif len(tokens) == 3:
-            return tokens[0] - tokens[2]
+            return sympy.Add(tokens[0], -tokens[2])
 
     def mul(self, tokens):
         if len(tokens) == 2:
-            return tokens[0] * tokens[1]
+            return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
-            return tokens[0] * tokens[2]
+            return sympy.Mul(tokens[0], tokens[2])
         else:
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
     def div(self, tokens):
-        return tokens[0] / tokens[2]
+        return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
 
     def superscript(self, tokens):
-        return tokens[0] ** tokens[2]
+        return sympy.Pow(tokens[0], tokens[2])
 
     def fraction(self, tokens):
-        return tokens[1] / tokens[2]
+        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1))
 
     def binomial(self, tokens):
         return sympy.binomial(tokens[1], tokens[2])
@@ -314,42 +314,42 @@ class TransformToSymPyExpr(Transformer):
         if exponent == -1:
             return sympy.asin(tokens[-1])
         else:
-            return sympy.sin(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.sin(tokens[-1]), exponent)
 
     def cos_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
             return sympy.acos(tokens[-1])
         else:
-            return sympy.cos(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.cos(tokens[-1]), exponent)
 
     def tan_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
             return sympy.atan(tokens[-1])
         else:
-            return sympy.tan(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.tan(tokens[-1]), exponent)
 
     def csc_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
             return sympy.acsc(tokens[-1])
         else:
-            return sympy.csc(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.csc(tokens[-1]), exponent)
 
     def sec_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
             return sympy.asec(tokens[-1])
         else:
-            return sympy.sec(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.sec(tokens[-1]), exponent)
 
     def cot_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
             return sympy.acot(tokens[-1])
         else:
-            return sympy.cot(tokens[-1]) ** exponent
+            return sympy.Pow(sympy.cot(tokens[-1]), exponent)
 
     def arcsin(self, tokens):
         return sympy.asin(tokens[1])
