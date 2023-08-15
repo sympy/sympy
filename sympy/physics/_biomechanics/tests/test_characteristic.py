@@ -645,3 +645,21 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
         fl_M_pas_inv_manual = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *constants)
         fl_M_pas_inv_constants = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
         assert fl_M_pas_inv_manual == fl_M_pas_inv_constants
+
+    def test_differentiate_wrt_fl_T(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = self.c0*(exp(self.c1) - 1)/(self.c1*(self.fl_M_pas*(exp(self.c1) - 1) + 1))
+        assert fl_M_pas_inv.diff(self.fl_M_pas) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1
+        assert fl_M_pas_inv.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = (
+            self.c0*self.fl_M_pas*exp(self.c1)/(self.c1*(self.fl_M_pas*(exp(self.c1) - 1) + 1))
+            - self.c0*log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1**2
+        )
+        assert fl_M_pas_inv.diff(self.c1) == expected
