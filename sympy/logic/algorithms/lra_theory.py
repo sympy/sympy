@@ -82,7 +82,8 @@ def standardize_binrel(prop):
 
 class Boundry:
     """
-    Represents an upper or lower bound or an equality between a symbol and some constant.
+    Represents an upper or lower bound or an equality between a symbol
+    and some constant.
     """
     def __init__(self, var, const, upper, equality, strict=None):
         if not equality in [True, False]:
@@ -132,7 +133,8 @@ class LRASolver():
     References
     ==========
 
-    .. [1] Dutertre, B., de Moura, L.: A Fast Linear-Arithmetic Solver for DPLL(T)
+    .. [1] Dutertre, B., de Moura, L.:
+           A Fast Linear-Arithmetic Solver for DPLL(T)
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
@@ -160,7 +162,8 @@ class LRASolver():
         self.up_origin = {}
         self.assign = {}
 
-        self.result = None # always one of: (True, Assignment), (False, ConflictClause), None
+        # always one of: (True, Assignment), (False, ConflictClause), None
+        self.result = None
 
         for var in self.all_var:
             self.lower[var] = (-float("inf"), 0)
@@ -177,7 +180,8 @@ class LRASolver():
         Example
         -------
 
-        This example comes from the example in section 3 of Dutertre's and de Moura's paper.
+        This example comes from the example in section 3 of
+        Dutertre's and de Moura's paper.
 
         >>> from sympy.core.relational import Eq
         >>> from sympy.matrices.dense import Matrix
@@ -185,7 +189,8 @@ class LRASolver():
         >>> from sympy.assumptions.ask import Q
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
         >>> from sympy.abc import a, x, y, z
-        >>> phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+        >>> phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6))
+        >>> phi = phi & (Eq(x + y, 2) | (x + 2 * y - z > 4))
         >>> cnf = CNF.from_prop(phi)
         >>> enc = EncodedCNF()
         >>> enc.from_cnf(cnf)
@@ -200,47 +205,52 @@ class LRASolver():
          Q.ge(x + 2*y - z, 6): 6}
         >>> lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
 
-        Each nonslack variable gets replaced with a dummy variable. Here x, y, and z get replaced
-        with _x1, _x2, _x3 respectively.
+        Each nonslack variable gets replaced with a dummy variable. Here
+        x, y, and z get replaced with _x1, _x2, _x3 respectively.
 
         >>> x_subs
         {x: _x1, y: _x2, z: _x3}
 
-        We convert any constraints with multiple nonslack variables into single variable constraints
-        by substituting with slack variables. Here x + y gets substituted with _s1 and x + 2 * y - z gets
-        substituted with -_s2.
+        We convert any constraints with multiple nonslack variables into single
+        variable constraints by substituting with slack variables. Here x + y
+        gets substituted with _s1 and x + 2 * y - z gets substituted with -_s2.
 
         >>> s_subs
         {_x1 + _x2: _s1, -_x1 - 2*_x2 + _x3: _s2}
 
-        Each row of the matrix A represents an equallity between a slack variable and some nonslack varaibles.
+        Each row of the matrix A represents an equallity between a slack
+        variable and some nonslack varaibles.
 
         >>> lra.A
         Matrix([
         [ 1,  1, 0, -1,  0],
         [-1, -2, 1,  0, -1]])
 
-        To make it very clear what those equalities are, we can multiply A by a vector containing each varaiable.
-        The result will be a list of quantities that are equal to zero.
+        To make it very clear what those equalities are, we can multiply A
+        by a vector containing each varaiable. The result will be a list of
+        quantities that are equal to zero.
 
         >>> lra.A * Matrix(lra.all_var)
         Matrix([
         [        -_s1 + _x1 + _x2],
         [-_s2 - _x1 - 2*_x2 + _x3]])
 
-        By substituting terms with multiple constraints with slack variables, each constraint in phi
-        is transformed into an upper or lower bound or equality between a single variable and some
-        constant. Rather than returning a new encoded cnf object with a new encoding, the new lra
-        object has its own encoding stored in `lra.boundry_enc` and `lra.boundry_rev_enc`.
+        By substituting terms with multiple constraints with slack variables,
+        each constraint in phi is transformed into an upper or lower bound or
+        equality between a single variable and some constant. Rather than
+        returning a new encoded cnf object with a new encoding, the new lra
+        object has its own encoding stored in `lra.boundry_enc` and
+        `lra.boundry_rev_enc`.
 
-        As boundry objects can't be printed nicely, here's what that looks like if the boundries are
-        converted into inequalities.
+        As boundry objects can't be printed nicely, here's what that looks
+        like if the boundries are converted into inequalities.
 
         >>> {key: value.get_inequality() for key, value in lra.boundry_enc.items()} #doctest: +SKIP
         {5: Eq(_s1, 2), 6: _s2 <= -6, 4: _x1 >= 0, 1: _s2 < -4, 2: _s1 <= 2}
 
-        Notice that there are no encodings for 3. This is because predicates such as
-        Q.prime which the LRASolver has no understanding of are ignored.
+        Notice that there are no encodings for 3. This is because predicates
+        such as Q.prime which the LRASolver has no understanding of are
+        ignored.
         """
 
         # TODO: Preprecessing needs to be done to encoded_cnf
