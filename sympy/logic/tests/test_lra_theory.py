@@ -90,7 +90,7 @@ def test_from_encoded_cnf():
     assert str(lra.nonslack) == '[_x1, _x2, _x3]'
     assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
                             [-1, -2, 1,  0, -1]])
-    assert set((str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.boundry_enc.values()) == {('_s1', 2, None, True, False),
+    assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.boundry_enc.values()} == {('_s1', 2, None, True, False),
     ('_s1', 2, True, False, False),
     ('_s2', -4, True, False, True),
     ('_s2', -6, True, False, False),
@@ -247,7 +247,7 @@ def test_random_problems():
         lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
-        lits = set(lit for clause in enc.data for lit in clause)
+        lits = {lit for clause in enc.data for lit in clause}
 
         bounds = [(lra.boundry_enc[l], l) for l in lits if l in lra.boundry_enc]
         bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
