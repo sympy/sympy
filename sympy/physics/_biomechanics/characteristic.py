@@ -771,3 +771,15 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
             )
 
         raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return FiberForceLengthPassiveDeGroote2016
