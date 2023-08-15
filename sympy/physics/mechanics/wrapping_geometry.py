@@ -182,16 +182,23 @@ class WrappingSphere(WrappingGeometryBase):
         return Eq(point_radius_squared, self.radius**2) == True
 
     def geodesic_length(self, point_1, point_2):
-        """Returns the shortest distance between two points on the sphere's
+        r"""Returns the shortest distance between two points on the sphere's
         surface.
 
         Explanation
         ===========
 
         The geodesic length, i.e. the shortest arc along the surface of a
-        sphere, connecting two points. Note that the actual path that the
-        geodesic will take is undefined when the two points are directly
-        opposite one another.
+        sphere, connecting two points can be calculated using the formula:
+
+        .. math::
+
+           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
+
+        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
+        sphere's center to the first and second points on the sphere's surface
+        respectively. Note that the actual path that the geodesic will take is
+        undefined when the two points are directly opposite one another.
 
         Examples
         ========
@@ -417,21 +424,18 @@ class WrappingCylinder(WrappingGeometryBase):
         return Eq(trigsimp(point_radius_squared), self.radius**2) == True
 
     def geodesic_length(self, point_1, point_2):
-        r"""The shortest distance between two points on a geometry's surface.
+        """The shortest distance between two points on a geometry's surface.
 
         Explanation
         ===========
 
         The geodesic length, i.e. the shortest arc along the surface of a
-        cylinder, connecting two points can be calculated using the formula:
-
-        .. math::
-
-           l = \arccos\left(\mathbf{v}_1 \cdot \mathbf{v}_2\right)
-
-        where $\mathbf{v}_1$ and $\mathbf{v}_2$ are the unit vectors from the
-        cylinder's center to the first and second points on the cylinder's
-        surface respectively.
+        cylinder, connecting two points. It can be calculated using Pythagoras'
+        theorem. The first short side is the distance between the two points on
+        the cylinder's surface parallel to the cylinder's axis. The second
+        short side is the arc of a circle between the two points of the
+        cylinder's surface perpendicular to the cylinder's axis. The resulting
+        hypotenuse is the geodesic length.
 
         Examples
         ========
