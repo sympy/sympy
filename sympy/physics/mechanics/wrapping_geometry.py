@@ -66,7 +66,7 @@ class GeometryBase(ABC):
         pass
 
     @abstractmethod
-    def _geodesic_end_vectors(self, point_1, point_2,):
+    def geodesic_end_vectors(self, point_1, point_2,):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
@@ -258,7 +258,7 @@ class Sphere(GeometryBase):
         geodesic_length = self.radius*central_angle
         return geodesic_length
 
-    def _geodesic_end_vectors(self, point_1, point_2):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters
@@ -525,7 +525,7 @@ class Cylinder(GeometryBase):
         geodesic_length = sqrt(parallel_length**2 + planar_arc_length**2)
         return geodesic_length
 
-    def _geodesic_end_vectors(self, point_1, point_2):
+    def geodesic_end_vectors(self, point_1, point_2):
         """The vectors parallel to the geodesic at the two end points.
 
         Parameters

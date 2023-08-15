@@ -463,7 +463,7 @@ class WrappingPathway(PathwayBase):
         """
         pA, pB = self.attachments
         pO = self.geometry.point
-        pA_force, pB_force = self.geometry._geodesic_end_vectors(pA, pB)
+        pA_force, pB_force = self.geometry.geodesic_end_vectors(pA, pB)
         pO_force = -(pA_force + pB_force)
 
         loads: list[LoadBase] = [
