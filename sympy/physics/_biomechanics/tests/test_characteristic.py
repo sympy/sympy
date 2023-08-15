@@ -667,3 +667,13 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
     def test_inverse(self):
         fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
         assert fl_M_pas_inv.inverse() is FiberForceLengthPassiveDeGroote2016
+
+    def test_function_print_latex(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = r'\left( \operatorname{fl}^M_{pas} \right)^{-1} \left( fl_{M pas} \right)'
+        assert LatexPrinter().doprint(fl_M_pas_inv) == expected
+
+    def test_expression_print_latex(self):
+        fl_T = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = r'\frac{c_{0} \log{\left(fl_{M pas} \left(e^{c_{1}} - 1\right) + 1 \right)}}{c_{1}} + 1'
+        assert LatexPrinter().doprint(fl_T.doit()) == expected
