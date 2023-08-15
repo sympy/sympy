@@ -663,3 +663,31 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def with_default_constants(cls, fl_M_pas):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the inverse muscle fiber passive force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c_0 = 0.6$
+        $c_1 = 4.0$
+
+        Parameters
+        ==========
+
+        fl_M_pas : Any (sympifiable)
+            Normalized passive muscle fiber force as a function of muscle fiber
+            length.
+
+        """
+        c0 = Rational(3, 5)
+        c1 = Integer(4)
+        return cls(fl_M_pas, c0, c1)
