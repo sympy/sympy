@@ -21,6 +21,7 @@ from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Function, expand_mul
+from sympy.core.numbers import Float
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
