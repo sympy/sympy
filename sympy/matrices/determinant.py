@@ -903,7 +903,7 @@ def _det_bird(M):
                  enumerate(X)]
         return DDM(elems, X.shape, X.domain)
 
-    Mddm = M._rep.to_dense().rep
+    Mddm = M._rep.to_ddm()
     n = M.shape[0]
     if n == 0:
         return M.one
