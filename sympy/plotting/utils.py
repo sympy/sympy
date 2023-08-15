@@ -20,9 +20,7 @@ def _get_free_symbols(exprs):
 
     free = set().union(*[e.atoms(Indexed) for e in exprs])
     free = free.union(*[e.atoms(AppliedUndef) for e in exprs])
-    if len(free) > 0:
-        return free
-    return set().union(*[e.free_symbols for e in exprs])
+    return free or set().union(*[e.free_symbols for e in exprs])
 
 
 def extract_solution(set_sol, n=10):
