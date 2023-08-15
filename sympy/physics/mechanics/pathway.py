@@ -125,7 +125,7 @@ class LinearPathway(PathwayBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.pathway import LinearPathway
+    >>> from sympy.physics.mechanics import LinearPathway
 
     To construct a pathway, two points are required to be passed to the
     ``attachments`` parameter as a ``tuple``.
@@ -228,8 +228,8 @@ class LinearPathway(PathwayBase):
         actuator between two points separated by the coordinate ``q`` in the
         ``x`` direction of the global frame ``N``.
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics.pathway import LinearPathway
+        >>> from sympy.physics.mechanics import (LinearPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
@@ -279,7 +279,7 @@ class WrappingPathway(PathwayBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.pathway import WrappingPathway
+    >>> from sympy.physics.mechanics import WrappingPathway
 
     To construct a wrapping pathway, like other pathways, a pair of points must
     be passed, followed by an instance of a wrapping geometry class as a
@@ -400,8 +400,7 @@ class WrappingPathway(PathwayBase):
         relative to ``pA`` by the dynamics symbol ``q``.
 
         >>> from sympy import cos, sin
-        >>> from sympy.physics.mechanics import dynamicsymbols
-        >>> from sympy.physics.mechanics.pathway import WrappingPathway
+        >>> from sympy.physics.mechanics import WrappingPathway, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> pA = Point('pA')
         >>> pB = Point('pB')

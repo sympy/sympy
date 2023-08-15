@@ -13,18 +13,15 @@ from sympy.core.backend import (
 )
 from sympy.physics.mechanics import (
     Force,
+    LinearPathway,
+    PathwayBase,
     Point,
     ReferenceFrame,
     WrappingCylinder,
     WrappingGeometryBase,
+    WrappingPathway,
     WrappingSphere,
     dynamicsymbols,
-)
-
-from sympy.physics.mechanics.pathway import (
-    LinearPathway,
-    PathwayBase,
-    WrappingPathway,
 )
 from sympy.simplify.simplify import simplify
 
