@@ -184,23 +184,12 @@ class LinearPathway(PathwayBase):
     @property
     def length(self):
         """Exact analytical expression for the pathway's length."""
-        length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
-        return length
+        return self.attachments[-1].pos_from(self.attachments[0]).magnitude()
 
     @property
     def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
-        relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        if not relative_position:
-            return S.Zero
-        t = dynamicsymbols._t
-        # A reference frame is needed to differentiate ``relative_position`` to
-        # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
-        # ``relative_position`` is defined using.
-        frame = relative_position.args[0][1]
-        relative_velocity = relative_position.diff(t, frame)
-        extension_velocity = relative_velocity.dot(relative_position.normalize())
-        return extension_velocity
+        return self.length.diff(dynamicsymbols._t)
 
     def compute_loads(self, force):
         """Loads required by the equations of motion method classes.

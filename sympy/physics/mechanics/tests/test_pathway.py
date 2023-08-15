@@ -126,7 +126,7 @@ class TestLinearPathway:
 
     def test_2D_pathway_extension_velocity(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
-        expected = 2*self.q1*self.q1d/sqrt(self.q1**2)
+        expected = 2*sqrt(self.q1**2)*self.q1d/self.q1
         assert self.pathway.extension_velocity == expected
 
     def test_2D_pathway_compute_loads(self):
