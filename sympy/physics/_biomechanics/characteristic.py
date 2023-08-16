@@ -801,4 +801,34 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
-    pass
+    r"""Active muscle fiber force-length curve based on De Groote et al., 2016
+    [1].
+
+    Explanation
+    ===========
+
+    The function is defined by the equation:
+
+    $fl^M_{act} = c_0 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{\left(c_2 + c_3 \tilde{l}^M\right)}\right)^2}
+        + c_4 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{\left(c_6 + c_7 \tilde{l}^M\right)}\right)^2}
+        + c_8 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{\left(c_{10} + c_{11} \tilde{l}^M\right)}\right)^2}$
+
+    with constant values of $c0 = 0.814$, $c1 = 1.06$, $c2 = 0.162$,
+    $c3 = 0.0633$, $c4 = 0.433$, $c5 = 0.717$, $c6 = -0.0299$, $c7 = 0.2$,
+    $c8 = 0.1$, $c9 = 1.0$, $c10 = 0.354$, and $c11 = 0.0$.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    active fiber force of 1 at a normalized fiber length of 1, and an active
+    fiber force of 0 at normalized fiber lengths of 0 and 2.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
