@@ -362,7 +362,7 @@ class TestLinearDamper:
         assert isinstance(damper.pathway, LinearPathway)
         assert damper.pathway == self.pathway
 
-        expected_force = -self.damping * self.dq * self.q / sqrt(self.q**2)
+        expected_force = -self.damping*sqrt(self.q**2)*self.dq/self.q
         assert hasattr(damper, 'force')
         assert isinstance(damper.force, ExprType)
         assert damper.force == expected_force
