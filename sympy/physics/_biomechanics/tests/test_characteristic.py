@@ -10,6 +10,7 @@ from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
+    FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
     FiberForceLengthPassiveInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
@@ -788,3 +789,26 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
             1.2774998934,
         ])
         numpy.testing.assert_allclose(fl_M_pas_inv_callable(fl_M_pas), expected)
+
+
+class TestFiberForceLengthActiveDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _fiber_force_length_active_arguments_fixture(self):
+        self.l_M_tilde = Symbol('l_M_tilde')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.c2 = Symbol('c_2')
+        self.c3 = Symbol('c_3')
+        self.c4 = Symbol('c_4')
+        self.c5 = Symbol('c_5')
+        self.c6 = Symbol('c_6')
+        self.c7 = Symbol('c_7')
+        self.c8 = Symbol('c_8')
+        self.c9 = Symbol('c_9')
+        self.c10 = Symbol('c_10')
+        self.c11 = Symbol('c_11')
+        self.constants = (
+            self.c0, self.c1, self.c2, self.c3, self.c4, self.c5,
+            self.c6, self.c7, self.c8, self.c9, self.c10, self.c11,
+        )
