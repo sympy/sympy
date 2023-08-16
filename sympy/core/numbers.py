@@ -2118,16 +2118,17 @@ class Integer(Rational):
 
     __slots__ = ()
 
-    def length(self):
+    def length(self, base=10):
         """return number of base-10 digits"""
-        if not self:
+        b = as_int(b)
+        if self < b:
             return 1
         n = abs(self.p)
-        d = 1 + math.floor(math.log(n)/math.log(10))
-        s = n//10**d
+        d = 1 + math.floor(math.log(n)/math.log(b))
+        s = n//b**d
         if not s:
             return d
-        assert not s//10, self  # check assumptions
+        assert not s//b, self  # check assumptions
         return d + 1
 
     def _as_mpf_val(self, prec):
