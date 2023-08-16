@@ -168,21 +168,22 @@ def _unpack_args(*args):
     ========
 
     >>> from sympy import cos, sin, symbols
+    >>> from sympy.plotting.utils import _plot_sympify, _unpack_args
     >>> x, y = symbols('x, y')
     >>> args = (sin(x), (x, -10, 10), "f1")
     >>> args = _plot_sympify(args)
     >>> _unpack_args(*args)
-        ([sin(x)], [(x, -2, 2)], 'f1')
+    ([sin(x)], [(x, -10, 10)], 'f1', None)
 
     >>> args = (sin(x**2 + y**2), (x, -2, 2), (y, -3, 3), "f2")
     >>> args = _plot_sympify(args)
     >>> _unpack_args(*args)
-        ([sin(x**2 + y**2)], [(x, -2, 2), (y, -3, 3)], 'f2')
+    ([sin(x**2 + y**2)], [(x, -2, 2), (y, -3, 3)], 'f2', None)
 
     >>> args = (sin(x + y), cos(x - y), x + y, (x, -2, 2), (y, -3, 3), "f3")
     >>> args = _plot_sympify(args)
     >>> _unpack_args(*args)
-        ([sin(x + y), cos(x - y), x + y], [(x, -2, 2), (y, -3, 3)], 'f3')
+    ([sin(x + y), cos(x - y), x + y], [(x, -2, 2), (y, -3, 3)], 'f3', None)
     """
     ranges = [t for t in args if _is_range(t)]
     labels = [t for t in args if isinstance(t, str)]
@@ -233,10 +234,16 @@ def _check_arguments(args, nexpr, npar, **kwargs):
        >>> from sympy.plotting.plot import _check_arguments
        >>> x = symbols('x')
        >>> _check_arguments([cos(x), sin(x)], 2, 1)
-           [(cos(x), sin(x), (x, -10, 10), '(cos(x), sin(x))')]
+       [(cos(x), sin(x), (x, -10, 10), None, None)]
+
+       >>> _check_arguments([cos(x), sin(x), "test"], 2, 1)
+       [(cos(x), sin(x), (x, -10, 10), 'test', None)]
+
+       >>> _check_arguments([cos(x), sin(x), "test", {"a": 0, "b": 1}], 2, 1)
+       [(cos(x), sin(x), (x, -10, 10), 'test', {'a': 0, 'b': 1})]
 
        >>> _check_arguments([x, x**2], 1, 1)
-           [(x, (x, -10, 10), 'x'), (x**2, (x, -10, 10), 'x**2')]
+       [(x, (x, -10, 10), None, None), (x**2, (x, -10, 10), None, None)]
     """
     if not args:
         return []
