@@ -27,7 +27,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy, flint as _flint
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -100,16 +100,24 @@ def test_sympify_Fraction():
 
 
 def test_sympify_gmpy():
-    if HAS_GMPY:
-        if HAS_GMPY == 2:
-            import gmpy2 as gmpy
-        elif HAS_GMPY == 1:
-            import gmpy
+    if _gmpy is not None:
+        import gmpy2
 
-        value = sympify(gmpy.mpz(1000001))
+        value = sympify(gmpy2.mpz(1000001))
         assert value == Integer(1000001) and type(value) is Integer
 
-        value = sympify(gmpy.mpq(101, 127))
+        value = sympify(gmpy2.mpq(101, 127))
+        assert value == Rational(101, 127) and type(value) is Rational
+
+
+def test_sympify_flint():
+    if _flint is not None:
+        import flint
+
+        value = sympify(flint.fmpz(1000001))
+        assert value == Integer(1000001) and type(value) is Integer
+
+        value = sympify(flint.fmpq(101, 127))
         assert value == Rational(101, 127) and type(value) is Rational
 
 
