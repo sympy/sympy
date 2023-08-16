@@ -966,3 +966,17 @@ class TestFiberForceLengthActiveDeGroote2016:
             *exp((self.c9 - self.l_M_tilde)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c11) == expected
+
+    def test_function_print_latex(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = r'\operatorname{fl}^M_{act} \left( l_{M tilde} \right)'
+        assert LatexPrinter().doprint(fl_M_act) == expected
+
+    def test_expression_print_latex(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
+        expected = (
+            r'c_{0} e^{\frac{\left(c_{1} - l_{M tilde}\right)^{2}}{2 \left(c_{2} + c_{3} l_{M tilde}\right)^{2}}} '
+            r'+ c_{4} e^{\frac{\left(c_{5} - l_{M tilde}\right)^{2}}{2 \left(c_{6} + c_{7} l_{M tilde}\right)^{2}}} '
+            r'+ c_{8} e^{\frac{\left(c_{9} - l_{M tilde}\right)^{2}}{2 \left(c_{10} + c_{11} l_{M tilde}\right)^{2}}}'
+        )
+        assert LatexPrinter().doprint(fl_M_act.doit()) == expected
