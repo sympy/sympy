@@ -832,3 +832,51 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def with_default_constants(cls, l_M_tilde):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the inverse muscle fiber act force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c0 = 0.814$
+        $c1 = 1.06$
+        $c2 = 0.162$
+        $c3 = 0.0633$
+        $c4 = 0.433$
+        $c5 = 0.717$
+        $c6 = -0.0299$
+        $c7 = 0.2$
+        $c8 = 0.1$
+        $c9 = 1.0$
+        $c10 = 0.354$
+        $c11 = 0.0$
+
+        Parameters
+        ==========
+
+        fl_M_act : Any (sympifiable)
+            Normalized passive muscle fiber force as a function of muscle fiber
+            length.
+
+        """
+        c0 = Float('0.814')
+        c1 = Float('1.06')
+        c2 = Float('0.162')
+        c3 = Float('0.0633')
+        c4 = Float('0.433')
+        c5 = Float('0.717')
+        c6 = Float('-0.0299')
+        c7 = Rational(1, 5)
+        c8 = Rational(1, 10)
+        c9 = Integer(1)
+        c10 = Float('0.354')
+        c11 = Integer(0)
+        return cls(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
