@@ -830,17 +830,17 @@ class TestFiberForceLengthActiveDeGroote2016:
     def test_doit(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants).doit()
         assert fl_M_act == (
-            self.c0*exp(-0.5*((self.l_M_tilde - self.c1)/(self.c2 + self.c3*self.l_M_tilde))**2)
-            + self.c4*exp(-0.5*((self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde))**2)
-            + self.c8*exp(-0.5*((self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)
+            self.c0*exp((((self.c1 - self.l_M_tilde)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
+            + self.c4*exp((((self.c5 - self.l_M_tilde)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
+            + self.c8*exp((((self.c9 - self.l_M_tilde)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
         )
 
     def test_doit_evaluate_false(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
         assert fl_M_act == (
-            self.c0*exp(-0.5*(UnevaluatedExpr(self.l_M_tilde - self.c1)/(self.c2 + self.c3*self.l_M_tilde))**2)
-            + self.c4*exp(-0.5*(UnevaluatedExpr(self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde))**2)
-            + self.c8*exp(-0.5*(UnevaluatedExpr(self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)
+            self.c0*exp(((UnevaluatedExpr(self.c1 - self.l_M_tilde)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
+            + self.c4*exp(((UnevaluatedExpr(self.c5 - self.l_M_tilde)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
+            + self.c8*exp(((UnevaluatedExpr(self.c9 - self.l_M_tilde)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
         )
 
     def test_with_default_constants(self):
