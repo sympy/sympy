@@ -1664,10 +1664,8 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_polylog(self, e):
-        if self._use_unicode:
-            func_name = f"Li_{e.args[0].__str__()}"
-            new_e = Function(func_name)(e.args[1])
-            return self._print_Function(new_e)
+        if e.args[0].is_Integer and self._use_unicode:
+            return self._print_Function(Function('Li_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)
 
     def _print_lerchphi(self, e):

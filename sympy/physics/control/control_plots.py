@@ -208,7 +208,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -225,7 +225,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======
@@ -359,7 +359,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -376,7 +376,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======
@@ -510,7 +510,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -529,7 +529,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======
@@ -775,7 +775,7 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     return plt
 
 
-def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='rad/sec', phase_unit='rad', **kwargs):
+def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='rad/sec', phase_unit='rad', phase_unwrap = True, **kwargs):
     """
     Returns the numerical data of the Bode phase plot of the system.
     It is internally used by ``bode_phase_plot`` to get the data
@@ -796,6 +796,8 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
         User can choose between ``'rad/sec'`` (radians/second) and '``'Hz'`` (Hertz) as frequency units.
     phase_unit : string, optional
         User can choose between ``'rad'`` (radians) and ``'deg'`` (degree) as phase units.
+    phase_unwrap : bool, optional
+        Set to ``True`` by default.
 
     Returns
     =======
@@ -860,18 +862,33 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
     x, y = LineOver1DRangeSeries(phase,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
 
+    half = None
+    if phase_unwrap:
+        if(phase_unit == 'rad'):
+            half = pi
+        elif(phase_unit == 'deg'):
+            half = 180
+    if half:
+        unit = 2*half
+        for i in range(1, len(y)):
+            diff = y[i] - y[i - 1]
+            if diff > half:      # Jump from -half to half
+                y[i] = (y[i] - unit)
+            elif diff < -half:   # Jump from half to -half
+                y[i] = (y[i] + unit)
+
     return x, y
 
 
 def bode_phase_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
+    color='b', show_axes=False, grid=True, show=True, freq_unit='rad/sec', phase_unit='rad', phase_unwrap=True, **kwargs):
     r"""
     Returns the Bode phase plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
     x, y = bode_phase_numerical_data(system, initial_exp=initial_exp,
-        final_exp=final_exp, freq_unit=freq_unit, phase_unit=phase_unit)
+        final_exp=final_exp, freq_unit=freq_unit, phase_unit=phase_unit, phase_unwrap=phase_unwrap)
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
@@ -892,7 +909,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
+    grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', phase_unwrap=True, **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -949,7 +966,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     mag.xlabel(None)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
-        show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, **kwargs).title(None)
+        show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, phase_unwrap=phase_unwrap, **kwargs).title(None)
 
     if show:
         plt.show()

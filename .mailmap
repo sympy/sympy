@@ -30,7 +30,7 @@
 #   unrecognised author/email metadata.
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
@@ -49,7 +49,7 @@
 #   The mailmap file was reordered
 #
 #   For instructions on updating the .mailmap file see:
-#   https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file
+#   https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#add-your-name-and-email-address-to-the-mailmap-file
 #
 #   ...
 #
@@ -400,6 +400,7 @@ Bill Flynn <wflynny@gmail.com>
 Biswadeep Purkayastha <98874428+metabiswadeep@users.noreply.github.com>
 Björn Dahlgren <bjodah@gmail.com>
 Blair Azzopardi <blairuk@gmail.com> bsdz <bsdz@users.noreply.github.com>
+Bobby Palmer <bobbyp@umich.edu>
 Boris Atamanovskiy <shaomoron@gmail.com>
 Boris Ettinger <ettinger.boris@gmail.com>
 Boris Timokhin <qoqenator@gmail.com>
@@ -666,9 +667,11 @@ Hubert Tsang <intsangity@gmail.com>
 Hugo van Kemenade <hugovk@users.noreply.github.com> Hugo <hugovk@users.noreply.github.com>
 Huijun Mai <m.maihuijun@gmail.com>
 Ian Swire <oversizedpenguin@gmail.com>
+Idan Pazi <idan.kp@gmail.com>
 Ilya Pchelintsev <ilya.pchelintsev@outlook.com> ILLIA PCHALINTSAU <ilya.pchelintsev@outlook.com>
 Imran Ahmed Manzoor <imran.manzoor31@gmail.com>
 Ishan Joshi <ishanaj98@gmail.com>
+Ishan Pandhare <91841626+Ishanned@users.noreply.github.com>
 Ishan Pandhare <ishan9096137017@gmail.com>
 Isidora Araya <iarayaday@gmail.com>
 Islam Mansour <is3mansour@gmail.com>
@@ -747,6 +750,7 @@ Johan Blåbäck <johan_bluecreek@riseup.net> <johan.blaback@cea.fr>
 Johan Guzman <jguzm022@ucr.edu>
 Johann Cohen-Tanugi <johann.cohentanugi@gmail.com>
 Johannes Hartung <joha2@gmx.net>
+Johannes Kasimir <johannes.kasimir@math.lu.se>
 John Connor <john.theman.connor@gmail.com>
 John Möller <john.moller@outlook.com>
 John V. Siratt <jvsiratt@gmail.com>
@@ -789,6 +793,8 @@ Karthik Chintapalli <karthik.chintapalli@students.iiit.ac.in> <karthik.chintapal
 Kartik Sethi <kartiks31416@gmail.com> Kartik Sethi <37146279+ks147@users.noreply.github.com>
 Katja Sophie Hotz <katja.sophie.hotz@student.tuwien.ac.at>
 Kaushik Varanasi <kaushik.varanasi1@gmail.com>
+Kaustubh <90597818+kaustubh-765@users.noreply.github.com>
+Kaustubh <kaustubh.am765@gmail.com>
 Kaustubh Chaudhari <ckaustubhm06@gmail.com> Kaustubh <ckaustubhm06@gmail.com>
 Kaustubh Chaudhari <ckaustubhm06@gmail.com> kc611 <ckaustubhm06@gmail.com>
 KaustubhDamania <kaustubh.damania@gmail.com>
@@ -1030,6 +1036,10 @@ Oscar Benjamin <oscar.j.benjamin@gmail.com> <oscar@kar-wench.(none)>
 Oscar Gerardo Lazo Arjona <oscar.lazoarjona@physics.ox.ac.uk> oscarlazoarjona <oscar.lazoarjona@physics.ox.ac.uk>
 Oscar Gustafsson <oscar.gustafsson@gmail.com>
 P. Sai Prasanth <psai.prasanth.min16@itbhu.ac.in>
+Pablo Galindo Salgado <pablogsal@gmail.com> Pablo Galindo <pablogsal@gmail.com>
+Pablo Galindo Salgado <pablogsal@gmail.com> Pablo Galindo Salgado <Pablogsal@gmail.com>
+Pablo Galindo Salgado <pablogsal@gmail.com> pablogsal <Pablogsal@gmail.com>
+Pablo Galindo Salgado <pablogsal@gmail.com> pablogsal <pablogsal@gmail.com>
 Pablo Puente <ppuedom@gmail.com> <ppuedom@yahoo.com>
 Pablo Zubieta <pabloferz@yahoo.com.mx>
 Pan Peng <pengpanster@gmail.com>
@@ -1198,6 +1208,7 @@ Sagar231 <sagarfeb298@gmail.com>
 Sahil Shekhawat <sahilshekhawat01@gmail.com>
 Sai Nikhil <tsnlegend@gmail.com>
 Saicharan <saicharanhahaha@gmail.com>
+Saikat Das <saikatdchhe@gmail.com>
 Saket Kumar Singh <saketkumar1202@gmail.com>
 Saketh <alurusaisaketh@gmail.com>
 Sakirul Alam <binarysakir@gmail.com>
@@ -1324,6 +1335,7 @@ Subhash Saurabh <subhashsaurabh419@gmail.com>
 Sudarshan Kamath <sudarshan.kamath97@gmail.com>
 Sudeep Sidhu <sudeepmanilsidhu@gmail.com> sidhu1012 <sudeepmanilsidhu@gmail.com>
 Sudhanshu Mishra <mrsud94@gmail.com>
+Suman mondal <smondal.qwerty@gmail.com>
 Sumit Kumar <mr.sumitkrr@gmail.com> Sumit Kumar <96618001+sumit-158@users.noreply.github.com>
 Sumith Kulal <sumith1896@gmail.com>
 Sunny Aggarwal <sunnyaggarwal1994@gmail.com>
@@ -1343,6 +1355,7 @@ Tasha Kim <jae_young_kim@brown.edu>
 Ted Dokos <tdokos@gmail.com> <t.dokos@gmail.com>
 Ted Horst <ted.horst@earthlink.net>
 Tejaswini Sanapathi <sastejaswini2002@gmail.com>
+Theodore Dias <theodore.dias@hotmail.co.uk>
 Theodore Han <theodorehan@hotmail.com> <theodorehan373@gmail.com>
 Theodore Han <theodorehan@hotmail.com> <tqhan317@gmail.com>
 Thilina Rathnayake <thilinarmtb@gmail.com>

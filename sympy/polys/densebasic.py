@@ -484,7 +484,7 @@ def dup_normal(f, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_normal
 
-    >>> dup_normal([0, 1.5, 2, 3], ZZ)
+    >>> dup_normal([0, 1, 2, 3], ZZ)
     [1, 2, 3]
 
     """
@@ -501,7 +501,7 @@ def dmp_normal(f, u, K):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_normal
 
-    >>> dmp_normal([[], [0, 1.5, 2]], 1, ZZ)
+    >>> dmp_normal([[], [0, 1, 2]], 1, ZZ)
     [[1, 2]]
 
     """
