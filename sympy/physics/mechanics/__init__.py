@@ -37,7 +37,7 @@ __all__ = [
 
     'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
 
-    'PathwayBase', 'LinearPathway', 'WrappingPathway',
+    'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
 
     'ActuatorBase', 'ForceActuator', 'LinearDamper', 'LinearSpring',
     'TorqueActuator',
@@ -83,7 +83,8 @@ from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
 from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
                                 WrappingSphere)
 
-from .pathway import PathwayBase, LinearPathway, WrappingPathway
+from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
+                      WrappingPathway)
 
 from .actuator import (ActuatorBase, ForceActuator, LinearDamper, LinearSpring,
                        TorqueActuator)

@@ -11,6 +11,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     FiberForceLengthPassiveDeGroote2016,
+    FiberForceLengthPassiveInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -480,6 +481,10 @@ class TestFiberForceLengthPassiveDeGroote2016:
         )
         assert fl_M_pas.diff(self.c1) == expected
 
+    def test_inverse(self):
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
+        assert fl_M_pas.inverse() is FiberForceLengthPassiveInverseDeGroote2016
+
     def test_function_print_latex(self):
         fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = r'\operatorname{fl}^M_{pas} \left( l_{M tilde} \right)'
@@ -602,3 +607,184 @@ class TestFiberForceLengthPassiveDeGroote2016:
             0.5043387669,
         ])
         numpy.testing.assert_allclose(fl_M_pas_callable(l_M_tilde), expected)
+
+
+class TestFiberForceLengthPassiveInverseDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _fiber_force_length_passive_arguments_fixture(self):
+        self.fl_M_pas = Symbol('fl_M_pas')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.constants = (self.c0, self.c1)
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceLengthPassiveInverseDeGroote2016, Function)
+        assert issubclass(FiberForceLengthPassiveInverseDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceLengthPassiveInverseDeGroote2016.__name__ == 'FiberForceLengthPassiveInverseDeGroote2016'
+
+    def test_instance(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        assert isinstance(fl_M_pas_inv, FiberForceLengthPassiveInverseDeGroote2016)
+        assert str(fl_M_pas_inv) == 'FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c_0, c_1)'
+
+    def test_doit(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants).doit()
+        assert fl_M_pas_inv == self.c0*log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1 + 1
+
+    def test_doit_evaluate_false(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants).doit(evaluate=False)
+        assert fl_M_pas_inv == self.c0*log(UnevaluatedExpr(self.fl_M_pas*(exp(self.c1) - 1)) + 1)/self.c1 + 1
+
+    def test_with_default_constants(self):
+        constants = (
+            Rational(3, 5),
+            Integer(4),
+        )
+        fl_M_pas_inv_manual = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *constants)
+        fl_M_pas_inv_constants = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        assert fl_M_pas_inv_manual == fl_M_pas_inv_constants
+
+    def test_differentiate_wrt_fl_T(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = self.c0*(exp(self.c1) - 1)/(self.c1*(self.fl_M_pas*(exp(self.c1) - 1) + 1))
+        assert fl_M_pas_inv.diff(self.fl_M_pas) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1
+        assert fl_M_pas_inv.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = (
+            self.c0*self.fl_M_pas*exp(self.c1)/(self.c1*(self.fl_M_pas*(exp(self.c1) - 1) + 1))
+            - self.c0*log(self.fl_M_pas*(exp(self.c1) - 1) + 1)/self.c1**2
+        )
+        assert fl_M_pas_inv.diff(self.c1) == expected
+
+    def test_inverse(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        assert fl_M_pas_inv.inverse() is FiberForceLengthPassiveDeGroote2016
+
+    def test_function_print_latex(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = r'\left( \operatorname{fl}^M_{pas} \right)^{-1} \left( fl_{M pas} \right)'
+        assert LatexPrinter().doprint(fl_M_pas_inv) == expected
+
+    def test_expression_print_latex(self):
+        fl_T = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants)
+        expected = r'\frac{c_{0} \log{\left(fl_{M pas} \left(e^{c_{1}} - 1\right) + 1 \right)}}{c_{1}} + 1'
+        assert LatexPrinter().doprint(fl_T.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4)))',
+            ),
+            (
+                C99CodePrinter,
+                '1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4)))',
+            ),
+            (
+                C11CodePrinter,
+                '1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4)))',
+            ),
+            (
+                CXX98CodePrinter,
+                '1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4)))',
+            ),
+            (
+                CXX11CodePrinter,
+                '1 + (3.0/20.0)*std::log(1 + fl_M_pas*(-1 + std::exp(4)))',
+            ),
+            (
+                CXX17CodePrinter,
+                '1 + (3.0/20.0)*std::log(1 + fl_M_pas*(-1 + std::exp(4)))',
+            ),
+            (
+                FCodePrinter,
+                '      1 + (3.0d0/20.0d0)*log(1.0d0 + fl_M_pas*(-1 + 54.598150033144239d0\n'
+                '      @ ))',
+            ),
+            (
+                OctaveCodePrinter,
+                '1 + 3*log(1 + fl_M_pas.*(-1 + exp(4)))/20',
+            ),
+            (
+                PythonCodePrinter,
+                '1 + (3/20)*math.log(1 + fl_M_pas*(-1 + math.exp(4)))',
+            ),
+            (
+                NumPyPrinter,
+                '1 + (3/20)*numpy.log(1 + fl_M_pas*(-1 + numpy.exp(4)))',
+            ),
+            (
+                SciPyPrinter,
+                '1 + (3/20)*numpy.log(1 + fl_M_pas*(-1 + numpy.exp(4)))',
+            ),
+            (
+                CuPyPrinter,
+                '1 + (3/20)*cupy.log(1 + fl_M_pas*(-1 + cupy.exp(4)))',
+            ),
+            (
+                JaxPrinter,
+                '1 + (3/20)*jax.numpy.log(1 + fl_M_pas*(-1 + jax.numpy.exp(4)))',
+            ),
+            (
+                MpmathPrinter,
+                '1 + (mpmath.mpf(3)/mpmath.mpf(20))*mpmath.log(1 + fl_M_pas*(-1 + mpmath.exp(4)))',
+            ),
+            (
+                LambdaPrinter,
+                '1 + (3/20)*math.log(1 + fl_M_pas*(-1 + math.exp(4)))',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer, expected):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        assert code_printer().doprint(fl_M_pas_inv) == expected
+
+    def test_derivative_print_code(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        dfl_M_pas_inv_dfl_T = fl_M_pas_inv.diff(self.fl_M_pas)
+        expected = '(-3/5 + (3/5)*math.exp(4))/(4*fl_M_pas*(-1 + math.exp(4)) + 4)'
+        assert PythonCodePrinter().doprint(dfl_M_pas_inv_dfl_T) == expected
+
+    def test_lambdify(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv)
+        assert fl_M_pas_inv_callable(0.0) == pytest.approx(1.0)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv, 'numpy')
+        fl_M_pas = numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
+        expected = numpy.array([
+            0.8848253714,
+            1.0,
+            1.0643754386,
+            1.1092744701,
+            1.1954331425,
+            1.2774998934,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_inv_callable(fl_M_pas), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_callable = jax.jit(lambdify(self.fl_M_pas, fl_M_pas_inv, 'jax'))
+        fl_M_pas = jax.numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
+        expected = jax.numpy.array([
+            0.8848253714,
+            1.0,
+            1.0643754386,
+            1.1092744701,
+            1.1954331425,
+            1.2774998934,
+        ])
+        numpy.testing.assert_allclose(fl_M_pas_inv_callable(fl_M_pas), expected)
