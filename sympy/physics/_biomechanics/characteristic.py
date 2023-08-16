@@ -880,3 +880,56 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
         c10 = Float('0.354')
         c11 = Integer(0)
         return cls(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
+
+    @classmethod
+    def eval(cls, l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        l_M_tilde : Any (sympifiable)
+            Normalized muscle fiber length.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.814``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``1.06``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``0.162``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``0.0633``.
+        c4 : Any (sympifiable)
+            The fifth constant in the characteristic equation. The published
+            value is ``0.433``.
+        c5 : Any (sympifiable)
+            The sixth constant in the characteristic equation. The published
+            value is ``0.717``.
+        c6 : Any (sympifiable)
+            The seventh constant in the characteristic equation. The published
+            value is ``-0.0299``.
+        c7 : Any (sympifiable)
+            The eighth constant in the characteristic equation. The published
+            value is ``0.2``.
+        c8 : Any (sympifiable)
+            The ninth constant in the characteristic equation. The published
+            value is ``0.1``.
+        c9 : Any (sympifiable)
+            The tenth constant in the characteristic equation. The published
+            value is ``1.0``.
+        c10 : Any (sympifiable)
+            The eleventh constant in the characteristic equation. The published
+            value is ``0.354``.
+        c11 : Any (sympifiable)
+            The tweflth constant in the characteristic equation. The published
+            value is ``0.0``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
