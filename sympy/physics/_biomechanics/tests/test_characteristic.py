@@ -1136,3 +1136,36 @@ class TestFiberForceLengthActiveDeGroote2016:
             '*math.exp((25/2)*(0.717 - l_M_tilde)**2/(l_M_tilde - 0.1495)**2)'
         )
         assert PythonCodePrinter().doprint(fl_M_act_dl_M_tilde) == expected
+
+    def test_lambdify(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act_callable = lambdify(self.l_M_tilde, fl_M_act)
+        assert fl_M_act_callable(1.0) == pytest.approx(0.9941398866)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act_callable = lambdify(self.l_M_tilde, fl_M_act, 'numpy')
+        l_M_tilde = numpy.array([0.0, 0.5, 1.0, 1.5, 2.0])
+        expected = numpy.array([
+            0.0018501319,
+            0.0529122812,
+            0.9941398866,
+            0.2312431531,
+            0.0069595432,
+        ])
+        numpy.testing.assert_allclose(fl_M_act_callable(l_M_tilde), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act_callable = jax.jit(lambdify(self.l_M_tilde, fl_M_act, 'jax'))
+        l_M_tilde = jax.numpy.array([0.0, 0.5, 1.0, 1.5, 2.0])
+        expected = jax.numpy.array([
+            0.0018501319,
+            0.0529122812,
+            0.9941398866,
+            0.2312431531,
+            0.0069595432,
+        ])
+        numpy.testing.assert_allclose(fl_M_act_callable(l_M_tilde), expected)
