@@ -327,7 +327,7 @@ class ObstacleSetPathway(PathwayBase):
 
     """
 
-    def __init__(self, *attachments: Point) -> None:
+    def __init__(self, *attachments):
         """Initializer for ``ObstacleSetPathway``.
 
         Parameters
@@ -341,12 +341,12 @@ class ObstacleSetPathway(PathwayBase):
         super().__init__(*attachments)
 
     @property
-    def attachments(self) -> tuple[Point, ...]:
+    def attachments(self):
         """The set of points defining a pathway's segmented path."""
         return self._attachments
 
     @attachments.setter
-    def attachments(self, attachments: tuple[Point, ...]) -> None:
+    def attachments(self, attachments):
         if hasattr(self, '_attachments'):
             msg = (
                 f'Can\'t set attribute `attachments` to {repr(attachments)} '
@@ -370,7 +370,7 @@ class ObstacleSetPathway(PathwayBase):
         self._attachments = tuple(attachments)
 
     @property
-    def length(self) -> ExprType:
+    def length(self):
         """Exact analytical expression for the pathway's length."""
         length = S.Zero
         attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
@@ -379,7 +379,7 @@ class ObstacleSetPathway(PathwayBase):
         return length
 
     @property
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
         extension_velocity = S.Zero
         attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
@@ -387,7 +387,7 @@ class ObstacleSetPathway(PathwayBase):
             extension_velocity += _point_pair_extension_velocity(*attachment_pair)
         return extension_velocity
 
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
