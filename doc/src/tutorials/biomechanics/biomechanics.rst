@@ -43,7 +43,7 @@ the same points as the bicep.
    import sympy.physics.biomechanics as bm
 
 Define variables
-----------------
+================
 
 Introduce the four coordinates :math:`\mathbf{q} = [q_1, q_2, q_3, q_4]^T` for
 the lever angle, shoulder extension, shoulder rotation, and elbow extension. We
@@ -74,30 +74,8 @@ The necessary constant parameters are:
    mA, mC, mD = sm.symbols('mA, mC, mD', real=True, positive=True)
    g, k, c, r = sm.symbols('g, k, c, r', real=True, positive=True)
 
-::
-
-   q = sm.Matrix([q1, q2, q3, q4])
-   u = sm.Matrix([u1, u2, u3, u4])
-   ud = u.diff(me.dynamicsymbols._t)
-   ud_zerod = {udi: 0 for udi in ud}
-   p = sm.Matrix([
-       dx,
-       dy,
-       dz,
-       lA,
-       lC,
-       lD,
-       mA,
-       mC,
-       mD,
-       g,
-       kA,
-       cA,
-       r,
-   ])
-
 Define kinematics
------------------
+=================
 
 Define all the reference frames and points show in
 :numref:`fig-biomechanics-steerer`. :math:`C_o` and :math:`D_o` are the mass
@@ -133,7 +111,7 @@ All of the points locations and velocities are::
 
    O.set_vel(N, 0)
    Ao.set_vel(N, 0)
-   P1.v2pt_theory(O, N, A)
+   P1.v2pt_theory(Ao, N, A)
    P2.set_vel(N, 0)
    Co.v2pt_theory(P2, N, C)
    Cm.v2pt_theory(P2, N, C)
@@ -142,13 +120,13 @@ All of the points locations and velocities are::
    Do.v2pt_theory(P3, N, D)
    P4.v2pt_theory(P3, N, D)
 
-There are three holonomic constrain equations needed to keep the hand
+There are three holonomic constraint equations needed to keep the hand
 :math:`P_4` on the lever :math:`P_1`::
 
    holonomic = (P4.pos_from(O) - P1.pos_from(O)).to_matrix(N)
 
 Define inertia
---------------
+==============
 
 The inertia dyadics can be formed assuming the lever, upper arm, and lower arm
 are thin cylinders::
@@ -162,17 +140,20 @@ are thin cylinders::
    l_arm = me.RigidBody('lower arm', masscenter=Do, frame=D, mass=mD, inertia=ID)
 
 Define forces
--------------
+=============
 
-::
+The lever has inertia but we will also add a linear torsional spring and damper
+to provide something more resistance to press against and pull on::
 
    lever_resistance = me.Torque(A, (-kA*q1 - cA*u2)*N.z)
+
+We will simulate this system in Earth's gravitional field::
 
    gravC = me.Force(u_arm, mC*g*N.z)
    gravD = me.Force(l_arm, mD*g*N.z)
 
 Bicep
-~~~~~
+-----
 
 We will model the bicep muscle as an acutator that acts between the two muscle
 attachment points. This muscle can extend and contract given an excitation
@@ -211,7 +192,7 @@ of motion. The musculotendon forces are represented as SymPy functions::
    bicep.to_loads()
 
 Tricep
-~~~~~~
+------
 
 The tricep actuator model will need a custom pathway to manage the wrapped
 nature of the muscle and tendon around the circular arc of radius :math:`r`.
@@ -446,6 +427,11 @@ accessed from the muscle actuator models::
 
    tricep.activation_dynamics.state_equations
 
+::
+
+   dadt = sm.Matrix(bicep.activation_dynamics.state_equations).col_join(
+       sm.Matrix(tricep.activation_dynamics.state_equations))
+
 System Differential Equations
 =============================
 
@@ -470,34 +456,195 @@ The complete set of differential equations for this system take the form:
      \mathbf{g}_a(\mathbf{a}, \mathbf{e})
    \end{bmatrix}
 
-Numerics
-========
+Evaluate the System Differential Equations
+==========================================
 
-TODO : Why are these non-public attributes?
+::
+
+   q, u = kane.q, kane.u
+   q, u
+
+   a = sm.Matrix(bicep.activation_dynamics.state_variables).col_join(
+       sm.Matrix(tricep.activation_dynamics.state_variables))
+
+   x = q.col_join(u).col_join(a)
+
+::
+
+   e = sm.Matrix(bicep.activation_dynamics.control_variables).col_join(
+       sm.Matrix(tricep.activation_dynamics.control_variables))
+   e
+
+::
+
+   p = sm.Matrix([
+       dx,
+       dy,
+       dz,
+       lA,
+       lC,
+       lD,
+       mA,
+       mC,
+       mD,
+       g,
+       k,
+       c,
+       r,
+       bicep._F_M_max,
+       bicep._l_M_opt,
+       bicep._l_T_slack,
+       bicep._v_M_max,
+       bicep._alpha_opt,
+       bicep._beta,
+       tricep._F_M_max,
+       tricep._l_M_opt,
+       tricep._l_T_slack,
+       tricep._v_M_max,
+       tricep._alpha_opt,
+       tricep._beta,
+   ])
+   p
+
+::
+
+   eval_diffeq = sm.lambdify((q, u, a, e, p), (kane.mass_matrix, kane.forcing, dadt))
+   eval_holonomic = sm.lambdify((q, p), holonomic)
 
 Once the model is established it will need values for the specific muscle you
 are modeling::
 
-   musculotendon_constants = {**bicep_constants, **tricep_constants}
-   mt = sm.Matrix(list(musculotendon_constants.keys()))
+   import numpy as np
+   from scipy.optimize import fsolve
 
-   a = list(bicep.activation_dynamics.state_variables) + list(tricep.activation_dynamics.state_variables)
-   e = list(bicep.activation_dynamics.control_variables) + list(tricep.activation_dynamics.control_variables)
+   q_vals = np.array([
+       np.deg2rad(5.0),  # q1 [rad]
+       np.deg2rad(-10.0),  # q2 [rad]
+       np.deg2rad(0.0),  # q3 [rad]
+       np.deg2rad(75.0),  # q4 [rad]
+   ])
 
-   bicep_constants = {
-       bicep._F_M_max: 500.0,
-       bicep._l_M_opt: 0.6 * 0.3,
-       bicep._l_T_slack: 0.55 * 0.3,
-       bicep._v_M_max: 10.0,
-       bicep._alpha_opt: 0.0,
-       bicep._beta: 0.1,
-   }
+   q_sol = fsolve(lambda x: eval_holonomic((q_vals[0], x[0], x[1], x[2]), p_vals).squeeze(),
+       q_vals[1:])
+   # update all q_vals with constraint consistent values
+   q_vals[1], q_vals[2], q_vals[3] = q_sol[0], q_sol[1], q_sol[2]
 
-   tricep_constants = {
-       tricep._F_M_max: 500.0,
-       tricep._l_M_opt: 0.6 * 0.3,
-       tricep._l_T_slack: 0.65 * 0.3,
-       tricep._v_M_max: 10.0,
-       tricep._alpha_opt: 0.0,
-       tricep._beta: 0.1,
-   }
+   u_vals = np.array([
+       0.0,  # u1, [rad/s]
+       0.0,  # u2, [rad/s]
+       0.0,  # u3, [rad/s]
+       0.0,  # u4, [rad/s]
+   ])
+
+   a_vals = np.array([
+       0.0,  # a_bicep, nondimensional
+       0.0,  # a_tricep, nondimensional
+   ])
+
+   p_vals = np.array([
+       -0.31,  # dx [m]
+       0.15,  # dy [m]
+       -0.31,  # dz [m]
+       0.2,   # lA [m]
+       0.3,  # lC [m]
+       0.3,  # lD [m]
+       1.0,  # mA [kg]
+       2.3,  # mC [kg]
+       1.7,  # mD [kg]
+       9.81,  # g [m/s/s]
+       10.0,  # kA [Nm/rad]
+       0.2,  # cA [Nms/rad]
+       0.03,  # r [m]
+       500.0,
+       0.6*0.3,
+       0.55*0.3,
+       10.0,
+       0.0,
+       0.1,
+       500.0,
+       0.6*0.3,
+       0.65*0.3,
+       10.0,
+       0.0,
+       0.1,
+   ])
+
+   e_vals = np.array([
+       0.0,
+       0.0,
+   ])
+
+   eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
+
+Simulate
+========
+
+::
+
+   from scipy.integrate import solve_ivp
+
+   def eval_rhs(t, x, p):
+       q = x[0:4]
+       u = x[4:8]
+       a = x[8:10]
+
+       if t < 0.5:
+           e = np.array([0.0, 0.0])
+       elif t < 1.0:
+           e = np.array([-0.2, 0.8])
+       else:
+           e = np.array([0.0, 0.0])
+
+       qd = u
+       m, f, ad = eval_diffeq(q, u, a, e, p)
+       ud = np.linalg.solve(m, f)
+
+       return np.hstack((qd, ud, ad))
+
+::
+
+   t0, tf = 0.0, 2.0
+   ts = np.linspace(t0, tf, num=201)
+   sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), t_eval=ts)
+
+TODO : Use the matplotlib sphinx directive to plot this (if possible).
+
+::
+
+   import matplotlib.pyplot as plt
+
+   def plot_traj(t, x, syms):
+       """Simple plot of state trajectories.
+
+       Parameters
+       ==========
+       t : array_like, shape(n,)
+           Time values.
+       x : array_like, shape(n, m)
+           State values at each time value.
+       syms : sequence of Symbol, len(m)
+           SymPy symbols associated with state.
+
+       """
+       num_rows = 8
+       num_cols = (x.shape[1] // num_rows)
+       if x.shape[1] % num_rows > 0:
+           num_cols += 1
+
+       fig, axes = plt.subplots(num_rows, num_cols, sharex=True)
+
+       for ax, traj, sym in zip(axes.T.flatten(), x.T, syms):
+           ax.plot(t, traj)
+           ax.set_ylabel(sm.latex(sym, mode='inline'))
+
+       # label the x axis only on the bottom row.
+       for ax in axes[-1, :]:
+           ax.set_xlabel('Time [s]')
+
+       fig.tight_layout()
+
+    return axes
+
+::
+
+    plot_traj(ts, sol.y.T, x)
