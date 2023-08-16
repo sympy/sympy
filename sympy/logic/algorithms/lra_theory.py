@@ -417,8 +417,8 @@ class LRASolver():
 
     def check(self):
         """
-        Searches for an assignment for all variables that satisfies all their
-        upper bounds or determines that such an assignment does not exist.
+        Searches for an assignment that satisfies all constraints
+        or determines that such an assignment does not exist.
 
         Returns
         =======
