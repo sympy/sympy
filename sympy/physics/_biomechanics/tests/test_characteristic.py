@@ -842,3 +842,22 @@ class TestFiberForceLengthActiveDeGroote2016:
             + self.c4*exp(-0.5*(UnevaluatedExpr(self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde))**2)
             + self.c8*exp(-0.5*(UnevaluatedExpr(self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)
         )
+
+    def test_with_default_constants(self):
+        constants = (
+            Float('0.814'),
+            Float('1.06'),
+            Float('0.162'),
+            Float('0.0633'),
+            Float('0.433'),
+            Float('0.717'),
+            Float('-0.0299'),
+            Rational(1, 5),
+            Rational(1, 10),
+            Integer(1),
+            Float('0.354'),
+            Integer(0),
+        )
+        fl_M_act_manual = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *constants)
+        fl_M_act_constants = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        assert fl_M_act_manual == fl_M_act_constants
