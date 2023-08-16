@@ -126,8 +126,8 @@ class TestForceActuator:
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         actuator = ForceActuator(self.force, self.pathway)
         expected = [
-            (self.pA, - self.force*(self.q1 / sqrt(self.q1**2))*self.N.x),
-            (self.pB, self.force*(self.q1 / sqrt(self.q1**2))*self.N.x),
+            (self.pA, - self.force*(self.q1/sqrt(self.q1**2))*self.N.x),
+            (self.pB, self.force*(self.q1/sqrt(self.q1**2))*self.N.x),
         ]
         assert actuator.to_loads() == expected
 
@@ -139,14 +139,14 @@ class TestForceActuator:
         actuator = ForceActuator(self.force, self.pathway)
         length = sqrt(self.q1**2 + self.q2**2 + 4*self.q3**2)
         pO_force = (
-            - self.force*self.q1*self.N.x / length
-            + self.force*self.q2*self.N.y / length
-            - 2*self.force*self.q3*self.N.z / length
+            - self.force*self.q1*self.N.x/length
+            + self.force*self.q2*self.N.y/length
+            - 2*self.force*self.q3*self.N.z/length
         )
         pI_force = (
-            self.force*self.q1*self.N.x / length
-            - self.force*self.q2*self.N.y / length
-            + 2*self.force*self.q3*self.N.z / length
+            self.force*self.q1*self.N.x/length
+            - self.force*self.q2*self.N.y/length
+            + 2*self.force*self.q3*self.N.z/length
         )
         expected = [
             (self.pA, pO_force),
@@ -290,7 +290,7 @@ class TestLinearSpring:
     def test_to_loads(self):
         self.pB.set_pos(self.pA, self.q*self.N.x)
         spring = LinearSpring(self.stiffness, self.pathway, self.l)
-        normal = self.q / sqrt(self.q**2)*self.N.x
+        normal = self.q/sqrt(self.q**2)*self.N.x
         pA_force = self.stiffness*(sqrt(self.q**2) - self.l)*normal
         pB_force = -self.stiffness*(sqrt(self.q**2) - self.l)*normal
         expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
@@ -345,7 +345,7 @@ class TestLinearDamper:
         )
     )
     def test_valid_constructor_force(self):
-        self.pB.set_pos(self.pA, self.q * self.N.x)
+        self.pB.set_pos(self.pA, self.q*self.N.x)
         damper = LinearDamper(self.damping, self.pathway)
 
         expected_force = -self.damping*sqrt(self.q**2)*self.dq/self.q
@@ -384,7 +384,7 @@ class TestLinearDamper:
     def test_to_loads(self):
         self.pB.set_pos(self.pA, self.q*self.N.x)
         damper = LinearDamper(self.damping, self.pathway)
-        direction = self.q**2 / self.q**2*self.N.x
+        direction = self.q**2/self.q**2*self.N.x
         pA_force = self.damping*self.dq*direction
         pB_force = -self.damping*self.dq*direction
         expected = [Force(self.pA, pA_force), Force(self.pB, pB_force)]
