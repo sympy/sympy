@@ -137,19 +137,15 @@ def _primitive_root_prime_iter(p):
     if p == 3:
         yield 2
         return
+    # Let p = +-1 (mod 4a). Legendre symbol (a/p) = 1, so `a` is not the primitive root.
+    # Corollary : If p = +-1 (mod 8), then 2 is not the primitive root of p.
+    g_min = 3 if p % 8 in [1, 7] else 2
     if p < 41:
         # small case
-        if p == 23:
-            g = 5
-        elif p == 7 or p % 7 == 3:
-            # 3 is the smallest primitive root of p = 7,17,31
-            g = 3
-        else:
-            # 2 is the smallest primitive root of p = 5,11,13,19,29,37
-            g = 2
+        g = 5 if p == 23 else g_min
     else:
         v = [(p - 1) // i for i in factorint(p - 1).keys()]
-        for g in range(2, p):
+        for g in range(g_min, p):
             if all(pow(g, pw, p) != 1 for pw in v):
                 break
     yield g
@@ -433,10 +429,35 @@ def _sqrt_mod_tonelli_shanks(a, p):
     """
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
+    Assume that the root exists.
+    Although ``p`` correctly returns the answer for any odd prime,
+    ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
+    a more efficient algorithm exists.
+
+    Parameters
+    ==========
+
+    a : int
+    p : int
+        Odd prime number
+
+    Returns
+    =======
+
+    int : Generally, there are two roots, but only one is returned.
+          Which one is returned is random.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _sqrt_mod_tonelli_shanks
+    >>> _sqrt_mod_tonelli_shanks(2, 17) in [6, 11]
+    True
+
     References
     ==========
 
-    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nt Ed., page 101
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
 
     """
     s = trailing(p - 1)
@@ -493,24 +514,17 @@ def sqrt_mod(a, p, all_roots=False):
     """
     if all_roots:
         return sorted(sqrt_mod_iter(a, p))
-    try:
-        p = abs(as_int(p))
-        it = sqrt_mod_iter(a, p)
-        r = next(it)
-        if r > p // 2:
+    p = abs(as_int(p))
+    halfp = p // 2
+    x = None
+    for r in sqrt_mod_iter(a, p):
+        if r < halfp:
+            return r
+        elif r > halfp:
             return p - r
-        elif r < p // 2:
-            return r
         else:
-            try:
-                r = next(it)
-                if r > p // 2:
-                    return p - r
-            except StopIteration:
-                pass
-            return r
-    except StopIteration:
-        return None
+            x = r
+    return x
 
 
 def _product(*iters):
@@ -822,7 +836,7 @@ def _nthroot_mod1(s, q, p, all_roots):
     Parameters
     ==========
 
-    a : integer
+    s : integer
     q : integer, n > 2. ``q`` divides ``p - 1``.
     p : prime number
     all_roots : if False returns the smallest root, else the list of roots
@@ -846,10 +860,11 @@ def _nthroot_mod1(s, q, p, all_roots):
     References
     ==========
 
-    .. [1] A. M. Johnston "A Generalized qth Root Algorithm"
+    .. [1] A. M. Johnston, A Generalized qth Root Algorithm,
+           ACM-SIAM Symposium on Discrete Algorithms (1999), pp. 929-930
 
     """
-    g = primitive_root(p)
+    g = next(_primitive_root_prime_iter(p))
     r = s
     for qx, ex in factorint(q).items():
         f = (p - 1) // qx**ex
@@ -1598,7 +1613,7 @@ def polynomial_congruence(expr, m):
     Parameters
     ==========
 
-    coefficients : Coefficients of the Polynomial
+    expr : integer coefficient polynomial
     m : positive integer
 
     Examples
