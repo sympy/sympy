@@ -458,6 +458,10 @@ class DFM:
                     return False
         return True
 
+    def nnz(self):
+        """Return the number of non-zero elements in the matrix."""
+        return self.to_ddm().nnz()
+
     def scc(self):
         """Return the strongly connected components of the matrix."""
         return self.to_ddm().scc()

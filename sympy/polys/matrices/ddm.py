@@ -669,6 +669,16 @@ class DDM(list):
         elements = [list(map(func, row)) for row in self]
         return DDM(elements, self.shape, domain)
 
+    def nnz(a):
+        """Number of non-zero entries in :py:class:`~.DDM` matrix.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.nnz
+        """
+        return sum(sum(map(bool, row)) for row in a)
+
     def scc(a):
         """Strongly connected components of a square matrix *a*.
 
