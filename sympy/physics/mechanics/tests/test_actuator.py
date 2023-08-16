@@ -1,9 +1,5 @@
 """Tests for the ``sympy.physics.mechanics.actuator.py`` module."""
 
-from __future__ import annotations
-
-from typing import Any
-
 import pytest
 
 from sympy.core.backend import (
@@ -71,11 +67,7 @@ class TestForceActuator:
             (Symbol('F')**2 + Symbol('F'), Symbol('F')**2 + Symbol('F')),
         ]
     )
-    def test_valid_constructor_force(
-        self,
-        force,
-        expected_force,
-    ):
+    def test_valid_constructor_force(self, force, expected_force):
         instance = ForceActuator(force, self.pathway)
         assert isinstance(instance, ForceActuator)
         assert hasattr(instance, 'force')
@@ -83,10 +75,7 @@ class TestForceActuator:
         assert instance.force == expected_force
 
     @pytest.mark.parametrize('force', [None, 'F'])
-    def test_invalid_constructor_force_not_sympifyable(
-        self,
-        force,
-    ):
+    def test_invalid_constructor_force_not_sympifyable(self, force):
         with pytest.raises(SympifyError):
             _ = ForceActuator(force, self.pathway)
 
@@ -114,11 +103,7 @@ class TestForceActuator:
             ('pathway', 'pathway'),
         ]
     )
-    def test_properties_are_immutable(
-        self,
-        property_name,
-        fixture_attr_name,
-    ):
+    def test_properties_are_immutable(self, property_name, fixture_attr_name):
         instance = ForceActuator(self.force, self.pathway)
         value = getattr(self, fixture_attr_name)
         with pytest.raises(AttributeError):
@@ -258,10 +243,7 @@ class TestLinearSpring:
         assert spring.force == force
 
     @pytest.mark.parametrize('stiffness', [None, 'k'])
-    def test_invalid_constructor_stiffness_not_sympifyable(
-        self,
-        stiffness,
-    ):
+    def test_invalid_constructor_stiffness_not_sympifyable(self, stiffness):
         with pytest.raises(SympifyError):
             _ = LinearSpring(stiffness, self.pathway, self.l)
 
@@ -285,11 +267,7 @@ class TestLinearSpring:
             ('equilibrium_length', 'l'),
         ]
     )
-    def test_properties_are_immutable(
-        self,
-        property_name,
-        fixture_attr_name,
-    ):
+    def test_properties_are_immutable(self, property_name, fixture_attr_name):
         spring = LinearSpring(self.stiffness, self.pathway, self.l)
         value = getattr(self, fixture_attr_name)
         with pytest.raises(AttributeError):
@@ -367,7 +345,7 @@ class TestLinearDamper:
             'SymEngine puts it in the denominator'
         )
     )
-    def test_valid_constructor_force(self) -> None:
+    def test_valid_constructor_force(self):
         self.pB.set_pos(self.pA, self.q * self.N.x)
         damper = LinearDamper(self.damping, self.pathway)
 
@@ -377,10 +355,7 @@ class TestLinearDamper:
         assert damper.force == expected_force
 
     @pytest.mark.parametrize('damping', [None, 'c'])
-    def test_invalid_constructor_damping_not_sympifyable(
-        self,
-        damping,
-    ):
+    def test_invalid_constructor_damping_not_sympifyable(self, damping):
         with pytest.raises(SympifyError):
             _ = LinearDamper(damping, self.pathway)
 
@@ -395,11 +370,7 @@ class TestLinearDamper:
             ('pathway', 'pathway'),
         ]
     )
-    def test_properties_are_immutable(
-        self,
-        property_name,
-        fixture_attr_name,
-    ):
+    def test_properties_are_immutable(self, property_name, fixture_attr_name):
         damper = LinearDamper(self.damping, self.pathway)
         value = getattr(self, fixture_attr_name)
         with pytest.raises(AttributeError):
@@ -573,11 +544,7 @@ class TestTorqueActuator:
         ]
     )
     @pytest.mark.parametrize('target_frame', [target.frame, target])
-    def test_valid_constructor_without_reaction(
-        self,
-        torque,
-        target_frame,
-    ):
+    def test_valid_constructor_without_reaction(self, torque, target_frame):
         instance = TorqueActuator(torque, self.axis, target_frame)
         assert isinstance(instance, TorqueActuator)
 
@@ -597,10 +564,7 @@ class TestTorqueActuator:
         assert instance.reaction_frame is None
 
     @pytest.mark.parametrize('torque', [None, 'T'])
-    def test_invalid_constructor_torque_not_sympifyable(
-        self,
-        torque,
-    ):
+    def test_invalid_constructor_torque_not_sympifyable(self, torque):
         with pytest.raises(SympifyError):
             _ = TorqueActuator(torque, self.axis, self.target)
 
@@ -618,10 +582,7 @@ class TestTorqueActuator:
             (RigidBody('parent'), True),
         ]
     )
-    def test_invalid_constructor_frames_not_frame(
-        self,
-        frames: tuple[Any, Any],
-    ):
+    def test_invalid_constructor_frames_not_frame(self, frames):
         with pytest.raises(TypeError):
             _ = TorqueActuator(self.torque, self.axis, *frames)
 
@@ -634,11 +595,7 @@ class TestTorqueActuator:
             ('reaction_frame', 'reaction'),
         ]
     )
-    def test_properties_are_immutable(
-        self,
-        property_name,
-        fixture_attr_name,
-    ):
+    def test_properties_are_immutable(self, property_name, fixture_attr_name):
         actuator = TorqueActuator(
             self.torque,
             self.axis,
