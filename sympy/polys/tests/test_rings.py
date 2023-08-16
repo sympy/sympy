@@ -7,6 +7,7 @@ from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
+from sympy.polys.rings import monomial_extract, gcd_coeffs
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
@@ -1454,6 +1455,48 @@ def test_PolyElement_subresultants():
 
     f, g = x**2 + x, x**2 + x # f and g are same polynomial
     assert f.subresultants(g) == [x**2 + x, x**2 + x]
+
+def test_PolyElement_main_variable():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    p = x**2 + y**3 + z - 2*x*z**2
+    assert p.main_variable() == 0
+
+def test_monomial_extract():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = x**2*y + z**3
+    g = x**3*y + z**3
+    h = x**2*y**2 + z**3
+    polynomials = [f, g, h]
+    result = monomial_extract(polynomials)
+
+    assert result == (polynomials, None)
+
+    f = x**2*y
+    g = x**2*y + x*y
+    h = x*y + y**2
+    polynomials = [f, g, h]
+    result = monomial_extract(polynomials)
+
+    assert result == ([x**2, x**2 + x, x + y], y)
+
+def test_gcd_coeffs():
+    R, x, y = ring("x, y", ZZ)
+
+    f = x**2*y + x*y
+    g = x**3*y**2 + x*y**2
+    polynomials = [f, g]
+    result = gcd_coeffs(polynomials)
+
+    assert result == ([x*y], None)
+
+    f = x**2 - y**2
+    g = x**2 - 2*x*y + y**2
+    polynomials = [f, g]
+    result = gcd_coeffs(polynomials)
+
+    assert result == ([1], None)
 
 def test_PolyElement_resultant():
     _, x = ring("x", ZZ)
