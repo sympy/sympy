@@ -867,29 +867,29 @@ class TestFiberForceLengthActiveDeGroote2016:
         expected = (
             self.c0*(
                 self.c3*(self.l_M_tilde - self.c1)**2/(self.c2 + self.c3*self.l_M_tilde)**3
-                + (self.l_M_tilde - self.c1)/((self.c2 + self.c3*self.l_M_tilde)**2)
-            )*exp((self.c1 - self.l_M_tilde)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
+                + (self.c1 - self.l_M_tilde)/((self.c2 + self.c3*self.l_M_tilde)**2)
+            )*exp(-(self.l_M_tilde - self.c1)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
             + self.c4*(
                 self.c7*(self.l_M_tilde - self.c5)**2/(self.c6 + self.c7*self.l_M_tilde)**3
-                + (self.l_M_tilde - self.c5)/((self.c6 + self.c7*self.l_M_tilde)**2)
-            )*exp((self.c5 - self.l_M_tilde)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
+                + (self.c5 - self.l_M_tilde)/((self.c6 + self.c7*self.l_M_tilde)**2)
+            )*exp(-(self.l_M_tilde - self.c5)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
             + self.c8*(
                 self.c11*(self.l_M_tilde - self.c9)**2/(self.c10 + self.c11*self.l_M_tilde)**3
-                + (self.l_M_tilde - self.c9)/((self.c10 + self.c11*self.l_M_tilde)**2)
-            )*exp((self.c9 - self.l_M_tilde)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
+                + (self.c9 - self.l_M_tilde)/((self.c10 + self.c11*self.l_M_tilde)**2)
+            )*exp(-(self.l_M_tilde - self.c9)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.l_M_tilde) == expected
 
     def test_differentiate_wrt_c0(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
-        expected = exp((self.c1 - self.l_M_tilde)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
-        assert fl_M_act.diff(self.c0) == expected
+        expected = exp(-(self.l_M_tilde - self.c1)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
+        assert fl_M_act.doit().diff(self.c0) == expected
 
     def test_differentiate_wrt_c1(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
-            self.c0*(self.c1 - self.l_M_tilde)/(self.c2 + self.c3*self.l_M_tilde)**2
-            *exp((self.c1 - self.l_M_tilde)**2 /(2*(self.c2 + self.c3*self.l_M_tilde)**2))
+            self.c0*(self.l_M_tilde - self.c1)/(self.c2 + self.c3*self.l_M_tilde)**2
+            *exp(-(self.l_M_tilde - self.c1)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c1) == expected
 
@@ -897,7 +897,7 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c0*(self.l_M_tilde - self.c1)**2/(self.c2 + self.c3*self.l_M_tilde)**3
-            *exp((self.c1 - self.l_M_tilde)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c1)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c2) == expected
 
@@ -905,20 +905,20 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c0*self.l_M_tilde*(self.l_M_tilde - self.c1)**2/(self.c2 + self.c3*self.l_M_tilde)**3
-            *exp((self.c1 - self.l_M_tilde)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c1)**2/(2*(self.c2 + self.c3*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c3) == expected
 
     def test_differentiate_wrt_c4(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
-        expected = exp((self.c5 - self.l_M_tilde)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
+        expected = exp(-(self.l_M_tilde - self.c5)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
         assert fl_M_act.diff(self.c4) == expected
 
     def test_differentiate_wrt_c5(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
-            self.c4*(self.c5 - self.l_M_tilde)/(self.c6 + self.c7*self.l_M_tilde)**2
-            *exp((self.c5 - self.l_M_tilde)**2 /(2*(self.c6 + self.c7*self.l_M_tilde)**2))
+            self.c4*(self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde)**2
+            *exp(-(self.l_M_tilde - self.c5)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c5) == expected
 
@@ -926,7 +926,7 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c4*(self.l_M_tilde - self.c5)**2/(self.c6 + self.c7*self.l_M_tilde)**3
-            *exp((self.c5 - self.l_M_tilde)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c5)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c6) == expected
 
@@ -934,20 +934,20 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c4*self.l_M_tilde*(self.l_M_tilde - self.c5)**2/(self.c6 + self.c7*self.l_M_tilde)**3
-            *exp((self.c5 - self.l_M_tilde)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c5)**2/(2*(self.c6 + self.c7*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c7) == expected
 
     def test_differentiate_wrt_c8(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
-        expected = exp((self.c9 - self.l_M_tilde)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
+        expected = exp(-(self.l_M_tilde - self.c9)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         assert fl_M_act.diff(self.c8) == expected
 
     def test_differentiate_wrt_c9(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
-            self.c8*(self.c9 - self.l_M_tilde)/(self.c10 + self.c11*self.l_M_tilde)**2
-            *exp((self.c9 - self.l_M_tilde)**2 /(2*(self.c10 + self.c11*self.l_M_tilde)**2))
+            self.c8*(self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde)**2
+            *exp(-(self.l_M_tilde - self.c9)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c9) == expected
 
@@ -955,7 +955,7 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c8*(self.l_M_tilde - self.c9)**2/(self.c10 + self.c11*self.l_M_tilde)**3
-            *exp((self.c9 - self.l_M_tilde)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c9)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c10) == expected
 
@@ -963,7 +963,7 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
             self.c8*self.l_M_tilde*(self.l_M_tilde - self.c9)**2/(self.c10 + self.c11*self.l_M_tilde)**3
-            *exp((self.c9 - self.l_M_tilde)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
+            *exp(-(self.l_M_tilde - self.c9)**2/(2*(self.c10 + self.c11*self.l_M_tilde)**2))
         )
         assert fl_M_act.diff(self.c11) == expected
 
