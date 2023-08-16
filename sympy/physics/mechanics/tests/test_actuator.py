@@ -19,7 +19,6 @@ from sympy.physics.mechanics import (
     LinearPathway,
     LinearSpring,
     Particle,
-    PathwayBase,
     PinJoint,
     Point,
     ReferenceFrame,
