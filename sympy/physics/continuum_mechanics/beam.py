@@ -1443,8 +1443,9 @@ class Beam:
             length = subs[self.length]
         else:
             length = self.length
-        return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
+        return plot(shear_force.subs(subs), (self.variable, 0, length),
+            title='Shear Force', xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
+            line_color='g', adaptive=True)
 
     def plot_bending_moment(self, subs=None):
         """
@@ -1501,8 +1502,9 @@ class Beam:
             length = subs[self.length]
         else:
             length = self.length
-        return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
+        return plot(bending_moment.subs(subs), (self.variable, 0, length),
+            title='Bending Moment', xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
+            line_color='b', adaptive=True)
 
     def plot_slope(self, subs=None):
         """
@@ -1559,8 +1561,9 @@ class Beam:
             length = subs[self.length]
         else:
             length = self.length
-        return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
+        return plot(slope.subs(subs), (self.variable, 0, length),
+            title='Slope', xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
+            line_color='m', adaptive=True)
 
     def plot_deflection(self, subs=None):
         """
@@ -1619,8 +1622,8 @@ class Beam:
         else:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
-                    title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
-                    line_color='r')
+                    title='Deflection', xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\delta$', line_color='r', adaptive=True)
 
 
     def plot_loading_results(self, subs=None):
@@ -1677,16 +1680,16 @@ class Beam:
             length = subs[length]
         ax1 = plot(self.shear_force().subs(subs), (variable, 0, length),
                    title="Shear Force", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$',
-                   line_color='g', show=False)
+                   line_color='g', adaptive=True, show=False)
         ax2 = plot(self.bending_moment().subs(subs), (variable, 0, length),
                    title="Bending Moment", xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$',
-                   line_color='b', show=False)
+                   line_color='b', adaptive=True, show=False)
         ax3 = plot(self.slope().subs(subs), (variable, 0, length),
                    title="Slope", xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$',
-                   line_color='m', show=False)
+                   line_color='m', adaptive=True, show=False)
         ax4 = plot(self.deflection().subs(subs), (variable, 0, length),
                    title="Deflection", xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
-                   line_color='r', show=False)
+                   line_color='r', adaptive=True, show=False)
 
         return PlotGrid(4, 1, ax1, ax2, ax3, ax4)
 
@@ -1845,7 +1848,8 @@ class Beam:
         for reaction in self._ild_reactions:
             ildplots.append(plot(self._ild_reactions[reaction].subs(subs),
             (x, 0, self._length.subs(subs)), title='I.L.D. for Reactions',
-            xlabel=x, ylabel=reaction, line_color='blue', show=False))
+            xlabel=x, ylabel=reaction, line_color='blue', adaptive=True,
+            show=False))
 
         return PlotGrid(len(ildplots), 1, *ildplots)
 
@@ -1974,7 +1978,8 @@ class Beam:
                 raise ValueError('Value of %s was not passed.' %sym)
 
         return plot(self._ild_shear.subs(subs), (x, 0, l),  title='I.L.D. for Shear',
-               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$', line_color='blue',show=True)
+               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V}$',
+               line_color='blue', adaptive=True, show=True)
 
     def solve_for_ild_moment(self, distance, value, *reactions):
         """
@@ -2098,7 +2103,8 @@ class Beam:
             if sym != x and sym not in subs:
                 raise ValueError('Value of %s was not passed.' %sym)
         return plot(self._ild_moment.subs(subs), (x, 0, self._length), title='I.L.D. for Moment',
-               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
+               xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M}$',
+               line_color='blue', adaptive=True, show=True)
 
     @doctest_depends_on(modules=('numpy',))
     def draw(self, pictorial=True):
@@ -2181,8 +2187,9 @@ class Beam:
         markers += support_markers
 
         sing_plot = plot(height + load_eq, height + load_eq1, (x, 0, length),
-         xlim=(-height, length + height), ylim=(-length, 1.25*length), annotations=annotations,
-          markers=markers, rectangles=rectangles, line_color='brown', fill=fill, axis=False, show=False)
+            xlim=(-height, length + height), ylim=(-length, 1.25*length),
+            annotations=annotations, markers=markers, rectangles=rectangles,
+            line_color='brown', fill=fill, axis=False, adaptive=True, show=False)
 
         return sing_plot
 
@@ -2859,8 +2866,10 @@ class Beam3D(Beam):
         else:
             length = self.length
 
-        return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear Force along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir, line_color=color)
+        return plot(shear_force[dir_num].subs(subs), (self.variable, 0, length),
+            show=False, title='Shear Force along %c direction'%dir,
+            xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{V(%c)}$'%dir,
+            line_color=color, adaptive=True)
 
     def plot_shear_force(self, dir="all", subs=None):
 
@@ -2961,8 +2970,10 @@ class Beam3D(Beam):
         else:
             length = self.length
 
-        return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Bending Moment along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir, line_color=color)
+        return plot(bending_moment[dir_num].subs(subs), (self.variable, 0, length),
+            show=False, title='Bending Moment along %c direction'%dir,
+            xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{M(%c)}$'%dir,
+            line_color=color, adaptive=True)
 
     def plot_bending_moment(self, dir="all", subs=None):
 
@@ -3064,8 +3075,10 @@ class Beam3D(Beam):
             length = self.length
 
 
-        return plot(slope[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Slope along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\theta(%c)}$'%dir, line_color=color)
+        return plot(slope[dir_num].subs(subs), (self.variable, 0, length),
+            show=False, title='Slope along %c direction'%dir,
+            xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\theta(%c)}$'%dir,
+            line_color=color, adaptive=True)
 
     def plot_slope(self, dir="all", subs=None):
 
@@ -3167,8 +3180,10 @@ class Beam3D(Beam):
         else:
             length = self.length
 
-        return plot(deflection[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Deflection along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\delta(%c)}$'%dir, line_color=color)
+        return plot(deflection[dir_num].subs(subs), (self.variable, 0, length),
+            show=False, title='Deflection along %c direction'%dir,
+            xlabel=r'$\mathrm{X}$', ylabel=r'$\mathrm{\delta(%c)}$'%dir,
+            line_color=color, adaptive=True)
 
     def plot_deflection(self, dir="all", subs=None):
 
@@ -3339,8 +3354,10 @@ class Beam3D(Beam):
         else:
             length = self.length
 
-        return plot(shear_stress[dir_num].subs(subs), (self.variable, 0, length), show = False, title='Shear stress along %c direction'%dir,
-                xlabel=r'$\mathrm{X}$', ylabel=r'$\tau(%c)$'%dir, line_color=color)
+        return plot(shear_stress[dir_num].subs(subs), (self.variable, 0, length),
+            show=False, title='Shear stress along %c direction'%dir,
+            xlabel=r'$\mathrm{X}$', ylabel=r'$\tau(%c)$'%dir,
+            line_color=color, adaptive=True)
 
     def plot_shear_stress(self, dir="all", subs=None):
 
