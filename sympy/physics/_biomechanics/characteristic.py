@@ -8,6 +8,7 @@ from sympy.functions.elementary.exponential import exp, log
 
 __all__ = [
     'FiberForceLengthPassiveDeGroote2016',
+    'FiberForceLengthPassiveInverseDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
@@ -605,6 +606,18 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
 
         raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return FiberForceLengthPassiveInverseDeGroote2016
+
     def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
@@ -618,3 +631,169 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
         l_M_tilde = self.args[0]
         _l_M_tilde = printer._print(l_M_tilde)
         return r'\operatorname{fl}^M_{pas} \left( %s \right)' % _l_M_tilde
+
+
+class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
+    r"""Inverse passive muscle fiber force-length curve based on De Groote et
+    al., 2016 [1].
+
+    Explanation
+    ===========
+
+    The function is defined by the equation:
+
+    ${fl^M_{pas}}^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_pas + 1}}{c_1} + 1$
+
+    with constant values of $c_0 = 0.6$ and $c_1 = 4.0$. This function is the
+    exact analytical inverse of the related tendon force-length curve
+    ``fl_M_pas_de_groote_2016``.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    passive fiber force very close to 0 for all normalized fiber lengths
+    between 0 and 1.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    @classmethod
+    def with_default_constants(cls, fl_M_pas):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the inverse muscle fiber passive force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c_0 = 0.6$
+        $c_1 = 4.0$
+
+        Parameters
+        ==========
+
+        fl_M_pas : Any (sympifiable)
+            Normalized passive muscle fiber force as a function of muscle fiber
+            length.
+
+        """
+        c0 = Rational(3, 5)
+        c1 = Integer(4)
+        return cls(fl_M_pas, c0, c1)
+
+    @classmethod
+    def eval(cls, fl_M_pas, c0, c1):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        fl_M_pas : Any (sympifiable)
+            Normalized passive muscle fiber force.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.6``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``4.0``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_T_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        fl_M_pas, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            fl_M_pas = fl_M_pas.doit(deep=deep, **hints)
+            c0, c1 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1 = constants
+
+        if evaluate:
+            return c0*log(fl_M_pas*(exp(c1) - 1) + 1)/c1 + 1
+
+        return c0*log(UnevaluatedExpr(fl_M_pas*(exp(c1) - 1)) + 1)/c1 + 1
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        fl_M_pas, c0, c1 = self.args
+        if argindex == 1:
+            return c0*(exp(c1) - 1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+        elif argindex == 2:
+            return log(fl_M_pas*(exp(c1) - 1) + 1)/c1
+        elif argindex == 3:
+            return (
+                c0*fl_M_pas*exp(c1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+                - c0*log(fl_M_pas*(exp(c1) - 1) + 1)/c1**2
+            )
+
+        raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return FiberForceLengthPassiveDeGroote2016
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        fl_M_pas = self.args[0]
+        _fl_M_pas = printer._print(fl_M_pas)
+        return r'\left( \operatorname{fl}^M_{pas} \right)^{-1} \left( %s \right)' % _fl_M_pas
