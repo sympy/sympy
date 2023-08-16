@@ -1,35 +1,12 @@
-"""Implementations of pathways for use by actuators.
-
-Notes
-=====
-
-This module is experimental and so is named with a leading underscore to
-indicate that the API is not yet stabilized and could be subject to breaking
-changes.
-
-"""
-
-from __future__ import annotations
+"""Implementations of pathways for use by actuators."""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
-from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
 from sympy.physics.vector import dynamicsymbols
 
-if TYPE_CHECKING:
-    from sympy.core.backend import USE_SYMENGINE
-    from sympy.physics.mechanics.loads import LoadBase
-    from sympy.physics.vector import Vector
 
-    if USE_SYMENGINE:
-        from sympy.core.backend import Basic as ExprType
-    else:
-        from sympy.core.expr import Expr as ExprType
-
-
-__all__ = ['LinearPathway', 'ObstacleSetPathway', 'WrappingPathway']
+__all__ = ['PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway']
 
 
 class PathwayBase(ABC):
@@ -43,17 +20,17 @@ class PathwayBase(ABC):
 
     """
 
-    def __init__(self, *attachments: Point) -> None:
+    def __init__(self, *attachments):
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
     @property
-    def attachments(self) -> tuple[Point, ...]:
+    def attachments(self):
         """The pair of points defining a pathway's ends."""
         return self._attachments
 
     @attachments.setter
-    def attachments(self, attachments: tuple[Point, ...]) -> None:
+    def attachments(self, attachments):
         if hasattr(self, '_attachments'):
             msg = (
                 f'Can\'t set attribute `attachments` to {repr(attachments)} '
@@ -78,18 +55,18 @@ class PathwayBase(ABC):
 
     @property
     @abstractmethod
-    def length(self) -> ExprType:
+    def length(self):
         """An expression representing the pathway's length."""
         pass
 
     @property
     @abstractmethod
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """An expression representing the pathway's extension velocity."""
         pass
 
     @abstractmethod
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -107,7 +84,7 @@ class PathwayBase(ABC):
         """
         pass
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Default representation of a pathway."""
         attachments = ', '.join(str(a) for a in self.attachments)
         return f'{self.__class__.__name__}({attachments})'
@@ -125,14 +102,27 @@ class LinearPathway(PathwayBase):
     objects to ensure that the path between its two ends (its attachments) is
     the shortest possible.
 
+    A linear pathway is made up of two points that can move relative to each
+    other, and a pair of equal and opposite forces acting on the points. If the
+    positive time-varying Euclidean distance between the two points is defined,
+    then the "extension velocity" is the time derivative of this distance. The
+    extension velocity is positive when the two points are moving away from
+    each other and negative when moving closer to each other. The direction for
+    the force acting on either point is determined by constructing a unit
+    vector directed from the other point to this point. This establishes a sign
+    convention such that a positive force magnitude tends to push the points
+    apart. The following diagram shows the positive force sense and the
+    distance between the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
 
-    As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearPathway`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._pathway`` module.
-
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
+    >>> from sympy.physics.mechanics import LinearPathway
 
     To construct a pathway, two points are required to be passed to the
     ``attachments`` parameter as a ``tuple``.
@@ -152,7 +142,7 @@ class LinearPathway(PathwayBase):
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.set_pos(pA, q*N.x)
     >>> pB.pos_from(pA)
     q(t)*N.x
 
@@ -169,40 +159,39 @@ class LinearPathway(PathwayBase):
     ``extension_velocity`` attribute.
 
     >>> linear_pathway.extension_velocity
-    q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========
 
     attachments : tuple[Point, Point]
-        The pair of ``Point`` objects between which the linear pathway spans.
+        Pair of ``Point`` objects between which the linear pathway spans.
 
     """
 
-    def __init__(self, *attachments: Point) -> None:
+    def __init__(self, *attachments):
         """Initializer for ``LinearPathway``.
 
         Parameters
         ==========
 
         attachments : tuple[Point, Point]
-            The pair of ``Point`` objects between which the linear pathway
-            spans.
+            Pair of ``Point`` objects between which the linear pathway spans.
 
         """
         super().__init__(*attachments)
 
     @property
-    def length(self) -> ExprType:
+    def length(self):
         """Exact analytical expression for the pathway's length."""
         return _point_pair_length(*self.attachments)
 
     @property
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
         return _point_pair_extension_velocity(*self.attachments)
 
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -225,13 +214,13 @@ class LinearPathway(PathwayBase):
         actuator between two points separated by the coordinate ``q`` in the
         ``x`` direction of the global frame ``N``.
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._pathway import LinearPathway
+        >>> from sympy.physics.mechanics import (LinearPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
         >>> pA, pB = Point('pA'), Point('pB')
-        >>> pB.set_pos(pA, q * N.x)
+        >>> pB.set_pos(pA, q*N.x)
         >>> linear_pathway = LinearPathway(pA, pB)
 
         Now create a symbol ``F`` to describe the magnitude of the (expansile)
@@ -239,8 +228,8 @@ class LinearPathway(PathwayBase):
         ``KanesMethod`` requires can be produced by calling the pathway's
         ``compute_loads`` method with ``F`` passed as the only argument.
 
-        >>> from sympy import Symbol
-        >>> F = Symbol('F')
+        >>> from sympy import symbols
+        >>> F = symbols('F')
         >>> linear_pathway.compute_loads(F)
         [(pA, - F*q(t)/sqrt(q(t)**2)*N.x), (pB, F*q(t)/sqrt(q(t)**2)*N.x)]
 
@@ -248,14 +237,17 @@ class LinearPathway(PathwayBase):
         ==========
 
         force : Expr
-            The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. As
+            per the sign conventions for the pathway length, pathway extension
+            velocity, and pair of point forces, if this ``Expr`` is positive
+            then the force will act to push the pair of points away from one
+            another (it is expansile).
 
         """
         relative_position = _point_pair_relative_position(*self.attachments)
-        loads: list[LoadBase] = [
-            Force(self.attachments[0], -force * relative_position / self.length),
-            Force(self.attachments[-1], force * relative_position / self.length),
+        loads = [
+            Force(self.attachments[0], -force*relative_position/self.length),
+            Force(self.attachments[-1], force*relative_position/self.length),
         ]
         return loads
 
@@ -460,14 +452,14 @@ class ObstacleSetPathway(PathwayBase):
             that this ``Expr`` represents an expansile force.
 
         """
-        loads: list[LoadBase] = []
+        loads = []
         attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
         for attachment_pair in attachment_pairs:
             relative_position = _point_pair_relative_position(*attachment_pair)
             length = _point_pair_length(*attachment_pair)
             loads.extend([
-                Force(attachment_pair[0], -force * relative_position / length),
-                Force(attachment_pair[1], force * relative_position / length),
+                Force(attachment_pair[0], -force*relative_position/length),
+                Force(attachment_pair[1], force*relative_position/length),
             ])
         return loads
 
@@ -485,24 +477,39 @@ class WrappingPathway(PathwayBase):
     a ``WrappingPathway`` will intersect other objects to ensure that the path
     between its two ends (its attachments) is the shortest possible.
 
+    To explain the sign conventions used for pathway length, extension
+    velocity, and direction of applied forces, we can ignore the geometry with
+    which the wrapping pathway interacts. A wrapping pathway is made up of two
+    points that can move relative to each other, and a pair of equal and
+    opposite forces acting on the points. If the positive time-varying
+    Euclidean distance between the two points is defined, then the "extension
+    velocity" is the time derivative of this distance. The extension velocity
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
 
-    As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``WrappingPathway`` must therefore
-    be imported directly from the ``sympy.physics.mechanics._pathway`` module.
-
-    >>> from sympy.physics.mechanics._pathway import WrappingPathway
+    >>> from sympy.physics.mechanics import WrappingPathway
 
     To construct a wrapping pathway, like other pathways, a pair of points must
     be passed, followed by an instance of a wrapping geometry class as a
     keyword argument. We'll use a cylinder with radius ``r`` and its axis
     parallel to ``N.x`` passing through a point ``pO``.
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
-    ...     WrappingCylinder)
-    >>> r = Symbol('r')
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCylinder
+    >>> r = symbols('r')
     >>> N = ReferenceFrame('N')
     >>> pA, pB, pO = Point('pA'), Point('pB'), Point('pO')
     >>> cylinder = WrappingCylinder(r, pO, N.x)
@@ -515,34 +522,30 @@ class WrappingPathway(PathwayBase):
     ==========
 
     attachment_1 : Point
-        The first of the pair of ``Point`` objects between which the wrapping
+        First of the pair of ``Point`` objects between which the wrapping
         pathway spans.
     attachment_2 : Point
-        The second of the pair of ``Point`` objects between which the wrapping
+        Second of the pair of ``Point`` objects between which the wrapping
         pathway spans.
     geometry : WrappingGeometryBase
-        The geometry about which the pathway wraps.
+        Geometry about which the pathway wraps.
 
     """
 
-    def __init__(
-        self,
-        attachment_1: Point,
-        attachment_2: Point,
-        geometry: WrappingGeometryBase,
-    ) -> None:
+    def __init__(self, attachment_1, attachment_2, geometry):
         """Initializer for ``WrappingPathway``.
 
         Parameters
         ==========
 
         attachment_1 : Point
-            The first of the pair of ``Point`` objects between which the
-            wrapping pathway spans.
+            First of the pair of ``Point`` objects between which the wrapping
+            pathway spans.
         attachment_2 : Point
-            The second of the pair of ``Point`` objects between which the
-            wrapping pathway spans.
+            Second of the pair of ``Point`` objects between which the wrapping
+            pathway spans.
         geometry : WrappingGeometryBase
+            Geometry about which the pathway wraps.
             The geometry about which the pathway wraps.
 
         """
@@ -550,12 +553,12 @@ class WrappingPathway(PathwayBase):
         self.geometry = geometry
 
     @property
-    def geometry(self) -> WrappingGeometryBase:
-        """The geometry around which the pathway wraps."""
+    def geometry(self):
+        """Geometry around which the pathway wraps."""
         return self._geometry
 
     @geometry.setter
-    def geometry(self, geometry: WrappingGeometryBase) -> None:
+    def geometry(self, geometry):
         if hasattr(self, '_geometry'):
             msg = (
                 f'Can\'t set attribute `geometry` to {repr(geometry)} as it '
@@ -571,16 +574,16 @@ class WrappingPathway(PathwayBase):
         self._geometry = geometry
 
     @property
-    def length(self) -> ExprType:
+    def length(self):
         """Exact analytical expression for the pathway's length."""
         return self.geometry.geodesic_length(*self.attachments)
 
     @property
-    def extension_velocity(self) -> ExprType:
+    def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
-        return self.length.diff(dynamicsymbols._t)  # type: ignore
+        return self.length.diff(dynamicsymbols._t)
 
-    def compute_loads(self, force: ExprType) -> list[LoadBase]:
+    def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -604,11 +607,11 @@ class WrappingPathway(PathwayBase):
         parallel to the ``N.z`` direction of the global frame ``N`` that also
         passes through a point ``pO``.
 
-        >>> from sympy import Symbol
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import (Point, ReferenceFrame,
         ...     WrappingCylinder)
         >>> N = ReferenceFrame('N')
-        >>> r = Symbol('r', positive=True)
+        >>> r = symbols('r', positive=True)
         >>> pO = Point('pO')
         >>> cylinder = WrappingCylinder(r, pO, N.z)
 
@@ -618,13 +621,12 @@ class WrappingPathway(PathwayBase):
         relative to ``pA`` by the dynamics symbol ``q``.
 
         >>> from sympy import cos, sin
-        >>> from sympy.physics.mechanics import dynamicsymbols
-        >>> from sympy.physics.mechanics._pathway import WrappingPathway
+        >>> from sympy.physics.mechanics import WrappingPathway, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> pA = Point('pA')
         >>> pB = Point('pB')
-        >>> pA.set_pos(pO, r * N.x)
-        >>> pB.set_pos(pO, r * (cos(q) * N.x + sin(q) * N.y))
+        >>> pA.set_pos(pO, r*N.x)
+        >>> pB.set_pos(pO, r*(cos(q)*N.x + sin(q)*N.y))
         >>> pB.pos_from(pA)
         (r*cos(q(t)) - r)*N.x + r*sin(q(t))*N.y
         >>> pathway = WrappingPathway(pA, pB, cylinder)
@@ -634,7 +636,7 @@ class WrappingPathway(PathwayBase):
         ``KanesMethod`` requires can be produced by calling the pathway's
         ``compute_loads`` method with ``F`` passed as the only argument.
 
-        >>> F = Symbol('F')
+        >>> F = symbols('F')
         >>> loads = pathway.compute_loads(F)
         >>> [load.__class__(load.location, load.vector.simplify()) for load in loads]
         [(pA, F*N.y), (pB, F*sin(q(t))*N.x - F*cos(q(t))*N.y),
@@ -644,8 +646,8 @@ class WrappingPathway(PathwayBase):
         ==========
 
         force : Expr
-            The force acting along the length of the pathway. It is assumed
-            that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. It
+            is assumed that this ``Expr`` represents an expansile force.
 
         """
         pA, pB = self.attachments
@@ -653,14 +655,14 @@ class WrappingPathway(PathwayBase):
         pA_force, pB_force = self.geometry.geodesic_end_vectors(pA, pB)
         pO_force = -(pA_force + pB_force)
 
-        loads: list[LoadBase] = [
+        loads = [
             Force(pA, force * pA_force),
             Force(pB, force * pB_force),
             Force(pO, force * pO_force),
         ]
         return loads
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``WrappingPathway``."""
         attachments = ', '.join(str(a) for a in self.attachments)
         return (
@@ -669,26 +671,16 @@ class WrappingPathway(PathwayBase):
         )
 
 
-def _point_pair_relative_position(point_1: Point, point_2: Point) -> Vector:
+def _point_pair_relative_position(point_1, point_2):
     """The relative position between a pair of points."""
     return point_2.pos_from(point_1)
 
 
-def _point_pair_length(point_1: Point, point_2: Point) -> ExprType:
+def _point_pair_length(point_1, point_2):
     """The length of the direct linear path between two points."""
     return _point_pair_relative_position(point_1, point_2).magnitude()
 
 
-def _point_pair_extension_velocity(point_1: Point, point_2: Point) -> ExprType:
+def _point_pair_extension_velocity(point_1, point_2):
     """The extension velocity of the direct linear path between two points."""
-    relative_position = _point_pair_relative_position(point_1, point_2)
-    if not relative_position:
-        return S.Zero
-    t = dynamicsymbols._t  # type: ignore
-    # A reference frame is needed to differentiate ``relative_position`` to
-    # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
-    # ``relative_position`` is defined using.
-    frame = relative_position.args[0][1]
-    relative_velocity = relative_position.diff(t, frame)
-    extension_velocity = relative_velocity.dot(relative_position.normalize())
-    return extension_velocity
+    return _point_pair_length.diff(dynamicsymbols._t)
