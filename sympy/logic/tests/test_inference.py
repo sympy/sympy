@@ -11,6 +11,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
 from sympy.testing.pytest import raises
+from sympy.assumptions.cnf import CNF, EncodedCNF
 
 
 def test_literal():
@@ -121,6 +122,19 @@ def test_dpll2_satisfiable():
         {B: True, A: True})
     assert dpll2_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
+
+    # test inequalities
+    x, y, z = symbols('x,y,z')
+    cnf = (x >= 2) & (x <= 0)
+    cnf = CNF.from_prop(cnf)
+    enc_cnf = EncodedCNF()
+    enc_cnf.from_cnf(cnf)
+
+    assert dpll2_satisfiable(enc_cnf) is False
+
+
+
 
 
 def test_minisat22_satisfiable():
