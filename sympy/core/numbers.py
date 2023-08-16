@@ -2122,7 +2122,7 @@ class Integer(Rational):
         """return number of base-10 digits"""
         if not self:
             return 1
-        n = abs(self)
+        n = abs(self.p)
         d = 1 + math.floor(math.log(n)/math.log(10))
         s = n//10**d
         if not s:
