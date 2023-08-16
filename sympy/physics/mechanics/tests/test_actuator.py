@@ -15,24 +15,22 @@ from sympy.core.backend import (
     sqrt,
 )
 from sympy.physics.mechanics import (
+    ActuatorBase,
     Force,
+    ForceActuator,
     KanesMethod,
+    LinearDamper,
     LinearPathway,
+    LinearSpring,
     Particle,
     PathwayBase,
     PinJoint,
     Point,
     ReferenceFrame,
     RigidBody,
+    TorqueActuator,
     Vector,
     dynamicsymbols,
-)
-from sympy.physics.mechanics.actuator import (
-    ActuatorBase,
-    ForceActuator,
-    LinearDamper,
-    LinearSpring,
-    TorqueActuator,
 )
 
 if USE_SYMENGINE:

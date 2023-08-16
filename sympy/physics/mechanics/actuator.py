@@ -208,7 +208,7 @@ class ForceActuator(ActuatorBase):
         multiplied by the length.
 
         >>> from sympy import symbols
-        >>> from sympy.physics.mechanics.actuator import ForceActuator
+        >>> from sympy.physics.mechanics import ForceActuator
         >>> stiffness = symbols('k')
         >>> spring_force = -stiffness*pathway.length
         >>> spring = ForceActuator(spring_force, pathway)
@@ -262,8 +262,6 @@ class LinearSpring(ForceActuator):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.actuator import LinearSpring
-
     To construct a linear spring, an expression (or symbol) must be supplied to
     represent the stiffness (spring constant) of the spring, alongside a
     pathway specifying its line of action. Let's also create a global reference
@@ -272,8 +270,8 @@ class LinearSpring(ForceActuator):
     specified by the coordinate ``q``.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import (LinearPathway, Point,
-    ...     ReferenceFrame)
+    >>> from sympy.physics.mechanics import (LinearPathway, LinearSpring,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
