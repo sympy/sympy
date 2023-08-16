@@ -17,3 +17,12 @@ If you are new to SymPy, start here.
    :hidden:
 
    intro-tutorial/index.rst
+
+
+Introduction to Biomechanical Modeling with SymPy
+=================================================
+
+.. toctree::
+   :hidden:
+
+   biomechanics/biomechanics.rst
