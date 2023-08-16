@@ -269,17 +269,10 @@ class ObstacleSetPathway(PathwayBase):
     Examples
     ========
 
-    As the ``_pathway.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``ObstacleSetPathway`` must
-    therefore be imported directly from the
-    ``sympy.physics.mechanics._pathway`` module.
+    To construct an obstacle-set pathway, three or more points are required to
+    be passed to the ``attachments`` parameter as a ``tuple``.
 
-    >>> from sympy.physics.mechanics._pathway import ObstacleSetPathway
-
-    To construct a pathway, three or more points are required to be passed to
-    the ``attachments`` parameter as a ``tuple``.
-
-    >>> from sympy.physics.mechanics import Point
+    >>> from sympy.physics.mechanics import ObstacleSetPathway, Point
     >>> pA, pB, pC, pD = Point('pA'), Point('pB'), Point('pC'), Point('pD')
     >>> obstacle_set_pathway = ObstacleSetPathway(pA, pB, pC, pD)
     >>> obstacle_set_pathway
@@ -414,8 +407,8 @@ class ObstacleSetPathway(PathwayBase):
         such that it relates to ``A`` via a rotation of ``q`` about an axis
         ``N.z`` in a global frame (``N.z``, ``A.z``, and ``B.z`` are parallel).
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._pathway import ObstacleSetPathway
+        >>> from sympy.physics.mechanics import (ObstacleSetPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
