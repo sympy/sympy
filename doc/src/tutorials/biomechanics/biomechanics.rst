@@ -54,7 +54,6 @@ which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 
    q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4')
    u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4')
-   u1d, u2d, u3d, u4d = me.dynamicsymbols('u1d, u2d, u3d, u4d')
 
 The necessary constant parameters are:
 
@@ -168,7 +167,6 @@ Define forces
 ::
 
    lever_resistance = me.Torque(A, (-kA*q1 - cA*u2)*N.z)
-   lever_resistance = me.Torque(A, 0*N.z)
 
    gravC = me.Force(u_arm, mC*g*N.z)
    gravD = me.Force(l_arm, mD*g*N.z)
@@ -176,61 +174,225 @@ Define forces
 Bicep
 ~~~~~
 
-::
+We will model the bicep muscle as an acutator that acts between the two muscle
+attachment points. This muscle can extend and contract given an excitation
+specified input and we will assume that the tendon is rigid. The musclulotendon
+actuator model will be made up of two components: a pathway on which to act and
+activation dynamics that define how an excitation input will propogate to
+activating the muscle. The bicep muscle will act along a :obj:`~LinearPathway`
+and will use a specific muscle dynamics implementation derived from
+[DeGroote2016]_.
+
+Start by importing and then creating the linear pathway::
+
+   from sympy.physics.mechanics.pathway import LinearPathway
 
    bicep_pathway = LinearPathway(Cm, Dm)
+
+Then import the specific muscle model elements::
+
+   from sympy.physics.biomechanics import (FirstOrderActivationDeGroote2016,
+      MusculotendonDeGroote2016)
+
+You can create an activation model that is fully symbolic or create it with the
+specific tuned numerical parameters from [DeGroote2016]_ like so
+(recommended)::
+
    bicep_activation = FirstOrderActivationDeGroote2016.with_default_constants('bicep')
-   bicep = MusculotendonDeGroote2016('bicep', bicep_pathway, activation_dynamics=bicep_activation)
-   bicep_constants = {
-       bicep._F_M_max: 500.0,
-       bicep._l_M_opt: 0.6 * 0.3,
-       bicep._l_T_slack: 0.55 * 0.3,
-       bicep._v_M_max: 10.0,
-       bicep._alpha_opt: 0.0,
-       bicep._beta: 0.1,
-   }
+
+The full musculotendon acutuator model is then named and constructed like so::
+
+   bicep = MusculotendonDeGroote2016('bicep', bicep_pathway,
+       activation_dynamics=bicep_activation)
+
+An :obj:`~Acutator` can compute the loads necessary for forming the equations
+of motion. The musculotendon forces are represented as SymPy functions::
+
+   bicep.to_loads()
 
 Tricep
 ~~~~~~
 
+The tricep actuator model will need a custom pathway to manage the wrapped
+nature of the muscle and tendon around the circular arc of radius :math:`r`.
+This pathway is made up of two linear segments that do not change length and a
+circular arc that changes length as the elbow extends and flexes. The forces
+acting on the upper and lower arm can be modeled as forces acting on points
+:math:`C_m` and :math:`D_m` always parallel to the linear segments and a
+resultant force at :math:`P_3` from the equal and opposite forces acting on the
+points at the ends of the circular arc.
+
+To develop this pathway we need to subclass :obj:`PathwayBase` and create
+methods that compute the pathway length, pathway extension velocity, and the
+loads acting on the involved bodies. We will develop a class which assumes that
+there is a pin joint between to rigid bodies and that the two muscle attachment
+points are fixed on each body, respectively, and that the pin joint point and
+two attachment points lie in the same plane which is normal to the pin joint
+axis. We will also assume that the pin joint coordinate is measured as
+:math:`q_4` is in :numref:`fig-biomechanics-steerer` and that :math:`0 \le q_4
+\le \pi`'. The circular arc has a radius :math:`r`. With these assumptions we
+can then use the ``__init__()`` method to collect the necessary information for
+use in the remaining methods::
+
+   from sympy.physics.mechanics.pathway import PathwayBase
+
+   class ExtensorPathway(PathwayBase):
+
+       def __init__(self, origin, insertion, axis_point, axis, parent_axis,
+           child_axis, radius, coordinate):
+           """A custom pathway that wraps a cicular arc around a pin joint.
+
+           This is intended to be used for extensor muscles. For example, a
+           tricep wrapping around the elbow joint to extend the upper arm at
+           the elbow.
+
+           Parameters
+           ==========
+           origin : Point
+               Muscle origin point fixed on the parent body (A).
+           insertion : Point
+               Muscle insertion point fixed on the child body (B).
+           axis_point : Point
+               Pin joint location fixed in both the parent and child.
+           axis : Vector
+               Pin joint rotation axis.
+           parent_axis : Vector
+               Axis fixed in the parent frame (A) that is directed from the pin
+               joint point to the muscle origin point.
+           child_axis : Vector
+               Axis fixed in the child frame (B) that is directed from the pin
+               joint point to the muscle insertion point.
+           radius : sympyfiable
+               Radius of the arc that the muscle wraps around.
+           coordinate : sympfiable function of time
+               Joint angle, zero when parent and child frames align. Positive
+               rotation about the pin joint axis, B with respect to A.
+
+           Notes
+           =====
+
+           Only valid for coordinate >= 0.
+
+           """
+           super().__init__(origin, insertion)
+
+           self.origin = origin
+           self.insertion = insertion
+           self.axis_point = axis_point
+           self.axis = axis.normalize()
+           self.parent_axis = parent_axis.normalize()
+           self.child_axis = child_axis.normalize()
+           self.radius = radius
+           self.coordinate = coordinate
+
+Also in ``__init__()`` we can calculate some quantities that will be needed in
+multiple overloaded methods::
+
+           self.origin_distance = axis_point.pos_from(origin).magnitude()
+           self.insertion_distance = axis_point.pos_from(insertion).magnitude()
+           self.origin_angle = sm.asin(self.radius/self.origin_distance)
+           self.insertion_angle = sm.asin(self.radius/self.insertion_distance)
+
+The length of the pathway is the sum of the lengths of the two linear segments
+and the circular arc that changes with variation of the pin joint coordinate.
+
 ::
 
-   tricep_pathway = ExtensorPathway(C.y, P3, -C.z, D.z, Cm, Dm, r, q4)
+       @property
+       def length(self):
+           """Length of the pathway.
+
+           Length of two fixed length line segments and a changing arc length
+           of a circle.
+
+           """
+
+           angle = self.origin_angle + self.coordinate + self.insertion_angle
+           arc_length = self.radius*angle
+
+           origin_segment_length = self.origin_distance*sm.cos(self.origin_angle)
+           insertion_segment_length = self.insertion_distance*sm.cos(self.insertion_angle)
+
+           return origin_segment_length + arc_length + insertion_segment_length
+
+The extension velocity is simply the change in the arc length::
+
+       @property
+       def extension_velocity(self):
+           """Extension velocity of the pathway.
+
+           Arc length of circle is the only thing that changes when the elbow
+           flexes and extends.
+
+           """
+           return self.radius*self.coordinate.diff(me.dynamicsymbols._t)
+
+The loads are made up of three forces: two that push an pull on the origin and
+insertion points along the linear portions of the pathway and the resultant
+effect on the elbow from the forces pushing and pulling on the ends of the
+circular arc.
+
+::
+
+       def compute_loads(self, force_magnitude):
+           """Loads in the correct format to be supplied to `KanesMethod`.
+
+           Forces applied to origin, insertion, and P from the muscle wrapped
+           over circular arc of radius r.
+
+           """
+
+           parent_tangency_point = Point('Aw')  # fixed in parent
+           child_tangency_point = Point('Bw')  # fixed in child
+
+           parent_tangency_point.set_pos(
+               self.axis_point,
+               -self.radius*sm.cos(self.origin_angle)*self.parent_axis.cross(self.axis)
+               + self.radius*sm.sin(self.origin_angle)*self.parent_axis,
+           )
+           child_tangency_point.set_pos(
+               self.axis_point,
+               self.radius*sm.cos(self.insertion_angle)*self.child_axis.cross(self.axis)
+               + self.radius*sm.sin(self.insertion_angle)*self.child_axis),
+
+           parent_force_direction_vector = self.origin.pos_from(parent_tangency_point)
+           child_force_direction_vector = self.insertion.pos_from(child_tangency_point)
+           force_on_parent = force_magnitude*parent_force_direction_vector.normalize()
+           force_on_child = force_magnitude*child_force_direction_vector.normalize()
+           loads = [
+               Force(self.origin, force_on_parent),
+               Force(self.axis_point, -(force_on_parent + force_on_child)),
+               Force(self.insertion, force_on_child),
+           ]
+           return loads
+
+Now that we have a custom pathway defined we can create a musculotendon
+actuator model in the same fashion as the bicep::
+
+   tricep_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
    tricep_activation = FirstOrderActivationDeGroote2016.with_default_constants('tricep')
-   tricep = MusculotendonDeGroote2016('tricep', tricep_pathway, activation_dynamics=tricep_activation)
-   tricep_constants = {
-       tricep._F_M_max: 500.0,
-       tricep._l_M_opt: 0.6 * 0.3,
-       tricep._l_T_slack: 0.65 * 0.3,
-       tricep._v_M_max: 10.0,
-       tricep._alpha_opt: 0.0,
-       tricep._beta: 0.1,
-   }
+   tricep = MusculotendonDeGroote2016('tricep', tricep_pathway,
+       activation_dynamics=tricep_activation)
 
-::
+The load formulas are more complex but should allow the tricpe to extend the
+elbow::
+
+       tricep.to_loads()
+
+Lastly, all of the loads can be assembled into one tuple::
 
    loads = (
        bicep.to_loads() +
        tricep.to_loads() +
-       [steer_resistance, gravA, gravB]
+       [lever_resistance, gravC, gravD]
    )
-
-Muscle Differential Equations
-=============================
-
-::
-
-   musculotendon_constants = {**bicep_constants, **tricep_constants}
-   mt = sm.Matrix(list(musculotendon_constants.keys()))
-
-   a = list(bicep.activation_dynamics.state_variables) + list(tricep.activation_dynamics.state_variables)
-   e = list(bicep.activation_dynamics.control_variables) + list(tricep.activation_dynamics.control_variables)
-   da = list(bicep.activation_dynamics.state_equations.values()) + list(tricep.activation_dynamics.state_equations.values())
-   eval_da = sm.lambdify((e, a), da, cse=True)
-
 
 Equations of Motion
 ===================
+
+With all of the loads defined the equations of motion of the system can be
+generated. We have three holonomic constraints, so the system only has one
+degree of freedom.
 
 ::
 
@@ -248,6 +410,94 @@ Equations of Motion
        configuration_constraints=holonomic,
        velocity_constraints=holonomic.diff(t),
        u_dependent=(u2, u3, u4),
-       bodies=(lever, u_arm, l_arm),
-       forcelist=loads,
    )
+   kane.kanes_equations((lever, u_arm, l_arm), loads)
+
+::
+
+   kane.mass_matrix
+
+::
+
+   kane.forcing
+
+The terms not linear in :math:`\dot{\mathbf{u}}` contain the muscle forces
+which are a function of the activation state variables in addition to the
+coordinates and generalized speeds.
+
+::
+
+   me.find_dynamicsymbols(kane.forcing)
+
+They also contain new constant parameters associated with the muscle models::
+
+   kane.forcing.free_symbols
+
+Muscle Activation Differential Equations
+========================================
+
+The activation state of each muscle are new state variables associated with two
+new first order differential equations. These differential equations are
+accessed from the muscle actuator models::
+
+   bicep.activation_dynamics.state_equations
+
+::
+
+   tricep.activation_dynamics.state_equations
+
+System Differential Equations
+=============================
+
+The complete set of differential equations for this system take the form:
+
+.. math::
+
+   \begin{bmatrix}
+     \mathbf{I} & \mathbf{0} & \mathbf{0} \\
+     \mathbf{0} & \mathbf{M}_d &  \mathbf{0} \\
+     \mathbf{0} & \mathbf{0}   & \mathbf{I}
+   \end{bmatrix}
+   \begin{bmatrix}
+     \dot{\mathbf{q}} \\
+     \dot{\mathbf{u}} \\
+     \dot{\mathbf{a}}
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathbf{u} \\
+     \mathbf{g}_d(\mathbf{u}, \mathbf{q}, \mathbf{a})  \\
+     \mathbf{g}_a(\mathbf{a}, \mathbf{e})
+   \end{bmatrix}
+
+Numerics
+========
+
+TODO : Why are these non-public attributes?
+
+Once the model is established it will need values for the specific muscle you
+are modeling::
+
+   musculotendon_constants = {**bicep_constants, **tricep_constants}
+   mt = sm.Matrix(list(musculotendon_constants.keys()))
+
+   a = list(bicep.activation_dynamics.state_variables) + list(tricep.activation_dynamics.state_variables)
+   e = list(bicep.activation_dynamics.control_variables) + list(tricep.activation_dynamics.control_variables)
+
+   bicep_constants = {
+       bicep._F_M_max: 500.0,
+       bicep._l_M_opt: 0.6 * 0.3,
+       bicep._l_T_slack: 0.55 * 0.3,
+       bicep._v_M_max: 10.0,
+       bicep._alpha_opt: 0.0,
+       bicep._beta: 0.1,
+   }
+
+   tricep_constants = {
+       tricep._F_M_max: 500.0,
+       tricep._l_M_opt: 0.6 * 0.3,
+       tricep._l_T_slack: 0.65 * 0.3,
+       tricep._v_M_max: 10.0,
+       tricep._alpha_opt: 0.0,
+       tricep._beta: 0.1,
+   }
