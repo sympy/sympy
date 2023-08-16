@@ -1416,7 +1416,7 @@ def test_StateSpace_construction():
 
     # using less matrices. Rest will be filled with a minimum of zeros.
     ss5 = StateSpace()
-    assert ss5.args = (Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[0]]))
+    assert ss5.args == (Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[0]]))
 
     A6 = Matrix([[0, 1], [1, 0]])
     B6 = Matrix([1, 1])
