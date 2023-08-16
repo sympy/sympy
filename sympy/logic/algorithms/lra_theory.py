@@ -115,6 +115,8 @@ class LRASolver():
     Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
     the Dual Simplex method and Bland's pivoting rule.
 
+    TODO: Implement and utilize backtracking
+
     References
     ==========
 
@@ -140,6 +142,12 @@ class LRASolver():
         self.nonslack = nonslack_variables
         self.all_var = nonslack_variables + slack_variables
         self.col_index = {v: i for i, v in enumerate(self.all_var)}
+
+        # if previously we knew this was sat
+        # if no assertions about slack variables have been made since
+        # and changing bounds on nonslack hasn't lead to unsat
+        self.is_sat = True
+        self.slack_set = set(slack_variables) # used for checking if var is slack
 
         self.lower = {}
         self.upper = {}
@@ -266,7 +274,8 @@ class LRASolver():
         #assert all(standardize_binrel(prop) == prop for prop, enc in encoding)
 
         for prop, enc in ordered_encoded_cnf:
-            if not isinstance(prop, AppliedBinaryRelation):
+            if not isinstance(prop, AppliedBinaryRelation) or prop.function == Q.ne:
+                # TODO: handle Q.ne better
                 continue
             assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
 
@@ -336,6 +345,9 @@ class LRASolver():
             AppliedBinaryRelation. Which relation a given int
             encodes can be found in `self.boundry_enc`.
         """
+        if enc_boundry not in self.boundry_enc:
+            return None
+
         boundry = self.boundry_enc[enc_boundry]
         sym, c = boundry.var, boundry.bound
 
@@ -349,15 +361,20 @@ class LRASolver():
             self.stack_bounds.append((sym, c, c))
             res1 = self._assert_lower(sym, c,from_equality=True)
             if res1 and res1[0] == False:
-                return res1
+                res = res1
             res2 = self._assert_upper(sym, c,from_equality=True)
-            return res2
+            res =  res2
         elif boundry.upper:
             self.stack_bounds.append((sym, None, c))
-            return self._assert_upper(sym, c)
+            res = self._assert_upper(sym, c)
         else:
             self.stack_bounds.append((sym, c, None))
-            return self._assert_lower(sym, c)
+            res = self._assert_lower(sym, c)
+
+        if self.is_sat and sym not in self.slack_set:
+            self.is_sat = res is None
+
+        return res
 
     def _assert_upper(self, xi, ci, from_equality=False):
         if self.result:
@@ -460,6 +477,9 @@ class LRASolver():
             AppliedBinaryRelation. Which relation a given int
             encodes can be found in `self.boundry_enc`.
         """
+        if self.is_sat:
+            return True, self.assign
+
         if self.result:
             return self.result
 
