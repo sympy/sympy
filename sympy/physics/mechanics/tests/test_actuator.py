@@ -362,6 +362,18 @@ class TestLinearDamper:
         assert isinstance(damper.pathway, LinearPathway)
         assert damper.pathway == self.pathway
 
+    @pytest.mark.skipif(
+        USE_SYMENGINE,
+        reason=(
+            'SymEngine give equivalent expression that does not compare equal;'
+            'SymPy puts the sqrt(q(t)**2) term in the numerator, while '
+            'SymEngine puts it in the denominator'
+        )
+    )
+    def test_valid_constructor_force(self) -> None:
+        self.pB.set_pos(self.pA, self.q * self.N.x)
+        damper = LinearDamper(self.damping, self.pathway)
+
         expected_force = -self.damping*sqrt(self.q**2)*self.dq/self.q
         assert hasattr(damper, 'force')
         assert isinstance(damper.force, ExprType)
