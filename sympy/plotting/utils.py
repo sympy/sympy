@@ -1,11 +1,11 @@
 from sympy.core.containers import Tuple
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef
 from sympy.core.relational import Relational
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanFunction
-from sympy.physics.mechanics import Vector as MechVector
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.sets import FiniteSet
 from sympy.tensor.indexed import Indexed
@@ -71,7 +71,13 @@ def _plot_sympify(args):
     for i, a in enumerate(args):
         if isinstance(a, (list, tuple)):
             args[i] = Tuple(*_plot_sympify(a), sympify=False)
-        elif not (isinstance(a, (str, dict, MechVector)) or callable(a)):
+        elif not (isinstance(a, (str, dict)) or callable(a)
+            # NOTE: check if it is a vector from sympy.physics.vector module
+            # without importing the module (because it slows down SymPy's
+            # import process and triggers SymPy's optional-dependencies
+            # tests to fail).
+            or ((a.__class__.__name__ == "Vector") and not isinstance(a, Basic))
+        ):
             args[i] = sympify(a)
     return args
 
