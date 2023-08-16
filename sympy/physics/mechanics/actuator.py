@@ -6,13 +6,13 @@ from abc import ABC, abstractmethod
 
 from sympy.core.backend import S, sympify
 from sympy.physics.mechanics import (
+    PathwayBase,
     PinJoint,
     ReferenceFrame,
     RigidBody,
     Torque,
     Vector,
 )
-from sympy.physics.mechanics.pathway import PathwayBase
 
 
 __all__ = [
@@ -77,13 +77,6 @@ class ForceActuator(ActuatorBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.actuator import ForceActuator
-
-    This is similarly the case for imports from the ``pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics.pathway import LinearPathway
-
     To construct an actuator, an expression (or symbol) must be supplied to
     represent the force it can produce, alongside a pathway specifying its line
     of action. Let's also create a global reference frame and spatially fix one
@@ -92,7 +85,8 @@ class ForceActuator(ActuatorBase):
     ``q``.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import (ForceActuator, LinearPathway,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
@@ -196,8 +190,8 @@ class ForceActuator(ActuatorBase):
         First, create a linear pathway between two points separated by the
         coordinate ``q`` in the ``x`` direction of the global frame ``N``.
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics.pathway import LinearPathway
+        >>> from sympy.physics.mechanics import (LinearPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
@@ -241,8 +235,7 @@ class ForceActuator(ActuatorBase):
         the ``to_loads`` method.
 
         >>> damper.to_loads()
-        [(pA, c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x),
-         (pB, - c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x)]
+        [(pA, c*Derivative(q(t), t)*N.x), (pB, - c*Derivative(q(t), t)*N.x)]
 
         """
         return self.pathway.compute_loads(self.force)
@@ -271,11 +264,6 @@ class LinearSpring(ForceActuator):
 
     >>> from sympy.physics.mechanics.actuator import LinearSpring
 
-    This is similarly the case for imports from the ``_pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics.pathway import LinearPathway
-
     To construct a linear spring, an expression (or symbol) must be supplied to
     represent the stiffness (spring constant) of the spring, alongside a
     pathway specifying its line of action. Let's also create a global reference
@@ -284,7 +272,8 @@ class LinearSpring(ForceActuator):
     specified by the coordinate ``q``.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import (LinearPathway, Point,
+    ...     ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
@@ -432,13 +421,6 @@ class LinearDamper(ForceActuator):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.actuator import LinearDamper
-
-    This is similarly the case for imports from the ``_pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics.pathway import LinearPathway
-
     To construct a linear damper, an expression (or symbol) must be supplied to
     represent the damping coefficient of the damper (we'll use the symbol
     ``c``), alongside a pathway specifying its line of action. Let's also
@@ -450,7 +432,8 @@ class LinearDamper(ForceActuator):
     (i.e., ``u = Derivative(q(t), t)``).
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy.physics.mechanics import (LinearDamper, LinearPathway,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
@@ -474,7 +457,7 @@ class LinearDamper(ForceActuator):
     direction of length change.
 
     >>> damper.force
-    -c*q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    -c*sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========

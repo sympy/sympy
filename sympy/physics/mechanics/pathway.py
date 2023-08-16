@@ -1,10 +1,7 @@
 """Implementations of pathways for use by actuators."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import S
 from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
 from sympy.physics.vector import dynamicsymbols
 
@@ -22,10 +19,7 @@ class PathwayBase(ABC):
 
     """
 
-    def __init__(
-        self,
-        *attachments: Point,
-    ):
+    def __init__(self, *attachments):
         """Initializer for ``PathwayBase``."""
         self.attachments = attachments
 
@@ -108,16 +102,16 @@ class LinearPathway(PathwayBase):
     the shortest possible.
 
     A linear pathway is made up of two points that can move relative to each
-    other and a pair of equal and opposite forces acting on the points. If the
-    positive time varying Euclidean distance between the two points is defined,
-    then the "extension velocity" is the time derivative of this distance and
-    is positive when the two points are moving away from each other and
-    negative when moving closer to each other. The direction for the force
-    acting on either point is determined by constructing a unit vector directed
-    from the other point to this point. This establishes a sign convention such
-    that a positive force magnitude tends to push the points apart. The
-    following diagram shows the positive force sense and the distance between
-    the points::
+    other, and a pair of equal and opposite forces acting on the points. If the
+    positive time-varying Euclidean distance between the two points is defined,
+    then the "extension velocity" is the time derivative of this distance. The
+    extension velocity is positive when the two points are moving away from
+    each other and negative when moving closer to each other. The direction for
+    the force acting on either point is determined by constructing a unit
+    vector directed from the other point to this point. This establishes a sign
+    convention such that a positive force magnitude tends to push the points
+    apart. The following diagram shows the positive force sense and the
+    distance between the points::
 
        P           Q
        o<--- F --->o
@@ -127,7 +121,7 @@ class LinearPathway(PathwayBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.pathway import LinearPathway
+    >>> from sympy.physics.mechanics import LinearPathway
 
     To construct a pathway, two points are required to be passed to the
     ``attachments`` parameter as a ``tuple``.
@@ -164,7 +158,7 @@ class LinearPathway(PathwayBase):
     ``extension_velocity`` attribute.
 
     >>> linear_pathway.extension_velocity
-    q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========
@@ -189,23 +183,12 @@ class LinearPathway(PathwayBase):
     @property
     def length(self):
         """Exact analytical expression for the pathway's length."""
-        length = self.attachments[-1].pos_from(self.attachments[0]).magnitude()
-        return length
+        return self.attachments[-1].pos_from(self.attachments[0]).magnitude()
 
     @property
     def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
-        relative_position = self.attachments[-1].pos_from(self.attachments[0])
-        if not relative_position:
-            return S.Zero
-        t = dynamicsymbols._t
-        # A reference frame is needed to differentiate ``relative_position`` to
-        # ``relative_velocity`` so choose the first ``ReferenceFrame`` that
-        # ``relative_position`` is defined using.
-        frame = relative_position.args[0][1]
-        relative_velocity = relative_position.diff(t, frame)
-        extension_velocity = relative_velocity.dot(relative_position.normalize())
-        return extension_velocity
+        return self.length.diff(dynamicsymbols._t)
 
     def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
@@ -230,8 +213,8 @@ class LinearPathway(PathwayBase):
         actuator between two points separated by the coordinate ``q`` in the
         ``x`` direction of the global frame ``N``.
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics.pathway import LinearPathway
+        >>> from sympy.physics.mechanics import (LinearPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
@@ -253,8 +236,11 @@ class LinearPathway(PathwayBase):
         ==========
 
         force : Expr
-            Magnitude of the force acting along the length of the pathway. It
-            is assumed that this ``Expr`` represents an expansile force.
+            Magnitude of the force acting along the length of the pathway. As
+            per the sign conventions for the pathway length, pathway extension
+            velocity, and pair of point forces, if this ``Expr`` is positive
+            then the force will act to push the pair of points away from one
+            another (it is expansile).
 
         """
         relative_position = self.attachments[-1].pos_from(self.attachments[0])
@@ -278,10 +264,30 @@ class WrappingPathway(PathwayBase):
     a ``WrappingPathway`` will intersect other objects to ensure that the path
     between its two ends (its attachments) is the shortest possible.
 
+    To explain the sign conventions used for pathway length, extension
+    velocity, and direction of applied forces, we can ignore the geometry with
+    which the wrapping pathway interacts. A wrapping pathway is made up of two
+    points that can move relative to each other, and a pair of equal and
+    opposite forces acting on the points. If the positive time-varying
+    Euclidean distance between the two points is defined, then the "extension
+    velocity" is the time derivative of this distance. The extension velocity
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.pathway import WrappingPathway
+    >>> from sympy.physics.mechanics import WrappingPathway
 
     To construct a wrapping pathway, like other pathways, a pair of points must
     be passed, followed by an instance of a wrapping geometry class as a
@@ -308,7 +314,7 @@ class WrappingPathway(PathwayBase):
     attachment_2 : Point
         Second of the pair of ``Point`` objects between which the wrapping
         pathway spans.
-    geometry : GeometryBase
+    geometry : WrappingGeometryBase
         Geometry about which the pathway wraps.
 
     """
@@ -402,8 +408,7 @@ class WrappingPathway(PathwayBase):
         relative to ``pA`` by the dynamics symbol ``q``.
 
         >>> from sympy import cos, sin
-        >>> from sympy.physics.mechanics import dynamicsymbols
-        >>> from sympy.physics.mechanics.pathway import WrappingPathway
+        >>> from sympy.physics.mechanics import WrappingPathway, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> pA = Point('pA')
         >>> pB = Point('pB')
