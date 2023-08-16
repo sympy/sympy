@@ -320,6 +320,13 @@ def test_Integer_new():
     assert Integer(Rational('1.' + '9'*20)) == 1
 
 
+def test_Integer_length():
+    assert Integer(0).length() == 1
+    for i in range(100):
+        n = 10**i
+        assert Integer(n).length() == i + 1
+        assert Integer(-n).length() == i + 1
+
 def test_Rational_new():
     """"
     Test for Rational constructor
@@ -539,15 +546,15 @@ def test_Float():
     assert Integer('123 456') == Integer('123456')
     assert Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+    # but treat them as strictly ass underscore between digits: only 1
+    raises(ValueError, lambda: Float('1  2'))
 
-    # allow underscore
+    # allow underscore between digits
     assert Float('1_23.4_56') == Float('123.456')
-    assert Float('1_') == Float('1.0')
-    assert Float('1_.') == Float('1.0')
-    assert Float('1._') == Float('1.0')
-    assert Float('1__2') == Float('12.0')
     # assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
     # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1__2'))
     raises(ValueError, lambda: Float('_1'))
     raises(ValueError, lambda: Float('_inf'))
 
