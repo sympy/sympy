@@ -145,7 +145,7 @@ Define forces
 The lever has inertia but we will also add a linear torsional spring and damper
 to provide something more resistance to press against and pull on::
 
-   lever_resistance = me.Torque(A, (-kA*q1 - cA*u2)*N.z)
+   lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
 
 We will simulate this system in Earth's gravitional field::
 
@@ -164,16 +164,9 @@ activating the muscle. The bicep muscle will act along a :obj:`~LinearPathway`
 and will use a specific muscle dynamics implementation derived from
 [DeGroote2016]_.
 
-Start by importing and then creating the linear pathway::
+Start by creating the linear pathway::
 
-   from sympy.physics.mechanics.pathway import LinearPathway
-
-   bicep_pathway = LinearPathway(Cm, Dm)
-
-Then import the specific muscle model elements::
-
-   from sympy.physics.biomechanics import (FirstOrderActivationDeGroote2016,
-      MusculotendonDeGroote2016)
+   bicep_pathway = me.LinearPathway(Cm, Dm)
 
 You can create an activation model that is fully symbolic or create it with the
 specific tuned numerical parameters from [DeGroote2016]_ like so
@@ -183,8 +176,8 @@ specific tuned numerical parameters from [DeGroote2016]_ like so
 
 The full musculotendon acutuator model is then named and constructed like so::
 
-   bicep = MusculotendonDeGroote2016('bicep', bicep_pathway,
-       activation_dynamics=bicep_activation)
+   bicep = bm.MusculotendonDeGroote2016('bicep', bicep_pathway,
+                                        activation_dynamics=bicep_activation)
 
 An :obj:`~Acutator` can compute the loads necessary for forming the equations
 of motion. The musculotendon forces are represented as SymPy functions::
@@ -215,9 +208,7 @@ axis. We will also assume that the pin joint coordinate is measured as
 can then use the ``__init__()`` method to collect the necessary information for
 use in the remaining methods::
 
-   from sympy.physics.mechanics.pathway import PathwayBase
-
-   class ExtensorPathway(PathwayBase):
+   class ExtensorPathway(me.PathwayBase):
 
        def __init__(self, origin, insertion, axis_point, axis, parent_axis,
            child_axis, radius, coordinate):
@@ -351,9 +342,9 @@ Now that we have a custom pathway defined we can create a musculotendon
 actuator model in the same fashion as the bicep::
 
    tricep_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
-   tricep_activation = FirstOrderActivationDeGroote2016.with_default_constants('tricep')
-   tricep = MusculotendonDeGroote2016('tricep', tricep_pathway,
-       activation_dynamics=tricep_activation)
+   tricep_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('tricep')
+   tricep = bm.MusculotendonDeGroote2016('tricep', tricep_pathway,
+                                         activation_dynamics=tricep_activation)
 
 The load formulas are more complex but should allow the tricpe to extend the
 elbow::
@@ -389,10 +380,10 @@ degree of freedom.
        ),
        q_dependent=(q2, q3, q4),
        configuration_constraints=holonomic,
-       velocity_constraints=holonomic.diff(t),
+       velocity_constraints=holonomic.diff(me.dynamicsymbols._t),
        u_dependent=(u2, u3, u4),
    )
-   kane.kanes_equations((lever, u_arm, l_arm), loads)
+   Fr, Frs = kane.kanes_equations((lever, u_arm, l_arm), loads)
 
 ::
 
@@ -429,8 +420,8 @@ accessed from the muscle actuator models::
 
 ::
 
-   dadt = sm.Matrix(bicep.activation_dynamics.state_equations).col_join(
-       sm.Matrix(tricep.activation_dynamics.state_equations))
+   dadt = sm.Matrix(list(bicep.activation_dynamics.state_equations.values())).col_join(
+       sm.Matrix(list(tricep.activation_dynamics.state_equations.values())))
 
 System Differential Equations
 =============================
@@ -508,14 +499,43 @@ Evaluate the System Differential Equations
 
 ::
 
-   eval_diffeq = sm.lambdify((q, u, a, e, p), (kane.mass_matrix, kane.forcing, dadt))
-   eval_holonomic = sm.lambdify((q, p), holonomic)
+   eval_diffeq = sm.lambdify((q, u, a, e, p),
+                             (kane.mass_matrix, kane.forcing, dadt), cse=True)
+   eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
 Once the model is established it will need values for the specific muscle you
 are modeling::
 
    import numpy as np
    from scipy.optimize import fsolve
+
+   p_vals = np.array([
+       -0.31,  # dx [m]
+       0.15,  # dy [m]
+       -0.31,  # dz [m]
+       0.2,   # lA [m]
+       0.3,  # lC [m]
+       0.3,  # lD [m]
+       1.0,  # mA [kg]
+       2.3,  # mC [kg]
+       1.7,  # mD [kg]
+       9.81,  # g [m/s/s]
+       10.0,  # k [Nm/rad]
+       0.5,  # c [Nms/rad]
+       0.03,  # r [m]
+       500.0,
+       0.6*0.3,
+       0.55*0.3,
+       10.0,
+       0.0,
+       0.1,
+       500.0,
+       0.6*0.3,
+       0.65*0.3,
+       10.0,
+       0.0,
+       0.1,
+   ])
 
    q_vals = np.array([
        np.deg2rad(5.0),  # q1 [rad]
@@ -541,34 +561,6 @@ are modeling::
        0.0,  # a_tricep, nondimensional
    ])
 
-   p_vals = np.array([
-       -0.31,  # dx [m]
-       0.15,  # dy [m]
-       -0.31,  # dz [m]
-       0.2,   # lA [m]
-       0.3,  # lC [m]
-       0.3,  # lD [m]
-       1.0,  # mA [kg]
-       2.3,  # mC [kg]
-       1.7,  # mD [kg]
-       9.81,  # g [m/s/s]
-       10.0,  # kA [Nm/rad]
-       0.2,  # cA [Nms/rad]
-       0.03,  # r [m]
-       500.0,
-       0.6*0.3,
-       0.55*0.3,
-       10.0,
-       0.0,
-       0.1,
-       500.0,
-       0.6*0.3,
-       0.65*0.3,
-       10.0,
-       0.0,
-       0.1,
-   ])
-
    e_vals = np.array([
        0.0,
        0.0,
@@ -584,28 +576,30 @@ Simulate
    from scipy.integrate import solve_ivp
 
    def eval_rhs(t, x, p):
+
        q = x[0:4]
        u = x[4:8]
        a = x[8:10]
 
        if t < 0.5:
-           e = np.array([0.0, 0.0])
+          e = np.array([0.0, 0.0])
        elif t < 1.0:
-           e = np.array([-0.2, 0.8])
+          e = np.array([-0.2, 0.8])
        else:
-           e = np.array([0.0, 0.0])
+          e = np.array([0.0, 0.0])
 
        qd = u
        m, f, ad = eval_diffeq(q, u, a, e, p)
-       ud = np.linalg.solve(m, f)
+       ud = np.linalg.solve(m, f).squeeze()
 
-       return np.hstack((qd, ud, ad))
+       return np.hstack((qd, ud, ad.squeeze()))
 
 ::
 
-   t0, tf = 0.0, 2.0
-   ts = np.linspace(t0, tf, num=201)
-   sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), t_eval=ts)
+   t0, tf = 0.0, 3.0
+   ts = np.linspace(t0, tf, num=301)
+   x0 = np.hstack((q_vals, u_vals, a_vals))
+   sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
 
 TODO : Use the matplotlib sphinx directive to plot this (if possible).
 
