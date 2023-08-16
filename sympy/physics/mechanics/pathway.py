@@ -2,10 +2,12 @@
 
 from abc import ABC, abstractmethod
 
+from sympy.core.singleton import S
 from sympy.physics.mechanics import Force, Point, WrappingGeometryBase
 from sympy.physics.vector import dynamicsymbols
 
-__all__ = ['PathwayBase', 'LinearPathway', 'WrappingPathway']
+
+__all__ = ['PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway']
 
 
 class PathwayBase(ABC):
@@ -183,12 +185,12 @@ class LinearPathway(PathwayBase):
     @property
     def length(self):
         """Exact analytical expression for the pathway's length."""
-        return self.attachments[-1].pos_from(self.attachments[0]).magnitude()
+        return _point_pair_length(*self.attachments)
 
     @property
     def extension_velocity(self):
         """Exact analytical expression for the pathway's extension velocity."""
-        return self.length.diff(dynamicsymbols._t)
+        return _point_pair_extension_velocity(*self.attachments)
 
     def compute_loads(self, force):
         """Loads required by the equations of motion method classes.
@@ -243,11 +245,216 @@ class LinearPathway(PathwayBase):
             another (it is expansile).
 
         """
-        relative_position = self.attachments[-1].pos_from(self.attachments[0])
+        relative_position = _point_pair_relative_position(*self.attachments)
         loads = [
             Force(self.attachments[0], -force*relative_position/self.length),
             Force(self.attachments[-1], force*relative_position/self.length),
         ]
+        return loads
+
+
+class ObstacleSetPathway(PathwayBase):
+    """Obstacle-set pathway between a set of attachment points.
+
+    Explanation
+    ===========
+
+    An obstacle-set pathway forms a series of straight-line segment between
+    pairs of consecutive points in a set of points. It is similiar to multiple
+    linear pathways joined end-to-end. It will not interact with any other
+    objects in the system, i.e. an ``ObstacleSetPathway`` will intersect other
+    objects to ensure that the path between its pairs of points (its
+    attachments) is the shortest possible.
+
+    Examples
+    ========
+
+    To construct an obstacle-set pathway, three or more points are required to
+    be passed to the ``attachments`` parameter as a ``tuple``.
+
+    >>> from sympy.physics.mechanics import ObstacleSetPathway, Point
+    >>> pA, pB, pC, pD = Point('pA'), Point('pB'), Point('pC'), Point('pD')
+    >>> obstacle_set_pathway = ObstacleSetPathway(pA, pB, pC, pD)
+    >>> obstacle_set_pathway
+    ObstacleSetPathway(pA, pB, pC, pD)
+
+    The pathway created above isn't very interesting without the positions and
+    velocities of its attachment points being described. Without this its not
+    possible to describe how the pathway moves, i.e. its length or its
+    extension velocity.
+
+    >>> from sympy import cos, sin
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> from sympy.physics.vector import dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> pO = Point('pO')
+    >>> pA.set_pos(pO, N.y)
+    >>> pB.set_pos(pO, -N.x)
+    >>> pC.set_pos(pA, cos(q) * N.x - (sin(q) + 1) * N.y)
+    >>> pD.set_pos(pA, sin(q) * N.x + (cos(q) - 1) * N.y)
+    >>> pB.pos_from(pA)
+    - N.x - N.y
+    >>> pC.pos_from(pA)
+    cos(q(t))*N.x + (-sin(q(t)) - 1)*N.y
+    >>> pD.pos_from(pA)
+    sin(q(t))*N.x + (cos(q(t)) - 1)*N.y
+
+    A pathway's length can be accessed via its ``length`` attribute.
+
+    >>> obstacle_set_pathway.length.simplify()
+    sqrt(2)*(sqrt(cos(q(t)) + 1) + 2)
+
+    A pathway's extension velocity can be accessed similarly via its
+    ``extension_velocity`` attribute.
+
+    >>> obstacle_set_pathway.extension_velocity.simplify()
+    -sqrt(2)*sin(q(t))*Derivative(q(t), t)/(2*sqrt(cos(q(t)) + 1))
+
+    Parameters
+    ==========
+
+    attachments : tuple[Point, Point]
+        The set of ``Point`` objects that define the segmented obstacle-set
+        pathway.
+
+    """
+
+    def __init__(self, *attachments):
+        """Initializer for ``ObstacleSetPathway``.
+
+        Parameters
+        ==========
+
+        attachments : tuple[Point, ...]
+            The set of ``Point`` objects that define the segmented obstacle-set
+            pathway.
+
+        """
+        super().__init__(*attachments)
+
+    @property
+    def attachments(self):
+        """The set of points defining a pathway's segmented path."""
+        return self._attachments
+
+    @attachments.setter
+    def attachments(self, attachments):
+        if hasattr(self, '_attachments'):
+            msg = (
+                f'Can\'t set attribute `attachments` to {repr(attachments)} '
+                f'as it is immutable.'
+            )
+            raise AttributeError(msg)
+        if len(attachments) <= 2:
+            msg = (
+                f'Value {repr(attachments)} passed to `attachments` was an '
+                f'iterable of length {len(attachments)}, must be an iterable '
+                f'of length 3 or greater.'
+            )
+            raise ValueError(msg)
+        for i, point in enumerate(attachments):
+            if not isinstance(point, Point):
+                msg = (
+                    f'Value {repr(point)} passed to `attachments` at index '
+                    f'{i} was of type {type(point)}, must be {Point}.'
+                )
+                raise TypeError(msg)
+        self._attachments = tuple(attachments)
+
+    @property
+    def length(self):
+        """Exact analytical expression for the pathway's length."""
+        length = S.Zero
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            length += _point_pair_length(*attachment_pair)
+        return length
+
+    @property
+    def extension_velocity(self):
+        """Exact analytical expression for the pathway's extension velocity."""
+        extension_velocity = S.Zero
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            extension_velocity += _point_pair_extension_velocity(*attachment_pair)
+        return extension_velocity
+
+    def compute_loads(self, force):
+        """Loads required by the equations of motion method classes.
+
+        Explanation
+        ===========
+
+        ``KanesMethod`` requires a list of ``Point``-``Vector`` tuples to be
+        passed to the ``loads`` parameters of its ``kanes_equations`` method
+        when constructing the equations of motion. This method acts as a
+        utility to produce the correctly-structred pairs of points and vectors
+        required so that these can be easily concatenated with other items in
+        the list of loads and passed to ``KanesMethod.kanes_equations``. These
+        loads are also in the correct form to also be passed to the other
+        equations of motion method classes, e.g. ``LagrangesMethod``.
+
+        Examples
+        ========
+
+        The below example shows how to generate the loads produced in an
+        actuator that follows an obstacle-set pathway between four points and
+        produces an expansile force ``F``. First, create a pair of reference
+        frames, ``A`` and ``B``, in which the four points ``pA``, ``pB``,
+        ``pC``, and ``pD`` will be located. The first two points in frame ``A``
+        and the second two in frame ``B``. Frame ``B`` will also be oriented
+        such that it relates to ``A`` via a rotation of ``q`` about an axis
+        ``N.z`` in a global frame (``N.z``, ``A.z``, and ``B.z`` are parallel).
+
+        >>> from sympy.physics.mechanics import (ObstacleSetPathway, Point,
+        ...     ReferenceFrame)
+        >>> from sympy.physics.vector import dynamicsymbols
+        >>> q = dynamicsymbols('q')
+        >>> N = ReferenceFrame('N')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'axis', (0, N.x))
+        >>> B = A.orientnew('B', 'axis', (q, N.z))
+        >>> pO = Point('pO')
+        >>> pA, pB, pC, pD = Point('pA'), Point('pB'), Point('pC'), Point('pD')
+        >>> pA.set_pos(pO, A.x)
+        >>> pB.set_pos(pO, -A.y)
+        >>> pC.set_pos(pO, B.y)
+        >>> pD.set_pos(pO, B.x)
+        >>> obstacle_set_pathway = ObstacleSetPathway(pA, pB, pC, pD)
+
+        Now create a symbol ``F`` to describe the magnitude of the (expansile)
+        force that will be produced along the pathway. The list of loads that
+        ``KanesMethod`` requires can be produced by calling the pathway's
+        ``compute_loads`` method with ``F`` passed as the only argument.
+
+        >>> from sympy import Symbol
+        >>> F = Symbol('F')
+        >>> obstacle_set_pathway.compute_loads(F)
+        [(pA, sqrt(2)*F/2*A.x + sqrt(2)*F/2*A.y),
+         (pB, - sqrt(2)*F/2*A.x - sqrt(2)*F/2*A.y),
+         (pB, - F/sqrt(2*cos(q(t)) + 2)*A.y - F/sqrt(2*cos(q(t)) + 2)*B.y),
+         (pC, F/sqrt(2*cos(q(t)) + 2)*A.y + F/sqrt(2*cos(q(t)) + 2)*B.y),
+         (pC, - sqrt(2)*F/2*B.x + sqrt(2)*F/2*B.y),
+         (pD, sqrt(2)*F/2*B.x - sqrt(2)*F/2*B.y)]
+
+        Parameters
+        ==========
+
+        force : Expr
+            The force acting along the length of the pathway. It is assumed
+            that this ``Expr`` represents an expansile force.
+
+        """
+        loads = []
+        attachment_pairs = zip(self.attachments[:-1], self.attachments[1:])
+        for attachment_pair in attachment_pairs:
+            relative_position = _point_pair_relative_position(*attachment_pair)
+            length = _point_pair_length(*attachment_pair)
+            loads.extend([
+                Force(attachment_pair[0], -force*relative_position/length),
+                Force(attachment_pair[1], force*relative_position/length),
+            ])
         return loads
 
 
@@ -456,3 +663,18 @@ class WrappingPathway(PathwayBase):
             f'{self.__class__.__name__}({attachments}, '
             f'geometry={self.geometry})'
         )
+
+
+def _point_pair_relative_position(point_1, point_2):
+    """The relative position between a pair of points."""
+    return point_2.pos_from(point_1)
+
+
+def _point_pair_length(point_1, point_2):
+    """The length of the direct linear path between two points."""
+    return _point_pair_relative_position(point_1, point_2).magnitude()
+
+
+def _point_pair_extension_velocity(point_1, point_2):
+    """The extension velocity of the direct linear path between two points."""
+    return _point_pair_length(point_1, point_2).diff(dynamicsymbols._t)
