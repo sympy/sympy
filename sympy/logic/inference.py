@@ -93,6 +93,11 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         if pysat is None:
             algorithm = "dpll2"
 
+    if algorithm=="z3":
+        z3 = import_module('z3')
+        if z3 is None:
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
@@ -106,74 +111,14 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
         return minisat22_satisfiable(expr, all_models, minimal)
     elif algorithm == "z3":
-        z3 = import_module("z3")
-        if z3 is None:
-            raise Exception("Z3 is not installed.")
-
-        from sympy.printing.smtlib import smtlib_code
-        from sympy.assumptions.assume import AppliedPredicate
-        from sympy.assumptions.cnf import EncodedCNF
-        if not isinstance(expr, EncodedCNF):
-            exprs = EncodedCNF()
-            exprs.add_prop(expr)
-            expr = exprs
-
-        s = encoded_cnf_to_z3_solver(expr, z3)
-
-        res = str(s.check())
-        if res == "unsat":
-            return False
-        elif res == "sat":
-            return True
-        else:
-            return None
+        from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+        return z3_satisfiable(expr, all_models)
 
 
 
 
 
     raise NotImplementedError
-
-
-def encoded_cnf_to_z3_solver(enc_cnf, z3):
-    def dummify_bool(pred):
-        return False
-        assert isinstance(pred, AppliedPredicate)
-
-        if pred.function in [Q.positive, Q.negative, Q.zero]:
-            return pred
-        else:
-            return False
-
-    s = z3.Solver()
-
-    declarations = []
-    for var in enc_cnf.variables:
-        declarations.append(f"(declare-const d{var} Bool)")
-
-    declarations = "\n".join(declarations)
-
-    assertions = []
-    for clause in enc_cnf.data:
-        clause_strings = []
-        for lit in clause:
-            if lit > 0:
-                clause_strings.append(f"d{abs(lit)}")
-            elif lit < 0:
-                clause_strings.append(f"(not d{abs(lit)})")
-            else:
-                assert False
-
-        clause = " ".join(clause_strings)
-        clause = "(or " + clause + ")"
-        assertion = "(assert " + clause + ")"
-        assertions.append(assertion)
-
-    assertions = "\n".join(assertions)
-    print(declarations + "\n" + assertions)
-    s.from_string(declarations + assertions)
-
-    return s
 
 
 def valid(expr):
