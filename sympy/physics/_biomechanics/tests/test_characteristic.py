@@ -830,17 +830,17 @@ class TestFiberForceLengthActiveDeGroote2016:
     def test_doit(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants).doit()
         assert fl_M_act == (
-            self.c0*exp((((self.c1 - self.l_M_tilde)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
-            + self.c4*exp((((self.c5 - self.l_M_tilde)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
-            + self.c8*exp((((self.c9 - self.l_M_tilde)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
+            self.c0*exp(-(((self.l_M_tilde - self.c1)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
+            + self.c4*exp(-(((self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
+            + self.c8*exp(-(((self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
         )
 
     def test_doit_evaluate_false(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
         assert fl_M_act == (
-            self.c0*exp(((UnevaluatedExpr(self.c1 - self.l_M_tilde)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
-            + self.c4*exp(((UnevaluatedExpr(self.c5 - self.l_M_tilde)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
-            + self.c8*exp(((UnevaluatedExpr(self.c9 - self.l_M_tilde)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
+            self.c0*exp(-((UnevaluatedExpr(self.l_M_tilde - self.c1)/(self.c2 + self.c3*self.l_M_tilde))**2)/2)
+            + self.c4*exp(-((UnevaluatedExpr(self.l_M_tilde - self.c5)/(self.c6 + self.c7*self.l_M_tilde))**2)/2)
+            + self.c8*exp(-((UnevaluatedExpr(self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
         )
 
     def test_with_default_constants(self):
@@ -975,9 +975,9 @@ class TestFiberForceLengthActiveDeGroote2016:
     def test_expression_print_latex(self):
         fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
         expected = (
-            r'c_{0} e^{\frac{\left(c_{1} - l_{M tilde}\right)^{2}}{2 \left(c_{2} + c_{3} l_{M tilde}\right)^{2}}} '
-            r'+ c_{4} e^{\frac{\left(c_{5} - l_{M tilde}\right)^{2}}{2 \left(c_{6} + c_{7} l_{M tilde}\right)^{2}}} '
-            r'+ c_{8} e^{\frac{\left(c_{9} - l_{M tilde}\right)^{2}}{2 \left(c_{10} + c_{11} l_{M tilde}\right)^{2}}}'
+            r'c_{0} e^{- \frac{\left(- c_{1} + l_{M tilde}\right)^{2}}{2 \left(c_{2} + c_{3} l_{M tilde}\right)^{2}}} '
+            r'+ c_{4} e^{- \frac{\left(- c_{5} + l_{M tilde}\right)^{2}}{2 \left(c_{6} + c_{7} l_{M tilde}\right)^{2}}} '
+            r'+ c_{8} e^{- \frac{\left(- c_{9} + l_{M tilde}\right)^{2}}{2 \left(c_{10} + c_{11} l_{M tilde}\right)^{2}}}'
         )
         assert LatexPrinter().doprint(fl_M_act.doit()) == expected
 
