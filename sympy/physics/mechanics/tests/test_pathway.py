@@ -124,6 +124,14 @@ class TestLinearPathway:
         expected = 2*sqrt(self.q1**2)
         assert self.pathway.length == expected
 
+    @pytest.mark.skipif(
+        USE_SYMENGINE,
+        reason=(
+            'SymEngine give equivalent expression that does not compare equal;'
+            'SymPy puts the sqrt(q(t)**2) term in the numerator, while '
+            'SymEngine puts it in the denominator'
+        )
+    )
     def test_2D_pathway_extension_velocity(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = 2*sqrt(self.q1**2)*self.q1d/self.q1
