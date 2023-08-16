@@ -217,11 +217,60 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
+_dig = str.maketrans(dict.fromkeys('1234567890'))
 
-_floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
-def _literal_float(f):
-    """Return True if n starts like a floating point number."""
-    return bool(_floatpat.match(f))
+def _literal_float(s):
+    """return True if s is space-trimmed number literal else False
+
+    Python allows underscore as digit separators: there must be a
+    digit on each side. So neither a leading underscore nor a
+    double underscore are valid as part of a number. A number does
+    not have to precede the decimal point, but there must be a
+    digit before the optional "e" or "E" that begins the signs
+    exponent of the number which must be an integer, perhaps with
+    underscore separators.
+
+    SymPy allows space as a separator and this routine is as strict
+    with the use of spaces as Python is with the use of uderscores:
+    there can only be 1 between digits.
+
+    We don't check for error from float(s) because we don't know
+    whether s is malicious or not. A regex for this could maybe
+    be written but will it be understood by most who read it?
+    """
+    # mantissa and exponent
+    parts = s.split('e')
+    if len(parts) > 2:
+        return False
+    if len(parts) == 2:
+        m, e = parts
+        if e.startswith('+') or e.startswith('-'):
+            e = e[1:]
+        if not e:
+            return False
+    else:
+        m, e = s, '1'
+    # integer and fraction of mantissa
+    parts = m.split('.')
+    if len(parts) > 2:
+        return False
+    elif len(parts) == 2:
+        i, f = parts
+    else:
+        i, f = a, '1'
+    if not i and not f:
+        return False
+    if i and i[0] in '+-':
+        i = i[1:]
+    elif not i:
+        i = '1'
+    f = f or '1'
+    # check that all groups contain only digits and are not null
+    for n in (i, f, e):
+        for g in n.split('_'):
+            if not g or g.translate(_dig):
+                return False
+    return True
 
 # (a,b) -> gcd(a,b)
 
@@ -1029,8 +1078,8 @@ class Float(Number):
                              'Supply only one. ')
 
         if isinstance(num, str):
-            # Float accepts spaces as digit separators
-            num = num.replace(' ', '').lower()
+            _num = num = num.strip()  # Python ignores leading and trailing space
+            num = num.replace(' ', '_').lower()  # Float treats spaces as digit sep; E -> e
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1039,6 +1088,10 @@ class Float(Number):
                 return S.Infinity
             elif num == '-inf':
                 return S.NegativeInfinity
+            elif num == 'nan':
+                return S.NaN
+            elif not _literal_float(num):
+                raise ValueError('string-float not recognized: %s' % _num)
         elif isinstance(num, float) and num == 0:
             num = '0'
         elif isinstance(num, float) and num == float('inf'):
@@ -1067,7 +1120,7 @@ class Float(Number):
             dps = 15
             if isinstance(num, Float):
                 return num
-            if isinstance(num, str) and _literal_float(num):
+            if isinstance(num, str):
                 try:
                     Num = decimal.Decimal(num)
                 except decimal.InvalidOperation:
@@ -1076,28 +1129,25 @@ class Float(Number):
                     isint = '.' not in num
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
-                        dps = max(dps, len(str(num).lstrip('-')))
+                        # without dec, e-notation is short for int
+                        dps = max(dps, num.length())
                     dps = max(15, dps)
                     precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
-            ok = None
-            if _literal_float(num):
-                try:
-                    Num = decimal.Decimal(num)
-                except decimal.InvalidOperation:
-                    pass
-                else:
-                    isint = '.' not in num
-                    num, dps = _decimal_to_Rational_prec(Num)
-                    if num.is_Integer and isint:
-                        dps = max(dps, len(str(num).lstrip('-')))
-                        precision = dps_to_prec(dps)
-                    ok = True
-            if ok is None:
-                raise ValueError('string-float not recognized: %s' % num)
+            try:
+                Num = decimal.Decimal(num)
+            except decimal.InvalidOperation:
+                raise ValueError('string-float not recognized by Decimal: %s' % num)
+            else:
+                isint = '.' not in num
+                num, dps = _decimal_to_Rational_prec(Num)
+                if num.is_Integer and isint:
+                    # without dec, e-notation is short for int
+                    dps = max(dps, num.length())
+                    precision = dps_to_prec(dps)
 
         # decimal precision(dps) is set and maybe binary precision(precision)
         # as well.From here on binary precision is used to compute the Float.
@@ -1112,8 +1162,6 @@ class Float(Number):
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, precision, rnd)
         elif isinstance(num, str):
-            if num.startswith('_') or not num.translate(cls._remove_non_digits):
-                raise ValueError(f"could not convert string to float: {num!r}")
             _mpf_ = mlib.from_str(num, precision, rnd)
         elif isinstance(num, decimal.Decimal):
             if num.is_finite():
@@ -2070,6 +2118,11 @@ class Integer(Rational):
     is_Integer = True
 
     __slots__ = ()
+
+    def length(self):
+        if not self:
+            return 1
+        return 1 + math.floor(math.log(abs(self.p))/math.log(10))
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
