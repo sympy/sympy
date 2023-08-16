@@ -972,3 +972,85 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
             + c4*exp(-((UnevaluatedExpr(l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2)
             + c8*exp(-((UnevaluatedExpr(l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2)
         )
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = self.args
+        if argindex == 1:
+            return (
+                c0*(
+                    c3*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                    + (c1 - l_M_tilde)/((c2 + c3*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+                + c4*(
+                    c7*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                    + (c5 - l_M_tilde)/((c6 + c7*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+                + c8*(
+                    c11*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                    + (c9 - l_M_tilde)/((c10 + c11*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 2:
+            return exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+        elif argindex == 3:
+            return (
+                c0*(l_M_tilde - c1)/(c2 + c3*l_M_tilde)**2
+                *exp(-(l_M_tilde - c1)**2 /(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 4:
+            return (
+                c0*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                *exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 5:
+            return (
+                c0*l_M_tilde*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                *exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 6:
+            return exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+        elif argindex == 7:
+            return (
+                c4*(l_M_tilde - c5)/(c6 + c7*l_M_tilde)**2
+                *exp(-(l_M_tilde - c5)**2 /(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 8:
+            return (
+                c4*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                *exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 9:
+            return (
+                c4*l_M_tilde*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                *exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 10:
+            return exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+        elif argindex == 11:
+            return (
+                c8*(l_M_tilde - c9)/(c10 + c11*l_M_tilde)**2
+                *exp(-(l_M_tilde - c9)**2 /(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 12:
+            return (
+                c8*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                *exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 13:
+            return (
+                c8*l_M_tilde*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                *exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+
+        raise ArgumentIndexError(self, argindex)
