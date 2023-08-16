@@ -812,3 +812,9 @@ class TestFiberForceLengthActiveDeGroote2016:
             self.c0, self.c1, self.c2, self.c3, self.c4, self.c5,
             self.c6, self.c7, self.c8, self.c9, self.c10, self.c11,
         )
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceLengthActiveDeGroote2016, Function)
+        assert issubclass(FiberForceLengthActiveDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceLengthActiveDeGroote2016.__name__ == 'FiberForceLengthActiveDeGroote2016'
