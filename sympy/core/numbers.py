@@ -256,7 +256,7 @@ def _literal_float(s):
     elif len(parts) == 2:
         i, f = parts
     else:
-        i, f = a, '1'
+        i, f = m, '1'
     if not i and not f:
         return False
     if i and i[0] in '+-':
@@ -2120,7 +2120,7 @@ class Integer(Rational):
 
     def length(self, base=10):
         """return number of base-10 digits"""
-        b = as_int(b)
+        b = as_int(base)
         if self < b:
             return 1
         n = abs(self.p)
