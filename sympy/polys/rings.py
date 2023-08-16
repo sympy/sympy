@@ -1965,7 +1965,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         for coeff in f.itercoeffs():
             cont = gcd(cont, coeff)
 
-        return int(cont)
+        return cont
 
     def primitive(f):
         """Returns content and a primitive polynomial. """
@@ -3199,8 +3199,14 @@ def _gcd_prs(p1, p2):
     h = pp1.subresultants(pp2, x)[-1]
     c = gcd_prs([c1, c2])
 
+
     domain = p1.ring.to_domain()
-    if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))):
+
+    coeff = h.coeff_wrt(x, h.degree(x))
+
+    normalized_coeff = domain.canonical_unit(coeff)
+
+    if normalized_coeff == coeff:
         h = -h
 
     _, h = h.primitive()
