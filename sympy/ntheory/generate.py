@@ -151,7 +151,7 @@ class Sieve:
             # Create the list such that block[x] iff (a + 2x + 1) is prime.
             # Note that even numbers are not considered here.
             block = [True] * block_size
-            for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
                 for t in range((-(a + 1 + p) // 2) % p, block_size, p):
                     block[t] = False
             for idx, p in enumerate(block):

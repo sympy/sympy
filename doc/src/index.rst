@@ -48,9 +48,6 @@ function does.
 ----------------------------------
 
 The contributing guide goes over the details necessary to contribute to SymPy.
-See also the full `Development Workflow
-<https://github.com/sympy/sympy/wiki/Development-workflow>`_ guide on the
-SymPy wiki.
 
 .. toctree::
    :hidden:

@@ -8,7 +8,6 @@ import math
 
 from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
@@ -17,7 +16,7 @@ from sympy.core.numbers import Rational, Integer
 from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -209,6 +208,12 @@ def trailing(n):
     7
     >>> trailing(63)
     0
+
+    See Also
+    ========
+
+    multiplicity
+
     """
     n = abs(int(n))
     if not n:
@@ -217,32 +222,28 @@ def trailing(n):
     if low_byte:
         return small_trailing[low_byte]
 
+    t = 8
+    n >>= 8
     # 2**m is quick for z up through 2**30
-    z = bitcount(n) - 1
-    if isinstance(z, SYMPY_INTS):
-        if n == 1 << z:
-            return z
+    z = n.bit_length() - 1
+    if n == 1 << z:
+        return z + t
 
     if z < 300:
         # fixed 8-byte reduction
-        t = 8
-        n >>= 8
         while not n & 0xff:
             n >>= 8
             t += 8
-        return t + small_trailing[n & 0xff]
-
-    # binary reduction important when there might be a large
-    # number of trailing 0s
-    t = 0
-    p = 8
-    while not n & 1:
-        while not n & ((1 << p) - 1):
+    else:
+        # binary reduction important when there might be a large
+        # number of trailing 0s
+        p = z >> 1
+        while not n & 0xff:
+            while n & ((1 << p) - 1):
+                p >>= 1
             n >>= p
             t += p
-            p *= 2
-        p //= 2
-    return t
+    return t + small_trailing[n & 0xff]
 
 
 def multiplicity(p, n):
@@ -271,6 +272,11 @@ def multiplicity(p, n):
     52818775009509558395695966887
     >>> _ == multiplicity_in_factorial(p, n)
     True
+
+    See Also
+    ========
+
+    trailing
 
     """
     try:
@@ -1309,17 +1315,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # square root anyway. Finding 2 factors is easy if they are
             # "close enough." This is the big root equivalent of dividing by
             # 2, 3, 5.
-            sqrt_n = integer_nthroot(n, 2)[0]
+            sqrt_n = isqrt(n)
             a = sqrt_n + 1
             a2 = a**2
             b2 = a2 - n
             for i in range(3):
-                b, fermat = integer_nthroot(b2, 2)
-                if fermat:
+                b, fermat = sqrtrem(b2)
+                if not fermat:
                     break
                 b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
-            if fermat:
+            if not fermat:
                 if verbose:
                     print(fermat_msg)
                 if limit:
@@ -2430,8 +2436,8 @@ def is_perfect(n):
         last2 = n % 100
         if last2 != 28 and last2 % 10 != 6:
             return False
-        r, b = integer_nthroot(1 + 8*n, 2)
-        if not b:
+        r, b = sqrtrem(1 + 8*n)
+        if b:
             return False
         m, x = divmod(1 + r, 4)
         if x:
