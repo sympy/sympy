@@ -243,7 +243,7 @@ def _literal_float(s):
         return False
     if len(parts) == 2:
         m, e = parts
-        if e.startswith('+') or e.startswith('-'):
+        if e.startswith(tuple('+-')):
             e = e[1:]
         if not e:
             return False
