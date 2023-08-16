@@ -7,9 +7,9 @@ from sympy.polys.domains import ZZ
 
 @st.composite
 def coefficients(draw: st.DrawFn, empty=True):
-    l = [ZZ(i) for i in draw(st.lists(st.integers()))]
-    if not empty:
-        assume(len(l) > 0)
+    min_size = 0 if empty else 1
+    raw_l = draw(st.lists(st.integers(), min_size=min_size))
+    l = [ZZ(i) for i in raw_l]
     if len(l) > 0:
         assume(any(l))
         assume(l[0] != 0)
