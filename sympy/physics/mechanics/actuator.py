@@ -529,15 +529,14 @@ class TorqueActuator(ActuatorBase):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics.actuator import TorqueActuator
-
     To construct a torque actuator, an expression (or symbol) must be supplied
     to represent the torque it can produce, alongside a vector specifying the
     axis about which the torque will act, and a pair of frames on which the
     torque will act.
 
     >>> from sympy import symbols
-    >>> from sympy.physics.mechanics import ReferenceFrame, RigidBody
+    >>> from sympy.physics.mechanics import (ReferenceFrame, RigidBody,
+    ...     TorqueActuator)
     >>> N = ReferenceFrame('N')
     >>> A = ReferenceFrame('A')
     >>> torque = symbols('T')
@@ -606,8 +605,7 @@ class TorqueActuator(ActuatorBase):
         z-axis as the joint axis.
 
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
-        ... RigidBody)
-        >>> from sympy.physics.mechanics.actuator import TorqueActuator
+        ...     RigidBody, TorqueActuator)
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> parent = RigidBody('parent', frame=N)
@@ -772,8 +770,7 @@ class TorqueActuator(ActuatorBase):
 
         >>> from sympy import symbols
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
-        ... RigidBody)
-        >>> from sympy.physics.mechanics.actuator import TorqueActuator
+        ...     RigidBody, TorqueActuator)
         >>> torque = symbols('T')
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
