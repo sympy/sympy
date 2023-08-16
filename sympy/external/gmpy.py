@@ -1,10 +1,23 @@
 import os
-import sys
 from typing import Tuple as tTuple, Type
 
-import mpmath.libmp as mlib
-
 from sympy.external import import_module
+
+from .pythonmpq import PythonMPQ
+
+from .ntheory import (
+    factorial as python_factorial,
+    sqrt as python_sqrt,
+    sqrtrem as python_sqrtrem,
+    gcd as python_gcd,
+    lcm as python_lcm,
+    is_square as python_is_square,
+    invert as python_invert,
+    legendre as python_legendre,
+    jacobi as python_jacobi,
+    kronecker as python_kronecker,
+)
+
 
 __all__ = [
     # GROUND_TYPES is either 'gmpy' or 'python' depending on which is used. If
@@ -35,6 +48,12 @@ __all__ = [
     # isqrt from gmpy or mpmath
     'sqrt',
 
+    # is_square from gmpy or mpmath
+    'is_square',
+
+    # sqrtrem from gmpy or mpmath
+    'sqrtrem',
+
     # gcd from gmpy or math
     'gcd',
 
@@ -49,6 +68,9 @@ __all__ = [
 
     # jacobi from gmpy or sympy
     'jacobi',
+
+    # kronecker from gmpy or sympy
+    'kronecker',
 ]
 
 
@@ -68,24 +90,48 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
     # Actually import gmpy2
     gmpy = import_module('gmpy2', min_module_version='2.0.0',
                 module_version_attr='version', module_version_attr_call_args=())
+    flint = None
 
-    # Warn if user explicitly asked for gmpy but it isn't available.
-    if gmpy is None and GROUND_TYPES in ('gmpy', 'gmpy2'):
+    if gmpy is None:
+        # Warn if user explicitly asked for gmpy but it isn't available.
+        if GROUND_TYPES != 'auto':
+            from warnings import warn
+            warn("gmpy library is not installed, switching to 'python' ground types")
+
+        # Fall back to Python if gmpy2 is not available
+        GROUND_TYPES = 'python'
+    else:
+        GROUND_TYPES = 'gmpy'
+
+elif GROUND_TYPES == 'flint':
+
+    # Try to use python_flint
+    flint = import_module('flint')
+    gmpy = None
+
+    if flint is None:
         from warnings import warn
-        warn("gmpy library is not installed, switching to 'python' ground types")
+        warn("python_flint is not installed, switching to 'python' ground types")
+        GROUND_TYPES = 'python'
+    else:
+        GROUND_TYPES = 'flint'
 
 elif GROUND_TYPES == 'python':
 
-    # The user asked for Python so ignore gmpy2 module.
+    # The user asked for Python so ignore gmpy2/flint
     gmpy = None
+    flint = None
+    GROUND_TYPES = 'python'
 
 else:
 
-    # Invalid value for SYMPY_GROUND_TYPES. Ignore the gmpy2 module.
+    # Invalid value for SYMPY_GROUND_TYPES. Warn and default to Python.
     from warnings import warn
     warn("SYMPY_GROUND_TYPES environment variable unrecognised. "
          "Should be 'python', 'auto', 'gmpy', or 'gmpy2'")
     gmpy = None
+    flint = None
+    GROUND_TYPES = 'python'
 
 
 #
@@ -96,7 +142,7 @@ else:
 #
 SYMPY_INTS: tTuple[Type, ...]
 
-if gmpy is not None:
+if GROUND_TYPES == 'gmpy':
 
     HAS_GMPY = 2
     GROUND_TYPES = 'gmpy'
@@ -113,10 +159,28 @@ if gmpy is not None:
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
+    kronecker = gmpy.kronecker
 
-else:
-    from .pythonmpq import PythonMPQ
-    import math
+elif GROUND_TYPES == 'flint':
+
+    HAS_GMPY = 0
+    GROUND_TYPES = 'flint'
+    SYMPY_INTS = (int, flint.fmpz) # type: ignore
+    MPZ = flint.fmpz # type: ignore
+    MPQ = flint.fmpq # type: ignore
+
+    factorial = python_factorial
+    sqrt = python_sqrt
+    is_square = python_is_square
+    sqrtrem = python_sqrtrem
+    gcd = python_gcd
+    lcm = python_lcm
+    invert = python_invert
+    legendre = python_legendre
+    jacobi = python_jacobi
+    kronecker = python_kronecker
+
+elif GROUND_TYPES == 'python':
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
@@ -124,68 +188,16 @@ else:
     MPZ = int
     MPQ = PythonMPQ
 
-    factorial = lambda x: int(mlib.ifac(x))
-    sqrt = lambda x: int(mlib.isqrt(x))
-    is_square = lambda x: x >= 0 and mlib.sqrtrem(x)[1] == 0
-    sqrtrem = lambda x: tuple(int(r) for r in mlib.sqrtrem(x))
-    if sys.version_info[:2] >= (3, 9):
-        gcd = math.gcd
-        lcm = math.lcm
-    else:
-        # Until python 3.8 is no longer supported
-        from functools import reduce
-        gcd = lambda *args: reduce(math.gcd, args, 0)
+    factorial = python_factorial
+    sqrt = python_sqrt
+    is_square = python_is_square
+    sqrtrem = python_sqrtrem
+    gcd = python_gcd
+    lcm = python_lcm
+    invert = python_invert
+    legendre = python_legendre
+    jacobi = python_jacobi
+    kronecker = python_kronecker
 
-        def lcm(*args):
-            if 0 in args:
-                return 0
-            return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
-
-    def invert(x, m):
-        """ Return y such that x*y == 1 modulo m.
-
-        Uses ``math.pow`` but reproduces the behaviour of ``gmpy2.invert``
-        which raises ZeroDivisionError if no inverse exists.
-        """
-        try:
-            return pow(x, -1, m)
-        except ValueError:
-            raise ZeroDivisionError("invert() no inverse exists")
-
-    def legendre(x, y):
-        """ Return Legendre symbol (x / y).
-
-        Following the implementation of gmpy2,
-        the error is raised only when y is an even number.
-        """
-        if y <= 0 or not y % 2:
-            raise ValueError("y should be an odd prime")
-        x %= y
-        if not x:
-            return 0
-        if pow(x, (y - 1) // 2, y) == 1:
-            return 1
-        return -1
-
-    def jacobi(x, y):
-        """ Return Jacobi symbol (x / y)."""
-        if y <= 0 or not y % 2:
-            raise ValueError("y should be an odd positive integer")
-        x %= y
-        if not x:
-            return int(y == 1)
-        if y == 1 or x == 1:
-            return 1
-        if gcd(x, y) != 1:
-            return 0
-        j = 1
-        while x != 0:
-            while x % 2 == 0 and x > 0:
-                x >>= 1
-                if y % 8 in [3, 5]:
-                    j = -j
-            x, y = y, x
-            if x % 4 == y % 4 == 3:
-                j = -j
-            x %= y
-        return j
+else:
+    assert False

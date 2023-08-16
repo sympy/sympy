@@ -3361,6 +3361,35 @@ def test_sympy__physics__vector__frame__CoordinateSym():
     assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 
+@SKIP("abstract class")
+def test_sympy__physics___biomechanics__characteristic__CharacteristicCurveFunction():
+    pass
+
+
+def test_sympy__physics___biomechanics__characteristic__TendonForceLengthDeGroote2016():
+    from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
+    l_T_tilde, c0, c1, c2, c3 = symbols('l_T_tilde, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthDeGroote2016(l_T_tilde, c0, c1, c2, c3))
+
+
+def test_sympy__physics___biomechanics__characteristic__TendonForceLengthInverseDeGroote2016():
+    from sympy.physics._biomechanics import TendonForceLengthInverseDeGroote2016
+    fl_T, c0, c1, c2, c3 = symbols('fl_T, c0, c1, c2, c3')
+    assert _test_args(TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3))
+
+
+def test_sympy__physics___biomechanics__characteristic__FiberForceLengthPassiveDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+    l_M_tilde, c0, c1 = symbols('l_M_tilde, c0, c1')
+    assert _test_args(FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1))
+
+
+def test_sympy__physics___biomechanics__characteristic__FiberForceLengthPassiveInverseDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    fl_M_pas, c0, c1 = symbols('fl_M_pas, c0, c1')
+    assert _test_args(FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1))
+
+
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
     assert _test_args(Pauli(1))

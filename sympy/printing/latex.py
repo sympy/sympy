@@ -2878,6 +2878,12 @@ class LatexPrinter(Printer):
     def _print_mpq(self, expr):
         return str(expr)
 
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
+        return str(expr)
+
     def _print_Predicate(self, expr):
         return r"\operatorname{{Q}}_{{\text{{{}}}}}".format(latex_escape(str(expr.name)))
 

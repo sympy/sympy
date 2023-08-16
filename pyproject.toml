@@ -105,6 +105,7 @@ ignore_errors = true
 module = [
     "antlr4.*",
     "Cython.*",
+    "flint.*",
     "gmpy.*",
     "gmpy2.*",
     "IPython.*",

@@ -1352,16 +1352,72 @@ def test_PolyElement_drop():
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
 
+def test_PolyElement_coeff_wrt():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    p = 4*x**3 + 5*y**2 + 6*y**2*z + 7
+    assert p.coeff_wrt(1, 2) == 6*z + 5 # using generator index
+    assert p.coeff_wrt(x, 3) == 4 # using generator
+
+    p = 2*x**4 + 3*x*y**2*z + 10*y**2 + 10*x*z**2
+    assert p.coeff_wrt(x, 1) == 3*y**2*z + 10*z**2
+    assert p.coeff_wrt(y, 2) == 3*x*z + 10
+
+    p = 4*x**2 + 2*x*y + 5
+    assert p.coeff_wrt(z, 1) == R(0)
+    assert p.coeff_wrt(y, 2) == R(0)
+
+def test_PolyElement_prem():
+    R, x, y = ring("x, y", ZZ)
+
+    f, g = x**2 + x*y, 2*x + 2
+    assert f.prem(g) == -4*y + 4 # first generator is chosen by default if it is not given
+
+    f, g = x**2 + 1, 2*x - 4
+    assert f.prem(g) == f.prem(g, x) == 20
+    assert f.prem(g, 1) == R(0)
+
+    f, g = x*y + 2*x + 1, x + y
+    assert f.prem(g) == -y**2 - 2*y + 1
+    assert f.prem(g, 1) == f.prem(g, y) == -x**2 + 2*x + 1
+
+    raises(ZeroDivisionError, lambda: f.prem(R(0)))
+
 def test_PolyElement_pdiv():
-    _, x, y = ring("x,y", ZZ)
+    R, x, y = ring("x,y", ZZ)
+
+    f, g = x**4 + 5*x**3 + 7*x**2, 2*x**2 + 3
+    assert f.pdiv(g) == f.pdiv(g, x) == (4*x**2 + 20*x + 22, -60*x - 66)
 
     f, g = x**2 - y**2, x - y
-    q, r = x + y, 0
+    assert f.pdiv(g) == f.pdiv(g, 0) == (x + y, 0)
 
-    assert f.pdiv(g) == (q, r)
-    assert f.prem(g) == r
-    assert f.pquo(g) == q
-    assert f.pexquo(g) == q
+    f, g = x*y + 2*x + 1, x + y
+    assert f.pdiv(g) == (y + 2, -y**2 - 2*y + 1)
+    assert f.pdiv(g, y) == f.pdiv(g, 1) == (x + 1, -x**2 + 2*x + 1)
+
+    assert R(0).pdiv(g) == (0, 0)
+    raises(ZeroDivisionError, lambda: f.prem(R(0)))
+
+def test_PolyElement_pquo():
+    R, x, y = ring("x, y", ZZ)
+
+    f, g = x**4 - 4*x**2*y + 4*y**2, x**2 - 2*y
+    assert f.pquo(g) == f.pquo(g, x) == x**2 - 2*y
+    assert f.pquo(g, y) == 4*x**2 - 8*y + 4
+
+    f, g = x**4 - y**4, x**2 - y**2
+    assert f.pquo(g) == f.pquo(g, 0) == x**2 + y**2
+
+def test_PolyElement_pexquo():
+    R, x, y = ring("x, y", ZZ)
+
+    f, g = x**2 - y**2, x - y
+    assert f.pexquo(g) == f.pexquo(g, x) == x + y
+    assert f.pexquo(g, y) == f.pexquo(g, 1) == x + y + 1
+
+    f, g = x**2 + 3*x + 6, x + 2
+    raises(ExactQuotientFailed, lambda: f.pexquo(g))
 
 def test_PolyElement_gcdex():
     _, x = ring("x", QQ)
@@ -1373,10 +1429,31 @@ def test_PolyElement_gcdex():
     assert f.gcdex(g) == (s, t, h)
 
 def test_PolyElement_subresultants():
-    _, x = ring("x", ZZ)
-    f, g, h = x**2 - 2*x + 1, x**2 - 1, 2*x - 2
+    R, x, y = ring("x, y", ZZ)
 
-    assert f.subresultants(g) == [f, g, h]
+    f, g = x**2*y + x*y, x + y # degree(f, x) > degree(g, x)
+    h = y**3 - y**2
+    assert f.subresultants(g) == [f, g, h] # first generator is chosen default
+
+    # generator index or generator is given
+    assert f.subresultants(g, 0) ==  f.subresultants(g, x) == [f, g, h]
+
+    assert f.subresultants(g, y) == [x**2*y + x*y, x + y, x**3 + x**2]
+
+    f, g = 2*x - y, x**2 + 2*y + x # degree(f, x) < degree(g, x)
+    assert f.subresultants(g) == [x**2 + x + 2*y, 2*x - y, y**2 + 10*y]
+
+    f, g = R(0), y**3 - y**2 # f = 0
+    assert f.subresultants(g) == [y**3 - y**2, 1]
+
+    f, g = x**2*y + x*y, R(0) # g = 0
+    assert f.subresultants(g) == [x**2*y + x*y, 1]
+
+    f, g = R(0), R(0) # f = 0 and g = 0
+    assert f.subresultants(g) == [0, 0]
+
+    f, g = x**2 + x, x**2 + x # f and g are same polynomial
+    assert f.subresultants(g) == [x**2 + x, x**2 + x]
 
 def test_PolyElement_resultant():
     _, x = ring("x", ZZ)
