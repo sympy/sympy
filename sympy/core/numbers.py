@@ -229,9 +229,9 @@ def _literal_float(s):
     exponent of the number which must be an integer, perhaps with
     underscore separators.
 
-    SymPy allows space as a separator and this routine is as strict
-    with the use of spaces as Python is with the use of uderscores:
-    there can only be 1 between digits.
+    SymPy allows space as a separator; if the calling routine replaces
+    them with underscores then the same semantics will be enforced
+    for them as for underscores: there can only be 1 *between* digits.
 
     We don't check for error from float(s) because we don't know
     whether s is malicious or not. A regex for this could maybe
