@@ -22,24 +22,22 @@ if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
-
-
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
-from sympy.core.function import Function
+from sympy.core.function import Function, AppliedUndef
 from sympy.core.symbol import (Dummy, Symbol, Wild)
-from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.functions import sign
 from sympy.plotting.backends.base_backend import Plot
 from sympy.plotting.backends.matplotlibbackend import MatplotlibBackend
 from sympy.plotting.backends.textbackend import TextBackend
 from sympy.plotting.series import (
-    _set_discretization_points, LineOver1DRangeSeries,
-    Parametric2DLineSeries, Parametric3DLineSeries, ParametricSurfaceSeries,
-    SurfaceOver2DRangeSeries, ContourSeries
-)
+    LineOver1DRangeSeries, Parametric2DLineSeries, Parametric3DLineSeries,
+    ParametricSurfaceSeries, SurfaceOver2DRangeSeries, ContourSeries)
+from sympy.plotting.utils import _check_arguments, _plot_sympify
+from sympy.tensor.indexed import Indexed
+from sympy.vector import BaseScalar
 # to maintain back-compatibility
 from sympy.plotting.plotgrid import PlotGrid # noqa: F401
 from sympy.plotting.series import BaseSeries # noqa: F401
@@ -54,7 +52,6 @@ from sympy.plotting.series import flat # noqa: F401
 from sympy.plotting.backends.base_backend import unset_show # noqa: F401
 from sympy.plotting.backends.matplotlibbackend import _matplotlib_list # noqa: F401
 from sympy.plotting.textplot import textplot # noqa: F401
-
 
 
 def _process_summations(sum_bound, *args):
@@ -106,6 +103,68 @@ def _process_summations(sum_bound, *args):
         expr = expr.subs(t, s)
     args[0] = expr
     return args
+
+
+def _build_line_series(*args, **kwargs):
+    """Loop over the provided arguments and create the necessary line series.
+    """
+    series = []
+    sum_bound = int(kwargs.get("sum_bound", 1000))
+    for arg in args:
+        expr, r, label, rendering_kw = arg
+        kw = kwargs.copy()
+        if rendering_kw is not None:
+            kw["rendering_kw"] = rendering_kw
+        # TODO: _process_piecewise check goes here
+        if not callable(expr):
+            arg = _process_summations(sum_bound, *arg)
+        series.append(LineOver1DRangeSeries(*arg[:-1], **kw))
+    return series
+
+
+def _create_series(series_type, plot_expr, **kwargs):
+    """Extract the rendering_kw dictionary from the provided arguments and
+    create an appropriate data series.
+    """
+    series = []
+    for args in plot_expr:
+        kw = kwargs.copy()
+        if args[-1] is not None:
+            kw["rendering_kw"] = args[-1]
+        series.append(series_type(*args[:-1], **kw))
+    return series
+
+
+def _set_labels(series, labels, rendering_kw):
+    """Apply the `label` and `rendering_kw` keyword arguments to the series.
+    """
+    if not isinstance(labels, (list, tuple)):
+        labels = [labels]
+    if len(labels) > 0:
+        if len(labels) == 1 and len(series) > 1:
+            # if one label is provided and multiple series are being plotted,
+            # set the same label to all data series. It maintains
+            # back-compatibility
+            labels *= len(series)
+        if len(series) != len(labels):
+            raise ValueError("The number of labels must be equal to the "
+                "number of expressions being plotted.\nReceived "
+                f"{len(series)} expressions and {len(labels)} labels")
+
+        for s, l in zip(series, labels):
+            s.label = l
+
+    if rendering_kw:
+        if isinstance(rendering_kw, dict):
+            rendering_kw = [rendering_kw]
+        if len(rendering_kw) == 1:
+            rendering_kw *= len(series)
+        elif len(series) != len(rendering_kw):
+            raise ValueError("The number of rendering dictionaries must be "
+                "equal to the number of expressions being plotted.\nReceived "
+                f"{len(series)} expressions and {len(labels)} labels")
+        for s, r in zip(series, rendering_kw):
+            s.rendering_kw = r
 
 
 def plot_factory(*args, **kwargs):
@@ -325,26 +384,25 @@ def plot(*args, show=True, **kwargs):
     Plot, LineOver1DRangeSeries
 
     """
-    kwargs = _set_discretization_points(kwargs, LineOver1DRangeSeries)
-    args = list(map(sympify, args))
+    args = _plot_sympify(args)
+    plot_expr = _check_arguments(args, 1, 1, **kwargs)
+    params = kwargs.get("params", None)
     free = set()
-    for a in args:
-        if isinstance(a, Expr):
-            free |= a.free_symbols
-            if len(free) > 1:
-                raise ValueError(
-                    'The same variable should be used in all '
-                    'univariate expressions being plotted.')
-    x = free.pop() if free else Symbol('x')
+    for p in plot_expr:
+        if not isinstance(p[1][0], str):
+            free |= {p[1][0]}
+        else:
+            free |= {Symbol(p[1][0])}
+    if params:
+        free = free.difference(params.keys())
+    x = free.pop() if free else Symbol("x")
     kwargs.setdefault('xlabel', x)
     kwargs.setdefault('ylabel', Function('f')(x))
-    series = []
-    plot_expr = check_arguments(args, 1, 1)
 
-    sum_bound = int(kwargs.get("sum_bound", 1000))
-    plot_expr = [_process_summations(sum_bound, *args) for args in plot_expr]
-
-    series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
+    labels = kwargs.pop("label", [])
+    rendering_kw = kwargs.pop("rendering_kw", None)
+    series = _build_line_series(*plot_expr, **kwargs)
+    _set_labels(series, labels, rendering_kw)
 
     plots = plot_factory(*series, **kwargs)
     if show:
@@ -533,11 +591,14 @@ def plot_parametric(*args, show=True, **kwargs):
 
     Plot, Parametric2DLineSeries
     """
-    kwargs = _set_discretization_points(kwargs, Parametric2DLineSeries)
-    args = list(map(sympify, args))
-    series = []
-    plot_expr = check_arguments(args, 2, 1)
-    series = [Parametric2DLineSeries(*arg, **kwargs) for arg in plot_expr]
+    args = _plot_sympify(args)
+    plot_expr = _check_arguments(args, 2, 1, **kwargs)
+
+    labels = kwargs.pop("label", [])
+    rendering_kw = kwargs.pop("rendering_kw", None)
+    series = _create_series(Parametric2DLineSeries, plot_expr, **kwargs)
+    _set_labels(series, labels, rendering_kw)
+
     plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
@@ -658,16 +719,56 @@ def plot3d_parametric_line(*args, show=True, **kwargs):
     Plot, Parametric3DLineSeries
 
     """
-    kwargs = _set_discretization_points(kwargs, Parametric3DLineSeries)
-    args = list(map(sympify, args))
-    series = []
-    plot_expr = check_arguments(args, 3, 1)
-    series = [Parametric3DLineSeries(*arg, **kwargs) for arg in plot_expr]
+    args = _plot_sympify(args)
+    plot_expr = _check_arguments(args, 3, 1, **kwargs)
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
+
+    labels = kwargs.pop("label", [])
+    rendering_kw = kwargs.pop("rendering_kw", None)
+    series = _create_series(Parametric3DLineSeries, plot_expr, **kwargs)
+    _set_labels(series, labels, rendering_kw)
+
     plots = plot_factory(*series, **kwargs)
     if show:
+        plots.show()
+    return plots
+
+
+def _plot3d_plot_contour_helper(Series, *args, **kwargs):
+    """plot3d and plot_contour are structurally identical. Let's reduce
+    code repetition.
+    """
+    args = _plot_sympify(args)
+    plot_expr = _check_arguments(args, 1, 2, **kwargs)
+
+    free_x = set()
+    free_y = set()
+    _types = (Symbol, BaseScalar, Indexed, AppliedUndef)
+    for p in plot_expr:
+        free_x |= {p[1][0]} if isinstance(p[1][0], _types) else {Symbol(p[1][0])}
+        free_y |= {p[2][0]} if isinstance(p[2][0], _types) else {Symbol(p[2][0])}
+    x = free_x.pop() if free_x else Symbol("x")
+    y = free_y.pop() if free_y else Symbol("y")
+    kwargs.setdefault("xlabel", x)
+    kwargs.setdefault("ylabel", y)
+    kwargs.setdefault("zlabel", Function('f')(x, y))
+
+    # if a polar discretization is requested and automatic labelling has ben
+    # applied, hide the labels on the x-y axis.
+    if kwargs.get("is_polar", False):
+        if callable(kwargs["xlabel"]):
+            kwargs["xlabel"] = ""
+        if callable(kwargs["ylabel"]):
+            kwargs["ylabel"] = ""
+
+    labels = kwargs.pop("label", [])
+    rendering_kw = kwargs.pop("rendering_kw", None)
+    series = _create_series(Series, plot_expr, **kwargs)
+    _set_labels(series, labels, rendering_kw)
+    plots = plot_factory(*series, **kwargs)
+    if kwargs.get("show", True):
         plots.show()
     return plots
 
@@ -803,19 +904,9 @@ def plot3d(*args, show=True, **kwargs):
     Plot, SurfaceOver2DRangeSeries
 
     """
-
-    kwargs = _set_discretization_points(kwargs, SurfaceOver2DRangeSeries)
-    args = list(map(sympify, args))
-    series = []
-    plot_expr = check_arguments(args, 1, 2)
-    series = [SurfaceOver2DRangeSeries(*arg, **kwargs) for arg in plot_expr]
-    kwargs.setdefault("xlabel", series[0].var_x)
-    kwargs.setdefault("ylabel", series[0].var_y)
-    kwargs.setdefault("zlabel", Function('f')(series[0].var_x, series[0].var_y))
-    plots = plot_factory(*series, **kwargs)
-    if show:
-        plots.show()
-    return plots
+    kwargs.setdefault("show", show)
+    return _plot3d_plot_contour_helper(
+        SurfaceOver2DRangeSeries, *args, **kwargs)
 
 
 def plot3d_parametric_surface(*args, show=True, **kwargs):
@@ -923,14 +1014,17 @@ def plot3d_parametric_surface(*args, show=True, **kwargs):
 
     """
 
-    kwargs = _set_discretization_points(kwargs, ParametricSurfaceSeries)
-    args = list(map(sympify, args))
-    series = []
-    plot_expr = check_arguments(args, 3, 2)
-    series = [ParametricSurfaceSeries(*arg, **kwargs) for arg in plot_expr]
+    args = _plot_sympify(args)
+    plot_expr = _check_arguments(args, 3, 2, **kwargs)
     kwargs.setdefault("xlabel", "x")
     kwargs.setdefault("ylabel", "y")
     kwargs.setdefault("zlabel", "z")
+
+    labels = kwargs.pop("label", [])
+    rendering_kw = kwargs.pop("rendering_kw", None)
+    series = _create_series(ParametricSurfaceSeries, plot_expr, **kwargs)
+    _set_labels(series, labels, rendering_kw)
+
     plots = plot_factory(*series, **kwargs)
     if show:
         plots.show()
@@ -1016,17 +1110,9 @@ def plot_contour(*args, show=True, **kwargs):
     Plot, ContourSeries
 
     """
+    kwargs.setdefault("show", show)
+    return _plot3d_plot_contour_helper(ContourSeries, *args, **kwargs)
 
-    kwargs = _set_discretization_points(kwargs, ContourSeries)
-    args = list(map(sympify, args))
-    plot_expr = check_arguments(args, 1, 2)
-    series = [ContourSeries(*arg) for arg in plot_expr]
-    plot_contours = plot_factory(*series, **kwargs)
-    if len(plot_expr[0].free_symbols) > 2:
-        raise ValueError('Contour Plot cannot Plot for more than two variables.')
-    if show:
-        plot_contours.show()
-    return plot_contours
 
 def check_arguments(args, expr_len, nb_of_free_symbols):
     """

@@ -4,7 +4,7 @@ import pytest
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import (I, oo, pi)
 from sympy.core.relational import Ne
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
 from sympy.functions.elementary.miscellaneous import (real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
@@ -20,6 +20,9 @@ from sympy.plotting.plot import (
     plot3d_parametric_surface)
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, MatplotlibBackend, TextBackend)
+from sympy.plotting.series import (
+    LineOver1DRangeSeries, Parametric2DLineSeries, Parametric3DLineSeries,
+    ParametricSurfaceSeries, SurfaceOver2DRangeSeries)
 from sympy.testing.pytest import skip, warns, raises, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 from sympy.utilities.exceptions import ignore_warnings
@@ -886,3 +889,441 @@ def test_back_compatibility():
         (x, 0, pi), (y, 0, 2*pi), n=5)
     assert len(p[0].get_meshes()) == 3
     assert len(p[0].get_data()) == 5
+
+
+def test_plot_arguments():
+    ### Test arguments for plot()
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols("x, y")
+
+    # single expressions
+    p = plot(x + 1)
+    assert isinstance(p[0], LineOver1DRangeSeries)
+    assert p[0].expr == x + 1
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x + 1"
+    assert p[0].rendering_kw == {}
+
+    # single expressions custom label
+    p = plot(x + 1, "label")
+    assert isinstance(p[0], LineOver1DRangeSeries)
+    assert p[0].expr == x + 1
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "label"
+    assert p[0].rendering_kw == {}
+
+    # single expressions with range
+    p = plot(x + 1, (x, -2, 2))
+    assert p[0].ranges == [(x, -2, 2)]
+
+    # single expressions with range, label and rendering-kw dictionary
+    p = plot(x + 1, (x, -2, 2), "test", {"color": "r"})
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {"color": "r"}
+
+    # multiple expressions
+    p = plot(x + 1, x**2)
+    assert isinstance(p[0], LineOver1DRangeSeries)
+    assert p[0].expr == x + 1
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x + 1"
+    assert p[0].rendering_kw == {}
+    assert isinstance(p[1], LineOver1DRangeSeries)
+    assert p[1].expr == x**2
+    assert p[1].ranges == [(x, -10, 10)]
+    assert p[1].get_label(False) == "x**2"
+    assert p[1].rendering_kw == {}
+
+    # multiple expressions over the same range
+    p = plot(x + 1, x**2, (x, 0, 5))
+    assert p[0].ranges == [(x, 0, 5)]
+    assert p[1].ranges == [(x, 0, 5)]
+
+    # multiple expressions over the same range with the same rendering kws
+    p = plot(x + 1, x**2, (x, 0, 5), {"color": "r"})
+    assert p[0].ranges == [(x, 0, 5)]
+    assert p[1].ranges == [(x, 0, 5)]
+    assert p[0].rendering_kw == {"color": "r"}
+    assert p[1].rendering_kw == {"color": "r"}
+
+    # multiple expressions with different ranges, labels and rendering kws
+    p = plot(
+        (x + 1, (x, 0, 5)),
+        (x**2, (x, -2, 2), "test", {"color": "r"}))
+    assert isinstance(p[0], LineOver1DRangeSeries)
+    assert p[0].expr == x + 1
+    assert p[0].ranges == [(x, 0, 5)]
+    assert p[0].get_label(False) == "x + 1"
+    assert p[0].rendering_kw == {}
+    assert isinstance(p[1], LineOver1DRangeSeries)
+    assert p[1].expr == x**2
+    assert p[1].ranges == [(x, -2, 2)]
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {"color": "r"}
+
+    # single argument: lambda function
+    f = lambda t: t
+    p = plot(lambda t: t)
+    assert isinstance(p[0], LineOver1DRangeSeries)
+    assert callable(p[0].expr)
+    assert p[0].ranges[0][1:] == (-10, 10)
+    assert p[0].get_label(False) == ""
+    assert p[0].rendering_kw == {}
+
+    # single argument: lambda function + custom range and label
+    p = plot(f, ("t", -5, 6), "test")
+    assert p[0].ranges[0][1:] == (-5, 6)
+    assert p[0].get_label(False) == "test"
+
+
+def test_plot_parametric_arguments():
+    ### Test arguments for plot_parametric()
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols("x, y")
+
+    # single parametric expression
+    p = plot_parametric(x + 1, x)
+    assert isinstance(p[0], Parametric2DLineSeries)
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+
+    # single parametric expression with custom range, label and rendering kws
+    p = plot_parametric(x + 1, x, (x, -2, 2), "test",
+        {"cmap": "Reds"})
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {"cmap": "Reds"}
+
+    p = plot_parametric((x + 1, x), (x, -2, 2), "test")
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+
+    # multiple parametric expressions same symbol
+    p = plot_parametric((x + 1, x), (x ** 2, x + 1))
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x ** 2, x + 1)
+    assert p[1].ranges == [(x, -10, 10)]
+    assert p[1].get_label(False) == "x"
+    assert p[1].rendering_kw == {}
+
+    # multiple parametric expressions different symbols
+    p = plot_parametric((x + 1, x), (y ** 2, y + 1, "test"))
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (y ** 2, y + 1)
+    assert p[1].ranges == [(y, -10, 10)]
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {}
+
+    # multiple parametric expressions same range
+    p = plot_parametric((x + 1, x), (x ** 2, x + 1), (x, -2, 2))
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x ** 2, x + 1)
+    assert p[1].ranges == [(x, -2, 2)]
+    assert p[1].get_label(False) == "x"
+    assert p[1].rendering_kw == {}
+
+    # multiple parametric expressions, custom ranges and labels
+    p = plot_parametric(
+        (x + 1, x, (x, -2, 2), "test1"),
+        (x ** 2, x + 1, (x, -3, 3), "test2", {"cmap": "Reds"}))
+    assert p[0].expr == (x + 1, x)
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "test1"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x ** 2, x + 1)
+    assert p[1].ranges == [(x, -3, 3)]
+    assert p[1].get_label(False) == "test2"
+    assert p[1].rendering_kw == {"cmap": "Reds"}
+
+    # single argument: lambda function
+    fx = lambda t: t
+    fy = lambda t: 2 * t
+    p = plot_parametric(fx, fy)
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (-10, 10)
+    assert "Dummy" in p[0].get_label(False)
+    assert p[0].rendering_kw == {}
+
+    # single argument: lambda function + custom range + label
+    p = plot_parametric(fx, fy, ("t", 0, 2), "test")
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (0, 2)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+
+
+def test_plot3d_parametric_line_arguments():
+    ### Test arguments for plot3d_parametric_line()
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols("x, y")
+
+    # single parametric expression
+    p = plot3d_parametric_line(x + 1, x, sin(x))
+    assert isinstance(p[0], Parametric3DLineSeries)
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+
+    # single parametric expression with custom range, label and rendering kws
+    p = plot3d_parametric_line(x + 1, x, sin(x), (x, -2, 2),
+        "test", {"cmap": "Reds"})
+    assert isinstance(p[0], Parametric3DLineSeries)
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {"cmap": "Reds"}
+
+    p = plot3d_parametric_line((x + 1, x, sin(x)), (x, -2, 2), "test")
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -2, 2)]
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+
+    # multiple parametric expression same symbol
+    p = plot3d_parametric_line(
+        (x + 1, x, sin(x)), (x ** 2, 1, cos(x), {"cmap": "Reds"}))
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x ** 2, 1, cos(x))
+    assert p[1].ranges == [(x, -10, 10)]
+    assert p[1].get_label(False) == "x"
+    assert p[1].rendering_kw == {"cmap": "Reds"}
+
+    # multiple parametric expression different symbols
+    p = plot3d_parametric_line((x + 1, x, sin(x)), (y ** 2, 1, cos(y)))
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (y ** 2, 1, cos(y))
+    assert p[1].ranges == [(y, -10, 10)]
+    assert p[1].get_label(False) == "y"
+    assert p[1].rendering_kw == {}
+
+    # multiple parametric expression, custom ranges and labels
+    p = plot3d_parametric_line(
+        (x + 1, x, sin(x)),
+        (x ** 2, 1, cos(x), (x, -2, 2), "test", {"cmap": "Reds"}))
+    assert p[0].expr == (x + 1, x, sin(x))
+    assert p[0].ranges == [(x, -10, 10)]
+    assert p[0].get_label(False) == "x"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x ** 2, 1, cos(x))
+    assert p[1].ranges == [(x, -2, 2)]
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {"cmap": "Reds"}
+
+    # single argument: lambda function
+    fx = lambda t: t
+    fy = lambda t: 2 * t
+    fz = lambda t: 3 * t
+    p = plot3d_parametric_line(fx, fy, fz)
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (-10, 10)
+    assert "Dummy" in p[0].get_label(False)
+    assert p[0].rendering_kw == {}
+
+    # single argument: lambda function + custom range + label
+    p = plot3d_parametric_line(fx, fy, fz, ("t", 0, 2), "test")
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (0, 2)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+
+
+def test_plot3d_plot_contour_arguments():
+    ### Test arguments for plot3d() and plot_contour()
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols("x, y")
+
+    # single expression
+    p = plot3d(x + y)
+    assert isinstance(p[0], SurfaceOver2DRangeSeries)
+    assert p[0].expr == x + y
+    assert p[0].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].get_label(False) == "x + y"
+    assert p[0].rendering_kw == {}
+
+    # single expression, custom range, label and rendering kws
+    p = plot3d(x + y, (x, -2, 2), "test", {"cmap": "Reds"})
+    assert isinstance(p[0], SurfaceOver2DRangeSeries)
+    assert p[0].expr == x + y
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -10, 10)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {"cmap": "Reds"}
+
+    p = plot3d(x + y, (x, -2, 2), (y, -4, 4), "test")
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -4, 4)
+
+    # multiple expressions
+    p = plot3d(x + y, x * y)
+    assert p[0].expr == x + y
+    assert p[0].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].get_label(False) == "x + y"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == x * y
+    assert p[1].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[1].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[1].get_label(False) == "x*y"
+    assert p[1].rendering_kw == {}
+
+    # multiple expressions, same custom ranges
+    p = plot3d(x + y, x * y, (x, -2, 2), (y, -4, 4))
+    assert p[0].expr == x + y
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -4, 4)
+    assert p[0].get_label(False) == "x + y"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == x * y
+    assert p[1].ranges[0] == (x, -2, 2)
+    assert p[1].ranges[1] == (y, -4, 4)
+    assert p[1].get_label(False) == "x*y"
+    assert p[1].rendering_kw == {}
+
+    # multiple expressions, custom ranges, labels and rendering kws
+    p = plot3d(
+        (x + y, (x, -2, 2), (y, -4, 4)),
+        (x * y, (x, -3, 3), (y, -6, 6), "test", {"cmap": "Reds"}))
+    assert p[0].expr == x + y
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -4, 4)
+    assert p[0].get_label(False) == "x + y"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == x * y
+    assert p[1].ranges[0] == (x, -3, 3)
+    assert p[1].ranges[1] == (y, -6, 6)
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {"cmap": "Reds"}
+
+    # single expression: lambda function
+    f = lambda x, y: x + y
+    p = plot3d(f)
+    assert callable(p[0].expr)
+    assert p[0].ranges[0][1:] == (-10, 10)
+    assert p[0].ranges[1][1:] == (-10, 10)
+    assert p[0].get_label(False) == ""
+    assert p[0].rendering_kw == {}
+
+    # single expression: lambda function + custom ranges + label
+    p = plot3d(f, ("a", -5, 3), ("b", -2, 1), "test")
+    assert callable(p[0].expr)
+    assert p[0].ranges[0][1:] == (-5, 3)
+    assert p[0].ranges[1][1:] == (-2, 1)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+
+
+def test_plot3d_parametric_surface_arguments():
+    ### Test arguments for plot3d_parametric_surface()
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x, y = symbols("x, y")
+
+    # single parametric expression
+    p = plot3d_parametric_surface(x + y, cos(x + y), sin(x + y))
+    assert isinstance(p[0], ParametricSurfaceSeries)
+    assert p[0].expr == (x + y, cos(x + y), sin(x + y))
+    assert p[0].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].get_label(False) == "(x + y, cos(x + y), sin(x + y))"
+    assert p[0].rendering_kw == {}
+
+    # single parametric expression, custom ranges, labels and rendering kws
+    p = plot3d_parametric_surface(x + y, cos(x + y), sin(x + y),
+        (x, -2, 2), (y, -4, 4), "test", {"cmap": "Reds"})
+    assert isinstance(p[0], ParametricSurfaceSeries)
+    assert p[0].expr == (x + y, cos(x + y), sin(x + y))
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -4, 4)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {"cmap": "Reds"}
+
+    # multiple parametric expressions
+    p = plot3d_parametric_surface(
+        (x + y, cos(x + y), sin(x + y)),
+        (x - y, cos(x - y), sin(x - y), "test"))
+    assert p[0].expr == (x + y, cos(x + y), sin(x + y))
+    assert p[0].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[0].get_label(False) == "(x + y, cos(x + y), sin(x + y))"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x - y, cos(x - y), sin(x - y))
+    assert p[1].ranges[0] == (x, -10, 10) or (y, -10, 10)
+    assert p[1].ranges[1] == (x, -10, 10) or (y, -10, 10)
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {}
+
+    # multiple parametric expressions, custom ranges and labels
+    p = plot3d_parametric_surface(
+        (x + y, cos(x + y), sin(x + y), (x, -2, 2), "test"),
+        (x - y, cos(x - y), sin(x - y), (x, -3, 3), (y, -4, 4),
+            "test2", {"cmap": "Reds"}))
+    assert p[0].expr == (x + y, cos(x + y), sin(x + y))
+    assert p[0].ranges[0] == (x, -2, 2)
+    assert p[0].ranges[1] == (y, -10, 10)
+    assert p[0].get_label(False) == "test"
+    assert p[0].rendering_kw == {}
+    assert p[1].expr == (x - y, cos(x - y), sin(x - y))
+    assert p[1].ranges[0] == (x, -3, 3)
+    assert p[1].ranges[1] == (y, -4, 4)
+    assert p[1].get_label(False) == "test2"
+    assert p[1].rendering_kw == {"cmap": "Reds"}
+
+    # lambda functions instead of symbolic expressions for a single 3D
+    # parametric surface
+    p = plot3d_parametric_surface(
+        lambda u, v: u, lambda u, v: v, lambda u, v: u + v,
+        ("u", 0, 2), ("v", -3, 4))
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (-0, 2)
+    assert p[0].ranges[1][1:] == (-3, 4)
+    assert p[0].get_label(False) == ""
+    assert p[0].rendering_kw == {}
+
+    # lambda functions instead of symbolic expressions for multiple 3D
+    # parametric surfaces
+    p = plot3d_parametric_surface(
+        (lambda u, v: u, lambda u, v: v, lambda u, v: u + v,
+        ("u", 0, 2), ("v", -3, 4)),
+        (lambda u, v: v, lambda u, v: u, lambda u, v: u - v,
+        ("u", -2, 3), ("v", -4, 5), "test"))
+    assert all(callable(t) for t in p[0].expr)
+    assert p[0].ranges[0][1:] == (0, 2)
+    assert p[0].ranges[1][1:] == (-3, 4)
+    assert p[0].get_label(False) == ""
+    assert p[0].rendering_kw == {}
+    assert all(callable(t) for t in p[1].expr)
+    assert p[1].ranges[0][1:] == (-2, 3)
+    assert p[1].ranges[1][1:] == (-4, 5)
+    assert p[1].get_label(False) == "test"
+    assert p[1].rendering_kw == {}
