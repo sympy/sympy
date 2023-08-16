@@ -2,11 +2,12 @@ from hypothesis import given, assume
 from hypothesis import strategies as st
 from sympy.abc import x
 from sympy.polys.polytools import Poly
+from sympy.polys.domains import ZZ
 
 
 @st.composite
 def coefficients(draw: st.DrawFn, empty=True):
-    l = draw(st.lists(st.integers()))
+    l = [ZZ(i) for i in draw(st.lists(st.integers()))]
     if not empty:
         assume(len(l) > 0)
     if len(l) > 0:
@@ -89,11 +90,11 @@ def test_lcm(coefficients1, coefficients2):
 
 
 @given(
-    coefficients=coefficients(),
+    coefficients1=coefficients(),
     value=st.integers(),
 )
-def test_dispersion(coefficients, value):
-    f = Poly(coefficients, x, domain="ZZ")
+def test_dispersion(coefficients1, value):
+    f = Poly(coefficients1, x, domain="ZZ")
     g = Poly([value], x, domain="ZZ")
     assert f.dispersion() == f.dispersion(f)
     assert f.dispersion(g) == 0
