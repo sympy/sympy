@@ -419,6 +419,21 @@ class LRASolver():
             self.assign[b] = (lhs, rhs)
         self.assign[xi] = v
 
+    def reset_bounds(self):
+        """
+        Resets the state of the LRASolver to before
+        anything was asserted.
+        """
+        self.stack_bounds = []
+        for var in self.all_var:
+            self.lower[var] = (-float("inf"), 0)
+            self.low_origin[var] = False
+            self.upper[var] = (float("inf"), 0)
+            self.up_origin[var] = False
+            self.assign[var] = (0, 0)
+
+        self.last_safe_assignment = self.assign.copy()
+
     def get_assignment(self, xi):
         pass
 
