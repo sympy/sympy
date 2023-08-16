@@ -13,7 +13,7 @@ from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
 from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
-from sympy.matrices import ImmutableMatrix, Matrix
+from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.physics.control import (TransferFunction, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
@@ -1440,7 +1440,7 @@ def test_StateSpace_construction():
                                           Matrix([s**2 - 1]), Matrix([2*s])))
     raises(ShapeError, lambda: StateSpace(Matrix([s]), Matrix([s+1]),
                                           Matrix([[s**2 - 1], [s**2 + 2*s + 1]]), Matrix([2*s])))
-    raises(ShapeError, lambda: ss3 = StateSpace(Matrix([[-s, -s], [s, 0]]),
+    raises(ShapeError, lambda: StateSpace(Matrix([[-s, -s], [s, 0]]),
                                                 Matrix([[s/2, 0], [0, s]]),
                                                 Matrix([[0, s]]),
                                                 Matrix([[2*s, 2*s], [s, s]])))
