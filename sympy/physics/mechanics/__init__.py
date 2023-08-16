@@ -38,6 +38,9 @@ __all__ = [
     'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
 
     'PathwayBase', 'LinearPathway', 'WrappingPathway',
+
+    'ActuatorBase', 'ForceActuator', 'LinearDamper', 'LinearSpring',
+    'TorqueActuator',
 ]
 
 from sympy.physics import vector
@@ -81,3 +84,6 @@ from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
                                 WrappingSphere)
 
 from .pathway import PathwayBase, LinearPathway, WrappingPathway
+
+from .actuator import (ActuatorBase, ForceActuator, LinearDamper, LinearSpring,
+                       TorqueActuator)
