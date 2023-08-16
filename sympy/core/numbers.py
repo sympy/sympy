@@ -4,7 +4,6 @@ import numbers
 import decimal
 import fractions
 import math
-import re as regex
 import sys
 from functools import lru_cache
 
