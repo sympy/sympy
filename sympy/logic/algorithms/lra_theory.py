@@ -157,6 +157,13 @@ class LRASolver():
             self.up_origin[var] = False
             self.assign[var] = (0, 0)
 
+        # Backtracking Variables
+        # stack contains elements of form (var, lower, upper)
+        # where lower or upper may be None
+        self.stack_bounds = []
+        # only assignment from the last succesful check needs to be stored
+        self.last_safe_assignment = self.assign.copy()
+
     @staticmethod
     def from_encoded_cnf(encoded_cnf):
         """
@@ -339,14 +346,17 @@ class LRASolver():
             c = (c, 0)
 
         if boundry.equality:
+            self.stack_bounds.append((sym, c, c))
             res1 = self._assert_lower(sym, c,from_equality=True)
             if res1 and res1[0] == False:
                 return res1
             res2 = self._assert_upper(sym, c,from_equality=True)
             return res2
         elif boundry.upper:
+            self.stack_bounds.append((sym, None, c))
             return self._assert_upper(sym, c)
         else:
+            self.stack_bounds.append((sym, c, None))
             return self._assert_lower(sym, c)
 
     def _assert_upper(self, xi, ci, from_equality=False):
@@ -497,6 +507,7 @@ class LRASolver():
              or self.assign[b] > self.upper[b]]
 
             if len(cand) == 0:
+                self.last_safe_assignment = self.assign.copy()
                 return True, self.assign
 
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland's rule better
