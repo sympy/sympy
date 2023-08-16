@@ -818,3 +818,11 @@ class TestFiberForceLengthActiveDeGroote2016:
         assert issubclass(FiberForceLengthActiveDeGroote2016, Function)
         assert issubclass(FiberForceLengthActiveDeGroote2016, CharacteristicCurveFunction)
         assert FiberForceLengthActiveDeGroote2016.__name__ == 'FiberForceLengthActiveDeGroote2016'
+
+    def test_instance(self):
+        fl_M_act = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *self.constants)
+        assert isinstance(fl_M_act, FiberForceLengthActiveDeGroote2016)
+        assert str(fl_M_act) == (
+            'FiberForceLengthActiveDeGroote2016(l_M_tilde, c_0, c_1, c_2, c_3, '
+            'c_4, c_5, c_6, c_7, c_8, c_9, c_10, c_11)'
+        )
