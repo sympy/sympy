@@ -4,11 +4,11 @@ from sympy.core.backend import (
     ImmutableMatrix, _simplify_matrix, cos, eye, sin, symbols, sympify, zeros)
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
-    PrismaticJoint, ReferenceFrame, RigidBody, Torque, dynamicsymbols)
+    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
+    dynamicsymbols)
 from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
-from sympy.physics.mechanics.actuator import TorqueActuator
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
