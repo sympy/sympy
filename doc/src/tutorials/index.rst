@@ -19,8 +19,8 @@ If you are new to SymPy, start here.
    intro-tutorial/index.rst
 
 
-Introduction to Biomechanical Modeling with SymPy
-=================================================
+:ref:`Introduction to Biomechanical Modeling <biomechanics-tutorial>`
+=====================================================================
 
 .. toctree::
    :hidden:

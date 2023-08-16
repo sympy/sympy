@@ -1,3 +1,5 @@
+.. _biomechanics-tutorial:
+
 ======================================
 Introduction to Biomechanical Modeling
 ======================================
