@@ -2121,15 +2121,15 @@ class Integer(Rational):
     def length(self, base=10):
         """return number of base-10 digits"""
         b = as_int(base)
+        if b <= 2:
+            raise ValueError('base must be integer greater than 1')
         if self < b:
             return 1
         n = abs(self.p)
-        d = 1 + math.floor(math.log(n)/math.log(b))
-        s = n//b**d
-        if not s:
-            return d
-        assert not s//b, self  # check assumptions
-        return d + 1
+        # round rounds up on tie and log(x)/log(y) == i/2 when x = y**(i/2)
+        # where the number of digits is ceiling(y**(i/2));  so round should always
+        # work
+        return 1 + int(round(math.log10(n)/math.log10(b)))
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
