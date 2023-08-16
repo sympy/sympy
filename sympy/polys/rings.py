@@ -3204,9 +3204,8 @@ def _gcd_prs(p1, p2):
 
     coeff = h.coeff_wrt(x, h.degree(x))
 
-    if domain.canonical_unit(coeff):
-        norm_coeff = domain.canonical_unit(coeff)
-        h = norm_coeff * h
+    norm_coeff = domain.canonical_unit(coeff)
+    h = norm_coeff * h
 
     _, h = h.primitive()
     h = h * c
