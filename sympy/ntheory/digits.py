@@ -39,11 +39,12 @@ def ndigits(n, base=10):
     n = abs(as_int(n))
     if n < b:
         return 1
-    d = 1 + math.floor(math.log10(n)/math.log10(b))
-    s = n//b**d
-    if not s:
-        return d
-    return d + 1  # assert not s//b
+    d = math.floor(math.log10(n)/math.log10(b))
+    b_ = b**d
+    while b_ <= n:
+        d += 1
+        b_ *= b
+    return d
 
 
 def digits(n, b=10, digits=None):
