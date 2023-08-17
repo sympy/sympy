@@ -2099,6 +2099,7 @@ def test_issue_20782():
     assert integrate(-f, (x, -oo, 1)) == -1
 
 
+@slow
 def test_issue_19427():
     # <https://github.com/sympy/sympy/issues/19427>
     x = Symbol("x")
