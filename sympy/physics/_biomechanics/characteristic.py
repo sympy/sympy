@@ -1133,3 +1133,32 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
         c2=Float('-0.374')
         c3=Float('0.886')
         return cls(v_M_tilde, c0, c1, c2, c3)
+
+    @classmethod
+    def eval(cls, v_M_tilde, c0, c1, c2, c3):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        v_M_tilde : Any (sympifiable)
+            Normalized muscle fiber extension velocity.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``-0.318``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``-8.149``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``-0.374``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``0.886``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
