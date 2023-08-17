@@ -322,3 +322,6 @@ def test_z3():
     assert z3_satisfiable( A & ~A ) is False
     assert z3_satisfiable(A & (~A | B | C)) is True
 
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
