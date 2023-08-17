@@ -1265,3 +1265,40 @@ class TestFiberForceVelocityDeGroote2016:
         fv_M_manual = FiberForceVelocityDeGroote2016(self.v_M_tilde, *constants)
         fv_M_constants = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
         assert fv_M_manual == fv_M_constants
+
+    def test_differentiate_wrt_v_M_tilde(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0*self.c1
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.v_M_tilde) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = log(
+            self.c1*self.v_M_tilde + self.c2
+            + sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0*self.v_M_tilde
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = Integer(1)
+        assert fv_M.diff(self.c3) == expected
