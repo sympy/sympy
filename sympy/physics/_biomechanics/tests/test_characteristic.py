@@ -1232,3 +1232,8 @@ class TestFiberForceVelocityDeGroote2016:
         assert issubclass(FiberForceVelocityDeGroote2016, Function)
         assert issubclass(FiberForceVelocityDeGroote2016, CharacteristicCurveFunction)
         assert FiberForceVelocityDeGroote2016.__name__ == 'FiberForceVelocityDeGroote2016'
+
+    def test_instance(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        assert isinstance(fv_M, FiberForceVelocityDeGroote2016)
+        assert str(fv_M) == 'FiberForceVelocityDeGroote2016(v_M_tilde, c_0, c_1, c_2, c_3)'
