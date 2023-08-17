@@ -14,6 +14,7 @@ from sympy.core.backend import (
 from sympy.physics.mechanics import (
     Force,
     LinearPathway,
+    ObstacleSetPathway,
     PathwayBase,
     Point,
     ReferenceFrame,
@@ -24,6 +25,13 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 from sympy.simplify.simplify import simplify
+
+
+def _simplify_loads(loads):
+    return [
+        load.__class__(load.location, load.vector.simplify())
+        for load in loads
+    ]
 
 
 class TestLinearPathway:
@@ -187,6 +195,174 @@ class TestLinearPathway:
             (self.pB, pI_force),
         ]
         assert self.pathway.compute_loads(self.F) == expected
+
+
+class TestObstacleSetPathway:
+
+    def test_is_pathway_base_subclass(self):
+        assert issubclass(ObstacleSetPathway, PathwayBase)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'num_attachments, attachments',
+        [
+            (3, [Point(name) for name in ('pO', 'pA', 'pI')]),
+            (4, [Point(name) for name in ('pO', 'pA', 'pB', 'pI')]),
+            (5, [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pI')]),
+            (6, [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pD', 'pI')]),
+        ]
+    )
+    def test_valid_constructor(num_attachments, attachments):
+        instance = ObstacleSetPathway(*attachments)
+        assert isinstance(instance, ObstacleSetPathway)
+        assert hasattr(instance, 'attachments')
+        assert len(instance.attachments) == num_attachments
+        for attachment in instance.attachments:
+            assert isinstance(attachment, Point)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [[Point('pO')], [Point('pO'), Point('pI')]],
+    )
+    def test_invalid_constructor_attachments_incorrect_number(attachments):
+        with pytest.raises(ValueError):
+            _ = ObstacleSetPathway(*attachments)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments',
+        [
+            (None, Point('pA'), Point('pI')),
+            (Point('pO'), None, Point('pI')),
+            (Point('pO'), Point('pA'), None),
+        ]
+    )
+    def test_invalid_constructor_attachments_not_point(attachments):
+        with pytest.raises(TypeError):
+            _ = WrappingPathway(*attachments)  # type: ignore
+
+    def test_properties_are_immutable(self):
+        pathway = ObstacleSetPathway(Point('pO'), Point('pA'), Point('pI'))
+        with pytest.raises(AttributeError):
+            pathway.attachments = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[0] = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[1] = None  # type: ignore
+        with pytest.raises(TypeError):
+            pathway.attachments[-1] = None  # type: ignore
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'attachments, expected',
+        [
+            (
+                [Point(name) for name in ('pO', 'pA', 'pI')],
+                'ObstacleSetPathway(pO, pA, pI)'
+            ),
+            (
+                [Point(name) for name in ('pO', 'pA', 'pB', 'pI')],
+                'ObstacleSetPathway(pO, pA, pB, pI)'
+            ),
+            (
+                [Point(name) for name in ('pO', 'pA', 'pB', 'pC', 'pI')],
+                'ObstacleSetPathway(pO, pA, pB, pC, pI)'
+            ),
+        ]
+    )
+    def test_repr(attachments, expected):
+        pathway = ObstacleSetPathway(*attachments)
+        assert repr(pathway) == expected
+
+    @pytest.fixture(autouse=True)
+    def _obstacle_set_pathway_fixture(self):
+        self.N = ReferenceFrame('N')
+        self.pO = Point('pO')
+        self.pI = Point('pI')
+        self.pA = Point('pA')
+        self.pB = Point('pB')
+        self.q = dynamicsymbols('q')
+        self.qd = dynamicsymbols('q', 1)
+        self.F = Symbol('F')
+
+    def test_static_pathway_length(self):
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        assert pathway.length == 1 + 2 * sqrt(2)
+
+    def test_static_pathway_extension_velocity(self):
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        assert pathway.extension_velocity == 0
+
+    def test_static_pathway_compute_loads(self):
+        self.pA.set_pos(self.pO, self.N.x)
+        self.pB.set_pos(self.pO, self.N.y)
+        self.pI.set_pos(self.pO, self.N.z)
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        expected = [
+            Force(self.pO, -self.F * self.N.x),
+            Force(self.pA, self.F * self.N.x),
+            Force(self.pA, self.F * sqrt(2) / 2 * (self.N.x - self.N.y)),
+            Force(self.pB, self.F * sqrt(2) / 2 * (self.N.y - self.N.x)),
+            Force(self.pB, self.F * sqrt(2) / 2 * (self.N.y - self.N.z)),
+            Force(self.pI, self.F * sqrt(2) / 2 * (self.N.z - self.N.y)),
+        ]
+        assert pathway.compute_loads(self.F) == expected
+
+    def test_2D_pathway_length(self):
+        self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
+        self.pB.set_pos(
+            self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
+        )
+        self.pI.set_pos(
+            self.pO, sin(self.q) * self.N.x + (cos(self.q) - 1) * self.N.y
+        )
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        expected = 2 * sqrt(2) + sqrt(2 + 2*cos(self.q))
+        assert (pathway.length - expected).simplify() == 0
+
+    def test_2D_pathway_extension_velocity(self):
+        self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
+        self.pB.set_pos(
+            self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
+        )
+        self.pI.set_pos(
+            self.pO, sin(self.q) * self.N.x + (cos(self.q) - 1) * self.N.y
+        )
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        expected = - (sqrt(2) * sin(self.q) * self.qd) / (2 * sqrt(cos(self.q) + 1))
+        assert (pathway.extension_velocity - expected).simplify() == 0
+
+    def test_2D_pathway_compute_loads(self):
+        self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
+        self.pB.set_pos(
+            self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
+        )
+        self.pI.set_pos(
+            self.pO, sin(self.q) * self.N.x + (cos(self.q) - 1) * self.N.y
+        )
+        pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
+        pO_pA_force_vec = sqrt(2) / 2 * (self.N.x + self.N.y)
+        pA_pB_force_vec = (
+            - sqrt(2 * cos(self.q) + 2) / 2 * self.N.x
+            + sqrt(2) * sin(self.q) / (2 * sqrt(cos(self.q) + 1)) * self.N.y
+        )
+        pB_pI_force_vec = cos(self.q + pi/4) * self.N.x - sin(self.q + pi/4) * self.N.y
+        expected = [
+            Force(self.pO, self.F * pO_pA_force_vec),
+            Force(self.pA, -self.F * pO_pA_force_vec),
+            Force(self.pA, self.F * pA_pB_force_vec),
+            Force(self.pB, -self.F * pA_pB_force_vec),
+            Force(self.pB, self.F * pB_pI_force_vec),
+            Force(self.pI, -self.F * pB_pI_force_vec),
+        ]
+        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
 
 
 class TestWrappingPathway:
@@ -484,7 +660,7 @@ class TestWrappingPathway:
             Force(self.pB, pB_force_expected),
             Force(self.pO, pO_force_expected),
         ]
-        assert self._simplify_loads(pathway.compute_loads(self.F)) == expected
+        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_length(self):
@@ -524,12 +700,5 @@ class TestWrappingPathway:
             Force(self.pO, pO_force),
         ]
 
-        loads = self._simplify_loads(self.pathway.compute_loads(self.F))
+        loads = _simplify_loads(self.pathway.compute_loads(self.F))
         assert loads == expected
-
-    @staticmethod
-    def _simplify_loads(loads):
-        return [
-            load.__class__(load.location, load.vector.simplify())
-            for load in loads
-        ]
