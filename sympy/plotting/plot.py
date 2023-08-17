@@ -37,7 +37,6 @@ from sympy.plotting.series import (
     ParametricSurfaceSeries, SurfaceOver2DRangeSeries, ContourSeries)
 from sympy.plotting.utils import _check_arguments, _plot_sympify
 from sympy.tensor.indexed import Indexed
-from sympy.vector import BaseScalar
 # to maintain back-compatibility
 from sympy.plotting.plotgrid import PlotGrid # noqa: F401
 from sympy.plotting.series import BaseSeries # noqa: F401
@@ -740,6 +739,10 @@ def _plot3d_plot_contour_helper(Series, *args, **kwargs):
     """plot3d and plot_contour are structurally identical. Let's reduce
     code repetition.
     """
+    # NOTE: if this import would be at the top-module level, it would trigger
+    # SymPy's optional-dependencies tests to fail.
+    from sympy.vector import BaseScalar
+
     args = _plot_sympify(args)
     plot_expr = _check_arguments(args, 1, 2, **kwargs)
 
