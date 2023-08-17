@@ -13,6 +13,12 @@ def test_ndigits():
     assert ndigits(-1000, 10) == 4
     assert ndigits(-125, 5) == 4
     assert ndigits(-100, 16) == 2
+    for base in range(2, 100):
+        for e in range(1, 100):
+            n = base**e
+            assert ndigits(n, base) == e + 1
+            assert ndigits(n + 1, base) == e + 1
+            assert ndigits(n - 1, base) == e
 
 
 def test_digits():
