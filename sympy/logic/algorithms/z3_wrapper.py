@@ -22,6 +22,10 @@ def z3_satisfiable(expr, all_models=False):
         return None
 
 
+def clause_to_assertion(clause):
+    clause_strings = [f"d{abs(lit)}" if lit > 0 else f"(not d{abs(lit)})" for lit in clause]
+    return "(assert (or " + " ".join(clause_strings) + "))"
+
 
 
 def encoded_cnf_to_z3_solver(enc_cnf, z3):
@@ -36,26 +40,11 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
     s = z3.Solver()
 
-    declarations = []
-    for var in enc_cnf.variables:
-        declarations.append(f"(declare-const d{var} Bool)")
+    declarations = [f"(declare-const d{var} Bool)" for var in enc_cnf.variables]
+    assertions = [clause_to_assertion(clause) for clause in enc_cnf.data]
 
-
-    assertions = []
-    for clause in enc_cnf.data:
-        clause_strings = []
-        for lit in clause:
-            if lit > 0:
-                clause_strings.append(f"d{abs(lit)}")
-            elif lit < 0:
-                clause_strings.append(f"(not d{abs(lit)})")
-            else:
-                assert False
-
-        clause = " ".join(clause_strings)
-        clause = "(or " + clause + ")"
-        assertion = "(assert " + clause + ")"
-        assertions.append(assertion)
+    #declarations = [f"(declare-const d{var} Bool)" for var in enc_cnf.variables]
+    #assertions = [clause_to_assertion(clause) for clause in enc_cnf.data]
 
     symbols = set()
     for pred, enc in enc_cnf.encoding.items():
@@ -66,11 +55,15 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
 
         try:
-            pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False)
+            pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False, known_functions=known_functions)
         except KeyError:
             # Sometimes pred can contain a matrix or something else the smtlib printer
             # doesn't know how to print.
             continue
+        except TypeError:
+            # assert ask(Q.finite(log(x))) is None
+            continue
+
 
         symbols |= pred.free_symbols
         pred = pred_str
@@ -85,6 +78,50 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
     declarations = "\n".join(declarations)
     assertions = "\n".join(assertions)
     #print(declarations + "\n" + assertions)
-    s.from_string(declarations + assertions)
+    s.from_string(declarations)
+    s.from_string(assertions)
+    #s.from_string(declarations + assertions)
 
     return s
+
+
+from sympy.core import Add, Mul
+from sympy.core.relational import Equality, LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import Pow
+from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.logic.boolalg import And, Or, Xor, Implies
+from sympy.logic.boolalg import Not, ITE
+from sympy.assumptions.assume import AppliedPredicate
+from sympy.assumptions.ask import Q
+from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+
+
+known_functions = {
+            Add: '+',
+            Mul: '*',
+
+            Equality: '=',
+            LessThan: '<=',
+            GreaterThan: '>=',
+            StrictLessThan: '<',
+            StrictGreaterThan: '>',
+
+            EqualityPredicate(): '=',
+            LessThanPredicate(): '<=',
+            GreaterThanPredicate(): '>=',
+            StrictLessThanPredicate(): '<',
+            StrictGreaterThanPredicate(): '>',
+
+            Abs: 'abs',
+            Min: 'min',
+            Max: 'max',
+            Pow: '^',
+
+            And: 'and',
+            Or: 'or',
+            Xor: 'xor',
+            Not: 'not',
+            ITE: 'ite',
+            Implies: '=>',
+        }
