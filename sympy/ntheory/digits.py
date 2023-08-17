@@ -1,6 +1,6 @@
-import math
 from collections import defaultdict
 
+from sympy.core.numbers import Integer
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
 
@@ -33,18 +33,7 @@ def ndigits(n, base=10):
     ========
     digits, count_digits
     """
-    b = as_int(base)
-    if b < 2:
-        raise ValueError('base must be integer greater than 1')
-    n = abs(as_int(n))
-    if n < b:
-        return 1
-    d = math.floor(math.log10(n)/math.log10(b))
-    b_ = b**d
-    while b_ <= n:  # this will iterate 0, 1 or 2 times
-        d += 1
-        b_ *= b
-    return d
+    return Integer(abs(as_int(n))).length(base)
 
 
 def digits(n, b=10, digits=None):
