@@ -66,7 +66,7 @@ The necessary constant parameters for the mechanical system are:
 - :math:`m_A,m_C,m_D` : mass of lever, upper arm, and lower arm
 - :math:`g` : acceleration due to gravity
 - :math:`k` : lever linear rotational spring coefficient
-- :math:`c` : leverl linear rotational damper coefficient
+- :math:`c` : lever linear rotational damper coefficient
 
 ::
 
@@ -99,7 +99,7 @@ The orientations and angular velocities of the reference frames are::
    C.set_ang_vel(B, u3*B.z)
    D.set_ang_vel(C, u4*C.y)
 
-All of the points locations and velocities are::
+All of the points' locations and velocities are::
 
    P1.set_pos(O, dx*N.x + lA*A.y)
    P2.set_pos(O, dy*N.y + dz*N.z)
@@ -143,27 +143,27 @@ are thin cylinders::
 Define forces
 =============
 
-The lever has inertia but we will also add a linear torsional spring and damper
-to provide something more resistance to press against and pull on::
-
-   lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
-
-We will simulate this system in Earth's gravitional field::
+We will simulate this system in Earth's gravitational field::
 
    gravC = me.Force(u_arm, mC*g*N.z)
    gravD = me.Force(l_arm, mD*g*N.z)
 
-Bicep
------
+The lever has inertia but we will also add a linear torsional spring and damper
+to provide some more resistance for the arm to press against and pull on::
 
-We will model the biceps muscle as an acutator that acts between the two muscle
-attachment points. This muscle can extend and contract given an excitation
-specified input and we will assume that the tendon is rigid. The musclulotendon
-actuator model will be made up of two components: a pathway on which to act and
-activation dynamics that define how an excitation input will propogate to
-activating the muscle. The biceps muscle will act along a :obj:`~LinearPathway`
-and will use a specific muscle dynamics implementation derived from
-[DeGroote2016]_.
+   lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
+
+Biceps
+------
+
+We will model the biceps muscle as an actuator that extends and contracts
+between the two muscle attachment points. This muscle can extend and contract
+given an excitation specified input and we will assume that the tendon is
+rigid. The musculotendon actuator model will be made up of two components: a
+pathway on which to act and activation dynamics that define how an excitation
+input will propagate to activating the muscle. The biceps muscle will act along
+a :obj:`~LinearPathway` and will use a specific muscle dynamics implementation
+derived from [DeGroote2016]_.
 
 Start by creating the linear pathway::
 
@@ -175,7 +175,8 @@ specific tuned numerical parameters from [DeGroote2016]_ like so
 
    biceps_activation = FirstOrderActivationDeGroote2016.with_default_constants('biceps')
 
-The full musculotendon acutuator model is then named and constructed like so::
+The full musculotendon actuator model is then named and constructed with a
+matching class::
 
    biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
                                          activation_dynamics=biceps_activation)
@@ -204,16 +205,16 @@ there is a pin joint between to rigid bodies and that the two muscle attachment
 points are fixed on each body, respectively, and that the pin joint point and
 two attachment points lie in the same plane which is normal to the pin joint
 axis. We will also assume that the pin joint coordinate is measured as
-:math:`q_4` is in :numref:`fig-biomechanics-steerer` and that :math:`0 \le q_4
-\le \pi`'. The circular arc has a radius :math:`r`. With these assumptions we
-can then use the ``__init__()`` method to collect the necessary information for
-use in the remaining methods::
+:math:`q_4` is in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le
+\pi`'. The circular arc has a radius :math:`r`. With these assumptions we can
+then use the ``__init__()`` method to collect the necessary information for use
+in the remaining methods::
 
    class ExtensorPathway(me.PathwayBase):
 
        def __init__(self, origin, insertion, axis_point, axis, parent_axis,
            child_axis, radius, coordinate):
-           """A custom pathway that wraps a cicular arc around a pin joint.
+           """A custom pathway that wraps a circular arc around a pin joint.
 
            This is intended to be used for extensor muscles. For example, a
            triceps wrapping around the elbow joint to extend the upper arm at
@@ -288,7 +289,8 @@ and the circular arc that changes with variation of the pin joint coordinate.
 
            return origin_segment_length + arc_length + insertion_segment_length
 
-The extension velocity is simply the change in the arc length::
+The extension velocity is simply the change with respect to time in the arc
+length::
 
        @property
        def extension_velocity(self):
@@ -345,9 +347,9 @@ actuator model in the same fashion as the biceps::
    triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
    triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
    triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway,
-                                         activation_dynamics=triceps_activation)
+                                          activation_dynamics=triceps_activation)
 
-The load formulas are more complex but should allow the tricpe to extend the
+The load formulas are more complex but should allow the triceps to extend the
 elbow::
 
        triceps.to_loads()
@@ -448,24 +450,39 @@ The complete set of differential equations for this system take the form:
      \mathbf{g}_a(\mathbf{a}, \mathbf{e})
    \end{bmatrix}
 
+In this case, only the dynamical differential equations require solving the
+linear system to put into explicit form.
+
 Evaluate the System Differential Equations
 ==========================================
+
+To evaluate the system's equations we first need to gather up all of the state,
+input, and constant variables for use with :obj:`~lambdify`. The state vector
+is made up of the coordinates, generalized speeds, and the two muscles'
+activation state:
+:math:`\mathbf{x}=\begin{bmatrix}\mathbf{q}\\\mathbf{u}\\\mathbf{a}\end{bmatrix}`.
 
 ::
 
    q, u = kane.q, kane.u
-   q, u
 
    a = sm.Matrix(biceps.activation_dynamics.state_variables).col_join(
        sm.Matrix(triceps.activation_dynamics.state_variables))
 
    x = q.col_join(u).col_join(a)
+   x
+
+The only specific inputs are the two muscles' excitation:
 
 ::
 
    e = sm.Matrix(biceps.activation_dynamics.control_variables).col_join(
        sm.Matrix(triceps.activation_dynamics.control_variables))
    e
+
+The constants are made up of the geometry, mass, local gravitational constant,
+the lever's stiffness and damping coefficients, and various parameters of the
+muscles.
 
 ::
 
@@ -497,6 +514,8 @@ Evaluate the System Differential Equations
        triceps._beta,
    ])
    p
+
+
 
 ::
 
@@ -643,3 +662,11 @@ TODO : Use the matplotlib sphinx directive to plot this (if possible).
 ::
 
     plot_traj(ts, sol.y.T, x)
+
+References
+==========
+
+.. [DeGroote2016] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J.,
+   Evaluation of direct collocation optimal control problem formulations for
+   solving the muscle redundancy problem, Annals of biomedical engineering,
+   44(10), (2016) pp. 2922-2936
