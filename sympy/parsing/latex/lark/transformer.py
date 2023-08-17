@@ -99,33 +99,33 @@ class TransformToSymPyExpr(lark.Transformer):
             raise LaTeXParsingError() # TODO: Fill descriptive error message.
 
     def add(self, tokens):
-        return sympy.Add(tokens[0], tokens[2], evaluate=False)
+        return sympy.Add(tokens[0], tokens[2])
 
     def sub(self, tokens):
         if len(tokens) == 2:
             return -tokens[1]
         elif len(tokens) == 3:
-            return sympy.Add(tokens[0], -tokens[2], evaluate=False)
+            return sympy.Add(tokens[0], -tokens[2])
 
     def mul(self, tokens):
         if len(tokens) == 2:
-            return sympy.Mul(tokens[0], tokens[1], evaluate=False)
+            return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
-            return sympy.Mul(tokens[0], tokens[2], evaluate=False)
+            return sympy.Mul(tokens[0], tokens[2])
         else:
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
     def div(self, tokens):
-        return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
+        return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
 
     def superscript(self, tokens):
-        return sympy.Pow(tokens[0], tokens[2], evaluate=False)
+        return sympy.Pow(tokens[0], tokens[2])
 
     def fraction(self, tokens):
-        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
+        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1))
 
     def binomial(self, tokens):
-        return sympy.binomial(tokens[1], tokens[2], evaluate=False)
+        return sympy.binomial(tokens[1], tokens[2])
 
     def integral(self, tokens):
         underscore_index = None
@@ -277,140 +277,140 @@ class TransformToSymPyExpr(lark.Transformer):
         return sympy.Function(tokens[0])(*tokens[2])
 
     def sin(self, tokens):
-        return sympy.sin(tokens[1], evaluate=False)
+        return sympy.sin(tokens[1])
 
     def cos(self, tokens):
-        return sympy.cos(tokens[1], evaluate=False)
+        return sympy.cos(tokens[1])
 
     def tan(self, tokens):
-        return sympy.tan(tokens[1], evaluate=False)
+        return sympy.tan(tokens[1])
 
     def csc(self, tokens):
-        return sympy.csc(tokens[1], evaluate=False)
+        return sympy.csc(tokens[1])
 
     def sec(self, tokens):
-        return sympy.sec(tokens[1], evaluate=False)
+        return sympy.sec(tokens[1])
 
     def cot(self, tokens):
-        return sympy.cot(tokens[1], evaluate=False)
+        return sympy.cot(tokens[1])
 
     def sin_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.asin(tokens[-1], evaluate=False)
+            return sympy.asin(tokens[-1])
         else:
-            return sympy.Pow(sympy.sin(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.sin(tokens[-1]), exponent)
 
     def cos_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acos(tokens[-1], evaluate=False)
+            return sympy.acos(tokens[-1])
         else:
-            return sympy.Pow(sympy.cos(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.cos(tokens[-1]), exponent)
 
     def tan_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.atan(tokens[-1], evaluate=False)
+            return sympy.atan(tokens[-1])
         else:
-            return sympy.Pow(sympy.tan(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.tan(tokens[-1]), exponent)
 
     def csc_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acsc(tokens[-1], evaluate=False)
+            return sympy.acsc(tokens[-1])
         else:
-            return sympy.Pow(sympy.csc(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.csc(tokens[-1]), exponent)
 
     def sec_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.asec(tokens[-1], evaluate=False)
+            return sympy.asec(tokens[-1])
         else:
-            return sympy.Pow(sympy.sec(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.sec(tokens[-1]), exponent)
 
     def cot_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acot(tokens[-1], evaluate=False)
+            return sympy.acot(tokens[-1])
         else:
-            return sympy.Pow(sympy.cot(tokens[-1], evaluate=False), exponent, evaluate=False)
+            return sympy.Pow(sympy.cot(tokens[-1]), exponent)
 
     def arcsin(self, tokens):
-        return sympy.asin(tokens[1], evaluate=False)
+        return sympy.asin(tokens[1])
 
     def arccos(self, tokens):
-        return sympy.acos(tokens[1], evaluate=False)
+        return sympy.acos(tokens[1])
 
     def arctan(self, tokens):
-        return sympy.atan(tokens[1], evaluate=False)
+        return sympy.atan(tokens[1])
 
     def arccsc(self, tokens):
-        return sympy.acsc(tokens[1], evaluate=False)
+        return sympy.acsc(tokens[1])
 
     def arcsec(self, tokens):
-        return sympy.asec(tokens[1], evaluate=False)
+        return sympy.asec(tokens[1])
 
     def arccot(self, tokens):
-        return sympy.acot(tokens[1], evaluate=False)
+        return sympy.acot(tokens[1])
 
     def sinh(self, tokens):
-        return sympy.sinh(tokens[1], evaluate=False)
+        return sympy.sinh(tokens[1])
 
     def cosh(self, tokens):
-        return sympy.cosh(tokens[1], evaluate=False)
+        return sympy.cosh(tokens[1])
 
     def tanh(self, tokens):
-        return sympy.tanh(tokens[1], evaluate=False)
+        return sympy.tanh(tokens[1])
 
     def asinh(self, tokens):
-        return sympy.asinh(tokens[1], evaluate=False)
+        return sympy.asinh(tokens[1])
 
     def acosh(self, tokens):
-        return sympy.acosh(tokens[1], evaluate=False)
+        return sympy.acosh(tokens[1])
 
     def atanh(self, tokens):
-        return sympy.atanh(tokens[1], evaluate=False)
+        return sympy.atanh(tokens[1])
 
     def abs(self, tokens):
-        return sympy.Abs(tokens[1], evaluate=False)
+        return sympy.Abs(tokens[1])
 
     def floor(self, tokens):
-        return sympy.floor(tokens[1], evaluate=False)
+        return sympy.floor(tokens[1])
 
     def ceil(self, tokens):
-        return sympy.ceiling(tokens[1], evaluate=False)
+        return sympy.ceiling(tokens[1])
 
     def factorial(self, tokens):
-        return sympy.factorial(tokens[0], evaluate=False)
+        return sympy.factorial(tokens[0])
 
     def conjugate(self, tokens):
-        return sympy.conjugate(tokens[1], evaluate=False)
+        return sympy.conjugate(tokens[1])
 
     def square_root(self, tokens):
         if len(tokens) == 2:
             # then there was no square bracket argument
-            return sympy.sqrt(tokens[1], evaluate=False)
+            return sympy.sqrt(tokens[1])
         elif len(tokens) == 3:
             # then there _was_ a square bracket argument
-            return sympy.root(tokens[2], tokens[1], evaluate=False)
+            return sympy.root(tokens[2], tokens[1])
 
     def exponential(self, tokens):
-        return sympy.exp(tokens[1], evaluate=False)
+        return sympy.exp(tokens[1])
 
     def log(self, tokens):
         if tokens[0].type == "FUNC_LG":
             # we don't need to check if there's an underscore or not because having one
             # in this case would be meaningless
             # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
-            return sympy.log(tokens[1], 10, evaluate=False)
+            return sympy.log(tokens[1], 10)
         elif tokens[0].type == "FUNC_LN":
-            return sympy.log(tokens[1], evaluate=False)
+            return sympy.log(tokens[1])
         elif tokens[0].type == "FUNC_LOG":
             # we check if a base was specified or not
             if "_" in tokens:
                 # then a base was specified
-                return sympy.log(tokens[3], tokens[2], evaluate=False) # fix the arguments
+                return sympy.log(tokens[3], tokens[2])
             else:
                 # a base was not specified
-                return sympy.log(tokens[1], evaluate=False)
+                return sympy.log(tokens[1])
