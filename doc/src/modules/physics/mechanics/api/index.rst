@@ -14,3 +14,4 @@ Mechanics API Reference
    printing.rst
    wrapping_geometry.rst
    pathway.rst
+   actuator.rst
