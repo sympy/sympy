@@ -19,7 +19,7 @@ from sympy.core.singleton import S
 from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
-from .digits import digits
+from .digits import digits, ndigits
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
@@ -1430,7 +1430,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         #Use pollard algorithms for finding small factors for 3 iterations
         #if after small factors the number of digits of n is >= 20 then use ecm
         iteration += 1
-        if use_ecm and iteration >= 3 and len(str(n)) >= 25:
+        if use_ecm and iteration >= 3 and ndigits(n) >= 25:
             break
         low, high = high, high*2
     B1 = 10000
