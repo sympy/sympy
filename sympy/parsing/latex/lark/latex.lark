@@ -44,6 +44,8 @@ FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
+FUNC_MIN: "\\min"
+FUNC_MAX: "\\max"
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -243,6 +245,10 @@ list_of_expressions: _expression ("," _expression)*
 
 function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
 
+min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
+
+max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
+
 _function: function_applied
     | abs | floor | ceil
     | _trigonometric_function | _inverse_trigonometric_function
@@ -253,6 +259,8 @@ _function: function_applied
     | square_root
     | factorial
     | conjugate
+    | min
+    | max
 
 exponential: FUNC_EXP _expression
 

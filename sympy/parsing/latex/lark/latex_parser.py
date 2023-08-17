@@ -290,6 +290,12 @@ class TransformToSymPyExpr(Transformer):
 
     def function_applied(self, tokens):
         return sympy.Function(tokens[0])(*tokens[2])
+    
+    def min(self, tokens):
+        return sympy.Min(*tokens[2])
+    
+    def max(self, tokens):
+        return sympy.Max(*tokens[2])
 
     def sin(self, tokens):
         return sympy.sin(tokens[1])
