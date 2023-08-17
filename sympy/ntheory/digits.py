@@ -1,7 +1,49 @@
+import math
 from collections import defaultdict
 
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
+
+
+def ndigits(n, base=10):
+    """Return the number of digits needed to express n in give base.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.digits import ndigits
+    >>> ndigits(10)
+    2
+    >> ndigits(10, 2)  # 1010 -> 4 digits
+    4
+    >>> ndigits(-100, 16)  # -64 -> 2 digits
+    2
+
+
+    Parameters
+    ==========
+
+    n: integer
+        The number whose digits are returned.
+
+    b: integer
+        The base in which digits are computed.
+
+    See Also
+    ========
+    digits, count_digits
+    """
+    b = as_int(base)
+    if b < 2:
+        raise ValueError('base must be integer greater than 1')
+    n = abs(as_int(n))
+    if n < b:
+        return 1
+    d = 1 + math.floor(math.log10(n)/math.log10(b))
+    s = n//b**d
+    if not s:
+        return d
+    return d + 1  # assert not s//b
 
 
 def digits(n, b=10, digits=None):
@@ -45,6 +87,9 @@ def digits(n, b=10, digits=None):
         The number of digits to be returned (padded with zeros, if
         necessary).
 
+    See Also
+    ========
+    ndigits, count_digits
     """
 
     b = as_int(b)

@@ -1,6 +1,18 @@
-from sympy.ntheory import count_digits, digits, is_palindromic
+from sympy.ntheory import count_digits, digits, is_palindromic, ndigits
 
 from sympy.testing.pytest import raises
+
+
+def test_ndigits():
+    # depending on whether one rounds up or down or uses log or log10,
+    # one or more of these will fail if you don't check for the off-by
+    # one condition
+    assert ndigits(1000, 10) == 4
+    assert ndigits(125, 5) == 4
+    assert ndigits(100, 16) == 2
+    assert ndigits(-1000, 10) == 4
+    assert ndigits(-125, 5) == 4
+    assert ndigits(-100, 16) == 2
 
 
 def test_digits():
