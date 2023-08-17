@@ -1224,3 +1224,17 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
             return Integer(1)
 
         raise ArgumentIndexError(self, argindex)
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        v_M_tilde = self.args[0]
+        _v_M_tilde = printer._print(v_M_tilde)
+        return r'\operatorname{fv}^M \left( %s \right)' % _v_M_tilde
