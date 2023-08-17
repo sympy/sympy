@@ -27,7 +27,7 @@ Compound Sets
 -------------
 
 .. module:: sympy.sets.sets
-    :noindex:
+   :noindex:
 
 .. autoclass:: Union
    :members:
