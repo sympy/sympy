@@ -70,7 +70,25 @@ class ForceActuator(ActuatorBase):
     A ``ForceActuator`` is an actuator that produces a (expansile) force along
     its length.
 
-    TODO : Add explanation about the sign convention like we did in pathway.
+    A force actuator uses a pathway instance to determine the direction and
+    number of forces that it applies to a system. Consider the simplest case
+    where a ``LinearPathway`` instance is used. This pathway is made up of two
+    points that can move relative to each other, and results in a pair of equal
+    and opposite forces acting on the endpoints. If the positive time-varying
+    Euclidean distance between the two points is defined, then the "extension
+    velocity" is the time derivative of this distance. The extension velocity
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart, this is the
+    meaning of "expansile" in this context. The following diagram shows the
+    positive force sense and the distance between the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
 
     Examples
     ========
@@ -257,6 +275,24 @@ class LinearSpring(ForceActuator):
     straight, pathway between its two ends, a ``LinearPathway`` instance needs
     to be passed to the ``pathway`` parameter.
 
+    A ``LinearSpring`` is a subclass of ``ForceActuator`` and so follows the
+    same sign conventions for length, extension velocity, and the direction of
+    the forces it applies to its points of attachment on bodies. The sign
+    convention for the direction of forces is such that, for the case where a
+    linear spring is instantiated with a ``LinearPathway`` instance as its
+    pathway, they act to push the two ends of the spring away from one another.
+    Because springs produces a contractile force and acts to pull the two ends
+    together towards the equilibrium length when stretched, the scalar portion
+    of the forces on the endpoint are negative in order to flip the sign of the
+    forces on the endpoints when converted into vector quantities. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
 
@@ -413,6 +449,29 @@ class LinearDamper(ForceActuator):
     function in ``v``. To create a damper that follows a linear, or straight,
     pathway between its two ends, a ``LinearPathway`` instance needs to be
     passed to the ``pathway`` parameter.
+
+    A ``LinearDamper`` is a subclass of ``ForceActuator`` and so follows the
+    same sign conventions for length, extension velocity, and the direction of
+    the forces it applies to its points of attachment on bodies. The sign
+    convention for the direction of forces is such that, for the case where a
+    linear damper is instantiated with a ``LinearPathway`` instance as its
+    pathway, they act to push the two ends of the damper away from one another.
+    Because dampers produce a force that opposes the direction of change in
+    length, when extension velocity is positive the scalar portions of the
+    forces applied at the two endpoints are negative in order to flip the sign
+    of the forces on the endpoints wen converted into vector quantities. When
+    extension velocity is negative (i.e. when the damper is shortening), the
+    scalar portions of the fofces applied are also negative so that the signs
+    cancel producing forces on the endpoints that are in the same direction as
+    the positive sign convention for the forces at the endpoints of the pathway
+    (i.e. they act to push the endpoints away from one another). The following
+    diagram shows the positive force sense and the distance between the
+    points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
 
     Examples
     ========
