@@ -126,12 +126,8 @@ def test_dpll2_satisfiable():
 
     # test inequalities
     x, y, z = symbols('x,y,z')
-    cnf = (x >= 2) & (x <= 0)
-    cnf = CNF.from_prop(cnf)
-    enc_cnf = EncodedCNF()
-    enc_cnf.from_cnf(cnf)
-
-    assert dpll2_satisfiable(enc_cnf) is False
+    assert dpll2_satisfiable((x >= 2) & (x <= 0), use_lra_theory=True) is False
+    #assert dpll2_satisfiable(Q.positive(x) & (x <= -2), use_lra_theory=True) is False
 
 
 
