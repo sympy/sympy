@@ -5,7 +5,7 @@ matplotlib-inline
 mpmath
 myst-parser
 scipy
-Sphinx<7.2.0
+Sphinx
 sphinx-autobuild
 sphinx-copybutton
 sphinx-math-dollar
