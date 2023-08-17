@@ -1254,3 +1254,14 @@ class TestFiberForceVelocityDeGroote2016:
             + sqrt(UnevaluatedExpr(self.c1 * self.v_M_tilde + self.c2)**2 + 1)) + self.c3
         )
         assert fv_M == expected
+
+    def test_with_default_constants(self):
+        constants = (
+            Float('-0.318'),
+            Float('-8.149'),
+            Float('-0.374'),
+            Float('0.886'),
+        )
+        fv_M_manual = FiberForceVelocityDeGroote2016(self.v_M_tilde, *constants)
+        fv_M_constants = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        assert fv_M_manual == fv_M_constants
