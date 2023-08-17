@@ -104,6 +104,7 @@ class CodePrinter(StrPrinter):
             'Ei': ('li', []),
             'dirichlet_eta': ('zeta', []),
             'riemann_xi': ('zeta', ['gamma']),
+            'SingularityFunction': ('Piecewise', []),
     }
 
     def __init__(self, settings=None):
