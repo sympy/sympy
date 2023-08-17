@@ -29,12 +29,8 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 """
 
 
-from sympy.core.relational import (Equality, GreaterThan, LessThan,
-                Relational)
 from sympy.core.containers import Tuple
-from sympy.core.relational import Eq
 from sympy.core.symbol import (Dummy, Symbol)
-from sympy.logic.boolalg import BooleanFunction
 from sympy.polys.polyutils import _sort_gens
 from sympy.plotting.series import ImplicitSeries, _set_discretization_points
 from sympy.plotting.plot import plot_factory
@@ -187,33 +183,6 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
         >>> p8 = plot_implicit(y - 1, y_var=y)
         >>> p9 = plot_implicit(x - 1, x_var=x)
     """
-    has_equality = False  # Represents whether the expression contains an Equality,
-                     #GreaterThan or LessThan
-
-    def arg_expand(bool_expr):
-        """
-        Recursively expands the arguments of an Boolean Function
-        """
-        for arg in bool_expr.args:
-            if isinstance(arg, BooleanFunction):
-                arg_expand(arg)
-            elif isinstance(arg, Relational):
-                arg_list.append(arg)
-
-    arg_list = []
-    if isinstance(expr, BooleanFunction):
-        arg_expand(expr)
-
-    #Check whether there is an equality in the expression provided.
-        if any(isinstance(e, (Equality, GreaterThan, LessThan))
-               for e in arg_list):
-            has_equality = True
-
-    elif not isinstance(expr, Relational):
-        expr = Eq(expr, 0)
-        has_equality = True
-    elif isinstance(expr, (Equality, GreaterThan, LessThan)):
-        has_equality = True
 
     xyvar = [i for i in (x_var, y_var) if i is not None]
     free_symbols = expr.free_symbols
@@ -243,17 +212,11 @@ def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
             xyvar.append(undeclared.pop())
     var_start_end_y = _range_tuple(xyvar[1])
 
-    #Check whether the depth is greater than 4 or less than 0.
-    if depth > 4:
-        depth = 4
-    elif depth < 0:
-        depth = 0
-
-    kwargs["n"] = n
     kwargs = _set_discretization_points(kwargs, ImplicitSeries)
-    series_argument = ImplicitSeries(expr, var_start_end_x, var_start_end_y,
-                                    has_equality, adaptive, depth,
-                                    kwargs["n"], line_color)
+    series_argument = ImplicitSeries(
+        expr, var_start_end_x, var_start_end_y,
+        adaptive=adaptive, depth=depth,
+        n=n, line_color=line_color)
 
     #set the x and y limits
     kwargs['xlim'] = tuple(float(x) for x in var_start_end_x[1:])
