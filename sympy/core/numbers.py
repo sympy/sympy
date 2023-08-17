@@ -2073,6 +2073,21 @@ class Integer(Rational):
     def _mpmath_(self, prec, rnd):
         return mpmath.make_mpf(self._as_mpf_val(prec))
 
+    def length(self, base=10):
+        """return number of base-10 digits"""
+        b = as_int(base)
+        if b < 2:
+            raise ValueError('base must be integer greater than 1')
+        n = abs(self.p)
+        if n < b:
+            return 1
+        d = math.floor(math.log10(n)/math.log10(b))
+        b_ = b**d
+        while b_ <= n:  # this will iterate 0, 1 or 2 times
+            d += 1
+            b_ *= b
+        return d
+
     @cacheit
     def __new__(cls, i):
         if isinstance(i, str):
