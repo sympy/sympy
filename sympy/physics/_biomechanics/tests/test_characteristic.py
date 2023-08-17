@@ -1409,3 +1409,34 @@ class TestFiberForceVelocityDeGroote2016:
         dfv_M_dv_M_tilde = fv_M.diff(self.v_M_tilde)
         expected = '2.591382*(1 + (-8.149*v_M_tilde - 0.374)**2)**(-1/2)'
         assert PythonCodePrinter().doprint(dfv_M_dv_M_tilde) == expected
+
+    def test_lambdify(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = lambdify(self.v_M_tilde, fv_M)
+        assert fv_M_callable(0.0) == pytest.approx(1.002320622548512)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = lambdify(self.v_M_tilde, fv_M, 'numpy')
+        v_M_tilde = numpy.array([-1.0, -0.5, 0.0, 0.5])
+        expected = numpy.array([
+            0.0120816781,
+            0.2438336294,
+            1.0023206225,
+            1.5850003903,
+        ])
+        numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = jax.jit(lambdify(self.v_M_tilde, fv_M, 'jax'))
+        v_M_tilde = jax.numpy.array([-1.0, -0.5, 0.0, 0.5])
+        expected = jax.numpy.array([
+            0.0120816781,
+            0.2438336294,
+            1.0023206225,
+            1.5850003903,
+        ])
+        numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
