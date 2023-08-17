@@ -574,7 +574,7 @@ independent coordinate and solve for the rest, given guesses of their values.
    ])
 
    def eval_holo_fsolve(x):
-      q1 = q_vals  # specified
+      q1 = q_vals[0]  # specified
       q2, q3, q4 = x
       return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
 
