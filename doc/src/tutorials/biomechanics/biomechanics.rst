@@ -6,7 +6,7 @@ Introduction to Biomechanical Modeling
 
 :obj:`~sympy.physics._biomechanics` provides features to enhance models created
 with :obj:`~sympy.physics.mechanics` with force producing elements that model
-muscles and other biomechanical elements. In this tutorial, we will introduce
+muscles and other biomechanical components. In this tutorial, we will introduce
 the features of this package by adding muscles to a simple model of a human arm
 that moves a lever.
 
@@ -16,25 +16,26 @@ Model Description
 .. _fig-biomechanics-steerer:
 .. figure:: biomechanics-steerer.svg
 
-   TODO: add caption
+   Schematic showing the lever :math:`A` and the upper :math:`C` and lower
+   :math:`D` arm.
 
 The lever :math:`A` can rotate about :math:`\hat{n}_z` through angle
-:math:`q_1`. The shoulder is located at :math:`P_2` and the upper arm :math:`C`
-can extend about :math:`\hat{n}_y` through angle :math:`q_2` and rotate about
-:math:`\hat{b}_z` through angle :math:`q_3`. The elbow is located at point
-:math:`P_3`.  The lower arm can extend about :math:`\hat{c}_y` through angle
-:math:`q_4`. The hand is located at point :math:`P_4`. The hand will be
-constrained to the lever by :math:`\mathbf{r}^{P_4/O} = \mathbf{r}^{P_1/O}`.
-The lever, upper arm, and lower arm will be modeled as thin cylinders for
-inertial simplicity.
+:math:`q_1`. Its mass center lies on the rotation axis. The shoulder is located
+at :math:`P_2` and the upper arm :math:`C` can extend about :math:`\hat{n}_y`
+through angle :math:`q_2` and rotate about :math:`\hat{b}_z` through angle
+:math:`q_3`. The elbow is located at point :math:`P_3`.  The lower arm can
+extend about :math:`\hat{c}_y` through angle :math:`q_4`. The hand is located
+at point :math:`P_4`. The hand will be constrained to the lever by
+:math:`\mathbf{r}^{P_4/O} = \mathbf{r}^{P_1/O}`. The lever, upper arm, and
+lower arm will be modeled as thin cylinders for inertial simplicity.
 
-To begin, we will introduce two muscles that represent the bicep and the
-tricep. A circular arc of radius :math:`r` is defined with its center at
-:math:`P_3` and normal to :math:`\hat{c}_y`. Two muscle attachment points
-:math:`C_m` and :math:`D_m` are fixed on the upper arm and lower arm,
-respectively. The bicep muscle will act along a linear path from :math:`C_m` to
-:math:`D_m`. The tricep will wrap around the circular arc and also attach at
-the same points as the bicep.
+We will introduce two muscle models that represent the biceps and the triceps.
+Two muscle attachment points :math:`C_m` and :math:`D_m` are fixed on the upper
+arm and lower arm, respectively. The biceps muscle will act along a linear path
+from :math:`C_m` to :math:`D_m`. A circular arc of radius :math:`r` is defined
+with its center at :math:`P_3` and normal to :math:`\hat{c}_y`. The triceps
+will wrap around the circular arc and also attach at the same points as the
+biceps.
 
 ::
 
@@ -52,10 +53,10 @@ which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 
 ::
 
-   q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4')
-   u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4')
+   q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4', real=True)
+   u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4', real=True)
 
-The necessary constant parameters are:
+The necessary constant parameters for the mechanical system are:
 
 - :math:`d_x, l_A`: locates :math:`P_1` from :math:`O` along the
   :math:`\hat{n}_x` and :math:`\hat{a}_y`, respectively
@@ -69,16 +70,16 @@ The necessary constant parameters are:
 
 ::
 
-   dx, dy, dz, lA, lC, lD = sm.symbols('dx, dy, dz, lA, lC, lD', real=True,
-                                       nonnegative=True)
+   dx, dy, dz = sm.symbols('dx, dy, dz', real=True, nonnegative=True)
+   lA, lC, lD = sm.symbols('lA, lC, lD', real=True, positive=True)
    mA, mC, mD = sm.symbols('mA, mC, mD', real=True, positive=True)
    g, k, c, r = sm.symbols('g, k, c, r', real=True, positive=True)
 
 Define kinematics
 =================
 
-Define all the reference frames and points show in
-:numref:`fig-biomechanics-steerer`. :math:`C_o` and :math:`D_o` are the mass
+Define all the reference frames and points shown in
+:ref:`fig-biomechanics-steerer`. :math:`C_o` and :math:`D_o` are the mass
 centers of the upper and lower arm, respectively.
 
 ::
@@ -155,39 +156,39 @@ We will simulate this system in Earth's gravitional field::
 Bicep
 -----
 
-We will model the bicep muscle as an acutator that acts between the two muscle
+We will model the biceps muscle as an acutator that acts between the two muscle
 attachment points. This muscle can extend and contract given an excitation
 specified input and we will assume that the tendon is rigid. The musclulotendon
 actuator model will be made up of two components: a pathway on which to act and
 activation dynamics that define how an excitation input will propogate to
-activating the muscle. The bicep muscle will act along a :obj:`~LinearPathway`
+activating the muscle. The biceps muscle will act along a :obj:`~LinearPathway`
 and will use a specific muscle dynamics implementation derived from
 [DeGroote2016]_.
 
 Start by creating the linear pathway::
 
-   bicep_pathway = me.LinearPathway(Cm, Dm)
+   biceps_pathway = me.LinearPathway(Cm, Dm)
 
 You can create an activation model that is fully symbolic or create it with the
 specific tuned numerical parameters from [DeGroote2016]_ like so
 (recommended)::
 
-   bicep_activation = FirstOrderActivationDeGroote2016.with_default_constants('bicep')
+   biceps_activation = FirstOrderActivationDeGroote2016.with_default_constants('biceps')
 
 The full musculotendon acutuator model is then named and constructed like so::
 
-   bicep = bm.MusculotendonDeGroote2016('bicep', bicep_pathway,
-                                        activation_dynamics=bicep_activation)
+   biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
+                                         activation_dynamics=biceps_activation)
 
 An :obj:`~Acutator` can compute the loads necessary for forming the equations
 of motion. The musculotendon forces are represented as SymPy functions::
 
-   bicep.to_loads()
+   biceps.to_loads()
 
-Tricep
-------
+Triceps
+-------
 
-The tricep actuator model will need a custom pathway to manage the wrapped
+The triceps actuator model will need a custom pathway to manage the wrapped
 nature of the muscle and tendon around the circular arc of radius :math:`r`.
 This pathway is made up of two linear segments that do not change length and a
 circular arc that changes length as the elbow extends and flexes. The forces
@@ -215,7 +216,7 @@ use in the remaining methods::
            """A custom pathway that wraps a cicular arc around a pin joint.
 
            This is intended to be used for extensor muscles. For example, a
-           tricep wrapping around the elbow joint to extend the upper arm at
+           triceps wrapping around the elbow joint to extend the upper arm at
            the elbow.
 
            Parameters
@@ -339,23 +340,23 @@ circular arc.
            return loads
 
 Now that we have a custom pathway defined we can create a musculotendon
-actuator model in the same fashion as the bicep::
+actuator model in the same fashion as the biceps::
 
-   tricep_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
-   tricep_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('tricep')
-   tricep = bm.MusculotendonDeGroote2016('tricep', tricep_pathway,
-                                         activation_dynamics=tricep_activation)
+   triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
+   triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
+   triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway,
+                                         activation_dynamics=triceps_activation)
 
 The load formulas are more complex but should allow the tricpe to extend the
 elbow::
 
-       tricep.to_loads()
+       triceps.to_loads()
 
 Lastly, all of the loads can be assembled into one tuple::
 
    loads = (
-       bicep.to_loads() +
-       tricep.to_loads() +
+       biceps.to_loads() +
+       triceps.to_loads() +
        [lever_resistance, gravC, gravD]
    )
 
@@ -412,16 +413,16 @@ The activation state of each muscle are new state variables associated with two
 new first order differential equations. These differential equations are
 accessed from the muscle actuator models::
 
-   bicep.activation_dynamics.state_equations
+   biceps.activation_dynamics.state_equations
 
 ::
 
-   tricep.activation_dynamics.state_equations
+   triceps.activation_dynamics.state_equations
 
 ::
 
-   dadt = sm.Matrix(list(bicep.activation_dynamics.state_equations.values())).col_join(
-       sm.Matrix(list(tricep.activation_dynamics.state_equations.values())))
+   dadt = sm.Matrix(list(biceps.activation_dynamics.state_equations.values())).col_join(
+       sm.Matrix(list(triceps.activation_dynamics.state_equations.values())))
 
 System Differential Equations
 =============================
@@ -455,15 +456,15 @@ Evaluate the System Differential Equations
    q, u = kane.q, kane.u
    q, u
 
-   a = sm.Matrix(bicep.activation_dynamics.state_variables).col_join(
-       sm.Matrix(tricep.activation_dynamics.state_variables))
+   a = sm.Matrix(biceps.activation_dynamics.state_variables).col_join(
+       sm.Matrix(triceps.activation_dynamics.state_variables))
 
    x = q.col_join(u).col_join(a)
 
 ::
 
-   e = sm.Matrix(bicep.activation_dynamics.control_variables).col_join(
-       sm.Matrix(tricep.activation_dynamics.control_variables))
+   e = sm.Matrix(biceps.activation_dynamics.control_variables).col_join(
+       sm.Matrix(triceps.activation_dynamics.control_variables))
    e
 
 ::
@@ -482,18 +483,18 @@ Evaluate the System Differential Equations
        k,
        c,
        r,
-       bicep._F_M_max,
-       bicep._l_M_opt,
-       bicep._l_T_slack,
-       bicep._v_M_max,
-       bicep._alpha_opt,
-       bicep._beta,
-       tricep._F_M_max,
-       tricep._l_M_opt,
-       tricep._l_T_slack,
-       tricep._v_M_max,
-       tricep._alpha_opt,
-       tricep._beta,
+       biceps._F_M_max,
+       biceps._l_M_opt,
+       biceps._l_T_slack,
+       biceps._v_M_max,
+       biceps._alpha_opt,
+       biceps._beta,
+       triceps._F_M_max,
+       triceps._l_M_opt,
+       triceps._l_T_slack,
+       triceps._v_M_max,
+       triceps._alpha_opt,
+       triceps._beta,
    ])
    p
 
