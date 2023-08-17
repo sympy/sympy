@@ -8,6 +8,7 @@ from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
@@ -1237,3 +1238,19 @@ class TestFiberForceVelocityDeGroote2016:
         fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
         assert isinstance(fv_M, FiberForceVelocityDeGroote2016)
         assert str(fv_M) == 'FiberForceVelocityDeGroote2016(v_M_tilde, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants).doit()
+        expected = (
+            self.c0 * log((self.c1 * self.v_M_tilde + self.c2)
+            + sqrt((self.c1 * self.v_M_tilde + self.c2)**2 + 1)) + self.c3
+        )
+        assert fv_M == expected
+
+    def test_doit_evaluate_false(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants).doit(evaluate=False)
+        expected = (
+            self.c0 * log((self.c1 * self.v_M_tilde + self.c2)
+            + sqrt(UnevaluatedExpr(self.c1 * self.v_M_tilde + self.c2)**2 + 1)) + self.c3
+        )
+        assert fv_M == expected
