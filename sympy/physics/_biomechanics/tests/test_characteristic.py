@@ -1315,3 +1315,97 @@ class TestFiberForceVelocityDeGroote2016:
             r'v_{M tilde} + c_{2}\right)^{2} + 1} \right)} + c_{3}'
         )
         assert LatexPrinter().doprint(fv_M.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                C99CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                C11CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX98CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX11CodePrinter,
+                '0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX17CodePrinter,
+                '0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                FCodePrinter,
+                '      0.886d0 - 0.318d0*log(-8.1489999999999991d0*v_M_tilde - 0.374d0 +\n'
+                '      @ sqrt(1.0d0 + (-8.149d0*v_M_tilde - 0.374d0)**2))',
+            ),
+            (
+                OctaveCodePrinter,
+                '0.886 - 0.318*log(-8.149*v_M_tilde - 0.374 '
+                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374).^2))',
+            ),
+            (
+                PythonCodePrinter,
+                '0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
+                '+ math.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                NumPyPrinter,
+                '0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                SciPyPrinter,
+                '0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                CuPyPrinter,
+                '0.886 - 0.318*cupy.log(-8.149*v_M_tilde - 0.374 '
+                '+ cupy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                JaxPrinter,
+                '0.886 - 0.318*jax.numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ jax.numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                MpmathPrinter,
+                'mpmath.mpf((0, 7980378539700519, -53, 53)) '
+                '- mpmath.mpf((0, 5728578726015271, -54, 53))'
+                '*mpmath.log(-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
+                '+ mpmath.mpf((1, 3368692521273131, -53, 52)) '
+                '+ mpmath.sqrt(1 + (-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
+                '+ mpmath.mpf((1, 3368692521273131, -53, 52)))**2))',
+            ),
+            (
+                LambdaPrinter,
+                '0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
+                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer, expected):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        assert code_printer().doprint(fv_M) == expected
+
+    def test_derivative_print_code(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        dfv_M_dv_M_tilde = fv_M.diff(self.v_M_tilde)
+        expected = '2.591382*(1 + (-8.149*v_M_tilde - 0.374)**2)**(-1/2)'
+        assert PythonCodePrinter().doprint(dfv_M_dv_M_tilde) == expected
