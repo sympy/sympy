@@ -1103,3 +1103,33 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    @classmethod
+    def with_default_constants(cls, v_M_tilde):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the muscle fiber force-velocity function
+        using the four constant values specified in the original publication.
+
+        These have the values:
+
+        $c_0 = -0.318$
+        $c_1 = -8.149$
+        $c_2 = -0.374$
+        $c_3 = 0.886$
+
+        Parameters
+        ==========
+
+        v_M_tilde : Any (sympifiable)
+            Normalized muscle fiber extension velocity.
+
+        """
+        c0=Float('-0.318')
+        c1=Float('-8.149')
+        c2=Float('-0.374')
+        c3=Float('0.886')
+        return cls(v_M_tilde, c0, c1, c2, c3)
