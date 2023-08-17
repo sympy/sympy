@@ -15,16 +15,16 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.sets.sets import (FiniteSet, Interval, Union)
-from sympy.solvers.inequalities import (reduce_inequalities,
+from sympy.solvers.inequalities import (solve_linear_inequalities,reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,
                                         reduce_abs_inequality,
-                                        _solve_inequality)
+                                        _solve_inequality,)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 from sympy.core.mod import Mod
 
@@ -238,6 +238,24 @@ def test__solve_inequalities():
     assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x < oo) & (x >= -y + 1)
     assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
     assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
+
+def test_solve_linear_inequalities():
+    eq1 = 2*x - 3*y + z + 1
+    eq2 = x - y + 2*z - 2
+    eq3 = x + y + 3*z + 4
+    eq4 = x - z
+    symbols = {x,y,z}
+    d = solve_linear_inequalities([eq1, eq2, eq3, eq4],symbols)
+    assert str(d[x]) == "(oo > x, x > -2/7)"
+    assert str(d[y]) == "(Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)"
+    assert str(d[z]) == "(x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))"
+    d = solve_linear_inequalities([eq1, eq4],symbols)
+    assert str(d[x]) == "(oo > x, x > y - 1/3)"
+    assert str(d[z]) == "(x > z, z > -2*x + 3*y - 1)"
+    d = solve_linear_inequalities([eq4, eq1],symbols)
+    assert str(d[x]) == "(oo > x, x > y - 1/3)"
+    assert str(d[z]) == "(x > z, z > -2*x + 3*y - 1)"
+
 
 
 def test_issue_6343():
