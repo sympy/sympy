@@ -1302,3 +1302,16 @@ class TestFiberForceVelocityDeGroote2016:
         fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
         expected = Integer(1)
         assert fv_M.diff(self.c3) == expected
+
+    def test_function_print_latex(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = r'\operatorname{fv}^M \left( v_{M tilde} \right)'
+        assert LatexPrinter().doprint(fv_M) == expected
+
+    def test_expression_print_latex(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            r'c_{0} \log{\left(c_{1} v_{M tilde} + c_{2} + \sqrt{\left(c_{1} '
+            r'v_{M tilde} + c_{2}\right)^{2} + 1} \right)} + c_{3}'
+        )
+        assert LatexPrinter().doprint(fv_M.doit()) == expected
