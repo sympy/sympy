@@ -316,7 +316,9 @@ def test_satisfiable_all_models():
 
 def test_z3():
     A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
     z3_satisfiable = lambda expr: satisfiable(expr, algorithm="z3")
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
     assert z3_satisfiable( A & ~A ) is False
     assert z3_satisfiable(A & (~A | B | C)) is True
 
