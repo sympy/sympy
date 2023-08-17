@@ -25,8 +25,8 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="1.0120115"
-     inkscape:cx="247.52682"
-     inkscape:cy="197.13214"
+     inkscape:cx="247.03277"
+     inkscape:cy="180.33392"
      inkscape:window-width="1920"
      inkscape:window-height="1016"
      inkscape:window-x="0"
@@ -230,14 +230,14 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-47.710802,-86.610429)">
+     transform="translate(-48.08925,-87.031358)">
     <rect
        style="fill:#ffffff;stroke:#ffffff;stroke-width:0.324399;stroke-linejoin:round"
        id="rect619"
        width="134.14091"
        height="103.51522"
-       x="47.873001"
-       y="86.772629" />
+       x="48.25145"
+       y="87.193558" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        d="m 69.374675,113.02611 27.857956,48.2514 26.664729,-15.39489"
@@ -268,12 +268,12 @@
        transform="rotate(-25.179141)" />
     <path
        style="fill:none;stroke:#ff0000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="m 101.57121,166.21403 3.73556,-9.69213 -18.379,-12.8023"
+       d="m 101.57121,166.21403 1.96893,-8.50575 -26.115465,-31.03374"
        id="path2107"
        sodipodi:nodetypes="ccc" />
     <path
        style="fill:none;stroke:#ff0000;stroke-width:0.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="M 93.051982,161.14587 86.799154,143.64592"
+       d="M 93.051982,161.14587 77.355915,126.83612"
        id="path2109"
        sodipodi:nodetypes="cc" />
     <path
@@ -284,8 +284,8 @@
     <circle
        style="fill:#ff0000;stroke:#ff0000;stroke-width:0.4;stroke-linejoin:round;stroke-dasharray:none"
        id="path1078"
-       cx="87.188911"
-       cy="144.33238"
+       cx="77.257065"
+       cy="126.68801"
        r="1.0193517" />
     <circle
        style="fill:#ff0000;stroke:#ff0000;stroke-width:0.4;stroke-linejoin:round;stroke-dasharray:none"
@@ -302,8 +302,8 @@
     <circle
        style="fill:#ff0000;stroke:#ff0000;stroke-width:0.4;stroke-linejoin:round;stroke-dasharray:none"
        id="path1078-7"
-       cx="105.20085"
-       cy="156.53844"
+       cx="103.32472"
+       cy="157.57526"
        r="1.0193517" />
     <circle
        style="fill:#808080;stroke:#000000;stroke-width:0.4;stroke-linejoin:round;stroke-dasharray:none"
@@ -424,14 +424,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="81.785042"
-       y="125.33447"
+       x="78.420944"
+       y="121.33571"
        id="text6052"><tspan
          sodipodi:role="line"
          id="tspan6050"
          style="font-size:4.23333px;stroke-width:0.264583"
-         x="81.785042"
-         y="125.33447">q<tspan
+         x="78.420944"
+         y="121.33571">q<tspan
    style="font-size:65%;baseline-shift:sub"
    id="tspan6056">3</tspan></tspan></text>
     <text
@@ -522,14 +522,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="79.334389"
-       y="117.06953"
+       x="77.434052"
+       y="114.2737"
        id="text6261-7"><tspan
          sodipodi:role="line"
          id="tspan6259-5"
          style="font-size:4.23333px;stroke-width:0.264583"
-         x="79.334389"
-         y="117.06953">B</tspan></text>
+         x="77.434052"
+         y="114.2737">B</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -544,8 +544,8 @@
     <circle
        style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linejoin:round;stroke-dasharray:none"
        id="path6332"
-       cx="80.844376"
-       cy="115.52647"
+       cx="78.944038"
+       cy="112.73064"
        r="2.9300351" />
     <text
        xml:space="preserve"
@@ -634,14 +634,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:4.23333px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.264583"
-       x="81.690018"
-       y="150.7007"
+       x="71.92572"
+       y="132.31647"
        id="text7430"><tspan
          sodipodi:role="line"
          id="tspan7428"
          style="font-size:4.23333px;fill:#ff0000;stroke-width:0.264583"
-         x="81.690018"
-         y="150.7007">C<tspan
+         x="71.92572"
+         y="132.31647">C<tspan
    style="font-size:65%;baseline-shift:sub;fill:#ff0000"
    id="tspan7432">m</tspan></tspan></text>
     <text
@@ -727,8 +727,9 @@
    id="tspan9209">y</tspan></tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 78.015657,116.59201 -4.148553,3.45518"
-       id="path9344" />
+       d="m 75.947509,113.87559 -4.290256,2.22052"
+       id="path9344"
+       sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 87.538114,136.98237 -2.255771,2.75837"
@@ -795,7 +796,7 @@
     </g>
     <g
        id="g995"
-       transform="translate(3.9890269,7.2048385)">
+       transform="translate(0.20062664,0.52125885)">
       <path
          style="fill:none;stroke:#000000;stroke-width:0.4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
          d="m 72.783571,124.71412 -2.966887,-5.13879"
