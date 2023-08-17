@@ -162,8 +162,8 @@ given an excitation specified input and we will assume that the tendon is
 rigid. The musculotendon actuator model will be made up of two components: a
 pathway on which to act and activation dynamics that define how an excitation
 input will propagate to activating the muscle. The biceps muscle will act along
-a :obj:`~LinearPathway` and will use a specific muscle dynamics implementation
-derived from [DeGroote2016]_.
+a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` and will use a specific
+muscle dynamics implementation derived from [DeGroote2016]_.
 
 Start by creating the linear pathway::
 
@@ -181,8 +181,9 @@ matching class::
    biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
                                          activation_dynamics=biceps_activation)
 
-An :obj:`~Acutator` can compute the loads necessary for forming the equations
-of motion. The musculotendon forces are represented as SymPy functions::
+An :obj:`~sympy.physics.mechanics.actuator.AcutatorBase` can compute the loads
+necessary for forming the equations of motion. The musculotendon forces are
+represented as SymPy functions::
 
    biceps.to_loads()
 
@@ -198,17 +199,18 @@ acting on the upper and lower arm can be modeled as forces acting on points
 resultant force at :math:`P_3` from the equal and opposite forces acting on the
 points at the ends of the circular arc.
 
-To develop this pathway we need to subclass :obj:`PathwayBase` and create
-methods that compute the pathway length, pathway extension velocity, and the
-loads acting on the involved bodies. We will develop a class which assumes that
-there is a pin joint between to rigid bodies and that the two muscle attachment
-points are fixed on each body, respectively, and that the pin joint point and
-two attachment points lie in the same plane which is normal to the pin joint
-axis. We will also assume that the pin joint coordinate is measured as
-:math:`q_4` is in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le
-\pi`'. The circular arc has a radius :math:`r`. With these assumptions we can
-then use the ``__init__()`` method to collect the necessary information for use
-in the remaining methods::
+To develop this pathway we need to subclass
+:obj:`~sympy.physics.mechanics.pathway.PathwayBase` and create methods that
+compute the pathway length, pathway extension velocity, and the loads acting on
+the involved bodies. We will develop a class which assumes that there is a pin
+joint between to rigid bodies and that the two muscle attachment points are
+fixed on each body, respectively, and that the pin joint point and two
+attachment points lie in the same plane which is normal to the pin joint axis.
+We will also assume that the pin joint coordinate is measured as :math:`q_4` is
+in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le \pi`'. The
+circular arc has a radius :math:`r`. With these assumptions we can then use the
+``__init__()`` method to collect the necessary information for use in the
+remaining methods::
 
    class ExtensorPathway(me.PathwayBase):
 
@@ -423,11 +425,11 @@ accessed from the muscle actuator models::
 
 ::
 
-   dadt = sm.Matrix(list(biceps.activation_dynamics.state_equations.values())).col_join(
+   ga = sm.Matrix(list(biceps.activation_dynamics.state_equations.values())).col_join(
        sm.Matrix(list(triceps.activation_dynamics.state_equations.values())))
 
-System Differential Equations
-=============================
+Evaluate the System Differential Equations
+==========================================
 
 The complete set of differential equations for this system take the form:
 
@@ -446,20 +448,17 @@ The complete set of differential equations for this system take the form:
    =
    \begin{bmatrix}
      \mathbf{u} \\
-     \mathbf{g}_d(\mathbf{u}, \mathbf{q}, \mathbf{a})  \\
+     \mathbf{g}_d(\mathbf{q}, \mathbf{u}, \mathbf{a})  \\
      \mathbf{g}_a(\mathbf{a}, \mathbf{e})
    \end{bmatrix}
 
 In this case, only the dynamical differential equations require solving the
 linear system to put into explicit form.
 
-Evaluate the System Differential Equations
-==========================================
-
 To evaluate the system's equations we first need to gather up all of the state,
-input, and constant variables for use with :obj:`~lambdify`. The state vector
-is made up of the coordinates, generalized speeds, and the two muscles'
-activation state:
+input, and constant variables for use with
+:obj:`~sympy.utilities.lambdify.lambdify`. The state vector is made up of the
+coordinates, generalized speeds, and the two muscles' activation state:
 :math:`\mathbf{x}=\begin{bmatrix}\mathbf{q}\\\mathbf{u}\\\mathbf{a}\end{bmatrix}`.
 
 ::
@@ -515,19 +514,21 @@ muscles.
    ])
    p
 
-
+Now we have all the symbolic components to generate numerical functions to
+evaluate :math:`\mathbf{M}_d,\mathbf{g}_d` and :math:`\mathbf{g}_a`. With these
+we can calculate the time derivative of the state. We will also need a
+numerical function for the holonomic constraints to ensure the configuration is
+in a valid state.
 
 ::
 
    eval_diffeq = sm.lambdify((q, u, a, e, p),
-                             (kane.mass_matrix, kane.forcing, dadt), cse=True)
+                             (kane.mass_matrix, kane.forcing, ga), cse=True)
    eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
-Once the model is established it will need values for the specific muscle you
-are modeling::
+We need some reasonable numerical values for all the constants::
 
    import numpy as np
-   from scipy.optimize import fsolve
 
    p_vals = np.array([
        -0.31,  # dx [m]
@@ -543,19 +544,27 @@ are modeling::
        10.0,  # k [Nm/rad]
        0.5,  # c [Nms/rad]
        0.03,  # r [m]
-       500.0,
-       0.6*0.3,
-       0.55*0.3,
-       10.0,
-       0.0,
-       0.1,
-       500.0,
-       0.6*0.3,
-       0.65*0.3,
-       10.0,
-       0.0,
-       0.1,
+       500.0,  # biceps F_M_max [?]
+       0.6*0.3,  # biceps l_M_opt [?]
+       0.55*0.3,  # biceps l_T_slack [?]
+       10.0,  # biceps v_M_max [?]
+       0.0,  # biceps alpha_opt [?]
+       0.1,  # biceps beta [?]
+       500.0,  # triceps F_M_max [?]
+       0.6*0.3,  # triceps l_M_opt [?]
+       0.65*0.3,  # triceps l_T_slack [?]
+       10.0,  # triceps v_M_max [?]
+       0.0,  # triceps alpha_opt [?]
+       0.1,  # triceps beta [?]
    ])
+
+Due to the three holonomic constraints, three of the coordinates are a function
+of the remaining one. We can choose the lever angle :math:`q_1` to be the
+independent coordinate and solve for the rest, given guesses of their values.
+
+::
+
+   from scipy.optimize import fsolve
 
    q_vals = np.array([
        np.deg2rad(5.0),  # q1 [rad]
@@ -564,10 +573,16 @@ are modeling::
        np.deg2rad(75.0),  # q4 [rad]
    ])
 
-   q_sol = fsolve(lambda x: eval_holonomic((q_vals[0], x[0], x[1], x[2]), p_vals).squeeze(),
-       q_vals[1:])
-   # update all q_vals with constraint consistent values
-   q_vals[1], q_vals[2], q_vals[3] = q_sol[0], q_sol[1], q_sol[2]
+   def eval_holo_fsolve(x):
+      q1 = q_vals  # specified
+      q2, q3, q4 = x
+      return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
+
+   q_vals[1:] = fsolve(eval_holo_fsolve, q_vals[1:])
+
+   np.rad2deg(q_vals)
+
+We'll assume the system is in a stationary state::
 
    u_vals = np.array([
        0.0,  # u1, [rad/s]
@@ -581,32 +596,57 @@ are modeling::
        0.0,  # a_tricep, nondimensional
    ])
 
+The muscle excitations will also initially be deactivated::
+
    e_vals = np.array([
        0.0,
        0.0,
    ])
 
+The system equations can be now be numerically evaluated::
+
    eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
 
-Simulate
-========
+Simulate the muscle-driven motion
+=================================
+
+Now that the system equations can be evaluated given the state and constant
+values we can simulate the arm and lever's motion with excitation of the two
+muscles. SciPy's ``solve_ivp()`` can integrate the differential equations if we
+provide a function that evaluates them in explicit form, i.e.
+:math:`\dot{\mathbf{x}}=`. Inside this function we will active the biceps in
+contraction and the triceps in extension with excitation values between -1 and
+1 for a second causing the elbow to flex while the muscles are activated.
 
 ::
 
-   from scipy.integrate import solve_ivp
-
    def eval_rhs(t, x, p):
+       """Returns the time derivative of the state.
+
+       Parameters
+       ==========
+       t : float
+          Time in seconds.
+       x : array_like, shape(10,)
+         State vector.
+       p : array_like, shape(?, )
+         Parameter vector.
+
+       Returns
+       =======
+       dxdt : ndarray, shape(10,)
+         Time derivative of the state.
+
+       """
 
        q = x[0:4]
        u = x[4:8]
        a = x[8:10]
 
-       if t < 0.5:
+       if t < 0.5 or t > 1.5:
           e = np.array([0.0, 0.0])
-       elif t < 1.0:
-          e = np.array([-0.2, 0.8])
        else:
-          e = np.array([0.0, 0.0])
+          e = np.array([-0.2, 0.8])
 
        qd = u
        m, f, ad = eval_diffeq(q, u, a, e, p)
@@ -614,7 +654,13 @@ Simulate
 
        return np.hstack((qd, ud, ad.squeeze()))
 
+The system can now be simulated over 3 seconds provided the initial state
+:math:`\mathbf{x}_0` and our function defined above using SciPy's
+``solve_ivp()``.
+
 ::
+
+   from scipy.integrate import solve_ivp
 
    t0, tf = 0.0, 3.0
    ts = np.linspace(t0, tf, num=301)
@@ -622,6 +668,8 @@ Simulate
    sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
 
 TODO : Use the matplotlib sphinx directive to plot this (if possible).
+
+The motion can be visualized by plotting the state trajectories over time.
 
 ::
 
@@ -640,7 +688,7 @@ TODO : Use the matplotlib sphinx directive to plot this (if possible).
            SymPy symbols associated with state.
 
        """
-       num_rows = 8
+       num_rows = 10
        num_cols = (x.shape[1] // num_rows)
        if x.shape[1] % num_rows > 0:
            num_cols += 1
@@ -662,6 +710,8 @@ TODO : Use the matplotlib sphinx directive to plot this (if possible).
 ::
 
     plot_traj(ts, sol.y.T, x)
+
+TODO : Tune the simulation parameters and describe the motion.
 
 References
 ==========
