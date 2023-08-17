@@ -1195,3 +1195,32 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
             return c0*log(c1*v_M_tilde + c2 + sqrt((c1*v_M_tilde + c2)**2 + 1)) + c3
 
         return c0*log(c1*v_M_tilde + c2 + sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)) + c3
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        v_M_tilde, c0, c1, c2, c3 = self.args
+        if argindex == 1:
+            return c0*c1/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 2:
+            return log(
+                c1*v_M_tilde + c2
+                + sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+            )
+        elif argindex == 3:
+            return c0*v_M_tilde/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 4:
+            return c0/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 5:
+            return Integer(1)
+
+        raise ArgumentIndexError(self, argindex)
