@@ -127,8 +127,8 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
     if only_update:
         # This function is not defined:
         # XXX: This branch is clearly not tested!
-        if not missing_or_other_newer(dst, src): # noqa
-            return
+        if os.path.exists(src) and os.path.getatime(src) <= os.path.getatime(dst):
+            return None
 
     if os.path.islink(dst):
         dst = os.path.abspath(os.path.realpath(dst), cwd=cwd)

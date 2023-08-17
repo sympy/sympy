@@ -137,6 +137,7 @@ else:
     try:
         SYMPY_CACHE_SIZE = int(scs)
     except ValueError:
+        SYMPY_CACHE_SIZE = scs
         raise RuntimeError(
             'SYMPY_CACHE_SIZE must be a valid integer or None. ' + \
             'Got: %s' % SYMPY_CACHE_SIZE)

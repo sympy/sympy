@@ -556,13 +556,22 @@ class FpSubgroup(DefaultPrinting):
     group belongs to the subgroup
 
     '''
+    def define_subgroup(cls):
+        G = FreeGroup("a b")  # Define your free group with generators 'a' and 'b'
+        gens = [G.generators[0], G.generators[0]**-1]  # Define the generators for the subgroup
+        return G, gens
+
     def __init__(self, G, gens, normal=False):
-        super().__init__()
+        G, gens = FpSubgroup.define_subgroup()
+        #super().__init__()
         self.parent = G
         self.generators = list({g for g in gens if g != G.identity})
         self._min_words = None #for use in __contains__
         self.C = None
         self.normal = normal
+
+        if not isinstance(G, FreeGroup):
+            self.C = G.coset_enumeration(self.generators)
 
     def __contains__(self, g):
 
