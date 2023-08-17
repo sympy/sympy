@@ -36,6 +36,8 @@ __all__ = [
     'JointsMethod',
 
     'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
+
+    'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
 ]
 
 from sympy.physics import vector
@@ -77,3 +79,6 @@ from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
 
 from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
                                 WrappingSphere)
+
+from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
+                      WrappingPathway)
