@@ -1072,4 +1072,34 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
-    pass
+    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the normalized muscle fiber force produced as a function of
+    normalized tendon velocity.
+
+    The function is defined by the equation:
+
+    $fv^M = c_0 \log{\left(c1 v_M_tilde + c2\right)
+        + \sqrt{\left(c1 v_M_tilde + c2\right)^2 + 1}} + c3
+
+    with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
+    $c_3 = 0.886$.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    normalized muscle fiber force of 1 when the muscle fibers are contracting
+    isometrically (they have an extension rate of 0).
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
