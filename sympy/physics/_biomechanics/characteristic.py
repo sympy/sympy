@@ -7,6 +7,7 @@ from sympy.functions.elementary.exponential import exp, log
 
 
 __all__ = [
+    'FiberForceLengthActiveDeGroote2016',
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
     'TendonForceLengthDeGroote2016',
@@ -797,3 +798,273 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
         fl_M_pas = self.args[0]
         _fl_M_pas = printer._print(fl_M_pas)
         return r'\left( \operatorname{fl}^M_{pas} \right)^{-1} \left( %s \right)' % _fl_M_pas
+
+
+class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
+    r"""Active muscle fiber force-length curve based on De Groote et al., 2016
+    [1].
+
+    Explanation
+    ===========
+
+    The function is defined by the equation:
+
+    $fl^M_{act} = c_0 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{\left(c_2 + c_3 \tilde{l}^M\right)}\right)^2}
+        + c_4 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{\left(c_6 + c_7 \tilde{l}^M\right)}\right)^2}
+        + c_8 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{\left(c_{10} + c_{11} \tilde{l}^M\right)}\right)^2}$
+
+    with constant values of $c0 = 0.814$, $c1 = 1.06$, $c2 = 0.162$,
+    $c3 = 0.0633$, $c4 = 0.433$, $c5 = 0.717$, $c6 = -0.0299$, $c7 = 0.2$,
+    $c8 = 0.1$, $c9 = 1.0$, $c10 = 0.354$, and $c11 = 0.0$.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    active fiber force of 1 at a normalized fiber length of 1, and an active
+    fiber force of 0 at normalized fiber lengths of 0 and 2.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    @classmethod
+    def with_default_constants(cls, l_M_tilde):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the inverse muscle fiber act force-length
+        function using the four constant values specified in the original
+        publication.
+
+        These have the values:
+
+        $c0 = 0.814$
+        $c1 = 1.06$
+        $c2 = 0.162$
+        $c3 = 0.0633$
+        $c4 = 0.433$
+        $c5 = 0.717$
+        $c6 = -0.0299$
+        $c7 = 0.2$
+        $c8 = 0.1$
+        $c9 = 1.0$
+        $c10 = 0.354$
+        $c11 = 0.0$
+
+        Parameters
+        ==========
+
+        fl_M_act : Any (sympifiable)
+            Normalized passive muscle fiber force as a function of muscle fiber
+            length.
+
+        """
+        c0 = Float('0.814')
+        c1 = Float('1.06')
+        c2 = Float('0.162')
+        c3 = Float('0.0633')
+        c4 = Float('0.433')
+        c5 = Float('0.717')
+        c6 = Float('-0.0299')
+        c7 = Rational(1, 5)
+        c8 = Rational(1, 10)
+        c9 = Integer(1)
+        c10 = Float('0.354')
+        c11 = Integer(0)
+        return cls(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
+
+    @classmethod
+    def eval(cls, l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        l_M_tilde : Any (sympifiable)
+            Normalized muscle fiber length.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``0.814``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``1.06``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``0.162``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``0.0633``.
+        c4 : Any (sympifiable)
+            The fifth constant in the characteristic equation. The published
+            value is ``0.433``.
+        c5 : Any (sympifiable)
+            The sixth constant in the characteristic equation. The published
+            value is ``0.717``.
+        c6 : Any (sympifiable)
+            The seventh constant in the characteristic equation. The published
+            value is ``-0.0299``.
+        c7 : Any (sympifiable)
+            The eighth constant in the characteristic equation. The published
+            value is ``0.2``.
+        c8 : Any (sympifiable)
+            The ninth constant in the characteristic equation. The published
+            value is ``0.1``.
+        c9 : Any (sympifiable)
+            The tenth constant in the characteristic equation. The published
+            value is ``1.0``.
+        c10 : Any (sympifiable)
+            The eleventh constant in the characteristic equation. The published
+            value is ``0.354``.
+        c11 : Any (sympifiable)
+            The tweflth constant in the characteristic equation. The published
+            value is ``0.0``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``l_M_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        l_M_tilde, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            l_M_tilde = l_M_tilde.doit(deep=deep, **hints)
+            constants = [c.doit(deep=deep, **hints) for c in constants]
+        c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = constants
+
+        if evaluate:
+            return (
+                c0*exp(-(((l_M_tilde - c1)/(c2 + c3*l_M_tilde))**2)/2)
+                + c4*exp(-(((l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2)
+                + c8*exp(-(((l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2)
+            )
+
+        return (
+            c0*exp(-((UnevaluatedExpr(l_M_tilde - c1)/(c2 + c3*l_M_tilde))**2)/2)
+            + c4*exp(-((UnevaluatedExpr(l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2)
+            + c8*exp(-((UnevaluatedExpr(l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2)
+        )
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = self.args
+        if argindex == 1:
+            return (
+                c0*(
+                    c3*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                    + (c1 - l_M_tilde)/((c2 + c3*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+                + c4*(
+                    c7*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                    + (c5 - l_M_tilde)/((c6 + c7*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+                + c8*(
+                    c11*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                    + (c9 - l_M_tilde)/((c10 + c11*l_M_tilde)**2)
+                )*exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 2:
+            return exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+        elif argindex == 3:
+            return (
+                c0*(l_M_tilde - c1)/(c2 + c3*l_M_tilde)**2
+                *exp(-(l_M_tilde - c1)**2 /(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 4:
+            return (
+                c0*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                *exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 5:
+            return (
+                c0*l_M_tilde*(l_M_tilde - c1)**2/(c2 + c3*l_M_tilde)**3
+                *exp(-(l_M_tilde - c1)**2/(2*(c2 + c3*l_M_tilde)**2))
+            )
+        elif argindex == 6:
+            return exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+        elif argindex == 7:
+            return (
+                c4*(l_M_tilde - c5)/(c6 + c7*l_M_tilde)**2
+                *exp(-(l_M_tilde - c5)**2 /(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 8:
+            return (
+                c4*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                *exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 9:
+            return (
+                c4*l_M_tilde*(l_M_tilde - c5)**2/(c6 + c7*l_M_tilde)**3
+                *exp(-(l_M_tilde - c5)**2/(2*(c6 + c7*l_M_tilde)**2))
+            )
+        elif argindex == 10:
+            return exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+        elif argindex == 11:
+            return (
+                c8*(l_M_tilde - c9)/(c10 + c11*l_M_tilde)**2
+                *exp(-(l_M_tilde - c9)**2 /(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 12:
+            return (
+                c8*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                *exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+        elif argindex == 13:
+            return (
+                c8*l_M_tilde*(l_M_tilde - c9)**2/(c10 + c11*l_M_tilde)**3
+                *exp(-(l_M_tilde - c9)**2/(2*(c10 + c11*l_M_tilde)**2))
+            )
+
+        raise ArgumentIndexError(self, argindex)
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        l_M_tilde = self.args[0]
+        _l_M_tilde = printer._print(l_M_tilde)
+        return r'\operatorname{fl}^M_{act} \left( %s \right)' % _l_M_tilde
