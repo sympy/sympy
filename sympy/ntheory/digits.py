@@ -14,7 +14,7 @@ def ndigits(n, base=10):
     >>> from sympy.ntheory.digits import ndigits
     >>> ndigits(10)
     2
-    >> ndigits(10, 2)  # 1010 -> 4 digits
+    >>> ndigits(10, 2)  # 1010 -> 4 digits
     4
     >>> ndigits(-100, 16)  # -64 -> 2 digits
     2
@@ -41,7 +41,7 @@ def ndigits(n, base=10):
         return 1
     d = math.floor(math.log10(n)/math.log10(b))
     b_ = b**d
-    while b_ <= n:
+    while b_ <= n:  # this will iterate 0, 1 or 2 times
         d += 1
         b_ *= b
     return d

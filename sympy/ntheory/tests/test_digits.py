@@ -7,12 +7,14 @@ def test_ndigits():
     # depending on whether one rounds up or down or uses log or log10,
     # one or more of these will fail if you don't check for the off-by
     # one condition
+    assert ndigits(2, 2) == 2
+    assert ndigits(2**48 - 1, 2) == 48
     assert ndigits(1000, 10) == 4
     assert ndigits(125, 5) == 4
     assert ndigits(100, 16) == 2
     assert ndigits(-1000, 10) == 4
-    assert ndigits(-125, 5) == 4
-    assert ndigits(-100, 16) == 2
+    # if changes are made to the function, this structured test over
+    # this range will expose problems
     for base in range(2, 100):
         for e in range(1, 100):
             n = base**e
