@@ -12,13 +12,10 @@ class TransformToSymPyExpr(lark.Transformer):
 
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
-        # like "varphi" or "varepsilon", we remove that
+        # like "varphi" or "varepsilon", we remove that too
         variable_name = re.sub("var", "", tokens[1:])
-        if variable_name == "lambda":
-            # we do the same name change as sympy.abc because lambda is a Python keyword
-            return sympy.Symbol("lamda")
-        else:
-            return sympy.Symbol(variable_name)
+
+        return sympy.Symbol(variable_name)
 
     def BASIC_SUBSCRIPTED_SYMBOL(self, tokens):
         symbol, sub = tokens.value.split("_")
@@ -29,11 +26,7 @@ class TransformToSymPyExpr(lark.Transformer):
 
     def GREEK_SUBSCRIPTED_SYMBOL(self, tokens):
         greek_letter, sub = tokens.value.split("_")
-
         greek_letter = re.sub("var", "", greek_letter[1:])
-        if greek_letter == "lambda":
-            # we do the same name change as sympy.abc because lambda is a Python keyword
-            greek_letter = "lamda"
 
         if sub.startswith("{"):
             return sympy.Symbol("%s_{%s}" % (greek_letter, sub[1:-1]))
@@ -45,16 +38,12 @@ class TransformToSymPyExpr(lark.Transformer):
         if sub.startswith("{"):
             greek_letter = sub[2:-1]
             greek_letter = re.sub("var", "", greek_letter)
-            if greek_letter == "lambda":
-                # we do the same name change as sympy.abc because lambda is a Python keyword
-                greek_letter = "lamda"
+
             return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
         else:
             greek_letter = sub[1:]
             greek_letter = re.sub("var", "", greek_letter)
-            if greek_letter == "lambda":
-                # we do the same name change as sympy.abc because lambda is a Python keyword
-                greek_letter = "lamda"
+
             return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
 
     def multiletter_symbol(self, tokens):
