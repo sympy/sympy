@@ -1,39 +1,9 @@
 from collections import defaultdict
 
 from sympy.core.numbers import Integer
+from sympy.core.intfunc import ndigits
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
-
-
-def ndigits(n, base=10):
-    """Return the number of digits needed to express n in give base.
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.digits import ndigits
-    >>> ndigits(10)
-    2
-    >>> ndigits(10, 2)  # 1010 -> 4 digits
-    4
-    >>> ndigits(-100, 16)  # -64 -> 2 digits
-    2
-
-
-    Parameters
-    ==========
-
-    n: integer
-        The number whose digits are returned.
-
-    b: integer
-        The base in which digits are computed.
-
-    See Also
-    ========
-    digits, count_digits
-    """
-    return Integer(abs(as_int(n))).length(base)
 
 
 def digits(n, b=10, digits=None):
@@ -79,7 +49,7 @@ def digits(n, b=10, digits=None):
 
     See Also
     ========
-    ndigits, count_digits
+    core.intfunc.ndigits, count_digits
     """
 
     b = as_int(b)
@@ -138,6 +108,10 @@ def count_digits(n, b=10):
     >>> c77 = count_digits(factorial(77))
     >>> [i for i in range(10) if c77[i] == 7]
     [1, 3, 7, 9]
+
+    See Also
+    ========
+    core.intfunc.ndigits, digits
     """
     rv = defaultdict(int, multiset(digits(n, b)).items())
     rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there
