@@ -45,6 +45,13 @@ class ActivationBase(ABC, _NamedMixin):
         self._e = dynamicsymbols(f"e_{name}")
         self._a = dynamicsymbols(f"a_{name}")
 
+    @classmethod
+    @abstractmethod
+    def with_default_constants(cls, name):
+        """Alternate constructor that provides recommended defaults for
+        constants."""
+        pass
+
     @property
     def excitation(self):
         """Dynamic symbol representing excitation.
@@ -267,6 +274,22 @@ class ZerothOrderActivation(ActivationBase):
         # Zeroth-order activation dynamics has activation equal excitation so
         # overwrite the symbol for activation with the excitation symbol.
         self._a = self._e
+
+    @classmethod
+    def with_default_constants(cls, name):
+        """Alternate constructor that provides recommended defaults for
+        constants.
+
+        Explanation
+        ===========
+
+        As this concrete class doesn't implement any constants associated with
+        its dynamics, this ``classmethod`` simply creates a standard instance
+        of ``ZerothOrderActivation``. An implementation is provided to ensure
+        a consistent interface between all ``ActivationBase`` concrete classes.
+
+        """
+        return cls(name)
 
     @property
     def order(self):
