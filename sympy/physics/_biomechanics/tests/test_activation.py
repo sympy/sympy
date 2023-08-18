@@ -30,6 +30,11 @@ class TestZerothOrderActivation:
         instance = ZerothOrderActivation(self.name)
         assert isinstance(instance, ZerothOrderActivation)
 
+    def test_with_default_constants(self):
+        instance = ZerothOrderActivation.with_default_constants(self.name)
+        assert isinstance(instance, ZerothOrderActivation)
+        assert instance == ZerothOrderActivation(self.name)
+
     def test_name_attribute(self):
         assert hasattr(self.instance, 'name')
         assert self.instance.name == self.name
