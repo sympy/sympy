@@ -80,6 +80,8 @@ CMD_DIV:   "\\div"
 CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_OVERLINE: "\\overline"
+CMD_LANGLE: "\\langle"
+CMD_RANGLE: "\\rangle"
 
 CMD_MATHIT: "\\mathit"
 
@@ -249,6 +251,10 @@ min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 
 max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
 
+bra: CMD_LANGLE _expression BAR
+
+ket: BAR _expression CMD_RANGLE
+
 _function: function_applied
     | abs | floor | ceil
     | _trigonometric_function | _inverse_trigonometric_function
@@ -259,8 +265,8 @@ _function: function_applied
     | square_root
     | factorial
     | conjugate
-    | min
-    | max
+    | max | min
+    | bra | ket
 
 exponential: FUNC_EXP _expression
 

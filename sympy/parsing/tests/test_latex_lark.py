@@ -392,7 +392,9 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\min(a, b)", _Min(a, b)),
     (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
     (r"\max(a, b)", _Max(a, b)),
-    (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y))
+    (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y)),
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')) # physics things don't have an `evaluate=False` variant
 ]
 
 EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
@@ -422,7 +424,9 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\min(a, b)", Min(a, b)),
     (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
     (r"\max(a, b)", Max(a, b)),
-    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y))
+    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x'))
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
@@ -460,8 +464,6 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
     (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
-    (r"\langle x |", Bra('x')),
-    (r"| x \rangle", Ket('x')),
 ]
 
 
