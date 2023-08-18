@@ -57,7 +57,6 @@ def test_And():
     assert And(True, False, A) is false
     assert And(1, A) == A
     raises(TypeError, lambda: And(2, A))
-    raises(TypeError, lambda: And(A < 2, A))
     assert And(A < 1, A >= 1) is false
     e = A > 1
     assert And(e, e.canonical) == e.canonical
@@ -82,7 +81,6 @@ def test_Or():
     assert Or(False, False, A) == A
     assert Or(1, A) is true
     raises(TypeError, lambda: Or(2, A))
-    raises(TypeError, lambda: Or(A < 2, A))
     assert Or(A < 1, A >= 1) is true
     e = A > 1
     assert Or(e, e.canonical) == e
@@ -304,7 +302,6 @@ def test_simplification_boolalg():
     assert simplify_logic(Equivalent(A, B)) == \
         Or(And(A, B), And(Not(A), Not(B)))
     assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
-    assert simplify_logic(And(Equality(A, 2), A)) is S.false
     assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(A, 2), A)
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
@@ -676,7 +673,6 @@ def test_ITE():
     assert ITE(1, 1, 1) is S.true
     assert isinstance(ITE(1, 1, 1, evaluate=False), ITE)
 
-    raises(TypeError, lambda: ITE(x > 1, y, x))
     assert ITE(Eq(x, True), y, x) == ITE(x, y, x)
     assert ITE(Eq(x, False), y, x) == ITE(~x, y, x)
     assert ITE(Ne(x, True), y, x) == ITE(~x, y, x)
@@ -1345,3 +1341,9 @@ def test_relational_threeterm_simplification_patterns_numerically():
                 assert originalvalue == simplifiedvalue, "Original: {}\nand"\
                     " simplified: {}\ndo not evaluate to the same value for"\
                     "{}".format(pattern[0], simplified, sublist)
+
+
+def test_issue_25451():
+    x = Or(And(a, c), Eq(a, b))
+    assert isinstance(x, Or)
+    assert set(x.args) == {And(a, c), Eq(a, b)}

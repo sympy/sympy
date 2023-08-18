@@ -3384,6 +3384,24 @@ def test_sympy__physics___biomechanics__characteristic__FiberForceLengthPassiveD
     assert _test_args(FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1))
 
 
+def test_sympy__physics___biomechanics__characteristic__FiberForceLengthPassiveInverseDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    fl_M_pas, c0, c1 = symbols('fl_M_pas, c0, c1')
+    assert _test_args(FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1))
+
+
+def test_sympy__physics___biomechanics__characteristic__FiberForceLengthActiveDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+    l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = symbols('l_M_tilde, c0:12')
+    assert _test_args(FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11))
+
+
+def test_sympy__physics___biomechanics__characteristic__FiberForceVelocityDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+    v_M_tilde, c0, c1, c2, c3 = symbols('v_M_tilde, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3))
+
+
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
     assert _test_args(Pauli(1))
