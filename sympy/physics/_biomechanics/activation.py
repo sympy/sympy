@@ -445,7 +445,7 @@ class ZerothOrderActivation(ActivationBase):
         return zeros(0, 1)
 
     def rhs(self):
-        """
+        """Ordered column matrix of equations for the solution of ``M x' = F``.
 
         Explanation
         ===========
