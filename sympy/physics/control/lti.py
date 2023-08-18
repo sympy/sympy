@@ -818,7 +818,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.num, self.var), self.var)
 
-    def eval_frequency(self,other):
+    def eval_frequency(self, other):
         """
         Returns the system response at any point in the real or complex plane.
 
@@ -3223,7 +3223,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
 
-    def eval_frequency(self,other):
+    def eval_frequency(self, other):
         """
         Evaluates each element of the ``TransferFunctionMatrix`` at a frequency.
 
