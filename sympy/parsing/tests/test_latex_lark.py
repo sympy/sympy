@@ -22,7 +22,7 @@ from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.physics.quantum.state import Bra, Ket
+from sympy.physics.quantum import Bra, Ket, InnerProduct
 from sympy.abc import x, y, z, a, b, c, d, t, k, n
 
 lark = import_module("lark")
@@ -393,8 +393,10 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
     (r"\max(a, b)", _Max(a, b)),
     (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y)),
+    # physics things don't have an `evaluate=False` variant
     (r"\langle x |", Bra('x')),
-    (r"| x \rangle", Ket('x')) # physics things don't have an `evaluate=False` variant
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
 ]
 
 EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
@@ -426,7 +428,8 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\max(a, b)", Max(a, b)),
     (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
     (r"\langle x |", Bra('x')),
-    (r"| x \rangle", Ket('x'))
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
