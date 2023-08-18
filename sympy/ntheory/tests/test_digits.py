@@ -1,4 +1,5 @@
-from sympy.ntheory import count_digits, digits, is_palindromic, ndigits
+from sympy.ntheory import count_digits, digits, is_palindromic
+from sympy.core.intfunc import ndigits
 
 from sympy.testing.pytest import raises
 

@@ -1,10 +1,11 @@
 import math
+import sys
 from functools import lru_cache
 
 from .sympify import sympify
 from .singleton import S
 from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm, sqrt, iroot
-from sympy.utilities.misc import as_int
+from sympy.utilities.misc import as_int, filldedent
 
 from mpmath.libmp import bitcount
 
@@ -28,7 +29,7 @@ def ndigits(n, base=10):
     ==========
 
     n: integer
-        The number whose digits are returned.
+        The number whose digits are counted.
 
     b: integer
         The base in which digits are computed.
@@ -37,20 +38,75 @@ def ndigits(n, base=10):
     ========
     ntheory.digits.digits, ntheory.digits.count_digits
     """
-    b = as_int(base)
-    if b < 2:
-        raise ValueError("base must be integer greater than 1")
-    if b == 2:
-        return bitcount(n)
-    n = abs(as_int(n))
-    if n < b:
+    if base < 0:
+        raise ValueError('base must be int greater than 1')
+    if not n:
         return 1
+    e, t = integer_log(abs(n), base)
+    return 1 + e
+
+
+def integer_log(n, b):
+    r"""
+    Returns ``(e, bool)`` where e is the largest nonnegative integer
+    such that :math:`|n| \geq |b^e|` and ``bool`` is True if $n = b^e$.
+
+    Examples
+    ========
+
+    >>> from sympy import integer_log
+    >>> integer_log(125, 5)
+    (3, True)
+    >>> integer_log(17, 9)
+    (1, False)
+    >>> integer_log(4, -2)
+    (2, True)
+    >>> integer_log(-125,-5)
+    (3, True)
+
+    See Also
+    ========
+    integer_nthroot
+    sympy.ntheory.primetest.is_square
+    sympy.ntheory.factor_.multiplicity
+    sympy.ntheory.factor_.perfect_power
+    """
+    if b < 0:
+        e, t = integer_log(n if n > 0 else -n, -b)
+        if n < 0:
+            t = t and e % 2 == 1
+        else:
+            t = t and bool(n % 2 if n < 0 else not n % 2)
+        return e, t
+    if b == 1:
+        raise ValueError('base cannot be 1')
+    if n < 0:
+        return 0, False
+    if n == 0:
+        raise ValueError('n cannot be 0')
+
+    n = as_int(n)
+    b = as_int(b)
+
+    if n < b:
+        return 0, n == 1
+    if b == 2:
+        e = n.bit_length() - 1
+        return e, trailing(n) == e
+    t = trailing(b)
+    if 2**t == b:
+        e = int(n.bit_length() - 1)//t
+        n_ = 2 << (t*e)
+        return e, n_ == n
+    if b == 1:
+        raise ValueError('b cannot be 1')
+
     d = math.floor(math.log10(n) / math.log10(b))
-    b_ = b ** d
-    while b_ <= n:  # this will iterate 0, 1 or 2 times
+    n_ = b ** d
+    while n_ <= n:  # this will iterate 0, 1 or 2 times
         d += 1
-        b_ *= b
-    return d
+        n_ *= b
+    return d - (n_ > n), (n_ == n or n_//b == n)
 
 
 _small_trailing = [0] * 256
@@ -315,7 +371,7 @@ def igcdex(a, b):
     Examples
     ========
 
-    >>> from sympy.core.numbers import igcdex
+    >>> from sympy.core.intfunc import igcdex
     >>> igcdex(2, 3)
     (-1, 1, 1)
     >>> igcdex(10, 12)
@@ -422,61 +478,6 @@ def mod_inverse(a, m):
     if c is None:
         raise ValueError("inverse of %s (mod %s) does not exist" % (a, m))
     return c
-
-
-def integer_log(y, x):
-    r"""
-    Returns ``(e, bool)`` where e is the largest nonnegative integer
-    such that :math:`|y| \geq |x^e|` and ``bool`` is True if $y = x^e$.
-
-    Examples
-    ========
-
-    >>> from sympy import integer_log
-    >>> integer_log(125, 5)
-    (3, True)
-    >>> integer_log(17, 9)
-    (1, False)
-    >>> integer_log(4, -2)
-    (2, True)
-    >>> integer_log(-125,-5)
-    (3, True)
-
-    See Also
-    ========
-    integer_nthroot
-    sympy.ntheory.primetest.is_square
-    sympy.ntheory.factor_.multiplicity
-    sympy.ntheory.factor_.perfect_power
-    """
-    if x == 1:
-        raise ValueError('x cannot take value as 1')
-    if y == 0:
-        raise ValueError('y cannot take value as 0')
-
-    if x in (-2, 2):
-        x = int(x)
-        y = as_int(y)
-        e = y.bit_length() - 1
-        return e, x**e == y
-    if x < 0:
-        n, b = integer_log(y if y > 0 else -y, -x)
-        return n, b and bool(n % 2 if y < 0 else not n % 2)
-
-    x = as_int(x)
-    y = as_int(y)
-    r = e = 0
-    while y >= x:
-        d = x
-        m = 1
-        while y >= d:
-            y, rem = divmod(y, d)
-            r = r or rem
-            e += m
-            if y > d:
-                d *= d
-                m *= 2
-    return e, r == 0 and y == 1
 
 
 def isqrt(n):

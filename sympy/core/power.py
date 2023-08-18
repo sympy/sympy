@@ -9,12 +9,10 @@ from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
-from .intfunc import isqrt, integer_log, integer_nthroot
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
-from sympy.external.gmpy import sqrt, iroot
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
