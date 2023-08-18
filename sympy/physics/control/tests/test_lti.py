@@ -231,6 +231,12 @@ def test_TransferFunction_functions():
     assert SP4.subs({a0: -1, a1: -7}).evalf() == expect4
     assert expect4_.evalf() == expect4
 
+    # evaluate the transfer function at particular frequencies.
+    assert tf1.eval_frequency(wn) == wn**2/(wn**2 + 4*wn - 5) + 2*wn/(wn**2 + 4*wn - 5) - 3/(wn**2 + 4*wn - 5)
+    assert G1.eval_frequency(1 + I) == S(3)/25 + S(4)*I/25
+    assert G4.eval_frequency(S(5)/3) == \
+        a0*s**s/(a1*a2*s**(S(8)/3) + S(5)*a1*s/3 + 5*a2*b1*s**(S(8)/3)/3 + S(25)*b1*s/9) - 5*3**(S(1)/3)*5**(S(2)/3)*b0/(9*a1*a2*s**(S(8)/3) + 15*a1*s + 15*a2*b1*s**(S(8)/3) + 25*b1*s)
+
     # Low-frequency (or DC) gain.
     assert tf0.dc_gain() == 1
     assert tf1.dc_gain() == Rational(3, 5)
@@ -1180,6 +1186,9 @@ def test_TransferFunctionMatrix_functions():
     assert H_2.subs(k, 1) == TransferFunctionMatrix([[TransferFunction(a*p*s, s**2, s), TransferFunction(p*s, -a + s**2, s)]])
     assert H_2.subs(a, 0) == TransferFunctionMatrix([[TransferFunction(0, k*s**2, s), TransferFunction(p*s, k*s**2, s)]])
     assert H_2.subs({p: 1, k: 1, a: a0}) == TransferFunctionMatrix([[TransferFunction(a0*s, s**2, s), TransferFunction(s, -a0 + s**2, s)]])
+
+    # eval_frequency()
+    assert H_2.eval_frequency(S(1)/2 + I) == Matrix([[2*a*p/(5*k) - 4*I*a*p/(5*k), I*p/(-a*k - 3*k/4 + I*k) + p/(-2*a*k - 3*k/2 + 2*I*k)]])
 
     # transpose()
 
