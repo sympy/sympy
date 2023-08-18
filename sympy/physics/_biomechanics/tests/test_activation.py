@@ -23,7 +23,7 @@ class TestZerothOrderActivation:
     @pytest.fixture(autouse=True)
     def _zeroth_order_activation_fixture(self):
         self.name = 'name'
-        self.e = dynamicsymbols(f'e_name')
+        self.e = dynamicsymbols('e_name')
         self.instance = ZerothOrderActivation(self.name)
 
     def test_instance(self):
