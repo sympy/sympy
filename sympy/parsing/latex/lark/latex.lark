@@ -251,13 +251,13 @@ min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 
 max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
 
-bra: CMD_LANGLE _atomic_expr BAR
+bra: CMD_LANGLE _expression BAR
 
-ket: BAR _atomic_expr CMD_RANGLE
+ket: BAR _expression CMD_RANGLE
 
-inner_product: CMD_LANGLE _atomic_expr BAR _atomic_expr CMD_RANGLE
+inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 
-// outer_product: BAR _atomic_expr CMD_RANGLE CMD_LANGLE _atomic_expr BAR
+// outer_product: BAR _expression CMD_RANGLE CMD_LANGLE _expression BAR
 
 _function: function_applied
     | abs | floor | ceil
