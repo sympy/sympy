@@ -9,7 +9,7 @@ from sympy.core.symbol import Symbol
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.physics._biomechanics.characteristic import (
+from sympy.physics._biomechanics.curve import (
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
