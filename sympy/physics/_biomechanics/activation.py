@@ -20,6 +20,7 @@ from sympy.physics.mechanics import dynamicsymbols
 
 __all__ = [
     'ActivationBase',
+    'FirstOrderActivationDeGroote2016',
     'ZerothOrderActivation',
 ]
 
@@ -429,3 +430,7 @@ class ZerothOrderActivation(ActivationBase):
 
         """
         return zeros(0, 1)
+
+
+class FirstOrderActivationDeGroote2016(ActivationBase):
+    pass
