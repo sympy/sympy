@@ -237,6 +237,14 @@ class ActivationBase(ABC, _NamedMixin):
         """
         pass
 
+    def __eq__(self, other):
+        """Equality check for activation dynamics."""
+        if type(self) != type(other):
+            return False
+        if self.name != other.name:
+            return False
+        return True
+
     def __repr__(self):
         """Default representation of activation dynamics."""
         return f'{self.__class__.__name__}({self.name!r})'
