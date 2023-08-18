@@ -13,14 +13,14 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.intfunc import trailing, integer_nthroot, integer_log
+from sympy.core.intfunc import trailing, integer_log, ndigits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
 from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
-from .digits import digits, ndigits
+from .digits import digits
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor

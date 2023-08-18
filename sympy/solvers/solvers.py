@@ -22,7 +22,8 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import ilcm, Float, Rational, _illegal
-from sympy.core.power import integer_log, Pow
+from sympy.core.intfunc import integer_log
+from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify

@@ -5,7 +5,6 @@ import decimal
 import fractions
 import math
 import re as regex
-import sys
 
 from .containers import Tuple
 from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
@@ -16,11 +15,10 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
-from .intfunc import ndigits, trailing, igcd, igcd_lehmer, ilcm, igcdex, mod_inverse, igcd2
+from .intfunc import ndigits, igcd, ilcm, mod_inverse, integer_log, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import (SYMPY_INTS, gmpy, flint,
-                                 gcd as number_gcd, lcm as number_lcm)
+from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -32,7 +30,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import as_int, debug, filldedent
+from sympy.utilities.misc import debug
 from .parameters import global_parameters
 
 _LOG2 = math.log(2)
@@ -1577,7 +1575,6 @@ class Rational(Number):
                     return False
                 return m == self.p
 
-            from .power import integer_log
             if t > 0:
                 # other is an even integer
                 if not self.is_Integer:
@@ -4266,7 +4263,7 @@ def sympify_complex(a):
 
 _sympy_converter[complex] = sympify_complex
 
-from .power import Pow, integer_nthroot
+from .power import Pow
 from .mul import Mul
 Mul.identity = One()
 from .add import Add

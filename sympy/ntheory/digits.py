@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from sympy.core.numbers import Integer
-from sympy.core.intfunc import ndigits
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
 
