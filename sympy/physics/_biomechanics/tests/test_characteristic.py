@@ -8,11 +8,13 @@ from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.characteristic import (
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
     FiberForceLengthPassiveInverseDeGroote2016,
+    FiberForceVelocityDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -1213,3 +1215,228 @@ class TestFiberForceLengthActiveDeGroote2016:
             0.0069595432,
         ])
         numpy.testing.assert_allclose(fl_M_act_callable(l_M_tilde), expected)
+
+
+class TestFiberForceVelocityDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _muscle_fiber_force_velocity_arguments_fixture(self):
+        self.v_M_tilde = Symbol('v_M_tilde')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.c2 = Symbol('c_2')
+        self.c3 = Symbol('c_3')
+        self.constants = (self.c0, self.c1, self.c2, self.c3)
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceVelocityDeGroote2016, Function)
+        assert issubclass(FiberForceVelocityDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceVelocityDeGroote2016.__name__ == 'FiberForceVelocityDeGroote2016'
+
+    def test_instance(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        assert isinstance(fv_M, FiberForceVelocityDeGroote2016)
+        assert str(fv_M) == 'FiberForceVelocityDeGroote2016(v_M_tilde, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants).doit()
+        expected = (
+            self.c0 * log((self.c1 * self.v_M_tilde + self.c2)
+            + sqrt((self.c1 * self.v_M_tilde + self.c2)**2 + 1)) + self.c3
+        )
+        assert fv_M == expected
+
+    def test_doit_evaluate_false(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants).doit(evaluate=False)
+        expected = (
+            self.c0 * log((self.c1 * self.v_M_tilde + self.c2)
+            + sqrt(UnevaluatedExpr(self.c1 * self.v_M_tilde + self.c2)**2 + 1)) + self.c3
+        )
+        assert fv_M == expected
+
+    def test_with_default_constants(self):
+        constants = (
+            Float('-0.318'),
+            Float('-8.149'),
+            Float('-0.374'),
+            Float('0.886'),
+        )
+        fv_M_manual = FiberForceVelocityDeGroote2016(self.v_M_tilde, *constants)
+        fv_M_constants = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        assert fv_M_manual == fv_M_constants
+
+    def test_differentiate_wrt_v_M_tilde(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0*self.c1
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.v_M_tilde) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = log(
+            self.c1*self.v_M_tilde + self.c2
+            + sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0*self.v_M_tilde
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            self.c0
+            /sqrt(UnevaluatedExpr(self.c1*self.v_M_tilde + self.c2)**2 + 1)
+        )
+        assert fv_M.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = Integer(1)
+        assert fv_M.diff(self.c3) == expected
+
+    def test_function_print_latex(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = r'\operatorname{fv}^M \left( v_{M tilde} \right)'
+        assert LatexPrinter().doprint(fv_M) == expected
+
+    def test_expression_print_latex(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        expected = (
+            r'c_{0} \log{\left(c_{1} v_{M tilde} + c_{2} + \sqrt{\left(c_{1} '
+            r'v_{M tilde} + c_{2}\right)^{2} + 1} \right)} + c_{3}'
+        )
+        assert LatexPrinter().doprint(fv_M.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                C99CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                C11CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + sqrt(1 + pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX98CodePrinter,
+                '0.88600000000000001 - 0.318*log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX11CodePrinter,
+                '0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                CXX17CodePrinter,
+                '0.88600000000000001 - 0.318*std::log(-8.1489999999999991*v_M_tilde '
+                '- 0.374 + std::sqrt(1 + std::pow(-8.1489999999999991*v_M_tilde - 0.374, 2)))',
+            ),
+            (
+                FCodePrinter,
+                '      0.886d0 - 0.318d0*log(-8.1489999999999991d0*v_M_tilde - 0.374d0 +\n'
+                '      @ sqrt(1.0d0 + (-8.149d0*v_M_tilde - 0.374d0)**2))',
+            ),
+            (
+                OctaveCodePrinter,
+                '0.886 - 0.318*log(-8.149*v_M_tilde - 0.374 '
+                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374).^2))',
+            ),
+            (
+                PythonCodePrinter,
+                '0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
+                '+ math.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                NumPyPrinter,
+                '0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                SciPyPrinter,
+                '0.886 - 0.318*numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                CuPyPrinter,
+                '0.886 - 0.318*cupy.log(-8.149*v_M_tilde - 0.374 '
+                '+ cupy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                JaxPrinter,
+                '0.886 - 0.318*jax.numpy.log(-8.149*v_M_tilde - 0.374 '
+                '+ jax.numpy.sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+            (
+                MpmathPrinter,
+                'mpmath.mpf((0, 7980378539700519, -53, 53)) '
+                '- mpmath.mpf((0, 5728578726015271, -54, 53))'
+                '*mpmath.log(-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
+                '+ mpmath.mpf((1, 3368692521273131, -53, 52)) '
+                '+ mpmath.sqrt(1 + (-mpmath.mpf((0, 4587479170430271, -49, 53))*v_M_tilde '
+                '+ mpmath.mpf((1, 3368692521273131, -53, 52)))**2))',
+            ),
+            (
+                LambdaPrinter,
+                '0.886 - 0.318*math.log(-8.149*v_M_tilde - 0.374 '
+                '+ sqrt(1 + (-8.149*v_M_tilde - 0.374)**2))',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer, expected):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        assert code_printer().doprint(fv_M) == expected
+
+    def test_derivative_print_code(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        dfv_M_dv_M_tilde = fv_M.diff(self.v_M_tilde)
+        expected = '2.591382*(1 + (-8.149*v_M_tilde - 0.374)**2)**(-1/2)'
+        assert PythonCodePrinter().doprint(dfv_M_dv_M_tilde) == expected
+
+    def test_lambdify(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = lambdify(self.v_M_tilde, fv_M)
+        assert fv_M_callable(0.0) == pytest.approx(1.002320622548512)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = lambdify(self.v_M_tilde, fv_M, 'numpy')
+        v_M_tilde = numpy.array([-1.0, -0.5, 0.0, 0.5])
+        expected = numpy.array([
+            0.0120816781,
+            0.2438336294,
+            1.0023206225,
+            1.5850003903,
+        ])
+        numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_callable = jax.jit(lambdify(self.v_M_tilde, fv_M, 'jax'))
+        v_M_tilde = jax.numpy.array([-1.0, -0.5, 0.0, 0.5])
+        expected = jax.numpy.array([
+            0.0120816781,
+            0.2438336294,
+            1.0023206225,
+            1.5850003903,
+        ])
+        numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
