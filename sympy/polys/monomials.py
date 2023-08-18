@@ -274,7 +274,7 @@ def monomial_gcd(A, B):
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
-def monomial_ngcd(*args):
+def monomial_ngcd(monomials):
     """
     Computes the greatest common divisor (GCD) of the exponents for each
     variable in the monomials.
@@ -282,9 +282,8 @@ def monomial_ngcd(*args):
     Parameters
     ==========
 
-    *args : tuple of tuples
-        If a single argument is provided, it should be a tuple of tuples
-        representing monomials.
+    monomials : iterable of tuples
+        Represents monomials, where each monomial is a tuple of exponents for variables.
 
     Returns
     =======
@@ -301,13 +300,7 @@ def monomial_ngcd(*args):
     (0, 0)
 
     """
-    if len(args) == 1:
-        monomials = args[0]
-        monomial_ngcd = tuple(map(min, zip(*monomials)))
-    else:
-        monomials = args
-        monomial_ngcd = tuple(map(min, zip(*monomials)))
-
+    monomial_ngcd = tuple(map(min, zip(*monomials)))
     return monomial_ngcd
 
 def monomial_lcm(A, B):
