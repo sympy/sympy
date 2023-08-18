@@ -307,6 +307,12 @@ class TransformToSymPyExpr(Transformer):
         from sympy.physics.quantum import Ket
         return Ket(tokens[1])
 
+    def inner_product(self, tokens):
+        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
+        from sympy.physics.quantum import Bra, Ket, InnerProduct
+        return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
+
+
     def sin(self, tokens):
         return sympy.sin(tokens[1])
 
