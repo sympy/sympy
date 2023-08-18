@@ -6,6 +6,10 @@ musculoskeletal models involding musculotendons and activation dynamics.
 
 """
 
+from .activation import (
+   ActivationBase,
+   ZerothOrderActivation,
+)
 from .characteristic import (
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
@@ -22,4 +26,8 @@ __all__ = [
    'FiberForceLengthPassiveInverseDeGroote2016',
    'TendonForceLengthDeGroote2016',
    'TendonForceLengthInverseDeGroote2016',
+
+   # Activation dynamics classes
+   'ActivationBase',
+   'ZerothOrderActivation',
 ]
