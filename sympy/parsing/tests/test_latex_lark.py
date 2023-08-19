@@ -16,14 +16,14 @@ from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
-from sympy.functions.elementary.miscellaneous import root, sqrt
+from sympy.functions.elementary.miscellaneous import root, sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import asin, cos, csc, sec, sin, tan
 from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
-from sympy.physics.quantum.state import Bra, Ket
-from sympy.abc import x, y, z, a, b, c, t, k, n
+from sympy.physics.quantum import Bra, Ket, InnerProduct
+from sympy.abc import x, y, z, a, b, c, d, t, k, n
 
 lark = import_module("lark")
 
@@ -58,6 +58,12 @@ def _Conjugate(a):
 
 def _Abs(a):
     return Abs(a, evaluate=False)
+
+def _Min(*args):
+    return Min(*args, evaluate=False)
+
+def _Max(*args):
+    return Max(*args, evaluate=False)
 
 
 def _factorial(a):
@@ -382,7 +388,15 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{z}", _Conjugate(z)),
     (r"\overline{\overline{z}}", _Conjugate(_Conjugate(z))),
     (r"\overline{x + y}", _Conjugate(_Add(x, y))),
-    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y))
+    (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
+    (r"\min(a, b)", _Min(a, b)),
+    (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
+    (r"\max(a, b)", _Max(a, b)),
+    (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y)),
+    # physics things don't have an `evaluate=False` variant
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
 ]
 
 EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
@@ -408,7 +422,14 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{z}", conjugate(z)),
     (r"\overline{\overline{z}}", conjugate(conjugate(z))),
     (r"\overline{x + y}", conjugate(x + y)),
-    (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y))
+    (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
+    (r"\min(a, b)", Min(a, b)),
+    (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
+    (r"\max(a, b)", Max(a, b)),
+    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
+    (r"\langle x |", Bra('x')),
+    (r"| x \rangle", Ket('x')),
+    (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
 ]
 
 SPACING_RELATED_EXPRESSION_PAIRS = [
@@ -446,8 +467,6 @@ MISCELLANEOUS_EXPRESSION_PAIRS = [
     (r"\left(x + y\right) z", _Mul(_Add(x, y), z)),
     (r"\left( x + y\right ) z", _Mul(_Add(x, y), z)),
     (r"\left(  x + y\right ) z", _Mul(_Add(x, y), z)),
-    (r"\langle x |", Bra('x')),
-    (r"| x \rangle", Ket('x')),
 ]
 
 

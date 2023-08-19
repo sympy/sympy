@@ -13,10 +13,10 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.power import integer_nthroot, Pow, integer_log
+from sympy.core.power import Pow, integer_log
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -516,9 +516,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if big:
             candidates = reversed(candidates)
         for e in candidates:
-            r, ok = integer_nthroot(n, e)
+            r, ok = iroot(n, e)
             if ok:
-                return (r, e)
+                return int(r), e
         return False
 
     def _factors():
@@ -540,7 +540,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 return False
 
             # maybe the e-th root of n is exact
-            r, exact = integer_nthroot(n, e)
+            r, exact = iroot(n, e)
             if not exact:
                 # Having a factor, we know that e is the maximal
                 # possible value for a root of n.
@@ -558,7 +558,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 e0 = primefactors(e)
                 if e0[0] != e:
                     r, e = r**(e//e0[0]), e0[0]
-            return r, e
+            return int(r), e
 
         # Weed out downright impossible candidates
         if logn/e < 40:
@@ -567,7 +567,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 continue
 
         # now see if the plausible e makes a perfect power
-        r, exact = integer_nthroot(n, e)
+        r, exact = iroot(n, e)
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
