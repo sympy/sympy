@@ -6,7 +6,7 @@ musculoskeletal models involding musculotendons and activation dynamics.
 
 """
 
-from .characteristic import (
+from .curve import (
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
    FiberForceLengthPassiveInverseDeGroote2016,
