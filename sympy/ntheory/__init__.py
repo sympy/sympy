@@ -58,7 +58,7 @@ __all__ = [
     'digits',
     'count_digits',
     'is_palindromic',
-    'ndigits',
+    'num_digits',
 
     'egyptian_fraction',
 

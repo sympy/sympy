@@ -13,7 +13,7 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.intfunc import trailing, integer_log, ndigits
+from sympy.core.intfunc import trailing, integer_log, num_digits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
@@ -1375,7 +1375,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         # Use pollard algorithms for finding small factors for 3 iterations
         # if after small factors the number of digits of n >= 25 then use ecm
         iteration += 1
-        if use_ecm and iteration >= 3 and ndigits(n) >= 24:
+        if use_ecm and iteration >= 3 and num_digits(n) >= 24:
             break
         low, high = high, high*2
     B1 = 10000

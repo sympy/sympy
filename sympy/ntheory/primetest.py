@@ -75,7 +75,7 @@ def is_square(n, prep=True):
 
     See Also
     ========
-    sympy.core.power.isqrt
+    sympy.core.intfunc.isqrt
     """
     if prep:
         n = as_int(n)

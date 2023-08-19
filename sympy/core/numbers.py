@@ -15,7 +15,7 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
-from .intfunc import ndigits, igcd, ilcm, mod_inverse, integer_log, integer_nthroot
+from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_log, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
@@ -760,7 +760,7 @@ class Float(Number):
                     isint = '.' not in num
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
-                        dps = max(dps, ndigits(num))
+                        dps = max(dps, num_digits(num))
                     dps = max(15, dps)
                     precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
