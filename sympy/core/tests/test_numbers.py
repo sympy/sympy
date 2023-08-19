@@ -1063,10 +1063,16 @@ def test_integer_log():
     assert integer_log(3**3, 3) == (3, True)
     assert integer_log(27, 5) == (2, False)
     assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, 2) == (0, False)
     assert integer_log(-4, -2) == (2, False)
+    assert integer_log(4, -2) == (2, True)
+    assert integer_log(-8, -2) == (3, True)
+    assert integer_log(8, -2) == (3, False)
+    assert integer_log(-9, 3) == (0, False)
+    assert integer_log(-9, -3) == (2, False)
+    assert integer_log(9, -3) == (2, True)
+    assert integer_log(-27, -3) == (3, True)
     assert integer_log(27, -3) == (3, False)
-    assert integer_log(-49, 7) == (0, False)
-    assert integer_log(-49, -7) == (2, False)
 
 
 def test_isqrt():

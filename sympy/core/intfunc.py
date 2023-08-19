@@ -70,14 +70,13 @@ def integer_log(n, b):
     sympy.ntheory.factor_.perfect_power
     """
     if b < 0:
-        e, t = integer_log(n if n > 0 else -n, -b)
-        if n < 0:
-            t = t and e % 2 == 1
-        else:
-            t = t and bool(n % 2 if n < 0 else not n % 2)
+        e, t = integer_log(abs(n), -b)
+        # (-2)**3 == -8
+        # (-2)**2 = 4
+        t = t and e % 2 == (n < 0)
         return e, t
-    if b == 1:
-        raise ValueError('base cannot be 1')
+    if b <= 1:
+        raise ValueError('base must be 2 or more')
     if n < 0:
         return 0, False
     if n == 0:
