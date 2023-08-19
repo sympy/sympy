@@ -7,11 +7,11 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import (mpf_norm, mod_inverse, seterr,
+from sympy.core.numbers import (mpf_norm, seterr,
     Integer, I, pi, comp, Rational, E, nan,
     oo, AlgebraicNumber, Number, Float, zoo, equal_valued)
 from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
-    ilcm, integer_nthroot, isqrt, integer_log)
+    ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
