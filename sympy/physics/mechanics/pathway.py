@@ -167,6 +167,9 @@ class LinearPathway(PathwayBase):
 
     attachments : tuple[Point, Point]
         Pair of ``Point`` objects between which the linear pathway spans.
+        Constructor expects two points to be passed, e.g.
+        ``LinearPathway(Point('pA'), Point('pB'))``. More or fewer points will
+        cause an error to be thrown.
 
     """
 
@@ -176,8 +179,11 @@ class LinearPathway(PathwayBase):
         Parameters
         ==========
 
-        attachments : tuple[Point, Point]
+        attachments : Point
             Pair of ``Point`` objects between which the linear pathway spans.
+            Constructor expects two points to be passed, e.g.
+            ``LinearPathway(Point('pA'), Point('pB'))``. More or fewer points
+            will cause an error to be thrown.
 
         """
         super().__init__(*attachments)
