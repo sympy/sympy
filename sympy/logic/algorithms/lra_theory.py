@@ -42,7 +42,7 @@ def sep_const_terms(expr):
 
     var, const = [], []
     for t in terms:
-        if t.is_constant():
+        if len(t.free_symbols) == 0:
             const.append(t)
         else:
             var.append(t)
@@ -308,7 +308,7 @@ class LRASolver():
                     d = Dummy(f"s{s_count}")
                     basic.append(d)
                     s_subs[var] = d
-                    A.append(Eq(var, d))
+                    A.append(var - d)
                 var = s_subs[var]
             else:
                 var = terms[0]
