@@ -7,21 +7,19 @@ from .singleton import S
 from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm, sqrt, iroot
 from sympy.utilities.misc import as_int, filldedent
 
-from mpmath.libmp import bitcount
 
-
-def ndigits(n, base=10):
+def num_digits(n, base=10):
     """Return the number of digits needed to express n in give base.
 
     Examples
     ========
 
-    >>> from sympy.ntheory.digits import ndigits
-    >>> ndigits(10)
+    >>> from sympy.core.intfunc import num_digits
+    >>> num_digits(10)
     2
-    >>> ndigits(10, 2)  # 1010 -> 4 digits
+    >>> num_digits(10, 2)  # 1010 -> 4 digits
     4
-    >>> ndigits(-100, 16)  # -64 -> 2 digits
+    >>> num_digits(-100, 16)  # -64 -> 2 digits
     2
 
 
@@ -96,10 +94,8 @@ def integer_log(n, b):
     t = trailing(b)
     if 2**t == b:
         e = int(n.bit_length() - 1)//t
-        n_ = 2 << (t*e)
+        n_ = 1 << (t*e)
         return e, n_ == n
-    if b == 1:
-        raise ValueError('b cannot be 1')
 
     d = math.floor(math.log10(n) / math.log10(b))
     n_ = b ** d
@@ -505,7 +501,7 @@ def isqrt(n):
     Examples
     ========
 
-    >>> from sympy.core.power import isqrt
+    >>> from sympy.core.intfunc import isqrt
     >>> isqrt(0)
     0
     >>> isqrt(9)
