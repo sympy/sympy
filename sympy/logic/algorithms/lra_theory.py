@@ -7,6 +7,7 @@ from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.relational import Eq
 from sympy import SYMPY_DEBUG
+from sympy.matrices.dense import Matrix
 
 
 def sep_const_coeff(expr):
@@ -404,6 +405,11 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
+        if self.run_checks:
+            M = self.A
+            X = Matrix([self.assign[v][0] for v in self.col_index])
+            assert all(abs(val) < 10 ** (-10) for val in M * X)
+
         return None
 
     def _assert_lower(self, xi, ci, from_equality=False):
@@ -427,6 +433,11 @@ class LRASolver():
         self.low_origin[xi] = from_equality
         if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
+
+        if self.run_checks:
+            M = self.A
+            X = Matrix([self.assign[v][0] for v in self.col_index])
+            assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
 
