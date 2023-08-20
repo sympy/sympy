@@ -34,7 +34,7 @@ def num_digits(n, base=10):
 
     See Also
     ========
-    ntheory.digits.digits, ntheory.digits.count_digits
+    sympy.ntheory.digits.digits, sympy.ntheory.digits.count_digits
     """
     if base < 0:
         raise ValueError('base must be int greater than 1')
@@ -86,6 +86,9 @@ def integer_log(n, b):
     sympy.ntheory.factor_.multiplicity
     sympy.ntheory.factor_.perfect_power
     """
+    n = as_int(n)
+    b = as_int(b)
+
     if b < 0:
         e, t = integer_log(abs(n), -b)
         # (-2)**3 == -8
@@ -101,9 +104,6 @@ def integer_log(n, b):
         return e, False
     if n == 0:
         raise ValueError('n cannot be 0')
-
-    n = as_int(n)
-    b = as_int(b)
 
     if n < b:
         return 0, n == 1
@@ -145,8 +145,7 @@ def trailing(n):
 
     See Also
     ========
-
-    multiplicity
+    sympy.ntheory.factor_.multiplicity
 
     """
     n = abs(int(n))
@@ -223,7 +222,7 @@ def igcd_lehmer(a, b):
     Euclid's algorithm for the computation of the greatest
     common divisor ``gcd(a, b)``  of two (positive) integers
     $a$ and $b$ is based on the division identity
-       $$ a = q \times b + r$$,
+    $$ a = q \times b + r$$,
     where the quotient  $q$  and the remainder  $r$  are integers
     and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
     divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.

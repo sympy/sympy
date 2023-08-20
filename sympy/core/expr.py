@@ -3796,7 +3796,7 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        sympy.core.intfunc.mod_inverse, sympy.polys.polytools.invert
         """
         if self.is_number and getattr(g, 'is_number', True):
             return mod_inverse(self, g)
