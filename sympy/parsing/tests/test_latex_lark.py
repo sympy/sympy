@@ -4,11 +4,8 @@ from sympy.external import import_module
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.core.add import Add
 from sympy.core.function import Derivative, Function
-from sympy.core.mul import Mul
 from sympy.core.numbers import E, oo, Rational
-from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
