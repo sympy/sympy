@@ -57,10 +57,27 @@ def integer_log(n, b):
     (3, True)
     >>> integer_log(17, 9)
     (1, False)
+
+    If the base is positive and the number negative the
+    return value will always be the same except for 2:
+
+    >>> integer_log(-4, 2)
+    (2, False)
+    >>> integer_log(-16, 4)
+    (0, False)
+
+    When the base is negative, the returned value
+    will only be True if the parity of the exponent is
+    correct for the sign of the base:
+
     >>> integer_log(4, -2)
     (2, True)
-    >>> integer_log(-125,-5)
+    >>> integer_log(8, -2)
+    (3, False)
+    >>> integer_log(-8, -2)
     (3, True)
+    >>> integer_log(-4, -2)
+    (2, False)
 
     See Also
     ========
@@ -78,7 +95,10 @@ def integer_log(n, b):
     if b <= 1:
         raise ValueError('base must be 2 or more')
     if n < 0:
-        return 0, False
+        if b != 2:
+            return 0, False
+        e, t = integer_log(-n, b)
+        return e, False
     if n == 0:
         raise ValueError('n cannot be 0')
 
