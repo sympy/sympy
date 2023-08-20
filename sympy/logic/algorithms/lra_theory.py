@@ -42,7 +42,7 @@ def sep_const_terms(expr):
 
     var, const = [], []
     for t in terms:
-        if t.is_constant():
+        if len(t.free_symbols) == 0:
             const.append(t)
         else:
             var.append(t)
@@ -308,7 +308,7 @@ class LRASolver():
                     d = Dummy(f"s{s_count}")
                     basic.append(d)
                     s_subs[var] = d
-                    A.append(Eq(var, d))
+                    A.append(var - d)
                 var = s_subs[var]
             else:
                 var = terms[0]
@@ -362,8 +362,9 @@ class LRASolver():
             res1 = self._assert_lower(sym, c,from_equality=True)
             if res1 and res1[0] == False:
                 res = res1
-            res2 = self._assert_upper(sym, c,from_equality=True)
-            res =  res2
+            else:
+                res2 = self._assert_upper(sym, c,from_equality=True)
+                res =  res2
         elif boundry.upper:
             self.stack_bounds.append((sym, None, c))
             res = self._assert_upper(sym, c)
@@ -373,6 +374,8 @@ class LRASolver():
 
         if self.is_sat and sym not in self.slack_set:
             self.is_sat = res is None
+        else:
+            self.is_sat = False
 
         return res
 
