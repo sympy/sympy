@@ -47,7 +47,7 @@ def digits(n, b=10, digits=None):
 
     See Also
     ========
-    core.intfunc.num_digits, count_digits
+    sympy.core.intfunc.num_digits, count_digits
     """
 
     b = as_int(b)
@@ -109,7 +109,7 @@ def count_digits(n, b=10):
 
     See Also
     ========
-    core.intfunc.num_digits, digits
+    sympy.core.intfunc.num_digits, digits
     """
     rv = defaultdict(int, multiset(digits(n, b)).items())
     rv.pop(b) if b in rv else rv.pop(-b)  # b or -b is there

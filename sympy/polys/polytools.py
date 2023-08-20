@@ -5190,7 +5190,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the :obj:`~.mod_inverse` function:
+    use the :obj:`sympy.core.intfunc.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -5199,8 +5199,7 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
-
-    sympy.core.numbers.mod_inverse
+    sympy.core.intfunc.mod_inverse
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
