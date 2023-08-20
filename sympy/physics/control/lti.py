@@ -3225,7 +3225,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def eval_frequency(self, other):
         """
-        Evaluates each element of the ``TransferFunctionMatrix`` at a frequency.
+        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
 
         Examples
         ========
