@@ -192,6 +192,44 @@ def test_LRA_solver():
     # lra = LRASolver(Matrix(), [], [x])
     # lra.assert_con(x <= 1)
 
+def test_for_profiler():
+    def prob_to_enc(cons):
+        phi = And(*cons)
+        cnf = CNF.from_prop(phi)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def assert_bounds(lra, enc):
+        lits = {lit for clause in enc.data for lit in clause}
+        bounds = [(lra.boundry_enc[l], l) for l in lits if l in lra.boundry_enc]
+        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper)))  # to remove nondeterminism
+
+        for b, l in bounds:
+            if lra.result and lra.result[0] == False:
+                break
+            # print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
+            lra.assert_enc_boundry(l)
+            # print(lra.assign, lra.lower, lra.upper)
+
+    problems = [make_random_problem(num_variables=8, num_constraints=16, rational=False, disable_strict=False,
+                                      disable_nonstrict=False, disable_equality=False) for _ in range(20)]
+
+    problems = [prob_to_enc(cons) for cons in problems]
+
+    from pyinstrument import Profiler
+
+    profiler = Profiler()
+    profiler.start()
+    for enc in problems:
+        lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+        assert_bounds(lra, enc)
+        lra.check()
+
+    profiler.stop()
+    #profiler.open_in_browser()
+
+
 
 def test_random_problems():
     from sympy.core.relational import StrictLessThan, StrictGreaterThan
@@ -213,6 +251,11 @@ def test_random_problems():
     special_cases.append([x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7])
     special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
+
+    import time
+    check_time = 0.0
+    from_encoded_time = 0.0
+    assert_time = 0.0
 
     feasible_count = 0
     for i in range(300):
@@ -244,7 +287,12 @@ def test_random_problems():
         cnf = CNF.from_prop(phi); enc = EncodedCNF()
         enc.from_cnf(cnf)
         assert all(0 not in clause for clause in enc.data)
+
+        start = time.time()
         lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+        end = time.time()
+        from_encoded_time += end - start
+
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
         lits = {lit for clause in enc.data for lit in clause}
@@ -252,6 +300,7 @@ def test_random_problems():
         bounds = [(lra.boundry_enc[l], l) for l in lits if l in lra.boundry_enc]
         bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
 
+        start = time.time()
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
                 break
@@ -259,7 +308,14 @@ def test_random_problems():
             lra.assert_enc_boundry(l)
             #print(lra.assign, lra.lower, lra.upper)
 
+        end = time.time()
+        assert_time += end - start
+
+        start = time.time()
         feasible = lra.check()
+        end = time.time()
+        check_time += end - start
+
         if feasible[0] == True:
             feasible_count += 1
             assert check_if_satisfiable_with_z3(constraints) is True
@@ -285,6 +341,12 @@ def test_random_problems():
             # check that conflict clause is probably minimal
             for subset in itertools.combinations(conflict, len(conflict)-1):
                 assert check_if_satisfiable_with_z3(subset) is True
+    print("check", check_time)
+    print("from_encoded", from_encoded_time)
+    print("assert", assert_time)
+    print("total", check_time+from_encoded_time+assert_time)
+    print("sat count", feasible_count)
+
 
 
 def test_pivot():
