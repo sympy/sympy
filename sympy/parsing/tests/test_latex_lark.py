@@ -25,53 +25,20 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
 from sympy.abc import x, y, z, a, b, c, d, t, k, n
 
+from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
+
 lark = import_module("lark")
 
 # disable tests if lark is not present
-if not lark:
-    disabled = True
+disabled = lark is None
 
-theta = Symbol('theta')
-f = Function('f')
-
-
-# shorthand definitions
-def _Add(a, b):
-    return Add(a, b, evaluate=False)
-
-
-def _Mul(a, b):
-    return Mul(a, b, evaluate=False)
-
-
-def _Pow(a, b):
-    return Pow(a, b, evaluate=False)
-
-
-def _Sqrt(a):
-    return sqrt(a, evaluate=False)
-
-
-def _Conjugate(a):
-    return conjugate(a, evaluate=False)
-
-
-def _Abs(a):
-    return Abs(a, evaluate=False)
-
+# shorthand definitions that are only needed for the Lark LaTeX parser
 def _Min(*args):
     return Min(*args, evaluate=False)
 
+
 def _Max(*args):
     return Max(*args, evaluate=False)
-
-
-def _factorial(a):
-    return factorial(a, evaluate=False)
-
-
-def _exp(a):
-    return exp(a, evaluate=False)
 
 
 def _log(a, b=E):
@@ -79,10 +46,6 @@ def _log(a, b=E):
         return log(a, evaluate=False)
     else:
         return log(a, b, evaluate=False)
-
-
-def _binomial(n, k):
-    return binomial(n, k, evaluate=False)
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression
