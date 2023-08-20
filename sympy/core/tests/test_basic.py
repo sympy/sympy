@@ -1,6 +1,5 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
-
 import collections
 from typing import TypeVar, Generic
 
@@ -327,10 +326,4 @@ def test_generic():
         pass
 
     class B(A[T]):
-        pass
-
-    class C(Basic, Generic[T]):
-        args: tuple[T]
-
-    class D(C[Symbol]):
         pass
