@@ -1,4 +1,4 @@
-from hypothesis import given, assume
+from hypothesis import given
 from sympy.testing.hypothesis import polynomial
 
 
