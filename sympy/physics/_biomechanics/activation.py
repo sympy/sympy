@@ -665,3 +665,29 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
     def order(self):
         """Order of the (differential) equation governing activation."""
         return 1
+
+    @property
+    def state_vars(self):
+        """Ordered column matrix of functions of time that represent the state
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``x`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._a])
+
+    @property
+    def x(self):
+        """Ordered column matrix of functions of time that represent the state
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``state_vars`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._a])
