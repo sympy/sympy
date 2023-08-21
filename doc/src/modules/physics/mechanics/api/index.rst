@@ -12,6 +12,7 @@ Mechanics API Reference
    linearize.rst
    expr_manip.rst
    printing.rst
-   wrapping_geometry.rst
    pathway.rst
    actuator.rst
+   wrapping_geometry.rst
+   symsystem.rst
