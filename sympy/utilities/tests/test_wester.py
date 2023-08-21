@@ -14,7 +14,8 @@ from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, Lambda, Subs,
     diff, expand, expand_func)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational,
     nan, oo, pi, zoo)
 from sympy.core.relational import Eq, Lt
 from sympy.core.singleton import S

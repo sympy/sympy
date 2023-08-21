@@ -102,6 +102,7 @@ modules = [
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
     'sympy.physics',
+    'sympy.physics._biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -259,6 +260,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics._biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -360,5 +362,8 @@ if __name__ == '__main__':
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
             ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

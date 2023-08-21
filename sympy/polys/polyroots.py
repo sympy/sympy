@@ -9,7 +9,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import Rational, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
