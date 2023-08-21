@@ -464,4 +464,34 @@ class ZerothOrderActivation(ActivationBase):
 
 
 class FirstOrderActivationDeGroote2016(ActivationBase):
-    pass
+    r"""First-order activation dynamics based on De Groote et al., 2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the first-order activation dynamics equation for the rate of change
+    of activation with respect to time as a function of excitation and
+    activation.
+
+    The function is defined by the equation:
+
+    $\frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
+        + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
+        + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
+        \left(e - a\right)$
+
+    where
+
+    $a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}$
+
+    with constant values of $tau_a = 0.015$, $tau_d = 0.060$, and $b = 10$.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
