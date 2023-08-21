@@ -35,15 +35,15 @@ class TestZerothOrderActivation:
         assert isinstance(instance, ZerothOrderActivation)
         assert instance == ZerothOrderActivation(self.name)
 
-    def test_name_attribute(self):
+    def test_name(self):
         assert hasattr(self.instance, 'name')
         assert self.instance.name == self.name
 
-    def test_order_attribute(self):
+    def test_order(self):
         assert hasattr(self.instance, 'order')
         assert self.instance.order == 0
 
-    def test_excitation_attribute(self):
+    def test_excitation(self):
         assert hasattr(self.instance, 'e')
         assert hasattr(self.instance, 'excitation')
         e_expected = dynamicsymbols('e_name')
@@ -51,7 +51,7 @@ class TestZerothOrderActivation:
         assert self.instance.excitation == e_expected
         assert self.instance.e is self.instance.excitation
 
-    def test_activation_attribute(self):
+    def test_activation(self):
         assert hasattr(self.instance, 'a')
         assert hasattr(self.instance, 'activation')
         a_expected = dynamicsymbols('e_name')
@@ -59,7 +59,7 @@ class TestZerothOrderActivation:
         assert self.instance.activation == a_expected
         assert self.instance.a is self.instance.activation is self.instance.e
 
-    def test_state_vars_attribute(self):
+    def test_state_vars(self):
         assert hasattr(self.instance, 'x')
         assert hasattr(self.instance, 'state_vars')
         assert self.instance.x == self.instance.state_vars
@@ -71,7 +71,7 @@ class TestZerothOrderActivation:
         assert self.instance.x.shape == (0, 1)
         assert self.instance.state_vars.shape == (0, 1)
 
-    def test_input_vars_attribute(self):
+    def test_input_vars(self):
         assert hasattr(self.instance, 'r')
         assert hasattr(self.instance, 'input_vars')
         assert self.instance.r == self.instance.input_vars
@@ -83,7 +83,7 @@ class TestZerothOrderActivation:
         assert self.instance.r.shape == (1, 1)
         assert self.instance.input_vars.shape == (1, 1)
 
-    def test_constants_attribute(self):
+    def test_constants(self):
         assert hasattr(self.instance, 'p')
         assert hasattr(self.instance, 'constants')
         assert self.instance.p == self.instance.constants
@@ -95,14 +95,14 @@ class TestZerothOrderActivation:
         assert self.instance.p.shape == (0, 1)
         assert self.instance.constants.shape == (0, 1)
 
-    def test_M_attribute(self):
+    def test_M(self):
         assert hasattr(self.instance, 'M')
         M_expected = Matrix([])
         assert self.instance.M == M_expected
         assert isinstance(self.instance.M, Matrix)
         assert self.instance.M.shape == (0, 0)
 
-    def test_F_attribute(self):
+    def test_F(self):
         assert hasattr(self.instance, 'F')
         F_expected = zeros(0, 1)
         assert self.instance.F == F_expected
