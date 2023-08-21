@@ -625,3 +625,38 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return self._tau_d
+
+    @property
+    def smoothing_rate(self):
+        """Smoothing constant for the hyperbolic tangent term.
+
+        Explanation
+        ===========
+
+        The alias ``b`` can also be used to access the same attribute.
+
+        """
+        return self._b
+
+    @smoothing_rate.setter
+    def smoothing_rate(self, b):
+        if hasattr(self, '_b'):
+            msg = (
+                f'Can\'t set attribute `smoothing_rate` to {b!r} as it is '
+                f'immutable and already has value {self._b!r}.'
+            )
+            raise AttributeError(msg)
+        self._b = Symbol(f'b_{self.name}') if b is None else b
+
+    @property
+    def b(self):
+        """Smoothing constant for the hyperbolic tangent term.
+
+        Explanation
+        ===========
+
+        The alias ``smoothing_rate`` can also be used to access the same
+        attribute.
+
+        """
+        return self._b
