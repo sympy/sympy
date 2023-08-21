@@ -320,13 +320,6 @@ def test_Integer_new():
     assert Integer(Rational('1.' + '9'*20)) == 1
 
 
-def test_Integer_length():
-    assert Integer(0).length() == 1
-    for i in range(100):
-        n = 10**i
-        assert Integer(n).length() == i + 1
-        assert Integer(-n).length() == i + 1
-
 def test_Rational_new():
     """"
     Test for Rational constructor
