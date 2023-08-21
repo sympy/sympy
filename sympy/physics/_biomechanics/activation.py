@@ -807,3 +807,12 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         if self_attrs == other_attrs:
             return True
         return False
+
+    def __repr__(self):
+        """Representation of ``FirstOrderActivationDeGroote2016``."""
+        return (
+            f'{self.__class__.__name__}({self.name!r}, '
+            f'activation_time_constant={self.tau_a!r}, '
+            f'deactivation_time_constant={self.tau_d!r}, '
+            f'smoothing_rate={self.b!r})'
+        )
