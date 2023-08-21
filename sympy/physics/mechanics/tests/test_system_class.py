@@ -4,9 +4,8 @@ from sympy.core.backend import (
     ImmutableMatrix, _simplify_matrix, cos, eye, sin, symbols, sympify, zeros)
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
-    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
+    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator, System,
     dynamicsymbols)
-from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 
