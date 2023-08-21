@@ -5,7 +5,7 @@ import pytest
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
 from sympy.core.numbers import Float, Integer, Rational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -42,6 +42,57 @@ numpy = import_module('numpy')
 
 if jax:
     jax.config.update('jax_enable_x64', True)
+
+
+class TestCharacteristicCurveFunction:
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (C89CodePrinter, '(a + b)*(c - d)'),
+            (C99CodePrinter, '(a + b)*(c - d)'),
+            (C11CodePrinter, '(a + b)*(c - d)'),
+            (CXX98CodePrinter, '(a + b)*(c - d)'),
+            (CXX11CodePrinter, '(a + b)*(c - d)'),
+            (CXX17CodePrinter, '(a + b)*(c - d)'),
+            (FCodePrinter, '(a + b)*(c - d)'),
+            (OctaveCodePrinter, '(a + b)*(c - d)'),
+            (PythonCodePrinter, '(a + b)*(c - d)'),
+            (NumPyPrinter, '(a + b)*(c - d)'),
+            (SciPyPrinter, '(a + b)*(c - d)'),
+            (CuPyPrinter, '(a + b)*(c - d)'),
+            (JaxPrinter, '(a + b)*(c - d)'),
+            (MpmathPrinter, '(a + b)*(c - d)'),
+            (LambdaPrinter, '(a + b)*(c - d)'),
+        ]
+    )
+    def test_print_code_parenthesize(code_printer, expected):
+
+        class Function1(CharacteristicCurveFunction):
+
+            @classmethod
+            def eval(cls, a, b):
+                pass
+
+            def doit(self, **kwargs):
+                a, b = self.args
+                return a + b
+
+        class Function2(CharacteristicCurveFunction):
+
+            @classmethod
+            def eval(cls, c, d):
+                pass
+
+            def doit(self, **kwargs):
+                c, d = self.args
+                return c - d
+
+        a, b, c, d = symbols('a, b, c, d')
+        f1 = Function1(a, b)
+        f2 = Function2(c, d)
+        assert code_printer().doprint(f1*f2) == expected
 
 
 class TestTendonForceLengthDeGroote2016:
