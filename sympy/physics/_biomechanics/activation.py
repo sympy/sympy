@@ -495,3 +495,35 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
            engineering, 44(10), (2016) pp. 2922-2936
 
     """
+
+    def __init__(self,
+        name,
+        activation_time_constant=None,
+        deactivation_time_constant=None,
+        smoothing_rate=None,
+    ):
+        """Initializer for ``FirstOrderActivationDeGroote2016``.
+
+        Parameters
+        ==========
+        activation time constant : Symbol | Number | None
+            The value of the activation time constant governing the delay
+            between excitation and activation when excitation exceeds
+            activation.
+        deactivation time constant : Symbol | Number | None
+            The value of the deactivation time constant governing the delay
+            between excitation and activation when activation exceeds
+            excitation.
+        smoothing_rate : Symbol | Number | None
+            The slope of the hyperbolic tangent function used to smooth between
+            the switching of the equations where excitation exceed activation
+            and where activation exceeds excitation. The recommended value to
+            use is ``10``, but values between ``0.1`` and ``100`` can be used.
+
+        """
+        super().__init__(name)
+
+        # Symbols
+        self.activation_time_constant = activation_time_constant
+        self.deactivation_time_constant = deactivation_time_constant
+        self.smoothing_rate = smoothing_rate
