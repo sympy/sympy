@@ -11,7 +11,11 @@ level, can be modeled by the models present in this module.
 """
 
 from abc import ABC, abstractmethod
+from functools import cached_property
 
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import Float, Integer, Rational
+from sympy.functions.elementary.hyperbolic import tanh
 from sympy.matrices import Matrix
 from sympy.matrices.dense import zeros
 from sympy.physics._biomechanics._mixin import _NamedMixin
@@ -527,3 +531,25 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         self.activation_time_constant = activation_time_constant
         self.deactivation_time_constant = deactivation_time_constant
         self.smoothing_rate = smoothing_rate
+
+    @classmethod
+    def with_default_constants(cls, name):
+        """Alternate constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns an instance of ``FirstOrderActivationDeGroote2016`` using the
+        three constant values specified in the original publication.
+
+        These have the values:
+
+        $tau_a = 0.015$
+        $tau_d = 0.060$
+        $b = 10$
+
+        """
+        tau_a = Float('0.015')
+        tau_d = Float('0.060')
+        b = Integer(10)
+        return cls(name, tau_a, tau_d, b)
