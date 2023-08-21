@@ -1,14 +1,18 @@
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
+from sympy.assumptions import Predicate
+from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
 from sympy.core import Dummy
 from sympy.core.mul import Mul
 from sympy.core.add import Add
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
+from sympy.core.sympify import sympify
 from sympy import SYMPY_DEBUG
 from sympy.matrices.dense import Matrix
 from sympy.core.numbers import Rational, oo
+from sympy.matrices.expressions import MatrixExpr
 
 
 def sep_const_coeff(expr):
@@ -22,7 +26,8 @@ def sep_const_coeff(expr):
 
     var, const = [], []
     for c in coeffs:
-        if c.is_constant():
+        c = sympify(c)
+        if len(c.free_symbols)==0:
             const.append(c)
         else:
             var.append(c)
@@ -65,6 +70,27 @@ def standardize_binrel(prop):
         return Q.lt(var, const)
     else:
         return Q.le(var, const)
+
+def _eval_binrel(binrel):
+    if not (len(binrel.lhs.free_symbols) == 0 and len(binrel.rhs.free_symbols) == 0):
+        return binrel
+    if binrel.function == Q.lt:
+        res = binrel.lhs < binrel.rhs
+    if binrel.function == Q.gt:
+        res = binrel.lhs > binrel.rhs
+    if binrel.function == Q.le:
+        res = binrel.lhs <= binrel.rhs
+    if binrel.function == Q.ge:
+        res = binrel.lhs >= binrel.rhs
+    if binrel.function == Q.eq:
+        res = Eq(binrel.lhs, binrel.rhs)
+    if binrel.function == Q.ne:
+        res = Ne(binrel.lhs, binrel.rhs)
+
+    if res == True or res == False:
+        return res
+    else:
+        return None
 
 
 class Boundry:
@@ -309,13 +335,36 @@ class LRASolver():
         # TODO: get rid of this to speed things up
         #assert all(standardize_binrel(prop) == prop for prop, enc in encoding)
 
+        empty_var = Dummy()
+
+        conflicts = []
+
         for prop, enc in encoded_cnf_items:
+            if isinstance(prop, Predicate):
+                prop = prop(empty_var)
+            if not isinstance(prop, AppliedPredicate):
+                continue
+
             if not isinstance(prop, AppliedBinaryRelation) or prop.function == Q.ne:
                 # TODO: handle Q.ne better
                 prop = LRASolver._pred_to_binrel(prop)
                 if prop is None:
                     continue
             assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
+
+            if isinstance(prop.lhs, MatrixExpr) or isinstance(prop.rhs, MatrixExpr):
+                continue
+
+            prop = _eval_binrel(prop)
+
+            if prop == True:
+                conflicts.append([enc])
+                continue
+            elif prop == False:
+                conflicts.append([-enc])
+                continue
+            elif prop is None:
+                raise UnhandledNumber(f"{prop} contains no variables and could not be evaluated as True or False")
 
             expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
@@ -360,7 +409,7 @@ class LRASolver():
             encoding[enc] = b
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        return LRASolver(A, basic, nonbasic, encoding, testing_mode), x_subs, s_subs
+        return LRASolver(A, basic, nonbasic, encoding, testing_mode), conflicts,  x_subs, s_subs
 
     def assert_enc_boundry(self, enc_boundry):
         """

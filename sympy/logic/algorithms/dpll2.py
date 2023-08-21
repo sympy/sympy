@@ -47,10 +47,11 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         return False
 
     if use_lra_theory:
-        lra, _, _ = LRASolver.from_encoded_cnf(expr)
+        lra, immediate_conflicts, _, _ = LRASolver.from_encoded_cnf(expr)
     else:
         lra = None
-    solver = SATSolver(expr.data, expr.variables, set(), expr.symbols, lra_theory=lra)
+        immediate_conflicts = []
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
     models = solver._find_model()
 
     if all_models:

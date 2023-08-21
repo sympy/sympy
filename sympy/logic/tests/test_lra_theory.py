@@ -86,7 +86,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (2, 5)
     assert str(lra.slack) == '[_s1, _s2]'
     assert str(lra.nonslack) == '[_x1, _x2, _x3]'
@@ -105,7 +105,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert str(lra.slack) == '[_s1]'
     # TODO: fix bug with constant functions so assert statement passes
     #assert str(lra.nonslack) == '[_x1, _x2, _x3, _x4]'
@@ -116,7 +116,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A == Matrix()
     assert lra.slack == []
     assert lra.nonslack == []
@@ -134,7 +134,7 @@ def test_LRA_solver():
     # If the preprocessing step doesn't do anything, then the matrix is empty.
     phi = (x >= 0) & (x >= 1) & (x <= -1)
     enc = boolean_formula_to_encoded_cnf(phi)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
 
     assert len(lra.A) == 0
@@ -302,7 +302,7 @@ def test_random_problems():
         assert all(0 not in clause for clause in enc.data)
 
         start = time.time()
-        lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+        lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
         end = time.time()
         from_encoded_time += end - start
 
@@ -363,7 +363,7 @@ def test_random_problems():
 def test_pos_neg_zero():
     bf = Q.positive(x) & Q.negative(x) & Q.zero(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -372,7 +372,7 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.lt(x, -1)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -381,7 +381,7 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.zero(x)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -390,7 +390,7 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.zero(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -400,7 +400,7 @@ def test_pos_neg_zero():
 def test_pos_neg_infinite():
     bf = Q.positive_infinite(x) & Q.lt(x, 10000000) & Q.positive_infinite(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -409,7 +409,7 @@ def test_pos_neg_infinite():
 
     bf = Q.positive_infinite(x) & Q.gt(x, 10000000) & Q.positive_infinite(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
@@ -418,13 +418,26 @@ def test_pos_neg_infinite():
 
     bf = Q.positive_infinite(x) & Q.negative_infinite(x)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_enc_boundry(lit) is not None:
             break
     assert len(lra.boundry_enc) == 2
     assert lra.check()[0] == False
 
+
+def test_binrel_evaluation():
+    bf = Q.gt(3, 2)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    assert len(lra.boundry_enc) == 0
+    assert conflicts == [[1]]
+
+    bf = Q.lt(3, 2)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    assert len(lra.boundry_enc) == 0
+    assert conflicts == [[-1]]
 
 def test_pivot():
     for _ in range(10):
