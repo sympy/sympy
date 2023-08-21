@@ -229,6 +229,9 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
             tendon_slack_length=tendon_slack_length,
             peak_isometric_force=peak_isometric_force,
             optimal_fiber_length=optimal_fiber_length,
+            maximal_fiber_velocity=v_M_max,
+            optimal_pennation_angle=alpha_opt,
+            fiber_damping_coefficient=beta,
         )
 
     @property
@@ -396,30 +399,6 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
     def _tendon_force_explicit_musculotendon_dynamics(self):
         """Elastic tendon musculotendon using `F_T_tilde` as a state."""
         raise NotImplementedError
-        self._F_T_tilde = dynamicsymbols(f'F_T_tilde_{self.name}')
-        self._l_MT = self.pathway.length
-        self._v_MT = self.pathway.extension_velocity
-        self._fl_T = self._F_T_tilde
-        self._l_T_tilde = TendonForceLengthInverseDeGroote2016.with_default_constants(self._fl_T)
-        self._l_T = self._l_T_tilde*self._l_T_slack
-        self._l_M = sqrt((self._l_MT - self._l_T)**2 + (self._l_M_opt*sin(self._alpha_opt))**2)
-        self._l_M_tilde = self._l_M/self._l_M_opt
-        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self._l_M_tilde)
-        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self._l_M_tilde)
-        self._cos_alpha = (self._l_MT - self._l_T)/self._l_M
-        self._F_T = self._F_T_tilde*self._F_M_max
-        self._F_M = self._F_T/self._cos_alpha
-        self._F_M_tilde = self._F_M/self._F_M_max
-        self._fv_M = (self._F_M_tilde - self._fl_M_pas)/(self.a*self._fl_M_act)
-        self._v_M_tilde = FiberForceVelocityInverseDeGroote2016.with_default_constants(self._fv_M)
-        self._v_M = self._v_M_tilde*self._v_M_max
-        self._v_T = self._v_MT - (self._v_M/self._cos_alpha)
-        self._v_T_tilde = self._v_T/self._l_T_slack
-        self._dF_T_tilde_dt = TendonForceLengthDeGroote2016.with_default_constants(self._l_T_tilde).diff(dynamicsymbols._t).subs({self._l_T_tilde.diff(dynamicsymbols._t): self._v_T_tilde})
-
-        self._state_vars = Matrix([self._F_T_tilde])
-        self._input_vars = zeros(0, 1)
-        self._state_eqns = Matrix([self._dF_T_tilde_dt])
 
     def _fiber_length_implicit_musculotendon_dynamics(self):
         raise NotImplementedError
