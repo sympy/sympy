@@ -1,5 +1,5 @@
 from hypothesis import given, assume
-from sympy.testing.hypothesis_helper import polynomial
+from sympy.testing.hypothesis import polynomial
 
 
 @given(
