@@ -8,6 +8,7 @@ from sympy.core.add import Add
 from sympy.core.relational import Eq
 from sympy import SYMPY_DEBUG
 from sympy.matrices.dense import Matrix
+from sympy.core.numbers import Rational
 
 
 def sep_const_coeff(expr):
@@ -111,12 +112,18 @@ class Boundry:
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
+
+class UnhandledNumber(Exception):
+    pass
+
 class LRASolver():
     """
     Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
     the Dual Simplex method and Bland's pivoting rule.
 
     TODO: Implement and utilize backtracking
+
+    TODO: Allow all real numbers other than just rationals
 
     References
     ==========
@@ -126,7 +133,11 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, boundry_enc=None):
+    def __init__(self, A, slack_variables, nonslack_variables, boundry_enc):
+        if any(not isinstance(a, Rational) for a in A) or \
+            any(not isinstance(b.bound, Rational) for b in boundry_enc.values()):
+            raise UnhandledNumber
+
         self.run_checks = False # set to True to turn on assert statements
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -176,7 +187,8 @@ class LRASolver():
     @staticmethod
     def from_encoded_cnf(encoded_cnf):
         """
-        Creates an LRASolver from an EncodedCNF object.
+        Creates an LRASolver from an EncodedCNF object. Constraints in the
+        EncodedCNF object must only contain Rational numbers.
 
         Example
         -------
