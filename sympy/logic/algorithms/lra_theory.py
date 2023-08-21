@@ -8,7 +8,7 @@ from sympy.core.add import Add
 from sympy.core.relational import Eq
 from sympy import SYMPY_DEBUG
 from sympy.matrices.dense import Matrix
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, oo
 
 
 def sep_const_coeff(expr):
@@ -134,9 +134,11 @@ class LRASolver():
     """
 
     def __init__(self, A, slack_variables, nonslack_variables, boundry_enc, testing_mode):
-        if any(not isinstance(a, Rational) for a in A) or \
-            any(not isinstance(b.bound, Rational) for b in boundry_enc.values()):
+        if any(not isinstance(a, Rational) for a in A):
             raise UnhandledNumber
+        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in boundry_enc.values()):
+            raise UnhandledNumber
+
 
         self.run_checks = testing_mode # set to True to turn on assert statements
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
@@ -183,6 +185,23 @@ class LRASolver():
         self.stack_bounds = []
         # only assignment from the last succesful check needs to be stored
         self.last_safe_assignment = self.assign.copy()
+
+    @staticmethod
+    def _pred_to_binrel(pred):
+        assert not pred.function == Q.extended_positive
+        arg = pred.arguments[0]
+        if pred.function == Q.zero:
+            return Q.eq(arg, 0)
+        if pred.function == Q.positive:
+            return Q.gt(arg, 0)
+        if pred.function == Q.positive_infinite:
+            return Q.ge(arg, float("inf"))
+        if pred.function == Q.negative:
+            return Q.lt(arg, 0)
+        if pred.function == Q.negative_infinite:
+            return Q.le(arg, -float("inf"))
+
+        return None
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
@@ -293,7 +312,9 @@ class LRASolver():
         for prop, enc in encoded_cnf_items:
             if not isinstance(prop, AppliedBinaryRelation) or prop.function == Q.ne:
                 # TODO: handle Q.ne better
-                continue
+                prop = LRASolver._pred_to_binrel(prop)
+                if prop is None:
+                    continue
             assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
 
             expr = prop.lhs - prop.rhs
