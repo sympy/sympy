@@ -7,7 +7,8 @@ from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, trailing, multiplicity, perfect_power
+from sympy.core.intfunc import trailing
+from .factor_ import factorint, multiplicity, perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint

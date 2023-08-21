@@ -23,8 +23,8 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install -r requirements-test.txt
-      - run: pip install flake8 flake8-comprehensions ruff
+      - run: pip install -r requirements-dev.txt
+      - run: pip install ruff
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -135,7 +135,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
@@ -193,7 +193,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
@@ -236,7 +236,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
@@ -267,7 +267,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
@@ -284,7 +284,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
@@ -307,7 +307,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -333,7 +333,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #

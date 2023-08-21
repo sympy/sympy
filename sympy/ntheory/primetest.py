@@ -6,6 +6,7 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
+from sympy.core.intfunc import trailing
 from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square
 from sympy.utilities.misc import as_int
 
@@ -34,7 +35,6 @@ def is_euler_pseudoprime(n, b):
 
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
-    from sympy.ntheory.factor_ import trailing
 
     if not mr(n, [b]):
         return False
@@ -75,7 +75,7 @@ def is_square(n, prep=True):
 
     See Also
     ========
-    sympy.core.power.isqrt
+    sympy.core.intfunc.isqrt
     """
     if prep:
         n = as_int(n)
@@ -130,7 +130,6 @@ def mr(n, bases):
     True
 
     """
-    from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
     n = as_int(n)
@@ -454,7 +453,6 @@ def is_strong_lucas_prp(n):
     16109
     18971
     """
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -528,7 +526,6 @@ def is_extra_strong_lucas_prp(n):
     #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
     #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
     #      references on the MathWorld page, or run it and see Q=-1 is wrong.
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
