@@ -691,3 +691,29 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return Matrix([self._a])
+
+    @property
+    def input_vars(self):
+        """Ordered column matrix of functions of time that represent the input
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``r`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._e])
+
+    @property
+    def r(self):
+        """Ordered column matrix of functions of time that represent the input
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``input_vars`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._e])
