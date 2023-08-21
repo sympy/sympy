@@ -259,7 +259,7 @@ def _literal_float(s):
         return False
     if i and i[0] in '+-':
         i = i[1:]
-    elif not i:
+    if not i:  # -.3e4 -> -0.3e4
         i = '1'
     f = f or '1'
     # check that all groups contain only digits and are not null
