@@ -1460,7 +1460,6 @@ def test_StateSpace_construction():
     raises(TypeError, lambda: StateSpace(Matrix([2, 0.5]), Matrix([-1]),
                                          Matrix([1]), 0))
 
-
 def test_StateSpace_negation():
     A = Matrix([[a0, a1], [a2, a3]])
     B = Matrix([[b0, b1], [b2, b3]])
@@ -1476,29 +1475,27 @@ def test_StateSpace_negation():
     system = StateSpace(state_mat, input_mat, output_mat, feedforward_mat)
 
     assert SS_neg == \
-        StateSpace(Matrix([
-        [a0, a1],
-        [a2, a3]]), Matrix([
-        [b0, b1],
-        [b2, b3]]), Matrix([
-        [-c0, -c1],
-        [-c1, -c2],
-        [-c2, -c3]]), Matrix([
-        [-d0, -d1],
-        [-d1, -d2],
-        [-d2, -d3]]))
+        StateSpace(Matrix([[a0, a1],
+                           [a2, a3]]),
+                   Matrix([[b0, b1],
+                           [b2, b3]]),
+                   Matrix([[-c0, -c1],
+                           [-c1, -c2],
+                           [-c2, -c3]]),
+                   Matrix([[-d0, -d1],
+                           [-d1, -d2],
+                           [-d2, -d3]]))
     assert -system == \
-        StateSpace(Matrix([
-        [-1,  1],
-        [ 1, -1]]), Matrix([
-        [ 1],
-        [-1]]), Matrix([[1, -1]]), Matrix([[-1]]))
+        StateSpace(Matrix([[-1,  1],
+                           [ 1, -1]]),
+                   Matrix([[ 1],[-1]]),
+                   Matrix([[1, -1]]),
+                   Matrix([[-1]]))
     assert -SS_neg == SS
     assert -(-(-(-system))) == system
 
 def test_SymPy_substitution_functions():
     # subs
-
     ss1 = StateSpace(Matrix([s]), Matrix([(s + 1)**2]), Matrix([s**2 - 1]), Matrix([2*s]))
     ss2 = StateSpace(Matrix([s + p]), Matrix([(s + 1)*(p - 1)]), Matrix([p**3 - s**3]), Matrix([s - p]))
 
@@ -1506,14 +1503,12 @@ def test_SymPy_substitution_functions():
     assert ss2.subs({p:1}) == StateSpace(Matrix([[s + 1]]), Matrix([[0]]), Matrix([[1 - s**3]]), Matrix([[s - 1]]))
 
     # xreplace
-
     assert ss1.xreplace({s:p}) == \
         StateSpace(Matrix([[p]]), Matrix([[(p + 1)**2]]), Matrix([[p**2 - 1]]), Matrix([[2*p]]))
     assert ss2.xreplace({s:a, p:b}) == \
         StateSpace(Matrix([[a + b]]), Matrix([[(a + 1)*(b - 1)]]), Matrix([[-a**3 + b**3]]), Matrix([[a - b]]))
 
     # evalf
-
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     G = StateSpace(Matrix([p1]), Matrix([p2]))
@@ -1522,3 +1517,75 @@ def test_SymPy_substitution_functions():
     assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
     assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect_
     assert expect.evalf() == expect_
+
+def test_conversion():
+    # StateSpace to TransferFunction for SISO
+    A1 = Matrix([[-5, -1], [3, -1]])
+    B1 = Matrix([2, 5])
+    C1 = Matrix([[1, 2]])
+    D1 = Matrix([0])
+    H1 = StateSpace(A1, B1, C1, D1)
+    tm1 = H1.rewrite(TransferFunction)
+    tm2 = (-H1).rewrite(TransferFunction)
+
+    tf1 = tm1[0][0]
+    tf2 = tm2[0][0]
+
+    assert tf1 == TransferFunction(12*s + 59, s**2 + 6*s + 8, s)
+    assert tf2.num == -tf1.num
+    assert tf2.den == tf1.den
+
+    # StateSpace to TransferFunction for MIMO
+    A2 = Matrix([[-1.5, -2, 3], [1, 0, 1], [2, 1, 1]])
+    B2 = Matrix([[0.5, 0, 1], [0, 1, 2], [2, 2, 3]])
+    C2 = Matrix([[0, 1, 0], [0, 2, 1], [1, 0, 2]])
+    D2 = Matrix([[2, 2, 0], [1, 1, 1], [3, 2, 1]])
+    H2 = StateSpace(A2, B2, C2, D2)
+    tm3 = H2.rewrite(TransferFunction)
+
+    # outputs for input i obtained at Index i-1. Consider input 1
+    assert tm3[0][0] == TransferFunction(2.0*s**3 + s**2 - 10.5*s + 4.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+    assert tm3[0][1] == TransferFunction(2.0*s**3 + 2.0*s**2 - 10.5*s - 3.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+    assert tm3[0][2] == TransferFunction(2.0*s**2 + 5.0*s - 0.5, 1.0*s**3 + 0.5*s**2 - 6.5*s - 2.5, s)
+
+    # TransferFunction to StateSpace
+    SS = TF1.rewrite(StateSpace)
+    assert SS == \
+        StateSpace(Matrix([[     0,          1],
+                           [-wn**2, -2*wn*zeta]]),
+                   Matrix([[0],
+                           [1]]),
+                   Matrix([[1, 0]]),
+                   Matrix([[0]]))
+    assert SS.rewrite(TransferFunction)[0][0] == TF1
+
+    # Transfer function has to be proper
+    raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
+
+
+def test_StateSpace_functions():
+    # https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
+
+    A_mat = Matrix([[-1.5, -2], [1, 0]])
+    B_mat = Matrix([0.5, 0])
+    C_mat = Matrix([[0, 1]])
+    D_mat = Matrix([1])
+    SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
+    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
+    SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
+
+    # Observability
+    assert SS1.is_observable() == True
+    assert SS2.is_observable() == False
+    assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
+    assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
+    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+
+    # Controllability
+    assert SS1.is_controllable() == True
+    assert SS3.is_controllable() == False
+    assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
+    assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
+    assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
