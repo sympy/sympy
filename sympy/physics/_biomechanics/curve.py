@@ -5,6 +5,7 @@ from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.precedence import PRECEDENCE
 
 
 __all__ = [
@@ -48,7 +49,9 @@ class CharacteristicCurveFunction(Function):
             characteristic curve as valid code in the target language.
 
         """
-        return printer.doprint(self.doit(deep=False, evaluate=False))
+        return printer._print(printer.parenthesize(
+            self.doit(deep=False, evaluate=False), PRECEDENCE['Atom'],
+        ))
 
     _ccode = _print_code
     _cupycode = _print_code

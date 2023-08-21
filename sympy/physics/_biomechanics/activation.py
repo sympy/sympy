@@ -3,10 +3,11 @@
 Musculotendon models are able to produce active force when they are activated,
 which is when a chemical process has taken place within the muscle fibers
 causing them to voluntarily contract. Biologically this chemical process (the
-diffusion of $Ca^{2+}$ ions) is not the input in the system, electrical signals
-from the nervous system are. These are termed excitations. Activation dynamics,
-which relates the normalized excitation level to the normalized activation
-level, can be modeled by the models present in this module.
+diffusion of :math:`\textrm{Ca}^{2+}` ions) is not the input in the system,
+electrical signals from the nervous system are. These are termed excitations.
+Activation dynamics, which relates the normalized excitation level to the
+normalized activation level, can be modeled by the models present in this
+module.
 
 """
 
