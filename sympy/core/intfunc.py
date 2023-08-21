@@ -1,3 +1,13 @@
+"""
+The routines here were removed from numbers.py, power.py,
+digits.py and factor_.py so they could be imported into core
+without raising circular import errors.
+
+Although the name 'intfunc' was chosen to represent functions that
+work with integers, it can also be thought of as containing
+internal/core functions that are needed by the classes of the core.
+"""
+
 import math
 import sys
 from functools import lru_cache
