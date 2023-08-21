@@ -44,6 +44,8 @@ FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
+FUNC_MIN: "\\min"
+FUNC_MAX: "\\max"
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -78,6 +80,8 @@ CMD_DIV:   "\\div"
 CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_OVERLINE: "\\overline"
+CMD_LANGLE: "\\langle"
+CMD_RANGLE: "\\rangle"
 
 CMD_MATHIT: "\\mathit"
 
@@ -243,6 +247,18 @@ list_of_expressions: _expression ("," _expression)*
 
 function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
 
+min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
+
+max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
+
+bra: CMD_LANGLE _expression BAR
+
+ket: BAR _expression CMD_RANGLE
+
+inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
+
+// outer_product: BAR _expression CMD_RANGLE CMD_LANGLE _expression BAR
+
 _function: function_applied
     | abs | floor | ceil
     | _trigonometric_function | _inverse_trigonometric_function
@@ -253,6 +269,8 @@ _function: function_applied
     | square_root
     | factorial
     | conjugate
+    | max | min
+    | bra | ket | inner_product
 
 exponential: FUNC_EXP _expression
 
