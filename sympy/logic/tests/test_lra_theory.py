@@ -86,7 +86,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (2, 5)
     assert str(lra.slack) == '[_s1, _s2]'
     assert str(lra.nonslack) == '[_x1, _x2, _x3]'
@@ -105,7 +105,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert str(lra.slack) == '[_s1]'
     # TODO: fix bug with constant functions so assert statement passes
     #assert str(lra.nonslack) == '[_x1, _x2, _x3, _x4]'
@@ -116,7 +116,7 @@ def test_from_encoded_cnf():
     cnf = CNF.from_prop(phi)
     enc = EncodedCNF()
     enc.from_cnf(cnf)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A == Matrix()
     assert lra.slack == []
     assert lra.nonslack == []
@@ -134,7 +134,7 @@ def test_LRA_solver():
     # If the preprocessing step doesn't do anything, then the matrix is empty.
     phi = (x >= 0) & (x >= 1) & (x <= -1)
     enc = boolean_formula_to_encoded_cnf(phi)
-    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+    lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
 
 
     assert len(lra.A) == 0
@@ -144,7 +144,7 @@ def test_LRA_solver():
 
     bf = x >= pi
     enc = boolean_formula_to_encoded_cnf(bf)
-    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc))
+    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
 
 
@@ -302,7 +302,7 @@ def test_random_problems():
         assert all(0 not in clause for clause in enc.data)
 
         start = time.time()
-        lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
+        lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
         end = time.time()
         from_encoded_time += end - start
 
