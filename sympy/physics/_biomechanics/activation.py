@@ -59,7 +59,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `e` can also be used to access the same attribute.
+        The alias ``e`` can also be used to access the same attribute.
 
         """
         return self._e
@@ -71,7 +71,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `excitation` can also be used to access the same attribute.
+        The alias ``excitation`` can also be used to access the same attribute.
 
         """
         return self._e
@@ -83,7 +83,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `a` can also be used to access the same attribute.
+        The alias ``a`` can also be used to access the same attribute.
 
         """
         return self._a
@@ -95,7 +95,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `activation` can also be used to access the same attribute.
+        The alias ``activation`` can also be used to access the same attribute.
 
         """
         return self._a
@@ -115,7 +115,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `x` can also be used to access the same attribute.
+        The alias ``x`` can also be used to access the same attribute.
 
         """
         pass
@@ -129,7 +129,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `state_vars` can also be used to access the same attribute.
+        The alias ``state_vars`` can also be used to access the same attribute.
 
         """
         pass
@@ -143,7 +143,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `r` can also be used to access the same attribute.
+        The alias ``r`` can also be used to access the same attribute.
 
         """
         pass
@@ -157,7 +157,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `input_vars` can also be used to access the same attribute.
+        The alias ``input_vars`` can also be used to access the same attribute.
 
         """
         pass
@@ -171,7 +171,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `p` can also be used to access the same attribute.
+        The alias ``p`` can also be used to access the same attribute.
 
         """
         pass
@@ -185,7 +185,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `constants` can also be used to access the same attribute.
+        The alias ``constants`` can also be used to access the same attribute.
 
         """
         pass
@@ -316,7 +316,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated state variables and so this
         property return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `x` can also be used to access the same attribute.
+        The alias ``x`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -333,7 +333,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated state variables and so this
         property return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `state_vars` can also be used to access the same attribute.
+        The alias ``state_vars`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -350,7 +350,7 @@ class ZerothOrderActivation(ActivationBase):
         this property returns a column ``Matrix`` with one entry, ``e``, and
         shape (1, 1).
 
-        The alias `r` can also be used to access the same attribute.
+        The alias ``r`` can also be used to access the same attribute.
 
         """
         return Matrix([self._e])
@@ -367,7 +367,7 @@ class ZerothOrderActivation(ActivationBase):
         this property returns a column ``Matrix`` with one entry, ``e``, and
         shape (1, 1).
 
-        The alias `input_vars` can also be used to access the same attribute.
+        The alias ``input_vars`` can also be used to access the same attribute.
 
         """
         return Matrix([self._e])
@@ -384,7 +384,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated constants and so this property
         return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `p` can also be used to access the same attribute.
+        The alias ``p`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -401,7 +401,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated constants and so this property
         return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `constants` can also be used to access the same attribute.
+        The alias ``constants`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
