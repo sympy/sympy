@@ -21,11 +21,8 @@ from sympy.physics._biomechanics.activation import ActivationBase
 from sympy.physics._biomechanics.curve import (
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
-    FiberForceLengthPassiveInverseDeGroote2016,
     FiberForceVelocityDeGroote2016,
-    # FiberForceVelocityInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
-    TendonForceLengthInverseDeGroote2016,
 )
 from sympy.physics._biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
