@@ -1,4 +1,5 @@
 import os
+from ctypes import c_long, sizeof
 from typing import Tuple as tTuple, Type
 
 from sympy.external import import_module
@@ -16,6 +17,7 @@ from .ntheory import (
     legendre as python_legendre,
     jacobi as python_jacobi,
     kronecker as python_kronecker,
+    iroot as python_iroot,
 )
 
 
@@ -71,6 +73,9 @@ __all__ = [
 
     # kronecker from gmpy or sympy
     'kronecker',
+
+    # iroot from gmpy or sympy
+    'iroot',
 ]
 
 
@@ -142,6 +147,12 @@ else:
 #
 SYMPY_INTS: tTuple[Type, ...]
 
+#
+# In gmpy2 and flint, there are functions that take a long (or unsigned long) argument.
+# That is, it is not possible to input a value larger than that.
+#
+LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
+
 if GROUND_TYPES == 'gmpy':
 
     HAS_GMPY = 2
@@ -160,6 +171,13 @@ if GROUND_TYPES == 'gmpy':
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
     kronecker = gmpy.kronecker
+
+    def iroot(x, n):
+        # In the latest gmpy2, the threshold for n is ULONG_MAX,
+        # but adjust to the older one.
+        if n <= LONG_MAX:
+            return gmpy.iroot(x, n)
+        return python_iroot(x, n)
 
 elif GROUND_TYPES == 'flint':
 
@@ -180,6 +198,12 @@ elif GROUND_TYPES == 'flint':
     jacobi = python_jacobi
     kronecker = python_kronecker
 
+    def iroot(x, n):
+        if n <= LONG_MAX:
+            y = flint.fmpz(x).root(n)
+            return y, y**n == x
+        return python_iroot(x, n)
+
 elif GROUND_TYPES == 'python':
 
     HAS_GMPY = 0
@@ -198,6 +222,7 @@ elif GROUND_TYPES == 'python':
     legendre = python_legendre
     jacobi = python_jacobi
     kronecker = python_kronecker
+    iroot = python_iroot
 
 else:
     assert False

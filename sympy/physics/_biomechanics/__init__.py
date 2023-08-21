@@ -10,10 +10,11 @@ from .activation import (
    ActivationBase,
    ZerothOrderActivation,
 )
-from .characteristic import (
+from .curve import (
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
    FiberForceLengthPassiveInverseDeGroote2016,
+   FiberForceVelocityDeGroote2016,
    TendonForceLengthDeGroote2016,
    TendonForceLengthInverseDeGroote2016,
 )
@@ -24,6 +25,7 @@ __all__ = [
    'FiberForceLengthActiveDeGroote2016',
    'FiberForceLengthPassiveDeGroote2016',
    'FiberForceLengthPassiveInverseDeGroote2016',
+   'FiberForceVelocityDeGroote2016',
    'TendonForceLengthDeGroote2016',
    'TendonForceLengthInverseDeGroote2016',
 
