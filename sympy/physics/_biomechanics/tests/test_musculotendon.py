@@ -89,6 +89,7 @@ class TestMusculotendonDeGroote2016:
             optimal_pennation_angle=alpha_opt,
             fiber_damping_coefficient=beta,
         )
+        assert isinstance(instance, MusculotendonDeGroote2016)
 
     @pytest.fixture(autouse=True)
     def _musculotendon_fixture(self):
@@ -118,7 +119,7 @@ class TestMusculotendonDeGroote2016:
         l_M_opt = Symbol("l_M_opt")
         v_M_max = Integer(10)
         alpha_opt = Integer(0)
-        beta = Rational(1, 2)
+        beta = Rational(1, 10)
         instance = MusculotendonDeGroote2016.with_default_constants(
             "name",
             pathway,
@@ -128,6 +129,12 @@ class TestMusculotendonDeGroote2016:
             peak_isometric_force=F_M_max,
             optimal_fiber_length=l_M_opt,
         )
+        assert instance.tendon_slack_length == l_T_slack
+        assert instance.peak_isometric_force == F_M_max
+        assert instance.optimal_fiber_length == l_M_opt
+        assert instance.maximal_fiber_velocity == v_M_max
+        assert instance.optimal_pennation_angle == alpha_opt
+        assert instance.fiber_damping_coefficient == beta
 
     @pytest.mark.parametrize(
         "l_T_slack, expected",
@@ -468,7 +475,7 @@ class TestMusculotendonDeGroote2016RigidTendon:
         rhs = self.instance.rhs()
         assert isinstance(rhs, Matrix)
         assert rhs.shape == (1, 1)
-        assert simplify(self.instance.M.solve(self.instance.F) - rhs) == zeros(1)
+        assert simplify(rhs - rhs_expected) == zeros(1)
 
     def test_repr(self):
         expected = (
@@ -526,7 +533,6 @@ class TestMusculotendonDeGroote2016FiberLengthExplicit:
         )
         self.l_M_tilde = dynamicsymbols("l_M_tilde_name")
         l_MT = self.pathway.length
-        v_MT = self.pathway.extension_velocity
         l_M = self.l_M_tilde*self.l_M_opt
         l_T = l_MT - sqrt(l_M**2 - (self.l_M_opt*sin(self.alpha_opt)) ** 2)
         fl_T = TendonForceLengthDeGroote2016.with_default_constants(
@@ -618,7 +624,7 @@ class TestMusculotendonDeGroote2016FiberLengthExplicit:
         rhs = self.instance.rhs()
         assert isinstance(rhs, Matrix)
         assert rhs.shape == (2, 1)
-        assert simplify(self.instance.M.solve(self.instance.F) - rhs) == zeros(2, 1)
+        assert simplify(rhs - rhs_expected) == zeros(2, 1)
 
     def test_repr(self):
         expected = (
