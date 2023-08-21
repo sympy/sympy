@@ -3,14 +3,11 @@
 from abc import ABC, abstractmethod
 
 from sympy.core.backend import S, sympify
-from sympy.physics.mechanics import (
-    PathwayBase,
-    PinJoint,
-    ReferenceFrame,
-    RigidBody,
-    Torque,
-    Vector,
-)
+from sympy.physics.mechanics.joint import PinJoint
+from sympy.physics.mechanics.loads import Torque
+from sympy.physics.mechanics.pathway import PathwayBase
+from sympy.physics.mechanics.rigidbody import RigidBody
+from sympy.physics.vector import ReferenceFrame, Vector
 
 
 __all__ = [
