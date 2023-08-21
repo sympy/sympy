@@ -8,6 +8,7 @@ musculoskeletal models involding musculotendons and activation dynamics.
 
 from .activation import (
    ActivationBase,
+   FirstOrderActivationDeGroote2016,
    ZerothOrderActivation,
 )
 from .curve import (
@@ -31,5 +32,6 @@ __all__ = [
 
    # Activation dynamics classes
    'ActivationBase',
+   'FirstOrderActivationDeGroote2016',
    'ZerothOrderActivation',
 ]
