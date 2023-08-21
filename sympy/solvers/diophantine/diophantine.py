@@ -5,8 +5,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.numbers import igcdex, ilcm, igcd
-from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.intfunc import igcdex, ilcm, igcd, integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key, ordered

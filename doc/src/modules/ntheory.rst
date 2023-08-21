@@ -41,8 +41,6 @@ Ntheory Functions Reference
 
 .. autofunction:: smoothness_p
 
-.. autofunction:: trailing
-
 .. autofunction:: multiplicity
 
 .. autofunction:: perfect_power
