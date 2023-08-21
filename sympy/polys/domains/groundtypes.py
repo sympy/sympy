@@ -9,7 +9,7 @@ PythonComplex = builtins.complex
 
 from .pythonrational import PythonRational
 
-from sympy.core.numbers import (
+from sympy.core.intfunc import (
     igcdex as python_gcdex,
     igcd2 as python_gcd,
     ilcm as python_lcm,

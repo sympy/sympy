@@ -48,7 +48,7 @@ class TestZerothOrderActivation:
         assert hasattr(self.instance, 'order')
         assert self.instance.order == 0
 
-    def test_excitation(self):
+    def test_excitation_attribute(self):
         assert hasattr(self.instance, 'e')
         assert hasattr(self.instance, 'excitation')
         e_expected = dynamicsymbols('e_name')
@@ -56,7 +56,7 @@ class TestZerothOrderActivation:
         assert self.instance.excitation == e_expected
         assert self.instance.e is self.instance.excitation
 
-    def test_activation(self):
+    def test_activation_attribute(self):
         assert hasattr(self.instance, 'a')
         assert hasattr(self.instance, 'activation')
         a_expected = dynamicsymbols('e_name')
@@ -64,7 +64,7 @@ class TestZerothOrderActivation:
         assert self.instance.activation == a_expected
         assert self.instance.a is self.instance.activation is self.instance.e
 
-    def test_state_vars(self):
+    def test_state_vars_attribute(self):
         assert hasattr(self.instance, 'x')
         assert hasattr(self.instance, 'state_vars')
         assert self.instance.x == self.instance.state_vars
@@ -76,7 +76,7 @@ class TestZerothOrderActivation:
         assert self.instance.x.shape == (0, 1)
         assert self.instance.state_vars.shape == (0, 1)
 
-    def test_input_vars(self):
+    def test_input_vars_attribute(self):
         assert hasattr(self.instance, 'r')
         assert hasattr(self.instance, 'input_vars')
         assert self.instance.r == self.instance.input_vars
@@ -88,7 +88,8 @@ class TestZerothOrderActivation:
         assert self.instance.r.shape == (1, 1)
         assert self.instance.input_vars.shape == (1, 1)
 
-    def test_constants(self):
+
+    def test_constants_attribute(self):
         assert hasattr(self.instance, 'p')
         assert hasattr(self.instance, 'constants')
         assert self.instance.p == self.instance.constants
@@ -100,7 +101,7 @@ class TestZerothOrderActivation:
         assert self.instance.p.shape == (0, 1)
         assert self.instance.constants.shape == (0, 1)
 
-    def test_M(self):
+    def test_M_attribute(self):
         assert hasattr(self.instance, 'M')
         M_expected = Matrix([])
         assert self.instance.M == M_expected
