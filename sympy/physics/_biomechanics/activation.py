@@ -16,8 +16,7 @@ from functools import cached_property
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.hyperbolic import tanh
-from sympy.matrices import Matrix
-from sympy.matrices.dense import zeros
+from sympy.matrices.dense import MutableDenseMatrix as Matrix, zeros
 from sympy.physics._biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics import dynamicsymbols
 
