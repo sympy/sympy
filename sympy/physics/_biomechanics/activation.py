@@ -717,3 +717,29 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return Matrix([self._e])
+
+    @property
+    def constants(self):
+        """Ordered column matrix of non-time varying symbols present in ``M``
+        and ``F``.
+
+        Explanation
+        ===========
+
+        The alias ``p`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._tau_a, self._tau_d, self._b])
+
+    @property
+    def p(self):
+        """Ordered column matrix of non-time varying symbols present in ``M``
+        and ``F``.
+
+        Explanation
+        ===========
+
+        The alias ``constants`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._tau_a, self._tau_d, self._b])
