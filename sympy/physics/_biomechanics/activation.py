@@ -797,3 +797,13 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         a3 = a1 * (HALF - a0) / self._tau_d
         activation_dynamics_equation = (a2 + a3) * (self._e - self._a)
         return activation_dynamics_equation
+
+    def __eq__(self, other):
+        """Equality check for ``FirstOrderActivationDeGroote2016``."""
+        if type(self) != type(other):
+            return False
+        self_attrs = (self.name, self.tau_a, self.tau_d, self.b)
+        other_attrs = (other.name, other.tau_a, other.tau_d, other.b)
+        if self_attrs == other_attrs:
+            return True
+        return False
