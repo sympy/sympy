@@ -133,12 +133,12 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, boundry_enc):
+    def __init__(self, A, slack_variables, nonslack_variables, boundry_enc, testing_mode):
         if any(not isinstance(a, Rational) for a in A) or \
             any(not isinstance(b.bound, Rational) for b in boundry_enc.values()):
             raise UnhandledNumber
 
-        self.run_checks = False # set to True to turn on assert statements
+        self.run_checks = testing_mode # set to True to turn on assert statements
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
@@ -185,10 +185,13 @@ class LRASolver():
         self.last_safe_assignment = self.assign.copy()
 
     @staticmethod
-    def from_encoded_cnf(encoded_cnf):
+    def from_encoded_cnf(encoded_cnf, testing_mode=False):
         """
         Creates an LRASolver from an EncodedCNF object. Constraints in the
         EncodedCNF object must only contain Rational numbers.
+
+        Setting testing_mode to True enables some slow assert statements
+        and sorting of nonterministic objects to make bugs more reproducable.
 
         Example
         -------
@@ -278,15 +281,16 @@ class LRASolver():
         x_count = 0
         x_subs = {}
 
-        # sorted here to remove nondeterminism
-        # TODO: get rid of this to speed things up
-        ordered_encoded_cnf = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
+        if testing_mode:
+            encoded_cnf_items = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
+        else:
+            encoded_cnf_items = encoded_cnf.encoding.items()
 
         # check that preprocessing has been done
         # TODO: get rid of this to speed things up
         #assert all(standardize_binrel(prop) == prop for prop, enc in encoding)
 
-        for prop, enc in ordered_encoded_cnf:
+        for prop, enc in encoded_cnf_items:
             if not isinstance(prop, AppliedBinaryRelation) or prop.function == Q.ne:
                 # TODO: handle Q.ne better
                 continue
@@ -335,7 +339,7 @@ class LRASolver():
             encoding[enc] = b
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
-        return LRASolver(A, basic, nonbasic, boundry_enc=encoding), x_subs, s_subs
+        return LRASolver(A, basic, nonbasic, encoding, testing_mode), x_subs, s_subs
 
     def assert_enc_boundry(self, enc_boundry):
         """
