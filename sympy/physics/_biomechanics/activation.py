@@ -660,3 +660,8 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return self._b
+
+    @property
+    def order(self):
+        """Order of the (differential) equation governing activation."""
+        return 1
