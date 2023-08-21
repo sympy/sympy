@@ -16,6 +16,7 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
+from .intfunc import num_digits
 from .logic import fuzzy_not
 from .kind import NumberKind
 from sympy.external.gmpy import (SYMPY_INTS, gmpy, flint,
@@ -1129,7 +1130,7 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         # without dec, e-notation is short for int
-                        dps = max(dps, num.length())
+                        dps = max(dps, num_digits(num))
                     dps = max(15, dps)
                     precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
@@ -1145,7 +1146,7 @@ class Float(Number):
                 num, dps = _decimal_to_Rational_prec(Num)
                 if num.is_Integer and isint:
                     # without dec, e-notation is short for int
-                    dps = max(dps, num.length())
+                    dps = max(dps, num_digits(num))
                     precision = dps_to_prec(dps)
 
         # decimal precision(dps) is set and maybe binary precision(precision)
@@ -2117,19 +2118,6 @@ class Integer(Rational):
     is_Integer = True
 
     __slots__ = ()
-
-    def length(self, base=10):
-        """return number of base-10 digits"""
-        b = as_int(base)
-        if b <= 2:
-            raise ValueError('base must be integer greater than 1')
-        if self < b:
-            return 1
-        n = abs(self.p)
-        # round rounds up on tie and log(x)/log(y) == i/2 when x = y**(i/2)
-        # where the number of digits is ceiling(y**(i/2));  so round should always
-        # work
-        return 1 + int(round(math.log10(n)/math.log10(b)))
 
     def _as_mpf_val(self, prec):
         return mlib.from_int(self.p, prec, rnd)
