@@ -743,3 +743,57 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return Matrix([self._tau_a, self._tau_d, self._b])
+
+    @property
+    def M(self):
+        """Ordered square matrix of coefficients on the LHS of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The square matrix that forms part of the LHS of the linear system of
+        ordinary differential equations governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([Integer(1)])
+
+    @property
+    def F(self):
+        """Ordered column matrix of equations on the RHS of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The column matrix that forms the RHS of the linear system of ordinary
+        differential equations governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([self._da_eqn])
+
+    def rhs(self):
+        """Ordered column matrix of equations for the solution of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The solution to the linear system of ordinary differential equations
+        governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([self._da_eqn])
+
+    @cached_property
+    def _da_eqn(self):
+        HALF = Rational(1, 2)
+        a0 = HALF * tanh(self._b * (self._e - self._a))
+        a1 = (HALF + Rational(3, 2) * self._a)
+        a2 = (HALF + a0) / (self._tau_a * a1)
+        a3 = a1 * (HALF - a0) / self._tau_d
+        activation_dynamics_equation = (a2 + a3) * (self._e - self._a)
+        return activation_dynamics_equation
