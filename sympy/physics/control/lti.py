@@ -3758,6 +3758,16 @@ class StateSpace(LinearTimeInvariant):
         """
         return StateSpace(self._A, self._B, -self._C, -self._D)
 
+    def _eval_evalf(self, prec):
+        """
+        Returns state space model where numerical expressions are evaluated into floating point numbers.
+        """
+        return StateSpace(
+            self._A.evalf(prec),
+            self._B.evalf(prec),
+            self._C.evalf(prec),
+            self._D.evalf(prec))
+
     def _eval_rewrite_as_TransferFunction(self, *args):
         """
         Returns the equivalent Transfer Function of the state space model.
