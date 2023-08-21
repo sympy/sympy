@@ -589,3 +589,39 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         """
         return self._tau_a
+
+    @property
+    def deactivation_time_constant(self):
+        """Delay constant for deactivation.
+
+        Explanation
+        ===========
+
+        The alias ``tau_d`` can also be used to access the same attribute.
+
+        """
+        return self._tau_d
+
+    @deactivation_time_constant.setter
+    def deactivation_time_constant(self, tau_d):
+        if hasattr(self, '_tau_d'):
+            msg = (
+                f'Can\'t set attribute `deactivation_time_constant` to '
+                f'{repr(tau_d)} as it is immutable and already has value '
+                f'{self._tau_d}.'
+            )
+            raise AttributeError(msg)
+        self._tau_d = Symbol(f'tau_d_{self.name}') if tau_d is None else tau_d
+
+    @property
+    def tau_d(self):
+        """Delay constant for deactivation.
+
+        Explanation
+        ===========
+
+        The alias ``deactivation_time_constant`` can also be used to access the
+        same attribute.
+
+        """
+        return self._tau_d
