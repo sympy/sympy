@@ -1,5 +1,5 @@
 from sympy.core.function import Function
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.matrices.dense import Matrix
@@ -9,11 +9,13 @@ from sympy.logic.boolalg import And
 from sympy.abc import x, y, z, a
 from sympy.assumptions.cnf import CNF, EncodedCNF
 
-from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber
 
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
+
+from sympy.testing.pytest import raises
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
                         disable_strict = False, disable_nonstrict=False, disable_equality=False):
@@ -120,21 +122,32 @@ def test_from_encoded_cnf():
     assert lra.nonslack == []
 
 
+def boolean_formula_to_encoded_cnf(bf):
+    cnf = CNF.from_prop(bf)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    return enc
+
+
 def test_LRA_solver():
-    s1, s2 = symbols("s1 s2")
     # Empty matrix should be handled.
     # If the preprocessing step doesn't do anything, then the matrix is empty.
     phi = (x >= 0) & (x >= 1) & (x <= -1)
-    cnf = CNF.from_prop(phi)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
+    enc = boolean_formula_to_encoded_cnf(phi)
     lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
 
 
     assert len(lra.A) == 0
-    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 0))) +1) == ("OK", None)
-    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 1))) +1) == ("OK", None)
-    assert lra.assert_enc_boundry(enc.symbols.index((Q.le(x, -1))) + 1) == ('UNSAT', {-(enc.symbols.index((Q.le(x, -1))) + 1), -(enc.symbols.index((Q.ge(x, 1))) +1)})
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 0))) +1) is None
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.ge(x, 1))) +1) is None
+    assert lra.assert_enc_boundry(enc.symbols.index((Q.le(x, -1))) + 1)[0] == False
+
+    bf = x >= pi
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc))
+
+
+
     # assert lra.assert_con(Q.ge(x, 0)) == ("OK", None)
     # assert lra.assert_con(Q.ge(x, -1)) == ('SAT', {x: 0, y: 0})
     # assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
