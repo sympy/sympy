@@ -19,6 +19,7 @@ from .curve import (
    TendonForceLengthDeGroote2016,
    TendonForceLengthInverseDeGroote2016,
 )
+from .musculotendon import MusculotendonDeGroote2016, MusculotendonFormulation
 
 
 __all__ = [
@@ -34,4 +35,8 @@ __all__ = [
    'ActivationBase',
    'FirstOrderActivationDeGroote2016',
    'ZerothOrderActivation',
+
+   # Musculotendon classes
+   'MusculotendonDeGroote2016',
+   'MusculotendonFormulation',
 ]
