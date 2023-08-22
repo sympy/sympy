@@ -439,7 +439,7 @@ class EncodedCNF:
     >>> encoded_cnf.decode_literal(-2) #doctest: +SKIP
     ~a
     >>> encoded_cnf.decode()
-    [a | ~b]
+    a | ~b
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
@@ -510,4 +510,4 @@ class EncodedCNF:
         for encoded_clause in self.data:
             clause = self._decode_clause(encoded_clause)
             decoded_cnf.append(clause)
-        return decoded_cnf
+        return And(*decoded_cnf)
