@@ -2,6 +2,7 @@ from sympy.core.function import Function
 from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
+from sympy.core.singleton import S
 from sympy.matrices.dense import Matrix
 from sympy.matrices.dense import randMatrix
 from sympy.assumptions.ask import Q
@@ -438,6 +439,17 @@ def test_binrel_evaluation():
     lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert len(lra.boundry_enc) == 0
     assert conflicts == [[-1]]
+
+
+def test_nan():
+    # Constraints containing nan should be ignored
+    nan = S.NaN
+    bf = Q.gt(3, nan) & Q.gt(x, nan)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    assert len(lra.boundry_enc) == 0
+    assert conflicts == []
+
 
 def test_pivot():
     for _ in range(10):

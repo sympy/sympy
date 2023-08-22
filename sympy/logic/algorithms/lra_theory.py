@@ -9,6 +9,7 @@ from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.relational import Eq, Ne
 from sympy.core.sympify import sympify
+from sympy.core.singleton import S
 from sympy import SYMPY_DEBUG
 from sympy.matrices.dense import Matrix
 from sympy.core.numbers import Rational, oo
@@ -353,6 +354,9 @@ class LRASolver():
             assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
 
             if isinstance(prop.lhs, MatrixExpr) or isinstance(prop.rhs, MatrixExpr):
+                continue
+
+            if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 continue
 
             prop = _eval_binrel(prop)
