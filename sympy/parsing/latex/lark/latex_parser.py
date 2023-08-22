@@ -291,6 +291,28 @@ class TransformToSymPyExpr(Transformer):
     def function_applied(self, tokens):
         return sympy.Function(tokens[0])(*tokens[2])
 
+    def min(self, tokens):
+        return sympy.Min(*tokens[2])
+
+    def max(self, tokens):
+        return sympy.Max(*tokens[2])
+
+    def bra(self, tokens):
+        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
+        from sympy.physics.quantum import Bra
+        return Bra(tokens[1])
+
+    def ket(self, tokens):
+        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
+        from sympy.physics.quantum import Ket
+        return Ket(tokens[1])
+
+    def inner_product(self, tokens):
+        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
+        from sympy.physics.quantum import Bra, Ket, InnerProduct
+        return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
+
+
     def sin(self, tokens):
         return sympy.sin(tokens[1])
 

@@ -4,12 +4,15 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.printing.precedence import PRECEDENCE
 
 
 __all__ = [
     'FiberForceLengthActiveDeGroote2016',
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
+    'FiberForceVelocityDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
@@ -46,7 +49,9 @@ class CharacteristicCurveFunction(Function):
             characteristic curve as valid code in the target language.
 
         """
-        return printer.doprint(self.doit(deep=False, evaluate=False))
+        return printer._print(printer.parenthesize(
+            self.doit(deep=False, evaluate=False), PRECEDENCE['Atom'],
+        ))
 
     _ccode = _print_code
     _cupycode = _print_code
@@ -1068,3 +1073,171 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
         l_M_tilde = self.args[0]
         _l_M_tilde = printer._print(l_M_tilde)
         return r'\operatorname{fl}^M_{act} \left( %s \right)' % _l_M_tilde
+
+
+class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
+    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the normalized muscle fiber force produced as a function of
+    normalized tendon velocity.
+
+    The function is defined by the equation:
+
+    $fv^M = c_0 \log{\left(c1 v_M_tilde + c2\right)
+        + \sqrt{\left(c1 v_M_tilde + c2\right)^2 + 1}} + c3
+
+    with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
+    $c_3 = 0.886$.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    normalized muscle fiber force of 1 when the muscle fibers are contracting
+    isometrically (they have an extension rate of 0).
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    @classmethod
+    def with_default_constants(cls, v_M_tilde):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the muscle fiber force-velocity function
+        using the four constant values specified in the original publication.
+
+        These have the values:
+
+        $c_0 = -0.318$
+        $c_1 = -8.149$
+        $c_2 = -0.374$
+        $c_3 = 0.886$
+
+        Parameters
+        ==========
+
+        v_M_tilde : Any (sympifiable)
+            Normalized muscle fiber extension velocity.
+
+        """
+        c0=Float('-0.318')
+        c1=Float('-8.149')
+        c2=Float('-0.374')
+        c3=Float('0.886')
+        return cls(v_M_tilde, c0, c1, c2, c3)
+
+    @classmethod
+    def eval(cls, v_M_tilde, c0, c1, c2, c3):
+        """Evaluation of basic inputs.
+
+        Parameters
+        ==========
+
+        v_M_tilde : Any (sympifiable)
+            Normalized muscle fiber extension velocity.
+        c0 : Any (sympifiable)
+            The first constant in the characteristic equation. The published
+            value is ``-0.318``.
+        c1 : Any (sympifiable)
+            The second constant in the characteristic equation. The published
+            value is ``-8.149``.
+        c2 : Any (sympifiable)
+            The third constant in the characteristic equation. The published
+            value is ``-0.374``.
+        c3 : Any (sympifiable)
+            The fourth constant in the characteristic equation. The published
+            value is ``0.886``.
+
+        """
+        pass
+
+    def _eval_evalf(self, prec):
+        """Evaluate the expression numerically using ``evalf``."""
+        return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``v_M_tilde`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        v_M_tilde, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            v_M_tilde = v_M_tilde.doit(deep=deep, **hints)
+            c0, c1, c2, c3 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1, c2, c3 = constants
+
+        if evaluate:
+            return c0*log(c1*v_M_tilde + c2 + sqrt((c1*v_M_tilde + c2)**2 + 1)) + c3
+
+        return c0*log(c1*v_M_tilde + c2 + sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)) + c3
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        v_M_tilde, c0, c1, c2, c3 = self.args
+        if argindex == 1:
+            return c0*c1/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 2:
+            return log(
+                c1*v_M_tilde + c2
+                + sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+            )
+        elif argindex == 3:
+            return c0*v_M_tilde/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 4:
+            return c0/sqrt(UnevaluatedExpr(c1*v_M_tilde + c2)**2 + 1)
+        elif argindex == 5:
+            return Integer(1)
+
+        raise ArgumentIndexError(self, argindex)
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        v_M_tilde = self.args[0]
+        _v_M_tilde = printer._print(v_M_tilde)
+        return r'\operatorname{fv}^M \left( %s \right)' % _v_M_tilde
