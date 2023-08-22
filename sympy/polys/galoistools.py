@@ -2453,7 +2453,7 @@ def csolve_prime(f, p, e=1):
     from solution [1] (mod 3).
     """
     from sympy.polys.domains import ZZ
-    g = list(map(lambda x: MPZ(int(x)), f))
+    g = [MPZ(int(c)) for c in f]
     # Convert to polynomial of degree at most p-1
     for i in range(len(g) - p):
         g[i + p - 1] += g[i]
