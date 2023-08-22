@@ -8,7 +8,8 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd, equal_valued
+from .numbers import equal_valued
+from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift

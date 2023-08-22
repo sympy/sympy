@@ -48,7 +48,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
-from sympy.core.numbers import Rational, igcd
+from sympy.core.numbers import Rational
+from sympy.core.intfunc import igcd
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
