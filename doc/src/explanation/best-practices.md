@@ -139,7 +139,7 @@ you should parse it explicitly with
 [`parse_expr()`](sympy.parsing.sympy_parser.parse_expr). It is best to parse
 all strings early and only use symbolic manipulation from there on.
 
-```
+```py
 >>> from sympy import parse_expr
 >>> string_input = "(x**2 + x)/x"
 >>> expr = parse_expr(string_input)
@@ -149,13 +149,23 @@ x + 1
 
 **Reason**
 
-There are many disadvantages to using strings:
+There are many disadvantages to using strings as input to SymPy functions:
 
-- [They are not explicit.](https://peps.python.org/pep-0020/) They make code much harder to read.
+- It is unpythonic and makes code harder to read. See [the Zen of
+  Python](https://peps.python.org/pep-0020/) "explicit is better than implicit".
 
-- `sympify()` automatically turns all undefined names into Symbols or
-  Functions, so if you have a typo, the string will still parse correctly, but
-  the output will not be what you expect. For example
+- Support for string inputs in general SymPy functions is mostly accidental.
+  It happens because these functions call {func}`~.sympify` on their inputs in
+  order to convert things like Python `int`s into SymPy `Integer`s. However,
+  `sympify()` also parses strings into SymPy expressions, unless the
+  `strict=True` flag is used. Automatic parsing of strings for general SymPy
+  functions (other than `sympify()` or {func}`~.parse_expr()`) [may go away in
+  a future version of SymPy](https://github.com/sympy/sympy/issues/11003).
+
+- Typos in symbol or function names can go unnoticed. This is because all
+  undefined names in the string will be automatically parsed into Symbols or
+  Functions. If the input has a typo, the string will still parse correctly,
+  but the output will not be what was expected. For example
 
   ```py
   >>> from sympy import expand_trig
@@ -163,9 +173,9 @@ There are many disadvantages to using strings:
   sine(x + y)
   ```
 
-  Compare this to the explicit error you get when you don't use strings.
+  Compare this to the explicit error you get when not using strings:
 
-  ```
+  ```py
   >>> from sympy import sin, symbols
   >>> x, y = symbols('x y')
   >>> expand_trig(sine(x + y)) # The typo is caught by a NameError
@@ -176,7 +186,7 @@ There are many disadvantages to using strings:
   sin(x)*cos(y) + sin(y)*cos(x)
   ```
 
-  In the first example, `sine`, a typo for `sin` is parsed into
+  In the first example, `sine`, a typo for `sin`, is parsed into
   `Function("sine")`, and it appears that `expand_trig` cannot handle it. In the
   second case, we immediately get an error from the undefined name `sine`, and
   fixing our typo, we see that `expand_trig` can indeed do what we want.
@@ -185,7 +195,7 @@ There are many disadvantages to using strings:
   SymPy, if two symbols have the same name but different assumptions, they are
   considered unequal:
 
-  ```
+  ```py
   >>> z1 = symbols('z')
   >>> z2 = symbols('z', positive=True)
   >>> z1 == z2
@@ -196,9 +206,9 @@ There are many disadvantages to using strings:
 
   It is generally recommended to avoid doing this, as it can lead to confusing
   expressions like the one above (see [](best-practices-defining-symbols)
-  abovee).
+  above).
 
-  However, strings always parse symbols into symbols without assumptions. So
+  However, string inputs will always create symbols without assumptions. So
   if you have a symbol with an assumption and later try to use the string
   version of it, you will end up with confusing results.
 
@@ -211,8 +221,9 @@ There are many disadvantages to using strings:
 
   The answer here is apparently wrong, but what happened is that the `z` in
   `"z**2"` parsed to `Symbol('z')` with no assumptions, which SymPy considers
-  to be a different symbol from `Symbol('z', positive=True)`. So as far as
-  `diff` is concerned, the expression is constant and the result is 0.
+  to be a different symbol from `z = Symbol('z', positive=True)`, which is
+  used as the second argument to `diff()`. So as far as `diff` is concerned,
+  the expression is constant and the result is 0.
 
   This sort of thing is particularly bad because it generally doesn't lead to
   any errors. It will just silently give the "wrong" answer because SymPy will
@@ -235,27 +246,27 @@ There are many disadvantages to using strings:
 
   **Do**
 
-  ```
+  ```py
   >>> # a, b, and c are the same as the a, b, c with real=True defined above
   >>> expr = parse_expr('a**2 + b - c', {'a': a, 'b': b, 'c': c})
   >>> expr.subs({a: 1, b: 1, c: 1})
   1
   ```
 
-- Many operations on SymPy objects work as methods, not functions. These
-  methods won't work on strings, since they are not yet SymPy objects. For
-  example:
+- Many SymPy operations are defined as methods, not functions, that is, they
+  are called like `sympy_obj.method_name()`. These methods won't work on
+  strings, since they are not yet SymPy objects. For example:
 
-  ```
+  ```py
   >>> "x + 1".subs("x", "y")
   Traceback (most recent call last):
   ...
   AttributeError: 'str' object has no attribute 'subs'
   ```
 
-  vs.
+  Contrasted with:
 
-  ```
+  ```py
   >>> x, y = symbols('x y')
   >>> (x + 1).subs(x, y)
   y + 1
@@ -265,7 +276,7 @@ There are many disadvantages to using strings:
   valid Python. But if you use strings as input, it is impossible to use such
   symbols. For example
 
-  ```
+  ```py
   >>> from sympy import solve
   >>> solve('x_{2} - 1') # doctest: +SKIP
   ValueError: Error from parse_expr with transformed code: "Symbol ('x_' ){Integer (2 )}-Integer (1 )"
@@ -273,20 +284,13 @@ There are many disadvantages to using strings:
   SyntaxError: invalid syntax (<string>, line 1)
   ```
 
-  This doesn't work because `x_{2}` is not valid Python.
-
-  Symbol names do not have to be valid Python. If they are created from the
-  `Symbol` or `symbols` functions they can contain any string. It's often
-  convenient to use non-Python notation in Symbol names so that they will
-  print nicely in LaTeX, for example:
+  This doesn't work because `x_{2}` is not valid Python. But it is perfectly
+  possible to use this as a Symbol name:
 
   ```py
-  >>> from sympy import latex
   >>> x2 = symbols('x_{2}')
   >>> solve(x2 - 1, x2)
   [1]
-  >>> latex(x2)
-  'x_{2}'
   ```
 
   Actually, the above is the best case scenario, where you get an error. It is
@@ -298,8 +302,8 @@ There are many disadvantages to using strings:
   ```
 
   What happened here is that instead of parsing `x^1_2` as $x^1_2$, it is
-  parsed as `x**12`, because `^` is converted to `**` and [`_` is ignored in
-  numeric literals in Python](https://peps.python.org/pep-0515/).
+  parsed as `x**12` (`^` is converted to `**` and [`_` is ignored in
+  numeric literals in Python](https://peps.python.org/pep-0515/)).
 
   If we instead create a Symbol, the actual contents of the symbol name are
   ignored. It is always represented as a single symbol.
@@ -311,50 +315,51 @@ There are many disadvantages to using strings:
   ```
 
 - If you use strings, syntax errors won't be caught until the line is run. If
-  you build up the expressions, syntax errors will be caught immediately when
-  Python compiles the script before any of it runs.
+  you build up the expressions, syntax errors will be caught immediately by
+  before any of it runs.
 
-- When you are using strings, it is tempting to build up expressions and do
-  symbolic manipulation via manipulation of strings. This is always a bad idea
-  and a sign that you are using SymPy incorrectly. It is much better to use
-  SymPy functions and operations to do symbolic manipulation. You will avoid
-  mistakes, and doing things with strings will soon get too complex to handle.
-  That's because there is no notion of a symbolic expression in a string. To
-  Python, `"(x + y)/z"` is no different from `"/x+)(y z "`, which is the same
-  string with the characters in another order. But SymPy expressions know what
-  type of expression they are and how to traverse the expression tree (e.g.,
-  using `expr.args`), and you build then up with operators like `+`, `-`, `*`,
-  or `/`. And to the previous point, if there is an error, it will be
-  difficult to track down because it won't be noticed until you actually parse
-  the string into an expression.
+- Syntax highlighting in code editors doesn't typically recognize and
+  color-code the content of strings, whereas it can recognize Python
+  expressions.
 
-  For example
+### Avoid Manipulating Expressions as Strings
 
-  **Don't**
+If you find yourself doing a lot of string or regular expression manipulations
+on symbolic expressions, this is generally a sign that you are using SymPy
+incorrectly. It's better to build up expressions directly with operators like
+`+`, `-`, `*`, and `/` and SymPy's various functions and methods. String-based
+manipulations can introduce errors, grow complex quickly, and lose the
+benefits of symbolic expression structures.
 
-  ```py
-  >>> expression_str = '+'.join([f'{i}*x_{i}' for i in range(10)])
-  >>> expr = parse_expr(expression_str)
-  >>> expr
-  x_1 + 2*x_2 + 3*x_3 + 4*x_4 + 5*x_5 + 6*x_6 + 7*x_7 + 8*x_8 + 9*x_9
-  ```
+The reason for this is that there is no notion of a symbolic expression in a
+string. To Python, `"(x + y)/z"` is no different from `"/x+)(y z "`, which is
+the same string with the characters in another order. To contrast, a SymPy
+expression actually knows about what type of mathematical object it
+represents. SymPy has many methods and functions for building and manipulating
+expressions, and they all operate on SymPy objects, not strings.
 
-  **Do**
+For example
 
-  ```py
-  >>> from sympy import Add, Symbol
-  >>> expr = Add(*[i*Symbol(f'x_{i}') for i in range(10)])
-  >>> expr
-  x_1 + 2*x_2 + 3*x_3 + 4*x_4 + 5*x_5 + 6*x_6 + 7*x_7 + 8*x_8 + 9*x_9
-  ```
+**Don't**
 
-- In code editors that do syntax highlighting, strings will be highlighted all
-  one color, whereas Python expressions will be highlighted according to their
-  actual content.
+```py
+>>> expression_str = '+'.join([f'{i}*x_{i}' for i in range(10)])
+>>> expr = parse_expr(expression_str)
+>>> expr
+x_1 + 2*x_2 + 3*x_3 + 4*x_4 + 5*x_5 + 6*x_6 + 7*x_7 + 8*x_8 + 9*x_9
+```
 
-- Support for string inputs in general SymPy functions (other than `sympify()`
-  or `parse_expr()`) [may go away in a future version of
-  SymPy](https://github.com/sympy/sympy/issues/11003).
+**Do**
+
+```py
+>>> from sympy import Add, Symbol
+>>> expr = Add(*[i*Symbol(f'x_{i}') for i in range(10)])
+>>> expr
+x_1 + 2*x_2 + 3*x_3 + 4*x_4 + 5*x_5 + 6*x_6 + 7*x_7 + 8*x_8 + 9*x_9
+```
+
+See also the [previous section on avoiding string inputs to
+functions](best-practices-avoid-string-inputs).
 
 (best-practices-exact-rational-numbers-vs-floats)=
 ### Exact Rational Numbers vs. Floats
