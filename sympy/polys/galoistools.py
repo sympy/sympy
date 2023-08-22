@@ -2,7 +2,7 @@
 
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
-from sympy.core.random import uniform, randint
+from sympy.core.random import uniform, randint, seed as seed_func
 from sympy.external.gmpy import SYMPY_INTS, invert
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -2328,7 +2328,7 @@ def _raise_mod_power(x, s, p, f):
     return linear_congruence(alpha, beta, p)
 
 
-def _csolve_prime_las_vegas(f, p):
+def _csolve_prime_las_vegas(f, p, seed=1234):
     r""" Solutions of `f(x) \equiv 0 \pmod{p}`, `f(0) \not\equiv 0 \pmod{p}`.
 
     Explanation
@@ -2386,6 +2386,7 @@ def _csolve_prime_las_vegas(f, p):
     """
     from sympy.polys.domains import ZZ
     from sympy.ntheory import sqrt_mod
+    seed_func(seed)
     root = set()
     g = gf_pow_mod([1, 0], p - 1, f, p, ZZ)
     g = gf_sub_ground(g, 1, p, ZZ)
