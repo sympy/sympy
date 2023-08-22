@@ -1,4 +1,3 @@
-import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 from sympy.testing.hypothesis import polynomial
