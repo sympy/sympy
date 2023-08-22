@@ -1,13 +1,19 @@
+import pytest
 from hypothesis import given
+from hypothesis import strategies as st
 from sympy.testing.hypothesis import polynomial
+from sympy import gcd, lcm
+
 
 
 @given(
     f=polynomial(),
     g=polynomial(),
     r=polynomial(),
+    x=st.integers(),
+    y=st.integers(),
 )
-def test_gcd(f, g, r):
+def test_gcd(f, g, r, x, y):
     gcd_1 = f.gcd(g)
     gcd_2 = g.gcd(f)
 
@@ -18,7 +24,7 @@ def test_gcd(f, g, r):
 
     assert gcd_1 == gcd_3
 
-
+    assert gcd(x, y) == gcd(y, x)
 @given(
     f=polynomial(),
     g=polynomial(empty=False),
@@ -58,12 +64,15 @@ def test_addition(f, g):
 @given(
     f=polynomial(),
     g=polynomial(empty=False),
+    x=st.integers(),
+    y=st.integers(),
 )
-def test_lcm(f, g):
+def test_lcm(f, g, x, y):
     assert f.lcm(g) == g.lcm(f)
     assert f * g == f.lcm(g) * f.gcd(g)
     if f.coeffs()[0] == 0 or g.coeffs()[0] == 0:
         assert f.lcm(g) == 0
+    assert lcm(x, y) == lcm(y, x)
 
 
 @given(
