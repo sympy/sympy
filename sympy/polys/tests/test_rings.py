@@ -7,7 +7,7 @@ from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.rings import monomial_extract, gcd_coeffs
+from sympy.polys.rings import monomial_extract, _gcd_preprocess_polys
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
@@ -1481,20 +1481,20 @@ def test_monomial_extract():
 
     assert result == ([x**2, x**2 + x, x + y], y)
 
-def test_gcd_coeffs():
+def test_gcd_preprocess_polys():
     R, x, y = ring("x, y", ZZ)
 
     f = x**2*y + x*y
     g = x**3*y**2 + x*y**2
     polynomials = [f, g]
-    result = gcd_coeffs(polynomials)
+    result = _gcd_preprocess_polys(polynomials)
 
     assert result == ([x*y], None)
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
-    result = gcd_coeffs(polynomials)
+    result = _gcd_preprocess_polys(polynomials)
 
     assert result == ([1], None)
 
