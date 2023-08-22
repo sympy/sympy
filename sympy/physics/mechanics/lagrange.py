@@ -221,6 +221,7 @@ class LagrangesMethod(_Methods):
         # Form the dynamic mass and forcing matrices
         without_lam = self._term1 - self._term2 - self._term4
         self._m_d = without_lam.jacobian(self._qdoubledots)
+        self._k_d = without_lam.jacobian(self._q)
         self._f_d = -without_lam.subs(qdd_zero)
 
         # Form the EOM
@@ -269,6 +270,13 @@ class LagrangesMethod(_Methods):
             return row1.col_join(row2).col_join(row3)
         else:
             return row1.col_join(row2)
+
+    @property
+    def stiffness_matrix(self):
+        """Returns the stiffness matrix."""
+        if self.eom is None:
+            raise ValueError('Need to compute the equations of motion first')
+        return self._k_d
 
     @property
     def forcing(self):
