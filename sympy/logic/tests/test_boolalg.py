@@ -593,7 +593,7 @@ def test_encoded_cnf():
         assert decoded_literal == expected_literals[i], f"Expected: {expected_literals[i]}, Decoded: {decoded_literal}"
 
     # Test decode()
-    decoded_prop = encoded_cnf.decode()[0]
+    decoded_prop = encoded_cnf.decode()
     original_prop = Or(Or(a, Not(b)), Or(Not(c), b))
     assert decoded_prop == original_prop, "Decoded prop is not equal to the original prop"
 
