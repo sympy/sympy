@@ -160,6 +160,12 @@ class ExtendedRational():
         return self.value == other.value
 
     def __add__(self, other):
+        self_infinity = self.value[0] == oo
+        other_infinity = other.value[0] == oo
+        if self_infinity and not other_infinity:
+            return self
+        if other_infinity and not self_infinity:
+            return other
         return ExtendedRational(self.value[0] + other.value[0], self.value[1] + other.value[1])
 
     def __sub__(self, other):
