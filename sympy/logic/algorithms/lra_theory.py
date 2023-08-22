@@ -18,7 +18,7 @@ from sympy.matrices.expressions import MatrixExpr
 
 def sep_const_coeff(expr):
     if isinstance(expr, Add):
-        return expr, 1
+        return expr, sympify(1)
 
     if isinstance(expr, Mul):
         coeffs = expr.args
@@ -131,6 +131,9 @@ class Boundry:
         else:
             return self.var >= self.bound
 
+    def __repr__(self):
+        return repr("Boundry(" + repr(self.get_inequality()) + ")")
+
     def __eq__(self, other):
         other = (other.var, other.bound, other.strict, other.upper, other.equality)
         return (self.var, self.bound, self.strict, self.upper, self.equality) == other
@@ -139,6 +142,38 @@ class Boundry:
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
+class ExtendedRational():
+    """
+    Represents c + k*delta where c is a rational or positive/negative
+    infinity.
+    """
+    def __init__(self, extended_rational, delta):
+        self.value = (extended_rational, delta)
+
+    def __lt__(self, other):
+        return self.value < other.value
+
+    def __le__(self, other):
+        return self.value <= other.value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __add__(self, other):
+        return ExtendedRational(self.value[0] + other.value[0], self.value[1] + other.value[1])
+
+    def __sub__(self, other):
+        return ExtendedRational(self.value[0] - other.value[0], self.value[1] - other.value[1])
+
+    def __mul__(self, other):
+        assert not isinstance(other, ExtendedRational)
+        return ExtendedRational(self.value[0] * other, self.value[1] * other)
+
+    def __getitem__(self, index):
+        return self.value[index]
+
+    def __repr__(self):
+        return repr(self.value)
 
 class UnhandledNumber(Exception):
     pass
@@ -200,11 +235,11 @@ class LRASolver():
         self.result = None
 
         for var in self.all_var:
-            self.lower[var] = (-float("inf"), 0)
+            self.lower[var] = ExtendedRational(-float("inf"), 0)
             self.low_origin[var] = False
-            self.upper[var] = (float("inf"), 0)
+            self.upper[var] = ExtendedRational(float("inf"), 0)
             self.up_origin[var] = False
-            self.assign[var] = (0, 0)
+            self.assign[var] = ExtendedRational(0, 0)
 
         # Backtracking Variables
         # stack contains elements of form (var, lower, upper)
@@ -444,9 +479,9 @@ class LRASolver():
 
         if boundry.strict:
             delta = -1 if boundry.upper else 1
-            c = (c, delta)
+            c = ExtendedRational(c, delta)
         else:
-            c = (c, 0)
+            c = ExtendedRational(c, 0)
 
         if boundry.equality:
             self.stack_bounds.append((sym, c, c))
@@ -495,7 +530,8 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] > ci:
             self._update(xi, ci)
 
-        if self.run_checks:
+        if self.run_checks and all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
+                                   for v in self.col_index):
             M = self.A
             X = Matrix([self.assign[v][0] for v in self.col_index])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
@@ -524,7 +560,8 @@ class LRASolver():
         if xi in self.nonslack and self.assign[xi] < ci:
             self._update(xi, ci)
 
-        if self.run_checks:
+        if self.run_checks and all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
+                                   for v in self.col_index):
             M = self.A
             X = Matrix([self.assign[v][0] for v in self.col_index])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
@@ -535,9 +572,7 @@ class LRASolver():
         i = self.col_index[xi]
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
-            lhs = self.assign[b][0] + aji*(v[0] - self.assign[xi][0])
-            rhs = self.assign[b][1] + aji*(v[1] - self.assign[xi][1])
-            self.assign[b] = (lhs, rhs)
+            self.assign[b] = self.assign[b] + (v - self.assign[xi])*aji
         self.assign[xi] = v
 
     def reset_bounds(self):
@@ -629,8 +664,10 @@ class LRASolver():
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                X = Matrix([self.assign[v][0] for v in self.col_index])
-                assert all(abs(val) < 10**(-10) for val in M*X)
+                if all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
+                                   for v in self.col_index):
+                    X = Matrix([self.assign[v][0] for v in self.col_index])
+                    assert all(abs(val) < 10**(-10) for val in M*X)
 
                 # check upper and lower match this format:
                 # x <= rat + delta iff x < rat
@@ -701,15 +738,14 @@ class LRASolver():
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
         i, j = basic[xi], self.col_index[xj]
         assert M[i, j] != 0
-        theta_lhs = (v[0] - self.assign[xi][0])/M[i, j]
-        theta_rhs = (v[1] - self.assign[xi][1])/M[i, j]
+        theta = (v - self.assign[xi])*(1/M[i, j])
         self.assign[xi] = v
-        self.assign[xj] = (self.assign[xj][0] + theta_lhs, self.assign[xj][1] + theta_rhs)
+        self.assign[xj] = self.assign[xj] + theta
         for xk in basic:
             if xk != xi:
                 k = basic[xk]
                 akj = M[k, j]
-                self.assign[xk] = (self.assign[xk][0] + akj*theta_lhs, self.assign[xk][1] + akj*theta_rhs)
+                self.assign[xk] = self.assign[xk] + theta*akj
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]
