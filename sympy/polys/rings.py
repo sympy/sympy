@@ -1955,10 +1955,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def content(f, domain=None):
+    def content(f):
         """Returns GCD of polynomial's coefficients. """
-        if domain is None:
-            domain = f.ring.domain
+
+        domain = f.ring.domain
         cont = domain.zero
         gcd = domain.gcd
 
@@ -2982,7 +2982,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         p = self
         exponents = list(map(sum, zip(*p)))
-        free_sym = {n for n, e in enumerate(exponents) if e}
+        free_sym = [n for n, e in enumerate(exponents) if e]
         return min(free_sym)
 
     # TODO: following methods should point to polynomial
@@ -3058,20 +3058,23 @@ def monomial_extract(polynomials):
 
     """
     ring = polynomials[0].ring
-    zero_monoms = ring.zero_monom
+    zero_monom = ring.zero_monom
     monoms = chain(*polynomials)
+
+    # Check for the presence of zero_monom in any polynomial
+    if any(zero_monom in poly for poly in polynomials):
+        return polynomials, None
+
     monom_gcd = tuple(map(min, zip(*monoms)))
 
-    # If the zero monomial is present, we can immediately return
-    if (any(zero_monoms in poly for poly in polynomials)
-        or monom_gcd == ring.zero_monom):
+    if monom_gcd == ring.zero_monom:
         return polynomials, None
     else:
         d = ring({monom_gcd: ring.domain.one})
-        p = [pi.exquo(d) for pi in polynomials] # TODO: Use monomial_ldiv
+        p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
         return p, d
 
-def gcd_coeffs(polynomials):
+def _gcd_preprocess_polys(polynomials):
     """
     Simplify a list of polynomials whose gcd is wanted. Returns a possibly
     longer list of simpler polynomials having the same gcd as the input.
@@ -3084,22 +3087,23 @@ def gcd_coeffs(polynomials):
     Examples
     ========
 
-    >>> from sympy.polys.rings import gcd_coeffs
+    >>> from sympy.polys.rings import _gcd_preprocess_polys
     >>> from sympy import ring, ZZ
-    >>> R, x, y = ring("x, y", ZZ)
+    >>> R, x, y, z = ring("x, y, z", ZZ)
 
-    >>> f = x**2 - y**2
-    >>> g = x - y
-    >>> polynomials = [f, g]
-    >>> gcd_coeffs(polynomials)
+    >>> f = x**2 + y**2
+    >>> g = x**2 - z**2
+    >>> h = y**3 + z**3
+    >>> polynomials = [f, g, h]
+    >>> _gcd_preprocess_polys(polynomials)
     ([1], None)
 
     """
-    all_coeffs = polynomials
+    all_polys = polynomials
 
     while True:
         # Quick exits are most efficient if we start from the simplest polys
-        polynomials = sorted(set(all_coeffs), key=len)
+        polynomials = sorted(set(all_polys), key=len)
 
         # Find the intersection of symbols for each poly:
         common = polynomials[0].main_variable()
@@ -3113,26 +3117,28 @@ def gcd_coeffs(polynomials):
                 gcd = gcd_terms(polynomials, R, K)
                 return [gcd], None
 
-            syms = pi.main_variable()
-            if allsame and syms != common:
-                allsame = False
-            common &= syms
+            for pi in polynomials:
+                main_sym = pi.main_variable()
+
+                if allsame and main_sym != common:
+                    allsame = False
+                common &= main_sym
 
         # The loop is complete if they all have the same symbols.
         if allsame:
             return polynomials, common
 
         # Extract coefficients as polys containing only the common symbols.
-        all_coeffs = []
+        all_polys = []
         for i, pi in enumerate(polynomials):
             coeffs_i = pi.coeff_wrt(pi.main_variable - common)
-            all_coeffs.extend(coeffs_i)
+            all_polys.extend(coeffs_i)
 
             # Quick exit:
             if len(coeffs_i) == 1:
                 R = polynomials[0].ring
                 K = R.domain
-                gcd = gcd_terms((all_coeffs + polynomials[i+1:]), R, K)
+                gcd = gcd_terms((all_polys + polynomials[i+1:]), R, K)
                 return [gcd], None
 
 def gcd_prs(polynomials):
@@ -3159,7 +3165,7 @@ def gcd_prs(polynomials):
 
     p, monom_gcd = monomial_extract(polynomials)
 
-    p, common_symbols = gcd_coeffs(polynomials)
+    p, common_symbols = _gcd_preprocess_polys(polynomials)
 
     gcd = p[0]
     for pi in p[1:]:
@@ -3247,7 +3253,7 @@ def gcd_terms(polynomials, ring, domain):
     R = domain[sym]
     fpe = R.from_sympy(fpe)
 
-    coeff_gcd = fpe.content(domain)
+    coeff_gcd = fpe.content()
     term_gcd = ring({monom_gcd: coeff_gcd})
 
     return term_gcd
