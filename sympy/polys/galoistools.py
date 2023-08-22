@@ -3,7 +3,7 @@
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
 from sympy.core.random import uniform, randint, seed as seed_func
-from sympy.external.gmpy import SYMPY_INTS, invert
+from sympy.external.gmpy import SYMPY_INTS, MPZ, invert
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors
@@ -2453,7 +2453,7 @@ def csolve_prime(f, p, e=1):
     from solution [1] (mod 3).
     """
     from sympy.polys.domains import ZZ
-    g = f.copy()
+    g = list(map(lambda x: MPZ(int(x)), f))
     # Convert to polynomial of degree at most p-1
     for i in range(len(g) - p):
         g[i + p - 1] += g[i]
