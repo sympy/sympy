@@ -408,17 +408,13 @@ class EncodedCNF:
     data : list of sets of integers
         The CNF expression that has been encoded. Each set represents a clause
         in the CNF expression, where the integers inside the set represent the
-        encoded symbols (variables) or their negations.
+        encoded symbols or their negations.
 
     encoding : dict
         A dictionary that maps symbols (variables) to their corresponding integer
         encodings. The integers are used to represent the symbols in the 'data' list.
 
     symbols : list of symbols
-        A list containing the symbols (variables) that have been encoded. This list
-        is derived from the keys of the 'encoding' dictionary and may be useful for
-        other purposes or in future extensions of the class.
-
         Note that the order of symbols in this list corresponds to their encoding.
         For instance, if the we encode the cnf with symbols [b, a, c], then the
         encoding dictionary will be {b: 1, a: 2, c: 3}.
