@@ -3795,6 +3795,56 @@ class StateSpace(LinearTimeInvariant):
         tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
         return tf_mat
 
+    def append(self, other):
+        """
+        Returns the first model appended with the second model. The order is preserved.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1.append(ss2)
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [2,  0],
+        [0, -2]]), Matrix([
+        [-1, 0],
+        [ 0, 1]]), Matrix([
+        [-2, 0],
+        [ 0, 2]]))
+
+        """
+        n = self.num_states + other.num_states
+        m = self.num_inputs + other.num_inputs
+        p = self.num_outputs + other.num_outputs
+
+        A = zeros(n, n)
+        B = zeros(n, m)
+        C = zeros(p, n)
+        D = zeros(p, m)
+
+        A[:self.num_states, :self.num_states] = self._A
+        A[self.num_states:, self.num_states:] = other._A
+        B[:self.num_states, :self.num_inputs] = self._B
+        B[self.num_states:, self.num_inputs:] = other._B
+        C[:self.num_outputs, :self.num_states] = self._C
+        C[self.num_outputs:, self.num_states:] = other._C
+        D[:self.num_outputs, :self.num_inputs] = self._D
+        D[self.num_outputs:, self.num_inputs:] = other._D
+        return StateSpace(A, B, C, D)
+
     def observability_matrix(self):
         """
         Returns the observability matrix of the state space model:
