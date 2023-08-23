@@ -2,7 +2,10 @@ import os
 import logging
 import re
 
+from sympy.external import import_module
 from .transformer import TransformToSymPyExpr
+
+_lark = import_module("lark")
 
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
