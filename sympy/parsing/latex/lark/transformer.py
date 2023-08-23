@@ -12,7 +12,7 @@ else:
     class Transformer:  # type: ignore
         def transform(self, *args):
             pass
-        
+
     class Token:  # type: ignore
         pass
 
