@@ -173,6 +173,8 @@ elif GROUND_TYPES == 'flint':
         return flint.fmpz(x).isqrt()
 
     def is_square(x):
+        if x < 0:
+            return False
         return flint.fmpz(x).sqrtrem()[1] == 0
 
     def sqrtrem(x):
