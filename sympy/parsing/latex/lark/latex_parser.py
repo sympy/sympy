@@ -2,18 +2,7 @@ import os
 import logging
 import re
 
-from sympy.external import import_module
-
-
-_lark = import_module("lark")
-
-if _lark is not None:
-    from .transformer import TransformToSymPyExpr
-else:
-    class Transformer:  # type: ignore
-        def transform(self, *args):
-            pass
-
+from .transformer import TransformToSymPyExpr
 
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
