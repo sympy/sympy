@@ -7,14 +7,13 @@ from sympy.parsing.latex.errors import LaTeXParsingError
 lark = import_module("lark")
 
 if lark:
-    from lark import Transformer
-    from lark.lexer import Token
+    from lark import Transformer, Token
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
             pass
         
-    class Token:
+    class Token:  # type: ignore
         pass
 
 
