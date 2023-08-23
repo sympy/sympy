@@ -255,6 +255,39 @@ class LRASolver():
         self.last_safe_assignment = self.assign.copy()
 
     @staticmethod
+    def _remove_uneeded_variables(A, nonbasic, num_unused):
+        """
+        See
+        cs.stackexchange.com/questions/161709/a-fast-linear-arithmetic-solver-how-can-gaussian-elimination-be-used-to-simplif/161713#161713
+        """
+        M = A.copy()
+        if num_unused == 0:
+            return M, nonbasic
+
+        rref, pivs = M.rref()
+
+        removed = set()
+        for col in pivs:
+            if col >= num_unused:
+                break
+
+            # col in terms of other variables
+            sol = rref[col, :]
+            if sol*M[col, col] == M[col, :]:
+                continue
+
+            removed.add(col)
+            for row in range(M.shape[0]):
+                M[row, :] = M[row, :]- sol*M[row, col]
+
+        not_removed = [col for col in range(M.shape[1]) if col not in removed]
+        M = M[:,not_removed]
+        nonbasic = [nonbasic[nr] for nr in not_removed if nr < len(nonbasic)]
+
+        return M, nonbasic
+
+
+    @staticmethod
     def _pred_to_binrel(pred):
         assert not pred.function == Q.extended_positive
         arg = pred.arguments[0]
@@ -453,7 +486,15 @@ class LRASolver():
             b = Boundry(var, -const, upper, equality, strict)
             encoding[enc] = b
 
+        # unused variables should come first
+        used_var = {b.var for b in encoding.values()}
+        unused_var = [var for var in nonbasic if var not in used_var]
+        nonbasic = sorted(nonbasic, key=lambda x: x in used_var)
+
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+
+        #A, nonbasic = LRASolver._remove_uneeded_variables(A, nonbasic, len(unused_var))
+
         return LRASolver(A, basic, nonbasic, encoding, testing_mode), conflicts,  x_subs, s_subs
 
     def assert_enc_boundry(self, enc_boundry):
