@@ -1285,8 +1285,6 @@ This generally means using methods like {meth}`~.as_independent` or
 the `args` of expressions directly (see the [custom functions
 guide](custom-functions-assumptions) for an example).
 
-<!-- TODO: Give an example here. Can we show an infinite recursion? -->
-
 Secondly, **do not recursively evaluate assumptions on `self` in assumptions
 handlers**. Assumptions handlers should only check for assumptions on
 `self.args`. The global assumptions system will automatically handle
