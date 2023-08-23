@@ -39,7 +39,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild, Symbol

@@ -6,6 +6,11 @@ musculoskeletal models involding musculotendons and activation dynamics.
 
 """
 
+from .activation import (
+   ActivationBase,
+   FirstOrderActivationDeGroote2016,
+   ZerothOrderActivation,
+)
 from .curve import (
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
@@ -14,6 +19,7 @@ from .curve import (
    TendonForceLengthDeGroote2016,
    TendonForceLengthInverseDeGroote2016,
 )
+from .musculotendon import MusculotendonDeGroote2016, MusculotendonFormulation
 
 
 __all__ = [
@@ -24,4 +30,13 @@ __all__ = [
    'FiberForceVelocityDeGroote2016',
    'TendonForceLengthDeGroote2016',
    'TendonForceLengthInverseDeGroote2016',
+
+   # Activation dynamics classes
+   'ActivationBase',
+   'FirstOrderActivationDeGroote2016',
+   'ZerothOrderActivation',
+
+   # Musculotendon classes
+   'MusculotendonDeGroote2016',
+   'MusculotendonFormulation',
 ]
