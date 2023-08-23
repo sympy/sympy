@@ -7,7 +7,8 @@ from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, trailing, multiplicity, perfect_power
+from sympy.core.intfunc import trailing
+from .factor_ import factorint, multiplicity, perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.core.random import _randint, randint
@@ -731,8 +732,37 @@ def is_quad_residue(a, p):
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
     i.e a % p in set([i**2 % p for i in range(p)]).
 
+    Parameters
+    ==========
+
+    a : integer
+    p : positive integer
+
+    Returns
+    =======
+
+    bool : If True, ``x**2 == a (mod p)`` has solution.
+
+    Raises
+    ======
+
+    ValueError
+        If ``a``, ``p`` is not integer.
+        If ``p`` is not positive.
+
     Examples
     ========
+
+    >>> from sympy.ntheory import is_quad_residue
+    >>> is_quad_residue(21, 100)
+    True
+
+    Indeed, ``pow(39, 2, 100)`` would be 21.
+
+    >>> is_quad_residue(21, 120)
+    False
+
+    That is, for any integer ``x``, ``pow(x, 2, 120)`` is not 21.
 
     If ``p`` is an odd
     prime, an iterative method is used to make the determination:
@@ -746,25 +776,46 @@ def is_quad_residue(a, p):
     See Also
     ========
 
-    legendre_symbol, jacobi_symbol
+    legendre_symbol, jacobi_symbol, sqrt_mod
     """
     a, p = as_int(a), as_int(p)
     if p < 1:
         raise ValueError('p must be > 0')
-    if a >= p or a < 0:
-        a = a % p
+    a %= p
     if a < 2 or p < 3:
         return True
-    if not isprime(p):
-        if p % 2 and jacobi(a, p) == -1:
-            return False
-        r = sqrt_mod(a, p)
-        if r is None:
-            return False
-        else:
+    # Since we want to compute the Jacobi symbol,
+    # we separate p into the odd part and the rest.
+    t = trailing(p)
+    if t:
+        # The existence of a solution to a power of 2 is determined
+        # using the logic of `p==2` in `_sqrt_mod_prime_power` and `_sqrt_mod1`.
+        a_ = a % (1 << t)
+        if a_:
+            r = trailing(a_)
+            if r % 2 or (a_ >> r) & 6:
+                return False
+        p >>= t
+        a %= p
+        if a < 2 or p < 3:
             return True
-
-    return pow(a, (p - 1) // 2, p) == 1
+    # If Jacobi symbol is -1 or p is prime, can be determined by Jacobi symbol only
+    j = jacobi(a, p)
+    if j == -1 or isprime(p):
+        return j == 1
+    # Checks if `x**2 = a (mod p)` has a solution
+    for px, ex in factorint(p).items():
+        if a % px:
+            if jacobi(a, px) != 1:
+                return False
+        else:
+            a_ = a % px**ex
+            if a_ == 0:
+                continue
+            r = multiplicity(px, a_)
+            if r % 2 or jacobi(a_ // px**r, px) != 1:
+                return False
+    return True
 
 
 def is_nthpow_residue(a, n, m):
