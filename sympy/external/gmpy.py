@@ -1,5 +1,6 @@
 import os
 from ctypes import c_long, sizeof
+from functools import reduce
 from typing import Tuple as tTuple, Type
 
 from sympy.external import import_module
@@ -44,37 +45,16 @@ __all__ = [
     # MPZ is either gmpy.mpz or int.
     'MPZ',
 
-    # Either the gmpy or the mpmath function
     'factorial',
-
-    # isqrt from gmpy or mpmath
     'sqrt',
-
-    # is_square from gmpy or mpmath
     'is_square',
-
-    # sqrtrem from gmpy or mpmath
     'sqrtrem',
-
-    # gcd from gmpy or math
     'gcd',
-
-    # lcm from gmpy or math
     'lcm',
-
-    # invert from gmpy or pow
     'invert',
-
-    # legendre from gmpy or sympy
     'legendre',
-
-    # jacobi from gmpy or sympy
     'jacobi',
-
-    # kronecker from gmpy or sympy
     'kronecker',
-
-    # iroot from gmpy or sympy
     'iroot',
 ]
 
@@ -188,14 +168,30 @@ elif GROUND_TYPES == 'flint':
     MPQ = flint.fmpq # type: ignore
 
     factorial = python_factorial
-    sqrt = python_sqrt
-    is_square = python_is_square
-    sqrtrem = python_sqrtrem
-    gcd = python_gcd
-    lcm = python_lcm
+
+    def sqrt(x):
+        return flint.fmpz(x).isqrt()
+
+    def is_square(x):
+        return flint.fmpz(x).sqrtrem()[1] == 0
+
+    def sqrtrem(x):
+        return flint.fmpz(x).sqrtrem()
+
+    def gcd(*args):
+        return reduce(flint.fmpz.gcd, args, flint.fmpz(0))
+
+    def lcm(*args):
+        return reduce(flint.fmpz.lcm, args, flint.fmpz(1))
+
     invert = python_invert
     legendre = python_legendre
-    jacobi = python_jacobi
+
+    def jacobi(x, y):
+        if y <= 0 or not y % 2:
+            raise ValueError("y should be an odd positive integer")
+        return flint.fmpz(x).jacobi(y)
+
     kronecker = python_kronecker
 
     def iroot(x, n):
