@@ -1045,7 +1045,7 @@ def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_po
     real_expr = w_expr[0]
     imag_expr = w_expr[1]
 
-    real_points, imag_points = Parametric2DLineSeries(w_expr[0], w_expr[1], (w, initial_omega, final_omega),
+    real_points, imag_points = Parametric2DLineSeries(real_expr, imag_expr, (w, initial_omega, final_omega),
                                 nb_of_points = nb_of_points, xscale = 'linear', adaptive= False).get_points()
 
     return real_points, imag_points
