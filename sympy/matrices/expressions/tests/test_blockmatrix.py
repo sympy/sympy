@@ -12,9 +12,7 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
     Matrix, ImmutableMatrix, ImmutableSparseMatrix, zeros)
-from sympy.core import Tuple, symbols, Expr, S, Function
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
-from sympy.core import Tuple, Expr, S
+from sympy.core import Tuple, Expr, S, Function
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions import transpose, im, re
 
