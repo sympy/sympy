@@ -1589,3 +1589,20 @@ def test_StateSpace_functions():
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
+
+    # Append
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([[0]])
+    ss1 = StateSpace(A1, B1, C1, D1)
+    ss2 = StateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]), Matrix([[1]]))
+    ss3 = ss1.append(ss2)
+
+    assert ss3.num_states == ss1.num_states + ss2.num_states
+    assert ss3.num_inputs == ss1.num_inputs + ss2.num_inputs
+    assert ss3.num_outputs == ss1.num_outputs + ss2.num_outputs
+    assert ss3.state_matrix == Matrix([[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
+    assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
+    assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
