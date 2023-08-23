@@ -39,9 +39,9 @@ biceps.
 
 ::
 
-   import sympy as sm
-   import sympy.physics.mechanics as me
-   import sympy.physics._biomechanics as bm
+   >>> import sympy as sm
+   >>> import sympy.physics.mechanics as me
+   >>> import sympy.physics._biomechanics as bm
 
 Define variables
 ================
@@ -53,8 +53,8 @@ which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 
 ::
 
-   q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4', real=True)
-   u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4', real=True)
+   >>> q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4', real=True)
+   >>> u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4', real=True)
 
 The necessary constant parameters for the mechanical system are:
 
@@ -70,10 +70,10 @@ The necessary constant parameters for the mechanical system are:
 
 ::
 
-   dx, dy, dz = sm.symbols('dx, dy, dz', real=True, nonnegative=True)
-   lA, lC, lD = sm.symbols('lA, lC, lD', real=True, positive=True)
-   mA, mC, mD = sm.symbols('mA, mC, mD', real=True, positive=True)
-   g, k, c, r = sm.symbols('g, k, c, r', real=True, positive=True)
+   >>> dx, dy, dz = sm.symbols('dx, dy, dz', real=True, nonnegative=True)
+   >>> lA, lC, lD = sm.symbols('lA, lC, lD', real=True, positive=True)
+   >>> mA, mC, mD = sm.symbols('mA, mC, mD', real=True, positive=True)
+   >>> g, k, c, r = sm.symbols('g, k, c, r', real=True, positive=True)
 
 Define kinematics
 =================
@@ -84,48 +84,55 @@ centers of the upper and lower arm, respectively.
 
 ::
 
-   N, A, B, C, D = sm.symbols('N, A, B, C, D', cls=me.ReferenceFrame)
-   O, P1, P2, P3, P4 = sm.symbols('O, P1, P2, P3, P4 ', cls=me.Point)
-   Ao, Co, Cm, Dm, Do = sm.symbols('Ao, Co, Cm, Dm, Do', cls=me.Point)
+   >>> N, A, B, C, D = sm.symbols('N, A, B, C, D', cls=me.ReferenceFrame)
+   >>> O, P1, P2, P3, P4 = sm.symbols('O, P1, P2, P3, P4 ', cls=me.Point)
+   >>> Ao, Co, Cm, Dm, Do = sm.symbols('Ao, Co, Cm, Dm, Do', cls=me.Point)
 
 The orientations and angular velocities of the reference frames are::
 
-   A.orient_axis(N, q1, N.z)
-   B.orient_axis(N, q2, N.y)
-   C.orient_axis(B, q3, B.z)
-   D.orient_axis(C, q4, C.y)
-   A.set_ang_vel(N, u1*N.z)
-   B.set_ang_vel(N, u2*N.y)
-   C.set_ang_vel(B, u3*B.z)
-   D.set_ang_vel(C, u4*C.y)
+   >>> A.orient_axis(N, q1, N.z)
+   >>> B.orient_axis(N, q2, N.y)
+   >>> C.orient_axis(B, q3, B.z)
+   >>> D.orient_axis(C, q4, C.y)
+   >>> A.set_ang_vel(N, u1*N.z)
+   >>> B.set_ang_vel(N, u2*N.y)
+   >>> C.set_ang_vel(B, u3*B.z)
+   >>> D.set_ang_vel(C, u4*C.y)
 
 All of the points' locations and velocities are::
 
-   Ao.set_pos(O, dx*N.x)
-   P1.set_pos(Ao, lA*A.y)
-   P2.set_pos(O, dy*N.y + dz*N.z)
-   Co.set_pos(P2, lC/2*C.z)
-   Cm.set_pos(P2, 1*lC/3*C.z)
-   P3.set_pos(P2, lC*C.z)
-   Dm.set_pos(P3, 1*lD/3*D.z)
-   Do.set_pos(P3, lD/2*D.z)
-   P4.set_pos(P3, lD*D.z)
+   >>> Ao.set_pos(O, dx*N.x)
+   >>> P1.set_pos(Ao, lA*A.y)
+   >>> P2.set_pos(O, dy*N.y + dz*N.z)
+   >>> Co.set_pos(P2, lC/2*C.z)
+   >>> Cm.set_pos(P2, 1*lC/3*C.z)
+   >>> P3.set_pos(P2, lC*C.z)
+   >>> Dm.set_pos(P3, 1*lD/3*D.z)
+   >>> Do.set_pos(P3, lD/2*D.z)
+   >>> P4.set_pos(P3, lD*D.z)
 
-   O.set_vel(N, 0)
-   Ao.set_vel(N, 0)
-   P1.v2pt_theory(Ao, N, A)
-   P2.set_vel(N, 0)
-   Co.v2pt_theory(P2, N, C)
-   Cm.v2pt_theory(P2, N, C)
-   P3.v2pt_theory(P2, N, C)
-   Dm.v2pt_theory(P3, N, D)
-   Do.v2pt_theory(P3, N, D)
-   P4.v2pt_theory(P3, N, D)
+   >>> O.set_vel(N, 0)
+   >>> Ao.set_vel(N, 0)
+   >>> P1.v2pt_theory(Ao, N, A)
+   - lA*u1(t)*A.x
+   >>> P2.set_vel(N, 0)
+   >>> Co.v2pt_theory(P2, N, C)
+   lC*u2(t)*cos(q3(t))/2*C.x - lC*u2(t)*sin(q3(t))/2*C.y
+   >>> Cm.v2pt_theory(P2, N, C)
+   lC*u2(t)*cos(q3(t))/3*C.x - lC*u2(t)*sin(q3(t))/3*C.y
+   >>> P3.v2pt_theory(P2, N, C)
+   lC*u2(t)*cos(q3(t))*C.x - lC*u2(t)*sin(q3(t))*C.y
+   >>> Dm.v2pt_theory(P3, N, D)
+   lC*u2(t)*cos(q3(t))*C.x - lC*u2(t)*sin(q3(t))*C.y + lD*(u2(t)*cos(q3(t)) + u4(t))/3*D.x - lD*(u2(t)*sin(q3(t))*cos(q4(t)) - u3(t)*sin(q4(t)))/3*D.y
+   >>> Do.v2pt_theory(P3, N, D)
+   lC*u2(t)*cos(q3(t))*C.x - lC*u2(t)*sin(q3(t))*C.y + lD*(u2(t)*cos(q3(t)) + u4(t))/2*D.x - lD*(u2(t)*sin(q3(t))*cos(q4(t)) - u3(t)*sin(q4(t)))/2*D.y
+   >>> P4.v2pt_theory(P3, N, D)
+   lC*u2(t)*cos(q3(t))*C.x - lC*u2(t)*sin(q3(t))*C.y + lD*(u2(t)*cos(q3(t)) + u4(t))*D.x - lD*(u2(t)*sin(q3(t))*cos(q4(t)) - u3(t)*sin(q4(t)))*D.y
 
 There are three holonomic constraint equations needed to keep the hand
 :math:`P_4` on the lever :math:`P_1`::
 
-   holonomic = (P4.pos_from(O) - P1.pos_from(O)).to_matrix(N)
+   >>> holonomic = (P4.pos_from(O) - P1.pos_from(O)).to_matrix(N)
 
 Define inertia
 ==============
@@ -133,26 +140,26 @@ Define inertia
 The inertia dyadics can be formed assuming the lever, upper arm, and lower arm
 are thin cylinders::
 
-   IA = me.Inertia(me.inertia(A, mA/12*lA**2, mA/2*lA**2, mA/12*lA**2), Ao)
-   IC = me.Inertia(me.inertia(C, mC/12*lC**2, mC/12*lC**2, mC/2*lC**2), Co)
-   ID = me.Inertia(me.inertia(D, mD/12*lD**2, mD/12*lD**2, mD/2*lD**2), Do)
+   >>> IA = me.Inertia(me.inertia(A, mA/12*lA**2, mA/2*lA**2, mA/12*lA**2), Ao)
+   >>> IC = me.Inertia(me.inertia(C, mC/12*lC**2, mC/12*lC**2, mC/2*lC**2), Co)
+   >>> ID = me.Inertia(me.inertia(D, mD/12*lD**2, mD/12*lD**2, mD/2*lD**2), Do)
 
-   lever = me.RigidBody('lever', masscenter=Ao, frame=A, mass=mA, inertia=IA)
-   u_arm = me.RigidBody('upper arm', masscenter=Co, frame=C, mass=mC, inertia=IC)
-   l_arm = me.RigidBody('lower arm', masscenter=Do, frame=D, mass=mD, inertia=ID)
+   >>> lever = me.RigidBody('lever', masscenter=Ao, frame=A, mass=mA, inertia=IA)
+   >>> u_arm = me.RigidBody('upper arm', masscenter=Co, frame=C, mass=mC, inertia=IC)
+   >>> l_arm = me.RigidBody('lower arm', masscenter=Do, frame=D, mass=mD, inertia=ID)
 
 Define forces
 =============
 
 We will simulate this system in Earth's gravitational field::
 
-   gravC = me.Force(u_arm, mC*g*N.z)
-   gravD = me.Force(l_arm, mD*g*N.z)
+   >>> gravC = me.Force(u_arm, mC*g*N.z)
+   >>> gravD = me.Force(l_arm, mD*g*N.z)
 
 The lever has inertia but we will also add a linear torsional spring and damper
 to provide some more resistance for the arm to press against and pull on::
 
-   lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
+   >>> lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
 
 Biceps
 ------
@@ -168,25 +175,25 @@ muscle dynamics implementation derived from [DeGroote2016]_.
 
 Start by creating the linear pathway::
 
-   biceps_pathway = me.LinearPathway(Cm, Dm)
+   >>> biceps_pathway = me.LinearPathway(Cm, Dm)
 
 You can create an activation model that is fully symbolic or create it with the
 specific tuned numerical parameters from [DeGroote2016]_ like so
 (recommended)::
 
-   biceps_activation = FirstOrderActivationDeGroote2016.with_default_constants('biceps')
+   >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('biceps')
 
 The full musculotendon actuator model is then named and constructed with a
 matching class::
 
-   biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
-                                         activation_dynamics=biceps_activation)
+   >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
+   ...                                       activation_dynamics=biceps_activation)
 
 An :obj:`~sympy.physics.mechanics.actuator.AcutatorBase` can compute the loads
 necessary for forming the equations of motion. The musculotendon forces are
 represented as SymPy functions::
 
-   biceps.to_loads()
+   >>> # biceps.to_loads()
 
 Triceps
 -------
@@ -213,97 +220,128 @@ circular arc has a radius :math:`r`. With these assumptions we can then use the
 ``__init__()`` method to collect the necessary information for use in the
 remaining methods::
 
-   class ExtensorPathway(me.PathwayBase):
-
-       def __init__(self, origin, insertion, axis_point, axis, parent_axis,
-           child_axis, radius, coordinate):
-           """A custom pathway that wraps a circular arc around a pin joint.
-
-           This is intended to be used for extensor muscles. For example, a
-           triceps wrapping around the elbow joint to extend the upper arm at
-           the elbow.
-
-           Parameters
-           ==========
-           origin : Point
-               Muscle origin point fixed on the parent body (A).
-           insertion : Point
-               Muscle insertion point fixed on the child body (B).
-           axis_point : Point
-               Pin joint location fixed in both the parent and child.
-           axis : Vector
-               Pin joint rotation axis.
-           parent_axis : Vector
-               Axis fixed in the parent frame (A) that is directed from the pin
-               joint point to the muscle origin point.
-           child_axis : Vector
-               Axis fixed in the child frame (B) that is directed from the pin
-               joint point to the muscle insertion point.
-           radius : sympyfiable
-               Radius of the arc that the muscle wraps around.
-           coordinate : sympfiable function of time
-               Joint angle, zero when parent and child frames align. Positive
-               rotation about the pin joint axis, B with respect to A.
-
-           Notes
-           =====
-
-           Only valid for coordinate >= 0.
-
-           """
-           super().__init__(origin, insertion)
-
-           self.origin = origin
-           self.insertion = insertion
-           self.axis_point = axis_point
-           self.axis = axis.normalize()
-           self.parent_axis = parent_axis.normalize()
-           self.child_axis = child_axis.normalize()
-           self.radius = radius
-           self.coordinate = coordinate
+   >>> class ExtensorPathway(me.PathwayBase):
+   ...
+   ...     def __init__(self, origin, insertion, axis_point, axis, parent_axis,
+   ...                  child_axis, radius, coordinate):
+   ...         """A custom pathway that wraps a circular arc around a pin joint.
+   ...
+   ...         This is intended to be used for extensor muscles. For example, a
+   ...         triceps wrapping around the elbow joint to extend the upper arm at
+   ...         the elbow.
+   ...
+   ...         Parameters
+   ...         ==========
+   ...         origin : Point
+   ...             Muscle origin point fixed on the parent body (A).
+   ...         insertion : Point
+   ...             Muscle insertion point fixed on the child body (B).
+   ...         axis_point : Point
+   ...             Pin joint location fixed in both the parent and child.
+   ...         axis : Vector
+   ...             Pin joint rotation axis.
+   ...         parent_axis : Vector
+   ...             Axis fixed in the parent frame (A) that is directed from the pin
+   ...             joint point to the muscle origin point.
+   ...         child_axis : Vector
+   ...             Axis fixed in the child frame (B) that is directed from the pin
+   ...             joint point to the muscle insertion point.
+   ...         radius : sympyfiable
+   ...             Radius of the arc that the muscle wraps around.
+   ...         coordinate : sympfiable function of time
+   ...             Joint angle, zero when parent and child frames align. Positive
+   ...             rotation about the pin joint axis, B with respect to A.
+   ...
+   ...         Notes
+   ...         =====
+   ...
+   ...         Only valid for coordinate >= 0.
+   ...
+   ...         """
+   ...         super().__init__(origin, insertion)
+   ...
+   ...         self.origin = origin
+   ...         self.insertion = insertion
+   ...         self.axis_point = axis_point
+   ...         self.axis = axis.normalize()
+   ...         self.parent_axis = parent_axis.normalize()
+   ...         self.child_axis = child_axis.normalize()
+   ...         self.radius = radius
+   ...         self.coordinate = coordinate
+   ...
+   ...         self.origin_distance = axis_point.pos_from(origin).magnitude()
+   ...         self.insertion_distance = axis_point.pos_from(insertion).magnitude()
+   ...         self.origin_angle = sm.asin(self.radius/self.origin_distance)
+   ...         self.insertion_angle = sm.asin(self.radius/self.insertion_distance)
+   ...
+   ...     @property
+   ...     def length(self):
+   ...         """Length of the pathway.
+   ...
+   ...         Length of two fixed length line segments and a changing arc length
+   ...         of a circle.
+   ...
+   ...         """
+   ...
+   ...         angle = self.origin_angle + self.coordinate + self.insertion_angle
+   ...         arc_length = self.radius*angle
+   ...
+   ...         origin_segment_length = self.origin_distance*sm.cos(self.origin_angle)
+   ...         insertion_segment_length = self.insertion_distance*sm.cos(self.insertion_angle)
+   ...
+   ...         return origin_segment_length + arc_length + insertion_segment_length
+   ...
+   ...     @property
+   ...     def extension_velocity(self):
+   ...         """Extension velocity of the pathway.
+   ...
+   ...         Arc length of circle is the only thing that changes when the elbow
+   ...         flexes and extends.
+   ...
+   ...         """
+   ...         return self.radius*self.coordinate.diff(me.dynamicsymbols._t)
+   ...
+   ...     def compute_loads(self, force_magnitude):
+   ...         """Loads in the correct format to be supplied to `KanesMethod`.
+   ...
+   ...         Forces applied to origin, insertion, and P from the muscle wrapped
+   ...         over circular arc of radius r.
+   ...
+   ...         """
+   ...
+   ...         parent_tangency_point = me.Point('Aw')  # fixed in parent
+   ...         child_tangency_point = me.Point('Bw')  # fixed in child
+   ...
+   ...         parent_tangency_point.set_pos(
+   ...             self.axis_point,
+   ...             -self.radius*sm.cos(self.origin_angle)*self.parent_axis.cross(self.axis)
+   ...             + self.radius*sm.sin(self.origin_angle)*self.parent_axis,
+   ...         )
+   ...         child_tangency_point.set_pos(
+   ...             self.axis_point,
+   ...             self.radius*sm.cos(self.insertion_angle)*self.child_axis.cross(self.axis)
+   ...             + self.radius*sm.sin(self.insertion_angle)*self.child_axis),
+   ...
+   ...         parent_force_direction_vector = self.origin.pos_from(parent_tangency_point)
+   ...         child_force_direction_vector = self.insertion.pos_from(child_tangency_point)
+   ...         force_on_parent = force_magnitude*parent_force_direction_vector.normalize()
+   ...         force_on_child = force_magnitude*child_force_direction_vector.normalize()
+   ...         loads = [
+   ...             me.Force(self.origin, force_on_parent),
+   ...             me.Force(self.axis_point, -(force_on_parent + force_on_child)),
+   ...             me.Force(self.insertion, force_on_child),
+   ...         ]
+   ...         return loads
+   ...
 
 Also in ``__init__()`` we can calculate some quantities that will be needed in
 multiple overloaded methods::
 
-           self.origin_distance = axis_point.pos_from(origin).magnitude()
-           self.insertion_distance = axis_point.pos_from(insertion).magnitude()
-           self.origin_angle = sm.asin(self.radius/self.origin_distance)
-           self.insertion_angle = sm.asin(self.radius/self.insertion_distance)
-
 The length of the pathway is the sum of the lengths of the two linear segments
 and the circular arc that changes with variation of the pin joint coordinate.
 
-::
-
-       @property
-       def length(self):
-           """Length of the pathway.
-
-           Length of two fixed length line segments and a changing arc length
-           of a circle.
-
-           """
-
-           angle = self.origin_angle + self.coordinate + self.insertion_angle
-           arc_length = self.radius*angle
-
-           origin_segment_length = self.origin_distance*sm.cos(self.origin_angle)
-           insertion_segment_length = self.insertion_distance*sm.cos(self.insertion_angle)
-
-           return origin_segment_length + arc_length + insertion_segment_length
-
 The extension velocity is simply the change with respect to time in the arc
 length::
-
-       @property
-       def extension_velocity(self):
-           """Extension velocity of the pathway.
-
-           Arc length of circle is the only thing that changes when the elbow
-           flexes and extends.
-
-           """
-           return self.radius*self.coordinate.diff(me.dynamicsymbols._t)
 
 The loads are made up of three forces: two that push an pull on the origin and
 insertion points along the linear portions of the pathway and the resultant
@@ -312,58 +350,29 @@ circular arc.
 
 ::
 
-       def compute_loads(self, force_magnitude):
-           """Loads in the correct format to be supplied to `KanesMethod`.
-
-           Forces applied to origin, insertion, and P from the muscle wrapped
-           over circular arc of radius r.
-
-           """
-
-           parent_tangency_point = Point('Aw')  # fixed in parent
-           child_tangency_point = Point('Bw')  # fixed in child
-
-           parent_tangency_point.set_pos(
-               self.axis_point,
-               -self.radius*sm.cos(self.origin_angle)*self.parent_axis.cross(self.axis)
-               + self.radius*sm.sin(self.origin_angle)*self.parent_axis,
-           )
-           child_tangency_point.set_pos(
-               self.axis_point,
-               self.radius*sm.cos(self.insertion_angle)*self.child_axis.cross(self.axis)
-               + self.radius*sm.sin(self.insertion_angle)*self.child_axis),
-
-           parent_force_direction_vector = self.origin.pos_from(parent_tangency_point)
-           child_force_direction_vector = self.insertion.pos_from(child_tangency_point)
-           force_on_parent = force_magnitude*parent_force_direction_vector.normalize()
-           force_on_child = force_magnitude*child_force_direction_vector.normalize()
-           loads = [
-               Force(self.origin, force_on_parent),
-               Force(self.axis_point, -(force_on_parent + force_on_child)),
-               Force(self.insertion, force_on_child),
-           ]
-           return loads
 
 Now that we have a custom pathway defined we can create a musculotendon
 actuator model in the same fashion as the biceps::
 
-   triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
-   triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
-   triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway,
-                                          activation_dynamics=triceps_activation)
+   >>> triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
+   >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
+   >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway,
+   ...                                        activation_dynamics=triceps_activation)
+   ...
 
 The load formulas are more complex but should allow the triceps to extend the
 elbow::
 
-       triceps.to_loads()
+   >>> # triceps.to_loads()
 
 Lastly, all of the loads can be assembled into one tuple::
 
-   loads = (
-       biceps.to_loads() +
-       triceps.to_loads() +
-       [lever_resistance, gravC, gravD]
-   )
+   >>> loads = (
+   ...     biceps.to_loads() +
+   ...     triceps.to_loads() +
+   ...     [lever_resistance, gravC, gravD]
+   ... )
+   ...
 
 Equations of Motion
 ===================
@@ -374,30 +383,31 @@ degree of freedom.
 
 ::
 
-   kane = me.KanesMethod(
-       N,
-       (q1,),
-       (u1,),
-       kd_eqs=(
-           u1 - q1.diff(),
-           u2 - q2.diff(),
-           u3 - q3.diff(),
-           u4 - q4.diff(),
-       ),
-       q_dependent=(q2, q3, q4),
-       configuration_constraints=holonomic,
-       velocity_constraints=holonomic.diff(me.dynamicsymbols._t),
-       u_dependent=(u2, u3, u4),
-   )
-   Fr, Frs = kane.kanes_equations((lever, u_arm, l_arm), loads)
+   >>> kane = me.KanesMethod(
+   ...     N,
+   ...     (q1,),
+   ...     (u1,),
+   ...     kd_eqs=(
+   ...         u1 - q1.diff(),
+   ...         u2 - q2.diff(),
+   ...         u3 - q3.diff(),
+   ...         u4 - q4.diff(),
+   ...     ),
+   ...     q_dependent=(q2, q3, q4),
+   ...     configuration_constraints=holonomic,
+   ...     velocity_constraints=holonomic.diff(me.dynamicsymbols._t),
+   ...     u_dependent=(u2, u3, u4),
+   ... )
+   ...
+   >>> Fr, Frs = kane.kanes_equations((lever, u_arm, l_arm), loads)
 
 ::
 
-   kane.mass_matrix
+   >>> # kane.mass_matrix
 
 ::
 
-   kane.forcing
+   >>> # kane.forcing
 
 The terms not linear in :math:`\dot{\mathbf{u}}` contain the muscle forces
 which are a function of the activation state variables in addition to the
@@ -405,11 +415,13 @@ coordinates and generalized speeds.
 
 ::
 
-   me.find_dynamicsymbols(kane.forcing)
+   >>> me.find_dynamicsymbols(kane.forcing)
+   {a_biceps(t), a_triceps(t), q1(t), q2(t), q3(t), q4(t), u1(t), u2(t), u3(t), u4(t)}
 
 They also contain new constant parameters associated with the muscle models::
 
-   kane.forcing.free_symbols
+   >>> kane.forcing.free_symbols
+   {F_M_max_biceps, F_M_max_triceps, alpha_opt_biceps, alpha_opt_triceps, beta_biceps, beta_triceps, c, g, k, lA, lC, lD, l_M_opt_biceps, l_M_opt_triceps, l_T_slack_biceps, l_T_slack_triceps, mC, mD, r, t, v_M_max_biceps, v_M_max_triceps}
 
 Muscle Activation Differential Equations
 ========================================
@@ -418,15 +430,17 @@ The activation state of each muscle are new state variables associated with two
 new first order differential equations. These differential equations are
 accessed from the muscle actuator models::
 
-   biceps.rhs()
+   >>> biceps.rhs()
+   Matrix([[(-0.5625*a_biceps(t)**3*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.5625*a_biceps(t)**3 + 0.5625*a_biceps(t)**2*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.5625*a_biceps(t)**2*e_biceps(t) - 0.375*a_biceps(t)**2*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.375*a_biceps(t)**2 + 0.375*a_biceps(t)*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.375*a_biceps(t)*e_biceps(t) + 0.9375*a_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 1.0625*a_biceps(t) - 0.9375*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 1.0625*e_biceps(t))/(0.045*a_biceps(t) + 0.015)]])
 
 ::
 
-   triceps.rhs()
+   >>> triceps.rhs()
+   Matrix([[(-0.5625*a_triceps(t)**3*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.5625*a_triceps(t)**3 + 0.5625*a_triceps(t)**2*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.5625*a_triceps(t)**2*e_triceps(t) - 0.375*a_triceps(t)**2*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.375*a_triceps(t)**2 + 0.375*a_triceps(t)*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.375*a_triceps(t)*e_triceps(t) + 0.9375*a_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 1.0625*a_triceps(t) - 0.9375*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 1.0625*e_triceps(t))/(0.045*a_triceps(t) + 0.015)]])
 
 ::
 
-   dadt = bicep.rhs().col_join(tricep.rhs())
+   >>> dadt = biceps.rhs().col_join(triceps.rhs())
 
 Evaluate the System Differential Equations
 ==========================================
@@ -463,19 +477,31 @@ coordinates, generalized speeds, and the two muscles' activation state:
 
 ::
 
-   q, u = kane.q, kane.u
-
-   a = bicep.x.col_join(tricep.x)
-
-   x = q.col_join(u).col_join(a)
-   x
+   >>> q, u = kane.q, kane.u
+   >>> a = biceps.x.col_join(triceps.x)
+   >>> x = q.col_join(u).col_join(a)
+   >>> x
+   Matrix([
+   [       q1(t)],
+   [       q2(t)],
+   [       q3(t)],
+   [       q4(t)],
+   [       u1(t)],
+   [       u2(t)],
+   [       u3(t)],
+   [       u4(t)],
+   [ a_biceps(t)],
+   [a_triceps(t)]])
 
 The only specific inputs are the two muscles' excitation:
 
 ::
 
-   e = bicep.r.col_join(tricep.r)
-   e
+   >>> e = biceps.r.col_join(triceps.r)
+   >>> e
+   Matrix([
+   [ e_biceps(t)],
+   [e_triceps(t)]])
 
 The constants are made up of the geometry, mass, local gravitational constant,
 the lever's stiffness and damping coefficients, and various parameters of the
@@ -483,34 +509,61 @@ muscles.
 
 ::
 
-   p = sm.Matrix([
-       dx,
-       dy,
-       dz,
-       lA,
-       lC,
-       lD,
-       mA,
-       mC,
-       mD,
-       g,
-       k,
-       c,
-       r,
-       biceps._F_M_max,
-       biceps._l_M_opt,
-       biceps._l_T_slack,
-       biceps._v_M_max,
-       biceps._alpha_opt,
-       biceps._beta,
-       triceps._F_M_max,
-       triceps._l_M_opt,
-       triceps._l_T_slack,
-       triceps._v_M_max,
-       triceps._alpha_opt,
-       triceps._beta,
-   ])
-   p
+   >>> p = sm.Matrix([
+   ...     dx,
+   ...     dy,
+   ...     dz,
+   ...     lA,
+   ...     lC,
+   ...     lD,
+   ...     mA,
+   ...     mC,
+   ...     mD,
+   ...     g,
+   ...     k,
+   ...     c,
+   ...     r,
+   ...     biceps._F_M_max,
+   ...     biceps._l_M_opt,
+   ...     biceps._l_T_slack,
+   ...     biceps._v_M_max,
+   ...     biceps._alpha_opt,
+   ...     biceps._beta,
+   ...     triceps._F_M_max,
+   ...     triceps._l_M_opt,
+   ...     triceps._l_T_slack,
+   ...     triceps._v_M_max,
+   ...     triceps._alpha_opt,
+   ...     triceps._beta,
+   ... ])
+   ...
+   >>> p
+   Matrix([
+   [               dx],
+   [               dy],
+   [               dz],
+   [               lA],
+   [               lC],
+   [               lD],
+   [               mA],
+   [               mC],
+   [               mD],
+   [                g],
+   [                k],
+   [                c],
+   [                r],
+   [   F_M_max_biceps],
+   [   l_M_opt_biceps],
+   [ l_T_slack_biceps],
+   [   v_M_max_biceps],
+   [ alpha_opt_biceps],
+   [      beta_biceps],
+   [  F_M_max_triceps],
+   [  l_M_opt_triceps],
+   [l_T_slack_triceps],
+   [  v_M_max_triceps],
+   [alpha_opt_triceps],
+   [     beta_triceps]])
 
 Now we have all the symbolic components to generate numerical functions to
 evaluate :math:`\mathbf{M}_d,\mathbf{g}_d` and :math:`\mathbf{g}_a`. With these
@@ -520,41 +573,42 @@ in a valid state.
 
 ::
 
-   eval_diffeq = sm.lambdify((q, u, a, e, p),
-                             (kane.mass_matrix, kane.forcing, ga), cse=True)
-   eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
+   >>> eval_diffeq = sm.lambdify((q, u, a, e, p),
+   ...                           (kane.mass_matrix, kane.forcing, dadt), cse=True)
+   >>> eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
 We need some reasonable numerical values for all the constants::
 
-   import numpy as np
+   >>> import numpy as np
 
-   p_vals = np.array([
-       -0.31,  # dx [m]
-       0.15,  # dy [m]
-       -0.31,  # dz [m]
-       0.2,   # lA [m]
-       0.3,  # lC [m]
-       0.3,  # lD [m]
-       1.0,  # mA [kg]
-       2.3,  # mC [kg]
-       1.7,  # mD [kg]
-       9.81,  # g [m/s/s]
-       5.0,  # k [Nm/rad]
-       0.5,  # c [Nms/rad]
-       0.03,  # r [m]
-       500.0,  # biceps F_M_max [?]
-       0.6*0.3,  # biceps l_M_opt [?]
-       0.55*0.3,  # biceps l_T_slack [?]
-       10.0,  # biceps v_M_max [?]
-       0.0,  # biceps alpha_opt [?]
-       0.1,  # biceps beta [?]
-       500.0,  # triceps F_M_max [?]
-       0.6*0.3,  # triceps l_M_opt [?]
-       0.65*0.3,  # triceps l_T_slack [?]
-       10.0,  # triceps v_M_max [?]
-       0.0,  # triceps alpha_opt [?]
-       0.1,  # triceps beta [?]
-   ])
+   >>> p_vals = np.array([
+   ...     -0.31,  # dx [m]
+   ...     0.15,  # dy [m]
+   ...     -0.31,  # dz [m]
+   ...     0.2,   # lA [m]
+   ...     0.3,  # lC [m]
+   ...     0.3,  # lD [m]
+   ...     1.0,  # mA [kg]
+   ...     2.3,  # mC [kg]
+   ...     1.7,  # mD [kg]
+   ...     9.81,  # g [m/s/s]
+   ...     5.0,  # k [Nm/rad]
+   ...     0.5,  # c [Nms/rad]
+   ...     0.03,  # r [m]
+   ...     500.0,  # biceps F_M_max [?]
+   ...     0.6*0.3,  # biceps l_M_opt [?]
+   ...     0.55*0.3,  # biceps l_T_slack [?]
+   ...     10.0,  # biceps v_M_max [?]
+   ...     0.0,  # biceps alpha_opt [?]
+   ...     0.1,  # biceps beta [?]
+   ...     500.0,  # triceps F_M_max [?]
+   ...     0.6*0.3,  # triceps l_M_opt [?]
+   ...     0.65*0.3,  # triceps l_T_slack [?]
+   ...     10.0,  # triceps v_M_max [?]
+   ...     0.0,  # triceps alpha_opt [?]
+   ...     0.1,  # triceps beta [?]
+   ... ])
+   ...
 
 Due to the three holonomic constraints, three of the coordinates are a function
 of the remaining one. We can choose the lever angle :math:`q_1` to be the
@@ -562,48 +616,60 @@ independent coordinate and solve for the rest, given guesses of their values.
 
 ::
 
-   from scipy.optimize import fsolve
+   >>> from scipy.optimize import fsolve
 
-   q_vals = np.array([
-       np.deg2rad(5.0),  # q1 [rad]
-       np.deg2rad(-10.0),  # q2 [rad]
-       np.deg2rad(0.0),  # q3 [rad]
-       np.deg2rad(75.0),  # q4 [rad]
-   ])
+   >>> q_vals = np.array([
+   ...     np.deg2rad(5.0),  # q1 [rad]
+   ...     np.deg2rad(-10.0),  # q2 [rad]
+   ...     np.deg2rad(0.0),  # q3 [rad]
+   ...     np.deg2rad(75.0),  # q4 [rad]
+   ... ])
+   ...
 
-   def eval_holo_fsolve(x):
-       q1 = q_vals[0]  # specified
-       q2, q3, q4 = x
-       return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
+   >>> def eval_holo_fsolve(x):
+   ...     q1 = q_vals[0]  # specified
+   ...     q2, q3, q4 = x
+   ...     return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
+   ...
 
-   q_vals[1:] = fsolve(eval_holo_fsolve, q_vals[1:])
+   >>> q_vals[1:] = fsolve(eval_holo_fsolve, q_vals[1:])
 
-   np.rad2deg(q_vals)
+   >>> np.rad2deg(q_vals)
+   [  5.         -87.06145113   9.54565989  81.77992469]
 
 We'll assume the system is in a stationary state::
 
-   u_vals = np.array([
-       0.0,  # u1, [rad/s]
-       0.0,  # u2, [rad/s]
-       0.0,  # u3, [rad/s]
-       0.0,  # u4, [rad/s]
-   ])
+   >>> u_vals = np.array([
+   ...     0.0,  # u1, [rad/s]
+   ...     0.0,  # u2, [rad/s]
+   ...     0.0,  # u3, [rad/s]
+   ...     0.0,  # u4, [rad/s]
+   ... ])
+   ...
 
-   a_vals = np.array([
-       0.0,  # a_bicep, nondimensional
-       0.0,  # a_tricep, nondimensional
-   ])
+   >>> a_vals = np.array([
+   ...     0.0,  # a_bicep, nondimensional
+   ...     0.0,  # a_tricep, nondimensional
+   ... ])
 
 The muscle excitations will also initially be deactivated::
 
-   e_vals = np.array([
-       0.0,
-       0.0,
-   ])
+   >>> e_vals = np.array([
+   ...     0.0,
+   ...     0.0,
+   ... ])
 
 The system equations can be now be numerically evaluated::
 
-   eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
+   >>> eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
+   ([[ 0.00333333 -0.02787753 -0.00714468 -0.03360186]
+    [ 0.19923894  0.31       -0.00252423  0.29869588]
+    [ 0.01743115  0.          0.29280666  0.00711305]
+    [ 0.          0.32743115 -0.04917419  0.02702174]], [[ 0.31082274]
+    [ 0.        ]
+    [-0.        ]
+    [ 0.        ]], [[0.]
+    [0.]])
 
 Simulate the muscle-driven motion
 =================================
@@ -618,39 +684,40 @@ contraction and the triceps in extension with excitation values between -1 and
 
 ::
 
-   def eval_rhs(t, x, p):
-       """Returns the time derivative of the state.
-
-       Parameters
-       ==========
-       t : float
-          Time in seconds.
-       x : array_like, shape(10,)
-         State vector.
-       p : array_like, shape(?, )
-         Parameter vector.
-
-       Returns
-       =======
-       dxdt : ndarray, shape(10,)
-         Time derivative of the state.
-
-       """
-
-       q = x[0:4]
-       u = x[4:8]
-       a = x[8:10]
-
-       if t < 0.5 or t > 1.5:
-          e = np.array([0.0, 0.0])
-       else:
-          e = np.array([0.8, 0.0])
-
-       qd = u
-       m, f, ad = eval_diffeq(q, u, a, e, p)
-       ud = np.linalg.solve(m, f).squeeze()
-
-       return np.hstack((qd, ud, ad.squeeze()))
+   >>> def eval_rhs(t, x, p):
+   ...     """Returns the time derivative of the state.
+   ...
+   ...     Parameters
+   ...     ==========
+   ...     t : float
+   ...        Time in seconds.
+   ...     x : array_like, shape(10,)
+   ...       State vector.
+   ...     p : array_like, shape(?, )
+   ...       Parameter vector.
+   ...
+   ...     Returns
+   ...     =======
+   ...     dxdt : ndarray, shape(10,)
+   ...       Time derivative of the state.
+   ...
+   ...     """
+   ...
+   ...     q = x[0:4]
+   ...     u = x[4:8]
+   ...     a = x[8:10]
+   ...
+   ...     if t < 0.5 or t > 1.5:
+   ...        e = np.array([0.0, 0.0])
+   ...     else:
+   ...        e = np.array([0.8, 0.0])
+   ...
+   ...     qd = u
+   ...     m, f, ad = eval_diffeq(q, u, a, e, p)
+   ...     ud = np.linalg.solve(m, f).squeeze()
+   ...
+   ...     return np.hstack((qd, ud, ad.squeeze()))
+   ...
 
 The system can now be simulated over 3 seconds provided the initial state
 :math:`\mathbf{x}_0` and our function defined above using SciPy's
@@ -658,12 +725,12 @@ The system can now be simulated over 3 seconds provided the initial state
 
 ::
 
-   from scipy.integrate import solve_ivp
+   >>> from scipy.integrate import solve_ivp
 
-   t0, tf = 0.0, 3.0
-   ts = np.linspace(t0, tf, num=301)
-   x0 = np.hstack((q_vals, u_vals, a_vals))
-   sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
+   >>> t0, tf = 0.0, 3.0
+   >>> ts = np.linspace(t0, tf, num=301)
+   >>> x0 = np.hstack((q_vals, u_vals, a_vals))
+   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
 
 TODO : Use the matplotlib sphinx directive to plot this (if possible).
 
@@ -671,43 +738,55 @@ The motion can be visualized by plotting the state trajectories over time.
 
 ::
 
-   import matplotlib.pyplot as plt
+   >>> import matplotlib.pyplot as plt
 
-   def plot_traj(t, x, syms):
-       """Simple plot of state trajectories.
-
-       Parameters
-       ==========
-       t : array_like, shape(n,)
-           Time values.
-       x : array_like, shape(n, m)
-           State values at each time value.
-       syms : sequence of Symbol, len(m)
-           SymPy symbols associated with state.
-
-       """
-       num_rows = 10
-       num_cols = (x.shape[1] // num_rows)
-       if x.shape[1] % num_rows > 0:
-           num_cols += 1
-
-       fig, axes = plt.subplots(num_rows, num_cols, sharex=True)
-
-       for ax, traj, sym in zip(axes.T.flatten(), x.T, syms):
-           ax.plot(t, traj)
-           ax.set_ylabel(sm.latex(sym, mode='inline'))
-
-       # label the x axis only on the bottom row.
-       for ax in axes[-1, :]:
-           ax.set_xlabel('Time [s]')
-
-       fig.tight_layout()
-
-    return axes
+   >>> def plot_traj(t, x, syms):
+   ...     """Simple plot of state trajectories.
+   ...
+   ...     Parameters
+   ...     ==========
+   ...     t : array_like, shape(n,)
+   ...         Time values.
+   ...     x : array_like, shape(n, m)
+   ...         State values at each time value.
+   ...     syms : sequence of Symbol, len(m)
+   ...         SymPy symbols associated with state.
+   ...
+   ...     """
+   ...     num_rows = 8
+   ...     num_cols = (x.shape[1] // num_rows)
+   ...     if x.shape[1] % num_rows > 0:
+   ...         num_cols += 1
+   ...
+   ...     fig, axes = plt.subplots(num_rows, num_cols, sharex=True)
+   ...
+   ...     for ax, traj, sym in zip(axes.T.flatten(), x.T, syms):
+   ...         ax.plot(t, traj)
+   ...         ax.set_ylabel(sm.latex(sym, mode='inline'))
+   ...
+   ...     # label the x axis only on the bottom row.
+   ...     for ax in axes[-1, :]:
+   ...         ax.set_xlabel('Time [s]')
+   ...
+   ...     fig.tight_layout()
+   ...
+   ...     return axes
+   ...
 
 ::
 
-    plot_traj(ts, sol.y.T, x)
+   >>> plot_traj(ts, sol.y.T, x)
+   [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{2}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{triceps}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{1}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{2}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{3}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: xlabel='Time [s]', ylabel='$u_{4}{\\left(t \\right)}$'>
+     <Axes: xlabel='Time [s]'>]]
 
 TODO : Tune the simulation parameters and describe the motion.
 
