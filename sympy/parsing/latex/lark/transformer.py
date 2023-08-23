@@ -1,12 +1,25 @@
 import re
 
 import sympy
+from sympy.external import import_module
 from sympy.parsing.latex.errors import LaTeXParsingError
 
-import lark
+lark = import_module("lark")
+
+if lark:
+    from lark import Transformer
+    from lark.lexer import Token
+else:
+    class Transformer:  # type: ignore
+        def transform(self, *args):
+            pass
+        
+    class Token:
+        pass
+
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic
-class TransformToSymPyExpr(lark.Transformer):
+class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
@@ -253,7 +266,7 @@ class TransformToSymPyExpr(lark.Transformer):
             return tokens
         else:
             def remove_tokens(args):
-                if isinstance(args, lark.lexer.Token):
+                if isinstance(args, Token):
                     if args.type != "COMMA":
                         # an unexpected token was encountered
                         raise LaTeXParsingError()  # TODO: write descriptive error message
