@@ -3,12 +3,12 @@ from sympy.external import import_module
 import sympy.physics.mechanics as me
 import sympy.physics._biomechanics as bm
 from sympy.testing.pytest import skip
-numpy = import_module('numpy')
+np = import_module('numpy')
 scipy = import_module('scipy', import_kwargs={'fromlist': ['optimize']})
 
 
 def test_arm_lever_tutorial():
-    if not numpy:
+    if not np:
         skip('NumPy not installed.')
     if not scipy:
         skip('SciPy not installed.')
@@ -266,39 +266,39 @@ def test_arm_lever_tutorial():
                               (kane.mass_matrix, kane.forcing, dadt), cse=True)
     eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
-    p_vals = numpy.array([
-        0.31,  # dx [m]
+    p_vals = np.array([
+        -0.31,  # dx [m]
         0.15,  # dy [m]
         -0.31,  # dz [m]
         0.2,   # lA [m]
         0.3,  # lC [m]
         0.3,  # lD [m]
-        0.5,  # mA [kg]
+        1.0,  # mA [kg]
         2.3,  # mC [kg]
         1.7,  # mD [kg]
         9.81,  # g [m/s/s]
         5.0,  # k [Nm/rad]
         0.5,  # c [Nms/rad]
         0.03,  # r [m]
-        500.0,
-        0.6*0.3,
-        0.55*0.3,
-        10.0,
-        0.0,
-        0.1,
-        500.0,
-        0.6*0.3,
-        0.65*0.3,
-        10.0,
-        0.0,
-        0.1,
+        500.0,  # biceps F_M_max [?]
+        0.6*0.3,  # biceps l_M_opt [?]
+        0.55*0.3,  # biceps l_T_slack [?]
+        10.0,  # biceps v_M_max [?]
+        0.0,  # biceps alpha_opt [?]
+        0.1,  # biceps beta [?]
+        500.0,  # triceps F_M_max [?]
+        0.6*0.3,  # triceps l_M_opt [?]
+        0.65*0.3,  # triceps l_T_slack [?]
+        10.0,  # triceps v_M_max [?]
+        0.0,  # triceps alpha_opt [?]
+        0.1,  # triceps beta [?]
     ])
 
-    q_vals = numpy.array([
-        numpy.deg2rad(5.0),  # q1 [rad]
-        numpy.deg2rad(-10.0),  # q2 [rad]
-        numpy.deg2rad(0.0),  # q3 [rad]
-        numpy.deg2rad(75.0),  # q4 [rad]
+    q_vals = np.array([
+        np.deg2rad(5.0),  # q1 [rad]
+        np.deg2rad(-10.0),  # q2 [rad]
+        np.deg2rad(0.0),  # q3 [rad]
+        np.deg2rad(75.0),  # q4 [rad]
     ])
 
     def eval_holo_fsolve(x):
@@ -308,19 +308,19 @@ def test_arm_lever_tutorial():
 
     q_vals[1:] = scipy.optimize.fsolve(eval_holo_fsolve, q_vals[1:])
 
-    u_vals = numpy.array([
+    u_vals = np.array([
         0.0,  # u1, [rad/s]
         0.0,  # u2, [rad/s]
         0.0,  # u3, [rad/s]
         0.0,  # u4, [rad/s]
     ])
 
-    a_vals = numpy.array([
+    a_vals = np.array([
         0.0,  # a_bicep, nondimensional
         0.0,  # a_tricep, nondimensional
     ])
 
-    e_vals = numpy.array([
+    e_vals = np.array([
         0.0,
         0.0,
     ])
@@ -332,18 +332,18 @@ def test_arm_lever_tutorial():
         a = x[8:10]
 
         if t < 0.5 or t > 1.5:
-            e = numpy.array([0.0, 0.0])
+            e = np.array([0.0, 0.0])
         else:
-            e = numpy.array([0.8, 0.0])
+            e = np.array([0.8, 0.0])
 
         qd = u
         m, f, ad = eval_diffeq(q, u, a, e, p)
-        ud = numpy.linalg.solve(m, f).squeeze()
+        ud = np.linalg.solve(m, f).squeeze()
 
-        return numpy.hstack((qd, ud, ad.squeeze()))
+        return np.hstack((qd, ud, ad.squeeze()))
 
-    x0 = numpy.hstack((q_vals, u_vals, a_vals))
+    x0 = np.hstack((q_vals, u_vals, a_vals))
 
-    expected_rhs = numpy.array([0.0, 0.0, 0.0, 0.0, -8.86014888, 5.96818164,
-                                0.54422603, -5.82455426, 0.0, 0.0])
-    numpy.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, p_vals))
+    expected_rhs = np.array([0.0, 0.0, 0.0, 0.0, -8.86014888, 5.96818164,
+                             0.54422603, -5.82455426, 0.0, 0.0])
+    np.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, p_vals))

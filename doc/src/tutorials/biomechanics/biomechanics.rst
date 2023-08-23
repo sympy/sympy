@@ -41,7 +41,7 @@ biceps.
 
    import sympy as sm
    import sympy.physics.mechanics as me
-   import sympy.physics.biomechanics as bm
+   import sympy.physics._biomechanics as bm
 
 Define variables
 ================
@@ -101,10 +101,11 @@ The orientations and angular velocities of the reference frames are::
 
 All of the points' locations and velocities are::
 
-   P1.set_pos(O, dx*N.x + lA*A.y)
+   Ao.set_pos(O, dx*N.x)
+   P1.set_pos(Ao, lA*A.y)
    P2.set_pos(O, dy*N.y + dz*N.z)
    Co.set_pos(P2, lC/2*C.z)
-   Cm.set_pos(P2, 2*lC/3*C.z)
+   Cm.set_pos(P2, 1*lC/3*C.z)
    P3.set_pos(P2, lC*C.z)
    Dm.set_pos(P3, 1*lD/3*D.z)
    Do.set_pos(P3, lD/2*D.z)
@@ -417,16 +418,15 @@ The activation state of each muscle are new state variables associated with two
 new first order differential equations. These differential equations are
 accessed from the muscle actuator models::
 
-   biceps.activation_dynamics.state_equations
+   biceps.rhs()
 
 ::
 
-   triceps.activation_dynamics.state_equations
+   triceps.rhs()
 
 ::
 
-   ga = sm.Matrix(list(biceps.activation_dynamics.state_equations.values())).col_join(
-       sm.Matrix(list(triceps.activation_dynamics.state_equations.values())))
+   dadt = bicep.rhs().col_join(tricep.rhs())
 
 Evaluate the System Differential Equations
 ==========================================
@@ -465,8 +465,7 @@ coordinates, generalized speeds, and the two muscles' activation state:
 
    q, u = kane.q, kane.u
 
-   a = sm.Matrix(biceps.activation_dynamics.state_variables).col_join(
-       sm.Matrix(triceps.activation_dynamics.state_variables))
+   a = bicep.x.col_join(tricep.x)
 
    x = q.col_join(u).col_join(a)
    x
@@ -475,8 +474,7 @@ The only specific inputs are the two muscles' excitation:
 
 ::
 
-   e = sm.Matrix(biceps.activation_dynamics.control_variables).col_join(
-       sm.Matrix(triceps.activation_dynamics.control_variables))
+   e = bicep.r.col_join(tricep.r)
    e
 
 The constants are made up of the geometry, mass, local gravitational constant,
@@ -541,7 +539,7 @@ We need some reasonable numerical values for all the constants::
        2.3,  # mC [kg]
        1.7,  # mD [kg]
        9.81,  # g [m/s/s]
-       10.0,  # k [Nm/rad]
+       5.0,  # k [Nm/rad]
        0.5,  # c [Nms/rad]
        0.03,  # r [m]
        500.0,  # biceps F_M_max [?]
@@ -574,9 +572,9 @@ independent coordinate and solve for the rest, given guesses of their values.
    ])
 
    def eval_holo_fsolve(x):
-      q1 = q_vals[0]  # specified
-      q2, q3, q4 = x
-      return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
+       q1 = q_vals[0]  # specified
+       q2, q3, q4 = x
+       return eval_holonomic((q1, q2, q3, q4), p_vals).squeeze()
 
    q_vals[1:] = fsolve(eval_holo_fsolve, q_vals[1:])
 
@@ -646,7 +644,7 @@ contraction and the triceps in extension with excitation values between -1 and
        if t < 0.5 or t > 1.5:
           e = np.array([0.0, 0.0])
        else:
-          e = np.array([-0.2, 0.8])
+          e = np.array([0.8, 0.0])
 
        qd = u
        m, f, ad = eval_diffeq(q, u, a, e, p)
