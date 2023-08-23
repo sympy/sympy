@@ -254,6 +254,8 @@ def test_random_problems():
     special_cases.append([-3 * x1 >= 3, Eq(4 * x1, -1)])
     special_cases.append([-4 * x1 < 4, 6 * x1 <= -6])
     special_cases.append([-3 * x2 >= 7, 6 * x1 <= -5, -3 * x2 <= -4])
+    special_cases.append([x + y >= 2, x + y <= 1])
+    special_cases.append([x >= 0, x + y <= 2, x + 2 * y - z >= 6])  # from paper example
     special_cases.append([-2 * x1 - 2 * x2 >= 7, -9 * x1 >= 7, -6 * x1 >= 5])
     special_cases.append([2 * x1 > -3, -9 * x1 < -6, 9 * x1 <= 6])
     special_cases.append([-2*x1 < -4, 9*x1 > -9])
@@ -348,6 +350,7 @@ def test_random_problems():
             assert check_if_satisfiable_with_z3(constraints) is False
 
             conflict = feasible[1]
+            assert len(conflict) >= 2
             conflict = {lra.boundry_enc[-l].get_inequality() for l in conflict}
             conflict = {clause.subs(s_subs_rev) for clause in conflict}
             assert check_if_satisfiable_with_z3(conflict) is False
