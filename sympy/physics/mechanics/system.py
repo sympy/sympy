@@ -254,6 +254,7 @@ class System(_Methods):
         self._q_dep = ImmutableMatrix(1, 0, []).T
         self._u_ind = ImmutableMatrix(1, 0, []).T
         self._u_dep = ImmutableMatrix(1, 0, []).T
+        self._u_aux = ImmutableMatrix(1, 0, []).T
         self._kdes = ImmutableMatrix(1, 0, []).T
         self._hol_coneqs = ImmutableMatrix(1, 0, []).T
         self._nonhol_coneqs = ImmutableMatrix(1, 0, []).T
@@ -366,7 +367,7 @@ class System(_Methods):
     @_reset_eom_method
     def q_ind(self, q_ind):
         self._q_ind, self._q_dep = self._parse_coordinates(
-            self._objects_to_list(q_ind), True, [], self.q_dep, True)
+            self._objects_to_list(q_ind), True, [], self.q_dep, 'coordinates')
 
     @property
     def q_dep(self):
@@ -377,7 +378,7 @@ class System(_Methods):
     @_reset_eom_method
     def q_dep(self, q_dep):
         self._q_ind, self._q_dep = self._parse_coordinates(
-            self._objects_to_list(q_dep), False, self.q_ind, [], True)
+            self._objects_to_list(q_dep), False, self.q_ind, [], 'coordinates')
 
     @property
     def u_ind(self):
@@ -388,7 +389,7 @@ class System(_Methods):
     @_reset_eom_method
     def u_ind(self, u_ind):
         self._u_ind, self._u_dep = self._parse_coordinates(
-            self._objects_to_list(u_ind), True, [], self.u_dep, False)
+            self._objects_to_list(u_ind), True, [], self.u_dep, 'speeds')
 
     @property
     def u_dep(self):
@@ -399,7 +400,18 @@ class System(_Methods):
     @_reset_eom_method
     def u_dep(self, u_dep):
         self._u_ind, self._u_dep = self._parse_coordinates(
-            self._objects_to_list(u_dep), False, self.u_ind, [], False)
+            self._objects_to_list(u_dep), False, self.u_ind, [], 'speeds')
+
+    @property
+    def u_aux(self):
+        """Matrix of auxiliary generalized speeds."""
+        return self._u_aux
+
+    @u_aux.setter
+    @_reset_eom_method
+    def u_aux(self, u_aux):
+        self._u_aux = self._parse_coordinates(
+            self._objects_to_list(u_aux), True, [], [], 'u_auxiliary')[0]
 
     @property
     def kdes(self):
@@ -494,7 +506,7 @@ class System(_Methods):
                              f'to the system.')
 
     def _parse_coordinates(self, new_coords, independent, old_coords_ind,
-                           old_coords_dep, is_coordinates=True):
+                           old_coords_dep, coord_type='coordinates'):
         """Helper to parse coordinates and speeds."""
         # Construct lists of the independent and dependent coordinates
         coords_ind, coords_dep = old_coords_ind[:], old_coords_dep[:]
@@ -506,12 +518,11 @@ class System(_Methods):
             else:
                 coords_dep.append(coord)
         # Check types and duplicates
-        if is_coordinates:
-            _validate_coordinates(coords_ind + coords_dep,
-                                  self.u_ind[:] + self.u_dep[:])
-        else:
-            _validate_coordinates(self.q_ind[:] + self.q_dep[:],
-                                  coords_ind + coords_dep)
+        current = {'coordinates': self.q_ind[:] + self.q_dep[:],
+                   'speeds': self.u_ind[:] + self.u_dep[:],
+                   'u_auxiliary': self._u_aux[:],
+                   coord_type: coords_ind + coords_dep}
+        _validate_coordinates(**current)
         return (ImmutableMatrix(1, len(coords_ind), coords_ind).T,
                 ImmutableMatrix(1, len(coords_dep), coords_dep).T)
 
@@ -549,7 +560,7 @@ class System(_Methods):
 
         """
         self._q_ind, self._q_dep = self._parse_coordinates(
-            coordinates, independent, self.q_ind, self.q_dep, True)
+            coordinates, independent, self.q_ind, self.q_dep, 'coordinates')
 
     @_reset_eom_method
     def add_speeds(self, *speeds, independent=True):
@@ -566,7 +577,21 @@ class System(_Methods):
 
         """
         self._u_ind, self._u_dep = self._parse_coordinates(
-            speeds, independent, self.u_ind, self.u_dep, False)
+            speeds, independent, self.u_ind, self.u_dep, 'speeds')
+
+    @_reset_eom_method
+    def add_auxiliary_speeds(self, *speeds):
+        """Add auxiliary speed(s) to the system.
+
+        Parameters
+        ==========
+
+        *speeds : dynamicsymbols
+            One or more auxiliary speeds to be added to the system.
+
+        """
+        self._u_aux = self._parse_coordinates(
+            speeds, True, self._u_aux, [], 'u_auxiliary')[0]
 
     @_reset_eom_method
     def add_kdes(self, *kdes):
@@ -811,7 +836,7 @@ class System(_Methods):
         if issubclass(eom_method, KanesMethod):
             disallowed_kwargs = {
                 "frame", "q_ind", "u_ind", "kd_eqs", "q_dependent",
-                "u_dependent", "configuration_constraints",
+                "u_dependent", "u_auxiliary", "configuration_constraints",
                 "velocity_constraints", "forcelist", "bodies"}
             wrong_kwargs = disallowed_kwargs.intersection(kwargs)
             if wrong_kwargs:
@@ -825,6 +850,7 @@ class System(_Methods):
                       "q_dependent": self.q_dep, "u_dependent": self.u_dep,
                       "configuration_constraints": self.holonomic_constraints,
                       "velocity_constraints": velocity_constraints,
+                      "u_auxiliary": self.u_aux,
                       "forcelist": loads, "bodies": self.bodies,
                       "explicit_kinematics": False, **kwargs}
             self._eom_method = eom_method(**kwargs)
@@ -1035,6 +1061,7 @@ class System(_Methods):
         if check_duplicates:  # Should be redundant
             duplicates_to_check = [('generalized coordinates', self.q),
                                    ('generalized speeds', self.u),
+                                   ('auxiliary speeds', self.u_aux),
                                    ('bodies', self.bodies),
                                    ('joints', self.joints)]
             for name, lst in duplicates_to_check:
