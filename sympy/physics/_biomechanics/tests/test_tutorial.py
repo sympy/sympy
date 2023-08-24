@@ -83,6 +83,8 @@ def test_simple_muscle():
 
     print(eval_eom(x_vals, r_vals, p_vals))
 
+    eval_force(x_vals, p_vals)
+
 
     def eval_rhs(t, x):
 
