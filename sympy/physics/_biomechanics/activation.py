@@ -51,7 +51,7 @@ class ActivationBase(ABC, _NamedMixin):
 
     @classmethod
     @abstractmethod
-    def with_default_constants(cls, name):
+    def with_defaults(cls, name):
         """Alternate constructor that provides recommended defaults for
         constants."""
         pass
@@ -288,7 +288,7 @@ class ZerothOrderActivation(ActivationBase):
         self._a = self._e
 
     @classmethod
-    def with_default_constants(cls, name):
+    def with_defaults(cls, name):
         """Alternate constructor that provides recommended defaults for
         constants.
 
@@ -533,7 +533,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         self.smoothing_rate = smoothing_rate
 
     @classmethod
-    def with_default_constants(cls, name):
+    def with_defaults(cls, name):
         """Alternate constructor that will use the published constants.
 
         Explanation
