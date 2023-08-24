@@ -333,7 +333,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
 
     if use_known_facts:
         known_facts_CNF = CNF()
-        if isinstance(proposition.arg ,MatrixExpr):
+        if any(isinstance(pred.arg, MatrixExpr) for pred in proposition.all_predicates()):
             known_facts_CNF.add_clauses(get_all_known_matrix_facts())
         else:
             known_facts_CNF.add_clauses(get_all_known_nonmatrix_facts())
