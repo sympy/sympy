@@ -24,7 +24,7 @@ def test_simple_muscle():
     gravity = me.Force(P, m*g*N.x)
 
     muscle_pathway = me.LinearPathway(O, P)
-    muscle_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('muscle')
+    muscle_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('muscle')
     muscle = bm.MusculotendonDeGroote2016(
         'muscle',
         muscle_pathway,
@@ -57,8 +57,6 @@ def test_simple_muscle():
 
     eval_eom = sm.lambdify((state, inputs, constants), (dqdt, dudt, dadt))
     eval_force = sm.lambdify((state, constants), force)
-
-    pause
 
     # q-l_T_slack is the length of the muscle
 
@@ -166,7 +164,7 @@ def test_arm_lever_tutorial():
     bicep_pathway = me.LinearPathway(Cm, Dm)
 
     bicep_activation = \
-        bm.FirstOrderActivationDeGroote2016.with_default_constants('bicep')
+        bm.FirstOrderActivationDeGroote2016.with_defaults('bicep')
 
     bicep = bm.MusculotendonDeGroote2016('bicep', bicep_pathway,
                                          bicep_activation)
@@ -254,7 +252,7 @@ def test_arm_lever_tutorial():
             """
             return self.radius*self.coordinate.diff(me.dynamicsymbols._t)
 
-        def compute_loads(self, force_magnitude):
+        def to_loads(self, force_magnitude):
             """Loads in the correct format to be supplied to `KanesMethod`.
 
             Forces applied to origin, insertion, and P from the muscle wrapped
@@ -290,7 +288,7 @@ def test_arm_lever_tutorial():
 
     tricep_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
     tricep_activation = \
-        bm.FirstOrderActivationDeGroote2016.with_default_constants('tricep')
+        bm.FirstOrderActivationDeGroote2016.with_defaults('tricep')
     tricep = bm.MusculotendonDeGroote2016('tricep', tricep_pathway,
                                           tricep_activation)
 
@@ -430,6 +428,7 @@ def test_arm_lever_tutorial():
 
     x0 = np.hstack((q_vals, u_vals, a_vals))
 
-    expected_rhs = np.array([0.0, 0.0, 0.0, 0.0, -8.86014888, 5.96818164,
-                             0.54422603, -5.82455426, 0.0, 0.0])
-    np.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, p_vals))
+    expected_rhs = np.array([0.0, 0.0, 0.0, 0.0, 11.759447,  0.627271,
+                             -0.493589, -8.499078,  0.0,  0.0])
+    np.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, p_vals),
+                               rtol=1e-6)

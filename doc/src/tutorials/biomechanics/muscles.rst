@@ -67,8 +67,8 @@ speed between the two attachment points::
 Finally, the pathway can determine the forces acting on the two attachment
 points give a force magnitude::
 
-   >>> muscle_pathway.compute_loads(m*g)
-   [Force(point=O, force=-m*g*q(t)/sqrt(q(t)**2)*N.x), Force(point=P, force=m*g*q(t)/sqrt(q(t)**2)*N.x)]
+   >>> muscle_pathway.to_loads(m*g)
+   [(O, - g*m*q(t)/sqrt(q(t)**2)*N.x), (P, g*m*q(t)/sqrt(q(t)**2)*N.x)]
 
 The activation dynamics model represents a set of algebraic or ordinary
 differential equations that relate the muscle excitation to the muscle
@@ -80,9 +80,8 @@ TODO : We could plot dadt as a function of a for different e from 0 to 1.
 
 ::
 
-   from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
-
-   muscle_activation = FirstOrderActivationDeGroote2016.with_default_constants('muscle')
+   >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
+   >>> muscle_activation = FirstOrderActivationDeGroote2016.with_defaults('muscle')
 
 The activation model has a state variable, input variable, and some constant
 parameters::
@@ -112,22 +111,23 @@ TODO : How do we know this is a rigid tendon model?
 
 ::
 
-   from sympy.physics._biomechanics import MusculotendonDeGroote2016
+   >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
 
-   F_M_max, l_M_opt, l_T_slack = sm.symbols('F_M_max, l_M_opt, l_T_slack')
-   v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta')
+   >>> F_M_max, l_M_opt, l_T_slack = sm.symbols('F_M_max, l_M_opt, l_T_slack')
+   >>> v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta')
 
-   muscle = MusculotendonDeGroote2016(
-       'muscle',
-       muscle_pathway,
-       muscle_activation,
-       tendon_slack_length=l_T_slack,
-       peak_isometric_force=F_M_max,
-       optimal_fiber_length=l_M_opt,
-       maximal_fiber_velocity=v_M_max,
-       optimal_pennation_angle=alpha_opt,
-       fiber_damping_coefficient=beta,
-   )
+   >>> muscle = MusculotendonDeGroote2016(
+   ...     'muscle',
+   ...     muscle_pathway,
+   ...     muscle_activation,
+   ...     tendon_slack_length=l_T_slack,
+   ...     peak_isometric_force=F_M_max,
+   ...     optimal_fiber_length=l_M_opt,
+   ...     maximal_fiber_velocity=v_M_max,
+   ...     optimal_pennation_angle=alpha_opt,
+   ...     fiber_damping_coefficient=beta,
+   ... )
+   ...
 
 TODO : Explain why the rhs() is different for the muscle than the activation.
 TODO : Needs explanation about rigid tendon
@@ -136,7 +136,7 @@ Because this musculotendon actuator has a rigid tendon model, it has the same
 state and ordinary differential equation as the activation model::
 
    >>> muscle.musculotendon_dynamics
-   <MusculotendonFormulation.RIGID_TENDON: 0>
+   MusculotendonFormulation.RIGID_TENDON
    >>> muscle.x
    Matrix([[a_muscle(t)]])
    >>> muscle.r
@@ -160,9 +160,9 @@ the muscle specific forces applied to the pathway::
 
    >>> muscle_loads = muscle.to_loads()
    >>> muscle_loads[0]
-   Force(point=O, force=F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
+   (O, F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
    >>> muscle_loads[1]
-   Force(point=P, force=- F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
+   (P, - F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
 
 These loads are made up of various functions that describe the length and
 velocity relationships to the fiber force.
@@ -171,7 +171,7 @@ Now that we have the forces that the muscles and tendons produce the equations
 of motion of the system can be formed with, for example, Kanes Method::
 
    >>> kane = me.KanesMethod(N, (q,), (u,), kd_eqs=(u - q.diff(),))
-   >>> kane.kanes_equations((block,), (muscle_loads + [gravity]))
+   >>> Fr, Frs = kane.kanes_equations((block,), (muscle_loads + [gravity]))
 
 The equations of motion are made up of the kinematical differential equation,
 the dynamical differential equation (Newton's Second Law), and the muscle
@@ -236,7 +236,9 @@ We can set the excitation to zero to test the numerical functions::
    ... ])
    ...
    >>> eval_eom(x_vals, r_vals, p_vals)
-   >>> eval_force(x_vals, p_vals))
+   (0.0, 9.81, 0.0)
+   >>> eval_force(x_vals, p_vals)
+   1.4499681738213515e-16
 
 The two functions work so we can now simulate this system to see if and how the
 muscle lifts the mass::
@@ -254,6 +256,7 @@ muscle lifts the mass::
    >>> sol = solve_ivp(eval_rhs,
    ...                 (t0, tf),
    ...                 x_vals, t_eval=times)
+   ...
    >>> import matplotlib.pyplot as plt
    >>> fig, axes = plt.subplots(4, 1, sharex=True)
    >>> axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')
