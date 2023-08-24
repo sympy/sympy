@@ -35,8 +35,8 @@ class TestZerothOrderActivation:
         instance = ZerothOrderActivation(self.name)
         assert isinstance(instance, ZerothOrderActivation)
 
-    def test_with_default_constants(self):
-        instance = ZerothOrderActivation.with_default_constants(self.name)
+    def test_with_defaults(self):
+        instance = ZerothOrderActivation.with_defaults(self.name)
         assert isinstance(instance, ZerothOrderActivation)
         assert instance == ZerothOrderActivation(self.name)
 
@@ -155,8 +155,8 @@ class TestFirstOrderActivationDeGroote2016:
         instance = FirstOrderActivationDeGroote2016(self.name)
         assert isinstance(instance, FirstOrderActivationDeGroote2016)
 
-    def test_with_default_constants(self):
-        instance = FirstOrderActivationDeGroote2016.with_default_constants(self.name)
+    def test_with_defaults(self):
+        instance = FirstOrderActivationDeGroote2016.with_defaults(self.name)
         assert isinstance(instance, FirstOrderActivationDeGroote2016)
         assert instance.tau_a == Float('0.015')
         assert instance.activation_time_constant == Float('0.015')
