@@ -186,8 +186,7 @@ specific tuned numerical parameters from [DeGroote2016]_ like so
 The full musculotendon actuator model is then named and constructed with a
 matching class::
 
-   >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway,
-   ...                                       activation_dynamics=biceps_activation)
+   >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway, biceps_activation)
 
 An :obj:`~sympy.physics.mechanics.actuator.AcutatorBase` can compute the loads
 necessary for forming the equations of motion. The musculotendon forces are
@@ -356,9 +355,7 @@ actuator model in the same fashion as the biceps::
 
    >>> triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
    >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
-   >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway,
-   ...                                        activation_dynamics=triceps_activation)
-   ...
+   >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway, triceps_activation)
 
 The load formulas are more complex but should allow the triceps to extend the
 elbow::
