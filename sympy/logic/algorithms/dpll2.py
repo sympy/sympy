@@ -237,7 +237,7 @@ class SATSolver:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
                     else:
-                        self.add_learned_clause(res[1])
+                        self._simple_add_learned_clause(res[1])
 
                     while self._current_level.flipped:
                         self._undo()
