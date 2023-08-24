@@ -7,7 +7,9 @@ from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.rings import monomial_extract, _gcd_preprocess_polys
+from sympy.polys.rings import monomial_extract, \
+    gcd_terms, _gcd_preprocess_polys, gcd_prs, _gcd_prs
+
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
@@ -1489,14 +1491,84 @@ def test_gcd_preprocess_polys():
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
 
-    assert result == ([x*y], None)
+    assert result == ([x**3*y**2 + x*y**2, x**2*y + x*y], {0, 1})
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
 
-    assert result == ([1], None)
+    assert result == ([x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+
+def test_gcd_terms():
+    from sympy import ring
+    R, x, y = ring("x, y", ZZ)
+
+    polynomials = [x**2 - y**2, x - y]
+    ring = polynomials[0].ring
+    domain = ring.domain
+    result = gcd_terms(polynomials, ring, domain)
+    assert result == 1
+
+def test_gcd_prs():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = x - y
+    g = x**2 - y**2
+    assert gcd_prs([f, g]) == x - y
+
+    f = x*y + y*z
+    g = x*z - y*z
+    assert gcd_prs([f, g]) == 1
+
+    f = x**2 - x
+    g = x**3 - x**2
+    assert gcd_prs([f, g]) == x**2 - x
+
+    # Polynomials with rational coefficients
+    Q, a, b = ring("a, b", QQ)
+    f = a**2 - 2*a*b + b**2
+    g = a**3 - b**3
+    assert gcd_prs([f, g]) == a - b
+
+    f = x*y*z
+    g = x**2*y - x*y**2
+    h = x**3 - y**3
+    assert gcd_prs([f, g, h]) == 1
+
+    f = x*y - y*z
+    g = x*z - x*y
+    h = x**2 - y**2
+    assert gcd_prs([f, g, h]) == 1
+
+def test__gcd_prs():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 4*x**2 + 8*x + 10
+    g = 2*x**2 + 6*x + 10
+    result = _gcd_prs(f, g)
+    assert result == 2
+
+    h = 3*x**2 + 9*x + 15
+    result = _gcd_prs(f, h)
+    assert result == 1
+
+    i = 2*x**3 + 4*x**2 + 2*x
+    result = _gcd_prs(f, i)
+    assert result == x + 5
+
+    f = 4*x**2 + 8*x + 10*y
+    g = 2*x**2 + 6*x + 10*y
+    result = _gcd_prs(f, g)
+    assert result == 2
+
+    h = 3*x**2 + 9*x + 15*y
+    result = _gcd_prs(f, h)
+    assert result == 1
+
+    i = 2*x**3 + 4*x**2*y + 2*x*y**2
+    result = _gcd_prs(f, i)
+    assert result == 2
 
 def test_PolyElement_resultant():
     _, x = ring("x", ZZ)

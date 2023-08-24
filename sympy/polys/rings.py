@@ -3033,6 +3033,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
+
 def monomial_extract(polynomials):
     """
     Extracts any common monomial from the polynomials in p.
@@ -3245,7 +3246,7 @@ def gcd_terms(polynomials, ring, domain):
             monomials.add(monomial)
             coeffs.add(coeff)
 
-    monom_gcd = monomial_ngcd(monomials)
+    monom_gcd = monomial_ngcd(list(monomials))
 
     x = Symbol('x')
     fpe = Poly.from_list(list(coeffs), x).as_expr()
