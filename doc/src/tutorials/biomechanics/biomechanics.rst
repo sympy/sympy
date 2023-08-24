@@ -1,8 +1,8 @@
 .. _biomechanics-tutorial:
 
-======================================
-Introduction to Biomechanical Modeling
-======================================
+===========================
+Biomechanical Model Example
+===========================
 
 :obj:`~sympy.physics._biomechanics` provides features to enhance models created
 with :obj:`~sympy.physics.mechanics` with force producing elements that model

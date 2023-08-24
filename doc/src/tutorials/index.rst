@@ -18,11 +18,10 @@ If you are new to SymPy, start here.
 
    intro-tutorial/index.rst
 
-
-:ref:`Introduction to Biomechanical Modeling <biomechanics-tutorial>`
-=====================================================================
+Biomechanics Tutorials
+======================
 
 .. toctree::
-   :hidden:
 
+   biomechanics/muscles.rst
    biomechanics/biomechanics.rst
