@@ -2089,14 +2089,14 @@ def test_issue_20782():
     assert integrate(-fun2(x_d), (x_d, -float('Inf'), 1)) == 0
     assert integrate(fun1(x_d), (x_d, -float('Inf'), 1)) == -1
     assert integrate(fun2(x_d), (x_d, -float('Inf'), 1)) == 0
-    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1
-    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1
+    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1.
+    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1.
+    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1.
+    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1.
 
     f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
-    assert integrate(f, (x, -oo, 1)) == 1
-    assert integrate(-f, (x, -oo, 1)) == -1
+    assert integrate(f, (x, -oo, 1)) == 1.
+    assert integrate(-f, (x, -oo, 1)) == -1.
 
 
 @slow
