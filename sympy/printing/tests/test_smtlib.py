@@ -170,7 +170,7 @@ def test_Pow():
              '(assert (= (> b a) c))\n' \
              '(assert c)\n' \
              '(assert (= ' \
-             '(* (pow (* 7. a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
+             '(* (pow (* 7.0 a) (+ (pow b a) (* -1 a))) (pow (+ b (pow a 2)) -1)) ' \
              '(/ 7 3)' \
              '))'
 
@@ -523,6 +523,7 @@ def test_not_supported():
         raises(KeyError, lambda: smtlib_code(f(x).diff(x), symbol_table={f: Callable[[float], float]}, log_warn=w))
     with _check_warns([_W.WILL_NOT_ASSERT]) as w:
         raises(KeyError, lambda: smtlib_code(S.ComplexInfinity, log_warn=w))
+
 
 def test_Float():
     assert smtlib_code(0.0) == "0.0"
