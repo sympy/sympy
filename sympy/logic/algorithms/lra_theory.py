@@ -201,10 +201,10 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, boundry_enc, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundry, testing_mode):
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledNumber
-        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in boundry_enc.values()):
+        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in enc_to_boundry.values()):
             raise UnhandledNumber
 
 
@@ -216,8 +216,8 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.boundry_enc = boundry_enc
-        self.boundry_rev_enc = {value: key for key, value in boundry_enc.items()}
+        self.enc_to_boundry = enc_to_boundry
+        self.boundry_to_enc = {value: key for key, value in enc_to_boundry.items()}
 
         self.A = A # TODO: Row reduce A
         self.slack = slack_variables
@@ -375,13 +375,13 @@ class LRASolver():
         each constraint in phi is transformed into an upper or lower bound or
         equality between a single variable and some constant. Rather than
         returning a new encoded cnf object with a new encoding, the new lra
-        object has its own encoding stored in `lra.boundry_enc` and
-        `lra.boundry_rev_enc`.
+        object has its own encoding stored in `lra.enc_to_boundry` and
+        `lra.boundry_to_enc`.
 
         As boundry objects can't be printed nicely, here's what that looks
         like if the boundries are converted into inequalities.
 
-        >>> {key: value.get_inequality() for key, value in lra.boundry_enc.items()} #doctest: +SKIP
+        >>> {key: value.get_inequality() for key, value in lra.enc_to_boundry.items()} #doctest: +SKIP
         {5: Eq(_s1, 2), 6: _s2 <= -6, 4: _x1 >= 0, 1: _s2 < -4, 2: _s1 <= 2}
 
         Notice that there are no encodings for 3. This is because predicates
@@ -497,7 +497,7 @@ class LRASolver():
 
         return LRASolver(A, basic, nonbasic, encoding, testing_mode), conflicts,  x_subs, s_subs
 
-    def assert_enc_boundry(self, enc_boundry):
+    def assert_lit(self, enc_boundry):
         """
         Assert an upper or lower bound or equality between
         a variable and a constant. Update the state
@@ -516,12 +516,12 @@ class LRASolver():
         explanation : set of ints
             Integers are negative and represent negations of some
             AppliedBinaryRelation. Which relation a given int
-            encodes can be found in `self.boundry_enc`.
+            encodes can be found in `self.enc_to_boundry`.
         """
-        if enc_boundry not in self.boundry_enc:
+        if enc_boundry not in self.enc_to_boundry:
             return None
 
-        boundry = self.boundry_enc[enc_boundry]
+        boundry = self.enc_to_boundry[enc_boundry]
         sym, c = boundry.var, boundry.bound
 
         if boundry.strict:
@@ -567,10 +567,10 @@ class LRASolver():
                            equality=self.low_origin[xi])
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
 
-            conflict = {-self.boundry_rev_enc[lit1], -self.boundry_rev_enc[lit2]}
+            conflict = {-self.boundry_to_enc[lit1], -self.boundry_to_enc[lit2]}
             self.result = False, conflict
-            assert lit1 in self.boundry_rev_enc
-            assert lit2 in self.boundry_rev_enc
+            assert lit1 in self.boundry_to_enc
+            assert lit2 in self.boundry_to_enc
             return self.result
         self.upper[xi] = ci
         self.up_origin[xi] = from_equality
@@ -599,7 +599,7 @@ class LRASolver():
                            equality=self.up_origin[xi])
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
 
-            conflict = {-self.boundry_rev_enc[lit1],-self.boundry_rev_enc[lit2]}
+            conflict = {-self.boundry_to_enc[lit1],-self.boundry_to_enc[lit2]}
             self.result = False, conflict
             return self.result
         self.lower[xi] = ci
@@ -661,7 +661,7 @@ class LRASolver():
         explanation : set of ints
             Integers are negative and represent negations of some
             AppliedBinaryRelation. Which relation a given int
-            encodes can be found in `self.boundry_enc`.
+            encodes can be found in `self.enc_to_boundry`.
         """
         if self.is_sat:
             return True, self.assign
@@ -752,7 +752,7 @@ class LRASolver():
                     conflict |= {Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
-                    conflict = {-self.boundry_rev_enc[c] for c in conflict}
+                    conflict = {-self.boundry_to_enc[c] for c in conflict}
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -776,7 +776,7 @@ class LRASolver():
                                  for nb, lo in lower}
                     conflict.add(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
 
-                    conflict = {-self.boundry_rev_enc[c] for c in conflict}
+                    conflict = {-self.boundry_to_enc[c] for c in conflict}
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
