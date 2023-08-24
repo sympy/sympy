@@ -627,7 +627,10 @@ def factorial_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT)
     result: List[TOKEN] = []
     nfactorial = 0
     for toknum, tokval in tokens:
-        if toknum == ERRORTOKEN:
+        if toknum == OP and tokval == "!":
+            # In Python 3.12 "!" are OP instead of ERRORTOKEN
+            nfactorial += 1
+        elif toknum == ERRORTOKEN:
             op = tokval
             if op == '!':
                 nfactorial += 1

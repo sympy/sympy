@@ -21,7 +21,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.core.singleton import S
@@ -450,7 +450,7 @@ def test_pickling_polys_domains():
     for c in (PythonRationalField, PythonRationalField()):
         check(c, check_attr=False)
 
-    if HAS_GMPY:
+    if _gmpy is not None:
         # from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
         from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
         from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
