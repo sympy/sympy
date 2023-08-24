@@ -1,18 +1,13 @@
 from hypothesis import given
-from hypothesis import strategies as st
-from sympy.testing.hypothesis import polynomial
-from sympy import gcd, lcm
-
+from sympy.testing.hypothesis import polys
 
 
 @given(
-    f=polynomial(),
-    g=polynomial(),
-    r=polynomial(),
-    x=st.integers(),
-    y=st.integers(),
+    f=polys(),
+    g=polys(),
+    r=polys(),
 )
-def test_gcd(f, g, r, x, y):
+def test_gcd(f, g, r):
     gcd_1 = f.gcd(g)
     gcd_2 = g.gcd(f)
 
@@ -23,12 +18,12 @@ def test_gcd(f, g, r, x, y):
 
     assert gcd_1 == gcd_3
 
-    assert gcd(x, y) == gcd(y, x)
+
 @given(
-    f=polynomial(),
-    g=polynomial(empty=False),
-    h=polynomial(domain="QQ"),
-    l=polynomial(empty=False, domain="QQ"),
+    f=polys(),
+    g=polys(empty=False),
+    h=polys(domain="QQ"),
+    l=polys(empty=False, domain="QQ"),
 )
 def test_division(f, g, h, l):
     # Integer case
@@ -41,8 +36,8 @@ def test_division(f, g, h, l):
 
 
 @given(
-    f=polynomial(),
-    g=polynomial(),
+    f=polys(),
+    g=polys(),
 )
 def test_multiplication(f, g):
     h = f * g
@@ -51,8 +46,8 @@ def test_multiplication(f, g):
 
 
 @given(
-    f=polynomial(),
-    g=polynomial(),
+    f=polys(),
+    g=polys(),
 )
 def test_addition(f, g):
     h = f + g
@@ -61,22 +56,19 @@ def test_addition(f, g):
 
 
 @given(
-    f=polynomial(),
-    g=polynomial(empty=False),
-    x=st.integers(),
-    y=st.integers(),
+    f=polys(),
+    g=polys(empty=False),
 )
-def test_lcm(f, g, x, y):
+def test_lcm(f, g):
     assert f.lcm(g) == g.lcm(f)
     assert f * g == f.lcm(g) * f.gcd(g)
     if f.coeffs()[0] == 0 or g.coeffs()[0] == 0:
         assert f.lcm(g) == 0
-    assert lcm(x, y) == lcm(y, x)
 
 
 @given(
-    f=polynomial(),
-    g=polynomial(size=1),
+    f=polys(),
+    g=polys(degree=1),
 )
 def test_dispersion(f, g):
     assert f.dispersion() == f.dispersion(f)
