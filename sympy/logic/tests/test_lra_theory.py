@@ -17,6 +17,7 @@ from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
 from sympy.testing.pytest import raises
+import time
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
                         disable_strict = False, disable_nonstrict=False, disable_equality=False):
@@ -268,7 +269,6 @@ def test_random_problems():
     special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
 
-    import time
     check_time = 0.0
     from_encoded_time = 0.0
     assert_time = 0.0
