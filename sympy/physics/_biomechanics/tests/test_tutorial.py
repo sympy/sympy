@@ -78,7 +78,7 @@ def test_arm_lever_tutorial():
         bm.FirstOrderActivationDeGroote2016.with_default_constants('bicep')
 
     bicep = bm.MusculotendonDeGroote2016('bicep', bicep_pathway,
-                                         activation_dynamics=bicep_activation)
+                                         bicep_activation)
 
     class ExtensorPathway(me.PathwayBase):
 
@@ -201,7 +201,7 @@ def test_arm_lever_tutorial():
     tricep_activation = \
         bm.FirstOrderActivationDeGroote2016.with_default_constants('tricep')
     tricep = bm.MusculotendonDeGroote2016('tricep', tricep_pathway,
-                                          activation_dynamics=tricep_activation)
+                                          tricep_activation)
 
     loads = (
         bicep.to_loads() +
