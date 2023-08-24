@@ -108,7 +108,7 @@ class TestMusculotendonDeGroote2016:
         self.alpha_opt = Symbol("alpha_opt")
         self.beta = Symbol("beta")
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         origin = Point("pO")
         insertion = Point("pI")
         insertion.set_pos(origin, dynamicsymbols("q")*ReferenceFrame("N").x)
@@ -120,7 +120,7 @@ class TestMusculotendonDeGroote2016:
         v_M_max = Integer(10)
         alpha_opt = Integer(0)
         beta = Rational(1, 10)
-        instance = MusculotendonDeGroote2016.with_default_constants(
+        instance = MusculotendonDeGroote2016.with_defaults(
             "name",
             pathway,
             activation,
@@ -535,16 +535,16 @@ class TestMusculotendonDeGroote2016FiberLengthExplicit:
         l_MT = self.pathway.length
         l_M = self.l_M_tilde*self.l_M_opt
         l_T = l_MT - sqrt(l_M**2 - (self.l_M_opt*sin(self.alpha_opt)) ** 2)
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(
             l_T/self.l_T_slack
         )
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(
             self.l_M_tilde
         )
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(
             self.l_M_tilde
         )
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(
             ((((fl_T*self.F_M_max)/((l_MT - l_T)/l_M))/self.F_M_max) - fl_M_pas)
             /(self.a*fl_M_act)
         )
