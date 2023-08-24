@@ -93,6 +93,11 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         if pysat is None:
             algorithm = "dpll2"
 
+    if algorithm=="z3":
+        z3 = import_module('z3')
+        if z3 is None:
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
@@ -105,6 +110,14 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
     elif algorithm == "minisat22":
         from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
         return minisat22_satisfiable(expr, all_models, minimal)
+    elif algorithm == "z3":
+        from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+        return z3_satisfiable(expr, all_models)
+
+
+
+
+
     raise NotImplementedError
 
 

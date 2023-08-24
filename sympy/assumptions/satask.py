@@ -88,6 +88,9 @@ def check_satisfiability(prop, _prop, factbase):
     can_be_true = satisfiable(sat_true)
     can_be_false = satisfiable(sat_false)
 
+    if can_be_true is None or can_be_false is None:
+        return None
+
     if can_be_true and can_be_false:
         return None
 

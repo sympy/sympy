@@ -324,3 +324,15 @@ def test_satisfiable_all_models():
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+def test_z3():
+    A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
+    z3_satisfiable = lambda expr: satisfiable(expr, algorithm="z3")
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
+    assert z3_satisfiable( A & ~A ) is False
+    assert z3_satisfiable(A & (~A | B | C)) is True
+
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
