@@ -215,6 +215,9 @@ def test_generate():
                  (1003003, 1005000), # 1000**2 < a < b
                  ]:
         assert list(primerange(a, b)) == list(s.primerange(a, b))
+    sieve._reset(prime=True)
+    sieve.extend(100000)
+    assert len(sieve._list) == len(set(sieve._list))
     s = Sieve()
     assert s[10] == 29
 
