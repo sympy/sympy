@@ -553,7 +553,7 @@ class PermuteDims(_CodegenArrayAbstract):
             permutation_array_blocks_up.append(current)
 
         # Get the map of axis repositioning for every argument of tensor-product:
-        index_blocks = [[j for j in range(cumul[i], cumul[i+1])] for i, e in enumerate(expr.subranks)]
+        index_blocks = [list(range(cumul[i], cumul[i+1])) for i, e in enumerate(expr.subranks)]
         index_blocks_up = expr._push_indices_up(expr.contraction_indices, index_blocks)
         inverse_permutation = permutation**(-1)
         index_blocks_up_permuted = [[inverse_permutation(j) for j in i if j is not None] for i in index_blocks_up]
@@ -583,7 +583,7 @@ class PermuteDims(_CodegenArrayAbstract):
         arg_candidate_index = index2arg[permuted_indices[0]]
         current_indices = []
         new_permutation = []
-        inserted_arg_cand_indices = set([])
+        inserted_arg_cand_indices = set()
         for i, idx in enumerate(permuted_indices):
             if index2arg[idx] != arg_candidate_index:
                 new_permutation.extend(current_indices)
@@ -607,7 +607,7 @@ class PermuteDims(_CodegenArrayAbstract):
         maps = {}
         cumulative_subranks = [0] + list(accumulate(subranks))
         for i in range(len(subranks)):
-            s = set([index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])])
+            s = {index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])}
             if len(s) != 1:
                 continue
             elem = next(iter(s))
@@ -1078,7 +1078,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         cumranks = list(accumulate([0] + subranks))
         contraction_indices_remaining = []
         contraction_indices_args = [[] for i in expr.args]
-        backshift = set([])
+        backshift = set()
         for i, contraction_group in enumerate(contraction_indices):
             for j in range(len(expr.args)):
                 if not isinstance(expr.args[j], ArrayAdd):
@@ -1742,7 +1742,7 @@ class _EditArrayContraction:
         inv_perm1 = []
         inv_perm2 = []
         # Keep track of which diagonal indices have already been processed:
-        done = set([])
+        done = set()
 
         # Counter for the diagonal indices:
         counter4 = 0
@@ -1839,7 +1839,7 @@ class _EditArrayContraction:
 
     @property
     def number_of_diagonal_indices(self):
-        data = set([])
+        data = set()
         for arg in self.args_with_ind:
             data.update({i for i in arg.indices if i is not None and i < 0})
         return len(data)

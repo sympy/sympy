@@ -224,7 +224,7 @@ class ReprPrinter(Printer):
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
     def _print_Symbol(self, expr):
-        d = expr._assumptions.generator
+        d = expr._assumptions_orig
         # print the dummy_index like it was an assumption
         if expr.is_Dummy:
             d['dummy_index'] = expr.dummy_index

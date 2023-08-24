@@ -14,7 +14,8 @@ from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, Lambda, Subs,
     diff, expand, expand_func)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational,
     nan, oo, pi, zoo)
 from sympy.core.relational import Eq, Lt
 from sympy.core.singleton import S
@@ -920,7 +921,7 @@ def test_M6():
 def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)) == set([
+        226*x**2 - 140*x + 46, x)) == {
         1 - sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
         1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
         1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
@@ -929,7 +930,7 @@ def test_M7():
         1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
         1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
         1 + sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
-        ])
+        }
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -2914,7 +2915,7 @@ def test_Y2():
     t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
+    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t, simplify=True)
     assert f == cos(t*(w - 1))
 
 

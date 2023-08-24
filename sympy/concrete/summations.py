@@ -165,7 +165,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
            Volume 28 Issue 2, April 1981, Pages 305-350
-           http://dl.acm.org/citation.cfm?doid=322248.322255
+           https://dl.acm.org/doi/10.1145/322248.322255
     .. [2] https://en.wikipedia.org/wiki/Summation#Capital-sigma_notation
     .. [3] https://en.wikipedia.org/wiki/Empty_sum
     """
@@ -858,7 +858,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         .. [1] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
                Volume 28 Issue 2, April 1981, Pages 305-350
-               http://dl.acm.org/citation.cfm?doid=322248.322255
+               https://dl.acm.org/doi/10.1145/322248.322255
         """
         l_indices = list(indices)
 
@@ -1490,7 +1490,7 @@ def eval_sum_residue(f, i_a_b):
         return residue_factor
 
     # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - set([i]):
+    if f.free_symbols - {i}:
         return None
 
     if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):

@@ -24,7 +24,7 @@ from sympy.polys.polytools import (
     sqf_norm, sqf_part, sqf_list, sqf,
     factor_list, factor,
     intervals, refine_root, count_roots,
-    real_roots, nroots, ground_roots,
+    all_roots, real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
@@ -54,6 +54,7 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
+from sympy.combinatorics.galois import S4TransitiveSubgroups
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.containers import Tuple
@@ -2603,6 +2604,21 @@ def test_factor():
     assert factor_list(x**3 - x*y**2, t, w, x) == (
         1, [(x, 1), (x - y, 1), (x + y, 1)])
 
+    # https://github.com/sympy/sympy/issues/24952
+    s2, s2p, s2n = sqrt(2), 1 + sqrt(2), 1 - sqrt(2)
+    pip, pin = 1 + pi, 1 - pi
+    assert factor_list(s2p*s2n) == (-1, [(-s2n, 1), (s2p, 1)])
+    assert factor_list(pip*pin) == (-1, [(-pin, 1), (pip, 1)])
+    # Not sure about this one. Maybe coeff should be 1 or -1?
+    assert factor_list(s2*s2n) == (-s2, [(-s2n, 1)])
+    assert factor_list(pi*pin) == (-1, [(-pin, 1), (pi, 1)])
+    assert factor_list(s2p*s2n, x) == (s2p*s2n, [])
+    assert factor_list(pip*pin, x) == (pip*pin, [])
+    assert factor_list(s2*s2n, x) == (s2*s2n, [])
+    assert factor_list(pi*pin, x) == (pi*pin, [])
+    assert factor_list((x - sqrt(2)*pi)*(x + sqrt(2)*pi), x) == (
+        1, [(x - sqrt(2)*pi, 1), (x + sqrt(2)*pi, 1)])
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -2840,6 +2856,7 @@ def test_Poly_root():
 
 
 def test_real_roots():
+
     assert real_roots(x) == [0]
     assert real_roots(x, multiple=False) == [(0, 1)]
 
@@ -2855,6 +2872,11 @@ def test_real_roots():
     assert real_roots(x**3*(x**3 + x + 3), multiple=False) == [(rootof(
         x**3 + x + 3, 0), 1), (0, 3)]
 
+    assert real_roots(x**2 - 2, radicals=False) == [
+            rootof(x**2 - 2, 0, radicals=False),
+            rootof(x**2 - 2, 1, radicals=False),
+        ]
+
     f = 2*x**3 - 7*x**2 + 4*x + 4
     g = x**3 + x + 1
 
@@ -2863,11 +2885,26 @@ def test_real_roots():
 
 
 def test_all_roots():
-    f = 2*x**3 - 7*x**2 + 4*x + 4
-    g = x**3 + x + 1
 
-    assert Poly(f).all_roots() == [Rational(-1, 2), 2, 2]
-    assert Poly(g).all_roots() == [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
+    f = 2*x**3 - 7*x**2 + 4*x + 4
+    froots = [Rational(-1, 2), 2, 2]
+    assert all_roots(f) == Poly(f).all_roots() == froots
+
+    g = x**3 + x + 1
+    groots = [rootof(g, 0), rootof(g, 1), rootof(g, 2)]
+    assert all_roots(g) == Poly(g).all_roots() == groots
+
+    assert all_roots(x**2 - 2) == [-sqrt(2), sqrt(2)]
+    assert all_roots(x**2 - 2, multiple=False) == [(-sqrt(2), 1), (sqrt(2), 1)]
+    assert all_roots(x**2 - 2, radicals=False) == [
+        rootof(x**2 - 2, 0, radicals=False),
+        rootof(x**2 - 2, 1, radicals=False),
+    ]
+
+    p = x**5 - x - 1
+    assert all_roots(p) == [
+        rootof(p, 0), rootof(p, 1), rootof(p, 2), rootof(p, 3), rootof(p, 4)
+    ]
 
 
 def test_nroots():
@@ -3157,6 +3194,41 @@ def test_cancel():
     assert cancel(expr) == (z*sin(M[1, 4] + M[2, 1] * 5 * M[4, 0]) - 5 * M[1, 2]) / z
 
     assert cancel((x**2 + 1)/(x - I)) == x + I
+
+
+def test_make_monic_over_integers_by_scaling_roots():
+    f = Poly(x**2 + 3*x + 4, x, domain='ZZ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == f
+    assert c == ZZ.one
+
+    f = Poly(x**2 + 3*x + 4, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == f.to_ring()
+    assert c == ZZ.one
+
+    f = Poly(x**2/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == Poly(x**2 + 2*x + 4, x, domain='ZZ')
+    assert c == 4
+
+    f = Poly(x**3/2 + S(1)/4 * x + S(1)/8, x, domain='QQ')
+    g, c = f.make_monic_over_integers_by_scaling_roots()
+    assert g == Poly(x**3 + 8*x + 16, x, domain='ZZ')
+    assert c == 4
+
+    f = Poly(x*y, x, y)
+    raises(ValueError, lambda: f.make_monic_over_integers_by_scaling_roots())
+
+    f = Poly(x, domain='RR')
+    raises(ValueError, lambda: f.make_monic_over_integers_by_scaling_roots())
+
+
+def test_galois_group():
+    f = Poly(x ** 4 - 2)
+    G, alt = f.galois_group(by_name=True)
+    assert G == S4TransitiveSubgroups.D4
+    assert alt is False
 
 
 def test_reduced():

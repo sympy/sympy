@@ -121,7 +121,7 @@ class MatrixShaping(MatrixRequired):
         cols = self.cols
         indices = (i * cols + j for i in rowsList for j in colsList)
         return self._new(len(rowsList), len(colsList),
-                         list(mat[i] for i in indices))
+                         [mat[i] for i in indices])
 
     def _eval_get_diag_blocks(self):
         sub_blocks = []
@@ -834,8 +834,8 @@ class MatrixSpecial(MatrixRequired):
 
         D = cls._new(2*n + 1, 2*n + 1, entry)
 
-        wminus = cls.diag([i for i in range(-n, n + 1)], unpack=True) + D + D.T
-        wplus = abs(cls.diag([i for i in range(-n, n + 1)], unpack=True)) + D + D.T
+        wminus = cls.diag(list(range(-n, n + 1)), unpack=True) + D + D.T
+        wplus = abs(cls.diag(list(range(-n, n + 1)), unpack=True)) + D + D.T
 
         return wminus, wplus
 
@@ -2972,7 +2972,7 @@ class _MinimalMatrix:
     def __init__(self, rows, cols=None, mat=None, copy=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
-            mat = list(mat(i, j) for i in range(rows) for j in range(cols))
+            mat = [mat(i, j) for i in range(rows) for j in range(cols)]
         if cols is None and mat is None:
             mat = rows
         rows, cols = getattr(mat, 'shape', (rows, cols))
@@ -3022,7 +3022,7 @@ class _MinimalMatrix:
                 indices = (i * self.cols + j for i in rowsList for j in
                            colsList)
                 return self._new(len(rowsList), len(colsList),
-                                 list(self.mat[i] for i in indices))
+                                 [self.mat[i] for i in indices])
 
             # if the key is a tuple of ints, change
             # it to an array index

@@ -419,8 +419,8 @@ class Integral(AddWithLimits):
             manual = meijerg = heurisch = False
         elif heurisch:
             manual = meijerg = risch = False
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
-            conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
+            "conds": conds}
 
         if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -922,8 +922,8 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
-            heurisch=heurisch, conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
+            "heurisch": heurisch, "conds": conds}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1362,7 +1362,7 @@ class Integral(AddWithLimits):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [2] https://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "

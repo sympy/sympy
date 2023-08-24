@@ -39,20 +39,20 @@ dimsys_length_weight_time = DimensionSystem([
     length,
     mass,
     time,
-], dimensional_dependencies=dict(
+], dimensional_dependencies={
     # Dimensional dependencies for derived dimensions
-    velocity=dict(length=1, time=-1),
-    acceleration=dict(length=1, time=-2),
-    momentum=dict(mass=1, length=1, time=-1),
-    force=dict(mass=1, length=1, time=-2),
-    energy=dict(mass=1, length=2, time=-2),
-    power=dict(length=2, mass=1, time=-3),
-    pressure=dict(mass=1, length=-1, time=-2),
-    frequency=dict(time=-1),
-    action=dict(length=2, mass=1, time=-1),
-    area=dict(length=2),
-    volume=dict(length=3),
-))
+    "velocity": {"length": 1, "time": -1},
+    "acceleration": {"length": 1, "time": -2},
+    "momentum": {"mass": 1, "length": 1, "time": -1},
+    "force": {"mass": 1, "length": 1, "time": -2},
+    "energy": {"mass": 1, "length": 2, "time": -2},
+    "power": {"length": 2, "mass": 1, "time": -3},
+    "pressure": {"mass": 1, "length": -1, "time": -2},
+    "frequency": {"time": -1},
+    "action": {"length": 2, "mass": 1, "time": -1},
+    "area": {"length": 2},
+    "volume": {"length": 3},
+})
 
 
 One = S.One

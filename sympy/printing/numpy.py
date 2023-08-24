@@ -19,6 +19,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
+    'isnan': 'isnan'
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -226,7 +227,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
-            map(lambda arg: self._print(arg), expr.args)))
+            (self._print(arg) for arg in expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
@@ -482,6 +483,7 @@ class JaxPrinter(NumPyPrinter):
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
 
     # These need specific override to allow for the lack of "jax.numpy.reduce"
     def _print_And(self, expr):

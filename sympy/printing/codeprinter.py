@@ -395,14 +395,12 @@ class CodePrinter(StrPrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         return self._get_statement("{} {} {}".format(
-            *map(lambda arg: self._print(arg),
-                 [lhs_code, expr.op, rhs_code])))
+            *(self._print(arg) for arg in [lhs_code, expr.op, rhs_code])))
 
     def _print_FunctionCall(self, expr):
         return '%s(%s)' % (
             expr.name,
-            ', '.join(map(lambda arg: self._print(arg),
-                          expr.function_args)))
+            ', '.join((self._print(arg) for arg in expr.function_args)))
 
     def _print_Variable(self, expr):
         return self._print(expr.symbol)
@@ -446,7 +444,8 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
             if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
-                return self._print(expr.rewrite(target_f))
+                return '(' + self._print(expr.rewrite(target_f)) + ')'
+
         if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:

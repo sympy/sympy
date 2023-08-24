@@ -75,7 +75,7 @@ class ArrayKind(Kind):
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
-        elem_kinds = set(e.kind for e in kinds)
+        elem_kinds = {e.kind for e in kinds}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:

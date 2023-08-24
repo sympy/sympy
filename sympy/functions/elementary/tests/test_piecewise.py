@@ -5,6 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.function import (Function, diff, expand)
 from sympy.core.mul import Mul
+from sympy.core.mod import Mod
 from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Ne)
 from sympy.core.singleton import S
@@ -1339,6 +1340,43 @@ def test_issue_14787():
     f = Piecewise((x, x < 1), ((S(58) / 7), True))
     assert str(f.evalf()) == "Piecewise((x, x < 1), (8.28571428571429, True))"
 
+def test_issue_21481():
+    b, e = symbols('b e')
+    C = Piecewise(
+        (2,
+        ((b > 1) & (e > 0)) |
+        ((b > 0) & (b < 1) & (e < 0)) |
+        ((e >= 2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e <= -2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (S.Half,
+        ((b > 1) & (e < 0)) |
+        ((b > 0) & (e > 0) & (b < 1)) |
+        ((e <= -2) & (b < -1) & Eq(Mod(e, 2), 0)) |
+        ((e >= 2) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 0))),
+        (-S.Half,
+        Eq(Mod(e, 2), 1) &
+        (((e <= -1) & (b < -1)) | ((e >= 1) & (b > -1) & (b < 0)))),
+        (-2,
+        ((e >= 1) & (b < -1) & Eq(Mod(e, 2), 1)) |
+        ((e <= -1) & (b > -1) & (b < 0) & Eq(Mod(e, 2), 1)))
+    )
+    A = Piecewise(
+        (1, Eq(b, 1) | Eq(e, 0) | (Eq(b, -1) & Eq(Mod(e, 2), 0))),
+        (0, Eq(b, 0) & (e > 0)),
+        (-1, Eq(b, -1) & Eq(Mod(e, 2), 1)),
+        (C, Eq(im(b), 0) & Eq(im(e), 0))
+    )
+
+    B = piecewise_fold(A)
+    sa = A.simplify()
+    sb = B.simplify()
+    v = (-2, -1, -S.Half, 0, S.Half, 1, 2)
+    for i in v:
+        for j in v:
+            r = {b:i, e:j}
+            ok = [k.xreplace(r) for k in (A, B, sa, sb)]
+            assert len(set(ok)) == 1
+
 
 def test_issue_8458():
     x, y = symbols('x y')
@@ -1553,3 +1591,16 @@ def test_issue_22533():
 def test_issue_24072():
     assert Piecewise((1, x > 1), (2, x <= 1), (3, x <= 1)
         ) == Piecewise((1, x > 1), (2, True))
+
+
+def test_piecewise__eval_is_meromorphic():
+    """ Issue 24127: Tests eval_is_meromorphic auxiliary method """
+    x = symbols('x', real=True)
+    f = Piecewise((1, x < 0), (sqrt(1 - x), True))
+    assert f.is_meromorphic(x, I) is None
+    assert f.is_meromorphic(x, -1) == True
+    assert f.is_meromorphic(x, 0) == None
+    assert f.is_meromorphic(x, 1) == False
+    assert f.is_meromorphic(x, 2) == True
+    assert f.is_meromorphic(x, Symbol('a')) == None
+    assert f.is_meromorphic(x, Symbol('a', real=True)) == None

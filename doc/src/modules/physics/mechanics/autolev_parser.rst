@@ -14,7 +14,7 @@ enough power and functionality to be a fully featured symbolic dynamics
 module. This parser parses Autolev (version 4.1) code to SymPy code by making
 use of SymPy's math libraries and the mechanics module.
 
-The parser has been built using the `ANTLR <http://www.antlr.org/>`_ framework and its main purpose
+The parser has been built using the `ANTLR <https://www.antlr.org/>`_ framework and its main purpose
 is to help former users of Autolev to get familiarized with multibody dynamics
 in SymPy.
 
@@ -564,7 +564,7 @@ Future Improvements
 1. Completing Dynamics Online
 -----------------------------
 The parser has been built by referring to and parsing codes from the
-`Autolev Tutorial <http://web.mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
+`Autolev Tutorial <https://mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
 and the book *Dynamics Online: Theory and Implementation Using Autolev*.
 Basically, the process involved going through each of these codes,
 validating the parser results and improving the rules if required
@@ -590,7 +590,7 @@ functionality to SymPy.
 3. Switching to an AST
 ----------------------
 The parser is currently built using a kind of Concrete Syntax Tree (CST)
-using the `ANTLR <http://www.antlr.org/>`_ framework. It would be ideal to switch from a CST to an
+using the `ANTLR <https://www.antlr.org/>`_ framework. It would be ideal to switch from a CST to an
 Abstract Syntax Tree (AST). This way, the parser code will be independent
 of the ANTLR grammar which makes it a lot more flexible. It would also be
 easier to make changes to the grammar and the rules of the parser.

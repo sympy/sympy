@@ -1725,8 +1725,6 @@ class Beam:
         point of the beam. Calculate the I.L.D. equations for reaction forces
         under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildreaction.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1875,8 +1873,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -1935,8 +1931,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Shear at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
@@ -2006,8 +2000,6 @@ class Beam:
         of 8 meters. Calculate the I.L.D. equations for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
 
-        .. image:: ildshear.png
-
         Using the sign convention of downwards forces being positive.
 
         .. plot::
@@ -2065,8 +2057,6 @@ class Beam:
         below the beam, one at the starting point and another at a distance
         of 8 meters. Plot the I.L.D. for Moment at a distance
         of 4 meters under the effect of a moving load of magnitude 1kN.
-
-        .. image:: ildshear.png
 
         Using the sign convention of downwards forces being positive.
 
@@ -2156,12 +2146,13 @@ class Beam:
             >>> b.apply_support(0, "fixed")
             >>> b.apply_support(20, "roller")
             >>> p = b.draw()
-            >>> p
+            >>> p  # doctest: +ELLIPSIS
             Plot object containing:
             [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
             + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
             - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
             [1]: cartesian line: 5 for x over (0.0, 50.0)
+            ...
             >>> p.show()
 
         """
@@ -2223,9 +2214,9 @@ class Beam:
             # point loads
             if load[2] == -1:
                 if isinstance(load[0], Symbol) or load[0].is_negative:
-                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':dict(width= 1.5, headlength=5, headwidth=5, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':{"width": 1.5, "headlength": 5, "headwidth": 5, "facecolor": 'black'}})
                 else:
-                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':dict(width= 1.5, headlength=4, headwidth=4, facecolor='black')})
+                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':{"width": 1.5, "headlength": 4, "headwidth": 4, "facecolor": 'black'}})
             # moment loads
             elif load[2] == -2:
                 if load[0].is_negative:
@@ -2390,7 +2381,7 @@ class Beam3D(Beam):
     References
     ==========
 
-    .. [1] http://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
+    .. [1] https://homes.civil.aau.dk/jc/FemteSemester/Beams3D.pdf
 
     """
 
@@ -2889,8 +2880,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -2991,8 +2982,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3094,8 +3085,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3197,8 +3188,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3272,8 +3263,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3370,7 +3361,7 @@ class Beam3D(Beam):
         Examples
         ========
         There is a beam of length 20 meters and area of cross section 2 square
-        meters. It it supported by rollers at of its end. A linear load having
+        meters. It is supported by rollers at both of its ends. A linear load having
         slope equal to 12 is applied along y-axis. A constant distributed load
         of magnitude 15 N is applied from start till its end along z-axis.
 
@@ -3465,8 +3456,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3540,8 +3531,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 
@@ -3618,8 +3609,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 20 meters. It it supported by rollers
-        at of its end. A linear load having slope equal to 12 is applied
+        There is a beam of length 20 meters. It is supported by rollers
+        at both of its ends. A linear load having slope equal to 12 is applied
         along y-axis. A constant distributed load of magnitude 15 N is
         applied from start till its end along z-axis.
 

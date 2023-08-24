@@ -6,6 +6,8 @@ The optional dependencies need to be installed before running this.
 """
 
 
+import pytest
+
 # Add the local sympy to sys.path (needed for CI)
 from get_sympy import path_hack
 path_hack()
@@ -40,6 +42,7 @@ test_list = [
     '*jax*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # gmpy, numpy, scipy, autowrap, matplotlib
@@ -67,9 +70,11 @@ test_list = [
     'sympy/logic',
     'sympy/assumptions',
 
-    #stats
+    # stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/tests/test_mathml.py",
 ]
 
 
@@ -96,6 +101,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # autowrap
@@ -117,6 +123,8 @@ doctest_list = [
     #stats
     'sympy/stats',
 
+    # lxml
+    "sympy/utilities/mathml/",
 ]
 
 
@@ -127,12 +135,14 @@ from sympy import test, doctest
 
 
 tests_passed = test(*test_list, blacklist=blacklist, force_colors=True)
+if tests_passed is True:
+    tests_passed = pytest.ExitCode.OK
 doctests_passed = doctest(*doctest_list, force_colors=True)
 
 
-if not tests_passed and not doctests_passed:
+if (tests_passed != pytest.ExitCode.OK) and not doctests_passed:
     raise TestsFailedError('Tests and doctests failed')
-elif not tests_passed:
+elif tests_passed != pytest.ExitCode.OK:
     raise TestsFailedError('Doctests passed but tests failed')
 elif not doctests_passed:
     raise TestsFailedError('Tests passed but doctests failed')

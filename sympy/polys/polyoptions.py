@@ -314,7 +314,7 @@ class Wrt(Option, metaclass=OptionType):
                 raise OptionError('Bad input: missing parameter.')
             if not wrt:
                 return []
-            return [ gen for gen in cls._re_split.split(wrt) ]
+            return list(cls._re_split.split(wrt))
         elif hasattr(wrt, '__getitem__'):
             return list(map(str, wrt))
         else:

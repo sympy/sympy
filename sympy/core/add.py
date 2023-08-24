@@ -8,7 +8,8 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd, equal_valued
+from .numbers import equal_valued
+from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
@@ -678,8 +679,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im_I.append(a*S.ImaginaryUnit)
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_I.append(a*S.ImaginaryUnit)
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_I.append(-coeff)
+                else:
+                    return
             else:
                 return
         b = self.func(*nz)
@@ -708,8 +713,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im += 1
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_or_z = True
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_or_z = True
+                else:
+                    return
             else:
                 return
         if z == len(self.args):
@@ -1025,9 +1034,9 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=False,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": False,
+                "factor": False}
             old = old.expand(**logflags)
         expr = expand_mul(old)
 

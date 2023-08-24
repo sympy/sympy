@@ -350,7 +350,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     References
     ==========
 
-    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    .. [1] https://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 

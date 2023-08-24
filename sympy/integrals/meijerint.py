@@ -32,16 +32,18 @@ import itertools
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.symbol import Dummy, symbols, Wild, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
@@ -296,19 +298,16 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
 
-def _mytype(f, x):
+def _mytype(f: Basic, x: Symbol) -> tuple[type[Basic], ...]:
     """ Create a hashable entity describing the type of f. """
+    def key(x: type[Basic]) -> tuple[int, int, str]:
+        return x.class_key()
+
     if x not in f.free_symbols:
         return ()
     elif f.is_Function:
-        return (type(f),)
-    else:
-        types = [_mytype(a, x) for a in f.args]
-        res = []
-        for t in types:
-            res += list(t)
-        res.sort()
-        return tuple(res)
+        return type(f),
+    return tuple(sorted((t for a in f.args for t in _mytype(a, x)), key=key))
 
 
 class _CoeffExpValueError(ValueError):
@@ -659,7 +658,7 @@ def _condsimp(cond, first=True):
         (Ne(p, 2) & (cos(Abs(arg(p)))*Abs(p) > 2), Abs(p) > 2),  # 13
         ((Abs(arg(p)) < pi/2) & (cos(Abs(arg(p)))*sqrt(Abs(p**2)) > 1), p**2 > 1),  # 14
     ]
-    cond = cond.func(*list(map(lambda _: _condsimp(_, first), cond.args)))
+    cond = cond.func(*[_condsimp(_, first) for _ in cond.args])
     change = True
     while change:
         change = False
@@ -854,7 +853,7 @@ def _check_antecedents_1(g, x, helper=False):
 
     # extra case from wofram functions site:
     # (reproduced verbatim from Prudnikov, section 2.24.2)
-    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
+    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(unbranched_argument(eta), 0), Ne(eta, 0)]
     if not helper:
@@ -993,7 +992,7 @@ def _check_antecedents(g1, g2, x):
     # [P], Section 2.24.1
     #
     # They are also reproduced (verbatim!) at
-    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
+    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
     #
     # Note: k=l=r=alpha=1
     sigma, _ = _get_coeff_exp(g1.argument, x)
@@ -1049,7 +1048,7 @@ def _check_antecedents(g1, g2, x):
     #   https://reduce-algebra.svn.sourceforge.net/svnroot/reduce-algebra/trunk/packages/defint/definta.red
     #   (search for tst14)
     # The Wolfram alpha version:
-    #   http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
+    #   https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
     z0 = exp(-(bstar + cstar)*pi*S.ImaginaryUnit)
     zos = unpolarify(z0*omega/sigma)
     zso = unpolarify(z0*sigma/omega)

@@ -170,7 +170,7 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        newlist = [v for v in self.args]
+        newlist = list(self.args)
         other = sympify(other)
         for i, v in enumerate(newlist):
             newlist[i] = (other * newlist[i][0], newlist[i][1])
@@ -513,17 +513,15 @@ class Vector(Printable, EvalfMixin):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-        >>> from sympy.physics.vector import Vector
         >>> from sympy.physics.vector import init_vprinting
         >>> init_vprinting(pretty_print=False)
-        >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
         - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
-        >>> A.x.diff(t, N).express(A)
+        >>> A.x.diff(t, N).express(A).simplify()
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')

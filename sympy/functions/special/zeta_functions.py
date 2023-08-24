@@ -122,7 +122,7 @@ class lerchphi(Function):
 
     .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
            Vol. I, New York: McGraw-Hill. Section 1.11.
-    .. [2] http://dlmf.nist.gov/25.14
+    .. [2] https://dlmf.nist.gov/25.14
     .. [3] https://en.wikipedia.org/wiki/Lerch_transcendent
 
     """
@@ -493,7 +493,7 @@ class zeta(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/25.11
+    .. [1] https://dlmf.nist.gov/25.11
     .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     """

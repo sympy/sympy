@@ -37,7 +37,8 @@ from typing import Callable
 from functools import reduce
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
-from sympy.core.numbers import igcdex, Integer
+from sympy.core.intfunc import igcdex
+from sympy.core.numbers import Integer
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.cache import cacheit
 
@@ -201,7 +202,7 @@ def cos_257() -> Expr:
     References
     ==========
 
-    .. [*] http://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
+    .. [*] https://math.stackexchange.com/questions/516142/how-does-cos2-pi-257-look-like-in-real-radicals
     .. [*] https://r-knott.surrey.ac.uk/Fibonacci/simpleTrig.html
     """
     def f1(a: Expr, b: Expr) -> tuple[Expr, Expr]:

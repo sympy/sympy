@@ -626,7 +626,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
+    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -649,12 +649,10 @@ class Equality(Relational):
         (b, x, b, -x)
         """
         from .add import _unevaluated_Add, Add
-        L, R = args
         if L == 0:
             return R
         if R == 0:
             return L
-        evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R
@@ -1078,7 +1076,7 @@ class GreaterThan(_Greater):
        method to determine that a chained inequality is being built.
        Chained comparison operators are evaluated pairwise, using "and"
        logic (see
-       http://docs.python.org/reference/expressions.html#not-in). This
+       https://docs.python.org/3/reference/expressions.html#not-in). This
        is done in an efficient way, so that each object being compared
        is only evaluated once and the comparison can short-circuit. For
        example, ``1 > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2

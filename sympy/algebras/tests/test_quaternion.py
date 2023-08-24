@@ -29,7 +29,8 @@ def test_quaternion_construction():
 
     M = Matrix([[cos(phi), -sin(phi), 0], [sin(phi), cos(phi), 0], [0, 0, 1]])
     q3 = trigsimp(Quaternion.from_rotation_matrix(M))
-    assert q3 == Quaternion(sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
+    assert q3 == Quaternion(
+        sqrt(2)*sqrt(cos(phi) + 1)/2, 0, 0, sqrt(2 - 2*cos(phi))*sign(sin(phi))/2)
 
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
@@ -123,8 +124,10 @@ def test_quaternion_complex_real_addition():
 
 
 def test_quaternion_evalf():
-    assert Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() == Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf())
-    assert Quaternion(1/sqrt(2), 0, 0, 1/sqrt(2)).evalf() == Quaternion((1/sqrt(2)).evalf(), 0, 0, (1/sqrt(2)).evalf())
+    assert (Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() ==
+            Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf()))
+    assert (Quaternion(1/sqrt(2), 0, 0, 1/sqrt(2)).evalf() ==
+            Quaternion((1/sqrt(2)).evalf(), 0, 0, (1/sqrt(2)).evalf()))
 
 
 def test_quaternion_functions():
@@ -140,8 +143,10 @@ def test_quaternion_functions():
     raises(ValueError, lambda: q0.inverse())
     assert q.pow(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
     assert q**(2) == Quaternion(w**2 - x**2 - y**2 - z**2, 2*w*x, 2*w*y, 2*w*z)
-    assert q1.pow(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
-    assert q1**(-2) == Quaternion(Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
+    assert q1.pow(-2) == Quaternion(
+        Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
+    assert q1**(-2) == Quaternion(
+        Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1.pow(-0.5) == NotImplemented
     raises(TypeError, lambda: q1**(-0.5))
 
@@ -182,51 +187,66 @@ def test_quaternion_functions():
     assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
     assert q1.axis().pow(2) == Quaternion(-1, 0, 0, 0)
     assert q0.axis().scalar_part() == 0
-    assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))
+    assert (q.axis() == Quaternion(0,
+                                   x/sqrt(x**2 + y**2 + z**2),
+                                   y/sqrt(x**2 + y**2 + z**2),
+                                   z/sqrt(x**2 + y**2 + z**2)))
 
-    assert q0.is_pure() == True
-    assert q1.is_pure() == False
-    assert Quaternion(0, 0, 0, 3).is_pure() == True
-    assert Quaternion(0, 2, 10, 3).is_pure() == True
-    assert Quaternion(w, 2, 10, 3).is_pure() == None
+    assert q0.is_pure() is True
+    assert q1.is_pure() is False
+    assert Quaternion(0, 0, 0, 3).is_pure() is True
+    assert Quaternion(0, 2, 10, 3).is_pure() is True
+    assert Quaternion(w, 2, 10, 3).is_pure() is None
 
-    assert q1.angle() == atan(sqrt(29))
-    assert q.angle() == atan2(sqrt(x**2 + y**2 + z**2), w)
+    assert q1.angle() == 2*atan(sqrt(29))
+    assert q.angle() == 2*atan2(sqrt(x**2 + y**2 + z**2), w)
 
-    assert Quaternion.arc_coplanar(q1, Quaternion(2, 4, 6, 8)) == True
-    assert Quaternion.arc_coplanar(q1, Quaternion(1, -2, -3, -4)) == True
-    assert Quaternion.arc_coplanar(q1, Quaternion(1, 8, 12, 16)) == True
-    assert Quaternion.arc_coplanar(q1, Quaternion(1, 2, 3, 4)) == True
-    assert Quaternion.arc_coplanar(q1, Quaternion(w, 4, 6, 8)) == True
-    assert Quaternion.arc_coplanar(q1, Quaternion(2, 7, 4, 1)) == False
-    assert Quaternion.arc_coplanar(q1, Quaternion(w, x, y, z)) == None
+    assert Quaternion.arc_coplanar(q1, Quaternion(2, 4, 6, 8)) is True
+    assert Quaternion.arc_coplanar(q1, Quaternion(1, -2, -3, -4)) is True
+    assert Quaternion.arc_coplanar(q1, Quaternion(1, 8, 12, 16)) is True
+    assert Quaternion.arc_coplanar(q1, Quaternion(1, 2, 3, 4)) is True
+    assert Quaternion.arc_coplanar(q1, Quaternion(w, 4, 6, 8)) is True
+    assert Quaternion.arc_coplanar(q1, Quaternion(2, 7, 4, 1)) is False
+    assert Quaternion.arc_coplanar(q1, Quaternion(w, x, y, z)) is None
     raises(ValueError, lambda: Quaternion.arc_coplanar(q1, q0))
 
-    assert Quaternion.vector_coplanar(Quaternion(0, 8, 12, 16), Quaternion(0, 4, 6, 8), Quaternion(0, 2, 3, 4)) == True
-    assert Quaternion.vector_coplanar(Quaternion(0, 0, 0, 0), Quaternion(0, 4, 6, 8), Quaternion(0, 2, 3, 4)) == True
-    assert Quaternion.vector_coplanar(Quaternion(0, 8, 2, 6), Quaternion(0, 1, 6, 6), Quaternion(0, 0, 3, 4)) == False
-    assert Quaternion.vector_coplanar(Quaternion(0, 1, 3, 4), Quaternion(0, 4, w, 6), Quaternion(0, 6, 8, 1)) == None
-    raises(ValueError, lambda: Quaternion.vector_coplanar(q0, Quaternion(0, 4, 6, 8), q1))
+    assert Quaternion.vector_coplanar(
+        Quaternion(0, 8, 12, 16),
+        Quaternion(0, 4, 6, 8),
+        Quaternion(0, 2, 3, 4)) is True
+    assert Quaternion.vector_coplanar(
+        Quaternion(0, 0, 0, 0), Quaternion(0, 4, 6, 8), Quaternion(0, 2, 3, 4)) is True
+    assert Quaternion.vector_coplanar(
+        Quaternion(0, 8, 2, 6), Quaternion(0, 1, 6, 6), Quaternion(0, 0, 3, 4)) is False
+    assert Quaternion.vector_coplanar(
+        Quaternion(0, 1, 3, 4),
+        Quaternion(0, 4, w, 6),
+        Quaternion(0, 6, 8, 1)) is None
+    raises(ValueError, lambda:
+        Quaternion.vector_coplanar(q0, Quaternion(0, 4, 6, 8), q1))
 
-    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 4, 6)) == True
-    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 2, 6)) == False
-    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(w, x, y, 6)) == None
+    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 4, 6)) is True
+    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(0, 2, 2, 6)) is False
+    assert Quaternion(0, 1, 2, 3).parallel(Quaternion(w, x, y, 6)) is None
     raises(ValueError, lambda: q0.parallel(q1))
 
-    assert Quaternion(0, 1, 2, 3).orthogonal(Quaternion(0, -2, 1, 0)) == True
-    assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(0, 2, 2, 6)) == False
-    assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(w, x, y, 6)) == None
+    assert Quaternion(0, 1, 2, 3).orthogonal(Quaternion(0, -2, 1, 0)) is True
+    assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(0, 2, 2, 6)) is False
+    assert Quaternion(0, 2, 4, 7).orthogonal(Quaternion(w, x, y, 6)) is None
     raises(ValueError, lambda: q0.orthogonal(q1))
 
-    assert q1.index_vector() == Quaternion(0, 2*sqrt(870)/29, 3*sqrt(870)/29, 4*sqrt(870)/29)
+    assert q1.index_vector() == Quaternion(
+        0, 2*sqrt(870)/29,
+        3*sqrt(870)/29,
+        4*sqrt(870)/29)
     assert Quaternion(0, 3, 9, 4).index_vector() == Quaternion(0, 3, 9, 4)
 
     assert Quaternion(4, 3, 9, 4).mensor() == log(sqrt(122))
     assert Quaternion(3, 3, 0, 2).mensor() == log(sqrt(22))
 
-    assert q0.is_zero_quaternion() == True
-    assert q1.is_zero_quaternion() == False
-    assert Quaternion(w, 0, 0, 0).is_zero_quaternion() == None
+    assert q0.is_zero_quaternion() is True
+    assert q1.is_zero_quaternion() is False
+    assert Quaternion(w, 0, 0, 0).is_zero_quaternion() is None
 
 def test_quaternion_conversions():
     q1 = Quaternion(1, 2, 3, 4)
@@ -236,14 +256,17 @@ def test_quaternion_conversions():
                                    4 * sqrt(29)/29),
                                    2 * acos(sqrt(30)/30))
 
-    assert q1.to_rotation_matrix() == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
-                                              [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
-                                              [Rational(1, 3), Rational(14, 15), Rational(2, 15)]])
+    assert (q1.to_rotation_matrix() ==
+            Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15)],
+                    [Rational(2, 3), Rational(-1, 3), Rational(2, 3)],
+                    [Rational(1, 3), Rational(14, 15), Rational(2, 15)]]))
 
-    assert q1.to_rotation_matrix((1, 1, 1)) == Matrix([[Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
-                                                       [Rational(2, 3), Rational(-1, 3), Rational(2, 3), S.Zero],
-                                                       [Rational(1, 3), Rational(14, 15), Rational(2, 15), Rational(-2, 5)],
-                                                       [S.Zero, S.Zero, S.Zero, S.One]])
+    assert (q1.to_rotation_matrix((1, 1, 1)) ==
+            Matrix([
+                [Rational(-2, 3), Rational(2, 15), Rational(11, 15), Rational(4, 5)],
+                [Rational(2, 3), Rational(-1, 3), Rational(2, 3), S.Zero],
+                [Rational(1, 3), Rational(14, 15), Rational(2, 15), Rational(-2, 5)],
+                [S.Zero, S.Zero, S.Zero, S.One]]))
 
     theta = symbols("theta", real=True)
     q2 = Quaternion(cos(theta/2), 0, 0, sin(theta/2))
@@ -292,7 +315,8 @@ def test_quaternion_multiplication():
     q3 = Quaternion(1, 1, 1, y)
 
     assert Quaternion._generic_mul(S(4), S.One) == 4
-    assert Quaternion._generic_mul(S(4), q1) == Quaternion(12 + 16*I, 8 + 20*I, 0, 28 + 32*I)
+    assert (Quaternion._generic_mul(S(4), q1) ==
+            Quaternion(12 + 16*I, 8 + 20*I, 0, 28 + 32*I))
     assert q2.mul(2) == Quaternion(2, 4, 6, 10)
     assert q2.mul(q3) == Quaternion(-5*y - 4, 3*y - 2, 9 - 2*y, y + 4)
     assert q2.mul(q3) == q2*q3

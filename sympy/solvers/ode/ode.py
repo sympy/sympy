@@ -1179,7 +1179,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
     -A. D. Polyanin and A. V. Manzhirov, Handbook of Mathematics for Engineers and Scientists
 
     Examples
@@ -2159,7 +2159,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr
@@ -2306,7 +2306,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     References
     ==========
-    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - https://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
     - George E. Simmons, "Differential Equations with Applications and
       Historical Notes", p.p 176 - 184
 
@@ -3302,7 +3302,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3356,7 +3356,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3413,7 +3413,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3473,7 +3473,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3523,7 +3523,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)

@@ -127,7 +127,7 @@ def _liupc(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -175,7 +175,7 @@ def _row_structure_symbolic_cholesky(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -188,7 +188,7 @@ def _row_structure_symbolic_cholesky(M):
                 Lrow[k].append(j)
                 j = parent[j]
 
-        Lrow[k] = list(sorted(set(Lrow[k])))
+        Lrow[k] = sorted(set(Lrow[k]))
 
     return Lrow
 
@@ -1130,7 +1130,7 @@ def _singular_value_decomposition(A):
     Explanation
     ===========
 
-    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
     where
 
     - $U, V$ are column orthogonal matrix.
@@ -1313,11 +1313,7 @@ def _singular_value_decomposition(A):
 
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
     else:
@@ -1331,11 +1327,7 @@ def _singular_value_decomposition(A):
         U = U[:, ranked]
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
 
@@ -1348,7 +1340,7 @@ def _QRdecomposition_optional(M, normalize=True):
     dps = _get_intermediate_simp(expand_mul, expand_mul)
 
     A = M.as_mutable()
-    ranked = list()
+    ranked = []
 
     Q = A
     R = A.zeros(A.cols)

@@ -1,12 +1,13 @@
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import atan
 from sympy.matrices.dense import eye
 from sympy.polys.polytools import factor
 from sympy.polys.rootoftools import CRootOf
@@ -14,7 +15,8 @@ from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, bilinear)
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
+    gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
 a, x, b, s, g, d, p, k, a0, a1, a2, b0, b1, b2, tau, zeta, wn, T = symbols('a, x, b, s, g, d, p, k,\
@@ -150,6 +152,26 @@ def test_TransferFunction_functions():
     assert H1 == H2
     assert TransferFunction.from_rational_expression(expr_8, s) == \
         TransferFunction(2*s**2 + 3*s + 2, s**2 + 1, s)
+
+    # classmethod from_coeff_lists
+    tf1 = TransferFunction.from_coeff_lists([1, 2], [3, 4, 5], s)
+    num2 = [p**2, 2*p]
+    den2 = [p**3, p + 1, 4]
+    tf2 = TransferFunction.from_coeff_lists(num2, den2, s)
+    num3 = [1, 2, 3]
+    den3 = [0, 0]
+
+    assert tf1 == TransferFunction(s + 2, 3*s**2 + 4*s + 5, s)
+    assert tf2 == TransferFunction(p**2*s + 2*p, p**3*s**2 + s*(p + 1) + 4, s)
+    raises(ZeroDivisionError, lambda: TransferFunction.from_coeff_lists(num3, den3, s))
+
+    # classmethod from_zpk
+    zeros = [4]
+    poles = [-1+2j, -1-2j]
+    gain = 3
+    tf1 = TransferFunction.from_zpk(zeros, poles, gain, s)
+
+    assert tf1 == TransferFunction(3*s - 12, (s + 1.0 - 2.0*I)*(s + 1.0 + 2.0*I), s)
 
     # explicitly cancel poles and zeros.
     tf0 = TransferFunction(s**5 + s**3 + s, s - s**2, s)
@@ -372,6 +394,11 @@ def test_TransferFunction_multiplication_and_division():
         Series(G1, G2, TransferFunction(-1, 1, s), Series(G5, G6))
     assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
 
+    # division - See ``test_Feedback_functions()`` for division by Parallel objects.
+    assert G5/G6 == Series(G5, pow(G6, -1))
+    assert -G3/G4 == Series(-G3, pow(G4, -1))
+    assert (G5*G6)/G7 == Series(G5, G6, pow(G7, -1))
+
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
     raises(ValueError, lambda: G1 * c)
@@ -386,8 +413,6 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G5 / s**2)
     raises(ValueError, lambda: (s - 4*s**2) / G2)
     raises(ValueError, lambda: 0 / G4)
-    raises(ValueError, lambda: G5 / G6)
-    raises(ValueError, lambda: -G3 /G4)
     raises(ValueError, lambda: G7 / (1 + G6))
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
@@ -931,6 +956,8 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    assert (tf1*tf2*tf3 / tf3*tf5) == Series(tf1, tf2, tf3, pow(tf3, -1), tf5)
+    assert (tf1*tf2*tf3) / (tf3*tf5) == Series((tf1*tf2*tf3).doit(), pow((tf3*tf5).doit(),-1))
     assert tf / (tf + tf1) == Feedback(tf, tf1)
     assert tf / (tf + tf1*tf2*tf3) == Feedback(tf, tf1*tf2*tf3)
     assert tf1 / (tf + tf1*tf2*tf3) == Feedback(tf1, tf2*tf3)
@@ -941,7 +968,6 @@ def test_Feedback_functions():
     assert tf5 / (tf + tf5) == Feedback(tf5, tf)
 
     raises(TypeError, lambda: tf1*tf2*tf3 / (1 + tf1*tf2*tf3))
-    raises(ValueError, lambda: tf1*tf2*tf3 / tf3*tf5)
     raises(ValueError, lambda: tf2*tf3 / (tf + tf2*tf3*tf4))
 
     assert Feedback(tf, tf1*tf2*tf3).doit() == \
@@ -1221,6 +1247,44 @@ def test_TransferFunctionMatrix_functions():
     assert H_5.expand() == \
         TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
 
+def test_TransferFunction_gbt():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = gbt(tf, T, 0.5)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_bilinear = TransferFunction(s * numZ[0] + numZ[1], s * denZ[0] + denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s * T/(2*(a + b*T/2)) + T/(2*(a + b*T/2)), s + (-a + b*T/2)/(a + b*T/2), s)
+
+    assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
+
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = gbt(tf, T, 0)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(T/a, s + (-a + b*T)/a, s)
+
+    assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
+
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = gbt(tf, T, 1)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_backward = TransferFunction(s*numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s * T/(a + b*T), s - a/(a + b*T), s)
+
+    assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
+
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = gbt(tf, T, 0.3)
+    # discretized transfer function with coefs from tf.gbt()
+    tf_test_gbt = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s*3*T/(10*(a + 3*b*T/10)) + 7*T/(10*(a + 3*b*T/10)), s + (-a + 7*b*T/10)/(a + 3*b*T/10), s)
+
+    assert S.Zero == (tf_test_gbt.simplify()-tf_test_manual.simplify()).simplify().num
+
 def test_TransferFunction_bilinear():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
@@ -1228,6 +1292,58 @@ def test_TransferFunction_bilinear():
     # discretized transfer function with coefs from tf.bilinear()
     tf_test_bilinear = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
     # corresponding tf with manually calculated coefs
-    tf_test_manual = TransferFunction(s*T+T, s*(T*b+2*a)+T*b-2*a, s)
+    tf_test_manual = TransferFunction(s * T/(2*(a + b*T/2)) + T/(2*(a + b*T/2)), s + (-a + b*T/2)/(a + b*T/2), s)
 
-    assert S.Zero == (tf_test_bilinear-tf_test_manual).simplify().num
+    assert S.Zero == (tf_test_bilinear.simplify()-tf_test_manual.simplify()).simplify().num
+
+def test_TransferFunction_forward_diff():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = forward_diff(tf, T)
+    # discretized transfer function with coefs from tf.forward_diff()
+    tf_test_forward = TransferFunction(numZ[0], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(T/a, s + (-a + b*T)/a, s)
+
+    assert S.Zero == (tf_test_forward.simplify()-tf_test_manual.simplify()).simplify().num
+
+def test_TransferFunction_backward_diff():
+    # simple transfer function, e.g. ohms law
+    tf = TransferFunction(1, a*s+b, s)
+    numZ, denZ = backward_diff(tf, T)
+    # discretized transfer function with coefs from tf.backward_diff()
+    tf_test_backward = TransferFunction(s*numZ[0]+numZ[1], s*denZ[0]+denZ[1], s)
+    # corresponding tf with manually calculated coefs
+    tf_test_manual = TransferFunction(s * T/(a + b*T), s - a/(a + b*T), s)
+
+    assert S.Zero == (tf_test_backward.simplify()-tf_test_manual.simplify()).simplify().num
+
+def test_TransferFunction_phase_margin():
+    # Test for phase margin
+    tf1 = TransferFunction(10, p**3 + 1, p)
+    tf2 = TransferFunction(s**2, 10, s)
+    tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
+
+    assert phase_margin(tf1) == -180 + 180*atan(3*sqrt(11))/pi
+    assert phase_margin(tf2) == 0
+
+    raises(NotImplementedError, lambda: phase_margin(tf4))
+    raises(ValueError, lambda: phase_margin(tf3))
+    raises(ValueError, lambda: phase_margin(MIMOSeries(tf_m)))
+
+def test_TransferFunction_gain_margin():
+    # Test for gain margin
+    tf1 = TransferFunction(s**2, 5*(s+1)*(s-5)*(s-10), s)
+    tf2 = TransferFunction(s**2 + 2*s + 1, 1, s)
+    tf3 = TransferFunction(1, a*s+b, s)
+    tf4 = TransferFunction((s + 1)*exp(s/tau), s**2 + 2, s)
+    tf_m = TransferFunctionMatrix([[tf2],[tf3]])
+
+    assert gain_margin(tf1) == -20*log(S(7)/540)/log(10)
+    assert gain_margin(tf2) == oo
+
+    raises(NotImplementedError, lambda: gain_margin(tf4))
+    raises(ValueError, lambda: gain_margin(tf3))
+    raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))

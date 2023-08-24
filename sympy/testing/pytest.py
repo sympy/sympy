@@ -364,3 +364,25 @@ def warns_deprecated_sympy():
     '''
     with warns(SymPyDeprecationWarning):
         yield
+
+
+def _running_under_pyodide():
+    """Test if running under pyodide."""
+    try:
+        import pyodide_js  # type: ignore  # noqa
+    except ImportError:
+        return False
+    else:
+        return True
+
+
+def skip_under_pyodide(message):
+    """Decorator to skip a test if running under pyodide."""
+    def decorator(test_func):
+        @functools.wraps(test_func)
+        def test_wrapper():
+            if _running_under_pyodide():
+                skip(message)
+            return test_func()
+        return test_wrapper
+    return decorator

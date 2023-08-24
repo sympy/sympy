@@ -19,7 +19,7 @@ def test_qs_1():
         {18640889198609, 20991129234731}
 
 
-def test_qs_2():
+def test_qs_2() -> None:
     n = 10009202107
     M = 50
     # a = 10, b = 15, modified_coeff = [a**2, 2*a*b, b**2 - N]

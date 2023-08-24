@@ -34,7 +34,7 @@ from typing import Any
 from functools import reduce
 from math import prod
 
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABC
 from collections import defaultdict
 import operator
 import itertools
@@ -43,7 +43,6 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
-from sympy.core.assumptions import ManagedProperties
 from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
@@ -249,7 +248,7 @@ class _IndexStructure(CantSympify):
     @staticmethod
     def _replace_dummy_names(indices, free, dum):
         dum.sort(key=lambda x: x[0])
-        new_indices = [ind for ind in indices]
+        new_indices = list(indices)
         assert len(indices) == len(free) + 2*len(dum)
         generate_dummy_name = _IndexStructure._get_generator_for_dummy_indices(free)
         for ipos1, ipos2 in dum:
@@ -1965,11 +1964,7 @@ def tensor_heads(s, index_types, symmetry=None, comm=0):
     return thlist
 
 
-class _TensorMetaclass(ManagedProperties, ABCMeta):
-    pass
-
-
-class TensExpr(Expr, metaclass=_TensorMetaclass):
+class TensExpr(Expr, ABC):
     """
     Abstract base class for tensor expressions
 
@@ -2711,7 +2706,7 @@ class TensAdd(TensExpr, AssocOp):
             raise ValueError("No iteration on abstract tensors")
         return self.data.flatten().__iter__()
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         return Add.fromiter(args)
 
     def _eval_partial_derivative(self, s):
@@ -3143,7 +3138,7 @@ class Tensor(TensExpr):
     def contract_delta(self, metric):
         return self.contract_metric(metric)
 
-    def _eval_rewrite_as_Indexed(self, tens, indices):
+    def _eval_rewrite_as_Indexed(self, tens, indices, **kwargs):
         from sympy.tensor.indexed import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
@@ -4075,7 +4070,7 @@ class TensMul(TensExpr, AssocOp):
                 exclude.update(get_indices(new_renamed))
         return newrule
 
-    def _eval_rewrite_as_Indexed(self, *args):
+    def _eval_rewrite_as_Indexed(self, *args, **kwargs):
         from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
@@ -4866,3 +4861,18 @@ def _expand(expr, **kwargs):
         return expr._expand(**kwargs)
     else:
         return expr.expand(**kwargs)
+
+
+def get_postprocessor(cls):
+    def _postprocessor(expr):
+        tens_class = {Mul: TensMul, Add: TensAdd}[cls]
+        if any(isinstance(a, TensExpr) for a in expr.args):
+            return tens_class(*expr.args)
+        else:
+            return expr
+
+    return _postprocessor
+
+Basic._constructor_postprocessor_mapping[TensExpr] = {
+    "Mul": [get_postprocessor(Mul)],
+}

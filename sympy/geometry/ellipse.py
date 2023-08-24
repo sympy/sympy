@@ -767,7 +767,7 @@ class Ellipse(GeometrySet):
                     else:
                         return False
                 else:
-                    return all_tangents
+                    return False
             return all_tangents
         elif isinstance(o, (LinearEntity3D, Point3D)):
             raise TypeError('Entity must be two dimensional, not three dimensional')
@@ -1008,7 +1008,7 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        .. [1] http://mathworld.wolfram.com/SemilatusRectum.html
+        .. [1] https://mathworld.wolfram.com/SemilatusRectum.html
         .. [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
 
         """

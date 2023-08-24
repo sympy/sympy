@@ -9,7 +9,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import Rational, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
@@ -284,11 +285,11 @@ def roots_quartic(f):
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
-    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
-    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    3. https://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    4. https://people.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
-    6. http://www.statemaster.com/encyclopedia/Quartic-equation
-    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
+    6. https://web.archive.org/web/20171002081448/http://www.statemaster.com/encyclopedia/Quartic-equation
+    7. https://eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 

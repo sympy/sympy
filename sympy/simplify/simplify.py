@@ -586,12 +586,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         return shorter(rv, collect_abs(rv))
 
     expr = sympify(expr, rational=rational)
-    kwargs = dict(
-        ratio=kwargs.get('ratio', ratio),
-        measure=kwargs.get('measure', measure),
-        rational=kwargs.get('rational', rational),
-        inverse=kwargs.get('inverse', inverse),
-        doit=kwargs.get('doit', doit))
+    kwargs = {
+        "ratio": kwargs.get('ratio', ratio),
+        "measure": kwargs.get('measure', measure),
+        "rational": kwargs.get('rational', rational),
+        "inverse": kwargs.get('inverse', inverse),
+        "doit": kwargs.get('doit', doit)}
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
         return S.Zero if not expr.is_Number else expr
@@ -833,8 +833,8 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     y*Sum(x, (x, 1, 3))
     """
     # XXX deprecate in favor of direct call to factor_terms
-    kwargs = dict(radical=radical, clear=clear,
-        fraction=fraction, sign=sign)
+    kwargs = {"radical": radical, "clear": clear,
+        "fraction": fraction, "sign": sign}
     expr = Sum(self, *limits) if limits else self
     return factor_terms(expr, **kwargs)
 
@@ -1710,7 +1710,7 @@ def nc_simplify(expr, deep=True):
         inverses = []
         args = []
         for arg in _args:
-            if isinstance(arg, _Pow) and arg.args[1] < 0:
+            if isinstance(arg, _Pow) and arg.args[1].is_extended_negative:
                 inverses = [arg**-1] + inverses
                 inv_tot += 1
             else:

@@ -7,9 +7,11 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
-    igcd_lehmer, Integer, I, pi, comp, ilcm, Rational, E, nan, igcd2,
-    oo, AlgebraicNumber, igcdex, Number, Float, zoo, equal_valued)
+from sympy.core.numbers import (mpf_norm, seterr,
+    Integer, I, pi, comp, Rational, E, nan,
+    oo, AlgebraicNumber, Number, Float, zoo, equal_valued)
+from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
+    ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
@@ -25,14 +27,12 @@ from sympy.polys.domains.realfield import RealField
 from sympy.printing.latex import latex
 from sympy.printing.repr import srepr
 from sympy.simplify import simplify
-from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 from mpmath import mpf
-from mpmath.rational import mpq
 import mpmath
 from sympy.core import numbers
 t = Symbol('t', real=False)
@@ -363,7 +363,6 @@ def test_Rational_new():
     except ImportError:
         pass
 
-    assert Rational(mpq(2, 6)) == Rational(1, 3)
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
     assert Rational(2, 4, gcd=1).q == 4
@@ -547,15 +546,15 @@ def test_Float():
     assert Integer('123 456') == Integer('123456')
     assert Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+    # but treat them as strictly ass underscore between digits: only 1
+    raises(ValueError, lambda: Float('1  2'))
 
-    # allow underscore
+    # allow underscore between digits
     assert Float('1_23.4_56') == Float('123.456')
-    assert Float('1_') == Float('1.0')
-    assert Float('1_.') == Float('1.0')
-    assert Float('1._') == Float('1.0')
-    assert Float('1__2') == Float('12.0')
     # assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
     # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1__2'))
     raises(ValueError, lambda: Float('_1'))
     raises(ValueError, lambda: Float('_inf'))
 
@@ -1068,10 +1067,17 @@ def test_integer_log():
     assert integer_log(3**3, 3) == (3, True)
     assert integer_log(27, 5) == (2, False)
     assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, 2) == (2, False)
+    assert integer_log(-16, 4) == (0, False)
     assert integer_log(-4, -2) == (2, False)
+    assert integer_log(4, -2) == (2, True)
+    assert integer_log(-8, -2) == (3, True)
+    assert integer_log(8, -2) == (3, False)
+    assert integer_log(-9, 3) == (0, False)
+    assert integer_log(-9, -3) == (2, False)
+    assert integer_log(9, -3) == (2, True)
+    assert integer_log(-27, -3) == (3, True)
     assert integer_log(27, -3) == (3, False)
-    assert integer_log(-49, 7) == (0, False)
-    assert integer_log(-49, -7) == (2, False)
 
 
 def test_isqrt():
@@ -1098,16 +1104,6 @@ def test_isqrt():
     assert isqrt(1-tiny) == 0
     assert isqrt(4503599761588224-tiny) == 67108864
     assert isqrt(10**100 - tiny) == 10**50 - 1
-
-    # Check that using an inaccurate math.sqrt doesn't affect the results.
-    from sympy.core import power
-    old_sqrt = power._sqrt
-    power._sqrt = lambda x: 2.999999999
-    try:
-        assert isqrt(9) == 3
-        assert isqrt(10000) == 100
-    finally:
-        power._sqrt = old_sqrt
 
 
 def test_powers_Integer():

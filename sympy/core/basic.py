@@ -5,9 +5,9 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
 
-from .assumptions import ManagedProperties
+from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
-from .core import BasicMeta
+from .core import ordering_of_classes
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -33,7 +33,31 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(Printable, metaclass=ManagedProperties):
+def _old_compare(x: type, y: type) -> int:
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
+
+    n1 = x.__name__
+    n2 = y.__name__
+    if n1 == n2:
+        return 0
+
+    UNKNOWN = len(ordering_of_classes) + 1
+    try:
+        i1 = ordering_of_classes.index(n1)
+    except ValueError:
+        i1 = UNKNOWN
+    try:
+        i2 = ordering_of_classes.index(n2)
+    except ValueError:
+        i2 = UNKNOWN
+    if i1 == UNKNOWN and i2 == UNKNOWN:
+        return (n1 > n2) - (n1 < n2)
+    return (i1 > i2) - (i1 < i2)
+
+
+class Basic(Printable):
     """
     Base class for all SymPy objects.
 
@@ -84,6 +108,18 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     _args: tuple[Basic, ...]
     _mhash: int | None
+
+    @property
+    def __sympy__(self):
+        return True
+
+    def __init_subclass__(cls):
+        # Initialize the default_assumptions FactKB and also any assumptions
+        # property methods. This method will only be called for subclasses of
+        # Basic but not for Basic itself so we call
+        # _prepare_class_assumptions(Basic) below the class definition.
+        super().__init_subclass__()
+        _prepare_class_assumptions(cls)
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -228,7 +264,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
+        c = _old_compare(n1, n2)
         if c:
             return c
         #
@@ -367,7 +403,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         References
         ==========
 
-        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
+        from https://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
         if self is other:
             return True
@@ -1343,7 +1379,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         type_set = set()  # only types
         p_set = set()  # hashable non-types
         for p in patterns:
-            if isinstance(p, BasicMeta):
+            if isinstance(p, type) and issubclass(p, Basic):
                 type_set.add(p)
                 continue
             if not isinstance(p, Basic):
@@ -2015,6 +2051,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
+
+
+# For all Basic subclasses _prepare_class_assumptions is called by
+# Basic.__init_subclass__ but that method is not called for Basic itself so we
+# call the function here instead.
+_prepare_class_assumptions(Basic)
 
 
 class Atom(Basic):

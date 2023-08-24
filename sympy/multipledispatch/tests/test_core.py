@@ -6,7 +6,7 @@ from sympy.multipledispatch.conflict import AmbiguityWarning
 from sympy.testing.pytest import raises, warns
 from functools import partial
 
-test_namespace: dict[str, Any] = dict()
+test_namespace: dict[str, Any] = {}
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
@@ -107,7 +107,7 @@ def test_competing_multiple():
 
 
 def test_competing_ambiguous():
-    test_namespace = dict()
+    test_namespace = {}
     dispatch = partial(orig_dispatch, namespace=test_namespace)
 
     @dispatch(A, C)
@@ -147,8 +147,8 @@ def test_union_types():
 
 
 def test_namespaces():
-    ns1 = dict()
-    ns2 = dict()
+    ns1 = {}
+    ns2 = {}
 
     def foo(x):
         return 1

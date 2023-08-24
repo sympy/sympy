@@ -33,7 +33,8 @@ from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_bird, _det_laplace, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -58,7 +59,7 @@ from .graph import (
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
-    _pinv_solve, _solve, _solve_least_squares)
+    _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
@@ -109,6 +110,12 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
         return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
+    def _eval_det_bird(self):
+        return _det_bird(self)
+
+    def _eval_det_laplace(self):
+        return _det_laplace(self)
+
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
@@ -140,6 +147,8 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
     _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_bird.__doc__            = _det_bird.__doc__
+    _eval_det_laplace.__doc__            = _det_laplace.__doc__
     _eval_det_lu.__doc__                 = _det_LU.__doc__
     _eval_determinant.__doc__            = _det.__doc__
     adjugate.__doc__                     = _adjugate.__doc__
@@ -442,7 +451,6 @@ class MatrixCalculus(MatrixCommon):
 
     def diff(self, *args, **kwargs):
         """Calculate the derivative of each element in the matrix.
-        ``args`` will be passed to the ``integrate`` function.
 
         Examples
         ========
@@ -757,7 +765,7 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self) -> MatrixKind:
-        elem_kinds = set(e.kind for e in self.flat())
+        elem_kinds = {e.kind for e in self.flat()}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -964,9 +972,7 @@ class MatrixBase(MatrixDeprecated,
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
+                    evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
 
@@ -1242,6 +1248,8 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         dot
+        hat
+        vee
         multiply
         multiply_elementwise
         """
@@ -1259,6 +1267,140 @@ class MatrixBase(MatrixDeprecated,
                 (self[1] * b[2] - self[2] * b[1]),
                 (self[2] * b[0] - self[0] * b[2]),
                 (self[0] * b[1] - self[1] * b[0])))
+
+    def hat(self):
+        r"""
+        Return the skew-symmetric matrix representing the cross product,
+        so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
+
+        Examples
+        ========
+
+        Calling ``hat`` creates a skew-symmetric 3x3 Matrix from a 3x1 Matrix:
+
+        >>> from sympy import Matrix
+        >>> a = Matrix([1, 2, 3])
+        >>> a.hat()
+        Matrix([
+        [ 0, -3,  2],
+        [ 3,  0, -1],
+        [-2,  1,  0]])
+
+        Multiplying it with another 3x1 Matrix calculates the cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> a.hat() * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        Which is equivalent to calling the ``cross`` method:
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        vee
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 1):
+            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
+                             str(self.shape))
+        else:
+            x, y, z = self
+            return self._new(3, 3, (
+                 0, -z,  y,
+                 z,  0, -x,
+                -y,  x,  0))
+
+    def vee(self):
+        r"""
+        Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
+        so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
+
+        Examples
+        ========
+
+        Calling ``vee`` creates a vector from a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
+        >>> a = A.vee()
+        >>> a
+        Matrix([
+        [1],
+        [2],
+        [3]])
+
+        Calculating the matrix product of the original matrix with a vector
+        is equivalent to a cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> A * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        ``vee`` can also be used to retrieve angular velocity expressions.
+        Defining a rotation matrix:
+
+        >>> from sympy import rot_ccw_axis3, trigsimp
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> theta = dynamicsymbols('theta')
+        >>> R = rot_ccw_axis3(theta)
+        >>> R
+        Matrix([
+        [cos(theta(t)), -sin(theta(t)), 0],
+        [sin(theta(t)),  cos(theta(t)), 0],
+        [            0,              0, 1]])
+
+        We can retrive the angular velocity:
+
+        >>> Omega = R.T * R.diff()
+        >>> Omega = trigsimp(Omega)
+        >>> Omega.vee()
+        Matrix([
+        [                      0],
+        [                      0],
+        [Derivative(theta(t), t)]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        hat
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 3):
+            raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
+                             str(self.shape))
+        elif not self.is_anti_symmetric():
+            raise ValueError("Matrix is not skew-symmetric")
+        else:
+            return self._new(3, 1, (
+                 self[2, 1],
+                 self[0, 2],
+                 self[1, 0]))
 
     @property
     def D(self):
@@ -2140,6 +2282,9 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
+    def cramer_solve(self, rhs, det_method="laplace"):
+        return _cramer_solve(self, rhs, det_method=det_method)
+
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
 
@@ -2210,6 +2355,7 @@ class MatrixBase(MatrixDeprecated,
     QRsolve.__doc__                = _QRsolve.__doc__
     gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
     pinv_solve.__doc__             = _pinv_solve.__doc__
+    cramer_solve.__doc__           = _cramer_solve.__doc__
     solve.__doc__                  = _solve.__doc__
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 

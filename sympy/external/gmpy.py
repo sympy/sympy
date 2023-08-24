@@ -1,9 +1,25 @@
 import os
+from ctypes import c_long, sizeof
 from typing import Tuple as tTuple, Type
 
-import mpmath.libmp as mlib
-
 from sympy.external import import_module
+
+from .pythonmpq import PythonMPQ
+
+from .ntheory import (
+    factorial as python_factorial,
+    sqrt as python_sqrt,
+    sqrtrem as python_sqrtrem,
+    gcd as python_gcd,
+    lcm as python_lcm,
+    is_square as python_is_square,
+    invert as python_invert,
+    legendre as python_legendre,
+    jacobi as python_jacobi,
+    kronecker as python_kronecker,
+    iroot as python_iroot,
+)
+
 
 __all__ = [
     # GROUND_TYPES is either 'gmpy' or 'python' depending on which is used. If
@@ -33,6 +49,33 @@ __all__ = [
 
     # isqrt from gmpy or mpmath
     'sqrt',
+
+    # is_square from gmpy or mpmath
+    'is_square',
+
+    # sqrtrem from gmpy or mpmath
+    'sqrtrem',
+
+    # gcd from gmpy or math
+    'gcd',
+
+    # lcm from gmpy or math
+    'lcm',
+
+    # invert from gmpy or pow
+    'invert',
+
+    # legendre from gmpy or sympy
+    'legendre',
+
+    # jacobi from gmpy or sympy
+    'jacobi',
+
+    # kronecker from gmpy or sympy
+    'kronecker',
+
+    # iroot from gmpy or sympy
+    'iroot',
 ]
 
 
@@ -52,24 +95,48 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
     # Actually import gmpy2
     gmpy = import_module('gmpy2', min_module_version='2.0.0',
                 module_version_attr='version', module_version_attr_call_args=())
+    flint = None
 
-    # Warn if user explicitly asked for gmpy but it isn't available.
-    if gmpy is None and GROUND_TYPES in ('gmpy', 'gmpy2'):
+    if gmpy is None:
+        # Warn if user explicitly asked for gmpy but it isn't available.
+        if GROUND_TYPES != 'auto':
+            from warnings import warn
+            warn("gmpy library is not installed, switching to 'python' ground types")
+
+        # Fall back to Python if gmpy2 is not available
+        GROUND_TYPES = 'python'
+    else:
+        GROUND_TYPES = 'gmpy'
+
+elif GROUND_TYPES == 'flint':
+
+    # Try to use python_flint
+    flint = import_module('flint')
+    gmpy = None
+
+    if flint is None:
         from warnings import warn
-        warn("gmpy library is not installed, switching to 'python' ground types")
+        warn("python_flint is not installed, switching to 'python' ground types")
+        GROUND_TYPES = 'python'
+    else:
+        GROUND_TYPES = 'flint'
 
 elif GROUND_TYPES == 'python':
 
-    # The user asked for Python so ignore gmpy2 module.
+    # The user asked for Python so ignore gmpy2/flint
     gmpy = None
+    flint = None
+    GROUND_TYPES = 'python'
 
 else:
 
-    # Invalid value for SYMPY_GROUND_TYPES. Ignore the gmpy2 module.
+    # Invalid value for SYMPY_GROUND_TYPES. Warn and default to Python.
     from warnings import warn
     warn("SYMPY_GROUND_TYPES environment variable unrecognised. "
          "Should be 'python', 'auto', 'gmpy', or 'gmpy2'")
     gmpy = None
+    flint = None
+    GROUND_TYPES = 'python'
 
 
 #
@@ -80,7 +147,13 @@ else:
 #
 SYMPY_INTS: tTuple[Type, ...]
 
-if gmpy is not None:
+#
+# In gmpy2 and flint, there are functions that take a long (or unsigned long) argument.
+# That is, it is not possible to input a value larger than that.
+#
+LONG_MAX = (1 << (8*sizeof(c_long) - 1)) - 1
+
+if GROUND_TYPES == 'gmpy':
 
     HAS_GMPY = 2
     GROUND_TYPES = 'gmpy'
@@ -90,9 +163,48 @@ if gmpy is not None:
 
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
+    is_square = gmpy.is_square
+    sqrtrem = gmpy.isqrt_rem
+    gcd = gmpy.gcd
+    lcm = gmpy.lcm
+    invert = gmpy.invert
+    legendre = gmpy.legendre
+    jacobi = gmpy.jacobi
+    kronecker = gmpy.kronecker
 
-else:
-    from .pythonmpq import PythonMPQ
+    def iroot(x, n):
+        # In the latest gmpy2, the threshold for n is ULONG_MAX,
+        # but adjust to the older one.
+        if n <= LONG_MAX:
+            return gmpy.iroot(x, n)
+        return python_iroot(x, n)
+
+elif GROUND_TYPES == 'flint':
+
+    HAS_GMPY = 0
+    GROUND_TYPES = 'flint'
+    SYMPY_INTS = (int, flint.fmpz) # type: ignore
+    MPZ = flint.fmpz # type: ignore
+    MPQ = flint.fmpq # type: ignore
+
+    factorial = python_factorial
+    sqrt = python_sqrt
+    is_square = python_is_square
+    sqrtrem = python_sqrtrem
+    gcd = python_gcd
+    lcm = python_lcm
+    invert = python_invert
+    legendre = python_legendre
+    jacobi = python_jacobi
+    kronecker = python_kronecker
+
+    def iroot(x, n):
+        if n <= LONG_MAX:
+            y = flint.fmpz(x).root(n)
+            return y, y**n == x
+        return python_iroot(x, n)
+
+elif GROUND_TYPES == 'python':
 
     HAS_GMPY = 0
     GROUND_TYPES = 'python'
@@ -100,5 +212,17 @@ else:
     MPZ = int
     MPQ = PythonMPQ
 
-    factorial = lambda x: int(mlib.ifac(x))
-    sqrt = lambda x: int(mlib.isqrt(x))
+    factorial = python_factorial
+    sqrt = python_sqrt
+    is_square = python_is_square
+    sqrtrem = python_sqrtrem
+    gcd = python_gcd
+    lcm = python_lcm
+    invert = python_invert
+    legendre = python_legendre
+    jacobi = python_jacobi
+    kronecker = python_kronecker
+    iroot = python_iroot
+
+else:
+    assert False

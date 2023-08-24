@@ -1,5 +1,6 @@
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.method import _Methods
 from sympy.core.backend import Matrix
 
@@ -76,7 +77,7 @@ class JointsMethod(_Methods):
     """
 
     def __init__(self, newtonion, *joints):
-        if isinstance(newtonion, Body):
+        if isinstance(newtonion, BodyBase):
             self.frame = newtonion.frame
         else:
             self.frame = newtonion
@@ -152,7 +153,8 @@ class JointsMethod(_Methods):
     def _generate_loadlist(self):
         load_list = []
         for body in self.bodies:
-            load_list.extend(body.loads)
+            if isinstance(body, Body):
+                load_list.extend(body.loads)
         return load_list
 
     def _generate_q(self):
@@ -183,6 +185,9 @@ class JointsMethod(_Methods):
         # Convert `Body` to `Particle` and `RigidBody`
         bodylist = []
         for body in self.bodies:
+            if not isinstance(body, Body):
+                bodylist.append(body)
+                continue
             if body.is_rigidbody:
                 rb = RigidBody(body.name, body.masscenter, body.frame, body.mass,
                     (body.central_inertia, body.masscenter))

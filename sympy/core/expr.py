@@ -11,6 +11,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
+from .intfunc import mod_inverse
 from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -235,7 +236,6 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return _sympify(pow(_self, other, mod))
             else:
-                from .numbers import mod_inverse
                 return _sympify(mod_inverse(pow(_self, -other, mod), mod))
         except ValueError:
             power = self._pow(other)
@@ -1949,7 +1949,7 @@ class Expr(Basic, EvalfMixin):
                   of commutative and noncommutative factors.
         """
         d = defaultdict(int)
-        d.update(dict([self.as_base_exp()]))
+        d.update([self.as_base_exp()])
         return d
 
     def as_coefficients_dict(self, *syms):
@@ -2042,7 +2042,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has(*deps):
-                return self, tuple()
+                return self, ()
         return S.One, (self,)
 
     def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
@@ -2078,7 +2078,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has_free(*deps):
-                return self, tuple()
+                return self, ()
         return S.Zero, (self,)
 
     def primitive(self):
@@ -3194,7 +3194,7 @@ class Expr(Basic, EvalfMixin):
                In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
                pp. 239-244.
         .. [2] Gruntz thesis - p90
-        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+        .. [3] https://en.wikipedia.org/wiki/Asymptotic_expansion
 
         See Also
         ========
@@ -3796,10 +3796,9 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        sympy.core.intfunc.mod_inverse, sympy.polys.polytools.invert
         """
         if self.is_number and getattr(g, 'is_number', True):
-            from .numbers import mod_inverse
             return mod_inverse(self, g)
         from sympy.polys.polytools import invert
         return invert(self, g, *gens, **args)

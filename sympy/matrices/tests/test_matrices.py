@@ -15,6 +15,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.simplify import (signsimp, simplify)
@@ -33,17 +34,15 @@ from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
-from sympy.testing.pytest import (raises, XFAIL, slow, skip,
+from sympy.testing.pytest import (raises, XFAIL, slow, skip, skip_under_pyodide,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
-from sympy.external import import_module
 from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
-pyodide_js = import_module('pyodide_js')
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -2548,6 +2547,12 @@ def test_cross():
     raises(ShapeError, lambda:
         Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
+def test_hat_vee():
+    v1 = Matrix([x, y, z])
+    v2 = Matrix([a, b, c])
+    assert v1.hat() * v2 == v1.cross(v2)
+    assert v1.hat().is_anti_symmetric()
+    assert v1.hat().vee() == v1
 
 def test_hash():
     for cls in classes[-2:]:
@@ -2645,7 +2650,6 @@ def test_pinv():
 
 
 @slow
-@XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
     # diagonalization of A.H*A fails.
@@ -2663,7 +2667,24 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert AAp.H == AAp
-        assert ApA.H == ApA
+
+        # Here ApA.H and ApA are equivalent expressions but they are very
+        # complicated expressions involving RootOfs. Using simplify would be
+        # too slow and so would evalf so we substitute approximate values for
+        # the RootOfs and then evalf which is less accurate but good enough to
+        # confirm that these two matrices are equivalent.
+        #
+        # assert ApA.H == ApA  # <--- would fail (structural equality)
+        # assert simplify(ApA.H - ApA).is_zero_matrix  # <--- too slow
+        # (ApA.H - ApA).evalf()  # <--- too slow
+
+        def allclose(M1, M2):
+            rootofs = M1.atoms(RootOf)
+            rootofs_approx = {r: r.evalf() for r in rootofs}
+            diff_approx = (M1 - M2).xreplace(rootofs_approx).evalf()
+            return all(abs(e) < 1e-10 for e in diff_approx)
+
+        assert allclose(ApA.H, ApA)
 
 
 def test_issue_7201():
@@ -2985,9 +3006,8 @@ def test_func():
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
 
 
+@skip_under_pyodide("Cannot create threads under pyodide.")
 def test_issue_19809():
-    if pyodide_js:
-        skip("can't run on pyodide")
 
     def f():
         assert _dotprodsimp_state.state == None
