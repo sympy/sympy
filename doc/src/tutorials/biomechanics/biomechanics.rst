@@ -181,7 +181,7 @@ You can create an activation model that is fully symbolic or create it with the
 specific tuned numerical parameters from [DeGroote2016]_ like so
 (recommended)::
 
-   >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('biceps')
+   >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('biceps')
 
 The full musculotendon actuator model is then named and constructed with a
 matching class::
@@ -300,7 +300,7 @@ remaining methods::
    ...         """
    ...         return self.radius*self.coordinate.diff(me.dynamicsymbols._t)
    ...
-   ...     def compute_loads(self, force_magnitude):
+   ...     def to_loads(self, force_magnitude):
    ...         """Loads in the correct format to be supplied to `KanesMethod`.
    ...
    ...         Forces applied to origin, insertion, and P from the muscle wrapped
@@ -354,7 +354,7 @@ Now that we have a custom pathway defined we can create a musculotendon
 actuator model in the same fashion as the biceps::
 
    >>> triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
-   >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_default_constants('triceps')
+   >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('triceps')
    >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway, triceps_activation)
 
 The load formulas are more complex but should allow the triceps to extend the
