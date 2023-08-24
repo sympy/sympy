@@ -204,7 +204,7 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
         self._force = -self._F_T
 
     @classmethod
-    def with_default_constants(
+    def with_defaults(
         cls,
         name,
         pathway,
@@ -355,10 +355,10 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
         self._l_M_tilde = self._l_M/self._l_M_opt
         self._v_M = self._v_MT*(self._l_MT - self._l_T_slack)/self._l_M
         self._v_M_tilde = self._v_M/self._v_M_max
-        self._fl_T = TendonForceLengthDeGroote2016.with_default_constants(self._l_T_tilde)
-        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self._l_M_tilde)
-        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self._l_M_tilde)
-        self._fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self._v_M_tilde)
+        self._fl_T = TendonForceLengthDeGroote2016.with_defaults(self._l_T_tilde)
+        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self._l_M_tilde)
+        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self._l_M_tilde)
+        self._fv_M = FiberForceVelocityDeGroote2016.with_defaults(self._v_M_tilde)
         self._F_M_tilde = self.a*self._fl_M_act*self._fv_M + self._fl_M_pas + self._beta*self._v_M_tilde
         self._F_T_tilde = self._F_M_tilde
         self._F_M = self._F_M_tilde*self._F_M_max
@@ -378,15 +378,15 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
         self._l_T = self._l_MT - sqrt(self._l_M**2 - (self._l_M_opt*sin(self._alpha_opt))**2)
         self._l_T_tilde = self._l_T/self._l_T_slack
         self._cos_alpha = (self._l_MT - self._l_T)/self._l_M
-        self._fl_T = TendonForceLengthDeGroote2016.with_default_constants(self._l_T_tilde)
-        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self._l_M_tilde)
-        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self._l_M_tilde)
+        self._fl_T = TendonForceLengthDeGroote2016.with_defaults(self._l_T_tilde)
+        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self._l_M_tilde)
+        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self._l_M_tilde)
         self._F_T_tilde = self._fl_T
         self._F_T = self._F_T_tilde*self._F_M_max
         self._F_M = self._F_T/self._cos_alpha
         self._F_M_tilde = self._F_M/self._F_M_max
         self._fv_M = (self._F_M_tilde - self._fl_M_pas)/(self.a*self._fl_M_act)
-        self._v_M_tilde = FiberForceVelocityDeGroote2016.with_default_constants(self._fv_M)
+        self._v_M_tilde = FiberForceVelocityDeGroote2016.with_defaults(self._fv_M)
         self._dl_M_tilde_dt = (self._v_M_max/self._l_M_opt)*self._v_M_tilde
 
         self._state_vars = Matrix([self._l_M_tilde])
