@@ -4,12 +4,10 @@ from sympy.external import import_module
 
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
-from sympy.core.add import Add
 from sympy.core.function import Derivative, Function
-from sympy.core.mul import Mul
 from sympy.core.numbers import E, oo, Rational
-from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
+from sympy.core.parameters import evaluate
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -25,53 +23,20 @@ from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
 from sympy.abc import x, y, z, a, b, c, d, t, k, n
 
+from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
+
 lark = import_module("lark")
 
 # disable tests if lark is not present
-if not lark:
-    disabled = True
+disabled = lark is None
 
-theta = Symbol('theta')
-f = Function('f')
-
-
-# shorthand definitions
-def _Add(a, b):
-    return Add(a, b, evaluate=False)
-
-
-def _Mul(a, b):
-    return Mul(a, b, evaluate=False)
-
-
-def _Pow(a, b):
-    return Pow(a, b, evaluate=False)
-
-
-def _Sqrt(a):
-    return sqrt(a, evaluate=False)
-
-
-def _Conjugate(a):
-    return conjugate(a, evaluate=False)
-
-
-def _Abs(a):
-    return Abs(a, evaluate=False)
-
+# shorthand definitions that are only needed for the Lark LaTeX parser
 def _Min(*args):
     return Min(*args, evaluate=False)
 
+
 def _Max(*args):
     return Max(*args, evaluate=False)
-
-
-def _factorial(a):
-    return factorial(a, evaluate=False)
-
-
-def _exp(a):
-    return exp(a, evaluate=False)
 
 
 def _log(a, b=E):
@@ -79,10 +44,6 @@ def _log(a, b=E):
         return log(a, evaluate=False)
     else:
         return log(a, b, evaluate=False)
-
-
-def _binomial(n, k):
-    return binomial(n, k, evaluate=False)
 
 
 # These LaTeX strings should parse to the corresponding SymPy expression
@@ -624,8 +585,7 @@ def test_binomial_expressions():
     for latex_str, sympy_expr in EVALUATED_BINOMIAL_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-# sus expressions
-@XFAIL
+
 def test_miscellaneous_expressions():
     for latex_str, sympy_expr in MISCELLANEOUS_EXPRESSION_PAIRS:
         with evaluate(False):

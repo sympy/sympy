@@ -1054,6 +1054,10 @@ def test_has_basics():
 
     assert not x.has()
 
+    # see issue at https://github.com/sympy/sympy/issues/5190
+    assert not S(1).has(Wild)
+    assert not x.has(Wild)
+
 
 def test_has_multiple():
     f = x**2*y + sin(2**t + log(z))
