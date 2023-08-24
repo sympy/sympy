@@ -232,11 +232,11 @@ we choose :math:`q_0=l_M_opt + l_T_slack`::
 We can set the excitation to zero to test the numerical functions::
 
    >>> r_vals = np.array([
-   ...     0.0,  # e
+   ...     1.0,  # e
    ... ])
    ...
    >>> eval_eom(x_vals, r_vals, p_vals)
-   (0.0, 9.81, 0.0)
+   (0.0, 9.81, 133.33333307568913)
    >>> eval_force(x_vals, p_vals)
    1.4499681738213515e-16
 
