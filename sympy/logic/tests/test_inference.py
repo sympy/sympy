@@ -13,6 +13,7 @@ from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.testing.pytest import raises
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.tests.test_lra_theory import make_random_problem
 
 
 def test_literal():
@@ -132,38 +133,6 @@ def test_dpll2_satisfiable_lra_theory():
     assert lra_dpll2_satisfiable((x >= 2) & (x <= 0)) is False
     assert lra_dpll2_satisfiable(Q.gt(2, 3)) is False
     #assert dpll2_satisfiable(Q.positive(x) & (x <= -2), use_lra_theory=True) is False
-    from sympy.logic.tests.test_lra_theory import make_random_problem
-
-    def boolean_formula_to_encoded_cnf(bf):
-        cnf = CNF.from_prop(bf)
-        enc = EncodedCNF()
-        enc.from_cnf(cnf)
-        return enc
-
-    def make_random_cnf(num_clauses=2):
-        constraints = make_random_problem(num_variables=1, num_constraints=4, rational=False)
-        #shuffle(constraints)
-        c_size = len(constraints) // num_clauses
-        assert len(constraints) % num_clauses == 0
-        clauses = [constraints[i*c_size:i*c_size+c_size] for i in range(num_clauses)]
-        clauses = [Or(*clause) for clause in clauses]
-        cnf = And(*clauses)
-        return boolean_formula_to_encoded_cnf(cnf)
-
-
-
-    for _ in range(10):
-        cnf = make_random_cnf()
-
-        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
-        #z3_sat = z3_satisfiable(cnf)
-
-        # if z3_sat != lra_dpll2_sat:
-        #     pass
-        #
-        # assert z3_sat == lra_dpll2_sat
-        #res = lra_dpll2_satisfiable(cnf)
-        #z3_res =
 
 
 
@@ -368,4 +337,31 @@ def test_z3():
 
     # test nonlinear function
     assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
+
+def test_z3_vs_lra_dpll2():
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def make_random_cnf(num_clauses=2):
+        constraints = make_random_problem(num_variables=2, num_constraints=6, rational=False)
+        c_size = len(constraints) // num_clauses
+        assert len(constraints) % num_clauses == 0
+        clauses = [constraints[i*c_size:i*c_size+c_size] for i in range(num_clauses)]
+        clauses = [Or(*clause) for clause in clauses]
+        cnf = And(*clauses)
+        return boolean_formula_to_encoded_cnf(cnf)
+
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+
+    for _ in range(20):
+        cnf = make_random_cnf()
+
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
+        z3_sat = z3_satisfiable(cnf)
+
+        assert z3_sat == lra_dpll2_sat
 
