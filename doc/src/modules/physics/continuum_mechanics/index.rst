@@ -22,3 +22,11 @@ Truss
    :titlesonly:
 
    truss.rst
+
+Cable
+=====
+
+.. toctree::
+   :titlesonly:
+
+   cable.rst
