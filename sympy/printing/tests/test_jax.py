@@ -9,7 +9,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 
 from sympy.abc import x, i, j, a, b, c, d
-from sympy.core import Pow
+from sympy.core import Function, Pow, Symbol
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
@@ -35,6 +35,7 @@ jax = import_module('jax')
 if jax:
     deafult_float_info = jax.numpy.finfo(jax.numpy.array([]).dtype)
     JAX_DEFAULT_EPSILON = deafult_float_info.eps
+
 
 def test_jax_piecewise_regression():
     """
@@ -330,9 +331,11 @@ def test_issue_17006():
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n), 'jax'))
 
+
 def test_jax_array():
     assert JaxPrinter().doprint(Array(((1, 2), (3, 5)))) == 'jax.numpy.array([[1, 2], [3, 5]])'
     assert JaxPrinter().doprint(Array((1, 2))) == 'jax.numpy.array((1, 2))'
+
 
 def test_jax_known_funcs_consts():
     assert _jax_known_constants['NaN'] == 'jax.numpy.nan'
@@ -341,7 +344,27 @@ def test_jax_known_funcs_consts():
     assert _jax_known_functions['acos'] == 'jax.numpy.arccos'
     assert _jax_known_functions['log'] == 'jax.numpy.log'
 
+
 def test_jax_print_methods():
     prntr = JaxPrinter()
     assert hasattr(prntr, '_print_acos')
     assert hasattr(prntr, '_print_log')
+
+
+def test_jax_printmethod():
+    printer = JaxPrinter()
+    assert hasattr(printer, 'printmethod')
+    assert printer.printmethod == '_jaxcode'
+
+
+def test_jax_custom_print_method():
+
+    class expm1(Function):
+
+        def _jaxcode(self, printer):
+            x, = self.args
+            function = f'expm1({printer._print(x)})'
+            return printer._module_format(printer._module + '.' + function)
+
+    printer = JaxPrinter()
+    assert printer.doprint(expm1(Symbol('x'))) == 'jax.numpy.expm1(x)'

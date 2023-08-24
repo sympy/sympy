@@ -60,6 +60,7 @@ Basic polynomial manipulation functions
 .. autofunction:: intervals
 .. autofunction:: refine_root
 .. autofunction:: count_roots
+.. autofunction:: all_roots
 .. autofunction:: real_roots
 .. autofunction:: nroots
 .. autofunction:: ground_roots

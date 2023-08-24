@@ -14,6 +14,7 @@ jobs:
           artifact-path: 0/doc/_build/html/index.html
           circleci-jobs: Build Docs Preview
           job-title: Click here to see a preview of the documentation.
+          api-token: ${{ secrets.CIRCLECI_TOKEN }}
       - name: Check the URL
         if: github.event.status != 'pending'
         run: |
