@@ -1083,6 +1083,7 @@ def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
         :context: close-figs
         :format: doctest
         :include-source: True
+
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction
         >>> from sympy.physics.control.control_plots import nyquist_plot
