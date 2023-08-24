@@ -226,8 +226,11 @@ class SATSolver:
                     # check if assignment satisfies lra theory
                     if self.lra:
                         for enc_var in self.var_settings:
-                            self.lra.assert_lit(enc_var)
+                            res = self.lra.assert_lit(enc_var)
+                            if res is not None:
+                                break
                         res = self.lra.check()
+                        self.lra.reset_bounds()
                     else:
                         res = None
                     if res is None or res[0]:

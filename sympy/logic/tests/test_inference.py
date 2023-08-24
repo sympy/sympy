@@ -2,7 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.logic.boolalg import And, Implies, Equivalent, true, false
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -10,6 +10,7 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.testing.pytest import raises
 from sympy.assumptions.cnf import CNF, EncodedCNF
 
@@ -131,6 +132,39 @@ def test_dpll2_satisfiable_lra_theory():
     assert lra_dpll2_satisfiable((x >= 2) & (x <= 0)) is False
     assert lra_dpll2_satisfiable(Q.gt(2, 3)) is False
     #assert dpll2_satisfiable(Q.positive(x) & (x <= -2), use_lra_theory=True) is False
+    from sympy.logic.tests.test_lra_theory import make_random_problem
+
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def make_random_cnf(num_clauses=2):
+        constraints = make_random_problem(num_variables=1, num_constraints=4, rational=False)
+        #shuffle(constraints)
+        c_size = len(constraints) // num_clauses
+        assert len(constraints) % num_clauses == 0
+        clauses = [constraints[i*c_size:i*c_size+c_size] for i in range(num_clauses)]
+        clauses = [Or(*clause) for clause in clauses]
+        cnf = And(*clauses)
+        return boolean_formula_to_encoded_cnf(cnf)
+
+
+
+    for _ in range(10):
+        cnf = make_random_cnf()
+
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
+        #z3_sat = z3_satisfiable(cnf)
+
+        # if z3_sat != lra_dpll2_sat:
+        #     pass
+        #
+        # assert z3_sat == lra_dpll2_sat
+        #res = lra_dpll2_satisfiable(cnf)
+        #z3_res =
+
 
 
 
@@ -328,7 +362,6 @@ def test_satisfiable_all_models():
 def test_z3():
     A, B, C = symbols('A,B,C')
     x, y, z = symbols('x,y,z')
-    z3_satisfiable = lambda expr: satisfiable(expr, algorithm="z3")
     assert z3_satisfiable((x >= 2) & (x < 1)) is False
     assert z3_satisfiable( A & ~A ) is False
     assert z3_satisfiable(A & (~A | B | C)) is True

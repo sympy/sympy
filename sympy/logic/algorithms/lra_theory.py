@@ -628,12 +628,13 @@ class LRASolver():
         anything was asserted.
         """
         self.stack_bounds = []
+        self.result = None
         for var in self.all_var:
-            self.lower[var] = (-float("inf"), 0)
+            self.lower[var] = ExtendedRational(-float("inf"), 0)
             self.low_origin[var] = False
-            self.upper[var] = (float("inf"), 0)
+            self.upper[var] = ExtendedRational(float("inf"), 0)
             self.up_origin[var] = False
-            self.assign[var] = (0, 0)
+            self.assign[var] = ExtendedRational(0, 0)
 
         self.last_safe_assignment = self.assign.copy()
 
