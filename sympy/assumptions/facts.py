@@ -119,6 +119,7 @@ def get_known_facts(x=None):
     return fact
 
 
+@cacheit
 def get_nonmatrix_facts(x = None):
     """
     Facts between unary predicates.
@@ -177,6 +178,7 @@ def get_nonmatrix_facts(x = None):
     return fact
 
 
+@cacheit
 def get_matrix_facts(x = None):
     """
     Facts between unary predicates.
