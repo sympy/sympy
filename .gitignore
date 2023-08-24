@@ -87,3 +87,6 @@ sample.tex
 
 # Files for pyodide test
 pyodide
+
+# Ignore hypothesis files
+.hypothesis

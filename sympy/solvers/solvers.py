@@ -21,8 +21,9 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import ilcm, Float, Rational, _illegal
-from sympy.core.power import integer_log, Pow
+from sympy.core.numbers import Float, Rational, _illegal
+from sympy.core.intfunc import integer_log, ilcm
+from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify
@@ -1390,10 +1391,17 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
+        if any(e.is_zero for e, c in f.args):
+            f = f.simplify()  # failure imminent w/o help
         for i, (expr, cond) in enumerate(f.args):
             if expr.is_zero:
-                raise NotImplementedError(
-                    'solve cannot represent interval solutions')
+                raise NotImplementedError(filldedent('''
+                    An expression is already zero when %s.
+                    This means that in this *region* the solution
+                    is zero but solve can only represent discrete,
+                    not interval, solutions. If this is a spurious
+                    interval it might be resolved with simplification
+                    of the Piecewise conditions.''' % cond))
             candidates = _vsolve(expr, symbol, **flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
