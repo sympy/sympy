@@ -230,7 +230,6 @@ def test_arm_lever_tutorial():
 
     q, u = kane.q, kane.u
     a = bicep.x.col_join(tricep.x)
-    x = q.col_join(u).col_join(a)
     e = bicep.r.col_join(tricep.r)
 
     p = sm.Matrix([
@@ -320,10 +319,6 @@ def test_arm_lever_tutorial():
         0.0,  # a_tricep, nondimensional
     ])
 
-    e_vals = np.array([
-        0.0,
-        0.0,
-    ])
 
     def eval_rhs(t, x, p):
 
