@@ -208,7 +208,11 @@ class SMTLibPrinter(Printer):
 
     def _print_NumberSymbol(self, x):
         name = self._known_constants.get(x)
-        return name if name else self._print_Float(x)
+        if name:
+            return name
+        else:
+            f = x.evalf(self._precision) if self._precision else x.evalf()
+            return self._print_Float(f)
 
     def _print_UndefinedFunction(self, x):
         assert self._is_legal_name(x.name)
