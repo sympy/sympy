@@ -1,5 +1,5 @@
 from sympy.core.function import Function
-from sympy.core.numbers import Rational, pi
+from sympy.core.numbers import Rational, pi, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.core.singleton import S
@@ -445,14 +445,24 @@ def test_binrel_evaluation():
     assert conflicts == [[-1]]
 
 
-def test_nan():
-    # Constraints containing nan should be ignored
+def test_unhandled_input():
     nan = S.NaN
     bf = Q.gt(3, nan) & Q.gt(x, nan)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(lra.enc_to_boundry) == 0
-    assert conflicts == []
+    raises(ValueError, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    bf = Q.gt(3, I) & Q.gt(x, I)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    bf = Q.gt(3, float("inf")) & Q.gt(x, float("inf"))
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    bf = Q.gt(3, oo) & Q.gt(x, oo)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
 
 def test_strict_inequalities():
     # Extensive testing of the interaction between strict inequalities

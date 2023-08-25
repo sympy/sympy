@@ -212,6 +212,9 @@ class VariableLRA():
 class UnhandledNumber(Exception):
     pass
 
+
+ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
+
 class LRASolver():
     """
     Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
@@ -325,7 +328,7 @@ class LRASolver():
         Example
         -------
 
-        This example comes from the example in section 3 of
+        This example is a modified version of an example in section 3 of
         Dutertre's and de Moura's paper.
 
         >>> from sympy.core.relational import Eq
@@ -398,8 +401,6 @@ class LRASolver():
         ignored.
         """
 
-        # TODO: Preprecessing needs to be done to encoded_cnf
-        # x - y > 0 should be the same as x > y
         encoding = {}  # maps int to Boundry
         A = []
 
@@ -415,14 +416,9 @@ class LRASolver():
         else:
             encoded_cnf_items = encoded_cnf.encoding.items()
 
-        # check that preprocessing has been done
-        # TODO: get rid of this to speed things up
-        #assert all(standardize_binrel(prop) == prop for prop, enc in encoding)
 
         empty_var = Dummy()
-
         var_to_lra_var = {}
-
         conflicts = []
 
         for prop, enc in encoded_cnf_items:
@@ -431,21 +427,22 @@ class LRASolver():
             if not isinstance(prop, AppliedPredicate):
                 continue
 
-            if not isinstance(prop, AppliedBinaryRelation) or prop.function == Q.ne:
-                # TODO: handle Q.ne better
-                prop = LRASolver._pred_to_binrel(prop)
-                if prop is None:
-                    continue
-            assert prop.function in [Q.le, Q.ge, Q.eq, Q.gt, Q.lt]
+            assert prop.function in ALLOWED_PRED
 
             if isinstance(prop.lhs, MatrixExpr) or isinstance(prop.rhs, MatrixExpr):
-                continue
+                raise ValueError(f"{prop} contains matrix variables")
 
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
-                continue
+                raise ValueError(f"{prop} contains nan")
 
+            if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
+                raise UnhandledNumber(f"{prop} contains an imaginary component")
+
+            if prop.lhs == oo or prop.rhs == oo:
+                raise UnhandledNumber(f"{prop} contains infinity")
+
+            # simplify to True / False if possible
             prop = _eval_binrel(prop)
-
             if prop == True:
                 conflicts.append([enc])
                 continue
