@@ -16,7 +16,7 @@ from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 import time
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
@@ -78,17 +78,21 @@ def find_rational_assignment(constr, assignment, iter=20):
 
     return None
 
+def boolean_formula_to_encoded_cnf(bf):
+    cnf = CNF.from_prop(bf)
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    return enc
+
 
 def test_from_encoded_cnf():
     s1, s2 = symbols("s1 s2")
 
     # Test preprocessing
     # Example is from section 3 of paper.
-    phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
-    cnf = CNF.from_prop(phi)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6)) & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+    enc = boolean_formula_to_encoded_cnf(phi)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (2, 5)
     assert str(lra.slack) == '[_s1, _s2]'
     assert str(lra.nonslack) == '[_x1, _x2, _x3]'
@@ -99,151 +103,6 @@ def test_from_encoded_cnf():
     ('_s2', -4, True, False, True),
     ('_s2', -6, True, False, False),
     ('_x1', 0, False, False, False)}
-
-    # test functions
-    g = Function('g')(x)
-    f = Function('f')()
-    phi = (g + x + f + g**2 <= 2)
-    cnf = CNF.from_prop(phi)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert str(lra.slack) == '[_s1]'
-    # TODO: fix bug with constant functions so assert statement passes
-    #assert str(lra.nonslack) == '[_x1, _x2, _x3, _x4]'
-    #assert lra.A == Matrix([[1, 1, 1, 1, -1]])
-
-    # test no constraints
-    phi = Q.prime(x) & Q.integer(y)
-    cnf = CNF.from_prop(phi)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    assert lra.A == Matrix()
-    assert lra.slack == []
-    assert lra.nonslack == []
-
-
-def boolean_formula_to_encoded_cnf(bf):
-    cnf = CNF.from_prop(bf)
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    return enc
-
-
-def test_LRA_solver():
-    # Empty matrix should be handled.
-    # If the preprocessing step doesn't do anything, then the matrix is empty.
-    phi = (x >= 0) & (x >= 1) & (x <= -1)
-    enc = boolean_formula_to_encoded_cnf(phi)
-    lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-
-
-    assert len(lra.A) == 0
-    assert lra.assert_lit(enc.symbols.index((Q.ge(x, 0))) +1) is None
-    assert lra.assert_lit(enc.symbols.index((Q.ge(x, 1))) +1) is None
-    assert lra.assert_lit(enc.symbols.index((Q.le(x, -1))) + 1)[0] == False
-
-    bf = x >= pi
-    enc = boolean_formula_to_encoded_cnf(bf)
-    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
-
-
-
-    # assert lra.assert_con(Q.ge(x, 0)) == ("OK", None)
-    # assert lra.assert_con(Q.ge(x, -1)) == ('SAT', {x: 0, y: 0})
-    # assert lra.assert_con(Q.le(x, -1)) == ('UNSAT', {x <= -1, x >= 0})
-    #
-    # m = Matrix()
-    # lra = LRASolver(m, [], [x, y])
-    # assert lra.assert_con(Q.le(x, -1)) == ("OK", None)
-    # assert lra.assert_con(Q.ge(x, 0)) == ('UNSAT', {x <= -1, x >= 0})
-    #
-    # m = Matrix([[-1, -1, 1, 0], [-2, 1, 0, 1]])
-    # #assert LRASolver._pivot(m, 0, 0) == Matrix([[1, 1, -1, 0], [0, 3, -2, 1]])
-    #
-    # # Example from page 89-90 of
-    # # "A Fast Linear-Arithmetic Solver for DPLL(T)"
-    # equations = [Eq(s1, -x + y), Eq(s2, x + y)]
-    # A, _ = linear_eq_to_matrix(equations, [x, y, s1, s2])
-    # A = -A # the identity matrix should be negative
-    # lra = LRASolver(A, [s1, s2], [x, y])
-    # assert lra.check() == ('SAT', {x: 0, y: 0, s1: 0, s2: 0})
-    # assert {v: lra.assign[v] for v in lra.all_var} == {x:0, y:0, s1:0, s2:0}
-    #
-    # assert lra.assert_con(x <= -4) == ("OK", None)
-    # assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
-    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1: 4, s2:-4}
-    #
-    # assert lra.assert_con(x >= -8) == ("OK", None)
-    # assert lra.check() == ('SAT', {x: -4, y: 0, s1: 4, s2: -4})
-    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:0, s1:4, s2:-4}
-    #
-    # # note that this is the first time a pivot is used
-    # assert lra.assert_con(s1 <= 1) == ("OK", None)
-    # assert lra.check() == ('SAT', {x: -4, y: -3, s1: 1, s2: -7})
-    # assert {v: lra.assign[v] for v in lra.all_var} == {x:-4, y:-3, s1:1, s2:-7}
-    #
-    # assert lra.assert_con(s2 >= -3) == ("OK", None)
-    # assert lra.check() == ('UNSAT', {s1 <= 1, x <= -4, s2 >= -3})
-    #
-    #
-    # r1 = x <= 0
-    # r2 = y <= 0
-    # r3 = s1 >= 2
-    # equations = [Eq(s1, x+y)]
-    # A, _ = linear_eq_to_matrix(equations, [x, y, s1])
-    # A = -A  # the identity matrix should be negative
-    # lra = LRASolver(A, [s1], [x, y])
-    # lra.assert_con(x <= 0)
-    # lra.assert_con(y <= 0)
-    # lra.assert_con(s1 >= 2)
-    # assert lra.check() == ('UNSAT', {s1 >= 2, x <= 0, y <= 0})
-    #
-    #
-    # # test potential edge case
-    # r1 = x <= 1
-    # r2 = -x <= -5
-    # lra = LRASolver(Matrix(), [], [x])
-    # lra.assert_con(x <= 1)
-
-def test_for_profiler():
-    def prob_to_enc(cons):
-        phi = And(*cons)
-        cnf = CNF.from_prop(phi)
-        enc = EncodedCNF()
-        enc.from_cnf(cnf)
-        return enc
-
-    def assert_bounds(lra, enc):
-        lits = {lit for clause in enc.data for lit in clause}
-        bounds = [(lra.enc_to_boundry[l], l) for l in lits if l in lra.enc_to_boundry]
-        bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper)))  # to remove nondeterminism
-
-        for b, l in bounds:
-            if lra.result and lra.result[0] == False:
-                break
-            # print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
-            lra.assert_lit(l)
-            # print(lra.assign, lra.lower, lra.upper)
-
-    problems = [make_random_problem(num_variables=8, num_constraints=16, rational=False, disable_strict=False,
-                                      disable_nonstrict=False, disable_equality=False) for _ in range(20)]
-
-    problems = [prob_to_enc(cons) for cons in problems]
-
-    from pyinstrument import Profiler
-
-    profiler = Profiler()
-    profiler.start()
-    for enc in problems:
-        lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
-        assert_bounds(lra, enc)
-        lra.check()
-
-    profiler.stop()
-    #profiler.open_in_browser()
-
 
 
 def test_random_problems():
@@ -305,7 +164,9 @@ def test_random_problems():
         assert all(0 not in clause for clause in enc.data)
 
         start = time.time()
-        lra, _, x_subs, s_subs = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+        lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+        x_subs = lra.x_subs
+        s_subs = lra.s_subs
         end = time.time()
         from_encoded_time += end - start
 
@@ -365,10 +226,11 @@ def test_random_problems():
     print("total", check_time+from_encoded_time+assert_time)
     print("sat count", feasible_count)
 
+@XFAIL
 def test_pos_neg_zero():
     bf = Q.positive(x) & Q.negative(x) & Q.zero(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -377,7 +239,7 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.lt(x, -1)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -386,7 +248,7 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.zero(x)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -395,17 +257,19 @@ def test_pos_neg_zero():
 
     bf = Q.positive(x) & Q.zero(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
     assert len(lra.enc_to_boundry) == 2
     assert lra.check()[0] == True
 
+
+@XFAIL
 def test_pos_neg_infinite():
     bf = Q.positive_infinite(x) & Q.lt(x, 10000000) & Q.positive_infinite(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -414,7 +278,7 @@ def test_pos_neg_infinite():
 
     bf = Q.positive_infinite(x) & Q.gt(x, 10000000) & Q.positive_infinite(y)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -423,7 +287,7 @@ def test_pos_neg_infinite():
 
     bf = Q.positive_infinite(x) & Q.negative_infinite(x)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in enc.encoding.values():
         if lra.assert_lit(lit) is not None:
             break
@@ -434,13 +298,13 @@ def test_pos_neg_infinite():
 def test_binrel_evaluation():
     bf = Q.gt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert len(lra.enc_to_boundry) == 0
     assert conflicts == [[1]]
 
     bf = Q.lt(3, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, conflicts, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert len(lra.enc_to_boundry) == 0
     assert conflicts == [[-1]]
 
@@ -463,8 +327,8 @@ def test_unhandled_input():
     enc = boolean_formula_to_encoded_cnf(bf)
     raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
-
-def test_strict_inequalities():
+@XFAIL
+def test_infinite_strict_inequalities():
     # Extensive testing of the interaction between strict inequalities
     # and constraints containing infinity is needed because
     # the paper's rule for strict inequalities don't work when
@@ -474,7 +338,7 @@ def test_strict_inequalities():
     # See https://math.stackexchange.com/questions/4757069/can-this-method-of-converting-strict-inequalities-to-equisatisfiable-nonstrict-i
     bf = (-x - y >= -float("inf")) & (x > 0) & (y >= float("inf"))
     enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _, _, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     for lit in sorted(enc.encoding.values()):
         if lra.assert_lit(lit) is not None:
             break

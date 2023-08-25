@@ -232,12 +232,14 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundry, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundry, x_subs, s_subs, testing_mode):
+        """
+        Use the "from_encoded_cnf" method to create a new LRASolver.
+        """
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledNumber
         if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in enc_to_boundry.values()):
             raise UnhandledNumber
-
 
         self.run_checks = testing_mode # set to True to turn on assert statements
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
@@ -255,6 +257,9 @@ class LRASolver():
         self.nonslack = nonslack_variables
         self.all_var = nonslack_variables + slack_variables
 
+        self.x_subs = x_subs
+        self.s_subs = s_subs
+
         # if previously we knew this was sat
         # if no assertions about slack variables have been made since
         # and changing bounds on nonslack hasn't lead to unsat
@@ -269,7 +274,7 @@ class LRASolver():
     @staticmethod
     def _remove_uneeded_variables(A, nonbasic, num_unused):
         """
-        See
+        WIP speed up. See the following cs stack exchange for more information.
         cs.stackexchange.com/questions/161709/a-fast-linear-arithmetic-solver-how-can-gaussian-elimination-be-used-to-simplif/161713#161713
         """
         M = A.copy()
@@ -506,9 +511,7 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        #A, nonbasic = LRASolver._remove_uneeded_variables(A, nonbasic, len(unused_var))
-
-        return LRASolver(A, basic, nonbasic, encoding, testing_mode), conflicts,  x_subs, s_subs
+        return LRASolver(A, basic, nonbasic, encoding, x_subs, s_subs, testing_mode), conflicts
 
     def assert_lit(self, enc_boundry):
         """
