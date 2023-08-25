@@ -37,7 +37,11 @@ with its center at :math:`P_3` and normal to :math:`\hat{c}_y`. The triceps
 will wrap around the circular arc and also attach at the same points as the
 biceps.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: reset
+   :nofigs:
 
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
@@ -51,7 +55,11 @@ the lever angle, shoulder extension, shoulder rotation, and elbow extension. We
 will also need generalized speeds :math:`\mathbf{u} = [u_1,u_2,u_3,u_4]^T`
 which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4', real=True)
    >>> u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4', real=True)
@@ -68,7 +76,11 @@ The necessary constant parameters for the mechanical system are:
 - :math:`k` : lever linear rotational spring coefficient
 - :math:`c` : lever linear rotational damper coefficient
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> dx, dy, dz = sm.symbols('dx, dy, dz', real=True, nonnegative=True)
    >>> lA, lC, lD = sm.symbols('lA, lC, lD', real=True, positive=True)
@@ -82,13 +94,23 @@ Define all the reference frames and points shown in
 :ref:`fig-biomechanics-steerer`. :math:`C_o` and :math:`D_o` are the mass
 centers of the upper and lower arm, respectively.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> N, A, B, C, D = sm.symbols('N, A, B, C, D', cls=me.ReferenceFrame)
    >>> O, P1, P2, P3, P4 = sm.symbols('O, P1, P2, P3, P4 ', cls=me.Point)
    >>> Ao, Co, Cm, Dm, Do = sm.symbols('Ao, Co, Cm, Dm, Do', cls=me.Point)
 
-The orientations and angular velocities of the reference frames are::
+The orientations and angular velocities of the reference frames are:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> A.orient_axis(N, q1, N.z)
    >>> B.orient_axis(N, q2, N.y)
@@ -99,7 +121,13 @@ The orientations and angular velocities of the reference frames are::
    >>> C.set_ang_vel(B, u3*B.z)
    >>> D.set_ang_vel(C, u4*C.y)
 
-All of the points' locations and velocities are::
+All of the points' locations and velocities are:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> Ao.set_pos(O, dx*N.x)
    >>> P1.set_pos(Ao, lA*A.y)
@@ -130,7 +158,13 @@ All of the points' locations and velocities are::
    lC*u2(t)*cos(q3(t))*C.x - lC*u2(t)*sin(q3(t))*C.y + lD*(u2(t)*cos(q3(t)) + u4(t))*D.x - lD*(u2(t)*sin(q3(t))*cos(q4(t)) - u3(t)*sin(q4(t)))*D.y
 
 There are three holonomic constraint equations needed to keep the hand
-:math:`P_4` on the lever :math:`P_1`::
+:math:`P_4` on the lever :math:`P_1`:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> holonomic = (P4.pos_from(O) - P1.pos_from(O)).to_matrix(N)
 
@@ -138,7 +172,13 @@ Define inertia
 ==============
 
 The inertia dyadics can be formed assuming the lever, upper arm, and lower arm
-are thin cylinders::
+are thin cylinders:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> IA = me.Inertia(me.inertia(A, mA/12*lA**2, mA/2*lA**2, mA/12*lA**2), Ao)
    >>> IC = me.Inertia(me.inertia(C, mC/12*lC**2, mC/12*lC**2, mC/2*lC**2), Co)
@@ -151,13 +191,25 @@ are thin cylinders::
 Define forces
 =============
 
-We will simulate this system in Earth's gravitational field::
+We will simulate this system in Earth's gravitational field:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> gravC = me.Force(u_arm, mC*g*N.z)
    >>> gravD = me.Force(l_arm, mD*g*N.z)
 
 The lever has inertia but we will also add a linear torsional spring and damper
-to provide some more resistance for the arm to press against and pull on::
+to provide some more resistance for the arm to press against and pull on:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> lever_resistance = me.Torque(A, (-k*q1 - c*u1)*N.z)
 
@@ -173,24 +225,48 @@ input will propagate to activating the muscle. The biceps muscle will act along
 a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` and will use a specific
 muscle dynamics implementation derived from [DeGroote2016]_.
 
-Start by creating the linear pathway::
+Start by creating the linear pathway:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> biceps_pathway = me.LinearPathway(Cm, Dm)
 
 You can create an activation model that is fully symbolic or create it with the
 specific tuned numerical parameters from [DeGroote2016]_ like so
-(recommended)::
+(recommended):
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('biceps')
 
 The full musculotendon actuator model is then named and constructed with a
-matching class::
+matching class:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway, biceps_activation)
 
 An :obj:`~sympy.physics.mechanics.actuator.AcutatorBase` can compute the loads
 necessary for forming the equations of motion. The musculotendon forces are
-represented as SymPy functions::
+represented as SymPy functions:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> # biceps.to_loads()
 
@@ -217,7 +293,13 @@ We will also assume that the pin joint coordinate is measured as :math:`q_4` is
 in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le \pi`'. The
 circular arc has a radius :math:`r`. With these assumptions we can then use the
 ``__init__()`` method to collect the necessary information for use in the
-remaining methods::
+remaining methods:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> class ExtensorPathway(me.PathwayBase):
    ...
@@ -347,22 +429,43 @@ insertion points along the linear portions of the pathway and the resultant
 effect on the elbow from the forces pushing and pulling on the ends of the
 circular arc.
 
-::
-
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
 Now that we have a custom pathway defined we can create a musculotendon
-actuator model in the same fashion as the biceps::
+actuator model in the same fashion as the biceps:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
    >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('triceps')
    >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway, triceps_activation)
 
 The load formulas are more complex but should allow the triceps to extend the
-elbow::
+elbow:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> # triceps.to_loads()
 
-Lastly, all of the loads can be assembled into one tuple::
+Lastly, all of the loads can be assembled into one tuple:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> loads = (
    ...     biceps.to_loads() +
@@ -378,7 +481,11 @@ With all of the loads defined the equations of motion of the system can be
 generated. We have three holonomic constraints, so the system only has one
 degree of freedom.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> kane = me.KanesMethod(
    ...     N,
@@ -398,11 +505,19 @@ degree of freedom.
    ...
    >>> Fr, Frs = kane.kanes_equations((lever, u_arm, l_arm), loads)
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> # kane.mass_matrix
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> # kane.forcing
 
@@ -410,12 +525,22 @@ The terms not linear in :math:`\dot{\mathbf{u}}` contain the muscle forces
 which are a function of the activation state variables in addition to the
 coordinates and generalized speeds.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> me.find_dynamicsymbols(kane.forcing)
    {a_biceps(t), a_triceps(t), q1(t), q2(t), q3(t), q4(t), u1(t), u2(t), u3(t), u4(t)}
 
-They also contain new constant parameters associated with the muscle models::
+They also contain new constant parameters associated with the muscle models:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> kane.forcing.free_symbols
    {F_M_max_biceps, F_M_max_triceps, alpha_opt_biceps, alpha_opt_triceps, beta_biceps, beta_triceps, c, g, k, lA, lC, lD, l_M_opt_biceps, l_M_opt_triceps, l_T_slack_biceps, l_T_slack_triceps, mC, mD, r, t, v_M_max_biceps, v_M_max_triceps}
@@ -425,17 +550,31 @@ Muscle Activation Differential Equations
 
 The activation state of each muscle are new state variables associated with two
 new first order differential equations. These differential equations are
-accessed from the muscle actuator models::
+accessed from the muscle actuator models:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> biceps.rhs()
    Matrix([[(-0.5625*a_biceps(t)**3*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.5625*a_biceps(t)**3 + 0.5625*a_biceps(t)**2*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.5625*a_biceps(t)**2*e_biceps(t) - 0.375*a_biceps(t)**2*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.375*a_biceps(t)**2 + 0.375*a_biceps(t)*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.375*a_biceps(t)*e_biceps(t) + 0.9375*a_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 1.0625*a_biceps(t) - 0.9375*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 1.0625*e_biceps(t))/(0.045*a_biceps(t) + 0.015)]])
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> triceps.rhs()
    Matrix([[(-0.5625*a_triceps(t)**3*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.5625*a_triceps(t)**3 + 0.5625*a_triceps(t)**2*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.5625*a_triceps(t)**2*e_triceps(t) - 0.375*a_triceps(t)**2*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.375*a_triceps(t)**2 + 0.375*a_triceps(t)*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.375*a_triceps(t)*e_triceps(t) + 0.9375*a_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 1.0625*a_triceps(t) - 0.9375*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 1.0625*e_triceps(t))/(0.045*a_triceps(t) + 0.015)]])
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> dadt = biceps.rhs().col_join(triceps.rhs())
 
@@ -472,7 +611,11 @@ input, and constant variables for use with
 coordinates, generalized speeds, and the two muscles' activation state:
 :math:`\mathbf{x}=\begin{bmatrix}\mathbf{q}\\\mathbf{u}\\\mathbf{a}\end{bmatrix}`.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> q, u = kane.q, kane.u
    >>> a = biceps.x.col_join(triceps.x)
@@ -492,7 +635,11 @@ coordinates, generalized speeds, and the two muscles' activation state:
 
 The only specific inputs are the two muscles' excitation:
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> e = biceps.r.col_join(triceps.r)
    >>> e
@@ -504,7 +651,11 @@ The constants are made up of the geometry, mass, local gravitational constant,
 the lever's stiffness and damping coefficients, and various parameters of the
 muscles.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> p = sm.Matrix([
    ...     dx,
@@ -568,13 +719,23 @@ we can calculate the time derivative of the state. We will also need a
 numerical function for the holonomic constraints to ensure the configuration is
 in a valid state.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> eval_diffeq = sm.lambdify((q, u, a, e, p),
    ...                           (kane.mass_matrix, kane.forcing, dadt), cse=True)
    >>> eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
-We need some reasonable numerical values for all the constants::
+We need some reasonable numerical values for all the constants:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> import numpy as np
 
@@ -611,7 +772,11 @@ Due to the three holonomic constraints, three of the coordinates are a function
 of the remaining one. We can choose the lever angle :math:`q_1` to be the
 independent coordinate and solve for the rest, given guesses of their values.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> from scipy.optimize import fsolve
 
@@ -634,7 +799,13 @@ independent coordinate and solve for the rest, given guesses of their values.
    >>> np.rad2deg(q_vals)
    [  5.         -87.06145113   9.54565989  81.77992469]
 
-We'll assume the system is in a stationary state::
+We'll assume the system is in a stationary state:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> u_vals = np.array([
    ...     0.0,  # u1, [rad/s]
@@ -649,14 +820,26 @@ We'll assume the system is in a stationary state::
    ...     0.0,  # a_tricep, nondimensional
    ... ])
 
-The muscle excitations will also initially be deactivated::
+The muscle excitations will also initially be deactivated:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> e_vals = np.array([
    ...     0.0,
    ...     0.0,
    ... ])
 
-The system equations can be now be numerically evaluated::
+The system equations can be now be numerically evaluated:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
    ([[ 0.00333333 -0.02787753 -0.00714468 -0.03360186]
@@ -679,7 +862,11 @@ provide a function that evaluates them in explicit form, i.e.
 contraction and the triceps in extension with excitation values between -1 and
 1 for a second causing the elbow to flex while the muscles are activated.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> def eval_rhs(t, x, p):
    ...     """Returns the time derivative of the state.
@@ -720,7 +907,11 @@ The system can now be simulated over 3 seconds provided the initial state
 :math:`\mathbf{x}_0` and our function defined above using SciPy's
 ``solve_ivp()``.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> from scipy.integrate import solve_ivp
 
@@ -733,7 +924,11 @@ TODO : Use the matplotlib sphinx directive to plot this (if possible).
 
 The motion can be visualized by plotting the state trajectories over time.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> import matplotlib.pyplot as plt
 
@@ -770,7 +965,10 @@ The motion can be visualized by plotting the state trajectories over time.
    ...     return axes
    ...
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
 
    >>> plot_traj(ts, sol.y.T, x)
    [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
