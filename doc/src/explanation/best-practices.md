@@ -14,8 +14,7 @@ or functions are outlined in the documentation for those specific functions.
 ### Defining Symbols
 
 - **The best way to define symbols is using the {func}`~.symbols` function.**
-  The `symbols()` function supports creating one or multiple symbols at a
-  time:
+  The `symbols()` function supports creating one or more symbols at once:
 
   ```py
   >>> from sympy import symbols
@@ -419,7 +418,8 @@ Here `sympy.sin(math.pi)` is not exactly 0, because `math.pi` is not exactly $\p
 
 
 One should also take care to avoid writing `integer/integer` where both
-integers are explicit integers. This is because Python will evaluate this to a floating-point value before SymPy is able to parse it.
+integers are explicit integers. This is because Python will evaluate this to a
+floating-point value before SymPy is able to parse it.
 
 **Don't**
 
