@@ -119,17 +119,25 @@ class Boundry:
         self.strict = strict
         assert self.strict is not None
 
+    @staticmethod
+    def from_upper(var):
+        return Boundry(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
+
+    @staticmethod
+    def from_lower(var):
+        return Boundry(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
+
     def get_inequality(self):
         if self.equality:
-            return Eq(self.var, self.bound)
+            return Eq(self.var.var, self.bound)
         elif self.upper and self.strict:
-            return self.var < self.bound
+            return self.var.var < self.bound
         elif not self.upper and self.strict:
-            return self.var > self.bound
+            return self.var.var > self.bound
         elif self.upper:
-            return self.var <= self.bound
+            return self.var.var <= self.bound
         else:
-            return self.var >= self.bound
+            return self.var.var >= self.bound
 
     def __repr__(self):
         return repr("Boundry(" + repr(self.get_inequality()) + ")")
@@ -181,6 +189,26 @@ class ExtendedRational():
     def __repr__(self):
         return repr(self.value)
 
+
+class VariableLRA():
+    def __init__(self, var):
+        self.upper = ExtendedRational(float("inf"), 0)
+        self.upper_from_eq = False
+        self.lower = ExtendedRational(-float("inf"), 0)
+        self.lower_from_eq = False
+        self.assign = ExtendedRational(0,0)
+        self.var = var
+        self.col_idx = None
+
+    def __repr__(self):
+        return repr(self.var)
+
+    def __eq__(self, other):
+        return other.var == self.var
+
+    def __hash__(self):
+        return hash(self.var)
+
 class UnhandledNumber(Exception):
     pass
 
@@ -223,7 +251,6 @@ class LRASolver():
         self.slack = slack_variables
         self.nonslack = nonslack_variables
         self.all_var = nonslack_variables + slack_variables
-        self.col_index = {v: i for i, v in enumerate(self.all_var)}
 
         # if previously we knew this was sat
         # if no assertions about slack variables have been made since
@@ -231,28 +258,10 @@ class LRASolver():
         self.is_sat = True
         self.slack_set = set(slack_variables) # used for checking if var is slack
 
-        self.lower = {}
-        self.upper = {}
-        self.low_origin = {}
-        self.up_origin = {}
-        self.assign = {}
 
         # always one of: (True, Assignment), (False, ConflictClause), None
         self.result = None
 
-        for var in self.all_var:
-            self.lower[var] = ExtendedRational(-float("inf"), 0)
-            self.low_origin[var] = False
-            self.upper[var] = ExtendedRational(float("inf"), 0)
-            self.up_origin[var] = False
-            self.assign[var] = ExtendedRational(0, 0)
-
-        # Backtracking Variables
-        # stack contains elements of form (var, lower, upper)
-        # where lower or upper may be None
-        self.stack_bounds = []
-        # only assignment from the last succesful check needs to be stored
-        self.last_safe_assignment = self.assign.copy()
 
     @staticmethod
     def _remove_uneeded_variables(A, nonbasic, num_unused):
@@ -412,6 +421,8 @@ class LRASolver():
 
         empty_var = Dummy()
 
+        var_to_lra_var = {}
+
         conflicts = []
 
         for prop, enc in encoded_cnf_items:
@@ -461,9 +472,9 @@ class LRASolver():
                 if term not in x_subs:
                     x_count += 1
                     x_subs[term] = Dummy(f"x{x_count}")
+                    var_to_lra_var[x_subs[term]] = VariableLRA(x_subs[term])
                     nonbasic.append(x_subs[term])
                 terms.append(term_coeff * x_subs[term])
-
             # If there are multiple variable terms, replace them with a dummy _si variable.
             # If needed (no other expr has this sum of variable terms), create a new Dummy _si varaible.
             if len(terms) > 1:
@@ -471,6 +482,7 @@ class LRASolver():
                 if var not in s_subs:
                     s_count += 1
                     d = Dummy(f"s{s_count}")
+                    var_to_lra_var[d] = VariableLRA(d)
                     basic.append(d)
                     s_subs[var] = d
                     A.append(var - d)
@@ -483,15 +495,19 @@ class LRASolver():
             equality = prop.function == Q.eq
             upper = var_coeff > 0 if not equality else None
             strict = prop.function in [Q.gt, Q.lt]
-            b = Boundry(var, -const, upper, equality, strict)
+            b = Boundry(var_to_lra_var[var], -const, upper, equality, strict)
             encoding[enc] = b
 
         # unused variables should come first
-        used_var = {b.var for b in encoding.values()}
-        unused_var = [var for var in nonbasic if var not in used_var]
-        nonbasic = sorted(nonbasic, key=lambda x: x in used_var)
+        # used_var = {b.var for b in encoding.values()}
+        # unused_var = [var for var in nonbasic if var not in used_var]
+        # nonbasic = sorted(nonbasic, key=lambda x: x in used_var)
 
-        A, _ = linear_eq_to_matrix(A, nonbasic + basic)
+        A, _ = linear_eq_to_matrix(A, [var for var in nonbasic + basic])
+        nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
+        basic = [var_to_lra_var[b] for b in basic]
+        for idx, var in enumerate(nonbasic + basic):
+            var.col_idx = idx
 
         #A, nonbasic = LRASolver._remove_uneeded_variables(A, nonbasic, len(unused_var))
 
@@ -531,7 +547,6 @@ class LRASolver():
             c = ExtendedRational(c, 0)
 
         if boundry.equality:
-            self.stack_bounds.append((sym, c, c))
             res1 = self._assert_lower(sym, c,from_equality=True)
             if res1 and res1[0] == False:
                 res = res1
@@ -539,10 +554,8 @@ class LRASolver():
                 res2 = self._assert_upper(sym, c,from_equality=True)
                 res =  res2
         elif boundry.upper:
-            self.stack_bounds.append((sym, None, c))
             res = self._assert_upper(sym, c)
         else:
-            self.stack_bounds.append((sym, c, None))
             res = self._assert_lower(sym, c)
 
         if self.is_sat and sym not in self.slack_set:
@@ -556,31 +569,27 @@ class LRASolver():
         if self.result:
             assert self.result[0] != False
         self.result = None
-        if ci >= self.upper[xi]:
+        if ci >= xi.upper:
             return None
-        if ci < self.lower[xi]:
-            assert (self.lower[xi][1] >= 0) is True
+        if ci < xi.lower:
+            assert (xi.lower[1] >= 0) is True
             assert (ci[1] <= 0) is True
 
-
-            lit1 = Boundry(var=xi, const=self.lower[xi][0], strict=self.lower[xi][1] != 0, upper=False,
-                           equality=self.low_origin[xi])
+            lit1 = Boundry.from_lower(xi)
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
 
             conflict = [-self.boundry_to_enc[lit1], -self.boundry_to_enc[lit2]]
             self.result = False, conflict
-            assert lit1 in self.boundry_to_enc
-            assert lit2 in self.boundry_to_enc
             return self.result
-        self.upper[xi] = ci
-        self.up_origin[xi] = from_equality
-        if xi in self.nonslack and self.assign[xi] > ci:
+        xi.upper = ci
+        xi.upper_from_eq = from_equality
+        if xi in self.nonslack and xi.assign > ci:
             self._update(xi, ci)
 
-        if self.run_checks and all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
-                                   for v in self.col_index):
+        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+                                   for v in self.all_var):
             M = self.A
-            X = Matrix([self.assign[v][0] for v in self.col_index])
+            X = Matrix([v.assign[0] for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
@@ -589,54 +598,51 @@ class LRASolver():
         if self.result:
             assert self.result[0] != False
         self.result = None
-        if ci <= self.lower[xi]:
+        if ci <= xi.lower:
             return None
-        if ci > self.upper[xi]:
-            assert (self.upper[xi][1] <= 0) is True
+        if ci > xi.upper:
+            assert (xi.upper[1] <= 0) is True
             assert (ci[1] >= 0) is True
 
-            lit1 = Boundry(var=xi, const=self.upper[xi][0], strict=self.upper[xi][1] != 0, upper=True,
-                           equality=self.up_origin[xi])
+            lit1 = Boundry.from_upper(xi)
             lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
 
             conflict = [-self.boundry_to_enc[lit1],-self.boundry_to_enc[lit2]]
             self.result = False, conflict
             return self.result
-        self.lower[xi] = ci
-        self.low_origin[xi] = from_equality
-        if xi in self.nonslack and self.assign[xi] < ci:
+        xi.lower = ci
+        xi.lower_from_eq = from_equality
+        if xi in self.nonslack and xi.assign < ci:
             self._update(xi, ci)
 
-        if self.run_checks and all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
-                                   for v in self.col_index):
+        if self.run_checks and all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+                                   for v in self.all_var):
             M = self.A
-            X = Matrix([self.assign[v][0] for v in self.col_index])
+            X = Matrix([v.assign[0] for v in self.all_var])
             assert all(abs(val) < 10 ** (-10) for val in M * X)
 
         return None
 
     def _update(self, xi, v):
-        i = self.col_index[xi]
+        i = xi.col_idx
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
-            self.assign[b] = self.assign[b] + (v - self.assign[xi])*aji
-        self.assign[xi] = v
+            b.assign = b.assign + (v - xi.assign)*aji
+        xi.assign = v
 
     def reset_bounds(self):
         """
         Resets the state of the LRASolver to before
         anything was asserted.
         """
-        self.stack_bounds = []
         self.result = None
         for var in self.all_var:
-            self.lower[var] = ExtendedRational(-float("inf"), 0)
-            self.low_origin[var] = False
-            self.upper[var] = ExtendedRational(float("inf"), 0)
-            self.up_origin[var] = False
-            self.assign[var] = ExtendedRational(0, 0)
+            var.lower = ExtendedRational(-float("inf"), 0)
+            var.lower_from_eq = False
+            var.upper = ExtendedRational(float("inf"), 0)
+            var.upper_from_eq= False
+            var.assign = ExtendedRational(0, 0)
 
-        self.last_safe_assignment = self.assign.copy()
 
     def get_assignment(self, xi):
         pass
@@ -665,7 +671,7 @@ class LRASolver():
             encodes can be found in `self.enc_to_boundry`.
         """
         if self.is_sat:
-            return True, self.assign
+            return True, {var: var.assign for var in self.all_var}
 
         if self.result:
             return self.result
@@ -708,13 +714,13 @@ class LRASolver():
 
             if self.run_checks:
                 # nonbasic variables must always be within bounds
-                assert all(((self.assign[nb] >= self.lower[nb]) == True) and ((self.assign[nb] <= self.upper[nb]) == True) for nb in nonbasic)
+                assert all(((nb.assign >= nb.lower) == True) and ((nb.assign <= nb.upper) == True) for nb in nonbasic)
 
                 # assignments for x must always satisfy Ax = 0
                 # probably have to turn this off when dealing with strict ineq
-                if all(self.assign[v][0] != float("inf") and self.assign[v][0] != -float("inf")
-                                   for v in self.col_index):
-                    X = Matrix([self.assign[v][0] for v in self.col_index])
+                if all(v.assign[0] != float("inf") and v.assign[0] != -float("inf")
+                                   for v in self.all_var):
+                    X = Matrix([v.assign[0] for v in self.all_var])
                     assert all(abs(val) < 10**(-10) for val in M*X)
 
                 # check upper and lower match this format:
@@ -723,77 +729,66 @@ class LRASolver():
                 # this wouldn't make sense:
                 # x <= rat - delta
                 # x >= rat + delta
-                assert all(self.upper[x][1] <= 0 for x in self.upper)
-                assert all(self.lower[x][1] >= 0 for x in self.upper)
+                assert all(x.upper[1] <= 0 for x in self.all_var)
+                assert all(x.lower[1] >= 0 for x in self.all_var)
 
-            cand = [b for b in basic
-             if self.assign[b] < self.lower[b]
-             or self.assign[b] > self.upper[b]]
+            cand = [b for b in basic if b.assign < b.lower or b.assign > b.upper]
 
             if len(cand) == 0:
-                self.last_safe_assignment = self.assign.copy()
-                return True, self.assign
+                return True, {var: var.assign for var in self.all_var}
 
             xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland's rule better
             i = basic[xi]
 
-            if self.assign[xi] < self.lower[xi]:
+            if xi.assign < xi.lower:
                 cand = [nb for nb in nonbasic
-                        if (M[i, self.col_index[nb]] > 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, self.col_index[nb]] < 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, nb.col_idx] > 0 and nb.assign < nb.upper)
+                        or (M[i, nb.col_idx] < 0 and nb.assign > nb.lower)]
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, self.col_index[nb]] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, self.col_index[nb]] < 0]
-                    upper = [(nb, self.upper[nb]) for nb in N_plus]
-                    lower = [(nb, self.lower[nb]) for nb in N_minus]
+                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundry(nb, up[0], True, self.up_origin[nb], up[1] != 0)
-                            for nb, up in upper]
-                    conflict += [Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
-                                 for nb, lo in lower]
-                    conflict.append(Boundry(xi, self.lower[xi][0], False, self.low_origin[xi], self.lower[xi][1] != 0))
+                    conflict += [Boundry.from_upper(nb) for nb in N_plus]
+                    conflict += [Boundry.from_lower(nb) for nb in N_minus]
+                    conflict.append(Boundry.from_lower(xi))
                     conflict = [-self.boundry_to_enc[c] for c in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.lower[xi])
+                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
 
-            if self.assign[xi] > self.upper[xi]:
+            if xi.assign > xi.upper:
                 cand = [nb for nb in nonbasic
-                        if (M[i, self.col_index[nb]] < 0 and self.assign[nb] < self.upper[nb])
-                        or (M[i, self.col_index[nb]] > 0 and self.assign[nb] > self.lower[nb])]
+                        if (M[i, nb.col_idx] < 0 and nb.assign < nb.upper)
+                        or (M[i, nb.col_idx] > 0 and nb.assign > nb.lower)]
 
                 if len(cand) == 0:
-                    N_plus = [nb for nb in nonbasic if M[i, self.col_index[nb]] > 0]
-                    N_minus = [nb for nb in nonbasic if M[i, self.col_index[nb]] < 0]
-                    upper = [(nb, self.upper[nb]) for nb in N_minus]
-                    lower = [(nb, self.lower[nb]) for nb in N_plus]
+                    N_plus = [nb for nb in nonbasic if M[i, nb.col_idx] > 0]
+                    N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundry(nb, up[0], True, self.up_origin[nb], up[1] != 0)
-                                 for nb, up in upper]
-                    conflict += [Boundry(nb, lo[0], False, self.low_origin[nb], lo[1] != 0)
-                                 for nb, lo in lower]
-                    conflict.append(Boundry(xi, self.upper[xi][0], True, self.up_origin[xi], self.upper[xi][1] != 0))
+                    conflict += [Boundry.from_upper(nb) for nb in N_minus]
+                    conflict += [Boundry.from_lower(nb) for nb in N_plus]
+                    conflict.append(Boundry.from_upper(xi))
 
                     conflict = [-self.boundry_to_enc[c] for c in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
-                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, self.upper[xi])
+                M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
-        i, j = basic[xi], self.col_index[xj]
+        i, j = basic[xi], xj.col_idx
         assert M[i, j] != 0
-        theta = (v - self.assign[xi])*(1/M[i, j])
-        self.assign[xi] = v
-        self.assign[xj] = self.assign[xj] + theta
+        theta = (v - xi.assign)*(1/M[i, j])
+        xi.assign = v
+        xj.assign = xj.assign + theta
         for xk in basic:
             if xk != xi:
                 k = basic[xk]
                 akj = M[k, j]
-                self.assign[xk] = self.assign[xk] + theta*akj
+                xk.assign = xk.assign + theta*akj
         # pivot
         basic[xj] = basic[xi]
         del basic[xi]

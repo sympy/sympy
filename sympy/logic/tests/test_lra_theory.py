@@ -274,7 +274,7 @@ def test_random_problems():
     assert_time = 0.0
 
     feasible_count = 0
-    for i in range(30):
+    for i in range(300):
         if i % 8 == 0:
             constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False)
         elif i % 8 == 1:
@@ -337,6 +337,7 @@ def test_random_problems():
             assert check_if_satisfiable_with_z3(constraints) is True
             cons_funcs = [cons.func for cons in constraints]
             assignment = feasible[1]
+            assignment = {key.var : value for key, value in assignment.items()}
             constraints = [constr.subs(x_subs) for constr in constraints]
             if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
                 assignment = {key: value[0] for key, value in assignment.items()}
