@@ -56,14 +56,14 @@ def get_known_facts(x=None):
         x = Symbol('x')
 
     fact = And(
-        get_nonmatrix_facts(x),
+        get_number_facts(x),
         get_matrix_facts(x)
     )
     return fact
 
 
 @cacheit
-def get_nonmatrix_facts(x = None):
+def get_number_facts(x = None):
     """
     Facts between unary number predicates.
 

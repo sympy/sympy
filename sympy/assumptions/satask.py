@@ -4,7 +4,7 @@ Module to evaluate the proposition with assumptions using SAT algorithm.
 
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_nonmatrix_facts
+from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_known_number_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
@@ -336,7 +336,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
         if any(any(isinstance(arg, MatrixExpr) for arg in pred.arguments) for pred in proposition.all_predicates()):
             known_facts_CNF.add_clauses(get_all_known_matrix_facts())
         else:
-            known_facts_CNF.add_clauses(get_all_known_nonmatrix_facts())
+            known_facts_CNF.add_clauses(get_all_known_number_facts())
         kf_encoded = EncodedCNF()
         kf_encoded.from_cnf(known_facts_CNF)
 
