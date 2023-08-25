@@ -119,7 +119,7 @@ def get_all_known_matrix_facts():
     }
 
 @cacheit
-def get_all_known_nonmatrix_facts():
+def get_all_known_number_facts():
     """
     Known facts between unary predicates for numbers as CNF clauses.
     """
