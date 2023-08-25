@@ -551,7 +551,7 @@ def cross(vect1, vect2):
             n2 = vect2.args[0]
             if n1 == n2:
                 return Vector.zero
-            n3 = ({0,1,2}.difference({n1, n2})).pop()
+            n3 = ({S(0),S(1),S(2)}.difference({n1, n2})).pop()
             sign = 1 if ((n1 + 1) % 3 == n2) else -1
             return sign*vect1._sys.base_vectors()[n3]
         from .functions import express
