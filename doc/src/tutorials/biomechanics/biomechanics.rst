@@ -891,10 +891,7 @@ contraction and the triceps in extension with excitation values between -1 and
    ...     u = x[4:8]
    ...     a = x[8:10]
    ...
-   ...     if t < 0.5 or t > 1.5:
-   ...        e = np.array([0.0, 0.0])
-   ...     else:
-   ...        e = np.array([0.8, 0.0])
+   ...     e = np.array([0.0, 0.0])
    ...
    ...     qd = u
    ...     m, f, ad = eval_diffeq(q, u, a, e, p)
@@ -984,6 +981,76 @@ The motion can be visualized by plotting the state trajectories over time.
      <Axes: xlabel='Time [s]'>]]
 
 TODO : Tune the simulation parameters and describe the motion.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
+
+   >>> def eval_rhs(t, x, p):
+   ...     """Returns the time derivative of the state.
+   ...
+   ...     Parameters
+   ...     ==========
+   ...     t : float
+   ...        Time in seconds.
+   ...     x : array_like, shape(10,)
+   ...       State vector.
+   ...     p : array_like, shape(?, )
+   ...       Parameter vector.
+   ...
+   ...     Returns
+   ...     =======
+   ...     dxdt : ndarray, shape(10,)
+   ...       Time derivative of the state.
+   ...
+   ...     """
+   ...
+   ...     q = x[0:4]
+   ...     u = x[4:8]
+   ...     a = x[8:10]
+   ...
+   ...     if t < 0.5 or t > 1.5:
+   ...        e = np.array([0.0, 0.0])
+   ...     else:
+   ...        e = np.array([0.8, 0.0])
+   ...
+   ...     qd = u
+   ...     m, f, ad = eval_diffeq(q, u, a, e, p)
+   ...     ud = np.linalg.solve(m, f).squeeze()
+   ...
+   ...     return np.hstack((qd, ud, ad.squeeze()))
+   ...
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
+
+   >>> t0, tf = 0.0, 3.0
+   >>> ts = np.linspace(t0, tf, num=301)
+   >>> x0 = np.hstack((q_vals, u_vals, a_vals))
+   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+
+   >>> plot_traj(ts, sol.y.T, x)
+   [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{2}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{triceps}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{1}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{2}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: ylabel='$u_{3}{\\left(t \\right)}$'> <Axes: >]
+    [<Axes: xlabel='Time [s]', ylabel='$u_{4}{\\left(t \\right)}$'>
+     <Axes: xlabel='Time [s]'>]]
 
 References
 ==========
