@@ -10,7 +10,7 @@ from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.common import MatrixKind
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
@@ -333,7 +333,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
 
     if use_known_facts:
         known_facts_CNF = CNF()
-        if any(any(isinstance(arg, MatrixExpr) for arg in pred.arguments) for pred in proposition.all_predicates()):
+        if any(any(arg.kind == MatrixKind for arg in pred.arguments) for pred in proposition.all_predicates()):
             known_facts_CNF.add_clauses(get_all_known_matrix_facts())
         else:
             known_facts_CNF.add_clauses(get_all_known_number_facts())
