@@ -17,7 +17,13 @@ mass :math:`m` under the influence of gravity with a muscle pulling the mass
 against gravity. The mass :math:`m` has a single generalized coordinate
 :math:`q` and generalized speed :math:`u` to describe its position and motion.
 The following code establishes the kinematics and gravitational force and an
-associated particle::
+associated particle:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: reset
+   :nofigs:
 
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
@@ -43,13 +49,23 @@ model. The actuator must act along a pathway that connects the origin and
 insertion points of the muscle. Our origin will attach to the fixed point
 :math:`O` and insert on the moving particle :math:`P`.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> from sympy.physics.mechanics.pathway import LinearPathway
 
    >>> muscle_pathway = LinearPathway(O, P)
 
-A pathway has attachment points::
+A pathway has attachment points:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_pathway.attachments
    (O, P)
@@ -57,15 +73,29 @@ A pathway has attachment points::
 TODO : note the sign conventions
 
 and knows the length between the end attachment points as well as the relative
-speed between the two attachment points::
+speed between the two attachment points:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_pathway.length
    sqrt(q(t)**2)
    >>> muscle_pathway.extension_velocity
    sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
+The sign convention is that a positive speed
+
 Finally, the pathway can determine the forces acting on the two attachment
-points give a force magnitude::
+points give a force magnitude:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_pathway.to_loads(m*g)
    [(O, - g*m*q(t)/sqrt(q(t)**2)*N.x), (P, g*m*q(t)/sqrt(q(t)**2)*N.x)]
@@ -78,13 +108,23 @@ excitation :math:`e(t)`.
 
 TODO : We could plot dadt as a function of a for different e from 0 to 1.
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
    >>> muscle_activation = FirstOrderActivationDeGroote2016.with_defaults('muscle')
 
 The activation model has a state variable, input variable, and some constant
-parameters::
+parameters:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_activation.x
    Matrix([[a_muscle(t)]])
@@ -96,7 +136,13 @@ parameters::
    [ 0.06],
    [   10]])
 
-These are associated with its first order differential equation::
+These are associated with its first order differential equation:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_activation.rhs()
    Matrix([[((1/2 - tanh(10*a_muscle(t) - 10*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10*a_muscle(t) - 10*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
@@ -109,7 +155,11 @@ fiber damping coefficients.
 
 TODO : How do we know this is a rigid tendon model?
 
-::
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
 
@@ -133,7 +183,13 @@ TODO : Explain why the rhs() is different for the muscle than the activation.
 TODO : Needs explanation about rigid tendon
 
 Because this musculotendon actuator has a rigid tendon model, it has the same
-state and ordinary differential equation as the activation model::
+state and ordinary differential equation as the activation model:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle.musculotendon_dynamics
    MusculotendonFormulation.RIGID_TENDON
@@ -156,7 +212,13 @@ state and ordinary differential equation as the activation model::
    Matrix([[(-0.5625*a_muscle(t)**3*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 0.5625*a_muscle(t)**3 + 0.5625*a_muscle(t)**2*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 0.5625*a_muscle(t)**2*e_muscle(t) - 0.375*a_muscle(t)**2*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 0.375*a_muscle(t)**2 + 0.375*a_muscle(t)*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 0.375*a_muscle(t)*e_muscle(t) + 0.9375*a_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 1.0625*a_muscle(t) - 0.9375*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 1.0625*e_muscle(t))/(0.045*a_muscle(t) + 0.015)]])
 
 The musculotendon provides the extra ordinary differential equations as well as
-the muscle specific forces applied to the pathway::
+the muscle specific forces applied to the pathway:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> muscle_loads = muscle.to_loads()
    >>> muscle_loads[0]
@@ -168,7 +230,13 @@ These loads are made up of various functions that describe the length and
 velocity relationships to the fiber force.
 
 Now that we have the forces that the muscles and tendons produce the equations
-of motion of the system can be formed with, for example, Kanes Method::
+of motion of the system can be formed with, for example, Kanes Method:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> kane = me.KanesMethod(N, (q,), (u,), kd_eqs=(u - q.diff(),))
    >>> Fr, Frs = kane.kanes_equations((block,), (muscle_loads + [gravity]))
@@ -176,7 +244,13 @@ of motion of the system can be formed with, for example, Kanes Method::
 The equations of motion are made up of the kinematical differential equation,
 the dynamical differential equation (Newton's Second Law), and the muscle
 activation differential equation. The explicit form of each can be formed like
-so::
+so:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> dqdt = u
    >>> dudt = kane.forcing[0]/m
@@ -184,7 +258,13 @@ so::
 
 We can now create a numerical function that evaluates the equations of motion
 given the state, inputs, and constant parameters. Start by listing each
-symbolically::
+symbolically:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> a = muscle.a
    >>> e = muscle.e
@@ -192,18 +272,36 @@ symbolically::
    >>> inputs = [e]
    >>> constants = [m, g, F_M_max, l_M_opt, l_T_slack, v_M_max, alpha_opt, beta]
 
-Then the numerical function is::
+Then the numerical function is:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> eval_eom = sm.lambdify((state, inputs, constants), (dqdt, dudt, dadt))
 
 It will additionally be interesting to numerically evaluate the muscle force,
-so create a function for it too::
+so create a function for it too:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> force = muscle.force.xreplace({q.diff(): u})
    >>> eval_force = sm.lambdify((state, constants), force)
 
 To test these functions we need some suitable numerical values. This muscle
-will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg::
+will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> import numpy as np
    >>> p_vals = np.array([
@@ -220,7 +318,13 @@ will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg::
 
 Our tendon is rigid, so the length of the muscle will be :math:`q-l_T_slack`
 and we want to give an initial muscle length near its force producing peak, so
-we choose :math:`q_0=l_M_opt + l_T_slack`::
+we choose :math:`q_0=l_M_opt + l_T_slack`:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> x_vals = np.array([
    ...     p_vals[3] + p_vals[4],  # q [m]
@@ -229,7 +333,13 @@ we choose :math:`q_0=l_M_opt + l_T_slack`::
    ... ])
    ...
 
-We can set the excitation to zero to test the numerical functions::
+We can set the excitation to zero to test the numerical functions:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+   :nofigs:
 
    >>> r_vals = np.array([
    ...     1.0,  # e
@@ -241,7 +351,12 @@ We can set the excitation to zero to test the numerical functions::
    1.4499681738213515e-16
 
 The two functions work so we can now simulate this system to see if and how the
-muscle lifts the mass::
+muscle lifts the mass:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
 
    >>> def eval_rhs(t, x):
    ...
@@ -260,7 +375,12 @@ muscle lifts the mass::
    >>> import matplotlib.pyplot as plt
    >>> fig, axes = plt.subplots(4, 1, sharex=True)
    >>> axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')
+   >>> axes[0].set_ylabel('Distance [m]')
    >>> axes[1].plot(sol.t, sol.y[1], label=state[1])
+   >>> axes[1].set_ylabel('Speed [m/s]')
    >>> axes[2].plot(sol.t, sol.y[2], label=state[2])
+   >>> axes[2].set_ylabel('Activation')
    >>> axes[3].plot(sol.t, eval_force(sol.y, p_vals).T, label='force')
+   >>> axes[3].set_ylabel('Force [N]')
+   >>> axes[3].set_xlabel('Time [s]')
    >>> axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()
