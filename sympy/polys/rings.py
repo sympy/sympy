@@ -2560,7 +2560,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
         >>> syms = {2}
-        >>> coeff_split(f, syms)
+        >>> f.coeff_split(syms)
         [2*x**4 + 3*y**4, 10*x + 10]
 
         See Also
@@ -3032,7 +3032,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
 
         >>> from sympy import ZZ, ring
-        >>> R, x, y = ring("x, y", ZZ)
+        >>> R, x, y, z = ring("x, y, z", ZZ)
         >>> p = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
         >>> p.free_variable()
         {0, 1, 2}
