@@ -557,9 +557,8 @@ def as_int(n, strict=True):
             raise ValueError('%s is not an integer' % (n,))
     else:
         try:
-            result = int(n)
+            if n % 1:
+                raise TypeError
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if not (n == result or n == n.round(0)):
-            raise ValueError('%s is not an integer' % (n,))
-        return result
+        return int(n)

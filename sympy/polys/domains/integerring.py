@@ -69,7 +69,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return MPZ(a.p)
-        elif a.is_Float and a.round(0) == a:
+        elif a.is_Float and not a % 1:
             return MPZ(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

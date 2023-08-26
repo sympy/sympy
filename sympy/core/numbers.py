@@ -1038,7 +1038,7 @@ class Float(Number):
                          precision=self._prec)
         if isinstance(other, Float) and global_parameters.evaluate:
             r = self/other
-            if r == r.round(0):
+            if not r % 1:
                 return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
