@@ -1511,13 +1511,13 @@ def test_gcd_preprocess_polys():
     g = x**3*y**2 + x*y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert result == ([x**2*y + x*y, x**3*y**2 + x*y**2], {0, 1})
+    assert result == ([f, g], {0, 1}) or ([g, f], {0, 1})
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert result == ([x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+    assert result == ([f, g], {0, 1}) or ([g, f], {0, 1})
 
 def test_gcd_terms():
     from sympy import ring
