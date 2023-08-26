@@ -114,10 +114,6 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
         return z3_satisfiable(expr, all_models)
 
-
-
-
-
     raise NotImplementedError
 
 
