@@ -1,6 +1,5 @@
 from sympy.solvers.solveset import linear_eq_to_matrix
 from sympy.matrices.dense import eye
-from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions import Predicate
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.ask import Q
