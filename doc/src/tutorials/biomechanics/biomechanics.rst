@@ -47,7 +47,7 @@ biceps.
    >>> import sympy.physics.mechanics as me
    >>> import sympy.physics._biomechanics as bm
 
-Define variables
+Define Variables
 ================
 
 Introduce the four coordinates :math:`\mathbf{q} = [q_1, q_2, q_3, q_4]^T` for
@@ -87,7 +87,7 @@ The necessary constant parameters for the mechanical system are:
    >>> mA, mC, mD = sm.symbols('mA, mC, mD', real=True, positive=True)
    >>> g, k, c, r = sm.symbols('g, k, c, r', real=True, positive=True)
 
-Define kinematics
+Define Kinematics
 =================
 
 Define all the reference frames and points shown in
@@ -168,7 +168,7 @@ There are three holonomic constraint equations needed to keep the hand
 
    >>> holonomic = (P4.pos_from(O) - P1.pos_from(O)).to_matrix(N)
 
-Define inertia
+Define Inertia
 ==============
 
 The inertia dyadics can be formed assuming the lever, upper arm, and lower arm
@@ -188,7 +188,7 @@ are thin cylinders:
    >>> u_arm = me.RigidBody('upper arm', masscenter=Co, frame=C, mass=mC, inertia=IC)
    >>> l_arm = me.RigidBody('lower arm', masscenter=Do, frame=D, mass=mD, inertia=ID)
 
-Define forces
+Define Forces
 =============
 
 We will simulate this system in Earth's gravitational field:
@@ -293,7 +293,13 @@ We will also assume that the pin joint coordinate is measured as :math:`q_4` is
 in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le \pi`'. The
 circular arc has a radius :math:`r`. With these assumptions we can then use the
 ``__init__()`` method to collect the necessary information for use in the
-remaining methods:
+remaining methods.
+
+In ``__init__()`` we can calculate some quantities that will be needed in
+multiple overloaded methods. The length of the pathway is the sum of the
+lengths of the two linear segments and the circular arc that changes with
+variation of the pin joint coordinate. The extension velocity is simply the
+change with respect to time in the arc length.
 
 .. plot::
    :format: doctest
@@ -415,14 +421,6 @@ remaining methods:
    ...         return loads
    ...
 
-Also in ``__init__()`` we can calculate some quantities that will be needed in
-multiple overloaded methods::
-
-The length of the pathway is the sum of the lengths of the two linear segments
-and the circular arc that changes with variation of the pin joint coordinate.
-
-The extension velocity is simply the change with respect to time in the arc
-length::
 
 The loads are made up of three forces: two that push an pull on the origin and
 insertion points along the linear portions of the pathway and the resultant
@@ -797,7 +795,7 @@ independent coordinate and solve for the rest, given guesses of their values.
    >>> q_vals[1:] = fsolve(eval_holo_fsolve, q_vals[1:])
 
    >>> np.rad2deg(q_vals)
-   [  5.         -87.06145113   9.54565989  81.77992469]
+   [ 5.         -0.60986636  9.44918589 88.68812842]
 
 We'll assume the system is in a stationary state:
 
@@ -842,13 +840,13 @@ The system equations can be now be numerically evaluated:
    :nofigs:
 
    >>> eval_diffeq(q_vals, u_vals, a_vals, e_vals, p_vals)
-   ([[ 0.00333333 -0.02787753 -0.00714468 -0.03360186]
-    [ 0.19923894  0.31       -0.00252423  0.29869588]
-    [ 0.01743115  0.          0.29280666  0.00711305]
-    [ 0.          0.32743115 -0.04917419  0.02702174]], [[ 0.31082274]
-    [ 0.        ]
-    [-0.        ]
-    [ 0.        ]], [[0.]
+   ([[ 0.00333333 -0.15174161 -0.00109772 -0.00152436]
+    [ 0.19923894  0.31       -0.04923615  0.00996712]
+    [ 0.01743115  0.          0.29585191  0.0011276 ]
+    [ 0.         -0.29256885 -0.0005241  -0.29983226]], [[-0.9121071]
+    [ 0.       ]
+    [-0.       ]
+    [ 0.       ]], [[0.]
     [0.]])
 
 Simulate the muscle-driven motion
@@ -975,16 +973,15 @@ The motion can be visualized by plotting the state trajectories over time.
 
    >>> plot_traj(ts, sol.y.T, x)
    [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
-     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+     <Axes: ylabel='$u_{2}{\\left(t \\right)}$'>]
     [<Axes: ylabel='$q_{2}{\\left(t \\right)}$'>
-     <Axes: ylabel='$a_{triceps}{\\left(t \\right)}$'>]
-    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{1}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{2}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{3}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: xlabel='Time [s]', ylabel='$u_{4}{\\left(t \\right)}$'>
-     <Axes: xlabel='Time [s]'>]]
+     <Axes: ylabel='$u_{3}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'>
+     <Axes: ylabel='$u_{4}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+    [<Axes: xlabel='Time [s]', ylabel='$u_{1}{\\left(t \\right)}$'>
+     <Axes: xlabel='Time [s]', ylabel='$a_{triceps}{\\left(t \\right)}$'>]]
 
 TODO : Tune the simulation parameters and describe the motion.
 
@@ -1019,16 +1016,15 @@ TODO : Tune the simulation parameters and describe the motion.
 
    >>> plot_traj(ts, sol.y.T, x)
    [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
-     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+     <Axes: ylabel='$u_{2}{\\left(t \\right)}$'>]
     [<Axes: ylabel='$q_{2}{\\left(t \\right)}$'>
-     <Axes: ylabel='$a_{triceps}{\\left(t \\right)}$'>]
-    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{1}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{2}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: ylabel='$u_{3}{\\left(t \\right)}$'> <Axes: >]
-    [<Axes: xlabel='Time [s]', ylabel='$u_{4}{\\left(t \\right)}$'>
-     <Axes: xlabel='Time [s]'>]]
+     <Axes: ylabel='$u_{3}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{3}{\\left(t \\right)}$'>
+     <Axes: ylabel='$u_{4}{\\left(t \\right)}$'>]
+    [<Axes: ylabel='$q_{4}{\\left(t \\right)}$'>
+     <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
+    [<Axes: xlabel='Time [s]', ylabel='$u_{1}{\\left(t \\right)}$'>
+     <Axes: xlabel='Time [s]', ylabel='$a_{triceps}{\\left(t \\right)}$'>]]
 
 References
 ==========
