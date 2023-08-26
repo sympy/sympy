@@ -1,5 +1,4 @@
-from sympy.core.function import Function
-from sympy.core.numbers import Rational, pi, I, oo
+from sympy.core.numbers import Rational, I, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.core.singleton import S
@@ -7,7 +6,7 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices.dense import randMatrix
 from sympy.assumptions.ask import Q
 from sympy.logic.boolalg import And
-from sympy.abc import x, y, z, a
+from sympy.abc import x, y, z
 from sympy.assumptions.cnf import CNF, EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber

@@ -12,7 +12,6 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
 
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
-from sympy.testing.pytest import raises
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.tests.test_lra_theory import make_random_problem
 import time
