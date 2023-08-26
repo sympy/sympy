@@ -504,7 +504,7 @@ class LRASolver():
         # unused_var = [var for var in nonbasic if var not in used_var]
         # nonbasic = sorted(nonbasic, key=lambda x: x in used_var)
 
-        A, _ = linear_eq_to_matrix(A, [var for var in nonbasic + basic])
+        A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
         basic = [var_to_lra_var[b] for b in basic]
         for idx, var in enumerate(nonbasic + basic):
