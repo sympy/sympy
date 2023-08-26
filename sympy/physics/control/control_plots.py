@@ -6,7 +6,7 @@ from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
-from sympy.plotting.plot import LineOver1DRangeSeries
+from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
 
@@ -211,7 +211,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -228,7 +228,7 @@ def step_response_numerical_data(system, prec=8, lower_limit=0,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======
@@ -362,7 +362,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -379,7 +379,7 @@ def impulse_response_numerical_data(system, prec=8, lower_limit=0,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======
@@ -513,7 +513,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
     is used. If the user wants to instead get an uniformly
     sampled response, then ``adaptive`` kwarg should be passed ``False``
     and ``n`` must be passed as additional kwargs.
-    Refer to the parameters of class :class:`sympy.plotting.plot.LineOver1DRangeSeries`
+    Refer to the parameters of class :class:`sympy.plotting.series.LineOver1DRangeSeries`
     for more details.
 
     Parameters
@@ -532,7 +532,7 @@ def ramp_response_numerical_data(system, slope=1, prec=8,
         The upper limit of the plot range. Defaults to 10.
     kwargs :
         Additional keyword arguments are passed to the underlying
-        :class:`sympy.plotting.plot.LineOver1DRangeSeries` class.
+        :class:`sympy.plotting.series.LineOver1DRangeSeries` class.
 
     Returns
     =======

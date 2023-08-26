@@ -352,8 +352,7 @@ beyond Python and mpmath.
 
 - **git**: The [SymPy source code](https://github.com/sympy/sympy) uses the
   [git](https://git-scm.com/) version control system. See the [installation
-  guide](installation-git) and [development
-  workflow](https://github.com/sympy/sympy/wiki/Development-workflow#set-up-git)
+  guide](installation-git) and the [contributor guide](devsetup)
   for instructions on how to get the development version of SymPy from git.
 
 ### Running the Tests

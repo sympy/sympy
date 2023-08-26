@@ -1215,24 +1215,6 @@ def test_presentation_settings():
                                      method="garbage"))
 
 
-def test_toprettyxml_hooking():
-    # test that the patch doesn't influence the behavior of the standard
-    # library
-    import xml.dom.minidom
-    doc1 = xml.dom.minidom.parseString(
-        "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
-    doc2 = xml.dom.minidom.parseString(
-        "<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>")
-    prettyxml_old1 = doc1.toprettyxml()
-    prettyxml_old2 = doc2.toprettyxml()
-
-    mp.apply_patch()
-    mp.restore_patch()
-
-    assert prettyxml_old1 == doc1.toprettyxml()
-    assert prettyxml_old2 == doc2.toprettyxml()
-
-
 def test_print_domains():
     from sympy.sets import Integers, Naturals, Naturals0, Reals, Complexes
 

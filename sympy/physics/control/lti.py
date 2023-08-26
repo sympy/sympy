@@ -546,6 +546,108 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var):
+        r"""
+        Creates a new ``TransferFunction`` efficiently from a list of coefficients.
+
+        Parameters
+        ==========
+
+        num_list : Sequence
+            Sequence comprising of numerator coefficients.
+        den_list : Sequence
+            Sequence comprising of denominator coefficients.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Raises
+        ======
+
+        ZeroDivisionError
+            When the constructed denominator is zero.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> num = [1, 0, 2]
+        >>> den = [3, 2, 2, 1]
+        >>> tf = TransferFunction.from_coeff_lists(num, den, s)
+        >>> tf
+        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
+
+        # Create a Transfer Function with more than one variable
+        >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
+        >>> tf1
+        TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
+
+        """
+        num_list = num_list[::-1]
+        den_list = den_list[::-1]
+        num_var_powers = [var**i for i in range(len(num_list))]
+        den_var_powers = [var**i for i in range(len(den_list))]
+
+        _num = sum(coeff * var_power for coeff, var_power in zip(num_list, num_var_powers))
+        _den = sum(coeff * var_power for coeff, var_power in zip(den_list, den_var_powers))
+
+        if _den == 0:
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
+
+        return cls(_num, _den, var)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var):
+        r"""
+        Creates a new ``TransferFunction`` from given zeros, poles and gain.
+
+        Parameters
+        ==========
+
+        zeros : Sequence
+            Sequence comprising of zeros of transfer function.
+        poles : Sequence
+            Sequence comprising of poles of transfer function.
+        gain : Number, Symbol, Expression
+            A scalar value specifying gain of the model.
+        var : Symbol
+            Complex variable of the Laplace transform used by the
+            polynomials of the transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, k
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> zeros = [1, 2, 3]
+        >>> poles = [6, 5, 4]
+        >>> gain = 7
+        >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
+        >>> tf
+        TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
+
+        # Create a Transfer Function with variable poles and zeros
+        >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
+        >>> tf1
+        TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
+
+        # Complex poles or zeros are acceptable
+        >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
+        >>> tf2
+        TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
+
+        """
+        num_poly = 1
+        den_poly = 1
+        for zero in zeros:
+            num_poly *= var - zero
+        for pole in poles:
+            den_poly *= var - pole
+
+        return cls(gain*num_poly, den_poly, var)
+
     @property
     def num(self):
         """
@@ -715,6 +817,32 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         """
         return _roots(Poly(self.num, self.var), self.var)
+
+    def evalfr(self,other):
+        """
+        Returns the system response at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import I
+        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
+        >>> omega = 0.1
+        >>> tf1.evalfr(I*omega)
+        TransferFunction(1, 0.99 + 0.2*I, s)
+        >>> tf2 = TransferFunction(s**2, a*s + p, s)
+        >>> tf2.evalfr(2)
+        TransferFunction(4, 2*a + p, s)
+        >>> tf2.evalfr(I*2)
+        TransferFunction(-4, 2*I*a + p, s)
+
+        """
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        argnew = TransferFunction(arg_num, arg_den, self.var)
+        return argnew.expand()
 
     def is_stable(self):
         """
@@ -3095,6 +3223,30 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
+
+    def evalfr(self,other):
+        """
+        Evaluates each element of the ``TransferFunctionMatrix`` at a frequency.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> from sympy import I
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
+        >>> tfm_1.evalfr(2*I)
+        TransferFunctionMatrix(((TransferFunction(3 - 6*I, 5, s), TransferFunction((1 - 2*I)*(2 - 2*I)*(6 + 2*I), 40, s)), (TransferFunction((-2 - 6*I)*(3 + 2*I), 40, s), TransferFunction((-14 - 10*I)*(16 - 18*I), 296, s))))
+
+        """
+        mat = self._expr_mat.subs(self.var, other)
+        return _to_TFM(mat, self.var)
 
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""

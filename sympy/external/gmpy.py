@@ -35,6 +35,12 @@ __all__ = [
     # isqrt from gmpy or mpmath
     'sqrt',
 
+    # is_square from gmpy or mpmath
+    'is_square',
+
+    # sqrtrem from gmpy or mpmath
+    'sqrtrem',
+
     # gcd from gmpy or math
     'gcd',
 
@@ -49,6 +55,9 @@ __all__ = [
 
     # jacobi from gmpy or sympy
     'jacobi',
+
+    # kronecker from gmpy or sympy
+    'kronecker',
 ]
 
 
@@ -113,6 +122,7 @@ if gmpy is not None:
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
+    kronecker = gmpy.kronecker
 
 else:
     from .pythonmpq import PythonMPQ
@@ -126,7 +136,40 @@ else:
 
     factorial = lambda x: int(mlib.ifac(x))
     sqrt = lambda x: int(mlib.isqrt(x))
-    is_square = lambda x: x >= 0 and mlib.sqrtrem(x)[1] == 0
+
+    def is_square(x):
+        if x < 0:
+            return False
+        # Note that the possible values of y**2 % n for a given n are limited.
+        # For example, when n=4, y**2 % n can only take 0 or 1.
+        # In other words, if x % 4 is 2 or 3, then x is not a square number.
+        # Mathematically, it determines if it belongs to the set {y**2 % n},
+        # but implementationally, it can be realized as a logical conjunction
+        # with an n-bit integer.
+        # see https://mersenneforum.org/showpost.php?p=110896
+        # def magic(n):
+        #     s = {y**2 % n for y in range(n)}
+        #     s = set(range(n)) - s
+        #     return sum(1 << bit for bit in s)
+        # >>> print(hex(magic(128)))
+        # 0xfdfdfdedfdfdfdecfdfdfdedfdfcfdec
+        # >>> print(hex(magic(99)))
+        # 0x5f6f9ffb6fb7ddfcb75befdec
+        # >>> print(hex(magic(91)))
+        # 0x6fd1bfcfed5f3679d3ebdec
+        # >>> print(hex(magic(85)))
+        # 0xdef9ae771ffe3b9d67dec
+        if 0xfdfdfdedfdfdfdecfdfdfdedfdfcfdec & (1 << (x & 127)):
+            return False  # e.g. 2, 3
+        m = x % 765765 # 765765 = 99 * 91 * 85
+        if 0x5f6f9ffb6fb7ddfcb75befdec & (1 << (m % 99)):
+            return False  # e.g. 17, 68
+        if 0x6fd1bfcfed5f3679d3ebdec & (1 << (m % 91)):
+            return False  # e.g. 97, 388
+        if 0xdef9ae771ffe3b9d67dec & (1 << (m % 85)):
+            return False  # e.g. 793, 1408
+        return mlib.sqrtrem(x)[1] == 0
+
     sqrtrem = lambda x: tuple(int(r) for r in mlib.sqrtrem(x))
     if sys.version_info[:2] >= (3, 9):
         gcd = math.gcd
@@ -189,3 +232,20 @@ else:
                 j = -j
             x %= y
         return j
+
+    def kronecker(x, y):
+        """ Return Kronecker symbol (x / y)."""
+        if gcd(x, y) != 1:
+            return 0
+        if y == 0:
+            return 1
+        sign = -1 if y < 0 and x < 0 else 1
+        y = abs(y)
+        # We want to calculate s = trailing(y)
+        s = 0
+        while y % 2 == 0:
+            y >>= 1
+            s += 1
+        if s % 2 and x % 8 in [3, 5]:
+            sign = -sign
+        return sign * jacobi(x, y)
