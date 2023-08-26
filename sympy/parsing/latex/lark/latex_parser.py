@@ -9,12 +9,11 @@ _lark = import_module("lark")
 
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
-        import lark
 
         with open(os.path.join(os.path.dirname(__file__), "latex.lark"), encoding="utf-8") as f:
             latex_grammar = f.read()
 
-        self.parser = lark.Lark(
+        self.parser = _lark.Lark(
             latex_grammar, parser="earley", start="latex_string",
             lexer="auto",
             ambiguity="explicit",
@@ -30,30 +29,28 @@ class LarkLatexParser:
         self.transform_to_sympy_expr = TransformToSymPyExpr()
 
     def doparse(self, s: str):
-        import lark
-
         if self.logger:
-            lark.logger.setLevel(logging.DEBUG)
+            _lark.logger.setLevel(logging.DEBUG)
 
         parse_tree = self.parser.parse(s)
 
         if not self.transform:
             # exit early and return the parse tree
-            lark.logger.debug("expression =", s)
-            lark.logger.debug(parse_tree)
-            lark.logger.debug(parse_tree.pretty())
+            _lark.logger.debug("expression =", s)
+            _lark.logger.debug(parse_tree)
+            _lark.logger.debug(parse_tree.pretty())
             return parse_tree
 
         if self.print_debug_output:
             # print this stuff before attempting to run the transformer
-            lark.logger.debug("expression =", s)
+            _lark.logger.debug("expression =", s)
             # print the `parse_tree` variable
-            lark.logger.debug(parse_tree.pretty())
+            _lark.logger.debug(parse_tree.pretty())
 
         sympy_expression = self.transform_to_sympy_expr.transform(parse_tree)
 
         if self.print_debug_output:
-            lark.logger.debug("SymPy expression =", sympy_expression)
+            _lark.logger.debug("SymPy expression =", sympy_expression)
 
         return sympy_expression
 
