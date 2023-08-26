@@ -2123,8 +2123,8 @@ def _aresame(a, b):
     False
 
     However, other object might compare the same. This
-    routine will only return True if two expressions identical in terms of
-    class types.
+    routine will only return True if two expressions are identical in
+    terms of class types.
 
     >>> from sympy.core.basic import _aresame
     >>> eye(1) == S(eye(1))  # mutable vs immutable
