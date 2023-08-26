@@ -6,9 +6,8 @@ Biomechanical Model Example
 
 :obj:`~sympy.physics._biomechanics` provides features to enhance models created
 with :obj:`~sympy.physics.mechanics` with force producing elements that model
-muscles and other biomechanical components. In this tutorial, we will introduce
-the features of this package by adding muscles to a simple model of a human arm
-that moves a lever.
+muscles and tendons. In this tutorial, we will introduce the features of this
+package by adding muscles to a simple model of a human arm that moves a lever.
 
 Model Description
 =================
@@ -23,19 +22,20 @@ The lever :math:`A` can rotate about :math:`\hat{n}_z` through angle
 :math:`q_1`. Its mass center lies on the rotation axis. The shoulder is located
 at :math:`P_2` and the upper arm :math:`C` can extend about :math:`\hat{n}_y`
 through angle :math:`q_2` and rotate about :math:`\hat{b}_z` through angle
-:math:`q_3`. The elbow is located at point :math:`P_3`.  The lower arm can
-extend about :math:`\hat{c}_y` through angle :math:`q_4`. The hand is located
-at point :math:`P_4`. The hand will be constrained to the lever by
+:math:`q_3`. The elbow is located at point :math:`P_3`.  The lower arm can flex
+about :math:`\hat{c}_y` through angle :math:`q_4`. The hand is located at point
+:math:`P_4`. The hand will be constrained to the lever by enforcing
 :math:`\mathbf{r}^{P_4/O} = \mathbf{r}^{P_1/O}`. The lever, upper arm, and
 lower arm will be modeled as thin cylinders for inertial simplicity.
 
-We will introduce two muscle models that represent the biceps and the triceps.
-Two muscle attachment points :math:`C_m` and :math:`D_m` are fixed on the upper
-arm and lower arm, respectively. The biceps muscle will act along a linear path
-from :math:`C_m` to :math:`D_m`. A circular arc of radius :math:`r` is defined
-with its center at :math:`P_3` and normal to :math:`\hat{c}_y`. The triceps
-will wrap around the circular arc and also attach at the same points as the
-biceps.
+We will introduce two musculotendon models that represent the biceps and the
+triceps. Two muscle attachment points :math:`C_m` and :math:`D_m` are fixed on
+the upper arm and lower arm, respectively. The biceps muscle will act along a
+linear path from :math:`C_m` to :math:`D_m`, causing flexion at the elbow when
+contracted. A circular arc of radius :math:`r` is defined with its center at
+:math:`P_3` and normal to :math:`\hat{c}_y`. The triceps will wrap around the
+circular arc and also attach at the same points as the biceps, causing elbow
+extension when contracted.
 
 .. plot::
    :format: doctest
@@ -51,7 +51,7 @@ Define Variables
 ================
 
 Introduce the four coordinates :math:`\mathbf{q} = [q_1, q_2, q_3, q_4]^T` for
-the lever angle, shoulder extension, shoulder rotation, and elbow extension. We
+the lever angle, shoulder extension, shoulder rotation, and elbow flexion. We
 will also need generalized speeds :math:`\mathbf{u} = [u_1,u_2,u_3,u_4]^T`
 which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 
@@ -67,7 +67,7 @@ which we define as :math:`\mathbf{u} = \dot{\mathbf{q}}`.
 The necessary constant parameters for the mechanical system are:
 
 - :math:`d_x, l_A`: locates :math:`P_1` from :math:`O` along the
-  :math:`\hat{n}_x` and :math:`\hat{a}_y`, respectively
+  :math:`\hat{n}_x` and :math:`\hat{a}_y` directions, respectively
 - :math:`d_y, d_z`: locates :math:`P_2` from :math:`O` along the :math:`N` unit
   vector directions
 - :math:`l_C,l_D` : length of upper and lower arm
@@ -171,8 +171,8 @@ There are three holonomic constraint equations needed to keep the hand
 Define Inertia
 ==============
 
-The inertia dyadics can be formed assuming the lever, upper arm, and lower arm
-are thin cylinders:
+The inertia dyadics and then rigid bodies can be formed assuming the lever,
+upper arm, and lower arm are thin cylinders:
 
 .. plot::
    :format: doctest
@@ -216,14 +216,14 @@ to provide some more resistance for the arm to press against and pull on:
 Biceps
 ------
 
-We will model the biceps muscle as an actuator that extends and contracts
-between the two muscle attachment points. This muscle can extend and contract
-given an excitation specified input and we will assume that the tendon is
-rigid. The musculotendon actuator model will be made up of two components: a
-pathway on which to act and activation dynamics that define how an excitation
-input will propagate to activating the muscle. The biceps muscle will act along
-a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` and will use a specific
-muscle dynamics implementation derived from [DeGroote2016]_.
+We will model the biceps muscle as an actuator that contracts between the two
+muscle attachment points :math:`C_m` and :math:`D_m`. This muscle can contract
+given an excitation specified input and we will assume that the associated
+tendon is rigid. The musculotendon actuator model will be made up of two
+components: a pathway on which to act and activation dynamics that define how
+an excitation input will propagate to activating the muscle. The biceps muscle
+will act along a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` and will
+use a specific muscle dynamics implementation derived from [DeGroote2016]_.
 
 Start by creating the linear pathway:
 
@@ -236,8 +236,7 @@ Start by creating the linear pathway:
    >>> biceps_pathway = me.LinearPathway(Cm, Dm)
 
 You can create an activation model that is fully symbolic or create it with the
-specific tuned numerical parameters from [DeGroote2016]_ like so
-(recommended):
+specific tuned numerical parameters from [DeGroote2016]_ like so (recommended):
 
 .. plot::
    :format: doctest
@@ -246,6 +245,9 @@ specific tuned numerical parameters from [DeGroote2016]_ like so
    :nofigs:
 
    >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('biceps')
+
+TODO : There does not seem to be a ``__str__`` for this object with any useful
+information.
 
 The full musculotendon actuator model is then named and constructed with a
 matching class:
@@ -257,18 +259,6 @@ matching class:
    :nofigs:
 
    >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway, biceps_activation)
-
-An :obj:`~sympy.physics.mechanics.actuator.AcutatorBase` can compute the loads
-necessary for forming the equations of motion. The musculotendon forces are
-represented as SymPy functions:
-
-.. plot::
-   :format: doctest
-   :include-source: True
-   :context: close-figs
-   :nofigs:
-
-   >>> # biceps.to_loads()
 
 Triceps
 -------
@@ -286,20 +276,21 @@ To develop this pathway we need to subclass
 :obj:`~sympy.physics.mechanics.pathway.PathwayBase` and create methods that
 compute the pathway length, pathway extension velocity, and the loads acting on
 the involved bodies. We will develop a class which assumes that there is a pin
-joint between to rigid bodies and that the two muscle attachment points are
-fixed on each body, respectively, and that the pin joint point and two
-attachment points lie in the same plane which is normal to the pin joint axis.
-We will also assume that the pin joint coordinate is measured as :math:`q_4` is
-in :ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le \pi`'. The
+joint between two rigid bodies, that the two muscle attachment points are fixed
+on each body, respectively, and that the pin joint point and two attachment
+points lie in the same plane which is normal to the pin joint axis.  We will
+also assume that the pin joint coordinate is measured as :math:`q_4` is in
+:ref:`fig-biomechanics-steerer` and that :math:`0 \le q_4 \le \pi`'. The
 circular arc has a radius :math:`r`. With these assumptions we can then use the
 ``__init__()`` method to collect the necessary information for use in the
-remaining methods.
-
-In ``__init__()`` we can calculate some quantities that will be needed in
-multiple overloaded methods. The length of the pathway is the sum of the
-lengths of the two linear segments and the circular arc that changes with
-variation of the pin joint coordinate. The extension velocity is simply the
-change with respect to time in the arc length.
+remaining methods. In ``__init__()`` we will also calculate some quantities
+that will be needed in multiple overloaded methods. The length of the pathway
+is the sum of the lengths of the two linear segments and the circular arc that
+changes with variation of the pin joint coordinate. The extension velocity is
+simply the change with respect to time in the arc length. The loads are made up
+of three forces: two that push an pull on the origin and insertion points along
+the linear portions of the pathway and the resultant effect on the elbow from
+the forces pushing and pulling on the ends of the circular arc.
 
 .. plot::
    :format: doctest
@@ -421,18 +412,6 @@ change with respect to time in the arc length.
    ...         return loads
    ...
 
-
-The loads are made up of three forces: two that push an pull on the origin and
-insertion points along the linear portions of the pathway and the resultant
-effect on the elbow from the forces pushing and pulling on the ends of the
-circular arc.
-
-.. plot::
-   :format: doctest
-   :include-source: True
-   :context: close-figs
-   :nofigs:
-
 Now that we have a custom pathway defined we can create a musculotendon
 actuator model in the same fashion as the biceps:
 
@@ -446,8 +425,7 @@ actuator model in the same fashion as the biceps:
    >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('triceps')
    >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway, triceps_activation)
 
-The load formulas are more complex but should allow the triceps to extend the
-elbow:
+Lastly, all of the loads can be assembled into one list:
 
 .. plot::
    :format: doctest
@@ -455,27 +433,12 @@ elbow:
    :context: close-figs
    :nofigs:
 
-   >>> # triceps.to_loads()
-
-Lastly, all of the loads can be assembled into one tuple:
-
-.. plot::
-   :format: doctest
-   :include-source: True
-   :context: close-figs
-   :nofigs:
-
-   >>> loads = (
-   ...     biceps.to_loads() +
-   ...     triceps.to_loads() +
-   ...     [lever_resistance, gravC, gravD]
-   ... )
-   ...
+   >>> loads = biceps.to_loads() + triceps.to_loads() + [lever_resistance, gravC, gravD]
 
 Equations of Motion
 ===================
 
-With all of the loads defined the equations of motion of the system can be
+With all of the loads now defined the equations of motion of the system can be
 generated. We have three holonomic constraints, so the system only has one
 degree of freedom.
 
@@ -502,22 +465,6 @@ degree of freedom.
    ... )
    ...
    >>> Fr, Frs = kane.kanes_equations((lever, u_arm, l_arm), loads)
-
-.. plot::
-   :format: doctest
-   :include-source: True
-   :context: close-figs
-   :nofigs:
-
-   >>> # kane.mass_matrix
-
-.. plot::
-   :format: doctest
-   :include-source: True
-   :context: close-figs
-   :nofigs:
-
-   >>> # kane.forcing
 
 The terms not linear in :math:`\dot{\mathbf{u}}` contain the muscle forces
 which are a function of the activation state variables in addition to the
@@ -567,6 +514,8 @@ accessed from the muscle actuator models:
 
    >>> triceps.rhs()
    Matrix([[(-0.5625*a_triceps(t)**3*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.5625*a_triceps(t)**3 + 0.5625*a_triceps(t)**2*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.5625*a_triceps(t)**2*e_triceps(t) - 0.375*a_triceps(t)**2*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.375*a_triceps(t)**2 + 0.375*a_triceps(t)*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.375*a_triceps(t)*e_triceps(t) + 0.9375*a_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 1.0625*a_triceps(t) - 0.9375*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 1.0625*e_triceps(t))/(0.045*a_triceps(t) + 0.015)]])
+
+Store the muscle activation differential equations together in a matrix:
 
 .. plot::
    :format: doctest
@@ -631,7 +580,7 @@ coordinates, generalized speeds, and the two muscles' activation state:
    [ a_biceps(t)],
    [a_triceps(t)]])
 
-The only specific inputs are the two muscles' excitation:
+The only specified inputs are the two muscles' excitation:
 
 .. plot::
    :format: doctest
@@ -797,7 +746,7 @@ independent coordinate and solve for the rest, given guesses of their values.
    >>> np.rad2deg(q_vals)
    [ 5.         -0.60986636  9.44918589 88.68812842]
 
-We'll assume the system is in a stationary state:
+We'll assume the system is in an initial stationary state:
 
 .. plot::
    :format: doctest
@@ -849,16 +798,15 @@ The system equations can be now be numerically evaluated:
     [ 0.       ]], [[0.]
     [0.]])
 
-Simulate the muscle-driven motion
-=================================
+Simulate the Muscle-actuated Motion
+===================================
 
 Now that the system equations can be evaluated given the state and constant
 values we can simulate the arm and lever's motion with excitation of the two
 muscles. SciPy's ``solve_ivp()`` can integrate the differential equations if we
 provide a function that evaluates them in explicit form, i.e.
-:math:`\dot{\mathbf{x}}=`. Inside this function we will active the biceps in
-contraction and the triceps in extension with excitation values between -1 and
-1 for a second causing the elbow to flex while the muscles are activated.
+:math:`\dot{\mathbf{x}}=`. We will include a function to excite the muscles but
+set it to zero for the first simulation.
 
 .. plot::
    :format: doctest
@@ -867,6 +815,7 @@ contraction and the triceps in extension with excitation values between -1 and
    :nofigs:
 
    >>> def eval_r(t):
+   ...     """Returns the muscles' excitation as a function of time."""
    ...     e = np.array([0.0, 0.0])
    ...     return e
    ...
@@ -922,9 +871,7 @@ The system can now be simulated over 3 seconds provided the initial state
    >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, eval_r, p_vals),
    ...                 (t0, tf), x0, t_eval=ts)
 
-TODO : Use the matplotlib sphinx directive to plot this (if possible).
-
-The motion can be visualized by plotting the state trajectories over time.
+The motion can be visualized by plotting the state trajectories over time:
 
 .. plot::
    :format: doctest
@@ -983,7 +930,10 @@ The motion can be visualized by plotting the state trajectories over time.
     [<Axes: xlabel='Time [s]', ylabel='$u_{1}{\\left(t \\right)}$'>
      <Axes: xlabel='Time [s]', ylabel='$a_{triceps}{\\left(t \\right)}$'>]]
 
-TODO : Tune the simulation parameters and describe the motion.
+The simulation shows that the arm settles into equilibrium balanced by the
+gravitational forces, the lever resistance, and the passive aspects of the
+musculotendon models. Now we activate the biceps for 1 second with 80%
+excitation to see the effect on the motion:
 
 .. plot::
    :format: doctest
@@ -1025,6 +975,19 @@ TODO : Tune the simulation parameters and describe the motion.
      <Axes: ylabel='$a_{biceps}{\\left(t \\right)}$'>]
     [<Axes: xlabel='Time [s]', ylabel='$u_{1}{\\left(t \\right)}$'>
      <Axes: xlabel='Time [s]', ylabel='$a_{triceps}{\\left(t \\right)}$'>]]
+
+We first see that the arm tries to settle to equilibrium as before but then the
+activated biceps pull the lever back towards the shoulder causing the arm to
+oppose the passive motion. Once the muscle is deactivated, the arm settles as
+before.
+
+Conclusion
+==========
+
+Here we have shown how to create a mathematical model that represents a
+musculoskeletal system by constructing a simple and custom muscle-tendon
+actuation pathway. The model's motion can be controlled by exciting the muscles
+and the simulation shows expected behavior.
 
 References
 ==========
