@@ -189,10 +189,6 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
-    assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
-    # divmod(4, -2.1) gives an inaccurate result for the remainder
-    # assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
-    assert divmod(S(-8), S(-2.5) ) == Tuple(3, -0.5)
 
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
@@ -206,10 +202,10 @@ def test_divmod():
     assert [divmod(i, -oo) for i in range(-2, 3)] == ans
     assert [divmod(i, -OO) for i in range(-2, 3)] == ANS
     # sympy's divmod gives an Integer for the quotient rather than a float
-    #assert divmod(S(3.5), S(-2)) == divmod(3.5, -2)
-    #assert divmod(-S(3.5), S(-2)) == divmod(-3.5, -2)
-    #assert divmod(S(0.0), S(9)) == divmod(0.0, 9)
-    #assert divmod(S(0), S(9.0)) == divmod(0, 9.0)
+    dmod = lambda a, b: tuple([j if i else int(j) for i, j in enumerate(divmod(a, b))])
+    for a in (4, 4., 4.25, 0, 0., -4, -4. -4.25):
+        for b in (2, 2., 2.5, -2, -2., -2.5):
+            assert divmod(S(a), S(b)) == dmod(a, b)
 
 
 def test_igcd():
