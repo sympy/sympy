@@ -2126,6 +2126,7 @@ def _aresame(a, b):
     routine will only return True if two expressions identical in terms of
     class types.
 
+    >>> from sympy.core.basic import _aresame
     >>> eye(1) == S(eye(1))  # mutable vs immutable
     True
     >>> _aresame(S(2.0), S(2))
