@@ -7,6 +7,153 @@ np = import_module('numpy')
 scipy = import_module('scipy', import_kwargs={'fromlist': ['optimize']})
 
 
+def test_basics():
+
+    k, c = sm.symbols('k, c')
+    x, v = me.dynamicsymbols('x, v')
+    N = me.ReferenceFrame('N')
+    P1, P2 = me.Point('P1'), me.Point('P2')
+    P2.set_pos(P1, x*N.x)
+
+    # loads
+    force = me.Force(P2, -k*x*N.x - c*v*N.x)
+    print('Force object:')
+    print(force)
+
+    # pathways
+    lpathway = me.LinearPathway(P1, P2)
+    # TODO : Force could have some methods like .magnitude(), as
+    # force.force.magnitude() isn't obvious.
+    print('Linear pathway loads:')
+    print(lpathway.to_loads(force.force.magnitude()))
+
+    P3 = me.Point('P3')
+    P3.set_pos(P1, 1*N.x + 1*N.y)
+    opathway = me.ObstacleSetPathway(P1, P3, P2)
+    print('Ostacle pathway loads:')
+    print(opathway.to_loads(force.force.magnitude()))
+
+    # geometry and WrappingGeometry
+    l = sm.symbols('l')
+    theta = me.dynamicsymbols('theta')
+    P4, P5, P6 = sm.symbols('P4, P5, P6', cls=me.Point)
+    A = me.ReferenceFrame('A')
+    A.orient_axis(N, theta, N.z)
+    P5.set_pos(P4, l*A.x)
+    P6.set_pos(P4, l*N.x)
+    cyl = me.WrappingCylinder(l, P4, N.z)
+    wpathway = me.WrappingPathway(P5, P6, cyl)
+    print('Wrapping pathway loads:')
+    print(wpathway.to_loads(force.force.magnitude()))
+
+    # actuators
+
+    class SpringDamper(me.ActuatorBase):
+
+        # positive x spring is in tension
+        # negative x spring is in compression
+
+        def __init__(self, P1, P2, spring_constant, damping_constant):
+            self.P1 = P1
+            self.P2 = P2
+            self.k = spring_constant
+            self.c = damping_constant
+
+        def to_loads(self):
+
+            x = self.P2.pos_from(self.P1).magnitude()
+            v = x.diff(me.dynamicsymbols._t)
+
+            xhat = self.P2.pos_from(self.P1).normalize()
+
+            force_P1 = me.Force(self.P1, self.k*x*xhat + self.c*v*xhat)
+            force_P2 = me.Force(self.P2, -self.k*x*xhat - self.c*v*xhat)
+
+            return [force_P1, force_P2]
+
+    spring_damper = SpringDamper(P1, P2, k, c)
+    print(spring_damper.to_loads())
+
+    class SpringDamper2(me.ForceActuator):
+
+        # positive x spring is in tension
+        # negative x spring is in compression
+
+        def __init__(self, pathway, spring_constant, damping_constant):
+            self.pathway = pathway
+            self.k = spring_constant
+            self.c = damping_constant
+            self.force = (-self.k*pathway.length -
+                          self.c*pathway.extension_velocity)
+
+    spring_damper2 = SpringDamper2(lpathway, k, c)
+    print(spring_damper2.to_loads())
+
+    # activation
+    # TODO : there are no sympy symbols in this activation, I was expecting to
+    # find a symbol for a and e and then something that indicates that a = e.
+    # Also confused to why rhs() returns Matrix(0, 1, []).
+    actz = bm.ZerothOrderActivation('zeroth')
+    print(actz.rhs())
+
+    tau_a, tau_d, b = sm.symbols('tau_a, tau_d, b')
+    actf = bm.FirstOrderActivationDeGroote2016(
+        'first',
+        activation_time_constant=tau_a,
+        deactivation_time_constant=tau_d,
+        smoothing_rate=b
+    )
+    print(actf.rhs())
+
+    actf = bm.FirstOrderActivationDeGroote2016.with_defaults('first')
+    print(actf.rhs())
+
+    # curve
+    l_T_tilde = sm.symbols('l_T_tilde')
+
+    curve1 = bm.FiberForceLengthActiveDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve1)
+
+    curve2 = bm.FiberForceLengthPassiveDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve2)
+
+    curve3 = bm.FiberForceVelocityDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve3)
+
+    curve4 = bm.TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve4)
+
+    # these two are used internally in the matching two above to give inverse
+    # functions
+    curve5 = bm.TendonForceLengthInverseDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve5)
+
+    curve6 = bm.FiberForceLengthPassiveInverseDeGroote2016.with_defaults(l_T_tilde)
+    #sm.plot(curve6)
+
+    # musculotendon
+    l_T_slack, F_M_max, l_M_opt, v_M_max, alpha_opt, beta = sm.symbols(
+        'l_T_slack, F_M_max, l_M_opt, v_M_max, alpha_opt, beta')
+    mt = bm.MusculotendonDeGroote2016(
+        'm', lpathway, actf,
+        musculotendon_dynamics=0,
+        tendon_slack_length=l_T_slack,
+        peak_isometric_force=F_M_max,
+        optimal_fiber_length=l_M_opt,
+        maximal_fiber_velocity=v_M_max,
+        optimal_pennation_angle=alpha_opt,
+        fiber_damping_coefficient=beta,
+    )
+    print(mt.to_loads())
+
+    mt = bm.MusculotendonDeGroote2016.with_defaults('m', lpathway, actf)
+    print(mt.to_loads())
+    print(me.find_dynamicsymbols(mt.to_loads()[0][1], reference_frame=N))
+    print(mt.to_loads()[0][1].free_symbols(N))
+    print(mt.x)
+    print(mt.r)
+    print(mt.rhs())
+
 def test_simple_muscle():
 
     q, u = me.dynamicsymbols('q, u')
