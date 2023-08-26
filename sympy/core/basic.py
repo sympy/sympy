@@ -2107,6 +2107,46 @@ class Atom(Basic):
         ' to make a check for Atoms in the calling code.')
 
 
+def _aresame(a, b):
+    """Return True if a and b are structurally the same, else False.
+
+    Examples
+    ========
+
+    In SymPy (unlike Python) two numbers do not compare the same if they are
+    not of the same type:
+
+    >>> from sympy import S, eye
+    >>> 2.0 == S(2)
+    False
+    >>> 0.5 == S.Half
+    False
+
+    However, other object might compare the same. This
+    routine will only return True if two expressions identical in terms of
+    class types.
+
+    >>> eye(1) == S(eye(1))  # mutable vs immutable
+    True
+    >>> _aresame(S(2.0), S(2))
+    False
+
+    """
+    from .numbers import Number
+    from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    if isinstance(a, Number) and isinstance(b, Number):
+        return a == b and a.__class__ == b.__class__
+    for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
+        if i != j or type(i) != type(j):
+            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
+                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
+                if i.class_key() != j.class_key():
+                    return False
+            else:
+                return False
+    return True
+
+
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
     concerned: Derivatives, Functions and Symbols. Do not
