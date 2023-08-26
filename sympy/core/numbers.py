@@ -374,6 +374,9 @@ class Number(AtomicExpr):
             if rat < 0 and other % 1:  # correct if negative and not int
                 w -= 1
             r = self - other*w
+            if not r and (isinstance(self, Float) or isinstance(other, Float)):
+                r = Float(r)  # python has signed 0, but not SymPy
+
         else:
             w = 0 if not self or (sign(self) == sign(other)) else -1
             r = other if w else self
