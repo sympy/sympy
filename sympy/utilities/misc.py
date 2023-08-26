@@ -557,8 +557,9 @@ def as_int(n, strict=True):
             raise ValueError('%s is not an integer' % (n,))
     else:
         try:
-            if n % 1:
-                raise TypeError
+            result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        return int(n)
+        if n % 1:  # if number has fractional part, not an int
+            raise ValueError('%s is not an integer' % (n,))
+        return result
