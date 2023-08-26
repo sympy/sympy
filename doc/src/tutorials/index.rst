@@ -23,5 +23,5 @@ Biomechanics Tutorials
 
 .. toctree::
 
-   biomechanics/muscles.rst
    biomechanics/biomechanics.rst
+   biomechanics/biomechanical-model-example.rst
