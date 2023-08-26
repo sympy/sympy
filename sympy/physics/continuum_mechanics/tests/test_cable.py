@@ -1,6 +1,5 @@
 from sympy.physics.continuum_mechanics.cable import Cable
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def test_cable():
@@ -75,7 +74,6 @@ def test_cable():
     c.apply_load(0, ("X", 850))
     c.solve(58.58, 0)
 
-    X = Symbol('X')
     # assert c.tension['distributed'] == 36456.8485*sqrt(0.000543529004799705*(X + 0.00135624381275735)**2 + 1)
     assert abs(c.tension_at(0) - 61709.0363315913) < 10e-11
     assert abs(c.tension_at(40) - 39729.7316969361) < 10e-11

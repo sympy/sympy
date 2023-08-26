@@ -562,10 +562,8 @@ class Cable:
             B = coefficient_solution[0][1]
             C = coefficient_solution[0][2]
 
-            x = Symbol('x')
-            y = Symbol('y')
 
-            y = A*x**2 + B*x + C
+            # y = A*x**2 + B*x + C
             # shifting origin to lowest point
             X = Symbol('X')
             Y = Symbol('Y')
