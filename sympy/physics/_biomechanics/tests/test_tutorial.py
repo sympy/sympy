@@ -357,7 +357,7 @@ def test_arm_lever_tutorial():
     eval_holonomic = sm.lambdify((q, p), holonomic, cse=True)
 
     p_vals = np.array([
-        -0.31,  # dx [m]
+        0.31,  # dx [m]
         0.15,  # dy [m]
         -0.31,  # dz [m]
         0.2,   # lA [m]
@@ -410,17 +410,19 @@ def test_arm_lever_tutorial():
         0.0,  # a_tricep, nondimensional
     ])
 
+    def eval_r(t):
 
-    def eval_rhs(t, x, p):
+        e = np.array([0.0, 0.0])
+
+        return e
+
+    def eval_rhs(t, x, r, p):
 
         q = x[0:4]
         u = x[4:8]
         a = x[8:10]
 
-        if t < 0.5 or t > 1.5:
-            e = np.array([0.0, 0.0])
-        else:
-            e = np.array([0.8, 0.0])
+        e = r(t)
 
         qd = u
         m, f, ad = eval_diffeq(q, u, a, e, p)
@@ -430,7 +432,21 @@ def test_arm_lever_tutorial():
 
     x0 = np.hstack((q_vals, u_vals, a_vals))
 
-    expected_rhs = np.array([0.0, 0.0, 0.0, 0.0, 11.759447,  0.627271,
-                             -0.493589, -8.499078,  0.0,  0.0])
-    np.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, p_vals),
+    expected_rhs = np.array([0.,  0.,  0.,  0., -8.718989, 5.873097, 0.535555,
+                             -5.731758, 0., 0.])
+    np.testing.assert_allclose(expected_rhs, eval_rhs(0.0, x0, eval_r, p_vals),
+                               rtol=1e-6)
+
+    def eval_r(t):
+
+        if t < 0.5 or t > 1.5:
+            e = np.array([0.0, 0.0])
+        else:
+            e = np.array([0.8, 0.0])
+
+        return e
+
+    expected_rhs = np.array([0.,   0.,   0.,   0., -8.718989, 5.873097,
+                             0.535555, -5.731758, 106.666655, 0.])
+    np.testing.assert_allclose(expected_rhs, eval_rhs(1.0, x0, eval_r, p_vals),
                                rtol=1e-6)
