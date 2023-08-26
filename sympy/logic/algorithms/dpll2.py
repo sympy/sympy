@@ -47,7 +47,7 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         return False
 
     if use_lra_theory:
-        lra, immediate_conflicts, _, _ = LRASolver.from_encoded_cnf(expr)
+        lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
     else:
         lra = None
         immediate_conflicts = []
