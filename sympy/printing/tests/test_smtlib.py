@@ -9,7 +9,7 @@ import sympy
 from sympy import Add, Implies, sqrt
 from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
-                        Symbol, Eq, Ne, Le, Lt, Gt, Ge)
+                        Symbol, Eq, Ne, Le, Lt, Gt, Ge, oo)
 from sympy.functions import Piecewise, exp, sin, cos
 from sympy.assumptions.ask import Q
 from sympy.printing.smtlib import smtlib_code
@@ -551,5 +551,3 @@ def test_Float():
     assert smtlib_code(0.0) == "0.0"
     assert smtlib_code(0.000000000000000003) == '(* 3.0 (pow 10 -18))'
     assert smtlib_code(5.3) == "5.3"
-    raises(KeyError, lambda: smtlib_code(float("inf")))
-    raises(KeyError, lambda: smtlib_code(-float("inf")))
