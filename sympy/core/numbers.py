@@ -370,7 +370,9 @@ class Number(AtomicExpr):
         else:
             rat = self/other
         if other.is_finite:
-            w = int(rat) if rat >= 0 else int(rat) - 1
+            w = int(rat)
+            if rat < 0 and other % 1:  # correct if negative and not int
+                w -= 1
             r = self - other*w
         else:
             w = 0 if not self or (sign(self) == sign(other)) else -1
