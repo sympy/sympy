@@ -8,7 +8,7 @@ from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.rings import monomial_extract, \
-    gcd_terms, _gcd_preprocess_polys, gcd_prs, _gcd_prs
+    cont_prim, gcd_terms, _gcd_preprocess_polys, gcd_prs, _gcd_prs
 
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
@@ -1355,6 +1355,19 @@ def test_PolyElement_drop():
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
 
+def test_PolyElement_coeff_split():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+    syms = {2}
+    result = f.coeff_split(syms)
+    assert result ==[2*x**4 + 3*y**4, 10*x + 10]
+
+    g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+    syms = {0, 1}
+    result = g.coeff_split(syms)
+    assert result == [3, 2, 5*z**3, 7]
+
 def test_PolyElement_coeff_wrt():
     R, x, y, z = ring("x, y, z", ZZ)
 
@@ -1464,6 +1477,15 @@ def test_PolyElement_main_variable():
     p = x**2 + y**3 + z - 2*x*z**2
     assert p.main_variable() == 0
 
+def test_cont_prim():
+    R, x= ring("x", ZZ)
+
+    p = 4*x**3 + 8*x**2 + 12*x
+    assert cont_prim(p, x) == (4*x**3 + 8*x**2 + 12*x, 1)
+
+    p = x**2 + 3*x
+    assert cont_prim(p, x) == (x**2 + 3*x, 1)
+
 def test_monomial_extract():
     R, x, y, z = ring("x, y, z", ZZ)
 
@@ -1480,7 +1502,6 @@ def test_monomial_extract():
     h = x*y + y**2
     polynomials = [f, g, h]
     result = monomial_extract(polynomials)
-
     assert result == ([x**2, x**2 + x, x + y], y)
 
 def test_gcd_preprocess_polys():
@@ -1490,14 +1511,12 @@ def test_gcd_preprocess_polys():
     g = x**3*y**2 + x*y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-
-    assert result == ([x**3*y**2 + x*y**2, x**2*y + x*y], {0, 1})
+    assert result == ([x**2*y + x*y, x**3*y**2 + x*y**2], {0, 1})
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-
     assert result == ([x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
 
 def test_gcd_terms():
@@ -1555,7 +1574,7 @@ def test__gcd_prs():
 
     i = 2*x**3 + 4*x**2 + 2*x
     result = _gcd_prs(f, i)
-    assert result == x + 5
+    assert result == 2
 
     f = 4*x**2 + 8*x + 10*y
     g = 2*x**2 + 6*x + 10*y

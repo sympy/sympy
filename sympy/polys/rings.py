@@ -6,7 +6,7 @@ from typing import Any
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
-from itertools import chain
+from itertools import chain, compress
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
@@ -2534,6 +2534,71 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
+    def coeff_split(self, syms):
+        """
+        Split a polynomial ``self`` into terms based on a set of symbolic
+        indices ``syms``.
+
+        Parameters
+        ==========
+
+        syms : set
+                A set of indices representing symbol variables.
+
+        Returns
+        =======
+
+        list
+            A list of polynomials resulting from splitting the input
+            polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y, z = ring("x, y, z", ZZ)
+
+        >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+        >>> syms = {2}
+        >>> coeff_split(f, syms)
+        [2*x**4 + 3*y**4, 10*x + 10]
+
+        See Also
+        ========
+
+        coeff, coeffs, coeff_wrt
+
+        """
+        p1 = self
+        N = len(p1.ring.gens)
+        nsyms = set(range(N)) - syms
+        p2 = {}
+        r = range(N)
+
+        # Iterate through the terms and coefficients of the input polynomial
+        for m1, c1 in p1.items():
+            sym_indices = set(compress(r, m1))
+            m21 = [0] * N
+            m22 = [0] * N
+
+            # Separate variables into symbol and non-symbol categories
+            for i in sym_indices & syms:
+                m21[i] = m1[i]
+            for i in sym_indices & nsyms:
+                m22[i] = m1[i]
+
+            key1 = tuple(m21)
+            key2 = tuple(m22)
+
+            if key1 not in p2:
+                p2[key1] = {}
+
+            # Store the coefficient in the organized structure
+            p2[key1][key2] = c1
+
+        return [p1.ring(pi) for pi in p2.values()]
+
+
     def coeff_wrt(self, x, deg):
         """
         Coefficient of ``self`` with respect to ``x**deg``.
@@ -2573,7 +2638,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs
+        coeff, coeffs, coeff_split
 
         """
         p = self
@@ -2961,6 +3026,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return R
 
+    def free_variable(self):
+        """
+        Examples
+        ========
+
+        >>> from sympy import ZZ, ring
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+        >>> p.free_variable()
+        {0, 1, 2}
+
+        """
+        p = self
+        exponents = list(map(sum, zip(*p)))
+        return {n for n, e in enumerate(exponents) if e}
+
     def main_variable(self):
         """
         Find the smallest index of the free symbolic variable in a given
@@ -2981,8 +3062,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         p = self
-        exponents = list(map(sum, zip(*p)))
-        free_sym = [n for n, e in enumerate(exponents) if e]
+        free_sym = p.free_variable()
         return min(free_sym)
 
     # TODO: following methods should point to polynomial
@@ -3033,6 +3113,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
+def cont_prim(p, x):
+    """Returns the content and primitive part of a polynomial with respect to a
+    specified variable."""
+
+    coeffs = p.coeff_split({x})
+    content = gcd_prs(coeffs)
+    primitive = p.exquo(content)
+    return content, primitive
 
 def monomial_extract(polynomials):
     """
@@ -3107,7 +3195,7 @@ def _gcd_preprocess_polys(polynomials):
         polynomials = sorted(set(all_polys), key=len)
 
         # Find the intersection of symbols for each poly:
-        common = polynomials[0].main_variable()
+        common = polynomials[0].free_variable()
         allsame = True
         for pi in polynomials[1:]:
 
@@ -3118,12 +3206,10 @@ def _gcd_preprocess_polys(polynomials):
                 gcd = gcd_terms(polynomials, R, K)
                 return [gcd], None
 
-            for pi in polynomials:
-                main_sym = pi.main_variable()
-
-                if allsame and main_sym != common:
-                    allsame = False
-                common &= main_sym
+            syms = pi.free_variable()
+            if allsame and syms != common:
+                allsame = False
+            common &= syms
 
         # The loop is complete if they all have the same symbols.
         if allsame:
@@ -3132,11 +3218,11 @@ def _gcd_preprocess_polys(polynomials):
         # Extract coefficients as polys containing only the common symbols.
         all_polys = []
         for i, pi in enumerate(polynomials):
-            coeffs_i = pi.coeff_wrt(pi.main_variable - common)
+            coeffs_i = pi.coeff_split(pi.free_variable() - common)
             all_polys.extend(coeffs_i)
 
             # Quick exit:
-            if len(coeffs_i) == 1:
+            if ((len(c)) == 1 for c in coeffs_i):
                 R = polynomials[0].ring
                 K = R.domain
                 gcd = gcd_terms((all_polys + polynomials[i+1:]), R, K)
@@ -3164,13 +3250,15 @@ def gcd_prs(polynomials):
     if any(len(pi) == 1 for pi in polynomials):
         return gcd_terms(polynomials, ring, domain)
 
-    p, monom_gcd = monomial_extract(polynomials)
+    polynomials, monom_gcd = monomial_extract(polynomials)
 
-    p, common_symbols = _gcd_preprocess_polys(polynomials)
+    polynomials, common_symbols = _gcd_preprocess_polys(polynomials)
 
-    gcd = p[0]
-    for pi in p[1:]:
+    gcd = polynomials[0]
+    for pi in polynomials[1:]:
         gcd = _gcd_prs(gcd, pi)
+        if gcd == domain.one:
+            break
 
     if monom_gcd is not None:
         gcd = gcd * monom_gcd
@@ -3197,24 +3285,21 @@ def _gcd_prs(p1, p2):
     """
     x = p1.main_variable()
 
-    c1, pp1 = p1.primitive()
-    c2, pp2 = p2.primitive()
-    from sympy.polys.domains import ZZ
-    R, _ = ring('_', ZZ)
-    c1, c2 = R(c1), R(c2)
+    c1, pp1 = cont_prim(p1, x)
+    c2, pp2 = cont_prim(p2, x)
 
     h = pp1.subresultants(pp2, x)[-1]
     c = gcd_prs([c1, c2])
-
-
     domain = p1.ring.to_domain()
 
     coeff = h.coeff_wrt(x, h.degree(x))
 
     norm_coeff = domain.canonical_unit(coeff)
+
     h = norm_coeff * h
 
-    _, h = h.primitive()
+    _, h = cont_prim(h, x)
+
     h = h * c
 
     return h
