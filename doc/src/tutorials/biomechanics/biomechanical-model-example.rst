@@ -1,4 +1,4 @@
-.. _biomechanics-tutorial:
+.. _biomechanical-model-example:
 
 ===========================
 Biomechanical Model Example
