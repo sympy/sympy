@@ -1164,6 +1164,25 @@ def test_col_row_op():
     assert M[0, 0] == x + 1
 
 
+def test_row_mult():
+    M = Matrix([[1,2,3],
+               [4,5,6]])
+    M.row_mult(1,3)
+    assert M[1,0] == 12
+    assert M[0,0] == 1
+    assert M[1,2] == 18
+
+
+def test_row_add():
+    M = Matrix([[1,2,3],
+               [4,5,6],
+               [1,1,1]])
+    M.row_add(2,0,5)
+    assert M[0,0] == 6
+    assert M[1,0] == 4
+    assert M[0,2] == 8
+
+
 def test_zip_row_op():
     for cls in classes[:2]: # XXX: immutable matrices don't support row ops
         M = cls.eye(3)
