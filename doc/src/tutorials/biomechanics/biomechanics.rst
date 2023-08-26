@@ -740,7 +740,7 @@ We need some reasonable numerical values for all the constants:
    >>> import numpy as np
 
    >>> p_vals = np.array([
-   ...     -0.31,  # dx [m]
+   ...     0.31,  # dx [m]
    ...     0.15,  # dy [m]
    ...     -0.31,  # dz [m]
    ...     0.2,   # lA [m]
@@ -868,17 +868,23 @@ contraction and the triceps in extension with excitation values between -1 and
    :context: close-figs
    :nofigs:
 
-   >>> def eval_rhs(t, x, p):
+   >>> def eval_r(t):
+   ...     e = np.array([0.0, 0.0])
+   ...     return e
+   ...
+   >>> def eval_rhs(t, x, r, p):
    ...     """Returns the time derivative of the state.
    ...
    ...     Parameters
    ...     ==========
    ...     t : float
-   ...        Time in seconds.
+   ...         Time in seconds.
    ...     x : array_like, shape(10,)
-   ...       State vector.
+   ...         State vector.
+   ...     r : function
+   ...         Function f(t) that evaluates e.
    ...     p : array_like, shape(?, )
-   ...       Parameter vector.
+   ...         Parameter vector.
    ...
    ...     Returns
    ...     =======
@@ -891,7 +897,7 @@ contraction and the triceps in extension with excitation values between -1 and
    ...     u = x[4:8]
    ...     a = x[8:10]
    ...
-   ...     e = np.array([0.0, 0.0])
+   ...     e = r(t)
    ...
    ...     qd = u
    ...     m, f, ad = eval_diffeq(q, u, a, e, p)
@@ -915,7 +921,8 @@ The system can now be simulated over 3 seconds provided the initial state
    >>> t0, tf = 0.0, 3.0
    >>> ts = np.linspace(t0, tf, num=301)
    >>> x0 = np.hstack((q_vals, u_vals, a_vals))
-   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
+   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, eval_r, p_vals),
+   ...                 (t0, tf), x0, t_eval=ts)
 
 TODO : Use the matplotlib sphinx directive to plot this (if possible).
 
@@ -942,18 +949,15 @@ The motion can be visualized by plotting the state trajectories over time.
    ...         SymPy symbols associated with state.
    ...
    ...     """
-   ...     num_rows = 8
-   ...     num_cols = (x.shape[1] // num_rows)
-   ...     if x.shape[1] % num_rows > 0:
-   ...         num_cols += 1
    ...
-   ...     fig, axes = plt.subplots(num_rows, num_cols, sharex=True)
+   ...     fig, axes = plt.subplots(5, 2, sharex=True)
    ...
    ...     for ax, traj, sym in zip(axes.T.flatten(), x.T, syms):
+   ...         if not sym.name.startswith('a'):
+   ...             traj = np.rad2deg(traj)
    ...         ax.plot(t, traj)
    ...         ax.set_ylabel(sm.latex(sym, mode='inline'))
    ...
-   ...     # label the x axis only on the bottom row.
    ...     for ax in axes[-1, :]:
    ...         ax.set_xlabel('Time [s]')
    ...
@@ -966,6 +970,8 @@ The motion can be visualized by plotting the state trajectories over time.
    :format: doctest
    :include-source: True
    :context: close-figs
+   :caption: Simulation of the arm with an initial lever angle of 5 degrees
+             settling to its equilibrium position with no muscle activation.
 
    >>> plot_traj(ts, sol.y.T, x)
    [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
@@ -988,39 +994,12 @@ TODO : Tune the simulation parameters and describe the motion.
    :context: close-figs
    :nofigs:
 
-   >>> def eval_rhs(t, x, p):
-   ...     """Returns the time derivative of the state.
-   ...
-   ...     Parameters
-   ...     ==========
-   ...     t : float
-   ...        Time in seconds.
-   ...     x : array_like, shape(10,)
-   ...       State vector.
-   ...     p : array_like, shape(?, )
-   ...       Parameter vector.
-   ...
-   ...     Returns
-   ...     =======
-   ...     dxdt : ndarray, shape(10,)
-   ...       Time derivative of the state.
-   ...
-   ...     """
-   ...
-   ...     q = x[0:4]
-   ...     u = x[4:8]
-   ...     a = x[8:10]
-   ...
+   >>> def eval_r(t):
    ...     if t < 0.5 or t > 1.5:
-   ...        e = np.array([0.0, 0.0])
+   ...         e = np.array([0.0, 0.0])
    ...     else:
-   ...        e = np.array([0.8, 0.0])
-   ...
-   ...     qd = u
-   ...     m, f, ad = eval_diffeq(q, u, a, e, p)
-   ...     ud = np.linalg.solve(m, f).squeeze()
-   ...
-   ...     return np.hstack((qd, ud, ad.squeeze()))
+   ...         e = np.array([0.8, 0.0])
+   ...     return e
    ...
 
 .. plot::
@@ -1029,15 +1008,14 @@ TODO : Tune the simulation parameters and describe the motion.
    :context: close-figs
    :nofigs:
 
-   >>> t0, tf = 0.0, 3.0
-   >>> ts = np.linspace(t0, tf, num=301)
-   >>> x0 = np.hstack((q_vals, u_vals, a_vals))
-   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, p_vals), (t0, tf), x0, t_eval=ts)
+   >>> sol = solve_ivp(lambda t, x: eval_rhs(t, x, eval_r, p_vals), (t0, tf), x0, t_eval=ts)
 
 .. plot::
    :format: doctest
    :include-source: True
    :context: close-figs
+   :caption: Simulation of the arm with an initial lever angle of 5 degrees
+             under the influence of the biceps contracting for 1 second.
 
    >>> plot_traj(ts, sol.y.T, x)
    [[<Axes: ylabel='$q_{1}{\\left(t \\right)}$'>
