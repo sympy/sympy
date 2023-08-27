@@ -641,3 +641,6 @@ def line_width(line):
     separate symbols and thus should not be counted
     """
     return len(line.translate(_remove_combining))
+
+def _opportunistic_subscripter(e):
+    return all(character in sub for character in str(e.args[0]))
