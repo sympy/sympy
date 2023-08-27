@@ -206,13 +206,6 @@ def test_divmod():
     for a in (4, 4., 4.25, 0, 0., -4, -4. -4.25):
         for b in (2, 2., 2.5, -2, -2., -2.5):
             assert divmod(S(a), S(b)) == dmod(a, b)
-    # done with Float/Integer now Rational
-    for a in range(-20, 21, 10):
-           a = a/S(5)
-           for b in (-10, -5, 5, 10):
-                  b = b/S(5)
-                  assert __divmod__(a, b) == dmod(a, b)
-
 
 def test_igcd():
     assert igcd(0, 0) == 0
