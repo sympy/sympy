@@ -1,3 +1,4 @@
+from pprint import pprint
 import sympy as sm
 from sympy.external import import_module
 import sympy.physics.mechanics as me
@@ -12,39 +13,45 @@ def test_basics():
     k, c = sm.symbols('k, c')
     x, v = me.dynamicsymbols('x, v')
     N = me.ReferenceFrame('N')
-    P1, P2 = me.Point('P1'), me.Point('P2')
-    P2.set_pos(P1, x*N.x)
+    O, P = me.Point('O'), me.Point('P')
+    P.set_pos(O, x*N.x)
+    P.set_vel(N, v*N.x)
 
     # loads
-    force = me.Force(P2, -k*x*N.x - c*v*N.x)
-    print('Force object:')
-    print(force)
+    force_on_P = me.Force(P, -k*P.pos_from(O) - c*P.vel(N))
+    force_on_O = me.Force(O, k*P.pos_from(O) + c*P.vel(N))
+    print('Force objects:')
+    print(force_on_P)
+    print(force_on_O)
 
     # pathways
-    lpathway = me.LinearPathway(P1, P2)
+    lpathway = me.LinearPathway(O, P)
     # TODO : Force could have some methods like .magnitude(), as
     # force.force.magnitude() isn't obvious.
     print('Linear pathway loads:')
-    print(lpathway.to_loads(force.force.magnitude()))
+    pprint(lpathway.to_loads(-k*x - c*v))
+    lpathway.length
+    lpathway.extension_velocity
 
-    P3 = me.Point('P3')
-    P3.set_pos(P1, 1*N.x + 1*N.y)
-    opathway = me.ObstacleSetPathway(P1, P3, P2)
+    Q, R = me.Point('Q'), me.Point('R')
+    Q.set_pos(O, 1*N.y)
+    R.set_pos(O, 1*N.x + 1*N.y)
+    opathway = me.ObstacleSetPathway(O, Q, R, P)
     print('Ostacle pathway loads:')
-    print(opathway.to_loads(force.force.magnitude()))
+    pprint(opathway.to_loads(-k*opathway.length))
 
     # geometry and WrappingGeometry
-    l = sm.symbols('l')
+    r = sm.symbols('r')
     theta = me.dynamicsymbols('theta')
-    P4, P5, P6 = sm.symbols('P4, P5, P6', cls=me.Point)
+    O, P, Q = sm.symbols('O, P, Q', cls=me.Point)
     A = me.ReferenceFrame('A')
     A.orient_axis(N, theta, N.z)
-    P5.set_pos(P4, l*A.x)
-    P6.set_pos(P4, l*N.x)
-    cyl = me.WrappingCylinder(l, P4, N.z)
-    wpathway = me.WrappingPathway(P5, P6, cyl)
+    P.set_pos(O, r*N.x)
+    Q.set_pos(O, N.z + r*A.x)
+    cyl = me.WrappingCylinder(r, O, N.z)
+    wpathway = me.WrappingPathway(P, Q, cyl)
     print('Wrapping pathway loads:')
-    print(wpathway.to_loads(force.force.magnitude()))
+    pprint(wpathway.to_loads(-k*wpathway.length))
 
     # actuators
 
@@ -71,7 +78,7 @@ def test_basics():
 
             return [force_P1, force_P2]
 
-    spring_damper = SpringDamper(P1, P2, k, c)
+    spring_damper = SpringDamper(O, P, k, c)
     print(spring_damper.to_loads())
 
     class SpringDamper2(me.ForceActuator):
@@ -154,6 +161,7 @@ def test_basics():
     print(mt.r)
     print(mt.rhs())
 
+
 def test_simple_muscle():
 
     q, u = me.dynamicsymbols('q, u')
@@ -171,11 +179,11 @@ def test_simple_muscle():
     gravity = me.Force(P, m*g*N.x)
 
     muscle_pathway = me.LinearPathway(O, P)
-    muscle_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('muscle')
+    muscle_act = bm.FirstOrderActivationDeGroote2016.with_defaults('muscle')
     muscle = bm.MusculotendonDeGroote2016(
         'muscle',
         muscle_pathway,
-        activation_dynamics=muscle_activation,
+        activation_dynamics=muscle_act,
         tendon_slack_length=l_T_slack,
         peak_isometric_force=F_M_max,
         optimal_fiber_length=l_M_opt,
