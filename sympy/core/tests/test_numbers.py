@@ -134,7 +134,7 @@ def test_divmod():
 
     assert divmod(S("2"), S("3/2")) == Tuple(S("1"), S("1/2"))
     assert divmod(S("3/2"), S("2")) == Tuple(S("0"), S("3/2"))
-    assert divmod(S("2"), S("3.5")) == Tuple(S("0"), S("2"))
+    assert divmod(S("2"), S("3.5")) == Tuple(S("0"), S("2."))
     assert divmod(S("3.5"), S("2")) == Tuple(S("1"), S("1.5"))
     assert divmod(S("2"), S("1/3")) == Tuple(S("6"), S("0"))
     assert divmod(S("1/3"), S("2")) == Tuple(S("0"), S("1/3"))
@@ -146,7 +146,7 @@ def test_divmod():
     assert divmod(S("2"), 1.5) == Tuple(S("1"), S("0.5"))
     assert divmod(1.5, S("2")) == Tuple(S("0"), S("1.5"))
     assert divmod(0.3, S("2")) == Tuple(S("0"), S("0.3"))
-    assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S("3/2"))
+    assert divmod(S("3/2"), S("3.5")) == Tuple(S("0"), S(3/2))
     assert divmod(S("3.5"), S("3/2")) == Tuple(S("2"), S("0.5"))
     assert divmod(S("3/2"), S("1/3")) == Tuple(S("4"), S("1/6"))
     assert divmod(S("1/3"), S("3/2")) == Tuple(S("0"), S("1/3"))
