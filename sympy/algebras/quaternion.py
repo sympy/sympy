@@ -884,7 +884,7 @@ class Quaternion(Expr):
             q = self
             # trigsimp is used to simplify sin(x)^2 + cos(x)^2 (these terms
             # arise when from_axis_angle is used).
-            self._norm = sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
+            return sqrt(trigsimp(q.a**2 + q.b**2 + q.c**2 + q.d**2))
 
         return self._norm
 
