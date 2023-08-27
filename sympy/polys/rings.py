@@ -2192,7 +2192,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else: # TODO: don't use dense representation (port PRS algorithms)
-            return _gcd_prs(f, g)
+            return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
         h = _gcd_prs(f, g)
