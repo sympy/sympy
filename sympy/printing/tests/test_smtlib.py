@@ -9,7 +9,7 @@ import sympy
 from sympy import Add, Implies, sqrt
 from sympy.core import Mul, Pow
 from sympy.core import (S, pi, symbols, Function, Rational, Integer,
-                        Symbol, Eq, Ne, Le, Lt, Gt, Ge, oo)
+                        Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, exp, sin, cos
 from sympy.assumptions.ask import Q
 from sympy.printing.smtlib import smtlib_code

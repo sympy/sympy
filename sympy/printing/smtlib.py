@@ -3,7 +3,6 @@ import typing
 import sympy
 from sympy.core import Add, Mul
 from sympy.core import Symbol, Expr, Float, Rational, Integer, Basic
-from sympy.core.numbers import Infinity, NegativeInfinity
 from sympy.core.function import UndefinedFunction, Function
 from sympy.core.relational import Relational, Unequality, Equality, LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
 from sympy.functions.elementary.complexes import Abs
