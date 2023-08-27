@@ -642,5 +642,5 @@ def line_width(line):
     """
     return len(line.translate(_remove_combining))
 
-def _opportunistic_subscripter(e):
-    return all(character in sub for character in str(e.args[0]))
+def _opportunistic_subscripter(subscript):
+    return all(character in sub for character in subscript)

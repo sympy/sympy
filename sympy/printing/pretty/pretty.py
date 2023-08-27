@@ -1664,7 +1664,7 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_polylog(self, e):
-        if _opportunistic_subscripter(e) and self._use_unicode:
+        if _opportunistic_subscripter(self._print(e.args[0])) and self._use_unicode:
             return self._print_Function(Function('Li_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)
 
@@ -1811,7 +1811,7 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        if _opportunistic_subscripter(e) and self._use_unicode:
+        if _opportunistic_subscripter(self._print(e.args[0])) and self._use_unicode:
             return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)
 
