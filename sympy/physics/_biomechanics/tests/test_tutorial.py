@@ -54,34 +54,40 @@ def test_basics():
     pprint(wpathway.to_loads(-k*wpathway.length))
 
     # actuators
+    N = me.ReferenceFrame('N')
+    O, P = me.Point('O'), me.Point('P')
+    P.set_pos(O, x*N.x)
+    P.set_vel(N, v*N.x)
 
     class SpringDamper(me.ActuatorBase):
 
         # positive x spring is in tension
         # negative x spring is in compression
 
-        def __init__(self, P1, P2, spring_constant, damping_constant):
+        def __init__(self, P1, P2, spring_constant, damper_constant):
             self.P1 = P1
             self.P2 = P2
             self.k = spring_constant
-            self.c = damping_constant
+            self.c = damper_constant
 
         def to_loads(self):
 
             x = self.P2.pos_from(self.P1).magnitude()
             v = x.diff(me.dynamicsymbols._t)
 
-            xhat = self.P2.pos_from(self.P1).normalize()
+            dir_vec = self.P2.pos_from(self.P1).normalize()
 
-            force_P1 = me.Force(self.P1, self.k*x*xhat + self.c*v*xhat)
-            force_P2 = me.Force(self.P2, -self.k*x*xhat - self.c*v*xhat)
+            force_P1 = me.Force(self.P1,
+                                self.k*x*dir_vec + self.c*v*dir_vec)
+            force_P2 = me.Force(self.P2,
+                                -self.k*x*dir_vec - self.c*v*dir_vec)
 
             return [force_P1, force_P2]
 
     spring_damper = SpringDamper(O, P, k, c)
     print(spring_damper.to_loads())
 
-    class SpringDamper2(me.ForceActuator):
+    class SpringDamper(me.ForceActuator):
 
         # positive x spring is in tension
         # negative x spring is in compression
@@ -93,8 +99,11 @@ def test_basics():
             self.force = (-self.k*pathway.length -
                           self.c*pathway.extension_velocity)
 
-    spring_damper2 = SpringDamper2(lpathway, k, c)
+    spring_damper2 = SpringDamper(lpathway, k, c)
     print(spring_damper2.to_loads())
+
+    spring_damper3 = SpringDamper(wpathway, k, c)
+    print(spring_damper3.to_loads())
 
     # activation
     # TODO : there are no sympy symbols in this activation, I was expecting to
