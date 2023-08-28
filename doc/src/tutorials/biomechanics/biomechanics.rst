@@ -36,8 +36,8 @@ described by generalized coordinate :math:`x(t)` and generalized speed
 
 .. math::
 
-   \dot{x} = v \\
-   m \dot{v} = \sum F = -kx - cv
+   \dot{x} & = v \\
+   m \dot{v} & = \sum F = -kx - cv
 
 In SymPy, we can formulate the force acting on the particle :math:`P` that has
 motion in reference frame :math:`N` and position relative to point :math:`O`
@@ -208,6 +208,91 @@ given that pathway is in mechanics and not biomechanicis.
 
 Actuators
 =========
+
+Models of multibody systems have time varying inputs in the form of the
+magnitude of a force or torques. In many cases, the specified inputs may be
+derived from the state of the system or even from the output of another dynamic
+system. The :obj:`sympy.physics.mechanics.actuator` package includes classes to
+help manage the creation of such model force and torque inputs. An acutator is
+designed to represent a real physical component.
+
+For example, the spring-damper force from above can be created by subclassing
+:obj:`sympy.physics.mechanics.ActuatorBase` and developing a method that
+generates the loads associated with that spring-damper acuator.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context:
+   :nofigs:
+
+
+   >>> N = me.ReferenceFrame('N')
+   >>> O, P = me.Point('O'), me.Point('P')
+   >>> P.set_pos(O, x*N.x)
+   >>> P.set_vel(N, v*N.x)
+   >>> class SpringDamper(me.ActuatorBase):
+   ...     # positive x spring is in tension
+   ...     # negative x spring is in compression
+   ...     def __init__(self, P1, P2, spring_constant, damper_constant):
+   ...         self.P1 = P1
+   ...         self.P2 = P2
+   ...         self.k = spring_constant
+   ...         self.c = damper_constant
+   ...     def to_loads(self):
+   ...         x = self.P2.pos_from(self.P1).magnitude()
+   ...         v = x.diff(me.dynamicsymbols._t)
+   ...         dir_vec = self.P2.pos_from(self.P1).normalize()
+   ...         force_P1 = me.Force(self.P1,
+   ...                             self.k*x*dir_vec + self.c*v*dir_vec)
+   ...         force_P2 = me.Force(self.P2,
+   ...                             -self.k*x*dir_vec - self.c*v*dir_vec)
+   ...         return [force_P1, force_P2]
+   ...
+   >>> spring_damper = SpringDamper(O, P, k, c)
+   >>> pprint.pprint(spring_damper.to_loads())
+   [Force(point=O, force=(c*Derivative(x(t), t) + k*x(t))*N.x),
+    Force(point=P, force=(-c*Derivative(x(t), t) - k*x(t))*N.x)]
+
+There is also a :obj:`sympy.physics.mechanics.actuator.ForceActuator` that
+allows seemless integration with pathway objects.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context:
+   :nofigs:
+
+   >>> class SpringDamper(me.ForceActuator):
+   ...     # positive x spring is in tension
+   ...     # negative x spring is in compression
+   ...     def __init__(self, pathway, spring_constant, damping_constant):
+   ...         self.pathway = pathway
+   ...         self.k = spring_constant
+   ...         self.c = damping_constant
+   ...         self.force = (-self.k*pathway.length -
+   ...                       self.c*pathway.extension_velocity)
+   ...
+   >>> spring_damper2 = SpringDamper(lpathway, k, c)
+   >>> pprint.pprint(spring_damper2.to_loads())
+   [Force(point=O, force=(c*sqrt(x(t)**2)*Derivative(x(t), t)/x(t) + k*sqrt(x(t)**2))*x(t)/sqrt(x(t)**2)*N.x),
+    Force(point=P, force=(-c*sqrt(x(t)**2)*Derivative(x(t), t)/x(t) - k*sqrt(x(t)**2))*x(t)/sqrt(x(t)**2)*N.x)]
+
+This then makes it easy to apply a spring-damper force to other pathways:
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context:
+   :nofigs:
+
+   >>> spring_damper3 = SpringDamper(wpathway, k, c)
+   >>> pprint.pprint(spring_damper3.to_loads())
+   [Force(point=P, force=r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y + (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z),
+    Force(point=Q, force=- (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z - r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y),
+    Force(point=O, force=- r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y + r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y)]
+
+TODO : need to explain why we get these sqrt(x)**2/x type terms.
 
 Activation Dynamics
 ===================
