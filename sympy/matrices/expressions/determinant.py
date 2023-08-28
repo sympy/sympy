@@ -49,7 +49,7 @@ class Determinant(Expr):
         if result is not None:
             return result
 
-        return Determinant(arg)
+        return self
 
 
 def det(matexpr):
