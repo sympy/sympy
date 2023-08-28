@@ -13,8 +13,9 @@ or functions are outlined in the documentation for those specific functions.
 (best-practices-defining-symbols)=
 ### Defining Symbols
 
-- **The best way to define symbols is using the {func}`~.symbols` function.**
-  The `symbols()` function supports creating one or more symbols at once:
+- **Define symbols with {func}`~.symbols` or {class}`~.Symbol()`.** The
+  `symbols()` function is the most convenient way to create symbols. It
+  supports creating one or more symbols at once:
 
   ```py
   >>> from sympy import symbols
@@ -42,20 +43,50 @@ or functions are outlined in the documentation for those specific functions.
   (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
   ```
 
-  There also exist some alternatives to {func}`~.symbols`. Two alternatives
-  are using the {class}`~.Symbol` constructor directly and {mod}`sympy.abc`.
-  These are both fine, but they are less general than {func}`~.symbols`, so
-  just using `symbols()` is generally preferred. {class}`~.Symbol` only
-  supports creating one symbol at a time. If you want to be sure you are only
-  creating one Symbol, this is better. {mod}`sympy.abc` allows importing
-  common single letter symbol names but doesn't support more general symbol
-  names and doesn't allow including assumptions.
+  The `Symbol()` constructor may also be used directly. Unlike `symbols()`,
+  `Symbol()` always creates one symbol. It is the best option if you want to
+  make a symbol with unusual characters in its name or if you are creating
+  symbols programmatically.
+
+  ```py
+  >>> from sympy import Symbol
+  >>> x_y = Symbol('x y') # This creates a single symbol named 'x y'
+  ```
 
   The {func}`~.var` function should be avoided, except when working
   interactively. It works like the {func}`~.symbols` function, except it
-  automatically injects symbol names into the calling namespace. This is
-  designed only for typing convenience interactively, and shouldn't be used in
-  programmatic environments.
+  automatically injects symbol names into the calling namespace. This function
+  is designed solely for interactive typing convenience and is not recommended
+  for programmatic use.
+
+  Do not use `sympify()` or `S()` to create symbols. This may appear to work:
+
+  ```py
+  >>> from sympy import S
+  >>> x = S("x") # DO NOT DO THIS
+  ```
+
+  However, `S()`/`sympify()` are not designed to create symbols. They are
+  designed to parse entire expressions. This method fails if the input string
+  is not valid Python. It also fails if the string parses to a larger
+  expression:
+
+  ```py
+  >>> # These both fail
+  >>> x = S("0x") # doctest: +SKIP
+  Traceback (most recent call last):
+  ...
+  SyntaxError: invalid syntax (<string>, line 1)
+  >>> x = S("x+") # doctest: +SKIP
+  Traceback (most recent call last):
+  ...
+  SyntaxError: invalid syntax (<string>, line 1)
+  ```
+
+  Any Python string can be used as a valid Symbol name.
+
+  Furthermore, all the same issues described in the
+  [](best-practices-avoid-string-inputs) section below apply here.
 
 - **Add assumptions to symbols when they are known.**
   [Assumptions](assumptions-guide) can be added by passing the relevant
@@ -93,7 +124,7 @@ or functions are outlined in the documentation for those specific functions.
   defined with different assumptions, but these symbols will be considered
   unequal to each other:
 
-  ```
+  ```py
   >>> z1 = symbols('z')
   >>> z2 = symbols('z', positive=True)
   >>> z1 == z2
