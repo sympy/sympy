@@ -3,6 +3,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
 class Determinant(Expr):
@@ -45,11 +46,9 @@ class Determinant(Expr):
         if hints.get('deep', True):
             arg = arg.doit(**hints)
 
-        _eval_determinant = getattr(arg, '_eval_determinant', None)
-        if _eval_determinant is not None:
-            result = _eval_determinant()
-            if result is not None:
-                return result
+        result = arg._eval_determinant()
+        if result is not None:
+            return result
 
         return Determinant(arg)
 
