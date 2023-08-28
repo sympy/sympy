@@ -3,7 +3,6 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.expressions.matexpr import MatrixExpr
 
 
 class Determinant(Expr):
