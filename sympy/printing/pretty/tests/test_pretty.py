@@ -7507,8 +7507,7 @@ def test_print_polylog():
     assert upretty(polylog(2, 3)) == uresult
 
 
-# Issue #25312
-def test_print_expint_polylog_symbolic_order():
+def test_issue_25312():
     s, z = symbols("s, z")
     uresult = 'Liₛ(z)'
     aresult = 'polylog(s, z)'
