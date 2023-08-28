@@ -7,7 +7,8 @@ from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
-from sympy.core.numbers import oo, igcd, Rational
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import oo, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S

@@ -2407,3 +2407,9 @@ def test_relational():
     assert ask(Q.ne(x, 0), Q.zero(x)) is False
     assert ask(Q.ne(x, 0), Q.nonzero(x)) is True
     assert ask(Q.eq(x, 1), ~Q.ne(x, 1)) is True
+
+
+def test_issue_25221():
+    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
+    assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
+    assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
