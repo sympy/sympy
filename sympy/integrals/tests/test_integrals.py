@@ -2103,10 +2103,7 @@ def test_issue_20781():
     fun_sum = lambda x, a1, a2: Piecewise((0, x<a1),(1, x>=a1)) + Piecewise((0, x<a2),(1, x>=a2))
 
     assert integrate(fun_sum((x_d), 0, 0.0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
-    assert integrate(fun_sum((x_d), 0, 0.0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
     assert integrate(fun_sum((x_d), 0.0, 0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
-    assert integrate(fun_sum((x_d), 0.0, 0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
-    assert integrate(fun_sum((x_d), 1.0, 1), (x_d, -float('Inf'), x)) == 2*x - 2*Min(1, x)
     assert integrate(fun_sum((x_d), 1.0, 1), (x_d, -float('Inf'), x)) == 2*x - 2*Min(1, x)
 
 @slow
