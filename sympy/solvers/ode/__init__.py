@@ -1,5 +1,5 @@
 from .ode import (allhints, checkinfsol, classify_ode,
-        constantsimp, dsolve, homogeneous_order)
+        constantsimp, dsolve, homogeneous_order, dsubs)
 
 from .lie_group import infinitesimals
 
@@ -12,5 +12,5 @@ from .systems import (canonical_odes, linear_ode_to_matrix,
 __all__ = [
     'allhints', 'checkinfsol', 'checkodesol', 'classify_ode', 'constantsimp',
     'dsolve', 'homogeneous_order', 'infinitesimals', 'canonical_odes', 'linear_ode_to_matrix',
-    'linodesolve'
+    'linodesolve', 'dsubs'
 ]

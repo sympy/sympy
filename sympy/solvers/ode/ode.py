@@ -707,6 +707,212 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = rv1
     return rv
 
+def dsubs(eq, trans, newvars=None):
+    r"""
+    Function that substitutes for variables in an Ordinary Differential Equation.
+
+    The inputs are -
+
+    ``trans``: A dictionary specifying the variable transformations
+    with the old variable as key and the transformation as value.
+
+    ``newvars``: A list of new variables in the transformation rules
+    that should be considered variables rather than constants. For example,
+    a transformation `x = a t` where `a` is a constant and `t` is the new
+    independent variable can be specified as -
+
+    ``trans = {x: a*t}, newvars = [t]``
+
+    For convenience, the newvars argument can be omitted although for robust
+    usage in code. it should always be provided. If the newvars argument is
+    not provided then dsubs will treat all symbols in the replacement expression
+    as variables but will raise an exception of the number of new variables is
+    not equal to the number of variables being replaced.
+
+    Returns
+    =======
+
+    The transformed differential equation
+
+    Examples
+    ========
+
+    A basic transformation can be achieved by -
+
+    >>> from sympy import symbols, dsubs, Function, cos
+    >>> f, g, h = symbols('f g h', cls=Function)
+    >>> x, a, t = symbols('x a t')
+    >>> eq = f(x).diff(x) + f(x)
+    >>> dsubs(eq, {x: t**2})
+    f(t**2) + Derivative(f(t**2), t)/(2*t)
+
+    Functions in the equation can be transformed too
+
+    >>> eq = f(x).diff(x, 2) + cos(x)
+    >>> dsubs(eq, {x: t**2, f(x): g(t)})
+    cos(t**2) + (Derivative(g(t), (t, 2))/(2*t)
+    - Derivative(g(t), t)/(2*t**2))/(2*t)
+    >>> dsubs(eq, {x: t, f(x): g(t)**2})
+    2*g(t)*Derivative(g(t), (t, 2)) + cos(t)
+    + 2*Derivative(g(t), t)**2
+
+    To apply a transformation with number of new symbols greater
+    than number of old symbols, a list of all new variables must be
+    given. For example, a transformation `x = a t` where `t` is the
+    new variable and `a` is a symbolic constant, would be done as -
+
+    >>> dsubs(eq, {x: a*t, f(x): g(t)}, [t])
+    cos(a*t) + Derivative(g(t), (t, 2))/a**2
+    >>> dsubs(eq, {x: t, f(x): h(a)*g(t)**2}, [t, g(t)])
+    2*g(t)*h(a)*Derivative(g(t), (t, 2))
+    + 2*h(a)*Derivative(g(t), t)**2 + cos(t)
+
+    Let us see how ``dsubs`` works for some typical cases using an example
+    of homogeneous ODEs which can be solved using the substitution
+    `v = \frac{y}{x}`.
+
+    >>> from sympy import symbols, Function, dsolve
+    >>> x, t = symbols('x t')
+    >>> y, v = symbols('y v', cls=Function)
+    >>> eq = y(x).diff(x) - (x**2 + y(x)**2)/(x*y(x))
+
+    Transform the homogeneous equation to a linear equation
+
+    >>> homeq = dsubs(eq, {x:t, y(x): t*v(t)}, [t, v(t)]).simplify()
+    >>> homeq
+    t*Derivative(v(t), t) - 1/v(t)
+
+    Find the solutions for the transformed equation
+
+    >>> solt1, solt2 = dsolve(homeq)
+    >>> solt1
+    Eq(v(t), -sqrt(C1 + 2*log(t)))
+
+    Re-substitute `v = \frac{y}{x}` to get the solutions to the
+    original equation
+
+    >>> sol = dsubs(solt1, {v(t): y(x)/x, t: x})
+    >>> sol
+    Eq(y(x)/x, -sqrt(C1 + 2*log(x)))
+
+    Let us look at another example - The 2nd order Cauchy Euler equation.
+
+    >>> x, a, b, t = symbols('x a b t')
+    >>> y, phi = symbols('y phi', cls=Function)
+    >>> eq = x**2*y(x).diff(x, 2) + a*x*y(x).diff(x) + b*y(x)
+
+    Transform the equation using the substitutions `x = e^t`
+    and `y(x) = \phi(t)`
+
+    >>> from sympy import exp, log, logcombine
+    >>> eqtrans = dsubs(eq, {x: exp(t), y(x): phi(t)}, [t, phi(t)]).simplify()
+    >>> eqtrans
+    a*Derivative(phi(t), t) + b*phi(t) - Derivative(phi(t), t) + Derivative(phi(t), (t, 2))
+
+    The equation is now transformed to a constant-coefficient equation.
+
+    >>> solt = dsolve(eqtrans)
+    >>> solt
+    Eq(phi(t), C1*exp(t*(-a - sqrt(a**2 - 2*a - 4*b + 1) + 1)/2) + C2*exp(t*(-a + sqrt(a**2 - 2*a - 4*b + 1) + 1)/2))
+
+    Re-substitute for `\phi(t)` and `t` to get the solution for
+    the original equation.
+
+    >>> sol = logcombine(dsubs(solt, {phi(t): y(x), t: log(x)}), force=True)
+    >>> sol
+    Eq(y(x), C1*x**(-a/2 - sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2) + C2*x**(-a/2 + sqrt(a**2 - 2*a - 4*b + 1)/2 + 1/2))
+    """
+    # Substitutes the transformation in the innermost
+    # derivative in case of nested derivatives. Facilitates
+    # chain rule to be applied.
+    def diffx(e, sym, n):
+        if n > 1:
+            return diffx(diffx(e, sym, n-1), sym, 1)
+        return Derivative(e, mapdict[sym]) / Derivative(trans[sym], mapdict[sym])
+
+    # Store all functions present in the equation
+    mapdict = {}
+    lhs_vars = set(trans.keys())
+    rhs_vars = set()
+
+    for var in trans:
+        # Create mapping between new and old variables
+        if not isinstance(var, (Symbol, Function)):
+            raise ValueError(f"Expected Symbol or Function, recieved {var.__class__.__name__}")
+        syms = trans[var].atoms(Symbol)
+        funcs = trans[var].atoms(AppliedUndef)
+        rhs_vars |= (syms | funcs)
+        if isinstance(var, Symbol):
+            atoms = syms
+        else:
+            atoms = funcs
+        if not len(atoms):
+            raise ValueError("Invalid rule. Expected atleast one Symbol or Function for substitution")
+
+        multi = False
+        to_map = None
+        # If list of new variables is not passed
+        if newvars is None:
+            # If more than 1 new symbol/function appears in the transformation
+            # then the mapping is ambiguous. Raise an error.
+            if len(atoms) > 1:
+                raise ValueError("Missing a list of the new variables")
+            # Store the new variable to be mapped
+            else:
+                to_map = atoms.pop()
+        # List of new variables is passed
+        else:
+            for atom in atoms:
+                if atom in newvars:
+                    # Multiple variables from the list of new variables
+                    # are present in the RHS of the transformation
+                    # Again, matching is ambiguous. Raise an error.
+                    if multi:
+                        raise ValueError(f"Rules contain more than one {var.__class__.__name__}.")
+                    # Encountered single new variable so far in RHS
+                    # Store the new variable to be mapped
+                    else:
+                        multi = True
+                        to_map = atom
+        # Map the old variable to the new variable
+        mapdict[var] = to_map
+
+    if len(lhs_vars & rhs_vars):
+        raise ValueError("Old variable(s) appearing on RHS of transformation rules")
+
+    # Store all integrals in the equation
+    integrals = eq.atoms(Integral)
+    for i in integrals:
+        inew = i
+        # For each integral in the equation, transform it
+        # by replacing old variables with new variables
+        for tr in trans:
+            inew = inew.transform(tr, trans[tr])
+        # Replace the old integral with the transformed integral
+        eq = eq.subs(i, inew)
+
+    # Replace the derivatives and apply the chain rule so that
+    # the derivatives are now with respect to the new variables.
+    eq = eq.replace(Derivative, lambda e, vs: diffx(e, vs[0], vs[1]))
+
+    # Replace the old functions with new functions
+    eq = eq.xreplace(trans)
+
+    # Store all the derivative terms
+    derivatives = list(eq.atoms(Derivative))
+    # Sort them according to their length so that in case of nested derivatives
+    # the longest ones come first
+    derivatives.sort(key=lambda x: len(str(x)), reverse=True)
+    for d in derivatives:
+        # Expand each derivative term
+        done = d.doit()
+        # If it becomes a Subs term, don't expand
+        # Else expand it and substitute it in the equation
+        if not len(done.atoms(Subs)):
+            eq = eq.subs(d, done)
+
+    return eq
+
 def solve_ics(sols, funcs, constants, ics):
     """
     Solve for the constants given initial conditions
