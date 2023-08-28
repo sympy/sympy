@@ -11,10 +11,11 @@ from sympy.core.intfunc import trailing
 from .factor_ import factorint, multiplicity, perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
+from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
 
 from collections import defaultdict
-from itertools import cycle, product
+from itertools import product
 
 
 def n_order(a, n):
@@ -528,39 +529,6 @@ def sqrt_mod(a, p, all_roots=False):
     return x
 
 
-def _product(*iters):
-    """
-    Cartesian product generator
-
-    Notes
-    =====
-
-    Unlike itertools.product, it works also with iterables which do not fit
-    in memory. See https://bugs.python.org/issue10109
-
-    Author: Fernando Sumudu
-    with small changes
-    """
-    inf_iters = tuple(cycle(enumerate(it)) for it in iters)
-    num_iters = len(inf_iters)
-    cur_val = [None]*num_iters
-
-    first_v = True
-    while True:
-        i, p = 0, num_iters
-        while p and not i:
-            p -= 1
-            i, cur_val[p] = next(inf_iters[p])
-
-        if not p and not i:
-            if first_v:
-                first_v = False
-            else:
-                break
-
-        yield cur_val
-
-
 def sqrt_mod_iter(a, p, domain=int):
     """
     Iterate over solutions to ``x**2 = a mod p``.
@@ -578,45 +546,37 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> from sympy.ntheory.residue_ntheory import sqrt_mod_iter
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
+
+    See Also
+    ========
+
+    sqrt_mod : Same functionality, but you want a sorted list or only one solution.
+
     """
     a, p = as_int(a), abs(as_int(p))
-    if isprime(p):
-        a = a % p
-        if a == 0:
-            res = _sqrt_mod1(a, p, 1)
+    v = []
+    pv = []
+    _product = product
+    for px, ex in factorint(p).items():
+        if a % px:
+            # `len(rx)` is at most 4
+            rx = _sqrt_mod_prime_power(a, px, ex)
         else:
-            res = _sqrt_mod_prime_power(a, p, 1)
-        if res:
-            if domain is ZZ:
-                for x in res:
-                    yield ZZ(x)
-            else:
-                for x in res:
-                    yield domain(x)
+            # `len(list(rx))` can be assumed to be large.
+            # The `itertools.product` is disadvantageous in terms of memory usage.
+            # It is also inferior to iproduct in speed if not all Cartesian products are needed.
+            rx = _sqrt_mod1(a, px, ex)
+            _product = iproduct
+        if not rx:
+            return
+        v.append(rx)
+        pv.append(px**ex)
+    if len(v) == 1:
+        yield from map(domain, v[0])
     else:
-        f = factorint(p)
-        v = []
-        pv = []
-        for px, ex in f.items():
-            if a % px == 0:
-                rx = _sqrt_mod1(a, px, ex)
-                if not rx:
-                    return
-            else:
-                rx = _sqrt_mod_prime_power(a, px, ex)
-                if not rx:
-                    return
-            v.append(rx)
-            pv.append(px**ex)
         mm, e, s = gf_crt1(pv, ZZ)
-        if domain is ZZ:
-            for vx in _product(*v):
-                r = gf_crt2(vx, pv, mm, e, s, ZZ)
-                yield r
-        else:
-            for vx in _product(*v):
-                r = gf_crt2(vx, pv, mm, e, s, ZZ)
-                yield domain(r)
+        for vx in _product(*v):
+            yield domain(gf_crt2(vx, pv, mm, e, s, ZZ))
 
 
 def _sqrt_mod_prime_power(a, p, k):
