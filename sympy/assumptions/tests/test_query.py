@@ -2402,7 +2402,8 @@ def test_Predicate_handler_is_unique():
 
 
 def test_relational():
-    assert ask(Q.eq(x, 0), Q.zero(x))
-    assert not ask(Q.eq(x, 0), Q.nonzero(x))
-    assert not ask(Q.ne(x, 0), Q.zero(x))
-    assert ask(Q.ne(x, 0), Q.nonzero(x))
+    assert ask(Q.eq(x, 0), Q.zero(x)) is True
+    assert ask(Q.eq(x, 0), Q.nonzero(x)) is False
+    assert ask(Q.ne(x, 0), Q.zero(x)) is False
+    assert ask(Q.ne(x, 0), Q.nonzero(x)) is True
+    assert ask(Q.eq(x, 1), ~Q.ne(x, 1)) is True

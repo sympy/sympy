@@ -181,6 +181,10 @@ def to_NNF(expr, composite_map=None):
         pred = binrelpreds[type(expr)]
         expr = pred(*expr.args)
 
+    if isinstance(expr, AppliedPredicate) and expr.function == Q.ne:
+        args = expr.arguments
+        expr = Not(Q.eq(*args))
+
     if isinstance(expr, Not):
         arg = expr.args[0]
         tmp = to_NNF(arg, composite_map)  # Strategy: negate the NNF of expr
