@@ -120,11 +120,22 @@ class Boundry:
 
     @staticmethod
     def from_upper(var):
-        return Boundry(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
+        neg = -1 if var.upper_from_neg else 1
+        b = Boundry(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
+        if neg < 0:
+            b = b.get_negated()
+        return b, neg
 
     @staticmethod
     def from_lower(var):
-        return Boundry(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
+        neg = -1 if var.lower_from_neg else 1
+        b = Boundry(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
+        if neg < 0:
+            b = b.get_negated()
+        return b, neg
+
+    def get_negated(self):
+        return Boundry(self.var, self.bound, not self.upper, self.equality, not self.strict)
 
     def get_inequality(self):
         if self.equality:
@@ -193,8 +204,10 @@ class VariableLRA():
     def __init__(self, var):
         self.upper = ExtendedRational(float("inf"), 0)
         self.upper_from_eq = False
+        self.upper_from_neg = False
         self.lower = ExtendedRational(-float("inf"), 0)
         self.lower_from_eq = False
+        self.lower_from_neg = False
         self.assign = ExtendedRational(0,0)
         self.var = var
         self.col_idx = None
@@ -528,29 +541,30 @@ class LRASolver():
             AppliedBinaryRelation. Which relation a given int
             encodes can be found in `self.enc_to_boundry`.
         """
-        if enc_boundry not in self.enc_to_boundry:
-            return None
+        if abs(enc_boundry) not in self.enc_to_boundry:
+            raise ValueError("Tried to assert a literal with no encoding")
 
-        boundry = self.enc_to_boundry[enc_boundry]
-        sym, c = boundry.var, boundry.bound
+        boundry = self.enc_to_boundry[abs(enc_boundry)]
+        sym, c, negated = boundry.var, boundry.bound, enc_boundry < 0
 
-        if boundry.strict:
-            delta = -1 if boundry.upper else 1
+        upper = boundry.upper != negated
+        if boundry.strict != negated:
+            delta = -1 if upper else 1
             c = ExtendedRational(c, delta)
         else:
             c = ExtendedRational(c, 0)
 
         if boundry.equality:
-            res1 = self._assert_lower(sym, c,from_equality=True)
+            res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
             if res1 and res1[0] == False:
                 res = res1
             else:
-                res2 = self._assert_upper(sym, c,from_equality=True)
+                res2 = self._assert_upper(sym, c, from_equality=True, from_neg=negated)
                 res =  res2
-        elif boundry.upper:
-            res = self._assert_upper(sym, c)
+        elif upper:
+            res = self._assert_upper(sym, c, from_neg=negated)
         else:
-            res = self._assert_lower(sym, c)
+            res = self._assert_lower(sym, c, from_neg=negated)
 
         if self.is_sat and sym not in self.slack_set:
             self.is_sat = res is None
@@ -559,7 +573,7 @@ class LRASolver():
 
         return res
 
-    def _assert_upper(self, xi, ci, from_equality=False):
+    def _assert_upper(self, xi, ci, from_equality=False, from_neg=False):
         if self.result:
             assert self.result[0] != False
         self.result = None
@@ -569,14 +583,19 @@ class LRASolver():
             assert (xi.lower[1] >= 0) is True
             assert (ci[1] <= 0) is True
 
-            lit1 = Boundry.from_lower(xi)
-            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+            lit1, neg1 = Boundry.from_lower(xi)
 
-            conflict = [-self.boundry_to_enc[lit1], -self.boundry_to_enc[lit2]]
+            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+            if from_neg:
+                lit2 = lit2.get_negated()
+            neg2 = -1 if from_neg else 1
+
+            conflict = [-neg1*self.boundry_to_enc[lit1], -neg2*self.boundry_to_enc[lit2]]
             self.result = False, conflict
             return self.result
         xi.upper = ci
         xi.upper_from_eq = from_equality
+        xi.upper_from_neg = from_neg
         if xi in self.nonslack and xi.assign > ci:
             self._update(xi, ci)
 
@@ -588,7 +607,7 @@ class LRASolver():
 
         return None
 
-    def _assert_lower(self, xi, ci, from_equality=False):
+    def _assert_lower(self, xi, ci, from_equality=False, from_neg=False):
         if self.result:
             assert self.result[0] != False
         self.result = None
@@ -598,14 +617,19 @@ class LRASolver():
             assert (xi.upper[1] <= 0) is True
             assert (ci[1] >= 0) is True
 
-            lit1 = Boundry.from_upper(xi)
-            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
+            lit1, neg1 = Boundry.from_upper(xi)
 
-            conflict = [-self.boundry_to_enc[lit1],-self.boundry_to_enc[lit2]]
+            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
+            if from_neg:
+                lit2 = lit2.get_negated()
+            neg2 = -1 if from_neg else 1
+
+            conflict = [-neg1*self.boundry_to_enc[lit1],-neg2*self.boundry_to_enc[lit2]]
             self.result = False, conflict
             return self.result
         xi.lower = ci
         xi.lower_from_eq = from_equality
+        xi.lower_from_neg = from_neg
         if xi in self.nonslack and xi.assign < ci:
             self._update(xi, ci)
 
@@ -746,7 +770,7 @@ class LRASolver():
                     conflict += [Boundry.from_upper(nb) for nb in N_plus]
                     conflict += [Boundry.from_lower(nb) for nb in N_minus]
                     conflict.append(Boundry.from_lower(xi))
-                    conflict = [-self.boundry_to_enc[c] for c in conflict]
+                    conflict = [-neg*self.boundry_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -766,7 +790,7 @@ class LRASolver():
                     conflict += [Boundry.from_lower(nb) for nb in N_plus]
                     conflict.append(Boundry.from_upper(xi))
 
-                    conflict = [-self.boundry_to_enc[c] for c in conflict]
+                    conflict = [-neg*self.boundry_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
