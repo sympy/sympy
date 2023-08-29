@@ -2,6 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
+from sympy.core.relational import Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -14,6 +15,7 @@ from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.tests.test_lra_theory import make_random_problem
+from sympy.core.random import randint
 import time
 
 from sympy.testing.pytest import raises, skip
@@ -349,17 +351,26 @@ def test_z3():
 
 
 def test_z3_vs_lra_dpll2():
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+
     def boolean_formula_to_encoded_cnf(bf):
         cnf = CNF.from_prop(bf)
         enc = EncodedCNF()
         enc.from_cnf(cnf)
         return enc
 
-    def make_random_cnf(num_clauses=10):
-        constraints = make_random_problem(num_variables=2, num_constraints=20, rational=False)
-        c_size = len(constraints) // num_clauses
-        assert len(constraints) % num_clauses == 0
-        clauses = [constraints[i*c_size:i*c_size+c_size] for i in range(num_clauses)]
+    def make_random_cnf(num_clauses=5, num_constraints=10, num_var=2):
+        assert num_clauses <= num_constraints
+        constraints = make_random_problem(num_variables=num_var, num_constraints=num_constraints, rational=False)
+        clauses = [[cons] for cons in constraints[:num_clauses]]
+        for cons in constraints[num_clauses:]:
+            if isinstance(cons, Unequality):
+                cons = ~cons
+            i = randint(0, num_clauses-1)
+            clauses[i].append(cons)
+
         clauses = [Or(*clause) for clause in clauses]
         cnf = And(*clauses)
         return boolean_formula_to_encoded_cnf(cnf)
@@ -368,21 +379,26 @@ def test_z3_vs_lra_dpll2():
 
     lra_dpll2_time = 0
     z3_time = 0
-
     sat_count = 0
-    for _ in range(10):
-        cnf = make_random_cnf()
+    for _ in range(50):
+        cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
+
+        try:
+            start = time.time()
+            z3_sat = z3_satisfiable(cnf)
+            stop = time.time()
+            z3_time += stop - start
+        except z3.z3types.Z3Exception:
+            continue
 
         start = time.time()
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
         stop = time.time()
         lra_dpll2_time += stop - start
 
-        start = time.time()
-        z3_sat = z3_satisfiable(cnf)
-        stop = time.time()
-        z3_time += stop - start
-
         assert z3_sat == lra_dpll2_sat
         if z3_sat:
             sat_count += 1
+
+    # print("lra_dpll2_time", lra_dpll2_time)
+    # print("z3_time", z3_time)
