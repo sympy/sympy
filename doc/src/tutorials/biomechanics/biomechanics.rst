@@ -507,8 +507,6 @@ A pathway has attachment points:
    >>> muscle_pathway.attachments
    (O, P)
 
-TODO : note the sign conventions
-
 and knows the length between the end attachment points as well as the relative
 speed between the two attachment points:
 
@@ -522,8 +520,6 @@ speed between the two attachment points:
    Abs(q(t))
    >>> muscle_pathway.extension_velocity
    sign(q(t))*Derivative(q(t), t)
-
-The sign convention is that a positive speed
 
 Finally, the pathway can determine the forces acting on the two attachment
 points give a force magnitude:
@@ -543,8 +539,6 @@ activation. In our case, we will use a first order ordinary differential
 equation that gives a smooth, but delayed activation :math:`a(t)` from the
 excitation :math:`e(t)`.
 
-TODO : We could plot dadt as a function of a for different e from 0 to 1.
-
 .. plot::
    :format: doctest
    :include-source: True
@@ -554,8 +548,8 @@ TODO : We could plot dadt as a function of a for different e from 0 to 1.
    >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
    >>> muscle_activation = FirstOrderActivationDeGroote2016.with_defaults('muscle')
 
-The activation model has a state variable, input variable, and some constant
-parameters:
+The activation model has a state variable :math:`\mathbf{x}`, input variable
+:math:`\mathbf{r}`, and some constant parameters :math:`\mathbf{p}`:
 
 .. plot::
    :format: doctest
@@ -573,7 +567,8 @@ parameters:
    [ 0.06],
    [   10]])
 
-These are associated with its first order differential equation:
+These are associated with its first order differential equation :math:`\dot{a}
+= f(a, e, t)`:
 
 .. plot::
    :format: doctest
@@ -663,10 +658,10 @@ the muscle specific forces applied to the pathway:
     Force(point=P, force=- F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 3/5, 4))*q(t)/Abs(q(t))*N.x)]
 
 These loads are made up of various functions that describe the length and
-velocity relationships to the fiber force.
+velocity relationships to the muscle fiber force.
 
 Now that we have the forces that the muscles and tendons produce the equations
-of motion of the system can be formed with, for example, Kanes Method:
+of motion of the system can be formed with, for example, Kane's Method:
 
 .. plot::
    :format: doctest
@@ -708,7 +703,8 @@ symbolically:
    >>> inputs = [e]
    >>> constants = [m, g, F_M_max, l_M_opt, l_T_slack, v_M_max, alpha_opt, beta]
 
-Then the numerical function is:
+Then the numerical function to evaluate the right hand side of the explicit
+ordinary differential equations is:
 
 .. plot::
    :format: doctest
@@ -765,11 +761,11 @@ we choose :math:`q_0=l_M_opt + l_T_slack`:
    >>> x_vals = np.array([
    ...     p_vals[3] + p_vals[4],  # q [m]
    ...     0.0,  # u [m/s]
-   ...     0.0,  # a [?]
+   ...     0.0,  # a [unitless]
    ... ])
    ...
 
-We can set the excitation to zero to test the numerical functions:
+We can set the excitation to 1.0 to test the numerical functions:
 
 .. plot::
    :format: doctest
