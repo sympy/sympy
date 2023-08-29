@@ -6,8 +6,8 @@ Introduction to Biomechanical Modeling
 
 :obj:`~sympy.physics._biomechanics` provides features to enhance models created
 with :obj:`~sympy.physics.mechanics` with force producing elements that model
-muscles and other biomechanical components. In this tutorial, we will introduce
-the features of this package.
+muscles and tendons. In this tutorial, we will introduce the features of this
+package.
 
 The initial primary purpose of the biomechanics package is to introduce tools
 for modeling the forces produced by `Hill-type muscle models`_. These models
@@ -15,7 +15,7 @@ generate forces applied to the skeletal structure of an organism based on the
 contraction state of the muscle coupled with the passive stretch of tendons. In
 this tutorial, we introduce the elements that make up a musculotendon model and
 then demonstrate it in operation with a specific implementation, the
-:obj:`~sympy.physics._biomechanics.MusculotendonDeGroote2016`.
+:obj:`~sympy.physics._biomechanics.MusculotendonDeGroote2016` model.
 
 .. _Hill-type muscle models: https://en.wikipedia.org/wiki/Hill%27s_muscle_model
 
@@ -24,20 +24,18 @@ Loads
 
 :obj:`~sympy.physics.mechanics.loads` includes two types of loads:
 :obj:`~sympy.physics.mechanics.loads.Force` and
-:obj:`~sympy.physics.mechanics.loads.Torque`. Forces represented by bound vector
+:obj:`~sympy.physics.mechanics.loads.Torque`. Forces represent bound vector
 quantities that act directed along a line of action and torques are unbound
 vectors which represent the resulting torque of a couple from a set of forces.
 
 An example of very common force model is a linear spring and linear damper in
 parallel. The force acting on a particle of mass :math:`m` with 1D motion
-described by generalized coordinate :math:`x(t)` and generalized speed
-:math:`v(t)`  with linear spring and damper coefficients :math:`k` and
-:math:`c` has the familiar equations of motion:
+described by generalized coordinate :math:`x(t)`  with linear spring and damper
+coefficients :math:`k` and :math:`c` has the familiar equation of motion:
 
 .. math::
 
-   \dot{x} & = v \\
-   m \dot{v} & = \sum F = -kx - cv
+   m \ddot{x} = \sum F = -kx - c\dot{x}
 
 In SymPy, we can formulate the force acting on the particle :math:`P` that has
 motion in reference frame :math:`N` and position relative to point :math:`O`
@@ -49,22 +47,21 @@ fixed in :math:`N` like so:
    :context: reset
    :nofigs:
 
-   >>> import pprint
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
 
-   >>> k, c = sm.symbols('k, c')
-   >>> x, v = me.dynamicsymbols('x, v')
+   >>> k, c = sm.symbols('k, c', real=True, nonnegative=True)
+   >>> x = me.dynamicsymbols('x', real=True)
 
    >>> N = me.ReferenceFrame('N')
    >>> O, P = me.Point('O'), me.Point('P')
 
    >>> P.set_pos(O, x*N.x)
-   >>> P.set_vel(N, v*N.x)
+   >>> P.set_vel(N, x.diff()*N.x)
 
    >>> force_on_P = me.Force(P, -k*P.pos_from(O) - c*P.vel(N))
    >>> force_on_P
-   (P, (-c*v(t) - k*x(t))*N.x)
+   (P, (-c*Derivative(x(t), t) - k*x(t))*N.x)
 
 and there would be an equal and opposite force acting on :math:`O`:
 
@@ -76,26 +73,32 @@ and there would be an equal and opposite force acting on :math:`O`:
 
    >>> force_on_O = me.Force(O, k*P.pos_from(O) + c*P.vel(N))
    >>> force_on_O
-   (O, (c*v(t) + k*x(t))*N.x)
+   (O, (c*Derivative(x(t), t) + k*x(t))*N.x)
 
-Our final goal with muscle modeling is to generate the forces and torques a
-single musculotendon model applies to a set of rigid bodies, for example those
-rigid bodies that model a skeletal system.
+Forces that a single muscle and tendon applies to a set of rigid bodies will
+be the primary output of the musculotendon models developed further in this
+tutorial.
 
 Pathways
 ========
 
 Muscles and their associated tendons wrap around the moving skeletal system and
-other muscles and organs. This imposes the challenge of determining the line of
-action of the forces the muscle produces on the skeleton and organs it touches.
-We have introduced the :obj:`~sympy.physics.mechanics.pathway` package to help
-manage the specification of the geometric relationships to the forces' lines of
-action.
+other muscles and organs. This imposes the challenge of determining the lines
+of action of the forces that the muscle and tendon produce on the skeleton and
+organs it touches. We have introduced the
+:obj:`~sympy.physics.mechanics.pathway` module to help manage the specification
+of the geometric relationships to the forces' lines of action.
 
-Our spring-damper example above has the simplest line of action definition and
-we can use a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` to capture
-establish that. First provide the two points which the force will have equal
-and opposite application to:
+The spring-damper example above has the simplest line of action definition so
+we can use a :obj:`~sympy.physics.mechanics.pathway.LinearPathway` to establish
+that line of action. First provide the two endpoints where the force will have
+equal and opposite application to and the distance between the points and the
+relative speed between the two points are calculated by the pathway with
+:obj:`~sympy.physics.mechanics.pathway.LinearPathway.length` and
+:obj:`~sympy.physics.mechanics.pathway.LinearPathway.extension_velocity`. Note
+that a positive speed implies the points are moving away from each other. Also
+note that the formulation handles the case where :math:`x` is positive or
+negative.
 
 .. plot::
    :format: doctest
@@ -107,12 +110,9 @@ and opposite application to:
    >>> lpathway
    LinearPathway(O, P)
    >>> lpathway.length
-   sqrt(x(t)**2)
+   Abs(x(t))
    >>> lpathway.extension_velocity
-   sqrt(x(t)**2)*Derivative(x(t), t)/x(t)
-
-TODO : since we just to length' for velocity there is no way to utilize the
-generalized speeds we already set.
+   sign(x(t))*Derivative(x(t), t)
 
 The :obj:`~sympy.physics.mechanics.pathway.LinearPathway.to_loads` method then
 takes the magnitude of a force with a sign convention that positive magnitudes
@@ -125,9 +125,10 @@ acting on the two points.
    :context:
    :nofigs:
 
-   >>> pprint.pprint(lpathway.to_loads(-k*x - k*v))
-   [Force(point=O, force=(k*v(t) + k*x(t))*x(t)/sqrt(x(t)**2)*N.x),
-    Force(point=P, force=(-k*v(t) - k*x(t))*x(t)/sqrt(x(t)**2)*N.x)]
+   >>> import pprint
+   >>> pprint.pprint(lpathway.to_loads(-k*x - k*x.diff()))
+   [Force(point=O, force=(k*x(t) + k*Derivative(x(t), t))*x(t)/Abs(x(t))*N.x),
+    Force(point=P, force=(-k*x(t) - k*Derivative(x(t), t))*x(t)/Abs(x(t))*N.x)]
 
 Pathways can be constructed with any arbitrary geometry and any number of
 interconnected particles and rigid bodies. An example, a more complicated
@@ -161,11 +162,25 @@ simplicity we show the effect of only the spring force.
     Force(point=R, force=k*(sqrt((x(t) - 1)**2 + 1) + 2)*(x(t) - 1)/sqrt((x(t) - 1)**2 + 1)*N.x - k*(sqrt((x(t) - 1)**2 + 1) + 2)/sqrt((x(t) - 1)**2 + 1)*N.y),
     Force(point=P, force=- k*(sqrt((x(t) - 1)**2 + 1) + 2)*(x(t) - 1)/sqrt((x(t) - 1)**2 + 1)*N.x + k*(sqrt((x(t) - 1)**2 + 1) + 2)/sqrt((x(t) - 1)**2 + 1)*N.y)]
 
-TODO : if you subs(x:1) then it is clear that the forces are acting in the
-right directions. But Force.subs() doesn't exist. to_loads could take a subs=
-kwarg.
+If you set :math:`x=1`, it is a bit easier to see that the collection of forces
+are correct:
 
-You can create your own pathways by subclassing
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context:
+   :nofigs:
+
+   >>> for load in opathway.to_loads(-k*opathway.length):
+   ...     pprint.pprint(me.Force(load[0], load[1].subs({x: 1})))
+   Force(point=O, force=3*k*N.y)
+   Force(point=Q, force=- 3*k*N.y)
+   Force(point=Q, force=3*k*N.x)
+   Force(point=R, force=- 3*k*N.x)
+   Force(point=R, force=- 3*k*N.y)
+   Force(point=P, force=3*k*N.y)
+
+You can create your own pathways by sub-classing
 :obj:`~sympy.physics.mechanics.pathway.PathwayBase`.
 
 Wrapping Geometries
@@ -175,13 +190,12 @@ It is common for muscles to wrap over bones, tissue, or organs. We have
 introduced wrapping geometries and associated wrapping pathways to help manage
 their complexities. For example, if two pathway endpoints lie on the surface of
 a cylinder the forces act along lines that are tangent to the geodesic
-connecting the two points at the endpoints.
-
-:obj:`~sympy.physics.mechanics.wrapping_geometries.WrappingCylinder`
-:obj:`~sympy.physics.mechanics.pathway.WrappingPathway`
-
-TODO : "endpoints" seems like a better name than "attachements" for pathways
-given that pathway is in mechanics and not biomechanicis.
+connecting the two points at the endpoints. The
+:obj:`~sympy.physics.mechanics.wrapping_geometry.WrappingCylinder` object
+calculates the complex geometry for the pathway. A
+:obj:`~sympy.physics.mechanics.pathway.WrappingPathway` then uses the geometry
+to construct the forces. A spring force along this pathway is constructed
+below:
 
 .. plot::
    :format: doctest
@@ -189,8 +203,8 @@ given that pathway is in mechanics and not biomechanicis.
    :context:
    :nofigs:
 
-   >>> r = sm.symbols('r')
-   >>> theta = me.dynamicsymbols('theta')
+   >>> r = sm.symbols('r', real=True, nonegative=True)
+   >>> theta = me.dynamicsymbols('theta', real=True)
    >>> O, P, Q = sm.symbols('O, P, Q', cls=me.Point)
    >>> A = me.ReferenceFrame('A')
 
@@ -202,23 +216,22 @@ given that pathway is in mechanics and not biomechanicis.
    >>> cyl = me.WrappingCylinder(r, O, N.z)
    >>> wpathway = me.WrappingPathway(P, Q, cyl)
    >>> pprint.pprint(wpathway.to_loads(-k*wpathway.length))
-   [Force(point=P, force=- k*r*sqrt(r**2*theta(t)**2)*sqrt(r**2*theta(t)**2 + 1)/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y - k*sqrt(r**2*theta(t)**2 + 1)/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z),
-    Force(point=Q, force=k*sqrt(r**2*theta(t)**2 + 1)/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z + k*r*sqrt(r**2*theta(t)**2)*sqrt(r**2*theta(t)**2 + 1)/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y),
-    Force(point=O, force=k*r*sqrt(r**2*theta(t)**2)*sqrt(r**2*theta(t)**2 + 1)/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y - k*r*sqrt(r**2*theta(t)**2)*sqrt(r**2*theta(t)**2 + 1)/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y)]
+   [Force(point=P, force=- k*r*Abs(theta(t))*N.y - k*N.z),
+    Force(point=Q, force=k*N.z + k*r*Abs(theta(t))*A.y),
+    Force(point=O, force=k*r*Abs(theta(t))*N.y - k*r*Abs(theta(t))*A.y)]
 
 Actuators
 =========
 
-Models of multibody systems have time varying inputs in the form of the
-magnitude of a force or torques. In many cases, the specified inputs may be
-derived from the state of the system or even from the output of another dynamic
-system. The :obj:`sympy.physics.mechanics.actuator` package includes classes to
-help manage the creation of such model force and torque inputs. An acutator is
-designed to represent a real physical component.
-
-For example, the spring-damper force from above can be created by subclassing
+Models of multibody systems commonly have time varying inputs in the form of
+the magnitudes of forces or torques. In many cases, these specified inputs may
+be derived from the state of the system or even from the output of another
+dynamic system. The :obj:`sympy.physics.mechanics.actuator` module includes
+classes to help manage the creation of such models of force and torque inputs.
+An actuator is intended to represent a real physical component. For example,
+the spring-damper force from above can be created by sub-classing
 :obj:`sympy.physics.mechanics.ActuatorBase` and developing a method that
-generates the loads associated with that spring-damper acuator.
+generates the loads associated with that spring-damper actuator.
 
 .. plot::
    :format: doctest
@@ -226,11 +239,10 @@ generates the loads associated with that spring-damper acuator.
    :context:
    :nofigs:
 
-
    >>> N = me.ReferenceFrame('N')
    >>> O, P = me.Point('O'), me.Point('P')
    >>> P.set_pos(O, x*N.x)
-   >>> P.set_vel(N, v*N.x)
+
    >>> class SpringDamper(me.ActuatorBase):
    ...     # positive x spring is in tension
    ...     # negative x spring is in compression
@@ -249,13 +261,15 @@ generates the loads associated with that spring-damper acuator.
    ...                             -self.k*x*dir_vec - self.c*v*dir_vec)
    ...         return [force_P1, force_P2]
    ...
+
    >>> spring_damper = SpringDamper(O, P, k, c)
    >>> pprint.pprint(spring_damper.to_loads())
-   [Force(point=O, force=(c*Derivative(x(t), t) + k*x(t))*N.x),
-    Force(point=P, force=(-c*Derivative(x(t), t) - k*x(t))*N.x)]
+   [Force(point=O, force=(c*x(t)*sign(x(t))*Derivative(x(t), t)/Abs(x(t)) + k*x(t))*N.x),
+    Force(point=P, force=(-c*x(t)*sign(x(t))*Derivative(x(t), t)/Abs(x(t)) - k*x(t))*N.x)]
 
 There is also a :obj:`sympy.physics.mechanics.actuator.ForceActuator` that
-allows seemless integration with pathway objects.
+allows seamless integration with pathway objects. You only need to set the
+``.force`` attribute in initialization in the sub-class.
 
 .. plot::
    :format: doctest
@@ -266,19 +280,17 @@ allows seemless integration with pathway objects.
    >>> class SpringDamper(me.ForceActuator):
    ...     # positive x spring is in tension
    ...     # negative x spring is in compression
-   ...     def __init__(self, pathway, spring_constant, damping_constant):
+   ...     def __init__(self, pathway, spring_constant, damper_constant):
    ...         self.pathway = pathway
-   ...         self.k = spring_constant
-   ...         self.c = damping_constant
-   ...         self.force = (-self.k*pathway.length -
-   ...                       self.c*pathway.extension_velocity)
+   ...         self.force = (-spring_constant*pathway.length -
+   ...                       damper_constant*pathway.extension_velocity)
    ...
    >>> spring_damper2 = SpringDamper(lpathway, k, c)
    >>> pprint.pprint(spring_damper2.to_loads())
-   [Force(point=O, force=(c*sqrt(x(t)**2)*Derivative(x(t), t)/x(t) + k*sqrt(x(t)**2))*x(t)/sqrt(x(t)**2)*N.x),
-    Force(point=P, force=(-c*sqrt(x(t)**2)*Derivative(x(t), t)/x(t) - k*sqrt(x(t)**2))*x(t)/sqrt(x(t)**2)*N.x)]
+   [Force(point=O, force=(c*sign(x(t))*Derivative(x(t), t) + k*Abs(x(t)))*x(t)/Abs(x(t))*N.x),
+    Force(point=P, force=(-c*sign(x(t))*Derivative(x(t), t) - k*Abs(x(t)))*x(t)/Abs(x(t))*N.x)]
 
-This then makes it easy to apply a spring-damper force to other pathways:
+This then makes it easy to apply a spring-damper force to other pathways, e.g.:
 
 .. plot::
    :format: doctest
@@ -288,11 +300,9 @@ This then makes it easy to apply a spring-damper force to other pathways:
 
    >>> spring_damper3 = SpringDamper(wpathway, k, c)
    >>> pprint.pprint(spring_damper3.to_loads())
-   [Force(point=P, force=r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y + (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z),
-    Force(point=Q, force=- (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*N.z - r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y),
-    Force(point=O, force=- r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*N.y + r*sqrt(r**2*theta(t)**2)*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/(sqrt(r**2*(r**2*theta(t)**2)/r**2 + 1)*sqrt(r**2))*A.y)]
-
-TODO : need to explain why we get these sqrt(x)**2/x type terms.
+   [Force(point=P, force=r*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))*Abs(theta(t))/sqrt(r**2*theta(t)**2 + 1)*N.y + (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*theta(t)**2 + 1)*N.z),
+    Force(point=Q, force=- (-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))/sqrt(r**2*theta(t)**2 + 1)*N.z - r*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))*Abs(theta(t))/sqrt(r**2*theta(t)**2 + 1)*A.y),
+    Force(point=O, force=- r*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))*Abs(theta(t))/sqrt(r**2*theta(t)**2 + 1)*N.y + r*(-c*r**2*theta(t)*Derivative(theta(t), t)/sqrt(r**2*theta(t)**2 + 1) - k*sqrt(r**2*theta(t)**2 + 1))*Abs(theta(t))/sqrt(r**2*theta(t)**2 + 1)*A.y)]
 
 Activation Dynamics
 ===================
@@ -322,8 +332,8 @@ associated particle:
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
 
-   >>> q, u = me.dynamicsymbols('q, u')
-   >>> m, g = sm.symbols('m, g')
+   >>> q, u = me.dynamicsymbols('q, u', real=True)
+   >>> m, g = sm.symbols('m, g', real=True, positive=True)
 
    >>> N = me.ReferenceFrame('N')
    >>> O, P = sm.symbols('O, P', cls=me.Point)
@@ -376,9 +386,9 @@ speed between the two attachment points:
    :nofigs:
 
    >>> muscle_pathway.length
-   sqrt(q(t)**2)
+   Abs(q(t))
    >>> muscle_pathway.extension_velocity
-   sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
+   sign(q(t))*Derivative(q(t), t)
 
 The sign convention is that a positive speed
 
@@ -392,7 +402,7 @@ points give a force magnitude:
    :nofigs:
 
    >>> muscle_pathway.to_loads(m*g)
-   [(O, - g*m*q(t)/sqrt(q(t)**2)*N.x), (P, g*m*q(t)/sqrt(q(t)**2)*N.x)]
+   [(O, - g*m*q(t)/Abs(q(t))*N.x), (P, g*m*q(t)/Abs(q(t))*N.x)]
 
 The activation dynamics model represents a set of algebraic or ordinary
 differential equations that relate the muscle excitation to the muscle
@@ -457,8 +467,8 @@ TODO : How do we know this is a rigid tendon model?
 
    >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
 
-   >>> F_M_max, l_M_opt, l_T_slack = sm.symbols('F_M_max, l_M_opt, l_T_slack')
-   >>> v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta')
+   >>> F_M_max, l_M_opt, l_T_slack = sm.symbols('F_M_max, l_M_opt, l_T_slack', real=True)
+   >>> v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta', real=True)
 
    >>> muscle = MusculotendonDeGroote2016(
    ...     'muscle',
@@ -515,10 +525,9 @@ the muscle specific forces applied to the pathway:
    :nofigs:
 
    >>> muscle_loads = muscle.to_loads()
-   >>> muscle_loads[0]
-   (O, F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
-   >>> muscle_loads[1]
-   (P, - F_M_max*(beta*(-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + sqrt(q(t)**2))*sqrt(q(t)**2)*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)*q(t)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + sqrt(q(t)**2))**2)/l_M_opt, 3/5, 4))*q(t)/sqrt(q(t)**2)*N.x)
+   >>> pprint.pprint(muscle_loads)
+   [Force(point=O, force=F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 3/5, 4))*q(t)/Abs(q(t))*N.x),
+    Force(point=P, force=- F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 3/5, 4))*q(t)/Abs(q(t))*N.x)]
 
 These loads are made up of various functions that describe the length and
 velocity relationships to the fiber force.
