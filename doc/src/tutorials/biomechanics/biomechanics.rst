@@ -297,6 +297,138 @@ TODO : need to explain why we get these sqrt(x)**2/x type terms.
 Activation Dynamics
 ===================
 
+Musculotendon models are able to produce an active contractile force when they
+are activated. Biologically, this occurs when :math:`\textrm{Ca}^{2+}` ions are
+present among the muscle fibers at a sufficient concentration that they start
+to voluntarily contract. This state of voluntary contraction is "activation". In
+biomechanical models it is typically given the symbol :math:`a(t)`, which is
+treated as a normalized quantity in the range :math:`[0, 1]`.
+
+An organisms does not directly control the concentration of these
+:math:`\textrm{Ca}^{2+}` ions in its muscles, instead its nervous system,
+controlled by its brain, sends an electrical signal to a muscle which causes
+:math:`\textrm{Ca}^{2+}` ions to be released. These diffuse and increase in
+concentration throughout the muscle leading to activation. An electrical signal
+transmitted to a muscle stimulating contraction is an "excitation". In
+biomechanical models it is usually given the symbol :math:`e(t)`, which is also
+treated as a normalized quantity in the range :math:`[0, 1]`.
+
+The relationship between the excitation input and the activation state is known
+as activation dynamics. Because activation dynamics are so common in
+biomechanical models, SymPy provides the
+:obj:`~sympy.physics._biomechanics.activation` module, which contains
+implementations for some common models of activation dynamics. These are
+zeroth-order activation dynamics and first-order activation dynamics based on
+the equations from the paper by [DeGroote2016]_. Below we will work through
+manually implementing these models and then show how these relate to the classes
+provided by SymPy.
+
+Zeroth-Order
+------------
+
+The simplest possible model of activation dynamics is to assume that diffusion
+of :math:`\textrm{Ca}^{2+}` ions is instantaneous. Mathematically this gives us
+:math:`a(t) = e(t)`, a zeroth-order ordinary differential equation.
+
+>>> e = me.dynamicsymbols('e')
+>>> e
+e(t)
+>>> a = e
+>>> a
+e(t)
+
+Alternatively, you could give :math:`a(t)` its own
+:obj:`~sympy.physics.vector.dynamicsymbols` and use a substitution to replace
+this with :math:`e(t)` in any equation.
+
+>>> a = me.dynamicsymbols('a')
+>>> zeroth_order_activation = {a: e}
+>>> a.subs(zeroth_order_activation)
+e(t)
+
+SymPy provides the class
+:obj:`~sympy.physics._biomechanics.ZerothOrderActivation` in the
+:obj:`~sympy.physics._biomechanics.activation` module. This class must be
+instantiated with a single argument, `name`, which associates a name with the
+instance. This name should be unique per instance.
+
+>>> actz = ZerothOrderActivation('zeroth')
+>>> actz
+ZerothOrderActivation('zeroth')
+
+The argument passed to `name` tries to help ensures that the automatically-
+created :obj:`~sympy.physics.vector.dynamicsymbols` for :math:`e(t)` and
+:math:`a(t)` are unique betweem instances.
+
+>>> actz.excitation
+e_zeroth(t)
+>>> actz.activation
+e_zeroth(t)
+
+:obj:`~sympy.physics._biomechanics.ZerothOrderActivation` subclasses :obj:`~sympy.physics._biomechanics.ActivationBase`, which provides a
+consistent interface for all concrete classes of activation dynamics. This
+includes a method to inspect the ordinary differential equation(s) associated
+with the model. As zeroth-order activation dynamics correspond to a zeroth-order
+ordinary differential equation, this returns an empty column matrix.
+
+>>> actz.rhs()
+Matrix(0, 1, [])
+
+First-Order
+-----------
+
+In practice the diffusion and concentration increase of :math:`\textrm{Ca}^{2+}`
+ions is not instantaneous. In a real biological muscle a step increase in
+excitation will lead to a smooth and gradual increase in activation.
+[DeGroote2016]_ model this using a first-order ordinary differential equation:
+
+.. math::
+
+   \begin{align*}
+      \frac{da}{dt} &= \left( \frac{1}{\tau_a \left(1 + 3a(t)\right)} (1 + 2f) + \frac{1 + 3a(t)}{4\tau_d} (1 - 2f) \right) \left(e(t) - a(t) \right) \\
+      f &= \frac{1}{2} \tanh{\left(b \left(e(t) -a(t)\right)\right)}
+   \end{align*}
+
+where :math:`\tau_a` is the time constant for activation, :math:`\tau_d` is the
+time constant for deactivation, and :math:`b` is a smoothing coefficient.
+
+>>> tau_a, tau_d, b = sm.symbols('tau_a, tau_d, b')
+>>> f = sm.tanh(b*(e - a))/2
+>>> dadt = ((1/(tau_a*(1 + 3*a)))*(1 + 2*f) + ((1 + 3*a)/(4*tau_d))*(1 - 2*f))*(e - a)
+
+This first-order ordinary differential equation can then be used to propagate
+the state :math:`a(t)` under the input :math:`e(t)` in a simulation.
+
+Like before, SymPy provides the class
+:obj:`~sympy.physics._biomechanics.FirstOrderActivationDeGroote2016` in the
+:obj:`~sympy.physics._biomechanics.activation` module. This class is another
+subclass of :obj:`~sympy.physics._biomechanics.ActivationBase` and uses the
+model for first-order activation dynamics from [DeGroote2016]_ defined above.
+This class must be instantiated with four arguments: a name, and three
+sympifiable objects to represent the three constants :math:`\tau_a`,
+:math:`\tau_d`, and :math:`b`.
+
+>>> actf = FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
+>>> actf.excitation
+e_first(t)
+>>> actf.activation
+a_first(t)
+
+The first-order ordinary differential equation can be accessed as before, but
+this time a length-1 column vector is returned.
+
+>>> act.rhs()
+Matrix([[((1/2 - tanh(b*(-a_first(t) + e_first(t)))/2)*(3*a_first(t)/2 + 1/2)/tau_d + (tanh(b*(-a_first(t) + e_first(t)))/2 + 1/2)/(tau_a*(3*a_first(t)/2 + 1/2)))*(-a_first(t) + e_first(t))]])
+
+You can also instantiate the class with the suggested values for each of the
+constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
+:math:`b = 10`.
+
+>>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
+>>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Integer(10)}
+>>> actf2 == actf.subs(constants)
+True
+
 Musculotendon Curves
 ====================
 
@@ -678,3 +810,11 @@ muscle lifts the mass:
    >>> axes[3].set_ylabel('Force [N]')
    >>> axes[3].set_xlabel('Time [s]')
    >>> axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()
+
+References
+==========
+
+.. [DeGroote2016] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J.,
+   Evaluation of direct collocation optimal control problem formulations for
+   solving the muscle redundancy problem, Annals of biomedical engineering,
+   44(10), (2016) pp. 2922-2936
