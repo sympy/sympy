@@ -42,6 +42,7 @@ test_list = [
     '*jax*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # gmpy, numpy, scipy, autowrap, matplotlib
@@ -100,6 +101,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # autowrap

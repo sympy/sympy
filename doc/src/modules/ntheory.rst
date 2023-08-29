@@ -41,8 +41,6 @@ Ntheory Functions Reference
 
 .. autofunction:: smoothness_p
 
-.. autofunction:: trailing
-
 .. autofunction:: multiplicity
 
 .. autofunction:: perfect_power
@@ -176,6 +174,8 @@ Ntheory Functions Reference
 .. autofunction:: legendre_symbol
 
 .. autofunction:: jacobi_symbol
+
+.. autofunction:: kronecker_symbol
 
 .. autofunction:: discrete_log
 

@@ -4,20 +4,20 @@ Integer factorization
 
 from collections import defaultdict
 from functools import reduce
-import random
 import math
 
 from sympy.core import sympify
 from sympy.core.containers import Dict
-from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.power import integer_nthroot, Pow, integer_log
+from sympy.core.intfunc import trailing, integer_log, num_digits
+from sympy.core.power import Pow
+from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -57,11 +57,6 @@ def _isperfect(n):
             PERFECT.append(t*(2*t - 1))
             j += 1
     return n in PERFECT
-
-
-small_trailing = [0] * 256
-for j in range(1,8):
-    small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
 
 
 def smoothness(n):
@@ -196,55 +191,6 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     return '\n'.join(lines)
 
 
-def trailing(n):
-    """Count the number of trailing zero digits in the binary
-    representation of n, i.e. determine the largest power of 2
-    that divides n.
-
-    Examples
-    ========
-
-    >>> from sympy import trailing
-    >>> trailing(128)
-    7
-    >>> trailing(63)
-    0
-    """
-    n = abs(int(n))
-    if not n:
-        return 0
-    low_byte = n & 0xff
-    if low_byte:
-        return small_trailing[low_byte]
-
-    # 2**m is quick for z up through 2**30
-    z = bitcount(n) - 1
-    if isinstance(z, SYMPY_INTS):
-        if n == 1 << z:
-            return z
-
-    if z < 300:
-        # fixed 8-byte reduction
-        t = 8
-        n >>= 8
-        while not n & 0xff:
-            n >>= 8
-            t += 8
-        return t + small_trailing[n & 0xff]
-
-    # binary reduction important when there might be a large
-    # number of trailing 0s
-    t = 0
-    p = 8
-    while not n & 1:
-        while not n & ((1 << p) - 1):
-            n >>= p
-            t += p
-            p *= 2
-        p //= 2
-    return t
-
-
 def multiplicity(p, n):
     """
     Find the greatest integer m such that p**m divides n.
@@ -271,6 +217,11 @@ def multiplicity(p, n):
     52818775009509558395695966887
     >>> _ == multiplicity_in_factorial(p, n)
     True
+
+    See Also
+    ========
+
+    trailing
 
     """
     try:
@@ -463,7 +414,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     See Also
     ========
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
     if isinstance(n, Rational) and not n.is_Integer:
@@ -510,9 +461,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if big:
             candidates = reversed(candidates)
         for e in candidates:
-            r, ok = integer_nthroot(n, e)
+            r, ok = iroot(n, e)
             if ok:
-                return (r, e)
+                return int(r), e
         return False
 
     def _factors():
@@ -534,7 +485,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 return False
 
             # maybe the e-th root of n is exact
-            r, exact = integer_nthroot(n, e)
+            r, exact = iroot(n, e)
             if not exact:
                 # Having a factor, we know that e is the maximal
                 # possible value for a root of n.
@@ -552,7 +503,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 e0 = primefactors(e)
                 if e0[0] != e:
                     r, e = r**(e//e0[0]), e0[0]
-            return r, e
+            return int(r), e
 
         # Weed out downright impossible candidates
         if logn/e < 40:
@@ -561,7 +512,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
                 continue
 
         # now see if the plausible e makes a perfect power
-        r, exact = integer_nthroot(n, e)
+        r, exact = iroot(n, e)
         if exact:
             if big:
                 m = perfect_power(r, big=big, factor=factor)
@@ -662,7 +613,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     n = int(n)
     if n < 5:
         raise ValueError('pollard_rho should receive n > 4')
-    prng = random.Random(seed + retries)
+    randint = _randint(seed + retries)
     V = s
     for i in range(retries + 1):
         U = V
@@ -681,8 +632,8 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
             if g == n:
                 break
             return int(g)
-        V = prng.randint(0, n - 1)
-        a = prng.randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
+        V = randint(0, n - 1)
+        a = randint(1, n - 3)  # for x**2 + a, a%n should not be 0 or -2
         F = None
     return None
 
@@ -819,7 +770,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     n = int(n)
     if n < 4 or B < 3:
         raise ValueError('pollard_pm1 should receive n > 3 and B > 2')
-    prng = random.Random(seed + B)
+    randint = _randint(seed + B)
 
     # computing a**lcm(1,2,3,..B) % n for B > 2
     # it looks weird, but it's right: primes run [2, B]
@@ -838,7 +789,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
         # then (n - 1)**even % n will be 1 which will give a g of 0 and 1 will
         # give a zero, too, so we set the range as [2, n-2]. Some references
         # say 'a' should be coprime to n, but either will detect factors.
-        a = prng.randint(2, n - 2)
+        a = randint(2, n - 2)
 
 
 def _trial(factors, n, candidates, verbose=False):
@@ -1309,17 +1260,17 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             # square root anyway. Finding 2 factors is easy if they are
             # "close enough." This is the big root equivalent of dividing by
             # 2, 3, 5.
-            sqrt_n = integer_nthroot(n, 2)[0]
+            sqrt_n = isqrt(n)
             a = sqrt_n + 1
             a2 = a**2
             b2 = a2 - n
             for i in range(3):
-                b, fermat = integer_nthroot(b2, 2)
-                if fermat:
+                b, fermat = sqrtrem(b2)
+                if not fermat:
                     break
                 b2 += 2*a + 1  # equiv to (a + 1)**2 - n
                 a += 1
-            if fermat:
+            if not fermat:
                 if verbose:
                     print(fermat_msg)
                 if limit:
@@ -1420,11 +1371,11 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print(complete_msg)
             return factors
-        #Use subexponential algorithms if use_ecm
-        #Use pollard algorithms for finding small factors for 3 iterations
-        #if after small factors the number of digits of n is >= 20 then use ecm
+        # Use subexponential algorithms if use_ecm
+        # Use pollard algorithms for finding small factors for 3 iterations
+        # if after small factors the number of digits of n >= 25 then use ecm
         iteration += 1
-        if use_ecm and iteration >= 3 and len(str(n)) >= 25:
+        if use_ecm and iteration >= 3 and num_digits(n) >= 24:
             break
         low, high = high, high*2
     B1 = 10000
@@ -1435,7 +1386,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             print(ecm_msg % (B1, B2, num_curves))
         while(1):
             try:
-                factor = _ecm_one_factor(n, B1, B2, num_curves)
+                factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
                 ps = factorint(factor, limit=limit - 1,
                                use_trial=use_trial,
                                use_rho=use_rho,
@@ -1518,11 +1469,25 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 
-def primefactors(n, limit=None, verbose=False):
+def primefactors(n, limit=None, verbose=False, **kwargs):
     """Return a sorted list of n's prime factors, ignoring multiplicity
     and any composite factor that remains if the limit was set too low
     for complete factorization. Unlike factorint(), primefactors() does
     not return -1 or 0.
+
+    Parameters
+    ==========
+
+    n : integer
+    limit, verbose, **kwargs :
+        Additional keyword arguments to be passed to ``factorint``.
+        Since ``kwargs`` is new in version 1.13,
+        ``limit`` and ``verbose`` are retained for compatibility purposes.
+
+    Returns
+    =======
+
+    list(int) : List of prime numbers dividing ``n``
 
     Examples
     ========
@@ -1548,10 +1513,15 @@ def primefactors(n, limit=None, verbose=False):
     See Also
     ========
 
-    divisors
+    factorint, divisors
+
     """
     n = int(n)
-    factors = sorted(factorint(n, limit=limit, verbose=verbose).keys())
+    kwargs.update({"visual": None, "multiple": False,
+                   "limit": limit, "verbose": verbose})
+    factors = sorted(factorint(n=n, **kwargs).keys())
+    # We want to calculate
+    # s = [f for f in factors if isprime(f)]
     s = [f for f in factors[:-1:] if f not in [-1, 0, 1]]
     if factors and isprime(factors[-1]):
         s += [factors[-1]]
@@ -2411,8 +2381,8 @@ def is_perfect(n):
         last2 = n % 100
         if last2 != 28 and last2 % 10 != 6:
             return False
-        r, b = integer_nthroot(1 + 8*n, 2)
-        if not b:
+        r, b = sqrtrem(1 + 8*n)
+        if b:
             return False
         m, x = divmod(1 + r, 4)
         if x:
