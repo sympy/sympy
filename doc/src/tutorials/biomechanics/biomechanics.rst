@@ -461,6 +461,7 @@ associated particle:
    :context: reset
    :nofigs:
 
+   >>> import pprint
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
 
@@ -801,7 +802,7 @@ muscle lifts the mass:
    ...
 
    >>> from scipy.integrate import solve_ivp
-   >>> t0, tf = 0.0, 10.0
+   >>> t0, tf = 0.0, 6.0
    >>> times = np.linspace(t0, tf, num=1001)
    >>> sol = solve_ivp(eval_rhs,
    ...                 (t0, tf),
