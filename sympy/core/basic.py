@@ -2057,34 +2057,34 @@ class Basic(Printable):
         If `approx` is supplied, it will be used to test whether two
         numbers are the same or not. By default, only numbers of the
         same type will compare equal, so S.Half != Float(0.5).
-    
+
         Examples
         ========
-    
+
         In SymPy (unlike Python) two numbers do not compare the same if they are
         not of the same type:
-    
+
         >>> from sympy import S
         >>> 2.0 == S(2)
         False
         >>> 0.5 == S.Half
         False
-    
+
         By supplying a function with which to compare two numbers, such
         differences can be ignored. e.g. `equal_valued` will return True
         for decimal numbers having a denominator that is a power of 2,
         regardless of precision.
-    
+
         >>> from sympy import Float
         >>> from sympy.core.numbers import equal_valued
         >>> (S.Half/4).is_same(Float(0.125, 1), equal_valued)
         True
         >>> Float(1, 2).is_same(Float(1, 10), equal_valued)
         True
-    
+
         But decimals without a power of 2 denominator will compare
         as not being the same.
-    
+
         >>> Float(0.1, 9).is_same(Float(0.1, 10), equal_valued)
         False
 
@@ -2094,17 +2094,17 @@ class Basic(Printable):
         >>> import math
         >>> Float(0.1, 9).is_same(Float(0.1, 10), math.isclose)
         True
-    
+
         Other objects might compare the same even though types are not the
         same. This routine will only return True if two expressions are
         identical in terms of class types.
-    
+
         >>> from sympy import eye
         >>> eye(1) == S(eye(1))  # mutable vs immutable
         True
         >>> eye(1).is_same(S(eye(1)))
         False
-    
+
         """
         from .numbers import Number
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
