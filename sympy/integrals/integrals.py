@@ -19,6 +19,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -447,6 +448,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:

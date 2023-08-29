@@ -118,6 +118,7 @@ class Basic(Printable):
         # property methods. This method will only be called for subclasses of
         # Basic but not for Basic itself so we call
         # _prepare_class_assumptions(Basic) below the class definition.
+        super().__init_subclass__()
         _prepare_class_assumptions(cls)
 
     # To be overridden with True in the appropriate subclasses
