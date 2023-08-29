@@ -11,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And, Or, Xor, Implies
 from sympy.logic.boolalg import Not, ITE
 from sympy.assumptions.relation.equality import StrictGreaterThanPredicate, StrictLessThanPredicate, GreaterThanPredicate, LessThanPredicate, EqualityPredicate
+from sympy.external import import_module
 
 def z3_satisfiable(expr, all_models=False):
     if not isinstance(expr, EncodedCNF):
@@ -18,7 +19,10 @@ def z3_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
-    import z3
+
+    z3 = import_module("z3")
+    if z3 is None:
+        raise ImportError("z3 is not installed")
 
     s = encoded_cnf_to_z3_solver(expr, z3)
 
