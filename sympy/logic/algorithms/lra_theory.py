@@ -12,7 +12,8 @@ from sympy.core.singleton import S
 from sympy import SYMPY_DEBUG
 from sympy.matrices.dense import Matrix
 from sympy.core.numbers import Rational, oo
-from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.common import MatrixKind
+from sympy.core.kind import NumberKind
 
 
 def sep_const_coeff(expr):
@@ -447,7 +448,7 @@ class LRASolver():
 
             assert prop.function in ALLOWED_PRED
 
-            if isinstance(prop.lhs, MatrixExpr) or isinstance(prop.rhs, MatrixExpr):
+            if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
                 raise ValueError(f"{prop} contains matrix variables")
 
             if prop.lhs == S.NaN or prop.rhs == S.NaN:

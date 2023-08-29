@@ -15,6 +15,10 @@ from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.common import MatrixKind
+from sympy.core.kind import NumberKind
+
 from sympy.testing.pytest import raises, XFAIL, skip
 import time
 
@@ -419,6 +423,11 @@ def test_unhandled_input():
     bf = Q.gt(3, oo) & Q.gt(x, oo)
     enc = boolean_formula_to_encoded_cnf(bf)
     raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    X = MatrixSymbol("X", 2, 2)
+    bf = Q.gt(x, 2) & Q.gt(3, X)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(ValueError, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
 @XFAIL
 def test_infinite_strict_inequalities():
