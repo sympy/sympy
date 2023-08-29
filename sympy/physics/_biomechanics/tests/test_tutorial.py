@@ -110,7 +110,10 @@ def test_basics():
     # find a symbol for a and e and then something that indicates that a = e.
     # Also confused to why rhs() returns Matrix(0, 1, []).
     actz = bm.ZerothOrderActivation('zeroth')
-    print(actz.rhs())
+    assert str(actz) == 'ZerothOrderActivation(\'zeroth\')'
+    assert actz.excitation == me.dynamicsymbols('e_zeroth')
+    assert actz.activation == me.dynamicsymbols('e_zeroth')
+    assert actz.rhs() == sm.Matrix.zeros(0, 1)
 
     tau_a, tau_d, b = sm.symbols('tau_a, tau_d, b')
     actf = bm.FirstOrderActivationDeGroote2016(
@@ -121,8 +124,24 @@ def test_basics():
     )
     print(actf.rhs())
 
-    actf = bm.FirstOrderActivationDeGroote2016.with_defaults('first')
-    print(actf.rhs())
+    actf = bm.FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
+    assert actf.excitation == me.dynamicsymbols('e_first')
+    assert actf.activation == me.dynamicsymbols('a_first')
+    assert sm.simplify(actf.rhs() - sm.Matrix([[
+        ((1/2 - sm.tanh(b*(-actf.a + actf.e))/2)*(3*actf.a/2 + 1/2)/tau_d
+        + (sm.tanh(b*(-actf.a + actf.e))/2 + 1/2)/(tau_a*(3*actf.a/2 + 1/2)))
+        *(-actf.a + actf.e)
+    ]])) == sm.Matrix([[0]])
+    actf2 = bm.FirstOrderActivationDeGroote2016.with_defaults('first')
+    assert actf2.rhs() - sm.Matrix([[
+        ((1/2 - sm.tanh(b*(-actf.a + actf.e))/2)*(3*actf.a/2 + 1/2)/tau_d
+        + (sm.tanh(b*(-actf.a + actf.e))/2 + 1/2)/(tau_a*(3*actf.a/2 + 1/2)))
+        *(-actf.a + actf.e)
+    ]]).subs({
+        tau_a: sm.Float('0.015'),
+        tau_d: sm.Float('0.060'),
+        b: sm.Integer(10),
+    })
 
     # curve
     l_T_tilde = sm.symbols('l_T_tilde')
