@@ -226,6 +226,7 @@ class UnhandledNumber(Exception):
 
 
 ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
+HANDLE_NEGATION = True
 
 class LRASolver():
     """
@@ -544,8 +545,14 @@ class LRASolver():
         if abs(enc_boundry) not in self.enc_to_boundry:
             raise ValueError("Tried to assert a literal with no encoding")
 
+        if not HANDLE_NEGATION and enc_boundry < 0:
+            return None
+
         boundry = self.enc_to_boundry[abs(enc_boundry)]
         sym, c, negated = boundry.var, boundry.bound, enc_boundry < 0
+
+        if boundry.equality and negated:
+            return None # negated equality is not handled and should only appear as conflict clause
 
         upper = boundry.upper != negated
         if boundry.strict != negated:
@@ -657,8 +664,10 @@ class LRASolver():
         for var in self.all_var:
             var.lower = ExtendedRational(-float("inf"), 0)
             var.lower_from_eq = False
+            var.lower_from_neg = False
             var.upper = ExtendedRational(float("inf"), 0)
             var.upper_from_eq= False
+            var.lower_from_neg = False
             var.assign = ExtendedRational(0, 0)
 
 

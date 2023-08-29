@@ -9,8 +9,7 @@ from sympy.logic.boolalg import And
 from sympy.abc import x, y, z
 from sympy.assumptions.cnf import CNF, EncodedCNF
 
-from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber
-
+from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber, ExtendedRational, HANDLE_NEGATION
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -146,10 +145,11 @@ def test_random_problems():
             constraints = make_random_problem(num_variables=3, num_constraints=6, rational=False)
 
         if i < len(special_cases):
-            constraints = special_cases[i-1]
+            constraints = special_cases[i]
 
-        # constraints = make_random_problem(num_variables=2, num_constraints=4, rational=False, disable_strict=False,
-        #                                  disable_nonstrict=False, disable_equality=False)
+        # constraints = make_random_problem(num_variables=1, num_constraints=4, rational=False, disable_strict=False,
+        #                                  disable_nonstrict=False, disable_equality=False, allow_negation=True)
+
 
 
         if False in constraints or True in constraints:
@@ -219,62 +219,11 @@ def test_random_problems():
             # check that conflict clause is probably minimal
             for subset in itertools.combinations(conflict, len(conflict)-1):
                 assert check_if_satisfiable_with_z3(subset) is True
-    print("check", check_time)
-    print("from_encoded", from_encoded_time)
-    print("assert", assert_time)
-    print("total", check_time+from_encoded_time+assert_time)
-    print("sat count", feasible_count)
-
-
-def test_negation():
-    bf = Q.gt(x, 1) & ~Q.gt(x, 0)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    for clause in enc.data:
-        for lit in clause:
-            lra.assert_lit(lit)
-    assert len(lra.enc_to_boundry) == 2
-    assert lra.check()[0] == False
-    assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
-
-    bf = ~Q.gt(x, 1) & ~Q.lt(x, 0)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    for clause in enc.data:
-        for lit in clause:
-            lra.assert_lit(lit)
-    assert len(lra.enc_to_boundry) == 2
-    assert lra.check()[0] == True
-
-    bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    for clause in enc.data:
-        for lit in clause:
-            lra.assert_lit(lit)
-    assert len(lra.enc_to_boundry) == 2
-    assert lra.check()[0] == False
-
-    bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    for clause in enc.data:
-        for lit in clause:
-            lra.assert_lit(lit)
-    assert len(lra.enc_to_boundry) == 2
-    assert lra.check()[0] == False
-
-    bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-    for clause in enc.data:
-        for lit in clause:
-            lra.assert_lit(lit)
-    assert len(lra.enc_to_boundry) == 3
-    assert lra.check()[0] == False
-    assert len(lra.check()[1]) == 3
-    assert all(i > 0 for i in lra.check()[1])
-
+    # print("check", check_time)
+    # print("from_encoded", from_encoded_time)
+    # print("assert", assert_time)
+    # print("total", check_time+from_encoded_time+assert_time)
+    # print("sat count", feasible_count)
 
 
 @XFAIL
@@ -360,8 +309,64 @@ def test_binrel_evaluation():
     assert conflicts == [[-1]]
 
 
+def test_negation_version1():
+    # There are multiple ways to handle negation.
+    # Version1 is not compatible with version2.
+    assert HANDLE_NEGATION is True
+    bf = Q.gt(x, 1) & ~Q.gt(x, 0)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 2
+    assert lra.check()[0] == False
+    assert sorted(lra.check()[1]) in [[-1, 2], [-2, 1]]
+
+    bf = ~Q.gt(x, 1) & ~Q.lt(x, 0)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 2
+    assert lra.check()[0] == True
+
+    bf = ~Q.gt(x, 0) & ~Q.lt(x, 1)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 2
+    assert lra.check()[0] == False
+
+    bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 2
+    assert lra.check()[0] == False
+
+    bf = ~Q.le(x+y, 2) & ~Q.ge(x-y, 2) & ~Q.ge(y, 0)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 3
+    assert lra.check()[0] == False
+    assert len(lra.check()[1]) == 3
+    assert all(i > 0 for i in lra.check()[1])
+
+
 @XFAIL
-def test_negation_handling():
+def test_negation_version2():
+    # There are multiple ways to handle negation.
+    # Version1 is not compatible with version2.
+
     # note that SymPy assumes variables are complex by default
     # thus Not(x > 0) implies (x <= 0) OR (x has imaginary component)
 
@@ -429,7 +434,6 @@ def test_infinite_strict_inequalities():
     assert lra.check()[0] == True
 
 
-
 def test_pivot():
     for _ in range(10):
         m = randMatrix(5)
@@ -438,3 +442,27 @@ def test_pivot():
             i, j = randint(0, 4), randint(0, 4)
             if m[i, j] != 0:
                 assert LRASolver._pivot(m, i, j).rref() == rref
+
+
+def test_reset_bounds():
+    bf = Q.ge(x, 1) & Q.lt(x, 1)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+    for clause in enc.data:
+        for lit in clause:
+            lra.assert_lit(lit)
+    assert len(lra.enc_to_boundry) == 2
+    assert lra.check()[0] == False
+
+    lra.reset_bounds()
+    assert lra.check()[0] == True
+    for var in lra.all_var:
+        assert var.upper == ExtendedRational(float("inf"), 0)
+        assert var.upper_from_eq == False
+        assert var.upper_from_neg == False
+        assert var.lower == ExtendedRational(-float("inf"), 0)
+        assert var.lower_from_eq == False
+        assert var.lower_from_neg == False
+        assert var.assign == ExtendedRational(0, 0)
+        assert var.var is not None
+        assert var.col_idx is not None
