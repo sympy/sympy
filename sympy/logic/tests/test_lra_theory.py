@@ -8,13 +8,14 @@ from sympy.assumptions.ask import Q
 from sympy.logic.boolalg import And
 from sympy.abc import x, y, z
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.external import import_module
 
 from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber, ExtendedRational, HANDLE_NEGATION
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip
 import time
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
@@ -104,6 +105,10 @@ def test_from_encoded_cnf():
 
 
 def test_random_problems():
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 is not installed")
+
     from sympy.core.relational import StrictLessThan, StrictGreaterThan
     import itertools
 
