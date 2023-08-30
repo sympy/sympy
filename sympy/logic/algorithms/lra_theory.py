@@ -338,17 +338,31 @@ class LRASolver():
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
         """
-        Creates an LRASolver from an EncodedCNF object. Constraints in the
-        EncodedCNF object must only contain Rational numbers.
+        Creates an LRASolver from an EncodedCNF object
+        and a list of conflict clauses for propositions
+        that are always false or true.
 
-        Setting testing_mode to True enables some slow assert statements
-        and sorting of nonterministic objects to make bugs more reproducable.
+        Parameters
+        ==========
+
+        encoded_cnf : EncodedCNF
+
+        testing_mode : bool
+            Setting testing_mode to True enables some slow assert statements
+            and sorting to reduce nonterministic behavior.
+
+        Returns
+        =======
+
+        (lra, conflicts)
+
+        lra : LRASolver
+
+        conflicts : list
+            Contains a list of one-literal conflict clauses.
 
         Example
-        -------
-
-        This example is a modified version of an example in section 3 of
-        Dutertre's and de Moura's paper.
+        =======
 
         >>> from sympy.core.relational import Eq
         >>> from sympy.matrices.dense import Matrix
@@ -356,68 +370,17 @@ class LRASolver():
         >>> from sympy.assumptions.ask import Q
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
         >>> from sympy.abc import a, x, y, z
-        >>> phi = Q.prime(a) & (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6))
+        >>> phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6))
         >>> phi = phi & (Eq(x + y, 2) | (x + 2 * y - z > 4))
+        >>> phi = phi & Q.gt(2, 1)
         >>> cnf = CNF.from_prop(phi)
         >>> enc = EncodedCNF()
         >>> enc.from_cnf(cnf)
-        >>> enc.data #doctest: +SKIP
-        [{1, 5}, {3}, {4}, {2, 6}]
-        >>> enc.encoding #doctest: +SKIP
-        {Q.gt(x + 2*y - z, 4): 1,
-         Q.le(x + y, 2): 2,
-         Q.prime(a): 3,
-         Q.ge(x, 0): 4,
-         Q.eq(x + y, 2): 5,
-         Q.ge(x + 2*y - z, 6): 6}
-        >>> lra, x_subs, s_subs = LRASolver.from_encoded_cnf(enc)
-
-        Each nonslack variable gets replaced with a dummy variable. Here
-        x, y, and z get replaced with _x1, _x2, _x3 respectively.
-
-        >>> x_subs
-        {x: _x1, y: _x2, z: _x3}
-
-        We convert any constraints with multiple nonslack variables into single
-        variable constraints by substituting with slack variables. Here x + y
-        gets substituted with _s1 and x + 2 * y - z gets substituted with -_s2.
-
-        >>> s_subs
-        {_x1 + _x2: _s1, -_x1 - 2*_x2 + _x3: _s2}
-
-        Each row of the matrix A represents an equallity between a slack
-        variable and some nonslack varaibles.
-
-        >>> lra.A
-        Matrix([
-        [ 1,  1, 0, -1,  0],
-        [-1, -2, 1,  0, -1]])
-
-        To make it very clear what those equalities are, we can multiply A
-        by a vector containing each varaiable. The result will be a list of
-        quantities that are equal to zero.
-
-        >>> lra.A * Matrix(lra.all_var)
-        Matrix([
-        [        -_s1 + _x1 + _x2],
-        [-_s2 - _x1 - 2*_x2 + _x3]])
-
-        By substituting terms with multiple constraints with slack variables,
-        each constraint in phi is transformed into an upper or lower bound or
-        equality between a single variable and some constant. Rather than
-        returning a new encoded cnf object with a new encoding, the new lra
-        object has its own encoding stored in `lra.enc_to_boundry` and
-        `lra.boundry_to_enc`.
-
-        As boundry objects can't be printed nicely, here's what that looks
-        like if the boundries are converted into inequalities.
-
-        >>> {key: value.get_inequality() for key, value in lra.enc_to_boundry.items()} #doctest: +SKIP
-        {5: Eq(_s1, 2), 6: _s2 <= -6, 4: _x1 >= 0, 1: _s2 < -4, 2: _s1 <= 2}
-
-        Notice that there are no encodings for 3. This is because predicates
-        such as Q.prime which the LRASolver has no understanding of are
-        ignored.
+        >>> lra, conflicts = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+        >>> lra #doctest: +SKIP
+        <sympy.logic.algorithms.lra_theory.LRASolver object at 0x7fdcb0e15b70>
+        >>> conflicts #doctest: +SKIP
+        [[4]]
         """
 
         encoding = {}  # maps int to Boundry
