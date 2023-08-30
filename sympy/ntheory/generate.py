@@ -3,7 +3,6 @@ Generating and counting primes.
 
 """
 
-import random
 from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
@@ -11,6 +10,7 @@ from itertools import count
 from array import array as _array
 
 from sympy.core.function import Function
+from sympy.core.random import randint
 from sympy.core.singleton import S
 from sympy.external.gmpy import sqrt
 from .primetest import isprime
@@ -151,7 +151,7 @@ class Sieve:
             # Create the list such that block[x] iff (a + 2x + 1) is prime.
             # Note that even numbers are not considered here.
             block = [True] * block_size
-            for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
                 for t in range((-(a + 1 + p) // 2) % p, block_size, p):
                     block[t] = False
             for idx, p in enumerate(block):
@@ -813,6 +813,12 @@ def randprime(a, b):
         Bertrand's postulate assures that
         randprime(a, 2*a) will always succeed for a > 1.
 
+        Note that due to implementation difficulties,
+        the prime numbers chosen are not uniformly random.
+        For example, there are two primes in the range [112, 128),
+        ``113`` and ``127``, but ``randprime(112, 128)`` returns ``127``
+        with a probability of 15/17.
+
         Examples
         ========
 
@@ -836,7 +842,7 @@ def randprime(a, b):
     if a >= b:
         return
     a, b = map(int, (a, b))
-    n = random.randint(a - 1, b)
+    n = randint(a - 1, b)
     p = nextprime(n)
     if p >= b:
         p = prevprime(b)

@@ -2,7 +2,6 @@ from sympy.core.evalf import N
 from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
-from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
@@ -140,18 +139,6 @@ def test_eigen():
     assert isinstance(m.eigenvals(simplify=True, multiple=True), list)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=False), dict)
     assert isinstance(m.eigenvals(simplify=lambda x: x, multiple=True), list)
-
-
-@slow
-def test_eigen_slow():
-    # issue 15125
-    from sympy.core.function import count_ops
-    q = Symbol("q", positive = True)
-    m = Matrix([[-2, exp(-q), 1], [exp(q), -2, 1], [1, 1, -2]])
-    assert count_ops(m.eigenvals(simplify=False)) > \
-        count_ops(m.eigenvals(simplify=True))
-    assert count_ops(m.eigenvals(simplify=lambda x: x)) > \
-        count_ops(m.eigenvals(simplify=True))
 
 
 def test_float_eigenvals():

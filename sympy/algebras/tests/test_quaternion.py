@@ -13,6 +13,7 @@ from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
+import math
 from itertools import permutations, product
 
 w, x, y, z = symbols('w:z')
@@ -44,6 +45,16 @@ def test_quaternion_construction_norm():
 
     q3 = Quaternion(w, x, y, z, norm=1)
     assert (q1 * q3).norm() == q1.norm()
+
+
+def test_issue_25254():
+    # calculating the inverse cached the norm which caused problems
+    # when multiplying
+    p = Quaternion(1, 0, 0, 0)
+    q = Quaternion.from_axis_angle((1, 1, 1), 3 * math.pi/4)
+    qi = q.inverse()  # this operation cached the norm
+    test = q * p * qi
+    assert ((test - p).norm() < 1E-10)
 
 
 def test_to_and_from_Matrix():

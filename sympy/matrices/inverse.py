@@ -1,4 +1,4 @@
-from sympy.core.numbers import mod_inverse
+from sympy.core.intfunc import mod_inverse
 
 from .common import MatrixError, NonSquareMatrixError, NonInvertibleMatrixError
 from .utilities import _iszero

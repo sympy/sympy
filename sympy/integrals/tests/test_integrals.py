@@ -2097,3 +2097,24 @@ def test_issue_20782():
     f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
     assert integrate(f, (x, -oo, 1)) == 1
     assert integrate(-f, (x, -oo, 1)) == -1
+
+def test_issue_20781():
+    x_d = Symbol('x_d')
+    fun_sum = lambda x, a1, a2: Piecewise((0, x<a1),(1, x>=a1)) + Piecewise((0, x<a2),(1, x>=a2))
+
+    assert integrate(fun_sum((x_d), 0, 0.0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 0.0, 0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 1.0, 1), (x_d, -float('Inf'), x)) == 2*x - 2*Min(1, x)
+
+@slow
+def test_issue_19427():
+    # <https://github.com/sympy/sympy/issues/19427>
+    x = Symbol("x")
+
+    # Have always been okay:
+    assert integrate((x ** 4) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 16
+    assert integrate((-2 * x ** 2) * sqrt(1 - x ** 2), (x, -1, 1)) == -pi / 4
+    assert integrate((1) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 2
+
+    # Sum of the above, used to incorrectly return 0 for a while:
+    assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16

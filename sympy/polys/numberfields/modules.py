@@ -178,7 +178,7 @@ to support this.
 
 """
 
-from sympy.core.numbers import igcd, ilcm
+from sympy.core.intfunc import igcd, ilcm
 from sympy.core.symbol import Dummy
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polytools import Poly
@@ -1355,7 +1355,10 @@ class ModuleElement(IntegerPowerable):
         """
         Get a copy of this element's column, optionally converting to a domain.
         """
-        return self.col.convert_to(domain)
+        if domain is None:
+            return self.col.copy()
+        else:
+            return self.col.convert_to(domain)
 
     @property
     def coeffs(self):
