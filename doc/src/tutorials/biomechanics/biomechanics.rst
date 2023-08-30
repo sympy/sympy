@@ -739,10 +739,10 @@ will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
    >>> p_vals = np.array([
    ...     0.5,  # m [kg]
    ...     9.81,  # g [m/s/s]
-   ...     10.0,  # F_M_max
-   ...     0.18,  # l_M_opt, length of muscle at which max force is produced
-   ...     0.17,  # l_T_slack, always fixed (rigid tendon)
-   ...     10.0,  # v_M_max
+   ...     10.0,  # F_M_max [N]
+   ...     0.18,  # l_M_opt [m]
+   ...     0.17,  # l_T_slack [m]
+   ...     10.0,  # v_M_max [m/s]
    ...     0.0,  # alpha_opt
    ...     0.1,  # beta
    ... ])
@@ -765,7 +765,7 @@ we choose :math:`q_0=l_M_opt + l_T_slack`:
    ... ])
    ...
 
-We can set the excitation to 1.0 to test the numerical functions:
+Set the excitation to 1.0 and test the numerical functions:
 
 .. plot::
    :format: doctest
@@ -796,26 +796,28 @@ muscle lifts the mass:
    ...
    ...     return eval_eom(x, r, p_vals)
    ...
-
    >>> from scipy.integrate import solve_ivp
    >>> t0, tf = 0.0, 6.0
-   >>> times = np.linspace(t0, tf, num=1001)
+   >>> times = np.linspace(t0, tf, num=601)
    >>> sol = solve_ivp(eval_rhs,
    ...                 (t0, tf),
    ...                 x_vals, t_eval=times)
    ...
    >>> import matplotlib.pyplot as plt
    >>> fig, axes = plt.subplots(4, 1, sharex=True)
-   >>> axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')
-   >>> axes[0].set_ylabel('Distance [m]')
-   >>> axes[1].plot(sol.t, sol.y[1], label=state[1])
-   >>> axes[1].set_ylabel('Speed [m/s]')
-   >>> axes[2].plot(sol.t, sol.y[2], label=state[2])
-   >>> axes[2].set_ylabel('Activation')
-   >>> axes[3].plot(sol.t, eval_force(sol.y, p_vals).T, label='force')
-   >>> axes[3].set_ylabel('Force [N]')
-   >>> axes[3].set_xlabel('Time [s]')
-   >>> axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()
+   >>> _ = axes[0].plot(sol.t, sol.y[0] - p_vals[4], label='length of muscle')
+   >>> _ = axes[0].set_ylabel('Distance [m]')
+   >>> _ = axes[1].plot(sol.t, sol.y[1], label=state[1])
+   >>> _ = axes[1].set_ylabel('Speed [m/s]')
+   >>> _ = axes[2].plot(sol.t, sol.y[2], label=state[2])
+   >>> _ = axes[2].set_ylabel('Activation')
+   >>> _ = axes[3].plot(sol.t, eval_force(sol.y, p_vals).T, label='force')
+   >>> _ = axes[3].set_ylabel('Force [N]')
+   >>> _ = axes[3].set_xlabel('Time [s]')
+   >>> _ = axes[0].legend(), axes[1].legend(), axes[2].legend(), axes[3].legend()
+
+The muscle pulls the mass in opposition to gravity and damps out to an
+equilibrium of 5 N.
 
 References
 ==========
