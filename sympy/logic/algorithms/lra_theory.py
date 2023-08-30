@@ -161,13 +161,13 @@ class Boundry:
         return hash((self.var, self.bound, self.strict, self.upper, self.equality))
 
 
-class ExtendedRational():
+class LRARational():
     """
-    Represents c + k*delta where c is a rational or positive/negative
-    infinity.
+    Represents a rational plus or minus some amount
+    of arbitrary small deltas.
     """
-    def __init__(self, extended_rational, delta):
-        self.value = (extended_rational, delta)
+    def __init__(self, rational, delta):
+        self.value = (rational, delta)
 
     def __lt__(self, other):
         return self.value < other.value
@@ -179,20 +179,14 @@ class ExtendedRational():
         return self.value == other.value
 
     def __add__(self, other):
-        self_infinity = self.value[0] == oo
-        other_infinity = other.value[0] == oo
-        if self_infinity and not other_infinity:
-            return self
-        if other_infinity and not self_infinity:
-            return other
-        return ExtendedRational(self.value[0] + other.value[0], self.value[1] + other.value[1])
+        return LRARational(self.value[0] + other.value[0], self.value[1] + other.value[1])
 
     def __sub__(self, other):
-        return ExtendedRational(self.value[0] - other.value[0], self.value[1] - other.value[1])
+        return LRARational(self.value[0] - other.value[0], self.value[1] - other.value[1])
 
     def __mul__(self, other):
-        assert not isinstance(other, ExtendedRational)
-        return ExtendedRational(self.value[0] * other, self.value[1] * other)
+        assert not isinstance(other, LRARational)
+        return LRARational(self.value[0] * other, self.value[1] * other)
 
     def __getitem__(self, index):
         return self.value[index]
@@ -201,15 +195,15 @@ class ExtendedRational():
         return repr(self.value)
 
 
-class VariableLRA():
+class LRAVariable():
     def __init__(self, var):
-        self.upper = ExtendedRational(float("inf"), 0)
+        self.upper = LRARational(float("inf"), 0)
         self.upper_from_eq = False
         self.upper_from_neg = False
-        self.lower = ExtendedRational(-float("inf"), 0)
+        self.lower = LRARational(-float("inf"), 0)
         self.lower_from_eq = False
         self.lower_from_neg = False
-        self.assign = ExtendedRational(0,0)
+        self.assign = LRARational(0,0)
         self.var = var
         self.col_idx = None
 
@@ -234,9 +228,10 @@ class LRASolver():
     Linear Arithmatic Solver for DPLL(T) implemented with algorithm based on
     the Dual Simplex method and Bland's pivoting rule.
 
-    TODO: Implement and utilize backtracking
-
-    TODO: Allow all real numbers other than just rationals
+    TODO:
+     - Implement and utilize backtracking
+     - Handle non-rational real numbers
+     - Handle positive and negative infinity
 
     References
     ==========
@@ -284,63 +279,44 @@ class LRASolver():
         # always one of: (True, Assignment), (False, ConflictClause), None
         self.result = None
 
-
-    @staticmethod
-    def _remove_uneeded_variables(A, nonbasic, num_unused):
-        """
-        WIP speed up. See the following cs stack exchange for more information.
-        cs.stackexchange.com/questions/161709/a-fast-linear-arithmetic-solver-how-can-gaussian-elimination-be-used-to-simplif/161713#161713
-        """
-        M = A.copy()
-        if num_unused == 0:
-            return M, nonbasic
-
-        rref, pivs = M.rref()
-
-        removed = set()
-        for col in pivs:
-            if col >= num_unused:
-                break
-
-            # col in terms of other variables
-            sol = rref[col, :]
-            if sol*M[col, col] == M[col, :]:
-                continue
-
-            removed.add(col)
-            for row in range(M.shape[0]):
-                M[row, :] = M[row, :]- sol*M[row, col]
-
-        not_removed = [col for col in range(M.shape[1]) if col not in removed]
-        M = M[:,not_removed]
-        nonbasic = [nonbasic[nr] for nr in not_removed if nr < len(nonbasic)]
-
-        return M, nonbasic
-
-
-    @staticmethod
-    def _pred_to_binrel(pred):
-        assert not pred.function == Q.extended_positive
-        arg = pred.arguments[0]
-        if pred.function == Q.zero:
-            return Q.eq(arg, 0)
-        if pred.function == Q.positive:
-            return Q.gt(arg, 0)
-        if pred.function == Q.positive_infinite:
-            return Q.ge(arg, float("inf"))
-        if pred.function == Q.negative:
-            return Q.lt(arg, 0)
-        if pred.function == Q.negative_infinite:
-            return Q.le(arg, -float("inf"))
-
-        return None
+    # @staticmethod
+    # def _remove_uneeded_variables(A, nonbasic, num_unused):
+    #     """
+    #     WIP speed up. See the following cs stack exchange for more information.
+    #     cs.stackexchange.com/questions/161709/a-fast-linear-arithmetic-solver-how-can-gaussian-elimination-be-used-to-simplif/161713#161713
+    #     """
+    #     M = A.copy()
+    #     if num_unused == 0:
+    #         return M, nonbasic
+    #
+    #     rref, pivs = M.rref()
+    #
+    #     removed = set()
+    #     for col in pivs:
+    #         if col >= num_unused:
+    #             break
+    #
+    #         # col in terms of other variables
+    #         sol = rref[col, :]
+    #         if sol*M[col, col] == M[col, :]:
+    #             continue
+    #
+    #         removed.add(col)
+    #         for row in range(M.shape[0]):
+    #             M[row, :] = M[row, :]- sol*M[row, col]
+    #
+    #     not_removed = [col for col in range(M.shape[1]) if col not in removed]
+    #     M = M[:,not_removed]
+    #     nonbasic = [nonbasic[nr] for nr in not_removed if nr < len(nonbasic)]
+    #
+    #     return M, nonbasic
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
         """
         Creates an LRASolver from an EncodedCNF object
         and a list of conflict clauses for propositions
-        that are always false or true.
+        that can be simplified to True or False.
 
         Parameters
         ==========
@@ -359,7 +335,8 @@ class LRASolver():
         lra : LRASolver
 
         conflicts : list
-            Contains a list of one-literal conflict clauses.
+            Contains a one-literal conflict clause for each proposition
+            that can be simplified to True or False.
 
         Example
         =======
@@ -409,21 +386,16 @@ class LRASolver():
                 continue
 
             assert prop.function in ALLOWED_PRED
-
             if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
                 raise ValueError(f"{prop} contains matrix variables")
-
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 raise ValueError(f"{prop} contains nan")
-
             if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
                 raise UnhandledNumber(f"{prop} contains an imaginary component")
-
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledNumber(f"{prop} contains infinity")
 
-            # simplify to True / False if possible
-            prop = _eval_binrel(prop)
+            prop = _eval_binrel(prop)  # simplify to True / False if possible
             if prop == True:
                 conflicts.append([enc])
                 continue
@@ -450,7 +422,7 @@ class LRASolver():
                 if term not in x_subs:
                     x_count += 1
                     x_subs[term] = Dummy(f"x{x_count}")
-                    var_to_lra_var[x_subs[term]] = VariableLRA(x_subs[term])
+                    var_to_lra_var[x_subs[term]] = LRAVariable(x_subs[term])
                     nonbasic.append(x_subs[term])
                 terms.append(term_coeff * x_subs[term])
             # If there are multiple variable terms, replace them with a dummy _si variable.
@@ -460,7 +432,7 @@ class LRASolver():
                 if var not in s_subs:
                     s_count += 1
                     d = Dummy(f"s{s_count}")
-                    var_to_lra_var[d] = VariableLRA(d)
+                    var_to_lra_var[d] = LRAVariable(d)
                     basic.append(d)
                     s_subs[var] = d
                     A.append(var - d)
@@ -484,16 +456,32 @@ class LRASolver():
 
         return LRASolver(A, basic, nonbasic, encoding, x_subs, s_subs, testing_mode), conflicts
 
-    def assert_lit(self, enc_boundry):
+    def reset_bounds(self):
         """
-        Assert an upper or lower bound or equality between
-        a variable and a constant. Update the state
-        accordingly.
+        Resets the state of the LRASolver to before
+        anything was asserted.
+        """
+        self.result = None
+        for var in self.all_var:
+            var.lower = LRARational(-float("inf"), 0)
+            var.lower_from_eq = False
+            var.lower_from_neg = False
+            var.upper = LRARational(float("inf"), 0)
+            var.upper_from_eq= False
+            var.lower_from_neg = False
+            var.assign = LRARational(0, 0)
+
+    def assert_lit(self, enc_constraint):
+        """
+        Assert a literal representing a constraint
+        and update the interal state accordingly.
 
         Parameters
         ==========
 
-        enc_boundry : int
+        enc_constraint : int
+            A mapping of encodings to constraints
+            can be found in `self.enc_to_boundry`.
 
         Returns
         =======
@@ -501,18 +489,17 @@ class LRASolver():
         None or (False, explanation)
 
         explanation : set of ints
-            Integers are negative and represent negations of some
-            AppliedBinaryRelation. Which relation a given int
-            encodes can be found in `self.enc_to_boundry`.
+            A conflict clause that "explains" why
+            the literals asserted so far are unsatisfiable.
         """
-        if abs(enc_boundry) not in self.enc_to_boundry:
+        if abs(enc_constraint) not in self.enc_to_boundry:
             raise ValueError("Tried to assert a literal with no encoding")
 
-        if not HANDLE_NEGATION and enc_boundry < 0:
+        if not HANDLE_NEGATION and enc_constraint < 0:
             return None
 
-        boundry = self.enc_to_boundry[abs(enc_boundry)]
-        sym, c, negated = boundry.var, boundry.bound, enc_boundry < 0
+        boundry = self.enc_to_boundry[abs(enc_constraint)]
+        sym, c, negated = boundry.var, boundry.bound, enc_constraint < 0
 
         if boundry.equality and negated:
             return None # negated equality is not handled and should only appear as conflict clause
@@ -520,9 +507,9 @@ class LRASolver():
         upper = boundry.upper != negated
         if boundry.strict != negated:
             delta = -1 if upper else 1
-            c = ExtendedRational(c, delta)
+            c = LRARational(c, delta)
         else:
-            c = ExtendedRational(c, 0)
+            c = LRARational(c, 0)
 
         if boundry.equality:
             res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
@@ -618,47 +605,23 @@ class LRASolver():
             b.assign = b.assign + (v - xi.assign)*aji
         xi.assign = v
 
-    def reset_bounds(self):
-        """
-        Resets the state of the LRASolver to before
-        anything was asserted.
-        """
-        self.result = None
-        for var in self.all_var:
-            var.lower = ExtendedRational(-float("inf"), 0)
-            var.lower_from_eq = False
-            var.lower_from_neg = False
-            var.upper = ExtendedRational(float("inf"), 0)
-            var.upper_from_eq= False
-            var.lower_from_neg = False
-            var.assign = ExtendedRational(0, 0)
-
-
-    def get_assignment(self, xi):
-        pass
-
-    def backtrack(self):
-        pass
-
     def check(self):
         """
         Searches for an assignment that satisfies all constraints
-        or determines that such an assignment does not exist.
+        or determines that no such assignment exists and gives
+        a minimal conflict clause that "explains" why the
+        constraints are unsatisfiable.
 
         Returns
         =======
 
         (True, assignment) or (False, explanation)
 
-        assignment : dict of _xi and _si variables to assigned value
+        assignment : dict of LRAVariables to values
             Assigned values are tuples that represent a rational number
-            plus some infinatesimal delta. (Delta is needed so that strict
-            inequalities can be handled).
+            plus some infinatesimal delta.
 
         explanation : set of ints
-            Integers are negative and represent negations of some
-            AppliedBinaryRelation. Which relation a given int
-            encodes can be found in `self.enc_to_boundry`.
         """
         if self.is_sat:
             return True, {var: var.assign for var in self.all_var}
@@ -727,7 +690,7 @@ class LRASolver():
             if len(cand) == 0:
                 return True, {var: var.assign for var in self.all_var}
 
-            xi = sorted(cand, key=lambda v: str(v))[0] # TODO: Do Bland's rule better
+            xi = sorted(cand, key=lambda v: v.col_idx)[0] # Bland's rule
             i = basic[xi]
 
             if xi.assign < xi.lower:
@@ -764,7 +727,7 @@ class LRASolver():
 
                     conflict = [-neg*self.boundry_to_enc[c] for c, neg in conflict]
                     return False, conflict
-                xj = sorted(cand, key=lambda v: str(v))[0]
+                xj = sorted(cand, key=lambda v: v.col_idx)[0]
                 _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 

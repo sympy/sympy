@@ -10,7 +10,7 @@ from sympy.abc import x, y, z
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.external import import_module
 
-from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber, ExtendedRational, HANDLE_NEGATION
+from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber, LRARational, HANDLE_NEGATION
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -469,12 +469,12 @@ def test_reset_bounds():
     lra.reset_bounds()
     assert lra.check()[0] == True
     for var in lra.all_var:
-        assert var.upper == ExtendedRational(float("inf"), 0)
+        assert var.upper == LRARational(float("inf"), 0)
         assert var.upper_from_eq == False
         assert var.upper_from_neg == False
-        assert var.lower == ExtendedRational(-float("inf"), 0)
+        assert var.lower == LRARational(-float("inf"), 0)
         assert var.lower_from_eq == False
         assert var.lower_from_neg == False
-        assert var.assign == ExtendedRational(0, 0)
+        assert var.assign == LRARational(0, 0)
         assert var.var is not None
         assert var.col_idx is not None
