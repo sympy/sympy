@@ -2099,10 +2099,10 @@ class Basic(Printable):
         same. This routine will only return True if two expressions are
         identical in terms of class types.
 
-        >>> from sympy import eye
+        >>> from sympy import eye, Basic
         >>> eye(1) == S(eye(1))  # mutable vs immutable
         True
-        >>> eye(1).is_same(S(eye(1)))
+        >>> Basic.is_same(eye(1), S(eye(1)))
         False
 
         """
