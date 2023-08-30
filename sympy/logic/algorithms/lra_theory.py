@@ -10,8 +10,8 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy import SYMPY_DEBUG
-from sympy.matrices.dense import Matrix
 from sympy.core.numbers import Rational, oo
+from sympy.matrices.dense import Matrix
 from sympy.matrices.common import MatrixKind
 from sympy.core.kind import NumberKind
 
@@ -365,11 +365,10 @@ class LRASolver():
         =======
 
         >>> from sympy.core.relational import Eq
-        >>> from sympy.matrices.dense import Matrix
         >>> from sympy.assumptions.cnf import CNF, EncodedCNF
         >>> from sympy.assumptions.ask import Q
         >>> from sympy.logic.algorithms.lra_theory import LRASolver
-        >>> from sympy.abc import a, x, y, z
+        >>> from sympy.abc import x, y, z
         >>> phi = (x >= 0) & ((x + y <= 2) | (x + 2 * y - z >= 6))
         >>> phi = phi & (Eq(x + y, 2) | (x + 2 * y - z > 4))
         >>> phi = phi & Q.gt(2, 1)

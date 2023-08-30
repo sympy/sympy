@@ -16,8 +16,6 @@ from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.matrices.common import MatrixKind
-from sympy.core.kind import NumberKind
 
 from sympy.testing.pytest import raises, XFAIL, skip
 import time
