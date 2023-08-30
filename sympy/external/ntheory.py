@@ -9,6 +9,47 @@ import math
 import mpmath.libmp as mlib
 
 
+_small_trailing = [0] * 256
+for j in range(1, 8):
+    _small_trailing[1 << j :: 1 << (j + 1)] = [j] * (1 << (7 - j))
+
+
+def bit_scan1(x, n=0):
+    if not x:
+        return
+    x = abs(x >> n)
+    low_byte = x & 0xFF
+    if low_byte:
+        return _small_trailing[low_byte] + n
+
+    t = 8 + n
+    x >>= 8
+    # 2**m is quick for z up through 2**30
+    z = x.bit_length() - 1
+    if x == 1 << z:
+        return z + t
+
+    if z < 300:
+        # fixed 8-byte reduction
+        while not x & 0xFF:
+            x >>= 8
+            t += 8
+    else:
+        # binary reduction important when there might be a large
+        # number of trailing 0s
+        p = z >> 1
+        while not x & 0xFF:
+            while x & ((1 << p) - 1):
+                p >>= 1
+            x >>= p
+            t += p
+    return t + _small_trailing[x & 0xFF]
+
+
+def bit_scan0(x, n=0):
+    return bit_scan1(x + (1 << n), n)
+
+
 def factorial(x):
     """Return x!."""
     return int(mlib.ifac(int(x)))
@@ -145,11 +186,8 @@ def kronecker(x, y):
         return 1
     sign = -1 if y < 0 and x < 0 else 1
     y = abs(y)
-    # We want to calculate s = trailing(y)
-    s = 0
-    while y % 2 == 0:
-        y >>= 1
-        s += 1
+    s = bit_scan1(y)
+    y >>= s
     if s % 2 and x % 8 in [3, 5]:
         sign = -sign
     return sign * jacobi(x, y)

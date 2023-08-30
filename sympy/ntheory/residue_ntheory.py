@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker
+from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from sympy.core.intfunc import trailing
 from .factor_ import factorint, multiplicity, perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
@@ -462,7 +461,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
 
     """
-    s = trailing(p - 1)
+    s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
     while 1:
@@ -746,13 +745,13 @@ def is_quad_residue(a, p):
         return True
     # Since we want to compute the Jacobi symbol,
     # we separate p into the odd part and the rest.
-    t = trailing(p)
+    t = bit_scan1(p)
     if t:
         # The existence of a solution to a power of 2 is determined
         # using the logic of `p==2` in `_sqrt_mod_prime_power` and `_sqrt_mod1`.
         a_ = a % (1 << t)
         if a_:
-            r = trailing(a_)
+            r = bit_scan1(a_)
             if r % 2 or (a_ >> r) & 6:
                 return False
         p >>= t
@@ -835,8 +834,8 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         return pow(a, f // gcd(f, n), pow(p, k)) == 1
     if n & 1:
         return True
-    c = trailing(n)
-    return a % pow(2, min(c + 2, k)) == 1
+    c = min(bit_scan1(n) + 2, k)
+    return a % pow(2, c) == 1
 
 
 def _nthroot_mod1(s, q, p, all_roots):

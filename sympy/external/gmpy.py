@@ -8,6 +8,8 @@ from sympy.external import import_module
 from .pythonmpq import PythonMPQ
 
 from .ntheory import (
+    bit_scan1 as python_bit_scan1,
+    bit_scan0 as python_bit_scan0,
     factorial as python_factorial,
     sqrt as python_sqrt,
     sqrtrem as python_sqrtrem,
@@ -45,6 +47,8 @@ __all__ = [
     # MPZ is either gmpy.mpz or int.
     'MPZ',
 
+    'bit_scan1',
+    'bit_scan0',
     'factorial',
     'sqrt',
     'is_square',
@@ -141,6 +145,8 @@ if GROUND_TYPES == 'gmpy':
     MPZ = gmpy.mpz
     MPQ = gmpy.mpq
 
+    bit_scan1 = gmpy.bit_scan1
+    bit_scan0 = gmpy.bit_scan0
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     is_square = gmpy.is_square
@@ -167,6 +173,8 @@ elif GROUND_TYPES == 'flint':
     MPZ = flint.fmpz # type: ignore
     MPQ = flint.fmpq # type: ignore
 
+    bit_scan1 = python_bit_scan1
+    bit_scan0 = python_bit_scan0
     factorial = python_factorial
 
     def sqrt(x):
@@ -210,6 +218,8 @@ elif GROUND_TYPES == 'python':
     MPZ = int
     MPQ = PythonMPQ
 
+    bit_scan1 = python_bit_scan1
+    bit_scan0 = python_bit_scan0
     factorial = python_factorial
     sqrt = python_sqrt
     is_square = python_is_square
