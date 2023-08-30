@@ -14,7 +14,7 @@ from functools import lru_cache
 
 from .sympify import sympify
 from .singleton import S
-from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm, sqrt, iroot
+from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm, sqrt, iroot, bit_scan1
 from sympy.utilities.misc import as_int, filldedent
 
 
@@ -134,11 +134,6 @@ def integer_log(n, b):
     return d - (n_ > n), (n_ == n or n_//b == n)
 
 
-_small_trailing = [0] * 256
-for j in range(1, 8):
-    _small_trailing[1 << j :: 1 << (j + 1)] = [j] * (1 << (7 - j))
-
-
 def trailing(n):
     """Count the number of trailing zero digits in the binary
     representation of n, i.e. determine the largest power of 2
@@ -158,35 +153,9 @@ def trailing(n):
     sympy.ntheory.factor_.multiplicity
 
     """
-    n = abs(int(n))
     if not n:
         return 0
-    low_byte = n & 0xFF
-    if low_byte:
-        return _small_trailing[low_byte]
-
-    t = 8
-    n >>= 8
-    # 2**m is quick for z up through 2**30
-    z = n.bit_length() - 1
-    if n == 1 << z:
-        return z + t
-
-    if z < 300:
-        # fixed 8-byte reduction
-        while not n & 0xFF:
-            n >>= 8
-            t += 8
-    else:
-        # binary reduction important when there might be a large
-        # number of trailing 0s
-        p = z >> 1
-        while not n & 0xFF:
-            while n & ((1 << p) - 1):
-                p >>= 1
-            n >>= p
-            t += p
-    return t + _small_trailing[n & 0xFF]
+    return bit_scan1(int(n))
 
 
 @lru_cache(1024)
