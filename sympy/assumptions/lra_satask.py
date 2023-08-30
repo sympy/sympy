@@ -37,12 +37,15 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    sat_true = split_unequality(sat_true)
-    sat_false = split_unequality(sat_false)
+    try:
+        sat_true = _preprocess(sat_true)
+        sat_false = _preprocess(sat_false)
+    except UnhandledPred:
+        return None
 
     for pred in sat_true.encoding.keys():
         if isinstance(pred, AppliedPredicate):
-            if pred.function not in ALLOWED_PRED and pred.function:
+            if pred.function not in ALLOWED_PRED:
                 return None
             exprs = pred.arguments
             if any(expr.is_real is not True for expr in exprs):
@@ -64,10 +67,14 @@ def check_satisfiability(prop, _prop, factbase):
         return False
 
 
+class UnhandledPred(Exception):
+    pass
 
-def split_unequality(enc_cnf):
+
+def _preprocess(enc_cnf):
     """
-    Returns an encoded cnf without any Q.ne predicate.
+    Returns an encoded cnf with only Q.eq, Q.gt, Q.lt,
+    Q.ge, and Q.le predicate.
 
     Converts every unequality into a disjunction of strict
     inequalities. For example, x != 3 would become
@@ -77,83 +84,102 @@ def split_unequality(enc_cnf):
     equalities.
     """
     enc_cnf = enc_cnf.copy()
-    cur_enc = len(enc_cnf.encoding.items()) + 1
-
+    cur_enc = 1
     rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
 
+    new_encoding = {}
     new_data = []
     for clause in enc_cnf.data:
         new_clause = []
         for lit in clause:
+            if lit == 0:
+                new_clause.append(lit)
+                new_encoding[lit] = False
+                continue
             prop = rev_encoding[abs(lit)]
             negated = lit < 0
+            sign = (lit > 0) - (lit < 0)
 
             if not isinstance(prop, AppliedPredicate):
-                new_clause.append(lit)
+                if prop not in new_encoding:
+                    new_encoding[prop] = cur_enc
+                    cur_enc += 1
+                lit = new_encoding[prop]
+                new_clause.append(sign*lit)
                 continue
+
+            prop = _pred_to_binrel(prop)
+
+            if not (prop.function in ALLOWED_PRED or prop.function == Q.ne):
+                raise UnhandledPred
 
             if negated and prop.function == Q.eq:
                 negated = False
                 prop = Q.ne(*prop.arguments)
 
-            if prop.function != Q.ne:
-                new_clause.append(lit)
-                continue
-
             if prop.function == Q.ne:
                 arg1, arg2 = prop.arguments
                 if negated:
                     new_prop = Q.eq(arg1, arg2)
-                    if new_prop not in enc_cnf.encoding:
-                        enc_cnf.encoding[new_prop] = cur_enc
+                    if new_prop not in new_encoding:
+                        new_encoding[new_prop] = cur_enc
                         cur_enc += 1
 
-                    new_enc = enc_cnf.encoding[new_prop]
+                    new_enc = new_encoding[new_prop]
                     new_clause.append(new_enc)
                     continue
                 else:
                     new_props = (Q.gt(arg1, arg2), Q.lt(arg1, arg2))
                     for new_prop in new_props:
-                        if new_prop not in enc_cnf.encoding:
-                            enc_cnf.encoding[new_prop] = cur_enc
+                        if new_prop not in new_encoding:
+                            new_encoding[new_prop] = cur_enc
                             cur_enc += 1
 
-                        new_enc = enc_cnf.encoding[new_prop]
+                        new_enc = new_encoding[new_prop]
                         new_clause.append(new_enc)
                     continue
 
             if prop.function == Q.eq and negated:
                 assert False
 
-
-
-        new_data.append(new_clause)
-
-    enc_cnf.data = new_data
-    return reassign_encoding(enc_cnf)
-
-def reassign_encoding(enc_cnf):
-    enc_cnf = enc_cnf.copy()
-    old_to_new = {}
-    cur_enc = 1
-    new_data = []
-    for clause in enc_cnf.data:
-        new_clause = []
-        for lit in clause:
-            if abs(lit) not in old_to_new:
-                old_to_new[abs(lit)] = cur_enc
+            if prop not in new_encoding:
+                new_encoding[prop] = cur_enc
                 cur_enc += 1
-            sign = (lit > 0) - (lit < 0)
-            assert sign != 0
-            new_lit = old_to_new[abs(lit)]*sign
-            new_clause.append(new_lit)
+            new_clause.append(new_encoding[prop]*sign)
         new_data.append(new_clause)
 
-    new_encoding = {}
-    for prop, enc in enc_cnf.encoding.items():
-        if enc in old_to_new:
-            new_encoding[prop] = old_to_new[enc]
+    assert len(new_encoding) >= cur_enc - 1
 
-    enc_cnf.encoding = new_encoding
-    enc_cnf.data = new_data
-    return EncodedCNF(new_data, new_encoding)
+    enc_cnf = EncodedCNF(new_data, new_encoding)
+    return enc_cnf
+
+
+def _pred_to_binrel(pred):
+    if pred.function in pred_to_pos_neg_zero:
+        f = pred_to_pos_neg_zero[pred.function]
+        pred = f(pred.arguments[0])
+
+    if pred.function == Q.positive:
+        pred = Q.gt(pred.arguments[0], 0)
+    elif pred.function == Q.negative:
+        pred = Q.lt(pred.arguments[0], 0)
+    elif pred.function == Q.zero:
+        pred = Q.eq(pred.arguments[0], 0)
+    elif pred.function == Q.nonpositive:
+        pred = Q.le(pred.arguments[0], 0)
+    elif pred.function == Q.nonnegative:
+        pred = Q.ge(pred.arguments[0], 0)
+    elif pred.function == Q.nonzero:
+        pred = Q.ne(pred.arguments[0], 0)
+
+    return pred
+
+pred_to_pos_neg_zero = {
+    Q.prime : Q.positive,
+    Q.composite : Q.positive,
+    Q.extended_positive : Q.positive,
+    Q.extended_negative : Q.negative,
+    Q.extended_nonpositive : Q.nonpositive,
+    Q.extended_negative : Q.negative,
+    Q.extended_nonzero: Q.nonzero
+}
