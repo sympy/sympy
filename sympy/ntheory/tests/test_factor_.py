@@ -7,6 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
+from sympy.core.intfunc import _small_trailing as small_trailing
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
@@ -15,7 +16,7 @@ from sympy.ntheory import (totient,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
-    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
+    udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
@@ -76,6 +77,9 @@ def test_trailing_bitcount():
     for i in range(100):
         assert trailing(1 << i) == i
         assert trailing((1 << i) * 31337) == i
+    for i in range(500):
+        n = (1 << 500) + (1 << i)
+        assert trailing(n) == i
     assert trailing(1 << 1000001) == 1000001
     assert trailing((1 << 273956)*7**37) == 273956
     # issue 12709
