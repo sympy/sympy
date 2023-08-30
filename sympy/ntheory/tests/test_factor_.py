@@ -5,14 +5,12 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
-from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
-from sympy.core.intfunc import _small_trailing as small_trailing
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
     primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
@@ -65,27 +63,6 @@ def multiproduct(seq=(), start=1):
                 units *= base
             multi.append((base, exp//2))
     return units * multiproduct(multi)**2
-
-
-def test_trailing_bitcount():
-    assert trailing(0) == 0
-    assert trailing(1) == 0
-    assert trailing(-1) == 0
-    assert trailing(2) == 1
-    assert trailing(7) == 0
-    assert trailing(-7) == 0
-    for i in range(100):
-        assert trailing(1 << i) == i
-        assert trailing((1 << i) * 31337) == i
-    for i in range(500):
-        n = (1 << 500) + (1 << i)
-        assert trailing(n) == i
-    assert trailing(1 << 1000001) == 1000001
-    assert trailing((1 << 273956)*7**37) == 273956
-    # issue 12709
-    big = small_trailing[-1]*2
-    assert trailing(-big) == trailing(big)
-    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():
