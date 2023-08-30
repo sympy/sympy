@@ -23,7 +23,7 @@ HANDLE_NEGATION = True
 
 class LRASolver():
     """
-    Linear Arithmatic Solver for DPLL(T) implemented with an algorithm based on
+    Linear Arithmetic Solver for DPLL(T) implemented with an algorithm based on
     the Dual Simplex method. Uses Bland's pivoting rule to avoid cycling.
 
     TODO:
@@ -40,7 +40,7 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundry, x_subs, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundary, x_subs, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
@@ -50,7 +50,7 @@ class LRASolver():
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledNumber
-        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in enc_to_boundry.values()):
+        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in enc_to_boundary.values()):
             raise UnhandledNumber
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
@@ -59,8 +59,8 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundry = enc_to_boundry
-        self.boundry_to_enc = {value: key for key, value in enc_to_boundry.items()}
+        self.enc_to_boundary = enc_to_boundary
+        self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
         self.A = A
         self.slack = slack_variables
         self.nonslack = nonslack_variables
@@ -119,7 +119,7 @@ class LRASolver():
         [[4]]
         """
 
-        encoding = {}  # maps int to Boundry
+        encoding = {}  # maps int to boundary
         A = []
 
         basic = []
@@ -214,7 +214,7 @@ class LRASolver():
             equality = prop.function == Q.eq
             upper = var_coeff > 0 if not equality else None
             strict = prop.function in [Q.gt, Q.lt]
-            b = Boundry(var_to_lra_var[var], -const, upper, equality, strict)
+            b = Boundary(var_to_lra_var[var], -const, upper, equality, strict)
             encoding[enc] = b
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
@@ -250,7 +250,7 @@ class LRASolver():
 
         enc_constraint : int
             A mapping of encodings to constraints
-            can be found in `self.enc_to_boundry`.
+            can be found in `self.enc_to_boundary`.
 
         Returns
         =======
@@ -261,26 +261,26 @@ class LRASolver():
             A conflict clause that "explains" why
             the literals asserted so far are unsatisfiable.
         """
-        if abs(enc_constraint) not in self.enc_to_boundry:
+        if abs(enc_constraint) not in self.enc_to_boundary:
             return None
 
         if not HANDLE_NEGATION and enc_constraint < 0:
             return None
 
-        boundry = self.enc_to_boundry[abs(enc_constraint)]
-        sym, c, negated = boundry.var, boundry.bound, enc_constraint < 0
+        boundary = self.enc_to_boundary[abs(enc_constraint)]
+        sym, c, negated = boundary.var, boundary.bound, enc_constraint < 0
 
-        if boundry.equality and negated:
+        if boundary.equality and negated:
             return None # negated equality is not handled and should only appear in conflict clauses
 
-        upper = boundry.upper != negated
-        if boundry.strict != negated:
+        upper = boundary.upper != negated
+        if boundary.strict != negated:
             delta = -1 if upper else 1
             c = LRARational(c, delta)
         else:
             c = LRARational(c, 0)
 
-        if boundry.equality:
+        if boundary.equality:
             res1 = self._assert_lower(sym, c, from_equality=True, from_neg=negated)
             if res1 and res1[0] == False:
                 res = res1
@@ -309,14 +309,14 @@ class LRASolver():
             assert (xi.lower[1] >= 0) is True
             assert (ci[1] <= 0) is True
 
-            lit1, neg1 = Boundry.from_lower(xi)
+            lit1, neg1 = Boundary.from_lower(xi)
 
-            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
+            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=True, equality=from_equality)
             if from_neg:
                 lit2 = lit2.get_negated()
             neg2 = -1 if from_neg else 1
 
-            conflict = [-neg1*self.boundry_to_enc[lit1], -neg2*self.boundry_to_enc[lit2]]
+            conflict = [-neg1*self.boundary_to_enc[lit1], -neg2*self.boundary_to_enc[lit2]]
             self.result = False, conflict
             return self.result
         xi.upper = ci
@@ -343,14 +343,14 @@ class LRASolver():
             assert (xi.upper[1] <= 0) is True
             assert (ci[1] >= 0) is True
 
-            lit1, neg1 = Boundry.from_upper(xi)
+            lit1, neg1 = Boundary.from_upper(xi)
 
-            lit2 = Boundry(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
+            lit2 = Boundary(var=xi, const=ci[0], strict=ci[1] != 0, upper=False, equality=from_equality)
             if from_neg:
                 lit2 = lit2.get_negated()
             neg2 = -1 if from_neg else 1
 
-            conflict = [-neg1*self.boundry_to_enc[lit1],-neg2*self.boundry_to_enc[lit2]]
+            conflict = [-neg1*self.boundary_to_enc[lit1],-neg2*self.boundary_to_enc[lit2]]
             self.result = False, conflict
             return self.result
         xi.lower = ci
@@ -471,10 +471,10 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundry.from_upper(nb) for nb in N_plus]
-                    conflict += [Boundry.from_lower(nb) for nb in N_minus]
-                    conflict.append(Boundry.from_lower(xi))
-                    conflict = [-neg*self.boundry_to_enc[c] for c, neg in conflict]
+                    conflict += [Boundary.from_upper(nb) for nb in N_plus]
+                    conflict += [Boundary.from_lower(nb) for nb in N_minus]
+                    conflict.append(Boundary.from_lower(xi))
+                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -490,11 +490,11 @@ class LRASolver():
                     N_minus = [nb for nb in nonbasic if M[i, nb.col_idx] < 0]
 
                     conflict = []
-                    conflict += [Boundry.from_upper(nb) for nb in N_minus]
-                    conflict += [Boundry.from_lower(nb) for nb in N_plus]
-                    conflict.append(Boundry.from_upper(xi))
+                    conflict += [Boundary.from_upper(nb) for nb in N_minus]
+                    conflict += [Boundary.from_lower(nb) for nb in N_plus]
+                    conflict.append(Boundary.from_upper(xi))
 
-                    conflict = [-neg*self.boundry_to_enc[c] for c, neg in conflict]
+                    conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: v.col_idx)[0]
                 _debug_internal_state_printer2(xi, xj)
@@ -651,7 +651,7 @@ def _eval_binrel(binrel):
         return None
 
 
-class Boundry:
+class Boundary:
     """
     Represents an upper or lower bound or an equality between a symbol
     and some constant.
@@ -679,7 +679,7 @@ class Boundry:
     @staticmethod
     def from_upper(var):
         neg = -1 if var.upper_from_neg else 1
-        b = Boundry(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
+        b = Boundary(var, var.upper[0], True, var.upper_from_eq, var.upper[1] != 0)
         if neg < 0:
             b = b.get_negated()
         return b, neg
@@ -687,13 +687,13 @@ class Boundry:
     @staticmethod
     def from_lower(var):
         neg = -1 if var.lower_from_neg else 1
-        b = Boundry(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
+        b = Boundary(var, var.lower[0], False, var.lower_from_eq, var.lower[1] != 0)
         if neg < 0:
             b = b.get_negated()
         return b, neg
 
     def get_negated(self):
-        return Boundry(self.var, self.bound, not self.upper, self.equality, not self.strict)
+        return Boundary(self.var, self.bound, not self.upper, self.equality, not self.strict)
 
     def get_inequality(self):
         if self.equality:
