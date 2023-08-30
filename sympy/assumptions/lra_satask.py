@@ -4,6 +4,7 @@ from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.lra_theory import UnhandledNumber, ALLOWED_PRED
 from sympy.assumptions.assume import AppliedPredicate
+from sympy.core.mul import Mul
 
 
 def lra_satask(proposition, assumptions=True, context=global_assumptions):
@@ -48,8 +49,11 @@ def check_satisfiability(prop, _prop, factbase):
             if pred.function not in ALLOWED_PRED:
                 return None
             exprs = pred.arguments
-            if any(expr.is_real is not True for expr in exprs):
-                return None
+            for expr in exprs:
+                if expr.is_real is not True:
+                    return None
+                if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
+                    return None
 
     try:
         can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
