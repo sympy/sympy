@@ -334,10 +334,12 @@ def get_all_relevant_facts(proposition, assumptions, context,
 
     if use_known_facts:
         known_facts_CNF = CNF()
-        if any(any(arg.kind == MatrixKind(NumberKind) for arg in pred.arguments) for pred in proposition.all_predicates()):
-            known_facts_CNF.add_clauses(get_all_known_matrix_facts())
-        else:
-            known_facts_CNF.add_clauses(get_all_known_number_facts())
+        for expr in all_exprs:
+            if expr.kind == MatrixKind(NumberKind):
+                known_facts_CNF.add_clauses(get_all_known_matrix_facts())
+            elif expr.kind == NumberKind:
+                known_facts_CNF.add_clauses(get_all_known_number_facts())
+
         kf_encoded = EncodedCNF()
         kf_encoded.from_cnf(known_facts_CNF)
 
