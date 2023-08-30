@@ -15,8 +15,14 @@ def test_lra_satask():
 
     assert lra_satask(Q.gt(x, 0), Q.gt(x, 1)) is True
 
+    # check that True/False are handled
+    assert lra_satask(Q.gt(x, 0), True) is None
+    assert lra_satask(Q.gt(x, 0), False) is None
+
 
 def test_rel_queries():
     x, y, z = symbols("x y z", real=True)
+    assert ask(Q.positive(x - z), (x > y) & (y > z)) is True
+
     assert ask(x + y > 2, (x < 0) & (y <0)) is False
     assert ask(x > z, (x > y) & (y > z)) is True

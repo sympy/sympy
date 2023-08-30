@@ -143,7 +143,16 @@ class LRASolver():
             if isinstance(prop, Predicate):
                 prop = prop(empty_var)
             if not isinstance(prop, AppliedPredicate):
-                continue
+                if prop == True:
+                    conflicts.append([enc])
+                    continue
+                if prop == False:
+                    conflicts.append([-enc])
+                    continue
+
+                raise ValueError(f"Unhandled Predicate: {prop}")
+
+
 
             assert prop.function in ALLOWED_PRED
             if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
@@ -253,7 +262,7 @@ class LRASolver():
             the literals asserted so far are unsatisfiable.
         """
         if abs(enc_constraint) not in self.enc_to_boundry:
-            raise ValueError("Tried to assert a literal with no encoding")
+            return None
 
         if not HANDLE_NEGATION and enc_constraint < 0:
             return None
