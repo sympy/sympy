@@ -115,7 +115,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
+      - run: pip install mpmath numpy scipy matplotlib
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
