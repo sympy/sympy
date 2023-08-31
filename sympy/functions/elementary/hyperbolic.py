@@ -1366,6 +1366,9 @@ class asinh(InverseHyperbolicFunction):
     def _eval_is_zero(self):
         return self.args[0].is_zero
 
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
 
 class acosh(InverseHyperbolicFunction):
     """
@@ -1540,6 +1543,9 @@ class acosh(InverseHyperbolicFunction):
         if (self.args[0] - 1).is_zero:
             return True
 
+    def _eval_is_real(self):
+        return self.args[0].is_real and self.args[0] >= 1
+
 
 class atanh(InverseHyperbolicFunction):
     """
@@ -1683,6 +1689,9 @@ class atanh(InverseHyperbolicFunction):
         if self.args[0].is_zero:
             return True
 
+    def _eval_is_real(self):
+        return self.args[0].is_real and -1 <= self.args[0] <= 1
+
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
 
@@ -1825,6 +1834,9 @@ class acoth(InverseHyperbolicFunction):
         Returns the inverse of this function.
         """
         return coth
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and not -1 < self.args[0] < 1
 
 
 class asech(InverseHyperbolicFunction):
