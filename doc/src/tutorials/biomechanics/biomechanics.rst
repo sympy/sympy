@@ -314,7 +314,7 @@ to voluntarily contract. This state of voluntary contraction is "activation". In
 biomechanical models it is typically given the symbol :math:`a(t)`, which is
 treated as a normalized quantity in the range :math:`[0, 1]`.
 
-An organisms does not directly control the concentration of these
+An organism does not directly control the concentration of these
 :math:`\textrm{Ca}^{2+}` ions in its muscles, instead its nervous system,
 controlled by its brain, sends an electrical signal to a muscle which causes
 :math:`\textrm{Ca}^{2+}` ions to be released. These diffuse and increase in
@@ -362,7 +362,8 @@ SymPy provides the class
 instantiated with a single argument, `name`, which associates a name with the
 instance. This name should be unique per instance.
 
->>> actz = ZerothOrderActivation('zeroth')
+>>> import sympy.physics._biomechanics as bm
+>>> actz = bm.ZerothOrderActivation('zeroth')
 >>> actz
 ZerothOrderActivation('zeroth')
 
@@ -375,10 +376,11 @@ e_zeroth(t)
 >>> actz.activation
 e_zeroth(t)
 
-:obj:`~sympy.physics._biomechanics.ZerothOrderActivation` subclasses :obj:`~sympy.physics._biomechanics.ActivationBase`, which provides a
-consistent interface for all concrete classes of activation dynamics. This
-includes a method to inspect the ordinary differential equation(s) associated
-with the model. As zeroth-order activation dynamics correspond to a zeroth-order
+:obj:`~sympy.physics._biomechanics.ZerothOrderActivation` subclasses
+:obj:`~sympy.physics._biomechanics.ActivationBase`, which provides a consistent
+interface for all concrete classes of activation dynamics. This includes a
+method to inspect the ordinary differential equation(s) associated with the
+model. As zeroth-order activation dynamics correspond to a zeroth-order
 ordinary differential equation, this returns an empty column matrix.
 
 >>> actz.rhs()
@@ -387,10 +389,11 @@ Matrix(0, 1, [])
 First-Order
 -----------
 
-In practice the diffusion and concentration increase of :math:`\textrm{Ca}^{2+}`
-ions is not instantaneous. In a real biological muscle a step increase in
-excitation will lead to a smooth and gradual increase in activation.
-[DeGroote2016]_ model this using a first-order ordinary differential equation:
+In practice the diffusion and concentration increase of
+:math:`\textrm{Ca}^{2+}` ions is not instantaneous. In a real biological
+muscle, a step increase in excitation will lead to a smooth and gradual
+increase in activation. [DeGroote2016]_ model this using a first-order
+ordinary differential equation:
 
 .. math::
 
@@ -418,7 +421,7 @@ This class must be instantiated with four arguments: a name, and three
 sympifiable objects to represent the three constants :math:`\tau_a`,
 :math:`\tau_d`, and :math:`b`.
 
->>> actf = FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
+>>> actf = bm.FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
 >>> actf.excitation
 e_first(t)
 >>> actf.activation
@@ -427,17 +430,19 @@ a_first(t)
 The first-order ordinary differential equation can be accessed as before, but
 this time a length-1 column vector is returned.
 
->>> act.rhs()
+>>> actf.rhs()
 Matrix([[((1/2 - tanh(b*(-a_first(t) + e_first(t)))/2)*(3*a_first(t)/2 + 1/2)/tau_d + (tanh(b*(-a_first(t) + e_first(t)))/2 + 1/2)/(tau_a*(3*a_first(t)/2 + 1/2)))*(-a_first(t) + e_first(t))]])
 
 You can also instantiate the class with the suggested values for each of the
 constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
 :math:`b = 10`.
 
->>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
+>>> actf2 = bm.FirstOrderActivationDeGroote2016.with_defaults('first')
+>>> actf2.rhs()
+Matrix([[((1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
 >>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Integer(10)}
->>> actf2 == actf.subs(constants)
-True
+>>> actf.rhs().subs(constants)
+Matrix([[(66.6666666666667*(1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(3*a_first(t)/2 + 1/2) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
 
 Musculotendon Curves
 ====================
@@ -585,7 +590,7 @@ properties. You need to specify the tendon slack length, peak isometric force,
 optimal fiber length, maximal fiber velocity, optimal pennation angle, and
 fiber damping coefficients.
 
-TODO : How do we know this is a rigid tendon model?
+.. TODO : How do we know this is a rigid tendon model?
 
 .. plot::
    :format: doctest
@@ -611,8 +616,8 @@ TODO : How do we know this is a rigid tendon model?
    ... )
    ...
 
-TODO : Explain why the rhs() is different for the muscle than the activation.
-TODO : Needs explanation about rigid tendon
+.. TODO : Explain why the rhs() is different for the muscle than the activation.
+.. TODO : Needs explanation about rigid tendon
 
 Because this musculotendon actuator has a rigid tendon model, it has the same
 state and ordinary differential equation as the activation model:
@@ -748,9 +753,10 @@ will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
    ... ])
    ...
 
-Our tendon is rigid, so the length of the muscle will be :math:`q-l_T_slack`
-and we want to give an initial muscle length near its force producing peak, so
-we choose :math:`q_0=l_M_opt + l_T_slack`:
+Our tendon is rigid, so the length of the muscle will be
+:math:`q-l_{T_\textrm{slack}}` and we want to give an initial muscle length
+near its force producing peak, so we choose :math:`q_0=l_{M_\textrm{opt}} +
+l_{T_\textrm{slack}}`:
 
 .. plot::
    :format: doctest

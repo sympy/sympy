@@ -1,4 +1,3 @@
-from pprint import pprint
 import sympy as sm
 from sympy.external import import_module
 import sympy.physics.mechanics as me
@@ -10,26 +9,20 @@ scipy = import_module('scipy', import_kwargs={'fromlist': ['optimize']})
 
 def test_basics():
 
-    k, c = sm.symbols('k, c')
-    x, v = me.dynamicsymbols('x, v')
+    k, c = sm.symbols('k, c', real=True, nonnegative=True)
+    x = me.dynamicsymbols('x', real=True)
+
     N = me.ReferenceFrame('N')
     O, P = me.Point('O'), me.Point('P')
-    P.set_pos(O, x*N.x)
-    P.set_vel(N, v*N.x)
 
-    # loads
+    P.set_pos(O, x*N.x)
+    P.set_vel(N, x.diff()*N.x)
+
     force_on_P = me.Force(P, -k*P.pos_from(O) - c*P.vel(N))
     force_on_O = me.Force(O, k*P.pos_from(O) + c*P.vel(N))
-    print('Force objects:')
-    print(force_on_P)
-    print(force_on_O)
+    force_on_P, force_on_O
 
-    # pathways
     lpathway = me.LinearPathway(O, P)
-    # TODO : Force could have some methods like .magnitude(), as
-    # force.force.magnitude() isn't obvious.
-    print('Linear pathway loads:')
-    pprint(lpathway.to_loads(-k*x - c*v))
     lpathway.length
     lpathway.extension_velocity
 
@@ -37,33 +30,29 @@ def test_basics():
     Q.set_pos(O, 1*N.y)
     R.set_pos(O, 1*N.x + 1*N.y)
     opathway = me.ObstacleSetPathway(O, Q, R, P)
-    print('Ostacle pathway loads:')
-    pprint(opathway.to_loads(-k*opathway.length))
+    opathway.length
+    opathway.extension_velocity
 
-    # geometry and WrappingGeometry
-    r = sm.symbols('r')
-    theta = me.dynamicsymbols('theta')
+    r = sm.symbols('r', real=True, nonegative=True)
+    theta = me.dynamicsymbols('theta', real=True)
     O, P, Q = sm.symbols('O, P, Q', cls=me.Point)
     A = me.ReferenceFrame('A')
+
     A.orient_axis(N, theta, N.z)
+
     P.set_pos(O, r*N.x)
     Q.set_pos(O, N.z + r*A.x)
+
     cyl = me.WrappingCylinder(r, O, N.z)
     wpathway = me.WrappingPathway(P, Q, cyl)
-    print('Wrapping pathway loads:')
-    pprint(wpathway.to_loads(-k*wpathway.length))
 
-    # actuators
     N = me.ReferenceFrame('N')
     O, P = me.Point('O'), me.Point('P')
     P.set_pos(O, x*N.x)
-    P.set_vel(N, v*N.x)
 
     class SpringDamper(me.ActuatorBase):
-
         # positive x spring is in tension
         # negative x spring is in compression
-
         def __init__(self, P1, P2, spring_constant, damper_constant):
             self.P1 = P1
             self.P2 = P2
@@ -71,39 +60,31 @@ def test_basics():
             self.c = damper_constant
 
         def to_loads(self):
-
             x = self.P2.pos_from(self.P1).magnitude()
             v = x.diff(me.dynamicsymbols._t)
-
             dir_vec = self.P2.pos_from(self.P1).normalize()
-
             force_P1 = me.Force(self.P1,
                                 self.k*x*dir_vec + self.c*v*dir_vec)
             force_P2 = me.Force(self.P2,
                                 -self.k*x*dir_vec - self.c*v*dir_vec)
-
             return [force_P1, force_P2]
 
     spring_damper = SpringDamper(O, P, k, c)
-    print(spring_damper.to_loads())
+    spring_damper.to_loads()
 
     class SpringDamper(me.ForceActuator):
-
         # positive x spring is in tension
         # negative x spring is in compression
-
-        def __init__(self, pathway, spring_constant, damping_constant):
+        def __init__(self, pathway, spring_constant, damper_constant):
             self.pathway = pathway
-            self.k = spring_constant
-            self.c = damping_constant
-            self.force = (-self.k*pathway.length -
-                          self.c*pathway.extension_velocity)
+            self.force = (-spring_constant*pathway.length -
+                          damper_constant*pathway.extension_velocity)
 
     spring_damper2 = SpringDamper(lpathway, k, c)
-    print(spring_damper2.to_loads())
+    spring_damper2.to_loads()
 
     spring_damper3 = SpringDamper(wpathway, k, c)
-    print(spring_damper3.to_loads())
+    spring_damper3.to_loads()
 
     # activation
     # TODO : there are no sympy symbols in this activation, I was expecting to
@@ -147,23 +128,29 @@ def test_basics():
     l_T_tilde = sm.symbols('l_T_tilde')
 
     curve1 = bm.FiberForceLengthActiveDeGroote2016.with_defaults(l_T_tilde)
+    curve1
     #sm.plot(curve1)
 
     curve2 = bm.FiberForceLengthPassiveDeGroote2016.with_defaults(l_T_tilde)
+    curve2
     #sm.plot(curve2)
 
     curve3 = bm.FiberForceVelocityDeGroote2016.with_defaults(l_T_tilde)
+    curve3
     #sm.plot(curve3)
 
     curve4 = bm.TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
+    curve4
     #sm.plot(curve4)
 
     # these two are used internally in the matching two above to give inverse
     # functions
     curve5 = bm.TendonForceLengthInverseDeGroote2016.with_defaults(l_T_tilde)
+    curve5
     #sm.plot(curve5)
 
     curve6 = bm.FiberForceLengthPassiveInverseDeGroote2016.with_defaults(l_T_tilde)
+    curve6
     #sm.plot(curve6)
 
     # musculotendon
@@ -183,8 +170,6 @@ def test_basics():
 
     mt = bm.MusculotendonDeGroote2016.with_defaults('m', lpathway, actf)
     print(mt.to_loads())
-    print(me.find_dynamicsymbols(mt.to_loads()[0][1], reference_frame=N))
-    print(mt.to_loads()[0][1].free_symbols(N))
     print(mt.x)
     print(mt.r)
     print(mt.rhs())
