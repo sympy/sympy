@@ -2074,6 +2074,7 @@ def test_mul_pow_derivative():
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
 
+
 def test_issue_20782():
     x_d = symbols('x_d')
 
@@ -2097,6 +2098,15 @@ def test_issue_20782():
     f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
     assert integrate(f, (x, -oo, 1)) == 1.
     assert integrate(-f, (x, -oo, 1)) == -1.
+
+
+def test_issue_20781():
+    x_d = Symbol('x_d')
+    fun_sum = lambda x, a1, a2: Piecewise((0, x<a1),(1, x>=a1)) + Piecewise((0, x<a2),(1, x>=a2))
+
+    assert integrate(fun_sum((x_d), 0, 0.0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 0.0, 0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 1.0, 1), (x_d, -float('Inf'), x)) == 2*x - Min(1.0, x) - Min(x, Max(1.0, 1))
 
 
 @slow
