@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from itertools import chain, zip_longest
+from itertools import chain
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -2108,21 +2108,20 @@ class Basic(Printable):
         """
         from .numbers import Number
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
-        if isinstance(a, Number) and isinstance(b, Number):
+        if isinstance(a, Number):
             if approx:
-                return approx(a, b)
-            return a == b and a.__class__ == b.__class__
-        for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
-            if i != j or type(i) != type(j):
-                if approx and isinstance(a, Number) and isinstance(b, Number):
-                    return approx(i, j)
-                if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
-                    (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
-                    if i.class_key() != j.class_key():
-                        return False
-                else:
+                try:
+                    return approx(a, b)
+                except TypeError:
                     return False
-        return True
+            return a == b and a.__class__ == b.__class__
+        if not isinstance(b, Basic):
+            return False
+        if len(a.args) != len(b.args):
+            return False
+        if not a.args:
+            return a == b and a.__class__ == b.__class__
+        return all(i.is_same(j, approx) for i, j in zip(a.args, b.args))
 
 _aresame = Basic.is_same  # for sake of others importing this
 
