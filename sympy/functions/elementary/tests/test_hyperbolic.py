@@ -534,6 +534,9 @@ def test_asinh():
     assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
     assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
 
+    assert asinh(2).is_real
+    assert (asinh(2) - oo) == -oo
+
     # Symmetry
     assert asinh(Rational(-1, 2)) == -asinh(S.Half)
 
@@ -677,6 +680,11 @@ def test_acosh():
     assert acosh(cosh(-21 + 11*I)) == 21 - 11*I + 4*I*pi
     assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
     assert acosh(1, evaluate=False).is_zero is True
+
+    # Reality
+    assert acosh(2).is_real
+    assert not acosh(0.5).is_real
+    assert (acosh(2) - oo) == -oo
 
 
 def test_acosh_rewrite():
@@ -1022,9 +1030,15 @@ def test_atanh():
 
     assert atanh(zoo) == I*AccumBounds(-pi/2, pi/2)
 
-    #properties
+    # properties
     assert atanh(-x) == -atanh(x)
 
+    # reality
+    assert not atanh(2).is_real
+    assert not atanh(-2).is_real
+    assert atanh(-0.5).is_real
+
+    # special values
     assert atanh(I/sqrt(3)) == I*pi/6
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
@@ -1158,6 +1172,11 @@ def test_acoth():
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
     assert acoth(I*(2 - sqrt(3))) == pi*I*Rational(-5, 12)
     assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
+
+    # reality
+    assert acoth(2).is_real
+    assert acoth(-2).is_real
+    assert not acoth(-0.5).is_real
 
     # Symmetry
     assert acoth(Rational(-1, 2)) == -acoth(S.Half)
