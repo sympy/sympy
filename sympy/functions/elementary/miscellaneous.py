@@ -599,6 +599,8 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
+        if not x.arg:
+            return x == y
         for i in range(2):
             if x == y:
                 return True
