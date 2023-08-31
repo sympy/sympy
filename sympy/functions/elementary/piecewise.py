@@ -1190,7 +1190,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
                     if b.is_infinite:
                         c = (x > a)
                     else:
-                        c = (x <= b)
+                        c = And(a < x, x <= b)
                 else:
                     if a in covered:
                         c = (x < b)
