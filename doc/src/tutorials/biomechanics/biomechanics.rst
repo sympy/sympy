@@ -367,9 +367,9 @@ instance. This name should be unique per instance.
 >>> actz
 ZerothOrderActivation('zeroth')
 
-The argument passed to `name` tries to help ensures that the automatically-
-created :obj:`~sympy.physics.vector.dynamicsymbols` for :math:`e(t)` and
-:math:`a(t)` are unique betweem instances.
+The argument passed to `name` tries to help ensures that the
+automatically-created :obj:`~sympy.physics.vector.dynamicsymbols` for
+:math:`e(t)` and :math:`a(t)` are unique betweem instances.
 
 >>> actz.excitation
 e_zeroth(t)
