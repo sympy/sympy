@@ -2107,7 +2107,6 @@ class Basic(Printable):
 
         """
         from .numbers import Number
-        from .function import AppliedUndef, UndefinedFunction as UndefFunc
         if isinstance(a, Number):
             if approx:
                 try:
