@@ -29,6 +29,7 @@ def test_Min():
     np_ = Symbol('np_', nonpositive=True)
     r = Symbol('r', real=True)
 
+    assert Min(1, 1.0) not in (1, 1.0)
     assert Min(5, 4) == 4
     assert Min(-oo, -oo) is -oo
     assert Min(-oo, n) is -oo
@@ -151,6 +152,7 @@ def test_Max():
     p_ = Symbol('p_', positive=True)
     r = Symbol('r', real=True)
 
+    assert Max(1, 1.0) not in (1, 1.0)
     assert Max(5, 4) == 5
 
     # lists
