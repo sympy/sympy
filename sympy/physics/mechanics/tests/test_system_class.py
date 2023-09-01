@@ -19,7 +19,7 @@ ua = dynamicsymbols('ua:3')  # type: ignore
 class TestSystemBase:
     @pytest.fixture()
     def _empty_system_setup(self):
-        self.system = System(ReferenceFrame('frame'), Point('origin'))
+        self.system = System(ReferenceFrame('frame'), Point('fixed_point'))
 
     def _empty_system_check(self, exclude=()):
         matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'u_aux',
@@ -35,7 +35,7 @@ class TestSystemBase:
             assert self.system.eom_method is None
 
     def _create_filled_system(self, with_speeds=True):
-        self.system = System(ReferenceFrame('frame'), Point('origin'))
+        self.system = System(ReferenceFrame('frame'), Point('fixed_point'))
         u = dynamicsymbols('u:6') if with_speeds else qd
         self.bodies = symbols('rb1:5', cls=RigidBody)
         self.joints = (
@@ -94,7 +94,7 @@ class TestSystemBase:
         self.system.kdes = u[0] - q[0].diff(t)
         p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        p.masscenter.set_pos(self.system.fixed_point, q[0] * self.system.x)
 
 
 class TestSystem(TestSystemBase):
@@ -106,17 +106,17 @@ class TestSystem(TestSystemBase):
         self._filled_system_check()
         self.system.validate_system()
 
-    @pytest.mark.parametrize('origin', [None, Point('origin')])
     @pytest.mark.parametrize('frame', [None, ReferenceFrame('frame')])
-    def test_init(self, origin, frame):
-        if origin is None and frame is None:
+    @pytest.mark.parametrize('fixed_point', [None, Point('fixed_point')])
+    def test_init(self, frame, fixed_point):
+        if fixed_point is None and frame is None:
             self.system = System()
         else:
-            self.system = System(frame, origin)
-        if origin is None:
-            assert self.system.origin.name == 'inertial_origin'
+            self.system = System(frame, fixed_point)
+        if fixed_point is None:
+            assert self.system.fixed_point.name == 'inertial_point'
         else:
-            assert self.system.origin == origin
+            assert self.system.fixed_point == fixed_point
         if frame is None:
             assert self.system.frame.name == 'inertial_frame'
         else:
@@ -135,7 +135,7 @@ class TestSystem(TestSystemBase):
     def test_from_newtonian_rigid_body(self):
         rb = RigidBody('body')
         self.system = System.from_newtonian(rb)
-        assert self.system.origin == rb.masscenter
+        assert self.system.fixed_point == rb.masscenter
         assert self.system.frame == rb.frame
         self._empty_system_check(exclude=('bodies',))
         self.system.bodies = (rb,)
@@ -519,7 +519,7 @@ class TestSystem(TestSystemBase):
         self.system.q_ind = q[0]
         p = Particle('p', mass=symbols('m'))
         self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+        p.masscenter.set_pos(self.system.fixed_point, q[0] * self.system.x)
         with pytest.raises(error):
             self.system.form_eoms(eom_method=eom_method, **kwargs)
 
@@ -626,7 +626,7 @@ class TestSystemExamples:
         system = System.from_newtonian(rail)
         assert system.bodies == (rail,)
         assert system.frame == rail.frame
-        assert system.origin == rail.masscenter
+        assert system.fixed_point == rail.masscenter
         slider = PrismaticJoint('slider', rail, cart, qc, uc, joint_axis=rail.x)
         pin = PinJoint('pin', cart, bob, qp, up, joint_axis=cart.z,
                        child_interframe=bob_frame, child_point=l * bob_frame.y)
@@ -696,7 +696,7 @@ class TestSystemExamples:
         system = System.from_newtonian(rail)
         assert system.bodies == (rail,)
         assert system.frame == rail.frame
-        assert system.origin == rail.masscenter
+        assert system.fixed_point == rail.masscenter
         slider = PrismaticJoint('slider', rail, cart, qc, qcd,
                                 joint_axis=rail.x)
         pin = PinJoint('pin', cart, bob, qp, qpd, joint_axis=cart.z,
@@ -707,7 +707,7 @@ class TestSystemExamples:
         assert system.get_body('bob') == bob
         for body in system.bodies:
             body.potential_energy = body.mass * g * body.masscenter.pos_from(
-                system.origin).dot(system.y)
+                system.fixed_point).dot(system.y)
         system.add_loads((cart.masscenter, F * rail.x))
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system(LagrangesMethod)
@@ -763,7 +763,7 @@ class TestSystemExamples:
         P = Particle("P", mass=m)
         system = System()
         system.add_bodies(P)
-        P.masscenter.set_pos(system.origin, q * system.x)
+        P.masscenter.set_pos(system.fixed_point, q * system.x)
         P.masscenter.set_vel(system.frame, u * system.x + ua * system.y)
         system.q_ind, system.u_ind, system.u_aux = [q], [u], [ua]
         system.kdes = [q.diff(t) - u]

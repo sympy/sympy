@@ -45,10 +45,10 @@ class System(_Methods):
     Attributes
     ==========
 
-    origin : Point
-        Global origin of the system.
     frame : ReferenceFrame
         Inertial reference frame of the system.
+    fixed_point : Point
+        A fixed point in the inertial reference frame.
     x : Vector
         Unit vector in the x direction of the inertial reference frame.
     y : Vector
@@ -225,7 +225,7 @@ class System(_Methods):
 
     """
 
-    def __init__(self, frame=None, origin=None):
+    def __init__(self, frame=None, fixed_point=None):
         """Initialize the system.
 
         Parameters
@@ -234,9 +234,9 @@ class System(_Methods):
         frame : ReferenceFrame, optional
             The inertial frame of the system. If none is supplied, a new frame
             will be created.
-        origin : Point, optional
-            The origin of the system. If none is supplied, a new origin will be
-            created.
+        fixed_point : Point, optional
+            A fixed point in the inertial reference frame. If none is supplied,
+            a new fixed_point will be created.
 
         """
         if frame is None:
@@ -244,12 +244,12 @@ class System(_Methods):
         elif not isinstance(frame, ReferenceFrame):
             raise TypeError('Frame must be an instance of ReferenceFrame.')
         self._frame = frame
-        if origin is None:
-            origin = Point('inertial_origin')
-        elif not isinstance(origin, Point):
-            raise TypeError('Origin must be an instance of Point.')
-        self._origin = origin
-        self._origin.set_vel(self._frame, 0)
+        if fixed_point is None:
+            fixed_point = Point('inertial_point')
+        elif not isinstance(fixed_point, Point):
+            raise TypeError('Fixed point must be an instance of Point.')
+        self._fixed_point = fixed_point
+        self._fixed_point.set_vel(self._frame, 0)
         self._q_ind = ImmutableMatrix(1, 0, []).T
         self._q_dep = ImmutableMatrix(1, 0, []).T
         self._u_ind = ImmutableMatrix(1, 0, []).T
@@ -270,14 +270,14 @@ class System(_Methods):
         if isinstance(newtonian, Particle):
             raise TypeError('A Particle has no frame so cannot act as '
                             'the Newtonian.')
-        system = cls(frame=newtonian.frame, origin=newtonian.masscenter)
+        system = cls(frame=newtonian.frame, fixed_point=newtonian.masscenter)
         system.add_bodies(newtonian)
         return system
 
     @property
-    def origin(self):
-        """Global origin of the system."""
-        return self._origin
+    def fixed_point(self):
+        """Fixed point in the inertial reference frame."""
+        return self._fixed_point
 
     @property
     def frame(self):
