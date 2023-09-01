@@ -1366,8 +1366,11 @@ class asinh(InverseHyperbolicFunction):
     def _eval_is_zero(self):
         return self.args[0].is_zero
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
 
 class acosh(InverseHyperbolicFunction):
@@ -1543,8 +1546,11 @@ class acosh(InverseHyperbolicFunction):
         if (self.args[0] - 1).is_zero:
             return True
 
-    def _eval_is_real(self):
-        return self.args[0].is_real and (self.args[0] - 1).is_positive
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real and (self.args[0] - 1).is_positive
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
 
 class atanh(InverseHyperbolicFunction):
@@ -1689,8 +1695,18 @@ class atanh(InverseHyperbolicFunction):
         if self.args[0].is_zero:
             return True
 
-    def _eval_is_real(self):
-        return self.args[0].is_real and (1 - self.args[0]).is_positive and (self.args[0] + 1).is_positive
+    def _eval_is_extended_real(self):
+        if self.args[0].is_extended_real:
+            return (1 - self.args[0]).is_positive and (self.args[0] + 1).is_positive
+
+    def _eval_is_finite(self):
+        check_against_one = (self.args[0] - 1).is_zero
+        if check_against_one is None:
+            return None
+        check_against_minus_one = (self.args[0] + 1).is_zero
+        if check_against_minus_one is None:
+            return None
+        return check_against_one is False and check_against_minus_one is False
 
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
@@ -1835,8 +1851,18 @@ class acoth(InverseHyperbolicFunction):
         """
         return coth
 
-    def _eval_is_real(self):
-        return self.args[0].is_real and ((self.args[0] - 1).is_positive or (self.args[0] + 1).is_negative)
+    def _eval_is_extended_real(self):
+        if self.args[0].is_extended_real:
+            return (self.args[0] - 1).is_positive or (self.args[0] + 1).is_negative
+
+    def _eval_is_finite(self):
+        check_against_one = (self.args[0] - 1).is_zero
+        if check_against_one is None:
+            return None
+        check_against_minus_one = (self.args[0] + 1).is_zero
+        if check_against_minus_one is None:
+            return None
+        return check_against_one is False and check_against_minus_one is False
 
 
 class asech(InverseHyperbolicFunction):
