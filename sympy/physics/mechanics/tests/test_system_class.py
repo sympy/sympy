@@ -1,7 +1,6 @@
 import pytest
 
-from sympy import (
-    ImmutableMatrix, simplify, cos, eye, sin, symbols, sympify, zeros)
+from sympy import ImmutableMatrix, cos, eye, sin, symbols, sympify, zeros
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
     PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
