@@ -132,7 +132,7 @@ class KanesMethod(_Methods):
     The implemented solvers are:
 
     - Methods from :meth:`sympy.matrices.matrices.MatrixBase.solve`, like
-    ``'LU'`` (default).
+      ``'LU'`` (default).
     - ``'NUMERIC'``: numerical solver which utilizes
       ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
       ``True``.
