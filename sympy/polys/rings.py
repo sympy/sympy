@@ -1543,7 +1543,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not r:
             return q
         else:
-            print("ExactQuotientFai : ", "f :" ,f, "G :", G)
             raise ExactQuotientFailed(f, G)
 
     def _iadd_monom(self, mc):
@@ -2197,21 +2196,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
-        try:
-            h = _gcd_prs(f, g)
-            cff = f.div(h)[0]
-            cfg = g.div(h)[0]
-            new_gcd = h, cff, cfg
-
-        except ZeroDivisionError:
-            old_gcd = heugcd(f, g)
-            return old_gcd
-
-        except ExactQuotientFailed:
-            old_gcd = heugcd(f, g)
-            return old_gcd
-
-        return new_gcd
+        h = _gcd_prs(f, g)
+        cff = f.div(h)[0]
+        cfg = g.div(h)[0]
+        return h, cff, cfg
 
     def _gcd_QQ(self, g):
         f = self
@@ -3079,6 +3067,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         p = self
         free_sym = p.free_variables()
+        if not free_sym:
+            return 0
         return min(free_sym)
 
     # TODO: following methods should point to polynomial
@@ -3135,6 +3125,8 @@ def cont_prim(p, x):
 
     coeffs = p.coeff_split({x})
     cont = gcd_prs(coeffs)
+    # print("P =", p)
+    # print("cont =", cont)
     prim = p.exquo(cont)
     return cont, prim
 
@@ -3204,7 +3196,7 @@ def gcd_coeffs(coeff_lst, domain):
         res = gcd(res, coeff)
         if res == domain.one:
             break
-    return sympify(res)
+    return sympify(str(res))
 
 def _gcd_preprocess_polys(polynomials):
     """
@@ -3244,9 +3236,9 @@ def _gcd_preprocess_polys(polynomials):
 
             # Quick exit
             if not common:
-                R = polynomials[0].ring
-                K = R.domain
-                gcd = gcd_terms(polynomials, R, K)
+                ring = polynomials[0].ring
+                domain = ring.domain
+                gcd = gcd_terms(polynomials, ring, domain)
                 return [gcd], None
 
             syms = pi.free_variables()
@@ -3265,10 +3257,10 @@ def _gcd_preprocess_polys(polynomials):
             all_polys.extend(coeffs_i)
 
             # Quick exit:
-            if ((len(c)) == 1 for c in coeffs_i):
-                R = polynomials[0].ring
-                K = R.domain
-                gcd = gcd_terms((all_polys + polynomials[i+1:]), R, K)
+            if any((len(c)) == 1 for c in coeffs_i):
+                ring = polynomials[0].ring
+                domain = ring.domain
+                gcd = gcd_terms((all_polys + polynomials[i+1:]), ring, domain)
                 return [gcd], None
 
 def gcd_prs(polynomials):
