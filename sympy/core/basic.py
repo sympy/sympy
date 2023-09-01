@@ -2052,6 +2052,76 @@ class Basic(Printable):
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
 
+    def is_same(a, b, approx=None):
+        """Return True if a and b are structurally the same, else False.
+        If `approx` is supplied, it will be used to test whether two
+        numbers are the same or not. By default, only numbers of the
+        same type will compare equal, so S.Half != Float(0.5).
+
+        Examples
+        ========
+
+        In SymPy (unlike Python) two numbers do not compare the same if they are
+        not of the same type:
+
+        >>> from sympy import S
+        >>> 2.0 == S(2)
+        False
+        >>> 0.5 == S.Half
+        False
+
+        By supplying a function with which to compare two numbers, such
+        differences can be ignored. e.g. `equal_valued` will return True
+        for decimal numbers having a denominator that is a power of 2,
+        regardless of precision.
+
+        >>> from sympy import Float
+        >>> from sympy.core.numbers import equal_valued
+        >>> (S.Half/4).is_same(Float(0.125, 1), equal_valued)
+        True
+        >>> Float(1, 2).is_same(Float(1, 10), equal_valued)
+        True
+
+        But decimals without a power of 2 denominator will compare
+        as not being the same.
+
+        >>> Float(0.1, 9).is_same(Float(0.1, 10), equal_valued)
+        False
+
+        But arbitrary differences can be ignored by supplying a function
+        to test the equivalence of two numbers:
+
+        >>> import math
+        >>> Float(0.1, 9).is_same(Float(0.1, 10), math.isclose)
+        True
+
+        Other objects might compare the same even though types are not the
+        same. This routine will only return True if two expressions are
+        identical in terms of class types.
+
+        >>> from sympy import eye, Basic
+        >>> eye(1) == S(eye(1))  # mutable vs immutable
+        True
+        >>> Basic.is_same(eye(1), S(eye(1)))
+        False
+
+        """
+        from .numbers import Number
+        from .traversal import postorder_traversal as pot
+        for t in zip_longest(pot(a), pot(b)):
+            if None in t:
+                return False
+            a, b = t
+            if isinstance(a, Number):
+                if not isinstance(b, Number):
+                    return False
+                if approx:
+                    return approx(a, b)
+            if not (a == b and a.__class__ == b.__class__):
+                return False
+        return True
+
+_aresame = Basic.is_same  # for sake of others importing this
 
 # For all Basic subclasses _prepare_class_assumptions is called by
 # Basic.__init_subclass__ but that method is not called for Basic itself so we
@@ -2105,59 +2175,6 @@ class Atom(Basic):
         # to see that this property is not called for Atoms.
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
-
-
-def _aresame(a, b):
-    """Return True if a and b are structurally the same, else False.
-
-    Examples
-    ========
-
-    In SymPy (unlike Python) two numbers do not compare the same if they are
-    not of the same type. In particular an Integer or Rational will always
-    compare unequal with a Float. Also Floats of differing precision will
-    compare unequal.
-
-    >>> from sympy import S
-    >>> 2.0 == S(2)
-    False
-    >>> 0.5 == S.Half
-    False
-
-    Before SymPy 1.7 the two comparisons above would have given True rather
-    than False. This routine was written to provide a query that could
-    distinguish those cases but is no longer needed after the changes to Float
-    comparison introduced in SymPy 1.7. Its usage is
-
-    >>> from sympy.core.basic import _aresame
-    >>> _aresame(S(2.0), S(2))
-    False
-
-    """
-    from .numbers import Number
-    from .function import AppliedUndef, UndefinedFunction as UndefFunc
-    if isinstance(a, Number) and isinstance(b, Number):
-        return a == b and a.__class__ == b.__class__
-    for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
-        if i != j or type(i) != type(j):
-            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
-                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
-                if i.class_key() != j.class_key():
-                    return False
-            else:
-                return False
-    return True
-
-
-def _ne(a, b):
-    # use this as a second test after `a != b` if you want to make
-    # sure that things are truly equal, e.g.
-    # a, b = 0.5, S.Half
-    # a !=b or _ne(a, b) -> True
-    from .numbers import Number
-    # 0.5 == S.Half
-    if isinstance(a, Number) and isinstance(b, Number):
-        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):
