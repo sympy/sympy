@@ -1543,6 +1543,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not r:
             return q
         else:
+            print("ExactQuotientFai : ", "f :" ,f, "G :", G)
             raise ExactQuotientFailed(f, G)
 
     def _iadd_monom(self, mc):
@@ -2196,16 +2197,21 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
-        old_gcd = heugcd(f, g)
+        try:
+            h = _gcd_prs(f, g)
+            cff = f.div(h)[0]
+            cfg = g.div(h)[0]
+            new_gcd = h, cff, cfg
 
-        # h = _gcd_prs(f, g)
-        # cff = f.div(h)[0]
-        # cfg = g.div(h)[0]
-        # new_gcd = h, cff, cfg
-        # if old_gcd != new_gcd:  # compare the different algorithms
-        #     print("f :", f, "g :", g)
+        except ZeroDivisionError:
+            old_gcd = heugcd(f, g)
+            return old_gcd
 
-        return old_gcd
+        except ExactQuotientFailed:
+            old_gcd = heugcd(f, g)
+            return old_gcd
+
+        return new_gcd
 
     def _gcd_QQ(self, g):
         f = self
@@ -3183,6 +3189,7 @@ def gcd_coeffs(coeff_lst, domain):
     Examples
     ========
 
+    >>> from sympy.polys.rings import gcd_coeffs
     >>> from sympy import ZZ
     >>> coeff_lst = [12, 18, 24]
     >>> domain = ZZ
@@ -3359,8 +3366,8 @@ def gcd_terms(polynomials, ring, domain):
     >>> domain = ring.domain
     >>> gcd_terms(polynomials, ring, domain)
     1
-    >>> p1.gcd(p2)
-    x - y  # Shows the difference between the gcd_terms and gcd
+    >>> p1.gcd(p2) # Shows the difference between the gcd_terms and gcd
+    x - y
 
     """
     monomials = set()
