@@ -96,6 +96,8 @@ def _verify_rolling_disc_numerically(kane, all_zero=False):
 
 
 def test_kane_block_matrix_no_constraints():
+    if USE_SYMENGINE:
+        skip('symengine does not support block matrices.')
     # Uses the n_link_pendulum_on_cart to verify whether block matrices are also
     # returned correctly when not using velocity constraints
     kane = n_link_pendulum_on_cart()
@@ -130,6 +132,8 @@ def test_kane_rolling_disc_lu():
 def test_kane_rolling_disc_numeric():
     if not np:
         skip('numpy not installed.')
+    if USE_SYMENGINE:
+        skip('symengine does not support block matrices.')
     props = _create_rolling_disc()
     kane = KanesMethod(
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
