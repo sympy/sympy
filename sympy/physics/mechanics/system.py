@@ -30,7 +30,7 @@ def _reset_eom_method(method):
 
 
 class System(_Methods):
-    """Class to define a system and form the equations of motion.
+    """Class to define a multibody system and form its equations of motion.
 
     Explanation
     ===========
