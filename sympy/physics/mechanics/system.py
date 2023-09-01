@@ -188,12 +188,8 @@ class System(_Methods):
     The complexity of the above example can be increased if we add a constraint
     to prevent the particle from moving in the horizontal (x) direction. This
     can be done by adding a holonomic constraint. After which we should also
-    redefine what our (in)dependent generalized coordinates and speeds are. Note
-    that the backend for forming the equations of motion is reset automatically
-    because the system properties are changed in this process.
+    redefine what our (in)dependent generalized coordinates and speeds are.
 
-    >>> type(system.eom_method)
-    <class 'sympy.physics.mechanics.kane.KanesMethod'>
     >>> system.add_holonomic_constraints(
     ...     bob.masscenter.pos_from(rail.masscenter).dot(system.x)
     ... )
@@ -201,8 +197,6 @@ class System(_Methods):
     >>> system.q_dep = system.get_joint('slider').coordinates
     >>> system.u_ind = system.get_joint('pin').speeds
     >>> system.u_dep = system.get_joint('slider').speeds
-    >>> type(system.eom_method)
-    <class 'NoneType'>
 
     With the updated system the equations of motion can be formed again.
 
