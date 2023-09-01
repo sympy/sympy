@@ -534,8 +534,11 @@ def test_asinh():
     assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
     assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
 
-    assert asinh(2).is_real
+    # reality
+    assert asinh(S(2)).is_real is True
+    assert asinh(S(-2)).is_real is True
     assert (asinh(2) - oo) == -oo
+    assert asinh(symbols('y', real=True)).is_real is True
 
     # Symmetry
     assert asinh(Rational(-1, 2)) == -asinh(S.Half)
@@ -682,9 +685,11 @@ def test_acosh():
     assert acosh(1, evaluate=False).is_zero is True
 
     # Reality
-    assert acosh(2).is_real
-    assert not acosh(0.5).is_real
+    assert acosh(2).is_real is True
+    assert acosh(S(1) / 5).is_real is False
     assert (acosh(2) - oo) == -oo
+    assert acosh(symbols('y', real=True)).is_real is None
+    assert acosh(1).is_real is True
 
 
 def test_acosh_rewrite():
@@ -1013,7 +1018,7 @@ def test_acsch_fdiff():
 def test_atanh():
     x = Symbol('x')
 
-    #at specific points
+    # at specific points
     assert atanh(0) == 0
     assert atanh(I) == I*pi/4
     assert atanh(-I) == -I*pi/4
@@ -1034,9 +1039,11 @@ def test_atanh():
     assert atanh(-x) == -atanh(x)
 
     # reality
-    assert not atanh(2).is_real
-    assert not atanh(-2).is_real
-    assert atanh(-0.5).is_real
+    assert atanh(S(2)).is_real is False
+    assert atanh(S(-1)/5).is_real is True
+    assert atanh(symbols('y', real=True)).is_real is None
+    assert atanh(S(1)).is_real is False
+    assert atanh(S(-1)).is_real is False
 
     # special values
     assert atanh(I/sqrt(3)) == I*pi/6
@@ -1174,9 +1181,11 @@ def test_acoth():
     assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
 
     # reality
-    assert acoth(2).is_real
-    assert acoth(-2).is_real
-    assert not acoth(-0.5).is_real
+    assert acoth(S(2)).is_real is True
+    assert acoth(S(-2)).is_real is True
+    assert acoth(S(1)).is_real is False
+    assert acoth(S(-1)).is_real is False
+    assert acoth(symbols('y', real=True)).is_real is None
 
     # Symmetry
     assert acoth(Rational(-1, 2)) == -acoth(S.Half)
