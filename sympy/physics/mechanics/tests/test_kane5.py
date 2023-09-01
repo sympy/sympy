@@ -123,6 +123,7 @@ def test_kane_rolling_disc_lu():
                        bodies=props['bodies'], forcelist=props['loads'],
                        explicit_kinematics=False, constraint_solver='LU')
     kane.kanes_equations()
+    assert not kane.use_block_matrices
     _verify_rolling_disc_numerically(kane)
 
 
@@ -134,9 +135,10 @@ def test_kane_rolling_disc_numeric():
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
         u_dependent=props['u_dep'], velocity_constraints=props['fnh'],
         bodies=props['bodies'], forcelist=props['loads'],
-        explicit_kinematics=False, constraint_solver='numeric',
+        explicit_kinematics=False, constraint_solver='NUMERIC',
         kd_eqs_solver=lambda A, b: _simplify_matrix(A.LUsolve(b)))
     kane.kanes_equations()
+    assert kane.use_block_matrices
     _verify_rolling_disc_numerically(kane, all_zero=True)
 
 

@@ -360,7 +360,7 @@ class KanesMethod(_Methods):
             self._Ars = -linear_solver(B_dep, B_ind)
             try:  # Test if indexing is supported
                 self._Ars[0, 0]
-            except NotImplementedError or IndexError:
+            except (NotImplementedError, IndexError):
                 self.use_block_matrices = True
         else:
             self._f_nh = Matrix()
