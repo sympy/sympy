@@ -1600,8 +1600,6 @@ class Rational(Number):
             # a Rational is always in reduced form so will never be 2/4
             # so we can just check equivalence of args
             return self.p == other.p and self.q == other.q
-        if other.is_Float:
-            return False
         return False
 
     def __ne__(self, other):
