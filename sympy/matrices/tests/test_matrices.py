@@ -3,7 +3,7 @@ import concurrent.futures
 from collections.abc import Hashable
 
 from sympy.core.add import Add
-from sympy.core.function import (Function, diff, expand)
+from sympy.core.function import Function, diff, expand, Derivative
 from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -38,6 +38,7 @@ from sympy.testing.pytest import (raises, XFAIL, slow, skip, skip_under_pyodide,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import MatPow
 from sympy.algebras import Quaternion
 
@@ -1948,6 +1949,9 @@ def test_diff():
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    assert A.diff(x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
+    assert diff(A, x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
 
 
 def test_diff_by_matrix():
