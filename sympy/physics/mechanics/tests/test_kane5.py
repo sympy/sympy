@@ -2,7 +2,6 @@ from sympy import (zeros, Matrix, symbols, lambdify, sqrt, pi,
                                 simplify)
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
-from sympy.testing.pytest import skip
 
 
 def _create_rolling_disc():
