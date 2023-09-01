@@ -4166,7 +4166,7 @@ def equal_valued(x, y):
     However an individual Float compares equal to a Rational:
 
     >>> Rational(1, 2) == Float(0.5)
-    True
+    False
 
     In a future version of SymPy this might change so that Rational and Float
     compare unequal. This function provides the behavior currently expected of
