@@ -802,6 +802,14 @@ def test_asech():
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
     assert asech(2) == acosh(S.Half)
 
+    # reality
+    assert asech(S(2)).is_real is False
+    assert asech(-S(1) / 3).is_real is False
+    assert asech(S(2) / 3).is_finite is True
+    assert asech(S(0)).is_real is False
+    assert asech(S(0)).is_extended_real is True
+    assert asech(symbols('y', real=True)).is_real is None
+
     # asech(x) == I*acos(1/x)
     # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
     assert asech(-sqrt(2)) == I*acos(-1/sqrt(2))
@@ -933,6 +941,15 @@ def test_acsch():
     # acsch(x) == asinh(1/x)
     assert acsch(-I*sqrt(2)) == asinh(I/sqrt(2))
     assert acsch(-I*2 / sqrt(3)) == asinh(I*sqrt(3) / 2)
+
+    # reality
+    assert acsch(S(2)).is_real is True
+    assert acsch(S(2)).is_finite is True
+    assert acsch(S(-2)).is_real is True
+    assert acsch(S(oo)).is_extended_real is True
+    assert acsch(-S(oo)).is_real is True
+    assert (acsch(2) - oo) == -oo
+    assert acsch(symbols('y', extended_real=True)).is_extended_real is True
 
     # acsch(x) == -I*asin(I/x)
     assert acsch(-I*sqrt(2)) == -I*asin(-1/sqrt(2))

@@ -2046,6 +2046,19 @@ class asech(InverseHyperbolicFunction):
     def _eval_rewrite_as_acsch(self, x, **kwargs):
         return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x, evaluate=False))
 
+    def _eval_is_extended_real(self):
+        if self.args[0].is_extended_real:
+            check_against_zero = self.args[0].is_positive
+            if check_against_zero is None:
+                return None
+            check_against_one = (1 - self.args[0]).is_positive
+            if check_against_one is None:
+                return None
+            return check_against_zero is True and check_against_one is True
+
+    def _eval_is_finite(self):
+        return self.args[0].is_zero is not True
+
 
 class acsch(InverseHyperbolicFunction):
     """
@@ -2239,3 +2252,13 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_is_zero(self):
         return self.args[0].is_infinite
+
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        is_zero = self.args[0].is_zero
+        return None if is_zero is None else not is_zero
+
+
+
