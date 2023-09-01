@@ -50,11 +50,11 @@ class System(_Methods):
     fixed_point : Point
         A fixed point in the inertial reference frame.
     x : Vector
-        Unit vector in the x direction of the inertial reference frame.
+        Unit vector fixed in the inertial reference frame.
     y : Vector
-        Unit vector in the y direction of the inertial reference frame.
+        Unit vector fixed in the inertial reference frame.
     z : Vector
-        Unit vector in the z direction of the inertial reference frame.
+        Unit vector fixed in the inertial reference frame.
     q : ImmutableMatrix
         Matrix of all the generalized coordinates, i.e. the independent
         generalized coordinates stacked upon the dependent.
@@ -70,7 +70,8 @@ class System(_Methods):
     u_dep : ImmutableMatrix
         Matrix of the dependent generalized speeds.
     kdes : ImmutableMatrix
-        Matrix of the kinematic differential equations.
+        Matrix of the kinematical differential equations as expressions equated
+        to the zero matrix.
     bodies : tuple of BodyBase subclasses
         Tuple of all bodies that make up the system.
     joints : tuple of Joint
@@ -80,9 +81,11 @@ class System(_Methods):
     actuators : tuple of ActuatorBase subclasses
         Tuple of all actuators present in the system.
     holonomic_constraints : ImmutableMatrix
-        Matrix with the holonomic constraints as rows.
+        Matrix with the holonomic constraints as expressions equated to the zero
+        matrix.
     nonholonomic_constraints : ImmutableMatrix
-        Matrix with the nonholonomic constraints as rows.
+        Matrix with the nonholonomic constraints as expressions equated to the
+        zero matrix.
     eom_method : subclass of KanesMethod or LagrangesMethod
         Backend for forming the equations of motion.
 
@@ -286,17 +289,17 @@ class System(_Methods):
 
     @property
     def x(self):
-        """Unit vector in the x direction of the inertial reference frame."""
+        """Unit vector fixed in the inertial reference frame."""
         return self._frame.x
 
     @property
     def y(self):
-        """Unit vector in the y direction of the inertial reference frame."""
+        """Unit vector fixed in the inertial reference frame."""
         return self._frame.y
 
     @property
     def z(self):
-        """Unit vector in the z direction of the inertial reference frame."""
+        """Unit vector fixed in the inertial reference frame."""
         return self._frame.z
 
     @property
@@ -415,8 +418,9 @@ class System(_Methods):
 
     @property
     def kdes(self):
-        """Kinematic differential equations, which describe the coupling
-        between the generalized coordinates and the generalized speeds."""
+        """Kinematical differential equations as expressions equated to the zero
+        matrix. These equations describe the coupling between the generalized
+        coordinates and the generalized speeds."""
         return self._kdes
 
     @kdes.setter
@@ -428,7 +432,8 @@ class System(_Methods):
 
     @property
     def holonomic_constraints(self):
-        """Matrix with the holonomic constraints as rows."""
+        """Matrix with the holonomic constraints as expressions equated to the
+        zero matrix."""
         return self._hol_coneqs
 
     @holonomic_constraints.setter
@@ -440,7 +445,8 @@ class System(_Methods):
 
     @property
     def nonholonomic_constraints(self):
-        """Matrix with the nonholonomic constraints as rows."""
+        """Matrix with the nonholonomic constraints as expressions equated to
+        the zero matrix."""
         return self._nonhol_coneqs
 
     @nonholonomic_constraints.setter
