@@ -2196,7 +2196,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
-        return heugcd(f, g)
+        old_gcd = heugcd(f, g)
+
+        # h = _gcd_prs(f, g)
+        # cff = f.div(h)[0]
+        # cfg = g.div(h)[0]
+        # new_gcd = h, cff, cfg
+        # if old_gcd != new_gcd:  # compare the different algorithms
+        #     print("f :", f, "g :", g)
+
+        return old_gcd
 
     def _gcd_QQ(self, g):
         f = self
@@ -3166,7 +3175,7 @@ def monomial_extract(polynomials):
         p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
         return p, d
 
-def gcd_coeffs(coeffs, domain):
+def gcd_coeffs(coeff_lst, domain):
     """
     Return the greatest common divisor (GCD) of a list of coefficients of a
     polynomial.
@@ -3175,13 +3184,13 @@ def gcd_coeffs(coeffs, domain):
     ========
 
     >>> from sympy import ZZ
-    >>> coeffs_lst = [12, 18, 24]
+    >>> coeff_lst = [12, 18, 24]
     >>> domain = ZZ
     >>> gcd_coeffs(coeff_lst, domain)
     6
 
     """
-    coeff_lst = list(coeffs)
+    coeff_lst = list(coeff_lst)
     gcd = domain.gcd
     res = coeff_lst[0]
     for coeff in coeff_lst[1:]:
