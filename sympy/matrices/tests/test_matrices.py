@@ -3,7 +3,7 @@ import concurrent.futures
 from collections.abc import Hashable
 
 from sympy.core.add import Add
-from sympy.core.function import Function, diff, expand, Derivative
+from sympy.core.function import Function, diff, expand
 from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
