@@ -2,7 +2,7 @@
 
 import pytest
 
-from sympy.core.backend import Symbol
+from sympy import Symbol
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.matrices import Matrix
