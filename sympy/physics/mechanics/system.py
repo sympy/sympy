@@ -353,12 +353,14 @@ class System(_Methods):
 
     @property
     def q(self):
-        """Matrix of all the generalized coordinates."""
+        """Matrix of all the generalized coordinates with the independent
+        stacked upon the dependent."""
         return self._q_ind.col_join(self._q_dep)
 
     @property
     def u(self):
-        """Matrix of all the generalized speeds."""
+        """Matrix of all the generalized speeds with the independent stacked
+        upon the dependent."""
         return self._u_ind.col_join(self._u_dep)
 
     @property
