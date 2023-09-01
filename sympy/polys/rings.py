@@ -7,6 +7,7 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 from itertools import chain, compress
+from collections import defaultdict
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
@@ -18,6 +19,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps, monomial_ngcd
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import (
@@ -2195,10 +2197,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
-        h = _gcd_prs(f, g)
-        cff = f.div(h)[0]
-        cfg = g.div(h)[0]
-        return h, cff, cfg
+        return heugcd(f, g)
 
     def _gcd_QQ(self, g):
         f = self
@@ -2538,8 +2537,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def coeff_split(self, syms):
         """
-        Split a polynomial ``self`` into terms based on a set of symbolic
-        indices ``syms``.
+        Get the coefficients of a polynomial with respect to the specified ``syms``.
+
+        For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.coeff_split({y, t})`` converts ``p``
+        to an element of ``K[x, z][y, t]`` and returns the coefficients as elements of ``K[x, z]``.
 
         Parameters
         ==========
@@ -2568,7 +2569,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, coeff_wrt
+        coeff, coeffs, coeff_wrt, drop_to_ground
 
         """
         p1 = self
@@ -2593,13 +2594,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             key2 = tuple(m22)
 
             if key1 not in p2:
-                p2[key1] = {}
+                p2[key1] = defaultdict(dict)
 
             # Store the coefficient in the organized structure
             p2[key1][key2] = c1
 
         return [p1.ring(pi) for pi in p2.values()]
-
 
     def coeff_wrt(self, x, deg):
         """
@@ -3028,7 +3028,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return R
 
-    def free_variable(self):
+    def free_variables(self):
         """
         Examples
         ========
@@ -3036,7 +3036,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> from sympy import ZZ, ring
         >>> R, x, y, z = ring("x, y, z", ZZ)
         >>> p = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
-        >>> p.free_variable()
+        >>> p.free_variables()
         {0, 1, 2}
 
         """
@@ -3064,7 +3064,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         p = self
-        free_sym = p.free_variable()
+        free_sym = p.free_variables()
         return min(free_sym)
 
     # TODO: following methods should point to polynomial
@@ -3120,13 +3120,13 @@ def cont_prim(p, x):
     specified variable."""
 
     coeffs = p.coeff_split({x})
-    content = gcd_prs(coeffs)
-    primitive = p.exquo(content)
-    return content, primitive
+    cont = gcd_prs(coeffs)
+    prim = p.exquo(cont)
+    return cont, prim
 
 def monomial_extract(polynomials):
     """
-    Extracts any common monomial from the polynomials in p.
+    Extracts any common monomial from the polynomials.
 
     Examples
     ========
@@ -3139,7 +3139,7 @@ def monomial_extract(polynomials):
     >>> g = x**2*y + x*y
     >>> polynomials = [f, g]
     >>> monomial_extract(polynomials)
-    ([x + y, x**2*y + x*y], None)
+    ([x + y, x**2*y + x*y], 1)
 
     >>> f = x**2*y
     >>> g = x**2*y + x*y
@@ -3149,21 +3149,47 @@ def monomial_extract(polynomials):
 
     """
     ring = polynomials[0].ring
+    domain = ring.domain
+
     zero_monom = ring.zero_monom
     monoms = chain(*polynomials)
 
     # Check for the presence of zero_monom in any polynomial
     if any(zero_monom in poly for poly in polynomials):
-        return polynomials, None
+        return polynomials, domain.one
 
     monom_gcd = tuple(map(min, zip(*monoms)))
 
     if monom_gcd == ring.zero_monom:
-        return polynomials, None
+        return polynomials, domain.one
     else:
         d = ring({monom_gcd: ring.domain.one})
         p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
         return p, d
+
+def gcd_coeffs(coeff_lst, domain):
+    """
+    Return the greatest common divisor (GCD) of a list of coefficients of a
+    polynomial.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ
+    >>> coeffs_lst = [12, 18, 24]
+    >>> domain = ZZ
+    >>> gcd_coeffs(coeff_lst, domain)
+    6
+
+    """
+    coeff_lst = list(coeff_lst)
+    gcd = domain.gcd
+    res = coeff_lst[0]
+    for coeff in coeff_lst[1:]:
+        res = gcd(res, coeff)
+        if res == domain.one:
+            break
+    return sympify(res)
 
 def _gcd_preprocess_polys(polynomials):
     """
@@ -3197,7 +3223,7 @@ def _gcd_preprocess_polys(polynomials):
         polynomials = sorted(set(all_polys), key=len)
 
         # Find the intersection of symbols for each poly:
-        common = polynomials[0].free_variable()
+        common = polynomials[0].free_variables()
         allsame = True
         for pi in polynomials[1:]:
 
@@ -3208,7 +3234,7 @@ def _gcd_preprocess_polys(polynomials):
                 gcd = gcd_terms(polynomials, R, K)
                 return [gcd], None
 
-            syms = pi.free_variable()
+            syms = pi.free_variables()
             if allsame and syms != common:
                 allsame = False
             common &= syms
@@ -3220,7 +3246,7 @@ def _gcd_preprocess_polys(polynomials):
         # Extract coefficients as polys containing only the common symbols.
         all_polys = []
         for i, pi in enumerate(polynomials):
-            coeffs_i = pi.coeff_split(pi.free_variable() - common)
+            coeffs_i = pi.coeff_split(pi.free_variables() - common)
             all_polys.extend(coeffs_i)
 
             # Quick exit:
@@ -3308,8 +3334,8 @@ def _gcd_prs(p1, p2):
 
 def gcd_terms(polynomials, ring, domain):
     """
-    Returns the greatest common divisor (GCD) of a list of polynomials p in
-    a given ring and domain.
+    Returns the greatest common divisor (GCD) of all terms in a list of
+    polynomials p with respect to a given ring and domain.
 
     Examples
     ========
@@ -3318,11 +3344,15 @@ def gcd_terms(polynomials, ring, domain):
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
-    >>> polynomials = x**2 - y**2, x - y
-    >>> ring = polynomials[0].ring
+    >>> p1 = x**3 - y**3
+    >>> p2 = x**2 - y**2
+    >>> polynomials = [p1, p2]
+    >>> ring = p1.ring
     >>> domain = ring.domain
     >>> gcd_terms(polynomials, ring, domain)
     1
+    >>> p1.gcd(p2)
+    x - y  # Shows the difference between the gcd_terms and gcd
 
     """
     monomials = set()
@@ -3333,15 +3363,8 @@ def gcd_terms(polynomials, ring, domain):
             monomials.add(monomial)
             coeffs.add(coeff)
 
-    monom_gcd = monomial_ngcd(list(monomials))
-
-    x = Symbol('x')
-    fpe = Poly.from_list(list(coeffs), x).as_expr()
-    sym = list(fpe.free_symbols)
-    R = domain[sym]
-    fpe = R.from_sympy(fpe)
-
-    coeff_gcd = fpe.content()
-    term_gcd = ring({monom_gcd: coeff_gcd})
+    monom_gcd = monomial_ngcd(monomials)
+    coeff_gcd = gcd_coeffs(coeffs, domain)
+    term_gcd = ring({monom_gcd: sympify(coeff_gcd)})
 
     return term_gcd

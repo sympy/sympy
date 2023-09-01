@@ -296,20 +296,20 @@ def monomial_ngcd(monomials):
     ========
 
     >>> from sympy.polys.monomials import monomial_ngcd
-    >>> monomial_ngcd([(1, 0), (0, 2), (2, 0), (0, 1)])
-    (0, 0)
+    >>> monomial_ngcd([(2, 3), (3, 2), (1, 4), (4, 1)])
+    (1, 1)
 
     """
-    zero_monom = tuple(0 for _ in monomials[0])
+    zero_monom = tuple(0 for _ in next(iter(monomials)))
 
-    # If the first monomial is already the zero monomial, return early
-    if monomials[0] == zero_monom:
+    # If the zero monomial is present in the monomials, return early
+    if zero_monom in monomials:
         return zero_monom
 
-    gcd = monomials[0]
+    gcd = next(iter(monomials))
 
-    for monom in monomials[1:]:
-        gcd = tuple(min(a, b) for a, b in zip(gcd, monom))
+    for monom in monomials:
+        gcd = monomial_gcd(gcd, monom)
 
         # If gcd becomes the zero monomial, return early
         if gcd == zero_monom:
