@@ -27,7 +27,6 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed, MultivariatePolynomialError)
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
-from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
@@ -3167,7 +3166,7 @@ def monomial_extract(polynomials):
         p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
         return p, d
 
-def gcd_coeffs(coeff_lst, domain):
+def gcd_coeffs(coeffs, domain):
     """
     Return the greatest common divisor (GCD) of a list of coefficients of a
     polynomial.
@@ -3182,7 +3181,7 @@ def gcd_coeffs(coeff_lst, domain):
     6
 
     """
-    coeff_lst = list(coeff_lst)
+    coeff_lst = list(coeffs)
     gcd = domain.gcd
     res = coeff_lst[0]
     for coeff in coeff_lst[1:]:
