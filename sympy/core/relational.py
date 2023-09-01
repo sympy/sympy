@@ -626,7 +626,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
+    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -649,12 +649,10 @@ class Equality(Relational):
         (b, x, b, -x)
         """
         from .add import _unevaluated_Add, Add
-        L, R = args
         if L == 0:
             return R
         if R == 0:
             return L
-        evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R

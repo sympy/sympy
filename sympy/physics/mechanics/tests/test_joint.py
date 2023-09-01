@@ -13,7 +13,6 @@ from sympy.physics.vector import Vector, ReferenceFrame, Point
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
-Vector.simp = True
 t = dynamicsymbols._t # type: ignore
 
 
@@ -545,7 +544,7 @@ def test_pin_joint_arbitrary_axis():
                                                      u*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     angle = A.ang_vel_in(N).angle_between(A.x + A.y-A.z)
-    assert angle.xreplace({u: 1}) == 0
+    assert angle.xreplace({u: 1}).simplify() == 0
     assert C.masscenter.vel(N).simplify() == (u*A.y + u*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
     assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
@@ -573,12 +572,12 @@ def test_pin_joint_arbitrary_axis():
          2*sin(q + pi/6)/3 + S(1)/3],
         [-2*sin(q + pi/6)/3 - S(1)/3, 2*cos(q + pi/3)/3 + S(1)/3,
          2*cos(q)/3 - S(1)/3]])
-    assert A.ang_vel_in(N) == (u*N.x - u*N.y + u*N.z)/sqrt(3)
+    assert (A.ang_vel_in(N) - (u*N.x - u*N.y + u*N.z)/sqrt(3)).simplify()
     assert A.ang_vel_in(N).express(A).simplify() == (u*A.x + u*A.y -
                                                      u*A.z)/sqrt(3)
     assert A.ang_vel_in(N).magnitude() == sqrt(u**2)
     angle = A.ang_vel_in(N).angle_between(A.x+A.y-A.z)
-    assert angle.xreplace({u: 1}) == 0
+    assert angle.xreplace({u: 1}).simplify() == 0
     assert (C.masscenter.vel(N).simplify() ==
             sqrt(3)*n*u/3*A.y + sqrt(3)*n*u/3*A.z)
     assert C.masscenter.pos_from(P.masscenter) == m*N.x - n*A.x
@@ -801,16 +800,17 @@ def test_prismatic_joint_arbitrary_axis():
     N, A, P, C = _generate_body()
     PrismaticJoint('S', P, C, parent_point=N.x, child_point=A.x,
                    child_interframe=A.x + A.y - A.z)
-    assert N.x.angle_between(A.x + A.y - A.z) == 0 #Axis are aligned
-    assert (A.x + A.y - A.z).express(N) == sqrt(3)*N.x
+    assert N.x.angle_between(A.x + A.y - A.z).simplify() == 0 #Axis are aligned
+    assert ((A.x + A.y - A.z).express(N) - sqrt(3)*N.x).simplify() == 0
     assert _simplify_matrix(A.dcm(N)) == Matrix([[sqrt(3)/3, -sqrt(3)/3, sqrt(3)/3],
                                                  [sqrt(3)/3, sqrt(3)/6 + S(1)/2, S(1)/2 - sqrt(3)/6],
                                                  [-sqrt(3)/3, S(1)/2 - sqrt(3)/6, sqrt(3)/6 + S(1)/2]])
     assert C.masscenter.pos_from(P.masscenter) == (q + 1)*N.x - A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N) == \
-        (q - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z
+    assert (C.masscenter.pos_from(P.masscenter).express(N) -
+        ((q - sqrt(3)/3 + 1)*N.x + sqrt(3)/3*N.y - sqrt(3)/3*N.z)).simplify() == 0
     assert C.masscenter.vel(N) == u*N.x
-    assert C.masscenter.vel(N).express(A) == sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z
+    assert (C.masscenter.vel(N).express(A) - (
+        sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z)).simplify()
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
 
@@ -821,16 +821,20 @@ def test_prismatic_joint_arbitrary_axis():
                    parent_interframe=N.x - N.y + N.z)
     # 0 angle means that the axis are aligned
     assert (N.x-N.y+N.z).angle_between(A.x+A.y-A.z).simplify() == 0
-    assert (A.x+A.y-A.z).express(N) == N.x - N.y + N.z
+    assert ((A.x+A.y-A.z).express(N) - (N.x - N.y + N.z)).simplify() == 0
     assert _simplify_matrix(A.dcm(N)) == Matrix([[-S(1)/3, -S(2)/3, S(2)/3],
                                                  [S(2)/3, S(1)/3, S(2)/3],
                                                  [-S(2)/3, S(2)/3, S(1)/3]])
-    assert C.masscenter.pos_from(P.masscenter) == \
-        (m + sqrt(3)*q/3)*N.x - sqrt(3)*q/3*N.y + sqrt(3)*q/3*N.z - n*A.x
-    assert C.masscenter.pos_from(P.masscenter).express(N) == \
-        (m + n/3 + sqrt(3)*q/3)*N.x + (2*n/3 - sqrt(3)*q/3)*N.y + (-2*n/3 + sqrt(3)*q/3)*N.z
-    assert C.masscenter.vel(N) == sqrt(3)*u/3*N.x - sqrt(3)*u/3*N.y + sqrt(3)*u/3*N.z
-    assert C.masscenter.vel(N).express(A) == sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z
+    assert (C.masscenter.pos_from(P.masscenter) - (
+        (m + sqrt(3)*q/3)*N.x - sqrt(3)*q/3*N.y + sqrt(3)*q/3*N.z - n*A.x)
+            ).express(N).simplify() == 0
+    assert (C.masscenter.pos_from(P.masscenter).express(N) - (
+        (m + n/3 + sqrt(3)*q/3)*N.x + (2*n/3 - sqrt(3)*q/3)*N.y +
+        (-2*n/3 + sqrt(3)*q/3)*N.z)).simplify() == 0
+    assert (C.masscenter.vel(N).express(N) - (
+        sqrt(3)*u/3*N.x - sqrt(3)*u/3*N.y + sqrt(3)*u/3*N.z)).simplify() == 0
+    assert (C.masscenter.vel(N).express(A) -
+            (sqrt(3)*u/3*A.x + sqrt(3)*u/3*A.y - sqrt(3)*u/3*A.z)).simplify() == 0
     assert A.ang_vel_in(N) == 0
     assert N.ang_vel_in(A) == 0
 
@@ -1056,8 +1060,8 @@ def test_spherical_joint_orient_body():
     assert S._rot_type.upper() == 'BODY'
     assert S._rot_order == 123
     assert _simplify_matrix(N.dcm(A) - N_R_A) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == N_w_A
-    assert C.masscenter.vel(N).to_matrix(A) == N_v_Co
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A) - N_w_A) == zeros(3, 1)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == N_v_Co
     # Test change of amounts
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -1069,8 +1073,9 @@ def test_spherical_joint_orient_body():
     assert S._rot_type.upper() == 'BODY'
     assert S._rot_order == 123
     assert _simplify_matrix(N.dcm(A) - switch_order(N_R_A)) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == switch_order(N_w_A)
-    assert C.masscenter.vel(N).to_matrix(A) == switch_order(N_v_Co)
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A) - switch_order(N_w_A)
+                            ) == zeros(3, 1)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == switch_order(N_v_Co)
     # Test different rot_order
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],
@@ -1085,10 +1090,10 @@ def test_spherical_joint_orient_body():
         [-sin(q1), -cos(q1) * cos(q2), -sin(q2) * cos(q1)],
         [cos(q0) * cos(q1), -sin(q0) * sin(q2) - sin(q1) * cos(q0) * cos(q2),
          sin(q0) * cos(q2) - sin(q1) * sin(q2) * cos(q0)]])) == zeros(3)
-    assert A.ang_vel_in(N).to_matrix(A) == Matrix([
+    assert _simplify_matrix(A.ang_vel_in(N).to_matrix(A) - Matrix([
         [u0 * sin(q1) - u2], [u0 * cos(q1) * cos(q2) - u1 * sin(q2)],
-        [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])
-    assert C.masscenter.vel(N).to_matrix(A) == Matrix([
+        [u0 * sin(q2) * cos(q1) + u1 * cos(q2)]])) == zeros(3, 1)
+    assert _simplify_matrix(C.masscenter.vel(N).to_matrix(A)) == Matrix([
         [-sqrt(2) * (u0 * sin(q2 + pi / 4) * cos(q1) + u1 * cos(q2 + pi / 4))],
         [u0 * sin(q1) - u2], [u0 * sin(q1) - u2]])
 

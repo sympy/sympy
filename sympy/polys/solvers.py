@@ -31,7 +31,7 @@ class RawMatrix(MutableDenseMatrix):
        Matrix should be of type ``Expr``.
 
     """
-    _sympify = staticmethod(lambda x: x)
+    _sympify = staticmethod(lambda x, *args, **kwargs: x)
 
     def __init__(self, *args, **kwargs):
         sympy_deprecation_warning(

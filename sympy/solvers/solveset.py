@@ -17,12 +17,13 @@ from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
-from sympy.core.power import integer_log
+from sympy.core.numbers import I, Number, Rational, oo
+from sympy.core.intfunc import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
+from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
 from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
@@ -757,13 +758,7 @@ def _solve_trig2(f, symbol, domain):
 
     x = Dummy('x')
 
-    # ilcm() and igcd() require more than one argument
-    if len(numerators) > 1:
-        mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
-    else:
-        assert len(numerators) == 1
-        mu = Rational(2)*denominators[0]/numerators[0]
-
+    mu = Rational(2)*number_lcm(*denominators)/number_gcd(*numerators)
     f = f.subs(symbol, mu*x)
     f = f.rewrite(tan)
     f = expand_trig(f)
@@ -1332,9 +1327,13 @@ def _invert_modular(modterm, rhs, n, symbol):
         base, expo = a.args
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
-            # m, rhs are made coprime by dividing igcd(m, rhs)
+            # m, rhs are made coprime by dividing number_gcd(m, rhs)
+            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+                return modterm, rhs
+
+            mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
-                remainder = discrete_log(m / igcd(m, rhs), rhs, a.base)
+                remainder = discrete_log(mdiv, rhs.p, a.base.p)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
@@ -1344,7 +1343,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             period = totient(m)
             for p in divisors(period):
                 # there might a lesser period exist than totient(m).
-                if pow(a.base, p, m / igcd(m, a.base)) == 1:
+                if pow(a.base, p, m / number_gcd(m.p, a.base.p)) == 1:
                     period = p
                     break
             # recursion is not applied here since _invert_modular is currently

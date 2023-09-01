@@ -6,9 +6,10 @@ from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy.physics.mechanics.functions import (
-    msubs, find_dynamicsymbols, _f_list_parser, _validate_coordinates,
-    _parse_linear_solver)
+from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
+                                               _f_list_parser,
+                                               _validate_coordinates,
+                                               _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -33,7 +34,7 @@ class KanesMethod(_Methods):
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
     bodies : iterable
-        Iterable of Point and RigidBody objects in the system.
+        Iterable of Particle and RigidBody objects in the system.
     loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
@@ -53,79 +54,122 @@ class KanesMethod(_Methods):
         The "mass matrix" for the u's and q's with dynamics and kinematics
     forcing_full : Matrix
         The "forcing vector" for the u's and q's with dynamics and kinematics
+
+    Parameters
+    ==========
+
+    frame : ReferenceFrame
+        The inertial reference frame for the system.
+    q_ind : iterable of dynamicsymbols
+        Independent generalized coordinates.
+    u_ind : iterable of dynamicsymbols
+        Independent generalized speeds.
+    kd_eqs : iterable of Expr, optional
+        Kinematic differential equations, which linearly relate the generalized
+        speeds to the time-derivatives of the generalized coordinates.
+    q_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized coordinates.
+    configuration_constraints : iterable of Expr, optional
+        Constraints on the system's configuration, i.e. holonomic constraints.
+    u_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized speeds.
+    velocity_constraints : iterable of Expr, optional
+        Constraints on the system's velocity, i.e. the combination of the
+        nonholonomic constraints and the time-derivative of the holonomic
+        constraints.
+    acceleration_constraints : iterable of Expr, optional
+        Constraints on the system's acceleration, by default these are the
+        time-derivative of the velocity constraints.
+    u_auxiliary : iterable of dynamicsymbols, optional
+        Auxiliary generalized speeds.
+    bodies : iterable of Particle and/or RigidBody, optional
+        The particles and rigid bodies in the system.
+    forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
+        Forces and torques applied on the system.
     explicit_kinematics : bool
         Boolean whether the mass matrices and forcing vectors should use the
         explicit form (default) or implicit form for kinematics.
         See the notes for more details.
     kd_eqs_solver : str, callable
-        Method used to solve the kinematic differential equations. Supported options
-        are:
-        - Methods from :meth:`sympy.matrices.matrices.MatrixBase.solve`, like ``'LU'``
-          (default).
-        - ``callable``: custom solver with the format ``f(A, rhs)``, which returns the
-          solution.
-        See the notes for more information.
+        Method used to solve the kinematic differential equations. If a string
+        is supplied, it should be a valid method that can be used with the
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        equations and returns the solution. The default utilizes LU solve. See
+        the notes for more information.
     constraint_solver : str, callable
-        Method used to solve the velocity constraints. Supported options are:
-        - Methods from :meth:`sympy.matrices.matrices.MatrixBase.solve`, like ``'LU'``
-          (default).
-        - ``'NUMERIC'``: numerical solver which utilizes
-          ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
-          ``True``.
-        - ``callable``: custom solver with the format ``f(A, rhs)``, which returns the
-          solution.
-        See the notes for more information.
+        Method used to solve the velocity constraints. If a string is supplied,
+        it should be a valid method that can be used with the
+        :meth:`sympy.matrices.matrices.MatrixBase.solve` or the string
+        ``'NUMERIC'``. If ``'NUMERIC'`` is used, ``.use_block_matrices`` is set
+        to ``True`` and the equations of motion are in a form suitable for more
+        efficient code generation (but not necessarily more symbolic analyses)
+        using ``codegen.matrix_nodes.MatrixSolve``.  If a callable is supplied,
+        it should have the format ``f(A, rhs)``, where it solves the equations
+        and returns the solution. The default utilizes LU solve. See the notes
+        for more information.
     use_block_matrices : bool
-        Boolean whether the mass matrices and forcing vector should be returned as block
-        matrices, instead of normal matrices. See the notes more for information.
+        Boolean whether the mass matrices and forcing vector should be returned
+        as block matrices, instead of normal matrices. See the notes more for
+        information.
 
     Notes
     =====
 
-    The mass matrices and forcing vectors related to kinematic equations
-    are given in the explicit form by default. In other words, the kinematic
-    mass matrix is $\mathbf{k_{k\dot{q}}} = \mathbf{I}$.
-    In order to get the implicit form of those matrices/vectors, you can set the
-    ``explicit_kinematics`` attribute to ``False``. So $\mathbf{k_{k\dot{q}}}$
-    is not necessarily an identity matrix. This can provide more compact
-    equations for non-simple kinematics.
+    The mass matrices and forcing vectors related to kinematic equations are
+    given in the explicit form by default. In other words, the kinematic mass
+    matrix is :math:`\mathbf{k_{k\dot{q}}} = \mathbf{I}`.  In order to get the
+    implicit form of those matrices/vectors, you can set the
+    ``explicit_kinematics`` attribute to ``False``. So
+    :math:`\mathbf{k_{k\dot{q}}}` is not necessarily an identity matrix. This
+    can provide more compact equations for non-simple kinematics.
 
     Two linear solvers can be supplied to ``KanesMethod``: one for solving the
     kinematic differential equations and one to solve the velocity constraints.
-    Both of these sets of equations can be expressed as a linear system ``Ax = rhs``,
-    which have to be solved in order to obtain the equations of motion.
+    Both of these sets of equations can be expressed as a linear system ``Ax =
+    rhs``, which have to be solved in order to obtain the equations of motion.
 
     The implemented solvers are:
-    - Methods from :meth:`sympy.matrices.matrices.MatrixBase.solve`, like ``'LU'``
-      (default).
+
+    - Methods from :meth:`sympy.matrices.matrices.MatrixBase.solve`, like
+    ``'LU'`` (default).
     - ``'NUMERIC'``: numerical solver which utilizes
-      ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to ``True``.
-    - ``callable``: custom solver with the format ``f(A, rhs)``, which returns the
-      solution.
+      ``codegen.matrix_nodes.MatrixSolve``. Sets ``.use_block_matrices`` to
+      ``True``.
+    - ``callable``: custom solver with the format ``f(A, rhs)``, which returns
+      the solution.
 
-    The default solver ``'LU'``, which stands for LU solve, results relatively low
-    number of operations. The weakness of this method is that it can result in zero
-    division errors.
+    The default solver ``'LU'``, which stands for LU solve, results relatively
+    low number of operations. The weakness of this method is that it can result
+    in zero division errors.
 
-    The numeric solver ``'NUMERIC'`` utilizes ``codegen.matrix_nodes.MatrixSolve``,
-    which postpones the solve to the numeric evaluation. When using ``lambdify``
-    combined with the ``NumPyPrinter`` this will result in the usage of
-    ``np.linalg.solve``. The advantage of this method is that it results in numerically
-    stable solutions. It is however slower than ``Matrix.LUsolve``, at least for
-    relatively small systems. A possible disadvantage of this solver is that the
-    resulting matrices do not support indexing. The numeric solver can therefore not be
-    used for the kinematic differential equations. When used for the velocity
-    constraints, ``KanesMethod`` will automatically switch to use ``BlockMatrix`` for
-    the mass matrices and forcing vectors.
+    The numeric solver ``'NUMERIC'`` utilizes
+    ``codegen.matrix_nodes.MatrixSolve``, which postpones the solve to the
+    numeric evaluation. When using ``lambdify`` combined with the
+    ``NumPyPrinter`` this will result in the usage of ``np.linalg.solve``. The
+    advantage of this method is that it results in numerically stable
+    solutions. It is however slower than ``Matrix.LUsolve``, at least for
+    relatively small systems. A possible disadvantage of this solver is that
+    the resulting matrices do not support indexing. The numeric solver can
+    therefore not be used for the kinematic differential equations internall in
+    ``KanesMethod``. When used for the velocity constraints, ``KanesMethod``
+    will automatically switch to use ``BlockMatrix`` for the mass matrices and
+    forcing vectors.
 
-    While a further list list of solvers can be found at
-    :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a
-    `callable`. This way it is possible to use a different solver routine. If the
-    kinematic differential equations are not too complex it can be worth it to simplify
-    the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
-    option solver one may use is :func:`sympy.solvers.solveset.linsolve`. This can be
-    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
-    solution as our system should have only one unique solution.
+    If zero divisions are encountered, a possible solver which may solve the
+    problem is ``"CRAMER"``. This method uses Cramer's rule to solve the
+    system. This method is slower and results in more operations than the
+    default solver. However it only uses a single division by default per entry
+    of the solution.
+
+    :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to
+    supply a `callable`. This way it is possible to use a different solver
+    routine. If the kinematic differential equations are not too complex it can
+    be worth it to simplify the solution by using ``lambda A, b:
+    simplify(Matrix.LUsolve(A, b))``. Another option solver one may use is
+    :func:`sympy.solvers.solveset.linsolve`. This can be done using `lambda A,
+    b: tuple(linsolve((A, b)))[0]`, where we select the first solution as our
+    system should have only one unique solution.
 
     Examples
     ========
@@ -528,11 +572,32 @@ class KanesMethod(_Methods):
         self._f_d = -(self._fr - nonMM)
         return fr_star
 
-    def to_linearizer(self):
+    def to_linearizer(self, linear_solver='LU'):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points)."""
+        efficient recalculation (i.e. about varying operating points).
+
+        Parameters
+        ==========
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
+        Returns
+        =======
+        Linearizer
+            An instantiated
+            :class:`sympy.physics.mechanics.linearize.Linearizer`.
+
+        """
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -599,11 +664,29 @@ class KanesMethod(_Methods):
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r)
+                q_d, u_i, u_d, r, linear_solver=linear_solver)
 
     # TODO : Remove `new_method` after 1.1 has been released.
-    def linearize(self, *, new_method=None, **kwargs):
+    def linearize(self, *, new_method=None, linear_solver='LU', **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
+
+        Parameters
+        ==========
+        new_method
+            Deprecated, does nothing and will be removed.
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+        **kwargs
+            Extra keyword arguments are passed to
+            :meth:`sympy.physics.mechanics.linearize.Linearizer.linearize`.
 
         Explanation
         ===========
@@ -628,8 +711,11 @@ class KanesMethod(_Methods):
         dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
-        For more documentation, please see the ``Linearizer`` class."""
-        linearizer = self.to_linearizer()
+        For more documentation, please see the ``Linearizer`` class.
+
+        """
+
+        linearizer = self.to_linearizer(linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 

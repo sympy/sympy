@@ -4,6 +4,7 @@ C++ code printer
 
 from itertools import chain
 from sympy.codegen.ast import Type, none
+from .codeprinter import requires
 from .c import C89CodePrinter, C99CodePrinter
 
 # These are defined in the other file so we can avoid importing sympy.codegen
@@ -86,6 +87,7 @@ class _CXXCodePrinterBase:
     def __init__(self, settings=None):
         super().__init__(settings or {})
 
+    @requires(headers={'algorithm'})
     def _print_Max(self, expr):
         from sympy.functions.elementary.miscellaneous import Max
         if len(expr.args) == 1:
@@ -93,6 +95,7 @@ class _CXXCodePrinterBase:
         return "%smax(%s, %s)" % (self._ns, self._print(expr.args[0]),
                                   self._print(Max(*expr.args[1:])))
 
+    @requires(headers={'algorithm'})
     def _print_Min(self, expr):
         from sympy.functions.elementary.miscellaneous import Min
         if len(expr.args) == 1:
@@ -105,6 +108,15 @@ class _CXXCodePrinterBase:
             return 'using %s' % expr.type
         else:
             raise ValueError("C++98 does not support type aliases")
+
+    def _print_Raise(self, rs):
+        arg, = rs.args
+        return 'throw %s' % self._print(arg)
+
+    @requires(headers={'stdexcept'})
+    def _print_RuntimeError_(self, re):
+        message, = re.args
+        return "%sruntime_error(%s)" % (self._ns, self._print(message))
 
 
 class CXX98CodePrinter(_CXXCodePrinterBase, C89CodePrinter):

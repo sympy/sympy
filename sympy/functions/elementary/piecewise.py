@@ -930,7 +930,7 @@ class Piecewise(Function):
             last = ITE(c, a, last)
         return _canonical(last)
 
-    def _eval_rewrite_as_KroneckerDelta(self, *args):
+    def _eval_rewrite_as_KroneckerDelta(self, *args, **kwargs):
         from sympy.functions.special.tensor_functions import KroneckerDelta
 
         rules = {
@@ -1190,7 +1190,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
                     if b.is_infinite:
                         c = (x > a)
                     else:
-                        c = (x <= b)
+                        c = And(a < x, x <= b)
                 else:
                     if a in covered:
                         c = (x < b)

@@ -41,8 +41,6 @@ Ntheory Functions Reference
 
 .. autofunction:: smoothness_p
 
-.. autofunction:: trailing
-
 .. autofunction:: multiplicity
 
 .. autofunction:: perfect_power
@@ -177,7 +175,15 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: kronecker_symbol
+
 .. autofunction:: discrete_log
+
+.. autofunction:: quadratic_congruence
+
+.. autofunction:: polynomial_congruence
+
+.. autofunction:: binomial_mod
 
 .. automodule:: sympy.ntheory.continued_fraction
    :members:

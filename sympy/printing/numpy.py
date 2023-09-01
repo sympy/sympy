@@ -19,6 +19,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
+    'isnan': 'isnan'
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -482,6 +483,7 @@ class JaxPrinter(NumPyPrinter):
 
     def __init__(self, settings=None):
         super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
 
     # These need specific override to allow for the lack of "jax.numpy.reduce"
     def _print_And(self, expr):

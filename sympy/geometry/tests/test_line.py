@@ -9,7 +9,7 @@ from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
-    Point2D, Line2D)
+    Point2D, Line2D, Plane)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
@@ -406,6 +406,15 @@ def test_distance_3d():
     assert Line3D((0, 0, 0), (0, 1, 0)).distance(p2) == sqrt(2)
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p1) == 0
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p2) == sqrt(2)
+    # Line to line
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (0, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (1, 0, 0))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((10, 0, 0), (10, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 1, 0), (0, 1, 1))) == 1
+    # Line to plane
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((2, 0, 0), (0, 0, 1))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((0, 1, 0), (0, 1, 0))) == 1
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((1, 1, 3), (1, 0, 0))) == 0
     # Ray to point
     assert r.distance(Point3D(-1, -1, -1)) == sqrt(3)
     assert r.distance(Point3D(1, 1, 1)) == 0

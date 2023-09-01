@@ -20,10 +20,19 @@ def add_mathml_headers(s):
 
 @doctest_depends_on(modules=('lxml',))
 def apply_xsl(mml, xsl):
-    """Apply a xsl to a MathML string
-    @param mml: a string with MathML code
-    @param xsl: a string representing a path to a xsl (xml stylesheet)
-        file. This file name is relative to the PYTHONPATH
+    """Apply a xsl to a MathML string.
+
+    Parameters
+    ==========
+
+    mml
+        A string with MathML code.
+    xsl
+        A string representing a path to a xsl (xml stylesheet) file.
+        This file name is relative to the PYTHONPATH.
+
+    Examples
+    ========
 
     >>> from sympy.utilities.mathml import apply_xsl
     >>> xsl = 'mathml/data/simple_mmlctop.xsl'
@@ -31,12 +40,15 @@ def apply_xsl(mml, xsl):
     >>> res = apply_xsl(mml,xsl)
     >>> ''.join(res.splitlines())
     '<?xml version="1.0"?><mrow xmlns="http://www.w3.org/1998/Math/MathML">  <mi>a</mi>  <mo> + </mo>  <mi>b</mi></mrow>'
-
     """
     from lxml import etree
-    s = etree.XML(get_resource(xsl).read())
-    transform = etree.XSLT(s)
-    doc = etree.XML(mml)
+
+    parser = etree.XMLParser(resolve_entities=False)
+    ac = etree.XSLTAccessControl.DENY_ALL
+
+    s = etree.XML(get_resource(xsl).read(), parser=parser)
+    transform = etree.XSLT(s, access_control=ac)
+    doc = etree.XML(mml, parser=parser)
     result = transform(doc)
     s = str(result)
     return s
@@ -47,6 +59,9 @@ def c2p(mml, simple=False):
     """Transforms a document in MathML content (like the one that sympy produces)
     in one document in MathML presentation, more suitable for printing, and more
     widely accepted
+
+    Examples
+    ========
 
     >>> from sympy.utilities.mathml import c2p
     >>> mml = '<apply> <exp/> <cn>2</cn> </apply>'

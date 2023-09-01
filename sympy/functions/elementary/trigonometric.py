@@ -465,10 +465,10 @@ class sin(TrigonometricFunction):
                          (2*cot_half/(1 + cot_half**2), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        return self.rewrite(cos).rewrite(pow)
+        return self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        return self.rewrite(cos).rewrite(sqrt)
+        return self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return 1/csc(arg)
@@ -769,7 +769,7 @@ class cos(TrigonometricFunction):
         I = S.ImaginaryUnit
         from sympy.functions.elementary.hyperbolic import HyperbolicFunction
         if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
-            arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp, **kwargs)
         return (exp(arg*I) + exp(-arg*I))/2
 
     def _eval_rewrite_as_Pow(self, arg, **kwargs):
@@ -794,7 +794,7 @@ class cos(TrigonometricFunction):
                          ((cot_half - 1)/(cot_half + 1), True))
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        return self._eval_rewrite_as_sqrt(arg)
+        return self._eval_rewrite_as_sqrt(arg, **kwargs)
 
     def _eval_rewrite_as_sqrt(self, arg: Expr, **kwargs):
         from sympy.functions.special.polynomials import chebyshevt
@@ -819,7 +819,7 @@ class cos(TrigonometricFunction):
 
         if not pi_coeff.q % 2:  # recursively remove factors of 2
             pico2 = pi_coeff * 2
-            nval = cos(pico2 * pi).rewrite(sqrt)
+            nval = cos(pico2 * pi).rewrite(sqrt, **kwargs)
             x = (pico2 + 1) / 2
             sign_cos = -1 if int(x) % 2 else 1
             return sign_cos * sqrt((1 + nval) / 2)
@@ -837,13 +837,13 @@ class cos(TrigonometricFunction):
 
         if not FC or len(FC) == 1:
             return pcls
-        return pcls.rewrite(sqrt)
+        return pcls.rewrite(sqrt, **kwargs)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return 1/sec(arg)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return 1/sec(arg).rewrite(csc)
+        return 1/sec(arg).rewrite(csc, **kwargs)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1179,23 +1179,23 @@ class tan(TrigonometricFunction):
         return 1/cot(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        sin_in_sec_form = sin(arg).rewrite(sec)
-        cos_in_sec_form = cos(arg).rewrite(sec)
+        sin_in_sec_form = sin(arg).rewrite(sec, **kwargs)
+        cos_in_sec_form = cos(arg).rewrite(sec, **kwargs)
         return sin_in_sec_form/cos_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        sin_in_csc_form = sin(arg).rewrite(csc)
-        cos_in_csc_form = cos(arg).rewrite(csc)
+        sin_in_csc_form = sin(arg).rewrite(csc, **kwargs)
+        cos_in_csc_form = cos(arg).rewrite(csc, **kwargs)
         return sin_in_csc_form/cos_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(pow)
+        y = self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
         if y.has(cos):
             return None
         return y
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(sqrt)
+        y = self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
         if y.has(cos):
             return None
         return y
@@ -1440,7 +1440,7 @@ class cot(TrigonometricFunction):
         from sympy.functions.elementary.hyperbolic import HyperbolicFunction
         I = S.ImaginaryUnit
         if isinstance(arg, (TrigonometricFunction, HyperbolicFunction)):
-            arg = arg.func(arg.args[0]).rewrite(exp)
+            arg = arg.func(arg.args[0]).rewrite(exp, **kwargs)
         neg_exp, pos_exp = exp(-arg*I), exp(arg*I)
         return I*(pos_exp + neg_exp)/(pos_exp - neg_exp)
 
@@ -1463,23 +1463,23 @@ class cot(TrigonometricFunction):
         return 1/tan(arg)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        cos_in_sec_form = cos(arg).rewrite(sec)
-        sin_in_sec_form = sin(arg).rewrite(sec)
+        cos_in_sec_form = cos(arg).rewrite(sec, **kwargs)
+        sin_in_sec_form = sin(arg).rewrite(sec, **kwargs)
         return cos_in_sec_form/sin_in_sec_form
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        cos_in_csc_form = cos(arg).rewrite(csc)
-        sin_in_csc_form = sin(arg).rewrite(csc)
+        cos_in_csc_form = cos(arg).rewrite(csc, **kwargs)
+        sin_in_csc_form = sin(arg).rewrite(csc, **kwargs)
         return cos_in_csc_form/sin_in_csc_form
 
     def _eval_rewrite_as_pow(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(pow)
+        y = self.rewrite(cos, **kwargs).rewrite(pow, **kwargs)
         if y.has(cos):
             return None
         return y
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
-        y = self.rewrite(cos).rewrite(sqrt)
+        y = self.rewrite(cos, **kwargs).rewrite(sqrt, **kwargs)
         if y.has(cos):
             return None
         return y
@@ -1731,10 +1731,10 @@ class sec(ReciprocalTrigonometricFunction):
         return sin(arg)/(cos(arg)*sin(arg))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return (1/cos(arg).rewrite(sin))
+        return (1/cos(arg).rewrite(sin, **kwargs))
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1/cos(arg).rewrite(tan))
+        return (1/cos(arg).rewrite(tan, **kwargs))
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
         return csc(pi/2 - arg, evaluate=False)
@@ -1832,13 +1832,13 @@ class csc(ReciprocalTrigonometricFunction):
         return (1 + cot_half**2)/(2*cot_half)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return 1/sin(arg).rewrite(cos)
+        return 1/sin(arg).rewrite(cos, **kwargs)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
         return sec(pi/2 - arg, evaluate=False)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return (1/sin(arg).rewrite(tan))
+        return (1/sin(arg).rewrite(tan, **kwargs))
 
     def fdiff(self, argindex=1):
         if argindex == 1:

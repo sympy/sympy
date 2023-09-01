@@ -7,8 +7,9 @@ from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
-from sympy.external.gmpy import HAS_GMPY, gmpy
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.ntheory import sieve
+from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
@@ -158,8 +159,16 @@ class factorial(CombinatorialFunction):
                         result = cls._small_factorials[n-1]
 
                     # GMPY factorial is faster, use it when available
-                    elif HAS_GMPY:
-                        result = gmpy.fac(n)
+                    #
+                    # XXX: There is a sympy.external.gmpy.factorial function
+                    # which provides gmpy.fac if available or the flint version
+                    # if flint is used. It could be used here to avoid the
+                    # conditional logic but it needs to be checked whether the
+                    # pure Python fallback used there is as fast as the
+                    # fallback used here (perhaps the fallback here should be
+                    # moved to sympy.external.ntheory).
+                    elif _gmpy is not None:
+                        result = _gmpy.fac(n)
 
                     else:
                         bits = bin(n).count('1')
@@ -887,11 +896,27 @@ class binomial(CombinatorialFunction):
     >>> expand_func(binomial(n, 3))
     n*(n - 2)*(n - 1)/6
 
+    In many cases, we can also compute binomial coefficients modulo a
+    prime p quickly using Lucas' Theorem [2]_, though we need to include
+    `evaluate=False` to postpone evaluation:
+
+    >>> from sympy import Mod
+    >>> Mod(binomial(156675, 4433, evaluate=False), 10**5 + 3)
+    28625
+
+    Using a generalisation of Lucas's Theorem given by Granville [3]_,
+    we can extend this to arbitrary n:
+
+    >>> Mod(binomial(10**18, 10**12, evaluate=False), (10**5 + 3)**2)
+    3744312326
+
     References
     ==========
 
     .. [1] https://www.johndcook.com/blog/binomial_coefficients/
-
+    .. [2] https://en.wikipedia.org/wiki/Lucas%27s_theorem
+    .. [3] Binomial coefficients modulo prime powers, Andrew Granville,
+        Available: https://web.archive.org/web/20170202003812/http://www.dms.umontreal.ca/~andrew/PDF/BinCoeff.pdf
     """
 
     def fdiff(self, argindex=1):
@@ -922,8 +947,11 @@ class binomial(CombinatorialFunction):
                 elif k > n // 2:
                     k = n - k
 
-                if HAS_GMPY:
-                    return Integer(gmpy.bincoef(n, k))
+                # XXX: This conditional logic should be moved to
+                # sympy.external.gmpy and the pure Python version of bincoef
+                # should be moved to sympy.external.ntheory.
+                if _gmpy is not None:
+                    return Integer(_gmpy.bincoef(n, k))
 
                 d, result = n - k, 1
                 for i in range(1, k + 1):
@@ -1009,6 +1037,9 @@ class binomial(CombinatorialFunction):
 
                     res *= pow(kf*df % aq, aq - 2, aq)
                     res %= aq
+
+            elif _sqrt(q) < k and q != 1:
+                res = binomial_mod(n, k, q)
 
             else:
                 # Binomial Factorization is performed by calculating the
