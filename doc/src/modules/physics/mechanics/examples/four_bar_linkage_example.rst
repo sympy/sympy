@@ -32,15 +32,15 @@ instance of :class:`~.System`. ::
 
    >>> N = ReferenceFrame('N')
    >>> mass_centers = [Point(f'mc{i}') for i in range(1, 5)]
-   >>> inertias = [Inertia.from_inertia_scalars(P, N, 0, 0, rho * l ** 3 / 12)
+   >>> inertias = [Inertia.from_inertia_scalars(P, N, 0, 0, rho*l**3/12)
    ...             for P, l in zip(mass_centers, (l1, l2, l3, l4))]
-   >>> link1 = RigidBody('Link1', frame=N, mass=rho * l1,
+   >>> link1 = RigidBody('Link1', frame=N, mass=rho*l1,
    ...                   masscenter=mass_centers[0], inertia=inertias[0])
-   >>> link2 = RigidBody('Link2', mass=rho * l2, masscenter=mass_centers[1],
+   >>> link2 = RigidBody('Link2', mass=rho*l2, masscenter=mass_centers[1],
    ...                   inertia=inertias[1])
-   >>> link3 = RigidBody('Link3', mass=rho * l3, masscenter=mass_centers[2],
+   >>> link3 = RigidBody('Link3', mass=rho*l3, masscenter=mass_centers[2],
    ...                   inertia=inertias[2])
-   >>> link4 = RigidBody('Link4', mass=rho * l4, masscenter=mass_centers[3],
+   >>> link4 = RigidBody('Link4', mass=rho*l4, masscenter=mass_centers[3],
    ...                   inertia=inertias[3])
    >>> system = System.from_newtonian(link1)
 
@@ -48,21 +48,21 @@ Next, we also define the first three joints creating the open and add them to
 the system. ::
 
    >>> joint1 = PinJoint('J1', link1, link2, coordinates=q1, speeds=u1,
-   ...                   parent_point=l1 / 2 * link1.x,
-   ...                   child_point=-l2 / 2 * link2.x, joint_axis=link1.z)
+   ...                   parent_point=l1/2*link1.x,
+   ...                   child_point=-l2/2*link2.x, joint_axis=link1.z)
    >>> joint2 = PinJoint('J2', link2, link3, coordinates=q2, speeds=u2,
-   ...                   parent_point=l2 / 2 * link2.x,
-   ...                   child_point=-l3 / 2 * link3.x, joint_axis=link2.z)
+   ...                   parent_point=l2/2*link2.x,
+   ...                   child_point=-l3/2*link3.x, joint_axis=link2.z)
    >>> joint3 = PinJoint('J3', link3, link4, coordinates=q3, speeds=u3,
-   ...                   parent_point=l3 / 2 * link3.x,
-   ...                   child_point=-l4 / 2 * link4.x, joint_axis=link3.z)
+   ...                   parent_point=l3/2*link3.x,
+   ...                   child_point=-l4/2*link4.x, joint_axis=link3.z)
    >>> system.add_joints(joint1, joint2, joint3)
 
 Now we can formulate the holonomic constraint that will close the kinematic
 loop. ::
 
    >>> loop = (link4.masscenter.pos_from(link1.masscenter) +
-   ...         l1 / 2 * link1.x +l4 / 2 * link4.x)
+   ...         l1/2*link1.x +l4/2*link4.x)
    >>> system.add_holonomic_constraints(loop.dot(link1.x), loop.dot(link1.y))
 
 Before generating the equations of motion we need to specify which generalized
