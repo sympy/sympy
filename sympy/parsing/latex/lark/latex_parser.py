@@ -3,7 +3,7 @@ import logging
 import re
 
 from sympy.external import import_module
-from .transformer import TransformToSymPyExpr
+from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
 
@@ -69,14 +69,6 @@ def parse_latex_lark(s: str):
     if _lark is None:
         raise ImportError("Lark is probably not installed")
     return _lark_latex_parser.doparse(s)
-
-
-def pr_ltx(s: str):
-    LarkLatexParser(print_debug_output=True, transform=False).doparse(s)
-
-
-def trfm_ltx(s: str):
-    LarkLatexParser(print_debug_output=True).doparse(s)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
