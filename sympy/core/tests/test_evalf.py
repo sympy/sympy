@@ -515,6 +515,11 @@ def test_evalf_integral():
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
 
 
+def test_issue_21605_multi_dimension_integral():
+    assert NS('Integral(x*y**2, (x, 0, 1), (y, 0, 1))', 10) == '0.1666666667'
+    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10) == '0.04166666667'
+
+
 def test_issue_8821_highprec_from_str():
     s = str(pi.evalf(128))
     p = N(s)
