@@ -98,7 +98,7 @@ class TransformToSymPyExpr(Transformer):
         elif relation_type == "GTE":
             return sympy.Ge(tokens[0], tokens[2])
         else:
-            raise LaTeXParsingError()  # TODO: Fill descriptive error message.
+            raise LaTeXParsingError("An unsupported relational symbol was found.")
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2])
@@ -111,7 +111,6 @@ class TransformToSymPyExpr(Transformer):
 
     def mul(self, tokens):
         if len(tokens) == 2:
-            # if left tokken is a ket and right one is a bra, then return outer product. Else, return normal multiplication.
             return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
             return sympy.Mul(tokens[0], tokens[2])
