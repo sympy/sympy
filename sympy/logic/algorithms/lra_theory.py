@@ -9,6 +9,7 @@ from sympy.core.add import Add
 from sympy.core.relational import Eq, Ne
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy import SYMPY_DEBUG
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
@@ -40,12 +41,11 @@ class LRASolver():
            https://link.springer.com/chapter/10.1007/11817963_11
     """
 
-    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundary, x_subs, s_subs, testing_mode):
+    def __init__(self, A, slack_variables, nonslack_variables, enc_to_boundary, s_subs, testing_mode):
         """
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
         self.run_checks = testing_mode
-        self.x_subs = x_subs
         self.s_subs = s_subs
 
         if any(not isinstance(a, Rational) for a in A):
@@ -126,8 +126,6 @@ class LRASolver():
         s_count = 0
         s_subs = {}
         nonbasic = []
-        x_count = 0
-        x_subs = {}
 
         if testing_mode:
             encoded_cnf_items = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
@@ -188,12 +186,11 @@ class LRASolver():
             for term in list_terms(var):
                 assert not isinstance(term, Add)
                 term, term_coeff = sep_const_coeff(term)
-                if term not in x_subs:
-                    x_count += 1
-                    x_subs[term] = Dummy(f"x{x_count}")
-                    var_to_lra_var[x_subs[term]] = LRAVariable(x_subs[term])
-                    nonbasic.append(x_subs[term])
-                terms.append(term_coeff * x_subs[term])
+                assert isinstance(term, Symbol)
+                if term not in var_to_lra_var:
+                    var_to_lra_var[term] = LRAVariable(term)
+                    nonbasic.append(term)
+                terms.append(term_coeff * term)
             # If there are multiple variable terms, replace them with a dummy _si variable.
             # If needed (no other expr has this sum of variable terms), create a new Dummy _si varaible.
             if len(terms) > 1:
@@ -223,7 +220,7 @@ class LRASolver():
         for idx, var in enumerate(nonbasic + basic):
             var.col_idx = idx
 
-        return LRASolver(A, basic, nonbasic, encoding, x_subs, s_subs, testing_mode), conflicts
+        return LRASolver(A, basic, nonbasic, encoding, s_subs, testing_mode), conflicts
 
     def reset_bounds(self):
         """

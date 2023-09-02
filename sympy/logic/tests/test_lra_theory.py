@@ -96,14 +96,14 @@ def test_from_encoded_cnf():
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
     assert lra.A.shape == (2, 5)
     assert str(lra.slack) == '[_s1, _s2]'
-    assert str(lra.nonslack) == '[_x1, _x2, _x3]'
+    assert str(lra.nonslack) == '[x, y, z]'
     assert lra.A == Matrix([[ 1,  1, 0, -1,  0],
                             [-1, -2, 1,  0, -1]])
     assert {(str(b.var), b.bound, b.upper, b.equality, b.strict) for b in lra.enc_to_boundary.values()} == {('_s1', 2, None, True, False),
     ('_s1', 2, True, False, False),
     ('_s2', -4, True, False, True),
     ('_s2', -6, True, False, False),
-    ('_x1', 0, False, False, False)}
+    ('x', 0, False, False, False)}
 
 
 def test_random_problems():
@@ -171,7 +171,6 @@ def test_random_problems():
 
         start = time.time()
         lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
-        x_subs = lra.x_subs
         s_subs = lra.s_subs
         end = time.time()
         from_encoded_time += end - start
@@ -205,7 +204,6 @@ def test_random_problems():
             cons_funcs = [cons.func for cons in constraints]
             assignment = feasible[1]
             assignment = {key.var : value for key, value in assignment.items()}
-            constraints = [constr.subs(x_subs) for constr in constraints]
             if not (StrictLessThan in cons_funcs or StrictGreaterThan in cons_funcs):
                 assignment = {key: value[0] for key, value in assignment.items()}
                 for cons in constraints:
