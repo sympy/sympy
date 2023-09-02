@@ -35,7 +35,7 @@ from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
 from mpmath import inf, ninf, make_mpc
 from mpmath.libmp.libmpf import from_float, fzero
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, slow
 from sympy.abc import n, x, y
 
 
@@ -515,8 +515,12 @@ def test_evalf_integral():
     assert Integral(sin(x), (x, -pi, pi + eps)).n(2)._prec == 10
 
 
-def test_issue_21605_multi_dimension_integral():
+def test_issue_21605_double_integral():
     assert NS('Integral(x*y**2, (x, 0, 1), (y, 0, 1))', 10) == '0.1666666667'
+
+
+@slow
+def test_issue_21605_triple_integral():
     assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10) == '0.04166666667'
 
 
