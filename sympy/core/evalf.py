@@ -1125,6 +1125,9 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             return mpf(re or fzero)
 
         if options.get('quad') == 'osc':
+            if len(limits) > 1:
+                raise NotImplementedError
+
             A = Wild('A', exclude=[x])
             B = Wild('B', exclude=[x])
             D = Wild('D')
