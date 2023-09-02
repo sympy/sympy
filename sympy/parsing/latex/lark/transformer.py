@@ -158,15 +158,15 @@ class TransformToSymPyExpr(Transformer):
 
         differential_symbol = tokens[differential_symbol_index + 1]
 
-        # we can't simply do something like `if (lower_bound and not upper_bound) ...`
-        # because this would evaluate to `True` if the `lower_bound` is 0
+        # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would
+        # evaluate to `True` if the `lower_bound` is 0 and upper bound is non-zero
         if lower_bound is not None and upper_bound is None:
             # then one was given and the other wasn't
-            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not bound.")
+            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not found.")
 
         if upper_bound is not None and lower_bound is None:
             # then one was given and the other wasn't
-            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not bound.")
+            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not found.")
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
         if underscore_index is not None and underscore_index == differential_symbol_index - 2:
@@ -181,10 +181,9 @@ class TransformToSymPyExpr(Transformer):
             integrand = tokens[differential_symbol_index - 1]
 
         if lower_bound is not None:
-            # we have an definite integral
+            # we have a definite integral
 
-            # we can assume that either both the lower and upper bounds are given, or
-            # neither of them are
+            # we can assume that either both the lower and upper bounds are given, or neither of them are
             return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
         else:
             # we have an indefinite integral
