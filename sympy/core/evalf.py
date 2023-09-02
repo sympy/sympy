@@ -1090,7 +1090,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
                     diff = xhigh - xlow
                     if diff.is_number:
                         xlow, xhigh = 0, diff
-            
+
             limits.append([
                 as_mpmath(xlow, prec + 15, options),
                 as_mpmath(xhigh, prec + 15, options)])
