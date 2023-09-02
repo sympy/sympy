@@ -534,13 +534,8 @@ def test_piecewise_simplify():
         ).simplify() == Piecewise((1, (x >= 2) & (x < oo)), (nan, True))
     assert Piecewise((1, x < 2), (2, (x > 1) & (x < 3)), (3, True)
         ). simplify() == Piecewise((1, x < 2), (2, x < 3), (3, True))
-
-    # See test_piecewise_simplify_xfail_redundant_inequality below
-    #
-    # assert Piecewise((1, x < 2), (2, (x <= 3) & (x > 1)), (3, True)
-    #     ).simplify() == Piecewise((1, x < 2), (2, x <= 3), (3, True))
-    #
-
+    assert Piecewise((1, x < 2), (2, (x <= 3) & (x > 1)), (3, True)
+        ).simplify() == Piecewise((1, x < 2), (2, x <= 3), (3, True))
     assert Piecewise((1, x < 2), (2, (x > 2) & (x < 3)), (3, True)
         ).simplify() == Piecewise((1, x < 2), (2, (x > 2) & (x < 3)),
         (3, True))
@@ -552,14 +547,6 @@ def test_piecewise_simplify():
     # https://github.com/sympy/sympy/issues/25603
     assert Piecewise((log(x), (x <= 5) & (x > 3)), (x, True)
         ).simplify() == Piecewise((log(x), (x <= 5) & (x > 3)), (x, True))
-
-
-@XFAIL
-def test_piecewise_simplify_xfail_redundant_inequality():
-    # Uncomment this case in test_piecewise_simplify() when it is fixed.
-    # See https://github.com/sympy/sympy/pull/25605
-    assert Piecewise((1, x < 2), (2, (x <= 3) & (x > 1)), (3, True)
-        ).simplify() == Piecewise((1, x < 2), (2, x <= 3), (3, True))
 
 
 def test_piecewise_solve():
