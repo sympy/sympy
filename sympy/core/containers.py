@@ -114,8 +114,8 @@ class Tuple(Basic):
 
     # XXX: Basic defines count() as something different, so we can't
     # redefine it here. Originally this lead to cse() test failure.
-    def tuple_count(self, value):
-        """T.count(value) -> integer -- return number of occurrences of value"""
+    def tuple_count(self, value) -> int:
+        """Return number of occurrences of value."""
         return self.args.count(value)
 
     def index(self, value, start=None, stop=None):
@@ -211,7 +211,7 @@ def tuple_wrapper(method):
 
 class Dict(Basic):
     """
-    Wrapper around the builtin dict object
+    Wrapper around the builtin dict object.
 
     Explanation
     ===========

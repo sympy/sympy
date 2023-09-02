@@ -19,6 +19,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.special.singularity_functions import Heaviside
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -419,8 +420,8 @@ class Integral(AddWithLimits):
             manual = meijerg = heurisch = False
         elif heurisch:
             manual = meijerg = risch = False
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
-            conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual, "heurisch": heurisch,
+            "conds": conds}
 
         if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -447,6 +448,12 @@ class Integral(AddWithLimits):
 
         # now compute and check the function
         function = self.function
+
+        # hack to use a consistent Heaviside(x, 1/2)
+        function = function.replace(
+            lambda x: isinstance(x, Heaviside) and x.args[1]*2 != 1,
+            lambda x: Heaviside(x.args[0]))
+
         if deep:
             function = function.doit(**hints)
         if function.is_zero:
@@ -922,8 +929,8 @@ class Integral(AddWithLimits):
             except (ValueError, PolynomialError):
                 pass
 
-        eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual,
-            heurisch=heurisch, conds=conds)
+        eval_kwargs = {"meijerg": meijerg, "risch": risch, "manual": manual,
+            "heurisch": heurisch, "conds": conds}
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -1293,7 +1300,7 @@ class Integral(AddWithLimits):
         References
         ==========
 
-        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Methods
+        .. [1] https://en.wikipedia.org/wiki/Riemann_sum#Riemann_summation_methods
         """
 
         from sympy.concrete.summations import Sum
@@ -1362,7 +1369,7 @@ class Integral(AddWithLimits):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
-        .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
+        .. [2] https://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "

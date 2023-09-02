@@ -1054,6 +1054,10 @@ def test_has_basics():
 
     assert not x.has()
 
+    # see issue at https://github.com/sympy/sympy/issues/5190
+    assert not S(1).has(Wild)
+    assert not x.has(Wild)
+
 
 def test_has_multiple():
     f = x**2*y + sin(2**t + log(z))
@@ -1323,6 +1327,7 @@ def test_extractions():
     assert (2*x + 3).extract_additively(2*x) == 3
     assert x.extract_additively(0) == x
     assert S(2).extract_additively(x) is None
+    assert S(2.).extract_additively(2.) is S.Zero
     assert S(2.).extract_additively(2) is S.Zero
     assert S(2*x + 3).extract_additively(x + 1) == x + 2
     assert S(2*x + 3).extract_additively(y + 1) is None
@@ -1659,6 +1664,7 @@ def test_as_coeff_Mul():
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
     assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
+    assert Float(0.0).as_coeff_Mul() == (Float(0.0), Integer(1))
 
     assert (Integer(3)*x).as_coeff_Mul() == (Integer(3), x)
     assert (Rational(3, 4)*x).as_coeff_Mul() == (Rational(3, 4), x)
@@ -1966,12 +1972,12 @@ def test_round():
     assert n.round(-1) == 12340
 
     r = Float(str(n)).round(-4)
-    assert r == 10000
+    assert r == 10000.0
 
     assert n.round(-5) == 0
 
     assert str((pi + sqrt(2)).round(2)) == '4.56'
-    assert (10*(pi + sqrt(2))).round(-1) == 50
+    assert (10*(pi + sqrt(2))).round(-1) == 50.0
     raises(TypeError, lambda: round(x + 2, 2))
     assert str(S(2.3).round(1)) == '2.3'
     # rounding in SymPy (as in Decimal) should be
@@ -2004,11 +2010,21 @@ def test_round():
     assert S.Zero.round() == 0
 
     a = (Add(1, Float('1.' + '9'*27, ''), evaluate=0))
-    assert a.round(10) == Float('3.0000000000', '')
-    assert a.round(25) == Float('3.0000000000000000000000000', '')
-    assert a.round(26) == Float('3.00000000000000000000000000', '')
+    assert a.round(10) == Float('3.000000000000000000000000000', '')
+    assert a.round(25) == Float('3.000000000000000000000000000', '')
+    assert a.round(26) == Float('3.000000000000000000000000000', '')
     assert a.round(27) == Float('2.999999999999999999999999999', '')
     assert a.round(30) == Float('2.999999999999999999999999999', '')
+
+    # XXX: Should round set the precision of the result?
+    #      The previous version of the tests above is this but they only pass
+    #      because Floats with unequal precision compare equal:
+    #
+    # assert a.round(10) == Float('3.0000000000', '')
+    # assert a.round(25) == Float('3.0000000000000000000000000', '')
+    # assert a.round(26) == Float('3.00000000000000000000000000', '')
+    # assert a.round(27) == Float('2.999999999999999999999999999', '')
+    # assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
     raises(TypeError, lambda: f(1).round())

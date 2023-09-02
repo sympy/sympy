@@ -199,7 +199,7 @@ def test_eval_trace():
     d = Density([q1, 0.6], [q2, 0.4])
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     # extreme bits
     t = Tr(d, 0)
@@ -214,7 +214,7 @@ def test_eval_trace():
                         0.6*Density([Qubit('1010'), 1]))
     #trace all indices
     t = Tr(d, [0, 1, 2, 3, 4])
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     # trace some indices, initialized in
     # non-canonical order

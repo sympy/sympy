@@ -173,7 +173,6 @@ def _import(module, reload=False):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
-
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
@@ -181,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -351,6 +350,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
         the user may pass a function matching the ``cse`` signature.
 
+    docstring_limit : int or None
+        When lambdifying large expressions, a significant proportion of the time
+        spent inside ``lambdify`` is spent producing a string representation of
+        the expression for use in the automatically generated docstring of the
+        returned function. For expressions containing hundreds or more nodes the
+        resulting docstring often becomes so long and dense that it is difficult
+        to read. To reduce the runtime of lambdify, the rendering of the full
+        expression inside the docstring can be disabled.
+
+        When ``None``, the full expression is rendered in the docstring. When
+        ``0`` or a negative ``int``, an ellipsis is rendering in the docstring
+        instead of the expression. When a strictly positive ``int``, if the
+        number of nodes in the expression exceeds ``docstring_limit`` an
+        ellipsis is rendered in the docstring, otherwise a string representation
+        of the expression is rendered as normal. The default is ``1000``.
 
     Examples
     ========
@@ -896,9 +910,14 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
-    if len(expr_str) > 78:
-        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    if _too_large_for_docstring(expr, docstring_limit):
+        expr_str = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        src_str = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+    else:
+        expr_str = str(expr)
+        if len(expr_str) > 78:
+            expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+        src_str = funcstr
     func.__doc__ = (
         "Created with lambdify. Signature:\n\n"
         "{sig}\n\n"
@@ -908,7 +927,7 @@ or tuple for the function arguments.
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
+        ).format(sig=sig, expr=expr_str, src=src_str, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
@@ -1141,9 +1160,9 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(s))
+                funcbody.append('del {}'.format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
+                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
 
@@ -1395,3 +1414,113 @@ def implemented_function(symfunc, implementation):
             symfunc should be either a string or
             an UndefinedFunction instance.'''))
     return symfunc
+
+
+def _too_large_for_docstring(expr, limit):
+    """Decide whether an ``Expr`` is too large to be fully rendered in a
+    ``lambdify`` docstring.
+
+    This is a fast alternative to ``count_ops``, which can become prohibitively
+    slow for large expressions, because in this instance we only care whether
+    ``limit`` is exceeded rather than counting the exact number of nodes in the
+    expression.
+
+    Parameters
+    ==========
+    expr : ``Expr``, (nested) ``list`` of ``Expr``, or ``Matrix``
+        The same objects that can be passed to the ``expr`` argument of
+        ``lambdify``.
+    limit : ``int`` or ``None``
+        The threshold above which an expression contains too many nodes to be
+        usefully rendered in the docstring. If ``None`` then there is no limit.
+
+    Returns
+    =======
+    bool
+        ``True`` if the number of nodes in the expression exceeds the limit,
+        ``False`` otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import _too_large_for_docstring
+    >>> expr = x
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    False
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    Does this split it?
+
+    >>> expr = [x, y, z]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = [x, [y], z, [[x+y], [x*y*z, [x+y+z]]]]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = ((x + y + z)**5).expand()
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> from sympy import Matrix
+    >>> expr = Matrix([[(x + y + z), ((x + y + z)**2).expand(),
+    ...                 ((x + y + z)**3).expand(), ((x + y + z)**4).expand()]])
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 1000)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    """
+    # Must be imported here to avoid a circular import error
+    from sympy.core.traversal import postorder_traversal
+
+    if limit is None:
+        return False
+
+    i = 0
+    for _ in postorder_traversal(expr):
+        i += 1
+        if i > limit:
+            return True
+    return False

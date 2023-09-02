@@ -223,6 +223,9 @@ class BlockMatrix(MatrixExpr):
 
         return (BlockMatrix(real_matrices), BlockMatrix(im_matrices))
 
+    def _eval_derivative(self, x):
+        return BlockMatrix(self.blocks.diff(x))
+
     def transpose(self):
         """Return transpose of matrix.
 
@@ -792,8 +795,8 @@ def bc_dist(expr):
 
 def bc_matmul(expr):
     if isinstance(expr, MatPow):
-        if expr.args[1].is_Integer:
-            factor, matrices = (1, [expr.args[0]]*expr.args[1])
+        if expr.args[1].is_Integer and expr.args[1] > 0:
+            factor, matrices = 1, [expr.args[0]]*expr.args[1]
         else:
             return expr
     else:

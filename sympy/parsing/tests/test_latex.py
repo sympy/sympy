@@ -25,8 +25,7 @@ from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python3-runtime is not present
-if not antlr4:
-    disabled = True
+disabled = antlr4 is None
 
 theta = Symbol('theta')
 f = Function('f')
@@ -350,3 +349,10 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
+
+# In strict mode, FAILING_BAD_STRINGS would fail
+def test_strict_mode():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in FAILING_BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str, strict=True)

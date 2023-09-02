@@ -11,6 +11,7 @@ This module contain solvers for all kinds of equations:
       (you will need a good starting point)
 
 """
+from __future__ import annotations
 
 from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
@@ -20,8 +21,9 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import ilcm, Float, Rational, _illegal
-from sympy.core.power import integer_log, Pow
+from sympy.core.numbers import Float, Rational, _illegal
+from sympy.core.intfunc import integer_log, ilcm
+from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify
@@ -41,13 +43,14 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i
+from sympy.strategies.rl import rebuild
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import filldedent, debug
+from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten)
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -270,7 +273,7 @@ def checksol(f, symbol, sol=None, **flags):
             if not f.is_Boolean:
                 return
         else:
-            f = f.rewrite(Add, evaluate=False)
+            f = f.rewrite(Add, evaluate=False, deep=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -944,7 +947,7 @@ def solve(f, *symbols, **flags):
                             is True or False.
                         '''))
                 else:
-                    fi = fi.rewrite(Add, evaluate=False)
+                    fi = fi.rewrite(Add, evaluate=False, deep=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
@@ -1207,6 +1210,8 @@ def solve(f, *symbols, **flags):
     # restore floats
     if floats and solution and flags.get('rational', None) is None:
         solution = nfloat(solution, exponent=False)
+        # nfloat might reveal more duplicates
+        solution = _remove_duplicate_solutions(solution)
 
     if check and solution:  # assumption checking
         warn = flags.get('warn', False)
@@ -1386,10 +1391,17 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
+        if any(e.is_zero for e, c in f.args):
+            f = f.simplify()  # failure imminent w/o help
         for i, (expr, cond) in enumerate(f.args):
             if expr.is_zero:
-                raise NotImplementedError(
-                    'solve cannot represent interval solutions')
+                raise NotImplementedError(filldedent('''
+                    An expression is already zero when %s.
+                    This means that in this *region* the solution
+                    is zero but solve can only represent discrete,
+                    not interval, solutions. If this is a spurious
+                    interval it might be resolved with simplification
+                    of the Piecewise conditions.''' % cond))
             candidates = _vsolve(expr, symbol, **flags)
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
@@ -1689,8 +1701,12 @@ def _solve(f, *symbols, **flags):
     if result is False:
         raise NotImplementedError('\n'.join([msg, not_impl_msg % f]))
 
+    result = _remove_duplicate_solutions(result)
+
     if flags.get('simplify', True):
         result = [{k: d[k].simplify() for k in d} for d in result]
+        # Simplification might reveal more duplicates
+        result = _remove_duplicate_solutions(result)
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
         flags['simplify'] = False
@@ -1707,6 +1723,21 @@ def _solve(f, *symbols, **flags):
         result = [r for r in result if
                   checksol(f_num, r, **flags) is not False]
     return result
+
+
+def _remove_duplicate_solutions(solutions: list[dict[Expr, Expr]]
+                                ) -> list[dict[Expr, Expr]]:
+    """Remove duplicates from a list of dicts"""
+    solutions_set = set()
+    solutions_new = []
+
+    for sol in solutions:
+        solset = frozenset(sol.items())
+        if solset not in solutions_set:
+            solutions_new.append(sol)
+            solutions_set.add(solset)
+
+    return solutions_new
 
 
 def _solve_system(exprs, symbols, **flags):
@@ -1738,7 +1769,7 @@ def _solve_system(exprs, symbols, **flags):
                 subsyms = set()
                 for e in subexpr:
                     subsyms |= exprsyms[e]
-                subsyms = list(sorted(subsyms, key = lambda x: sym_indices[x]))
+                subsyms = sorted(subsyms, key = lambda x: sym_indices[x])
                 flags['_split'] = False  # skip split step
                 _linear, subsol = _solve_system(subexpr, subsyms, **flags)
                 if linear:
@@ -2216,7 +2247,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.values() if x != 0])
         for n in range(n0 - 1, 1, -1):
-            debug('minsolve: %s' % n)
+            debugf('minsolve: %s', n)
             thissol = None
             for nonzeros in combinations(range(N), n):
                 subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
@@ -2748,6 +2779,7 @@ def _tsolve(eq, sym, **flags):
                 return _vsolve(lhs.args[0] - rhs*exp(rhs), sym, **flags)
 
         rewrite = lhs.rewrite(exp)
+        rewrite = rebuild(rewrite) # avoid rewrites involving evaluate=False
         if rewrite != lhs:
             return _vsolve(rewrite - rhs, sym, **flags)
     except NotImplementedError:
@@ -3006,6 +3038,8 @@ def nsolve(*args, dict=False, **kwargs):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
             f = f.lhs - f.rhs
+        elif f.is_Relational:
+            raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
             fargs = syms.copy().pop()
@@ -3303,7 +3337,7 @@ def unrad(eq, *syms, **flags):
 
     """
 
-    uflags = dict(check=False, simplify=False)
+    uflags = {"check": False, "simplify": False}
 
     def _cov(p, e):
         if cov:
@@ -3376,7 +3410,7 @@ def unrad(eq, *syms, **flags):
         return
 
     cov, nwas, rpt = [flags.setdefault(k, v) for k, v in
-        sorted(dict(cov=[], n=None, rpt=0).items())]
+        sorted({"cov": [], "n": None, "rpt": 0}.items())]
 
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
@@ -3601,7 +3635,7 @@ def unrad(eq, *syms, **flags):
                 rpt > 3):
         raise NotImplementedError('Cannot remove all radicals')
 
-    flags.update(dict(cov=cov, n=len(rterms), rpt=rpt))
+    flags.update({"cov": cov, "n": len(rterms), "rpt": rpt})
     neq = unrad(eq, *syms, **flags)
     if neq:
         eq, cov = neq

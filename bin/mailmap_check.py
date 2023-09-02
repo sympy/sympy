@@ -7,14 +7,13 @@ to get the order in AUTHORS. bin/mailmap_check.py should be run before
 committing the results.
 
 See here for instructions on using this script:
-https://github.com/sympy/sympy/wiki/Development-workflow#update-mailmap
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions
 """
 
 from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
-import os
 if sys.version_info < (3, 8):
     sys.exit("This script requires Python 3.8 or newer")
 
@@ -144,7 +143,7 @@ def main(*args):
     if problems:
         print(red(filldedent("""
         For instructions on updating the .mailmap file see:
-        https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file""",
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions""",
                              break_on_hyphens=False, break_long_words=False)))
     else:
         print(green("No changes needed in .mailmap"))

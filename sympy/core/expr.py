@@ -11,6 +11,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
+from .intfunc import mod_inverse
 from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -235,7 +236,6 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return _sympify(pow(_self, other, mod))
             else:
-                from .numbers import mod_inverse
                 return _sympify(mod_inverse(pow(_self, -other, mod), mod))
         except ValueError:
             power = self._pow(other)
@@ -1273,7 +1273,6 @@ class Expr(Basic, EvalfMixin):
         raise NotImplementedError('not sure of order of %s' % o)
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1840,8 +1839,12 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        .separatevars(), .expand(log=True), sympy.core.add.Add.as_two_terms(),
-        sympy.core.mul.Mul.as_two_terms(), .as_coeff_add(), .as_coeff_mul()
+
+        separatevars
+        expand_log
+        sympy.core.add.Add.as_two_terms
+        sympy.core.mul.Mul.as_two_terms
+        as_coeff_mul
         """
         from .symbol import Symbol
         from .add import _unevaluated_Add
@@ -1946,7 +1949,7 @@ class Expr(Basic, EvalfMixin):
                   of commutative and noncommutative factors.
         """
         d = defaultdict(int)
-        d.update(dict([self.as_base_exp()]))
+        d.update([self.as_base_exp()])
         return d
 
     def as_coefficients_dict(self, *syms):
@@ -2039,7 +2042,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has(*deps):
-                return self, tuple()
+                return self, ()
         return S.One, (self,)
 
     def as_coeff_add(self, *deps) -> tuple[Expr, tuple[Expr, ...]]:
@@ -2075,7 +2078,7 @@ class Expr(Basic, EvalfMixin):
         """
         if deps:
             if not self.has_free(*deps):
-                return self, tuple()
+                return self, ()
         return S.Zero, (self,)
 
     def primitive(self):
@@ -2162,7 +2165,9 @@ class Expr(Basic, EvalfMixin):
         return S.One, self
 
     def as_numer_denom(self):
-        """ expression -> a/b -> a, b
+        """Return the numerator and the denominator of an expression.
+
+        expression -> a/b -> a, b
 
         This is just a stub that should be defined by
         an object's class methods to get anything else.
@@ -2176,7 +2181,9 @@ class Expr(Basic, EvalfMixin):
         return self, S.One
 
     def normal(self):
-        """ expression -> a/b
+        """Return the expression as a fraction.
+
+        expression -> a/b
 
         See Also
         ========
@@ -2370,8 +2377,8 @@ class Expr(Basic, EvalfMixin):
             co = self
             diff = co - c
             # XXX should we match types? i.e should 3 - .1 succeed?
-            if (co > 0 and diff > 0 and diff < co or
-                    co < 0 and diff < 0 and diff > co):
+            if (co > 0 and diff >= 0 and diff < co or
+                    co < 0 and diff <= 0 and diff > co):
                 return diff
             return None
 
@@ -2813,7 +2820,8 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        is_rational_function()
+
+        is_rational_function
 
         References
         ==========
@@ -3186,7 +3194,7 @@ class Expr(Basic, EvalfMixin):
                In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
                pp. 239-244.
         .. [2] Gruntz thesis - p90
-        .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
+        .. [3] https://en.wikipedia.org/wiki/Asymptotic_expansion
 
         See Also
         ========
@@ -3421,7 +3429,8 @@ class Expr(Basic, EvalfMixin):
         return limit(self, x, xlim, dir)
 
     def compute_leading_term(self, x, logx=None):
-        """
+        """Deprecated function to compute the leading term of a series.
+
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
@@ -3539,11 +3548,11 @@ class Expr(Basic, EvalfMixin):
         return c, e
 
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def as_coeff_Add(self, rational=False) -> tuple['Number', Expr]:
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return S.Zero, self
 
     def fps(self, x=None, x0=0, dir=1, hyper=True, order=4, rational=True,
@@ -3787,10 +3796,9 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        sympy.core.intfunc.mod_inverse, sympy.polys.polytools.invert
         """
         if self.is_number and getattr(g, 'is_number', True):
-            from .numbers import mod_inverse
             return mod_inverse(self, g)
         from sympy.polys.polytools import invert
         return invert(self, g, *gens, **args)

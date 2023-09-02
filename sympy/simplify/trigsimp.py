@@ -6,7 +6,8 @@ from sympy.core import (sympify, Basic, S, Expr, factor_terms,
 from sympy.core.cache import cacheit
 from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
                                  expand_mul, _coeff_isneg, Derivative)
-from sympy.core.numbers import I, Integer, igcd
+from sympy.core.numbers import I, Integer
+from sympy.core.intfunc import igcd
 from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
@@ -257,8 +258,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         """
         # First parse the hints
         n, funcs, iterables, extragens = parse_hints(hints)
-        debug('n=%s' % n, 'funcs:', funcs, 'iterables:',
-              iterables, 'extragens:', extragens)
+        debug('n=%s   funcs: %s   iterables: %s    extragens: %s',
+              (funcs, iterables, extragens))
 
         # We just add the extragens to gens and analyse them as before
         gens = list(gens)

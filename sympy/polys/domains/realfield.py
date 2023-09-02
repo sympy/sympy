@@ -1,6 +1,7 @@
 """Implementation of :class:`RealField` class. """
 
 
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -47,9 +48,25 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         context._parent = self
         self._context = context
 
-        self.dtype = context.mpf
+        self._dtype = context.mpf
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
+
+    @property
+    def tp(self):
+        # XXX: Domain treats tp as an alis of dtype. Here we need to two
+        # separate things: dtype is a callable to make/convert instances.
+        # We use tp with isinstance to check if an object is an instance
+        # of the domain already.
+        return self._dtype
+
+    def dtype(self, arg):
+        # XXX: This is needed because mpmath does not recognise fmpz.
+        # It might be better to add conversion routines to mpmath and if that
+        # happens then this can be removed.
+        if isinstance(arg, SYMPY_INTS):
+            arg = int(arg)
+        return self._dtype(arg)
 
     def __eq__(self, other):
         return (isinstance(other, RealField)
@@ -57,7 +74,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
            and self.tolerance == other.tolerance)
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.precision, self.tolerance))
+        return hash((self.__class__.__name__, self._dtype, self.precision, self.tolerance))
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
@@ -78,14 +95,18 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
 
-    def from_QQ(self, element, base):
-        return self.dtype(element.numerator) / element.denominator
-
-    def from_QQ_python(self, element, base):
-        return self.dtype(element.numerator) / element.denominator
-
     def from_ZZ_gmpy(self, element, base):
         return self.dtype(int(element))
+
+    # XXX: We need to convert the denominators to int here because mpmath does
+    # not recognise mpz. Ideally mpmath would handle this and if it changed to
+    # do so then the calls to int here could be removed.
+
+    def from_QQ(self, element, base):
+        return self.dtype(element.numerator) / int(element.denominator)
+
+    def from_QQ_python(self, element, base):
+        return self.dtype(element.numerator) / int(element.denominator)
 
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
@@ -127,6 +148,20 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+    def is_square(self, a):
+        """Returns ``True`` if ``a >= 0`` and ``False`` otherwise. """
+        return a >= 0
+
+    def exsqrt(self, a):
+        """Non-negative square root for ``a >= 0`` and ``None`` otherwise.
+
+        Explanation
+        ===========
+        The square root may be slightly inaccurate due to floating point
+        rounding error.
+        """
+        return a ** 0.5 if a >= 0 else None
 
 
 RR = RealField()

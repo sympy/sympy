@@ -3,7 +3,7 @@ from sympy.concrete.tests.test_sums_products import NS
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import convert_to, coulomb_constant, elementary_charge, gravitational_constant, planck
-from sympy.physics.units.definitions.unit_definitions import statcoulomb, coulomb, second, gram, centimeter, erg, \
+from sympy.physics.units.definitions.unit_definitions import angstrom, statcoulomb, coulomb, second, gram, centimeter, erg, \
     newton, joule, dyne, speed_of_light, meter, farad, henry, statvolt, volt, ohm
 from sympy.physics.units.systems import SI
 from sympy.physics.units.systems.cgs import cgs_gauss
@@ -44,6 +44,7 @@ def test_cgs_gauss_convert_constants():
     assert NS(convert_to(coulomb_constant, newton*meter**2/coulomb**2, SI)) == '8987551787.36818*meter**2*newton/coulomb**2'
 
     assert convert_to(elementary_charge, statcoulomb, cgs_gauss)
+    assert convert_to(angstrom, centimeter, cgs_gauss) == 1*centimeter/10**8
     assert convert_to(gravitational_constant, dyne*centimeter**2/gram**2, cgs_gauss)
     assert NS(convert_to(planck, erg*second, cgs_gauss)) == '6.62607015e-27*erg*second'
 

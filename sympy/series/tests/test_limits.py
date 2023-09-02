@@ -3,6 +3,7 @@ from itertools import product
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma
+from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -93,7 +94,7 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
+    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
     # test pull request 22491
@@ -687,7 +688,7 @@ def test_issue_6052():
 def test_issue_7224():
     expr = sqrt(x)*besseli(1,sqrt(8*x))
     assert limit(x*diff(expr, x, x)/expr, x, 0) == 2
-    assert limit(x*diff(expr, x, x)/expr, x, 1).evalf(n=2) == 2.0
+    assert limit(x*diff(expr, x, x)/expr, x, 1).evalf() == 2.0
 
 
 def test_issue_8208():
@@ -712,6 +713,12 @@ def test_issue_8481():
 def test_issue_8462():
     assert limit(binomial(n, n/2), n, oo) == oo
     assert limit(binomial(n, n/2) * 3 ** (-n), n, oo) == 0
+
+
+def test_issue_8634():
+    n = Symbol('n', integer=True, positive=True)
+    x = Symbol('x')
+    assert limit(x**n, x, -oo) == oo*sign((-1)**n)
 
 
 def test_issue_8635_18176():
@@ -1303,3 +1310,14 @@ def test_issue_24276():
     assert fx.simplify().limit(x, oo) == 2
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    n = Symbol('n', integer = True)
+    raises(NotImplementedError, lambda: limit(Mod(x, a), x, a))
+    assert limit(Mod(x, b), x, n*b, '+') == 0
+    assert limit(Mod(x, b), x, n*b, '-') == b
+    assert limit(Mod(x, c), x, n*c, '+') == c
+    assert limit(Mod(x, c), x, n*c, '-') == 0

@@ -8,7 +8,8 @@ from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
-from .numbers import ilcm, igcd
+from .numbers import equal_valued
+from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
@@ -193,7 +194,7 @@ class Add(Expr, AssocOp):
 
         NB: the removal of 0 is already handled by AssocOp.__new__
 
-        See also
+        See Also
         ========
 
         sympy.core.mul.Mul.flatten
@@ -396,7 +397,6 @@ class Add(Expr, AssocOp):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes"""
         return 3, 1, cls.__name__
 
     @property
@@ -496,7 +496,7 @@ class Add(Expr, AssocOp):
                 for i in c:
                     if abs(i) >= big:
                         big = abs(i)
-                if big > 0 and big != 1:
+                if big > 0 and not equal_valued(big, 1):
                     from sympy.functions.elementary.complexes import sign
                     bigs = (big, -big)
                     c = [sign(i) if i in bigs else i/big for i in c]
@@ -679,8 +679,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im_I.append(a*S.ImaginaryUnit)
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_I.append(a*S.ImaginaryUnit)
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_I.append(-coeff)
+                else:
+                    return
             else:
                 return
         b = self.func(*nz)
@@ -709,8 +713,12 @@ class Add(Expr, AssocOp):
                     return
             elif a.is_imaginary:
                 im += 1
-            elif (S.ImaginaryUnit*a).is_extended_real:
-                im_or_z = True
+            elif a.is_Mul and S.ImaginaryUnit in a.args:
+                coeff, ai = a.as_coeff_mul(S.ImaginaryUnit)
+                if ai == (S.ImaginaryUnit,) and coeff.is_extended_real:
+                    im_or_z = True
+                else:
+                    return
             else:
                 return
         if z == len(self.args):
@@ -987,7 +995,7 @@ class Add(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         """
-        returns a tuple representing a complex number
+        Return a tuple representing a complex number.
 
         Examples
         ========
@@ -1026,9 +1034,9 @@ class Add(Expr, AssocOp):
         # This expansion is the last part of expand_log. expand_log also calls
         # expand_mul with factor=True, which would be more expensive
         if any(isinstance(a, log) for a in self.args):
-            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
-                power_base=False, multinomial=False, basic=False, force=False,
-                factor=False)
+            logflags = {"deep": True, "log": True, "mul": False, "power_exp": False,
+                "power_base": False, "multinomial": False, "basic": False, "force": False,
+                "factor": False}
             old = old.expand(**logflags)
         expr = expand_mul(old)
 

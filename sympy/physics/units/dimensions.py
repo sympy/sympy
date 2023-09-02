@@ -37,7 +37,13 @@ class _QuantityMapper:
         self._quantity_dimension_map = {}
         self._quantity_scale_factors = {}
 
-    def set_quantity_dimension(self, unit, dimension):
+    def set_quantity_dimension(self, quantity, dimension):
+        """
+        Set the dimension for the quantity in a unit system.
+
+        If this relation is valid in every unit system, use
+        ``quantity.set_global_dimension(dimension)`` instead.
+        """
         from sympy.physics.units import Quantity
         dimension = sympify(dimension)
         if not isinstance(dimension, Dimension):
@@ -47,9 +53,19 @@ class _QuantityMapper:
                 raise ValueError("expected dimension or 1")
         elif isinstance(dimension, Quantity):
             dimension = self.get_quantity_dimension(dimension)
-        self._quantity_dimension_map[unit] = dimension
+        self._quantity_dimension_map[quantity] = dimension
 
-    def set_quantity_scale_factor(self, unit, scale_factor):
+    def set_quantity_scale_factor(self, quantity, scale_factor):
+        """
+        Set the scale factor of a quantity relative to another quantity.
+
+        It should be used only once per quantity to just one other quantity,
+        the algorithm will then be able to compute the scale factors to all
+        other quantities.
+
+        In case the scale factor is valid in every unit system, please use
+        ``quantity.set_global_relative_scale_factor(scale_factor)`` instead.
+        """
         from sympy.physics.units import Quantity
         from sympy.physics.units.prefixes import Prefix
         scale_factor = sympify(scale_factor)
@@ -63,7 +79,7 @@ class _QuantityMapper:
             lambda x: isinstance(x, Quantity),
             lambda x: self.get_quantity_scale_factor(x)
         )
-        self._quantity_scale_factors[unit] = scale_factor
+        self._quantity_scale_factors[quantity] = scale_factor
 
     def get_quantity_dimension(self, unit):
         from sympy.physics.units import Quantity
@@ -423,7 +439,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         dimdep = self._get_dimensional_dependencies_for_name(name)
         if mark_dimensionless and dimdep == {}:
             return {Dimension(1): 1}
-        return {k: v for k, v in dimdep.items()}
+        return dict(dimdep.items())
 
     def equivalent_dims(self, dim1, dim2):
         deps1 = self.get_dimensional_dependencies(dim1)

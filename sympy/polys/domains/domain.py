@@ -6,7 +6,7 @@ from typing import Any
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -422,14 +422,11 @@ class Domain:
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
-        if HAS_GMPY:
-            integers = ZZ
-            if isinstance(element, integers.tp):
-                return self.convert_from(element, integers)
-
-            rationals = QQ
-            if isinstance(element, rationals.tp):
-                return self.convert_from(element, rationals)
+        if GROUND_TYPES != 'python':
+            if isinstance(element, ZZ.tp):
+                return self.convert_from(element, ZZ)
+            if isinstance(element, QQ.tp):
+                return self.convert_from(element, QQ)
 
         if isinstance(element, float):
             parent = RealField(tol=False)
@@ -599,7 +596,7 @@ class Domain:
         raise NotImplementedError
 
     def sum(self, args):
-        return sum(args)
+        return sum(args, start=self.zero)
 
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
@@ -820,6 +817,7 @@ class Domain:
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
+        # XXX: Remove this.
         return isinstance(other, Domain) and self.dtype == other.dtype
 
     def map(self, seq):
@@ -1099,12 +1097,20 @@ class Domain:
 
         Since the default :py:attr:`~.Domain.dtype` for :ref:`ZZ` is ``int``
         (or ``mpz``) division as ``a / b`` should not be used as it would give
-        a ``float``.
+        a ``float`` which is not a domain element.
 
-        >>> ZZ(4) / ZZ(2)
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
         2.0
-        >>> ZZ(5) / ZZ(2)
+        >>> ZZ(5) / ZZ(2) # doctest: +SKIP
         2.5
+
+        On the other hand with `SYMPY_GROUND_TYPES=flint` elements of :ref:`ZZ`
+        are ``flint.fmpz`` and division would raise an exception:
+
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        TypeError: unsupported operand type(s) for /: 'fmpz' and 'fmpz'
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
         :py:meth:`~.Domain.exquo` should be used instead.
@@ -1273,7 +1279,51 @@ class Domain:
         raise NotImplementedError
 
     def sqrt(self, a):
-        """Returns square root of ``a``. """
+        """Returns a (possibly inexact) square root of ``a``.
+
+        Explanation
+        ===========
+        There is no universal definition of "inexact square root" for all
+        domains. It is not recommended to implement this method for domains
+        other then :ref:`ZZ`.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def is_square(self, a):
+        """Returns whether ``a`` is a square in the domain.
+
+        Explanation
+        ===========
+        Returns ``True`` if there is an element ``b`` in the domain such that
+        ``b * b == a``, otherwise returns ``False``. For inexact domains like
+        :ref:`RR` and :ref:`CC`, a tiny difference in this equality can be
+        tolerated.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def exsqrt(self, a):
+        """Principal square root of a within the domain if ``a`` is square.
+
+        Explanation
+        ===========
+        The implementation of this method should return an element ``b`` in the
+        domain such that ``b * b == a``, or ``None`` if there is no such ``b``.
+        For inexact domains like :ref:`RR` and :ref:`CC`, a tiny difference in
+        this equality can be tolerated. The choice of a "principal" square root
+        should follow a consistent rule whenever possible.
+
+        See also
+        ========
+        sqrt, is_square
+        """
         raise NotImplementedError
 
     def evalf(self, a, prec=None, **options):

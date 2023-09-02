@@ -724,8 +724,8 @@ def check_dummy_sol(eq, solse, dummy_sym):
     C1 = Dummy('C1')
     sols = [sol.subs(C1, dummy_sym) for sol in sols]
 
-    assert all([x[0] for x in checkodesol(eq, sols)])
-    assert all([s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse)])
+    assert all(x[0] for x in checkodesol(eq, sols))
+    assert all(s1.dummy_eq(s2, dummy_sym) for s1, s2 in zip(sols, solse))
 
 
 def test_solve_riccati():

@@ -147,7 +147,7 @@ class Dyadic(Printable, EvalfMixin):
 
         """
 
-        newlist = [v for v in self.args]
+        newlist = list(self.args)
         other = sympify(other)
         for i, v in enumerate(newlist):
             newlist[i] = (other * newlist[i][0], newlist[i][1],
@@ -433,9 +433,8 @@ class Dyadic(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> Vector.simp = True
+        >>> from sympy import symbols, trigsimp
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy.physics.mechanics import inertia
         >>> Ixx, Iyy, Izz, Ixy, Iyz, Ixz = symbols('Ixx, Iyy, Izz, Ixy, Iyz, Ixz')
         >>> N = ReferenceFrame('N')
@@ -447,7 +446,7 @@ class Dyadic(Printable, EvalfMixin):
         [Ixz, Iyz, Izz]])
         >>> beta = symbols('beta')
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
-        >>> inertia_dyadic.to_matrix(A)
+        >>> trigsimp(inertia_dyadic.to_matrix(A))
         Matrix([
         [                           Ixx,                                           Ixy*cos(beta) + Ixz*sin(beta),                                           -Ixy*sin(beta) + Ixz*cos(beta)],
         [ Ixy*cos(beta) + Ixz*sin(beta), Iyy*cos(2*beta)/2 + Iyy/2 + Iyz*sin(2*beta) - Izz*cos(2*beta)/2 + Izz/2,                 -Iyy*sin(2*beta)/2 + Iyz*cos(2*beta) + Izz*sin(2*beta)/2],

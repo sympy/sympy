@@ -5,17 +5,16 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
-from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
     primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
-    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
+    udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
@@ -64,24 +63,6 @@ def multiproduct(seq=(), start=1):
                 units *= base
             multi.append((base, exp//2))
     return units * multiproduct(multi)**2
-
-
-def test_trailing_bitcount():
-    assert trailing(0) == 0
-    assert trailing(1) == 0
-    assert trailing(-1) == 0
-    assert trailing(2) == 1
-    assert trailing(7) == 0
-    assert trailing(-7) == 0
-    for i in range(100):
-        assert trailing(1 << i) == i
-        assert trailing((1 << i) * 31337) == i
-    assert trailing(1 << 1000001) == 1000001
-    assert trailing((1 << 273956)*7**37) == 273956
-    # issue 12709
-    big = small_trailing[-1]*2
-    assert trailing(-big) == trailing(big)
-    assert bitcount(-big) == bitcount(big)
 
 
 def test_multiplicity():
@@ -459,7 +440,7 @@ def test_issue_4356():
 
 def test_divisors():
     assert divisors(28) == [1, 2, 4, 7, 14, 28]
-    assert [x for x in divisors(3*5*7, 1)] == [1, 3, 5, 15, 7, 21, 35, 105]
+    assert list(divisors(3*5*7, 1)) == [1, 3, 5, 15, 7, 21, 35, 105]
     assert divisors(0) == []
 
 
@@ -471,7 +452,7 @@ def test_divisor_count():
 def test_proper_divisors():
     assert proper_divisors(-1) == []
     assert proper_divisors(28) == [1, 2, 4, 7, 14]
-    assert [x for x in proper_divisors(3*5*7, True)] == [1, 3, 5, 15, 7, 21, 35]
+    assert list(proper_divisors(3*5*7, True)) == [1, 3, 5, 15, 7, 21, 35]
 
 
 def test_proper_divisor_count():
@@ -523,7 +504,7 @@ def test_visual_factorint():
     assert type(forty2) == Mul
     assert str(forty2) == '2**1*3**1*7**1'
     assert factorint(1, visual=True) is S.One
-    no = dict(evaluate=False)
+    no = {"evaluate": False}
     assert factorint(42**2, visual=True) == Mul(Pow(2, 2, **no),
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
@@ -573,7 +554,7 @@ def test_visual_io():
     assert [fi(th, visual=0) for th in [d, m, n]] == [m, d, d]
 
     # test reevaluation
-    no = dict(evaluate=False)
+    no = {"evaluate": False}
     assert sm({4: 2}, visual=False) == sm(16)
     assert sm(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == sm(2**10)

@@ -163,7 +163,7 @@ you intend to evaluate an expression at many points, there are more efficient
 ways.  For example, if you wanted to evaluate an expression at a thousand
 points, using SymPy would be far slower than it needs to be, especially if you
 only care about machine precision.  Instead, you should use libraries like
-`NumPy <http://www.numpy.org/>`_ and `SciPy <http://www.scipy.org/>`_.
+`NumPy <https://numpy.org/>`_ and `SciPy <https://scipy.org/>`_.
 
 The easiest way to convert a SymPy expression to an expression that can be
 numerically evaluated is to use the ``lambdify`` function.  ``lambdify`` acts

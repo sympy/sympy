@@ -32,16 +32,18 @@ import itertools
 from sympy import SYMPY_DEBUG
 from sympy.core import S, Expr
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
-from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.symbol import Dummy, symbols, Wild, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
@@ -68,6 +70,7 @@ from sympy.logic.boolalg import And, Or, BooleanAtom, Not, BooleanFunction
 from sympy.polys import cancel, factor
 from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
+from sympy.utilities.misc import debugf as _debugf
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -295,19 +298,16 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
 
-def _mytype(f, x):
+def _mytype(f: Basic, x: Symbol) -> tuple[type[Basic], ...]:
     """ Create a hashable entity describing the type of f. """
+    def key(x: type[Basic]) -> tuple[int, int, str]:
+        return x.class_key()
+
     if x not in f.free_symbols:
         return ()
     elif f.is_Function:
-        return (type(f),)
-    else:
-        types = [_mytype(a, x) for a in f.args]
-        res = []
-        for t in types:
-            res += list(t)
-        res.sort()
-        return tuple(res)
+        return type(f),
+    return tuple(sorted((t for a in f.args for t in _mytype(a, x)), key=key))
 
 
 class _CoeffExpValueError(ValueError):
@@ -658,7 +658,7 @@ def _condsimp(cond, first=True):
         (Ne(p, 2) & (cos(Abs(arg(p)))*Abs(p) > 2), Abs(p) > 2),  # 13
         ((Abs(arg(p)) < pi/2) & (cos(Abs(arg(p)))*sqrt(Abs(p**2)) > 1), p**2 > 1),  # 14
     ]
-    cond = cond.func(*list(map(lambda _: _condsimp(_, first), cond.args)))
+    cond = cond.func(*[_condsimp(_, first) for _ in cond.args])
     change = True
     while change:
         change = False
@@ -802,12 +802,15 @@ def _check_antecedents_1(g, x, helper=False):
     def debug(*msg):
         _debug(*msg)
 
+    def debugf(string, arg):
+        _debugf(string, arg)
+
     debug('Checking antecedents for 1 function:')
-    debug('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s'
-          % (delta, eta, m, n, p, q))
-    debug('  ap = %s, %s' % (list(g.an), list(g.aother)))
-    debug('  bq = %s, %s' % (list(g.bm), list(g.bother)))
-    debug('  cond_3=%s, cond_3*=%s, cond_4=%s' % (cond_3, cond_3_star, cond_4))
+    debugf('  delta=%s, eta=%s, m=%s, n=%s, p=%s, q=%s',
+           (delta, eta, m, n, p, q))
+    debugf('  ap = %s, %s', (list(g.an), list(g.aother)))
+    debugf('  bq = %s, %s', (list(g.bm), list(g.bother)))
+    debugf('  cond_3=%s, cond_3*=%s, cond_4=%s', (cond_3, cond_3_star, cond_4))
 
     conds = []
 
@@ -850,7 +853,7 @@ def _check_antecedents_1(g, x, helper=False):
 
     # extra case from wofram functions site:
     # (reproduced verbatim from Prudnikov, section 2.24.2)
-    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
+    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/01/
     case_extra = []
     case_extra += [Eq(p, q), Eq(delta, 0), Eq(unbranched_argument(eta), 0), Ne(eta, 0)]
     if not helper:
@@ -989,7 +992,7 @@ def _check_antecedents(g1, g2, x):
     # [P], Section 2.24.1
     #
     # They are also reproduced (verbatim!) at
-    # http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
+    # https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/
     #
     # Note: k=l=r=alpha=1
     sigma, _ = _get_coeff_exp(g1.argument, x)
@@ -1006,11 +1009,11 @@ def _check_antecedents(g1, g2, x):
     theta = (pi*(v - s - t) + Abs(unbranched_argument(sigma)))/(v - u)
 
     _debug('Checking antecedents:')
-    _debug('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s'
-           % (sigma, s, t, u, v, bstar, rho))
-    _debug('  omega=%s, m=%s, n=%s, p=%s, q=%s, c*=%s, mu=%s,'
-           % (omega, m, n, p, q, cstar, mu))
-    _debug('  phi=%s, eta=%s, psi=%s, theta=%s' % (phi, eta, psi, theta))
+    _debugf('  sigma=%s, s=%s, t=%s, u=%s, v=%s, b*=%s, rho=%s',
+            (sigma, s, t, u, v, bstar, rho))
+    _debugf('  omega=%s, m=%s, n=%s, p=%s, q=%s, c*=%s, mu=%s,',
+            (omega, m, n, p, q, cstar, mu))
+    _debugf('  phi=%s, eta=%s, psi=%s, theta=%s', (phi, eta, psi, theta))
 
     def _c1():
         for g in [g1, g2]:
@@ -1045,7 +1048,7 @@ def _check_antecedents(g1, g2, x):
     #   https://reduce-algebra.svn.sourceforge.net/svnroot/reduce-algebra/trunk/packages/defint/definta.red
     #   (search for tst14)
     # The Wolfram alpha version:
-    #   http://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
+    #   https://functions.wolfram.com/HypergeometricFunctions/MeijerG/21/02/03/03/0014/
     z0 = exp(-(bstar + cstar)*pi*S.ImaginaryUnit)
     zos = unpolarify(z0*omega/sigma)
     zso = unpolarify(z0*sigma/omega)
@@ -1121,13 +1124,13 @@ def _check_antecedents(g1, g2, x):
     for cond, i in [(c1, 1), (c2, 2), (c3, 3), (c4, 4), (c5, 5), (c6, 6),
                     (c7, 7), (c8, 8), (c9, 9), (c10, 10), (c11, 11),
                     (c12, 12), (c13, 13), (c14, 14), (c15, 15)]:
-        _debug('  c%s:' % i, cond)
+        _debugf('  c%s: %s', (i, cond))
 
     # We will return Or(*conds)
     conds = []
 
     def pr(count):
-        _debug('  case %s:' % count, conds[-1])
+        _debugf('  case %s: %s', (count, conds[-1]))
     conds += [And(m*n*s*t != 0, bstar.is_positive is True, cstar.is_positive is True, c1, c2, c3, c10,
                   c12)]  # 1
     pr(1)
@@ -1372,9 +1375,9 @@ def _check_antecedents_inversion(g, x):
         epsilon = S.NaN
     theta = ((1 - sigma)/2 + Add(*g.bq) - Add(*g.ap))/sigma
     delta = g.delta
-    _debug('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s' % (
-        m, n, p, q, tau, nu, rho, sigma))
-    _debug('  epsilon=%s, theta=%s, delta=%s' % (epsilon, theta, delta))
+    _debugf('  m=%s, n=%s, p=%s, q=%s, tau=%s, nu=%s, rho=%s, sigma=%s',
+            (m, n, p, q, tau, nu, rho, sigma))
+    _debugf('  epsilon=%s, theta=%s, delta=%s', (epsilon, theta, delta))
 
     # First check if the computation is valid.
     if not (g.delta >= e/2 or (p >= 1 and p >= q)):
@@ -1804,7 +1807,7 @@ def meijerint_definite(f, x, a, b):
     #
     # There are usually several ways of doing this, and we want to try all.
     # This function does (1), calls _meijerint_definite_2 for step (2).
-    _debug('Integrating', f, 'wrt %s from %s to %s.' % (x, a, b))
+    _debugf('Integrating %s wrt %s from %s to %s.', (f, x, a, b))
     f = sympify(f)
     if f.has(DiracDelta):
         _debug('Integrand has DiracDelta terms - giving up.')
@@ -1872,7 +1875,7 @@ def meijerint_definite(f, x, a, b):
         if b is S.Infinity:
             for split in _find_splitting_points(f, x):
                 if (a - split >= 0) == True:
-                    _debug('Trying x -> x + %s' % split)
+                    _debugf('Trying x -> x + %s', split)
                     res = _meijerint_definite_2(f.subs(x, x + split)
                                                 *Heaviside(x + split - a), x)
                     if res:
@@ -2067,9 +2070,9 @@ def _meijerint_definite_4(f, x, only_double=False):
                 break
             cond = _my_unpolarify(cond)
             if cond == False:
-                _debug('But cond is always False (full_pb=%s).' % full_pb)
+                _debugf('But cond is always False (full_pb=%s).', full_pb)
             else:
-                _debug('Result before branch substitutions is:', res)
+                _debugf('Result before branch substitutions is: %s', (res, ))
                 if only_double:
                     return res, cond
                 return _my_unpolarify(hyperexpand(res)), cond

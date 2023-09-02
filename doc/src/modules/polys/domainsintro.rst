@@ -289,14 +289,24 @@ multiplication will work for the elements of any domain and will produce new
 domain elements. Division with ``/`` (Python's "true division" operator) is not
 possible for all domains and should not be used with domain elements unless
 the domain is known to be a field. For example dividing two elements of :ref:`ZZ`
-gives a ``float`` which is not an element of :ref:`ZZ`::
+might give a ``float`` which is not an element of :ref:`ZZ`::
 
-  >>> z1 / z1
+  >>> z1 / z1  # doctest: +SKIP
   1.0
   >>> type(z1 / z1)  # doctest: +SKIP
   <class 'float'>
   >>> ZZ.is_Field
   False
+
+The behaviour of ``/`` for non-fields can also differ for different
+implementations of the ground types of the domain. For example with
+`SYMPY_GROUND_TYPES=flint` dividing two elements of :ref:`ZZ` will raise an
+error rather than return a float::
+
+   >>> z1 / z1  # doctest: +SKIP
+   Traceback (most recent call last):
+   ...
+   TypeError: unsupported operand type(s) for /: 'flint._flint.fmpz' and 'flint._flint.fmpz'
 
 Most domains representing non-field rings allow floor and modulo division
 (remainder) with Python's floor division ``//`` and modulo division ``%``

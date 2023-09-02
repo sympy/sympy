@@ -645,8 +645,11 @@ class ComplexRootOf(RootOf):
         # If the given poly is already irreducible, then the index does not
         # need to be adjusted, and we can postpone the heavy lifting of
         # computing and refining isolating intervals until that is needed.
+        # Note, however, that `_pure_factors()` extracts a negative leading
+        # coeff if present, so `factors[0][0]` may differ from `poly`, and
+        # is the "normalized" version of `poly` that we must return.
         if lazy and len(factors) == 1 and factors[0][1] == 1:
-            return poly, index
+            return factors[0][0], index
 
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
@@ -825,7 +828,7 @@ class ComplexRootOf(RootOf):
         expr, i = self.args
         return self.func(expr, i + (1 if self._get_interval().conj else -1))
 
-    def eval_approx(self, n):
+    def eval_approx(self, n, return_mpmath=False):
         """Evaluate this complex root to the given precision.
 
         This uses secant method and root bounds are used to both
@@ -908,6 +911,8 @@ class ComplexRootOf(RootOf):
         # update the interval so we at least (for this precision or
         # less) don't have much work to do to recompute the root
         self._set_interval(interval)
+        if return_mpmath:
+            return root
         return (Float._new(root.real._mpf_, prec) +
             I*Float._new(root.imag._mpf_, prec))
 

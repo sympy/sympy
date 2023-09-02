@@ -1811,7 +1811,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \circ '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
@@ -1826,7 +1826,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \otimes '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -2876,6 +2876,12 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_mpq(self, expr):
+        return str(expr)
+
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
         return str(expr)
 
     def _print_Predicate(self, expr):

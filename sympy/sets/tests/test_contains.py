@@ -7,6 +7,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.sets import (FiniteSet, Interval)
 from sympy.testing.pytest import raises
 
+
 def test_contains_basic():
     raises(TypeError, lambda: Contains(S.Integers, 1))
     assert Contains(2, S.Integers) is S.true
@@ -44,6 +45,7 @@ def test_as_set():
     assert Contains(x, FiniteSet(y)).as_set() == FiniteSet(y)
     assert Contains(x, S.Integers).as_set() == S.Integers
     assert Contains(x, S.Reals).as_set() == S.Reals
+
 
 def test_type_error():
     # Pass in a parameter not of type "set"

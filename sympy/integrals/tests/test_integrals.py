@@ -966,7 +966,7 @@ def test_is_number():
     i = Integral(x, (y, z, z))
     assert i.is_number is False and i.n() == 0
     i = Integral(1, (y, z, z + 2))
-    assert i.is_number is False and i.n() == 2
+    assert i.is_number is False and i.n() == 2.0
 
     assert Integral(x*y, (x, 1, 2), (y, 1, 3)).is_number is True
     assert Integral(x*y, (x, 1, 2), (y, 1, z)).is_number is False
@@ -1662,8 +1662,8 @@ def test_integrate_with_complex_constants():
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
     t = Symbol('t', real=True)
-    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(I)*sqrt(pi)*exp(-I*m**2
-                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K))
+    assert integrate(exp(-I*K*x**2+m*x), x) == sqrt(pi)*exp(-I*m**2
+                    /(4*K))*erfi((-2*I*K*x + m)/(2*sqrt(K)*sqrt(-I)))/(2*sqrt(K)*sqrt(-I))
     assert integrate(1/(1 + I*x**2), x) == (-I*(sqrt(-I)*log(x - I*sqrt(-I))/2
             - sqrt(-I)*log(x + I*sqrt(-I))/2))
     assert integrate(exp(-I*x**2), x) == sqrt(pi)*erf(sqrt(I)*x)/(2*sqrt(I))
@@ -1982,7 +1982,9 @@ def test_issue_11254b():
 
 
 def test_issue_11254d():
-    assert integrate((sech(x)**2).rewrite(sinh), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
+    # (sech(x)**2).rewrite(sinh)
+    assert integrate(-1/sinh(x + I*pi/2, evaluate=False)**2, x) == -2/(exp(2*x) + 1)
+    assert integrate(cosh(x)**(-2), x) == 2*tanh(x/2)/(tanh(x/2)**2 + 1)
 
 
 def test_issue_22863():
@@ -2071,3 +2073,48 @@ def test_mul_pow_derivative():
     assert integrate(x*sec(x)**2, x) == x*tan(x) + log(cos(x))
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
+
+def test_issue_20782():
+    x_d = symbols('x_d')
+
+    fun1 = lambda x : -Piecewise((0, x < 0.0), (1, True))
+    fun2 = lambda x : Piecewise((0, x < 1.0), (1, True))
+    fun_sum = lambda x : +Piecewise((0, x < 0.0), (1, True)) \
+                        -Piecewise((0, x < 1.0), (1, True))
+
+    fun_sum_neg = lambda x : -Piecewise((0, x < 0.0), (1, True)) \
+                            +Piecewise((0, x < 1.0), (1, True))
+
+    assert integrate(-fun1(x_d), (x_d, -float('Inf'), 1)) == 1
+    assert integrate(-fun2(x_d), (x_d, -float('Inf'), 1)) == 0
+    assert integrate(fun1(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(fun2(x_d), (x_d, -float('Inf'), 1)) == 0
+    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1
+    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1
+    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1
+
+    f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
+    assert integrate(f, (x, -oo, 1)) == 1
+    assert integrate(-f, (x, -oo, 1)) == -1
+
+def test_issue_20781():
+    x_d = Symbol('x_d')
+    fun_sum = lambda x, a1, a2: Piecewise((0, x<a1),(1, x>=a1)) + Piecewise((0, x<a2),(1, x>=a2))
+
+    assert integrate(fun_sum((x_d), 0, 0.0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 0.0, 0), (x_d, -float('Inf'), x)) == 2*x - 2*Min(0, x)
+    assert integrate(fun_sum((x_d), 1.0, 1), (x_d, -float('Inf'), x)) == 2*x - 2*Min(1, x)
+
+@slow
+def test_issue_19427():
+    # <https://github.com/sympy/sympy/issues/19427>
+    x = Symbol("x")
+
+    # Have always been okay:
+    assert integrate((x ** 4) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 16
+    assert integrate((-2 * x ** 2) * sqrt(1 - x ** 2), (x, -1, 1)) == -pi / 4
+    assert integrate((1) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 2
+
+    # Sum of the above, used to incorrectly return 0 for a while:
+    assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16

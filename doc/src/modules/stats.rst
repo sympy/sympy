@@ -44,6 +44,7 @@ Continuous Types
 .. autofunction:: ChiNoncentral
 .. autofunction:: ChiSquared
 .. autofunction:: Dagum
+.. autofunction:: Davis
 .. autofunction:: Erlang
 .. autofunction:: ExGaussian
 .. autofunction:: Exponential

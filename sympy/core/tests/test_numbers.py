@@ -7,9 +7,11 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
-    igcd_lehmer, Integer, I, pi, comp, ilcm, Rational, E, nan, igcd2,
-    oo, AlgebraicNumber, igcdex, Number, Float, zoo)
+from sympy.core.numbers import (mpf_norm, seterr,
+    Integer, I, pi, comp, Rational, E, nan,
+    oo, AlgebraicNumber, Number, Float, zoo, equal_valued)
+from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
+    ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
@@ -25,14 +27,12 @@ from sympy.polys.domains.realfield import RealField
 from sympy.printing.latex import latex
 from sympy.printing.repr import srepr
 from sympy.simplify import simplify
-from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 from mpmath import mpf
-from mpmath.rational import mpq
 import mpmath
 from sympy.core import numbers
 t = Symbol('t', real=False)
@@ -361,13 +361,19 @@ def test_Rational_new():
     except ImportError:
         pass
 
-    assert Rational(mpq(2, 6)) == Rational(1, 3)
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
     assert Rational(2, 4, gcd=1).q == 4
     n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
+
+def test_issue_24543():
+    for p in ('1.5', 1.5, 2):
+        for q in ('1.5', 1.5, 2):
+            assert Rational(p, q).as_numer_denom() == Rational('%s/%s'%(p,q)).as_numer_denom()
+
+    assert Rational('0.5', '100') == Rational(1, 200)
 
 
 def test_Number_new():
@@ -534,15 +540,15 @@ def test_Float():
     assert Integer('123 456') == Integer('123456')
     assert Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
+    # but treat them as strictly ass underscore between digits: only 1
+    raises(ValueError, lambda: Float('1  2'))
 
-    # allow underscore
+    # allow underscore between digits
     assert Float('1_23.4_56') == Float('123.456')
-    assert Float('1_') == Float('1.0')
-    assert Float('1_.') == Float('1.0')
-    assert Float('1._') == Float('1.0')
-    assert Float('1__2') == Float('12.0')
     # assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
     # ...but not in all cases (per Py 3.6)
+    raises(ValueError, lambda: Float('1_'))
+    raises(ValueError, lambda: Float('1__2'))
     raises(ValueError, lambda: Float('_1'))
     raises(ValueError, lambda: Float('_inf'))
 
@@ -1055,10 +1061,17 @@ def test_integer_log():
     assert integer_log(3**3, 3) == (3, True)
     assert integer_log(27, 5) == (2, False)
     assert integer_log(2, 3) == (0, False)
+    assert integer_log(-4, 2) == (2, False)
+    assert integer_log(-16, 4) == (0, False)
     assert integer_log(-4, -2) == (2, False)
+    assert integer_log(4, -2) == (2, True)
+    assert integer_log(-8, -2) == (3, True)
+    assert integer_log(8, -2) == (3, False)
+    assert integer_log(-9, 3) == (0, False)
+    assert integer_log(-9, -3) == (2, False)
+    assert integer_log(9, -3) == (2, True)
+    assert integer_log(-27, -3) == (3, True)
     assert integer_log(27, -3) == (3, False)
-    assert integer_log(-49, 7) == (0, False)
-    assert integer_log(-49, -7) == (2, False)
 
 
 def test_isqrt():
@@ -1085,16 +1098,6 @@ def test_isqrt():
     assert isqrt(1-tiny) == 0
     assert isqrt(4503599761588224-tiny) == 67108864
     assert isqrt(10**100 - tiny) == 10**50 - 1
-
-    # Check that using an inaccurate math.sqrt doesn't affect the results.
-    from sympy.core import power
-    old_sqrt = power._sqrt
-    power._sqrt = lambda x: 2.999999999
-    try:
-        assert isqrt(9) == 3
-        assert isqrt(10000) == 100
-    finally:
-        power._sqrt = old_sqrt
 
 
 def test_powers_Integer():
@@ -1590,25 +1593,25 @@ def test_Rational_gcd_lcm_cofactors():
     assert Integer(4).cofactors(Integer(2)) == \
         (Integer(2), Integer(2), Integer(1))
 
-    assert Integer(4).gcd(Float(2.0)) == S.One
+    assert Integer(4).gcd(Float(2.0)) == Float(1.0)
     assert Integer(4).lcm(Float(2.0)) == Float(8.0)
-    assert Integer(4).cofactors(Float(2.0)) == (S.One, Integer(4), Float(2.0))
+    assert Integer(4).cofactors(Float(2.0)) == (Float(1.0), Float(4.0), Float(2.0))
 
-    assert S.Half.gcd(Float(2.0)) == S.One
+    assert S.Half.gcd(Float(2.0)) == Float(1.0)
     assert S.Half.lcm(Float(2.0)) == Float(1.0)
     assert S.Half.cofactors(Float(2.0)) == \
-        (S.One, S.Half, Float(2.0))
+        (Float(1.0), Float(0.5), Float(2.0))
 
 
 def test_Float_gcd_lcm_cofactors():
-    assert Float(2.0).gcd(Integer(4)) == S.One
+    assert Float(2.0).gcd(Integer(4)) == Float(1.0)
     assert Float(2.0).lcm(Integer(4)) == Float(8.0)
-    assert Float(2.0).cofactors(Integer(4)) == (S.One, Float(2.0), Integer(4))
+    assert Float(2.0).cofactors(Integer(4)) == (Float(1.0), Float(2.0), Float(4.0))
 
-    assert Float(2.0).gcd(S.Half) == S.One
+    assert Float(2.0).gcd(S.Half) == Float(1.0)
     assert Float(2.0).lcm(S.Half) == Float(1.0)
     assert Float(2.0).cofactors(S.Half) == \
-        (S.One, Float(2.0), S.Half)
+        (Float(1.0), Float(2.0), Float(0.5))
 
 
 def test_issue_4611():
@@ -2006,7 +2009,7 @@ def test_issue_10020():
 def test_invert_numbers():
     assert S(2).invert(5) == 3
     assert S(2).invert(Rational(5, 2)) == S.Half
-    assert S(2).invert(5.) == 0.5
+    assert S(2).invert(5.) == S.Half
     assert S(2).invert(S(5)) == 3
     assert S(2.).invert(5) == 0.5
     assert S(sqrt(2)).invert(5) == 1/sqrt(2)
@@ -2212,7 +2215,7 @@ def test_floordiv():
 
 def test_negation():
     assert -S.Zero is S.Zero
-    assert -Float(0) is not S.Zero and -Float(0) == 0
+    assert -Float(0) is not S.Zero and -Float(0) == 0.0
 
 
 def test_exponentiation_of_0():
@@ -2222,3 +2225,35 @@ def test_exponentiation_of_0():
     x = Symbol('x', zero=True)
     assert 0**-x == S.One
     assert 0**x == S.One
+
+
+def test_equal_valued():
+    x = Symbol('x')
+
+    equal_values = [
+        [1, 1.0, S(1), S(1.0), S(1).n(5)],
+        [2, 2.0, S(2), S(2.0), S(2).n(5)],
+        [-1, -1.0, -S(1), -S(1.0), -S(1).n(5)],
+        [0.5, S(0.5), S(1)/2],
+        [-0.5, -S(0.5), -S(1)/2],
+        [0, 0.0, S(0), S(0.0), S(0).n()],
+        [pi], [pi.n()],           # <-- not equal
+        [S(1)/10], [0.1, S(0.1)], # <-- not equal
+        [S(0.1).n(5)],
+        [oo],
+        [cos(x/2)], [cos(0.5*x)], # <-- no recursion
+    ]
+
+    for m, values_m in enumerate(equal_values):
+        for value_i in values_m:
+
+            # All values in same list equal
+            for value_j in values_m:
+                assert equal_valued(value_i, value_j) is True
+
+            # Not equal to anything in any other list:
+            for n, values_n in enumerate(equal_values):
+                if n == m:
+                    continue
+                for value_j in values_n:
+                    assert equal_valued(value_i, value_j) is False

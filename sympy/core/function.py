@@ -35,7 +35,6 @@ from typing import Any
 from collections.abc import Iterable
 
 from .add import Add
-from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
 from .containers import Tuple, Dict
@@ -151,7 +150,7 @@ def arity(cls):
         lambda p:p.default == p.empty, binary=True))
     return no if not yes else tuple(range(no, no + yes + 1))
 
-class FunctionClass(ManagedProperties):
+class FunctionClass(type):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
@@ -194,8 +193,6 @@ class FunctionClass(ManagedProperties):
             namespace = args[2]
             if 'eval' in namespace and not isinstance(namespace['eval'], classmethod):
                 raise TypeError("eval on Function subclasses should be a class method (defined with @classmethod)")
-
-        super().__init__(*args, **kwargs)
 
     @property
     def __signature__(self):
@@ -345,13 +342,12 @@ class Application(Basic, metaclass=FunctionClass):
         Explanation
         ===========
 
-        The eval() method is called when the class cls is about to be
+        The ``eval()`` method is called when the class ``cls`` is about to be
         instantiated and it should return either some simplified instance
-        (possible of some other class), or if the class cls should be
+        (possible of some other class), or if the class ``cls`` should be
         unmodified, return None.
 
-        Examples of eval() for the function "sign"
-        ---------------------------------------------
+        Examples of ``eval()`` for the function "sign"
 
         .. code-block:: python
 
@@ -1428,8 +1424,7 @@ class Derivative(Expr):
                 expr = expr.xreplace({old_v: v})
                 # Derivatives and UndefinedFunctions are independent
                 # of all others
-                clashing = not (isinstance(old_v, Derivative) or \
-                    isinstance(old_v, AppliedUndef))
+                clashing = not (isinstance(old_v, (Derivative, AppliedUndef)))
                 if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
@@ -1716,7 +1711,7 @@ class Derivative(Expr):
                 return _derivative_dispatch(new, *(self_vars - old_vars).items()).canonical
 
         args = list(self.args)
-        newargs = list(x._subs(old, new) for x in args)
+        newargs = [x._subs(old, new) for x in args]
         if args[0] == old:
             # complete replacement of self.expr
             # we already checked that the new is valid so we know
@@ -2094,25 +2089,6 @@ class Subs(Expr):
         A point or list of evaluation points
         corresponding to those variables.
 
-    Notes
-    =====
-
-    ``Subs`` objects are generally useful to represent unevaluated derivatives
-    calculated at a point.
-
-    The variables may be expressions, but they are subjected to the limitations
-    of subs(), so it is usually a good practice to use only symbols for
-    variables, since in that case there can be no ambiguity.
-
-    There's no automatic expansion - use the method .doit() to effect all
-    possible substitutions of the object and also of objects inside the
-    expression.
-
-    When evaluating derivatives at a point that is not a symbol, a Subs object
-    is returned. One is also able to calculate derivatives of Subs objects - in
-    this case the expression is always expanded (for the unevaluated form, use
-    Derivative()).
-
     Examples
     ========
 
@@ -2141,6 +2117,22 @@ class Subs(Expr):
 
     Notes
     =====
+
+    ``Subs`` objects are generally useful to represent unevaluated derivatives
+    calculated at a point.
+
+    The variables may be expressions, but they are subjected to the limitations
+    of subs(), so it is usually a good practice to use only symbols for
+    variables, since in that case there can be no ambiguity.
+
+    There's no automatic expansion - use the method .doit() to effect all
+    possible substitutions of the object and also of objects inside the
+    expression.
+
+    When evaluating derivatives at a point that is not a symbol, a Subs object
+    is returned. One is also able to calculate derivatives of Subs objects - in
+    this case the expression is always expanded (for the unevaluated form, use
+    Derivative()).
 
     In order to allow expressions to combine before doit is done, a
     representation of the Subs expression is used internally to make
@@ -2474,7 +2466,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    .. [1] http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    .. [1] https://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
@@ -2640,7 +2632,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     and ``cos(x)`` are not unique, due to the identity `\sin^2(x) + \cos^2(x)
     = 1`.  The current implementation uses the form obtained from Chebyshev
     polynomials, but this may change.  See `this MathWorld article
-    <http://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
+    <https://mathworld.wolfram.com/Multiple-AngleFormulas.html>`_ for more
     information.
 
     Notes
@@ -3236,11 +3228,7 @@ def count_ops(expr, visual=False):
                 # count the args
                 ops.append(o*(len(a.args) - 1))
             elif a.args and (
-                    a.is_Pow or
-                    a.is_Function or
-                    isinstance(a, Derivative) or
-                    isinstance(a, Integral) or
-                    isinstance(a, Sum)):
+                    a.is_Pow or a.is_Function or isinstance(a, (Derivative, Integral, Sum))):
                 # if it's not in the list above we don't
                 # consider a.func something to count, e.g.
                 # Tuple, MatrixSymbol, etc...
@@ -3322,7 +3310,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     """
     from sympy.matrices.matrices import MatrixBase
 
-    kw = dict(n=n, exponent=exponent, dkeys=dkeys)
+    kw = {"n": n, "exponent": exponent, "dkeys": dkeys}
 
     if isinstance(expr, MatrixBase):
         return expr.applyfunc(lambda e: nfloat(e, **kw))
@@ -3331,7 +3319,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     if iterable(expr, exclude=str):
         if isinstance(expr, (dict, Dict)):
             if dkeys:
-                args = [tuple(map(lambda i: nfloat(i, **kw), a))
+                args = [tuple((nfloat(i, **kw) for i in a))
                     for a in expr.items()]
             else:
                 args = [(k, nfloat(v, **kw)) for k, v in expr.items()]

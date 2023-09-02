@@ -85,6 +85,10 @@ def test_matrix_derivative_by_scalar():
     assert expr.diff(x) == 2*mu*Identity(k)
 
 
+def test_one_matrix():
+    assert MatMul(x.T, OneMatrix(k, 1)).diff(x) == OneMatrix(k, 1)
+
+
 def test_matrix_derivative_non_matrix_result():
     # This is a 4-dimensional array:
     I = Identity(k)

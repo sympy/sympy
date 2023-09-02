@@ -627,7 +627,10 @@ def factorial_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT)
     result: List[TOKEN] = []
     nfactorial = 0
     for toknum, tokval in tokens:
-        if toknum == ERRORTOKEN:
+        if toknum == OP and tokval == "!":
+            # In Python 3.12 "!" are OP instead of ERRORTOKEN
+            nfactorial += 1
+        elif toknum == ERRORTOKEN:
             op = tokval
             if op == '!':
                 nfactorial += 1
@@ -767,12 +770,12 @@ def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
             number = tokval
             postfix = []
 
-            if number.endswith('j') or number.endswith('J'):
+            if number.endswith(('j', 'J')):
                 number = number[:-1]
                 postfix = [(OP, '*'), (NAME, 'I')]
 
             if '.' in number or (('e' in number or 'E' in number) and
-                    not (number.startswith('0x') or number.startswith('0X'))):
+                    not (number.startswith(('0x', '0X')))):
                 seq = [(NAME, 'Float'), (OP, '('),
                     (NUMBER, repr(str(number))), (OP, ')')]
             else:
@@ -912,7 +915,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
                transformations: tUnion[tTuple[TRANS, ...], str] \
                    = standard_transformations,
                global_dict: Optional[DICT] = None, evaluate=True):
-    """Converts the string ``s`` to a SymPy expression, in ``local_dict``
+    """Converts the string ``s`` to a SymPy expression, in ``local_dict``.
 
     Parameters
     ==========
@@ -1072,7 +1075,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
     code = stringify_expr(s, local_dict, global_dict, _transformations)
 
     if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval')
+        code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
 
     try:
         rv = eval_expr(code, local_dict, global_dict)
@@ -1119,6 +1122,29 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         'exp', 'ln', 'log', 'sqrt', 'cbrt',
     )
 
+    relational_operators = {
+        ast.NotEq: 'Ne',
+        ast.Lt: 'Lt',
+        ast.LtE: 'Le',
+        ast.Gt: 'Gt',
+        ast.GtE: 'Ge',
+        ast.Eq: 'Eq'
+    }
+    def visit_Compare(self, node):
+        if node.ops[0].__class__ in self.relational_operators:
+            sympy_class = self.relational_operators[node.ops[0].__class__]
+            right = self.visit(node.comparators[0])
+            left = self.visit(node.left)
+            new_node = ast.Call(
+                func=ast.Name(id=sympy_class, ctx=ast.Load()),
+                args=[left, right],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
+                starargs=None,
+                kwargs=None
+            )
+            return new_node
+        return node
+
     def flatten(self, args, func):
         result = []
         for arg in args:
@@ -1144,8 +1170,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1155,16 +1181,16 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     rev = True
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
                 else:
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1174,7 +1200,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )
@@ -1189,7 +1215,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def visit_Call(self, node):
         new_node = self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
-            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load())))
+            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load())))
         return new_node
 
 
