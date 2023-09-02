@@ -110,6 +110,10 @@ class TransformToSymPyExpr(Transformer):
 
     def mul(self, tokens):
         if len(tokens) == 2:
+            from sympy.physics.quantum import Bra, Ket
+            if isinstance(tokens[0], Ket) and isinstance(tokens[1], Bra):
+                from sympy.physics.quantum import OuterProduct
+                return OuterProduct(tokens[0], tokens[1])
             return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
             return sympy.Mul(tokens[0], tokens[2])
