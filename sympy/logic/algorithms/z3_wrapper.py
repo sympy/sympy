@@ -19,7 +19,6 @@ def z3_satisfiable(expr, all_models=False):
         exprs.add_prop(expr)
         expr = exprs
 
-
     z3 = import_module("z3")
     if z3 is None:
         raise ImportError("z3 is not installed")

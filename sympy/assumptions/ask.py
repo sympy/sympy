@@ -349,6 +349,10 @@ def _extract_all_facts(assump, exprs):
                 else:
                     # If any of the literals doesn't have matching expr don't add the whole clause.
                     break
+            else:
+                # If any of the literals aren't unary predicate don't add the whole clause.
+                break
+
         else:
             if args:
                 facts.add(frozenset(args))
