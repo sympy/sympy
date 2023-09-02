@@ -1109,9 +1109,9 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
         max_real_term: tUnion[float, int] = MINUS_INF
         max_imag_term: tUnion[float, int] = MINUS_INF
 
-        def f(*args: 'Expr') -> tUnion[mpc, mpf]:
+        def f(*symbol_values: 'Expr') -> tUnion[mpc, mpf]:
             nonlocal max_real_term, max_imag_term
-            subs = {symbol: value for symbol, value in zip(integration_symbols, args)}
+            subs = dict(zip(integration_symbols, symbol_values))
             re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': subs})
 
             have_part[0] = re or have_part[0]
