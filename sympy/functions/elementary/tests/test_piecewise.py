@@ -26,7 +26,7 @@ from sympy.printing import srepr
 from sympy.sets.contains import Contains
 from sympy.sets.sets import Interval
 from sympy.solvers.solvers import solve
-from sympy.testing.pytest import raises, slow, XFAIL
+from sympy.testing.pytest import raises, slow
 from sympy.utilities.lambdify import lambdify
 
 a, b, c, d, x, y = symbols('a:d, x, y')
