@@ -7,11 +7,12 @@ from sympy.parsing.latex.errors import LaTeXParsingError
 lark = import_module("lark")
 
 if lark:
-    from lark import Transformer, Token # type: ignore
+    from lark import Transformer, Token  # type: ignore
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
             pass
+
 
     class Token:  # type: ignore
         pass
@@ -97,7 +98,7 @@ class TransformToSymPyExpr(Transformer):
         elif relation_type == "GTE":
             return sympy.Ge(tokens[0], tokens[2])
         else:
-            raise LaTeXParsingError() # TODO: Fill descriptive error message.
+            raise LaTeXParsingError()  # TODO: Fill descriptive error message.
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2])
@@ -110,6 +111,7 @@ class TransformToSymPyExpr(Transformer):
 
     def mul(self, tokens):
         if len(tokens) == 2:
+            # if left tokken is a ket and right one is a bra, then return outer product. Else, return normal multiplication.
             return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
             return sympy.Mul(tokens[0], tokens[2])
@@ -152,8 +154,8 @@ class TransformToSymPyExpr(Transformer):
             differential_symbol_index = tokens.index(r"\mathrm{d}")
         else:
             # differential symbol was not found
-            raise LaTeXParsingError("Differential symbol was not found in the expression." \
-                "Valid differential symbols are \"d\", \"\\text{d}, and \"\\mathrm{d}\".")
+            raise LaTeXParsingError("Differential symbol was not found in the expression."
+                                    "Valid differential symbols are \"d\", \"\\text{d}, and \"\\mathrm{d}\".")
 
         differential_symbol = tokens[differential_symbol_index + 1]
 
