@@ -1070,25 +1070,31 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     func = expr.args[0]
-    x, xlow, xhigh = expr.args[1]
-    if xlow == xhigh:
-        xlow = xhigh = 0
-    elif x not in func.free_symbols:
-        # only the difference in limits matters in this case
-        # so if there is a symbol in common that will cancel
-        # out when taking the difference, then use that
-        # difference
-        if xhigh.free_symbols & xlow.free_symbols:
-            diff = xhigh - xlow
-            if diff.is_number:
-                xlow, xhigh = 0, diff
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
     with workprec(prec + 5):
-        xlow = as_mpmath(xlow, prec + 15, options)
-        xhigh = as_mpmath(xhigh, prec + 15, options)
+        # args[1:] are all limits
+        limits = []
+        integration_symbols = []
+        for x, xlow, xhigh in expr.args[1:]:
+            if xlow == xhigh:
+                xlow = xhigh = 0
+            elif x not in func.free_symbols:
+                # only the difference in limits matters in this case
+                # so if there is a symbol in common that will cancel
+                # out when taking the difference, then use that
+                # difference
+                if xhigh.free_symbols & xlow.free_symbols:
+                    diff = xhigh - xlow
+                    if diff.is_number:
+                        xlow, xhigh = 0, diff
+            
+            limits.append([
+                as_mpmath(xlow, prec + 15, options),
+                as_mpmath(xhigh, prec + 15, options)])
+            integration_symbols.append(x)
 
         # Integration is like summation, and we can phone home from
         # the integrand function to update accuracy summation style
@@ -1103,9 +1109,10 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
         max_real_term: tUnion[float, int] = MINUS_INF
         max_imag_term: tUnion[float, int] = MINUS_INF
 
-        def f(t: 'Expr') -> tUnion[mpc, mpf]:
+        def f(*args: 'Expr') -> tUnion[mpc, mpf]:
             nonlocal max_real_term, max_imag_term
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
+            subs = {symbol: value for symbol, value in zip(integration_symbols, args)}
+            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': subs})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1128,11 +1135,11 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
             period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
-            result = quadosc(f, [xlow, xhigh], period=period)
+            result = quadosc(f, *limits, period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_err = quadts(f, [xlow, xhigh], error=1)
+            result, quadrature_err = quadts(f, *limits, error=1)
             quadrature_error = fastlog(quadrature_err._mpf_)
 
     options['maxprec'] = oldmaxprec
@@ -1165,7 +1172,8 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
 
 def evalf_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     limits = expr.limits
-    if len(limits) != 1 or len(limits[0]) != 3:
+    # At time of writing mpmath only allows up to three dimensions
+    if len(limits) not in (1,2,3) or any(len(limit) != 3 for limit in limits):
         raise NotImplementedError
     workprec = prec
     i = 0
