@@ -9,7 +9,7 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
@@ -1109,8 +1109,14 @@ def test_gaussian_domains():
             assert G.is_nonnegative(qi) is False
             assert G.is_nonpositive(qi) is False
 
-        domains = [ZZ_python(), QQ_python(), AlgebraicField(QQ, I)]
-        if HAS_GMPY:
+        domains = [ZZ, QQ, AlgebraicField(QQ, I)]
+
+        # XXX: These domains are all obsolete because ZZ/QQ with MPZ/MPQ
+        # already use either gmpy, flint or python depending on the
+        # availability of these libraries. We can keep these tests for now but
+        # ideally we should remove these alternate domains entirely.
+        domains += [ZZ_python(), QQ_python()]
+        if GROUND_TYPES == 'gmpy':
             domains += [ZZ_gmpy(), QQ_gmpy()]
 
         for K in domains:

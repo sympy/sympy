@@ -1160,9 +1160,9 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(s))
+                funcbody.append('del {}'.format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
+                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
 

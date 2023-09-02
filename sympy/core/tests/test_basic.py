@@ -1,7 +1,7 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
-
 import collections
+from typing import TypeVar, Generic
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
@@ -22,6 +22,7 @@ b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+T = TypeVar('T')
 
 
 def test__aresame():
@@ -317,3 +318,12 @@ class MySubclass(Basic, metaclass=MyMeta):
         exec(code)
 
     assert myclasses == ['executed']
+
+
+def test_generic():
+    # https://github.com/sympy/sympy/issues/25399
+    class A(Symbol, Generic[T]):
+        pass
+
+    class B(A[T]):
+        pass
