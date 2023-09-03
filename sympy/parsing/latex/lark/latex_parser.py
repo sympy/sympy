@@ -9,7 +9,6 @@ _lark = import_module("lark")
 
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
-
         with open(os.path.join(os.path.dirname(__file__), "latex.lark"), encoding="utf-8") as f:
             latex_grammar = f.read()
 
@@ -26,7 +25,7 @@ class LarkLatexParser:
         self.print_debug_output = print_debug_output
         self.transform = transform
 
-        self.transform_to_sympy_expr = TransformToSymPyExpr()
+        self.transformer = TransformToSymPyExpr()
 
     def doparse(self, s: str):
         if self.logger:
@@ -47,7 +46,7 @@ class LarkLatexParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self.transform_to_sympy_expr.transform(parse_tree)
+        sympy_expression = self.transformer.transform(parse_tree)
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression =", sympy_expression)
