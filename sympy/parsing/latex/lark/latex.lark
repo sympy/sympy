@@ -175,10 +175,9 @@ add: _expression ADD _expression_mul
 sub: _expression SUB _expression_mul
     | SUB _expression_mul
 mul: _expression_mul MUL_SYMBOL _expression_power
-    | _implicit_multiplication
 div: _expression_mul DIV_SYMBOL _expression_power
 
-_implicit_multiplication: (_oneletter_symbol | number) _expression_mul
+adjacent_expressions: (_oneletter_symbol | number) _expression_mul
     | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
     | _function _function
     | fraction _expression
@@ -192,7 +191,7 @@ _expression_func: _expression_core
 
 _expression_power: _expression_func | superscript
 
-_expression_mul: _expression_power | mul | div | integral | summation | product | limit
+_expression_mul: _expression_power | mul | div | integral | summation | product | limit | derivative
 
 _expression: _expression_mul | add | sub
 
@@ -225,6 +224,9 @@ fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
+derivative: CMD_FRAC L_BRACE DIFFERENTIAL R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE _expression
+    |  CMD_FRAC L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE
+
 _basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
 
 _simple_fraction: CMD_FRAC DIGIT group_curly_parentheses
@@ -256,8 +258,6 @@ bra: CMD_LANGLE _expression BAR
 ket: BAR _expression CMD_RANGLE
 
 inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
-
-// outer_product: BAR _expression CMD_RANGLE CMD_LANGLE _expression BAR
 
 _function: function_applied
     | abs | floor | ceil
