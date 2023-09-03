@@ -22,6 +22,9 @@ class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
+    def CMD_INFTY(self, tokens):
+        return sympy.oo
+
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
         # like "varphi" or "varepsilon", we remove that too
@@ -70,8 +73,8 @@ class TransformToSymPyExpr(Transformer):
     def latex_string(self, tokens):
         return tokens[0]
 
-    def infinity(self, tokens):
-        return sympy.oo
+    # def infinity(self, tokens):
+    #     return sympy.oo
 
     def group_round_parentheses(self, tokens):
         return tokens[1]

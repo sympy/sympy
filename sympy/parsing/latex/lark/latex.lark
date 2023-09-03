@@ -156,12 +156,11 @@ _oneletter_symbol: SYMBOL
     | GREEK_SYMBOL
 multiletter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
 number: /\d+(\.\d*)?/
-infinity: CMD_INFTY
 
 _atomic_expr: _oneletter_symbol
     | multiletter_symbol
     | number
-    | infinity
+    | CMD_INFTY
 
 group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
