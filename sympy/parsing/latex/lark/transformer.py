@@ -70,6 +70,9 @@ class TransformToSymPyExpr(Transformer):
         else:
             return sympy.core.numbers.Integer(tokens[0])
 
+    def latex_string(self, tokens):
+        return tokens[0]
+
     def group_round_parentheses(self, tokens):
         return tokens[1]
 
