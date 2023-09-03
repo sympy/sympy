@@ -130,7 +130,11 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices.common import MatrixKind
 from sympy.core.kind import NumberKind
 
-class UnhandledNumber(Exception):
+class UnhandledInput(Exception):
+    """
+    Raised while creating an LRASolver if non-linearity
+    or non-rational numbers are present.
+    """
     pass
 
 ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
@@ -157,9 +161,9 @@ class LRASolver():
         self.s_subs = s_subs  # used only for test_lra_theory.test_random_problems
 
         if any(not isinstance(a, Rational) for a in A):
-            raise UnhandledNumber
-        if any(not isinstance(b.bound, Rational) and (b.bound != oo) and (b.bound != -oo) for b in enc_to_boundary.values()):
-            raise UnhandledNumber
+            raise UnhandledInput("Non-rational numbers are not handled")
+        if any(not isinstance(b.bound, Rational) for b in enc_to_boundary.values()):
+            raise UnhandledInput("Non-rational numbers are not handled")
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
@@ -272,9 +276,9 @@ class LRASolver():
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 raise ValueError(f"{prop} contains nan")
             if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
-                raise UnhandledNumber(f"{prop} contains an imaginary component")
+                raise UnhandledInput(f"{prop} contains an imaginary component")
             if prop.lhs == oo or prop.rhs == oo:
-                raise UnhandledNumber(f"{prop} contains infinity")
+                raise UnhandledInput(f"{prop} contains infinity")
 
             prop = _eval_binrel(prop)  # simplify to True / False if possible
             if prop == True:
@@ -284,7 +288,7 @@ class LRASolver():
                 conflicts.append([-enc])
                 continue
             elif prop is None:
-                raise UnhandledNumber(f"{prop} contains no variables and could not be evaluated as True or False")
+                raise UnhandledInput(f"{prop} contains no variables and could not be evaluated as True or False")
 
             expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
