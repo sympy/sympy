@@ -268,7 +268,6 @@ class LRASolver():
                 raise ValueError(f"Unhandled Predicate: {prop}")
 
 
-
             assert prop.function in ALLOWED_PRED
             if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
                 raise ValueError(f"{prop} contains matrix variables")
@@ -293,31 +292,27 @@ class LRASolver():
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
 
-            var, const = sep_const_terms(expr)
-            var, var_coeff = sep_const_coeff(var)
+            vars, const = _sep_const_terms(expr)  # example: (2x + 3y + 2) --> (2x + 3y), (2)
+            vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)
             const = const / var_coeff
 
-            terms = []
-            for term in list_terms(var):
-                assert not isinstance(term, Add)
-                term, term_coeff = sep_const_coeff(term)
+            terms = _list_terms(vars)  # example: (2x + 3y) --> [2x, 3y]
+            for term in terms:
+                term, _ = _sep_const_coeff(term)
                 assert isinstance(term, Symbol)
                 if term not in var_to_lra_var:
                     var_to_lra_var[term] = LRAVariable(term)
                     nonbasic.append(term)
-                terms.append(term_coeff * term)
-            # If there are multiple variable terms, replace them with a dummy _si variable.
-            # If needed (no other expr has this sum of variable terms), create a new Dummy _si varaible.
+
             if len(terms) > 1:
-                var = sum(terms)
-                if var not in s_subs:
+                if vars not in s_subs:
                     s_count += 1
                     d = Dummy(f"s{s_count}")
                     var_to_lra_var[d] = LRAVariable(d)
                     basic.append(d)
-                    s_subs[var] = d
-                    A.append(var - d)
-                var = s_subs[var]
+                    s_subs[vars] = d
+                    A.append(vars - d)
+                var = s_subs[vars]
             else:
                 var = terms[0]
 
@@ -637,6 +632,11 @@ class LRASolver():
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
+        """
+        Pivots basic variable xi with nonbasic variable xj,
+        and sets value of xi to v and adjusts the values of all basic variables
+        to keep equations satisfied.
+        """
         i, j = basic[xi], xj.col_idx
         assert M[i, j] != 0
         theta = (v - xi.assign)*(1/M[i, j])
@@ -708,7 +708,7 @@ class LRASolver():
         return A
 
 
-def sep_const_coeff(expr):
+def _sep_const_coeff(expr):
     if isinstance(expr, Add):
         return expr, sympify(1)
 
@@ -727,14 +727,14 @@ def sep_const_coeff(expr):
     return Mul(*var), Mul(*const)
 
 
-def list_terms(expr):
+def _list_terms(expr):
     if not isinstance(expr, Add):
         return [expr]
 
     return expr.args
 
 
-def sep_const_terms(expr):
+def _sep_const_terms(expr):
     if isinstance(expr, Add):
         terms = expr.args
     else:
@@ -755,7 +755,7 @@ def standardize_binrel(prop):
     expr = prop.lhs - prop.rhs
     if prop.function in [Q.ge, Q.gt]:
         expr = -expr
-    var, const = sep_const_terms(expr)
+    var, const = _sep_const_terms(expr)
 
     if prop.function == Q.eq:
         return Q.eq(var, const)
@@ -766,6 +766,9 @@ def standardize_binrel(prop):
 
 
 def _eval_binrel(binrel):
+    """
+    Simplify binary relation to True / False if possible.
+    """
     if not (len(binrel.lhs.free_symbols) == 0 and len(binrel.rhs.free_symbols) == 0):
         return binrel
     if binrel.function == Q.lt:
