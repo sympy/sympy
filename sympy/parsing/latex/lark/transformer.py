@@ -61,7 +61,7 @@ class TransformToSymPyExpr(Transformer):
 
             return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
 
-    def multiletter_symbol(self, tokens):
+    def multi_letter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
 
     def number(self, tokens):
@@ -69,12 +69,6 @@ class TransformToSymPyExpr(Transformer):
             return sympy.core.numbers.Float(tokens[0])
         else:
             return sympy.core.numbers.Integer(tokens[0])
-
-    def latex_string(self, tokens):
-        return tokens[0]
-
-    # def infinity(self, tokens):
-    #     return sympy.oo
 
     def group_round_parentheses(self, tokens):
         return tokens[1]
