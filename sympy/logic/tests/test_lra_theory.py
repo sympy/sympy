@@ -8,9 +8,10 @@ from sympy.assumptions.ask import Q
 from sympy.logic.boolalg import And
 from sympy.abc import x, y, z
 from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.functions.elementary.trigonometric import cos
 from sympy.external import import_module
 
-from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledNumber, LRARational, HANDLE_NEGATION
+from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARational, HANDLE_NEGATION
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
@@ -425,20 +426,29 @@ def test_unhandled_input():
 
     bf = Q.gt(3, I) & Q.gt(x, I)
     enc = boolean_formula_to_encoded_cnf(bf)
-    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
     bf = Q.gt(3, float("inf")) & Q.gt(x, float("inf"))
     enc = boolean_formula_to_encoded_cnf(bf)
-    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
     bf = Q.gt(3, oo) & Q.gt(x, oo)
     enc = boolean_formula_to_encoded_cnf(bf)
-    raises(UnhandledNumber, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
     X = MatrixSymbol("X", 2, 2)
     bf = Q.gt(x, 2) & Q.gt(3, X)
     enc = boolean_formula_to_encoded_cnf(bf)
     raises(ValueError, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    # test non-linearity
+    bf = Q.gt(x**2 + x, 2)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
+
+    bf = Q.gt(cos(x) + x, 2)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
 @XFAIL
 def test_infinite_strict_inequalities():
