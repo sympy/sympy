@@ -260,6 +260,12 @@ class TransformToSymPyExpr(Transformer):
 
         return sympy.Limit(tokens[-1], limit_variable, destination, direction)
 
+    def differential(self, tokens):
+        return tokens[1]
+
+    def derivative(self, tokens):
+        return sympy.Derivative(tokens[-1], tokens[5])
+
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
             # we return it verbatim because the function_applied node expects
