@@ -226,6 +226,15 @@ class LRASolver():
         >>> conflicts #doctest: +SKIP
         [[4]]
         """
+        # This function has three main jobs:
+        # - raise errors if the input formula is not handled
+        # - preprocesses the formula into a matirx and single variable constraints
+        # - create one-literal conflict clauses from predicates that are always True
+        #   or always False such as Q.gt(3, 2)
+        #
+        # See the preprocessing section of "A Fast Linear-Arithmetic Solver for DPLL(T)"
+        # for an explanation of how the formula is converted into a matrix
+        # and a set of single variable constraints.
 
         encoding = {}  # maps int to boundary
         A = []
@@ -288,8 +297,6 @@ class LRASolver():
             var, var_coeff = sep_const_coeff(var)
             const = const / var_coeff
 
-            # replace each term in expr with dummy _xi variable
-            # e.g.: -x -2*y + z --> [_x3, -_x1, -2*_x2]
             terms = []
             for term in list_terms(var):
                 assert not isinstance(term, Add)
@@ -348,7 +355,11 @@ class LRASolver():
     def assert_lit(self, enc_constraint):
         """
         Assert a literal representing a constraint
-        and update the interal state accordingly.
+        and update the internal state accordingly.
+
+        Note that due to peculiarities of this implementation
+        asserting ~(x > 0) will assert (x <= 0) but asserting
+        ~Eq(x, 0) will not do anything.
 
         Parameters
         ==========
@@ -405,6 +416,14 @@ class LRASolver():
         return res
 
     def _assert_upper(self, xi, ci, from_equality=False, from_neg=False):
+        """
+        Adjusts the upper bound on variable xi if the new upper bound is
+        more limiting. The assignment of variable xi is adjusted to be
+        within the new bound if needed.
+
+        Also calls `self._update` to update the assignment for slack variables
+        to keep all equalities satisfied.
+        """
         if self.result:
             assert self.result[0] != False
         self.result = None
@@ -439,6 +458,14 @@ class LRASolver():
         return None
 
     def _assert_lower(self, xi, ci, from_equality=False, from_neg=False):
+        """
+        Adjusts the lower bound on variable xi if the new lower bound is
+        more limiting. The assignment of variable xi is adjusted to be
+        within the new bound if needed.
+
+        Also calls `self._update` to update the assignment for slack variables
+        to keep all equalities satisfied.
+        """
         if self.result:
             assert self.result[0] != False
         self.result = None
@@ -473,6 +500,10 @@ class LRASolver():
         return None
 
     def _update(self, xi, v):
+        """
+        Updates all slack variables that have equations that contain
+        variable xi so that they stay satisfied given xi is equal to v.
+        """
         i = xi.col_idx
         for j, b in enumerate(self.slack):
             aji = self.A[j, i]
