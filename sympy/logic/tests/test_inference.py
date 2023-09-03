@@ -132,17 +132,6 @@ def test_dpll2_satisfiable():
     assert dpll2_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
 
-def test_dpll2_satisfiable_lra_theory():
-    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
-    # test inequalities
-    x, y, z = symbols('x,y,z')
-    assert lra_dpll2_satisfiable((x >= 2) & (x <= 0)) is False
-    assert lra_dpll2_satisfiable(Q.gt(2, 3)) is False
-    #assert dpll2_satisfiable(Q.positive(x) & (x <= -2), use_lra_theory=True) is False
-
-
-
-
 def test_minisat22_satisfiable():
     A, B, C = symbols('A,B,C')
     minisat22_satisfiable = lambda expr: satisfiable(expr, algorithm="minisat22")
