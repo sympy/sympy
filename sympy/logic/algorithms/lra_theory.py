@@ -154,7 +154,7 @@ class LRASolver():
         Use the "from_encoded_cnf" method to create a new LRASolver.
         """
         self.run_checks = testing_mode
-        self.s_subs = s_subs  # used only for testing; maps what a slack variable is equal to to each slack var
+        self.s_subs = s_subs  # used only for test_lra_theory.test_random_problems
 
         if any(not isinstance(a, Rational) for a in A):
             raise UnhandledNumber
@@ -163,11 +163,10 @@ class LRASolver():
         m, n = len(slack_variables), len(slack_variables)+len(nonslack_variables)
         if m != 0:
             assert A.shape == (m, n)
-
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundary = enc_to_boundary
+        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundry objects
         self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
         self.A = A
         self.slack = slack_variables
@@ -176,7 +175,7 @@ class LRASolver():
 
         self.slack_set = set(slack_variables)
 
-        self.is_sat = True
+        self.is_sat = True  # While True, all constraints asserted so far are satisfiable
         self.result = None  # always one of: (True, assignment), (False, conflict clause), None
 
     @staticmethod
@@ -245,10 +244,10 @@ class LRASolver():
         nonbasic = []
 
         if testing_mode:
+            # sort to reduce nondeterminism
             encoded_cnf_items = sorted(encoded_cnf.encoding.items(), key=lambda x: str(x))
         else:
             encoded_cnf_items = encoded_cnf.encoding.items()
-
 
         empty_var = Dummy()
         var_to_lra_var = {}
@@ -266,7 +265,6 @@ class LRASolver():
                     continue
 
                 raise ValueError(f"Unhandled Predicate: {prop}")
-
 
             assert prop.function in ALLOWED_PRED
             if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
@@ -525,7 +523,6 @@ class LRASolver():
         """
         if self.is_sat:
             return True, {var: var.assign for var in self.all_var}
-
         if self.result:
             return self.result
 
