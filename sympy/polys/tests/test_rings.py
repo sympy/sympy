@@ -1505,7 +1505,7 @@ def test_monomial_extract():
     assert result == ([x**2, x**2 + x, x + y], y)
 
 def test_gcd_coeffs():
-    coeff_lst = [6, 8, 4]
+    coeff_lst = [ZZ(6), ZZ(8), ZZ(4)]
     assert gcd_coeffs(coeff_lst, ZZ) == 2
 
 def test_gcd_preprocess_polys():

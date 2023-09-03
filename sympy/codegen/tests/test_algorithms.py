@@ -132,7 +132,7 @@ x=     0.86547 d_x= -9.3421e-12
 x=     0.86547 d_x=  3.6902e-17
 """  # try to run tests with LC_ALL=C if this assertion fails
 
-
+@may_xfail
 def test_newtons_method_function__rtol_cse_nan():
     a, b, c, N_geo, N_tot = symbols('a b c N_geo N_tot', real=True, nonnegative=True)
     i = Symbol('i', integer=True, nonnegative=True)

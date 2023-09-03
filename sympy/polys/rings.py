@@ -19,6 +19,7 @@ from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps, monomial_ngcd
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import (
@@ -2192,13 +2193,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else: # TODO: don't use dense representation (port PRS algorithms)
-            return ring.dmp_inner_gcd(f, g)
+            h = _gcd_prs(f, g).monic()
+            cff = f.quo(h)
+            cfg = g.quo(h)
+            return h, cff, cfg
 
     def _gcd_ZZ(f, g):
-        h = _gcd_prs(f, g)
-        cff = f.div(h)[0]
-        cfg = g.div(h)[0]
-        return h, cff, cfg
+        return heugcd(f, g)
 
     def _gcd_QQ(self, g):
         f = self
@@ -3124,8 +3125,6 @@ def cont_prim(p, x):
 
     coeffs = p.coeff_split({x})
     cont = gcd_prs(coeffs)
-    # print("P =", p)
-    # print("cont =", cont)
     prim = p.exquo(cont)
     return cont, prim
 
@@ -3182,7 +3181,7 @@ def gcd_coeffs(coeff_lst, domain):
 
     >>> from sympy.polys.rings import gcd_coeffs
     >>> from sympy import ZZ
-    >>> coeff_lst = [12, 18, 24]
+    >>> coeff_lst = [ZZ(12), ZZ(18), ZZ(24)]
     >>> domain = ZZ
     >>> gcd_coeffs(coeff_lst, domain)
     6
@@ -3195,7 +3194,7 @@ def gcd_coeffs(coeff_lst, domain):
         res = gcd(res, coeff)
         if res == domain.one:
             break
-    return sympify(str(res))
+    return res
 
 def _gcd_preprocess_polys(polynomials):
     """
@@ -3256,7 +3255,7 @@ def _gcd_preprocess_polys(polynomials):
             all_polys.extend(coeffs_i)
 
             # Quick exit:
-            if any((len(c)) == 1 for c in coeffs_i):
+            if any(len(c) == 1 for c in coeffs_i):
                 ring = polynomials[0].ring
                 domain = ring.domain
                 gcd = gcd_terms((all_polys + polynomials[i+1:]), ring, domain)
@@ -3371,6 +3370,6 @@ def gcd_terms(polynomials, ring, domain):
 
     monom_gcd = monomial_ngcd(monomials)
     coeff_gcd = gcd_coeffs(coeffs, domain)
-    term_gcd = ring({monom_gcd: sympify(coeff_gcd)})
+    term_gcd = ring({monom_gcd: coeff_gcd})
 
     return term_gcd
