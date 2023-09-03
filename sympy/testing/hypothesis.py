@@ -1,7 +1,5 @@
 from hypothesis import strategies as st
 from hypothesis import assume
-from hypothesis.strategies import data
-
 from sympy.abc import x
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly, lcm, gcd
