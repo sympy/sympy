@@ -7,11 +7,12 @@ from sympy.parsing.latex.errors import LaTeXParsingError
 lark = import_module("lark")
 
 if lark:
-    from lark import Transformer, Token # type: ignore
+    from lark import Transformer, Token  # type: ignore
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
             pass
+
 
     class Token:  # type: ignore
         pass
@@ -97,7 +98,7 @@ class TransformToSymPyExpr(Transformer):
         elif relation_type == "GTE":
             return sympy.Ge(tokens[0], tokens[2])
         else:
-            raise LaTeXParsingError() # TODO: Fill descriptive error message.
+            raise LaTeXParsingError("An unsupported relational symbol was found.")
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2])
@@ -113,8 +114,7 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Mul(tokens[0], tokens[1])
         elif len(tokens) == 3:
             return sympy.Mul(tokens[0], tokens[2])
-        else:
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+        # No other case can happen because of the way the `mul` rule is defined
 
     def div(self, tokens):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
@@ -153,16 +153,20 @@ class TransformToSymPyExpr(Transformer):
             differential_symbol_index = tokens.index(r"\mathrm{d}")
         else:
             # differential symbol was not found
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+            raise LaTeXParsingError("Differential symbol was not found in the expression."
+                                    "Valid differential symbols are \"d\", \"\\text{d}, and \"\\mathrm{d}\".")
 
         differential_symbol = tokens[differential_symbol_index + 1]
 
-        if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
+        # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would
+        # evaluate to `True` if the `lower_bound` is 0 and upper bound is non-zero
+        if lower_bound is not None and upper_bound is None:
             # then one was given and the other wasn't
+            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not found.")
 
-            # we can"t simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
-            # to True if the lower_bound is 0
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+        if upper_bound is not None and lower_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not found.")
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
         if underscore_index is not None and underscore_index == differential_symbol_index - 2:
@@ -170,17 +174,16 @@ class TransformToSymPyExpr(Transformer):
         elif caret_index is not None and caret_index == differential_symbol_index - 2:
             integrand = 1
         elif differential_symbol_index == 1:
-            # this means we have something like \int dx, because the \int symbol will always be
+            # this means we have something like "\int dx", because the "\int" symbol will always be
             # at index 0 in `tokens`
             integrand = 1
         else:
             integrand = tokens[differential_symbol_index - 1]
 
         if lower_bound is not None:
-            # we have an definite integral
+            # we have a definite integral
 
-            # we can assume that either both the lower and upper bounds are given, or
-            # neither of them are
+            # we can assume that either both the lower and upper bounds are given, or neither of them are
             return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
         else:
             # we have an indefinite integral
@@ -267,8 +270,8 @@ class TransformToSymPyExpr(Transformer):
             def remove_tokens(args):
                 if isinstance(args, Token):
                     if args.type != "COMMA":
-                        # an unexpected token was encountered
-                        raise LaTeXParsingError()  # TODO: write descriptive error message
+                        # An unexpected token was encountered
+                        raise LaTeXParsingError("A comma token was expected, but some other token was encountered.")
                     return False
                 return True
 
@@ -284,17 +287,14 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Max(*tokens[2])
 
     def bra(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Bra
         return Bra(tokens[1])
 
     def ket(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Ket
         return Ket(tokens[1])
 
     def inner_product(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Bra, Ket, InnerProduct
         return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
 
