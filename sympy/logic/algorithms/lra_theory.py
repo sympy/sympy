@@ -529,41 +529,14 @@ class LRASolver():
         if self.result:
             return self.result
 
-        def _debug_internal_state_printer1(iteration, A, bas, variables):
-            if not SYMPY_DEBUG:
-                return
-            import sys
-            from sympy.matrices.dense import Matrix
-            from sympy import pprint
-
-            bvar = [None]*len(bas)
-            for v, idx in bas.items():
-                bvar[idx] = v
-
-            r1 = Matrix([variables])
-            c1 = Matrix(bvar)
-            corner = Matrix([[iteration]])
-
-            tableau = Matrix([[corner, r1], [c1, A]])
-            pprint(tableau)
-            sys.stderr.write("\n")
-            sys.stderr.write(f"{self.assign}\n")
-            for v in self.upper:
-                sys.stderr.write(str(self.lower[v]) + " <= " + str(v) + " <= " + str(self.upper[v]) + "\n")
-
-        def _debug_internal_state_printer2(xi, xj):
-            if not SYMPY_DEBUG:
-                return
-            import sys
-            sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
-
         from sympy.matrices.dense import Matrix
         M = self.A.copy()
         basic = {s: i for i, s in enumerate(self.slack)}  # contains the row index associated with each basic variable
         nonbasic = set(self.nonslack)
         iteration = 0
         while True:
-            iteration += 1; _debug_internal_state_printer1(iteration, M, basic, self.all_var)
+            iteration += 1
+            _debug_internal_state_printer1(iteration, M, basic, self.all_var, self)
 
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -709,6 +682,17 @@ class LRASolver():
 
 
 def _sep_const_coeff(expr):
+    """
+    Example
+    =======
+
+    >>> from sympy.logic.algorithms.lra_theory import _sep_const_coeff
+    >>> from sympy.abc import x, y
+    >>> _sep_const_coeff(2*x)
+    (x, 2)
+    >>> _sep_const_coeff(2*x + 3*y)
+    (2*x + 3*y, 1)
+    """
     if isinstance(expr, Add):
         return expr, sympify(1)
 
@@ -735,6 +719,15 @@ def _list_terms(expr):
 
 
 def _sep_const_terms(expr):
+    """
+    Example
+    =======
+
+    >>> from sympy.logic.algorithms.lra_theory import _sep_const_terms
+    >>> from sympy.abc import x, y
+    >>> _sep_const_terms(2*x + 3*y + 2)
+    (2*x + 3*y, 2)
+    """
     if isinstance(expr, Add):
         terms = expr.args
     else:
@@ -747,22 +740,6 @@ def _sep_const_terms(expr):
         else:
             var.append(t)
     return sum(var), sum(const)
-
-
-def standardize_binrel(prop):
-    assert prop.function in [Q.ge, Q.gt, Q.le, Q.lt, Q.eq]
-
-    expr = prop.lhs - prop.rhs
-    if prop.function in [Q.ge, Q.gt]:
-        expr = -expr
-    var, const = _sep_const_terms(expr)
-
-    if prop.function == Q.eq:
-        return Q.eq(var, const)
-    if prop.function in [Q.gt, Q.lt]:
-        return Q.lt(var, const)
-    else:
-        return Q.le(var, const)
 
 
 def _eval_binrel(binrel):
@@ -892,6 +869,10 @@ class LRARational():
 
 
 class LRAVariable():
+    """
+    Object to keep track of upper and lower bounds
+    on `self.var`.
+    """
     def __init__(self, var):
         self.upper = LRARational(float("inf"), 0)
         self.upper_from_eq = False
@@ -907,7 +888,40 @@ class LRAVariable():
         return repr(self.var)
 
     def __eq__(self, other):
+        if not isinstance(other, LRAVariable):
+            return False
         return other.var == self.var
 
     def __hash__(self):
         return hash(self.var)
+
+
+def _debug_internal_state_printer1(iteration, A, bas, variables, lra):
+    if not SYMPY_DEBUG:
+        return
+    import sys
+    from sympy.matrices.dense import Matrix
+    from sympy import pprint
+
+    bvar = [None]*len(bas)
+    for v, idx in bas.items():
+        bvar[idx] = v
+
+    r1 = Matrix([variables])
+    c1 = Matrix(bvar)
+    corner = Matrix([[iteration]])
+
+    tableau = Matrix([[corner, r1], [c1, A]])
+    pprint(tableau)
+    sys.stderr.write("\n")
+    assign = {v: v.assign for v in lra.all_var}
+    sys.stderr.write(f"{assign}\n")
+    for v in lra.all_var:
+        sys.stderr.write(str(v.lower) + " <= " + str(v) + " <= " + str(v.upper) + "\n")
+
+
+def _debug_internal_state_printer2(xi, xj):
+    if not SYMPY_DEBUG:
+        return
+    import sys
+    sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
