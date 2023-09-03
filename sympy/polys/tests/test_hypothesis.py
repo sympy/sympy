@@ -1,22 +1,30 @@
 from hypothesis import given
-from sympy.testing.hypothesis import polys
+from sympy.testing.hypothesis import polys, lattice_axioms_singular, lattice_axioms_dual
+from sympy.polys.polytools import lcm, gcd
 
 
 @given(
     f=polys(),
     g=polys(),
-    r=polys(),
+    h=polys(),
 )
-def test_gcd(f, g, r):
-    gcd_1 = f.gcd(g)
-    gcd_2 = g.gcd(f)
+def test_gcd(f, g, h):
+    assert lattice_axioms_singular([f, g, h], gcd)
 
-    assert gcd_1 == gcd_2
+    # multiply by h
+    gcd_h = g.gcd(f + h * g)
+    assert f.gcd(g) == gcd_h
 
-    # multiply by r
-    gcd_3 = g.gcd(f + r * g)
 
-    assert gcd_1 == gcd_3
+@given(f=polys(), g=polys(), h=polys())
+def test_lcm(f, g, h):
+    assert lattice_axioms_singular([f, g, h], lcm)
+    assert f * g == f.lcm(g) * f.gcd(g)
+
+
+@given(f=polys(), g=polys(), h=polys())
+def test_lcm_gcd(f, g, h):
+    assert lattice_axioms_dual([f, g, h], [lcm, gcd])
 
 
 @given(
@@ -53,17 +61,6 @@ def test_addition(f, g):
     h = f + g
     if h.degree() != -float("inf"):
         assert h.degree() == max(f.degree(), g.degree())
-
-
-@given(
-    f=polys(),
-    g=polys(empty=False),
-)
-def test_lcm(f, g):
-    assert f.lcm(g) == g.lcm(f)
-    assert f * g == f.lcm(g) * f.gcd(g)
-    if f.coeffs()[0] == 0 or g.coeffs()[0] == 0:
-        assert f.lcm(g) == 0
 
 
 @given(
