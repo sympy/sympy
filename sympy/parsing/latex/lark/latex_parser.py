@@ -23,7 +23,7 @@ class LarkLatexParser:
 
         self.logger = logger
         self.print_debug_output = print_debug_output
-        self.transform = transform
+        self.transform_expr = transform
 
         self.transformer = TransformToSymPyExpr()
 
@@ -33,7 +33,7 @@ class LarkLatexParser:
 
         parse_tree = self.parser.parse(s)
 
-        if not self.transform:
+        if not self.transform_expr:
             # exit early and return the parse tree
             _lark.logger.debug("expression =", s)
             _lark.logger.debug(parse_tree)
