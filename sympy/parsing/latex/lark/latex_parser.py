@@ -7,19 +7,19 @@ from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
 
+
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
-        with open(os.path.join(os.path.dirname(__file__), "latex.lark"), encoding="utf-8") as f:
-            latex_grammar = f.read()
-
-        self.parser = _lark.Lark(
-            latex_grammar, parser="earley", start="latex_string",
-            lexer="auto",
-            ambiguity="explicit",
-            debug=True,
-            propagate_positions=False,
-            maybe_placeholders=False,
-            keep_all_tokens=True)
+        self.parser = _lark.Lark.open("latex.lark",
+                                      rel_to=os.path.join(os.path.dirname(__file__), "grammar/"),
+                                      parser="earley",
+                                      start="latex_string",
+                                      lexer="auto",
+                                      ambiguity="explicit",
+                                      debug=True,
+                                      propagate_positions=False,
+                                      maybe_placeholders=False,
+                                      keep_all_tokens=True)
 
         self.logger = logger
         self.print_debug_output = print_debug_output
