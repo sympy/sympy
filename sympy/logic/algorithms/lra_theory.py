@@ -301,7 +301,7 @@ class LRASolver():
             terms = _list_terms(vars)  # example: (2x + 3y) --> [2x, 3y]
             for term in terms:
                 term, _ = _sep_const_coeff(term)
-                assert isinstance(term, Symbol)
+                assert len(term.free_symbols) > 0
                 if term not in var_to_lra_var:
                     var_to_lra_var[term] = LRAVariable(term)
                     nonbasic.append(term)
@@ -325,6 +325,12 @@ class LRASolver():
             strict = prop.function in [Q.gt, Q.lt]
             b = Boundary(var_to_lra_var[var], -const, upper, equality, strict)
             encoding[enc] = b
+
+        fs = [v.free_symbols for v in nonbasic + basic]
+        assert all(len(syms) > 0 for syms in fs)
+        fs_count = sum(len(syms) for syms in fs)
+        if len(set.union(*fs)) < fs_count:
+            raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)
         nonbasic = [var_to_lra_var[nb] for nb in nonbasic]
