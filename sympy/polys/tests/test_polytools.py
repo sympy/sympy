@@ -2078,6 +2078,10 @@ def test_gcd():
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
 
+    f = Poly(0, x)
+    g = Poly(0, x)
+    assert lcm(f, g) == 0
+
 
 def test_gcd_numbers_vs_polys():
     assert isinstance(gcd(3, 9), Integer)

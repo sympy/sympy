@@ -1639,6 +1639,9 @@ def dup_rr_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
+    if not f and not g:
+        return K.zero
+
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
 

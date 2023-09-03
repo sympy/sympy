@@ -6,8 +6,7 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
-from sympy.core.intfunc import trailing
-from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square
+from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square, bit_scan1
 from sympy.utilities.misc import as_int
 
 
@@ -41,7 +40,7 @@ def is_euler_pseudoprime(n, b):
 
     n = as_int(n)
     r = n - 1
-    c = pow(b, r >> trailing(r), n)
+    c = pow(b, r >> bit_scan1(r), n)
 
     if c == 1:
         return True
@@ -136,7 +135,7 @@ def mr(n, bases):
     if n < 2:
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
-    s = trailing(n - 1)
+    s = bit_scan1(n - 1)
     t = n >> s
     for base in bases:
         # Bases >= n are wrapped, bases < 2 are invalid
@@ -466,7 +465,7 @@ def is_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
+    s = bit_scan1(n + 1)
     k = (n + 1) >> s
 
     U, V, Qk = _lucas_sequence(n, P, Q, k)
@@ -539,7 +538,7 @@ def is_extra_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
+    s = bit_scan1(n + 1)
     k = (n + 1) >> s
 
     U, V, _ = _lucas_sequence(n, P, Q, k)

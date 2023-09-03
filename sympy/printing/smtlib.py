@@ -15,6 +15,7 @@ from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
+from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q
@@ -205,11 +206,26 @@ class SMTLibPrinter(Printer):
         return 'false'
 
     def _print_Float(self, x: Float):
-        f = x.evalf(self._precision) if self._precision else x.evalf()
-        return str(f).rstrip('0')
+        dps = prec_to_dps(x._prec)
+        str_real = mlib_to_str(x._mpf_, dps, strip_zeros=True, min_fixed=None, max_fixed=None)
+
+        if 'e' in str_real:
+            (mant, exp) = str_real.split('e')
+
+            if exp[0] == '+':
+                exp = exp[1:]
+
+            mul = self._known_functions[Mul]
+            pow = self._known_functions[Pow]
+
+            return r"(%s %s (%s 10 %s))" % (mul, mant, pow, exp)
+        elif str_real in ["+inf", "-inf"]:
+            raise ValueError("Infinite values are not supported in SMT.")
+        else:
+            return str_real
 
     def _print_float(self, x: float):
-        return str(x)
+        return self._print(Float(x))
 
     def _print_Rational(self, x: Rational):
         return self._s_expr('/', [x.p, x.q])
@@ -227,7 +243,11 @@ class SMTLibPrinter(Printer):
 
     def _print_NumberSymbol(self, x):
         name = self._known_constants.get(x)
-        return name if name else self._print_Float(x)
+        if name:
+            return name
+        else:
+            f = x.evalf(self._precision) if self._precision else x.evalf()
+            return self._print_Float(f)
 
     def _print_UndefinedFunction(self, x):
         assert self._is_legal_name(x.name)

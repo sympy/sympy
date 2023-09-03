@@ -1,6 +1,8 @@
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
+from sympy.parsing.latex.lark import parse_latex_lark # noqa
+
 from .errors import LaTeXParsingError  # noqa
 
 @doctest_depends_on(modules=('antlr4',))

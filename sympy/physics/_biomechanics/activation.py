@@ -12,15 +12,19 @@ module.
 """
 
 from abc import ABC, abstractmethod
+from functools import cached_property
 
-from sympy.matrices import Matrix
-from sympy.matrices.dense import zeros
+from sympy.core.symbol import Symbol
+from sympy.core.numbers import Float, Integer, Rational
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.matrices.dense import MutableDenseMatrix as Matrix, zeros
 from sympy.physics._biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics import dynamicsymbols
 
 
 __all__ = [
     'ActivationBase',
+    'FirstOrderActivationDeGroote2016',
     'ZerothOrderActivation',
 ]
 
@@ -45,6 +49,13 @@ class ActivationBase(ABC, _NamedMixin):
         self._e = dynamicsymbols(f"e_{name}")
         self._a = dynamicsymbols(f"a_{name}")
 
+    @classmethod
+    @abstractmethod
+    def with_defaults(cls, name):
+        """Alternate constructor that provides recommended defaults for
+        constants."""
+        pass
+
     @property
     def excitation(self):
         """Dynamic symbol representing excitation.
@@ -52,7 +63,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `e` can also be used to access the same attribute.
+        The alias ``e`` can also be used to access the same attribute.
 
         """
         return self._e
@@ -64,7 +75,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `excitation` can also be used to access the same attribute.
+        The alias ``excitation`` can also be used to access the same attribute.
 
         """
         return self._e
@@ -76,7 +87,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `a` can also be used to access the same attribute.
+        The alias ``a`` can also be used to access the same attribute.
 
         """
         return self._a
@@ -88,7 +99,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `activation` can also be used to access the same attribute.
+        The alias ``activation`` can also be used to access the same attribute.
 
         """
         return self._a
@@ -108,7 +119,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `x` can also be used to access the same attribute.
+        The alias ``x`` can also be used to access the same attribute.
 
         """
         pass
@@ -122,7 +133,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `state_vars` can also be used to access the same attribute.
+        The alias ``state_vars`` can also be used to access the same attribute.
 
         """
         pass
@@ -136,7 +147,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `r` can also be used to access the same attribute.
+        The alias ``r`` can also be used to access the same attribute.
 
         """
         pass
@@ -150,7 +161,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `input_vars` can also be used to access the same attribute.
+        The alias ``input_vars`` can also be used to access the same attribute.
 
         """
         pass
@@ -164,7 +175,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `p` can also be used to access the same attribute.
+        The alias ``p`` can also be used to access the same attribute.
 
         """
         pass
@@ -178,7 +189,7 @@ class ActivationBase(ABC, _NamedMixin):
         Explanation
         ===========
 
-        The alias `constants` can also be used to access the same attribute.
+        The alias ``constants`` can also be used to access the same attribute.
 
         """
         pass
@@ -230,6 +241,14 @@ class ActivationBase(ABC, _NamedMixin):
         """
         pass
 
+    def __eq__(self, other):
+        """Equality check for activation dynamics."""
+        if type(self) != type(other):
+            return False
+        if self.name != other.name:
+            return False
+        return True
+
     def __repr__(self):
         """Default representation of activation dynamics."""
         return f'{self.__class__.__name__}({self.name!r})'
@@ -268,6 +287,22 @@ class ZerothOrderActivation(ActivationBase):
         # overwrite the symbol for activation with the excitation symbol.
         self._a = self._e
 
+    @classmethod
+    def with_defaults(cls, name):
+        """Alternate constructor that provides recommended defaults for
+        constants.
+
+        Explanation
+        ===========
+
+        As this concrete class doesn't implement any constants associated with
+        its dynamics, this ``classmethod`` simply creates a standard instance
+        of ``ZerothOrderActivation``. An implementation is provided to ensure
+        a consistent interface between all ``ActivationBase`` concrete classes.
+
+        """
+        return cls(name)
+
     @property
     def order(self):
         """Order of the (differential) equation governing activation."""
@@ -285,7 +320,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated state variables and so this
         property return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `x` can also be used to access the same attribute.
+        The alias ``x`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -302,7 +337,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated state variables and so this
         property return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `state_vars` can also be used to access the same attribute.
+        The alias ``state_vars`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -319,7 +354,7 @@ class ZerothOrderActivation(ActivationBase):
         this property returns a column ``Matrix`` with one entry, ``e``, and
         shape (1, 1).
 
-        The alias `r` can also be used to access the same attribute.
+        The alias ``r`` can also be used to access the same attribute.
 
         """
         return Matrix([self._e])
@@ -336,7 +371,7 @@ class ZerothOrderActivation(ActivationBase):
         this property returns a column ``Matrix`` with one entry, ``e``, and
         shape (1, 1).
 
-        The alias `input_vars` can also be used to access the same attribute.
+        The alias ``input_vars`` can also be used to access the same attribute.
 
         """
         return Matrix([self._e])
@@ -353,7 +388,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated constants and so this property
         return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `p` can also be used to access the same attribute.
+        The alias ``p`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -370,7 +405,7 @@ class ZerothOrderActivation(ActivationBase):
         activation, this class has no associated constants and so this property
         return an empty column ``Matrix`` with shape (0, 1).
 
-        The alias `constants` can also be used to access the same attribute.
+        The alias ``constants`` can also be used to access the same attribute.
 
         """
         return zeros(0, 1)
@@ -414,7 +449,7 @@ class ZerothOrderActivation(ActivationBase):
         return zeros(0, 1)
 
     def rhs(self):
-        """
+        """Ordered column matrix of equations for the solution of ``M x' = F``.
 
         Explanation
         ===========
@@ -430,3 +465,354 @@ class ZerothOrderActivation(ActivationBase):
 
         """
         return zeros(0, 1)
+
+
+class FirstOrderActivationDeGroote2016(ActivationBase):
+    r"""First-order activation dynamics based on De Groote et al., 2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the first-order activation dynamics equation for the rate of change
+    of activation with respect to time as a function of excitation and
+    activation.
+
+    The function is defined by the equation:
+
+    $\frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
+        + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
+        + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
+        \left(e - a\right)$
+
+    where
+
+    $a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}$
+
+    with constant values of $tau_a = 0.015$, $tau_d = 0.060$, and $b = 10$.
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    def __init__(self,
+        name,
+        activation_time_constant=None,
+        deactivation_time_constant=None,
+        smoothing_rate=None,
+    ):
+        """Initializer for ``FirstOrderActivationDeGroote2016``.
+
+        Parameters
+        ==========
+        activation time constant : Symbol | Number | None
+            The value of the activation time constant governing the delay
+            between excitation and activation when excitation exceeds
+            activation.
+        deactivation time constant : Symbol | Number | None
+            The value of the deactivation time constant governing the delay
+            between excitation and activation when activation exceeds
+            excitation.
+        smoothing_rate : Symbol | Number | None
+            The slope of the hyperbolic tangent function used to smooth between
+            the switching of the equations where excitation exceed activation
+            and where activation exceeds excitation. The recommended value to
+            use is ``10``, but values between ``0.1`` and ``100`` can be used.
+
+        """
+        super().__init__(name)
+
+        # Symbols
+        self.activation_time_constant = activation_time_constant
+        self.deactivation_time_constant = deactivation_time_constant
+        self.smoothing_rate = smoothing_rate
+
+    @classmethod
+    def with_defaults(cls, name):
+        """Alternate constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns an instance of ``FirstOrderActivationDeGroote2016`` using the
+        three constant values specified in the original publication.
+
+        These have the values:
+
+        $tau_a = 0.015$
+        $tau_d = 0.060$
+        $b = 10$
+
+        """
+        tau_a = Float('0.015')
+        tau_d = Float('0.060')
+        b = Integer(10)
+        return cls(name, tau_a, tau_d, b)
+
+    @property
+    def activation_time_constant(self):
+        """Delay constant for activation.
+
+        Explanation
+        ===========
+
+        The alias ```tau_a`` can also be used to access the same attribute.
+
+        """
+        return self._tau_a
+
+    @activation_time_constant.setter
+    def activation_time_constant(self, tau_a):
+        if hasattr(self, '_tau_a'):
+            msg = (
+                f'Can\'t set attribute `activation_time_constant` to '
+                f'{repr(tau_a)} as it is immutable and already has value '
+                f'{self._tau_a}.'
+            )
+            raise AttributeError(msg)
+        self._tau_a = Symbol(f'tau_a_{self.name}') if tau_a is None else tau_a
+
+    @property
+    def tau_a(self):
+        """Delay constant for activation.
+
+        Explanation
+        ===========
+
+        The alias ``activation_time_constant`` can also be used to access the
+        same attribute.
+
+        """
+        return self._tau_a
+
+    @property
+    def deactivation_time_constant(self):
+        """Delay constant for deactivation.
+
+        Explanation
+        ===========
+
+        The alias ``tau_d`` can also be used to access the same attribute.
+
+        """
+        return self._tau_d
+
+    @deactivation_time_constant.setter
+    def deactivation_time_constant(self, tau_d):
+        if hasattr(self, '_tau_d'):
+            msg = (
+                f'Can\'t set attribute `deactivation_time_constant` to '
+                f'{repr(tau_d)} as it is immutable and already has value '
+                f'{self._tau_d}.'
+            )
+            raise AttributeError(msg)
+        self._tau_d = Symbol(f'tau_d_{self.name}') if tau_d is None else tau_d
+
+    @property
+    def tau_d(self):
+        """Delay constant for deactivation.
+
+        Explanation
+        ===========
+
+        The alias ``deactivation_time_constant`` can also be used to access the
+        same attribute.
+
+        """
+        return self._tau_d
+
+    @property
+    def smoothing_rate(self):
+        """Smoothing constant for the hyperbolic tangent term.
+
+        Explanation
+        ===========
+
+        The alias ``b`` can also be used to access the same attribute.
+
+        """
+        return self._b
+
+    @smoothing_rate.setter
+    def smoothing_rate(self, b):
+        if hasattr(self, '_b'):
+            msg = (
+                f'Can\'t set attribute `smoothing_rate` to {b!r} as it is '
+                f'immutable and already has value {self._b!r}.'
+            )
+            raise AttributeError(msg)
+        self._b = Symbol(f'b_{self.name}') if b is None else b
+
+    @property
+    def b(self):
+        """Smoothing constant for the hyperbolic tangent term.
+
+        Explanation
+        ===========
+
+        The alias ``smoothing_rate`` can also be used to access the same
+        attribute.
+
+        """
+        return self._b
+
+    @property
+    def order(self):
+        """Order of the (differential) equation governing activation."""
+        return 1
+
+    @property
+    def state_vars(self):
+        """Ordered column matrix of functions of time that represent the state
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``x`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._a])
+
+    @property
+    def x(self):
+        """Ordered column matrix of functions of time that represent the state
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``state_vars`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._a])
+
+    @property
+    def input_vars(self):
+        """Ordered column matrix of functions of time that represent the input
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``r`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._e])
+
+    @property
+    def r(self):
+        """Ordered column matrix of functions of time that represent the input
+        variables.
+
+        Explanation
+        ===========
+
+        The alias ``input_vars`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._e])
+
+    @property
+    def constants(self):
+        """Ordered column matrix of non-time varying symbols present in ``M``
+        and ``F``.
+
+        Explanation
+        ===========
+
+        The alias ``p`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._tau_a, self._tau_d, self._b])
+
+    @property
+    def p(self):
+        """Ordered column matrix of non-time varying symbols present in ``M``
+        and ``F``.
+
+        Explanation
+        ===========
+
+        The alias ``constants`` can also be used to access the same attribute.
+
+        """
+        return Matrix([self._tau_a, self._tau_d, self._b])
+
+    @property
+    def M(self):
+        """Ordered square matrix of coefficients on the LHS of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The square matrix that forms part of the LHS of the linear system of
+        ordinary differential equations governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([Integer(1)])
+
+    @property
+    def F(self):
+        """Ordered column matrix of equations on the RHS of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The column matrix that forms the RHS of the linear system of ordinary
+        differential equations governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([self._da_eqn])
+
+    def rhs(self):
+        """Ordered column matrix of equations for the solution of ``M x' = F``.
+
+        Explanation
+        ===========
+
+        The solution to the linear system of ordinary differential equations
+        governing the activation dynamics:
+
+        ``M(x, r, t, p) x' = F(x, r, t, p)``.
+
+        """
+        return Matrix([self._da_eqn])
+
+    @cached_property
+    def _da_eqn(self):
+        HALF = Rational(1, 2)
+        a0 = HALF * tanh(self._b * (self._e - self._a))
+        a1 = (HALF + Rational(3, 2) * self._a)
+        a2 = (HALF + a0) / (self._tau_a * a1)
+        a3 = a1 * (HALF - a0) / self._tau_d
+        activation_dynamics_equation = (a2 + a3) * (self._e - self._a)
+        return activation_dynamics_equation
+
+    def __eq__(self, other):
+        """Equality check for ``FirstOrderActivationDeGroote2016``."""
+        if type(self) != type(other):
+            return False
+        self_attrs = (self.name, self.tau_a, self.tau_d, self.b)
+        other_attrs = (other.name, other.tau_a, other.tau_d, other.b)
+        if self_attrs == other_attrs:
+            return True
+        return False
+
+    def __repr__(self):
+        """Representation of ``FirstOrderActivationDeGroote2016``."""
+        return (
+            f'{self.__class__.__name__}({self.name!r}, '
+            f'activation_time_constant={self.tau_a!r}, '
+            f'deactivation_time_constant={self.tau_d!r}, '
+            f'smoothing_rate={self.b!r})'
+        )
