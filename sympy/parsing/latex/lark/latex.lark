@@ -147,7 +147,7 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 
 //////////////////// grammar //////////////////////
 
-?start: relation | _expression
+latex_string: relation | _expression
 
 _oneletter_symbol: SYMBOL
     | BASIC_SUBSCRIPTED_SYMBOL
