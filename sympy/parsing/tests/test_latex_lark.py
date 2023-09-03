@@ -217,7 +217,7 @@ EVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
 DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d}{dx} x", Derivative(x, x)),
     (r"\frac{d}{dt} x", Derivative(x, t)),
-    (r"\frac{d}{dx} [ \tan x ]", Derivative(tan(x), x)),
+    (r"\frac{d}{dx} ( \tan x )", Derivative(tan(x), x)),
     (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
 ]
@@ -495,12 +495,19 @@ def test_integral_expressions():
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-# feature yet to be added
-@XFAIL
+
 def test_derivative_expressions():
-    for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
+    expected_failures = {3, 4}
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_trigonometric_expressions():
