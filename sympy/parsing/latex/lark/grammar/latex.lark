@@ -104,38 +104,12 @@ GTE: "\\geq" | "\\ge" | "\\geqslant"
 DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
-// Greek symbols
-// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
-ALPHA: "\\alpha"
-BETA: "\\beta"
-GAMMA: "\\gamma"
-DELTA: "\\delta" // TODO: Should this be included? Delta usually denotes other things.
-EPSILON: "\\epsilon" |  "\\varepsilon"
-ZETA: "\\zeta"
-ETA: "\\eta"
-THETA: "\\theta" | "\\vartheta"
-// TODO: Should I add iota to the list?
-KAPPA: "\\kappa"
-LAMBDA: "\\lambda" // TODO: What about the uppercase variant?
-MU: "\\mu"
-NU: "\\nu"
-XI: "\\xi"
-// TODO: Should there be a separate note for transforming \pi into sympy.pi?
-RHO: "\\rho" | "\\varrho"
-// TODO: What should we do about sigma?
-TAU: "\\tau"
-UPSILON: "\\upsilon"
-PHI: "\\phi" | "\\varphi"
-CHI: "\\chi"
-PSI: "\\psi"
-OMEGA: "\\omega"
+%import .greek_symbols.GREEK_SYMBOL
 
-GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
-    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+DIFFERENTIAL_SYMBOL: "d" | "\\text{d}" | "\\mathrm{d}"
 
-DIFFERENTIAL: "d" | "\\text{d}" | "\\mathrm{d}"
-
-SYMBOL: /[a-zA-Z]/
+// disallow "d" as a variable name because we want to parse "d" as a differential symbol.
+SYMBOL: /[a-ce-zA-Z]/
 BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
 // best to define the variant with braces like that instead of shoving it all into one case like in
@@ -192,7 +166,7 @@ _expression_power: _expression_func | superscript
 
 _expression_mul: _expression_power
     | mul | div | adjacent_expressions
-    | integral// | derivative
+    | integral | derivative
     | summation | product
     | limit
 
@@ -206,9 +180,18 @@ group_curly_parentheses_lim: L_BRACE _expression LIM_APPROACH_SYM (limit_dir_exp
 
 limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim _expression
 
-integral: FUNC_INT _expression DIFFERENTIAL _oneletter_symbol
-    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
-    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
+differential: DIFFERENTIAL_SYMBOL _oneletter_symbol
+
+_derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
+
+derivative: _derivative_operator _expression
+
+//derivative: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE _expression
+//    | CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE
+
+integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _oneletter_symbol
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
 
 group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
     | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
@@ -226,9 +209,6 @@ ambiguous_sub: _oneletter_symbol number
 fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
-
-//derivative: CMD_FRAC L_BRACE DIFFERENTIAL R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE _expression
-//    | CMD_FRAC L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE
 
 _basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
 
