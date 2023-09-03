@@ -147,18 +147,18 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 
 //////////////////// grammar //////////////////////
 
-latex_string: relation | _expression
+?start: relation | _expression
 
 _oneletter_symbol: SYMBOL
     | BASIC_SUBSCRIPTED_SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
     | GREEK_SYMBOL
-multiletter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
+multi_letter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
 number: /\d+(\.\d*)?/
 
 _atomic_expr: _oneletter_symbol
-    | multiletter_symbol
+    | multi_letter_symbol
     | number
     | CMD_INFTY
 
@@ -190,7 +190,11 @@ _expression_func: _expression_core
 
 _expression_power: _expression_func | superscript
 
-_expression_mul: _expression_power | mul | div | integral | summation | product | limit | derivative
+_expression_mul: _expression_power
+    | mul | div | adjacent_expressions
+    | integral// | derivative
+    | summation | product
+    | limit
 
 _expression: _expression_mul | add | sub
 
@@ -223,8 +227,8 @@ fraction: _basic_fraction
     | _simple_fraction
     | _general_fraction
 
-derivative: CMD_FRAC L_BRACE DIFFERENTIAL R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE _expression
-    |  CMD_FRAC L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE
+//derivative: CMD_FRAC L_BRACE DIFFERENTIAL R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE _expression
+//    | CMD_FRAC L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL _oneletter_symbol R_BRACE
 
 _basic_fraction: CMD_FRAC DIGIT (DIGIT | SYMBOL | GREEK_SYMBOL)
 
