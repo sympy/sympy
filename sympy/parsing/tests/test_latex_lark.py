@@ -21,7 +21,7 @@ from sympy.series.limits import Limit
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
 from sympy.physics.quantum import Bra, Ket, InnerProduct
-from sympy.abc import x, y, z, a, b, c, d, t, k, n
+from sympy.abc import x, y, z, a, b, c, t, k, n
 
 from .test_latex import theta, f, _Add, _Mul, _Pow, _Sqrt, _Conjugate, _Abs, _factorial, _exp, _binomial
 
@@ -351,9 +351,9 @@ UNEVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{x + y}", _Conjugate(_Add(x, y))),
     (r"\overline{x} + \overline{y}", _Conjugate(x) + _Conjugate(y)),
     (r"\min(a, b)", _Min(a, b)),
-    (r"\min(a, b, c - d, xy)", _Min(a, b, c - d, x * y)),
+    (r"\min(a, b, c - x, xy)", _Min(a, b, c - x, x * y)),
     (r"\max(a, b)", _Max(a, b)),
-    (r"\max(a, b, c - d, xy)", _Max(a, b, c - d, x * y)),
+    (r"\max(a, b, c - x, xy)", _Max(a, b, c - x, x * y)),
     # physics things don't have an `evaluate=False` variant
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
@@ -385,9 +385,9 @@ EVALUATED_COMMON_FUNCTION_EXPRESSION_PAIRS = [
     (r"\overline{x + y}", conjugate(x + y)),
     (r"\overline{x} + \overline{y}", conjugate(x) + conjugate(y)),
     (r"\min(a, b)", Min(a, b)),
-    (r"\min(a, b, c - d, xy)", Min(a, b, c - d, x * y)),
+    (r"\min(a, b, c - x, xy)", Min(a, b, c - x, x * y)),
     (r"\max(a, b)", Max(a, b)),
-    (r"\max(a, b, c - d, xy)", Max(a, b, c - d, x * y)),
+    (r"\max(a, b, c - x, xy)", Max(a, b, c - x, x * y)),
     (r"\langle x |", Bra('x')),
     (r"| x \rangle", Ket('x')),
     (r"\langle x | y \rangle", InnerProduct(Bra('x'), Ket('y'))),
