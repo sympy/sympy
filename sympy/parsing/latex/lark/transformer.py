@@ -247,8 +247,6 @@ class TransformToSymPyExpr(Transformer):
 
         integrand, differential_variable = tokens[-1]
 
-        print(f"{integrand=}")
-
         if lower_bound is not None:
             # then we have a definite integral
 
