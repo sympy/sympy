@@ -123,7 +123,7 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 
 latex_string: _relation | _expression
 
-_oneletter_symbol: SYMBOL
+_one_letter_symbol: SYMBOL
     | BASIC_SUBSCRIPTED_SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
@@ -131,7 +131,7 @@ _oneletter_symbol: SYMBOL
 multi_letter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
 number: /\d+(\.\d*)?/
 
-_atomic_expr: _oneletter_symbol
+_atomic_expr: _one_letter_symbol
     | multi_letter_symbol
     | number
     | CMD_INFTY
@@ -156,8 +156,8 @@ sub: _expression SUB _expression_mul
 mul: _expression_mul MUL_SYMBOL _expression_power
 div: _expression_mul DIV_SYMBOL _expression_power
 
-adjacent_expressions: (_oneletter_symbol | number) _expression_mul
-    | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
+adjacent_expressions: (_one_letter_symbol | number) _expression_mul
+    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
     | _function _function
     | fraction _expression
 
@@ -186,7 +186,7 @@ group_curly_parentheses_lim: L_BRACE _expression LIM_APPROACH_SYM (limit_dir_exp
 
 limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim _expression
 
-differential: DIFFERENTIAL_SYMBOL _oneletter_symbol
+differential: DIFFERENTIAL_SYMBOL _one_letter_symbol
 
 _derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
 
@@ -194,9 +194,9 @@ derivative: _derivative_operator _expression
 
 _integral: normal_integral | integral_with_special_fraction
 
-normal_integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _oneletter_symbol
-    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
-    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
+normal_integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _one_letter_symbol
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL_SYMBOL _one_letter_symbol
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _one_letter_symbol
 
 group_curly_parentheses_int: L_BRACE _expression? differential R_BRACE
 
@@ -217,7 +217,7 @@ product: FUNC_PROD group_curly_parentheses_special _expression
 
 superscript: _expression_func CARET _expression_power
 
-ambiguous_sub: _oneletter_symbol number
+ambiguous_sub: _one_letter_symbol number
 
 fraction: _basic_fraction
     | _simple_fraction
@@ -243,7 +243,7 @@ _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
 list_of_expressions: _expression ("," _expression)*
 
-function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
+function_applied: _one_letter_symbol L_PAREN list_of_expressions R_PAREN
 
 min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
 
@@ -273,7 +273,7 @@ exponential: FUNC_EXP _expression
 log: FUNC_LOG _expression
     | FUNC_LN _expression
     | FUNC_LG _expression
-    | FUNC_LOG UNDERSCORE (DIGIT | _oneletter_symbol) _expression
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression
     | FUNC_LOG UNDERSCORE group_curly_parentheses _expression
 
 square_root: FUNC_SQRT group_curly_parentheses
