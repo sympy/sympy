@@ -2192,11 +2192,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return f._gcd_QQ(g)
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
-        else: # TODO: don't use dense representation (port PRS algorithms)
-            h = _gcd_prs(f, g).monic()
-            cff = f.quo(h)
-            cfg = g.quo(h)
-            return h, cff, cfg
+        else:
+            if not ring.domain.is_Field:
+                h = _gcd_prs(f, g)
+                cff = f.quo(h)
+                cfg = g.quo(h)
+                return h, cff, cfg
+            else:
+                h = _gcd_prs(f, g).monic()
+                cff = f.quo(h)
+                cfg = g.quo(h)
+                return h, cff, cfg
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -2743,8 +2749,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if dr < dg:
                 break
 
-        c = lc_g ** N
-
+        c = lc_g ** N if N >= 0 else 0
         return r * c
 
     def pdiv(self, g, x=None):
