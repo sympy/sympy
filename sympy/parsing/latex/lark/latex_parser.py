@@ -10,16 +10,22 @@ _lark = import_module("lark")
 
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
-        self.parser = _lark.Lark.open("latex.lark",
-                                      rel_to=os.path.join(os.path.dirname(__file__), "grammar/"),
-                                      parser="earley",
-                                      start="latex_string",
-                                      lexer="auto",
-                                      ambiguity="explicit",
-                                      debug=True,
-                                      propagate_positions=False,
-                                      maybe_placeholders=False,
-                                      keep_all_tokens=True)
+        grammar_dir_path = os.path.join(os.path.dirname(__file__), "grammar/")
+
+        with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
+            latex_grammar = f.read()
+
+        self.parser = _lark.Lark(
+            latex_grammar,
+            source_path=grammar_dir_path,
+            parser="earley",
+            start="latex_string",
+            lexer="auto",
+            ambiguity="explicit",
+            debug=True,
+            propagate_positions=False,
+            maybe_placeholders=False,
+            keep_all_tokens=True)
 
         self.logger = logger
         self.print_debug_output = print_debug_output
