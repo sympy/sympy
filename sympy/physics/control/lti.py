@@ -3752,12 +3752,6 @@ class StateSpace(LinearTimeInvariant):
         """
         return self._D.rows
 
-    def __neg__(self):
-        """
-        Returns the negation of the state space model.
-        """
-        return StateSpace(self._A, self._B, -self._C, -self._D)
-
     def _eval_evalf(self, prec):
         """
         Returns state space model where numerical expressions are evaluated into floating point numbers.
@@ -3794,6 +3788,101 @@ class StateSpace(LinearTimeInvariant):
         to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
         tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
         return tf_mat
+
+    def __add__(self, other):
+        """
+        Add two State Space systems (parallel connection).
+        """
+        # Check for scalars
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            B = self._B
+            C = self._C
+            D = self._D.applyfunc(lambda element: element + other)
+
+        else:
+            # Check nature of system
+            if not isinstance(other, StateSpace):
+                raise ValueError("Addition is only supported for 2 State Space models.")
+            # Check dimensions of system
+            elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
+                raise ValueError("Systems with incompatible inputs and outputs cannot be added.")
+
+            m1 = (self._A).row_join(zeros(self._A.shape[0], other._A.shape[-1]))
+            m2 = zeros(other._A.shape[0], self._A.shape[-1]).row_join(other._A)
+
+            A = m1.col_join(m2)
+            B = self._B.col_join(other._B)
+            C = self._C.row_join(other._C)
+            D = self._D + other._D
+
+        return StateSpace(A, B, C, D)
+
+    def __radd__(self, other):
+        """
+        Right add two State Space systems.
+        """
+        return self + other
+
+    def __sub__(self, other):
+        """
+        Subtract two State Space systems.
+        """
+        return self + (-other)
+
+    def __rsub__(self, other):
+        """
+        Right subtract two tate Space systems.
+        """
+        return other + (-self)
+
+    def __neg__(self):
+        """
+        Returns the negation of the state space model.
+        """
+        return StateSpace(self._A, self._B, -self._C, -self._D)
+
+    def __mul__(self, other):
+        """
+        Multiplication of two State Space systems (serial connection).
+        """
+        # Check for scalars
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            B = self._B
+            C = self._C.applyfunc(lambda element: element*other)
+            D = self._D.applyfunc(lambda element: element*other)
+
+        else:
+            # Check nature of system
+            if not isinstance(other, StateSpace):
+                raise ValueError("Multiplication is only supported for 2 State Space models.")
+            # Check dimensions of system
+            elif self.num_inputs != other.num_outputs:
+                raise ValueError("Systems with incompatible inputs and outputs cannot be multiplied.")
+
+            m1 = (other._A).row_join(zeros(other._A.shape[0], self._A.shape[1]))
+            m2 = (self._B * other._C).row_join(self._A)
+
+            A = m1.col_join(m2)
+            B = (other._B).col_join(self._B * other._D)
+            C = (self._D * other._C).row_join(self._C)
+            D = self._D * other._D
+
+        return StateSpace(A, B, C, D)
+
+    def __rmul__(self, other):
+        """
+        Right multiply two tate Space systems.
+        """
+        if isinstance(other, (int, float, complex, Symbol)):
+            A = self._A
+            C = self._C
+            B = self._B.applyfunc(lambda element: element*other)
+            D = self._D.applyfunc(lambda element: element*other)
+            return StateSpace(A, B, C, D)
+        else:
+            return self*other
 
     def __repr__(self):
         A_str = self._A.__repr__()
