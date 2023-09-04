@@ -5,6 +5,8 @@ from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import I
 
+from sympy.testing.pytest import raises
+
 def test_lra_satask():
     x = symbols("x", real=True)
     im = Symbol('im', imaginary=True)
@@ -20,7 +22,7 @@ def test_lra_satask():
 
     # check that True/False are handled
     assert lra_satask(Q.gt(x, 0), True) is None
-    assert lra_satask(Q.gt(x, 0), False) is None
+    assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
 
     # check imaginary numbers are correctly handled
     assert lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)) is None  # (im * I).is_real returns True so this is an edge case
