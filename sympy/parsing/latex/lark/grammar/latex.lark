@@ -121,7 +121,7 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 
 //////////////////// grammar //////////////////////
 
-latex_string: relation | _expression
+latex_string: _relation | _expression
 
 _oneletter_symbol: SYMBOL
     | BASIC_SUBSCRIPTED_SYMBOL
@@ -140,7 +140,13 @@ group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
 group_curly_parentheses: L_BRACE _expression R_BRACE
 
-relation: _expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) _expression
+_relation: eq | ne | lt | lte | gt | gte
+eq: _expression EQUAL _expression
+ne: _expression NOT_EQUAL _expression
+lt: _expression LT _expression
+lte: _expression LTE _expression
+gt: _expression GT _expression
+gte: _expression GTE _expression
 
 _expression_core: _atomic_expr | group_curly_parentheses
 
@@ -185,9 +191,6 @@ differential: DIFFERENTIAL_SYMBOL _oneletter_symbol
 _derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
 
 derivative: _derivative_operator _expression
-
-//derivative: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE _expression
-//    | CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE L_BRACE DIFFERENTIAL_SYMBOL _oneletter_symbol R_BRACE
 
 integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _oneletter_symbol
     | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
