@@ -106,7 +106,9 @@ MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
 %import .greek_symbols.GREEK_SYMBOL
 
-DIFFERENTIAL_SYMBOL: "d" | "\\text{d}" | "\\mathrm{d}"
+UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+LOWERCASE_LETTER_D: "d"
+DIFFERENTIAL_SYMBOL: LOWERCASE_LETTER_D | UPRIGHT_DIFFERENTIAL_SYMBOL
 
 // disallow "d" as a variable name because we want to parse "d" as a differential symbol.
 SYMBOL: /[a-ce-zA-Z]/
@@ -124,6 +126,7 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 latex_string: _relation | _expression
 
 _one_letter_symbol: SYMBOL
+    | LOWERCASE_LETTER_D
     | BASIC_SUBSCRIPTED_SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
@@ -141,6 +144,7 @@ group_square_brackets: L_BRACKET _expression R_BRACKET
 group_curly_parentheses: L_BRACE _expression R_BRACE
 
 _relation: eq | ne | lt | lte | gt | gte
+
 eq: _expression EQUAL _expression
 ne: _expression NOT_EQUAL _expression
 lt: _expression LT _expression
@@ -166,13 +170,12 @@ _expression_func: _expression_core
     | fraction
     | binomial
     | _function
-    | ambiguous_sub
 
 _expression_power: _expression_func | superscript
 
 _expression_mul: _expression_power
     | mul | div | adjacent_expressions
-    | _integral | derivative
+    | _integral// | derivative
     | summation | product
     | limit
 
@@ -188,9 +191,9 @@ limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim _expression
 
 differential: DIFFERENTIAL_SYMBOL _one_letter_symbol
 
-_derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
+//_derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
 
-derivative: _derivative_operator _expression
+//derivative: _derivative_operator _expression
 
 _integral: normal_integral | integral_with_special_fraction
 
@@ -216,8 +219,6 @@ product: FUNC_PROD group_curly_parentheses_special _expression
     | FUNC_PROD group_curly_parentheses_special _expression
 
 superscript: _expression_func CARET _expression_power
-
-ambiguous_sub: _one_letter_symbol number
 
 fraction: _basic_fraction
     | _simple_fraction
