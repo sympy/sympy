@@ -167,16 +167,24 @@ class TransformToSymPyExpr(Transformer):
             raise LaTeXParsingError() # TODO: fill out descriptive error message
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
-        if underscore_index is not None and underscore_index == differential_variable_index - 2:
+        if underscore_index is not None and underscore_index == differential_variable_index - 3:
+            # The Token at differential_variable_index - 2 should be the integrand. However, if going one more step
+            # backwards after that gives us the underscore, then that means that there _was_ no integrand.
+            # Example: \int^7_0 dx
             integrand = 1
-        elif caret_index is not None and caret_index == differential_variable_index - 2:
+        elif caret_index is not None and caret_index == differential_variable_index - 3:
+            # The Token at differential_variable_index - 2 should be the integrand. However, if going one more step
+            # backwards after that gives us the caret, then that means that there _was_ no integrand.
+            # Example: \int_0^7 dx
             integrand = 1
-        elif differential_variable_index == 1:
+        elif differential_variable_index == 2:
             # this means we have something like \int dx, because the \int symbol will always be
             # at index 0 in `tokens`
             integrand = 1
         else:
-            integrand = tokens[differential_variable_index - 1]
+            # The Token at differential_variable_index - 1 is the differential symbol itself, so we need to go one
+            # more step before that.
+            integrand = tokens[differential_variable_index - 2]
 
         if lower_bound is not None:
             # we have an definite integral
