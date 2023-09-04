@@ -3806,7 +3806,7 @@ class StateSpace(LinearTimeInvariant):
                 raise ValueError("Addition is only supported for 2 State Space models.")
             # Check dimensions of system
             elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
-                raise ValueError("Systems with incompatible inputs and outputs cannot be added.")
+                raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
 
             m1 = (self._A).row_join(zeros(self._A.shape[0], other._A.shape[-1]))
             m2 = zeros(other._A.shape[0], self._A.shape[-1]).row_join(other._A)
@@ -3859,7 +3859,7 @@ class StateSpace(LinearTimeInvariant):
                 raise ValueError("Multiplication is only supported for 2 State Space models.")
             # Check dimensions of system
             elif self.num_inputs != other.num_outputs:
-                raise ValueError("Systems with incompatible inputs and outputs cannot be multiplied.")
+                raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
 
             m1 = (other._A).row_join(zeros(other._A.shape[0], self._A.shape[1]))
             m2 = (self._B * other._C).row_join(self._A)
