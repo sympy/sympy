@@ -1084,8 +1084,8 @@ def wigner_d_small(J, beta):
         for j, Mj in enumerate(M):
 
             # We get the maximum and minimum value of sigma.
-            sigmamax = max([-Mi-Mj, J-Mj])
-            sigmamin = min([0, J-Mi])
+            sigmamax = min([J-Mi, J-Mj])
+            sigmamin = max([0, -Mi-Mj])
 
             dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
                        factorial(J+Mj)/factorial(J-Mj))
