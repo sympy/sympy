@@ -172,7 +172,7 @@ _expression_power: _expression_func | superscript
 
 _expression_mul: _expression_power
     | mul | div | adjacent_expressions
-    | integral | derivative
+    | _integral | derivative
     | summation | product
     | limit
 
@@ -192,9 +192,19 @@ _derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE diffe
 
 derivative: _derivative_operator _expression
 
-integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _oneletter_symbol
-    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
+_integral: normal_integral | integral_with_special_fraction
+
+normal_integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _oneletter_symbol
     | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _oneletter_symbol
+
+group_curly_parentheses_int: L_BRACE _expression? differential R_BRACE
+
+special_fraction: CMD_FRAC group_curly_parentheses_int group_curly_parentheses
+
+integral_with_special_fraction: FUNC_INT special_fraction
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? special_fraction
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? special_fraction
 
 group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
     | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
