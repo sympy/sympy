@@ -135,7 +135,7 @@ class TransformToSymPyExpr(Transformer):
     def binomial(self, tokens):
         return sympy.binomial(tokens[1], tokens[2])
 
-    def integral(self, tokens):
+    def normal_integral(self, tokens):
         underscore_index = None
         caret_index = None
 
@@ -191,6 +191,63 @@ class TransformToSymPyExpr(Transformer):
             # The Token at differential_variable_index - 1 is the differential symbol itself, so we need to go one
             # more step before that.
             integrand = tokens[differential_variable_index - 2]
+
+        if lower_bound is not None:
+            # then we have a definite integral
+
+            # we can assume that either both the lower and upper bounds are given, or
+            # neither of them are
+            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+        else:
+            # we have an indefinite integral
+            return sympy.Integral(integrand, differential_variable)
+
+    def group_curly_parentheses_int(self, tokens):
+        # return signature is a tuple consisting of the expression in the numerator, along with the variable of
+        # integration
+        if len(tokens) == 3:
+            return 1, tokens[1]
+        elif len(tokens) == 4:
+            return tokens[1], tokens[2]
+        # there are no other possibilities
+
+    def special_fraction(self, tokens):
+        numerator, variable = tokens[1]
+        denominator = tokens[2]
+
+        # We pass the integrand, along with information about the variable of integration, upw
+        return sympy.Mul(numerator, sympy.Pow(denominator, -1)), variable
+
+    def integral_with_special_fraction(self, tokens):
+        underscore_index = None
+        caret_index = None
+
+        if "_" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the lower bound of the integral
+            underscore_index = tokens.index("_")
+
+        if "^" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the upper bound of the integral
+            caret_index = tokens.index("^")
+
+        lower_bound = tokens[underscore_index + 1] if underscore_index else None
+        upper_bound = tokens[caret_index + 1] if caret_index else None
+
+        # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would
+        # evaluate to `True` if the `lower_bound` is 0 and upper bound is non-zero
+        if lower_bound is not None and upper_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not found.")
+
+        if upper_bound is not None and lower_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not found.")
+
+        integrand, differential_variable = tokens[-1]
+
+        print(f"{integrand=}")
 
         if lower_bound is not None:
             # then we have a definite integral
