@@ -74,6 +74,9 @@ def check_satisfiability(prop, _prop, factbase):
     if not can_be_true and can_be_false:
         return False
 
+    if not can_be_true and not can_be_false:
+        raise ValueError("Inconsistent assumptions")
+
 
 class UnhandledPred(Exception):
     pass
