@@ -127,8 +127,6 @@ from sympy.core.symbol import Symbol
 from sympy import SYMPY_DEBUG
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
-from sympy.matrices.common import MatrixKind
-from sympy.core.kind import NumberKind
 
 class UnhandledInput(Exception):
     """
@@ -271,8 +269,6 @@ class LRASolver():
                 raise ValueError(f"Unhandled Predicate: {prop}")
 
             assert prop.function in ALLOWED_PRED
-            if prop.lhs.kind == MatrixKind(NumberKind) or prop.rhs.kind == MatrixKind(NumberKind):
-                raise ValueError(f"{prop} contains matrix variables")
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 raise ValueError(f"{prop} contains nan")
             if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
@@ -329,7 +325,7 @@ class LRASolver():
         fs = [v.free_symbols for v in nonbasic + basic]
         assert all(len(syms) > 0 for syms in fs)
         fs_count = sum(len(syms) for syms in fs)
-        if len(set.union(*fs)) < fs_count:
+        if len(fs) > 0 and  len(set.union(*fs)) < fs_count:
             raise UnhandledInput("Nonlinearity is not handled")
 
         A, _ = linear_eq_to_matrix(A, nonbasic + basic)

@@ -16,8 +16,6 @@ from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
 
-from sympy.matrices.expressions.matexpr import MatrixSymbol
-
 from sympy.testing.pytest import raises, XFAIL, skip
 import time
 
@@ -436,11 +434,6 @@ def test_unhandled_input():
     enc = boolean_formula_to_encoded_cnf(bf)
     raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
-    X = MatrixSymbol("X", 2, 2)
-    bf = Q.gt(x, 2) & Q.gt(3, X)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    raises(ValueError, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
-
     # test non-linearity
     bf = Q.gt(x**2 + x, 2)
     enc = boolean_formula_to_encoded_cnf(bf)
@@ -501,3 +494,12 @@ def test_reset_bounds():
         assert var.assign == LRARational(0, 0)
         assert var.var is not None
         assert var.col_idx is not None
+
+
+def test_empty_cnf():
+    cnf = CNF()
+    enc = EncodedCNF()
+    enc.from_cnf(cnf)
+    lra, conflict = LRASolver.from_encoded_cnf(enc)
+    assert len(conflict) == 0
+    assert lra.check() == (True, {})

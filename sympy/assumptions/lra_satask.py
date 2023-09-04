@@ -2,7 +2,9 @@ from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
-from sympy.logic.algorithms.lra_theory import UnhandledNumber, ALLOWED_PRED
+from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
+from sympy.matrices.common import MatrixKind
+from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.mul import Mul
 
@@ -50,6 +52,8 @@ def check_satisfiability(prop, _prop, factbase):
                 return None
             exprs = pred.arguments
             for expr in exprs:
+                if expr.kind == MatrixKind(NumberKind):
+                    return None
                 if expr.is_real is not True:
                     return None
                 if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
@@ -58,7 +62,7 @@ def check_satisfiability(prop, _prop, factbase):
     try:
         can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
         can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
-    except UnhandledNumber:
+    except UnhandledInput:
         return None
 
     if can_be_true and can_be_false:
