@@ -82,22 +82,23 @@ class TransformToSymPyExpr(Transformer):
     def group_curly_parentheses(self, tokens):
         return tokens[1]
 
-    def relation(self, tokens):
-        relation_type = tokens[1].type
-        if relation_type == "EQUAL":
-            return sympy.Eq(tokens[0], tokens[2])
-        elif relation_type == "NOT_EQUAL":
-            return sympy.Ne(tokens[0], tokens[2])
-        elif relation_type == "LT":
-            return sympy.Lt(tokens[0], tokens[2])
-        elif relation_type == "LTE":
-            return sympy.Le(tokens[0], tokens[2])
-        elif relation_type == "GT":
-            return sympy.Gt(tokens[0], tokens[2])
-        elif relation_type == "GTE":
-            return sympy.Ge(tokens[0], tokens[2])
-        else:
-            raise LaTeXParsingError() # TODO: Fill descriptive error message.
+    def eq(self, tokens):
+        return sympy.Eq(tokens[0], tokens[2])
+
+    def ne(self, tokens):
+        return sympy.Ne(tokens[0], tokens[2])
+
+    def lt(self, tokens):
+        return sympy.Lt(tokens[0], tokens[2])
+
+    def lte(self, tokens):
+        return sympy.Le(tokens[0], tokens[2])
+
+    def gt(self, tokens):
+        return sympy.Gt(tokens[0], tokens[2])
+
+    def gte(self, tokens):
+        return sympy.Ge(tokens[0], tokens[2])
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2])
