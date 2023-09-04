@@ -3795,6 +3795,15 @@ class StateSpace(LinearTimeInvariant):
         tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
         return tf_mat
 
+    def __repr__(self):
+        A_str = self._A.__repr__()
+        B_str = self._B.__repr__()
+        C_str = self._C.__repr__()
+        D_str = self._D.__repr__()
+
+        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+
+
     def append(self, other):
         """
         Returns the first model appended with the second model. The order is preserved.
