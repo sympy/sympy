@@ -26,6 +26,9 @@ class TransformToSymPyExpr(Transformer):
     def CMD_INFTY(self, tokens):
         return sympy.oo
 
+    def LOWERCASE_LETTER_D(self, tokens):
+        return sympy.Symbol("d")
+
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
         # like "varphi" or "varepsilon", we remove that too
@@ -123,6 +126,12 @@ class TransformToSymPyExpr(Transformer):
         if isinstance(tokens[0], Ket) and isinstance(tokens[1], Bra):
             from sympy.physics.quantum import OuterProduct
             return OuterProduct(tokens[0], tokens[1])
+        elif tokens[0] == sympy.Symbol("d"):
+            # If the leftmost token is a "d", then it is highly likely that this is a differential
+            return tokens[0], tokens[1]
+        elif isinstance(tokens[0], tuple):
+            # then we have a derivative
+            return sympy.Derivative(tokens[1], tokens[0][1])
         else:
             return sympy.Mul(tokens[0], tokens[1])
 
@@ -130,7 +139,16 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Pow(tokens[0], tokens[2])
 
     def fraction(self, tokens):
-        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1))
+        numerator = tokens[1]
+        if isinstance(tokens[2], tuple):
+            # we only need the variable w.r.t. which we are differentiating
+            _, variable = tokens[2]
+
+            # we will pass this information upwards
+            return "derivative", variable
+        else:
+            denominator = tokens[2]
+            return sympy.Mul(numerator, sympy.Pow(denominator, -1))
 
     def binomial(self, tokens):
         return sympy.binomial(tokens[1], tokens[2])
