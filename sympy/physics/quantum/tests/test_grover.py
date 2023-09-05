@@ -49,7 +49,7 @@ def test_OracleGate():
 def test_WGate():
     nqubits = 2
     basis_states = superposition_basis(nqubits)
-    assert qapply(WGate(nqubits)*basis_states) == basis_states
+    assert qapply(WGate(nqubits)*basis_states).expand() == basis_states # .expand()
 
     expected = ((2/sqrt(pow(2, nqubits)))*basis_states) - IntQubit(1, nqubits=nqubits)
     assert qapply(WGate(nqubits)*IntQubit(1, nqubits=nqubits)) == expected
@@ -60,7 +60,7 @@ def test_grover_iteration_1():
     basis_states = superposition_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
     expected = IntQubit(1, nqubits=numqubits)
-    assert qapply(grover_iteration(basis_states, v)) == expected
+    assert qapply(grover_iteration(basis_states, v)).expand() == expected # .expand()
 
 
 def test_grover_iteration_2():
@@ -70,16 +70,16 @@ def test_grover_iteration_2():
     # After (pi/4)sqrt(pow(2, n)), IntQubit(2) should have highest prob
     # In this case, after around pi times (3 or 4)
     iterated = grover_iteration(basis_states, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated, mul=True) # mul=True indicates terms must be simplified by expansion
     iterated = grover_iteration(iterated, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated, mul=True) # mul=True indicates terms must be simplified by expansion
     iterated = grover_iteration(iterated, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated, mul=True) # mul=True indicates terms must be simplified by expansion
     # In this case, probability was highest after 3 iterations
     # Probability of Qubit('0010') was 251/256 (3) vs 781/1024 (4)
     # Ask about measurement
     expected = (-13*basis_states)/64 + 264*IntQubit(2, numqubits)/256
-    assert qapply(expected) == iterated
+    assert qapply(expected, mul=True) == iterated # mul=True default, expansion to achieve term equality
 
 
 def test_grover():
@@ -89,4 +89,4 @@ def test_grover():
     nqubits = 4
     basis_states = superposition_basis(nqubits)
     expected = (-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256
-    assert apply_grover(return_one_on_two, 4) == qapply(expected)
+    assert apply_grover(return_one_on_two, 4) == qapply(expected, mul=True) # mul=True is default, to make terms ==

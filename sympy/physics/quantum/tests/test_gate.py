@@ -46,7 +46,7 @@ def test_gate():
 
 def test_UGate():
     a, b, c, d = symbols('a,b,c,d')
-    uMat = Matrix([[a, b], [c, d]])
+    uMat = ImmutableMatrix([[a, b], [c, d]])
 
     # Test basic case where gate exists in 1-qubit space
     u1 = UGate((0,), uMat)
@@ -117,8 +117,8 @@ def test_cgate():
 
 def test_UGate_CGate_combo():
     a, b, c, d = symbols('a,b,c,d')
-    uMat = Matrix([[a, b], [c, d]])
-    cMat = Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, a, b], [0, 0, c, d]])
+    uMat = ImmutableMatrix([[a, b], [c, d]])
+    cMat = ImmutableMatrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, a, b], [0, 0, c, d]])
 
     # Test basic case where gate exists in 1-qubit space.
     u1 = UGate((0,), uMat)

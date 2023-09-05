@@ -1,6 +1,6 @@
 """Tests for sho1d.py"""
 
-from sympy.core.numbers import (I, Integer)
+from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -48,9 +48,9 @@ def test_RaisingOp():
     assert Dagger(ad) == a
     assert Commutator(ad, a).doit() == Integer(-1)
     assert Commutator(ad, N).doit() == Integer(-1)*ad
-    assert qapply(ad*k) == (sqrt(k.n + 1)*SHOKet(k.n + 1)).expand()
-    assert qapply(ad*kz) == (sqrt(kz.n + 1)*SHOKet(kz.n + 1)).expand()
-    assert qapply(ad*kf) == (sqrt(kf.n + 1)*SHOKet(kf.n + 1)).expand()
+    assert qapply(ad*k) == (sqrt(k.n + 1)*SHOKet(k.n + 1))    #2 no .expand() on rhs
+    assert qapply(ad*kz) == (sqrt(kz.n + 1)*SHOKet(kz.n + 1)) #2 no .expand() on rhs
+    assert qapply(ad*kf) == (sqrt(kf.n + 1)*SHOKet(kf.n + 1)) #2 no .expand() on rhs
     assert ad.rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(Integer(-1)*I*Px + m*omega*X)
     assert ad.hilbert_space == ComplexSpace(S.Infinity)
@@ -80,9 +80,9 @@ def test_LoweringOp():
     assert Dagger(a) == ad
     assert Commutator(a, ad).doit() == Integer(1)
     assert Commutator(a, N).doit() == a
-    assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
+    assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))) # no .expand() on rhs
     assert qapply(a*kz) == Integer(0)
-    assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n-Integer(1))).expand()
+    assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n-Integer(1))) # no .expand() on rhs
     assert a.rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
     for i in range(ndim - 1):
@@ -92,7 +92,7 @@ def test_NumberOp():
     assert Commutator(N, ad).doit() == ad
     assert Commutator(N, a).doit() == Integer(-1)*a
     assert Commutator(N, H).doit() == Integer(0)
-    assert qapply(N*k) == (k.n*k).expand()
+    assert qapply(N*k) == (k.n*k) # no .expand() on rhs
     assert N.rewrite('a').doit() == ad*a
     assert N.rewrite('xp').doit() == (Integer(1)/(Integer(2)*m*hbar*omega))*(
         Px**2 + (m*omega*X)**2) - Integer(1)/Integer(2)
@@ -103,7 +103,7 @@ def test_NumberOp():
 
 def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
-    assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
+    assert qapply(H*k, mul=False) == ((hbar*omega*(k.n + Rational(1, 2)))*k) # removed .expand() on rhs, mul=False
     assert H.rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))
     assert H.rewrite('xp').doit() == \
         (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
