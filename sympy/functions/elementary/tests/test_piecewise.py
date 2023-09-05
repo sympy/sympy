@@ -548,6 +548,13 @@ def test_piecewise_simplify():
     assert Piecewise((log(x), (x <= 5) & (x > 3)), (x, True)
         ).simplify() == Piecewise((log(x), (x <= 5) & (x > 3)), (x, True))
 
+    assert Piecewise((1, (x >= 1) & (x < 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x < 3)), (
+        2, (x >= 3) & (x < 4)), (nan, True))
+    assert Piecewise((1, (x >= 1) & (x <= 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x <= 3)), (
+        2, (x > 3) & (x < 4)), (nan, True))
+
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
