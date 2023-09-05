@@ -107,11 +107,10 @@ MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 %import .greek_symbols.GREEK_SYMBOL
 
 UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
-LOWERCASE_LETTER_D: "d"
-DIFFERENTIAL_SYMBOL: LOWERCASE_LETTER_D | UPRIGHT_DIFFERENTIAL_SYMBOL
+DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 
 // disallow "d" as a variable name because we want to parse "d" as a differential symbol.
-SYMBOL: /[a-ce-zA-Z]/
+SYMBOL: /[a-zA-Z]/
 BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
 // best to define the variant with braces like that instead of shoving it all into one case like in
@@ -126,7 +125,6 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 latex_string: _relation | _expression
 
 _one_letter_symbol: SYMBOL
-    | LOWERCASE_LETTER_D
     | BASIC_SUBSCRIPTED_SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
