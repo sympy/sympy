@@ -3,18 +3,23 @@ import logging
 import re
 
 from sympy.external import import_module
-from .transformer import TransformToSymPyExpr
+from sympy.parsing.latex.lark.transformer import TransformToSymPyExpr
 
 _lark = import_module("lark")
 
+
 class LarkLatexParser:
     def __init__(self, logger=False, print_debug_output=False, transform=True):
+        grammar_dir_path = os.path.join(os.path.dirname(__file__), "grammar/")
 
-        with open(os.path.join(os.path.dirname(__file__), "latex.lark"), encoding="utf-8") as f:
+        with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
             latex_grammar = f.read()
 
         self.parser = _lark.Lark(
-            latex_grammar, parser="earley", start="latex_string",
+            latex_grammar,
+            source_path=grammar_dir_path,
+            parser="earley",
+            start="latex_string",
             lexer="auto",
             ambiguity="explicit",
             debug=True,
@@ -24,9 +29,9 @@ class LarkLatexParser:
 
         self.logger = logger
         self.print_debug_output = print_debug_output
-        self.transform = transform
+        self.transform_expr = transform
 
-        self.transform_to_sympy_expr = TransformToSymPyExpr()
+        self.transformer = TransformToSymPyExpr()
 
     def doparse(self, s: str):
         if self.logger:
@@ -34,7 +39,7 @@ class LarkLatexParser:
 
         parse_tree = self.parser.parse(s)
 
-        if not self.transform:
+        if not self.transform_expr:
             # exit early and return the parse tree
             _lark.logger.debug("expression =", s)
             _lark.logger.debug(parse_tree)
@@ -47,7 +52,7 @@ class LarkLatexParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self.transform_to_sympy_expr.transform(parse_tree)
+        sympy_expression = self.transformer.transform(parse_tree)
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression =", sympy_expression)
@@ -69,14 +74,6 @@ def parse_latex_lark(s: str):
     if _lark is None:
         raise ImportError("Lark is probably not installed")
     return _lark_latex_parser.doparse(s)
-
-
-def pr_ltx(s: str):
-    LarkLatexParser(print_debug_output=True, transform=False).doparse(s)
-
-
-def trfm_ltx(s: str):
-    LarkLatexParser(print_debug_output=True).doparse(s)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
