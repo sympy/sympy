@@ -123,7 +123,6 @@ from sympy.core.add import Add
 from sympy.core.relational import Eq, Ne
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
 from sympy import SYMPY_DEBUG
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
@@ -287,12 +286,28 @@ class LRASolver():
             elif prop == False:
                 conflicts.append([-enc])
                 continue
-            elif prop is None:
-                raise UnhandledInput(f"{prop} contains no variables and could not be evaluated as True or False")
 
             expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
                 expr = -expr
+
+            # expr should be less than (or equal to) 0
+            # otherwise prop is False
+            if prop.function in [Q.le, Q.ge]:
+                bool = (expr <= 0)
+            elif prop.function in [Q.lt, Q.gt]:
+                bool = (expr < 0)
+            else:
+                assert prop.function == Q.eq
+                bool = Eq(expr, 0)
+
+            if bool == True:
+                conflicts.append([enc])
+                continue
+            elif bool == False:
+                conflicts.append([-enc])
+                continue
+
 
             vars, const = _sep_const_terms(expr)  # example: (2x + 3y + 2) --> (2x + 3y), (2)
             vars, var_coeff = _sep_const_coeff(vars)  # examples: (2x) --> (x, 2); (2x + 3y) --> (2x + 3y), (1)

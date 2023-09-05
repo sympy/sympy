@@ -5,7 +5,7 @@ from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.numbers import I
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, XFAIL
 x, y, z = symbols("x y z", real=True)
 
 def test_lra_satask():
@@ -18,6 +18,9 @@ def test_lra_satask():
     assert lra_satask(~Q.eq(x, 0), Q.eq(x, 0)) is False
     assert lra_satask(Q.ne(x, 0), Q.eq(x, 0)) is False
 
+    # basic tests
+    assert lra_satask(Q.ne(x, x)) is False
+    assert lra_satask(Q.eq(x, x)) is True
     assert lra_satask(Q.gt(x, 0), Q.gt(x, 1)) is True
 
     # check that True/False are handled
@@ -66,3 +69,72 @@ def test_all_pred():
     assert lra_satask((x > 0), (x > 2) & Q.odd(x)) is None
     assert lra_satask((x > 0), (x > 2) & Q.even(x)) is None
     assert lra_satask((x > 0), (x > 2) & Q.integer(x)) is None
+
+
+def test_number_line_properties():
+    # From:
+    # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
+
+    a, b, c = symbols("a b c", real=True)
+
+    # Transitivity
+    # If a <= b and b <= c, then a <= c.
+    assert ask(a <= c, (a <= b) & (b <= c)) is True
+    # If a <= b and b < c, then a < c.
+    assert ask(a < c, (a <= b) & (b < c)) is True
+    # If a < b and b <= c, then a < c.
+    assert ask(a < c, (a < b) & (b <= c)) is True
+
+    # Addition and subtraction
+    # If a <= b, then a + c <= b + c and a - c <= b - c.
+    assert ask(a + c <= b + c, a <= b) is True
+    assert ask(a - c <= b - c, a <= b) is True
+
+
+@XFAIL
+def test_failing_number_line_properties():
+    # From:
+    # https://en.wikipedia.org/wiki/Inequality_(mathematics)#Properties_on_the_number_line
+
+    a, b, c = symbols("a b c", real=True)
+
+    # Multiplication and division
+    # If a <= b and c > 0, then ac <= bc and a/c <= b/c. (True for non-zero c)
+    assert ask(a*c <= b*c, (a <= b) & (c > 0) & ~ Q.zero(c)) is True
+    assert ask(a/c <= b/c, (a <= b) & (c > 0) & ~ Q.zero(c)) is True
+    # If a <= b and c < 0, then ac >= bc and a/c >= b/c. (True for non-zero c)
+    assert ask(a*c >= b*c, (a <= b) & (c < 0) & ~ Q.zero(c)) is True
+    assert ask(a/c >= b/c, (a <= b) & (c < 0) & ~ Q.zero(c)) is True
+
+    # Additive inverse
+    # If a <= b, then -a >= -b.
+    assert ask(-a >= -b, a <= b) is True
+
+    # Multiplicative inverse
+    # For a, b that are both negative or both positive:
+    # If a <= b, then 1/a >= 1/b .
+    assert ask(1/a >= 1/b, (a <= b) & Q.positive(x) & Q.positive(b)) is True
+    assert ask(1/a >= 1/b, (a <= b) & Q.negative(x) & Q.negative(b)) is True
+
+
+def test_equality():
+    # test symetry and reflexivity
+    assert ask(Q.eq(x, x)) is True
+    assert ask(Q.eq(y, x), Q.eq(x, y)) is True
+    assert ask(Q.eq(y, x), ~Q.eq(z, z) | Q.eq(x, y)) is True
+
+    # test transitivity
+    assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
+
+
+@XFAIL
+def test_equality_failing():
+    # Note that implementing the substitution property of equality
+    # most likely requires a redesign of the new assumptions.
+    # See issue #25485 for why this is the case and general ideas
+    # about how things could be redesigned.
+
+    # test substitution property
+    assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
+    assert ask(Q.real(x), Q.eq(x, y) & Q.real(y)) is True
+    assert ask(Q.imaginary(x), Q.eq(x, y) & Q.imaginary(y)) is True
