@@ -26,9 +26,6 @@ class TransformToSymPyExpr(Transformer):
     def CMD_INFTY(self, tokens):
         return sympy.oo
 
-    def LOWERCASE_LETTER_D(self, tokens):
-        return sympy.Symbol("d")
-
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
         # like "varphi" or "varepsilon", we remove that too
