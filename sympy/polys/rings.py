@@ -2193,16 +2193,29 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else:
+            old_gcd = ring.dmp_inner_gcd(f, g)
             if not ring.domain.is_Field:
                 h = _gcd_prs(f, g)
                 cff = f.quo(h)
                 cfg = g.quo(h)
-                return h, cff, cfg
+                new_gcd = h, cff, cfg
+                if new_gcd != old_gcd:
+                    raise RuntimeError(f"GCD is different for\n\n"
+                    f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+                    f"New GCD = {new_gcd}")
+                else:
+                    return new_gcd
             else:
                 h = _gcd_prs(f, g).monic()
                 cff = f.quo(h)
                 cfg = g.quo(h)
-                return h, cff, cfg
+                new_gcd = h, cff, cfg
+                if new_gcd != old_gcd:
+                    raise RuntimeError(f"GCD is different for\n\n"
+                    f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+                    f"New GCD = {new_gcd}")
+                else:
+                    return new_gcd
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)

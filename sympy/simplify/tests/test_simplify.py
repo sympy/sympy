@@ -1052,16 +1052,13 @@ def test_issue_11004():
     half = Float('0.5', 4)
     z = log(p(n, k) / p(n, k + 1)).expand(force=True)
     r = simplify(z.subs(n, N).n(4))
-    result = (
+    assert r == (
         half*k*log(k)
         - half*k*log(k + 1)
         + half*log(N)
         - half*log(k + 1)
         + Float(0.9189224, 4)
     )
-    tolerance = 1e-4
-
-    assert abs(r - result) < tolerance
 
 
 def test_issue_19161():
