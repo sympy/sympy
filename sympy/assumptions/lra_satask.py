@@ -2,7 +2,7 @@ from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
-from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
+from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED, BENIGN_PRED
 from sympy.matrices.common import MatrixKind
 from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
@@ -46,9 +46,10 @@ def check_satisfiability(prop, _prop, factbase):
     except UnhandledPred:
         return None
 
+    # check if query might be handled by LRASolver
     for pred in sat_true.encoding.keys():
         if isinstance(pred, AppliedPredicate):
-            if pred.function not in ALLOWED_PRED:
+            if pred.function not in ALLOWED_PRED and pred.function not in BENIGN_PRED:
                 return None
             exprs = pred.arguments
             for expr in exprs:
@@ -94,6 +95,10 @@ def _preprocess(enc_cnf):
     Also converts all negated Q.ne predicates into
     equalities.
     """
+
+    # loops through each literal in each clause
+    # to construct a new, preprocessed encodedCNF
+
     enc_cnf = enc_cnf.copy()
     cur_enc = 1
     rev_encoding = {value: key for key, value in enc_cnf.encoding.items()}
@@ -111,6 +116,8 @@ def _preprocess(enc_cnf):
             negated = lit < 0
             sign = (lit > 0) - (lit < 0)
 
+            prop = _pred_to_binrel(prop)
+
             if not isinstance(prop, AppliedPredicate):
                 if prop not in new_encoding:
                     new_encoding[prop] = cur_enc
@@ -119,10 +126,8 @@ def _preprocess(enc_cnf):
                 new_clause.append(sign*lit)
                 continue
 
-            prop = _pred_to_binrel(prop)
-
-            if not (prop.function in ALLOWED_PRED or prop.function == Q.ne):
-                raise UnhandledPred
+            #if not (prop.function in ALLOWED_PRED or prop.function == Q.ne):
+           #     raise UnhandledPred
 
             if negated and prop.function == Q.eq:
                 negated = False
@@ -166,8 +171,13 @@ def _preprocess(enc_cnf):
 
 
 def _pred_to_binrel(pred):
+    if not isinstance(pred, AppliedPredicate):
+        return pred
+
     if pred.function in pred_to_pos_neg_zero:
         f = pred_to_pos_neg_zero[pred.function]
+        if f is False:
+            return False
         pred = f(pred.arguments[0])
 
     if pred.function == Q.positive:
@@ -186,11 +196,11 @@ def _pred_to_binrel(pred):
     return pred
 
 pred_to_pos_neg_zero = {
-    Q.prime : Q.positive,
-    Q.composite : Q.positive,
-    Q.extended_positive : Q.positive,
-    Q.extended_negative : Q.negative,
-    Q.extended_nonpositive : Q.nonpositive,
-    Q.extended_negative : Q.negative,
-    Q.extended_nonzero: Q.nonzero
+    Q.extended_positive: Q.positive,
+    Q.extended_negative: Q.negative,
+    Q.extended_nonpositive: Q.nonpositive,
+    Q.extended_negative: Q.negative,
+    Q.extended_nonzero: Q.nonzero,
+    Q.negative_infinite: False,
+    Q.positive_infinite: False
 }
