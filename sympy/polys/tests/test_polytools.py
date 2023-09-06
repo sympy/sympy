@@ -2079,8 +2079,10 @@ def test_gcd():
     raises(TypeError, lambda: lcm(x))
 
     f = Poly(0, x)
-    g = Poly(0, x)
-    assert lcm(f, g) == 0
+    assert lcm(f, 0) == 0
+
+    f = Poly([1, 1], x)
+    assert lcm(f,0) == 0
 
 
 def test_gcd_numbers_vs_polys():
