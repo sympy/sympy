@@ -1650,11 +1650,9 @@ def dup_rr_lcm(f, g, K):
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
-    h = dup_mul_ground(h, c, K)
-
     u = K.canonical_unit(dup_LC(h, K))
 
-    return dup_mul_ground(h, u, K)
+    return dup_mul_ground(h, c*u, K)
 
 
 def dup_ff_lcm(f, g, K):
