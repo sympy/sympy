@@ -9,11 +9,17 @@ _lark = import_module("lark")
 
 
 class LarkLatexParser:
-    def __init__(self, logger=False, print_debug_output=False, transform=True):
+    def __init__(self, logger=False, print_debug_output=False, transform=True, extends=None, overrides=None):
         grammar_dir_path = os.path.join(os.path.dirname(__file__), "grammar/")
 
         with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
             latex_grammar = f.read()
+
+        if extends is not None:
+            latex_grammar += "\n" + extends
+
+        if overrides is not None:
+            latex_grammar += "\n" + overrides
 
         self.parser = _lark.Lark(
             latex_grammar,
