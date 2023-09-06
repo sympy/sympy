@@ -62,6 +62,8 @@ MINUS_INF = float(-mpmath_inf)
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333
 
+# Default number of dimensions to integrate over
+DEFAULT_QUAD_MAX_DIMS = 1
 
 class PrecisionExhausted(ArithmeticError):
     pass
@@ -1073,6 +1075,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
 
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
+    quadmaxdims = options.get('quadmaxdims', DEFAULT_QUAD_MAX_DIMS)
 
     with workprec(prec + 5):
         # args[1:] are all limits
@@ -1142,6 +1145,9 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
+            if len(limits) > quadmaxdims:
+                raise NotImplementedError("Dimensions higher then quadmaxdims allows."
+                                 " Either reduce number of dimensions or increase quadmaxdims option.")
             result, quadrature_err = quadts(f, *limits, error=1)
             quadrature_error = fastlog(quadrature_err._mpf_)
 
@@ -1566,7 +1572,7 @@ class EvalfMixin:
 
     __slots__ = ()  # type: tTuple[str, ...]
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False, quadmaxdims=1):
         """
         Evaluate the given formula to an accuracy of *n* digits.
 
@@ -1654,6 +1660,8 @@ class EvalfMixin:
             options['subs'] = subs
         if quad is not None:
             options['quad'] = quad
+        if quadmaxdims is not None:
+            options['quadmaxdims'] = quadmaxdims
         try:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:

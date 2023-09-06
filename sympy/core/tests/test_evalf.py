@@ -516,12 +516,16 @@ def test_evalf_integral():
 
 
 def test_issue_21605_double_integral():
-    assert NS('Integral(x*y**2, (x, 0, 1), (y, 0, 1))', 10) == '0.1666666667'
+    assert NS('Integral(x*y**2, (x, 0, 1), (y, 0, 1))', 10, quadmaxdims=2) == '0.1666666667'
 
 
 @slow
 def test_issue_21605_triple_integral():
-    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10) == '0.04166666667'
+    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10, quadmaxdims=2) == '0.04166666667'
+
+
+def test_issue_21605_skip_evalf_triple_integral():
+    assert NS('Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))', 10, quadmaxdims=1) == 'Integral(x*y**2*z**3, (x, 0, 1), (y, 0, 1), (z, 0, 1))'
 
 
 def test_issue_8821_highprec_from_str():
