@@ -362,8 +362,8 @@ SymPy provides the class
 instantiated with a single argument, `name`, which associates a name with the
 instance. This name should be unique per instance.
 
->>> import sympy.physics._biomechanics as bm
->>> actz = bm.ZerothOrderActivation('zeroth')
+>>> from sympy.physics._biomechanics import ZerothOrderActivation
+>>> actz = ZerothOrderActivation('zeroth')
 >>> actz
 ZerothOrderActivation('zeroth')
 
@@ -421,7 +421,8 @@ This class must be instantiated with four arguments: a name, and three
 sympifiable objects to represent the three constants :math:`\tau_a`,
 :math:`\tau_d`, and :math:`b`.
 
->>> actf = bm.FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
+>>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
+>>> actf = FirstOrderActivationDeGroote2016('first', tau_a, tau_d, b)
 >>> actf.excitation
 e_first(t)
 >>> actf.activation
@@ -437,7 +438,7 @@ You can also instantiate the class with the suggested values for each of the
 constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
 :math:`b = 10`.
 
->>> actf2 = bm.FirstOrderActivationDeGroote2016.with_defaults('first')
+>>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
 >>> actf2.rhs()
 Matrix([[((1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
 >>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Integer(10)}
@@ -447,8 +448,485 @@ Matrix([[(66.6666666666667*(1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(3*a_fi
 Musculotendon Curves
 ====================
 
+Over the years many different configurations of Hill-type muscle models have
+been published containing different combinations of elements in series and in
+parallel. We'll consider a very common version of the model that has the tendon
+modeled as an element in series with muscle fibers, which are in turn modeled as
+three elements in parallel: an elastic element, a contractile element, and a
+damper.
+
+.. TODO : make and include diagram of the four-element model.
+
+Each of these components typically has a characteristic curve describing it. The
+following sub-sections will describe and implement the characteristic curves
+described in the paper by [DeGroote2016]_.
+
+Tendon Force-Length
+-------------------
+
+It is common to model tendons as both rigid (inextensible) and elastic elements.
+If the tendon is being treated as rigid, the tendon length does not change and
+the length of the muscle fibers change directly with changes in musculotendon
+length. A rigid tendon will not have an associated characteristic curve; it does
+not have any force-producing capabilities itself and just directly transmits the
+force produced by the muscle fibers.
+
+If the tendon is elastic, it is commonly modeled as a nonlinear spring. We
+therefore have our first characteristic curve, the tendon force-length curve,
+which is a function of normalized tendon length:
+
+.. math::
+
+   \tilde{l}^T = \frac{l^T}{l^T_{slack}}
+
+where :math:`l^T` is tendon length, and :math:`l^T_{slack}` is the "tendon slack
+length", a constant representing the tendon length under no force.
+Characteristic musculotendon curves are parameterized in terms of "normalized"
+(or "dimensionless") quantities such as :math:`\tilde{l}^T` because these curves
+apply generically to all muscle fibers and tendons. Their properties can be
+adjusted to model a specific musculotendon by selecting different values for the
+constants. In the case of the tendon force-length characteristic, this is done
+by tuning :math:`l^T_{slack}`. Shorter values for this constant result in a
+stiffer tendon.
+
+The equation for the tendon force-length curve
+:math:`fl^T\left(\tilde{l}^T\right)` from [DeGroote2016]_ is:
+
+.. math::
+
+   fl^T\left(\tilde{l}^T\right) = c_0 \exp{c_3 \left( \tilde{l}^T - c_1 \right)} - c_2
+
+To implement this in SymPy we need a time-varying dynamic symbol representing
+:math:`\tilde{l}^T` and four symbols representing the four constants.
+
+>>> l_T_tilde = me.dynamicsymbols('l_T_tilde')
+>>> c0, c1, c2, c3 = sm.symbols('c0, c1, c2, c3')
+
+>>> fl_T = c0*sm.exp(c3*(l_T_tilde - c1)) - c2
+>>> fl_T
+c0*exp(c3*(-c1 + l_T_tilde(t))) - c2
+
+Alternatively, we could define this in terms of :math:`l^T` and
+:math:`l^T_{slack}`.
+
+>>> l_T = me.dynamicsymbols('l_T')
+>>> l_T_slack = sm.symbols('l_T_slack')
+
+>>> fl_T = c0*sm.exp(c3*(l_T/l_T_slack - c1)) - c2
+>>> fl_T
+c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
+
+Again, the :obj:`~sympy.physics._biomechanics` module in SymPy provides a class
+for this exact curve,
+:obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016`. It can be
+instantiated with five arguments. The first argument is :math:`\tilde{l}^T`,
+which need not necessarily be a symbol and can be an expression. The further
+four arguments are all constants. It is intended that these will be constants,
+or sympifiable numerical values.
+
+>>> from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
+
+>>> fl_T2 = TendonForceLengthDeGroote2016(l_T/l_T_slack, c0, c1, c2, c3)
+>>> fl_T2
+TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, c0, c1, c2, c3)
+
+This class is a subclass of :obj:`~sympy.core.function.Function` and so
+implements usual SymPy methods for substitution, evaluation, differentiation
+etc. The :obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016.doit`
+method allows the equation of the curve to be accessed.
+
+>>> fl_T2.doit()
+c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
+
+The class provides an alternate constructor that allows it to be constucted
+prepopulated with the values for the constants recommended in [DeGroote2016]_.
+This takes a single argument, again corresponding to :math:`\tilde{l}^T`, which
+can against either be a symbol or expression.
+
+>>> fl_T3 = TendonForceLengthDeGroote2016.with_defaults(l_T/l_T_slack)
+>>> fl_T3
+TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, 0.2, 0.995, 0.25, 33.93669377311689)
+
+In the above the constants have been replaced with instances of SymPy numeric
+types like :obj:`~sympy.core.numbers.Float`.
+
+The :obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016` class also
+supports code generation, so seamlessly integrates with SymPy's code printers.
+To visualize this curve, we can use :obj:`~sympy.utilities.lambdify.lambdify` on
+an instance of the function, which will create a callable to evaluate it for a
+given value of :math:`\tilde{l}^T`. Sensible values for :math:`\tilde{l}^T fall
+within the range :math:`[0.95, 1.05]`, which we will plot below.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+
+   >>> import matplotlib.pyplot as plt
+   >>> import numpy as np
+   >>> from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
+
+   >>> l_T_tilde = me.dynamicsymbols('l_T_tilde')
+   >>> fl_T = TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
+   >>> fl_T_callable = sm.lambdify(l_T_tilde, fl_T)
+   >>> l_T_tilde_num = np.linspace(0.95, 1.05)
+
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(l_T_tilde_num, fl_T_callable(l_T_tilde_num))
+   >>> _ = ax.set_xlabel('Normalized tendon length')
+   >>> _ = ax.set_ylabel('Normalized tendon force-length')
+
+When deriving the equations describing the musculotendon dynamics of models with
+elastic tendons, it can be useful to know the inverse of the tendon force-length
+characteristic curve. The curve defined in [DeGroote2016]_ is analytically
+invertible, which means that we can directly determine
+:math:`\tilde{l}^T = \left[fl^T\left(\tilde{l}^T\right)\right]^{-1}` for a given
+value of :math:`fl^T\left(\tilde{l}^T\right)`.
+
+.. math::
+
+   \tilde{l}^T = \left[fl^T\left(\tilde{l}^T\right)\right]^{-1} = frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1
+
+There is also a class for this in :obj:`~sympy.physics._biomechanics`,
+:obj:`~sympy.physics._biomechanics.TendonForceLengthInverseDeGroote2016`, which
+behaves identically to
+:obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016`. It can be
+instantiated with five parameters, the first for :math:`fl^T` followed by four
+constants, or by using the alternate constructor with a single argument for
+:math:`fl^T`.
+
+>>> from sympy.physics._biomechanics import TendonForceLengthInverseDeGroote2016
+
+>>> fl_T_sym =me.dynamicsymbols('fl_T')
+>>> fl_T_inv = TendonForceLengthInverseDeGroote2016(fl_T_sym, c0, c1, c2, c3)
+>>> fl_T_inv
+TendonForceLengthInverseDeGroote2016(fl_T(t), c0, c1, c2, c3)
+
+>>> fl_T_inv2 = TendonForceLengthInverseDeGroote2016.with_defaults(fl_T_sym)
+>>> fl_T_inv2
+TendonForceLengthInverseDeGroote2016(fl_T(t), 0.2, 0.995, 0.25, 33.93669377311689)
+
+Fiber Passive Force-Length
+--------------------------
+
+The first element used to model the muscle fibers is the fiber passive force-
+length. This is essentially another nonlinear spring representing the elastic
+properties of the muscle fibers. The characteristic curve describing this
+element is a function of normalized muscle fiber length:
+
+.. math::
+
+   \tilde{l}^M = \frac{l^M}{l^M_{opt}}
+
+where :math:`l^M` is muscle fiber length, and :math:`l^M_{opt}` is the "optimal
+fiber length, a constant representing the muscle fiber length at which it
+produces no passive-elastic force (it is also the muscle fiber length at which
+it can produce maximum active force). Like with tuning :math:`l^T_{slack}` to
+change the stiffness properties of a modeled tendon via the tendon force-length
+characteristic, we can adjust :math:`l^M_{opt}` to change the passive properties
+of the muscle fibers; decreasing :math:`l^M_{opt}` will make modeled muscle
+fibers stiffer.
+
+The equation for the fiber passive force-length curve
+:math:`fl^M_{pas}\left(\tilde{l}^M\right)` from [DeGroote2016]_ is:
+
+.. math::
+
+   fl^M_{pas} = \frac{\frac{\exp{c_1 \left(\tilde{l^M} - 1\right)}}{c_0} - 1}{\exp{c_1} - 1}
+
+Similarly to before, to implement this in SymPy we need a time-varying dynamic
+symbol representing :math:`\tilde{l}^M` and two symbols representing the two
+constants.
+
+>>> l_M_tilde = me.dynamicsymbols('l_M_tilde')
+>>> c0, c1 = sm.symbols('c0, c1')
+
+>>> fl_M_pas = (sm.exp(c1*(l_M_tilde - 1)/c0) - 1)/(sm.exp(c1) - 1)
+>>> fl_M_pas
+(exp(c1*(l_M_tilde(t) - 1)/c0) - 1)/(exp(c1) - 1)
+
+Alternatively, we could define this in terms of :math:`l^M` and
+:math:`l^M_{opt}`.
+
+>>> l_M = me.dynamicsymbols('l_M')
+>>> l_M_opt = sm.symbols('l_M_opt')
+
+>>> fl_M_pas2 = (sm.exp(c1*(l_M/l_M_opt - 1)/c0) - 1)/(sm.exp(c1) - 1)
+>>> fl_M_pas2
+(exp(c1*(-1 + l_M(t)/l_M_opt)/c0) - 1)/(exp(c1) - 1)
+
+Again, the :obj:`~sympy.physics._biomechanics` module in SymPy provides a class
+for this exact curve,
+:obj:`~sympy.physics._biomechanics.FiberForceLengthPassiveDeGroote2016`. It can
+be instantiated with three arguments. The first argument is :math:`\tilde{l}^M`,
+which need not necessarily be a symbol and can be an expression. The further
+two arguments are both constants. It is intended that these will be constants,
+or sympifiable numerical values.
+
+>>> from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+
+>>> fl_M_pas2 = FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, c0, c1)
+>>> fl_M_pas2
+FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, c0, c1)
+>>> fl_M_pas2.doit()
+(exp(c1*(-1 + l_M(t)/l_M_opt)/c0) - 1)/(exp(c1) - 1)
+
+Using the alternate constructor, which takes a single parameter for
+:math:`\tilde{l}^M`, we can create an instance prepopulated with the values for
+the constants recommended in [DeGroote2016]_.
+
+>>> fl_M_pas3 = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
+>>> fl_M_pas3
+FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, 3/5, 4)
+>>> fl_M_pas3.doit()
+(exp(-20/3 + 20*l_M(t)/(3*l_M_opt)) - 1)/(-1 + exp(4))
+
+Sensible values for :math:`\tilde{l}^M` fall
+within the range :math:`[0.0, 2.0]`, which we will plot below.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+
+   >>> import matplotlib.pyplot as plt
+   >>> import numpy as np
+   >>> from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+
+   >>> l_M_tilde = me.dynamicsymbols('l_M_tilde')
+   >>> fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
+   >>> fl_M_pas_callable = sm.lambdify(l_M_tilde, fl_M_pas)
+   >>> l_M_tilde_num = np.linspace(0.0, 2.0)
+
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(l_M_tilde_num, fl_M_pas_callable(l_M_tilde_num))
+   >>> _ = ax.set_xlabel('Normalized fiber length')
+   >>> _ = ax.set_ylabel('Normalized fiber passive force-length')
+
+The inverse of the fiber passive force-length characteristic curve is sometimes
+required when formulating musculotendon dynamics. The equation for this curve
+from [DeGroote2016]_ is again analytically invertible.
+
+.. math::
+
+  tilde{l}^M = \left[fl^M_{pas}\right]^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_pas + 1}}{c_1} + 1
+
+There is also a class for this in :obj:`~sympy.physics._biomechanics`,
+:obj:`~sympy.physics._biomechanics.FiberForceLengthPassiveInverseDeGroote2016`.
+It can be instantiated with three parameters, the first for :math:`fl^M`
+followed by a pair of constants, or by using the alternate constructor with a
+single argument for :math:`\tilde{l}^M`.
+
+>>> from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+
+>>> fl_M_pas_sym =me.dynamicsymbols('fl_M_pas')
+>>> fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas_sym, c0, c1)
+>>> fl_M_pas_inv
+FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), c0, c1)
+
+>>> fl_M_pas_inv2 = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas_sym)
+>>> fl_M_pas_inv2
+FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), 3/5, 4)
+
+Fiber Active Force-Length
+-------------------------
+
+When a muscle is activated, it contracts to produce a force. This phenomenom is
+modeled by the contractile element in the parallel fiber component of the
+musculotendon model. The amount of force that the fibers can produce is a
+function of the instantaneous length of the fibers. The characteristic curve
+describing the fiber active force-length curve is again parameterized by
+:math:`\tilde{l}^M`. This curve is "bell-shaped". For very small and very large
+values of :math:`\tilde{l}^M`, the active fiber force-length tends to zero. The
+peak active fiber force-length occurs when :math:`\tilde{l}^M = l^M_{opt}` and
+gives a value of :math:`0.0`.
+
+The equation for the fiber active force-length curve
+:math:`fl^M_{act}\left(\tilde{l}^M\right)` from [DeGroote2016]_ is:
+
+.. math::
+
+   fl^M_{act}\left(\tilde{l}^M\right) = c_0 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{\left(c_2 + c_3 \tilde{l}^M\right)}\right)^2}
+        + c_4 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{\left(c_6 + c_7 \tilde{l}^M\right)}\right)^2}
+        + c_8 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{\left(c_{10} + c_{11} \tilde{l}^M\right)}\right)^2}
+
+To implement this in SymPy we need a time-varying dynamic symbol representing
+:math:`\tilde{l}^M` and twelve symbols representing the twelve constants.
+
+>>> constants = sm.symbols('c0:12')
+>>> c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = constants
+
+>>> fl_M_act = (c0*sm.exp(-(((l_M_tilde - c1)/(c2 + c3*l_M_tilde))**2)/2) + c4*sm.exp(-(((l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2) + c8*sm.exp(-(((l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2))
+>>> fl_M_act
+c0*exp(-(-c1 + l_M_tilde(t))**2/(2*(c2 + c3*l_M_tilde(t))**2)) + c4*exp(-(-c5 + l_M_tilde(t))**2/(2*(c6 + c7*l_M_tilde(t))**2)) + c8*exp(-(-c9 + l_M_tilde(t))**2/(2*(c10 + c11*l_M_tilde(t))**2))
+
+The SymPy-provided class for this exact curve is
+:obj:`~sympy.physics._biomechanics.FiberForceLengthActiveDeGroote2016`. It can
+be instantiated with thirteen arguments. The first argument is
+:math:`\tilde{l}^M`, which need not necessarily be a symbol and can be an
+expression. The further twelve arguments are all constants. It is intended that
+these will be constants, or sympifiable numerical values.
+
+>>> from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+
+>>> fl_M_act2 = FiberForceLengthActiveDeGroote2016(l_M/l_M_opt, *constants)
+>>> fl_M_act2
+FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
+>>> fl_M_act2.doit()
+c0*exp(-(-c1 + l_M(t)/l_M_opt)**2/(2*(c2 + c3*l_M(t)/l_M_opt)**2)) + c4*exp(-(-c5 + l_M(t)/l_M_opt)**2/(2*(c6 + c7*l_M(t)/l_M_opt)**2)) + c8*exp(-(-c9 + l_M(t)/l_M_opt)**2/(2*(c10 + c11*l_M(t)/l_M_opt)**2))
+
+Using the alternate constructor, which takes a single parameter for
+:math:`\tilde{l}^M`, we can create an instance prepopulated with the values for
+the constants recommended in [DeGroote2016]_.
+
+>>> fl_M_act3 = FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
+>>> fl_M_act3
+FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+>>> fl_M_act3.doit()
+exp(-3.98991349867535*(-1 + l_M(t)/l_M_opt)**2)/10 + 0.433*exp(-25*(-0.717 + l_M(t)/l_M_opt)**2/(2*(-0.1495 + l_M(t)/l_M_opt)**2)) + 0.814*exp(-21.4067977442463*(-1 + 0.943396226415094*l_M(t)/l_M_opt)**2/(1 + 0.390740740740741*l_M(t)/l_M_opt)**2)
+
+Sensible values for :math:`\tilde{l}^M` fall
+within the range :math:`[0.0, 2.0]`, which we will plot below.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+
+   >>> import matplotlib.pyplot as plt
+   >>> import numpy as np
+   >>> from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+
+   >>> l_M_tilde = me.dynamicsymbols('l_M_tilde')
+   >>> fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
+   >>> fl_M_act_callable = sm.lambdify(l_M_tilde, fl_M_act)
+   >>> l_M_tilde_num = np.linspace(0.0, 2.0)
+
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(l_M_tilde_num, fl_M_act_callable(l_M_tilde_num))
+   >>> _ = ax.set_xlabel('Normalized fiber length')
+   >>> _ = ax.set_ylabel('Normalized fiber active force-length')
+
+No inverse curve exists for the fiber active force-length characteristic curve
+as it has multiple values of :math:`\tilde{l}^M` for each value of
+:math:`fl^M_{act}`.
+
+Fiber Force-Velocity
+--------------------
+
+The force produced by the contractile element is also a function of its
+lengthening velocity. The characteristic curve describing the velocity-dependent
+portion of the contractile element's dynamics is a function of normalized muscle
+fiber lengthening velocity:
+
+.. math::
+
+   \tilde{v}^M = \frac{v^M}{v^M_{max}}
+
+where :math:`v^M` is muscle fiber lengthening velocity, and :math:`v^M_{max}` is
+the "maximum fiber velocity", a constant representing the muscle fiber velocity
+at which it is not able to produce any contractile force when concentrically
+contracting. :math:`v^M_{max}` is commonly given a value of
+:math:`10 l^M_{opt}`.
+
+The equation for the fiber force-velocity curve
+:math:`fv^M\left(\tilde{v}^M\right)` from [DeGroote2016]_ is:
+
+.. math::
+
+   fv^M\left(\tilde{v}^M\right) = c_0 \log{\left(c1 \tilde{v}^M + c2\right) + \sqrt{\left(c1 \tilde{v}^M + c2\right)^2 + 1}} + c3
+
+Similarly to before, to implement this in SymPy we need a time-varying dynamic
+symbol representing :math:`\tilde{v}^M` and four symbols representing the four
+constants.
+
+>>> v_M_tilde = me.dynamicsymbols('v_M_tilde')
+>>> c0, c1, c2, c3 = sm.symbols('c0, c1, c2, c3')
+
+>>> fv_M = c0*sm.log(c1*v_M_tilde + c2 + sm.sqrt((c1*v_M_tilde + c2)**2 + 1)) + c3
+>>> fv_M
+c0*log(c1*v_M_tilde(t) + c2 + sqrt((c1*v_M_tilde(t) + c2)**2 + 1)) + c3
+
+Alternatively, we could define this in terms of :math:`v^M` and
+:math:`v^M_{max}`.
+
+>>> v_M = me.dynamicsymbols('v_M')
+>>> v_M_max = sm.symbols('v_M_max')
+
+>>> fv_M_pas2 = c0*sm.log(c1*v_M/v_M_max + c2 + sm.sqrt((c1*v_M/v_M_max + c2)**2 + 1)) + c3
+>>> fv_M_pas2
+c0*log(c1*v_M(t)/v_M_max + c2 + sqrt((c1*v_M(t)/v_M_max + c2)**2 + 1)) + c3
+
+The SymPy-provided class for this exact curve is
+:obj:`~sympy.physics._biomechanics.FiberForceVelocityDeGroote2016`. It can
+be instantiated with five arguments. The first argument is :math:`\tilde{v}^M`,
+which need not necessarily be a symbol and can be an expression. The further
+four arguments are all constants. It is intended that these will be constants,
+or sympifiable numerical values.
+
+>>> from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+
+>>> fv_M2 = FiberForceVelocityDeGroote2016(v_M/v_M_max, c0, c1, c2, c3)
+>>> fv_M2
+FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, c0, c1, c2, c3)
+>>> fv_M2.doit()
+c0*log(c1*v_M(t)/v_M_max + c2 + sqrt((c1*v_M(t)/v_M_max + c2)**2 + 1)) + c3
+
+Using the alternate constructor, which takes a single parameter for
+:math:`\tilde{v}^M`, we can create an instance prepopulated with the values for
+the constants recommended in [DeGroote2016]_.
+
+>>> fv_M3 = FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
+>>> fv_M3
+FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, -0.318, -8.149, -0.374, 0.886)
+>>> fv_M3.doit()
+0.886 - 0.318*log(8.149*sqrt((-0.0458952018652595 - v_M(t)/v_M_max)**2 + 0.0150588346410601) - 0.374 - 8.149*v_M(t)/v_M_max)
+
+Sensible values for :math:`\tilde{v}^M` fall within the range
+:math:`[-1.0, 1.0]`, which we will plot below.
+
+.. plot::
+   :format: doctest
+   :include-source: True
+   :context: close-figs
+
+   >>> import matplotlib.pyplot as plt
+   >>> import numpy as np
+   >>> from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+
+   >>> v_M_tilde = me.dynamicsymbols('v_M_tilde')
+   >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
+   >>> fv_M_callable = sm.lambdify(v_M_tilde, fv_M)
+   >>> v_M_tilde_num = np.linspace(-1.0, 1.0)
+
+   >>> fig, ax = plt.subplots()
+   >>> _ = ax.plot(l_M_tilde_num, fv_M_callable(v_M_tilde_num))
+   >>> _ = ax.set_xlabel('Normalized fiber velocity')
+   >>> _ = ax.set_ylabel('Normalized fiber force-velocity')
+
+Fiber Damping
+-------------
+
+Perhaps the simplest element in the musculotendon model is the fiber damping.
+This does not have an associated characteristic curve as it is typically just
+modeled as a simple linear damper. We will use :math:`\beta` as the coefficient
+of damping such that the damping force can be described as:
+
+.. math::
+
+   f_{damp} = \beta \tilde{v}^M
+
+[DeGroote2016]_ suggest the value :math:`\beta = 0.1`. However, SymPy uses
+:math:`\beta = 10` by default. When conducting forward simulations or solving
+optimal control problems as this increase in damping typically does not
+significantly effect the musculotendon dynamics but does have been empirically
+found to significantly improve the numerical conditioning of the equations.
+
 Musculotendon Actuators
 =======================
+
+Musculotendon Dynamics
+======================
 
 A Simple Musculotendon Model
 ============================
