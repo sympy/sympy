@@ -303,7 +303,7 @@ def test_basics():
     print(mt.rhs())
 
 
-@pytest.mark.skipif(not np)
+@pytest.mark.skipif(not np, reason='NumPy not installed')
 def test_simple_muscle():
 
     q, u = me.dynamicsymbols('q, u')
@@ -395,7 +395,7 @@ def test_simple_muscle():
         return eval_eom(x, r, p_vals)
 
 
-@pytest.mark.skipif(not np or not scipy)
+@pytest.mark.skipif(not np or not scipy, reason='NumPy or SciPy not installed')
 def test_arm_lever_tutorial():
     q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4')
     u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4')
