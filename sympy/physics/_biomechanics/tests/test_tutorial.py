@@ -397,11 +397,6 @@ def test_simple_muscle():
 
 @pytest.mark.skipif(not np or not scipy)
 def test_arm_lever_tutorial():
-    if not np:
-        skip('NumPy not installed.')
-    if not scipy:
-        skip('SciPy not installed.')
-
     q1, q2, q3, q4 = me.dynamicsymbols('q1, q2, q3, q4')
     u1, u2, u3, u4 = me.dynamicsymbols('u1, u2, u3, u4')
 
