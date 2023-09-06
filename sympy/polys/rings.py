@@ -2186,36 +2186,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return h, cff, cfg
 
     def _gcd(f, g):
+        # TODO: implement better algorithm selection
         ring = f.ring
-
         if ring.domain.is_QQ:
             return f._gcd_QQ(g)
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else:
-            old_gcd = ring.dmp_inner_gcd(f, g)
-            if not ring.domain.is_Field:
-                h = _gcd_prs(f, g)
-                cff = f.quo(h)
-                cfg = g.quo(h)
-                new_gcd = h, cff, cfg
-                if new_gcd != old_gcd:
-                    raise RuntimeError(f"GCD is different for\n\n"
-                    f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-                    f"New GCD = {new_gcd}")
-                else:
-                    return new_gcd
-            else:
-                h = _gcd_prs(f, g).monic()
-                cff = f.quo(h)
-                cfg = g.quo(h)
-                new_gcd = h, cff, cfg
-                if new_gcd != old_gcd:
-                    raise RuntimeError(f"GCD is different for\n\n"
-                    f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-                    f"New GCD = {new_gcd}")
-                else:
-                    return new_gcd
+            return f._gcd_I(g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -2240,6 +2218,33 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         cfg = cfg.set_ring(ring).mul_ground(ring.domain.quo(c, cg))
 
         return h, cff, cfg
+
+    def _gcd_I(self, g):
+        f = self
+        ring = f.ring
+        old_gcd = ring.dmp_inner_gcd(f, g)
+        if not ring.domain.is_Field:
+            h = _gcd_prs(f, g)
+            cff = f.quo(h)
+            cfg = g.quo(h)
+            new_gcd = h, cff, cfg
+            if new_gcd != old_gcd:
+                raise RuntimeError(f"GCD is different for\n\n"
+                f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+                f"New GCD = {new_gcd}")
+            else:
+                return new_gcd
+        else:
+            h = _gcd_prs(f, g).monic()
+            cff = f.quo(h)
+            cfg = g.quo(h)
+            new_gcd = h, cff, cfg
+            if new_gcd != old_gcd:
+                raise RuntimeError(f"GCD is different for\n\n"
+                f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+                f"New GCD = {new_gcd}")
+            else:
+                return new_gcd
 
     def cancel(self, g):
         """
@@ -3341,15 +3346,13 @@ def _gcd_prs(p1, p2):
 
     h = pp1.subresultants(pp2, x)[-1]
     c = gcd_prs([c1, c2])
-    domain = p1.ring.to_domain()
 
-    coeff = h.coeff_wrt(x, h.degree(x))
-
-    norm_coeff = domain.canonical_unit(coeff)
-
-    h = norm_coeff * h
+    ring = p1.ring
+    domain = ring.to_domain()
 
     _, h = cont_prim(h, x)
+
+    c *= domain.canonical_unit(ring.dmp_LC(h))
 
     h = h * c
 
