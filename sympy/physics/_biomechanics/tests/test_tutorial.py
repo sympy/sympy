@@ -1,8 +1,11 @@
+import pytets
+
 import sympy as sm
-from sympy.external import import_module
 import sympy.physics.mechanics as me
 import sympy.physics._biomechanics as bm
-from sympy.testing.pytest import skip
+from sympy.external import import_module
+
+
 np = import_module('numpy')
 scipy = import_module('scipy', import_kwargs={'fromlist': ['optimize']})
 
@@ -300,6 +303,7 @@ def test_basics():
     print(mt.rhs())
 
 
+@pytest.mark.skipif(not np)
 def test_simple_muscle():
 
     q, u = me.dynamicsymbols('q, u')
@@ -391,6 +395,7 @@ def test_simple_muscle():
         return eval_eom(x, r, p_vals)
 
 
+@pytest.mark.skipif(not np or not scipy)
 def test_arm_lever_tutorial():
     if not np:
         skip('NumPy not installed.')
