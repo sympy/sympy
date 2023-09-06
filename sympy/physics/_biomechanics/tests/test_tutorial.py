@@ -281,6 +281,75 @@ def test_basics():
         + sm.Float('0.886')
     )
 
+    # dynamics
+    l_MT, v_MT, a = me.dynamicsymbols('l_MT, v_MT, a')
+    l_T_slack, l_M_opt, F_M_max = sm.symbols('l_T_slack, l_M_opt, F_M_max')
+    v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta')
+
+    l_M = sm.sqrt((l_MT - l_T_slack)**2 + (l_M_opt*sm.sin(alpha_opt))**2)
+    assert l_M == (
+        sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2)
+    )
+
+    v_M = v_MT*(l_MT - l_T_slack)/l_M
+    assert v_M == (
+        -l_T_slack + l_MT)*v_MT/sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2
+    )
+
+    fl_M_pas = bm.FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
+    assert fl_M_pas == bm.FiberForceLengthPassiveDeGroote2016(
+        sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2)/l_M_opt,
+        sm.Rational(3, 5), sm.Integer(4),
+    )
+
+    fl_M_act = bm.FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
+    assert fl_M_act == bm.FiberForceLengthActiveDeGroote2016(
+        sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2)/l_M_opt,
+        sm.Float(0.814), sm.Float(1.06), sm.Float(0.162), sm.Float(0.0633),
+        sm.Float(0.433), sm.Float(0.717), sm.Float(-0.0299), sm.Rational(1, 5),
+        sm.Rational(1, 10), sm.Integer(1), sm.Float(0.354), sm.Integer(0),
+    )
+
+    fv_M = bm.FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
+    assert fv_M == bm.FiberForceVelocityDeGroote2016(
+        (-l_T_slack + l_MT)*v_MT
+        /(v_M_max*sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2)),
+        sm.Float(-0.318), sm.Float(-8.149), sm.Float(-0.374), sm.Float(0.886),
+    )
+
+    F_M = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
+    assert F_M == (
+        beta*(-l_T_slack + l_MT)*v_MT
+        /(v_M_max*sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2))
+        + a*bm.FiberForceLengthActiveDeGroote2016(sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)/l_M_opt, sm.Float(0.814), sm.Float(1.06),
+        sm.Float(0.162), sm.Float(0.0633), sm.Float(0.433), sm.Float(0.717),
+        sm.Float(-0.0299), sm.Rational(1, 5), sm.Rational(1, 10), sm.Integer(1),
+        sm.Float(0.354), sm.Integer(0))*bm.FiberForceVelocityDeGroote2016(
+        (-l_T_slack + l_MT)*v_MT/(v_M_max*sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)), sm.Float(-0.318), sm.Float(-8.149),
+        sm.Float(-0.374), sm.Float(0.886))
+        + bm.FiberForceLengthPassiveDeGroote2016(sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)/l_M_opt, sm.Rational(3, 5), sm.Integer(4))
+    )
+
+    F_T = F_M_max*F_M*sm.sqrt(1 - sm.sin(alpha_opt)**2)
+    assert F_T == (
+        F_M_max*sm.sqrt(1 - sm.sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT)*v_MT
+        /(v_M_max*sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2 + (-l_T_slack + l_MT)**2))
+        + a*bm.FiberForceLengthActiveDeGroote2016(sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)/l_M_opt, sm.Float(0.814), sm.Float(1.06),
+        sm.Float(0.162), sm.Float(0.0633), sm.Float(0.433), sm.Float(0.717),
+        sm.Float(-0.0299), sm.Rational(1, 5), sm.Rational(1, 10), sm.Integer(1),
+        sm.Float(0.354), sm.Integer(0))*bm.FiberForceVelocityDeGroote2016(
+        (-l_T_slack + l_MT)*v_MT/(v_M_max*sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)), sm.Float(-0.318), sm.Float(-8.149),
+        sm.Float(-0.374), sm.Float(0.886))
+        + bm.FiberForceLengthPassiveDeGroote2016(sm.sqrt(l_M_opt**2*sm.sin(alpha_opt)**2
+        + (-l_T_slack + l_MT)**2)/l_M_opt, sm.Rational(3, 5), sm.Integer(4)))
+    )
+
     # musculotendon
     l_T_slack, F_M_max, l_M_opt, v_M_max, alpha_opt, beta = sm.symbols(
         'l_T_slack, F_M_max, l_M_opt, v_M_max, alpha_opt, beta')
