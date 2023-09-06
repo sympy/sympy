@@ -1,5 +1,5 @@
 """Laplace Transforms"""
-from sympy.core import S, pi, I
+from sympy.core import S, pi, I, nan
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
@@ -16,7 +16,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, atan
+from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
@@ -589,8 +589,21 @@ def _laplace_rule_delta(f, t, s):
             debug('      rule: multiply with DiracDelta')
             loc = ma2[a]/ma2[b]
             if re(loc) >= 0 and im(loc) == 0:
-                r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
-                return (r, S.NegativeInfinity, S.true)
+                fn = exp(-ma2[a]/ma2[b]*s)*ma1[z]
+                print('--', fn)
+                r = fn.subs(t, ma2[a]/ma2[b])/ma2[b]
+                print('--', r)
+                if r == nan and (fn.has(sin, cos)):
+                    # Then it may be possible that a sinc() is present in the
+                    # term; let's try this:
+                    fn = fn.rewrite(sinc).ratsimp()
+                    print('--', fn)
+                    r = fn.subs(t, ma2[a]/ma2[b])/ma2[b]
+                    print('--', r)
+                if r == nan:
+                    return None
+                else:
+                    return (r, S.NegativeInfinity, S.true)
             else:
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
@@ -1108,6 +1121,11 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
+        if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
+            # For t>=0, Heaviside(t)=1 can be used, except if there is also
+            # a DiracDelta(t) present, in which case removing Heaviside(t)
+            # is not necessary because _laplace_rule_delta can deal with it.
+            ft = ft.subs(Heaviside(t_), 1)
         if (
                 (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
                 (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
