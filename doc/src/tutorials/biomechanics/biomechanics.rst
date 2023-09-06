@@ -975,10 +975,50 @@ the skeleton at the musculotendon's origin and insertion, can be expressed as:
 
 .. math::
 
-   F^T = F^M_{max} \cdot F^M\right \cdot \sqrt{1 - \left(\alpha_{opt}\right)^2}
+   F^T = F^M_{max} \cdot F^M \cdot \sqrt{1 - \sin{\alpha_{opt}}^2}
 
-We can describe all of this using SymPy and the musculotendon class we
-introduced above.
+We can describe all of this using SymPy and the musculotendon curve classes that
+we introduced above. We will need time-varying dynamics symbols for
+:math:`l^{MT}`, :math:`v_{MT}`, and :math:`a`. We will also need constant
+symbols for :math:`l^T_{slack}`, :math:`l^M_{opt}`, :math:`F^M_{max}`,
+:math:`v^M_{max}`, :math:`\alpha_{opt}`, and :math:`\beta`.
+
+>>> l_MT, v_MT, a = me.dynamicsymbols('l_MT, v_MT, a')
+>>> l_T_slack, l_M_opt, F_M_max = sm.symbols('l_T_slack, l_M_opt, F_M_max')
+>>> v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta')
+
+>>> l_M = sm.sqrt((l_MT - l_T_slack)**2 + (l_M_opt*sm.sin(alpha_opt))**2)
+>>> l_M
+sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)
+
+>>> v_M = v_MT*(l_MT - l_T_slack)/l_M
+>>> v_M
+(-l_T_slack + l_MT(t))*v_MT(t)/sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)
+
+>>> fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
+>>> fl_M_pas
+FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4)
+
+>>> fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
+>>> fl_M_act
+FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+
+>>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
+>>> fv_M
+FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886)
+
+>>> F_M = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
+>>> F_M
+beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4)
+
+>>> F_T = F_M_max*F_M*sm.sqrt(1 - sm.sin(alpha_opt)**2)
+>>> F_T
+F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4))
+
+SymPy offers this implementation of rigid tendon dynamics in the
+:obj:`~sympy.physics._biomechanics.MusculotendonDeGroot2016` class, a full
+demonstration of which is shown below when we will construct a complete simple
+musculotendon model.
 
 Elastic Tendon Dynamics
 -----------------------
@@ -990,7 +1030,74 @@ by the muscle fibers, ensuring that the two are in equilibrium. We cannot do
 this without introducing an additional state variable into the musculotendon
 dynamics, and thus an additional first-order ordinary differential equation.
 There are many choices that we can make for this state, but perhaps one of the
-most intuitive is to use :math:`\tilde{l}^M`.
+most intuitive is to use :math:`\tilde{l}^M`. With this we will need to both
+create an expression for the tendon force (:math:`F^T`) as well as the
+first-order ordinary differential equation for :math:`\frac{d \tilde{l}^M}{dt}`.
+:math:`l^M`, :math:`l^T`, and `\tilde{l}^T` can be calculated similar to with
+rigid tendon dynamics, remembering that we already have :math:`\tilde{l}^M`
+available as a know value due to it being a state variable.
+
+.. math::
+
+   \begin{align}
+      l^M &= \tilde{l}^M \cdot l^M_{opt} \\
+      l^T &= l^{MT} - \sqrt{\left(l^M\right)^2 - \left(l^M_{opt} \sin{\alpha_{opt}}\right)^2} \\
+      \tilde{l}^T &= \frac{l^T}{l^T_{slack}}
+   \end{align}
+
+Using :math:`\tilde{l}^T` and the tendon force-length curve
+(:math:`fl^T\left(\tilde{l}^T\right)`), we can write an equation for the
+normalized and absolte tendon force:
+
+.. math::
+
+   \begin{align}
+      \tilde{F}^T &= fl^T\left(\tilde{l}^T\right) \\
+      F^T &= F^M_{max} \cdot \tilde{F}^T
+   \end{align}
+
+To express :math:`F^M` we need to know the cosine of the pennation angle
+(:math:`\cos{\alpha}`). We can use trigonometry to write an equation for this:
+
+.. math::
+
+   \begin{align}
+      \cos{\alpha} &= \frac{l^{MT} - l^T}{l^M} \\
+      F^M &= \frac{F^T}{\cos{\alpha}}
+   \end{align}
+
+If we assume that the damping coefficient :math:`\beta = 0`, we can rearrange
+the muscle fiber force equation:
+
+.. math::
+
+   \tilde{F}^M = a \cdot fl^M_{act}\left(\tilde{l}^M\right) \cdot fv^M\left(\tilde{v}^M\right) + fl^M_{pas}\left(\tilde{l}^M\right) + \beta \cdot \tilde{v}^M
+
+to give fv^M\left(\tilde{v}^M\right):
+
+.. math::
+
+   fv^M\left(\tilde{v}^M\right) = \frac{\tilde{F}^M - fl^M_{pas}\left(\tilde{l}^M\right)}{a \cdot fl^M_{act}\left(\tilde{l}^M\right)}
+
+Using the inverse fiber force-velocity curve, :math:`\left[fv^M\left(\tilde{v}^M\right)\right]^{-1}`, and differentiating
+:math:`\tilde{l}^M` with respect to time, we can finally write an equation for
+:math:`\frac{d \tilde{l}^M}{dt}`:
+
+.. math::
+
+   \frac{d \tilde{l}^M}{dt} = \frac{v^M_{max}}{l^M_{opt}} \tilde{v}^M
+
+To formulate these elastic tendon musculotendon dynamics, we had to assume that
+:math:`\beta = 0`, which is suboptimal in forward simulations and optimal
+control problems. It is possible to formulate elastic tendon musculotendon
+dynamics with damping, but this requires a more complicated formulation with an
+additional input variable in addition to an additional state variable, and as
+such the musculotendon dynamics must be enforced as a differential algebraic
+equation rather than an ordinary differential equation. The specifics of these
+types of formulation will not be discussed here, but the interested reader can
+refer to the docstrings of the
+:obj:`~sympy.physics._biomechanics.MusculotendonDeGroote2016` where they are
+implemented.
 
 A Simple Musculotendon Model
 ============================
