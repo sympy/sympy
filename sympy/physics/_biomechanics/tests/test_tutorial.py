@@ -1,4 +1,4 @@
-import pytets
+import pytest
 
 import sympy as sm
 import sympy.physics.mechanics as me
