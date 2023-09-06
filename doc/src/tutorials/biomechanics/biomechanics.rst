@@ -516,11 +516,11 @@ Alternatively, we could define this in terms of :math:`l^T` and
 >>> fl_T
 c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
 
-Again, the :obj:`~sympy.physics._biomechanics` module in SymPy provides a class
-for this exact curve,
+The :obj:`~sympy.physics._biomechanics` module in SymPy provides a class for
+this exact curve,
 :obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016`. It can be
 instantiated with five arguments. The first argument is :math:`\tilde{l}^T`,
-which need not necessarily be a symbol and can be an expression. The further
+which need not necessarily be a symbol; it could be an expression. The further
 four arguments are all constants. It is intended that these will be constants,
 or sympifiable numerical values.
 
@@ -554,7 +554,7 @@ The :obj:`~sympy.physics._biomechanics.TendonForceLengthDeGroote2016` class also
 supports code generation, so seamlessly integrates with SymPy's code printers.
 To visualize this curve, we can use :obj:`~sympy.utilities.lambdify.lambdify` on
 an instance of the function, which will create a callable to evaluate it for a
-given value of :math:`\tilde{l}^T`. Sensible values for :math:`\tilde{l}^T fall
+given value of :math:`\tilde{l}^T`. Sensible values for :math:`\tilde{l}^T` fall
 within the range :math:`[0.95, 1.05]`, which we will plot below.
 
 .. plot::
@@ -585,7 +585,7 @@ value of :math:`fl^T\left(\tilde{l}^T\right)`.
 
 .. math::
 
-   \tilde{l}^T = \left[fl^T\left(\tilde{l}^T\right)\right]^{-1} = frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1
+   \tilde{l}^T = \left[fl^T\left(\tilde{l}^T\right)\right]^{-1} = \frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1
 
 There is also a class for this in :obj:`~sympy.physics._biomechanics`,
 :obj:`~sympy.physics._biomechanics.TendonForceLengthInverseDeGroote2016`, which
@@ -709,7 +709,7 @@ from [DeGroote2016]_ is again analytically invertible.
 
 .. math::
 
-  tilde{l}^M = \left[fl^M_{pas}\right]^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_pas + 1}}{c_1} + 1
+  \tilde{l}^M = \left[fl^M_{pas}\right]^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_{pas} + 1}}{c_1} + 1
 
 There is also a class for this in :obj:`~sympy.physics._biomechanics`,
 :obj:`~sympy.physics._biomechanics.FiberForceLengthPassiveInverseDeGroote2016`.
