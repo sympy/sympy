@@ -34,23 +34,24 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
     return check_satisfiability(props, _props, assumptions)
 
 
+WHITE_LIST = ALLOWED_PRED | BENIGN_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
+                                            Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
+                                            Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
+                                            Q.positive_infinite}
+
+
 def check_satisfiability(prop, _prop, factbase):
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    try:
-        sat_true = _preprocess(sat_true)
-        sat_false = _preprocess(sat_false)
-    except UnhandledPred:
-        return None
-
     # check if query might be handled by LRASolver
     for pred in sat_true.encoding.keys():
         if isinstance(pred, AppliedPredicate):
-            if pred.function not in ALLOWED_PRED and pred.function not in BENIGN_PRED:
-                return None
+            if pred.function != Q.ne:
+                if pred.function not in WHITE_LIST:
+                    return None
             exprs = pred.arguments
             for expr in exprs:
                 if expr.kind == MatrixKind(NumberKind):
@@ -59,6 +60,12 @@ def check_satisfiability(prop, _prop, factbase):
                     return None
                 if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
                     return None
+
+    try:
+        sat_true = _preprocess(sat_true)
+        sat_false = _preprocess(sat_false)
+    except UnhandledPred:
+        return None
 
     try:
         can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False

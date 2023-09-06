@@ -279,13 +279,15 @@ class LRASolver():
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledInput(f"{prop} contains infinity")
 
-            prop = _eval_binrel(prop)  # simplify to True / False if possible
+            prop = _eval_binrel(prop)  # simplify variable-less quantities to True / False if possible
             if prop == True:
                 conflicts.append([enc])
                 continue
             elif prop == False:
                 conflicts.append([-enc])
                 continue
+            elif prop is None:
+                raise UnhandledInput(f"{prop} could not be simplified")
 
             expr = prop.lhs - prop.rhs
             if prop.function in [Q.ge, Q.gt]:
@@ -772,15 +774,15 @@ def _eval_binrel(binrel):
         return binrel
     if binrel.function == Q.lt:
         res = binrel.lhs < binrel.rhs
-    if binrel.function == Q.gt:
+    elif binrel.function == Q.gt:
         res = binrel.lhs > binrel.rhs
-    if binrel.function == Q.le:
+    elif binrel.function == Q.le:
         res = binrel.lhs <= binrel.rhs
-    if binrel.function == Q.ge:
+    elif binrel.function == Q.ge:
         res = binrel.lhs >= binrel.rhs
-    if binrel.function == Q.eq:
+    elif binrel.function == Q.eq:
         res = Eq(binrel.lhs, binrel.rhs)
-    if binrel.function == Q.ne:
+    elif binrel.function == Q.ne:
         res = Ne(binrel.lhs, binrel.rhs)
 
     if res == True or res == False:
