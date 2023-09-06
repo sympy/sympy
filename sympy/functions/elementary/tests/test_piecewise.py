@@ -524,8 +524,8 @@ def test_piecewise_simplify():
 
     # coverage
     nan = Undefined
-    covered = Piecewise((1, x > 3), (2, x < 2), (3, x > 1))
-    assert covered.simplify().args  == covered.args
+    assert Piecewise((1, x > 3), (2, x < 2), (3, x > 1)).simplify(
+        )  == Piecewise((1, x > 3), (2, x < 2), (3, True))
     assert Piecewise((1, x < 2), (2, x < 1), (3, True)).simplify(
         ) == Piecewise((1, x < 2), (3, True))
     assert Piecewise((1, x > 2)).simplify() == Piecewise((1, x > 2),
