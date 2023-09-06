@@ -1,5 +1,6 @@
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
+from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer
@@ -83,7 +84,7 @@ class ArrayKind(Kind):
         return ArrayKind(elemkind)
 
 
-class NDimArray(Printable):
+class NDimArray(Printable, EvalfMixin):
     """N-dimensional array.
 
     Examples
@@ -585,6 +586,12 @@ class NDimArray(Printable):
             raise ValueError('Dimension of index greater than rank of array')
 
         return index
+
+    def _eval_evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+        """Apply evalf() to each element of self."""
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
+        return self.applyfunc(lambda i: i.evalf(n, **options))
 
 
 class ImmutableNDimArray(NDimArray, Basic):
