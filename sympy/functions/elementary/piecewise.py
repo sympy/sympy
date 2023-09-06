@@ -1144,6 +1144,7 @@ def _clip(A, B, k):
 
 def piecewise_simplify_arguments(expr, **kwargs):
     from sympy.simplify.simplify import simplify
+    from sympy.sets import Union
 
     # simplify conditions
     f1 = expr.args[0].cond.free_symbols
@@ -1160,12 +1161,21 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 return c.subs(x, a) == True
             except TypeError:
                 return False
+        def lhs(a):
+            if a.is_finite and covered:
+                ivls = [covered] if not isinstance(covered, Union) else covered.args
+                for ivl in ivls:
+                    if a in ivl:
+                        return ivl.sup
+            return a
+            
         if ok:
             args = []
             covered = S.EmptySet
             from sympy.sets.sets import Interval
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
+                a = lhs(a)
                 incl_a = include(c, x, a)
                 incl_b = include(c, x, b)
                 iv = Interval(a, b, not incl_a, not incl_b)
@@ -1195,6 +1205,8 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 elif incl_b:
                     if b.is_infinite:
                         c = (x > a)
+                    elif a.is_infinite:
+                        c = (x <= b)
                     else:
                         c = And(a < x, x <= b)
                 else:
