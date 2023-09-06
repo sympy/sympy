@@ -46,6 +46,7 @@ def test_basics():
     cyl = me.WrappingCylinder(r, O, N.z)
     wpathway = me.WrappingPathway(P, Q, cyl)
 
+    # actuators
     N = me.ReferenceFrame('N')
     O, P = me.Point('O'), me.Point('P')
     P.set_pos(O, x*N.x)
@@ -125,33 +126,157 @@ def test_basics():
     })
 
     # curve
-    l_T_tilde = sm.symbols('l_T_tilde')
+    l_T_tilde = me.dynamicsymbols('l_T_tilde')
+    c0, c1, c2, c3 = sm.symbols('c0, c1, c2, c3')
+    fl_T = c0*sm.exp(c3*(l_T_tilde - c1)) - c2
+    assert str(fl_T) == 'c0*exp(c3*(-c1 + l_T_tilde(t))) - c2'
 
-    curve1 = bm.FiberForceLengthActiveDeGroote2016.with_defaults(l_T_tilde)
-    curve1
-    #sm.plot(curve1)
+    l_T = me.dynamicsymbols('l_T')
+    l_T_slack = sm.symbols('l_T_slack')
+    fl_T = c0*sm.exp(c3*(l_T/l_T_slack - c1)) - c2
+    assert str(fl_T) == 'c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2'
 
-    curve2 = bm.FiberForceLengthPassiveDeGroote2016.with_defaults(l_T_tilde)
-    curve2
-    #sm.plot(curve2)
+    fl_T2 = bm.TendonForceLengthDeGroote2016(l_T/l_T_slack, c0, c1, c2, c3)
+    assert str(fl_T2) == (
+        'TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, c0, c1, c2, c3)'
+    )
+    assert fl_T2.doit() == c0*sm.exp(c3*(-c1 + l_T/l_T_slack)) - c2
 
-    curve3 = bm.FiberForceVelocityDeGroote2016.with_defaults(l_T_tilde)
-    curve3
-    #sm.plot(curve3)
+    fl_T3 = bm.TendonForceLengthDeGroote2016.with_defaults(l_T/l_T_slack)
+    assert str(fl_T3) == (
+        'TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, 0.2, 0.995, 0.25, '
+        '33.93669377311689)'
+    )
 
-    curve4 = bm.TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
-    curve4
-    #sm.plot(curve4)
+    l_M_tilde = me.dynamicsymbols('l_M_tilde')
+    c0, c1 = sm.symbols('c0, c1')
 
-    # these two are used internally in the matching two above to give inverse
-    # functions
-    curve5 = bm.TendonForceLengthInverseDeGroote2016.with_defaults(l_T_tilde)
-    curve5
-    #sm.plot(curve5)
+    fl_M_pas = (sm.exp(c1*(l_M_tilde - 1)/c0) - 1)/(sm.exp(c1) - 1)
+    assert str(fl_M_pas) == '(exp(c1*(l_M_tilde(t) - 1)/c0) - 1)/(exp(c1) - 1)'
 
-    curve6 = bm.FiberForceLengthPassiveInverseDeGroote2016.with_defaults(l_T_tilde)
-    curve6
-    #sm.plot(curve6)
+    l_M = me.dynamicsymbols('l_M')
+    l_M_opt = sm.symbols('l_M_opt')
+
+    fl_M_pas2 = (sm.exp(c1*(l_M/l_M_opt - 1)/c0) - 1)/(sm.exp(c1) - 1)
+    assert str(fl_M_pas2) == (
+        '(exp(c1*(-1 + l_M(t)/l_M_opt)/c0) - 1)/(exp(c1) - 1)'
+    )
+
+    fl_M_pas2 = bm.FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, c0, c1)
+    assert str(fl_M_pas2) == (
+        'FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, c0, c1)'
+    )
+    assert fl_M_pas2.doit() == (
+        (sm.exp(c1*(-1 + l_M/l_M_opt)/c0) - 1)/(sm.exp(c1) - 1)
+    )
+
+    fl_M_pas3 = bm.FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
+    assert str(fl_M_pas3) == (
+        'FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, 3/5, 4)'
+    )
+    assert fl_M_pas3.doit() == (
+        (sm.exp(sm.Rational(-20, 3) + (20*l_M/(3*l_M_opt))) - 1)/(-1 + sm.exp(4))
+    )
+
+    fl_M_pas_sym = me.dynamicsymbols('fl_M_pas')
+    fl_M_pas_inv = bm.FiberForceLengthPassiveInverseDeGroote2016(
+        fl_M_pas_sym, c0, c1
+    )
+    assert str(fl_M_pas_inv) == (
+        'FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), c0, c1)'
+    )
+
+    fl_M_pas_inv2 = bm.FiberForceLengthPassiveInverseDeGroote2016.with_defaults(
+        fl_M_pas_sym
+    )
+    assert str(fl_M_pas_inv2) == (
+        'FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), 3/5, 4)'
+    )
+
+    constants = sm.symbols('c0:12')
+    c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = constants
+
+    fl_M_act = (
+        c0*sm.exp(-(((l_M_tilde - c1)/(c2 + c3*l_M_tilde))**2)/2)
+        + c4*sm.exp(-(((l_M_tilde - c5)/(c6 + c7*l_M_tilde))**2)/2)
+        + c8*sm.exp(-(((l_M_tilde - c9)/(c10 + c11*l_M_tilde))**2)/2)
+    )
+    assert fl_M_act == (
+        c0*sm.exp(-(-c1 + l_M_tilde)**2/(2*(c2 + c3*l_M_tilde)**2))
+        + c4*sm.exp(-(-c5 + l_M_tilde)**2/(2*(c6 + c7*l_M_tilde)**2))
+        + c8*sm.exp(-(-c9 + l_M_tilde)**2/(2*(c10 + c11*l_M_tilde)**2))
+    )
+
+    fl_M_act2 = bm.FiberForceLengthActiveDeGroote2016(l_M/l_M_opt, *constants)
+    assert str(fl_M_act2) == (
+        'FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, c0, c1, c2, c3, '
+        'c4, c5, c6, c7, c8, c9, c10, c11)'
+    )
+    assert fl_M_act2.doit() == (
+        c0*sm.exp(-(-c1 + l_M/l_M_opt)**2/(2*(c2 + c3*l_M/l_M_opt)**2))
+        + c4*sm.exp(-(-c5 + l_M/l_M_opt)**2/(2*(c6 + c7*l_M/l_M_opt)**2))
+        + c8*sm.exp(-(-c9 + l_M/l_M_opt)**2/(2*(c10 + c11*l_M/l_M_opt)**2))
+    )
+
+    fl_M_act3 = bm.FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
+    assert str(fl_M_act3) == (
+        'FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, '
+        '0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)'
+    )
+    assert fl_M_act3.doit() == (
+        sm.Float('0.814')*sm.exp(-(((l_M/l_M_opt
+                                     - sm.Float('1.06'))/(sm.Float('0.162')
+                                     + sm.Float('0.0633')*l_M/l_M_opt))**2)/2)
+        + sm.Float('0.433')*sm.exp(-(((l_M/l_M_opt
+                                       - sm.Float('0.717'))/(sm.Float('-0.0299')
+                                       + sm.Rational(1, 5)*l_M/l_M_opt))**2)/2)
+        + sm.Rational(1, 10)*sm.exp(-(((l_M/l_M_opt
+                                        - sm.Integer(1))/(sm.Float('0.354')
+                                        + sm.Integer(0)*l_M/l_M_opt))**2)/2)
+    )
+
+    v_M_tilde = me.dynamicsymbols('v_M_tilde')
+    c0, c1, c2, c3 = sm.symbols('c0, c1, c2, c3')
+
+    fv_M = c0*sm.log(c1*v_M_tilde + c2 + sm.sqrt((c1*v_M_tilde + c2)**2 + 1)) + c3
+    assert str(fv_M) == (
+        'c0*log(c1*v_M_tilde(t) + c2 '
+        '+ sqrt((c1*v_M_tilde(t) + c2)**2 + 1)) + c3'
+    )
+
+    v_M = me.dynamicsymbols('v_M')
+    v_M_max = sm.symbols('v_M_max')
+
+    fv_M_pas2 = (
+        c0*sm.log(c1*v_M/v_M_max + c2 + sm.sqrt((c1*v_M/v_M_max + c2)**2 + 1))
+        + c3
+    )
+    assert str(fv_M_pas2) == (
+        'c0*log(c1*v_M(t)/v_M_max + c2 '
+        '+ sqrt((c1*v_M(t)/v_M_max + c2)**2 + 1)) + c3'
+    )
+
+    fv_M2 = bm.FiberForceVelocityDeGroote2016(v_M/v_M_max, c0, c1, c2, c3)
+    assert str(fv_M2) == (
+        'FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, c0, c1, c2, c3)'
+    )
+    assert fv_M2.doit() == (
+        c0*sm.log(c1*v_M/v_M_max + c2
+                  + sm.sqrt((c1*v_M/v_M_max + c2)**2 + 1)) + c3
+    )
+
+    fv_M3 = bm.FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
+    assert str(fv_M3) == (
+        'FiberForceVelocityDeGroote2016(v_M(t)/v_M_max, -0.318, -8.149, '
+        '-0.374, 0.886)'
+    )
+    assert fv_M3.doit() == (
+        sm.Float('-0.318')*sm.log(sm.Float('-8.149')*v_M/v_M_max
+                                  + sm.Float('-0.374')
+                                  + sm.sqrt((sm.Float('-8.149')*v_M/v_M_max
+                                             + sm.Float('-0.374'))**2 + 1))
+        + sm.Float('0.886')
+    )
 
     # musculotendon
     l_T_slack, F_M_max, l_M_opt, v_M_max, alpha_opt, beta = sm.symbols(
