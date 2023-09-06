@@ -609,10 +609,10 @@ TendonForceLengthInverseDeGroote2016(fl_T(t), 0.2, 0.995, 0.25, 33.9366937731168
 Fiber Passive Force-Length
 --------------------------
 
-The first element used to model the muscle fibers is the fiber passive force-
-length. This is essentially another nonlinear spring representing the elastic
-properties of the muscle fibers. The characteristic curve describing this
-element is a function of normalized muscle fiber length:
+The first element used to model the muscle fibers is the fiber passive
+force- length. This is essentially another nonlinear spring representing the
+elastic properties of the muscle fibers. The characteristic curve describing
+this element is a function of normalized muscle fiber length:
 
 .. math::
 
@@ -922,11 +922,75 @@ optimal control problems as this increase in damping typically does not
 significantly effect the musculotendon dynamics but does have been empirically
 found to significantly improve the numerical conditioning of the equations.
 
-Musculotendon Actuators
-=======================
-
 Musculotendon Dynamics
 ======================
+
+Rigid Tendon Dynamics
+---------------------
+
+Rigid tendon musculotendon dynamics are reasonably straightforward to implement
+because the inextensible tendon allows for the normalized muscle fiber length
+to be expressed directly in terms of musculotendon length. With the inextensible
+tendon :math:`l^T = l^T_{slack}` and as such, normalized tendon length
+is just unity, :math:`\tilde{l}^T = 1`. Using trigonometry, muscle fiber length
+can be expressed as
+
+.. math::
+
+   l^M = \sqrt{\left(l^{MT} - l^T\right)^2 + \left(l^M_{opt} \sin{\alpha_{opt}} \right)^2}
+
+where :math:`\alpha_{opt}` is the "optimal pennation angle", another constant
+property of a musculotendon that describes the pennation angle (the angle of
+the muscle fibers relative to the direction parallel to the tendon) at which
+:math:`l^M = l^M_{opt}`. A common simplifying assumption is to assume
+:math:`\alpha_{opt} = 0`, which simplifies the above to
+
+.. math::
+
+   l^M = \sqrt{\left(l^{MT} - l^T\right)^2 + \left(l^M_{opt}\right)^2}
+
+With :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`, the muscle fiber velocity can
+be expressed as
+
+.. math::
+
+   v^M = v^{MT} \frac{l^{MT} - l^T_{slack}}{l^M}
+
+Muscle fiber can be normalized as before,
+:math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`. Using the curves described above,
+we can express the normalized muscle fiber force (:math:`\tilde{F}^M`) can be
+expressed as a function of normalized tendon length (:math:`\tilde{l}^T`),
+normalized fiber length (:math:`\tilde{l}^M`), normalized fiber velocity
+(:math:`\tilde{v}^M`), and activation (:math:`a`):
+
+.. math::
+
+   \tilde{F}^M = a \cdot fl^M_{act}\left(\tilde{l}^M\right) \cdot fv^M\left(\tilde{v}^M\right) + fl^M_{pas}\left(\tilde{l}^M\right) + \beta \cdot \tilde{v}^M
+
+We introduce a new constant, :math:`F^M_{max}`, the "maximum isometric force",
+which describes the maximum force that a musculotendon can produce under full
+activation and an isometric (:math:`v^M = 0`) contraction. Accounting for the
+pennation angle, the tendon force (:math:`F^T`), which is the force applied to
+the skeleton at the musculotendon's origin and insertion, can be expressed as:
+
+.. math::
+
+   F^T = F^M_{max} \cdot F^M\right \cdot \sqrt{1 - \left(\alpha_{opt}\right)^2}
+
+We can describe all of this using SymPy and the musculotendon class we
+introduced above.
+
+Elastic Tendon Dynamics
+-----------------------
+
+Elastic tendon dynamics are more complicated as we cannot directly express fiber
+length in terms of musculotendon length due to tendon length varying. Instead,
+we have to related the forces experienced in the tendon to the forces produced
+by the muscle fibers, ensuring that the two are in equilibrium. We cannot do
+this without introducing an additional state variable into the musculotendon
+dynamics, and thus an additional first-order ordinary differential equation.
+There are many choices that we can make for this state, but perhaps one of the
+most intuitive is to use :math:`\tilde{l}^M`.
 
 A Simple Musculotendon Model
 ============================
