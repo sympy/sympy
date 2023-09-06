@@ -13,11 +13,8 @@ from sympy.utilities.misc import as_int
 
 
 def is_euler_pseudoprime(n, a):
-    """Returns True if n is prime or an Euler pseudoprime to base a, else False.
-
-    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
-    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
-    arithmetic congruence relation :
+    """Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
     a ^ (n-1)/2 = + 1(mod n) or
     a ^ (n-1)/2 = - 1(mod n)
@@ -37,7 +34,7 @@ def is_euler_pseudoprime(n, a):
     =======
 
     bool : If ``n`` is prime, it always returns ``True``.
-           The composite number that returns ``True`` is called Euler pseudoprime.
+           The composite number that returns ``True`` is called an Euler pseudoprime.
 
     Examples
     ========
