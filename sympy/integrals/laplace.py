@@ -1510,17 +1510,15 @@ def _inverse_laplace_diff(f, s, t, plane):
     """
     a = Wild('a', exclude=[s])
     n = Wild('n', exclude=[s])
-    g = WildFunction('g')
+    g = Wild('g')
     ma = f.match(a*Derivative(g, (s, n)))
     if ma and ma[n].is_integer:
-        m = [z.has(s) for z in ma[g].args]
-        if sum(m) == 1:
-            debug('_inverse_laplace_apply_rules match:')
-            debugf('      f, n: %s, %s', (f, ma[n]))
-            debug('      rule: t**n*f(t) o---o (-1)**n*diff(F(s), s, n)')
-            r, c = _inverse_laplace_transform(
-                ma[g], s, t, plane, simplify=False, dorational=False)
-            return (-t)**ma[n]*r, c
+        debug('_inverse_laplace_apply_rules match:')
+        debugf('      f, n: %s, %s', (f, ma[n]))
+        debug('      rule: t**n*f(t) o---o (-1)**n*diff(F(s), s, n)')
+        r, c = _inverse_laplace_transform(
+            ma[g], s, t, plane, simplify=False, dorational=False)
+        return (-t)**ma[n]*r, c
     return None
 
 
