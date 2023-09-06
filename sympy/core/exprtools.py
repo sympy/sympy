@@ -7,7 +7,7 @@ from .basic import Basic
 from .expr import Expr
 from .function import expand_power_exp
 from .sympify import sympify
-from .numbers import Rational, Integer, Number, I, equal_valued
+from .numbers import Rational, Integer, Float, Number, I, equal_valued
 from .singleton import S
 from .sorting import default_sort_key, ordered
 from .symbol import Dummy
@@ -23,6 +23,23 @@ from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
+
+
+def is_int(x):
+    """return True only for a literal Number whose internal
+    representation as a fraction has a denominator of 1,
+    else False
+    """
+    if isinstance(x, (SYMPY_INTS, int)):
+        return True
+    if type(x) is float:
+        return x.is_integer()
+    if isinstance(x, Integer):
+        return True
+    if isinstance(x, Float):
+        # x = s*m*2**p; _mpf_ = s,m,e,p
+        return x._mpf_[2] >= 0
+    return False  # or add new types to recognize
 
 
 def _isnumber(i):

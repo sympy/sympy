@@ -1,6 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
 
+from sympy.core.exprtools import is_int
 from sympy.polys.domains.field import Field
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -152,7 +153,7 @@ class FiniteField(Field, SimpleDomain):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
         if a.is_Integer:
             return self.dtype(self.dom.dtype(int(a)))
-        elif a.is_Float and int(a) == a:
+        elif is_int(a):
             return self.dtype(self.dom.dtype(int(a)))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

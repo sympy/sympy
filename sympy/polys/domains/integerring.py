@@ -2,6 +2,7 @@
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
+from sympy.core.exprtools import is_int
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
     factorial,
@@ -69,7 +70,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return MPZ(a.p)
-        elif a.is_Float and int(a) == a:
+        elif is_int(a):
             return MPZ(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
