@@ -29,6 +29,7 @@ from sympy.abc import s
 @slow
 def test_laplace_transform():
     LT = laplace_transform
+    ILT = inverse_laplace_transform
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
     f = Function('f')
@@ -312,6 +313,14 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    # The following lines test whether _laplace_transform successfully
+    # removes Heaviside(1) before processing espressions. It fails if
+    # Heaviside(t) remains because then meijerg functions will appear.
+    X1 = 1/sqrt(a*s**2-b)
+    x1 = ILT(X1, s, t)
+    Y1 = LT(x1, t, s)[0]
+    Z1 = (Y1**2/X1**2).simplify()
+    assert Z1 == 1
     # The following two lines test whether issues #5813 and #7176 are solved.
     assert (LT(diff(f(t), (t, 1)), t, s, noconds=True) ==
             s*LaplaceTransform(f(t), t, s) - f(0))
@@ -339,6 +348,10 @@ def test_laplace_transform():
     assert LT(3*exp(t)*Heaviside(t), t, s) == (3/(s - 1), 1, True)
     assert (LT(2*sin(t)*Heaviside(t), t, s, simplify=True) ==
             (2/(s**2 + 1), 0, True))
+    # Issue #25293
+    assert (
+        LT((1/(t-1))*sin(4*pi*(t-1))*DiracDelta(t-1) *
+           (Heaviside(t-1/4) - Heaviside(t-2)), t, s)[0] == 4*pi*exp(-s))
     # additional basic tests from wikipedia
     assert (LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) ==
             ((c + s)**(-b - 1)*exp(-a*s)*gamma(b + 1), -c, True))
