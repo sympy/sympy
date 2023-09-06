@@ -1450,9 +1450,6 @@ def _inverse_laplace_build_rules():
         except PolynomialError:
             return f
 
-    def _is_integer(x):
-        return x.is_integer
-
     def same(f): return f
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
