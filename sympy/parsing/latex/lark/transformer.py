@@ -7,11 +7,12 @@ from sympy.parsing.latex.errors import LaTeXParsingError
 lark = import_module("lark")
 
 if lark:
-    from lark import Transformer, Token # type: ignore
+    from lark import Transformer, Token  # type: ignore
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
             pass
+
 
     class Token:  # type: ignore
         pass
@@ -21,6 +22,9 @@ else:
 class TransformToSymPyExpr(Transformer):
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
+
+    def CMD_INFTY(self, tokens):
+        return sympy.oo
 
     def GREEK_SYMBOL(self, tokens):
         # we omit the first character because it is a backslash. Also, if the variable name has "var" in it,
@@ -58,7 +62,7 @@ class TransformToSymPyExpr(Transformer):
 
             return sympy.Symbol("%s_{%s}" % (symbol, greek_letter))
 
-    def multiletter_symbol(self, tokens):
+    def multi_letter_symbol(self, tokens):
         return sympy.Symbol(tokens[2])
 
     def number(self, tokens):
@@ -70,9 +74,6 @@ class TransformToSymPyExpr(Transformer):
     def latex_string(self, tokens):
         return tokens[0]
 
-    def infinity(self, tokens):
-        return sympy.oo
-
     def group_round_parentheses(self, tokens):
         return tokens[1]
 
@@ -82,22 +83,23 @@ class TransformToSymPyExpr(Transformer):
     def group_curly_parentheses(self, tokens):
         return tokens[1]
 
-    def relation(self, tokens):
-        relation_type = tokens[1].type
-        if relation_type == "EQUAL":
-            return sympy.Eq(tokens[0], tokens[2])
-        elif relation_type == "NOT_EQUAL":
-            return sympy.Ne(tokens[0], tokens[2])
-        elif relation_type == "LT":
-            return sympy.Lt(tokens[0], tokens[2])
-        elif relation_type == "LTE":
-            return sympy.Le(tokens[0], tokens[2])
-        elif relation_type == "GT":
-            return sympy.Gt(tokens[0], tokens[2])
-        elif relation_type == "GTE":
-            return sympy.Ge(tokens[0], tokens[2])
-        else:
-            raise LaTeXParsingError() # TODO: Fill descriptive error message.
+    def eq(self, tokens):
+        return sympy.Eq(tokens[0], tokens[2])
+
+    def ne(self, tokens):
+        return sympy.Ne(tokens[0], tokens[2])
+
+    def lt(self, tokens):
+        return sympy.Lt(tokens[0], tokens[2])
+
+    def lte(self, tokens):
+        return sympy.Le(tokens[0], tokens[2])
+
+    def gt(self, tokens):
+        return sympy.Gt(tokens[0], tokens[2])
+
+    def gte(self, tokens):
+        return sympy.Ge(tokens[0], tokens[2])
 
     def add(self, tokens):
         return sympy.Add(tokens[0], tokens[2])
@@ -109,26 +111,46 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Add(tokens[0], -tokens[2])
 
     def mul(self, tokens):
-        if len(tokens) == 2:
-            return sympy.Mul(tokens[0], tokens[1])
-        elif len(tokens) == 3:
-            return sympy.Mul(tokens[0], tokens[2])
-        else:
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+        return sympy.Mul(tokens[0], tokens[2])
 
     def div(self, tokens):
         return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
+
+    def adjacent_expressions(self, tokens):
+        # Most of the time, if two expressions are next to each other, it means implicit multiplication,
+        # but not always
+        from sympy.physics.quantum import Bra, Ket
+        if isinstance(tokens[0], Ket) and isinstance(tokens[1], Bra):
+            from sympy.physics.quantum import OuterProduct
+            return OuterProduct(tokens[0], tokens[1])
+        elif tokens[0] == sympy.Symbol("d"):
+            # If the leftmost token is a "d", then it is highly likely that this is a differential
+            return tokens[0], tokens[1]
+        elif isinstance(tokens[0], tuple):
+            # then we have a derivative
+            return sympy.Derivative(tokens[1], tokens[0][1])
+        else:
+            return sympy.Mul(tokens[0], tokens[1])
 
     def superscript(self, tokens):
         return sympy.Pow(tokens[0], tokens[2])
 
     def fraction(self, tokens):
-        return sympy.Mul(tokens[1], sympy.Pow(tokens[2], -1))
+        numerator = tokens[1]
+        if isinstance(tokens[2], tuple):
+            # we only need the variable w.r.t. which we are differentiating
+            _, variable = tokens[2]
+
+            # we will pass this information upwards
+            return "derivative", variable
+        else:
+            denominator = tokens[2]
+            return sympy.Mul(numerator, sympy.Pow(denominator, -1))
 
     def binomial(self, tokens):
         return sympy.binomial(tokens[1], tokens[2])
 
-    def integral(self, tokens):
+    def normal_integral(self, tokens):
         underscore_index = None
         caret_index = None
 
@@ -145,46 +167,110 @@ class TransformToSymPyExpr(Transformer):
         lower_bound = tokens[underscore_index + 1] if underscore_index else None
         upper_bound = tokens[caret_index + 1] if caret_index else None
 
-        if "d" in tokens:
-            differential_symbol_index = tokens.index("d")
-        elif r"\text{d}" in tokens:
-            differential_symbol_index = tokens.index(r"\text{d}")
-        elif r"\mathrm{d}" in tokens:
-            differential_symbol_index = tokens.index(r"\mathrm{d}")
-        else:
-            # differential symbol was not found
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+        differential_symbol = self._extract_differential_symbol(tokens)
 
-        differential_symbol = tokens[differential_symbol_index + 1]
+        if differential_symbol is None:
+            raise LaTeXParsingError("Differential symbol was not found in the expression."
+                                    "Valid differential symbols are \"d\", \"\\text{d}, and \"\\mathrm{d}\".")
 
-        if (lower_bound is not None and upper_bound is None) or (upper_bound is not None and lower_bound is None):
+        # else we can assume that a differential symbol was found
+        differential_variable_index = tokens.index(differential_symbol) + 1
+        differential_variable = tokens[differential_variable_index]
+
+        # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would
+        # evaluate to `True` if the `lower_bound` is 0 and upper bound is non-zero
+        if lower_bound is not None and upper_bound is None:
             # then one was given and the other wasn't
+            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not found.")
 
-            # we can"t simply do something like `if (lower_bound and not upper_bound) ...` because this would evaluate
-            # to True if the lower_bound is 0
-            raise LaTeXParsingError() # TODO: fill out descriptive error message
+        if upper_bound is not None and lower_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not found.")
 
         # check if any expression was given or not. If it wasn't, then set the integrand to 1.
-        if underscore_index is not None and underscore_index == differential_symbol_index - 2:
+        if underscore_index is not None and underscore_index == differential_variable_index - 3:
+            # The Token at differential_variable_index - 2 should be the integrand. However, if going one more step
+            # backwards after that gives us the underscore, then that means that there _was_ no integrand.
+            # Example: \int^7_0 dx
             integrand = 1
-        elif caret_index is not None and caret_index == differential_symbol_index - 2:
+        elif caret_index is not None and caret_index == differential_variable_index - 3:
+            # The Token at differential_variable_index - 2 should be the integrand. However, if going one more step
+            # backwards after that gives us the caret, then that means that there _was_ no integrand.
+            # Example: \int_0^7 dx
             integrand = 1
-        elif differential_symbol_index == 1:
-            # this means we have something like \int dx, because the \int symbol will always be
+        elif differential_variable_index == 2:
+            # this means we have something like "\int dx", because the "\int" symbol will always be
             # at index 0 in `tokens`
             integrand = 1
         else:
-            integrand = tokens[differential_symbol_index - 1]
+            # The Token at differential_variable_index - 1 is the differential symbol itself, so we need to go one
+            # more step before that.
+            integrand = tokens[differential_variable_index - 2]
 
         if lower_bound is not None:
-            # we have an definite integral
+            # then we have a definite integral
 
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
-            return sympy.Integral(integrand, (differential_symbol, lower_bound, upper_bound))
+            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
         else:
             # we have an indefinite integral
-            return sympy.Integral(integrand, differential_symbol)
+            return sympy.Integral(integrand, differential_variable)
+
+    def group_curly_parentheses_int(self, tokens):
+        # return signature is a tuple consisting of the expression in the numerator, along with the variable of
+        # integration
+        if len(tokens) == 3:
+            return 1, tokens[1]
+        elif len(tokens) == 4:
+            return tokens[1], tokens[2]
+        # there are no other possibilities
+
+    def special_fraction(self, tokens):
+        numerator, variable = tokens[1]
+        denominator = tokens[2]
+
+        # We pass the integrand, along with information about the variable of integration, upw
+        return sympy.Mul(numerator, sympy.Pow(denominator, -1)), variable
+
+    def integral_with_special_fraction(self, tokens):
+        underscore_index = None
+        caret_index = None
+
+        if "_" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the lower bound of the integral
+            underscore_index = tokens.index("_")
+
+        if "^" in tokens:
+            # we need to know the index because the next item in the list is the
+            # arguments for the upper bound of the integral
+            caret_index = tokens.index("^")
+
+        lower_bound = tokens[underscore_index + 1] if underscore_index else None
+        upper_bound = tokens[caret_index + 1] if caret_index else None
+
+        # we can't simply do something like `if (lower_bound and not upper_bound) ...` because this would
+        # evaluate to `True` if the `lower_bound` is 0 and upper bound is non-zero
+        if lower_bound is not None and upper_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Lower bound for the integral was found, but upper bound was not found.")
+
+        if upper_bound is not None and lower_bound is None:
+            # then one was given and the other wasn't
+            raise LaTeXParsingError("Upper bound for the integral was found, but lower bound was not found.")
+
+        integrand, differential_variable = tokens[-1]
+
+        if lower_bound is not None:
+            # then we have a definite integral
+
+            # we can assume that either both the lower and upper bounds are given, or
+            # neither of them are
+            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+        else:
+            # we have an indefinite integral
+            return sympy.Integral(integrand, differential_variable)
 
     def group_curly_parentheses_special(self, tokens):
         underscore_index = tokens.index("_")
@@ -258,6 +344,12 @@ class TransformToSymPyExpr(Transformer):
 
         return sympy.Limit(tokens[-1], limit_variable, destination, direction)
 
+    def differential(self, tokens):
+        return tokens[1]
+
+    def derivative(self, tokens):
+        return sympy.Derivative(tokens[-1], tokens[5])
+
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
             # we return it verbatim because the function_applied node expects
@@ -267,8 +359,8 @@ class TransformToSymPyExpr(Transformer):
             def remove_tokens(args):
                 if isinstance(args, Token):
                     if args.type != "COMMA":
-                        # an unexpected token was encountered
-                        raise LaTeXParsingError()  # TODO: write descriptive error message
+                        # An unexpected token was encountered
+                        raise LaTeXParsingError("A comma token was expected, but some other token was encountered.")
                     return False
                 return True
 
@@ -284,17 +376,14 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Max(*tokens[2])
 
     def bra(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Bra
         return Bra(tokens[1])
 
     def ket(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Ket
         return Ket(tokens[1])
 
     def inner_product(self, tokens):
-        # TODO: Change or update the below code (or remove this comment) when the issue #25551 is resolved
         from sympy.physics.quantum import Bra, Ket, InnerProduct
         return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
 
@@ -436,3 +525,10 @@ class TransformToSymPyExpr(Transformer):
             else:
                 # a base was not specified
                 return sympy.log(tokens[1])
+
+    def _extract_differential_symbol(self, s: str):
+        differential_symbols = {"d", r"\text{d}", r"\mathrm{d}"}
+
+        differential_symbol = next((symbol for symbol in differential_symbols if symbol in s), None)
+
+        return differential_symbol
