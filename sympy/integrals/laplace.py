@@ -1,5 +1,5 @@
 """Laplace Transforms"""
-from sympy.core import S, pi, I, nan
+from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
@@ -590,20 +590,15 @@ def _laplace_rule_delta(f, t, s):
             loc = ma2[a]/ma2[b]
             if re(loc) >= 0 and im(loc) == 0:
                 fn = exp(-ma2[a]/ma2[b]*s)*ma1[z]
-                print('--', fn)
-                r = fn.subs(t, ma2[a]/ma2[b])/ma2[b]
-                print('--', r)
-                if r == nan and (fn.has(sin, cos)):
+                if fn.has(sin, cos):
                     # Then it may be possible that a sinc() is present in the
                     # term; let's try this:
                     fn = fn.rewrite(sinc).ratsimp()
-                    print('--', fn)
-                    r = fn.subs(t, ma2[a]/ma2[b])/ma2[b]
-                    print('--', r)
-                if r == nan:
-                    return None
+                n, d = [x.subs(t, ma2[a]/ma2[b]) for x in fn.as_numer_denom()]
+                if d != 0:
+                    return (n/d/ma2[b], S.NegativeInfinity, S.true)
                 else:
-                    return (r, S.NegativeInfinity, S.true)
+                    return None
             else:
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
