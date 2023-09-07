@@ -10,13 +10,15 @@ from sympy.testing.pytest import slow, raises
 from sympy.core.numbers import I
 
 def test_euler_pseudoprimes():
+    assert is_euler_pseudoprime(13, 1)
+    assert is_euler_pseudoprime(15, 1)
     assert is_euler_pseudoprime(17, 6)
     assert is_euler_pseudoprime(101, 7)
     assert is_euler_pseudoprime(1009, 10)
     assert is_euler_pseudoprime(11287, 41)
 
     raises(ValueError, lambda: is_euler_pseudoprime(0, 4))
-    raises(ValueError, lambda: is_euler_pseudoprime(3, 1))
+    raises(ValueError, lambda: is_euler_pseudoprime(3, 0))
     raises(ValueError, lambda: is_euler_pseudoprime(15, 6))
 
     # A006970
