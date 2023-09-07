@@ -7,7 +7,6 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 from itertools import chain, compress
-from collections import defaultdict
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
@@ -15,6 +14,7 @@ from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
+from sympy.polys.polyconfig import query
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.domainelement import DomainElement
@@ -24,7 +24,7 @@ from sympy.polys.monomials import MonomialOps, monomial_ngcd
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import (
     CoercionFailed, GeneratorsError,
-    ExactQuotientFailed, MultivariatePolynomialError)
+    ExactQuotientFailed, MultivariatePolynomialError, DomainError, HeuristicGCDFailed)
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
@@ -2561,12 +2561,79 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
+    def coeff_split_syms(self, syms):
+        """
+        Split a polynomial into two parts: symbolic and non-symbolic.
+
+        This function divides the polynomial into terms that involve the
+        specified symbolic variables (syms) and terms that do not. It organizes
+        these terms into separate dictionaries.
+
+        Parameters
+        ==========
+
+        syms : set of int
+            A set of indices representing the symbolic variables to consider.
+
+        Returns
+        =======
+
+        dict
+            A nested dictionary where the keys are tuples representing the
+            symbolic variables in the first part of the polynomial, and the
+            values are dictionaries with keys representing the symbolic
+            variables in the second part of the polynomial and values representing the coefficients.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x, y, z = ring("x, y, z", ZZ)
+
+        >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+        >>> syms = {2}
+        >>> f.coeff_split_syms(syms)
+        {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3}, (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
+
+        See Also
+        ========
+
+        coeff, coeffs, coeff_split, coeff_wrt
+
+        """
+        p1 = self
+        p2 = {}
+        r = range(len(p1.ring.gens))
+
+        # Iterate through the terms and coefficients of the input polynomial
+        for m1, c1 in p1.items():
+            sym_indices = set(compress(r, m1))
+            m21 = [0] * len(r)
+            m22 = [0] * len(r)
+
+            # Separate variables into symbol and non-symbol categories
+            for i in sym_indices & syms:
+                m21[i] = m1[i]
+            for i in sym_indices - syms:
+                m22[i] = m1[i]
+
+            key1 = tuple(m21)
+            key2 = tuple(m22)
+
+            if key1 not in p2:
+                p2[key1] = {}
+
+            # Store the coefficient in the organized structure
+            p2[key1][key2] = p2.get(key1, {}).get(key2, 0) + c1
+
+        return p2
+
     def coeff_split(self, syms):
         """
         Get the coefficients of a polynomial with respect to the specified ``syms``.
 
         For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.coeff_split({y, t})`` converts ``p``
-        to an element of ``K[x, z][y, t]`` and returns the coefficients as elements of ``K[x, z]``.
+        to an element of ``K[x, z][y, t]`` and returns the coefficients as elements of ``K[x, z]``
 
         Parameters
         ==========
@@ -2595,36 +2662,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, coeff_wrt, drop_to_ground
-
+        coeff, coeffs, coeff_split_syms, coeff_wrt, drop_to_ground
         """
         p1 = self
-        N = len(p1.ring.gens)
-        nsyms = set(range(N)) - syms
-        p2 = {}
-        r = range(N)
-
-        # Iterate through the terms and coefficients of the input polynomial
-        for m1, c1 in p1.items():
-            sym_indices = set(compress(r, m1))
-            m21 = [0] * N
-            m22 = [0] * N
-
-            # Separate variables into symbol and non-symbol categories
-            for i in sym_indices & syms:
-                m21[i] = m1[i]
-            for i in sym_indices & nsyms:
-                m22[i] = m1[i]
-
-            key1 = tuple(m21)
-            key2 = tuple(m22)
-
-            if key1 not in p2:
-                p2[key1] = defaultdict(dict)
-
-            # Store the coefficient in the organized structure
-            p2[key1][key2] = c1
-
+        p2 = p1.coeff_split_syms(syms)
         return [p1.ring(pi) for pi in p2.values()]
 
     def coeff_wrt(self, x, deg):
@@ -2666,19 +2707,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, coeff_split
+        coeff, coeffs, coeff_split, coeff_split_syms
 
         """
-        p = self
-        i = p.ring.index(x)
-        terms = [(m, c) for m, c in p.iterterms() if m[i] == deg]
-
-        if not terms:
-            return p.ring.zero
-
-        monoms, coeffs = zip(*terms)
-        monoms = [m[:i] + (0,) + m[i + 1:] for m in monoms]
-        return p.ring.from_dict(dict(zip(monoms, coeffs)))
+        p1 = self
+        x = x if isinstance(x, int) else p1.ring.gens.index(x)
+        p2 = p1.coeff_split_syms({x})
+        m = [0] * len(p1.ring.gens)
+        m[x] = deg
+        m = tuple(m)
+        return p1.ring(p2.get(m, 0))
 
     def prem(self, g, x=None):
         """
@@ -3352,11 +3390,50 @@ def _gcd_prs(p1, p2):
 
     _, h = cont_prim(h, x)
 
-    c *= domain.canonical_unit(ring.dmp_LC(h))
+    if not domain.is_Field:
+        return h*c
+    else:
+        return -h*c
 
-    h = h * c
+def _gcd_(f, g):
+    """Helper function for ``_gcd_prs``."""
 
-    return h
+    ring = f.ring
+    domain = ring.domain
+
+    if not domain.is_Exact:
+        try:
+            exact = domain.get_exact()
+        except DomainError:
+            return domain.one, f, g
+
+        f = ring.dmp_convert(f, domain, exact)
+
+        g = ring.dmp_convert(g, domain, exact)
+
+        h, cff, cfg  = f._gcd_(g)
+
+        h = ring.dmp_convert(h, exact, domain)
+        cff = ring.dmp_convert(cff, exact, domain)
+        cfg = ring.dmp_convert(cfg, exact, domain)
+
+        return h, cff, cfg
+    elif domain.is_Field:
+        if domain.is_QQ and query('USE_HEU_GCD'):
+            try:
+                return ring.dmp_qq_heu_gcd(f, g)
+            except HeuristicGCDFailed:
+                pass
+
+        return f._gcd_I(g)
+    else:
+        if domain.is_ZZ and query('USE_HEU_GCD'):
+            try:
+                return ring.dmp_zz_heu_gcd(f, g)
+            except HeuristicGCDFailed:
+                pass
+
+        return f._gcd_I(g)
 
 def gcd_terms(polynomials, ring, domain):
     """

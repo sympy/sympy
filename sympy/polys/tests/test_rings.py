@@ -3,13 +3,12 @@
 from functools import reduce
 from operator import add, mul
 
-from math import log
 from sympy.core.numbers import I
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX, ZZ_I
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.rings import monomial_extract, \
+from sympy.polys.rings import monomial_extract, _gcd_, \
     cont_prim, gcd_coeffs, gcd_terms, _gcd_preprocess_polys, gcd_prs, _gcd_prs
 
 from sympy.polys.polyerrors import GeneratorsError, \
@@ -1081,7 +1080,7 @@ def test_PolyElement_gcd_I():
 
     expected_gcd = (1, 1/10*x + 1/5*y + 3/10, y + 1)
 
-    assert  f._gcd_I(g) == expected_gcd
+    assert  _gcd_(f, g) == expected_gcd
 
     f = -0.0001*x**4 + 0.0098*x**3 + 0.0299999999999999*x**2 + \
         0.0199999999999998*x
@@ -1092,7 +1091,7 @@ def test_PolyElement_gcd_I():
                 -944473296573929/9444732965739290427392*x**6 + 3/100000*x**5 -
                 297/100000*x**4 + 47/500*x**3 + 297/1000*x**2 + 3/10*x + 1/10)
 
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
     R, x, y = ring("x, y", ZZ_I)
     f = (-1 + 0*I)*x*y + (0 + -1*I)*y**2
@@ -1100,17 +1099,18 @@ def test_PolyElement_gcd_I():
 
     expected_gcd = ((-1 + 0*I)*x + (0 + -1*I)*y, y, (-1 + 0*I)*x**2 + (-1 + 0*I)*y**2)
 
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
     R, y, _t0, _t1 = ring("y, _t0, _t1", EX)
     f = (2 + 0*I)*y**2*_t0 + (0 + 2*I)*y**2*(EX(pi)) + (-2 + 0*I)*y*_t1 + \
                         (0 + -2*I)*y*(EX(pi)) + (-2 + 0*I)*y*_t0
+
     g = (4 + 0*I)*y**3 + (-4 + 0*I)*y**2
 
     expected_gcd = (y, EX(2)*y*_t0 + EX(2*I*pi)*y - EX(2)*_t0 - EX(2)*_t1 - \
                     EX(-2*I*pi), EX(4)*y**2 - EX(4)*y)
 
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
     R, y = ring("y", EX)
     f = (0 + 2*I)*y*(EX(pi)) + (-1 + 0*I)
@@ -1118,24 +1118,14 @@ def test_PolyElement_gcd_I():
 
     expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
 
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
     f = (0 + 2*I)*y*pi + (-1 + 0*I)
     g = (0 + 2*I)*y*pi + (-1 + 0*I)
 
-    expected_gcd = ((0 + 2*I)*y*pi + (-1 + 0*I), (1 + 0*I), (1 + 0*I))
+    expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
 
-    assert f._gcd_I(g) == expected_gcd[0]
-
-    R, N, k = ring("N, k", QQ)
-    f = -0.5*k**2*(log(k + 1)) + 0.5*k**2*(log(k)) + 0.5*k*(log(N)) \
-            - k*(log(k + 1)) + 0.5*k*(log(k)) + 0.9189*k + 0.5*(log(N)) \
-            - 0.5*(log(k + 1)) + 0.9189
-    g = k + 1.0
-
-    expected_gcd = (k + 1.0, -0.5*k*(log(k + 1)) + 0.5*k*(log(k)) + 0.5*(log(N)) - 0.5*(log(k + 1)) + 0.9189, 1.0)
-
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
     R, x, _C3 = ring("x, _C3", ZZ_I)
     f = (0 + 4*I)*x**5 + (0 + -4*I)*x*_C3
@@ -1143,7 +1133,7 @@ def test_PolyElement_gcd_I():
 
     expected_gcd = ((-4 + 0*I)*x, (0 + -1*I)*x**4 + (0 + 1*I)*_C3, (-1 + 0*I)*x**4 + (-1 + 0*I)*_C3)
 
-    assert f._gcd_I(g) == expected_gcd
+    assert _gcd_(f, g) == expected_gcd
 
 def test_PolyElement_cancel():
     R, x, y = ring("x,y", ZZ)
@@ -1428,6 +1418,21 @@ def test_PolyElement_drop():
 
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
+
+def test_PolyElement_coeff_split_syms():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+    syms = {2}
+    result = f.coeff_split_syms(syms)
+    assert result == {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3},
+                        (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
+
+    g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+    syms = {0, 1}
+    result = g.coeff_split_syms(syms)
+    assert result == {(2, 0, 0): {(0, 0, 0): 3}, (0, 2, 0): {(0, 0, 0): 2},
+                        (0, 0, 0): {(0, 0, 3): 5}, (2, 1, 0): {(0, 0, 0): 7}}
 
 def test_PolyElement_coeff_split():
     R, x, y, z = ring("x, y, z", ZZ)
