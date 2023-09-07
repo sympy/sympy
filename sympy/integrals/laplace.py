@@ -7,7 +7,9 @@ from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
-from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import (
+    _canonical, Ge, Gt, Lt, Unequality, Eq, LessThan, StrictLessThan,
+    GreaterThan, StrictGreaterThan)
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -15,7 +17,8 @@ from sympy.functions.elementary.complexes import (
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import (
+    Piecewise, piecewise_exclusive)
 from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
@@ -997,6 +1000,41 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
+def _piecewise_to_heaviside(f, t):
+    """
+    This function converts a Piecewise expression to an expression written
+    with Heaviside. It is not exact, but valid in the context of the Laplace
+    transform.
+    """
+    x = piecewise_exclusive(f)
+    r = 0
+    for term in x.args:
+        # Here we do not need to do many checks because piecewise_exclusive
+        # has a clearly predictable output. However, if any of the conditions
+        # is not relative to t, this function just returns the input argument.
+        fn = term[0]
+        op = term[1].func
+        if op == LessThan or op == StrictLessThan:
+            if not term[1].args[0] == t:
+                return f
+            right_boundary = term[1].args[1]
+            r = r + Heaviside(-(t-right_boundary))*fn
+        if op == GreaterThan or op == StrictGreaterThan:
+            if not term[1].args[0] == t:
+                return f
+            left_boundary = term[1].args[1]
+            r = r + Heaviside(t-left_boundary)*fn
+        if op == And:
+            if not (
+                    term[1].args[0].args[0] == t and
+                    term[1].args[1].args[0] == t):
+                return f
+            left_boundary = term[1].args[0].args[1]
+            right_boundary = term[1].args[1].args[1]
+            r = r + (Heaviside(t-right_boundary)-Heaviside(t-left_boundary))*fn
+    return r
+
+
 def laplace_correspondence(f, fdict, /):
     """
     This helper function takes a function `f` that is the result of a
@@ -1121,6 +1159,8 @@ def _laplace_transform(fn, t_, s_, *, simplify):
             # a DiracDelta(t) present, in which case removing Heaviside(t)
             # is not necessary because _laplace_rule_delta can deal with it.
             ft = ft.subs(Heaviside(t_), 1)
+        if ft.func == Piecewise and not ft.has(DiracDelta(t_)):
+            ft = _piecewise_to_heaviside(ft, t_)
         if (
                 (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
                 (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or

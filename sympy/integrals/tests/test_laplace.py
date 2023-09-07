@@ -14,6 +14,7 @@ from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
@@ -313,6 +314,27 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    # The following tests check whether _piecewise_to_heaviside works:
+    x1 = Piecewise((0, t <= 0), (1, t <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1)
+    x1 = Piecewise((0, t <= 0), (t, t <= 1), (2-t, t <= 2), (0, True))
+    X1 = LT(x1, t, s)[0].simplify()
+    assert X1 == (exp(2*s) - 2*exp(s) + 1)*exp(-2*s)/s**2
+    y1 = ILT(X1, s, t)
+    assert (
+        -y1 + t*Heaviside(t) + (t - 2)*Heaviside(t - 2) -
+        2*(t - 1)*Heaviside(t - 1)).simplify() == 0
+    x1 = Piecewise((exp(t), t <= 0), (1, t <= 1), (exp(-(t)), True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == exp(-s - 1)/(s + 1) + 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1) + exp(-t)*Heaviside(t - 1)
+    x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
     # The following lines test whether _laplace_transform successfully
     # removes Heaviside(1) before processing espressions. It fails if
     # Heaviside(t) remains because then meijerg functions will appear.
