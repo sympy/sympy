@@ -14,6 +14,7 @@ from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
@@ -313,6 +314,27 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    # The following tests check whether _piecewise_to_heaviside works:
+    x1 = Piecewise((0, t <= 0), (1, t <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1)
+    x1 = Piecewise((0, t <= 0), (t, t <= 1), (2-t, t <= 2), (0, True))
+    X1 = LT(x1, t, s)[0].simplify()
+    assert X1 == (exp(2*s) - 2*exp(s) + 1)*exp(-2*s)/s**2
+    y1 = ILT(X1, s, t)
+    assert (
+        -y1 + t*Heaviside(t) + (t - 2)*Heaviside(t - 2) -
+        2*(t - 1)*Heaviside(t - 1)).simplify() == 0
+    x1 = Piecewise((exp(t), t <= 0), (1, t <= 1), (exp(-(t)), True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == exp(-s - 1)/(s + 1) + 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1) + exp(-t)*Heaviside(t - 1)
+    x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
     # The following lines test whether _laplace_transform successfully
     # removes Heaviside(1) before processing espressions. It fails if
     # Heaviside(t) remains because then meijerg functions will appear.
@@ -469,9 +491,10 @@ def test_inverse_laplace_transform():
             c*(exp(a*t) - exp(b*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
     assert (ILTS(c*s/((s+a)*(s+b))) ==
             c*(a*exp(b*t) - b*exp(a*t))*exp(-t*(a + b))*Heaviside(t)/(a - b))
-    assert ILTS(s/(a + s)**3) == t*(-a*t + 2)*exp(-a*t)*Heaviside(t)/2
-    assert ILTS(1/(s*(a + s)**3)) == (
-        -a**2*t**2 - 2*a*t + 2*exp(a*t) - 2)*exp(-a*t)*Heaviside(t)/(2*a**3)
+    assert ILTS(s/(a + s)**3) == t*(-a*t + 4)*exp(-a*t)*Heaviside(t)/2
+    assert (ILTS(1/(s*(a + s)**3)) ==
+            (-a**2*t**2 - 4*a*t + 4*exp(a*t) - 4) *
+            exp(-a*t)*Heaviside(t)/(2*a**3))
     assert ILT(1/(s*(a + s)**n)) == (
         Heaviside(t)*lowergamma(n, a*t)/(a**n*gamma(n)))
     assert ILT((s-a)**(-b)) == t**(b - 1)*exp(a*t)*Heaviside(t)/gamma(b)
@@ -487,9 +510,9 @@ def test_inverse_laplace_transform():
     assert ILT(1/(s**2*(s**2 + 1))) == t*Heaviside(t) - sin(t)*Heaviside(t)
     assert (ILTS(c*s/(d**2*(s+a)**2+b**2)) ==
             c*(-a*d*sin(b*t/d) + b*cos(b*t/d))*exp(-a*t)*Heaviside(t)/(b*d**2))
-    assert ILTS((b*s**2 + d)/(a**2 + s**2)**2) == (
-        2*a**2*b*sin(a*t) + (a**2*b - d)*(a*t*cos(a*t) -
-                                          sin(a*t)))*Heaviside(t)/(2*a**3)
+    assert (ILTS((b*s**2 + d)/(a**2 + s**2)**2) ==
+            (a**3*b*t*cos(a*t) + 5*a**2*b*sin(a*t) - a*d*t*cos(a*t) +
+             d*sin(a*t))*Heaviside(t)/(2*a**3))
     assert ILTS(b/(s**2-a**2)) == b*sinh(a*t)*Heaviside(t)/a
     assert (ILT(b/(s**2-a**2)) ==
             b*(exp(a*t)*Heaviside(t)/(2*a) - exp(-a*t)*Heaviside(t)/(2*a)))
