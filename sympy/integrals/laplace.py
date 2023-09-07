@@ -1092,14 +1092,13 @@ def laplace_initial_conds(f, t, fdict, /):
     s**3*Y(s) - 2*s**2 - 4*s - 8
     """
     for y, ic in fdict.items():
-        if len(ic) >= 0:
-            for k in range(len(ic)):
-                if k == 0:
-                    f = f.replace(y(0), ic[0])
-                elif k == 1:
-                    f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
-                else:
-                    f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
+        for k in range(len(ic)):
+            if k == 0:
+                f = f.replace(y(0), ic[0])
+            elif k == 1:
+                f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
+            else:
+                f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
     return f
 
 
