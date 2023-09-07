@@ -2034,7 +2034,7 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
             terms_t.append(Heaviside(t)*r)
         else:
             ft, cond = _inverse_laplace_transform(
-                fn, s, t, plane, simplify=simplify, dorational=False)
+                term, s, t, plane, simplify=simplify, dorational=False)
             terms_t.append(ft)
             conditions.append(cond)
 
