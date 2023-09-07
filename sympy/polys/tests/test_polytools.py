@@ -2078,6 +2078,10 @@ def test_gcd():
     raises(TypeError, lambda: gcd(x))
     raises(TypeError, lambda: lcm(x))
 
+    f = Poly(-1, x)
+    g = Poly(1, x)
+    assert lcm(f, g) == Poly(1, x)
+
     f = Poly(0, x)
     assert lcm(f, 0) == 0
 
