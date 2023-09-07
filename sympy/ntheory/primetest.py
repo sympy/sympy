@@ -13,11 +13,11 @@ from sympy.utilities.misc import as_int
 
 
 def is_euler_pseudoprime(n, a):
-    """Returns True if ``n`` is prime or is an odd composite integer that
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-    a ^ (n-1)/2 = + 1(mod n) or
-    a ^ (n-1)/2 = - 1(mod n)
+    .. math ::
+        a^{(n-1)/2} \equiv \pm 1 \pmod{n}
 
     (where mod refers to the modulo operation).
 
@@ -25,9 +25,9 @@ def is_euler_pseudoprime(n, a):
     ==========
 
     n : Integer
-        ``n`` is a positive integer
+        ``n`` is a positive integer.
     a : Integer
-        ``a`` is an integer greater than 1.
+        ``a`` is a positive integer.
         ``a`` and ``n`` should be relatively prime.
 
     Returns
@@ -53,8 +53,8 @@ def is_euler_pseudoprime(n, a):
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
     n, a = as_int(n), as_int(a)
-    if a < 2:
-        raise ValueError("a should be an integer greater than 1")
+    if a < 1:
+        raise ValueError("a should be an integer greater than 0")
     if n < 1:
         raise ValueError("n should be an integer greater than 0")
     if n == 1:
