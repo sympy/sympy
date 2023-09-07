@@ -80,7 +80,6 @@ from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
-from sympy.testing.pytest import XFAIL
 
 
 import sympy as sym
@@ -7508,7 +7507,7 @@ def test_print_polylog():
     assert upretty(polylog(2, 3)) == uresult
 
 
-@XFAIL  # Issue #25312
+# Issue #25312
 def test_print_expint_polylog_symbolic_order():
     s, z = symbols("s, z")
     uresult = 'Liₛ(z)'

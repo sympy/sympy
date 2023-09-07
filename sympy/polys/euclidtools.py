@@ -1639,7 +1639,7 @@ def dup_rr_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
-    if not f and not g:
+    if not f or not g:
         return K.zero
 
     fc, f = dup_primitive(f, K)
@@ -1650,7 +1650,9 @@ def dup_rr_lcm(f, g, K):
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
-    return dup_mul_ground(h, c, K)
+    u = K.canonical_unit(dup_LC(h, K))
+
+    return dup_mul_ground(h, c*u, K)
 
 
 def dup_ff_lcm(f, g, K):
