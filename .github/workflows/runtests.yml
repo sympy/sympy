@@ -202,7 +202,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml lark z3-solver                       \
+                         wurlitzer autowrap lxml lark z3-solver pycosat        \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
