@@ -59,6 +59,8 @@ def is_euler_pseudoprime(n, a):
         raise ValueError("n should be an integer greater than 0")
     if n == 1:
         return False
+    if a == 1:
+        return n == 2 or bool(n % 2)  # (prime or odd composite)
     if n % 2 == 0:
         return n == 2
     if gcd(n, a) != 1:
