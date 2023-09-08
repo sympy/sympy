@@ -45,10 +45,10 @@ Here's an example of how that would work:
     to a SAT solver. The SAT solver will give us a satisfying
     assignment such as:
 
-    Eq(1, 2): False
-    Eq(y,  1): True
-    (y < 1) : True
-    (y > 1) : True
+    (1 = 2): False
+    (y = 1): True
+    (y < 1): True
+    (y > 1): True
     (x = 0): True
     (x < 0): True
     (x > 0): True
@@ -92,12 +92,13 @@ Here's an example of how that would work:
     boolean formula was unsatisfiable.
 
 
-The paper this implementation comes from includes a
+This implementation is based on [1]_, which includes a
 detailed explanation of the algorithm and pseudocode
 for the most important functions.
 
-The paper also explains how backtracking and theory propagation
-could be implemented to speed up the current implementation.
+[1]_ also explains how backtracking and theory propagation
+could be implemented to speed up the current implementation, 
+but these are not currently implemented.
 
 TODO:
  - Handle non-rational real numbers
@@ -132,7 +133,6 @@ class UnhandledInput(Exception):
     Raised while creating an LRASolver if non-linearity
     or non-rational numbers are present.
     """
-    pass
 
 ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
 BENIGN_PRED = {Q.algebraic, Q.finite, Q.transcendental, Q.real, Q.extended_real, Q.irrational, Q.rational, Q.complex}
@@ -686,7 +686,7 @@ class LRASolver():
         [-1,       -e/d,       -f/d],
         [ 0,  h - e*g/d,  i - f*g/d]])
 
-        We rearage equation 1 in terms of variable 0 (x)
+        We rearrange equation 1 in terms of variable 0 (x)
         and substitute to remove x from the other equations.
 
         0 = 0 + (-a*e/d + b)*y + (-a*f/d + c)*z
