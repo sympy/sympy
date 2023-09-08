@@ -38,16 +38,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return "%s mod %s" % (self.val, self.mod)
 
     def __int__(self):
-        return int(self.to_int())
-
-    def to_int(self):
-        if self.sym:
-            if self.val <= self.mod // 2:
-                return self.val
-            else:
-                return self.val - self.mod
-        else:
-            return self.val
+        return int(self.val)
 
     def __pos__(self):
         return self
