@@ -238,11 +238,6 @@ def test_random_problems():
             # check that conflict clause is probably minimal
             for subset in itertools.combinations(conflict, len(conflict)-1):
                 assert check_if_satisfiable_with_z3(subset) is True
-    # print("check", check_time)
-    # print("from_encoded", from_encoded_time)
-    # print("assert", assert_time)
-    # print("total", check_time+from_encoded_time+assert_time)
-    # print("sat count", feasible_count)
 
 
 @XFAIL
