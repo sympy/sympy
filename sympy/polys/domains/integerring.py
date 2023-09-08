@@ -167,11 +167,11 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
-        return MPZ(a.to_int())
+        return MPZ(K0.to_int(a))
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
-        return MPZ(a.to_int())
+        return MPZ(K0.to_int(a))
 
     def from_ZZ(K1, a, K0):
         """Convert Python's ``int`` to GMPY's ``mpz``. """
@@ -193,7 +193,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to GMPY's ``mpz``. """
-        return a.to_int()
+        return MPZ(K0.to_int(a))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to GMPY's ``mpz``. """
