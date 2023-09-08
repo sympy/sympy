@@ -168,24 +168,27 @@ integers modulo ``n`` and can be used like:
 >>> K = GF(5)
 >>> a = K(7)
 >>> a
-SymmetricModularIntegerMod5(2)
->>> print(a)
 2 mod 5
 ```
+
 The elements of a modular integer domain have a ``to_int()`` method that is
 deprecated since SymPy 1.13:
 ```py
->>> a.to_int() # deprecated
+>>> # this is deprecated:
+>>> a.to_int()  # doctest: +SKIP
 2
 ```
+
 Instead the preferred way to achieve equivalent behavior is to use the method
-on the domain (added in SymPy 1.13) or just by calling ``int``:
+on the domain (added in SymPy 1.13) or alternatively calling ``int`` might be
+better:
 ```py
 >>> K.to_int(a)
 2
 >>> int(a)
 2
 ```
+
 These two ways of converting to an ``int`` are not equivalent. The domain
 ``GF(p)`` can be defined with ``symmetric=True`` or ``symmetric=False``. This
 difference affects the behavior of the ``to_int`` method:
@@ -201,6 +204,7 @@ difference affects the behavior of the ``to_int`` method:
 >>> [int(KU(n)) for n in range(10)]
 [0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
 ```
+
 So if ``symmetric=True`` (which is the default) then the ``to_int`` method will
 sometimes return negative integers. If ``symmetric=False`` or if the ``int(a)``
 method is used the returned result is always a nonnegative integer. Note also
