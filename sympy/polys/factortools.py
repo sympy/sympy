@@ -1222,7 +1222,7 @@ def dmp_zz_i_factor(f, u, K0):
         # Extract content
         fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
         fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
-        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K0)
 
         coeff = (coeff * content ** i) // fac_denom ** i
         new_factors.append((fac_prim, i))
