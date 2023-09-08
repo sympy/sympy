@@ -1174,9 +1174,10 @@ def piecewise_simplify_arguments(expr, **kwargs):
                     continue
                 try:
                     a = cset.inf
-                    incl_a = include(c, x, a)
                 except NotImplementedError:
                     pass # continue with the given `a`
+                else:
+                    incl_a = include(c, x, a)
                 if incl_a and incl_b:
                     if a.is_infinite and b.is_infinite:
                         c = S.true
