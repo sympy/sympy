@@ -1,7 +1,5 @@
 """OO layer for several polynomial representations. """
 
-from sympy.external.gmpy import GROUND_TYPES
-
 from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
