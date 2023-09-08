@@ -6,51 +6,66 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square, bit_scan1
+from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
+                                 is_square as gmpy_is_square,
+                                 bit_scan1)
 from sympy.utilities.misc import as_int
 
 
-def is_euler_pseudoprime(n, b):
-    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
+def is_euler_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
-    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
-    arithmetic congruence relation :
-
-    a ^ (n-1)/2 = + 1(mod n) or
-    a ^ (n-1)/2 = - 1(mod n)
+    .. math ::
+        a^{(n-1)/2} \equiv \pm 1 \pmod{n}
 
     (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler pseudoprime.
 
     Examples
     ========
 
     >>> from sympy.ntheory.primetest import is_euler_pseudoprime
-    >>> is_euler_pseudoprime(2, 5)
-    True
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
-
-    if not mr(n, [b]):
+    n, a = as_int(n), as_int(a)
+    if a < 1:
+        raise ValueError("a should be an integer greater than 0")
+    if n < 1:
+        raise ValueError("n should be an integer greater than 0")
+    if n == 1:
         return False
-
-    n = as_int(n)
-    r = n - 1
-    c = pow(b, r >> bit_scan1(r), n)
-
-    if c == 1:
-        return True
-
-    while True:
-        if c == n - 1:
-            return True
-        c = pow(c, 2, n)
-        if c == 1:
-            return False
+    if a == 1:
+        return n == 2 or bool(n % 2)  # (prime or odd composite)
+    if n % 2 == 0:
+        return n == 2
+    if gcd(n, a) != 1:
+        raise ValueError("The two numbers should be relatively prime")
+    return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
 
 def is_square(n, prep=True):
