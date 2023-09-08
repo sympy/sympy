@@ -6,7 +6,7 @@ from functools import reduce
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
-from sympy.core.exprtools import is_int
+from sympy.core.numbers import int_valued
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
@@ -1438,7 +1438,7 @@ class Permutation(Atom):
         >>> 2^p == p(2) == 9
         True
         """
-        if is_int(i):
+        if int_valued(i):
             return self(i)
         else:
             raise NotImplementedError(

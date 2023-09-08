@@ -6,7 +6,7 @@ from sympy.polys.domains.groundtypes import (
     factorial as gmpy_factorial,
     gmpy_gcdex, gmpy_gcd, gmpy_lcm, sqrt as gmpy_sqrt,
 )
-from sympy.core.exprtools import is_int
+from sympy.core.numbers import int_valued
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
@@ -36,7 +36,7 @@ class GMPYIntegerRing(IntegerRing):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return GMPYInteger(a.p)
-        elif is_int(a):
+        elif int_valued(a):
             return GMPYInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

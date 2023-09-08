@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational, oo, Float, pi)
+from sympy.core.numbers import (I, Rational, oo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -19,7 +19,7 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import simplify
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc, _mask_nc,
-                                  _monotonic_sign, is_int)
+                                  _monotonic_sign)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 from sympy.testing.pytest import raises
@@ -491,12 +491,3 @@ def test_issue_21623():
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]
-
-
-def test_is_int():
-    assert is_int(x) == False
-    assert is_int(S.Half) == False
-    assert is_int(S.One) == True
-    assert is_int(Float(1)) == True
-    assert is_int(Float(1.1)) == False
-    assert is_int(pi) == False

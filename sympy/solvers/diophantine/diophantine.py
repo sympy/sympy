@@ -4,7 +4,7 @@ from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, int_valued
 from sympy.core.intfunc import igcdex, ilcm, igcd, integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -173,7 +173,7 @@ class DiophantineEquationType:
             raise ValueError('equation should have 1 or more free symbols')
 
         self.coeff = self.equation.as_coefficients_dict()
-        if not all(_is_int(c) for c in self.coeff.values()):
+        if not all(int_valued(c) for c in self.coeff.values()):
             raise TypeError("Coefficients should be Integers")
 
         self.total_degree = Poly(self.equation).total_degree()
@@ -557,7 +557,7 @@ class BinaryQuadratic(DiophantineEquationType):
                         ans = diop_solve(sqa*x + e*sqc*y - root)
                         result.add((ans[0], ans[1]))
 
-                elif _is_int(c):
+                elif int_valued(c):
                     solve_x = lambda u: -e*sqc*g*_c*t**2 - (E + 2*e*sqc*g*u)*t \
                                         - (e*sqc*g*u**2 + E*u + e*sqc*F) // _c
 
@@ -630,7 +630,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 T = a[0][0]
                 U = a[0][1]
 
-                if all(_is_int(_) for _ in P[:4] + Q[:2]):
+                if all(int_valued(_) for _ in P[:4] + Q[:2]):
                     for r, s in solns_pell:
                         _a = (r + s*sqrt(D))*(T + U*sqrt(D))**t
                         _b = (r - s*sqrt(D))*(T - U*sqrt(D))**t
@@ -654,7 +654,7 @@ class BinaryQuadratic(DiophantineEquationType):
                     for X, Y in solns_pell:
 
                         for i in range(k):
-                            if all(_is_int(_) for _ in P*Matrix([X, Y]) + Q):
+                            if all(int_valued(_) for _ in P*Matrix([X, Y]) + Q):
                                 _a = (X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t
                                 _b = (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t
                                 Xt = S(_a + _b) / 2
@@ -1222,14 +1222,6 @@ all_diop_classes = [
 diop_known = {diop_class.name for diop_class in all_diop_classes}
 
 
-def _is_int(i):
-    try:
-        as_int(i)
-        return True
-    except ValueError:
-        pass
-
-
 def _sorted_tuple(*i):
     return tuple(sorted(i))
 
@@ -1509,7 +1501,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         sols.add(null)
     final_soln = set()
     for sol in sols:
-        if all(_is_int(s) for s in sol):
+        if all(int_valued(s) for s in sol):
             if do_permute_signs:
                 permuted_sign = set(permute_signs(sol))
                 final_soln.update(permuted_sign)
