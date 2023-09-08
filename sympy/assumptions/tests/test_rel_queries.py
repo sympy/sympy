@@ -1,4 +1,5 @@
 from sympy.assumptions.lra_satask import lra_satask
+from sympy.logic.algorithms.lra_theory import UnhandledInput
 from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
@@ -28,11 +29,12 @@ def test_lra_satask():
     assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
 
     # check imaginary numbers are correctly handled
-    assert lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)) is None  # (im * I).is_real returns True so this is an edge case
+    # (im * I).is_real returns True so this is an edge case
+    raises(UnhandledInput, lambda: lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)))
 
     # check matrix inputs
     X = MatrixSymbol("X", 2, 2)
-    assert lra_satask(Q.lt(X, 2) & Q.gt(X, 3)) is None
+    raises(ValueError, lambda: lra_satask(Q.lt(X, 2) & Q.gt(X, 3)))
 
 
 def test_rel_queries():
@@ -44,7 +46,7 @@ def test_rel_queries():
 
 def test_unhandled_queries():
     X = MatrixSymbol("X", 2, 2)
-    assert ask(Q.lt(X, 2) & Q.gt(X, 3)) is None
+    raises(ValueError, lambda: ask(Q.lt(X, 2) & Q.gt(X, 3)))
 
 
 def test_all_pred():
@@ -64,11 +66,11 @@ def test_all_pred():
     assert lra_satask((x > 0), (x > 2) & Q.extended_real(x)) is True
 
     # test disallowed pred
-    assert lra_satask((x > 0), (x > 2) & Q.prime(x)) is None
-    assert lra_satask((x > 0), (x > 2) & Q.composite(x)) is None
-    assert lra_satask((x > 0), (x > 2) & Q.odd(x)) is None
-    assert lra_satask((x > 0), (x > 2) & Q.even(x)) is None
-    assert lra_satask((x > 0), (x > 2) & Q.integer(x)) is None
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.prime(x)))
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.composite(x)))
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.odd(x)))
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.even(x)))
+    raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.integer(x)))
 
 
 def test_number_line_properties():
