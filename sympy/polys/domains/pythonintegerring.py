@@ -41,7 +41,7 @@ class PythonIntegerRing(IntegerRing):
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to Python's ``int``. """
-        return a.to_int()
+        return K0.to_int(a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert Python's ``int`` to Python's ``int``. """
@@ -59,7 +59,7 @@ class PythonIntegerRing(IntegerRing):
 
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to Python's ``int``. """
-        return PythonInteger(a.to_int())
+        return PythonInteger(K0.to_int(a))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to Python's ``int``. """
