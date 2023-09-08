@@ -1,6 +1,7 @@
 """Implementation of :class:`PythonIntegerRing` class. """
 
 
+from sympy.core.numbers import int_valued
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, sqrt as python_sqrt,
     factorial as python_factorial, python_gcdex, python_gcd, python_lcm,
@@ -33,7 +34,7 @@ class PythonIntegerRing(IntegerRing):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return PythonInteger(a.p)
-        elif a.is_Float and int(a) == a:
+        elif int_valued(a):
             return PythonInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)

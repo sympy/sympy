@@ -54,6 +54,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.numbers import int_valued
 from sympy.core.function import Function
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.singleton import S
@@ -336,11 +337,11 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
         1/2*sqrt(1/6)
     """
 
-    if int(aa + bb - cc) != (aa + bb - cc):
+    if not int_valued(aa + bb - cc):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(aa + cc - bb) != (aa + cc - bb):
+    if not int_valued(aa + cc - bb):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if int(bb + cc - aa) != (bb + cc - aa):
+    if not int_valued(bb + cc - aa):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if (aa + bb - cc) < 0:
         return S.Zero
