@@ -143,7 +143,7 @@ def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
 
 
-class DMP(PicklableWithSlots, CantSympify):
+class DMP(CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
     __slots__ = ('rep', 'lev', 'dom', 'ring')
@@ -159,6 +159,9 @@ class DMP(PicklableWithSlots, CantSympify):
             rep, lev = dmp_validate(rep)
 
         return cls.new(rep, dom, lev, ring)
+
+    def __getnewargs__(self):
+        return self.rep, self.dom, self.lev, self.ring
 
     @classmethod
     def new(cls, rep, dom, lev, ring):
