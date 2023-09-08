@@ -242,7 +242,7 @@ def test_DMP_functionality():
 
     raises(ValueError, lambda: f.invert(f))
 
-    f = DMP([ZZ(1), ZZ(0), ZZ(20), ZZ(0), ZZ(150), ZZ(0), ZZ(500), ZZ(0), ZZ(625), ZZ(-2), ZZ(0), ZZ(-10), ZZ(9)], ZZ)
+    f = DMP(ZZ.map([1, 0, 20, 0, 150, 0, 500, 0, 625, -2, 0, -10, 9]), ZZ)
     g = DMP([ZZ(1), ZZ(0), ZZ(0), ZZ(-2), ZZ(9)], ZZ)
     h = DMP([ZZ(1), ZZ(0), ZZ(5), ZZ(0)], ZZ)
 
@@ -261,7 +261,8 @@ def test_DMP_exclude():
         18, 19, 20, 21, 22, 24, 25]
 
     assert DMP(f, ZZ).exclude() == (J, DMP([ZZ(1), ZZ(0)], ZZ))
-    assert DMP([[ZZ(1)], [ZZ(1), ZZ(0)]], ZZ).exclude() == ([], DMP([[ZZ(1)], [ZZ(1), ZZ(0)]], ZZ))
+    assert DMP([[ZZ(1)], [ZZ(1), ZZ(0)]], ZZ).exclude() ==\
+            ([], DMP([[ZZ(1)], [ZZ(1), ZZ(0)]], ZZ))
 
 
 def test_DMF__init__():
