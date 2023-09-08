@@ -1,10 +1,12 @@
 """OO layer for several polynomial representations. """
 
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
 from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.domains import Domain
 
 
 class GenericPoly(PicklableWithSlots):
@@ -148,9 +150,9 @@ class DMP(PicklableWithSlots, CantSympify):
 
     __slots__ = ('rep', 'lev', 'dom', 'ring')
 
-    def __init__(self, rep, dom, lev=None, ring=None):
+    def __new__(cls, rep, dom, lev=None, ring=None):
         if lev is not None:
-            # Not possible to check with isinstance
+            # PolyElement is a dict subclass so use type instead of isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
             elif not isinstance(rep, list):
@@ -158,10 +160,37 @@ class DMP(PicklableWithSlots, CantSympify):
         else:
             rep, lev = dmp_validate(rep)
 
-        self.rep = rep
-        self.lev = lev
-        self.dom = dom
-        self.ring = ring
+        return cls.new(rep, dom, lev, ring)
+
+    @classmethod
+    def new(cls, rep, dom, lev, ring):
+        # It would be too slow to call _validate_args always at runtime.
+        # Ideally this checking would be handled by a static type checker.
+        cls._validate_args(rep, dom, lev, ring)
+
+        obj = super().__new__(cls)
+        obj.rep = rep
+        obj.lev = lev
+        obj.dom = dom
+        obj.ring = ring
+
+        return obj
+
+    @classmethod
+    def _validate_args(cls, rep, dom, lev, ring):
+        assert isinstance(dom, Domain)
+        assert isinstance(lev, int) and lev >= 0
+        assert ring is None or isinstance(ring, GlobalPolynomialRing)
+
+        def validate_rep(rep, lev):
+            assert isinstance(rep, list)
+            if lev == 0:
+                assert all(dom.of_type(c) for c in rep)
+            else:
+                for r in rep:
+                    validate_rep(r, lev - 1)
+
+        validate_rep(rep, lev)
 
     def __repr__(f):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
@@ -1798,3 +1827,7 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __bool__(f):
         return bool(f.rep)
+
+
+# Avoid circular import:
+from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
