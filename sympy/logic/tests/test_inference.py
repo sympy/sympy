@@ -388,6 +388,3 @@ def test_z3_vs_lra_dpll2():
         assert z3_sat == lra_dpll2_sat
         if z3_sat:
             sat_count += 1
-
-    # print("lra_dpll2_time", lra_dpll2_time)
-    # print("z3_time", z3_time)

@@ -200,9 +200,7 @@ def test_random_problems():
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
                 break
-            #print("var:", b.var, "bound:", b.bound, "upper:", b.upper, "strict:", b.strict)
             lra.assert_lit(l)
-            #print(lra.assign, lra.lower, lra.upper)
 
         end = time.time()
         assert_time += end - start

@@ -97,7 +97,7 @@ detailed explanation of the algorithm and pseudocode
 for the most important functions.
 
 [1]_ also explains how backtracking and theory propagation
-could be implemented to speed up the current implementation, 
+could be implemented to speed up the current implementation,
 but these are not currently implemented.
 
 TODO:
