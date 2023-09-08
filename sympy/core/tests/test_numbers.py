@@ -9,7 +9,8 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, seterr,
     Integer, I, pi, comp, Rational, E, nan,
-    oo, AlgebraicNumber, Number, Float, zoo, equal_valued)
+    oo, AlgebraicNumber, Number, Float, zoo, equal_valued,
+    int_valued)
 from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
     ilcm, integer_nthroot, isqrt, integer_log, mod_inverse)
 from sympy.core.power import Pow
@@ -2228,6 +2229,16 @@ def test_exponentiation_of_0():
     x = Symbol('x', zero=True)
     assert 0**-x == S.One
     assert 0**x == S.One
+
+
+def test_int_valued():
+    x = Symbol('x')
+    assert int_valued(x) == False
+    assert int_valued(S.Half) == False
+    assert int_valued(S.One) == True
+    assert int_valued(Float(1)) == True
+    assert int_valued(Float(1.1)) == False
+    assert int_valued(pi) == False
 
 
 def test_equal_valued():
