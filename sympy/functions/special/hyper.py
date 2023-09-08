@@ -1,4 +1,6 @@
 """Hypergeometric and Meijer G-functions"""
+from collections import Counter
+
 from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -7,6 +9,7 @@ from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo, zoo
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
@@ -20,6 +23,8 @@ from sympy.functions.elementary.exponential import exp_polar
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
+from sympy import ordered
+
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -120,17 +125,19 @@ class hyper(TupleParametersBase):
 
     >>> from sympy import hyper
     >>> from sympy.abc import x, n, a
-    >>> hyper((1, 2, 3), [3, 4], x)
+    >>> h = hyper((1, 2, 3), [3, 4], x); h
+    hyper((1, 2), (4,), x)
+    >>> hyper((3, 1, 2), [3, 4], x, evaluate=False)  # don't remove duplicates
     hyper((1, 2, 3), (3, 4), x)
 
     There is also pretty printing (it looks better using Unicode):
 
     >>> from sympy import pprint
-    >>> pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)
+    >>> pprint(h, use_unicode=False)
       _
-     |_  /1, 2, 3 |  \
-     |   |        | x|
-    3  2 \  3, 4  |  /
+     |_  /1, 2 |  \
+     |   |     | x|
+    2  1 \  4  |  /
 
     The parameters must always be iterables, even if they are vectors of
     length one or zero:
@@ -142,7 +149,7 @@ class hyper(TupleParametersBase):
     should not expect much implemented functionality):
 
     >>> hyper((n, a), (n**2,), x)
-    hyper((n, a), (n**2,), x)
+    hyper((a, n), (n**2,), x)
 
     The hypergeometric function generalizes many named special functions.
     The function ``hyperexpand()`` tries to express a hypergeometric function
@@ -191,6 +198,18 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
+        if kwargs.pop('evaluate', global_parameters.evaluate):
+            ca = Counter(Tuple(*ap))
+            cb = Counter(Tuple(*bq))
+            common = ca & cb
+            arg = ap, bq = [], []
+            for i, c in enumerate((ca, cb)):
+                c -= common
+                for k in ordered(c):
+                    arg[i].extend([k]*c[k])
+        else:
+            ap = list(ordered(ap))
+            bq = list(ordered(bq))
         return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
@@ -411,7 +430,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import meijerg, Tuple, pprint
     >>> from sympy.abc import x, a
     >>> pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)
-     __1, 2 /1, 2  a, 4 |  \
+     __1, 2 /1, 2  4, a |  \
     /__     |           | x|
     \_|4, 1 \ 5         |  /
 
@@ -496,6 +515,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
+            p = [list(ordered(i)) for i in p]
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         arg0, arg1 = tr(args[0]), tr(args[1])
