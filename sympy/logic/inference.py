@@ -78,10 +78,9 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
 
     """
     if use_lra_theory:
-        if algorithm is not None:
-            assert algorithm == "dpll2"
-        else:
-            algorithm == "dpll2"
+        if algorithm is not None and algorithm != "dpll2":
+            raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
+        algorithm = "dpll2"
 
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')
