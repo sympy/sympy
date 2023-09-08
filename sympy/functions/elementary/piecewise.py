@@ -1172,18 +1172,28 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 cset = iv - covered
                 if not cset:
                     continue
+                try:
+                    a = cset.inf
+                except NotImplementedError:
+                    pass # continue with the given `a`
+                else:
+                    incl_a = include(c, x, a)
                 if incl_a and incl_b:
                     if a.is_infinite and b.is_infinite:
                         c = S.true
                     elif b.is_infinite:
-                        c = (x >= a)
-                    elif a in covered or a.is_infinite:
+                        c = (x > a) if a in covered else (x >= a)
+                    elif a.is_infinite:
                         c = (x <= b)
+                    elif a in covered:
+                        c = And(a < x, x <= b)
                     else:
                         c = And(a <= x, x <= b)
                 elif incl_a:
-                    if a in covered or a.is_infinite:
+                    if a.is_infinite:
                         c = (x < b)
+                    elif a in covered:
+                        c = And(a < x, x < b)
                     else:
                         c = And(a <= x, x < b)
                 elif incl_b:
