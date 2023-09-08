@@ -451,6 +451,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     from sympy.assumptions.satask import satask
     from sympy.assumptions.lra_satask import lra_satask
+    from sympy.logic.algorithms.lra_theory import UnhandledInput
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
@@ -501,7 +502,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    res = lra_satask(proposition, assumptions=assumptions, context=context)
+    try:
+        res = lra_satask(proposition, assumptions=assumptions, context=context)
+    except UnhandledInput:
+        return None
+
     return res
 
 

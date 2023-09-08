@@ -51,27 +51,21 @@ def check_satisfiability(prop, _prop, factbase):
         if isinstance(pred, AppliedPredicate):
             if pred.function != Q.ne:
                 if pred.function not in WHITE_LIST:
-                    return None
+                    raise UnhandledInput(f"LRASolver is not able to handle {pred}")
             exprs = pred.arguments
             for expr in exprs:
                 if expr.kind == MatrixKind(NumberKind):
-                    return None
+                    raise ValueError(f"{pred} contains matrix expresions.")
                 if expr.is_real is not True:
-                    return None
+                    raise UnhandledInput(f"LRASolver can not handle non-real expresions")
                 if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
-                    return None
+                    raise UnhandledInput(f"LRASolver can not handle non-real expresions")
 
-    try:
-        sat_true = _preprocess(sat_true)
-        sat_false = _preprocess(sat_false)
-    except UnhandledPred:
-        return None
+    sat_true = _preprocess(sat_true)
+    sat_false = _preprocess(sat_false)
 
-    try:
-        can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
-        can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
-    except UnhandledInput:
-        return None
+    can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
+    can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
 
     if can_be_true and can_be_false:
         return None
@@ -84,10 +78,6 @@ def check_satisfiability(prop, _prop, factbase):
 
     if not can_be_true and not can_be_false:
         raise ValueError("Inconsistent assumptions")
-
-
-class UnhandledPred(Exception):
-    pass
 
 
 def _preprocess(enc_cnf):
@@ -133,8 +123,6 @@ def _preprocess(enc_cnf):
                 new_clause.append(sign*lit)
                 continue
 
-            #if not (prop.function in ALLOWED_PRED or prop.function == Q.ne):
-           #     raise UnhandledPred
 
             if negated and prop.function == Q.eq:
                 negated = False
