@@ -603,7 +603,7 @@ def _laplace_rule_delta(f, t, s):
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
             ro = roots(ma1[y], t)
-            if roots is not {} and set(ro.values()) == {1}:
+            if ro != {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
                 r = Add(
                     *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
