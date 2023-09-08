@@ -2193,7 +2193,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else:
-            return f._gcd_I(g)
+            return _gcd_(f, g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -3388,12 +3388,15 @@ def _gcd_prs(p1, p2):
     ring = p1.ring
     domain = ring.to_domain()
 
+
+    if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))) or domain.is_Field:
+        h = -h
+
     _, h = cont_prim(h, x)
 
-    if not domain.is_Field:
-        return h*c
-    else:
-        return -h*c
+    h = h * c
+
+    return h
 
 def _gcd_(f, g):
     """Helper function for ``_gcd_prs``."""
@@ -3407,29 +3410,31 @@ def _gcd_(f, g):
         except DomainError:
             return domain.one, f, g
 
-        f = ring.dmp_convert(f, domain, exact)
+        f = domain.convert_from(f, exact)
 
-        g = ring.dmp_convert(g, domain, exact)
+        g = domain.convert_from(g, exact)
 
-        h, cff, cfg  = f._gcd_(g)
+        h, cff, cfg  = _gcd_(f, g)
 
-        h = ring.dmp_convert(h, exact, domain)
-        cff = ring.dmp_convert(cff, exact, domain)
-        cfg = ring.dmp_convert(cfg, exact, domain)
+        h = exact.convert_from(h, domain)
+        cff = exact.convert_from(cff, domain)
+        cfg = exact.convert_from(cfg, domain)
 
         return h, cff, cfg
+
     elif domain.is_Field:
         if domain.is_QQ and query('USE_HEU_GCD'):
             try:
-                return ring.dmp_qq_heu_gcd(f, g)
+                return f._gcd_QQ(g)
             except HeuristicGCDFailed:
                 pass
 
         return f._gcd_I(g)
+
     else:
         if domain.is_ZZ and query('USE_HEU_GCD'):
             try:
-                return ring.dmp_zz_heu_gcd(f, g)
+                return f._gcd_ZZ(g)
             except HeuristicGCDFailed:
                 pass
 

@@ -1072,7 +1072,7 @@ def test_PolyElement_gcd():
 
     assert f.gcd(g) == x + 1
 
-def test_PolyElement_gcd_I():
+def test_PolyElement_gcd_():
     R, x, y = ring("x, y", QQ)
 
     f = 0.1*x + 0.1*y + 0.1*y + 0.3
