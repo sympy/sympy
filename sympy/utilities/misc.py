@@ -560,6 +560,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if not (n == result or n == n.round(0)):
+        if n - result:
             raise ValueError('%s is not an integer' % (n,))
         return result
