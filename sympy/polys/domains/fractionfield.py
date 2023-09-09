@@ -68,6 +68,13 @@ class FractionField(Field, CompositeDomain):
             (self.dtype.field, self.domain, self.symbols) ==\
             (other.dtype.field, other.domain, other.symbols)
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return a.as_expr()

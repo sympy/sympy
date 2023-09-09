@@ -251,6 +251,13 @@ class GaussianDomain():
     has_assoc_Ring = True
     has_assoc_Field = True
 
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         conv = self.dom.to_sympy
