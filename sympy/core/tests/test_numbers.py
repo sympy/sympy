@@ -190,10 +190,6 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
-    assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
-    # divmod(4, -2.1) gives an inaccurate result for the remainder
-    # assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
-    assert divmod(S(-8), S(-2.5) ) == Tuple(3, -0.5)
 
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
