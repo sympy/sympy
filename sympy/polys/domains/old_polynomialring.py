@@ -66,6 +66,13 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             self.dtype == other.dtype and self.dom == other.dom and \
             self.gens == other.gens and self.order == other.order
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.dom.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.dom.characteristic()
+
     def from_ZZ(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
