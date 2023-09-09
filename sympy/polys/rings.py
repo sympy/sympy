@@ -22,9 +22,8 @@ from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps, monomial_ngcd
 from sympy.polys.orderings import lex
-from sympy.polys.polyerrors import (
-    CoercionFailed, GeneratorsError,
-    ExactQuotientFailed, MultivariatePolynomialError, DomainError, HeuristicGCDFailed)
+from sympy.polys.polyerrors import (CoercionFailed, GeneratorsError,
+    ExactQuotientFailed, MultivariatePolynomialError, HeuristicGCDFailed)
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
@@ -3388,42 +3387,39 @@ def _gcd_prs(p1, p2):
     ring = p1.ring
     domain = ring.to_domain()
 
-
-    if domain.canonical_unit(h.coeff_wrt(x, h.degree(x))) or domain.is_Field:
-        h = -h
-
     _, h = cont_prim(h, x)
+    coeff = h.coeff_wrt(x, h.degree(x))
+
+    norm_coeff = domain.canonical_unit(coeff)
+    h = norm_coeff * h
 
     h = h * c
 
     return h
 
 def _gcd_(f, g):
-    """Helper function for ``_gcd_prs``."""
+    """Helper function for _gcd_I method."""
 
-    ring = f.ring
-    domain = ring.domain
+    old_ring = f.ring
+    old_domain = old_ring.domain
 
-    if not domain.is_Exact:
-        try:
-            exact = domain.get_exact()
-        except DomainError:
-            return domain.one, f, g
+    if not old_domain.is_Exact:
+        new_domain = old_domain.get_exact()
+        new_ring = new_domain[old_ring.symbols].ring
 
-        f = domain.convert_from(f, exact)
+        f = f.set_ring(new_ring)
+        g = f.set_ring(new_ring)
 
-        g = domain.convert_from(g, exact)
+        h, cff, cfg = _gcd_(f, g)
 
-        h, cff, cfg  = _gcd_(f, g)
-
-        h = exact.convert_from(h, domain)
-        cff = exact.convert_from(cff, domain)
-        cfg = exact.convert_from(cfg, domain)
+        h = h.set_ring(old_ring)
+        cff = cff.set_ring(old_ring)
+        cfg = cfg.set_ring(old_ring)
 
         return h, cff, cfg
 
-    elif domain.is_Field:
-        if domain.is_QQ and query('USE_HEU_GCD'):
+    elif old_domain.is_Field:
+        if old_domain.is_QQ and query('USE_HEU_GCD'):
             try:
                 return f._gcd_QQ(g)
             except HeuristicGCDFailed:
@@ -3432,7 +3428,7 @@ def _gcd_(f, g):
         return f._gcd_I(g)
 
     else:
-        if domain.is_ZZ and query('USE_HEU_GCD'):
+        if old_domain.is_ZZ and query('USE_HEU_GCD'):
             try:
                 return f._gcd_ZZ(g)
             except HeuristicGCDFailed:
