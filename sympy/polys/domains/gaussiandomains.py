@@ -251,13 +251,6 @@ class GaussianDomain():
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    @property
-    def has_CharacteristicZero(self):
-        return True
-
-    def characteristic(self):
-        return 0
-
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         conv = self.dom.to_sympy
@@ -456,6 +449,13 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         """Compute hash code of ``self``. """
         return hash('ZZ_I')
 
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
+
     def get_ring(self):
         """Returns a ring associated with ``self``. """
         return self
@@ -637,6 +637,13 @@ class GaussianRationalField(GaussianDomain, Field):
     def __hash__(self):
         """Compute hash code of ``self``. """
         return hash('QQ_I')
+
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
