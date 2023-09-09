@@ -11,8 +11,6 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.external.gmpy import GROUND_TYPES
-
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
