@@ -3398,8 +3398,6 @@ def _gcd_(f, g):
     """Helper function for _gcd_I method."""
 
     K = f.ring.domain
-    old_ring = f.ring
-    old_domain = old_ring.domain
 
     if not K.is_Exact:
         K_exact = K.get_exact()
