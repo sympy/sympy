@@ -1965,7 +1965,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not (int(i) == i or i.round(0) == i):
                     continue
 
                 i = int(i)
