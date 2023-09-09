@@ -1,3 +1,4 @@
+from sympy.core.basic import _aresame
 from sympy.core.function import Lambda, expand_complex
 from sympy.core.mul import Mul
 from sympy.core.numbers import ilcm, Float
@@ -436,7 +437,7 @@ def _(a, b):
             left_open = a.left_open
         else:
             start = a.start
-            if a.start != b.start:
+            if not _aresame(a.start, b.start):
                 # For example Integer(2) != Float(2)
                 # Prefer the Float boundary because Floats should be
                 # contagious in calculations.
@@ -445,7 +446,7 @@ def _(a, b):
                 elif a.start.has(Float) and not b.start.has(Float):
                     start = a.start
                 else:
-                    #this is to ensure that if Eq(a.start,b.start) but
+                    #this is to ensure that if Eq(a.start, b.start) but
                     #type(a.start) != type(b.start) the order of a and b
                     #does not matter for the result
                     start = list(ordered([a,b]))[0].start
@@ -458,11 +459,9 @@ def _(a, b):
             end = b.end
             right_open = b.right_open
         else:
+            # see above for logic with start
             end = a.end
-            if a.end != b.end:
-                # For example Integer(2) != Float(2)
-                # Prefer the Float boundary because Floats should be
-                # contagious in calculations.
+            if not _aresame(a.end, b.end):
                 if b.end.has(Float) and not a.end.has(Float):
                     end = b.end
                 elif a.end.has(Float) and not b.end.has(Float):
