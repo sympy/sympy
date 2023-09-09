@@ -3,59 +3,69 @@ Primality testing
 
 """
 
+from itertools import count
+
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import HAS_GMPY, gcd, jacobi, is_square as gmpy_is_square
+from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
+                                 is_square as gmpy_is_square,
+                                 bit_scan1)
 from sympy.utilities.misc import as_int
 
-from mpmath.libmp import bitcount as _bitlength
 
+def is_euler_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-def _int_tuple(*i):
-    return tuple(int(_) for _ in i)
-
-
-def is_euler_pseudoprime(n, b):
-    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
-
-    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
-    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
-    arithmetic congruence relation :
-
-    a ^ (n-1)/2 = + 1(mod n) or
-    a ^ (n-1)/2 = - 1(mod n)
+    .. math ::
+        a^{(n-1)/2} \equiv \pm 1 \pmod{n}
 
     (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler pseudoprime.
 
     Examples
     ========
 
     >>> from sympy.ntheory.primetest import is_euler_pseudoprime
-    >>> is_euler_pseudoprime(2, 5)
-    True
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
-    from sympy.ntheory.factor_ import trailing
-
-    if not mr(n, [b]):
+    n, a = as_int(n), as_int(a)
+    if a < 1:
+        raise ValueError("a should be an integer greater than 0")
+    if n < 1:
+        raise ValueError("n should be an integer greater than 0")
+    if n == 1:
         return False
-
-    n = as_int(n)
-    r = n - 1
-    c = pow(b, r >> trailing(r), n)
-
-    if c == 1:
-        return True
-
-    while True:
-        if c == n - 1:
-            return True
-        c = pow(c, 2, n)
-        if c == 1:
-            return False
+    if a == 1:
+        return n == 2 or bool(n % 2)  # (prime or odd composite)
+    if n % 2 == 0:
+        return n == 2
+    if gcd(n, a) != 1:
+        raise ValueError("The two numbers should be relatively prime")
+    return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
 
 def is_square(n, prep=True):
@@ -79,7 +89,7 @@ def is_square(n, prep=True):
 
     See Also
     ========
-    sympy.core.power.isqrt
+    sympy.core.intfunc.isqrt
     """
     if prep:
         n = as_int(n)
@@ -134,14 +144,13 @@ def mr(n, bases):
     True
 
     """
-    from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
     n = as_int(n)
     if n < 2:
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
-    s = trailing(n - 1)
+    s = bit_scan1(n - 1)
     t = n >> s
     for base in bases:
         # Bases >= n are wrapped, bases < 2 are invalid
@@ -155,15 +164,47 @@ def mr(n, bases):
 
 
 def _lucas_sequence(n, P, Q, k):
-    """Return the modular Lucas sequence (U_k, V_k, Q_k).
+    r"""Return the modular Lucas sequence (U_k, V_k, Q_k).
+
+    Explanation
+    ===========
 
     Given a Lucas sequence defined by P, Q, returns the kth values for
-    U and V, along with Q^k, all modulo n.  This is intended for use with
+    U and V, along with Q^k, all modulo n. This is intended for use with
     possibly very large values of n and k, where the combinatorial functions
     would be completely unusable.
 
+    .. math ::
+        U_k = \begin{cases}
+             0 & \text{if } k = 0\\
+             1 & \text{if } k = 1\\
+             PU_{k-1} - QU_{k-2} & \text{if } k > 1
+        \end{cases}\\
+        V_k = \begin{cases}
+             2 & \text{if } k = 0\\
+             P & \text{if } k = 1\\
+             PV_{k-1} - QV_{k-2} & \text{if } k > 1
+        \end{cases}
+
     The modular Lucas sequences are used in numerous places in number theory,
     especially in the Lucas compositeness tests and the various n + 1 proofs.
+
+    Parameters
+    ==========
+
+    n : int
+        n is an odd number greater than or equal to 3
+    P : int
+    Q : int
+        D determined by D = P**2 - 4*Q is non-zero
+    k : int
+        k is a nonnegative integer
+
+    Returns
+    =======
+
+    U, V, Qk : (int, int, int)
+        `(U_k \bmod{n}, V_k \bmod{n}, Q^k \bmod{n})`
 
     Examples
     ========
@@ -173,28 +214,24 @@ def _lucas_sequence(n, P, Q, k):
     >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
     (0, 2, 1)
 
-    """
-    D = P*P - 4*Q
-    if n < 2:
-        raise ValueError("n must be >= 2")
-    if k < 0:
-        raise ValueError("k must be >= 0")
-    if D == 0:
-        raise ValueError("D must not be zero")
+    References
+    ==========
 
+    .. [1] https://en.wikipedia.org/wiki/Lucas_sequence
+
+    """
     if k == 0:
-        return _int_tuple(0, 2, Q)
+        return (0, 2, 1)
+    D = P**2 - 4*Q
     U = 1
     V = P
-    Qk = Q
-    b = _bitlength(k)
+    Qk = Q % n
     if Q == 1:
         # Optimization for extra strong tests.
-        while b > 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             V = (V*V - 2) % n
-            b -= 1
-            if (k >> (b - 1)) & 1:
+            if b == "1":
                 U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
@@ -203,30 +240,45 @@ def _lucas_sequence(n, P, Q, k):
                 U, V = U >> 1, V >> 1
     elif P == 1 and Q == -1:
         # Small optimization for 50% of Selfridge parameters.
-        while b > 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             if Qk == 1:
                 V = (V*V - 2) % n
             else:
                 V = (V*V + 2) % n
                 Qk = 1
-            b -= 1
-            if (k >> (b-1)) & 1:
-                U, V = U + V, V + U*D
+            if b == "1":
+                # new_U = (U + V) // 2
+                # new_V = (5*U + V) // 2 = 2*U + new_U
+                U, V  = U + V, U << 1
                 if U & 1:
                     U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
+                U >>= 1
+                V += U
                 Qk = -1
-    else:
-        # The general case with any P and Q.
-        while b > 1:
+        Qk %= n
+    elif P == 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             V = (V*V - 2*Qk) % n
             Qk *= Qk
-            b -= 1
-            if (k >> (b - 1)) & 1:
+            if b == "1":
+                # new_U = (U + V) // 2
+                # new_V = new_U - 2*Q*U
+                U, V  = U + V, (Q*U) << 1
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = U - V
+                Qk *= Q
+            Qk %= n
+    else:
+        # The general case with any P and Q.
+        for b in bin(k)[3:]:
+            U = (U*V) % n
+            V = (V*V - 2*Qk) % n
+            Qk *= Qk
+            if b == "1":
                 U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
@@ -235,51 +287,104 @@ def _lucas_sequence(n, P, Q, k):
                 U, V = U >> 1, V >> 1
                 Qk *= Q
             Qk %= n
-    return _int_tuple(U % n, V % n, Qk)
+    return (U % n, V % n, Qk)
 
 
 def _lucas_selfridge_params(n):
-    """Calculates the Selfridge parameters (D, P, Q) for n.  This is
-       method A from page 1401 of Baillie and Wagstaff.
+    """Calculates the Selfridge parameters (D, P, Q) for n.
+
+    Explanation
+    ===========
+
+    The Lucas compositeness test checks whether n is a prime number.
+    The test can be run with arbitrary parameters ``P`` and ``Q``, which also change the performance of the test.
+    So, which parameters are most effective for running the Lucas compositeness test?
+    As an algorithm for determining ``P`` and ``Q``, Selfridge proposed method A [1]_ page 1401
+    (Since two methods were proposed, referred to simply as A and B in the paper,
+    we will refer to one of them as "method A").
+
+    method A fixes ``P = 1``. Then, ``D`` defined by ``D = P**2 - 4Q`` is varied from 5, -7, 9, -11, 13, and so on,
+    with the first ``D`` being ``jacobi(D, n) == -1``. Once ``D`` is determined,
+    ``Q`` is determined to be ``(P**2 - D)//4``. Here is an implementation of the method A.
+
+    Parameters
+    ==========
+
+    n : int
+        positive odd integer
+
+    Returns
+    =======
+
+    D, P, Q: Selfridge parameters for Lucas compositeness test.
+             ``(0, 0, 0)`` if we find a nontrivial divisor of ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_selfridge_params
+    >>> _lucas_selfridge_params(101)
+    (-7, 1, 2)
+    >>> _lucas_selfridge_params(15)
+    (0, 0, 0)
 
     References
     ==========
-    .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+
+    .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
            http://mpqs.free.fr/LucasPseudoprimes.pdf
+
     """
-    D = 5
-    while True:
-        g = gcd(D, n)
-        if g > 1 and g != n:
+    for D in count(5, 2):
+        if D & 2: # if D % 4 == 3
+            D = -D
+        j = jacobi(D, n)
+        if j == -1:
+            return (D, 1, (1 - D)//4)
+        elif j == 0 and D % n:
             return (0, 0, 0)
-        if jacobi(D, n) == -1:
-            break
-        if D > 0:
-          D = -D - 2
-        else:
-          D = -D + 2
-    return _int_tuple(D, 1, (1 - D)/4)
 
 
 def _lucas_extrastrong_params(n):
     """Calculates the "extra strong" parameters (D, P, Q) for n.
 
+    Parameters
+    ==========
+
+    n : int
+        positive odd integer
+
+    Returns
+    =======
+
+    D, P, Q: "extra strong" parameters.
+             ``(0, 0, 0)`` if we find a nontrivial divisor of ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import _lucas_extrastrong_params
+    >>> _lucas_extrastrong_params(101)
+    (12, 4, 1)
+    >>> _lucas_extrastrong_params(15)
+    (0, 0, 0)
+
     References
     ==========
     .. [1] OEIS A217719: Extra Strong Lucas Pseudoprimes
            https://oeis.org/A217719
-    .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [2] https://en.wikipedia.org/wiki/Lucas_pseudoprime
+
     """
-    P, Q, D = 3, 1, 5
-    while True:
-        g = gcd(D, n)
-        if g > 1 and g != n:
+    for P in count(3):
+        D = P**2 - 4
+        j = jacobi(D, n)
+        if j == -1:
+            return (D, P, 1)
+        elif j == 0 and D % n:
             return (0, 0, 0)
-        if jacobi(D, n) == -1:
-            break
-        P += 1
-        D = P*P - 4
-    return _int_tuple(D, P, Q)
 
 
 def is_lucas_prp(n):
@@ -291,11 +396,13 @@ def is_lucas_prp(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - OEIS A217120: Lucas Pseudoprimes
-      https://oeis.org/A217120
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [2] OEIS A217120: Lucas Pseudoprimes
+           https://oeis.org/A217120
+    .. [3] https://en.wikipedia.org/wiki/Lucas_pseudoprime
 
     Examples
     ========
@@ -303,7 +410,7 @@ def is_lucas_prp(n):
     >>> from sympy.ntheory.primetest import isprime, is_lucas_prp
     >>> for i in range(10000):
     ...     if is_lucas_prp(i) and not isprime(i):
-    ...        print(i)
+    ...         print(i)
     323
     377
     1159
@@ -325,8 +432,7 @@ def is_lucas_prp(n):
     D, P, Q = _lucas_selfridge_params(n)
     if D == 0:
         return False
-    U, V, Qk = _lucas_sequence(n, P, Q, n+1)
-    return U == 0
+    return _lucas_sequence(n, P, Q, n + 1)[0] == 0
 
 
 def is_strong_lucas_prp(n):
@@ -339,12 +445,14 @@ def is_strong_lucas_prp(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
-    - OEIS A217255: Strong Lucas Pseudoprimes
-      https://oeis.org/A217255
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
-    - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
+    .. [1] Robert Baillie, Samuel S. Wagstaff, Lucas Pseudoprimes,
+           Math. Comp. Vol 35, Number 152 (1980), pp. 1391-1417,
+           https://doi.org/10.1090%2FS0025-5718-1980-0583518-6
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [2] OEIS A217255: Strong Lucas Pseudoprimes
+           https://oeis.org/A217255
+    .. [3] https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [4] https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
 
     Examples
     ========
@@ -359,7 +467,6 @@ def is_strong_lucas_prp(n):
     16109
     18971
     """
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -373,14 +480,14 @@ def is_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
-    k = (n+1) >> s
+    s = bit_scan1(n + 1)
+    k = (n + 1) >> s
 
     U, V, Qk = _lucas_sequence(n, P, Q, k)
 
     if U == 0 or V == 0:
         return True
-    for r in range(1, s):
+    for _ in range(1, s):
         V = (V*V - 2*Qk) % n
         if V == 0:
             return True
@@ -394,7 +501,7 @@ def is_extra_strong_lucas_prp(n):
     prime.
 
     The parameters are selected using P = 3, Q = 1, then incrementing P until
-    (D|n) == -1.  The test itself is as defined in Grantham 2000, from the
+    (D|n) == -1.  The test itself is as defined in [1]_, from the
     Mo and Jones preprint.  The parameter selection and test are the same as
     used in OEIS A217719, Perl's Math::Prime::Util, and the Lucas pseudoprime
     page on Wikipedia.
@@ -407,11 +514,12 @@ def is_extra_strong_lucas_prp(n):
 
     References
     ==========
-    - "Frobenius Pseudoprimes", Jon Grantham, 2000.
-      https://www.ams.org/journals/mcom/2001-70-234/S0025-5718-00-01197-2/
-    - OEIS A217719: Extra Strong Lucas Pseudoprimes
-      https://oeis.org/A217719
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] Jon Grantham, Frobenius Pseudoprimes,
+           Math. Comp. Vol 70, Number 234 (2001), pp. 873-891,
+           https://doi.org/10.1090%2FS0025-5718-00-01197-2
+    .. [2] OEIS A217719: Extra Strong Lucas Pseudoprimes
+           https://oeis.org/A217719
+    .. [3] https://en.wikipedia.org/wiki/Lucas_pseudoprime
 
     Examples
     ========
@@ -432,7 +540,6 @@ def is_extra_strong_lucas_prp(n):
     #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
     #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
     #      references on the MathWorld page, or run it and see Q=-1 is wrong.
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -446,14 +553,14 @@ def is_extra_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
-    k = (n+1) >> s
+    s = bit_scan1(n + 1)
+    k = (n + 1) >> s
 
-    U, V, Qk = _lucas_sequence(n, P, Q, k)
+    U, V, _ = _lucas_sequence(n, P, Q, k)
 
     if U == 0 and (V == 2 or V == n - 2):
         return True
-    for r in range(1, s):
+    for _ in range(1, s):
         if V == 0:
             return True
         V = (V*V - 2) % n
@@ -562,9 +669,8 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    if HAS_GMPY == 2:
-        from gmpy2 import is_strong_prp, is_strong_selfridge_prp
-        return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
+    if _gmpy is not None:
+        return _gmpy.is_strong_prp(n, 2) and _gmpy.is_strong_selfridge_prp(n)
 
 
     # Step 2: deterministic Miller-Rabin testing for numbers < 2^64.  See:

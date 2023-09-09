@@ -9,7 +9,8 @@ from types import GeneratorType
 from itertools import chain, compress
 
 from sympy.core.expr import Expr
-from sympy.core.numbers import igcd, oo
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import oo
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients

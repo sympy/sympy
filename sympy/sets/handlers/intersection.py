@@ -1,6 +1,6 @@
 from sympy.core.function import Lambda, expand_complex
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm
+from sympy.core.intfunc import ilcm
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)

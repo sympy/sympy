@@ -100,7 +100,9 @@ modules = [
     'sympy.parsing.fortran',
     'sympy.parsing.latex',
     'sympy.parsing.latex._antlr',
+    'sympy.parsing.latex.lark',
     'sympy.physics',
+    'sympy.physics._biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -112,6 +114,9 @@ modules = [
     'sympy.physics.units.systems',
     'sympy.physics.vector',
     'sympy.plotting',
+    'sympy.plotting.backends',
+    'sympy.plotting.backends.matplotlibbackend',
+    'sympy.plotting.backends.textbackend',
     'sympy.plotting.intervalmath',
     'sympy.plotting.pygletplot',
     'sympy.polys',
@@ -255,6 +260,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics._biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -327,7 +333,7 @@ if __name__ == '__main__':
                   'test-examples/pydy-example-repo/*.py',
                   'test-examples/README.txt',
                   ],
-              'sympy.parsing.latex': ['*.txt', '*.g4'],
+              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
@@ -356,5 +362,8 @@ if __name__ == '__main__':
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
             ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

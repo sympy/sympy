@@ -151,7 +151,7 @@ class Sieve:
             # Create the list such that block[x] iff (a + 2x + 1) is prime.
             # Note that even numbers are not considered here.
             block = [True] * block_size
-            for p in sieve.primerange(3, sqrt(a + 2 * block_size) + 1):
+            for p in self._list[1:bisect(self._list, sqrt(a + 2 * block_size + 1))]:
                 for t in range((-(a + 1 + p) // 2) % p, block_size, p):
                     block[t] = False
             for idx, p in enumerate(block):
@@ -252,18 +252,20 @@ class Sieve:
             self._tlist += _array('L', range(n, b))
             for i in range(1, n):
                 ti = self._tlist[i]
-                startindex = (n + i - 1) // i * i
-                for j in range(startindex, b, i):
-                    self._tlist[j] -= ti
+                if ti == i - 1:
+                    startindex = (n + i - 1) // i * i
+                    for j in range(startindex, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
                     yield ti
 
             for i in range(n, b):
                 ti = self._tlist[i]
-                for j in range(2 * i, b, i):
-                    self._tlist[j] -= ti
+                if ti == i:
+                    for j in range(i, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
-                    yield ti
+                    yield self._tlist[i]
 
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).

@@ -1,5 +1,5 @@
 from typing import Type
-from sympy import Rational
+from sympy import Interval, numer, Rational, solveset
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -8,21 +8,25 @@ from sympy.core.expr import Expr
 from sympy.core.function import expand
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.series import limit
+from sympy.utilities.misc import filldedent
 
 from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'gbt', 'bilinear', 'forward_diff', 'backward_diff']
+    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'gbt', 'bilinear', 'forward_diff', 'backward_diff', 'phase_margin', 'gain_margin']
 
 
 def _roots(poly, var):
@@ -199,6 +203,161 @@ def backward_diff(tf, sample_per):
     """
     return gbt(tf, sample_per, S.One)
 
+def phase_margin(system):
+    r"""
+    Returns the phase margin of a continuous time system.
+    Only applicable to Transfer Functions which can generate valid bode plots.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When time delay terms are present in the system.
+
+    ValueError
+        When a SISO LTI system is not passed.
+
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.control import TransferFunction, phase_margin
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(1, s**3 + 2*s**2 + s, s)
+    >>> phase_margin(tf)
+    180*(-pi + atan((-1 + (-2*18**(1/3)/(9 + sqrt(93))**(1/3) + 12**(1/3)*(9 + sqrt(93))**(1/3))**2/36)/(-12**(1/3)*(9 + sqrt(93))**(1/3)/3 + 2*18**(1/3)/(3*(9 + sqrt(93))**(1/3)))))/pi + 180
+    >>> phase_margin(tf).n()
+    21.3863897518751
+
+    >>> tf1 = TransferFunction(s**3, s**2 + 5*s, s)
+    >>> phase_margin(tf1)
+    -180 + 180*(atan(sqrt(2)*(-51/10 - sqrt(101)/10)*sqrt(1 + sqrt(101))/(2*(sqrt(101)/2 + 51/2))) + pi)/pi
+    >>> phase_margin(tf1).n()
+    -25.1783920627277
+
+    >>> tf2 = TransferFunction(1, s + 1, s)
+    >>> phase_margin(tf2)
+    -180
+
+    See Also
+    ========
+
+    gain_margin
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Phase_margin
+
+    """
+    from sympy.functions import arg
+
+    if not isinstance(system, SISOLinearTimeInvariant):
+        raise ValueError("Margins are only applicable for SISO LTI systems.")
+
+    _w = Dummy("w", real=True)
+    repl = I*_w
+    expr = system.to_expr()
+    len_free_symbols = len(expr.free_symbols)
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
+        raise ValueError("Extra degree of freedom found. Make sure"
+            " that there are no free symbols in the dynamical system other"
+            " than the variable of Laplace transform.")
+
+    w_expr = expr.subs({system.var: repl})
+
+    mag = 20*log(Abs(w_expr), 10)
+    mag_sol = list(solveset(mag, _w, Interval(0, oo, left_open=True)))
+
+    if (len(mag_sol) == 0):
+      pm = S(-180)
+    else:
+      wcp = mag_sol[0]
+      pm = ((arg(w_expr)*S(180)/pi).subs({_w:wcp}) + S(180)) % 360
+
+    if(pm >= 180):
+        pm = pm - 360
+
+    return pm
+
+def gain_margin(system):
+    r"""
+    Returns the gain margin of a continuous time system.
+    Only applicable to Transfer Functions which can generate valid bode plots.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When time delay terms are present in the system.
+
+    ValueError
+        When a SISO LTI system is not passed.
+
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.control import TransferFunction, gain_margin
+    >>> from sympy.abc import s
+
+    >>> tf = TransferFunction(1, s**3 + 2*s**2 + s, s)
+    >>> gain_margin(tf)
+    20*log(2)/log(10)
+    >>> gain_margin(tf).n()
+    6.02059991327962
+
+    >>> tf1 = TransferFunction(s**3, s**2 + 5*s, s)
+    >>> gain_margin(tf1)
+    oo
+
+    See Also
+    ========
+
+    phase_margin
+
+    References
+    ==========
+
+    https://en.wikipedia.org/wiki/Bode_plot
+
+    """
+    if not isinstance(system, SISOLinearTimeInvariant):
+        raise ValueError("Margins are only applicable for SISO LTI systems.")
+
+    _w = Dummy("w", real=True)
+    repl = I*_w
+    expr = system.to_expr()
+    len_free_symbols = len(expr.free_symbols)
+    if expr.has(exp):
+        raise NotImplementedError("Margins for systems with Time delay terms are not supported.")
+    elif len_free_symbols > 1:
+        raise ValueError("Extra degree of freedom found. Make sure"
+            " that there are no free symbols in the dynamical system other"
+            " than the variable of Laplace transform.")
+
+    w_expr = expr.subs({system.var: repl})
+
+    mag = 20*log(Abs(w_expr), 10)
+    phase = w_expr
+    phase_sol = list(solveset(numer(phase.as_real_imag()[1].cancel()),_w, Interval(0, oo, left_open = True)))
+
+    if (len(phase_sol) == 0):
+        gm = oo
+    else:
+        wcg = phase_sol[0]
+        gm = -mag.subs({_w:wcg})
+
+    return gm
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
@@ -219,8 +378,10 @@ class LinearTimeInvariant(Basic, EvalfMixin):
             raise TypeError(f"All arguments must be of type {cls._clstype}.")
         var_set = {arg.var for arg in args}
         if len(var_set) != 1:
-            raise ValueError("All transfer functions should use the same complex variable"
-                f" of the Laplace transform. {len(var_set)} different values found.")
+            raise ValueError(filldedent(f"""
+                All transfer functions should use the same complex variable
+                of the Laplace transform. {len(var_set)} different
+                values found."""))
 
     @property
     def is_SISO(self):
@@ -537,9 +698,13 @@ class TransferFunction(SISOLinearTimeInvariant):
             if _len_free_symbols == 1:
                 var = list(_free_symbols)[0]
             elif _len_free_symbols == 0:
-                raise ValueError("Positional argument `var` not found in the TransferFunction defined. Specify it manually.")
+                raise ValueError(filldedent("""
+                    Positional argument `var` not found in the
+                    TransferFunction defined. Specify it manually."""))
             else:
-                raise ValueError("Conflicting values found for positional argument `var` ({}). Specify it manually.".format(_free_symbols))
+                raise ValueError(filldedent("""
+                    Conflicting values found for positional argument `var` ({}).
+                    Specify it manually.""".format(_free_symbols)))
 
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(S.ComplexInfinity):
@@ -818,7 +983,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.num, self.var), self.var)
 
-    def evalfr(self,other):
+    def eval_frequency(self, other):
         """
         Returns the system response at any point in the real or complex plane.
 
@@ -830,18 +995,17 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> from sympy import I
         >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
         >>> omega = 0.1
-        >>> tf1.evalfr(I*omega)
-        TransferFunction(1, 0.99 + 0.2*I, s)
+        >>> tf1.eval_frequency(I*omega)
+        1/(0.99 + 0.2*I)
         >>> tf2 = TransferFunction(s**2, a*s + p, s)
-        >>> tf2.evalfr(2)
-        TransferFunction(4, 2*a + p, s)
-        >>> tf2.evalfr(I*2)
-        TransferFunction(-4, 2*I*a + p, s)
-
+        >>> tf2.eval_frequency(2)
+        4/(2*a + p)
+        >>> tf2.eval_frequency(I*2)
+        -4/(2*I*a + p)
         """
         arg_num = self.num.subs(self.var, other)
         arg_den = self.den.subs(self.var, other)
-        argnew = TransferFunction(arg_num, arg_den, self.var)
+        argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
         return argnew.expand()
 
     def is_stable(self):
@@ -876,13 +1040,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __add__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
@@ -895,13 +1061,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __sub__(self, other):
         if isinstance(other, (TransferFunction, Series)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Parallel(self, -other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = [-i for i in list(other.args)]
             return Parallel(self, *arg_list)
         else:
@@ -914,13 +1082,15 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __mul__(self, other):
         if isinstance(other, (TransferFunction, Parallel)):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             return Series(self, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
@@ -930,16 +1100,25 @@ class TransferFunction(SISOLinearTimeInvariant):
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2 and isinstance(other.args[0], TransferFunction)
+        if isinstance(other, TransferFunction):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
+            return Series(self, TransferFunction(other.den, other.num, self.var))
+        elif (isinstance(other, Parallel) and len(other.args
+                ) == 2 and isinstance(other.args[0], TransferFunction)
             and isinstance(other.args[1], (Series, TransferFunction))):
 
             if not self.var == other.var:
-                raise ValueError("Both TransferFunction and Parallel should use the"
-                    " same complex variable of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    Both TransferFunction and Parallel should use the
+                    same complex variable of the Laplace transform."""))
             if other.args[1] == self:
                 # plant and controller with unit feedback.
                 return Feedback(self, other.args[0])
-            other_arg_list = list(other.args[1].args) if isinstance(other.args[1], Series) else other.args[1]
+            other_arg_list = list(other.args[1].args) if isinstance(
+                other.args[1], Series) else other.args[1]
             if other_arg_list == other.args[1]:
                 return Feedback(self, other_arg_list)
             elif self in other_arg_list:
@@ -1244,12 +1423,19 @@ class Series(SISOLinearTimeInvariant):
         return Series(*arg_list, other)
 
     def __truediv__(self, other):
-        if (isinstance(other, Parallel) and len(other.args) == 2
+        if isinstance(other, TransferFunction):
+            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        elif isinstance(other, Series):
+            tf_self = self.rewrite(TransferFunction)
+            tf_other = other.rewrite(TransferFunction)
+            return tf_self / tf_other
+        elif (isinstance(other, Parallel) and len(other.args) == 2
             and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
-                raise ValueError("All the transfer functions should use the same complex variable "
-                    "of the Laplace transform.")
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace transform."""))
             self_arg_list = set(self.args)
             other_arg_list = set(other.args[1].args)
             res = list(self_arg_list ^ other_arg_list)
@@ -1439,8 +1625,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
             obj = super().__new__(cls, *args)
 
         else:
-            raise ValueError("Number of input signals do not match the number"
-                " of output signals of adjacent systems for some args.")
+            raise ValueError(filldedent("""
+                Number of input signals do not match the number
+                of output signals of adjacent systems for some args."""))
 
         return obj.doit() if evaluate else obj
 
@@ -2060,15 +2247,18 @@ class Feedback(SISOLinearTimeInvariant):
             raise TypeError("Unsupported type for `sys1` or `sys2` of Feedback.")
 
         if sign not in [-1, 1]:
-            raise ValueError("Unsupported type for feedback. `sign` arg should "
-                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+            raise ValueError(filldedent("""
+                Unsupported type for feedback. `sign` arg should
+                either be 1 (positive feedback loop) or -1
+                (negative feedback loop)."""))
 
         if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
             raise ValueError("The equivalent system will have zero denominator.")
 
         if sys1.var != sys2.var:
-            raise ValueError("Both `sys1` and `sys2` should be using the"
-                " same complex variable.")
+            raise ValueError(filldedent("""
+                Both `sys1` and `sys2` should be using the
+                same complex variable."""))
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -2342,18 +2532,22 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         if sys1.num_inputs != sys2.num_outputs or \
             sys1.num_outputs != sys2.num_inputs:
-            raise ValueError("Product of `sys1` and `sys2` "
-                "must yield a square matrix.")
+            raise ValueError(filldedent("""
+                Product of `sys1` and `sys2` must
+                yield a square matrix."""))
 
         if sign not in (-1, 1):
-            raise ValueError("Unsupported type for feedback. `sign` arg should "
-                "either be 1 (positive feedback loop) or -1 (negative feedback loop).")
+            raise ValueError(filldedent("""
+                Unsupported type for feedback. `sign` arg should
+                either be 1 (positive feedback loop) or -1
+                (negative feedback loop)."""))
 
         if not _is_invertible(sys1, sys2, sign):
             raise ValueError("Non-Invertible system inputted.")
         if sys1.var != sys2.var:
-            raise ValueError("Both `sys1` and `sys2` should be using the"
-                " same complex variable.")
+            raise ValueError(filldedent("""
+                Both `sys1` and `sys2` should be using the
+                same complex variable."""))
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -2965,17 +3159,23 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         try:
             var = arg[0][0].var
         except TypeError:
-            raise ValueError("`arg` param in TransferFunctionMatrix should "
-            "strictly be a nested list containing TransferFunction objects.")
+            raise ValueError(filldedent("""
+                `arg` param in TransferFunctionMatrix should
+                strictly be a nested list containing TransferFunction
+                objects."""))
         for row_index, row in enumerate(arg):
             temp = []
             for col_index, element in enumerate(row):
                 if not isinstance(element, SISOLinearTimeInvariant):
-                    raise TypeError("Each element is expected to be of type `SISOLinearTimeInvariant`.")
+                    raise TypeError(filldedent("""
+                        Each element is expected to be of
+                        type `SISOLinearTimeInvariant`."""))
 
                 if var != element.var:
-                    raise ValueError("Conflicting value(s) found for `var`. All TransferFunction instances in "
-                            "TransferFunctionMatrix should use the same complex variable in Laplace domain.")
+                    raise ValueError(filldedent("""
+                        Conflicting value(s) found for `var`. All TransferFunction
+                        instances in TransferFunctionMatrix should use the same
+                        complex variable in Laplace domain."""))
 
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
@@ -3224,9 +3424,9 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
 
-    def evalfr(self,other):
+    def eval_frequency(self, other):
         """
-        Evaluates each element of the ``TransferFunctionMatrix`` at a frequency.
+        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
 
         Examples
         ========
@@ -3241,12 +3441,17 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
         >>> tfm_1
         TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
-        >>> tfm_1.evalfr(2*I)
-        TransferFunctionMatrix(((TransferFunction(3 - 6*I, 5, s), TransferFunction((1 - 2*I)*(2 - 2*I)*(6 + 2*I), 40, s)), (TransferFunction((-2 - 6*I)*(3 + 2*I), 40, s), TransferFunction((-14 - 10*I)*(16 - 18*I), 296, s))))
-
+        >>> tfm_1.eval_frequency(2)
+        Matrix([
+        [   1, 2/3],
+        [5/12, 3/2]])
+        >>> tfm_1.eval_frequency(I*2)
+        Matrix([
+        [   3/5 - 6*I/5,                -I],
+        [3/20 - 11*I/20, -101/74 + 23*I/74]])
         """
         mat = self._expr_mat.subs(self.var, other)
-        return _to_TFM(mat, self.var)
+        return mat.expand()
 
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""
