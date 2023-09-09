@@ -501,6 +501,12 @@ def test_intersect1():
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
 
+    # canonical boundary selected
+    a = sqrt(2*sqrt(6) + 5)
+    b = sqrt(2) + sqrt(3)
+    assert Interval(a, 4).intersection(Interval(b, 5)) == Interval(b, 4)
+    assert Interval(1, a).intersection(Interval(0, b)) == Interval(1, b)
+
 
 def test_intersection_interval_float():
     # intersection of Intervals with mixed Rational/Float boundaries should
