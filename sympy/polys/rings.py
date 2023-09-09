@@ -2592,7 +2592,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
         >>> syms = {2}
         >>> f.coeff_split_syms(syms)
-        {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3}, (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
+        {(0, 0, 0): {(0, 4, 0): 3, (4, 0, 0): 2}, (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
 
         See Also
         ========
