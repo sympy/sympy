@@ -166,6 +166,8 @@ def test_besselk_series():
         sqrt(x)*(log(x)/2 - S(1)/2 + S.EulerGamma) + x**(S(3)/2)*(log(x)/4 - S(5)/8 + \
         S.EulerGamma/2) + x**(S(5)/2)*(log(x)/24 - S(5)/36 + S.EulerGamma/12) + O(x**3*log(x))
     assert besselk(-2, sin(x)).series(x, n=4) == besselk(2, sin(x)).series(x, n=4)
+    assert besselk(2,x**2).series(x, n=2) == 2/x**4 + O(x**2)
+    assert (x**2*besselk(2, x)).series(x ,n=2) == 2 + O(x**2)
 
 
 def test_diff():
