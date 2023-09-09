@@ -2113,18 +2113,21 @@ def _aresame(a, b):
     Examples
     ========
 
-    In SymPy (as in Python) two numbers compare the same if they
-    have the same underlying base-2 representation even though
-    they may not be the same type:
+    In SymPy (unlike Python) two numbers do not compare the same if they are
+    not of the same type. In particular an Integer or Rational will always
+    compare unequal with a Float. Also Floats of differing precision will
+    compare unequal.
 
     >>> from sympy import S
     >>> 2.0 == S(2)
-    True
+    False
     >>> 0.5 == S.Half
-    True
+    False
 
-    This routine was written to provide a query for such cases that
-    would give false when the types do not match:
+    Before SymPy 1.7 the two comparisons above would have given True rather
+    than False. This routine was written to provide a query that could
+    distinguish those cases but is no longer needed after the changes to Float
+    comparison introduced in SymPy 1.7. Its usage is
 
     >>> from sympy.core.basic import _aresame
     >>> _aresame(S(2.0), S(2))
