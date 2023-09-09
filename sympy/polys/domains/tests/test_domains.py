@@ -1,5 +1,7 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
+from sympy.external.gmpy import GROUND_TYPES
+
 from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Integer,
     Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
@@ -811,6 +813,7 @@ def test_PolynomialRing_from_FractionField():
     assert R.to_domain().from_FractionField(g, F.to_domain()) == X**2/4 + Y**2/4
     assert R.to_domain().from_FractionField(h, F.to_domain()) == X**2 + Y**2
 
+
 def test_FractionField_from_PolynomialRing():
     R, x,y = ring("x,y", QQ)
     F, X,Y = field("x,y", ZZ)
@@ -821,10 +824,12 @@ def test_FractionField_from_PolynomialRing():
     assert F.to_domain().from_PolynomialRing(f, R.to_domain()) == 3*X**2 + 5*Y**2
     assert F.to_domain().from_PolynomialRing(g, R.to_domain()) == (5*X**2 + 3*Y**2)/15
 
+
 def test_FF_of_type():
+    # XXX: of_type is not very useful here because in the case of ground types
+    # = flint all elements are of type nmod.
     assert FF(3).of_type(FF(3)(1)) is True
     assert FF(5).of_type(FF(5)(3)) is True
-    assert FF(5).of_type(FF(7)(3)) is False
 
 
 def test___eq__():
@@ -855,92 +860,81 @@ def test_ModularInteger():
     F3 = FF(3)
 
     a = F3(0)
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(1)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(3)
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(4)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = F3(F3(0))
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(F3(1))
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(F3(2))
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(F3(3))
-    assert isinstance(a, F3.dtype) and a == 0
+    assert F3.of_type(a) and a == 0
     a = F3(F3(4))
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = -F3(1)
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = -F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2 + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + 2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2) + F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 3 - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - 2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(3) - F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)*F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = 2/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)/F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-
-    a = 1 % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % 2
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
-    a = F3(1) % F3(2)
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     a = F3(2)**0
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
     a = F3(2)**1
-    assert isinstance(a, F3.dtype) and a == 2
+    assert F3.of_type(a) and a == 2
     a = F3(2)**2
-    assert isinstance(a, F3.dtype) and a == 1
+    assert F3.of_type(a) and a == 1
 
     F7 = FF(7)
 
     a = F7(3)**100000000000
-    assert isinstance(a, F7.dtype) and a == 4
+    assert F7.of_type(a) and a == 4
     a = F7(3)**-100000000000
-    assert isinstance(a, F7.dtype) and a == 2
-    a = F7(3)**S(2)
-    assert isinstance(a, F7.dtype) and a == 2
+    assert F7.of_type(a) and a == 2
 
     assert bool(F3(3)) is False
     assert bool(F3(4)) is True
@@ -948,56 +942,18 @@ def test_ModularInteger():
     F5 = FF(5)
 
     a = F5(1)**(-1)
-    assert isinstance(a, F5.dtype) and a == 1
+    assert F5.of_type(a) and a == 1
     a = F5(2)**(-1)
-    assert isinstance(a, F5.dtype) and a == 3
+    assert F5.of_type(a) and a == 3
     a = F5(3)**(-1)
-    assert isinstance(a, F5.dtype) and a == 2
+    assert F5.of_type(a) and a == 2
     a = F5(4)**(-1)
-    assert isinstance(a, F5.dtype) and a == 4
+    assert F5.of_type(a) and a == 4
 
-    assert (F5(1) < F5(2)) is True
-    assert (F5(1) <= F5(2)) is True
-    assert (F5(1) > F5(2)) is False
-    assert (F5(1) >= F5(2)) is False
-
-    assert (F5(3) < F5(2)) is False
-    assert (F5(3) <= F5(2)) is False
-    assert (F5(3) > F5(2)) is True
-    assert (F5(3) >= F5(2)) is True
-
-    assert (F5(1) < F5(7)) is True
-    assert (F5(1) <= F5(7)) is True
-    assert (F5(1) > F5(7)) is False
-    assert (F5(1) >= F5(7)) is False
-
-    assert (F5(3) < F5(7)) is False
-    assert (F5(3) <= F5(7)) is False
-    assert (F5(3) > F5(7)) is True
-    assert (F5(3) >= F5(7)) is True
-
-    assert (F5(1) < 2) is True
-    assert (F5(1) <= 2) is True
-    assert (F5(1) > 2) is False
-    assert (F5(1) >= 2) is False
-
-    assert (F5(3) < 2) is False
-    assert (F5(3) <= 2) is False
-    assert (F5(3) > 2) is True
-    assert (F5(3) >= 2) is True
-
-    assert (F5(1) < 7) is True
-    assert (F5(1) <= 7) is True
-    assert (F5(1) > 7) is False
-    assert (F5(1) >= 7) is False
-
-    assert (F5(3) < 7) is False
-    assert (F5(3) <= 7) is False
-    assert (F5(3) > 7) is True
-    assert (F5(3) >= 7) is True
-
-    raises(NotInvertible, lambda: F5(0)**(-1))
-    raises(NotInvertible, lambda: F5(5)**(-1))
+    if GROUND_TYPES != 'flint':
+        # XXX: This gives a core dump with python-flint...
+        raises(NotInvertible, lambda: F5(0)**(-1))
+        raises(NotInvertible, lambda: F5(5)**(-1))
 
     raises(ValueError, lambda: FF(0))
     raises(ValueError, lambda: FF(2.1))

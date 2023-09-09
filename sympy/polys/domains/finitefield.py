@@ -1,5 +1,6 @@
 """Implementation of :class:`FiniteField` class. """
 
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core.numbers import int_valued
 from sympy.polys.domains.field import Field
@@ -10,6 +11,34 @@ from sympy.polys.galoistools import gf_zassenhaus, gf_irred_p_rabin
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 from sympy.polys.domains.groundtypes import SymPyInteger
+
+
+if GROUND_TYPES == 'flint':
+    import flint
+else:
+    flint = None
+
+
+def _modular_int_factory(mod, dom, symmetric, self):
+
+    # Use flint if available
+    if flint is not None:
+        try:
+            mod = dom.convert(mod)
+        except CoercionFailed:
+            raise ValueError('modulus must be an integer, got %s' % mod)
+
+        # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
+        try:
+            flint.nmod(0, mod)
+        except OverflowError:
+            pass
+        else:
+            return lambda val: flint.nmod(val, mod)
+
+    # Use the Python implementation
+    return ModularIntegerFactory(mod, dom, symmetric, self)
+
 
 @public
 class FiniteField(Field, SimpleDomain):
@@ -120,12 +149,17 @@ class FiniteField(Field, SimpleDomain):
         if mod <= 0:
             raise ValueError('modulus must be a positive integer, got %s' % mod)
 
-        self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
+        self.dtype = _modular_int_factory(mod, dom, symmetric, self)
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
         self.dom = dom
         self.mod = mod
         self.sym = symmetric
+        self._tp = type(self.zero)
+
+    @property
+    def tp(self):
+        return self._tp
 
     def __str__(self):
         return 'GF(%s)' % self.mod
@@ -161,18 +195,34 @@ class FiniteField(Field, SimpleDomain):
 
     def to_int(self, a):
         """Convert ``val`` to a Python ``int`` object. """
-        aval = a.val
+        aval = int(a)
         if self.sym and aval > self.mod // 2:
             aval -= self.mod
         return aval
 
+    def is_positive(self, a):
+        """Returns True if ``a`` is positive. """
+        return bool(a)
+
+    def is_nonnegative(self, a):
+        """Returns True if ``a`` is non-negative. """
+        return True
+
+    def is_negative(self, a):
+        """Returns True if ``a`` is negative. """
+        return False
+
+    def is_nonpositive(self, a):
+        """Returns True if ``a`` is non-positive. """
+        return not a
+
     def from_FF(K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ(a.val, K0.dom))
+        return K1.dtype(K1.dom.from_ZZ(int(a), K0.dom))
 
     def from_FF_python(K1, a, K0=None):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_python(a.val, K0.dom))
+        return K1.dtype(K1.dom.from_ZZ_python(int(a), K0.dom))
 
     def from_ZZ(K1, a, K0=None):
         """Convert Python's ``int`` to ``dtype``. """
@@ -215,7 +265,7 @@ class FiniteField(Field, SimpleDomain):
     def is_square(self, a):
         """Returns True if ``a`` is a quadratic residue modulo p. """
         # a is not a square <=> x**2-a is irreducible
-        poly = [x.val for x in [self.one, self.zero, -a]]
+        poly = [int(x) for x in [self.one, self.zero, -a]]
         return not gf_irred_p_rabin(poly, self.mod, self.dom)
 
     def exsqrt(self, a):
@@ -229,7 +279,7 @@ class FiniteField(Field, SimpleDomain):
         if self.mod == 2 or a == 0:
             return a
         # Otherwise, use square-free factorization routine to factorize x**2-a
-        poly = [x.val for x in [self.one, self.zero, -a]]
+        poly = [int(x) for x in [self.one, self.zero, -a]]
         for factor in gf_zassenhaus(poly, self.mod, self.dom):
             if len(factor) == 2 and factor[1] <= self.mod // 2:
                 return self.dtype(factor[1])
