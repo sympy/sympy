@@ -5,7 +5,7 @@ from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
-from sympy.core.sorting import default_sort_key, ordered
+from sympy.core.sorting import ordered
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
