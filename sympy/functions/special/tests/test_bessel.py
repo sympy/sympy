@@ -169,6 +169,7 @@ def test_besselk_series():
         S.EulerGamma/16) + O(x**4*log(x))
     assert besselk(2, x).series(x, n=4) == 2/x**2 - S(1)/2 + x**2*(-log(x)/8 - \
         S.EulerGamma/8 + log(2)/8 + S(3)/32) + O(x**4*log(x))
+    assert besselk(2, x).series(x, n=1) == 2/x**2 - S(1)/2 + O(x) #edge case for series truncation
     assert besselk(0, x**(1.1)).series(x, n=4) == log(2) - S.EulerGamma - \
         1.1*log(x) + x**2.2*(-0.275*log(x) - S.EulerGamma/4 + \
         log(2)/4 + S(1)/4) + O(x**4*log(x))
@@ -183,6 +184,9 @@ def test_besselk_series():
         sqrt(x)*(log(x)/2 - S(1)/2 + S.EulerGamma) + x**(S(3)/2)*(log(x)/4 - S(5)/8 + \
         S.EulerGamma/2) + x**(S(5)/2)*(log(x)/24 - S(5)/36 + S.EulerGamma/12) + O(x**3*log(x))
     assert besselk(-2, sin(x)).series(x, n=4) == besselk(2, sin(x)).series(x, n=4)
+    assert besselk(2, x**2).series(x, n=2) == 2/x**4 - S(1)/2 + O(x**2) #edge case for series truncation
+    assert besselk(2, x**2).series(x, n=6) == 2/x**4 - S(1)/2 + x**4*(-log(x)/4 - S.EulerGamma/8 + log(2)/8 + S(3)/32) + O(x**6*log(x))
+    assert (x**2*besselk(2, x)).series(x, n=2) == 2 + O(x**2)
 
     #test for aseries
     assert besselk(0,x).series(x, oo, n=4) == sqrt(2)*sqrt(pi)*(sqrt(1/x) + (1/x)**(S(3)/2)/8 - \
