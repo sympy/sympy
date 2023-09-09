@@ -1097,7 +1097,7 @@ def test_PolyElement_gcd_():
     f = (-1 + 0*I)*x*y + (0 + -1*I)*y**2
     g = x**3 + (0 + 1*I)*x**2*y + x*y**2 + (0 + 1*I)*y**3
 
-    expected_gcd = ((-1 + 0*I)*x + (0 + -1*I)*y, y, (-1 + 0*I)*x**2 + (-1 + 0*I)*y**2)
+    expected_gcd = (x + I*y, -y, x**2 + y**2)
 
     assert _gcd_(f, g) == expected_gcd
 
@@ -1107,8 +1107,11 @@ def test_PolyElement_gcd_():
 
     g = (4 + 0*I)*y**3 + (-4 + 0*I)*y**2
 
-    expected_gcd = (y, EX(2)*y*_t0 + EX(2*I*pi)*y - EX(2)*_t0 - EX(2)*_t1 - \
-                    EX(-2*I*pi), EX(4)*y**2 - EX(4)*y)
+    expected_gcd = (
+        y,
+        EX(2)*y*_t0 + EX(2*I*pi)*y - EX(2)*_t0 - EX(2)*_t1 + EX(-2*I*pi),
+        EX(4)*y**2 - EX(4)*y
+    )
 
     assert _gcd_(f, g) == expected_gcd
 
@@ -1131,7 +1134,7 @@ def test_PolyElement_gcd_():
     f = (0 + 4*I)*x**5 + (0 + -4*I)*x*_C3
     g = (4 + 0*I)*x**5 + (4 + 0*I)*x*_C3
 
-    expected_gcd = ((-4 + 0*I)*x, (0 + -1*I)*x**4 + (0 + 1*I)*_C3, (-1 + 0*I)*x**4 + (-1 + 0*I)*_C3)
+    expected_gcd = (4*x, I*x**4 - I*_C3, x**4 + _C3)
 
     assert _gcd_(f, g) == expected_gcd
 

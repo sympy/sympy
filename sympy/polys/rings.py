@@ -3376,50 +3376,50 @@ def _gcd_prs(p1, p2):
     2
 
     """
+    K = p1.ring.domain
+
     x = p1.main_variable()
 
     c1, pp1 = cont_prim(p1, x)
     c2, pp2 = cont_prim(p2, x)
 
-    h = pp1.subresultants(pp2, x)[-1]
     c = gcd_prs([c1, c2])
 
-    ring = p1.ring
-    domain = ring.to_domain()
-
+    h = pp1.subresultants(pp2, x)[-1]
     _, h = cont_prim(h, x)
-    coeff = h.coeff_wrt(x, h.degree(x))
 
-    norm_coeff = domain.canonical_unit(coeff)
-    h = norm_coeff * h
+    c *= K.canonical_unit(h.LC)
 
-    h = h * c
+    h = c * h
 
     return h
 
 def _gcd_(f, g):
     """Helper function for _gcd_I method."""
 
+    K = f.ring.domain
     old_ring = f.ring
     old_domain = old_ring.domain
 
-    if not old_domain.is_Exact:
-        new_domain = old_domain.get_exact()
-        new_ring = new_domain[old_ring.symbols].ring
+    if not K.is_Exact:
+        K_exact = K.get_exact()
 
-        f = f.set_ring(new_ring)
-        g = f.set_ring(new_ring)
+        ring_approx = f.ring
+        ring_exact = K_exact[ring_approx.symbols].ring
+
+        f = f.set_ring(ring_exact)
+        g = g.set_ring(ring_exact)
 
         h, cff, cfg = _gcd_(f, g)
 
-        h = h.set_ring(old_ring)
-        cff = cff.set_ring(old_ring)
-        cfg = cfg.set_ring(old_ring)
+        h = h.set_ring(ring_approx)
+        cff = cff.set_ring(ring_approx)
+        cfg = cfg.set_ring(ring_approx)
 
         return h, cff, cfg
 
-    elif old_domain.is_Field:
-        if old_domain.is_QQ and query('USE_HEU_GCD'):
+    elif K.is_Field:
+        if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return f._gcd_QQ(g)
             except HeuristicGCDFailed:
@@ -3428,7 +3428,7 @@ def _gcd_(f, g):
         return f._gcd_I(g)
 
     else:
-        if old_domain.is_ZZ and query('USE_HEU_GCD'):
+        if K.is_ZZ and query('USE_HEU_GCD'):
             try:
                 return f._gcd_ZZ(g)
             except HeuristicGCDFailed:
