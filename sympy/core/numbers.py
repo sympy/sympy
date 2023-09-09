@@ -14,8 +14,7 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
-from .intfunc import (num_digits, igcd, ilcm, mod_inverse,
-    integer_nthroot, integer_log)
+from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
