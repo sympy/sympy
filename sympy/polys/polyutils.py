@@ -1,5 +1,6 @@
 """Useful utilities for higher level polynomial classes. """
 
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
     expand_mul, expand_multinomial)
@@ -8,8 +9,14 @@ from sympy.core.numbers import _illegal
 from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
-
 import re
+
+
+if GROUND_TYPES == 'flint':
+    import flint
+else:
+    flint = None
+
 
 _gens_order = {
     'a': 301, 'b': 302, 'c': 303, 'd': 304,
@@ -154,12 +161,28 @@ def _analyze_gens(gens):
 
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
+
+    # XXX: python-flint's nmod type does not support comparisons so we need a
+    # key function to sort the factors if python-flint is being used. A better
+    # solution might be to add a sort key method to each domain.
+    if flint is not None:
+        def order_key(factor):
+            if isinstance(factor, flint.nmod):
+                return int(factor)
+            elif isinstance(factor, list):
+                return [order_key(f) for f in factor]
+            else:
+                return factor
+    else:
+        def order_key(factor):
+            return factor
+
     def order_if_multiple_key(factor):
         (f, n) = factor
-        return (len(f), n, f)
+        return (len(f), n, order_key(f))
 
     def order_no_multiple_key(f):
-        return (len(f), f)
+        return (len(f), order_key(f))
 
     if args.get('multiple', True):
         return sorted(factors, key=order_if_multiple_key)
