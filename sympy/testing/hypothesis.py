@@ -43,7 +43,7 @@ def lattice_axioms_singular(polysList, func=lcm):
     # Commutativity
     assert func(f, g) == func(g, f)
     # Idempotence
-    assert func(f, f) in [f, -f]  # when f is a negative integer
+    assert func(f, f) == f  # when f is a negative integer
     return True
 
 
@@ -52,15 +52,15 @@ def lattice_axioms_dual(polysList, funcs=[lcm, gcd]):
         return ValueError("Empty list of polynomials.")
     f, g, h = polysList[0], polysList[1], polysList[2]
     # Absorption
-    absorb1 = lambda func1, func2: func1(f, func2(f, g)) in [f, -f]
-    absorb2 = lambda func1, func2: func2(f, func1(f, g)) in [f, -f]
+    absorb1 = lambda func1, func2: func1(f, func2(f, g)) == f
+    absorb2 = lambda func1, func2: func2(f, func1(f, g)) == f
     assert absorb1(funcs[0], funcs[1])
     assert absorb2(funcs[0], funcs[1])
     # Identity
     assert funcs[0](f, 0) == 0
-    assert funcs[0](f, 1) in [f, -f, 0]  # lcm(0,1) = 0
+    assert funcs[0](f, 1) == f  # lcm(0,1) = 0
     assert funcs[1](f, 1) == 1
-    assert funcs[1](f, 0) in [f, -f]
+    assert funcs[1](f, 0) == f
     # Distributivity
     dist1 = lambda func1, func2: func2(f, func1(g, h)) == func1(
         func2(f, g), func2(f, h)
