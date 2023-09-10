@@ -15,10 +15,10 @@ Here's an example of how that would work:
 
     First a preprocessing step should be done on f. During preprocessing,
     f should be checked for any predicates such as `Q.prime` that can't be
-    handled. Also disequalities like `~Eq(y, 1)` should be split.
+    handled. Also unequality like `~Eq(y, 1)` should be split.
 
     I should mention that the paper says to split both equalities and
-    disequalities, but this implementation only requires that disequalities
+    unequality, but this implementation only requires that unequality
     be split.
 
     >>> f = ((x > 0) | (x < 0)) & (Eq(x, 0) | Eq(y, 1)) & ((y < 1) | (y > 1) | Eq(1, 2))
