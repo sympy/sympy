@@ -27,9 +27,18 @@ def test_TupleParametersBase():
 def test_hyper():
     raises(TypeError, lambda: hyper(1, 2, z))
 
-    assert hyper((1, 2), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1), (1,), z) == hyper(Tuple(1, 2), Tuple(1), z)
+    assert hyper((2, 1, 2), (1, 2, 1, 3), z) == hyper((2,), (1, 3), z)
+    u = hyper((2, 1, 2), (1, 2, 1, 3), z, evaluate=False)
+    assert u.ap == Tuple(1, 2, 2)
+    assert u.bq == Tuple(1, 1, 2, 3)
 
     h = hyper((1, 2), (3, 4, 5), z)
+    assert h.ap == Tuple(1, 2)
+    assert h.bq == Tuple(3, 4, 5)
+    assert h.argument == z
+    assert h.is_commutative is True
+    h = hyper((2, 1), (4, 3, 5), z)
     assert h.ap == Tuple(1, 2)
     assert h.bq == Tuple(3, 4, 5)
     assert h.argument == z
