@@ -100,11 +100,6 @@ class Tuple(Basic):
             return super().__eq__(other)
         return self.args == other
 
-    def __ne__(self, other):
-        if isinstance(other, Basic):
-            return super().__ne__(other)
-        return self.args != other
-
     def __hash__(self):
         return hash(self.args)
 

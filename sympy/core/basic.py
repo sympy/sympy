@@ -426,17 +426,6 @@ class Basic(Printable):
                 return False
         return True
 
-    def __ne__(self, other):
-        """``a != b``  -> Compare two symbolic trees and see whether they are different
-
-        this is the same as:
-
-        ``a.compare(b) != 0``
-
-        but faster
-        """
-        return not self == other
-
     def dummy_eq(self, other, symbol=None):
         """
         Compare two expressions and handle dummy symbols.

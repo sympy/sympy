@@ -118,10 +118,6 @@ class GeometryEntity(Basic, EvalfMixin):
         """Returns a tuple that will be passed to __new__ on unpickling."""
         return tuple(self.args)
 
-    def __ne__(self, o):
-        """Test inequality of two geometrical entities."""
-        return not self == o
-
     def __new__(cls, *args, **kwargs):
         # Points are sequences, but they should not
         # be converted to Tuples, so use this detection function instead.

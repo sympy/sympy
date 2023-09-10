@@ -820,10 +820,6 @@ class Domain:
         # XXX: Remove this.
         return isinstance(other, Domain) and self.dtype == other.dtype
 
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        return not self == other
-
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """
         result = []
