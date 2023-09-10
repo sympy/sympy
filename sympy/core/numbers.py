@@ -909,7 +909,7 @@ class Float(Number):
         return cls._new(_mpf_, precision, zero=False)
 
     @classmethod
-    def _new(cls, _mpf_, _prec, zero=True):
+    def _new(cls, _mpf_, _prec, zero=False):
         # special cases
         if zero and _mpf_ == fzero:
             return S.Zero  # Float(0) -> 0.0; Float._new((0,0,0,0)) -> 0

@@ -1208,7 +1208,7 @@ def test_powers_Integer():
 
     assert Integer(-2)**Symbol('', even=True) == \
         Integer(2)**Symbol('', even=True)
-    assert (-1)**Float(.5) == 1.0*I
+    assert (-1)**Float(.5) == 0.0 + 1.0*I
 
 
 def test_powers_Rational():

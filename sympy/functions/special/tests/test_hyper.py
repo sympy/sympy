@@ -112,7 +112,9 @@ def test_hyper_rewrite_sum():
 
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
+    assert hyper((1.0, 2), [3], z).radius_of_convergence == 1
     assert hyper((1, 2), [3, 4], z).radius_of_convergence is oo
+    assert hyper((1, 2), [3.0, 4], z).radius_of_convergence is oo
     assert hyper((1, 2, 3), [4], z).radius_of_convergence == 0
     assert hyper((0, 1, 2), [4], z).radius_of_convergence is oo
     assert hyper((-1, 1, 2), [-4], z).radius_of_convergence == 0

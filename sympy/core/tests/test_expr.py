@@ -2134,10 +2134,6 @@ def test_identity_removal():
 
 def test_float_0():
     assert Float(0.0) + 1 == Float(1.0)
-
-
-@XFAIL
-def test_float_0_fail():
     assert Float(0.0)*x == Float(0.0)
     assert (x + Float(0.0)).is_Add
 

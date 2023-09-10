@@ -1612,7 +1612,7 @@ class EvalfMixin:
         >>> from sympy.abc import x, y, z
         >>> values = {x: 1e16, y: 1, z: 1e16}
         >>> (x + y - z).subs(values)
-        0
+        0.0
 
         Using the subs argument for evalf is the accurate way to
         evaluate such an expression:

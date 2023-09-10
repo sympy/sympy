@@ -8,7 +8,7 @@ from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
-from sympy.core.numbers import I, pi, oo, zoo
+from sympy.core.numbers import I, pi, oo, zoo, int_valued
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
@@ -326,12 +326,12 @@ class hyper(TupleParametersBase):
         oo
 
         """
-        if any(a.is_integer and (a <= 0) == True for a in self.ap + self.bq):
-            aints = [a for a in self.ap if a.is_Integer and (a <= 0) == True]
-            bints = [a for a in self.bq if a.is_Integer and (a <= 0) == True]
+        aints = [a for a in self.ap if int_valued(a) and (a <= 0) == True]
+        bints = [a for a in self.bq if int_valued(a) and (a <= 0) == True]
+        if aints or bints:
             if len(aints) < len(bints):
                 return S.Zero
-            popped = False
+            small_pop = False
             for b in bints:
                 cancelled = False
                 while aints:
@@ -339,10 +339,10 @@ class hyper(TupleParametersBase):
                     if a >= b:
                         cancelled = True
                         break
-                    popped = True
+                    small_pop = True
                 if not cancelled:
                     return S.Zero
-            if aints or popped:
+            if aints or small_pop:
                 # There are still non-positive numerator parameters.
                 # This is a polynomial.
                 return oo
