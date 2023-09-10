@@ -3240,9 +3240,9 @@ def _gcd_preprocess_polys(polynomials):
     >>> f = x**2 - y**2
     >>> g = x**2 - 2*x*y + y**2
     >>> h = x - y
-    >>> polynomials = [f, g]
+    >>> polynomials = [f, g, h]
     >>> _gcd_preprocess_polys(polynomials)
-    ([x - y, x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+    ([x**2 - y**2, x - y, x**2 - 2*x*y + y**2], {0, 1})
 
     """
     all_polys = polynomials
