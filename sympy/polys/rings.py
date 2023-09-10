@@ -2193,7 +2193,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else:
-            return _gcd_(f, g)
+            return f._gcd_prs(g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -2219,32 +2219,38 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return h, cff, cfg
 
-    def _gcd_I(self, g):
+    def _gcd_prs(self, g):
+        """Helper function for gcd_prs method."""
+
         f = self
-        ring = f.ring
-        old_gcd = ring.dmp_inner_gcd(f, g)
-        if not ring.domain.is_Field:
-            h = _gcd_prs(f, g)
-            cff = f.quo(h)
-            cfg = g.quo(h)
-            new_gcd = h, cff, cfg
-            if new_gcd != old_gcd:
-                raise RuntimeError(f"GCD is different for\n\n"
-                f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-                f"New GCD = {new_gcd}")
-            else:
-                return new_gcd
+        K = f.ring.domain
+
+        if not K.is_Exact:
+            K_exact = K.get_exact()
+
+            ring_approx = f.ring
+            ring_exact = K_exact[ring_approx.symbols].ring
+
+            f = f.set_ring(ring_exact)
+            g = g.set_ring(ring_exact)
+
+            h, cff, cfg = f._gcd_prs(g)
+
+            h = h.set_ring(ring_approx)
+            cff = cff.set_ring(ring_approx)
+            cfg = cfg.set_ring(ring_approx)
+
+            return h, cff, cfg
+        elif K.is_Field:
+            if K.is_QQ:
+                return f._gcd_QQ(g)
+
+            return validate_prs(f, g)
         else:
-            h = _gcd_prs(f, g).monic()
-            cff = f.quo(h)
-            cfg = g.quo(h)
-            new_gcd = h, cff, cfg
-            if new_gcd != old_gcd:
-                raise RuntimeError(f"GCD is different for\n\n"
-                f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-                f"New GCD = {new_gcd}")
-            else:
-                return new_gcd
+            if K.is_ZZ:
+                return f._gcd_ZZ(g)
+
+            return validate_prs(f, g)
 
     def cancel(self, g):
         """
@@ -2561,9 +2567,31 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
+    def primitive_wrt(self, x):
+        """
+        Returns the content and primitive part of a polynomial with respect to a
+        specified variable.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x = ring("x", ZZ)
+        >>> p = 6*x**2 + 9*x**3
+        >>> p.primitive_wrt(x)
+        (9*x**3 + 6*x**2, 1)
+
+        """
+        p = self
+        coeffs = p.coeff_split({x})
+        cont = gcd_extract(coeffs)
+        prim = p.exquo(cont)
+        return cont, prim
+
     def coeff_split_syms(self, syms):
         """
-        Split a polynomial into two parts: symbolic and non-symbolic.
+        Split a polynomial into two parts: terms involving specified symbolic
+        variables and terms without them.
 
         This function divides the polynomial into terms that involve the
         specified symbolic variables (syms) and terms that do not. It organizes
@@ -3180,15 +3208,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
-def cont_prim(p, x):
-    """Returns the content and primitive part of a polynomial with respect to a
-    specified variable."""
-
-    coeffs = p.coeff_split({x})
-    cont = gcd_prs(coeffs)
-    prim = p.exquo(cont)
-    return cont, prim
-
 def monomial_extract(polynomials):
     """
     Extracts any common monomial from the polynomials.
@@ -3231,31 +3250,6 @@ def monomial_extract(polynomials):
         d = ring({monom_gcd: ring.domain.one})
         p = [pi.exquo(d) for pi in polynomials]  # TODO: Use monomial_ldiv
         return p, d
-
-def gcd_coeffs(coeff_lst, domain):
-    """
-    Return the greatest common divisor (GCD) of a list of coefficients of a
-    polynomial.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.rings import gcd_coeffs
-    >>> from sympy import ZZ
-    >>> coeff_lst = [ZZ(12), ZZ(18), ZZ(24)]
-    >>> domain = ZZ
-    >>> gcd_coeffs(coeff_lst, domain)
-    6
-
-    """
-    coeff_lst = list(coeff_lst)
-    gcd = domain.gcd
-    res = coeff_lst[0]
-    for coeff in coeff_lst[1:]:
-        res = gcd(res, coeff)
-        if res == domain.one:
-            break
-    return res
 
 def _gcd_preprocess_polys(polynomials):
     """
@@ -3322,19 +3316,19 @@ def _gcd_preprocess_polys(polynomials):
                 gcd = gcd_terms((all_polys + polynomials[i+1:]), ring, domain)
                 return [gcd], None
 
-def gcd_prs(polynomials):
+def gcd_extract(polynomials):
     """
     Returns the greatest common divisor (GCD) of a set of polynomials.
 
     Examples
     ========
 
-    >>> from sympy.polys.rings import gcd_prs
+    >>> from sympy.polys.rings import gcd_extract
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
     >>> polynomials = x - y, x - y
-    >>> gcd_prs(polynomials)
+    >>> gcd_extract(polynomials)
     x - y
 
     """
@@ -3350,7 +3344,7 @@ def gcd_prs(polynomials):
 
     gcd = polynomials[0]
     for pi in polynomials[1:]:
-        gcd = _gcd_prs(gcd, pi)
+        gcd = gcd_prs(gcd, pi)
         if gcd == domain.one:
             break
 
@@ -3359,7 +3353,7 @@ def gcd_prs(polynomials):
 
     return gcd
 
-def _gcd_prs(p1, p2):
+def gcd_prs(p1, p2):
     """
     Returns the greatest common divisor (GCD) of two polynomials using the
     Polynomial Resultant Sequences (PRS) method.
@@ -3367,13 +3361,13 @@ def _gcd_prs(p1, p2):
     Examples
     ========
 
-    >>> from sympy.polys.rings import _gcd_prs
+    >>> from sympy.polys.rings import gcd_prs
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
     >>> f = 4*x**2 + 8*x + 10
     >>> g = 2*x**2 + 6*x + 10
-    >>> _gcd_prs(f, g)
+    >>> gcd_prs(f, g)
     2
 
     """
@@ -3381,13 +3375,13 @@ def _gcd_prs(p1, p2):
 
     x = p1.main_variable()
 
-    c1, pp1 = cont_prim(p1, x)
-    c2, pp2 = cont_prim(p2, x)
+    c1, pp1 = p1.primitive_wrt(x)
+    c2, pp2 = p2.primitive_wrt(x)
 
-    c = gcd_prs([c1, c2])
+    c = gcd_extract([c1, c2])
 
     h = pp1.subresultants(pp2, x)[-1]
-    _, h = cont_prim(h, x)
+    _, h = h.primitive_wrt(x)
 
     c *= K.canonical_unit(h.LC)
 
@@ -3395,45 +3389,36 @@ def _gcd_prs(p1, p2):
 
     return h
 
-def _gcd_(f, g):
-    """Helper function for _gcd_I method."""
+def validate_prs(f, g):
+    """
+    Validates the result of the polynomial GCD computation using the ``gcd_prs``
+    algorithm with ``dmp_inner_gcd``.
 
-    K = f.ring.domain
-
-    if not K.is_Exact:
-        K_exact = K.get_exact()
-
-        ring_approx = f.ring
-        ring_exact = K_exact[ring_approx.symbols].ring
-
-        f = f.set_ring(ring_exact)
-        g = g.set_ring(ring_exact)
-
-        h, cff, cfg = _gcd_(f, g)
-
-        h = h.set_ring(ring_approx)
-        cff = cff.set_ring(ring_approx)
-        cfg = cfg.set_ring(ring_approx)
-
-        return h, cff, cfg
-
-    elif K.is_Field:
-        if K.is_QQ and query('USE_HEU_GCD'):
-            try:
-                return f._gcd_QQ(g)
-            except HeuristicGCDFailed:
-                pass
-
-        return f._gcd_I(g)
-
+    """
+    ring = f.ring
+    old_gcd = ring.dmp_inner_gcd(f, g)
+    if not ring.domain.is_Field:
+        h = gcd_prs(f, g)
+        cff = f.quo(h)
+        cfg = g.quo(h)
+        new_gcd = h, cff, cfg
+        if new_gcd != old_gcd:
+            raise RuntimeError(f"GCD is different for\n\n"
+            f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+            f"New GCD = {new_gcd}")
+        else:
+            return new_gcd
     else:
-        if K.is_ZZ and query('USE_HEU_GCD'):
-            try:
-                return f._gcd_ZZ(g)
-            except HeuristicGCDFailed:
-                pass
-
-        return f._gcd_I(g)
+        h = gcd_prs(f, g).monic()
+        cff = f.quo(h)
+        cfg = g.quo(h)
+        new_gcd = h, cff, cfg
+        if new_gcd != old_gcd:
+            raise RuntimeError(f"GCD is different for\n\n"
+            f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+            f"New GCD = {new_gcd}")
+        else:
+            return new_gcd
 
 def gcd_terms(polynomials, ring, domain):
     """
@@ -3447,15 +3432,15 @@ def gcd_terms(polynomials, ring, domain):
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
-    >>> p1 = x**3 - y**3
-    >>> p2 = x**2 - y**2
+    >>> p1 = 2*x**3*y**2 - 2*x**2*y**3
+    >>> p2 = 4*x**2*y**3 - 4*x**3*y**2
     >>> polynomials = [p1, p2]
     >>> ring = p1.ring
     >>> domain = ring.domain
     >>> gcd_terms(polynomials, ring, domain)
-    1
+    2*x**2*y**2
     >>> p1.gcd(p2) # Shows the difference between the gcd_terms and gcd
-    x - y
+    2*x**3*y**2 - 2*x**2*y**3
 
     """
     monomials = set()
@@ -3467,7 +3452,7 @@ def gcd_terms(polynomials, ring, domain):
             coeffs.add(coeff)
 
     monom_gcd = monomial_ngcd(monomials)
-    coeff_gcd = gcd_coeffs(coeffs, domain)
+    coeff_gcd = domain.gcdn(coeffs)
     term_gcd = ring({monom_gcd: coeff_gcd})
 
     return term_gcd
