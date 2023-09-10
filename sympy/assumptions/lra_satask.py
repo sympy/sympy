@@ -7,6 +7,7 @@ from sympy.matrices.common import MatrixKind
 from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.mul import Mul
+from sympy.core.singleton import S
 
 
 def lra_satask(proposition, assumptions=True, context=global_assumptions):
@@ -46,20 +47,30 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    # check if query might be handled by LRASolver
-    for pred in sat_true.encoding.keys():
-        if isinstance(pred, AppliedPredicate):
-            if pred.function != Q.ne:
-                if pred.function not in WHITE_LIST:
-                    raise UnhandledInput(f"LRASolver is not able to handle {pred}")
-            exprs = pred.arguments
-            for expr in exprs:
-                if expr.kind == MatrixKind(NumberKind):
-                    raise ValueError(f"{pred} contains matrix expresions.")
-                if expr.is_real is not True:
-                    raise UnhandledInput(f"LRASolver can not handle non-real expresions")
-                if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
-                    raise UnhandledInput(f"LRASolver can not handle non-real expresions")
+    all_pred, all_exprs = get_all_pred_and_expr(sat_true)
+
+    for pred in all_pred:
+        if pred.function not in WHITE_LIST and pred.function != Q.ne:
+            raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
+    for expr in all_exprs:
+        if expr.kind == MatrixKind(NumberKind):
+            raise UnhandledInput(f"LRASolver: {expr} is of MatrixKind")
+        if expr == S.NaN:
+            raise UnhandledInput("LRASolver: nan")
+
+    # add any old assumptions and raise
+    # exceptions if there are any unhandled assumptions
+    for assm in extract_old_assumptions(all_exprs):
+        n = len(sat_true.encoding)
+        if assm not in sat_true.encoding:
+            sat_true.encoding[assm] = n+1
+        sat_true.data.append([sat_true.encoding[assm]])
+
+        n = len(sat_false.encoding)
+        if assm not in sat_false.encoding:
+            sat_false.encoding[assm] = n+1
+        sat_false.data.append([sat_false.encoding[assm]])
+
 
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
@@ -199,3 +210,76 @@ pred_to_pos_neg_zero = {
     Q.negative_infinite: False,
     Q.positive_infinite: False
 }
+
+def get_all_pred_and_expr(enc_cnf):
+    all_exprs = set()
+    all_pred = set()
+    for pred in enc_cnf.encoding.keys():
+        if isinstance(pred, AppliedPredicate):
+            all_pred.add(pred)
+            for expr in pred.arguments:
+                all_exprs.add(expr)
+
+    return all_pred, all_exprs
+
+def extract_old_assumptions(all_exprs):
+    """
+    Returns a list of relevant new assumption predicate
+    based on any old assumptions.
+
+    Raises an UnhandledInput exception if any of the assumptions are
+    unhandled.
+
+    Ignored predicate:
+    - commutative
+    - complex
+    - algebraic
+    - transcendental
+    - extended_real
+    - real
+    - all matrix predicate
+    - rational
+    - irrational
+
+    Example
+    =======
+    >>> from sympy.assumptions.lra_satask import extract_old_assumptions
+    >>> from sympy import symbols
+    >>> x, y = symbols("x y", positive=True)
+    >>> extract_old_assumptions([x, y, 2])
+    [Q.positive(x), Q.positive(y)]
+    """
+    ret = []
+    for expr in all_exprs:
+        if not hasattr(expr, "free_symbols"):
+            continue
+        if len(expr.free_symbols) == 0:
+            continue
+
+        if expr.is_real is not True:
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
+        # test for I times imaginary variable; such expressions are considered real
+        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
+
+        if expr.is_integer == True and expr.is_zero != True:
+            raise UnhandledInput(f"LRASolver: {expr} is an integer")
+        if expr.is_integer == False:
+            raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
+        if expr.is_rational == False:
+            raise UnhandledInput(f"LRASolver: {expr} is irational")
+
+        if expr.is_zero:
+            ret.append(Q.zero(expr))
+        elif expr.is_positive:
+            ret.append(Q.positive(expr))
+        elif expr.is_negative:
+            ret.append(Q.negative(expr))
+        elif expr.is_nonzero:
+            ret.append(Q.nonzero(expr))
+        elif expr.is_nonpositive:
+            ret.append(Q.nonpositive(expr))
+        elif expr.is_nonnegative:
+            ret.append(Q.nonnegative(expr))
+
+    return ret
