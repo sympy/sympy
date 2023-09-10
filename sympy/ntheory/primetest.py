@@ -616,10 +616,10 @@ def isprime(n):
     >>> near_int == int(near_int)
     False
     >>> n = Float(near_int, 10)  # truncated by precision
-    >>> n == int(n)
+    >>> n % 1 == 0
     True
     >>> n = Float(near_int, 20)
-    >>> n == int(n)
+    >>> n % 1 == 0
     False
 
     See Also

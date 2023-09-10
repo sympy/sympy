@@ -455,7 +455,9 @@ def test_Float():
         return (-t < a - b < t)
 
     zeros = (0, S.Zero, 0., Float(0))
-    for i, j in permutations(zeros, 2):
+    for i, j in permutations(zeros[:-1], 2):
+        assert i == j
+    for i, j in permutations(zeros[-2:], 2):
         assert i == j
     for z in zeros:
         assert z in zeros
@@ -529,8 +531,11 @@ def test_Float():
 
     # inexact floats (repeating binary = denom not multiple of 2)
     # cannot have precision greater than 15
-    assert Float(.125, 22) == .125
-    assert Float(2.0, 22) == 2
+    assert Float(.125, 22)._prec == 76
+    assert Float(2.0, 22)._prec == 76
+    # only default prec is equal, even for exactly representable float
+    assert Float(.125, 22) != .125
+    #assert Float(2.0, 22) == 2
     assert float(Float('.12500000000000001', '')) == .125
     raises(ValueError, lambda: Float(.12500000000000001, ''))
 
@@ -1385,7 +1390,9 @@ def test_abs1():
 
 
 def test_accept_int():
-    assert Float(4) == 4
+    assert not Float(4) == 4
+    assert Float(4) != 4
+    assert Float(4) == 4.0
 
 
 def test_dont_accept_str():
@@ -1851,8 +1858,8 @@ def test_bool_eq():
 
 
 def test_Float_eq():
-    # all .5 values are the same
-    assert Float(.5, 10) == Float(.5, 11) == Float(.5, 1)
+    # Floats with different precision should not compare equal
+    assert Float(.5, 10) != Float(.5, 11) != Float(.5, 1)
     # but floats that aren't exact in base-2 still
     # don't compare the same because they have different
     # underlying mpf values
@@ -1868,23 +1875,27 @@ def test_Float_eq():
     assert Rational(11, 10) != Float('1.1')
     # coverage
     assert not Float(3) == 2
+    assert not Float(3) == Float(2)
+    assert not Float(3) == 3
     assert not Float(2**2) == S.Half
-    assert Float(2**2) == 4
+    assert Float(2**2) == 4.0
     assert not Float(2**-2) == 1
-    assert Float(2**-1) == S.Half
+    assert Float(2**-1) == 0.5
     assert not Float(2*3) == 3
-    assert not Float(2*3) == S.Half
-    assert Float(2*3) == 6
+    assert not Float(2*3) == 0.5
+    assert Float(2*3) == 6.0
+    assert not Float(2*3) == 6
     assert not Float(2*3) == 8
-    assert Float(.75) == Rational(3, 4)
+    assert not Float(.75) == Rational(3, 4)
+    assert Float(.75) == 0.75
     assert Float(5/18) == 5/18
     # 4473
     assert Float(2.) != 3
-    assert Float((0,1,-3)) == S.One/8
+    assert not Float((0,1,-3)) == S.One/8
+    assert Float((0,1,-3)) == 1/8
     assert Float((0,1,-3)) != S.One/9
     # 16196
-    assert 2 == Float(2)  # as per Python
-    # but in a computation...
+    assert not 2 == Float(2)  # unlike Python
     assert t**2 != t**2.0
 
 

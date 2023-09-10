@@ -14,8 +14,7 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
-from .intfunc import (num_digits, igcd, ilcm, mod_inverse,
-    integer_nthroot, integer_log)
+from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
@@ -1044,7 +1043,7 @@ class Float(Number):
                          precision=self._prec)
         if isinstance(other, Float) and global_parameters.evaluate:
             r = self/other
-            if r == int(r):
+            if int_valued(r):
                 return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
@@ -1101,37 +1100,22 @@ class Float(Number):
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):
-        from sympy.logic.boolalg import Boolean
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if isinstance(other, Boolean):
-            return False
-        if other.is_NumberSymbol:
-            if other.is_irrational:
-                return False
-            return other.__eq__(self)
-        if other.is_Float:
-            # comparison is exact
-            # so Float(.1, 3) != Float(.1, 33)
-            return self._mpf_ == other._mpf_
-        if other.is_Rational:
-            return other.__eq__(self)
-        if other.is_Number:
-            # numbers should compare at the same precision;
-            # all _as_mpf_val routines should be sure to abide
-            # by the request to change the prec if necessary; if
-            # they don't, the equality test will fail since it compares
-            # the mpf tuples
-            ompf = other._as_mpf_val(self._prec)
-            return bool(mlib.mpf_eq(self._mpf_, ompf))
-        if not self:
-            return not other
-        return False    # Float != non-Number
+        if isinstance(other, float):
+            other = Float(other)
+        return Basic.__eq__(self, other)
 
     def __ne__(self, other):
-        return not self == other
+        eq = self.__eq__(other)
+        if eq is NotImplemented:
+            return eq
+        else:
+            return not eq
+
+    def __hash__(self):
+        float_val = float(self)
+        if not math.isinf(float_val):
+            return hash(float_val)
+        return Basic.__hash__(self)
 
     def _Frel(self, other, op):
         try:
@@ -1193,9 +1177,6 @@ class Float(Number):
         if rv is None:
             return Expr.__le__(self, other)
         return rv
-
-    def __hash__(self):
-        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1619,31 +1600,6 @@ class Rational(Number):
             # a Rational is always in reduced form so will never be 2/4
             # so we can just check equivalence of args
             return self.p == other.p and self.q == other.q
-        if other.is_Float:
-            # all Floats have a denominator that is a power of 2
-            # so if self doesn't, it can't be equal to other
-            if self.q & (self.q - 1):
-                return False
-            s, m, t = other._mpf_[:3]
-            if s:
-                m = -m
-            if not t:
-                # other is an odd integer
-                if not self.is_Integer or self.is_even:
-                    return False
-                return m == self.p
-
-            if t > 0:
-                # other is an even integer
-                if not self.is_Integer:
-                    return False
-                # does m*2**t == self.p
-                return self.p and not self.p % m and \
-                    integer_log(self.p//m, 2) == (t, True)
-            # does non-integer s*m/2**-t = p/q?
-            if self.is_Integer:
-                return False
-            return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
     def __ne__(self, other):
@@ -4210,7 +4166,7 @@ def equal_valued(x, y):
     However an individual Float compares equal to a Rational:
 
     >>> Rational(1, 2) == Float(0.5)
-    True
+    False
 
     In a future version of SymPy this might change so that Rational and Float
     compare unequal. This function provides the behavior currently expected of

@@ -4,9 +4,8 @@ various operations on them.
 """
 
 from sympy.core import Add, Mul, Pow
-from sympy.core.numbers import int_valued
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
-        equal_valued)
+        equal_valued, int_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -1965,7 +1964,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not int_valued(i):
                     continue
 
                 i = int(i)
