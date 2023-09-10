@@ -15,7 +15,6 @@ from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyconfig import query
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.domainelement import DomainElement
@@ -24,7 +23,7 @@ from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps, monomial_ngcd
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import (CoercionFailed, GeneratorsError,
-    ExactQuotientFailed, MultivariatePolynomialError, HeuristicGCDFailed)
+    ExactQuotientFailed, MultivariatePolynomialError)
 from sympy.polys.polyoptions import (Domain as DomainOpt,
                                      Order as OrderOpt, build_options)
 from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
