@@ -7,6 +7,7 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 from itertools import chain, compress
+from collections import defaultdict
 
 from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
@@ -2219,7 +2220,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return h, cff, cfg
 
     def _gcd_prs(self, g):
-        """Helper function for gcd_prs method."""
+        """Helper function for ``gcd_prs`` method."""
 
         f = self
         K = f.ring.domain
@@ -2244,12 +2245,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if K.is_QQ:
                 return f._gcd_QQ(g)
 
-            return validate_prs(f, g)
+            return gcd_prs(f, g)
         else:
             if K.is_ZZ:
                 return f._gcd_ZZ(g)
 
-            return validate_prs(f, g)
+            return gcd_prs(f, g)
 
     def cancel(self, g):
         """
@@ -2576,10 +2577,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         >>> from sympy.polys import ring, ZZ
         >>> R, x = ring("x", ZZ)
-        >>> p = 6*x**2 + 9*x**3
+        >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
         >>> p.primitive_wrt(x)
-        (9*x**3 + 6*x**2, 1)
+        (-9*x**3*y**2 + 6*x**2*y + 3*x*y, 1)
 
+        >>> p.primitive() # Difference between primitive and primitive_wrt results
+        (3, -3*x**3*y**2 + 2*x**2*y + x*y)
         """
         p = self
         coeffs = p.coeff_split({x})
@@ -2587,49 +2590,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         prim = p.exquo(cont)
         return cont, prim
 
-    def coeff_split_syms(self, syms):
+    def _coeff_split_syms(self, syms):
         """
-        Split a polynomial into two parts: terms involving specified symbolic
-        variables and terms without them.
-
-        This function divides the polynomial into terms that involve the
-        specified symbolic variables (syms) and terms that do not. It organizes
-        these terms into separate dictionaries.
-
-        Parameters
-        ==========
-
-        syms : set of int
-            A set of indices representing the symbolic variables to consider.
-
-        Returns
-        =======
-
-        dict
-            A nested dictionary where the keys are tuples representing the
-            symbolic variables in the first part of the polynomial, and the
-            values are dictionaries with keys representing the symbolic
-            variables in the second part of the polynomial and values representing the coefficients.
-
-        Examples
-        ========
-
-        >>> from sympy.polys import ring, ZZ
-        >>> R, x, y, z = ring("x, y, z", ZZ)
-
-        >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
-        >>> syms = {2}
-        >>> f.coeff_split_syms(syms)
-        {(0, 0, 0): {(0, 4, 0): 3, (4, 0, 0): 2}, (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
-
-        See Also
-        ========
-
-        coeff, coeffs, coeff_split, coeff_wrt
-
+        Reorganize a polynomial over multiple variables into a polynomial over a
+        subset of those variables with coefficients being polynomials over the
+        remaining variables.
         """
         p1 = self
-        p2 = {}
+        p2 = defaultdict(dict)
         r = range(len(p1.ring.gens))
 
         # Iterate through the terms and coefficients of the input polynomial
@@ -2657,10 +2625,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def coeff_split(self, syms):
         """
-        Get the coefficients of a polynomial with respect to the specified ``syms``.
+        Get the coefficients of a polynomial with respect to the specified
+        ``syms``.
 
-        For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.coeff_split({y, t})`` converts ``p``
-        to an element of ``K[x, z][y, t]`` and returns the coefficients as elements of ``K[x, z]``
+        For example, given a polynomial in ``p`` in ``K[x,y,z,t]``, ``p.
+        coeff_split({y, t})`` converts ``p`` to an element of ``K[x, z][y, t]``
+        and returns the coefficients as elements of ``K[x, z]``
 
         Parameters
         ==========
@@ -2689,10 +2659,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, coeff_split_syms, coeff_wrt, drop_to_ground
+        coeff, coeffs, coeff_wrt, drop_to_ground
         """
         p1 = self
-        p2 = p1.coeff_split_syms(syms)
+        p2 = p1._coeff_split_syms(syms)
         return [p1.ring(pi) for pi in p2.values()]
 
     def coeff_wrt(self, x, deg):
@@ -2734,12 +2704,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         See Also
         ========
 
-        coeff, coeffs, coeff_split, coeff_split_syms
+        coeff, coeffs, coeff_split
 
         """
         p1 = self
         x = x if isinstance(x, int) else p1.ring.gens.index(x)
-        p2 = p1.coeff_split_syms({x})
+        p2 = p1._coeff_split_syms({x})
         m = [0] * len(p1.ring.gens)
         m[x] = deg
         m = tuple(m)
@@ -3136,7 +3106,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def main_variable(self):
         """
-        Find the smallest index of the free symbolic variable in a given
+        Return the leading generator index of the generators present in the
         polynomial.
 
         Examples
@@ -3241,7 +3211,7 @@ def monomial_extract(polynomials):
     if any(zero_monom in poly for poly in polynomials):
         return polynomials, domain.one
 
-    monom_gcd = tuple(map(min, zip(*monoms)))
+    monom_gcd = monomial_ngcd(monoms)
 
     if monom_gcd == ring.zero_monom:
         return polynomials, domain.one
@@ -3267,12 +3237,12 @@ def _gcd_preprocess_polys(polynomials):
     >>> from sympy import ring, ZZ
     >>> R, x, y, z = ring("x, y, z", ZZ)
 
-    >>> f = x**2 + y**2
-    >>> g = x**2 - z**2
-    >>> h = y**3 + z**3
-    >>> polynomials = [f, g, h]
+    >>> f = x**2 - y**2
+    >>> g = x**2 - 2*x*y + y**2
+    >>> h = x - y
+    >>> polynomials = [f, g]
     >>> _gcd_preprocess_polys(polynomials)
-    ([1], None)
+    ([x - y, x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
 
     """
     all_polys = polynomials
@@ -3343,7 +3313,7 @@ def gcd_extract(polynomials):
 
     gcd = polynomials[0]
     for pi in polynomials[1:]:
-        gcd = gcd_prs(gcd, pi)
+        gcd = gcd_prs(gcd, pi)[0]
         if gcd == domain.one:
             break
 
@@ -3352,7 +3322,7 @@ def gcd_extract(polynomials):
 
     return gcd
 
-def gcd_prs(p1, p2):
+def gcd_prs(f, g):
     """
     Returns the greatest common divisor (GCD) of two polynomials using the
     Polynomial Resultant Sequences (PRS) method.
@@ -3367,15 +3337,15 @@ def gcd_prs(p1, p2):
     >>> f = 4*x**2 + 8*x + 10
     >>> g = 2*x**2 + 6*x + 10
     >>> gcd_prs(f, g)
-    2
+    (2, 2*x**2 + 4*x + 5, x**2 + 3*x + 5)
 
     """
-    K = p1.ring.domain
+    K = f.ring.domain
 
-    x = p1.main_variable()
+    x = f.main_variable()
 
-    c1, pp1 = p1.primitive_wrt(x)
-    c2, pp2 = p2.primitive_wrt(x)
+    c1, pp1 = f.primitive_wrt(x)
+    c2, pp2 = g.primitive_wrt(x)
 
     c = gcd_extract([c1, c2])
 
@@ -3386,38 +3356,20 @@ def gcd_prs(p1, p2):
 
     h = c * h
 
-    return h
+    if K.is_Field:
+        h = h.monic()
 
-def validate_prs(f, g):
-    """
-    Validates the result of the polynomial GCD computation using the ``gcd_prs``
-    algorithm with ``dmp_inner_gcd``.
+    new_gcd = h, f.quo(h), g.quo(h)
 
-    """
     ring = f.ring
     old_gcd = ring.dmp_inner_gcd(f, g)
-    if not ring.domain.is_Field:
-        h = gcd_prs(f, g)
-        cff = f.quo(h)
-        cfg = g.quo(h)
-        new_gcd = h, cff, cfg
-        if new_gcd != old_gcd:
-            raise RuntimeError(f"GCD is different for\n\n"
-            f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-            f"New GCD = {new_gcd}")
-        else:
-            return new_gcd
+
+    if new_gcd != old_gcd:
+        raise RuntimeError(f"GCD is different for\n\n"
+        f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
+        f"New GCD = {new_gcd}")
     else:
-        h = gcd_prs(f, g).monic()
-        cff = f.quo(h)
-        cfg = g.quo(h)
-        new_gcd = h, cff, cfg
-        if new_gcd != old_gcd:
-            raise RuntimeError(f"GCD is different for\n\n"
-            f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-            f"New GCD = {new_gcd}")
-        else:
-            return new_gcd
+        return new_gcd
 
 def gcd_terms(polynomials, ring, domain):
     """

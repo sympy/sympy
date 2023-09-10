@@ -1431,20 +1431,20 @@ def test_PolyElement_primitive_wrt():
     p = x**2 + 3*x
     assert p.primitive_wrt(x) == (x**2 + 3*x, 1)
 
-def test_PolyElement_coeff_split_syms():
+def test_PolyElement__coeff_split_syms():
     R, x, y, z = ring("x, y, z", ZZ)
 
     f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
     syms = {2}
-    result = f.coeff_split_syms(syms)
-    assert result == {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3},
-                        (0, 0, 2): {(0, 0, 0): 10, (1, 0, 0): 10}}
+    result = f._coeff_split_syms(syms)
+    assert result == {(0, 0, 0): {(4, 0, 0): 2,(0, 4, 0): 3}, (0, 0, 2):
+                    {(0, 0, 0): 10, (1, 0, 0): 10}}
 
     g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
     syms = {0, 1}
-    result = g.coeff_split_syms(syms)
+    result = g._coeff_split_syms(syms)
     assert result == {(2, 0, 0): {(0, 0, 0): 3}, (0, 2, 0): {(0, 0, 0): 2},
-                        (0, 0, 0): {(0, 0, 3): 5}, (2, 1, 0): {(0, 0, 0): 7}}
+                    (0, 0, 0): {(0, 0, 3): 5}, (2, 1, 0): {(0, 0, 0): 7}}
 
 def test_PolyElement_coeff_split():
     R, x, y, z = ring("x, y, z", ZZ)
@@ -1647,28 +1647,28 @@ def test_gcd_prs():
 
     f = 4*x**2 + 8*x + 10
     g = 2*x**2 + 6*x + 10
-    result = gcd_prs(f, g)
+    result = gcd_prs(f, g)[0]
     assert result == 2
 
     h = 3*x**2 + 9*x + 15
-    result = gcd_prs(f, h)
+    result = gcd_prs(f, h)[0]
     assert result == 1
 
     i = 2*x**3 + 4*x**2 + 2*x
-    result = gcd_prs(f, i)
+    result = gcd_prs(f, i)[0]
     assert result == 2
 
     f = 4*x**2 + 8*x + 10*y
     g = 2*x**2 + 6*x + 10*y
-    result = gcd_prs(f, g)
+    result = gcd_prs(f, g)[0]
     assert result == 2
 
     h = 3*x**2 + 9*x + 15*y
-    result = gcd_prs(f, h)
+    result = gcd_prs(f, h)[0]
     assert result == 1
 
     i = 2*x**3 + 4*x**2*y + 2*x*y**2
-    result = gcd_prs(f, i)
+    result = gcd_prs(f, i)[0]
     assert result == 2
 
 def test_PolyElement_resultant():
