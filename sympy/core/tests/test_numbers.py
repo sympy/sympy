@@ -190,7 +190,6 @@ def test_divmod():
     assert divmod(S(-3), S(2)) == (-2, 1)
     assert divmod(S(-3), 2) == (-2, 1)
 
-
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
     assert divmod(1, S.NaN) == (S.NaN, S.NaN)
@@ -534,7 +533,8 @@ def test_Float():
     # cannot have precision greater than 15
     assert Float(.125, 22)._prec == 76
     assert Float(2.0, 22)._prec == 76
-    #assert Float(.125, 22) == .125
+    # only default prec is equal, even for exactly representable float
+    assert Float(.125, 22) != .125
     #assert Float(2.0, 22) == 2
     assert float(Float('.12500000000000001', '')) == .125
     raises(ValueError, lambda: Float(.12500000000000001, ''))
