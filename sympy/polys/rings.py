@@ -2576,7 +2576,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
 
         >>> from sympy.polys import ring, ZZ
-        >>> R, x = ring("x", ZZ)
+        >>> R, x, y = ring("x, y", ZZ)
         >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
         >>> p.primitive_wrt(x)
         (-9*x**3*y**2 + 6*x**2*y + 3*x*y, 1)
@@ -3235,7 +3235,7 @@ def _gcd_preprocess_polys(polynomials):
 
     >>> from sympy.polys.rings import _gcd_preprocess_polys
     >>> from sympy import ring, ZZ
-    >>> R, x, y, z = ring("x, y, z", ZZ)
+    >>> R, x, y = ring("x, y", ZZ)
 
     >>> f = x**2 - y**2
     >>> g = x**2 - 2*x*y + y**2
@@ -3334,10 +3334,10 @@ def gcd_prs(f, g):
     >>> from sympy import ZZ, ring
     >>> R, x, y = ring("x, y", ZZ)
 
-    >>> f = 4*x**2 + 8*x + 10
-    >>> g = 2*x**2 + 6*x + 10
+    >>> f = 4*x**2 + 8*x + 10*y
+    >>> g = 2*x**3 + 4*x**2*y + 2*x*y**2
     >>> gcd_prs(f, g)
-    (2, 2*x**2 + 4*x + 5, x**2 + 3*x + 5)
+    (2, 2*x**2 + 4*x + 5*y, x**3 + 2*x**2*y + x*y**2)
 
     """
     K = f.ring.domain
