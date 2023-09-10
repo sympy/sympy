@@ -43,16 +43,24 @@ def unify(K0, K1):
 
 def test_Domain_unify():
     F3 = GF(3)
+    F5 = GF(5)
 
     assert unify(F3, F3) == F3
     raises(UnificationFailed, lambda: unify(F3, ZZ))
     raises(UnificationFailed, lambda: unify(F3, QQ))
+    raises(UnificationFailed, lambda: unify(F3, ZZ_I))
+    raises(UnificationFailed, lambda: unify(F3, QQ_I))
     raises(UnificationFailed, lambda: unify(F3, ALG))
     raises(UnificationFailed, lambda: unify(F3, RR))
     raises(UnificationFailed, lambda: unify(F3, CC))
     raises(UnificationFailed, lambda: unify(F3, ZZ[x]))
     raises(UnificationFailed, lambda: unify(F3, ZZ.frac_field(x)))
     raises(UnificationFailed, lambda: unify(F3, EX))
+
+    assert unify(F5, F5) == F5
+    raises(UnificationFailed, lambda: unify(F5, F3))
+    raises(UnificationFailed, lambda: unify(F5, F3[x]))
+    raises(UnificationFailed, lambda: unify(F5, F3.frac_field(x)))
 
     raises(UnificationFailed, lambda: unify(ZZ, F3))
     assert unify(ZZ, ZZ) == ZZ
@@ -559,6 +567,8 @@ def test_Domain_get_exact():
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
     assert RR.get_exact() == QQ
+    # XXX: This should also be like RR:
+    # assert CC.get_exact() == QQ_I
     assert ALG.get_exact() == ALG
     assert ZZ[x].get_exact() == ZZ[x]
     assert QQ[x].get_exact() == QQ[x]
@@ -568,6 +578,17 @@ def test_Domain_get_exact():
     assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
     assert ZZ.frac_field(x, y).get_exact() == ZZ.frac_field(x, y)
     assert QQ.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+
+
+def test_Domain_characteristic():
+    for F, c in [(FF(3), 3), (FF(5), 5), (FF(7), 7)]:
+        for R in F, F[x], F.frac_field(x), F.old_poly_ring(x), F.old_frac_field(x):
+            assert F.has_CharacteristicZero is False
+            assert F.characteristic() == c
+    for D in ZZ, QQ, ZZ_I, QQ_I, ALG:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            assert D.has_CharacteristicZero is True
+            assert D.characteristic() == 0
 
 
 def test_Domain_is_unit():
