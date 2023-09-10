@@ -657,8 +657,9 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n < 31417:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
+    if n < 65077:
+        # There are only five Euler pseudoprimes with a least prime factor greater than 47
+        return pow(2, n >> 1, n) in [1, n - 1] and n not in [8321, 31621, 42799, 49141, 49981]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s
