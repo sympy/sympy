@@ -36,6 +36,7 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
+    assert Piecewise((x, x < 1.)).has(1.0)  # doesn't get changed to x < 1
     assert unchanged(Piecewise, ExprCondPair(x, x < 1), ExprCondPair(0, True))
     assert Piecewise((x, x < 1), (0, True)) == Piecewise(ExprCondPair(x, x < 1),
                                                          ExprCondPair(0, True))
