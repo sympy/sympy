@@ -237,3 +237,58 @@ def iroot(y, n):
         x -= 1
         t = x**n
     return x, t == y
+
+
+def is_fermat_prp(n, a):
+    if a < 2:
+        raise ValueError("is_fermat_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_fermat_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_fermat_prp() requires gcd(n,a) == 1")
+    return pow(a, n - 1, n) == 1
+
+
+def is_euler_prp(n, a):
+    if a < 2:
+        raise ValueError("is_euler_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_euler_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_euler_prp() requires gcd(n,a) == 1")
+    return pow(a, n >> 1, n) == jacobi(a, n) % n
+
+
+def is_strong_prp(n, a):
+    if a < 2:
+        raise ValueError("is_strong_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_strong_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_strong_prp() requires gcd(n,a) == 1")
+    s = bit_scan1(n - 1)
+    a = pow(a, n >> s, n)
+    if a == 1 or a == n - 1:
+        return True
+    for _ in range(s - 1):
+        a = pow(a, 2, n)
+        if a == n - 1:
+            return True
+        if a == 1:
+            return False
+    return False
