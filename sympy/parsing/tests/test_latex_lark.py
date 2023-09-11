@@ -120,7 +120,7 @@ EVALUATED_FRACTION_EXPRESSION_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
-    (r"\frac12", 1 / 2),
+    (r"\frac12", Rational(1, 2)),
     (r"\frac12y", y / 2),
     (r"\frac1234", 17),
     (r"\frac2{3}", Rational(2, 3)),
