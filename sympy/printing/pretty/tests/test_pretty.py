@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+from io import StringIO
+from contextlib import redirect_stdout
+
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -24,6 +28,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand, Nor, Not, Or, Xor)
 from sympy.matrices.dense import (Matrix, diag)
 from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.trace import Trace
 from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.integerring import ZZ
@@ -5190,17 +5195,14 @@ def test_pretty_prec():
     ]
 
 
+def pprint_out(expr, *args, **kwargs):
+    with redirect_stdout(StringIO()) as fd:
+        pprint(expr, *args, **kwargs)
+    return fd.getvalue().rstrip()
+
+
 def test_pprint():
-    import sys
-    from io import StringIO
-    fd = StringIO()
-    sso = sys.stdout
-    sys.stdout = fd
-    try:
-        pprint(pi, use_unicode=False, wrap_line=False)
-    finally:
-        sys.stdout = sso
-    assert fd.getvalue() == 'pi\n'
+    assert pprint_out(pi, use_unicode=False, wrap_line=False) == 'pi'
 
 
 def test_pretty_class():
@@ -7846,6 +7848,7 @@ def test_diffgeom():
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
 
+
 def test_deprecated_prettyForm():
     with warns_deprecated_sympy():
         from sympy.printing.pretty.pretty_symbology import xstr
@@ -7857,3 +7860,34 @@ def test_deprecated_prettyForm():
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
+
+
+def test_print_mat_add():
+    # Issue 23552
+    A = MatrixSymbol('A', 1, 1)
+    b = Symbol('b')
+    assert pretty(MatAdd(evaluate=False)) == '0'
+    assert pprint_out(MatAdd(evaluate=False)) == '𝟘'
+    assert pretty(MatAdd(A, evaluate=False)) == 'A'
+    assert pretty(MatAdd(b, evaluate=False)) == 'b'
+    assert pretty(MatAdd(1, evaluate=False)) == '1'
+    assert pretty(MatAdd(1, b, evaluate=False)) == '1 + b'
+    assert pretty(MatAdd(b, 1, evaluate=False)) == 'b + 1'
+    assert pretty(MatAdd(-1, b, evaluate=False)) == '-1 + b'
+    assert pretty(MatAdd(b, -1, evaluate=False)) == 'b -1'
+    assert pretty(MatAdd(99, b, evaluate=False)) == '99 + b'
+    assert pretty(MatAdd(b, 99, evaluate=False)) == 'b + 99'
+    assert pretty(MatAdd(-99, b, evaluate=False)) == '-99 + b'
+    assert pretty(MatAdd(b, -99, evaluate=False)) == 'b -99'
+    assert pretty(MatAdd(1, A, evaluate=False)) == '1 + A'
+    assert pretty(MatAdd(-1, A, evaluate=False)) == '-1 + A'
+    assert pretty(MatAdd(A, 1, evaluate=False)) == 'A + 1'
+    assert pretty(MatAdd(A, -1, evaluate=False)) == 'A -1'
+    assert pretty(MatAdd(99, A, evaluate=False)) == '99 + A'
+    assert pretty(MatAdd(-99, A, evaluate=False)) == '-99 + A'
+    assert pretty(MatAdd(A, 99, evaluate=False)) == 'A + 99'
+    assert pretty(MatAdd(A, -99, evaluate=False)) == 'A -99'
+    assert pretty(MatAdd(b, A, evaluate=False)) == 'b + A'
+    assert pretty(MatAdd(-b, A, evaluate=False)) == '-b + A'
+    assert pretty(MatAdd(A, b, evaluate=False)) == 'A + b'
+    assert pretty(MatAdd(A, -b, evaluate=False)) == 'A -b'

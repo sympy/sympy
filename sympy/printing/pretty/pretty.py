@@ -882,19 +882,16 @@ class PrettyPrinter(Printer):
         return self._print(B.blocks)
 
     def _print_MatAdd(self, expr):
-        s = None
-        for item in expr.args:
-            pform = self._print(item)
-            if s is None:
-                s = pform     # First element
-            else:
-                coeff = item.as_coeff_mmul()[0]
-                if S(coeff).could_extract_minus_sign():
-                    s = prettyForm(*stringPict.next(s, ' '))
-                    pform = self._print(item)
-                else:
-                    s = prettyForm(*stringPict.next(s, ' + '))
-                s = prettyForm(*stringPict.next(s, pform))
+        # expr.args should always be length >= 1
+        s = self._print(expr.args[0])
+        for item in expr.args[1:]:
+            coeff = (
+                item.as_coeff_mmul()[0] if hasattr(item, 'as_coeff_mmul')
+                else item.as_coeff_mul()[0] if hasattr(item, 'as_coeff_mul')
+                else item)
+            joiner = ' ' if S(coeff).could_extract_minus_sign() else ' + '
+            s = prettyForm(*stringPict.next(s, joiner))
+            s = prettyForm(*stringPict.next(s, self._print(item)))
 
         return s
 
