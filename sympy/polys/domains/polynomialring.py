@@ -67,6 +67,13 @@ class PolynomialRing(Ring, CompositeDomain):
             (self.dtype.ring, self.domain, self.symbols) == \
             (other.dtype.ring, other.domain, other.symbols)
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()
+
     def is_unit(self, a):
         """Returns ``True`` if ``a`` is a unit of ``self``"""
         if not a.is_ground:
