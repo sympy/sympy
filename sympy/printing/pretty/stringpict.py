@@ -269,7 +269,6 @@ class stringPict:
         """
         Break long-lines in a visually pleasing format.
         without overflow indicators | with overflow indicators
-        
         |   2  2        3     |     |   2  2        3    ↪|
         |6*x *y  + 4*x*y  +   |     |6*x *y  + 4*x*y  +  ↪|
         |                     |     |                     |
