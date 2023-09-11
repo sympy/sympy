@@ -665,26 +665,32 @@ def is_subscriptable_in_unicode(subscript):
     return all(character in sub for character in subscript)
 
 
-def center_pad(wstring, wtarget):
+def center_pad(wstring, wtarget, fillchar=' '):
     """
-    Returns the padding strings necessary for centering a string of line_width wstring
-    to a string of line_width wtarget.
+    Return the padding strings necessary to center a string of
+    wstring characters wide in a wtarget wide space.
 
-    The line_width wstring should always be less or equal to wtarget.
+    The line_width wstring should always be less or equal to wtarget
+    or else a ValueError will be raised.
     """
+    if wstring > wtarget:
+        raise ValueError('not enough space for string')
     wdelta = wtarget - wstring
-    assert wdelta >= 0
 
+    # make this `wleft = sum(divmod(wdelta, 2))` to put extra on left
+    # like '1'.center(2) -> ' 1'
     wleft = wdelta // 2
     wright = wdelta - wleft
 
-    fillchar = ' '
     left = fillchar * wleft
     right = fillchar * wright
 
     return left, right
 
-def center(string, width):
-    """Returns a centered string of line_width width."""
-    left, right = center_pad(line_width(string), width)
+
+def center(string, width, fillchar=' '):
+    """Return a centered string of length determined by `line_width`
+    that uses `fillchar` for padding.
+    """
+    left, right = center_pad(line_width(string), width, fillchar)
     return ''.join([left, string, right])
