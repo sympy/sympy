@@ -274,7 +274,6 @@ class stringPict:
         |                     |     |                     |
         |     3    4    4     |     |↪      3    4    4   |
         |4*y*x  + x  + y      |     |↪ 4*y*x  + x  + y    |
-        
         |a*c*e + a*c*f + a*d  |     |a*c*e + a*c*f + a*d ↪|
         |*e + a*d*f + b*c*e   |     |                     |
         |+ b*c*f + b*d*e + b  |     |↪ *e + a*d*f + b*c* ↪|
