@@ -460,17 +460,13 @@ def test_Poly__unify():
     raises(UnificationFailed, lambda: Poly(x)._unify(y))
 
     F3 = FF(3)
-    F5 = FF(5)
 
     assert Poly(x, x, modulus=3)._unify(Poly(y, y, modulus=3))[2:] == (
         DMP([[F3(1)], []], F3), DMP([[F3(1), F3(0)]], F3))
-    assert Poly(x, x, modulus=3)._unify(Poly(y, y, modulus=5))[2:] == (
-        DMP([[F5(1)], []], F5), DMP([[F5(1), F5(0)]], F5))
+    raises(UnificationFailed, lambda: Poly(x, x, modulus=3)._unify(Poly(y, y, modulus=5)))
 
-    assert Poly(y, x, y)._unify(Poly(x, x, modulus=3))[2:] ==\
-        (DMP([[F3(1), F3(0)]], F3), DMP([[F3(1)], []], F3))
-    assert Poly(x, x, modulus=3)._unify(Poly(y, x, y))[2:] ==\
-        (DMP([[F3(1)], []], F3), DMP([[F3(1), F3(0)]], F3))
+    raises(UnificationFailed, lambda: Poly(y, x, y)._unify(Poly(x, x, modulus=3)))
+    raises(UnificationFailed, lambda: Poly(x, x, modulus=3)._unify(Poly(y, x, y)))
 
     assert Poly(x + 1, x)._unify(Poly(x + 2, x))[2:] ==\
         (DMP([ZZ(1), ZZ(1)], ZZ), DMP([ZZ(1), ZZ(2)], ZZ))
