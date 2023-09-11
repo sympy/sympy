@@ -3243,8 +3243,8 @@ def _gcd_preprocess_polys(polynomials):
     >>> h = x - y
     >>> polynomials = [f, g, h]
     >>> result = _gcd_preprocess_polys(polynomials)
-    >>> list(ordered(result))
-    [{0, 1}, [x - y, x**2 - y**2, x**2 - 2*x*y + y**2]]
+    >>> list(ordered(result[0])), result[1] # Set ordering is random
+    ([x - y, x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
 
     """
     all_polys = polynomials

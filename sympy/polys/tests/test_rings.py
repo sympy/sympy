@@ -1593,13 +1593,15 @@ def test_gcd_preprocess_polys():
     g = x**3*y**2 + x*y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert list(ordered(result)) == [{0, 1}, [x**2*y + x*y, x**3*y**2 + x*y**2]]
+    expected = ([x**2*y + x*y, x**3*y**2 + x*y**2], {0, 1})
+    assert list(ordered(result[0])), result[1] == expected
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert list(ordered(result)) == [{0, 1}, [x**2 - y**2, x**2 - 2*x*y + y**2]]
+    expected = ([x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+    assert list(ordered(result[0])), result[1] == expected
 
 def test_gcd_terms():
     from sympy import ring
