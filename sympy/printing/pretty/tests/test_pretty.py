@@ -3029,7 +3029,6 @@ dy dx             \
 -----\\x  + log(x)/\n\
 dy dx             \
 """
-    
     ucode_str_1 = \
 """\
    2              \n\
