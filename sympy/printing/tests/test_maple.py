@@ -310,7 +310,6 @@ def test_maple_not_supported():
     )  # PROBLEM
 
 
-
 def test_MatrixElement_printing():
     # test cases for issue #11821
     A = MatrixSymbol("A", 1, 3)
@@ -376,8 +375,8 @@ def test_maple_derivatives():
 
 
 def test_automatic_rewrites():
-    assert maple_code(lucas(x)) == '2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x)'
-    assert maple_code(sinc(x)) == 'piecewise(x <> 0, sin(x)/x, 1)'
+    assert maple_code(lucas(x)) == '(2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x))'
+    assert maple_code(sinc(x)) == '(piecewise(x <> 0, sin(x)/x, 1))'
 
 
 def test_specfun():

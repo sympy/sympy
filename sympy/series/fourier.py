@@ -526,8 +526,8 @@ class FiniteFourierSeries(FourierSeries):
             a = Wild('a', properties=[lambda k: k.is_Integer, lambda k: k is not S.Zero, ])
             b = Wild('b', properties=[lambda k: x not in k.free_symbols, ])
 
-            an = dict()
-            bn = dict()
+            an = {}
+            bn = {}
 
             # separates the coefficients of sin and cos terms in dictionaries an, and bn
             for p in exp_ls:

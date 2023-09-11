@@ -143,21 +143,19 @@ class SATSolver:
         - Non-unit clauses have their first and last literals set as sentinels.
         - The number of clauses a literal appears in is computed.
         """
-        self.clauses = []
-        for cls in clauses:
-            self.clauses.append(list(cls))
+        self.clauses = [list(clause) for clause in clauses]
 
-        for i in range(len(self.clauses)):
+        for i, clause in enumerate(self.clauses):
 
             # Handle the unit clauses
-            if 1 == len(self.clauses[i]):
-                self._unit_prop_queue.append(self.clauses[i][0])
+            if 1 == len(clause):
+                self._unit_prop_queue.append(clause[0])
                 continue
 
-            self.sentinels[self.clauses[i][0]].add(i)
-            self.sentinels[self.clauses[i][-1]].add(i)
+            self.sentinels[clause[0]].add(i)
+            self.sentinels[clause[-1]].add(i)
 
-            for lit in self.clauses[i]:
+            for lit in clause:
                 self.occurrence_count[lit] += 1
 
     def _find_model(self):

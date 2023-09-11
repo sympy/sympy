@@ -28,7 +28,8 @@ from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -305,13 +306,13 @@ class DifferentialExtension:
 
         # Things like sqrt(exp(x)) do not automatically simplify to
         # exp(x/2), so they will be viewed as algebraic.  The easiest way
-        # to handle this is to convert all instances of (a**b)**Rational
-        # to a**(Rational*b) before doing anything else.  Note that the
+        # to handle this is to convert all instances of exp(a)**Rational
+        # to exp(Rational*a) before doing anything else.  Note that the
         # _exp_part code can generate terms of this form, so we do need to
         # do this at each pass (or else modify it to not do that).
 
-        ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
-            if (i.base.is_Pow or isinstance(i.base, exp) and i.exp.is_Rational)]
+        ratpows = [i for i in self.newf.atoms(Pow)
+                   if (isinstance(i.base, exp) and i.exp.is_Rational)]
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -382,7 +383,7 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
-                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+                # https://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                 self.newf = self.newf.xreplace({i: newterm})
 
@@ -1254,8 +1255,8 @@ def recognize_log_derivative(a, d, DE, z=None):
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, _ in Sp:
-        # TODO also consider the complex roots
-        # incase we have complex roots it should turn the flag false
+        # TODO also consider the complex roots which should
+        # turn the flag false
         a = real_roots(s.as_poly(z))
 
         if not all(j.is_Integer for j in a):

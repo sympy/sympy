@@ -131,7 +131,7 @@ def test_powerset_method():
 
 def test_is_subset():
     # covers line 101-102
-    # initalize powerset(1), which is a subset of powerset(1,2)
+    # initialize powerset(1), which is a subset of powerset(1,2)
     subset = PowerSet(FiniteSet(1))
     pset = PowerSet(FiniteSet(1, 2))
     bad_set = PowerSet(FiniteSet(2, 3))

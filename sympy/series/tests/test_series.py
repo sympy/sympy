@@ -1,17 +1,17 @@
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
-from sympy.core.numbers import (E, Rational, oo, pi, I)
+from sympy.core.numbers import (E, Float, Rational, oo, pi, I)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
-from sympy.integrals.integrals import Integral
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral, integrate
 from sympy.series.order import O
 from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
-from sympy.series.gruntz import calculate_series
 
 
 def test_sin():
@@ -86,6 +86,15 @@ def test_issue_5223():
         1 + p**S('3/2')*log(p) + O(p**3*log(p)**3)
 
     assert exp(sin(x)*log(x)).series(n=2) == 1 + x*log(x) + O(x**2*log(x)**2)
+
+
+def test_issue_6350():
+    expr = integrate(exp(k*(y**3 - 3*y)), (y, 0, oo), conds='none')
+    assert expr.series(k, 0, 3) == -(-1)**(S(2)/3)*sqrt(3)*gamma(S(1)/3)**2*gamma(S(2)/3)/(6*pi*k**(S(1)/3)) - \
+        sqrt(3)*k*gamma(-S(2)/3)*gamma(-S(1)/3)/(6*pi) - \
+        (-1)**(S(1)/3)*sqrt(3)*k**(S(1)/3)*gamma(-S(1)/3)*gamma(S(1)/3)*gamma(S(2)/3)/(6*pi) - \
+        (-1)**(S(2)/3)*sqrt(3)*k**(S(5)/3)*gamma(S(1)/3)**2*gamma(S(2)/3)/(4*pi) - \
+        (-1)**(S(1)/3)*sqrt(3)*k**(S(7)/3)*gamma(-S(1)/3)*gamma(S(1)/3)*gamma(S(2)/3)/(8*pi) + O(k**3)
 
 
 def test_issue_11313():
@@ -185,11 +194,6 @@ def test_x_is_base_detection():
     assert eq.series() == x**Rational(4, 3)
 
 
-def test_sin_power():
-    e = sin(x)**1.2
-    assert calculate_series(e, x) == x**1.2
-
-
 def test_issue_7203():
     assert series(cos(x), x, pi, 3) == \
         -1 + (x - pi)**2/2 + O((x - pi)**3, (x, pi))
@@ -229,10 +233,11 @@ def test_issue_12791():
     expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
         beta*varphi*sin(theta) - beta*cos(theta) - beta + 1)/(beta*cos(theta) - 1)**2
 
-    sol = 0.5/(0.5*cos(theta) - 1.0)**2 - 0.25*cos(theta)/(0.5*cos(theta)\
-        - 1.0)**2 + (beta - 0.5)*(-0.25*varphi*sin(2*theta) - 1.5*cos(theta)\
-        + 0.25*cos(2*theta) + 1.25)/(0.5*cos(theta) - 1.0)**3\
-        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - S.Half)**2, (beta, S.Half))
+    sol = (0.5/(0.5*cos(theta) - 1.0)**2 - 0.25*cos(theta)/(0.5*cos(theta) - 1.0)**2
+        + (beta - 0.5)*(-0.25*varphi*sin(2*theta) - 1.5*cos(theta)
+        + 0.25*cos(2*theta) + 1.25)/((0.5*cos(theta) - 1.0)**2*(0.5*cos(theta) - 1.0))
+        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2
+        + O((beta - S.Half)**2, (beta, S.Half)))
 
     assert expr.series(beta, 0.5, 2).trigsimp() == sol
 
@@ -322,9 +327,16 @@ def test_issue_19534():
             0.96296296296296296296*dt + 1.0) + 0.22431393315265061193*dt + 1.0) - \
             0.35816132904077632692*dt + 1.0) + 5.5065024887242400038*dt + 1.0)/20 + dt/20 + 1
 
-    assert N(expr.series(dt, 0, 8), 20) == -0.00092592592592592596126*dt**7 + 0.0027777777777777783175*dt**6 + \
-    0.016666666666666656027*dt**5 + 0.083333333333333300952*dt**4 + 0.33333333333333337034*dt**3 + \
-    1.0*dt**2 + 1.0*dt + 1.0
+    assert N(expr.series(dt, 0, 8), 20) == (
+            - Float('0.00092592592592592596126289', precision=70) * dt**7
+            + Float('0.0027777777777777783174695', precision=70) * dt**6
+            + Float('0.016666666666666656027029', precision=70) * dt**5
+            + Float('0.083333333333333300951828', precision=70) * dt**4
+            + Float('0.33333333333333337034077', precision=70) * dt**3
+            + Float('1.0', precision=70) * dt**2
+            + Float('1.0', precision=70) * dt
+            + Float('1.0', precision=70)
+        )
 
 
 def test_issue_11407():
@@ -362,3 +374,14 @@ def test_issue_21245():
 def test_issue_21938():
     expr = sin(1/x + exp(-x)) - sin(1/x)
     assert expr.series(x, oo) == (1/(24*x**4) - 1/(2*x**2) + 1 + O(x**(-6), (x, oo)))*exp(-x)
+
+
+def test_issue_23432():
+    expr = 1/sqrt(1 - x**2)
+    result = expr.series(x, 0.5)
+    assert result.is_Add and len(result.args) == 7
+
+
+def test_issue_23727():
+    res = series(sqrt(1 - x**2), x, 0.1)
+    assert res.is_Add == True

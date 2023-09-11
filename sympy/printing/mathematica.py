@@ -2,7 +2,8 @@
 Mathematica code printer
 """
 
-from typing import Any, Dict as tDict, Set as tSet, Tuple as tTuple
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import Basic, Expr, Float
 from sympy.core.sorting import default_sort_key
@@ -126,17 +127,17 @@ class MCodePrinter(CodePrinter):
     printmethod = "_mcode"
     language = "Wolfram Language"
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 15,
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-    }  # type: tDict[str, Any]
+    }
 
-    _number_symbols = set()  # type: tSet[tTuple[Expr, Float]]
-    _not_supported = set()  # type: tSet[Basic]
+    _number_symbols: set[tuple[Expr, Float]] = set()
+    _not_supported: set[Basic] = set()
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""

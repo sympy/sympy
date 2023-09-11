@@ -1,5 +1,5 @@
+from __future__ import annotations
 from operator import attrgetter
-from typing import Tuple as tTuple, Type
 from collections import defaultdict
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -45,9 +45,9 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ('is_commutative',)  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ('is_commutative',)
 
-    _args_type = None  # type: Type[Basic]
+    _args_type: type[Basic] | None = None
 
     @cacheit
     def __new__(cls, *args, evaluate=None, _sympify=True):
@@ -235,7 +235,7 @@ this object, use the * or + operator instead.
             return None
 
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
 
         # handle simple patterns
         if self == expr:
@@ -494,7 +494,8 @@ class LatticeOp(AssocOp):
     >>> my_join(1, 2)
     2
 
-    References:
+    References
+    ==========
 
     .. [1] https://en.wikipedia.org/wiki/Lattice_%28order%29
     """

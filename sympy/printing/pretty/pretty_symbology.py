@@ -642,6 +642,7 @@ def line_width(line):
     """
     return len(line.translate(_remove_combining))
 
+
 def center_pad(wstring, wtarget):
     """
     Returns the padding strings necessary for centering a string of line_width wstring
@@ -661,7 +662,30 @@ def center_pad(wstring, wtarget):
 
     return left, right
 
+
 def center(string, width):
     """Returns a centered string of line_width width."""
     left, right = center_pad(line_width(string), width)
     return ''.join([left, string, right])
+
+
+def is_subscriptable_in_unicode(subscript):
+    """
+    Checks whether a string is subscriptable in unicode or not.
+
+    Parameters
+    ==========
+
+    subscript: the string which needs to be checked
+
+    Examples
+    ========
+
+    >>> from sympy.printing.pretty.pretty_symbology import is_subscriptable_in_unicode
+    >>> is_subscriptable_in_unicode('abc')
+    False
+    >>> is_subscriptable_in_unicode('123')
+    True
+
+    """
+    return all(character in sub for character in subscript)

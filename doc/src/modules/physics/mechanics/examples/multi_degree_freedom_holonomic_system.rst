@@ -13,7 +13,7 @@ some of which are specified forces and torques. The system is shown below:
 The system will be modeled using ``JointsMethod``. First we need to create the
 ``dynamicsymbols`` needed to describe the system as shown in the above diagram.
 In this case, the generalized coordinates :math:`q_1` represent lateral distance of block from wall,
-:math:`q_2` represents ngle of the compound pendulum from vertical, :math:`q_3`  represents angle of the simple
+:math:`q_2` represents angle of the compound pendulum from vertical, :math:`q_3`  represents angle of the simple
 pendulum from the compound pendulum. The generalized speeds :math:`u_1` represents lateral speed of block,
 :math:`u_2` represents lateral speed of compound pendulum and :math:`u_3` represents angular speed of C relative to B.
 
@@ -40,11 +40,10 @@ kinematics. ::
 
     >>> slider = PrismaticJoint('J1', wall, block, coordinates=q1, speeds=u1)
     >>> rev1 = PinJoint('J2', block, compound_pend, coordinates=q2, speeds=u2,
-    ...                 child_axis=compound_pend.z, child_joint_pos=l*2/3*compound_pend.y,
-    ...                 parent_axis=block.z)
+    ...                 joint_axis=block.z, child_point=l*2/3*compound_pend.y)
     >>> rev2 = PinJoint('J3', compound_pend, simple_pend, coordinates=q3, speeds=u3,
-    ...                 child_axis=simple_pend.z, parent_joint_pos=-l/3*compound_pend.y,
-    ...                 parent_axis=compound_pend.z, child_joint_pos=l*simple_pend.y)
+    ...                 joint_axis=compound_pend.z, parent_point=-l/3*compound_pend.y,
+    ...                 child_point=l*simple_pend.y)
 
     >>> joints = (slider, rev1, rev2)
 

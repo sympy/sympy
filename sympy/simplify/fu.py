@@ -443,7 +443,7 @@ def TR8(rv, first=True):
             return rv
 
         args = {cos: [], sin: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (cos, sin):
                 args[type(a)].append(a.args[0])
             elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and \
@@ -1074,7 +1074,7 @@ def TR13(rv):
 
         # XXX handle products of powers? or let power-reducing handle it?
         args = {tan: [], cot: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (tan, cot):
                 args[type(a)].append(a.args[0])
             else:
@@ -1634,7 +1634,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     References
     ==========
 
-    .. [1] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
+    .. [1] https://www.sciencedirect.com/science/article/pii/S0895717706001609
     """
     fRL1 = greedy(RL1, measure)
     fRL2 = greedy(RL2, measure)

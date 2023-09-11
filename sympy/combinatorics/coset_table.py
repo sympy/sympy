@@ -1131,7 +1131,7 @@ def coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     R = fp_grp.relators
     A_dict = C.A_dict
     p = C.p
-    for i in range(0, len(Y)):
+    for i in range(len(Y)):
         if modified:
             _scan_and_fill(0, Y[i], C._grp.generators[i])
         else:

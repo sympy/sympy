@@ -19,7 +19,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
-from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
+from sympy.testing.pytest import XFAIL, raises, slow, ON_CI, skip
 from sympy.core.random import verify_numerically as tn
 
 from sympy.core.numbers import (Rational, pi)
@@ -745,9 +745,9 @@ def test_prudnikov_2():
 
 @slow
 def test_prudnikov_3():
-    if ON_TRAVIS:
+    if ON_CI:
         # See https://github.com/sympy/sympy/pull/12795
-        skip("Too slow for travis.")
+        skip("Too slow for CI.")
 
     h = S.Half
     assert can_do([Rational(1, 4), Rational(3, 4)], [h])

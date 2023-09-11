@@ -9,11 +9,11 @@ from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
-    Point2D, Line2D)
+    Point2D, Line2D, Plane)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import raises, warns, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns
 
 
 x = Symbol('x', real=True)
@@ -70,7 +70,6 @@ def test_angle_between():
     # direction of points is used to determine angle
     assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
                                 Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
-
 
 
 def test_closing_angle():
@@ -407,6 +406,15 @@ def test_distance_3d():
     assert Line3D((0, 0, 0), (0, 1, 0)).distance(p2) == sqrt(2)
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p1) == 0
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p2) == sqrt(2)
+    # Line to line
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (0, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (1, 0, 0))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((10, 0, 0), (10, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 1, 0), (0, 1, 1))) == 1
+    # Line to plane
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((2, 0, 0), (0, 0, 1))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((0, 1, 0), (0, 1, 0))) == 1
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((1, 1, 3), (1, 0, 0))) == 0
     # Ray to point
     assert r.distance(Point3D(-1, -1, -1)) == sqrt(3)
     assert r.distance(Point3D(1, 1, 1)) == 0
@@ -475,10 +483,6 @@ def test_equation():
         ).equation() == (x - 1, z - 3)
     assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
         ).equation() == (y - 2, z - 3)
-
-    with warns_deprecated_sympy():
-        assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
-        ).equation(k='k') == (y - 2, z - 3)
 
 
 def test_intersection_2d():
@@ -796,11 +800,11 @@ def test_ray_generation():
     assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
 
-def test_symbolic_intersect():
-    # Issue 7814.
+def test_issue_7814():
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
-    assert line.intersection(circle) == [Point(x + sqrt((y - z) * (y + z)), z), Point(x - sqrt((y - z) * (y + z)), z)]
+    _s = sqrt((y - z)*(y + z))
+    assert line.intersection(circle) == [Point2D(x + _s, z), Point2D(x - _s, z)]
 
 
 def test_issue_2941():

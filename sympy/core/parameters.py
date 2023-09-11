@@ -67,8 +67,7 @@ class _global_parameters(local):
 
 global_parameters = _global_parameters(evaluate=True, distribute=True, exp_is_pow=False)
 
-@contextmanager
-def evaluate(x):
+class evaluate:
     """ Control automatic evaluation
 
     Explanation
@@ -92,15 +91,16 @@ def evaluate(x):
     ...     print(x + x)
     x + x
     """
+    def __init__(self, x):
+        self.x = x
+        self.old = []
 
-    old = global_parameters.evaluate
+    def __enter__(self):
+        self.old.append(global_parameters.evaluate)
+        global_parameters.evaluate = self.x
 
-    try:
-        global_parameters.evaluate = x
-        yield
-    finally:
-        global_parameters.evaluate = old
-
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        global_parameters.evaluate = self.old.pop()
 
 @contextmanager
 def distribute(x):

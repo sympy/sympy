@@ -1,3 +1,6 @@
+from math import isclose
+
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
@@ -6,6 +9,7 @@ from sympy.core.relational import (Eq, Gt, Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
@@ -52,6 +56,28 @@ def dumeq(i, j):
     if type(i) in (list, tuple):
         return all(dumeq(i, j) for i, j in zip(i, j))
     return i == j or i.dummy_eq(j)
+
+
+def assert_close_ss(sol1, sol2):
+    """Test solutions with floats from solveset are close"""
+    sol1 = sympify(sol1)
+    sol2 = sympify(sol2)
+    assert isinstance(sol1, FiniteSet)
+    assert isinstance(sol2, FiniteSet)
+    assert len(sol1) == len(sol2)
+    assert all(isclose(v1, v2) for v1, v2 in zip(sol1, sol2))
+
+
+def assert_close_nl(sol1, sol2):
+    """Test solutions with floats from nonlinsolve are close"""
+    sol1 = sympify(sol1)
+    sol2 = sympify(sol2)
+    assert isinstance(sol1, FiniteSet)
+    assert isinstance(sol2, FiniteSet)
+    assert len(sol1) == len(sol2)
+    for s1, s2 in zip(sol1, sol2):
+        assert len(s1) == len(s2)
+        assert all(isclose(v1, v2) for v1, v2 in zip(s1, s2))
 
 
 @_both_exp_pow
@@ -507,11 +533,9 @@ def test_solve_sqrt_3():
                sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
                sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
 
-    assert sol._args[0] == FiniteSet(*fset)
-    assert sol._args[1] == ConditionSet(
-        R,
-        Eq(sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1), 0),
-        FiniteSet(*cset))
+    fs = FiniteSet(*fset)
+    cs = ConditionSet(R, Eq(eq, 0), FiniteSet(*cset))
+    assert sol == (fs - {-1}) | (cs - {-1})
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -1210,7 +1234,6 @@ def test_multi_exp():
              ProductSet(S.Integers, S.Integers, S.Integers, S.Integers))))
 
 
-
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
     from sympy.sets import Reals
@@ -1336,6 +1359,10 @@ def test_abs_invert_solvify():
 
 
 def test_linear_eq_to_matrix():
+    assert linear_eq_to_matrix(0, x) == (Matrix([[0]]), Matrix([[0]]))
+    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
+    # integer coefficients
     eqns1 = [2*x + y - 2*z - 3, x - y - z, x + y + 3*z - 12]
     eqns2 = [Eq(3*x + 2*y - z, 1), Eq(2*x - 2*y + 4*z, -2), -2*x + y - 2*z]
 
@@ -1353,17 +1380,24 @@ def test_linear_eq_to_matrix():
     assert A == Matrix([[a*b, b, c], [d + e, f, g], [i, j, k]])
     assert B == Matrix([[d], [h], [l]])
 
-    # raise ValueError if
+    # raise Errors if
     # 1) no symbols are given
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3))
     # 2) there are duplicates
     raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, x, y]))
-    # 3) there are non-symbols
-    raises(ValueError, lambda: linear_eq_to_matrix(eqns3, [x, 1/a, y]))
-    # 4) a nonlinear term is detected in the original expression
+    # 3) a nonlinear term is detected in the original expression
     raises(NonlinearError, lambda: linear_eq_to_matrix(Eq(1/x + x, 1/x), [x]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x**2], [x]))
+    raises(NonlinearError, lambda: linear_eq_to_matrix([x*y], [x, y]))
+    # 4) Eq being used to represent equations autoevaluates
+    # (use unevaluated Eq instead)
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x), x))
+    raises(ValueError, lambda: linear_eq_to_matrix(Eq(x, x + 1), x))
 
-    assert linear_eq_to_matrix(1, x) == (Matrix([[0]]), Matrix([[-1]]))
+
+    # if non-symbols are passed, the user is responsible for interpreting
+    assert linear_eq_to_matrix([x], [1/x]) == (Matrix([[0]]), Matrix([[-x]]))
+
     # issue 15195
     assert linear_eq_to_matrix(x + y*(z*(3*x + 2) + 3), x) == (
         Matrix([[3*y*z + 1]]), Matrix([[-y*(2*z + 3)]]))
@@ -1411,6 +1445,8 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(x1, x2))
     raises(ValueError, lambda: linsolve((A,), x1, x2))
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
+    raises(ValueError, lambda: linsolve([x1], x1, x1))
+    raises(ValueError, lambda: linsolve([x1], (i for i in (x1, x1))))
 
     #raise ValueError if equations are non-linear in given variables
     raises(NonlinearError, lambda: linsolve([x + y - 1, x ** 2 + y - 3], [x, y]))
@@ -1476,12 +1512,13 @@ def test_linsolve():
     assert linsolve(Eqns, x, y) == {
             (kilo*newton*Rational(-28, 3), kN*Rational(4, 3))}
 
-    # linsolve fully expands expressions, so removable singularities
-    # and other nonlinearity does not raise an error
+    # linsolve does not allow expansion (real or implemented)
+    # to remove singularities, but it will cancel linear terms
     assert linsolve([Eq(x, x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(1/x, 1/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(y/x, y/x + y)], [x, y]) == {(x, 0)}
-    assert linsolve([Eq(x*(x + 1), x**2 + y)], [x, y]) == {(y, y)}
+    assert linsolve([Eq(x + x*y, 1 + y)], [x]) == {(1,)}
+    assert linsolve([Eq(1 + y, x + x*y)], [x]) == {(1,)}
+    raises(NonlinearError, lambda:
+        linsolve([Eq(x**2, x**2 + y)], [x, y]))
 
     # corner cases
     #
@@ -2365,14 +2402,30 @@ def test_issue_11174():
 
 
 def test_issue_11534():
-    # eq and eq2 should give the same solution as a Complement
+    # eq1 and eq2 should not have the same solutions because squaring both
+    # sides of the radical equation introduces a spurious solution branch.
+    # The equations have a symbolic parameter y and it is easy to see that for
+    # y != 0 the solution s1 will not be valid for eq1.
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
-    eq = -y + x/sqrt(-x**2 + 1)
+    eq1 = -y + x/sqrt(-x**2 + 1)
     eq2 = -y**2 + x**2/(-x**2 + 1)
-    soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
-    assert solveset(eq, x, S.Reals) == soln
-    assert solveset(eq2, x, S.Reals) == soln
+
+    # We get a ConditionSet here because s1 works in eq1 if y is equal to zero
+    # although not for any other value of y. That case is redundant though
+    # because if y=0 then s1=s2 so the solution for eq1 could just be returned
+    # as s2 - {-1, 1}. In fact we have
+    #   |y/sqrt(y**2 + 1)| < 1
+    # So the complements are not needed either. The ideal output here would be
+    #   sol1 = s2
+    #   sol2 = s1 | s2.
+    s1, s2 = FiniteSet(-y/sqrt(y**2 + 1)), FiniteSet(y/sqrt(y**2 + 1))
+    cset = ConditionSet(x, Eq(eq1, 0), s1)
+    sol1 = (s2 - {-1, 1}) | (cset - {-1, 1})
+    sol2 = (s1 | s2) - {-1, 1}
+
+    assert solveset(eq1, x, S.Reals) == sol1
+    assert solveset(eq2, x, S.Reals) == sol2
 
 
 def test_issue_10477():
@@ -2503,6 +2556,7 @@ def test_issue_21276():
     eq = (2*x*(y - z) - y*erf(y - z) - y + z*erf(y - z) + z)**2
     assert solveset(eq.expand(), y) == FiniteSet(z, z + erfinv(2*x - 1))
 
+
 # exponential tests
 def test_exponential_real():
     from sympy.abc import y
@@ -2548,6 +2602,8 @@ def test_exponential_real():
     p = Symbol('p', positive=True)
     assert solveset_real((1/p + 1)**(p + 1), p).dummy_eq(
         ConditionSet(x, Eq((1 + 1/x)**(x + 1), 0), S.Reals))
+    assert solveset(2**x - 4**x + 12, x, S.Reals) == {2}
+    assert solveset(2**x - 2**(2*x) + 12, x, S.Reals) == {2}
 
 
 @XFAIL
@@ -2759,8 +2815,11 @@ def test_linear_coeffs():
         linear_coeffs(x, x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
+    # don't include coefficients of 0
+    assert linear_coeffs(Eq(x, x + y), x, y, dict=True) == {y: -1}
+    assert linear_coeffs(0, x, y, dict=True) == {}
 
-# modular tests
+
 def test_is_modular():
     assert _is_modular(y, x) is False
     assert _is_modular(Mod(x, 3) - 1, x) is True
@@ -2926,9 +2985,11 @@ def test_issue_10426():
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
         S.Integers)))).dummy_eq(Dummy('x,n'))
 
+
 def test_solveset_conjugate():
     """Test solveset for simple conjugate functions"""
     assert solveset(conjugate(x) -3 + I) == FiniteSet(3 + I)
+
 
 def test_issue_18208():
     variables = symbols('x0:16') + symbols('y0:12')
@@ -2991,7 +3052,7 @@ def test_issue_18208():
 
     # gauss_jordan_solve
     gj_solve, new_vars = A.gauss_jordan_solve(b)
-    gj_solve = [i for i in gj_solve]
+    gj_solve = list(gj_solve)
 
     gj_expected = linsolve_expected.subs(zip([x3, x7, y7, y9, y11], new_vars))
 
@@ -3155,6 +3216,23 @@ def test_issue_22413():
     sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
     assert res == sols
 
+
+def test_issue_23318():
+    eqs_eq = [
+        Eq(53.5780461486929, x * log(y / (5.0 - y) + 1) / y),
+        Eq(x, 0.0015 * z),
+        Eq(0.0015, 7845.32 * y / z),
+    ]
+    eqs_expr = [eq.rewrite(Add) for eq in eqs_eq]
+
+    sol = {(266.97755814852, 0.0340301680681629, 177985.03876568)}
+
+    assert_close_nl(nonlinsolve(eqs_eq, [x, y, z]), sol)
+    assert_close_nl(nonlinsolve(eqs_expr, [x, y, z]), sol)
+
+    logterm = log(1.91196789933362e-7*z/(5.0 - 1.91196789933362e-7*z) + 1)
+    eq = -0.0015*z*logterm + 1.02439504345316e-5*z
+    assert_close_ss(solveset(eq, z), {0, 177985.038765679})
 
 
 def test_issue_19814():

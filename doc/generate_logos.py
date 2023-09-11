@@ -15,11 +15,11 @@ import os.path
 import logging
 import subprocess
 import sys
+from platform import system
 
-
-default_source_dir = os.path.join(os.path.dirname(__file__), "src/logo")
+default_source_dir = os.path.join(os.path.dirname(__file__), "src", "logo")
+default_output_dir = os.path.join(os.path.dirname(__file__), "_build", "logo")
 default_source_svg = "sympy.svg"
-default_output_dir = os.path.join(os.path.dirname(__file__), "_build/logo")
 
 # those are the options for resizing versions without tail or text
 svg_sizes = {}
@@ -160,18 +160,31 @@ def convert_to_png(fn_source, output_dir, sizes):
     for ver in svgs:
         if ver == '':
             fn_svg = fn_source
+            if system()[0:3].lower() == "win":
+                os.chdir(default_source_dir)
         else:
             fn_svg = get_svg_filename_from_versionkey(fn_source, ver)
             fn_svg = os.path.join(output_dir, fn_svg)
+            if system()[0:3].lower() == "win":
+                os.chdir(default_output_dir)
+
 
         basename = os.path.basename(fn_svg)
         name, ext = os.path.splitext(basename)
         for size in sizes:
-            fn_out = "%s-%dpx.png" % (name, size)
-            fn_out = os.path.join(output_dir, fn_out)
-
-            cmd = "rsvg-convert %s -f png -o %s -h %d -w %d" % (fn_svg, fn_out,
-                size, size)
+            if system()[0:3].lower() == "win":
+                fn_out = "%s-%dpx.png" % (name, size)
+                fn_out = os.path.join(os.pardir, os.pardir, "_build", "logo", fn_out)
+                name_c = "%s.svg" % (name)
+                cmd = "rsvg-convert %s -f png -h %d -w %d > %s" % (name_c,
+                                                               size, size,
+                                                               fn_out)
+            else:
+                fn_out = "%s-%dpx.png" % (name, size)
+                fn_out = os.path.join(output_dir, fn_out)
+                cmd = "rsvg-convert %s -f png -o %s -h %d -w %d" % (fn_svg,
+                                                                fn_out,
+                                                                size, size)
 
             p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
@@ -185,6 +198,7 @@ def convert_to_png(fn_source, output_dir, sizes):
                 logging.debug("command: %s" % cmd)
                 logging.debug("return code: %s" % p.returncode)
 
+
 def convert_to_ico(fn_source, output_dir, sizes):
     # firstly prepare *.png files, which will be embedded
     # into the *.ico files.
@@ -193,7 +207,10 @@ def convert_to_ico(fn_source, output_dir, sizes):
     svgs = list(versions)
     svgs.insert(0, '')
 
-    cmd = "convert"
+    if system()[0:3].lower() == "win":
+        cmd = "magick"
+    else:
+        cmd = "convert"
     p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
@@ -202,6 +219,8 @@ def convert_to_ico(fn_source, output_dir, sizes):
         logging.error("%s: command not found. Install imagemagick" % cmd)
         sys.exit(p.returncode)
 
+    if system()[0:3].lower() == "win":
+        os.chdir(default_output_dir)
     for ver in svgs:
         if ver == '':
             fn_svg = fn_source
@@ -215,15 +234,16 @@ def convert_to_ico(fn_source, output_dir, sizes):
         pngs = []
         for size in sizes:
             fn_png= "%s-%dpx.png" % (name, size)
-            fn_png = os.path.join(output_dir, fn_png)
+            if system()[0:3].lower() != "win":
+                fn_png = os.path.join(output_dir, fn_png)
             pngs.append(fn_png)
 
         # convert them to *.ico
         fn_out = "%s-favicon.ico" % name
-        fn_out = os.path.join(output_dir, fn_out)
+        if system()[0:3].lower() != "win":
+            fn_out = os.path.join(output_dir, fn_out)
 
-        cmd = "convert {} {}".format(" ".join(pngs), fn_out)
-
+        cmd = "{} {} {}".format(cmd, " ".join(pngs), fn_out)
         p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
@@ -235,6 +255,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
         else:
             logging.debug("command: %s" % cmd)
             logging.debug("return code: %s" % p.returncode)
+
 
 def versionkey_to_boolean_tuple(ver):
     notail = False

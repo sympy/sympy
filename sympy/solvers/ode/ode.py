@@ -500,7 +500,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     For system of ordinary differential equations
     =============================================
 
-   **Usage**
+    **Usage**
         ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
         `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
@@ -995,22 +995,22 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     AppliedUndef) and deriv.args[0].func == f and
                     len(deriv.args[0].args) == 1 and old == x and not
                     new.has(x) and all(i == deriv.variables[0] for i in
-                    deriv.variables) and not ics[funcarg].has(f)):
+                    deriv.variables) and x not in ics[funcarg].free_symbols):
 
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Derivatives")
+                    raise ValueError("Invalid boundary conditions for Derivatives")
 
 
             # Separating functions
             elif isinstance(funcarg, AppliedUndef):
                 if (funcarg.func == f and len(funcarg.args) == 1 and
-                    not funcarg.args[0].has(x) and not ics[funcarg].has(f)):
+                    not funcarg.args[0].has(x) and x not in ics[funcarg].free_symbols):
                     boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Function")
+                    raise ValueError("Invalid boundary conditions for Function")
 
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
@@ -1179,7 +1179,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
     -A. D. Polyanin and A. V. Manzhirov, Handbook of Mathematics for Engineers and Scientists
 
     Examples
@@ -1223,7 +1223,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         "For scalar ODEs, classify_ode should be used")
 
     # find all the functions if not given
-    order = dict()
+    order = {}
     if funcs==[None]:
         funcs = _extract_funcs(eq)
 
@@ -1233,7 +1233,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     # This logic of list of lists in funcs to
     # be replaced later.
-    func_dict = dict()
+    func_dict = {}
     for func in funcs:
         if not order.get(func, False):
             max_order = 0
@@ -1350,7 +1350,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     y = func[1].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
+    r = {}
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
     # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
@@ -2159,7 +2159,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr
@@ -2306,7 +2306,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     References
     ==========
-    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - https://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
     - George E. Simmons, "Differential Equations with Applications and
       Historical Notes", p.p 176 - 184
 
@@ -2871,13 +2871,10 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    r = dict()
+    r = {}
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
-        eqs = 0
-        for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
+        eq[i] = Add(*[terms/fc[i,func[i],1] for terms in Add.make_args(eq[i])])
 
     # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
@@ -3305,7 +3302,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3359,7 +3356,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3416,7 +3413,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3476,7 +3473,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3526,7 +3523,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)

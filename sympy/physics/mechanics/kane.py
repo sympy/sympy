@@ -6,7 +6,9 @@ from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
-                                               _f_list_parser)
+                                               _f_list_parser,
+                                               _validate_coordinates,
+                                               _parse_linear_solver)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
@@ -14,7 +16,7 @@ __all__ = ['KanesMethod']
 
 
 class KanesMethod(_Methods):
-    """Kane's method object.
+    r"""Kane's method object.
 
     Explanation
     ===========
@@ -31,22 +33,110 @@ class KanesMethod(_Methods):
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
     bodies : iterable
-        Iterable of Point and RigidBody objects in the system.
+        Iterable of Particle and RigidBody objects in the system.
     loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
-    auxiliary : Matrix
+    auxiliary_eqs : Matrix
         If applicable, the set of auxiliary Kane's
         equations used to solve for non-contributing
         forces.
     mass_matrix : Matrix
-        The system's mass matrix
+        The system's dynamics mass matrix: [k_d; k_dnh]
     forcing : Matrix
-        The system's forcing vector
+        The system's dynamics forcing vector: -[f_d; f_dnh]
+    mass_matrix_kin : Matrix
+        The "mass matrix" for kinematic differential equations: k_kqdot
+    forcing_kin : Matrix
+        The forcing vector for kinematic differential equations: -(k_ku*u + f_k)
     mass_matrix_full : Matrix
-        The "mass matrix" for the u's and q's
+        The "mass matrix" for the u's and q's with dynamics and kinematics
     forcing_full : Matrix
-        The "forcing vector" for the u's and q's
+        The "forcing vector" for the u's and q's with dynamics and kinematics
+
+    Parameters
+    ==========
+
+    frame : ReferenceFrame
+        The inertial reference frame for the system.
+    q_ind : iterable of dynamicsymbols
+        Independent generalized coordinates.
+    u_ind : iterable of dynamicsymbols
+        Independent generalized speeds.
+    kd_eqs : iterable of Expr, optional
+        Kinematic differential equations, which linearly relate the generalized
+        speeds to the time-derivatives of the generalized coordinates.
+    q_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized coordinates.
+    configuration_constraints : iterable of Expr, optional
+        Constraints on the system's configuration, i.e. holonomic constraints.
+    u_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized speeds.
+    velocity_constraints : iterable of Expr, optional
+        Constraints on the system's velocity, i.e. the combination of the
+        nonholonomic constraints and the time-derivative of the holonomic
+        constraints.
+    acceleration_constraints : iterable of Expr, optional
+        Constraints on the system's acceleration, by default these are the
+        time-derivative of the velocity constraints.
+    u_auxiliary : iterable of dynamicsymbols, optional
+        Auxiliary generalized speeds.
+    bodies : iterable of Particle and/or RigidBody, optional
+        The particles and rigid bodies in the system.
+    forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
+        Forces and torques applied on the system.
+    explicit_kinematics : bool
+        Boolean whether the mass matrices and forcing vectors should use the
+        explicit form (default) or implicit form for kinematics.
+        See the notes for more details.
+    kd_eqs_solver : str, callable
+        Method used to solve the kinematic differential equations. If a string
+        is supplied, it should be a valid method that can be used with the
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        equations and returns the solution. The default utilizes LU solve. See
+        the notes for more information.
+    constraint_solver : str, callable
+        Method used to solve the velocity constraints. If a string is
+        supplied, it should be a valid method that can be used with the
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        equations and returns the solution. The default utilizes LU solve. See
+        the notes for more information.
+
+    Notes
+    =====
+
+    The mass matrices and forcing vectors related to kinematic equations
+    are given in the explicit form by default. In other words, the kinematic
+    mass matrix is $\mathbf{k_{k\dot{q}}} = \mathbf{I}$.
+    In order to get the implicit form of those matrices/vectors, you can set the
+    ``explicit_kinematics`` attribute to ``False``. So $\mathbf{k_{k\dot{q}}}$
+    is not necessarily an identity matrix. This can provide more compact
+    equations for non-simple kinematics.
+
+    Two linear solvers can be supplied to ``KanesMethod``: one for solving the
+    kinematic differential equations and one to solve the velocity constraints.
+    Both of these sets of equations can be expressed as a linear system ``Ax = rhs``,
+    which have to be solved in order to obtain the equations of motion.
+
+    The default solver ``'LU'``, which stands for LU solve, results relatively low
+    number of operations. The weakness of this method is that it can result in zero
+    division errors.
+
+    If zero divisions are encountered, a possible solver which may solve the problem
+    is ``"CRAMER"``. This method uses Cramer's rule to solve the system. This method
+    is slower and results in more operations than the default solver. However it only
+    uses a single division by default per entry of the solution.
+
+    While a valid list of solvers can be found at
+    :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a
+    `callable`. This way it is possible to use a different solver routine. If the
+    kinematic differential equations are not too complex it can be worth it to simplify
+    the solution by using ``lambda A, b: simplify(Matrix.LUsolve(A, b))``. Another
+    option solver one may use is :func:`sympy.solvers.solveset.linsolve`. This can be
+    done using `lambda A, b: tuple(linsolve((A, b)))[0]`, where we select the first
+    solution as our system should have only one unique solution.
 
     Examples
     ========
@@ -115,9 +205,11 @@ class KanesMethod(_Methods):
     """
 
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
-            configuration_constraints=None, u_dependent=None,
-            velocity_constraints=None, acceleration_constraints=None,
-            u_auxiliary=None, bodies=None, forcelist=None):
+                 configuration_constraints=None, u_dependent=None,
+                 velocity_constraints=None, acceleration_constraints=None,
+                 u_auxiliary=None, bodies=None, forcelist=None,
+                 explicit_kinematics=True, kd_eqs_solver='LU',
+                 constraint_solver='LU'):
 
         """Please read the online documentation. """
         if not q_ind:
@@ -134,11 +226,15 @@ class KanesMethod(_Methods):
         self._forcelist = forcelist
         self._bodylist = bodies
 
+        self.explicit_kinematics = explicit_kinematics
+
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
-        self._initialize_kindiffeq_matrices(kd_eqs)
-        self._initialize_constraint_matrices(configuration_constraints,
-                velocity_constraints, acceleration_constraints)
+        _validate_coordinates(self.q, self.u)
+        self._initialize_kindiffeq_matrices(kd_eqs, kd_eqs_solver)
+        self._initialize_constraint_matrices(
+            configuration_constraints, velocity_constraints,
+            acceleration_constraints, constraint_solver)
 
     def _initialize_vectors(self, q_ind, q_dep, u_ind, u_dep, u_aux):
         """Initialize the coordinate and speed vectors."""
@@ -168,9 +264,9 @@ class KanesMethod(_Methods):
         self._udot = self.u.diff(dynamicsymbols._t)
         self._uaux = none_handler(u_aux)
 
-    def _initialize_constraint_matrices(self, config, vel, acc):
+    def _initialize_constraint_matrices(self, config, vel, acc, linear_solver='LU'):
         """Initializes constraint matrices."""
-
+        linear_solver = _parse_linear_solver(linear_solver)
         # Define vector dimensions
         o = len(self.u)
         m = len(self._udep)
@@ -227,7 +323,7 @@ class KanesMethod(_Methods):
             # to independent speeds as: udep = Ars*uind, neglecting the C term.
             B_ind = self._k_nh[:, :p]
             B_dep = self._k_nh[:, p:o]
-            self._Ars = -B_dep.LUsolve(B_ind)
+            self._Ars = -linear_solver(B_dep, B_ind)
         else:
             self._f_nh = Matrix()
             self._k_nh = Matrix()
@@ -235,7 +331,7 @@ class KanesMethod(_Methods):
             self._k_dnh = Matrix()
             self._Ars = Matrix()
 
-    def _initialize_kindiffeq_matrices(self, kdeqs):
+    def _initialize_kindiffeq_matrices(self, kdeqs, linear_solver='LU'):
         """Initialize the kinematic differential equation matrices.
 
         Parameters
@@ -246,7 +342,7 @@ class KanesMethod(_Methods):
             coordinates and generalized speeds.
 
         """
-
+        linear_solver = _parse_linear_solver(linear_solver)
         if kdeqs:
             if len(self.q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
@@ -281,6 +377,10 @@ class KanesMethod(_Methods):
                        'coordinates.')
                 raise ValueError(msg.format(nonlin_vars))
 
+            self._f_k_implicit = f_k.xreplace(uaux_zero)
+            self._k_ku_implicit = k_ku.xreplace(uaux_zero)
+            self._k_kqdot_implicit = k_kqdot
+
             # Solve for q'(t) such that the coefficient matrices are now in
             # this form:
             #
@@ -289,19 +389,19 @@ class KanesMethod(_Methods):
             # NOTE : Solving the kinematic differential equations here is not
             # necessary and prevents the equations from being provided in fully
             # implicit form.
-            f_k = k_kqdot.LUsolve(f_k)
-            k_ku = k_kqdot.LUsolve(k_ku)
-            k_kqdot = eye(len(qdot))
-            self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
+            f_k_explicit = linear_solver(k_kqdot, f_k)
+            k_ku_explicit = linear_solver(k_kqdot, k_ku)
+            self._qdot_u_map = dict(zip(qdot, -(k_ku_explicit*u + f_k_explicit)))
 
-            self._f_k = f_k.xreplace(uaux_zero)
-            self._k_ku = k_ku.xreplace(uaux_zero)
-            self._k_kqdot = k_kqdot
+            self._f_k = f_k_explicit.xreplace(uaux_zero)
+            self._k_ku = k_ku_explicit.xreplace(uaux_zero)
+            self._k_kqdot = eye(len(qdot))
+
         else:
             self._qdot_u_map = None
-            self._f_k = Matrix()
-            self._k_ku = Matrix()
-            self._k_kqdot = Matrix()
+            self._f_k_implicit = self._f_k = Matrix()
+            self._k_ku_implicit = self._k_ku = Matrix()
+            self._k_kqdot_implicit = self._k_kqdot = Matrix()
 
     def _form_fr(self, fl):
         """Form the generalized active force."""
@@ -349,8 +449,8 @@ class KanesMethod(_Methods):
         uauxdot = [diff(i, t) for i in self._uaux]
         uauxdot_zero = {i: 0 for i in uauxdot}
         # Dictionary of q' and q'' to u and u'
-        q_ddot_u_map = {k.diff(t): v.diff(t) for (k, v) in
-                self._qdot_u_map.items()}
+        q_ddot_u_map = {k.diff(t): v.diff(t).xreplace(
+            self._qdot_u_map) for (k, v) in self._qdot_u_map.items()}
         q_ddot_u_map.update(self._qdot_u_map)
 
         # Fill up the list of partials: format is a list with num elements
@@ -425,18 +525,41 @@ class KanesMethod(_Methods):
             MMi = MM[:p, :]
             MMd = MM[p:o, :]
             MM = MMi + (self._Ars.T * MMd)
+            # Apply the same to nonMM
+            nonMM = nonMM[:p, :] + (self._Ars.T * nonMM[p:o, :])
 
         self._bodylist = bl
         self._frstar = fr_star
         self._k_d = MM
-        self._f_d = -msubs(self._fr + self._frstar, udot_zero)
+        self._f_d = -(self._fr - nonMM)
         return fr_star
 
-    def to_linearizer(self):
+    def to_linearizer(self, linear_solver='LU'):
         """Returns an instance of the Linearizer class, initiated from the
         data in the KanesMethod class. This may be more desirable than using
         the linearize class method, as the Linearizer object will allow more
-        efficient recalculation (i.e. about varying operating points)."""
+        efficient recalculation (i.e. about varying operating points).
+
+        Parameters
+        ==========
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+
+        Returns
+        =======
+        Linearizer
+            An instantiated
+            :class:`sympy.physics.mechanics.linearize.Linearizer`.
+
+        """
 
         if (self._fr is None) or (self._frstar is None):
             raise ValueError('Need to compute Fr, Fr* first.')
@@ -503,11 +626,29 @@ class KanesMethod(_Methods):
                 raise ValueError('Cannot have derivatives of specified \
                                  quantities when linearizing forcing terms.')
         return Linearizer(f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a, q, u, q_i,
-                q_d, u_i, u_d, r)
+                q_d, u_i, u_d, r, linear_solver=linear_solver)
 
     # TODO : Remove `new_method` after 1.1 has been released.
-    def linearize(self, *, new_method=None, **kwargs):
+    def linearize(self, *, new_method=None, linear_solver='LU', **kwargs):
         """ Linearize the equations of motion about a symbolic operating point.
+
+        Parameters
+        ==========
+        new_method
+            Deprecated, does nothing and will be removed.
+        linear_solver : str, callable
+            Method used to solve the several symbolic linear systems of the
+            form ``A*x=b`` in the linearization process. If a string is
+            supplied, it should be a valid method that can be used with the
+            :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+            supplied, it should have the format ``x = f(A, b)``, where it
+            solves the equations and returns the solution. The default is
+            ``'LU'`` which corresponds to SymPy's ``A.LUsolve(b)``.
+            ``LUsolve()`` is fast to compute but will often result in
+            divide-by-zero and thus ``nan`` results.
+        **kwargs
+            Extra keyword arguments are passed to
+            :meth:`sympy.physics.mechanics.linearize.Linearizer.linearize`.
 
         Explanation
         ===========
@@ -532,8 +673,11 @@ class KanesMethod(_Methods):
         dictionaries. The values may be numeric or symbolic. The more values
         you can specify beforehand, the faster this computation will run.
 
-        For more documentation, please see the ``Linearizer`` class."""
-        linearizer = self.to_linearizer()
+        For more documentation, please see the ``Linearizer`` class.
+
+        """
+
+        linearizer = self.to_linearizer(linear_solver=linear_solver)
         result = linearizer.linearize(**kwargs)
         return result + (linearizer.r,)
 
@@ -548,7 +692,7 @@ class KanesMethod(_Methods):
         constraints) the length of the returned vectors will be o - m + s in
         length. The first o - m equations will be the constrained Kane's
         equations, then the s auxiliary Kane's equations. These auxiliary
-        equations can be accessed with the auxiliary_eqs().
+        equations can be accessed with the auxiliary_eqs property.
 
         Parameters
         ==========
@@ -581,7 +725,10 @@ class KanesMethod(_Methods):
                 km = KanesMethod(self._inertial, self.q, self._uaux,
                         u_auxiliary=self._uaux, u_dependent=self._udep,
                         velocity_constraints=(self._k_nh * self.u +
-                        self._f_nh))
+                        self._f_nh),
+                        acceleration_constraints=(self._k_dnh * self._udot +
+                        self._f_dnh)
+                        )
             km._qdot_u_map = self._qdot_u_map
             self._km = km
             fraux = km._form_fr(loads)
@@ -645,22 +792,24 @@ class KanesMethod(_Methods):
         return self._aux_eq
 
     @property
+    def mass_matrix_kin(self):
+        r"""The kinematic "mass matrix" $\mathbf{k_{k\dot{q}}}$ of the system."""
+        return self._k_kqdot if self.explicit_kinematics else self._k_kqdot_implicit
+
+    @property
+    def forcing_kin(self):
+        """The kinematic "forcing vector" of the system."""
+        if self.explicit_kinematics:
+            return -(self._k_ku * Matrix(self.u) + self._f_k)
+        else:
+            return -(self._k_ku_implicit * Matrix(self.u) + self._f_k_implicit)
+
+    @property
     def mass_matrix(self):
         """The mass matrix of the system."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
         return Matrix([self._k_d, self._k_dnh])
-
-    @property
-    def mass_matrix_full(self):
-        """The mass matrix of the system, augmented by the kinematic
-        differential equations."""
-        if not self._fr or not self._frstar:
-            raise ValueError('Need to compute Fr, Fr* first.')
-        o = len(self.u)
-        n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
-                n)).row_join(self.mass_matrix))
 
     @property
     def forcing(self):
@@ -670,13 +819,20 @@ class KanesMethod(_Methods):
         return -Matrix([self._f_d, self._f_dnh])
 
     @property
-    def forcing_full(self):
-        """The forcing vector of the system, augmented by the kinematic
-        differential equations."""
+    def mass_matrix_full(self):
+        """The mass matrix of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
-        f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
+        o, n = len(self.u), len(self.q)
+        return (self.mass_matrix_kin.row_join(zeros(n, o))).col_join(
+            zeros(o, n).row_join(self.mass_matrix))
+
+    @property
+    def forcing_full(self):
+        """The forcing vector of the system, augmented by the kinematic
+        differential equations in explicit or implicit form."""
+        return Matrix([self.forcing_kin, self.forcing])
 
     @property
     def q(self):

@@ -1,6 +1,7 @@
+from math import prod
+
 from sympy import QQ, ZZ
 from sympy.abc import x, theta
-from sympy.core.mul import prod
 from sympy.ntheory import factorint
 from sympy.ntheory.residue_ntheory import n_order
 from sympy.polys import Poly, cyclotomic_poly
@@ -148,7 +149,7 @@ def test_decomp_5():
 
 def test_decomp_6():
     # Another case where 2 divides the index. This is Dedekind's example of
-    # an essential discriminant divisor. (See Cohen, Excercise 6.10.)
+    # an essential discriminant divisor. (See Cohen, Exercise 6.10.)
     T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     rad = {}
     ZK, dK = round_two(T, radicals=rad)
@@ -287,3 +288,9 @@ def test_PrimeIdeal_reduce():
     a_bar_expected = k.to_alg_num(a_bar_expected)
     a_bar = frp.reduce_alg_num(a)
     assert a_bar == a_bar_expected
+
+
+def test_issue_23402():
+    k = QQ.alg_field_from_poly(Poly(x ** 3 + x ** 2 - 2 * x + 8))
+    P = k.primes_above(3)
+    assert P[0].alpha.equiv(0)

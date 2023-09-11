@@ -1,10 +1,16 @@
+from math import prod
+
+from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.concrete.products import (Product, product)
-from sympy.concrete.summations import (Sum, summation)
+from sympy.concrete.summations import (Sum, summation, telescopic,
+     eval_sum_residue, _dummy_with_inherited_properties_concrete)
 from sympy.core.function import (Derivative, Function)
-from sympy.core.mul import prod
 from sympy.core import (Catalan, EulerGamma)
+from sympy.core.facts import InconsistentAssumptions
+from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
 from sympy.core.relational import Eq
+from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
@@ -24,19 +30,14 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
+from sympy.matrices import (Matrix, SparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix, diag)
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
-from sympy.concrete.summations import (
-    telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
-from sympy.concrete.expr_with_intlimits import ReorderError
-from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
-from sympy.matrices import (Matrix, SparseMatrix,
-    ImmutableDenseMatrix, ImmutableSparseMatrix)
-from sympy.core.mod import Mod
 from sympy.abc import a, b, c, d, k, m, x, y, z
 
 n = Symbol('n', integer=True)
@@ -288,7 +289,7 @@ def test_geometric_sums():
 
     #issue 11642:
     result = Sum(0.5**n, (n, 1, oo)).doit()
-    assert result == 1
+    assert result == 1.0
     assert result.is_Float
 
     result = Sum(0.25**n, (n, 1, oo)).doit()
@@ -296,7 +297,7 @@ def test_geometric_sums():
     assert result.is_Float
 
     result = Sum(0.99999**n, (n, 1, oo)).doit()
-    assert result == 99999
+    assert result == 99999.0
     assert result.is_Float
 
     result = Sum(S.Half**n, (n, 1, oo)).doit()
@@ -319,6 +320,8 @@ def test_geometric_sums():
             (1, Eq(exp(-2*I*pi*(k - q)/n), 1)), (0, True)
     )
 
+    #Issue 23491
+    assert Sum(1/(n**2 + 1), (n, 1, oo)).doit() == S(-1)/2 + pi/(2*tanh(pi))
 
 def test_harmonic_sums():
     assert summation(1/k, (k, 0, n)) == Sum(1/k, (k, 0, n))
@@ -800,7 +803,7 @@ def test_issue_4171():
 
 
 def test_issue_6273():
-    assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == 1
+    assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == Float(1, 2)
 
 
 def test_issue_6274():
@@ -860,6 +863,8 @@ def test_simplify_sum():
     assert _simplify(Sum(Sum(d * t, (x, a, b - 1)) + \
                 Sum(d * t, (x, b, c)), (t, a, b))) == \
                     d * Sum(1, (x, a, c)) * Sum(t, (t, a, b))
+    assert _simplify(Sum(sin(t)**2 + cos(t)**2 + 1, (t, a, b))) == \
+        2 * Sum(1, (t, a, b))
 
 
 def test_change_index():
@@ -937,18 +942,24 @@ def test_factor_expand_subs():
     assert Sum(4 * x * y, (x, 1, y)).factor() == 4 * y * Sum(x, (x, 1, y))
 
     # test expand
+    _x = Symbol('x', zero=False)
     assert Sum(x+1,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(1,(x,1,y))
     assert Sum(x+a*x**2,(x,1,y)).expand() == Sum(x,(x,1,y)) + Sum(a*x**2,(x,1,y))
-    assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
-        == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
+    assert Sum(_x**(n + 1)*(n + 1), (n, -1, oo)).expand() \
+        == Sum(n*_x*_x**n + _x*_x**n, (n, -1, oo))
     assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(power_exp=False) \
-        == Sum(n*x**(n+1), (n, -1, oo)) + Sum(x**(n+1), (n, -1, oo))
+        == Sum(n*x**(n + 1) + x**(n + 1), (n, -1, oo))
+    assert Sum(x**(n + 1)*(n + 1), (n, -1, oo)).expand(force=True) \
+           == Sum(x*x**n, (n, -1, oo)) + Sum(n*x*x**n, (n, -1, oo))
     assert Sum(a*n+a*n**2,(n,0,4)).expand() \
         == Sum(a*n,(n,0,4)) + Sum(a*n**2,(n,0,4))
-    assert Sum(x**a*x**n,(x,0,3)) \
-        == Sum(x**(a+n),(x,0,3)).expand(power_exp=True)
-    assert Sum(x**(a+n),(x,0,3)) \
-        == Sum(x**(a+n),(x,0,3)).expand(power_exp=False)
+    assert Sum(_x**a*_x**n,(x,0,3)) \
+        == Sum(_x**(a+n),(x,0,3)).expand(power_exp=True)
+    _a, _n = symbols('a n', positive=True)
+    assert Sum(x**(_a+_n),(x,0,3)).expand(power_exp=True) \
+        == Sum(x**_a*x**_n, (x, 0, 3))
+    assert Sum(x**(_a-_n),(x,0,3)).expand(power_exp=True) \
+        == Sum(x**(_a-_n),(x,0,3)).expand(power_exp=False)
 
     # test subs
     assert Sum(1/(1+a*x**2),(x,0,3)).subs([(a,3)]) == Sum(1/(1+3*x**2),(x,0,3))
@@ -972,12 +983,18 @@ def test_issue_2787():
     res = s.doit().simplify()
     ans = Piecewise(
         (n*p, x),
-        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k, (k, 0, n)),
-        True))
-    assert res == ans.subs(x, p/Abs(p - 1) <= 1)
+        (Sum(k*p**k*binomial(n, k)*(1 - p)**(n - k), (k, 0, n)),
+        True)).subs(x, (Eq(n, 1) | (n > 1)) & (p/Abs(p - 1) <= 1))
+    ans2 = Piecewise(
+        (n*p, x),
+        (factorial(n)*Sum(p**k*(1 - p)**(-k + n)/
+        (factorial(-k + n)*factorial(k - 1)), (k, 0, n)),
+        True)).subs(x, (Eq(n, 1) | (n > 1)) & (p/Abs(p - 1) <= 1))
+    assert res in [ans, ans2]  # XXX system dependent
     # Issue #17165: make sure that another simplify does not complicate
-    # the result (but why didn't first simplify handle this?)
-    assert res.simplify() == ans.subs(x, p <= S.Half)
+    # the result by much. Why didn't first simplify replace
+    # Eq(n, 1) | (n > 1) with True?
+    assert res.simplify().count_ops() <= res.count_ops() + 2
 
 
 def test_issue_4668():
@@ -1141,6 +1158,7 @@ def test_issue_10973():
 
 
 def test_issue_14129():
+    x = Symbol('x', zero=False)
     assert Sum( k*x**k, (k, 0, n-1)).doit() == \
         Piecewise((n**2/2 - n/2, Eq(x, 1)), ((n*x*x**n -
             n*x**n - x*x**n + x)/(x - 1)**2, True))
@@ -1148,17 +1166,22 @@ def test_issue_14129():
         Piecewise((n, Eq(x, 1)), ((-x**n + 1)/(-x + 1), True))
     assert Sum( k*(x/y+x)**k, (k, 0, n-1)).doit() == \
         Piecewise((n*(n - 1)/2, Eq(x, y/(y + 1))),
-        (x*(y + 1)*(n*x*y*(x + x/y)**n/(x + x/y)
-        + n*x*(x + x/y)**n/(x + x/y) - n*y*(x
-        + x/y)**n/(x + x/y) - x*y*(x + x/y)**n/(x
-        + x/y) - x*(x + x/y)**n/(x + x/y) + y)/(x*y
-        + x - y)**2, True))
+        (x*(y + 1)*(n*x*y*(x + x/y)**(n - 1) +
+        n*x*(x + x/y)**(n - 1) - n*y*(x + x/y)**(n - 1) -
+        x*y*(x + x/y)**(n - 1) - x*(x + x/y)**(n - 1) + y)/
+        (x*y + x - y)**2, True))
 
 
 def test_issue_14112():
     assert Sum((-1)**n/sqrt(n), (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**(2*n)/n, (n, 1, oo)).is_convergent() is S.false
     assert Sum((-2)**n + (-3)**n, (n, 1, oo)).is_convergent() is S.false
+
+
+def test_issue_14219():
+    A = diag(0, 2, -3)
+    res = diag(1, 15, -20)
+    assert Sum(A**n, (n, 0, 3)).doit() == res
 
 
 def test_sin_times_absolutely_convergent():
@@ -1176,7 +1199,7 @@ def test_issue_14484():
 
 def test_issue_14640():
     i, n = symbols("i n", integer=True)
-    a, b, c = symbols("a b c")
+    a, b, c = symbols("a b c", zero=False)
 
     assert Sum(a**-i/(a - b), (i, 0, n)).doit() == Sum(
         1/(a*a**i - a**i*b), (i, 0, n)).doit() == Piecewise(
@@ -1612,3 +1635,12 @@ def test_pr_22677():
     assert Sum(1/x**2,(x, 0, b)).doit() == Sum(x**(-2), (x, 0, b))
     assert Sum(1/(x - b)**2,(x, 0, b-1)).doit() == Sum(
         (-b + x)**(-2), (x, 0, b - 1))
+
+
+def test_issue_23952():
+    p, q = symbols("p q", real=True, nonnegative=True)
+    k1, k2 = symbols("k1 k2", integer=True, nonnegative=True)
+    n = Symbol("n", integer=True, positive=True)
+    expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
+        (k1, 0, n), (k2, 0, n))
+    assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3

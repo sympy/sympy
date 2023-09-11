@@ -59,28 +59,28 @@ def test_sample_scipy():
                     assert samps2[i][j] in X.pspace.domain.set
 
 
-def test_sample_pymc3():
-    distribs_pymc3 = [
+def test_sample_pymc():
+    distribs_pymc = [
         Bernoulli('B', 0.2),
         Binomial('N', 5, 0.4)
     ]
     size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    pymc = import_module('pymc')
+    if not pymc:
+        skip('PyMC is not installed. Abort tests for _sample_pymc.')
     else:
-        for X in distribs_pymc3:
-            samps = sample(X, size=size, library='pymc3')
+        for X in distribs_pymc:
+            samps = sample(X, size=size, library='pymc')
             for sam in samps:
                 assert sam in X.pspace.domain.set
         raises(NotImplementedError,
-                          lambda: (sample(Die("D"), library='pymc3')))
+                          lambda: (sample(Die("D"), library='pymc')))
 
 
 def test_sample_seed():
     F = FiniteRV('F', {1: S.Half, 2: Rational(1, 4), 3: Rational(1, 4)})
     size = 10
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ['scipy', 'numpy', 'pymc']
     for lib in libraries:
         try:
             imported_lib = import_module(lib)

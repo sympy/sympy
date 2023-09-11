@@ -374,12 +374,14 @@ def test_integrate_hyperexponential_returns_piecewise():
     # TODO: Add a test where two different parts of the extension use a
     # Piecewise, like y**x + z**x.
 
+
 def test_issue_13947():
     a, t, s = symbols('a t s')
     assert risch_integrate(2**(-pi)/(2**t + 1), t) == \
         2**(-pi)*t - 2**(-pi)*log(2**t + 1)/log(2)
     assert risch_integrate(a**(t - s)/(a**t + 1), t) == \
         exp(-s*log(a))*log(a**t + 1)/log(a)
+
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
@@ -738,3 +740,24 @@ def test_DifferentialExtension_printing():
     assert str(DE) == ("DifferentialExtension({fa=Poly(t1 + t0**2, t1, domain='ZZ[t0]'), "
         "fd=Poly(1, t1, domain='ZZ'), D=[Poly(1, x, domain='ZZ'), Poly(2*x*t0, t0, domain='ZZ[x]'), "
         "Poly(2*t0*x/(t0 + 1), t1, domain='ZZ(x,t0)')]})")
+
+
+def test_issue_23948():
+    f = (
+        ( (-2*x**5 + 28*x**4 - 144*x**3 + 324*x**2 - 270*x)*log(x)**2
+         +(-4*x**6 + 56*x**5 - 288*x**4 + 648*x**3 - 540*x**2)*log(x)
+         +(2*x**5 - 28*x**4 + 144*x**3 - 324*x**2 + 270*x)*exp(x)
+         +(2*x**5 - 28*x**4 + 144*x**3 - 324*x**2 + 270*x)*log(5)
+         -2*x**7 + 26*x**6 - 116*x**5 + 180*x**4 + 54*x**3 - 270*x**2
+        )*log(-log(x)**2 - 2*x*log(x) + exp(x) + log(5) - x**2 - x)**2
+       +( (4*x**5 - 44*x**4 + 168*x**3 - 216*x**2 - 108*x + 324)*log(x)
+         +(-2*x**5 + 24*x**4 - 108*x**3 + 216*x**2 - 162*x)*exp(x)
+         +4*x**6 - 42*x**5 + 144*x**4 - 108*x**3 - 324*x**2 + 486*x
+        )*log(-log(x)**2 - 2*x*log(x) + exp(x) + log(5) - x**2 - x)
+    )/(x*exp(x)**2*log(x)**2 + 2*x**2*exp(x)**2*log(x) - x*exp(x)**3
+       +(-x*log(5) + x**3 + x**2)*exp(x)**2)
+
+    F = ((x**4 - 12*x**3 + 54*x**2 - 108*x + 81)*exp(-2*x)
+        *log(-x**2 - 2*x*log(x) - x + exp(x) - log(x)**2 + log(5))**2)
+
+    assert risch_integrate(f, x) == F

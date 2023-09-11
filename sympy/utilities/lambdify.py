@@ -3,7 +3,8 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 import builtins
 import inspect
@@ -23,14 +24,15 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}  # type: tDict[str, Any]
-MPMATH_DEFAULT = {}  # type: tDict[str, Any]
-NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
-TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
-SYMPY_DEFAULT = {}  # type: tDict[str, Any]
-NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
+MATH_DEFAULT: dict[str, Any] = {}
+MPMATH_DEFAULT: dict[str, Any] = {}
+NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
+CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
+JAX_DEFAULT: dict[str, Any] = {"I": 1j}
+TENSORFLOW_DEFAULT: dict[str, Any] = {}
+SYMPY_DEFAULT: dict[str, Any] = {}
+NUMEXPR_DEFAULT: dict[str, Any] = {}
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -41,6 +43,7 @@ MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
+JAX = JAX_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
@@ -85,23 +88,25 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-NUMPY_TRANSLATIONS = {
+NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
-    }  # type: tDict[str, str]
-SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
-CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
+}
+SCIPY_TRANSLATIONS: dict[str, str] = {}
+CUPY_TRANSLATIONS: dict[str, str] = {}
+JAX_TRANSLATIONS: dict[str, str] = {}
 
-TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
+TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
 
-NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
+NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
-    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import numpy; import scipy; from scipy import *; from scipy.special import *",)),
+    "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
+    "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
@@ -117,7 +122,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math",
-    "mpmath", "numpy", "sympy", "tensorflow".
+    "mpmath", "numpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -168,7 +173,6 @@ def _import(module, reload=False):
     if 'Abs' not in namespace:
         namespace['Abs'] = abs
 
-
 # Used for dynamically generated filenames that are inserted into the
 # linecache.
 _lambdify_generated_counter = 1
@@ -176,7 +180,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False):
+             dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -310,7 +314,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         *modules* can be one of the following types:
 
         - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
-          ``"scipy"``, ``"sympy"``, or ``"tensorflow"``. This uses the
+          ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
@@ -346,6 +350,21 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         When ``True``, ``sympy.simplify.cse`` is used, otherwise (the default)
         the user may pass a function matching the ``cse`` signature.
 
+    docstring_limit : int or None
+        When lambdifying large expressions, a significant proportion of the time
+        spent inside ``lambdify`` is spent producing a string representation of
+        the expression for use in the automatically generated docstring of the
+        returned function. For expressions containing hundreds or more nodes the
+        resulting docstring often becomes so long and dense that it is difficult
+        to read. To reduce the runtime of lambdify, the rendering of the full
+        expression inside the docstring can be disabled.
+
+        When ``None``, the full expression is rendered in the docstring. When
+        ``0`` or a negative ``int``, an ellipsis is rendering in the docstring
+        instead of the expression. When a strictly positive ``int``, if the
+        number of nodes in the expression exceeds ``docstring_limit`` an
+        ellipsis is rendered in the docstring, otherwise a string representation
+        of the expression is rendered as normal. The default is ``1000``.
 
     Examples
     ========
@@ -466,25 +485,11 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
       of numexpr functions can be found at:
       https://numexpr.readthedocs.io/en/latest/user_guide.html#supported-functions
 
-    - In previous versions of SymPy, ``lambdify`` replaced ``Matrix`` with
-      ``numpy.matrix`` by default. As of SymPy 1.0 ``numpy.array`` is the
-      default. To get the old default behavior you must pass in
-      ``[{'ImmutableDenseMatrix':  numpy.matrix}, 'numpy']`` to the
-      ``modules`` kwarg.
-
-      >>> from sympy import lambdify, Matrix
-      >>> from sympy.abc import x, y
-      >>> import numpy
-      >>> array2mat = [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy']
-      >>> f = lambdify((x, y), Matrix([x, y]), modules=array2mat)
-      >>> f(1, 2)
-      [[1]
-       [2]]
-
     - In the above examples, the generated functions can accept scalar
       values or numpy arrays as arguments.  However, in some cases
       the generated function relies on the input being a numpy array:
 
+      >>> import numpy
       >>> from sympy import Piecewise
       >>> from sympy.testing.pytest import ignore_warnings
       >>> f = lambdify(x, Piecewise((x, x <= 1), (1/x, x > 1)), "numpy")
@@ -786,7 +791,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {} # type: tDict[str, Any]
+    namespace = {}
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -807,6 +812,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
+        elif _module_present('jax', namespaces):
+            from sympy.printing.numpy import JaxPrinter as Printer # type: ignore
         elif _module_present('numexpr', namespaces):
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
@@ -857,7 +864,7 @@ or tuple for the function arguments.
     # Create the function definition code and execute it
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify)
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -889,7 +896,7 @@ or tuple for the function arguments.
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {} # type: tDict[str, Any]
+    funclocals = {}
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1
@@ -903,9 +910,14 @@ or tuple for the function arguments.
     # Apply the docstring
     sig = "func({})".format(", ".join(str(i) for i in names))
     sig = textwrap.fill(sig, subsequent_indent=' '*8)
-    expr_str = str(expr)
-    if len(expr_str) > 78:
-        expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+    if _too_large_for_docstring(expr, docstring_limit):
+        expr_str = "EXPRESSION REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+        src_str = "SOURCE CODE REDACTED DUE TO LENGTH, (see lambdify's `docstring_limit`)"
+    else:
+        expr_str = str(expr)
+        if len(expr_str) > 78:
+            expr_str = textwrap.wrap(expr_str, 75)[0] + '...'
+        src_str = funcstr
     func.__doc__ = (
         "Created with lambdify. Signature:\n\n"
         "{sig}\n\n"
@@ -915,7 +927,7 @@ or tuple for the function arguments.
         "{src}\n\n"
         "Imported modules:\n\n"
         "{imp_mods}"
-        ).format(sig=sig, expr=expr_str, src=funcstr, imp_mods='\n'.join(imp_mod_lines))
+        ).format(sig=sig, expr=expr_str, src=src_str, imp_mods='\n'.join(imp_mod_lines))
     return func
 
 def _module_present(modname, modlist):
@@ -1119,7 +1131,14 @@ class _EvaluatorPrinter:
         if not iterable(args):
             args = [args]
 
-        argstrs, expr = self._preprocess(args, expr)
+        if cses:
+            subvars, subexprs = zip(*cses)
+            exprs = [expr] + list(subexprs)
+            argstrs, exprs = self._preprocess(args, exprs)
+            expr, subexprs = exprs[0], exprs[1:]
+            cses = zip(subvars, subexprs)
+        else:
+            argstrs, expr = self._preprocess(args, expr)
 
         # Generate argument unpacking and final argument list
         funcargs = []
@@ -1141,12 +1160,11 @@ class _EvaluatorPrinter:
 
         for s, e in cses:
             if e is None:
-                funcbody.append('del {}'.format(s))
+                funcbody.append('del {}'.format(self._exprrepr(s)))
             else:
-                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
+                funcbody.append('{} = {}'.format(self._exprrepr(s), self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
-
 
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
@@ -1396,3 +1414,113 @@ def implemented_function(symfunc, implementation):
             symfunc should be either a string or
             an UndefinedFunction instance.'''))
     return symfunc
+
+
+def _too_large_for_docstring(expr, limit):
+    """Decide whether an ``Expr`` is too large to be fully rendered in a
+    ``lambdify`` docstring.
+
+    This is a fast alternative to ``count_ops``, which can become prohibitively
+    slow for large expressions, because in this instance we only care whether
+    ``limit`` is exceeded rather than counting the exact number of nodes in the
+    expression.
+
+    Parameters
+    ==========
+    expr : ``Expr``, (nested) ``list`` of ``Expr``, or ``Matrix``
+        The same objects that can be passed to the ``expr`` argument of
+        ``lambdify``.
+    limit : ``int`` or ``None``
+        The threshold above which an expression contains too many nodes to be
+        usefully rendered in the docstring. If ``None`` then there is no limit.
+
+    Returns
+    =======
+    bool
+        ``True`` if the number of nodes in the expression exceeds the limit,
+        ``False`` otherwise.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y, z
+    >>> from sympy.utilities.lambdify import _too_large_for_docstring
+    >>> expr = x
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    False
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    Does this split it?
+
+    >>> expr = [x, y, z]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = [x, [y], z, [[x+y], [x*y*z, [x+y+z]]]]
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    False
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> expr = ((x + y + z)**5).expand()
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    >>> from sympy import Matrix
+    >>> expr = Matrix([[(x + y + z), ((x + y + z)**2).expand(),
+    ...                 ((x + y + z)**3).expand(), ((x + y + z)**4).expand()]])
+    >>> _too_large_for_docstring(expr, None)
+    False
+    >>> _too_large_for_docstring(expr, 1000)
+    False
+    >>> _too_large_for_docstring(expr, 100)
+    True
+    >>> _too_large_for_docstring(expr, 1)
+    True
+    >>> _too_large_for_docstring(expr, 0)
+    True
+    >>> _too_large_for_docstring(expr, -1)
+    True
+
+    """
+    # Must be imported here to avoid a circular import error
+    from sympy.core.traversal import postorder_traversal
+
+    if limit is None:
+        return False
+
+    i = 0
+    for _ in postorder_traversal(expr):
+        i += 1
+        if i > limit:
+            return True
+    return False

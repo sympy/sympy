@@ -27,7 +27,7 @@ class CompileError (Exception):
 
 
 def get_abspath(path, cwd='.'):
-    """ Returns the aboslute path.
+    """ Returns the absolute path.
 
     Parameters
     ==========
@@ -192,15 +192,16 @@ def pyx_is_cplus(path):
 
     Returns True if such a file is present in the file, else False.
     """
-    for line in open(path):
-        if line.startswith('#') and '=' in line:
-            splitted = line.split('=')
-            if len(splitted) != 2:
-                continue
-            lhs, rhs = splitted
-            if lhs.strip().split()[-1].lower() == 'language' and \
-               rhs.strip().split()[0].lower() == 'c++':
-                    return True
+    with open(path) as fh:
+        for line in fh:
+            if line.startswith('#') and '=' in line:
+                splitted = line.split('=')
+                if len(splitted) != 2:
+                    continue
+                lhs, rhs = splitted
+                if lhs.strip().split()[-1].lower() == 'language' and \
+                       rhs.strip().split()[0].lower() == 'c++':
+                            return True
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):

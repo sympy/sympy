@@ -13,7 +13,7 @@ from sympy.matrices import Matrix, MatrixBase, eye, randMatrix
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
@@ -35,7 +35,7 @@ Q = MatrixSymbol("Q", 3, 3)
 x, y, z, t = symbols("x y z t")
 
 if tf is not None:
-    llo = [[j for j in range(i, i+3)] for i in range(0, 9, 3)]
+    llo = [list(range(i, i+3)) for i in range(0, 9, 3)]
     m3x3 = tf.constant(llo)
     m3x3sympy = Matrix(llo)
 
@@ -54,7 +54,7 @@ def _compare_tensorflow_matrix(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -86,7 +86,7 @@ def _compare_tensorflow_matrix_inverse(variables, expr, use_float=False):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     if e.is_Matrix:
         if not isinstance(e, MatrixBase):
@@ -114,7 +114,7 @@ def _compare_tensorflow_matrix_scalar(variables, expr):
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*random_variables))
 
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)})
+    e = expr.subs(dict(zip(variables, random_matrices)))
     e = e.doit()
     assert abs(r-e) < 10**-6
 
@@ -131,7 +131,7 @@ def _compare_tensorflow_scalar(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).evalf().doit()
+    e = expr.subs(dict(zip(variables, rvs))).evalf().doit()
     assert abs(r-e) < 10**-6
 
 
@@ -147,7 +147,7 @@ def _compare_tensorflow_relational(
         session = tf.compat.v1.Session(graph=graph)
         r = session.run(f(*tf_rvs))
 
-    e = expr.subs({k: v for k, v in zip(variables, rvs)}).doit()
+    e = expr.subs(dict(zip(variables, rvs))).doit()
     assert r == e
 
 

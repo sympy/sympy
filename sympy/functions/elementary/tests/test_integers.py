@@ -10,7 +10,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, tan
 
 from sympy.core.expr import unchanged
-from sympy.testing.pytest import XFAIL
+from sympy.testing.pytest import XFAIL, raises
 
 x = Symbol('x')
 i = Symbol('i', imaginary=True)
@@ -582,6 +582,20 @@ def test_issue_14355():
     assert ceiling((x**3 + x)/(x**2 - x)).series(x, 0, 100, cdir = -1) == 0
 
 
+def test_frac_leading_term():
+    assert frac(x).as_leading_term(x) == x
+    assert frac(x).as_leading_term(x, cdir = 1) == x
+    assert frac(x).as_leading_term(x, cdir = -1) == 1
+    assert frac(x + S.Half).as_leading_term(x, cdir = 1) == S.Half
+    assert frac(x + S.Half).as_leading_term(x, cdir = -1) == S.Half
+    assert frac(-2*x + 1).as_leading_term(x, cdir = 1) == S.One
+    assert frac(-2*x + 1).as_leading_term(x, cdir = -1) == -2*x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = 1) == x
+    assert frac(sin(x) + 5).as_leading_term(x, cdir = -1) == S.One
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = 1) == x**2
+    assert frac(sin(x**2) + 5).as_leading_term(x, cdir = -1) == x**2
+
+
 @XFAIL
 def test_issue_4149():
     assert floor(3 + pi*I + y*I) == 3 + floor(pi + y)*I
@@ -616,3 +630,18 @@ def test_issue_18689():
 def test_issue_18421():
     assert floor(float(0)) is S.Zero
     assert ceiling(float(0)) is S.Zero
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    raises(NotImplementedError, lambda: floor(x/a).as_leading_term(x, cdir = 1))
+    raises(NotImplementedError, lambda: ceiling(x/a).as_leading_term(x, cdir = 1))
+    assert floor(x/b).as_leading_term(x, cdir = 1) == 0
+    assert floor(x/b).as_leading_term(x, cdir = -1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = 1) == -1
+    assert floor(x/c).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/b).as_leading_term(x, cdir = 1) == 1
+    assert ceiling(x/b).as_leading_term(x, cdir = -1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = 1) == 0
+    assert ceiling(x/c).as_leading_term(x, cdir = -1) == 1

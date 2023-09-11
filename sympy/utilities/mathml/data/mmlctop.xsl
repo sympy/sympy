@@ -260,7 +260,7 @@ CONSTANT and SYMBOL ELEMENTS
     </xsl:when>
     <xsl:when test="($SEM_SW=$SEM_XREF or $SEM_SW=$SEM_XREF_EXT) and @id">
       <xsl:choose>
-        <xsl:when test="self::sematics">
+        <xsl:when test="self::semantics">
           <xsl:copy>
             <xsl:copy-of select="@*"/>
             <xsl:attribute name="xref">

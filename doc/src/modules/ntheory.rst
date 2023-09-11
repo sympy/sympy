@@ -1,13 +1,19 @@
+.. _ntheory-module:
+
+=============
+Number Theory
+=============
 
 .. module:: sympy.ntheory.generate
 
 Ntheory Class Reference
------------------------
+=======================
+
 .. autoclass:: Sieve
    :members:
 
 Ntheory Functions Reference
----------------------------
+===========================
 
 .. autofunction:: prime
 
@@ -34,8 +40,6 @@ Ntheory Functions Reference
 .. autofunction:: smoothness
 
 .. autofunction:: smoothness_p
-
-.. autofunction:: trailing
 
 .. autofunction:: multiplicity
 
@@ -171,7 +175,15 @@ Ntheory Functions Reference
 
 .. autofunction:: jacobi_symbol
 
+.. autofunction:: kronecker_symbol
+
 .. autofunction:: discrete_log
+
+.. autofunction:: quadratic_congruence
+
+.. autofunction:: polynomial_congruence
+
+.. autofunction:: binomial_mod
 
 .. automodule:: sympy.ntheory.continued_fraction
    :members:
@@ -207,7 +219,7 @@ under around 47s to factorise this.
 .. autofunction:: ecm
 
 Examples
-========
+--------
 
  >>> from sympy.ntheory import ecm
  >>> ecm(7060005655815754299976961394452809, B1=100000, B2=1000000)
@@ -237,7 +249,7 @@ with two 25 digit factors. `qs` is able to factorize this in around 248s.
 .. autofunction:: qs
 
 Examples
-========
+--------
 
  >>> from sympy.ntheory import qs
  >>> qs(5915587277*3267000013, 1000, 10000)

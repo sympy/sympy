@@ -60,7 +60,7 @@ def update_docs(sympy_doc_git, doc_html_zip, version, dev_version, push):
 
         # Update versions.json
         with open(join(sympy_doc_git, 'versions.json'), 'w') as f:
-            json.dump({'dev': dev_version, 'latest': version}, f)
+            json.dump({'latest': version, 'dev': dev_version}, f)
         run('git', 'diff')
         run('git', 'add', 'versions.json')
         run('git', 'commit', '-m', 'Update versions.json')

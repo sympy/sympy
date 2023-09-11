@@ -244,7 +244,7 @@ class Point:
 
         _check_frame(frame)
         if not (frame in self._acc_dict):
-            if self._vel_dict[frame] != 0:
+            if self.vel(frame) != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:
                 return Vector(0)

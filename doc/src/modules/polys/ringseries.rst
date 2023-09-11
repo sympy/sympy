@@ -168,8 +168,9 @@ You can also add more functions to ``ring_series.py``. Only elementary
 functions are supported currently. The long term goal is to replace SymPy's
 current ``series`` method with ``rs_series``.
 
-Manipulation of power series
-****************************************************************************
+Reference
+=========
+
 .. currentmodule:: sympy.polys.ring_series
 
 Functions in this module carry the prefix ``rs_``, standing for "ring series".

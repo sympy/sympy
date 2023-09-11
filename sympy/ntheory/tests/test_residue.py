@@ -4,15 +4,18 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
+    legendre_symbol, jacobi_symbol, kronecker_symbol, totient, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
-    polynomial_congruence
+    polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
-    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman
+    _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
+    _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
+    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
+from sympy.core.random import randint, choice
 
 
 def test_residue():
@@ -32,19 +35,36 @@ def test_residue():
     raises(ValueError, lambda: is_primitive_root(3, 6))
 
     for p in primerange(3, 100):
-        it = _primitive_root_prime_iter(p)
-        assert len(list(it)) == totient(totient(p))
+        li = list(_primitive_root_prime_iter(p))
+        assert li[0] == min(li)
+        for g in li:
+            assert n_order(g, p) == p - 1
+        assert len(li) == totient(totient(p))
+        for e in range(1, 4):
+            li_power = list(_primitive_root_prime_power_iter(p, e))
+            li_power2 = list(_primitive_root_prime_power2_iter(p, e))
+            assert len(li_power) == len(li_power2) == totient(totient(p**e))
     assert primitive_root(97) == 5
+    assert n_order(primitive_root(97, False), 97) == totient(97)
     assert primitive_root(97**2) == 5
+    assert n_order(primitive_root(97**2, False), 97**2) == totient(97**2)
     assert primitive_root(40487) == 5
+    assert n_order(primitive_root(40487, False), 40487) == totient(40487)
     # note that primitive_root(40487) + 40487 = 40492 is a primitive root
     # of 40487**2, but it is not the smallest
     assert primitive_root(40487**2) == 10
+    assert n_order(primitive_root(40487**2, False), 40487**2) == totient(40487**2)
     assert primitive_root(82) == 7
+    assert n_order(primitive_root(82, False), 82) == totient(82)
     p = 10**50 + 151
     assert primitive_root(p) == 11
+    assert n_order(primitive_root(p, False), p) == totient(p)
     assert primitive_root(2*p) == 11
+    assert n_order(primitive_root(2*p, False), 2*p) == totient(2*p)
     assert primitive_root(p**2) == 11
+    assert n_order(primitive_root(p**2, False), p**2) == totient(p**2)
+    assert primitive_root(4 * 11) is None and primitive_root(4 * 11, False) is None
+    assert primitive_root(15) is None and primitive_root(15, False) is None
     raises(ValueError, lambda: primitive_root(-3))
 
     assert is_quad_residue(3, 7) is False
@@ -166,9 +186,30 @@ def test_residue():
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
-    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
+    # _nthroot_mod_prime_power
+    for p in primerange(2, 10):
+        for a in range(3):
+            for n in range(3, 5):
+                ans = _nthroot_mod_prime_power(a, n, p, 1)
+                assert isinstance(ans, list)
+                if len(ans) == 0:
+                    for b in range(p):
+                        assert pow(b, n, p) != a % p
+                    for k in range(2, 10):
+                        assert _nthroot_mod_prime_power(a, n, p, k) == []
+                else:
+                    for b in range(p):
+                        pred = pow(b, n, p) == a % p
+                        assert not(pred ^ (b in ans))
+                    for k in range(2, 10):
+                        ans = _nthroot_mod_prime_power(a, n, p, k)
+                        if not ans:
+                            break
+                        for b in ans:
+                            assert pow(b, n , p**k) == a
 
-    assert nthroot_mod(29, 31, 74) == [45]
+    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
+    assert nthroot_mod(29, 31, 74) == 45
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
@@ -178,26 +219,26 @@ def test_residue():
     assert nthroot_mod(11, 3, 109) is None
     assert nthroot_mod(16, 5, 36, True) == [4, 22]
     assert nthroot_mod(9, 16, 36, True) == [3, 9, 15, 21, 27, 33]
-    assert nthroot_mod(4, 3, 3249000) == []
+    assert nthroot_mod(4, 3, 3249000) is None
     assert nthroot_mod(36010, 8, 87382, True) == [40208, 47174]
     assert nthroot_mod(0, 12, 37, True) == [0]
     assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
     assert nthroot_mod(4, 4, 27, True) == [5, 22]
     assert nthroot_mod(4, 4, 121, True) == [19, 102]
     assert nthroot_mod(2, 3, 7, True) == []
-
-    for p in range(5, 100):
-        qv = range(3, p, 4)
-        for q in qv:
-            d = defaultdict(list)
-            for i in range(p):
-                d[pow(i, q, p)].append(i)
-            for a in range(1, p - 1):
-                res = nthroot_mod(a, q, p, True)
-                if d[a]:
-                    assert d[a] == res
+    for p in range(1, 20):
+        for a in range(p):
+            for n in range(1, p):
+                ans = nthroot_mod(a, n, p, True)
+                assert isinstance(ans, list)
+                for b in range(p):
+                    pred = pow(b, n, p) == a
+                    assert not(pred ^ (b in ans))
+                ans2 = nthroot_mod(a, n, p, False)
+                if ans2 is None:
+                    assert ans == []
                 else:
-                    assert res == []
+                    assert ans2 in ans
 
     assert legendre_symbol(5, 11) == 1
     assert legendre_symbol(25, 41) == 1
@@ -217,6 +258,25 @@ def test_residue():
     assert jacobi_symbol(2, 1) == 1
     assert jacobi_symbol(1, 3) == 1
     raises(ValueError, lambda: jacobi_symbol(3, 8))
+
+    for n in range(3, 10, 2):
+        for a in range(-n, n):
+            val = kronecker_symbol(a, n)
+            assert val == jacobi_symbol(a, n)
+            minus = kronecker_symbol(a, -n)
+            if a < 0:
+                assert -minus == val
+            else:
+                assert minus == val
+            even = kronecker_symbol(a, 2 * n)
+            if a % 2 == 0:
+                assert even == 0
+            elif a % 8 in [1, 7]:
+                assert even == val
+            else:
+                assert -even == val
+    assert kronecker_symbol(1, 0) == kronecker_symbol(-1, 0) == 1
+    assert kronecker_symbol(0, 0) == 0
 
     assert mobius(13*7) == 1
     assert mobius(1) == 1
@@ -284,3 +344,32 @@ def test_residue():
     raises(ValueError, lambda: polynomial_congruence(x**x, 6125))
     raises(ValueError, lambda: polynomial_congruence(x**i, 6125))
     raises(ValueError, lambda: polynomial_congruence(0.1*x**2 + 6, 100))
+
+    assert binomial_mod(-1, 1, 10) == 0
+    assert binomial_mod(1, -1, 10) == 0
+    raises(ValueError, lambda: binomial_mod(2, 1, -1))
+    assert binomial_mod(51, 10, 10) == 0
+    assert binomial_mod(10**3, 500, 3**6) == 567
+    assert binomial_mod(10**18 - 1, 123456789, 4) == 0
+    assert binomial_mod(10**18, 10**12, (10**5 + 3)**2) == 3744312326
+
+
+def test_binomial_p_pow():
+    n, binomials, binomial = 1000, [1], 1
+    for i in range(1, n + 1):
+        binomial *= n - i + 1
+        binomial //= i
+        binomials.append(binomial)
+
+    # Test powers of two, which the algorithm treats slightly differently
+    trials_2 = 100
+    for _ in range(trials_2):
+        m, power = randint(0, n), randint(1, 20)
+        assert _binomial_mod_prime_power(n, m, 2, power) == binomials[m] % 2**power
+
+    # Test against other prime powers
+    primes = list(sieve.primerange(2*n))
+    trials = 1000
+    for _ in range(trials):
+        m, prime, power = randint(0, n), choice(primes), randint(1, 10)
+        assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power

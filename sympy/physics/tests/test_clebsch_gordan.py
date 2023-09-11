@@ -1,4 +1,4 @@
-from sympy.core.numbers import (I, pi)
+from sympy.core.numbers import (I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp
@@ -7,8 +7,8 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
-        racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
-from sympy.core.numbers import Rational
+        real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
+from sympy.testing.pytest import raises
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -18,223 +18,41 @@ def test_clebsch_gordan_docs():
     assert clebsch_gordan(Rational(3, 2), S.Half, 1, Rational(-1, 2), S.Half, 0) == -sqrt(2)/2
 
 
-def test_clebsch_gordan1():
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 1
-    j = 1
-    m_1 = S.Half
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
+def test_clebsch_gordan():
+    # Argument order: (j_1, j_2, j, m_1, m_2, m)
 
-    j_1 = S.Half
-    j_2 = S.Half
-    m = -1
-    j = 1
-    m_1 = Rational(-1, 2)
-    m_2 = Rational(-1, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 0
-    j = 1
-    m_1 = S.Half
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 0
-
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 0
-    j = 1
-    m_1 = S.Half
-    m_2 = Rational(-1, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
-
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 0
-    j = 0
-    m_1 = S.Half
-    m_2 = Rational(-1, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
-
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 0
-    j = 1
-    m_1 = Rational(-1, 2)
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/2
-
-    j_1 = S.Half
-    j_2 = S.Half
-    m = 0
-    j = 0
-    m_1 = Rational(-1, 2)
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -sqrt(2)/2
-
-def test_clebsch_gordan2():
-    j_1 = S.One
-    j_2 = S.Half
-    m = Rational(3, 2)
-    j = Rational(3, 2)
-    m_1 = 1
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-    j_1 = S.One
-    j_2 = S.Half
-    m = S.Half
-    j = Rational(3, 2)
-    m_1 = 1
-    m_2 = Rational(-1, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(3)
-
-    j_1 = S.One
-    j_2 = S.Half
-    m = S.Half
-    j = S.Half
-    m_1 = 1
-    m_2 = Rational(-1, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/sqrt(3)
-
-    j_1 = S.One
-    j_2 = S.Half
-    m = S.Half
-    j = S.Half
-    m_1 = 0
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -1/sqrt(3)
-
-    j_1 = S.One
-    j_2 = S.Half
-    m = S.Half
-    j = Rational(3, 2)
-    m_1 = 0
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(2)/sqrt(3)
-
-    j_1 = S.One
-    j_2 = S.One
-    m = S(2)
-    j = S(2)
-    m_1 = 1
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-
-    j_1 = S.One
-    j_2 = S.One
-    m = 1
-    j = S(2)
-    m_1 = 1
-    m_2 = 0
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-
-    j_1 = S.One
-    j_2 = S.One
-    m = 1
-    j = S(2)
-    m_1 = 0
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-    j_1 = S.One
-    j_2 = S.One
-    m = 1
-    j = 1
-    m_1 = 1
-    m_2 = 0
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-    j_1 = S.One
-    j_2 = S.One
-    m = 1
-    j = 1
-    m_1 = 0
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == -1/sqrt(2)
-
-def test_clebsch_gordan3():
-    j_1 = Rational(3, 2)
-    j_2 = Rational(3, 2)
-    m = S(3)
-    j = S(3)
-    m_1 = Rational(3, 2)
-    m_2 = Rational(3, 2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-
-    j_1 = Rational(3, 2)
-    j_2 = Rational(3, 2)
-    m = S(2)
-    j = S(2)
-    m_1 = Rational(3, 2)
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-    j_1 = Rational(3, 2)
-    j_2 = Rational(3, 2)
-    m = S(2)
-    j = S(3)
-    m_1 = Rational(3, 2)
-    m_2 = S.Half
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-def test_clebsch_gordan4():
-    j_1 = S(2)
-    j_2 = S(2)
-    m = S(4)
-    j = S(4)
-    m_1 = S(2)
-    m_2 = S(2)
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-
-    j_1 = S(2)
-    j_2 = S(2)
-    m = S(3)
-    j = S(3)
-    m_1 = S(2)
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(2)
-
-    j_1 = S(2)
-    j_2 = S(2)
-    m = S(2)
-    j = S(3)
-    m_1 = 1
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 0
-
-def test_clebsch_gordan5():
-    j_1 = Rational(5, 2)
-    j_2 = S.One
-    m = Rational(7, 2)
-    j = Rational(7, 2)
-    m_1 = Rational(5, 2)
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1
-
-
-    j_1 = Rational(5, 2)
-    j_2 = S.One
-    m = Rational(5, 2)
-    j = Rational(5, 2)
-    m_1 = Rational(5, 2)
-    m_2 = 0
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == sqrt(5)/sqrt(7)
-
-    j_1 = Rational(5, 2)
-    j_2 = S.One
-    m = Rational(3, 2)
-    j = Rational(3, 2)
-    m_1 = S.Half
-    m_2 = 1
-    assert clebsch_gordan(j_1, j_2, j, m_1, m_2, m) == 1/sqrt(15)
+    h = S.One
+    k = S.Half
+    l = Rational(3, 2)
+    i = Rational(-1, 2)
+    n = Rational(7, 2)
+    p = Rational(5, 2)
+    assert clebsch_gordan(k, k, 1, k, k, 1) == 1
+    assert clebsch_gordan(k, k, 1, k, k, 0) == 0
+    assert clebsch_gordan(k, k, 1, i, i, -1) == 1
+    assert clebsch_gordan(k, k, 1, k, i, 0) == sqrt(2)/2
+    assert clebsch_gordan(k, k, 0, k, i, 0) == sqrt(2)/2
+    assert clebsch_gordan(k, k, 1, i, k, 0) == sqrt(2)/2
+    assert clebsch_gordan(k, k, 0, i, k, 0) == -sqrt(2)/2
+    assert clebsch_gordan(h, k, l, 1, k, l) == 1
+    assert clebsch_gordan(h, k, l, 1, i, k) == 1/sqrt(3)
+    assert clebsch_gordan(h, k, k, 1, i, k) == sqrt(2)/sqrt(3)
+    assert clebsch_gordan(h, k, k, 0, k, k) == -1/sqrt(3)
+    assert clebsch_gordan(h, k, l, 0, k, k) == sqrt(2)/sqrt(3)
+    assert clebsch_gordan(h, h, S(2), 1, 1, S(2)) == 1
+    assert clebsch_gordan(h, h, S(2), 1, 0, 1) == 1/sqrt(2)
+    assert clebsch_gordan(h, h, S(2), 0, 1, 1) == 1/sqrt(2)
+    assert clebsch_gordan(h, h, 1, 1, 0, 1) == 1/sqrt(2)
+    assert clebsch_gordan(h, h, 1, 0, 1, 1) == -1/sqrt(2)
+    assert clebsch_gordan(l, l, S(3), l, l, S(3)) == 1
+    assert clebsch_gordan(l, l, S(2), l, k, S(2)) == 1/sqrt(2)
+    assert clebsch_gordan(l, l, S(3), l, k, S(2)) == 1/sqrt(2)
+    assert clebsch_gordan(S(2), S(2), S(4), S(2), S(2), S(4)) == 1
+    assert clebsch_gordan(S(2), S(2), S(3), S(2), 1, S(3)) == 1/sqrt(2)
+    assert clebsch_gordan(S(2), S(2), S(3), 1, 1, S(2)) == 0
+    assert clebsch_gordan(p, h, n, p, 1, n) == 1
+    assert clebsch_gordan(p, h, p, p, 0, p) == sqrt(5)/sqrt(7)
+    assert clebsch_gordan(p, h, l, k, 1, l) == 1/sqrt(15)
 
 
 def test_wigner():
@@ -294,6 +112,40 @@ def test_gaunt():
                                 assert abs(g) < threshold
                             if (l1 + l2 + l3) % 2:
                                 assert abs(g) < threshold
+    assert gaunt(1, 1, 0, 0, 2, -2) is S.Zero
+
+
+def test_realgaunt():
+    # All non-zero values corresponding to l values from 0 to 2
+    for l in range(3):
+        for m in range(-l, l+1):
+            assert real_gaunt(0, l, l, 0, m, m) == 1/(2*sqrt(pi))
+    assert real_gaunt(1, 1, 2, 0, 0, 0) == sqrt(5)/(5*sqrt(pi))
+    assert real_gaunt(1, 1, 2, 1, 1, 0) == -sqrt(5)/(10*sqrt(pi))
+    assert real_gaunt(2, 2, 2, 0, 0, 0) == sqrt(5)/(7*sqrt(pi))
+    assert real_gaunt(2, 2, 2, 0, 2, 2) == -sqrt(5)/(7*sqrt(pi))
+    assert real_gaunt(2, 2, 2, -2, -2, 0) == -sqrt(5)/(7*sqrt(pi))
+    assert real_gaunt(1, 1, 2, -1, 0, -1) == sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(1, 1, 2, 0, 1, 1) == sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(1, 1, 2, 1, 1, 2) == sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(1, 1, 2, -1, 1, -2) == -sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(1, 1, 2, -1, -1, 2) == -sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(2, 2, 2, 0, 1, 1) == sqrt(5)/(14*sqrt(pi))
+    assert real_gaunt(2, 2, 2, 1, 1, 2) == sqrt(15)/(14*sqrt(pi))
+    assert real_gaunt(2, 2, 2, -1, -1, 2) == -sqrt(15)/(14*sqrt(pi))
+
+    assert real_gaunt(-2, -2, -2, -2, -2, 0) is S.Zero  # m test
+    assert real_gaunt(-2, 1, 0, 1, 1, 1) is S.Zero  # l test
+    assert real_gaunt(-2, -1, -2, -1, -1, 0) is S.Zero  # m and l test
+    assert real_gaunt(-2, -2, -2, -2, -2, -2) is S.Zero  # m and k test
+    assert real_gaunt(-2, -1, -2, -1, -1, -1) is S.Zero  # m, l and k test
+
+    x = symbols('x', integer=True)
+    v = [0]*6
+    for i in range(len(v)):
+        v[i] = x  # non literal ints fail
+        raises(ValueError, lambda: real_gaunt(*v))
+        v[i] = 0
 
 
 def test_racah():
@@ -327,13 +179,20 @@ def test_dot_rota_grad_SH():
 
 def test_wigner_d():
     half = S(1)/2
-    alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
-    d = wigner_d_small(half, beta).subs({beta: pi/2})
-    d_ = Matrix([[1, 1], [-1, 1]])/sqrt(2)
-    assert d == d_
+    assert wigner_d_small(half, 0) == Matrix([[1, 0], [0, 1]])
+    assert wigner_d_small(half, pi/2) == Matrix([[1, 1], [-1, 1]])/sqrt(2)
+    assert wigner_d_small(half, pi) == Matrix([[0, 1], [-1, 0]])
 
+    alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
     D = wigner_d(half, alpha, beta, gamma)
     assert D[0, 0] == exp(I*alpha/2)*exp(I*gamma/2)*cos(beta/2)
     assert D[0, 1] == exp(I*alpha/2)*exp(-I*gamma/2)*sin(beta/2)
     assert D[1, 0] == -exp(-I*alpha/2)*exp(I*gamma/2)*sin(beta/2)
     assert D[1, 1] == exp(-I*alpha/2)*exp(-I*gamma/2)*cos(beta/2)
+
+    # Test Y_{n mi}(g*x)=\sum_{mj}D^n_{mi mj}*Y_{n mj}(x)
+    theta, phi = symbols("theta phi", real=True)
+    v = Matrix([Ynm(1, mj, theta, phi) for mj in range(1, -2, -1)])
+    w = wigner_d(1, -pi/2, pi/2, -pi/2)@v.subs({theta: pi/4, phi: pi})
+    w_ = v.subs({theta: pi/2, phi: pi/4})
+    assert w.expand(func=True).as_real_imag() == w_.expand(func=True).as_real_imag()

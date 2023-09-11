@@ -48,7 +48,7 @@ from sympy.physics.quantum.trace import Tr
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
     euler, exp, expint, factorial, factorial2, floor, gamma, hyper, log,
-    meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi,
+    meijerg, sin, sqrt, subfactorial, tan, uppergamma, lerchphi, polylog,
     elliptic_k, elliptic_f, elliptic_e, elliptic_pi, DiracDelta, bell,
     bernoulli, fibonacci, tribonacci, lucas, stieltjes, mathieuc, mathieus,
     mathieusprime, mathieucprime)
@@ -4078,9 +4078,9 @@ x⋅⎜⎨            ⎟\n\
 |                                       \n\
 <            1               for |y| < 1\n\
 |                                       \n\
-|   __0, 2 /2, 1       | 1\\             \n\
+|   __0, 2 /1, 2       | 1\\             \n\
 |y*/__     |           | -|   otherwise \n\
-\\  \\_|2, 2 \\      1, 0 | y/             \
+\\  \\_|2, 2 \\      0, 1 | y/             \
 """
     ucode_str = \
 """\
@@ -4090,9 +4090,9 @@ x⋅⎜⎨            ⎟\n\
 ⎪                                       \n\
 ⎨            1               for │y│ < 1\n\
 ⎪                                       \n\
-⎪  ╭─╮0, 2 ⎛2, 1       │ 1⎞             \n\
+⎪  ╭─╮0, 2 ⎛1, 2       │ 1⎞             \n\
 ⎪y⋅│╶┐     ⎜           │ ─⎟   otherwise \n\
-⎩  ╰─╯2, 2 ⎝      1, 0 │ y⎠             \
+⎩  ╰─╯2, 2 ⎝      0, 1 │ y⎠             \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -5999,34 +5999,34 @@ def test_hyper():
  ┌─  ⎜  ─, -2⋅k   │  ⎟\n\
  ├─  ⎜  3         │ x⎟\n\
 2╵ 4 ⎜            │  ⎟\n\
-     ⎝3, 4, 5, -3 │  ⎠\
+     ⎝-3, 3, 4, 5 │  ⎠\
 """
     ascii_str = \
 """\
                       \n\
-  _  /  pi        |  \\\n\
- |_  |  --, -2*k  |  |\n\
- |   |  3         | x|\n\
-2  4 |            |  |\n\
-     \\3, 4, 5, -3 |  /\
-"""
+  _  /  pi        |  \\
+ |_  |  --, -2*k  |  |
+ |   |  3         | x|
+2  4 |            |  |
+     \\-3, 3, 4, 5 |  /"""
+
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
     expr = hyper((pi, S('2/3'), -2*k), (3, 4, 5, -3), x**2)
     ucode_str = \
 """\
- ┌─  ⎛π, 2/3, -2⋅k │  2⎞\n\
+ ┌─  ⎛2/3, π, -2⋅k │  2⎞\n\
  ├─  ⎜             │ x ⎟\n\
-3╵ 4 ⎝3, 4, 5, -3  │   ⎠\
+3╵ 4 ⎝-3, 3, 4, 5  │   ⎠\
 """
     ascii_str = \
 """\
   _                      \n\
- |_  /pi, 2/3, -2*k |  2\\\n\
- |   |              | x |\n\
-3  4 \\ 3, 4, 5, -3  |   /\
-"""
+ |_  /2/3, pi, -2*k |  2\\
+ |   |              | x |
+3  4 \\ -3, 3, 4, 5  |   /"""
+
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
@@ -6082,7 +6082,7 @@ def test_meijerg():
     ucode_str = \
 """\
         ⎛   π          │   ⎞\n\
-╭─╮0, 2 ⎜1, ─  2, π, 5 │  2⎟\n\
+╭─╮0, 2 ⎜1, ─  2, 5, π │  2⎟\n\
 │╶┐     ⎜   7          │ z ⎟\n\
 ╰─╯5, 0 ⎜              │   ⎟\n\
         ⎝              │   ⎠\
@@ -6090,7 +6090,7 @@ def test_meijerg():
     ascii_str = \
 """\
         /   pi           |   \\\n\
- __0, 2 |1, --  2, pi, 5 |  2|\n\
+ __0, 2 |1, --  2, 5, pi |  2|\n\
 /__     |   7            | z |\n\
 \\_|5, 0 |                |   |\n\
         \\                |   /\
@@ -6122,7 +6122,7 @@ def test_meijerg():
         ⎛           │       1      ⎞\n\
         ⎜           │ ─────────────⎟\n\
         ⎜           │         1    ⎟\n\
-╭─╮1, 2 ⎜1, 2  4, 3 │ 1 + ─────────⎟\n\
+╭─╮1, 2 ⎜1, 2  3, 4 │ 1 + ─────────⎟\n\
 │╶┐     ⎜           │           1  ⎟\n\
 ╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟\n\
         ⎜           │             1⎟\n\
@@ -6135,7 +6135,7 @@ def test_meijerg():
         /           |       1      \\\n\
         |           | -------------|\n\
         |           |         1    |\n\
- __1, 2 |1, 2  4, 3 | 1 + ---------|\n\
+ __1, 2 |1, 2  3, 4 | 1 + ---------|\n\
 /__     |           |           1  |\n\
 \\_|4, 3 | 3    4, 5 |     1 + -----|\n\
         |           |             1|\n\
@@ -6154,7 +6154,7 @@ def test_meijerg():
 ⎮         ⎛           │       1      ⎞   \n\
 ⎮         ⎜           │ ─────────────⎟   \n\
 ⎮         ⎜           │         1    ⎟   \n\
-⎮ ╭─╮1, 2 ⎜1, 2  4, 3 │ 1 + ─────────⎟   \n\
+⎮ ╭─╮1, 2 ⎜1, 2  3, 4 │ 1 + ─────────⎟   \n\
 ⎮ │╶┐     ⎜           │           1  ⎟ dx\n\
 ⎮ ╰─╯4, 3 ⎜ 3    4, 5 │     1 + ─────⎟   \n\
 ⎮         ⎜           │             1⎟   \n\
@@ -6170,7 +6170,7 @@ def test_meijerg():
  |         /           |       1      \\   \n\
  |         |           | -------------|   \n\
  |         |           |         1    |   \n\
- |  __1, 2 |1, 2  4, 3 | 1 + ---------|   \n\
+ |  __1, 2 |1, 2  3, 4 | 1 + ---------|   \n\
  | /__     |           |           1  | dx\n\
  | \\_|4, 3 | 3    4, 5 |     1 + -----|   \n\
  |         |           |             1|   \n\
@@ -7499,6 +7499,39 @@ def test_issue_15560():
     assert e == result
 
 
+def test_print_polylog():
+    # Part of issue 6013
+    uresult = 'Li₂(3)'
+    aresult = 'polylog(2, 3)'
+    assert pretty(polylog(2, 3)) == aresult
+    assert upretty(polylog(2, 3)) == uresult
+
+
+# Issue #25312
+def test_print_expint_polylog_symbolic_order():
+    s, z = symbols("s, z")
+    uresult = 'Liₛ(z)'
+    aresult = 'polylog(s, z)'
+    assert pretty(polylog(s, z)) == aresult
+    assert upretty(polylog(s, z)) == uresult
+    # TODO: TBD polylog(s - 1, z)
+    uresult = 'Eₛ(z)'
+    aresult = 'expint(s, z)'
+    assert pretty(expint(s, z)) == aresult
+    assert upretty(expint(s, z)) == uresult
+
+
+
+def test_print_polylog_long_order_issue_25309():
+    s, z = symbols("s, z")
+    ucode_str = \
+"""\
+       ⎛ 2   ⎞\n\
+polylog⎝s , z⎠\
+"""
+    assert upretty(polylog(s**2, z)) == ucode_str
+
+
 def test_print_lerchphi():
     # Part of issue 6013
     a = Symbol('a')
@@ -7507,6 +7540,7 @@ def test_print_lerchphi():
     aresult = 'lerchphi(a, 1, 2)'
     assert pretty(lerchphi(a, 1, 2)) == aresult
     assert upretty(lerchphi(a, 1, 2)) == uresult
+
 
 def test_issue_15583():
 
@@ -7769,7 +7803,6 @@ def test_issue_18272():
 def test_Str():
     from sympy.core.symbol import Str
     assert pretty(Str('x')) == 'x'
-
 
 
 def test_symbolic_probability():

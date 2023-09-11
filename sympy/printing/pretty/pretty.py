@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode, annotated, center_pad
+    pretty_try_use_unicode, annotated, center_pad, is_subscriptable_in_unicode
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -1661,6 +1661,12 @@ class PrettyPrinter(Printer):
         # GeometryEntity is based on Tuple but should not print like a Tuple
         return self.emptyPrinter(expr)
 
+    def _print_polylog(self, e):
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('Li_%s' % subscript)(e.args[1]))
+        return self._print_Function(e)
+
     def _print_lerchphi(self, e):
         func_name = greek_unicode['Phi'] if self._use_unicode else 'lerchphi'
         return self._print_Function(e, func_name=func_name)
@@ -1671,7 +1677,7 @@ class PrettyPrinter(Printer):
 
     def _print_Heaviside(self, e):
         func_name = greek_unicode['theta'] if self._use_unicode else 'Heaviside'
-        if e.args[1]==1/2:
+        if e.args[1] is S.Half:
             pform = prettyForm(*self._print(e.args[0]).parens())
             pform = prettyForm(*pform.left(func_name))
             return pform
@@ -1804,8 +1810,9 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        if e.args[0].is_Integer and self._use_unicode:
-            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('E_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_Chi(self, e):

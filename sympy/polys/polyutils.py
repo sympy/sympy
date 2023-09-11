@@ -470,8 +470,15 @@ class PicklableWithSlots:
 
         # Get all data that should be stored from super classes
         for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
+            # XXX: Python 3.11 defines object.__getstate__ and it does not
+            # accept any arguments so we need to make sure not to call it with
+            # an argument here. To be compatible with Python < 3.11 we need to
+            # be careful not to assume that c or object has a __getstate__
+            # method though.
+            getstate = getattr(c, "__getstate__", None)
+            objstate = getattr(object, "__getstate__", None)
+            if getstate is not None and getstate is not objstate:
+                d.update(getstate(self, c))
 
         # Get all information that should be stored from cls and return the dict
         for name in cls.__slots__:

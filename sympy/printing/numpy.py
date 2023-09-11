@@ -19,6 +19,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
+    'isnan': 'isnan'
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -45,7 +46,8 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
     def __init__(self, settings=None):
         """
         `settings` is passed to CodePrinter.__init__()
-        `module` specifies the array module to use, currently 'NumPy' or 'CuPy'
+        `module` specifies the array module to use, currently 'NumPy', 'CuPy'
+        or 'JAX'.
         """
         self.language = "Python with {}".format(self._module)
         self.printmethod = "_{}code".format(self._module)
@@ -225,7 +227,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
-            map(lambda arg: self._print(arg), expr.args)))
+            (self._print(arg) for arg in expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
@@ -277,6 +279,7 @@ for const in _numpy_known_constants:
 
 
 _known_functions_scipy_special = {
+    'Ei': 'expi',
     'erf': 'erf',
     'erfc': 'erfc',
     'besselj': 'jv',
@@ -284,10 +287,12 @@ _known_functions_scipy_special = {
     'besseli': 'iv',
     'besselk': 'kv',
     'cosm1': 'cosm1',
+    'powm1': 'powm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
+    'polygamma': 'polygamma',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',
     'gegenbauer': 'eval_gegenbauer',
@@ -398,6 +403,13 @@ class SciPyPrinter(NumPyPrinter):
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
+    def _print_bernoulli(self, expr):
+        # scipy's bernoulli is inconsistent with SymPy's so rewrite
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
+    def _print_harmonic(self, expr):
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
     def _print_Integral(self, e):
         integration_vars, limits = _unpack_integral_limits(e)
 
@@ -416,6 +428,15 @@ class SciPyPrinter(NumPyPrinter):
                 self._print(e.args[0]),
                 limit_str)
 
+    def _print_Si(self, expr):
+        return "{}({})[0]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
+
+    def _print_Ci(self, expr):
+        return "{}({})[1]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
 
 for func in _scipy_known_functions:
     setattr(SciPyPrinter, f'_print_{func}', _print_known_func)
@@ -445,3 +466,44 @@ for func in _cupy_known_functions:
 
 for const in _cupy_known_constants:
     setattr(CuPyPrinter, f'_print_{const}', _print_known_const)
+
+
+_jax_known_functions = {k: 'jax.numpy.' + v for k, v in _known_functions_numpy.items()}
+_jax_known_constants = {k: 'jax.numpy.' + v for k, v in _known_constants_numpy.items()}
+
+class JaxPrinter(NumPyPrinter):
+    """
+    JAX printer which handles vectorized piecewise functions,
+    logical operators, etc.
+    """
+    _module = "jax.numpy"
+
+    _kf = _jax_known_functions
+    _kc = _jax_known_constants
+
+    def __init__(self, settings=None):
+        super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
+
+    # These need specific override to allow for the lack of "jax.numpy.reduce"
+    def _print_And(self, expr):
+        "Logical And printer"
+        return "{}({}.asarray([{}]), axis=0)".format(
+            self._module_format(self._module + ".all"),
+            self._module_format(self._module),
+            ",".join(self._print(i) for i in expr.args),
+        )
+
+    def _print_Or(self, expr):
+        "Logical Or printer"
+        return "{}({}.asarray([{}]), axis=0)".format(
+            self._module_format(self._module + ".any"),
+            self._module_format(self._module),
+            ",".join(self._print(i) for i in expr.args),
+        )
+
+for func in _jax_known_functions:
+    setattr(JaxPrinter, f'_print_{func}', _print_known_func)
+
+for const in _jax_known_constants:
+    setattr(JaxPrinter, f'_print_{const}', _print_known_const)

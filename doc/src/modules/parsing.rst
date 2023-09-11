@@ -44,7 +44,7 @@ applied in the order given.
 .. autofunction:: sympy.parsing.sympy_parser.convert_xor
 
 These are included in
-:data:``sympy.parsing.sympy_parser.standard_transformations`` and generally
+:data:`sympy.parsing.sympy_parser.standard_transformations` and generally
 don't need to be manually added by the user.
 
 .. autofunction:: sympy.parsing.sympy_parser.lambda_notation
@@ -57,19 +57,19 @@ don't need to be manually added by the user.
 
 .. autofunction:: sympy.parsing.sympy_parser.factorial_notation
 
-Experimental `\textrm{\LaTeX}` Parsing
+Experimental `\mathrm{\LaTeX}` Parsing
 --------------------------------------
 
-`\textrm{\LaTeX}` parsing was ported from
+`\mathrm{\LaTeX}` parsing was ported from
 `latex2sympy <https://github.com/augustt198/latex2sympy>`_. While functional
 and its API should remain stable, the parsing behavior or backend may change in
 future releases.
 
-`\textrm{\LaTeX}` Parsing Caveats
+`\mathrm{\LaTeX}` Parsing Caveats
 ---------------------------------
 
 The current implementation is experimental. The behavior, parser backend and
-API might change in the future. Unlike some of the other parsers, `\textrm{\LaTeX}` is
+API might change in the future. Unlike some of the other parsers, `\mathrm{\LaTeX}` is
 designed as a *type-setting* language, not a *computer algebra system* and so
 can contain typographical conventions that might be interpreted multiple ways.
 
@@ -82,12 +82,12 @@ Will simply find ``x``. What is covered by this behavior will almost certainly
 change between releases, and become stricter, more relaxed, or some mix.
 
 
-`\textrm{\LaTeX}` Parsing Functions Reference
+`\mathrm{\LaTeX}` Parsing Functions Reference
 ---------------------------------------------
 
 .. autofunction:: sympy.parsing.latex.parse_latex
 
-`\textrm{\LaTeX}` Parsing Exceptions Reference
+`\mathrm{\LaTeX}` Parsing Exceptions Reference
 ----------------------------------------------
 
 .. autoclass:: sympy.parsing.latex.LaTeXParsingError
@@ -105,21 +105,17 @@ Runtime Installation
 --------------------
 
 The currently-packaged LaTeX parser backend is partially generated with
-`ANTLR4 <http://antlr4.org>`_,
+`ANTLR4 <https://www.antlr.org/>`_,
 but to use the parser, you only need the ``antlr4`` Python package available.
 
 Depending on your package manager, you can install the right package with, for
-example, ``pip3`` (Python 3 only)::
+example, ``pip``::
 
-    $ pip3 install antlr4-python3-runtime
+    $ pip install antlr4-python3-runtime==4.11
 
-or ``pip`` (Python 2 only)::
+or ``conda``::
 
-    $ pip install antlr4-python2-runtime
-
-or ``conda`` (Python 2 or Python 3)::
-
-    $ conda install --channel=conda-forge antlr-python-runtime
+    $ conda install -c conda-forge antlr-python-runtime==4.11
 
 The C parser depends on ``clang`` and the Fortran parser depends on ``LFortran``.
 You can install these packages using::

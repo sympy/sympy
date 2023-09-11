@@ -8,11 +8,10 @@ sympy.stats.frv
 sympy.stats.crv
 sympy.stats.drv
 """
-
+from math import prod
 
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
-from sympy.core.mul import prod
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.core.sympify import sympify
@@ -96,7 +95,7 @@ class JointPSpace(ProductPSpace):
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
         sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
-        limits = list([i,] for i in all_syms if i not in sym)
+        limits = [[i,] for i in all_syms if i not in sym]
         index = 0
         for i in range(count):
             if i not in indices:
@@ -226,24 +225,27 @@ class SampleJointNumpy:
         return samples.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 class SampleJointPymc:
-    """Returns the sample from pymc3 of the given distribution"""
+    """Returns the sample from pymc of the given distribution"""
 
     def __new__(cls, dist, size, seed=None):
-        return cls._sample_pymc3(dist, size, seed)
+        return cls._sample_pymc(dist, size, seed)
 
     @classmethod
-    def _sample_pymc3(cls, dist, size, seed):
-        """Sample from PyMC3."""
+    def _sample_pymc(cls, dist, size, seed):
+        """Sample from PyMC."""
 
-        import pymc3
-        pymc3_rv_map = {
+        try:
+            import pymc
+        except ImportError:
+            import pymc3 as pymc
+        pymc_rv_map = {
             'MultivariateNormalDistribution': lambda dist:
-                pymc3.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
+                pymc.MvNormal('X', mu=matrix2numpy(dist.mu, float).flatten(),
                 cov=matrix2numpy(dist.sigma, float), shape=(1, dist.mu.shape[0])),
             'MultivariateBetaDistribution': lambda dist:
-                pymc3.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
+                pymc.Dirichlet('X', a=list2numpy(dist.alpha, float).flatten()),
             'MultinomialDistribution': lambda dist:
-                pymc3.Multinomial('X', n=int(dist.n),
+                pymc.Multinomial('X', n=int(dist.n),
                 p=list2numpy(dist.p, float).flatten(), shape=(1, len(dist.p)))
         }
 
@@ -253,22 +255,23 @@ class SampleJointPymc:
             'MultinomialDistribution': lambda dist: list2numpy(dist.p).flatten().shape
         }
 
-        dist_list = pymc3_rv_map.keys()
+        dist_list = pymc_rv_map.keys()
 
         if dist.__class__.__name__ not in dist_list:
             return None
 
         import logging
         logging.getLogger("pymc3").setLevel(logging.ERROR)
-        with pymc3.Model():
-            pymc3_rv_map[dist.__class__.__name__](dist)
-            samples = pymc3.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)[:]['X']
+        with pymc.Model():
+            pymc_rv_map[dist.__class__.__name__](dist)
+            samples = pymc.sample(draws=prod(size), chains=1, progressbar=False, random_seed=seed, return_inferencedata=False, compute_convergence_checks=False)[:]['X']
         return samples.reshape(size + sample_shape[dist.__class__.__name__](dist))
 
 
 _get_sample_class_jrv = {
     'scipy': SampleJointScipy,
     'pymc3': SampleJointPymc,
+    'pymc': SampleJointPymc,
     'numpy': SampleJointNumpy
 }
 
@@ -313,7 +316,7 @@ class JointDistribution(Distribution, NamedArgsMixin):
     def sample(self, size=(), library='scipy', seed=None):
         """ A random realization from the distribution """
 
-        libraries = ['scipy', 'numpy', 'pymc3']
+        libraries = ('scipy', 'numpy', 'pymc3', 'pymc')
         if library not in libraries:
             raise NotImplementedError("Sampling from %s is not supported yet."
                                         % str(library))

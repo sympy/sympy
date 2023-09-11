@@ -210,13 +210,11 @@ def test_numexpr():
 
     from sympy.codegen.ast import Return, FunctionDefinition, Variable, Assignment
     func_def = FunctionDefinition(None, 'foo', [Variable(x)], [Assignment(y,x), Return(y**2)])
-    print("")
-    print(NumExprPrinter().doprint(func_def))
     expected = "def foo(x):\n"\
                "    y = numexpr.evaluate('x', truediv=True)\n"\
                "    return numexpr.evaluate('y**2', truediv=True)"
-    print(expected)
     assert NumExprPrinter().doprint(func_def) == expected
+
 
 class CustomPrintedObject(Expr):
     def _lambdacode(self, printer):

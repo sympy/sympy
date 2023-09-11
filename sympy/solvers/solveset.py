@@ -12,18 +12,19 @@ This module contains functions to:
 """
 from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
-                        Add)
+                        Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig, nfloat)
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
-from sympy.core.power import integer_log
+from sympy.core.numbers import I, Number, Rational, oo
+from sympy.core.intfunc import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
-from sympy.core.traversal import iterfreeargs
+from sympy.external.gmpy import gcd as number_gcd, lcm as number_lcm
+from sympy.polys.matrices.linsolve import _linear_eq_to_dict
 from sympy.polys.polyroots import UnsolvableFactorError
 from sympy.simplify.simplify import simplify, fraction, trigsimp, nsimplify
 from sympy.simplify import powdenest, logcombine
@@ -38,7 +39,7 @@ from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
-from sympy.matrices import Matrix, MatrixBase
+from sympy.matrices import zeros, Matrix, MatrixBase
 from sympy.ntheory import totient
 from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
@@ -54,11 +55,10 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       is_sequence)
+                                       is_sequence, iterable)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 from types import GeneratorType
-from collections import defaultdict
 
 
 class NonlinearError(ValueError):
@@ -758,13 +758,7 @@ def _solve_trig2(f, symbol, domain):
 
     x = Dummy('x')
 
-    # ilcm() and igcd() require more than one argument
-    if len(numerators) > 1:
-        mu = Rational(2)*ilcm(*denominators)/igcd(*numerators)
-    else:
-        assert len(numerators) == 1
-        mu = Rational(2)*denominators[0]/numerators[0]
-
+    mu = Rational(2)*number_lcm(*denominators)/number_gcd(*numerators)
     f = f.subs(symbol, mu*x)
     f = f.rewrite(tan)
     f = expand_trig(f)
@@ -834,6 +828,9 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
                     result = Union(*[rhs_s.subs(y, s) for s in poly_solns])
+                    if isinstance(result, FiniteSet) and isinstance(gen, Pow
+                            ) and gen.base.is_Rational:
+                        result = FiniteSet(*[expand_log(i) for i in result])
                 else:
                     result = ConditionSet(symbol, Eq(f, 0), domain)
         else:
@@ -877,17 +874,35 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if not isinstance(result, FiniteSet):
-        solution_set = result
-    else:
+    def check_finiteset(solutions):
         f_set = []  # solutions for FiniteSet
         c_set = []  # solutions for ConditionSet
-        for s in result:
+        for s in solutions:
             if checksol(f, symbol, s):
                 f_set.append(s)
             else:
                 c_set.append(s)
-        solution_set = FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
+        return FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
+
+    def check_set(solutions):
+        if solutions is S.EmptySet:
+            return solutions
+        elif isinstance(solutions, ConditionSet):
+            # XXX: Maybe the base set should be checked?
+            return solutions
+        elif isinstance(solutions, FiniteSet):
+            return check_finiteset(solutions)
+        elif isinstance(solutions, Complement):
+            A, B = solutions.args
+            return Complement(check_set(A), B)
+        elif isinstance(solutions, Union):
+            return Union(*[check_set(s) for s in solutions.args])
+        else:
+            # XXX: There should be more cases checked here. The cases above
+            # are all those that come up in the test suite for now.
+            return solutions
+
+    solution_set = check_set(result)
 
     return solution_set
 
@@ -1109,7 +1124,11 @@ def _solveset(f, symbol, domain, _check=False):
                                         # non-trivial factoring of equation
                                         # but use form with constants
                                         # in case they need special handling
-                                        t_result = solver(factored, symbol)
+                                        t_results = []
+                                        for fac in Mul.make_args(factored):
+                                            if fac.has(symbol):
+                                                t_results.append(solver(fac, symbol))
+                                        t_result = Union(*t_results)
                             result += t_result
                 else:
                     result += solver(equation, symbol)
@@ -1216,7 +1235,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     1. If a is symbol then  m*n + rhs is the required solution.
 
     2. If a is an instance of ``Add`` then we try to find two symbol independent
-       parts of a and the symbol independent part gets tranferred to the other
+       parts of a and the symbol independent part gets transferred to the other
        side and again the ``_invert_modular`` is called on the symbol
        dependent part.
 
@@ -1308,9 +1327,13 @@ def _invert_modular(modterm, rhs, n, symbol):
         base, expo = a.args
         if expo.has(symbol) and not base.has(symbol):
             # remainder -> solution independent of n of equation.
-            # m, rhs are made coprime by dividing igcd(m, rhs)
+            # m, rhs are made coprime by dividing number_gcd(m, rhs)
+            if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
+                return modterm, rhs
+
+            mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
-                remainder = discrete_log(m / igcd(m, rhs), rhs, a.base)
+                remainder = discrete_log(mdiv, rhs.p, a.base.p)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
@@ -1320,7 +1343,7 @@ def _invert_modular(modterm, rhs, n, symbol):
             period = totient(m)
             for p in divisors(period):
                 # there might a lesser period exist than totient(m).
-                if pow(a.base, p, m / igcd(m, a.base)) == 1:
+                if pow(a.base, p, m / number_gcd(m.p, a.base.p)) == 1:
                     period = p
                     break
             # recursion is not applied here since _invert_modular is currently
@@ -1567,7 +1590,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
             Ne(a_base, 0),
             Ne(b_base, 0))
 
-    L, R = map(lambda i: expand_log(log(i), force=True), (a, -b))
+    L, R = (expand_log(log(i), force=True) for i in (a, -b))
     solutions = _solveset(L - R, symbol, domain)
 
     return ConditionSet(symbol, conditions, solutions)
@@ -2286,13 +2309,13 @@ def _solveset_multi(eqs, syms, domains):
 
     eqs = sorted(eqs, key=lambda eq: len(eq.free_symbols & set(syms)))
 
-    for n in range(len(eqs)):
+    for n, eq in enumerate(eqs):
         sols = []
         all_handled = True
         for sym in syms:
-            if sym not in eqs[n].free_symbols:
+            if sym not in eq.free_symbols:
                 continue
-            sol = solveset(eqs[n], sym, domains[syms.index(sym)])
+            sol = solveset(eq, sym, domains[syms.index(sym)])
 
             if isinstance(sol, FiniteSet):
                 i = syms.index(sym)
@@ -2407,7 +2430,7 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, **_kw):
+def linear_coeffs(eq, *syms, dict=False):
     """Return a list whose elements are the coefficients of the
     corresponding symbols in the sum of terms in  ``eq``.
     The additive constant is returned as the last element of the
@@ -2418,69 +2441,84 @@ def linear_coeffs(eq, *syms, **_kw):
 
     NonlinearError
         The equation contains a nonlinear term
+    ValueError
+        duplicate or unordered symbols are passed
+
+    Parameters
+    ==========
+
+    dict - (default False) when True, return coefficients as a
+        dictionary with coefficients keyed to syms that were present;
+        key 1 gives the constant term
 
     Examples
     ========
 
     >>> from sympy.solvers.solveset import linear_coeffs
     >>> from sympy.abc import x, y, z
-
     >>> linear_coeffs(3*x + 2*y - 1, x, y)
     [3, 2, -1]
 
     It is not necessary to expand the expression:
 
-    >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
-    [3*y*z + 1, y*(2*z + 3)]
+        >>> linear_coeffs(x + y*(z*(x*3 + 2) + 3), x)
+        [3*y*z + 1, y*(2*z + 3)]
 
-    But if there are nonlinear or cross terms -- even if they would
-    cancel after simplification -- an error is raised so the situation
-    does not pass silently past the caller's attention:
+    When nonlinear is detected, an error will be raised:
 
-    >>> eq = 1/x*(x - 1) + 1/x
-    >>> linear_coeffs(eq.expand(), x)
-    [0, 1]
-    >>> linear_coeffs(eq, x)
-    Traceback (most recent call last):
-    ...
-    NonlinearError: nonlinear term encountered: 1/x
+        * even if they would cancel after expansion (so the
+        situation does not pass silently past the caller's
+        attention)
 
-    >>> linear_coeffs(x*(y + 1) - x*y, x, y)
-    Traceback (most recent call last):
-    ...
-    NonlinearError: nonlinear term encountered: x*(y + 1)
+        >>> eq = 1/x*(x - 1) + 1/x
+        >>> linear_coeffs(eq.expand(), x)
+        [0, 1]
+        >>> linear_coeffs(eq, x)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        nonlinear in given generators
+
+        * when there are cross terms
+
+        >>> linear_coeffs(x*(y + 1), x, y)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        symbol-dependent cross-terms encountered
+
+        * when there are terms that contain an expression
+        dependent on the symbols that is not linear
+
+        >>> linear_coeffs(x**2, x)
+        Traceback (most recent call last):
+        ...
+        NonlinearError:
+        nonlinear in given generators
     """
-    d = defaultdict(list)
     eq = _sympify(eq)
+    if len(syms) == 1 and iterable(syms[0]) and not isinstance(syms[0], Basic):
+        raise ValueError('expecting unpacked symbols, *syms')
     symset = set(syms)
     if len(symset) != len(syms):
         raise ValueError('duplicate symbols given')
-    has = set(iterfreeargs(eq)) & symset
-    if not has:
-        return [S.Zero]*len(syms) + [eq]
-    c, terms = eq.as_coeff_add(*has)
-    d[0].extend(Add.make_args(c))
-    for t in terms:
-        m, f = t.as_coeff_mul(*has)
-        if len(f) != 1:
-            break
-        f = f[0]
-        if f in symset:
-            d[f].append(m)
-        elif f.is_Add:
-            d1 = linear_coeffs(f, *has, **{'dict': True})
-            d[0].append(m*d1.pop(0))
-            for xf, vf in d1.items():
-                d[xf].append(m*vf)
-        else:
-            break
-    else:
-        for k, v in d.items():
-            d[k] = Add(*v)
-        if not _kw:
-            return [d.get(s, S.Zero) for s in syms]+ [d[0]]
-        return d  # default is still list but this won't matter
-    raise NonlinearError('nonlinear term encountered: %s' % t)
+    try:
+        d, c = _linear_eq_to_dict([eq], symset)
+        d = d[0]
+        c = c[0]
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err))
+    if dict:
+        if c:
+            d[S.One] = c
+        return d
+    rv = [S.Zero]*(len(syms) + 1)
+    rv[-1] = c
+    for i, k in enumerate(syms):
+        if k not in d:
+            continue
+        rv[i] = d[k]
+    return rv
 
 
 def linear_eq_to_matrix(equations, *symbols):
@@ -2527,39 +2565,39 @@ def linear_eq_to_matrix(equations, *symbols):
     The coefficients (numerical or symbolic) of the symbols will
     be returned as matrices:
 
-    >>> eqns = [c*x + z - 1 - c, y + z, x - y]
-    >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
-    >>> A
-    Matrix([
-    [c,  0, 1],
-    [0,  1, 1],
-    [1, -1, 0]])
-    >>> b
-    Matrix([
-    [c + 1],
-    [    0],
-    [    0]])
+        >>> eqns = [c*x + z - 1 - c, y + z, x - y]
+        >>> A, b = linear_eq_to_matrix(eqns, [x, y, z])
+        >>> A
+        Matrix([
+        [c,  0, 1],
+        [0,  1, 1],
+        [1, -1, 0]])
+        >>> b
+        Matrix([
+        [c + 1],
+        [    0],
+        [    0]])
 
     This routine does not simplify expressions and will raise an error
     if nonlinearity is encountered:
 
-    >>> eqns = [
-    ...     (x**2 - 3*x)/(x - 3) - 3,
-    ...     y**2 - 3*y - y*(y - 4) + x - 4]
-    >>> linear_eq_to_matrix(eqns, [x, y])
-    Traceback (most recent call last):
-    ...
-    NonlinearError:
-    The term (x**2 - 3*x)/(x - 3) is nonlinear in {x, y}
+            >>> eqns = [
+            ...     (x**2 - 3*x)/(x - 3) - 3,
+            ...     y**2 - 3*y - y*(y - 4) + x - 4]
+            >>> linear_eq_to_matrix(eqns, [x, y])
+            Traceback (most recent call last):
+            ...
+            NonlinearError:
+            symbol-dependent term can be ignored using `strict=False`
 
-    Simplifying these equations will discard the removable singularity
-    in the first, reveal the linear structure of the second:
+        Simplifying these equations will discard the removable singularity
+        in the first and reveal the linear structure of the second:
 
-    >>> [e.simplify() for e in eqns]
-    [x - 3, x + y - 4]
+            >>> [e.simplify() for e in eqns]
+            [x - 3, x + y - 4]
 
-    Any such simplification needed to eliminate nonlinear terms must
-    be done before calling this routine.
+        Any such simplification needed to eliminate nonlinear terms must
+        be done *before* calling this routine.
     """
     if not symbols:
         raise ValueError(filldedent('''
@@ -2569,12 +2607,6 @@ def linear_eq_to_matrix(equations, *symbols):
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
-
-    for i in symbols:
-        if not isinstance(i, Symbol):
-            raise ValueError(filldedent('''
-            Expecting a Symbol but got %s
-            ''' % i))
 
     if has_dups(symbols):
         raise ValueError('Symbols must be unique')
@@ -2590,14 +2622,20 @@ def linear_eq_to_matrix(equations, *symbols):
             Eq or Matrix.
             '''))
 
-    A, b = [], []
-    for i, f in enumerate(equations):
-        if isinstance(f, Equality):
-            f = f.rewrite(Add, evaluate=False)
-        coeff_list = linear_coeffs(f, *symbols)
-        b.append(-coeff_list.pop())
-        A.append(coeff_list)
-    A, b = map(Matrix, (A, b))
+    # construct the dictionaries
+    try:
+        eq, c = _linear_eq_to_dict(equations, symbols)
+    except PolyNonlinearError as err:
+        raise NonlinearError(str(err))
+    # prepare output matrices
+    n, m = shape = len(eq), len(symbols)
+    ix = dict(zip(symbols, range(m)))
+    A = zeros(*shape)
+    for row, d in enumerate(eq):
+        for k in d:
+            col = ix[k]
+            A[row, col] = d[k]
+    b = Matrix(n, 1, [-i for i in c])
     return A, b
 
 
@@ -2756,16 +2794,23 @@ def linsolve(system, *symbols):
     >>> linsolve([], x)
     EmptySet
 
-    * An error is raised if, after expansion, any nonlinearity
-      is detected:
+    * An error is raised if any nonlinearity is detected, even
+      if it could be removed with expansion
 
-    >>> linsolve([x*(1/x - 1), (y - 1)**2 - y**2 + 1], x, y)
-    {(1, 1)}
+    >>> linsolve([x*(1/x - 1)], x)
+    Traceback (most recent call last):
+    ...
+    NonlinearError: nonlinear term: 1/x
+
+    >>> linsolve([x*(y + 1)], x, y)
+    Traceback (most recent call last):
+    ...
+    NonlinearError: nonlinear cross-term: x*(y + 1)
+
     >>> linsolve([x**2 - 1], x)
     Traceback (most recent call last):
     ...
-    NonlinearError:
-    nonlinear term encountered: x**2
+    NonlinearError: nonlinear term: x**2
     """
     if not system:
         return S.EmptySet
@@ -2774,6 +2819,8 @@ def linsolve(system, *symbols):
     if symbols and hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
+    dup_msg = 'duplicate symbols given'
+
 
     b = None  # if we don't get b the input was bad
     # unpack system
@@ -2792,6 +2839,8 @@ def linsolve(system, *symbols):
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
                 '''))
+            if len(set(symbols)) != len(symbols):
+                raise ValueError(dup_msg)
 
             #
             # Pass to the sparse solver implemented in polys. It is important
@@ -2823,13 +2872,16 @@ def linsolve(system, *symbols):
         raise ValueError("Invalid arguments")
     if sym_gen:
         symbols = [next(symbols) for i in range(A.cols)]
-        if any(set(symbols) & (A.free_symbols | b.free_symbols)):
+        symset = set(symbols)
+        if any(symset & (A.free_symbols | b.free_symbols)):
             raise ValueError(filldedent('''
                 At least one of the symbols provided
                 already appears in the system to be solved.
                 One way to avoid this is to use Dummy symbols in
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
             ''' % symbols[0].name.rstrip('1234567890')))
+        elif len(symset) != len(symbols):
+            raise ValueError(dup_msg)
 
     if not symbols:
         symbols = [Dummy() for _ in range(A.cols)]
@@ -2878,9 +2930,9 @@ def _return_conditionset(eqs, symbols):
 def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
-     Solves the `system` using substitution method. It is used in
-     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
-     equation(s) is non polynomial equation.
+    Solves the `system` using substitution method. It is used in
+    :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
+    equation(s) is non polynomial equation.
 
     Parameters
     ==========
@@ -3423,7 +3475,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
     if isinstance(soln, FiniteSet):
-        _soln = FiniteSet(*[tuple((s,)) for s in soln])
+        _soln = FiniteSet(*[(s,) for s in soln])
         return _soln
     else:
         return FiniteSet(tuple(FiniteSet(soln)))

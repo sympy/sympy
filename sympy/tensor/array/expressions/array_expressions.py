@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict as tDict, Tuple as tTuple
+from typing import Optional, List, Tuple as tTuple
 
 import typing
 
@@ -220,6 +220,12 @@ class _CodegenArrayAbstract(Basic):
     def shape(self):
         return self._shape
 
+    def doit(self, **hints):
+        deep = hints.get("deep", True)
+        if deep:
+            return self.func(*[arg.doit(**hints) for arg in self.args])._canonicalize()
+        else:
+            return self._canonicalize()
 
 class ArrayTensorProduct(_CodegenArrayAbstract):
     r"""
@@ -302,13 +308,6 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
 
         return self.func(*args, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @classmethod
     def _flatten(cls, args):
         args = [i for arg in args for i in (arg.args if isinstance(arg, cls) else [arg])]
@@ -361,13 +360,6 @@ class ArrayAdd(_CodegenArrayAbstract):
             return args[0]
         return self.func(*args, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @classmethod
     def _flatten_args(cls, args):
         new_args = []
@@ -403,7 +395,7 @@ class PermuteDims(_CodegenArrayAbstract):
 
     This is evident when transforming back to matrix form:
 
-    >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+    >>> from sympy.tensor.array.expressions.from_array_to_matrix import convert_array_to_matrix
     >>> convert_array_to_matrix(cg)
     M.T
 
@@ -500,13 +492,6 @@ class PermuteDims(_CodegenArrayAbstract):
             return expr
         return self.func(expr, permutation, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     @property
     def expr(self):
         return self.args[0]
@@ -568,7 +553,7 @@ class PermuteDims(_CodegenArrayAbstract):
             permutation_array_blocks_up.append(current)
 
         # Get the map of axis repositioning for every argument of tensor-product:
-        index_blocks = [[j for j in range(cumul[i], cumul[i+1])] for i, e in enumerate(expr.subranks)]
+        index_blocks = [list(range(cumul[i], cumul[i+1])) for i, e in enumerate(expr.subranks)]
         index_blocks_up = expr._push_indices_up(expr.contraction_indices, index_blocks)
         inverse_permutation = permutation**(-1)
         index_blocks_up_permuted = [[inverse_permutation(j) for j in i if j is not None] for i in index_blocks_up]
@@ -598,7 +583,7 @@ class PermuteDims(_CodegenArrayAbstract):
         arg_candidate_index = index2arg[permuted_indices[0]]
         current_indices = []
         new_permutation = []
-        inserted_arg_cand_indices = set([])
+        inserted_arg_cand_indices = set()
         for i, idx in enumerate(permuted_indices):
             if index2arg[idx] != arg_candidate_index:
                 new_permutation.extend(current_indices)
@@ -621,8 +606,8 @@ class PermuteDims(_CodegenArrayAbstract):
         # Get possible shifts:
         maps = {}
         cumulative_subranks = [0] + list(accumulate(subranks))
-        for i in range(0, len(subranks)):
-            s = set([index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])])
+        for i in range(len(subranks)):
+            s = {index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])}
             if len(s) != 1:
                 continue
             elem = next(iter(s))
@@ -669,7 +654,7 @@ class PermuteDims(_CodegenArrayAbstract):
         cyclic_keep = []
         for i, cycle in enumerate(cyclic_form):
             flag = True
-            for j in range(0, len(cumulative_subranks) - 1):
+            for j in range(len(cumulative_subranks) - 1):
                 if cyclic_min[i] >= cumulative_subranks[j] and cyclic_max[i] < cumulative_subranks[j+1]:
                     # Found a sinkable cycle.
                     args[j] = _permute_dims(args[j], Permutation([[k - cumulative_subranks[j] for k in cyclic_form[i]]]))
@@ -794,7 +779,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             rank2 = len(diagonal_indices)
             rank3 = rank1 - rank2
             inv_permutation = []
-            counter1: int = 0
+            counter1 = 0
             indices_down = ArrayDiagonal._push_indices_down(diagonal_indices_short, list(range(rank1)), get_rank(expr))
             for i in indices_down:
                 if i in trivial_pos:
@@ -819,13 +804,6 @@ class ArrayDiagonal(_CodegenArrayAbstract):
             positions, shape = self._get_positions_shape(expr.shape, diagonal_indices)
             return ZeroArray(*shape)
         return self.func(expr, *diagonal_indices, canonicalize=False)
-
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
 
     @staticmethod
     def _validate(expr, *diagonal_indices, **kwargs):
@@ -1053,13 +1031,6 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         return self.func(expr, *contraction_indices, canonicalize=False)
 
-    def doit(self, **kwargs):
-        deep = kwargs.get("deep", True)
-        if deep:
-            return self.func(*[arg.doit(**kwargs) for arg in self.args])._canonicalize()
-        else:
-            return self._canonicalize()
-
     def __mul__(self, other):
         if other == 1:
             return self
@@ -1107,7 +1078,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         cumranks = list(accumulate([0] + subranks))
         contraction_indices_remaining = []
         contraction_indices_args = [[] for i in expr.args]
-        backshift = set([])
+        backshift = set()
         for i, contraction_group in enumerate(contraction_indices):
             for j in range(len(expr.args)):
                 if not isinstance(expr.args[j], ArrayAdd):
@@ -1183,8 +1154,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            not_vectors: tTuple[_ArgE, int] = []
-            vectors: tTuple[_ArgE, int] = []
+            not_vectors = []
+            vectors = []
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
@@ -1455,7 +1426,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         Examples
         ========
 
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
         >>> A = MatrixSymbol("A", N, N)
@@ -1497,7 +1468,7 @@ class ArrayContraction(_CodegenArrayAbstract):
 
         >>> from sympy import MatrixSymbol
         >>> from sympy.abc import N
-        >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+        >>> from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
         >>> A = MatrixSymbol("A", N, N)
         >>> B = MatrixSymbol("B", N, N)
         >>> C = MatrixSymbol("C", N, N)
@@ -1731,12 +1702,12 @@ class _EditArrayContraction:
         return self.number_of_contraction_indices - 1
 
     def refresh_indices(self):
-        updates: tDict[int, int] = {}
+        updates = {}
         for arg_with_ind in self.args_with_ind:
             updates.update({i: -1 for i in arg_with_ind.indices if i is not None})
         for i, e in enumerate(sorted(updates)):
             updates[e] = i
-        self.number_of_contraction_indices: int = len(updates)
+        self.number_of_contraction_indices = len(updates)
         for arg_with_ind in self.args_with_ind:
             arg_with_ind.indices = [updates.get(i, None) for i in arg_with_ind.indices]
 
@@ -1751,7 +1722,7 @@ class _EditArrayContraction:
         if len(self.args_with_ind) == 0:
             self.args_with_ind.append(_ArgE(scalar))
         else:
-            from sympy.tensor.array.expressions.conv_array_to_matrix import _a2m_tensor_product
+            from sympy.tensor.array.expressions.from_array_to_matrix import _a2m_tensor_product
             self.args_with_ind[0].element = _a2m_tensor_product(scalar, self.args_with_ind[0].element)
 
     def to_array_contraction(self):
@@ -1771,7 +1742,7 @@ class _EditArrayContraction:
         inv_perm1 = []
         inv_perm2 = []
         # Keep track of which diagonal indices have already been processed:
-        done = set([])
+        done = set()
 
         # Counter for the diagonal indices:
         counter4 = 0
@@ -1868,7 +1839,7 @@ class _EditArrayContraction:
 
     @property
     def number_of_diagonal_indices(self):
-        data = set([])
+        data = set()
         for arg in self.args_with_ind:
             data.update({i for i in arg.indices if i is not None and i < 0})
         return len(data)
@@ -1876,8 +1847,8 @@ class _EditArrayContraction:
     def track_permutation_start(self):
         permutation = []
         perm_diag = []
-        counter: int = 0
-        counter2: int = -1
+        counter = 0
+        counter2 = -1
         for arg_with_ind in self.args_with_ind:
             perm = []
             for i in arg_with_ind.indices:

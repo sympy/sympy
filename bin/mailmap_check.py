@@ -7,21 +7,20 @@ to get the order in AUTHORS. bin/mailmap_check.py should be run before
 committing the results.
 
 See here for instructions on using this script:
-https://github.com/sympy/sympy/wiki/Development-workflow#update-mailmap
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions
 """
 
 from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
-import os
+if sys.version_info < (3, 8):
+    sys.exit("This script requires Python 3.8 or newer")
+
 from pathlib import Path
 from subprocess import run, PIPE
 from collections import OrderedDict, defaultdict
 from argparse import ArgumentParser
-
-if sys.version_info < (3, 8):
-    sys.exit("This script requires Python 3.8 or newer")
 
 def sympy_dir():
     return Path(__file__).resolve().parent.parent
@@ -36,11 +35,6 @@ from sympy.external.importtools import version_tuple
 def main(*args):
 
     parser = ArgumentParser(description='Update the .mailmap file')
-    parser.add_argument('--skip-last-commit', action='store_true',
-            help=filldedent("""
-            Do not check metadata from the most recent commit. This is used
-            when the script runs in CI to ignore the merge commit that is
-            implicitly created by github."""))
     parser.add_argument('--update-authors', action='store_true',
             help=filldedent("""
             Also updates the AUTHORS file. DO NOT use this option as part of a
@@ -53,7 +47,7 @@ def main(*args):
 
     # find who git knows ahout
     try:
-        git_people = get_authors_from_git(skip_last=args.skip_last_commit)
+        git_people = get_authors_from_git()
     except AssertionError as msg:
         print(red(msg))
         return 1
@@ -81,6 +75,11 @@ def main(*args):
     ambiguous = False
     dups = defaultdict(list)
 
+    #
+    # Here we use the git people with the most recent commit skipped. This
+    # means we don't need to add .mailmap entries for the temporary merge
+    # commit created in CI on a PR.
+    #
     for person in git_people:
         email = key(person)
         dups[email].append(person)
@@ -129,6 +128,9 @@ def main(*args):
         print(red("The mailmap file was reordered"))
 
     # Check if changes to AUTHORS file are also needed
+    #
+    # Here we don't skip the last commit. We need authors from the most recent
+    # commit if the AUTHORS file was updated.
     lines_authors = make_authors_file_lines(git_people)
     old_lines_authors = read_lines(authors_path())
 
@@ -141,7 +143,7 @@ def main(*args):
     if problems:
         print(red(filldedent("""
         For instructions on updating the .mailmap file see:
-        https://github.com/sympy/sympy/wiki/Development-workflow#add-your-name-and-email-address-to-the-mailmap-file""",
+https://docs.sympy.org/dev/contributing/new-contributors-guide/workflow-process.html#mailmap-instructions""",
                              break_on_hyphens=False, break_long_words=False)))
     else:
         print(green("No changes needed in .mailmap"))
@@ -226,15 +228,18 @@ def author_name(line):
     return line.split("<", 1)[0].strip()
 
 
-def get_authors_from_git(skip_last=False):
+def get_authors_from_git():
     git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
 
-    if skip_last:
+    parents = run(["git", "rev-list", "--no-walk", "--count", "HEAD^@"],
+                  stdout=PIPE, encoding='utf-8').stdout.strip()
+    if parents != '1':
         # Skip the most recent commit. Used to ignore the merge commit created
-        # when this script runs in CI. We use HEAD^2 rather than HEAD^1 to
-        # select the parent commit that is part of the PR rather than the
-        # parent commit that was the previous tip of master.
-        git_command.append("HEAD^2")
+        # when this script runs in CI. If HEAD is a merge commit parents will
+        # typically be '2'. We use HEAD^2 rather than HEAD^1 to select the
+        # parent commit that is part of the PR rather than the parent commit
+        # that was the previous tip of master.
+        git_command.append("HEAD^"+parents)
 
     git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
@@ -292,7 +297,7 @@ def make_authors_file_lines(git_people):
         to their names are not found in the metadata of the git history. This
         file is generated automatically by running `./bin/authors_update.py`.
         """).lstrip()
-    header_extra = f"There are a total of {len(git_people)} authors."""
+    header_extra = "There are a total of %d authors."  % len(git_people)
     lines = header.splitlines()
     lines.append('')
     lines.append(header_extra)

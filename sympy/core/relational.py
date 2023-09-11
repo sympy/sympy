@@ -1,4 +1,4 @@
-from typing import Dict as tDict, Union as tUnion, Type
+from __future__ import annotations
 
 from .basic import Atom, Basic
 from .sorting import ordered
@@ -9,7 +9,6 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
@@ -141,7 +140,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
+    ValidRelationOperator: dict[str | None, type[Relational]] = {}
 
     is_Relational = True
 
@@ -610,18 +609,7 @@ class Equality(Relational):
 
     is_Equality = True
 
-    def __new__(cls, lhs, rhs=None, **options):
-
-        if rhs is None:
-            sympy_deprecation_warning(
-                """
-                Eq(expr) with a single argument with the right-hand side
-                defaulting to 0 is deprecated. Use Eq(expr, 0) instead.
-                """,
-                deprecated_since_version="1.5",
-                active_deprecations_target="deprecated-eq-expr",
-            )
-            rhs = 0
+    def __new__(cls, lhs, rhs, **options):
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
@@ -638,7 +626,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, *args, **kwargs):
+    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -661,12 +649,10 @@ class Equality(Relational):
         (b, x, b, -x)
         """
         from .add import _unevaluated_Add, Add
-        L, R = args
         if L == 0:
             return R
         if R == 0:
             return L
-        evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
             return L - R
@@ -1090,7 +1076,7 @@ class GreaterThan(_Greater):
        method to determine that a chained inequality is being built.
        Chained comparison operators are evaluated pairwise, using "and"
        logic (see
-       http://docs.python.org/reference/expressions.html#not-in). This
+       https://docs.python.org/3/reference/expressions.html#not-in). This
        is done in an efficient way, so that each object being compared
        is only evaluated once and the comparison can short-circuit. For
        example, ``1 > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2

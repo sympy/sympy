@@ -1,17 +1,20 @@
 """Hypergeometric and Meijer G-functions"""
-from functools import reduce
+from collections import Counter
 
-from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
+from sympy.core.numbers import I, pi, oo, zoo
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
+from sympy.external.gmpy import lcm
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth)
 from sympy.functions import factorial, RisingFactorial
@@ -20,6 +23,8 @@ from sympy.functions.elementary.exponential import exp_polar
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
+from sympy import ordered
+
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -120,17 +125,19 @@ class hyper(TupleParametersBase):
 
     >>> from sympy import hyper
     >>> from sympy.abc import x, n, a
-    >>> hyper((1, 2, 3), [3, 4], x)
+    >>> h = hyper((1, 2, 3), [3, 4], x); h
+    hyper((1, 2), (4,), x)
+    >>> hyper((3, 1, 2), [3, 4], x, evaluate=False)  # don't remove duplicates
     hyper((1, 2, 3), (3, 4), x)
 
     There is also pretty printing (it looks better using Unicode):
 
     >>> from sympy import pprint
-    >>> pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)
+    >>> pprint(h, use_unicode=False)
       _
-     |_  /1, 2, 3 |  \
-     |   |        | x|
-    3  2 \  3, 4  |  /
+     |_  /1, 2 |  \
+     |   |     | x|
+    2  1 \  4  |  /
 
     The parameters must always be iterables, even if they are vectors of
     length one or zero:
@@ -142,7 +149,7 @@ class hyper(TupleParametersBase):
     should not expect much implemented functionality):
 
     >>> hyper((n, a), (n**2,), x)
-    hyper((n, a), (n**2,), x)
+    hyper((a, n), (n**2,), x)
 
     The hypergeometric function generalizes many named special functions.
     The function ``hyperexpand()`` tries to express a hypergeometric function
@@ -191,6 +198,18 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
+        if kwargs.pop('evaluate', global_parameters.evaluate):
+            ca = Counter(Tuple(*ap))
+            cb = Counter(Tuple(*bq))
+            common = ca & cb
+            arg = ap, bq = [], []
+            for i, c in enumerate((ca, cb)):
+                c -= common
+                for k in ordered(c):
+                    arg[i].extend([k]*c[k])
+        else:
+            ap = list(ordered(ap))
+            bq = list(ordered(bq))
         return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
@@ -220,8 +239,8 @@ class hyper(TupleParametersBase):
     def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
         from sympy.concrete.summations import Sum
         n = Dummy("n", integer=True)
-        rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
-        rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
+        rfap = [RisingFactorial(a, n) for a in ap]
+        rfbq = [RisingFactorial(b, n) for b in bq]
         coeff = Mul(*rfap) / Mul(*rfbq)
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
@@ -251,14 +270,8 @@ class hyper(TupleParametersBase):
         terms = []
 
         for i in range(n):
-            num = 1
-            den = 1
-            for a in ap:
-                num *= RisingFactorial(a, i)
-
-            for b in bq:
-                den *= RisingFactorial(b, i)
-
+            num = Mul(*[RisingFactorial(a, i) for a in ap])
+            den = Mul(*[RisingFactorial(b, i) for b in bq])
             terms.append(((num/den) * (arg**i)) / factorial(i))
 
         return (Add(*terms) + Order(x**n,x))
@@ -417,7 +430,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import meijerg, Tuple, pprint
     >>> from sympy.abc import x, a
     >>> pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)
-     __1, 2 /1, 2  a, 4 |  \
+     __1, 2 /1, 2  4, a |  \
     /__     |           | x|
     \_|4, 1 \ 5         |  /
 
@@ -502,6 +515,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
+            p = [list(ordered(i)) for i in p]
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         arg0, arg1 = tr(args[0]), tr(args[1])
@@ -646,14 +660,14 @@ class meijerg(TupleParametersBase):
                 for j in range(i + 1, len(l)):
                     if not Mod((b - l[j]).simplify(), 1):
                         return oo
-            return reduce(ilcm, (x.q for x in l), 1)
+            return lcm(*(x.q for x in l))
         beta = compute(self.bm)
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
             if oo in (alpha, beta):
                 return oo
-            return 2*pi*ilcm(alpha, beta)
+            return 2*pi*lcm(alpha, beta)
         elif p < q:
             return 2*pi*beta
         else:
@@ -680,7 +694,7 @@ class meijerg(TupleParametersBase):
             branch = branch[0].args[0]/I
         else:
             branch = S.Zero
-        n = ceiling(abs(branch/S.Pi)) + 1
+        n = ceiling(abs(branch/pi)) + 1
         znum = znum**(S.One/n)*exp(I*branch / n)
 
         # Convert all args to mpf or mpc
@@ -1129,7 +1143,7 @@ class appellf1(Function):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Appell_series
-    .. [2] http://functions.wolfram.com/HypergeometricFunctions/AppellF1/
+    .. [2] https://functions.wolfram.com/HypergeometricFunctions/AppellF1/
 
     """
 
