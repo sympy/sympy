@@ -7857,3 +7857,9 @@ def test_deprecated_prettyForm():
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
+
+def test_issue_19435():
+    assert pretty(1/UnevaluatedExpr(sqrt(pi))) == \
+    '1 \n'\
+    '──\n'\
+    '√π'

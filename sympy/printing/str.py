@@ -341,7 +341,7 @@ class StrPrinter(Printer):
                 return i.func(b, e, evaluate=False)
             return i.func(e, evaluate=False)
         for item in args:
-            if (item.is_commutative and
+            if (item.is_commutative is not False and
                     isinstance(item, Pow) and
                     bool(item.exp.as_coeff_Mul()[0] < 0)):
                 if item.exp is not S.NegativeOne:
@@ -648,7 +648,7 @@ class StrPrinter(Printer):
         if expr.exp is S.Half and not rational:
             return "sqrt(%s)" % self._print(expr.base)
 
-        if expr.is_commutative:
+        if expr.is_commutative is not False:
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.

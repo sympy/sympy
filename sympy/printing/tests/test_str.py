@@ -1173,3 +1173,7 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+def test_issue_19435():
+    assert str(1/UnevaluatedExpr(sqrt(pi))) == '1/(sqrt(pi))'
+    
