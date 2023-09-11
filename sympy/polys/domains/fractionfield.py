@@ -144,6 +144,17 @@ class FractionField(Field, CompositeDomain):
             except (CoercionFailed, GeneratorsError):
                 return None
 
+    def from_LaurentPolynomialRing(K1, a, K0):
+        """Convert a Laurent polynomial to ``dtype``. """
+        if a.is_ground:
+            return K1.convert_from(a.numer.coeff(1), K0.domain)
+        try:
+            numer = a.numer.set_ring(K1.field.ring)
+            denom = a.denom.set_ring(K1.field.ring)
+            return K1.new((numer, denom))
+        except (CoercionFailed, GeneratorsError):
+            return None
+
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
         try:

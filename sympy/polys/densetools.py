@@ -685,7 +685,7 @@ def dup_primitive(f, K):
     if K.is_one(cont):
         return cont, f
     else:
-        return cont, dup_quo_ground(f, cont, K)
+        return cont, dup_exquo_ground(f, cont, K)
 
 
 def dmp_ground_primitive(f, u, K):

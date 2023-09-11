@@ -317,10 +317,7 @@ def dup_quo_ground(f, c, K):
     if not f:
         return f
 
-    if K.is_Field:
-        return [ K.quo(cf, c) for cf in f ]
-    else:
-        return [ cf // c for cf in f ]
+    return [ K.quo(cf, c) for cf in f ]
 
 
 def dmp_quo_ground(f, c, u, K):

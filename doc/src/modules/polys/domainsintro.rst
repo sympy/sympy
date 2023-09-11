@@ -1166,7 +1166,7 @@ complicated domains::
   >>> construct_domain([x/2, 3])[0]
   QQ[x]
   >>> construct_domain([2/x, 3])[0]
-  ZZ(x)
+  ZZ[x,1/x]
   >>> construct_domain([x, y])[0]
   ZZ[x,y]
 

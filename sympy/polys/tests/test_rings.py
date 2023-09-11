@@ -5,6 +5,7 @@ from operator import add, mul
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
+from sympy.polys.laurent import LaurentPolyRing
 from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, \
@@ -180,9 +181,13 @@ def test_sring():
     R = PolyRing("x,y,z", Rt, lex)
     assert sring(x + t*y/2 + t**2*z/3, x, y, z) == (R, R.x + Rt.t*R.y/2 + Rt.t**2*R.z/3)
 
-    Rt = FracField("t", ZZ, lex)
+    Rt = LaurentPolyRing("t", QQ, lex)
     R = PolyRing("x,y,z", Rt, lex)
     assert sring(x + 2*y/t + t**2*z/3, x, y, z) == (R, R.x + 2*R.y/Rt.t + Rt.t**2*R.z/3)
+
+    Rt = FracField("t", ZZ, lex)
+    R = PolyRing("x,y,z", Rt, lex)
+    assert sring(x + 2*y/(1-t) + t**2*z/3, x, y, z) == (R, R.x + 2*R.y/(1 - Rt.t) + Rt.t**2*R.z/3)
 
     r = sqrt(2) - sqrt(3)
     R, a = sring(r, extension=True)
