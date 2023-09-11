@@ -15,7 +15,7 @@ from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
 from sympy.testing.pytest import raises
-from sympy.core import Symbol, symbols
+from sympy.core import Symbol, symbols, ordered
 from sympy.core.singleton import S
 from sympy.core.numbers import (oo, pi)
 from sympy.functions.elementary.exponential import exp
@@ -1593,13 +1593,13 @@ def test_gcd_preprocess_polys():
     g = x**3*y**2 + x*y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert result == ([f, g], {0, 1}) or ([g, f], {0, 1})
+    assert list(ordered(result)) == [{0, 1}, [x**2*y + x*y, x**3*y**2 + x*y**2]]
 
     f = x**2 - y**2
     g = x**2 - 2*x*y + y**2
     polynomials = [f, g]
     result = _gcd_preprocess_polys(polynomials)
-    assert result == ([f, g], {0, 1}) or ([g, f], {0, 1})
+    assert list(ordered(result)) == [{0, 1}, [x**2 - y**2, x**2 - 2*x*y + y**2]]
 
 def test_gcd_terms():
     from sympy import ring

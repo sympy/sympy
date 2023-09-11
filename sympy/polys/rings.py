@@ -3233,6 +3233,7 @@ def _gcd_preprocess_polys(polynomials):
     Examples
     ========
 
+    >>> from sympy.core import ordered
     >>> from sympy.polys.rings import _gcd_preprocess_polys
     >>> from sympy import ring, ZZ
     >>> R, x, y = ring("x, y", ZZ)
@@ -3241,8 +3242,9 @@ def _gcd_preprocess_polys(polynomials):
     >>> g = x**2 - 2*x*y + y**2
     >>> h = x - y
     >>> polynomials = [f, g, h]
-    >>> _gcd_preprocess_polys(polynomials)
-    ([x - y, x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+    >>> result = _gcd_preprocess_polys(polynomials)
+    >>> list(ordered(result))
+    [{0, 1}, [x - y, x**2 - y**2, x**2 - 2*x*y + y**2]]
 
     """
     all_polys = polynomials
