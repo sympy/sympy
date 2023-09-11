@@ -62,7 +62,7 @@ from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunct
     Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
-from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
+from sympy.printing.pretty.pretty_symbology import center_accent, is_combining, center
 from sympy.sets.conditionset import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
@@ -7922,3 +7922,10 @@ def test_deprecated_prettyForm():
 
     with warns_deprecated_sympy():
         assert p.unicode == p.s == 's'
+
+
+def test_center():
+    assert center('1', 2) == '1 '
+    assert center('1', 3) == ' 1 '
+    assert center('1', 3, '-') == '-1-'
+    assert center('1', 5, '-') == '--1--'
