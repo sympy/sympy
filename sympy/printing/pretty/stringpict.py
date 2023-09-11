@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class stringPict:
@@ -40,7 +40,7 @@ class stringPict:
             return ['']
 
         width = max(line_width(line) for line in lines)
-        return [line.center(width) for line in lines]
+        return [center(line, width) for line in lines]
 
     def height(self):
         """The height of the picture in characters."""
@@ -137,10 +137,7 @@ class stringPict:
                 objects[i] = lineObj
 
         #stack the pictures, and center the result
-        newPicture = []
-        for obj in objects:
-            newPicture.extend(obj.picture)
-        newPicture = [line.center(newWidth) for line in newPicture]
+        newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
