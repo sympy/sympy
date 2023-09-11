@@ -75,6 +75,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArra
 from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
+from sympy.utilities.iterables import capture
 
 from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
@@ -918,15 +919,15 @@ y⋅z\
 """\
 -a \n\
 ---\n\
-  2\n\
- y \
+ 2 \n\
+y  \
 """
     ucode_str =\
 """\
 -a \n\
 ───\n\
-  2\n\
- y \
+ 2 \n\
+y  \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -952,15 +953,15 @@ y   \
 """\
 -1 \n\
 ---\n\
-  2\n\
- y \
+ 2 \n\
+y  \
 """
     ucode_str =\
 """\
 -1 \n\
 ───\n\
-  2\n\
- y \
+ 2 \n\
+y  \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -986,13 +987,13 @@ y   \
 """\
 -200 \n\
 -----\n\
-  37 \
+ 37  \
 """
     ucode_str =\
 """\
 -200 \n\
 ─────\n\
-  37 \
+ 37  \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1118,15 +1119,15 @@ y  + y  - x  + 2*x \
     expr = x - x**3/6 + x**5/120 + O(x**6)
     ascii_str = \
 """\
-     3     5        \n\
-    x     x     / 6\\\n\
+     3    5         \n\
+    x    x      / 6\\\n\
 x - -- + --- + O\\x /\n\
     6    120        \
 """
     ucode_str = \
 """\
-     3     5        \n\
-    x     x     ⎛ 6⎞\n\
+     3    5         \n\
+    x    x      ⎛ 6⎞\n\
 x - ── + ─── + O⎝x ⎠\n\
     6    120        \
 """
@@ -2472,14 +2473,14 @@ def test_pretty_Series():
 """
     expected2 = \
 """\
-⎛-x + y⎞ ⎛ -x - y⎞\n\
+⎛-x + y⎞ ⎛-x - y ⎞\n\
 ⎜──────⎟⋅⎜───────⎟\n\
 ⎝x + y ⎠ ⎝x - 2⋅y⎠\
 """
     expected3 = \
 """\
 ⎛ 2    ⎞                            \n\
-⎜x  + y⎟ ⎛ x + y ⎞ ⎛ -x - y   x - y⎞\n\
+⎜x  + y⎟ ⎛ x + y ⎞ ⎛-x - y    x - y⎞\n\
 ⎜──────⎟⋅⎜───────⎟⋅⎜─────── + ─────⎟\n\
 ⎝-x + y⎠ ⎝x - 2⋅y⎠ ⎝x - 2⋅y   x + y⎠\
 """
@@ -2512,7 +2513,7 @@ def test_pretty_Series():
 ⎢ 2            ⎥ ⋅⎢                         ⎥ ⋅⎜⎢──────     ───  ⎥  + ⎢  ───    ────── ⎥ ⎟\n\
 ⎢x  + y     2  ⎥  ⎢ 2                       ⎥  ⎜⎢-x + y      3   ⎥    ⎢   3     -x + y ⎥ ⎟\n\
 ⎢──────     ─  ⎥  ⎢x  + y    -2      x - y  ⎥  ⎜⎢                ⎥    ⎢                ⎥ ⎟\n\
-⎣-x + y     3  ⎦τ ⎢──────    ───     ─────  ⎥  ⎜⎢-x + y    -x - y⎥    ⎢ -x - y  -x + y ⎥ ⎟\n\
+⎣-x + y     3  ⎦τ ⎢──────    ───     ─────  ⎥  ⎜⎢-x + y   -x - y ⎥    ⎢-x - y   -x + y ⎥ ⎟\n\
                   ⎣-x + y     3      x + y  ⎦τ ⎜⎢──────   ───────⎥    ⎢───────  ────── ⎥ ⎟\n\
                                                ⎝⎣x + y    x - 2⋅y⎦τ   ⎣x - 2⋅y  x + y  ⎦τ⎠\
 """
@@ -3021,6 +3022,14 @@ dy dx             \
 -----\\x  + log(x)/\n\
 dy dx             \
 """
+    ascii_str_3 = \
+"""\
+  2               \n\
+ d   / 2         \\\n\
+-----\\x  + log(x)/\n\
+dy dx             \
+"""
+    
     ucode_str_1 = \
 """\
    2              \n\
@@ -3035,8 +3044,15 @@ dy dx             \
 ─────⎝x  + log(x)⎠\n\
 dy dx             \
 """
-    assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+    ucode_str_3 = \
+"""\
+  2               \n\
+ d   ⎛ 2         ⎞\n\
+─────⎝x  + log(x)⎠\n\
+dy dx             \
+"""
+    assert pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     expr = Derivative(2*x*y, y, x) + x**2
     ascii_str_1 = \
@@ -3050,6 +3066,13 @@ dx dy            \
 """\
         2        \n\
  2     d         \n\
+x  + -----(2*x*y)\n\
+     dx dy       \
+"""
+    ascii_str_3 = \
+"""\
+       2         \n\
+ 2    d          \n\
 x  + -----(2*x*y)\n\
      dx dy       \
 """
@@ -3067,22 +3090,29 @@ x  + -----(2*x*y)\n\
 x  + ─────(2⋅x⋅y)\n\
      ∂x ∂y       \
 """
-    assert pretty(expr) in [ascii_str_1, ascii_str_2]
-    assert upretty(expr) in [ucode_str_1, ucode_str_2]
+    ucode_str_3 = \
+"""\
+       2         \n\
+ 2    ∂          \n\
+x  + ─────(2⋅x⋅y)\n\
+     ∂x ∂y       \
+"""
+    assert pretty(expr) in [ascii_str_1, ascii_str_2, ascii_str_3]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2, ucode_str_3]
 
     expr = Derivative(2*x*y, x, x)
     ascii_str = \
 """\
-  2       \n\
- d        \n\
+ 2        \n\
+d         \n\
 ---(2*x*y)\n\
   2       \n\
 dx        \
 """
     ucode_str = \
 """\
-  2       \n\
- ∂        \n\
+ 2        \n\
+∂         \n\
 ───(2⋅x⋅y)\n\
   2       \n\
 ∂x        \
@@ -3153,16 +3183,16 @@ dα      \
 
     ascii_str = \
 """\
-  n      \n\
- d       \n\
+ n       \n\
+d        \n\
 ---(f(x))\n\
   n      \n\
 dx       \
 """
     ucode_str = \
 """\
-  n      \n\
- d       \n\
+ n       \n\
+d        \n\
 ───(f(x))\n\
   n      \n\
 dx       \
@@ -3296,11 +3326,11 @@ def test_pretty_integrals():
 """
     ucode_str = \
 """\
- 10      \n\
- ⌠       \n\
- ⎮   2   \n\
- ⎮  x  dx\n\
- ⌡       \n\
+10       \n\
+⌠        \n\
+⎮    2   \n\
+⎮   x  dx\n\
+⌡        \n\
 1/2      \
 """
     assert pretty(expr) == ascii_str
@@ -3337,7 +3367,7 @@ def test_pretty_integrals():
   |   |   cos(phi)                 \n\
   |   |                            \n\
  /   /                             \n\
- 0   0                             \
+0    0                             \
 """
     ucode_str = \
 """\
@@ -4524,6 +4554,13 @@ def test_pretty_ImageSet():
     assert pretty(imgset) == ascii_str
     assert upretty(imgset) == ucode_str
 
+    # issue 23449 centering issue
+    a = capture(lambda: pprint([Symbol("ihat") / (Symbol("i") + 1)]))
+    b = capture(lambda: pprint(Matrix([Symbol("ihat"), Symbol("i") + 1])))
+    assert a == '\u23a1  i\u0302  \u23a4\n\u23a2\u2500\u2500\u2500\u2500\u2500\u23a5\n\u23a3i + 1\u23a6\n'
+    assert b == a.replace('\u2500', ' ')
+
+
 def test_pretty_ConditionSet():
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
     ucode_str = '{x │ x ∊ ℝ ∧ (sin(x) = 0)}'
@@ -4767,7 +4804,7 @@ def test_pretty_FormalPowerSeries():
 
     ascii_str = \
 """\
-  oo             \n\
+ oo              \n\
 ____             \n\
 \\   `            \n\
  \\         -k  k \n\
@@ -4780,15 +4817,15 @@ k = 1            \
 
     ucode_str = \
 """\
-  ∞              \n\
- ____            \n\
- ╲               \n\
-  ╲        -k  k \n\
-   ╲  -(-1)  ⋅x  \n\
-   ╱  ───────────\n\
-  ╱        k     \n\
- ╱               \n\
- ‾‾‾‾            \n\
+ ∞               \n\
+____             \n\
+╲                \n\
+ ╲         -k  k \n\
+  ╲   -(-1)  ⋅x  \n\
+  ╱   ───────────\n\
+ ╱         k     \n\
+╱                \n\
+‾‾‾‾             \n\
 k = 1            \
 """
 
@@ -5233,12 +5270,12 @@ def test_pretty_sum():
     expr = Sum(k**k, (k, 0, n))
     ascii_str = \
 """\
-  n     \n\
- ___    \n\
- \\  `   \n\
-  \\    k\n\
-  /   k \n\
- /__,   \n\
+ n      \n\
+___     \n\
+\\  `    \n\
+ \\     k\n\
+ /    k \n\
+/__,    \n\
 k = 0   \
 """
     ucode_str = \
@@ -5283,8 +5320,8 @@ k = ∞   \
     expr = Sum(k**(Integral(x**n, (x, -oo, oo))), (k, 0, n**n))
     ascii_str = \
 """\
-    n             \n\
    n              \n\
+  n               \n\
 ______            \n\
 \\     `           \n\
  \\        oo      \n\
@@ -5401,24 +5438,24 @@ k = n  + n + x  + x + - + -           \n\
 """
     ucode_str = \
 """\
-          ∞                          \n\
-          ⌠                          \n\
-          ⎮   x                      \n\
-          ⎮  x  dx                   \n\
-          ⌡                          \n\
-          -∞                         \n\
-           ______                    \n\
+         ∞                           \n\
+         ⌠                           \n\
+         ⎮   x                       \n\
+         ⎮  x  dx                    \n\
+         ⌡                           \n\
+         -∞                          \n\
+          ______                     \n\
+          ╲                          \n\
            ╲                         \n\
-            ╲                        \n\
-             ╲               ∞       \n\
-              ╲              ⌠       \n\
-               ╲             ⎮   n   \n\
-               ╱             ⎮  x  dx\n\
-              ╱              ⌡       \n\
-             ╱               -∞      \n\
-            ╱               k        \n\
-           ╱                         \n\
-           ‾‾‾‾‾‾                    \n\
+            ╲                ∞       \n\
+             ╲               ⌠       \n\
+              ╲              ⎮   n   \n\
+              ╱              ⎮  x  dx\n\
+             ╱               ⌡       \n\
+            ╱                -∞      \n\
+           ╱                k        \n\
+          ╱                          \n\
+          ‾‾‾‾‾‾                     \n\
      2        2       1   x          \n\
 k = n  + n + x  + x + ─ + ─          \n\
                       x   n          \
@@ -5452,18 +5489,18 @@ n  + n + x  + x + - + -           \n\
  2        2       1   x          \n\
 n  + n + x  + x + ─ + ─          \n\
                   x   n          \n\
-         ______                  \n\
+        ______                   \n\
+        ╲                        \n\
          ╲                       \n\
-          ╲                      \n\
-           ╲             ∞       \n\
-            ╲            ⌠       \n\
-             ╲           ⎮   n   \n\
-             ╱           ⎮  x  dx\n\
-            ╱            ⌡       \n\
-           ╱             -∞      \n\
-          ╱             k        \n\
-         ╱                       \n\
-         ‾‾‾‾‾‾                  \n\
+          ╲              ∞       \n\
+           ╲             ⌠       \n\
+            ╲            ⎮   n   \n\
+            ╱            ⎮  x  dx\n\
+           ╱             ⌡       \n\
+          ╱              -∞      \n\
+         ╱              k        \n\
+        ╱                        \n\
+        ‾‾‾‾‾‾                   \n\
          k = 0                   \
 """
     assert pretty(expr) == ascii_str
@@ -5472,7 +5509,7 @@ n  + n + x  + x + ─ + ─          \n\
     expr = Sum(x, (x, 0, oo))
     ascii_str = \
 """\
-  oo   \n\
+ oo    \n\
  __    \n\
  \\ `   \n\
   )   x\n\
@@ -5497,12 +5534,12 @@ x = 0  \
     expr = Sum(x**2, (x, 0, oo))
     ascii_str = \
 """\
-  oo    \n\
- ___    \n\
- \\  `   \n\
-  \\    2\n\
-  /   x \n\
- /__,   \n\
+ oo     \n\
+___     \n\
+\\  `    \n\
+ \\     2\n\
+ /    x \n\
+/__,    \n\
 x = 0   \
 """
     ucode_str = \
@@ -5523,26 +5560,26 @@ x = 0   \
     expr = Sum(x/2, (x, 0, oo))
     ascii_str = \
 """\
-  oo   \n\
- ___   \n\
- \\  `  \n\
-  \\   x\n\
-   )  -\n\
-  /   2\n\
- /__,  \n\
+ oo    \n\
+___    \n\
+\\  `   \n\
+ \\    x\n\
+  )   -\n\
+ /    2\n\
+/__,   \n\
 x = 0  \
 """
     ucode_str = \
 """\
-  ∞    \n\
- ____  \n\
+ ∞     \n\
+____   \n\
+╲      \n\
  ╲     \n\
-  ╲    \n\
-   ╲  x\n\
-   ╱  ─\n\
-  ╱   2\n\
- ╱     \n\
- ‾‾‾‾  \n\
+  ╲   x\n\
+  ╱   ─\n\
+ ╱    2\n\
+╱      \n\
+‾‾‾‾   \n\
 x = 0  \
 """
 
@@ -5552,7 +5589,7 @@ x = 0  \
     expr = Sum(x**3/2, (x, 0, oo))
     ascii_str = \
 """\
-  oo    \n\
+ oo     \n\
 ____    \n\
 \\   `   \n\
  \\     3\n\
@@ -5564,15 +5601,15 @@ x = 0   \
 """
     ucode_str = \
 """\
-  ∞     \n\
- ____   \n\
- ╲      \n\
-  ╲    3\n\
-   ╲  x \n\
-   ╱  ──\n\
-  ╱   2 \n\
- ╱      \n\
- ‾‾‾‾   \n\
+ ∞      \n\
+____    \n\
+╲       \n\
+ ╲     3\n\
+  ╲   x \n\
+  ╱   ──\n\
+ ╱    2 \n\
+╱       \n\
+‾‾‾‾    \n\
 x = 0   \
 """
 
@@ -5582,11 +5619,11 @@ x = 0   \
     expr = Sum((x**3*y**(x/2))**n, (x, 0, oo))
     ascii_str = \
 """\
-  oo          \n\
+ oo           \n\
 ____          \n\
 \\   `         \n\
  \\           n\n\
-  \\   /    x\\ \n\
+  \\   /    x\ \n\
    )  |    -| \n\
   /   | 3  2| \n\
  /    \\x *y / \n\
@@ -5615,7 +5652,7 @@ x = 0         \
     expr = Sum(1/x**2, (x, 0, oo))
     ascii_str = \
 """\
-  oo    \n\
+ oo     \n\
 ____    \n\
 \\   `   \n\
  \\    1 \n\
@@ -5627,15 +5664,15 @@ x = 0   \
 """
     ucode_str = \
 """\
-  ∞     \n\
- ____   \n\
- ╲      \n\
-  ╲   1 \n\
-   ╲  ──\n\
-   ╱   2\n\
-  ╱   x \n\
- ╱      \n\
- ‾‾‾‾   \n\
+ ∞      \n\
+____    \n\
+╲       \n\
+ ╲    1 \n\
+  ╲   ──\n\
+  ╱    2\n\
+ ╱    x \n\
+╱       \n\
+‾‾‾‾    \n\
 x = 0   \
 """
 
@@ -5645,7 +5682,7 @@ x = 0   \
     expr = Sum(1/y**(a/b), (x, 0, oo))
     ascii_str = \
 """\
-  oo      \n\
+ oo       \n\
 ____      \n\
 \\   `     \n\
  \\     -a \n\
@@ -5657,15 +5694,15 @@ x = 0     \
 """
     ucode_str = \
 """\
-  ∞       \n\
- ____     \n\
- ╲        \n\
-  ╲    -a \n\
-   ╲   ───\n\
-   ╱    b \n\
-  ╱   y   \n\
- ╱        \n\
- ‾‾‾‾     \n\
+ ∞        \n\
+____      \n\
+╲         \n\
+ ╲     -a \n\
+  ╲    ───\n\
+  ╱     b \n\
+ ╱    y   \n\
+╱         \n\
+‾‾‾‾      \n\
 x = 0     \
 """
 
@@ -5702,40 +5739,40 @@ y = 1 x = 0    \
         1 + 1/k)) + 1, (k, 111, 1 + 1/n), (k, 1/(1 + m), oo)) + 1/(1 + 1/k)
     ascii_str = \
 """\
-               1                         \n\
-           1 + -                         \n\
-    oo         n                         \n\
-  _____    _____                         \n\
-  \\    `   \\    `                        \n\
-   \\        \\     /        1    \\        \n\
-    \\        \\    |1 + ---------|        \n\
-     \\        \\   |          1  |     1  \n\
-      )        )  |    1 + -----| + -----\n\
-     /        /   |            1|       1\n\
-    /        /    |        1 + -|   1 + -\n\
-   /        /     \\            k/       k\n\
-  /____,   /____,                        \n\
+              1                          \n\
+          1 + -                          \n\
+   oo         n                          \n\
+ _____    _____                          \n\
+ \\    `   \\    `                         \n\
+  \\        \\      /        1    \\        \n\
+   \\        \\     |1 + ---------|        \n\
+    \\        \\    |          1  |     1  \n\
+     )        )   |    1 + -----| + -----\n\
+    /        /    |            1|       1\n\
+   /        /     |        1 + -|   1 + -\n\
+  /        /      \\            k/       k\n\
+ /____,   /____,                         \n\
       1   k = 111                        \n\
 k = -----                                \n\
     m + 1                                \
 """
     ucode_str = \
 """\
-               1                         \n\
-           1 + ─                         \n\
-    ∞          n                         \n\
-  ______   ______                        \n\
+              1                          \n\
+          1 + ─                          \n\
+   ∞          n                          \n\
+ ______   ______                         \n\
+ ╲        ╲                              \n\
   ╲        ╲                             \n\
-   ╲        ╲                            \n\
-    ╲        ╲    ⎛        1    ⎞        \n\
-     ╲        ╲   ⎜1 + ─────────⎟        \n\
-      ╲        ╲  ⎜          1  ⎟     1  \n\
-      ╱        ╱  ⎜    1 + ─────⎟ + ─────\n\
-     ╱        ╱   ⎜            1⎟       1\n\
-    ╱        ╱    ⎜        1 + ─⎟   1 + ─\n\
-   ╱        ╱     ⎝            k⎠       k\n\
-  ╱        ╱                             \n\
-  ‾‾‾‾‾‾   ‾‾‾‾‾‾                        \n\
+   ╲        ╲     ⎛        1    ⎞        \n\
+    ╲        ╲    ⎜1 + ─────────⎟        \n\
+     ╲        ╲   ⎜          1  ⎟     1  \n\
+     ╱        ╱   ⎜    1 + ─────⎟ + ─────\n\
+    ╱        ╱    ⎜            1⎟       1\n\
+   ╱        ╱     ⎜        1 + ─⎟   1 + ─\n\
+  ╱        ╱      ⎝            k⎠       k\n\
+ ╱        ╱                              \n\
+ ‾‾‾‾‾‾   ‾‾‾‾‾‾                         \n\
       1   k = 111                        \n\
 k = ─────                                \n\
     m + 1                                \
@@ -6004,11 +6041,12 @@ def test_hyper():
     ascii_str = \
 """\
                       \n\
-  _  /  pi        |  \\
- |_  |  --, -2*k  |  |
- |   |  3         | x|
-2  4 |            |  |
-     \\-3, 3, 4, 5 |  /"""
+  _  / pi         |  \\\n\
+ |_  | --, -2*k   |  |\n\
+ |   | 3          | x|\n\
+2  4 |            |  |\n\
+     \\-3, 3, 4, 5 |  /\
+"""
 
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -6258,7 +6296,7 @@ def test_pretty_special_functions():
      /  ___         \\\n\
      |\\/ 2 *y    ___|\n\
 atan2|-------, \\/ x |\n\
-     \\   20         /\
+     \\  20          /\
 """
     ucode_str = \
 """\
@@ -6455,13 +6493,13 @@ def test_issue_6359():
 
     assert pretty(Sum(x**2, (x, 0, 1))**2) == \
 """\
-          2
-/  1     \\ \n\
-| ___    | \n\
-| \\  `   | \n\
-|  \\    2| \n\
-|  /   x | \n\
-| /__,   | \n\
+          2\n\
+/ 1      \ \n\
+|___     | \n\
+|\  `    | \n\
+| \     2| \n\
+| /    x | \n\
+|/__,    | \n\
 \\x = 0   / \
 """
     assert upretty(Sum(x**2, (x, 0, 1))**2) == \
@@ -6646,8 +6684,8 @@ QQ[x, y] \
 
     ucode_str = \
 """\
-            2    \n\
-     ℚ[x, y]     \n\
+           2     \n\
+    ℚ[x, y]      \n\
 ─────────────────\n\
 ╱        ⎡    2⎤╲\n\
 ╲[x, y], ⎣1, x ⎦╱\
@@ -6886,8 +6924,8 @@ def test_issue_6324():
     e = Mul(x, y, evaluate=False)
     ucode_str = \
 """\
-  3\n\
- 2 \n\
+ 3 \n\
+2  \n\
 ───\n\
   2\n\
 10 \
@@ -7429,8 +7467,8 @@ A  ⋅───⎜3⋅H    + B ⋅C  ⎟\n\
 
     expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
     ucode_str = """\
-    2           \n\
-   ∂   ⎛       ⎞\n\
+   2            \n\
+  ∂    ⎛       ⎞\n\
 ───────⎜A  + B ⎟\n\
        ⎝ i    i⎠\n\
 ∂A  ∂A          \n\
@@ -7440,8 +7478,8 @@ A  ⋅───⎜3⋅H    + B ⋅C  ⎟\n\
 
     expr = PartialDerivative(3*A(-i), A(-j), A(-n))
     ucode_str = """\
-    2        \n\
-   ∂   ⎛    ⎞\n\
+   2         \n\
+  ∂    ⎛    ⎞\n\
 ───────⎜3⋅A ⎟\n\
        ⎝   i⎠\n\
 ∂A  ∂A       \n\
