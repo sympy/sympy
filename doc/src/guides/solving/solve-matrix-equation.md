@@ -314,7 +314,7 @@ or you can extract individual elements by subscripting
 
 ```py
 >>> solution[0]
-      2⋅e  
+      2⋅e
     ───────
     c⋅e + d
 ```
