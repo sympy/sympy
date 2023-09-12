@@ -2231,13 +2231,14 @@ class Beam:
 
 
     def _is_load_negative(self, load):
-        """Try to determine if a load is negative or positive.
+        """Try to determine if a load is negative or positive, using
+        expansion and doit if necessary.
 
         Returns
         =======
-        1: if the load is negative
-        0: if the load is positive
-        -1: if it is indeterminate
+        True: if the load is negative
+        False: if the load is positive
+        None: if it is indeterminate
 
         Notes
         =====
@@ -2246,22 +2247,10 @@ class Beam:
         is a symbol or expression. If the load is a symbolic expression,
         I'm just going to look for negative signs.
         """
-        if load.is_number:
-            return 1 if load.is_negative else 0
-        if load.is_symbol:
-            return 0
-        load = load.doit().expand()
-        if load.is_Add:
-            if all((t.is_Mul and (t.args[0] == -1)) or (t.is_number and t.is_negative) for t in load.args):
-                return 1
-            # user provided a relatively complex expression: cannot determine
-            # if the load is positive or negative
-            return -1
-        if load.is_Mul:
-            return 1 if (load.args[0] == -1) else 0
-        # don't get too crazy with the logic
-        return -1
-
+        rv = load.is_negative
+        if load.is_Atom or rv is not None:
+            return rv
+        return load.doit().expand().is_negative
 
     def _draw_load(self, pictorial, length, l):
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
@@ -2300,9 +2289,8 @@ class Beam:
             # point loads
             if load[2] == -1:
                 iln = self._is_load_negative(load[0])
-                if iln == -1:
+                if iln is None:
                     warning_body += "* Point load %s located at %s\n" % (load[0], load[1])
-
                 if iln:
                     annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':{'width': 1.5, 'headlength': 5, 'headwidth': 5, 'facecolor': 'black'}})
                 else:
@@ -2310,7 +2298,7 @@ class Beam:
             # moment loads
             elif load[2] == -2:
                 iln = self._is_load_negative(load[0])
-                if iln == -1:
+                if iln is None:
                     warning_body += "* Moment %s located at %s\n" % (load[0], load[1])
                 if self._is_load_negative(load[0]):
                     markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
@@ -2322,14 +2310,13 @@ class Beam:
                 value, start, order, end = load
 
                 iln = self._is_load_negative(value)
-                if iln == -1:
+                if iln is None:
                     warning_body += "* Distributed load %s from %s to %s\n" % (value, start, end)
 
-                # Positive loads have their seperate equations
+                # Positive loads have their separate equations
                 if not iln:
-
-                # if pictorial is True we remake the load equation again with
-                # some constant magnitude values.
+                    # if pictorial is True we remake the load equation again with
+                    # some constant magnitude values.
                     if pictorial:
                         # remake the load equation again with some constant
                         # magnitude values.
