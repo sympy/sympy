@@ -24,6 +24,7 @@ from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
     _simplify, IntegralTransform, IntegralTransformError)
@@ -1007,7 +1008,7 @@ def _piecewise_to_heaviside(f, t):
     transform.
     """
     x = piecewise_exclusive(f)
-    r = 0
+    r = S.Zero
     for term in x.args:
         # Here we do not need to do many checks because piecewise_exclusive
         # has a clearly predictable output. However, if any of the conditions
@@ -1154,28 +1155,37 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
-        if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
-            # For t>=0, Heaviside(t)=1 can be used, except if there is also
-            # a DiracDelta(t) present, in which case removing Heaviside(t)
-            # is not necessary because _laplace_rule_delta can deal with it.
-            ft = ft.subs(Heaviside(t_), 1)
-        if ft.func == Piecewise and not ft.has(DiracDelta(t_)):
-            ft = _piecewise_to_heaviside(ft, t_)
-        if (
-                (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
-                (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
-                (r := _laplace_expand(ft, t_, s_)) is not None):
-            pass
-        elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
-            # If there are undefined functions f(t) then integration is
-            # unlikely to do anything useful so we skip it and given an
-            # unevaluated LaplaceTransform.
+        if ft.has(SingularityFunction):
+            ft = ft.rewrite(Heaviside)
+            # It may well be that the Singularity Function is still
+            # there after this rewrite, so we need to re-check.
+        if ft.has(SingularityFunction):
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
-        elif (r := _laplace_transform_integration(
-                ft, t_, s_, simplify=simplify)) is not None:
-            pass
         else:
-            r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+            if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
+                # For t>=0, Heaviside(t)=1 can be used, except if there is also
+                # a DiracDelta(t) present, in which case removing Heaviside(t)
+                # is unnecessary because _laplace_rule_delta can deal with it.
+                ft = ft.subs(Heaviside(t_), 1)
+            if ft.func == Piecewise and not ft.has(DiracDelta(t_)):
+                ft = _piecewise_to_heaviside(ft, t_)
+            if (
+                    (r := _laplace_apply_simple_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_apply_prog_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_expand(ft, t_, s_)) is not None):
+                pass
+            elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
+                # If there are undefined functions f(t) then integration is
+                # unlikely to do anything useful so we skip it and given an
+                # unevaluated LaplaceTransform.
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+            elif (r := _laplace_transform_integration(
+                    ft, t_, s_, simplify=simplify)) is not None:
+                pass
+            else:
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         (ri_, pi_, ci_) = r
         terms_s.append(k*ri_)
         planes.append(pi_)
