@@ -18,6 +18,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
 from sympy.functions.special.error_functions import (
     fresnelc, fresnels, erf, erfc, Ei, Ci, expint, E1)
@@ -397,6 +398,11 @@ def test_laplace_transform():
     assert LT(f(t)*DiracDelta(b*t-a), t, s) == (f(a/b)*exp(-a*s/b)/b,
                                                 -oo, True)
     assert LT(f(t)*DiracDelta(b*t+a), t, s) == (0, -oo, True)
+    # SingularityFunction
+    assert LT(SingularityFunction(t, a, -1), t, s)[0] == exp(-a*s)
+    assert LT(SingularityFunction(t, a, 1), t, s)[0] == exp(-a*s)/s**2
+    assert LT(SingularityFunction(t, a, x), t, s)[0] == (
+        LaplaceTransform(SingularityFunction(t, a, x), t, s))
     # Collection of cases that cannot be fully evaluated and/or would catch
     # some common implementation errors
     assert (LT(DiracDelta(t**2), t, s, noconds=True) ==
