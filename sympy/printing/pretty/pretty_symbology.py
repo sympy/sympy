@@ -32,7 +32,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 __all__ = ['greek_unicode', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
-           'annotated']
+           'annotated', 'center_pad', 'center']
 
 
 _use_unicode = False
@@ -663,3 +663,32 @@ def is_subscriptable_in_unicode(subscript):
 
     """
     return all(character in sub for character in subscript)
+
+
+def center_pad(wstring, wtarget, fillchar=' '):
+    """
+    Return the padding strings necessary to center a string of
+    wstring characters wide in a wtarget wide space.
+
+    The line_width wstring should always be less or equal to wtarget
+    or else a ValueError will be raised.
+    """
+    if wstring > wtarget:
+        raise ValueError('not enough space for string')
+    wdelta = wtarget - wstring
+
+    wleft = wdelta // 2  # favor left '1 '
+    wright = wdelta - wleft
+
+    left = fillchar * wleft
+    right = fillchar * wright
+
+    return left, right
+
+
+def center(string, width, fillchar=' '):
+    """Return a centered string of length determined by `line_width`
+    that uses `fillchar` for padding.
+    """
+    left, right = center_pad(line_width(string), width, fillchar)
+    return ''.join([left, string, right])
