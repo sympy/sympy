@@ -9,6 +9,11 @@ The *solvers* module in SymPy implements methods for solving equations.
 
 .. note::
 
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
+.. note::
+
    :func:`~sympy.solvers.solvers.solve` is an older more mature general
    function for solving many types of equations.
    :func:`~sympy.solvers.solvers.solve` has many options and uses different
@@ -95,3 +100,14 @@ Inequalities
 ------------
 
 See :ref:`inequality-docs`
+
+Linear Programming (Optimization)
+---------------------------------
+
+.. module:: sympy.solvers.simplex
+
+.. autofunction:: lpmax
+
+.. autofunction:: lpmin
+
+.. autofunction:: linprog

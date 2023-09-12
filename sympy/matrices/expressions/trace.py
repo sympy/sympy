@@ -37,7 +37,7 @@ class Trace(Expr):
         if not mat.is_Matrix:
             raise TypeError("input to Trace, %s, is not a matrix" % str(mat))
 
-        if not mat.is_square:
+        if mat.is_square is False:
             raise NonSquareMatrixError("Trace of a non-square matrix")
 
         return Basic.__new__(cls, mat)
@@ -122,7 +122,7 @@ class Trace(Expr):
     def _normalize(self):
         # Normalization of trace of matrix products. Use transposition and
         # cyclic properties of traces to make sure the arguments of the matrix
-        # product are sorted and the first argument is not a trasposition.
+        # product are sorted and the first argument is not a transposition.
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
         trace_arg = self.arg

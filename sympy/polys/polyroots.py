@@ -9,7 +9,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
-from sympy.core.numbers import Rational, igcd, comp
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import Rational, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
@@ -284,11 +285,11 @@ def roots_quartic(f):
 
     1. http://mathforum.org/dr.math/faq/faq.cubic.equations.html
     2. https://en.wikipedia.org/wiki/Quartic_function#Summary_of_Ferrari.27s_method
-    3. http://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
-    4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
+    3. https://planetmath.org/encyclopedia/GaloisTheoreticDerivationOfTheQuarticFormula.html
+    4. https://people.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
-    6. http://www.statemaster.com/encyclopedia/Quartic-equation
-    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
+    6. https://web.archive.org/web/20171002081448/http://www.statemaster.com/encyclopedia/Quartic-equation
+    7. https://eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -504,33 +505,40 @@ def roots_cyclotomic(f, factor=False):
 
 def roots_quintic(f):
     """
-    Calculate exact roots of a solvable quintic
+    Calculate exact roots of a solvable irreducible quintic with rational coefficients.
+    Return an empty list if the quintic is reducible or not solvable.
     """
     result = []
-    coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
-    # Eqn must be of the form x^5 + px^3 + qx^2 + rx + s
-    if coeff_4:
+    coeff_5, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    if not all(coeff.is_Rational for coeff in (coeff_5, coeff_4, p_, q_, r_, s_)):
         return result
 
     if coeff_5 != 1:
-        l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
-        if not all(coeff.is_Rational for coeff in l):
-            return result
-        f = Poly(f/coeff_5)
-    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
-        return result
+        f = Poly(f / coeff_5)
+        _, coeff_4, p_, q_, r_, s_ = f.all_coeffs()
+
+    # Cancel coeff_4 to form x^5 + px^3 + qx^2 + rx + s
+    if coeff_4:
+        p = p_ - 2*coeff_4*coeff_4/5
+        q = q_ - 3*coeff_4*p_/5 + 4*coeff_4**3/25
+        r = r_ - 2*coeff_4*q_/5 + 3*coeff_4**2*p_/25 - 3*coeff_4**4/125
+        s = s_ - coeff_4*r_/5 + coeff_4**2*q_/25 - coeff_4**3*p_/125 + 4*coeff_4**5/3125
+        x = f.gen
+        f = Poly(x**5 + p*x**3 + q*x**2 + r*x + s)
+    else:
+        p, q, r, s = p_, q_, r_, s_
+
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
     if not f.is_irreducible:
         return result
-
     f20 = quintic.f20
     # Check if f20 has linear factors over domain Z
     if f20.is_irreducible:
         return result
-
     # Now, we know that f is solvable
     for _factor in f20.factor_list()[1]:
         if _factor[0].is_linear:
@@ -635,7 +643,7 @@ def roots_quintic(f):
                 r2 = Res[2][i]
                 r3 = Res[3][j]
                 break
-        if r2:
+        if r2 is not None:
             break
     else:
         return []  # fall back to normal solve
@@ -658,6 +666,10 @@ def roots_quintic(f):
             # and fall back to usual solve
             return []
         saw.add(r)
+
+    # Restore to original equation where coeff_4 is nonzero
+    if coeff_4:
+        result = [x - coeff_4 / 5 for x in result]
     return result
 
 
@@ -915,7 +927,7 @@ def roots(f, *gens,
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Cubic_function#Trigonometric_.28and_hyperbolic.29_method
+    .. [1] https://en.wikipedia.org/wiki/Cubic_equation#Trigonometric_and_hyperbolic_solutions
 
     """
     from sympy.polys.polytools import to_rational_coeffs

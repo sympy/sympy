@@ -49,7 +49,6 @@ def default_sort_key(item, order=None):
     >>> default_sort_key(2)
     ((1, 0, 'Number'), (0, ()), (), 2)
 
-
     While sort_key is a method only defined for SymPy objects,
     default_sort_key will accept anything as an argument so it is
     more robust as a sorting key. For the following, using key=
@@ -69,8 +68,8 @@ def default_sort_key(item, order=None):
     >>> min(a, key=default_sort_key)
     2
 
-    Note
-    ----
+    Notes
+    =====
 
     The key returned is useful for getting items into a canonical order
     that will be the same across platforms. It is not directly useful for

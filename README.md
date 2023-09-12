@@ -1,7 +1,6 @@
 # SymPy
 
 [![pypi version](https://img.shields.io/pypi/v/sympy.svg)](https://pypi.python.org/pypi/sympy)
-[![Build status](https://secure.travis-ci.org/sympy/sympy.svg?branch=master)](https://travis-ci.org/sympy/sympy)
 [![Join the chat at https://gitter.im/sympy/sympy](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/sympy/sympy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Zenodo Badge](https://zenodo.org/badge/18918/sympy/sympy.svg)](https://zenodo.org/badge/latestdoi/18918/sympy/sympy)
 [![Downloads](https://pepy.tech/badge/sympy/month)](https://pepy.tech/project/sympy)
@@ -33,7 +32,7 @@ community.
 ## Download
 
 The recommended installation method is through Anaconda,
-<https://www.anaconda.com/download/>
+<https://www.anaconda.com/products/distribution>
 
 You can also get the latest version of SymPy from
 <https://pypi.python.org/pypi/sympy/>
@@ -109,14 +108,14 @@ To install SymPy from GitHub source, first clone SymPy using `git`:
 
 Then, in the `sympy` repository that you cloned, simply run:
 
-    $ python setup.py install
+    $ pip install .
 
 See <https://docs.sympy.org/dev/install.html> for more information.
 
 ## Contributing
 
 We welcome contributions from anyone, even if you are new to open
-source. Please read our [Introduction to Contributing](https://github.com/sympy/sympy/wiki/Introduction-to-contributing)
+source. Please read our [Introduction to Contributing](https://docs.sympy.org/dev/contributing/introduction-to-contributing.html)
 page and the [SymPy Documentation Style Guide](https://docs.sympy.org/dev/documentation-style-guide.html). If you
 are new and looking for some way to contribute, a good place to start is
 to look at the issues tagged [Easy to Fix](https://github.com/sympy/sympy/issues?q=is%3Aopen+is%3Aissue+label%3A%22Easy+to+Fix%22).
@@ -135,7 +134,7 @@ in the current directory.
 
 For the more fine-grained running of tests or doctests, use `bin/test`
 or respectively `bin/doctest`. The master branch is automatically tested
-by Travis CI.
+by GitHub Actions.
 
 To test pull requests, use
 [sympy-bot](https://github.com/sympy/sympy-bot).
@@ -149,15 +148,15 @@ if you plan to work on this feature, you will need the `antlr4`
 command-line tool (and you must ensure that it is in your `PATH`).
 One way to get it is:
 
-    $ conda install -c conda-forge antlr=4.10.1
+    $ conda install -c conda-forge antlr=4.11.1
 
 Alternatively, follow the instructions on the ANTLR website and download
-the `antlr-4.10.1-complete.jar`. Then export the `CLASSPATH` as instructed
+the `antlr-4.11.1-complete.jar`. Then export the `CLASSPATH` as instructed
 and instead of creating `antlr4` as an alias, make it an executable file
 with the following contents:
 ``` bash
 #!/bin/bash
-java -jar /usr/local/lib/antlr-4.10.1-complete.jar "$@"
+java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
 ```
 
 After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
@@ -167,10 +166,6 @@ After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
 ## Clean
 
 To clean everything (thus getting the same tree as in the repository):
-
-    $ ./setup.py clean
-
-You can also clean things with git using:
 
     $ git clean -Xdf
 

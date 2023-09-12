@@ -388,7 +388,11 @@ def test_cos():
 
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
-
+    assert cos(0, evaluate=False).is_zero is False
+    assert cos(Rational(1, 2)).is_zero is False
+    # The following test will return None as the result, but really it should
+    # be True even if it is not always possible to resolve an assumptions query.
+    assert cos(asin(-1, evaluate=False), evaluate=False).is_zero is None
     for d in list(range(1, 22)) + [60, 85]:
         for n in range(2*d + 1):
             x = n*pi/d
@@ -580,30 +584,26 @@ def test_tan_rewrite():
     assert tan(x).rewrite(sin) == 2*sin(x)**2/sin(2*x)
     assert tan(x).rewrite(cos) == cos(x - S.Pi/2, evaluate=False)/cos(x)
     assert tan(x).rewrite(cot) == 1/cot(x)
-    assert tan(sinh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert tan(cosh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert tan(tanh(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert tan(coth(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
-    assert tan(sin(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
-    assert tan(cos(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
-    assert tan(tan(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
-    assert tan(cot(x)).rewrite(
-        exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
+    assert tan(sinh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sinh(3)).n()
+    assert tan(cosh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cosh(3)).n()
+    assert tan(tanh(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tanh(3)).n()
+    assert tan(coth(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, coth(3)).n()
+    assert tan(sin(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, sin(3)).n()
+    assert tan(cos(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cos(3)).n()
+    assert tan(tan(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, tan(3)).n()
+    assert tan(cot(x)).rewrite(exp).subs(x, 3).n() == tan(x).rewrite(exp).subs(x, cot(3)).n()
     assert tan(log(x)).rewrite(Pow) == I*(x**-I - x**I)/(x**-I + x**I)
+    assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
+    assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
+    assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
+
+
+@slow
+def test_tan_rewrite_slow():
     assert 0 == (cos(pi/34)*tan(pi/34) - sin(pi/34)).rewrite(pow)
     assert 0 == (cos(pi/17)*tan(pi/17) - sin(pi/17)).rewrite(pow)
     assert tan(pi/19).rewrite(pow) == tan(pi/19)
     assert tan(pi*Rational(8, 19)).rewrite(sqrt) == tan(pi*Rational(8, 19))
-    assert tan(x).rewrite(sec) == sec(x)/sec(x - pi/2, evaluate=False)
-    assert tan(x).rewrite(csc) == csc(-x + pi/2, evaluate=False)/csc(x)
-    assert tan(sin(x)).rewrite(Pow) == tan(sin(x))
     assert tan(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == sqrt(sqrt(5)/8 +
                Rational(5, 8))/(Rational(-1, 4) + sqrt(5)/4)
 
@@ -759,8 +759,7 @@ def test_cot_rewrite():
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
     def check(func):
-        z = cot(func(x)).rewrite(exp
-            ) - cot(x).rewrite(exp).subs(x, func(x))
+        z = cot(func(x)).rewrite(exp) - cot(x).rewrite(exp).subs(x, func(x))
         assert z.rewrite(exp).expand() == 0
     check(sinh)
     check(cosh)
@@ -770,15 +769,21 @@ def test_cot_rewrite():
     check(cos)
     check(tan)
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
-    assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
-    assert cot(pi*Rational(4, 17)).rewrite(pow) == (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
-    assert cot(pi/19).rewrite(pow) == cot(pi/19)
-    assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
     assert cot(x).rewrite(sec) == sec(x - pi / 2, evaluate=False) / sec(x)
     assert cot(x).rewrite(csc) == csc(x) / csc(- x + pi / 2, evaluate=False)
     assert cot(sin(x)).rewrite(Pow) == cot(sin(x))
-    assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == (Rational(-1, 4) + sqrt(5)/4)/\
-                                                        sqrt(sqrt(5)/8 + Rational(5, 8))
+
+
+@slow
+def test_cot_rewrite_slow():
+    assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == \
+        (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
+    assert cot(pi*Rational(4, 17)).rewrite(pow) == \
+        (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
+    assert cot(pi/19).rewrite(pow) == cot(pi/19)
+    assert cot(pi/19).rewrite(sqrt) == cot(pi/19)
+    assert cot(pi*Rational(2, 5), evaluate=False).rewrite(sqrt) == \
+        (Rational(-1, 4) + sqrt(5)/4) / sqrt(sqrt(5)/8 + Rational(5, 8))
 
 
 def test_cot_subs():
@@ -1551,7 +1556,6 @@ def test_sincos_rewrite_sqrt():
                     assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
                     assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
     assert cos(pi/14).rewrite(sqrt) == sqrt(cos(pi/7)/2 + S.Half)
-    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
     assert cos(pi*Rational(-15, 2)/11, evaluate=False).rewrite(
         sqrt) == -sqrt(-cos(pi*Rational(4, 11))/2 + S.Half)
     assert cos(Mul(2, pi, S.Half, evaluate=False), evaluate=False).rewrite(
@@ -1607,6 +1611,11 @@ def test_sincos_rewrite_sqrt():
     # different but that portion of the code should be tested in some way
     assert cos(pi/9/17).rewrite(sqrt) == \
         sin(pi/9)*sin(pi*Rational(2, 17)) + cos(pi/9)*cos(pi*Rational(2, 17))
+
+
+@slow
+def test_sincos_rewrite_sqrt_257():
+    assert cos(pi/257).rewrite(sqrt).evalf(64) == cos(pi/257).evalf(64)
 
 
 @slow

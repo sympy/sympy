@@ -62,6 +62,7 @@ def test_is_strictly_increasing():
 
     assert is_strictly_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval.open(-2, 3)) is False
 
+
 def test_is_decreasing():
     """Test whether is_decreasing returns correct value."""
     b = Symbol('b', positive=True)
@@ -83,6 +84,7 @@ def test_is_strictly_decreasing():
     assert not is_strictly_decreasing(1)
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(Rational(3,2), 3))
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
+
 
 def test_is_monotonic():
     """Test whether is_monotonic returns correct value."""

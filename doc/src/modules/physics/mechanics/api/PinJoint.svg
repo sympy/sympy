@@ -29,7 +29,7 @@
         <text fill="#FF0000"
               font-family="Calibri,Calibri_MSFontService,sans-serif"
               font-weight="400" font-size="83"
-              transform="matrix(1 0 0 1 3259.58 1576)">θ, ω<tspan font-size="83"
+              transform="matrix(1 0 0 1 3259.58 1576)">q, u<tspan font-size="83"
                                                                   x="-42.585"
                                                                   y="395">joint_axis</tspan>
             <tspan fill="#008000" font-size="83" x="-1704.28" y="-33">parent.masscenter</tspan></text>

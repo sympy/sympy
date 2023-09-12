@@ -1,4 +1,4 @@
-from typing import Set as tSet
+from __future__ import annotations
 
 from warnings import warn
 import inspect
@@ -71,7 +71,7 @@ def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
 ###
 
 
-_unresolved_dispatchers = set() # type: tSet[Dispatcher]
+_unresolved_dispatchers: set[Dispatcher] = set()
 _resolve = [True]
 
 

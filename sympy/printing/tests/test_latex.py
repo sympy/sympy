@@ -10,6 +10,7 @@ from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
+from sympy.core.parameters import evaluate
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
@@ -450,6 +451,7 @@ def test_latex_functions():
     # not to be confused with the beta function
     assert latex(mybeta(x, y, z)) == r"\beta{\left(x,y,z \right)}"
     assert latex(beta(x, y)) == r'\operatorname{B}\left(x, y\right)'
+    assert latex(beta(x, evaluate=False)) == r'\operatorname{B}\left(x, x\right)'
     assert latex(beta(x, y)**2) == r'\operatorname{B}^{2}\left(x, y\right)'
     assert latex(mybeta(x)) == r"\beta{\left(x \right)}"
     assert latex(mybeta) == r"\beta"
@@ -808,7 +810,7 @@ def test_hyper_printing():
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
         r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
-        r'{{}_{2}F_{1}\left(\begin{matrix} x, 2 ' \
+        r'{{}_{2}F_{1}\left(\begin{matrix} 2, x ' \
         r'\\ 3 \end{matrix}\middle| {z} \right)}'
     assert latex(hyper(Tuple(), Tuple(1), z)) == \
         r'{{}_{0}F_{1}\left(\begin{matrix}  ' \
@@ -3115,3 +3117,7 @@ def test_Array():
     arr = Array(range(11))
     # added empty arguments {}
     assert latex(arr) == r'\left[\begin{array}{}0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\end{array}\right]'
+
+def test_latex_with_unevaluated():
+    with evaluate(False):
+        assert latex(a * a) == r"a a"

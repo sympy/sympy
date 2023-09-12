@@ -2,9 +2,14 @@
  Solvers
 =========
 
-    >>> from sympy import *
-    >>> x, y, z = symbols('x y z')
-    >>> init_printing(use_unicode=True)
+.. note::
+
+   For a beginner-friendly guide focused on solving common types of equations,
+   refer to :ref:`solving-guide`.
+
+>>> from sympy import *
+>>> x, y, z = symbols('x y z')
+>>> init_printing(use_unicode=True)
 
 A Note about Equations
 ======================

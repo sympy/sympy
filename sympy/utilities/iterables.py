@@ -1,9 +1,8 @@
-from collections import defaultdict, OrderedDict
+from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
-    permutations, product
+    permutations, product, groupby
 )
-
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
@@ -102,9 +101,11 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
                 "expected non-negative number of levels, got %s" % levels)
 
     if cls is None:
-        reducible = lambda x: is_sequence(x, set)
+        def reducible(x):
+            return is_sequence(x, set)
     else:
-        reducible = lambda x: isinstance(x, cls)
+        def reducible(x):
+            return isinstance(x, cls)
 
     result = []
 
@@ -210,27 +211,9 @@ def group(seq, multiple=True):
     multiset
 
     """
-    if not seq:
-        return []
-
-    current, groups = [seq[0]], []
-
-    for elem in seq[1:]:
-        if elem == current[-1]:
-            current.append(elem)
-        else:
-            groups.append(current)
-            current = [elem]
-
-    groups.append(current)
-
     if multiple:
-        return groups
-
-    for i, current in enumerate(groups):
-        groups[i] = (current[0], len(current))
-
-    return groups
+        return [(list(g)) for _, g in groupby(seq)]
+    return [(k, len(list(g))) for k, g in groupby(seq)]
 
 
 def _iproduct2(iterable1, iterable2):
@@ -285,7 +268,8 @@ def iproduct(*iterables):
 
     .. seealso::
 
-       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+       `itertools.product
+       <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     '''
     if len(iterables) == 0:
         yield ()
@@ -318,10 +302,7 @@ def multiset(seq):
     group
 
     """
-    rv = defaultdict(int)
-    for s in seq:
-        rv[s] += 1
-    return dict(rv)
+    return dict(Counter(seq).items())
 
 
 
@@ -390,7 +371,7 @@ def ibin(n, bits=None, str=False):
         if bits >= 0:
             return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
         else:
-            return variations(list(range(2)), n, repetition=True)
+            return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
             return bin(n)[2:].rjust(bits, "0")
@@ -428,8 +409,10 @@ def variations(seq, n, repetition=False):
 
     .. seealso::
 
-       `itertools.permutations <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
-       `itertools.product <https://docs.python.org/3/library/itertools.html#itertools.product>`_
+       `itertools.permutations
+       <https://docs.python.org/3/library/itertools.html#itertools.permutations>`_,
+       `itertools.product
+       <https://docs.python.org/3/library/itertools.html#itertools.product>`_
     """
     if not repetition:
         seq = tuple(seq)
@@ -456,7 +439,8 @@ def subsets(seq, k=None, repetition=False):
 
     >>> from sympy import subsets
 
-    ``subsets(seq, k)`` will return the `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
+    ``subsets(seq, k)`` will return the
+    `\frac{n!}{k!(n - k)!}` `k`-subsets (combinations)
     without repetition, i.e. once an item has been removed, it can no
     longer be "taken":
 
@@ -468,7 +452,8 @@ def subsets(seq, k=None, repetition=False):
         [(1, 2), (1, 3), (2, 3)]
 
 
-    ``subsets(seq, k, repetition=True)`` will return the `\frac{(n - 1 + k)!}{k!(n - 1)!}`
+    ``subsets(seq, k, repetition=True)`` will return the
+    `\frac{(n - 1 + k)!}{k!(n - 1)!}`
     combinations *with* repetition:
 
         >>> list(subsets([1, 2], 2, repetition=True))
@@ -534,10 +519,17 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumpt
         the form "x0", "x1", etc.
 
     cls : class, optional
-        The class to use. By default, it uses ``Symbol``, but you can also use ``Wild`` or ``Dummy``.
+        The class to use. By default, it uses ``Symbol``, but you can also use ``Wild``
+        or ``Dummy``.
 
     start : int, optional
         The start number.  By default, it is 0.
+
+    exclude : list, tuple, set of cls, optional
+        Symbols to be excluded.
+
+    *args, **kwargs
+        Additional positional and keyword arguments are passed to the *cls* class.
 
     Returns
     =======
@@ -867,7 +859,8 @@ def topological_sort(graph, key=None):
         S.discard(u)
 
     if key is None:
-        key = lambda value: value
+        def key(value):
+            return value
 
     S = sorted(S, key=key, reverse=True)
 
@@ -909,7 +902,7 @@ def strongly_connected_components(G):
     Parameters
     ==========
 
-    graph : tuple[list, list[tuple[T, T]]
+    G : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph whose strongly connected components are to be found.
 
@@ -1063,7 +1056,7 @@ def connected_components(G):
     Parameters
     ==========
 
-    graph : tuple[list, list[tuple[T, T]]
+    G : tuple[list, list[tuple[T, T]]
         A tuple consisting of a list of vertices and a list of edges of
         a graph whose connected components are to be found.
 
@@ -1113,7 +1106,7 @@ def connected_components(G):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Connected_component_(graph_theory)
+    .. [1] https://en.wikipedia.org/wiki/Component_%28graph_theory%29
     .. [2] https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
 
@@ -1366,7 +1359,7 @@ def _partition(seq, vector, m=None):
 
 
 def _set_partitions(n):
-    """Cycle through all partions of n elements, yielding the
+    """Cycle through all partitions of n elements, yielding the
     current number of partitions, ``m``, and a mutable list, ``q``
     such that ``element[i]`` is in part ``q[i]`` of the partition.
 
@@ -1605,20 +1598,21 @@ def multiset_partitions(multiset, m=None):
 def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of positive integer, n.
 
-    Parameters
-    ==========
-
-    m : integer (default gives partitions of all sizes)
-        limits number of parts in partition (mnemonic: m, maximum parts)
-    k : integer (default gives partitions number from 1 through n)
-        limits the numbers that are kept in the partition (mnemonic: k, keys)
-    size : bool (default False, only partition is returned)
-        when ``True`` then (M, P) is returned where M is the sum of the
-        multiplicities and P is the generated partition.
-
     Each partition is represented as a dictionary, mapping an integer
     to the number of copies of that integer in the partition.  For example,
     the first partition of 4 returned is {4: 1}, "4: one of them".
+
+    Parameters
+    ==========
+    n : int
+    m : int, optional
+        limits number of parts in partition (mnemonic: m, maximum parts)
+    k : int, optional
+        limits the numbers that are kept in the partition (mnemonic: k, keys)
+    size : bool, default: False
+        If ``True``, (M, P) is returned where M is the sum of the
+        multiplicities and P is the generated partition.
+        If ``False``, only the generated partition is returned.
 
     Examples
     ========
@@ -1651,7 +1645,7 @@ def partitions(n, m=None, k=None, size=False):
     ==========
 
     .. [1] modified from Tim Peter's version to allow for k and m values:
-           http://code.activestate.com/recipes/218332-generator-for-integer-partitions/
+           https://code.activestate.com/recipes/218332-generator-for-integer-partitions/
 
     See Also
     ========
@@ -1734,18 +1728,18 @@ def partitions(n, m=None, k=None, size=False):
 
 
 def ordered_partitions(n, m=None, sort=True):
-    """Generates ordered partitions of integer ``n``.
+    """Generates ordered partitions of integer *n*.
 
     Parameters
     ==========
-
-    m : integer (default None)
+    n : int
+    m : int, optional
         The default value gives partitions of all sizes else only
-        those with size m. In addition, if ``m`` is not None then
+        those with size m. In addition, if *m* is not None then
         partitions are generated *in place* (see examples).
-    sort : bool (default True)
+    sort : bool, default: True
         Controls whether partitions are
-        returned in sorted order when ``m`` is not None; when False,
+        returned in sorted order when *m* is not None; when False,
         the partitions are returned as fast as possible with elements
         sorted, but when m|n the partitions will not be in
         ascending lexicographical order.
@@ -1871,7 +1865,7 @@ def ordered_partitions(n, m=None, sort=True):
 
 def binary_partitions(n):
     """
-    Generates the binary partition of n.
+    Generates the binary partition of *n*.
 
     A binary partition consists only of numbers that are
     powers of two. Each step reduces a `2^{k+1}` to `2^k` and
@@ -2085,7 +2079,7 @@ def generate_bell(n):
 
     .. [2] https://stackoverflow.com/questions/4856615/recursive-permutation/4857018
 
-    .. [3] http://programminggeeks.com/bell-algorithm-for-permutation/
+    .. [3] https://web.archive.org/web/20160313023044/http://programminggeeks.com/bell-algorithm-for-permutation/
 
     .. [4] https://en.wikipedia.org/wiki/Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
 
@@ -2160,7 +2154,7 @@ def generate_involutions(n):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PermutationInvolution.html
+    .. [1] https://mathworld.wolfram.com/PermutationInvolution.html
 
     """
     idx = list(range(n))
@@ -2290,7 +2284,7 @@ def multiset_derangements(s):
         b = take[0][0]  # last element to be placed
         b_ct = take[0][1]
 
-        # split the indexes of the not-already-assigned elemements of rv into
+        # split the indexes of the not-already-assigned elements of rv into
         # three categories
         forced_a = []  # positions which must have an a
         forced_b = []  # positions which must have a b
@@ -2543,11 +2537,32 @@ def necklaces(n, k, free=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/Necklace.html
+    .. [1] https://mathworld.wolfram.com/Necklace.html
+
+    .. [2] Frank Ruskey, Carla Savage, and Terry Min Yih Wang,
+        Generating necklaces, Journal of Algorithms 13 (1992), 414-430;
+        https://doi.org/10.1016/0196-6774(92)90047-G
 
     """
-    return uniq(minlex(i, directed=not free) for i in
-        variations(list(range(k)), n, repetition=True))
+    # The FKM algorithm
+    if k == 0 and n > 0:
+        return
+    a = [0]*n
+    yield tuple(a)
+    if n == 0:
+        return
+    while True:
+        i = n - 1
+        while a[i] == k - 1:
+            i -= 1
+            if i == -1:
+                return
+        a[i] += 1
+        for j in range(n - i - 1):
+            a[j + i + 1] = a[j]
+        if n % (i + 1) == 0 and (not free or all(a <= a[j::-1] + a[-1:j:-1] for j in range(n - 1))):
+            # No need to test j = n - 1.
+            yield tuple(a)
 
 
 def bracelets(n, k):
@@ -2685,6 +2700,130 @@ def runs(seq, op=gt):
     return cycles
 
 
+def sequence_partitions(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^+$ where
+    $V^+$ is the Kleene plus of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^+, \cdots, s_n \in V^+,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A nonempty sequence of any Python objects
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions
+    >>> for out in sequence_partitions([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+
+    Notes
+    =====
+
+    This is modified version of EnricoGiampieri's partition generator
+    from https://stackoverflow.com/questions/13131491/partition-n-items-into-k-bins-in-python-lazily
+
+    See Also
+    ========
+
+    sequence_partitions_empty
+    """
+    # Asserting l is nonempty is done only for sanity check
+    if n == 1 and l:
+        yield [l]
+        return
+    for i in range(1, len(l)):
+        for part in sequence_partitions(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
+def sequence_partitions_empty(l, n, /):
+    r"""Returns the partition of sequence $l$ into $n$ bins with
+    empty sequence
+
+    Explanation
+    ===========
+
+    Given the sequence $l_1 \cdots l_m \in V^*$ where
+    $V^*$ is the Kleene star of $V$
+
+    The set of $n$ partitions of $l$ is defined as:
+
+    .. math::
+        \{(s_1, \cdots, s_n) | s_1 \in V^*, \cdots, s_n \in V^*,
+        s_1 \cdots s_n = l_1 \cdots l_m\}
+
+    There are more combinations than :func:`sequence_partitions` because
+    empty sequence can fill everywhere, so we try to provide different
+    utility for this.
+
+    Parameters
+    ==========
+
+    l : Sequence[T]
+        A sequence of any Python objects (can be possibly empty)
+
+    n : int
+        A positive integer
+
+    Yields
+    ======
+
+    out : list[Sequence[T]]
+        A list of sequences with concatenation equals $l$.
+        This should conform with the type of $l$.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import sequence_partitions_empty
+    >>> for out in sequence_partitions_empty([1, 2, 3, 4], 2):
+    ...     print(out)
+    [[], [1, 2, 3, 4]]
+    [[1], [2, 3, 4]]
+    [[1, 2], [3, 4]]
+    [[1, 2, 3], [4]]
+    [[1, 2, 3, 4], []]
+
+    See Also
+    ========
+
+    sequence_partitions
+    """
+    if n < 1:
+        return
+    if n == 1:
+        yield [l]
+        return
+    for i in range(0, len(l) + 1):
+        for part in sequence_partitions_empty(l[i:], n - 1):
+            yield [l[:i]] + part
+
+
 def kbins(l, k, ordered=None):
     """
     Return sequence ``l`` partitioned into ``k`` bins.
@@ -2766,24 +2905,12 @@ def kbins(l, k, ordered=None):
     partitions, multiset_partitions
 
     """
-    def partition(lista, bins):
-        #  EnricoGiampieri's partition generator from
-        #  https://stackoverflow.com/questions/13131491/
-        #  partition-n-items-into-k-bins-in-python-lazily
-        if len(lista) == 1 or bins == 1:
-            yield [lista]
-        elif len(lista) > 1 and bins > 1:
-            for i in range(1, len(lista)):
-                for part in partition(lista[i:], bins - 1):
-                    if len([lista[:i]] + part) == bins:
-                        yield [lista[:i]] + part
-
     if ordered is None:
-        yield from partition(l, k)
+        yield from sequence_partitions(l, k)
     elif ordered == 11:
         for pl in multiset_permutations(l):
             pl = list(pl)
-            yield from partition(pl, k)
+            yield from sequence_partitions(pl, k)
     elif ordered == 00:
         yield from multiset_partitions(l, k)
     elif ordered == 10:
@@ -2866,7 +2993,7 @@ def rotations(s, dir=1):
 
 def roundrobin(*iterables):
     """roundrobin recipe taken from itertools documentation:
-    https://docs.python.org/3/library/itertools.html#recipes
+    https://docs.python.org/3/library/itertools.html#itertools-recipes
 
     roundrobin('ABC', 'D', 'EF') --> A D E B F C
 

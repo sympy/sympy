@@ -32,15 +32,15 @@ sys.path = ['ext'] + sys.path
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
               'sphinx_reredirects', 'sphinx_copybutton',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser', 'convert-svg-to-pdf', 'sphinx.ext.intersphinx'
-              ]
+              'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
+              'matplotlib.sphinxext.plot_directive', 'myst_parser',
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
 # The format is
 
-# "page/path/without/extension": "../relative_path_with.html"
+# "old-page/path/without/extension": "../new-page/relative_path_with.html"
 
 # Note that the html path is relative to the redirected page. Always test the
 # redirect manually (they aren't tested automatically). See
@@ -60,7 +60,7 @@ redirects = {
     "guides/contributing/index": "../../contributing/index.html",
     "guides/contributing/dev-setup": "../../contributing/dev-setup.html",
     "guides/contributing/dependencies": "../../contributing/dependencies.html",
-    "guides/contributing/build-docs": "../../contributing/build-docs.html",
+    "guides/contributing/build-docs": "../../contributing/new-contributors-guide/build-docs.html",
     "guides/contributing/debug": "../../contributing/debug.html",
     "guides/contributing/docstring": "../../contributing/docstring.html",
     "guides/documentation-style-guide": "../../contributing/contributing/documentation-style-guide.html",
@@ -69,6 +69,7 @@ redirects = {
 
     "tutorial/preliminaries": "../tutorials/intro-tutorial/preliminaries.html",
     "tutorial/intro": "../tutorials/intro-tutorial/intro.html",
+    "tutorial/index": "../tutorials/intro-tutorial/index.html",
     "tutorial/gotchas": "../tutorials/intro-tutorial/gotchas.html",
     "tutorial/features": "../tutorials/intro-tutorial/features.html",
     "tutorial/next": "../tutorials/intro-tutorial/next.html",
@@ -112,9 +113,16 @@ mathjax3_config = {
 
 # Myst configuration (for .md files). See
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
-myst_enable_extensions = ["dollarmath", "linkify"]
-myst_heading_anchors = 2
+myst_enable_extensions = ["dollarmath", "linkify", "tasklist"]
+myst_heading_anchors = 6
+# Make - [ ] checkboxes from the tasklist extension checkable
+# Requires https://github.com/executablebooks/MyST-Parser/pull/686
+# myst_enable_checkboxes = True
 # myst_update_mathjax = False
+
+# Don't linkify links unless they start with "https://". This is needed
+# because the linkify library treates .py as a TLD.
+myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -394,13 +402,16 @@ graphviz_output_format = 'svg'
 
 # Enable links to other packages
 intersphinx_mapping = {
-    'matplotlib': ('https://matplotlib.org/stable/', None)
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'mpmath': ('https://mpmath.org/doc/current/', None),
+    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
 # Require :external: to reference intersphinx. Prevents accidentally linking
 # to something from matplotlib.
 intersphinx_disabled_reftypes = ['*']
 
-# Requried for linkcode extension.
+# Required for linkcode extension.
 # Get commit hash from the external file.
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None

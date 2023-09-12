@@ -361,7 +361,7 @@ class RewritingSystem:
             automaton_alphabet += rule.letter_form_elm
             # Compute the proper prefixes for every rule.
             proper_prefixes[rule] = []
-            letter_word_array = [s for s in rule.letter_form_elm]
+            letter_word_array = list(rule.letter_form_elm)
             len_letter_word_array = len(letter_word_array)
             for i in range (1, len_letter_word_array):
                 letter_word_array[i] = letter_word_array[i-1]*letter_word_array[i]

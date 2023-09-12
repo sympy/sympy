@@ -25,8 +25,7 @@ from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python3-runtime is not present
-if not antlr4:
-    disabled = True
+disabled = antlr4 is None
 
 theta = Symbol('theta')
 f = Function('f')
@@ -144,11 +143,11 @@ GOOD_PAIRS = [
     (r"\frac{a + b}{c}", _Mul(a + b, _Pow(c, -1))),
     (r"\frac{7}{3}", _Mul(7, _Pow(3, -1))),
     (r"(\csc x)(\sec y)", csc(x)*sec(y)),
-    (r"\lim_{x \to 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3)),
-    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3)),
+    (r"\lim_{x \to 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Rightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
+    (r"\lim_{x \Longrightarrow 3} a", Limit(a, x, 3, dir='+-')),
     (r"\lim_{x \to 3^{+}} a", Limit(a, x, 3, dir='+')),
     (r"\lim_{x \to 3^{-}} a", Limit(a, x, 3, dir='-')),
     (r"\lim_{x \to 3^+} a", Limit(a, x, 3, dir='+')),
@@ -273,6 +272,7 @@ GOOD_PAIRS = [
     (r"\log_2 x", _log(x, 2)),
     (r"\log_a x", _log(x, a)),
     (r"5^0 - 4^0", _Add(_Pow(5, 0), _Mul(-1, _Pow(4, 0)))),
+    (r"3x - 1", _Add(_Mul(3, x), -1))
 ]
 
 
@@ -349,3 +349,10 @@ def test_failing_not_parseable():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
+
+# In strict mode, FAILING_BAD_STRINGS would fail
+def test_strict_mode():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    for latex_str in FAILING_BAD_STRINGS:
+        with raises(LaTeXParsingError):
+            parse_latex(latex_str, strict=True)

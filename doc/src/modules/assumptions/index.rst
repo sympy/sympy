@@ -58,12 +58,12 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    ask.rst
-    assume.rst
-    refine.rst
-    predicates.rst
+   ask.rst
+   assume.rst
+   refine.rst
+   predicates.rst
 
 
 Performance improvements

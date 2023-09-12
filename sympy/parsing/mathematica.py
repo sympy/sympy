@@ -1,7 +1,8 @@
+from __future__ import annotations
 import re
 import typing
 from itertools import product
-from typing import Any, Dict as tDict, Tuple as tTuple, List, Optional, Union as tUnion, Callable
+from typing import Any, Callable
 
 import sympy
 from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
@@ -234,13 +235,13 @@ class MathematicaParser:
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    TRANSLATIONS: dict[tuple[str, int], dict[str, Any]] = {}
 
     # cache for a raw users' translation dictionary
-    cache_original = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    cache_original: dict[tuple[str, int], dict[str, Any]] = {}
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
+    cache_compiled: dict[tuple[str, int], dict[str, Any]] = {}
 
     @classmethod
     def _initialize_class(cls):
@@ -384,7 +385,7 @@ class MathematicaParser:
             x_args = self.translations[key]['args']
 
             # make CORRESPONDENCES between model arguments and actual ones
-            d = {k: v for k, v in zip(x_args, args)}
+            d = dict(zip(x_args, args))
 
         # with variable-length argument
         elif (fm, '*') in self.translations:
@@ -543,7 +544,7 @@ class MathematicaParser:
     RIGHT = "Right"
     LEFT = "Left"
 
-    _mathematica_op_precedence: List[tTuple[str, Optional[str], tDict[str, tUnion[str, Callable]]]] = [
+    _mathematica_op_precedence: list[tuple[str, str | None, dict[str, str | Callable]]] = [
         (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
@@ -623,7 +624,7 @@ class MathematicaParser:
         tokenizer = self._get_tokenizer()
 
         # Find strings:
-        code_splits: List[typing.Union[str, list]] = []
+        code_splits: list[str | list] = []
         while True:
             string_start = code.find("\"")
             if string_start == -1:
@@ -654,7 +655,7 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) else [i] for i in code_splits]
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
@@ -666,7 +667,7 @@ class MathematicaParser:
 
         return tokens
 
-    def _is_op(self, token: tUnion[str, list]) -> bool:
+    def _is_op(self, token: str | list) -> bool:
         if isinstance(token, list):
             return False
         if re.match(self._literal, token):
@@ -675,18 +676,18 @@ class MathematicaParser:
             return False
         return True
 
-    def _is_valid_star1(self, token: tUnion[str, list]) -> bool:
+    def _is_valid_star1(self, token: str | list) -> bool:
         if token in (")", "}"):
             return True
         return not self._is_op(token)
 
-    def _is_valid_star2(self, token: tUnion[str, list]) -> bool:
+    def _is_valid_star2(self, token: str | list) -> bool:
         if token in ("(", "{"):
             return True
         return not self._is_op(token)
 
     def _from_tokens_to_fullformlist(self, tokens: list):
-        stack: List[list] = [[]]
+        stack: list[list] = [[]]
         open_seq = []
         pointer: int = 0
         while pointer < len(tokens):
@@ -810,7 +811,7 @@ class MathematicaParser:
             while pointer < size:
                 token = tokens[pointer]
                 if isinstance(token, str) and token in op_dict:
-                    op_name: tUnion[str, Callable] = op_dict[token]
+                    op_name: str | Callable = op_dict[token]
                     node: list
                     first_index: int
                     if isinstance(op_name, str):
@@ -970,87 +971,87 @@ class MathematicaParser:
 
         return converter(pylist)
 
-    _node_conversions = dict(
-        Times=Mul,
-        Plus=Add,
-        Power=Pow,
-        Log=lambda *a: log(*reversed(a)),
-        Log2=lambda x: log(x, 2),
-        Log10=lambda x: log(x, 10),
-        Exp=exp,
-        Sqrt=sqrt,
+    _node_conversions = {
+        "Times": Mul,
+        "Plus": Add,
+        "Power": Pow,
+        "Log": lambda *a: log(*reversed(a)),
+        "Log2": lambda x: log(x, 2),
+        "Log10": lambda x: log(x, 10),
+        "Exp": exp,
+        "Sqrt": sqrt,
 
-        Sin=sin,
-        Cos=cos,
-        Tan=tan,
-        Cot=cot,
-        Sec=sec,
-        Csc=csc,
+        "Sin": sin,
+        "Cos": cos,
+        "Tan": tan,
+        "Cot": cot,
+        "Sec": sec,
+        "Csc": csc,
 
-        ArcSin=asin,
-        ArcCos=acos,
-        ArcTan=lambda *a: atan2(*reversed(a)) if len(a) == 2 else atan(*a),
-        ArcCot=acot,
-        ArcSec=asec,
-        ArcCsc=acsc,
+        "ArcSin": asin,
+        "ArcCos": acos,
+        "ArcTan": lambda *a: atan2(*reversed(a)) if len(a) == 2 else atan(*a),
+        "ArcCot": acot,
+        "ArcSec": asec,
+        "ArcCsc": acsc,
 
-        Sinh=sinh,
-        Cosh=cosh,
-        Tanh=tanh,
-        Coth=coth,
-        Sech=sech,
-        Csch=csch,
+        "Sinh": sinh,
+        "Cosh": cosh,
+        "Tanh": tanh,
+        "Coth": coth,
+        "Sech": sech,
+        "Csch": csch,
 
-        ArcSinh=asinh,
-        ArcCosh=acosh,
-        ArcTanh=atanh,
-        ArcCoth=acoth,
-        ArcSech=asech,
-        ArcCsch=acsch,
+        "ArcSinh": asinh,
+        "ArcCosh": acosh,
+        "ArcTanh": atanh,
+        "ArcCoth": acoth,
+        "ArcSech": asech,
+        "ArcCsch": acsch,
 
-        Expand=expand,
-        Im=im,
-        Re=sympy.re,
-        Flatten=flatten,
-        Polylog=polylog,
-        Cancel=cancel,
+        "Expand": expand,
+        "Im": im,
+        "Re": sympy.re,
+        "Flatten": flatten,
+        "Polylog": polylog,
+        "Cancel": cancel,
         # Gamma=gamma,
-        TrigExpand=expand_trig,
-        Sign=sign,
-        Simplify=simplify,
-        Defer=UnevaluatedExpr,
-        Identity=S,
+        "TrigExpand": expand_trig,
+        "Sign": sign,
+        "Simplify": simplify,
+        "Defer": UnevaluatedExpr,
+        "Identity": S,
         # Sum=Sum_doit,
         # Module=With,
         # Block=With,
-        Null=lambda *a: S.Zero,
-        Mod=Mod,
-        Max=Max,
-        Min=Min,
-        Pochhammer=rf,
-        ExpIntegralEi=Ei,
-        SinIntegral=Si,
-        CosIntegral=Ci,
-        AiryAi=airyai,
-        AiryAiPrime=airyaiprime,
-        AiryBi=airybi,
-        AiryBiPrime=airybiprime,
-        LogIntegral=li,
-        PrimePi=primepi,
-        Prime=prime,
-        PrimeQ=isprime,
+        "Null": lambda *a: S.Zero,
+        "Mod": Mod,
+        "Max": Max,
+        "Min": Min,
+        "Pochhammer": rf,
+        "ExpIntegralEi": Ei,
+        "SinIntegral": Si,
+        "CosIntegral": Ci,
+        "AiryAi": airyai,
+        "AiryAiPrime": airyaiprime,
+        "AiryBi": airybi,
+        "AiryBiPrime": airybiprime,
+        "LogIntegral": li,
+        "PrimePi": primepi,
+        "Prime": prime,
+        "PrimeQ": isprime,
 
-        List=Tuple,
-        Greater=StrictGreaterThan,
-        GreaterEqual=GreaterThan,
-        Less=StrictLessThan,
-        LessEqual=LessThan,
-        Equal=Equality,
-        Or=Or,
-        And=And,
+        "List": Tuple,
+        "Greater": StrictGreaterThan,
+        "GreaterEqual": GreaterThan,
+        "Less": StrictLessThan,
+        "LessEqual": LessThan,
+        "Equal": Equality,
+        "Or": Or,
+        "And": And,
 
-        Function=_parse_Function,
-    )
+        "Function": _parse_Function,
+    }
 
     _atom_conversions = {
         "I": I,
@@ -1065,7 +1066,7 @@ class MathematicaParser:
                     head = recurse(expr[0])
                 else:
                     head = self._node_conversions.get(expr[0], Function(expr[0]))
-                return head(*list(recurse(arg) for arg in expr[1:]))
+                return head(*[recurse(arg) for arg in expr[1:]])
             else:
                 return self._atom_conversions.get(expr, sympify(expr))
 

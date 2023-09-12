@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
 # Tests that a useful message is give in the ImportError when trying to import
-# sympy from Python 2. This is tested on Travis to ensure that we don't get a
-# Py2 SyntaxError from sympy/__init__.py
+# sympy from Python 2. This ensures that we don't get a Py2 SyntaxError from
+# sympy/__init__.py
 
 import sys
 assert sys.version_info[:2] == (2, 7), "This test is for Python 2.7 only"

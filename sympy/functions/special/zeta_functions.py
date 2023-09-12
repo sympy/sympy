@@ -1,10 +1,13 @@
 """ Riemann zeta and related function. """
 
 from sympy.core.add import Add
-from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.cache import cacheit
+from sympy.core.function import ArgumentIndexError, expand_mul, Function
+from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, genocchi, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
@@ -119,7 +122,7 @@ class lerchphi(Function):
 
     .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
            Vol. I, New York: McGraw-Hill. Section 1.11.
-    .. [2] http://dlmf.nist.gov/25.14
+    .. [2] https://dlmf.nist.gov/25.14
     .. [3] https://en.wikipedia.org/wiki/Lerch_transcendent
 
     """
@@ -163,9 +166,14 @@ class lerchphi(Function):
             m, n = S([a.p, a.q])
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
-            return add + mul*n**(s - 1)*Add(
-                *[polylog(s, zet**k*root)._eval_expand_func(**hints)
-                  / (unpolarify(zet)**k*root)**m for k in range(n)])
+            up_zet = unpolarify(zet)
+            addargs = []
+            for k in range(n):
+                p = polylog(s, zet**k*root)
+                if isinstance(p, polylog):
+                    p = p._eval_expand_func(**hints)
+                addargs.append(p/(up_zet**k*root)**m)
+            return add + mul*n**(s - 1)*Add(*addargs)
 
         # TODO use minpoly instead of ad-hoc methods when issue 5888 is fixed
         if isinstance(z, exp) and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
@@ -193,7 +201,7 @@ class lerchphi(Function):
         else:
             raise ArgumentIndexError
 
-    def _eval_rewrite_helper(self, z, s, a, target):
+    def _eval_rewrite_helper(self, target):
         res = self._eval_expand_func()
         if res.has(target):
             return res
@@ -201,10 +209,10 @@ class lerchphi(Function):
             return self
 
     def _eval_rewrite_as_zeta(self, z, s, a, **kwargs):
-        return self._eval_rewrite_helper(z, s, a, zeta)
+        return self._eval_rewrite_helper(zeta)
 
     def _eval_rewrite_as_polylog(self, z, s, a, **kwargs):
-        return self._eval_rewrite_helper(z, s, a, polylog)
+        return self._eval_rewrite_helper(polylog)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
@@ -283,25 +291,17 @@ class polylog(Function):
 
     @classmethod
     def eval(cls, s, z):
-        if z is S.One:
-            return zeta(s)
-        elif z is S.NegativeOne:
-            return -dirichlet_eta(s)
-        elif z is S.Zero:
-            return S.Zero
-        elif s == 2:
-            if z == S.Half:
-                return pi**2/12 - log(2)**2/2
-            elif z == 2:
-                return pi**2/4 - I*pi*log(2)
-            elif z == -(sqrt(5) - 1)/2:
-                return -pi**2/15 + log((sqrt(5)-1)/2)**2/2
-            elif z == -(sqrt(5) + 1)/2:
-                return -pi**2/10 - log((sqrt(5)+1)/2)**2
-            elif z == (3 - sqrt(5))/2:
-                return pi**2/15 - log((sqrt(5)-1)/2)**2
-            elif z == (sqrt(5) - 1)/2:
-                return pi**2/10 - log((sqrt(5)-1)/2)**2
+        if z.is_number:
+            if z is S.One:
+                return zeta(s)
+            elif z is S.NegativeOne:
+                return -dirichlet_eta(s)
+            elif z is S.Zero:
+                return S.Zero
+            elif s == 2:
+                dilogtable = _dilogtable()
+                if z in dilogtable:
+                    return dilogtable[z]
 
         if z.is_zero:
             return S.Zero
@@ -493,7 +493,7 @@ class zeta(Function):
     References
     ==========
 
-    .. [1] http://dlmf.nist.gov/25.11
+    .. [1] https://dlmf.nist.gov/25.11
     .. [2] https://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     """
@@ -703,6 +703,7 @@ class riemann_xi(Function):
         from sympy.functions.special.gamma_functions import gamma
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
+
 class stieltjes(Function):
     r"""
     Represents Stieltjes constants, $\gamma_{k}$ that occur in
@@ -767,3 +768,20 @@ class stieltjes(Function):
 
         if n.is_integer == False:
             return S.ComplexInfinity
+
+
+@cacheit
+def _dilogtable():
+    return {
+        S.Half: pi**2/12 - log(2)**2/2,
+        Integer(2) : pi**2/4 - I*pi*log(2),
+        -(sqrt(5) - 1)/2 : -pi**2/15 + log((sqrt(5)-1)/2)**2/2,
+        -(sqrt(5) + 1)/2 : -pi**2/10 - log((sqrt(5)+1)/2)**2,
+        (3 - sqrt(5))/2 : pi**2/15 - log((sqrt(5)-1)/2)**2,
+        (sqrt(5) - 1)/2 : pi**2/10 - log((sqrt(5)-1)/2)**2,
+        I : I*S.Catalan - pi**2/48,
+        -I : -I*S.Catalan - pi**2/48,
+        1 - I : pi**2/16 - I*S.Catalan - pi*I/4*log(2),
+        1 + I : pi**2/16 + I*S.Catalan + pi*I/4*log(2),
+        (1 - I)/2 : -log(2)**2/8 + pi*I*log(2)/8 + 5*pi**2/96 - I*S.Catalan
+    }

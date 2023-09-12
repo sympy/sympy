@@ -10,49 +10,49 @@ Quantum Functions
 =================
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    anticommutator.rst
-    cg.rst
-    commutator.rst
-    constants.rst
-    dagger.rst
-    innerproduct.rst
-    tensorproduct.rst
+   anticommutator.rst
+   cg.rst
+   commutator.rst
+   constants.rst
+   dagger.rst
+   innerproduct.rst
+   tensorproduct.rst
 
 States and Operators
 ====================
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    cartesian.rst
-    hilbert.rst
-    operator.rst
-    operatorset.rst
-    qapply.rst
-    represent.rst
-    spin.rst
-    state.rst
+   cartesian.rst
+   hilbert.rst
+   operator.rst
+   operatorset.rst
+   qapply.rst
+   represent.rst
+   spin.rst
+   state.rst
 
 Quantum Computation
 ===================
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    circuitplot.rst
-    gate.rst
-    grover.rst
-    qft.rst
-    qubit.rst
-    shor.rst
+   circuitplot.rst
+   gate.rst
+   grover.rst
+   qft.rst
+   qubit.rst
+   shor.rst
 
 Analytic Solutions
 ==================
 
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    piab.rst
+   piab.rst

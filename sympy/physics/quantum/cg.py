@@ -1,7 +1,7 @@
 #TODO:
 # -Implement Clebsch-Gordan symmetries
 # -Improve simplification method
-# -Implement new simpifications
+# -Implement new simplifications
 """Clebsch-Gordon Coefficients."""
 
 from sympy.concrete.summations import Sum

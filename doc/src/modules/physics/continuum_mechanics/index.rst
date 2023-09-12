@@ -10,17 +10,23 @@ Beam
 ====
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    beam.rst
-    beam_problems.rst
+   beam.rst
+   beam_problems.rst
 
 Truss
 =====
 
 .. toctree::
-    :maxdepth: 3
+   :titlesonly:
 
-    truss.rst
+   truss.rst
 
+Cable
+=====
 
+.. toctree::
+   :titlesonly:
+
+   cable.rst

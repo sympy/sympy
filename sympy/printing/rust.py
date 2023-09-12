@@ -31,9 +31,11 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import S, Rational, Float, Lambda
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 
 # Rust's methods for integer and float can be found at here :
@@ -68,11 +70,11 @@ known_functions = {
     # "": "is_sign_positive",
     # "": "is_sign_negative",
     # "": "mul_add",
-    "Pow": [(lambda base, exp: exp == -S.One, "recip", 2),           # 1.0/x
-            (lambda base, exp: exp == S.Half, "sqrt", 2),            # x ** 0.5
-            (lambda base, exp: exp == -S.Half, "sqrt().recip", 2),   # 1/(x ** 0.5)
+    "Pow": [(lambda base, exp: equal_valued(exp, -1), "recip", 2),   # 1.0/x
+            (lambda base, exp: equal_valued(exp, 0.5), "sqrt", 2),   # x ** 0.5
+            (lambda base, exp: equal_valued(exp, -0.5), "sqrt().recip", 2),   # 1/(x ** 0.5)
             (lambda base, exp: exp == Rational(1, 3), "cbrt", 2),    # x ** (1/3)
-            (lambda base, exp: base == S.One*2, "exp2", 3),          # 2 ** x
+            (lambda base, exp: equal_valued(base, 2), "exp2", 3),    # 2 ** x
             (lambda base, exp: exp.is_integer, "powi", 1),           # x ** y, for i32
             (lambda base, exp: not exp.is_integer, "powf", 1)],      # x ** y, for f64
     "exp": [(lambda exp: True, "exp", 2)],   # e ** x
@@ -219,7 +221,7 @@ class RustCodePrinter(CodePrinter):
     printmethod = "_rust_code"
     language = "Rust"
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -230,7 +232,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }  # type: tDict[str, Any]
+    }
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

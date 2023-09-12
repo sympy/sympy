@@ -52,9 +52,8 @@ def approximants(l, X=Symbol('x'), simplify=False):
     See Also
     ========
 
-    See function sympy.concrete.guess.guess_generating_function_rational and
-    function mpmath.pade
-
+    sympy.concrete.guess.guess_generating_function_rational
+    mpmath.pade
     """
     from sympy.simplify import simplify as simp
     from sympy.simplify.radsimp import denom

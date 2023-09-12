@@ -533,11 +533,9 @@ def test_solve_sqrt_3():
                sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
                sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3)]
 
-    assert sol._args[0] == FiniteSet(*fset)
-    assert sol._args[1] == ConditionSet(
-        R,
-        Eq(sqrt(2)*R*sqrt(1/(R + 1)) + (R + 1)*(sqrt(2)*sqrt(1/(R + 1)) - 1), 0),
-        FiniteSet(*cset))
+    fs = FiniteSet(*fset)
+    cs = ConditionSet(R, Eq(eq, 0), FiniteSet(*cset))
+    assert sol == (fs - {-1}) | (cs - {-1})
 
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
@@ -2404,14 +2402,30 @@ def test_issue_11174():
 
 
 def test_issue_11534():
-    # eq and eq2 should give the same solution as a Complement
+    # eq1 and eq2 should not have the same solutions because squaring both
+    # sides of the radical equation introduces a spurious solution branch.
+    # The equations have a symbolic parameter y and it is easy to see that for
+    # y != 0 the solution s1 will not be valid for eq1.
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
-    eq = -y + x/sqrt(-x**2 + 1)
+    eq1 = -y + x/sqrt(-x**2 + 1)
     eq2 = -y**2 + x**2/(-x**2 + 1)
-    soln = Complement(FiniteSet(-y/sqrt(y**2 + 1), y/sqrt(y**2 + 1)), FiniteSet(-1, 1))
-    assert solveset(eq, x, S.Reals) == soln
-    assert solveset(eq2, x, S.Reals) == soln
+
+    # We get a ConditionSet here because s1 works in eq1 if y is equal to zero
+    # although not for any other value of y. That case is redundant though
+    # because if y=0 then s1=s2 so the solution for eq1 could just be returned
+    # as s2 - {-1, 1}. In fact we have
+    #   |y/sqrt(y**2 + 1)| < 1
+    # So the complements are not needed either. The ideal output here would be
+    #   sol1 = s2
+    #   sol2 = s1 | s2.
+    s1, s2 = FiniteSet(-y/sqrt(y**2 + 1)), FiniteSet(y/sqrt(y**2 + 1))
+    cset = ConditionSet(x, Eq(eq1, 0), s1)
+    sol1 = (s2 - {-1, 1}) | (cset - {-1, 1})
+    sol2 = (s1 | s2) - {-1, 1}
+
+    assert solveset(eq1, x, S.Reals) == sol1
+    assert solveset(eq2, x, S.Reals) == sol2
 
 
 def test_issue_10477():
@@ -2542,6 +2556,7 @@ def test_issue_21276():
     eq = (2*x*(y - z) - y*erf(y - z) - y + z*erf(y - z) + z)**2
     assert solveset(eq.expand(), y) == FiniteSet(z, z + erfinv(2*x - 1))
 
+
 # exponential tests
 def test_exponential_real():
     from sympy.abc import y
@@ -2587,6 +2602,8 @@ def test_exponential_real():
     p = Symbol('p', positive=True)
     assert solveset_real((1/p + 1)**(p + 1), p).dummy_eq(
         ConditionSet(x, Eq((1 + 1/x)**(x + 1), 0), S.Reals))
+    assert solveset(2**x - 4**x + 12, x, S.Reals) == {2}
+    assert solveset(2**x - 2**(2*x) + 12, x, S.Reals) == {2}
 
 
 @XFAIL
@@ -3035,7 +3052,7 @@ def test_issue_18208():
 
     # gauss_jordan_solve
     gj_solve, new_vars = A.gauss_jordan_solve(b)
-    gj_solve = [i for i in gj_solve]
+    gj_solve = list(gj_solve)
 
     gj_expected = linsolve_expected.subs(zip([x3, x7, y7, y9, y11], new_vars))
 

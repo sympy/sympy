@@ -209,7 +209,7 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
 
     Here, we will see how facts relevant to ``Abs(x*y)`` are recursively
     extracted. On the first run, set containing the expression is passed
-    without pre-discovered relevant facts. The result is a set containig
+    without pre-discovered relevant facts. The result is a set containing
     candidates for next run, and ``CNF()`` instance containing facts
     which are relevant to ``Abs`` and its argument.
 

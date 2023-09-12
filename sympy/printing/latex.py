@@ -515,8 +515,6 @@ class LatexPrinter(Printer):
         return r"\Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr: Expr):
-        from sympy.physics.units import Quantity
-        from sympy.physics.units.prefixes import Prefix
         from sympy.simplify import fraction
         separator: str = self._settings['mul_symbol_latex']
         numbersep: str = self._settings['mul_symbol_latex_numbers']
@@ -530,11 +528,11 @@ class LatexPrinter(Printer):
                 else:
                     args = list(expr.args)
 
-                # If quantities are present append them at the back
-                units, nonunits = sift(args, lambda x: isinstance(x, (Quantity, Prefix)) or
+                # If there are quantities or prefixes, append them at the back.
+                units, nonunits = sift(args, lambda x: (hasattr(x, "_scale_factor") or hasattr(x, "is_physical_constant")) or
                               (isinstance(x, Pow) and
-                               isinstance(x.base, Quantity)), binary=True)
-                prefixes, units = sift(units, lambda x: isinstance(x, Prefix), binary=True)
+                               hasattr(x.base, "is_physical_constant")), binary=True)
+                prefixes, units = sift(units, lambda x: hasattr(x, "_scale_factor"), binary=True)
                 return convert_args(nonunits + prefixes + units)
 
         def convert_args(args) -> str:
@@ -542,8 +540,7 @@ class LatexPrinter(Printer):
 
             for i, term in enumerate(args):
                 term_tex = self._print(term)
-
-                if not isinstance(term, (Quantity, Prefix)):
+                if not (hasattr(term, "_scale_factor") or hasattr(term, "is_physical_constant")):
                     if self._needs_mul_brackets(term, first=(i == 0),
                                                 last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
@@ -1219,8 +1216,10 @@ class LatexPrinter(Printer):
             return r"\Pi%s" % tex
 
     def _print_beta(self, expr, exp=None):
-        tex = r"\left(%s, %s\right)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
+        x = expr.args[0]
+        # Deal with unevaluated single argument beta
+        y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
+        tex = rf"\left({x}, {y}\right)"
 
         if exp is not None:
             return r"\operatorname{B}^{%s}%s" % (exp, tex)
@@ -1707,7 +1706,7 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
-            left_delim: str = self._settings['mat_delim']
+            left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
@@ -1812,7 +1811,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \circ '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
@@ -1827,7 +1826,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \otimes '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -2877,6 +2876,12 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_mpq(self, expr):
+        return str(expr)
+
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
         return str(expr)
 
     def _print_Predicate(self, expr):

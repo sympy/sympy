@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 from functools import wraps
 
 from sympy.core import S, Integer, Basic, Mul, Add
@@ -52,7 +52,7 @@ class MatrixExpr(Expr):
 
     MatrixSymbol, MatAdd, MatMul, Transpose, Inverse
     """
-    __slots__ = ()  # type: tTuple[str, ...]
+    __slots__: tuple[str, ...] = ()
 
     # Should not be considered iterable by the
     # sympy.utilities.iterables.iterable function. Subclass that actually are
@@ -61,9 +61,9 @@ class MatrixExpr(Expr):
 
     _op_priority = 11.0
 
-    is_Matrix = True  # type: bool
-    is_MatrixExpr = True  # type: bool
-    is_Identity = None  # type: FuzzyBool
+    is_Matrix: bool = True
+    is_MatrixExpr: bool = True
+    is_Identity: FuzzyBool = None
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
@@ -84,7 +84,7 @@ class MatrixExpr(Expr):
     # The following is adapted from the core Expr object
 
     @property
-    def shape(self) -> tTuple[Expr, Expr]:
+    def shape(self) -> tuple[Expr, Expr]:
         raise NotImplementedError
 
     @property
@@ -171,8 +171,13 @@ class MatrixExpr(Expr):
         return self.shape[1]
 
     @property
-    def is_square(self):
-        return self.rows == self.cols
+    def is_square(self) -> bool | None:
+        rows, cols = self.shape
+        if isinstance(rows, Integer) and isinstance(cols, Integer):
+            return rows == cols
+        if rows == cols:
+            return True
+        return None
 
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
@@ -242,7 +247,7 @@ class MatrixExpr(Expr):
         return adjoint(self)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return S.One, self
 
     def conjugate(self):
@@ -258,7 +263,7 @@ class MatrixExpr(Expr):
         return self.transpose()
 
     def inverse(self):
-        if not self.is_square:
+        if self.is_square is False:
             raise NonSquareMatrixError('Inverse of non-square matrix')
         return self._eval_inverse()
 
@@ -628,10 +633,7 @@ class MatrixElement(Expr):
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
-            from sympy.matrices.matrices import MatrixBase
-            if isinstance(self.parent, MatrixBase):
-                return self.parent.diff(v)[self.i, self.j]
-            return S.Zero
+            return self.parent.diff(v)[self.i, self.j]
 
         M = self.args[0]
 
@@ -743,7 +745,7 @@ class _LeftRightArgs:
     """
 
     def __init__(self, lines, higher=S.One):
-        self._lines = [i for i in lines]
+        self._lines = list(lines)
         self._first_pointer_parent = self._lines
         self._first_pointer_index = 0
         self._first_line_index = 0
@@ -797,7 +799,7 @@ class _LeftRightArgs:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
-        data = [i for i in data]
+        data = list(data)
         return data
 
     def matrix_form(self):

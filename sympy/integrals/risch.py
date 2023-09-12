@@ -28,7 +28,8 @@ from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -382,7 +383,7 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
-                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+                # https://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                 self.newf = self.newf.xreplace({i: newterm})
 

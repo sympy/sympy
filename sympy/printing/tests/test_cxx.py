@@ -1,3 +1,4 @@
+from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import symbols
 from sympy.functions import beta, Ei, zeta, Max, Min, sqrt, riemann_xi, frac
 from sympy.printing.cxx import CXX98CodePrinter, CXX11CodePrinter, CXX17CodePrinter, cxxcode
@@ -53,8 +54,8 @@ def test_CXX17CodePrinter():
     assert CXX17CodePrinter().doprint(zeta(x)) == 'std::riemann_zeta(x)'
 
     # Automatic rewrite
-    assert CXX17CodePrinter().doprint(frac(x)) == 'x - std::floor(x)'
-    assert CXX17CodePrinter().doprint(riemann_xi(x)) == '(1.0/2.0)*std::pow(M_PI, -1.0/2.0*x)*x*(x - 1)*std::tgamma((1.0/2.0)*x)*std::riemann_zeta(x)'
+    assert CXX17CodePrinter().doprint(frac(x)) == '(x - std::floor(x))'
+    assert CXX17CodePrinter().doprint(riemann_xi(x)) == '((1.0/2.0)*std::pow(M_PI, -1.0/2.0*x)*x*(x - 1)*std::tgamma((1.0/2.0)*x)*std::riemann_zeta(x))'
 
 
 def test_cxxcode():
@@ -65,3 +66,21 @@ def test_cxxcode_nested_minmax():
         == 'std::max(std::min(u, v), std::min(x, y))'
     assert cxxcode(Min(Max(x, y), Max(u, v))) \
         == 'std::min(std::max(u, v), std::max(x, y))'
+
+def test_subclass_Integer_Float():
+    class MyPrinter(CXX17CodePrinter):
+        def _print_Integer(self, arg):
+            return 'bigInt("%s")' % super()._print_Integer(arg)
+
+        def _print_Float(self, arg):
+            rat = Rational(arg)
+            return 'bigFloat(%s, %s)' % (
+                self._print(Integer(rat.p)),
+                self._print(Integer(rat.q))
+            )
+
+    p = MyPrinter()
+    for i in range(13):
+        assert p.doprint(i) == 'bigInt("%d")' % i
+    assert p.doprint(Float(0.5)) == 'bigFloat(bigInt("1"), bigInt("2"))'
+    assert p.doprint(x**-1.0) == 'bigFloat(bigInt("1"), bigInt("1"))/x'

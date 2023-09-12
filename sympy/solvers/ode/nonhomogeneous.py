@@ -409,7 +409,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
 
     def is_homogeneous_solution(term):
         r""" This function checks whether the given trialset contains any root
-            of homogenous equation"""
+            of homogeneous equation"""
         return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
 
     retdict['test'] = _test_term(expr, x)

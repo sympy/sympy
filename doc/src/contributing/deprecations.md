@@ -218,76 +218,64 @@ deprecation as early as possible.
 Here is a checklist for doing a deprecation. See below for details
 on each step.
 
-<!-- This is a poor-man's version of the `- [ ]` syntax, which works on GitHub -->
-<!-- but doesn't work with MyST. <input type="checkbox"> gives a nice HTML -->
-<!-- checkbox. The <ul> tags create a nested list. -->
-
-<ul>
-
-<input type="checkbox"> Discuss the backwards incompatible change with the
+- [ ]  Discuss the backwards incompatible change with the
 community. Ensure the change is really worth making as per the discussion
 above.
 
-<input type="checkbox"> Remove all instance of the deprecated code from
+- [ ]  Remove all instance of the deprecated code from
 everywhere in the codebase (including doctest examples).
 
-<input type="checkbox"> Add {func}`~.sympy_deprecation_warning` to the code.
+- [ ]  Add {func}`~.sympy_deprecation_warning` to the code.
 
-<ul>
+    - [ ]  Write a descriptive message for the
+    {func}`~.sympy_deprecation_warning`. Make sure the message explains both what
+    is deprecated and what to replace it with. The message may be a multiline
+    string and contain examples.
 
-<input type="checkbox"> Write a descriptive message for the
-{func}`~.sympy_deprecation_warning`. Make sure the message explains both what
-is deprecated and what to replace it with. The message may be a multiline
-string and contain examples.
+    - [ ]  Set `deprecated_since_version` to the version in
+    [`sympy/release.py`](https://github.com/sympy/sympy/blob/master/sympy/release.py)
+    (without the `.dev`).
 
-<input type="checkbox"> Set `deprecated_since_version` to the version in
-[`sympy/release.py`](https://github.com/sympy/sympy/blob/master/sympy/release.py)
-(without the `.dev`).
+    - [ ]  Set `active_deprecations_target` to the target used in
+    the `active-deprecations.md` file.
 
-<input type="checkbox"> Set `active_deprecations_target` to the target used in
-the `active-deprecations.md` file.
+    - [ ]  Make sure `stacklevel` is set to the right value so
+    that the deprecation warning shows the user line of code.
 
-<input type="checkbox"> Make sure `stacklevel` is set to the right value so
-that the deprecation warning shows the user line of code.
+    - [ ]  Visually confirm the deprecation warning looks good in
+    the console.
 
-<input type="checkbox"> Visually confirm the deprecation warning looks good in
-the console.
 
-</ul>
-
-<input type="checkbox"> Add a `.. deprecated:: <version>` note to the top of
+- [ ]  Add a `.. deprecated:: <version>` note to the top of
 the relevant docstring(s).
 
-<input type="checkbox"> Add a section to the
+- [ ]  Add a section to the
 `doc/src/explanation/active-deprecations.md` file.
-<ul>
 
-<input type="checkbox"> Add a cross-reference target `(deprecation-xyz)=`
-before the section header (this is the same reference used by
-`active_deprecations_target` above).
 
-<input type="checkbox"> Explain what is deprecated and what to replace it
-with.
+    - [ ]  Add a cross-reference target `(deprecation-xyz)=`
+    before the section header (this is the same reference used by
+    `active_deprecations_target` above).
 
-<input type="checkbox"> Explain *why* the given thing is deprecated.
-</ul>
+    - [ ]  Explain what is deprecated and what to replace it
+    with.
 
-<input type="checkbox"> Add a test using {func}`~.warns_deprecated_sympy` that
+    - [ ]  Explain *why* the given thing is deprecated.
+
+- [ ]  Add a test using {func}`~.warns_deprecated_sympy` that
 tests that the deprecation warning is issued properly. This test should be the
 only place in the code that actually uses the deprecated functionality.
 
-<input type="checkbox"> Run the test suite to ensure the above test works and
+- [ ]  Run the test suite to ensure the above test works and
 that no other code uses the deprecated code, which will cause the tests to
 fail.
 
-<input type="checkbox"> In your PR, add a `BREAKING CHANGE` entry to the
+- [ ]  In your PR, add a `BREAKING CHANGE` entry to the
 release notes for the deprecation.
 
-<input type="checkbox"> Once the PR is merged, manually add the change to the
+- [ ]  Once the PR is merged, manually add the change to the
 "Backwards compatibility breaks and deprecations" section of the release notes
 on the wiki.
-
-</ul>
 
 ### Adding the deprecation to the code
 
