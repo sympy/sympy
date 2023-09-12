@@ -677,9 +677,7 @@ def center_pad(wstring, wtarget, fillchar=' '):
         raise ValueError('not enough space for string')
     wdelta = wtarget - wstring
 
-    # make this `wleft = sum(divmod(wdelta, 2))` to put extra on left
-    # like '1'.center(2) -> ' 1'
-    wleft = wdelta // 2
+    wleft = wdelta // 2  # favor left '1 '
     wright = wdelta - wleft
 
     left = fillchar * wleft
