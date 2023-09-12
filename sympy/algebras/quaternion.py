@@ -926,7 +926,10 @@ class Quaternion(Expr):
         668 + (-224)*i + (-336)*j + (-448)*k
 
         """
-        q, p = self, as_int(p)
+        try:
+            q, p = self, as_int(p)
+        except ValueError:
+            return NotImplemented
 
         if p < 0:
             q, p = q.inverse(), -p
