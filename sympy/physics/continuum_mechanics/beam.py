@@ -2240,12 +2240,6 @@ class Beam:
         False: if the load is positive
         None: if it is indeterminate
 
-        Notes
-        =====
-        The Beam class doesn't care about assumptions on symbolic loads.
-        Hence, looking at the is_negative attribute will to work if the load
-        is a symbol or expression. If the load is a symbolic expression,
-        I'm just going to look for negative signs.
         """
         rv = load.is_negative
         if load.is_Atom or rv is not None:
