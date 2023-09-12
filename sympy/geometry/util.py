@@ -285,7 +285,8 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -306,7 +307,7 @@ def closest_points(*args):
     References
     ==========
 
-    .. [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+    .. [1] https://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
 
     .. [2] Sweep line algorithm
         https://en.wikipedia.org/wiki/Sweep_line_algorithm
@@ -405,7 +406,7 @@ def convex_hull(*args, polygon=True):
     .. [2] Andrew's Monotone Chain Algorithm
       (A.M. Andrew,
       "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-      http://geomalgorithms.com/a10-_hull-1.html
+      https://web.archive.org/web/20210511015444/http://geomalgorithms.com/a10-_hull-1.html
 
     """
     from .line import Segment
@@ -476,7 +477,8 @@ def farthest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -497,7 +499,7 @@ def farthest_points(*args):
     References
     ==========
 
-    .. [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+    .. [1] https://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 
     .. [2] Rotating Callipers Technique
         https://en.wikipedia.org/wiki/Rotating_calipers
@@ -505,7 +507,7 @@ def farthest_points(*args):
     """
 
     def rotatingCalipers(Points):
-        U, L = convex_hull(*Points, **dict(polygon=False))
+        U, L = convex_hull(*Points, **{"polygon": False})
 
         if L is None:
             if isinstance(U, Point):

@@ -2593,7 +2593,7 @@ def _get_ordered_dummies(mul, verbose=False):
     Strategy
     --------
 
-    The canoncial order is given by an arbitrary sorting rule.  A sort key
+    The canonical order is given by an arbitrary sorting rule.  A sort key
     is determined for each dummy as a tuple that depends on all factors where
     the index is present.  The dummies are thereby sorted according to the
     contraction structure of the term, instead of sorting based solely on the

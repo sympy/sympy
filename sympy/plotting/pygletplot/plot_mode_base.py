@@ -269,7 +269,7 @@ class PlotModeBase(PlotMode):
         self._calculate_cverts()
 
     def _calculate_verts(self):
-        if self._calculating_verts.isSet():
+        if self._calculating_verts.is_set():
             return
         self._calculating_verts.set()
         try:
@@ -280,9 +280,9 @@ class PlotModeBase(PlotMode):
             self.bounds_callback()
 
     def _calculate_cverts(self):
-        if self._calculating_verts.isSet():
+        if self._calculating_verts.is_set():
             return
-        while self._calculating_cverts.isSet():
+        while self._calculating_cverts.is_set():
             sleep(0)  # wait for previous calculation
         self._calculating_cverts.set()
         try:
@@ -291,7 +291,7 @@ class PlotModeBase(PlotMode):
             self._calculating_cverts.clear()
 
     def _get_calculating_verts(self):
-        return self._calculating_verts.isSet()
+        return self._calculating_verts.is_set()
 
     def _get_calculating_verts_pos(self):
         return self._calculating_verts_pos
@@ -300,7 +300,7 @@ class PlotModeBase(PlotMode):
         return self._calculating_verts_len
 
     def _get_calculating_cverts(self):
-        return self._calculating_cverts.isSet()
+        return self._calculating_cverts.is_set()
 
     def _get_calculating_cverts_pos(self):
         return self._calculating_cverts_pos

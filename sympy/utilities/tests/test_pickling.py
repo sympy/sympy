@@ -7,7 +7,6 @@ from sympy.physics.units import meter
 from sympy.testing.pytest import XFAIL, raises
 
 from sympy.core.basic import Atom, Basic
-from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
@@ -22,7 +21,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import gmpy as _gmpy
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy.core.singleton import S
@@ -58,7 +57,7 @@ def check(a, exclude=[], check_attr=True):
             continue
 
         if callable(protocol):
-            if isinstance(a, BasicMeta):
+            if isinstance(a, type):
                 # Classes can't be copied, but that's okay.
                 continue
             b = protocol(a)
@@ -94,11 +93,7 @@ def check(a, exclude=[], check_attr=True):
 
 
 def test_core_basic():
-    for c in (Atom, Atom(),
-              Basic, Basic(),
-              # XXX: dynamically created types are not picklable
-              # BasicMeta, BasicMeta("test", (), {}),
-              SingletonRegistry, S):
+    for c in (Atom, Atom(), Basic, Basic(), SingletonRegistry, S):
         check(c)
 
 def test_core_Str():
@@ -455,7 +450,7 @@ def test_pickling_polys_domains():
     for c in (PythonRationalField, PythonRationalField()):
         check(c, check_attr=False)
 
-    if HAS_GMPY:
+    if _gmpy is not None:
         # from sympy.polys.domains.gmpyfinitefield import GMPYFiniteField
         from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
         from sympy.polys.domains.gmpyrationalfield import GMPYRationalField
@@ -700,7 +695,7 @@ def test_deprecation_warning():
     check(w)
 
 def test_issue_18438():
-    assert pickle.loads(pickle.dumps(S.Half)) == 1/2
+    assert pickle.loads(pickle.dumps(S.Half)) == S.Half
 
 
 #================= old pickles =================

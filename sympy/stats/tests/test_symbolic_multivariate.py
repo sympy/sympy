@@ -88,7 +88,7 @@ def test_multivariate_expectation():
 def test_multivariate_variance():
     raises(ShapeError, lambda: Variance(A))
 
-    expr = Variance(a)  # type: VarianceMatrix
+    expr = Variance(a)
     assert expr == Variance(a) == VarianceMatrix(a)
     assert expr.expand() == ZeroMatrix(k, k)
     expr = Variance(a.T)

@@ -1,7 +1,8 @@
-from sympy.core import S, sympify, cacheit, pi, I, Rational
+from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.logic import fuzzy_or, fuzzy_and, FuzzyBool
+from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_not, FuzzyBool
+from sympy.core.numbers import I, pi, Rational
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import (binomial, factorial,
                                                       RisingFactorial)
@@ -20,6 +21,82 @@ def _rewrite_hyperbolics_as_exp(expr):
     return expr.xreplace({h: h.rewrite(exp)
         for h in expr.atoms(HyperbolicFunction)})
 
+
+@cacheit
+def _acosh_table():
+    return {
+        I: log(I*(1 + sqrt(2))),
+        -I: log(-I*(1 + sqrt(2))),
+        S.Half: pi/3,
+        Rational(-1, 2): pi*Rational(2, 3),
+        sqrt(2)/2: pi/4,
+        -sqrt(2)/2: pi*Rational(3, 4),
+        1/sqrt(2): pi/4,
+        -1/sqrt(2): pi*Rational(3, 4),
+        sqrt(3)/2: pi/6,
+        -sqrt(3)/2: pi*Rational(5, 6),
+        (sqrt(3) - 1)/sqrt(2**3): pi*Rational(5, 12),
+        -(sqrt(3) - 1)/sqrt(2**3): pi*Rational(7, 12),
+        sqrt(2 + sqrt(2))/2: pi/8,
+        -sqrt(2 + sqrt(2))/2: pi*Rational(7, 8),
+        sqrt(2 - sqrt(2))/2: pi*Rational(3, 8),
+        -sqrt(2 - sqrt(2))/2: pi*Rational(5, 8),
+        (1 + sqrt(3))/(2*sqrt(2)): pi/12,
+        -(1 + sqrt(3))/(2*sqrt(2)): pi*Rational(11, 12),
+        (sqrt(5) + 1)/4: pi/5,
+        -(sqrt(5) + 1)/4: pi*Rational(4, 5)
+    }
+
+
+@cacheit
+def _acsch_table():
+    return {
+            I: -pi / 2,
+            I*(sqrt(2) + sqrt(6)): -pi / 12,
+            I*(1 + sqrt(5)): -pi / 10,
+            I*2 / sqrt(2 - sqrt(2)): -pi / 8,
+            I*2: -pi / 6,
+            I*sqrt(2 + 2/sqrt(5)): -pi / 5,
+            I*sqrt(2): -pi / 4,
+            I*(sqrt(5)-1): -3*pi / 10,
+            I*2 / sqrt(3): -pi / 3,
+            I*2 / sqrt(2 + sqrt(2)): -3*pi / 8,
+            I*sqrt(2 - 2/sqrt(5)): -2*pi / 5,
+            I*(sqrt(6) - sqrt(2)): -5*pi / 12,
+            S(2): -I*log((1+sqrt(5))/2),
+        }
+
+
+@cacheit
+def _asech_table():
+        return {
+            I: - (pi*I / 2) + log(1 + sqrt(2)),
+            -I: (pi*I / 2) + log(1 + sqrt(2)),
+            (sqrt(6) - sqrt(2)): pi / 12,
+            (sqrt(2) - sqrt(6)): 11*pi / 12,
+            sqrt(2 - 2/sqrt(5)): pi / 10,
+            -sqrt(2 - 2/sqrt(5)): 9*pi / 10,
+            2 / sqrt(2 + sqrt(2)): pi / 8,
+            -2 / sqrt(2 + sqrt(2)): 7*pi / 8,
+            2 / sqrt(3): pi / 6,
+            -2 / sqrt(3): 5*pi / 6,
+            (sqrt(5) - 1): pi / 5,
+            (1 - sqrt(5)): 4*pi / 5,
+            sqrt(2): pi / 4,
+            -sqrt(2): 3*pi / 4,
+            sqrt(2 + 2/sqrt(5)): 3*pi / 10,
+            -sqrt(2 + 2/sqrt(5)): 7*pi / 10,
+            S(2): pi / 3,
+            -S(2): 2*pi / 3,
+            sqrt(2*(2 + sqrt(2))): 3*pi / 8,
+            -sqrt(2*(2 + sqrt(2))): 5*pi / 8,
+            (1 + sqrt(5)): 2*pi / 5,
+            (-1 - sqrt(5)): 3*pi / 5,
+            (sqrt(6) + sqrt(2)): 5*pi / 12,
+            (-sqrt(6) - sqrt(2)): 7*pi / 12,
+            I*S.Infinity: -pi*I / 2,
+            I*S.NegativeInfinity: pi*I / 2,
+        }
 
 ###############################################################################
 ########################### HYPERBOLIC FUNCTIONS ##############################
@@ -56,7 +133,7 @@ def _peeloff_ipi(arg):
     >>> peel(x + I*2*pi/3 + I*pi*y)
     (x + I*pi*y + I*pi/6, 1/2)
     """
-    ipi = S.Pi*S.ImaginaryUnit
+    ipi = pi*I
     for a in Add.make_args(arg):
         if a == ipi:
             K = S.One
@@ -128,7 +205,7 @@ class sinh(HyperbolicFunction):
             i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * sin(i_coeff)
+                return I * sin(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
@@ -136,7 +213,7 @@ class sinh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    m = m*S.Pi*S.ImaginaryUnit
+                    m = m*pi*I
                     return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
             if arg.is_zero:
@@ -195,7 +272,7 @@ class sinh(HyperbolicFunction):
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        return re_part + im_part*I
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -227,7 +304,7 @@ class sinh(HyperbolicFunction):
         return -I / csc(I * arg)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return -S.ImaginaryUnit*cosh(arg + S.Pi*S.ImaginaryUnit/2)
+        return -I*cosh(arg + pi*I/2)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         tanh_half = tanh(S.Half*arg)
@@ -340,7 +417,7 @@ class cosh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    m = m*S.Pi*S.ImaginaryUnit
+                    m = m*pi*I
                     return cosh(m)*cosh(x) + sinh(m)*sinh(x)
 
             if arg.is_zero:
@@ -392,7 +469,7 @@ class cosh(HyperbolicFunction):
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
+        return re_part + im_part*I
 
     def _eval_expand_trig(self, deep=True, **hints):
         if deep:
@@ -418,13 +495,13 @@ class cosh(HyperbolicFunction):
         return (exp(arg) + exp(-arg)) / 2
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return cos(I * arg)
+        return cos(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return 1 / sec(I * arg)
+        return 1 / sec(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -S.ImaginaryUnit*sinh(arg + S.Pi*S.ImaginaryUnit/2)
+        return -I*sinh(arg + pi*I/2, evaluate=False)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         tanh_half = tanh(S.Half*arg)**2
@@ -584,8 +661,8 @@ class tanh(HyperbolicFunction):
 
             if i_coeff is not None:
                 if i_coeff.could_extract_minus_sign():
-                    return -S.ImaginaryUnit * tan(-i_coeff)
-                return S.ImaginaryUnit * tan(i_coeff)
+                    return -I * tan(-i_coeff)
+                return I * tan(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
@@ -593,7 +670,7 @@ class tanh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    tanhm = tanh(m*S.Pi*S.ImaginaryUnit)
+                    tanhm = tanh(m*pi*I)
                     if tanhm is S.ComplexInfinity:
                         return coth(x)
                     else: # tanhm == 0
@@ -676,16 +753,16 @@ class tanh(HyperbolicFunction):
         return (pos_exp - neg_exp)/(pos_exp + neg_exp)
 
     def _eval_rewrite_as_tan(self, arg, **kwargs):
-        return -I * tan(I * arg)
+        return -I * tan(I * arg, evaluate=False)
 
     def _eval_rewrite_as_cot(self, arg, **kwargs):
-        return -I / cot(I * arg)
+        return -I / cot(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return S.ImaginaryUnit*sinh(arg)/sinh(S.Pi*S.ImaginaryUnit/2 - arg)
+        return I*sinh(arg)/sinh(pi*I/2 - arg, evaluate=False)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return S.ImaginaryUnit*cosh(S.Pi*S.ImaginaryUnit/2 - arg)/cosh(arg)
+        return I*cosh(pi*I/2 - arg, evaluate=False)/cosh(arg)
 
     def _eval_rewrite_as_coth(self, arg, **kwargs):
         return 1/coth(arg)
@@ -797,8 +874,8 @@ class coth(HyperbolicFunction):
 
             if i_coeff is not None:
                 if i_coeff.could_extract_minus_sign():
-                    return S.ImaginaryUnit * cot(-i_coeff)
-                return -S.ImaginaryUnit * cot(i_coeff)
+                    return I * cot(-i_coeff)
+                return -I * cot(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
@@ -806,7 +883,7 @@ class coth(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    cothm = coth(m*S.Pi*S.ImaginaryUnit)
+                    cothm = coth(m*pi*I)
                     if cothm is S.ComplexInfinity:
                         return coth(x)
                     else: # cothm == 0
@@ -871,10 +948,10 @@ class coth(HyperbolicFunction):
         return (pos_exp + neg_exp)/(pos_exp - neg_exp)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return -S.ImaginaryUnit*sinh(S.Pi*S.ImaginaryUnit/2 - arg)/sinh(arg)
+        return -I*sinh(pi*I/2 - arg, evaluate=False)/sinh(arg)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return -S.ImaginaryUnit*cosh(arg)/cosh(S.Pi*S.ImaginaryUnit/2 - arg)
+        return -I*cosh(arg)/cosh(pi*I/2 - arg, evaluate=False)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
         return 1/tanh(arg)
@@ -921,8 +998,8 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     #To be defined in class
     _reciprocal_of = None
-    _is_even = None  # type: FuzzyBool
-    _is_odd = None  # type: FuzzyBool
+    _is_even: FuzzyBool = None
+    _is_odd: FuzzyBool = None
 
     @classmethod
     def eval(cls, arg):
@@ -975,7 +1052,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
     def _eval_expand_complex(self, deep=True, **hints):
         re_part, im_part = self.as_real_imag(deep=True, **hints)
-        return re_part + S.ImaginaryUnit*im_part
+        return re_part + I*im_part
 
     def _eval_expand_trig(self, **hints):
         return self._calculate_reciprocal("_eval_expand_trig", **hints)
@@ -1041,13 +1118,13 @@ class csch(ReciprocalHyperbolicFunction):
             return 2 * (1 - 2**n) * B/F * x**n
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        return I / sin(I * arg)
+        return I / sin(I * arg, evaluate=False)
 
     def _eval_rewrite_as_csc(self, arg, **kwargs):
-        return I * csc(I * arg)
+        return I * csc(I * arg, evaluate=False)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
-        return S.ImaginaryUnit / cosh(arg + S.ImaginaryUnit * S.Pi / 2)
+        return I / cosh(arg + I * pi / 2, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
         return 1 / sinh(arg)
@@ -1100,13 +1177,13 @@ class sech(ReciprocalHyperbolicFunction):
             return euler(n) / factorial(n) * x**(n)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        return 1 / cos(I * arg)
+        return 1 / cos(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sec(self, arg, **kwargs):
-        return sec(I * arg)
+        return sec(I * arg, evaluate=False)
 
     def _eval_rewrite_as_sinh(self, arg, **kwargs):
-        return S.ImaginaryUnit / sinh(arg + S.ImaginaryUnit * S.Pi /2)
+        return I / sinh(arg + I * pi /2, evaluate=False)
 
     def _eval_rewrite_as_cosh(self, arg, **kwargs):
         return 1 / cosh(arg)
@@ -1181,7 +1258,7 @@ class asinh(InverseHyperbolicFunction):
             i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * asin(i_coeff)
+                return I * asin(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
@@ -1222,7 +1299,7 @@ class asinh(InverseHyperbolicFunction):
         if x0.is_zero:
             return arg.as_leading_term(x)
         # Handling branch points
-        if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.ComplexInfinity):
+        if x0 in (-I, I, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
         if (1 + x0**2).is_negative:
@@ -1242,7 +1319,7 @@ class asinh(InverseHyperbolicFunction):
         arg0 = arg.subs(x, 0)
 
         # Handling branch points
-        if arg0 in (S.ImaginaryUnit, -S.ImaginaryUnit):
+        if arg0 in (I, -I):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
         res = Function._eval_nseries(self, x, n=n, logx=logx)
@@ -1275,10 +1352,10 @@ class asinh(InverseHyperbolicFunction):
         return I*(sqrt(1 - ix)/sqrt(ix - 1) * acosh(ix) - pi/2)
 
     def _eval_rewrite_as_asin(self, x, **kwargs):
-        return -I * asin(I * x)
+        return -I * asin(I * x, evaluate=False)
 
     def _eval_rewrite_as_acos(self, x, **kwargs):
-        return I * acos(I * x) - I*pi/2
+        return I * acos(I * x, evaluate=False) - I*pi/2
 
     def inverse(self, argindex=1):
         """
@@ -1288,6 +1365,12 @@ class asinh(InverseHyperbolicFunction):
 
     def _eval_is_zero(self):
         return self.args[0].is_zero
+
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
 
 class acosh(InverseHyperbolicFunction):
@@ -1319,32 +1402,6 @@ class acosh(InverseHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
-    @cacheit
-    def _acosh_table():
-        return {
-            S.ImaginaryUnit: log(S.ImaginaryUnit*(1 + sqrt(2))),
-            -S.ImaginaryUnit: log(-S.ImaginaryUnit*(1 + sqrt(2))),
-            S.Half: S.Pi/3,
-            Rational(-1, 2): S.Pi*Rational(2, 3),
-            sqrt(2)/2: S.Pi/4,
-            -sqrt(2)/2: S.Pi*Rational(3, 4),
-            1/sqrt(2): S.Pi/4,
-            -1/sqrt(2): S.Pi*Rational(3, 4),
-            sqrt(3)/2: S.Pi/6,
-            -sqrt(3)/2: S.Pi*Rational(5, 6),
-            (sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(5, 12),
-            -(sqrt(3) - 1)/sqrt(2**3): S.Pi*Rational(7, 12),
-            sqrt(2 + sqrt(2))/2: S.Pi/8,
-            -sqrt(2 + sqrt(2))/2: S.Pi*Rational(7, 8),
-            sqrt(2 - sqrt(2))/2: S.Pi*Rational(3, 8),
-            -sqrt(2 - sqrt(2))/2: S.Pi*Rational(5, 8),
-            (1 + sqrt(3))/(2*sqrt(2)): S.Pi/12,
-            -(1 + sqrt(3))/(2*sqrt(2)): S.Pi*Rational(11, 12),
-            (sqrt(5) + 1)/4: S.Pi/5,
-            -(sqrt(5) + 1)/4: S.Pi*Rational(4, 5)
-            }
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1355,29 +1412,29 @@ class acosh(InverseHyperbolicFunction):
             elif arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg.is_zero:
-                return S.Pi*S.ImaginaryUnit / 2
+                return pi*I / 2
             elif arg is S.One:
                 return S.Zero
             elif arg is S.NegativeOne:
-                return S.Pi*S.ImaginaryUnit
+                return pi*I
 
         if arg.is_number:
-            cst_table = cls._acosh_table()
+            cst_table = _acosh_table()
 
             if arg in cst_table:
                 if arg.is_extended_real:
-                    return cst_table[arg]*S.ImaginaryUnit
+                    return cst_table[arg]*I
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
             return S.ComplexInfinity
-        if arg == S.ImaginaryUnit*S.Infinity:
-            return S.Infinity + S.ImaginaryUnit*S.Pi/2
-        if arg == -S.ImaginaryUnit*S.Infinity:
-            return S.Infinity - S.ImaginaryUnit*S.Pi/2
+        if arg == I*S.Infinity:
+            return S.Infinity + I*pi/2
+        if arg == -I*S.Infinity:
+            return S.Infinity - I*pi/2
 
         if arg.is_zero:
-            return S.Pi*S.ImaginaryUnit*S.Half
+            return pi*I*S.Half
 
         if isinstance(arg, cosh) and arg.args[0].is_number:
             z = arg.args[0]
@@ -1416,7 +1473,7 @@ class acosh(InverseHyperbolicFunction):
                 k = (n - 1) // 2
                 R = RisingFactorial(S.Half, k)
                 F = factorial(k)
-                return -R / F * S.ImaginaryUnit * x**n / n
+                return -R / F * I * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acosh
         arg = self.args[0]
@@ -1470,7 +1527,7 @@ class acosh(InverseHyperbolicFunction):
         return sqrt(x - 1)/sqrt(1 - x) * (pi/2 - asin(x))
 
     def _eval_rewrite_as_asinh(self, x, **kwargs):
-        return sqrt(x - 1)/sqrt(1 - x) * (pi/2 + I*asinh(I*x))
+        return sqrt(x - 1)/sqrt(1 - x) * (pi/2 + I*asinh(I*x, evaluate=False))
 
     def _eval_rewrite_as_atanh(self, x, **kwargs):
         sxm1 = sqrt(x - 1)
@@ -1488,6 +1545,12 @@ class acosh(InverseHyperbolicFunction):
     def _eval_is_zero(self):
         if (self.args[0] - 1).is_zero:
             return True
+
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, (self.args[0] - 1).is_extended_nonnegative])
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
 
 
 class atanh(InverseHyperbolicFunction):
@@ -1528,20 +1591,20 @@ class atanh(InverseHyperbolicFunction):
             elif arg is S.NegativeOne:
                 return S.NegativeInfinity
             elif arg is S.Infinity:
-                return -S.ImaginaryUnit * atan(arg)
+                return -I * atan(arg)
             elif arg is S.NegativeInfinity:
-                return S.ImaginaryUnit * atan(-arg)
+                return I * atan(-arg)
             elif arg.is_negative:
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
                 from sympy.calculus.accumulationbounds import AccumBounds
-                return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
+                return I*AccumBounds(-pi/2, pi/2)
 
             i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
-                return S.ImaginaryUnit * atan(i_coeff)
+                return I * atan(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
@@ -1632,6 +1695,12 @@ class atanh(InverseHyperbolicFunction):
         if self.args[0].is_zero:
             return True
 
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, (1 - self.args[0]).is_nonnegative, (self.args[0] + 1).is_nonnegative])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(fuzzy_or([(self.args[0] - 1).is_zero, (self.args[0] + 1).is_zero]))
+
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
 
@@ -1678,7 +1747,7 @@ class acoth(InverseHyperbolicFunction):
             elif arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
-                return S.Pi*S.ImaginaryUnit / 2
+                return pi*I / 2
             elif arg is S.One:
                 return S.Infinity
             elif arg is S.NegativeOne:
@@ -1692,13 +1761,13 @@ class acoth(InverseHyperbolicFunction):
             i_coeff = _imaginary_unit_as_coefficient(arg)
 
             if i_coeff is not None:
-                return -S.ImaginaryUnit * acot(i_coeff)
+                return -I * acot(i_coeff)
             else:
                 if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
-            return S.Pi*S.ImaginaryUnit*S.Half
+            return pi*I*S.Half
 
     @staticmethod
     @cacheit
@@ -1775,6 +1844,12 @@ class acoth(InverseHyperbolicFunction):
         """
         return coth
 
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, fuzzy_or([(self.args[0] - 1).is_extended_nonnegative, (self.args[0] + 1).is_extended_nonpositive])])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(fuzzy_or([(self.args[0] - 1).is_zero, (self.args[0] + 1).is_zero]))
+
 
 class asech(InverseHyperbolicFunction):
     """
@@ -1809,8 +1884,8 @@ class asech(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcSech/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcSech/
 
     """
 
@@ -1821,65 +1896,33 @@ class asech(InverseHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    @staticmethod
-    @cacheit
-    def _asech_table():
-            return {
-                S.ImaginaryUnit: - (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
-                -S.ImaginaryUnit: (S.Pi*S.ImaginaryUnit / 2) + log(1 + sqrt(2)),
-                (sqrt(6) - sqrt(2)): S.Pi / 12,
-                (sqrt(2) - sqrt(6)): 11*S.Pi / 12,
-                sqrt(2 - 2/sqrt(5)): S.Pi / 10,
-                -sqrt(2 - 2/sqrt(5)): 9*S.Pi / 10,
-                2 / sqrt(2 + sqrt(2)): S.Pi / 8,
-                -2 / sqrt(2 + sqrt(2)): 7*S.Pi / 8,
-                2 / sqrt(3): S.Pi / 6,
-                -2 / sqrt(3): 5*S.Pi / 6,
-                (sqrt(5) - 1): S.Pi / 5,
-                (1 - sqrt(5)): 4*S.Pi / 5,
-                sqrt(2): S.Pi / 4,
-                -sqrt(2): 3*S.Pi / 4,
-                sqrt(2 + 2/sqrt(5)): 3*S.Pi / 10,
-                -sqrt(2 + 2/sqrt(5)): 7*S.Pi / 10,
-                S(2): S.Pi / 3,
-                -S(2): 2*S.Pi / 3,
-                sqrt(2*(2 + sqrt(2))): 3*S.Pi / 8,
-                -sqrt(2*(2 + sqrt(2))): 5*S.Pi / 8,
-                (1 + sqrt(5)): 2*S.Pi / 5,
-                (-1 - sqrt(5)): 3*S.Pi / 5,
-                (sqrt(6) + sqrt(2)): 5*S.Pi / 12,
-                (-sqrt(6) - sqrt(2)): 7*S.Pi / 12,
-                S.ImaginaryUnit*S.Infinity: -S.Pi*S.ImaginaryUnit / 2,
-                S.ImaginaryUnit*S.NegativeInfinity: S.Pi*S.ImaginaryUnit / 2,
-            }
-
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg is S.Infinity:
-                return S.Pi*S.ImaginaryUnit / 2
+                return pi*I / 2
             elif arg is S.NegativeInfinity:
-                return S.Pi*S.ImaginaryUnit / 2
+                return pi*I / 2
             elif arg.is_zero:
                 return S.Infinity
             elif arg is S.One:
                 return S.Zero
             elif arg is S.NegativeOne:
-                return S.Pi*S.ImaginaryUnit
+                return pi*I
 
         if arg.is_number:
-            cst_table = cls._asech_table()
+            cst_table = _asech_table()
 
             if arg in cst_table:
                 if arg.is_extended_real:
-                    return cst_table[arg]*S.ImaginaryUnit
+                    return cst_table[arg]*I
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
             from sympy.calculus.accumulationbounds import AccumBounds
-            return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
+            return I*AccumBounds(-pi/2, pi/2)
 
         if arg.is_zero:
             return S.Infinity
@@ -1898,7 +1941,7 @@ class asech(InverseHyperbolicFunction):
                 return p * ((n - 1)*(n-2)) * x**2/(4 * (n//2)**2)
             else:
                 k = n // 2
-                R = RisingFactorial(S.Half, k) *  n
+                R = RisingFactorial(S.Half, k) * n
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
 
@@ -1979,15 +2022,21 @@ class asech(InverseHyperbolicFunction):
         return acosh(1/arg)
 
     def _eval_rewrite_as_asinh(self, arg, **kwargs):
-        return sqrt(1/arg - 1)/sqrt(1 - 1/arg)*(S.ImaginaryUnit*asinh(S.ImaginaryUnit/arg)
-                                                + S.Pi*S.Half)
+        return sqrt(1/arg - 1)/sqrt(1 - 1/arg)*(I*asinh(I/arg, evaluate=False)
+                                                + pi*S.Half)
 
     def _eval_rewrite_as_atanh(self, x, **kwargs):
         return (I*pi*(1 - sqrt(x)*sqrt(1/x) - I/2*sqrt(-x)/sqrt(x) - I/2*sqrt(x**2)/sqrt(-x**2))
                 + sqrt(1/(x + 1))*sqrt(x + 1)*atanh(sqrt(1 - x**2)))
 
     def _eval_rewrite_as_acsch(self, x, **kwargs):
-        return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x))
+        return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x, evaluate=False))
+
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, self.args[0].is_nonnegative, (1 - self.args[0]).is_nonnegative])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(self.args[0].is_zero)
 
 
 class acsch(InverseHyperbolicFunction):
@@ -1999,7 +2048,7 @@ class acsch(InverseHyperbolicFunction):
     Examples
     ========
 
-    >>> from sympy import acsch, sqrt, S
+    >>> from sympy import acsch, sqrt, I
     >>> from sympy.abc import x
     >>> acsch(x).diff(x)
     -1/(x**2*sqrt(1 + x**(-2)))
@@ -2007,11 +2056,11 @@ class acsch(InverseHyperbolicFunction):
     0
     >>> acsch(1)
     log(1 + sqrt(2))
-    >>> acsch(S.ImaginaryUnit)
+    >>> acsch(I)
     -I*pi/2
-    >>> acsch(-2*S.ImaginaryUnit)
+    >>> acsch(-2*I)
     I*pi/6
-    >>> acsch(S.ImaginaryUnit*(sqrt(6) - sqrt(2)))
+    >>> acsch(I*(sqrt(6) - sqrt(2)))
     -5*I*pi/12
 
     See Also
@@ -2023,8 +2072,8 @@ class acsch(InverseHyperbolicFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hyperbolic_function
-    .. [2] http://dlmf.nist.gov/4.37
-    .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcCsch/
+    .. [2] https://dlmf.nist.gov/4.37
+    .. [3] https://functions.wolfram.com/ElementaryFunctions/ArcCsch/
 
     """
 
@@ -2034,25 +2083,6 @@ class acsch(InverseHyperbolicFunction):
             return -1/(z**2*sqrt(1 + 1/z**2))
         else:
             raise ArgumentIndexError(self, argindex)
-
-    @staticmethod
-    @cacheit
-    def _acsch_table():
-        return {
-                S.ImaginaryUnit: -S.Pi / 2,
-                S.ImaginaryUnit*(sqrt(2) + sqrt(6)): -S.Pi / 12,
-                S.ImaginaryUnit*(1 + sqrt(5)): -S.Pi / 10,
-                S.ImaginaryUnit*2 / sqrt(2 - sqrt(2)): -S.Pi / 8,
-                S.ImaginaryUnit*2: -S.Pi / 6,
-                S.ImaginaryUnit*sqrt(2 + 2/sqrt(5)): -S.Pi / 5,
-                S.ImaginaryUnit*sqrt(2): -S.Pi / 4,
-                S.ImaginaryUnit*(sqrt(5)-1): -3*S.Pi / 10,
-                S.ImaginaryUnit*2 / sqrt(3): -S.Pi / 3,
-                S.ImaginaryUnit*2 / sqrt(2 + sqrt(2)): -3*S.Pi / 8,
-                S.ImaginaryUnit*sqrt(2 - 2/sqrt(5)): -2*S.Pi / 5,
-                S.ImaginaryUnit*(sqrt(6) - sqrt(2)): -5*S.Pi / 12,
-                S(2): -S.ImaginaryUnit*log((1+sqrt(5))/2),
-            }
 
     @classmethod
     def eval(cls, arg):
@@ -2071,10 +2101,10 @@ class acsch(InverseHyperbolicFunction):
                 return - log(1 + sqrt(2))
 
         if arg.is_number:
-            cst_table = cls._acsch_table()
+            cst_table = _acsch_table()
 
             if arg in cst_table:
-                return cst_table[arg]*S.ImaginaryUnit
+                return cst_table[arg]*I
 
         if arg is S.ComplexInfinity:
             return S.Zero
@@ -2110,7 +2140,7 @@ class acsch(InverseHyperbolicFunction):
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         # Handling branch points
-        if x0 in (-S.ImaginaryUnit, S.ImaginaryUnit, S.Zero):
+        if x0 in (-I, I, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
@@ -2133,10 +2163,10 @@ class acsch(InverseHyperbolicFunction):
         arg0 = arg.subs(x, 0)
 
         # Handling branch points
-        if arg0 is S.ImaginaryUnit:
+        if arg0 is I:
             t = Dummy('t', positive=True)
-            ser = acsch(S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = -S.ImaginaryUnit + self.args[0]
+            ser = acsch(I + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = -I + self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
@@ -2146,10 +2176,10 @@ class acsch(InverseHyperbolicFunction):
             res = ser.removeO().subs(t, res).expand().powsimp() + O(x**n, x)
             return res
 
-        if arg0 == S.NegativeOne*S.ImaginaryUnit:
+        if arg0 == S.NegativeOne*I:
             t = Dummy('t', positive=True)
-            ser = acsch(-S.ImaginaryUnit + t**2).rewrite(log).nseries(t, 0, 2*n)
-            arg1 = S.ImaginaryUnit + self.args[0]
+            ser = acsch(-I + t**2).rewrite(log).nseries(t, 0, 2*n)
+            arg1 = I + self.args[0]
             f = arg1.as_leading_term(x)
             g = (arg1 - f)/ f
             if not g.is_meromorphic(x, 0):   # cannot be expanded
@@ -2190,14 +2220,20 @@ class acsch(InverseHyperbolicFunction):
         return asinh(1/arg)
 
     def _eval_rewrite_as_acosh(self, arg, **kwargs):
-        return S.ImaginaryUnit*(sqrt(1 - S.ImaginaryUnit/arg)/sqrt(S.ImaginaryUnit/arg - 1)*
-                                acosh(S.ImaginaryUnit/arg) - S.Pi*S.Half)
+        return I*(sqrt(1 - I/arg)/sqrt(I/arg - 1)*
+                                acosh(I/arg, evaluate=False) - pi*S.Half)
 
     def _eval_rewrite_as_atanh(self, arg, **kwargs):
         arg2 = arg**2
         arg2p1 = arg2 + 1
-        return sqrt(-arg2)/arg*(S.Pi*S.Half -
+        return sqrt(-arg2)/arg*(pi*S.Half -
                                 sqrt(-arg2p1**2)/arg2p1*atanh(sqrt(arg2p1)))
 
     def _eval_is_zero(self):
         return self.args[0].is_infinite
+
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        return fuzzy_not(self.args[0].is_zero)

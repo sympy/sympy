@@ -123,7 +123,8 @@ class no_attrs_in_subclass:
         raise AttributeError
 
 
-def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_version=None):
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None,
+                       python_version=None, ground_types=None):
     """
     Adds metadata about the dependencies which need to be met for doctesting
     the docstrings of the decorated objects.
@@ -146,6 +147,8 @@ def doctest_depends_on(exe=None, modules=None, disable_viewers=None, python_vers
         dependencies['disable_viewers'] = disable_viewers
     if python_version is not None:
         dependencies['python_version'] = python_version
+    if ground_types is not None:
+        dependencies['ground_types'] = ground_types
 
     def skiptests():
         from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter # lazy import
@@ -303,8 +306,8 @@ def deprecated(message, *, deprecated_since_version,
     sympy.testing.pytest.warns_deprecated_sympy
 
     '''
-    decorator_kwargs = dict(deprecated_since_version=deprecated_since_version,
-               active_deprecations_target=active_deprecations_target)
+    decorator_kwargs = {"deprecated_since_version": deprecated_since_version,
+               "active_deprecations_target": active_deprecations_target}
     def deprecated_decorator(wrapped):
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):

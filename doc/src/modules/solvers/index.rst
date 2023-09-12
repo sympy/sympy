@@ -11,11 +11,11 @@ Contents
 ========
 
 .. toctree::
-    :maxdepth: 2
+   :titlesonly:
 
-    diophantine.rst
-    inequalities.rst
-    ode.rst
-    pde.rst
-    solvers.rst
-    solveset.rst
+   diophantine.rst
+   inequalities.rst
+   ode.rst
+   pde.rst
+   solvers.rst
+   solveset.rst

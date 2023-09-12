@@ -686,6 +686,9 @@ def test_as_numer_denom():
     assert exp(-I*x).as_numer_denom() == (1, exp(I*x))
     assert exp(-I*n).as_numer_denom() == (1, exp(I*n))
     assert exp(-n).as_numer_denom() == (exp(-n), 1)
+    # Check noncommutativity
+    a = symbols('a', commutative=False)
+    assert exp(-a).as_numer_denom() == (exp(-a), 1)
 
 
 @_both_exp_pow

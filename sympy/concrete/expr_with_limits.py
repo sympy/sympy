@@ -338,7 +338,7 @@ class ExprWithLimits(Expr):
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
         reps = {v: k for k, v in reps.items()}
-        return set([reps.get(_, _) for _ in isyms])
+        return {reps.get(_, _) for _ in isyms}
 
     @property
     def is_number(self):

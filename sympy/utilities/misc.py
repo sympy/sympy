@@ -1,6 +1,6 @@
 """Miscellaneous stuff that does not really fit anywhere else."""
 
-from typing import List
+from __future__ import annotations
 
 import operator
 import sys
@@ -175,7 +175,7 @@ ARCH = str(struct.calcsize('P') * 8) + "-bit"
 # XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-_debug_tmp = []  # type: List[str]
+_debug_tmp: list[str] = []
 _debug_iter = 0
 
 def debug_decorator(func):
@@ -247,6 +247,16 @@ def debug(*args):
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:
         print(*args, file=sys.stderr)
+
+
+def debugf(string, args):
+    """
+    Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
+    intended for debug messages using formatted strings.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        print(string%args, file=sys.stderr)
 
 
 def find_executable(executable, path=None):
@@ -383,7 +393,7 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/how-to-replace-multiple-substrings-of-a-string
     """
     if len(reps) == 1:
         kv = reps[0]
@@ -550,6 +560,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n != result:
+        if n - result:
             raise ValueError('%s is not an integer' % (n,))
         return result

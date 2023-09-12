@@ -28,7 +28,7 @@ ErrorListener = import_module('antlr4.error.ErrorListener',
 
 
 if ErrorListener:
-    class MathErrorListener(ErrorListener.ErrorListener):  # type: ignore
+    class MathErrorListener(ErrorListener.ErrorListener):  # type:ignore # noqa:F811
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()
             self.src = src
@@ -58,15 +58,16 @@ if ErrorListener:
             raise LaTeXParsingError(err)
 
 
-def parse_latex(sympy):
+def parse_latex(sympy, strict=False):
     antlr4 = import_module('antlr4')
 
     if None in [antlr4, MathErrorListener] or \
-            version('antlr4-python3-runtime') != '4.10':
+            not version('antlr4-python3-runtime').startswith('4.11'):
         raise ImportError("LaTeX parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python3-runtime) or"
-                          " conda (antlr-python-runtime), version 4.10")
+                          " conda (antlr-python-runtime), version 4.11")
 
+    sympy = sympy.strip()
     matherror = MathErrorListener(sympy)
 
     stream = antlr4.InputStream(sympy)
@@ -82,6 +83,8 @@ def parse_latex(sympy):
     parser.addErrorListener(matherror)
 
     relation = parser.math().relation()
+    if strict and (relation.start.start != 0 or relation.stop.stop != len(sympy) - 1):
+        raise LaTeXParsingError("Invalid LaTeX")
     expr = convert_relation(relation)
 
     return expr
@@ -119,8 +122,9 @@ def convert_add(add):
     elif add.SUB():
         lh = convert_add(add.additive(0))
         rh = convert_add(add.additive(1))
-        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False),
-                         evaluate=False)
+        if hasattr(rh, "is_Atom") and rh.is_Atom:
+            return sympy.Add(lh, -1 * rh, evaluate=False)
+        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False), evaluate=False)
     else:
         return convert_mp(add.mp())
 
@@ -576,8 +580,10 @@ def handle_limit(func):
         var = sympy.Symbol('x')
     if sub.SUB():
         direction = "-"
-    else:
+    elif sub.ADD():
         direction = "+"
+    else:
+        direction = "+-"
     approaching = convert_expr(sub.expr())
     content = convert_mp(func.mp())
 

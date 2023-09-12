@@ -2,8 +2,8 @@
 
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
-from sympy.core.random import uniform
-from sympy.external.gmpy import SYMPY_INTS
+from sympy.core.random import uniform, _randint
+from sympy.external.gmpy import SYMPY_INTS, MPZ, invert
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors
@@ -62,10 +62,35 @@ def gf_crt1(M, K):
     ========
 
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.galoistools import gf_crt1
+    >>> from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+    >>> U = [49, 76, 65]
+    >>> M = [99, 97, 95]
 
-    >>> gf_crt1([99, 97, 95], ZZ)
-    (912285, [9215, 9405, 9603], [62, 24, 12])
+    The following two codes have the same result.
+
+    >>> gf_crt(U, M, ZZ)
+    639985
+
+    >>> p, E, S = gf_crt1(M, ZZ)
+    >>> gf_crt2(U, M, p, E, S, ZZ)
+    639985
+
+    However, it is faster when we want to fix ``M`` and
+    compute for multiple U, i.e. the following cases:
+
+    >>> p, E, S = gf_crt1(M, ZZ)
+    >>> Us = [[49, 76, 65], [23, 42, 67]]
+    >>> for U in Us:
+    ...     print(gf_crt2(U, M, p, E, S, ZZ))
+    639985
+    236237
+
+    See Also
+    ========
+
+    sympy.ntheory.modular.crt1 : a higher level crt routine
+    sympy.polys.galoistools.gf_crt
+    sympy.polys.galoistools.gf_crt2
 
     """
     E, S = [], []
@@ -82,6 +107,8 @@ def gf_crt2(U, M, p, E, S, K):
     """
     Second part of the Chinese Remainder Theorem.
 
+    See ``gf_crt1`` for usage.
+
     Examples
     ========
 
@@ -96,6 +123,13 @@ def gf_crt2(U, M, p, E, S, K):
 
     >>> gf_crt2(U, M, p, E, S, ZZ)
     639985
+
+    See Also
+    ========
+
+    sympy.ntheory.modular.crt2 : a higher level crt routine
+    sympy.polys.galoistools.gf_crt
+    sympy.polys.galoistools.gf_crt1
 
     """
     v = K.zero
@@ -1370,7 +1404,8 @@ def gf_random(n, p, K):
     [1, 2, 3, 2, 1, 1, 1, 2, 0, 4, 2]
 
     """
-    return [K.one] + [ K(int(uniform(0, p))) for i in range(0, n) ]
+    pi = int(p)
+    return [K.one] + [ K(int(uniform(0, pi))) for i in range(0, n) ]
 
 
 def gf_irreducible(n, p, K):
@@ -2293,15 +2328,122 @@ def _raise_mod_power(x, s, p, f):
     return linear_congruence(alpha, beta, p)
 
 
-def csolve_prime(f, p, e=1):
+def _csolve_prime_las_vegas(f, p, seed=None):
+    r""" Solutions of `f(x) \equiv 0 \pmod{p}`, `f(0) \not\equiv 0 \pmod{p}`.
+
+    Explanation
+    ===========
+
+    This algorithm is classified as the Las Vegas method.
+    That is, it always returns the correct answer and solves the problem
+    fast in many cases, but if it is unlucky, it does not answer forever.
+
+    Suppose the polynomial f is not a zero polynomial. Assume further
+    that it is of degree at most p-1 and `f(0)\not\equiv 0 \pmod{p}`.
+    These assumptions are not an essential part of the algorithm,
+    only that it is more convenient for the function calling this
+    function to resolve them.
+
+    Note that `x^{p-1} - 1 \equiv \prod_{a=1}^{p-1}(x - a) \pmod{p}`.
+    Thus, the greatest common divisor with f is `\prod_{s \in S}(x - s)`,
+    with S being the set of solutions to f. Furthermore,
+    when a is randomly determined, `(x+a)^{(p-1)/2}-1` is
+    a polynomial with (p-1)/2 randomly chosen solutions.
+    The greatest common divisor of f may be a nontrivial factor of f.
+
+    When p is large and the degree of f is small,
+    it is faster than naive solution methods.
+
+    Parameters
+    ==========
+
+    f : polynomial
+    p : prime number
+
+    Returns
+    =======
+
+    list[int]
+        a list of solutions, sorted in ascending order
+        by integers in the range [1, p). The same value
+        does not exist in the list even if there is
+        a multiple solution. If no solution exists, returns [].
+
+    Examples
+    ========
+
+    >>> from sympy.polys.galoistools import _csolve_prime_las_vegas
+    >>> _csolve_prime_las_vegas([1, 4, 3], 7) # x^2 + 4x + 3 = 0 (mod 7)
+    [4, 6]
+    >>> _csolve_prime_las_vegas([5, 7, 1, 9], 11) # 5x^3 + 7x^2 + x + 9 = 0 (mod 11)
+    [1, 5, 8]
+
+    References
+    ==========
+
+    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., Algorithm 2.3.10
+
     """
-    Solutions of f(x) congruent 0 mod(p**e).
+    from sympy.polys.domains import ZZ
+    from sympy.ntheory import sqrt_mod
+    randint = _randint(seed)
+    root = set()
+    g = gf_pow_mod([1, 0], p - 1, f, p, ZZ)
+    g = gf_sub_ground(g, 1, p, ZZ)
+    # We want to calculate gcd(x**(p-1) - 1, f(x))
+    factors = [gf_gcd(f, g, p, ZZ)]
+    while factors:
+        f = factors.pop()
+        # If the degree is small, solve directly
+        if len(f) <= 1:
+            continue
+        if len(f) == 2:
+            root.add(-invert(f[0], p) * f[1] % p)
+            continue
+        if len(f) == 3:
+            inv = invert(f[0], p)
+            b = f[1] * inv % p
+            b = (b + p * (b % 2)) // 2
+            root.update((r - b) % p for r in
+                        sqrt_mod(b**2 - f[2] * inv, p, all_roots=True))
+            continue
+        while True:
+            # Determine `a` randomly and
+            # compute gcd((x+a)**((p-1)//2)-1, f(x))
+            a = randint(0, p - 1)
+            g = gf_pow_mod([1, a], (p - 1) // 2, f, p, ZZ)
+            g = gf_sub_ground(g, 1, p, ZZ)
+            g = gf_gcd(f, g, p, ZZ)
+            if 1 < len(g) < len(f):
+                factors.append(g)
+                factors.append(gf_div(f, g, p, ZZ)[0])
+                break
+    return sorted(root)
+
+
+def csolve_prime(f, p, e=1):
+    r""" Solutions of `f(x) \equiv 0 \pmod{p^e}`.
+
+    Parameters
+    ==========
+
+    f : polynomial
+    p : prime number
+    e : positive integer
+
+    Returns
+    =======
+
+    list[int]
+        a list of solutions, sorted in ascending order
+        by integers in the range [1, p**e). The same value
+        does not exist in the list even if there is
+        a multiple solution. If no solution exists, returns [].
 
     Examples
     ========
 
     >>> from sympy.polys.galoistools import csolve_prime
-
     >>> csolve_prime([1, 1, 7], 3, 1)
     [1]
     >>> csolve_prime([1, 1, 7], 3, 2)
@@ -2311,7 +2453,29 @@ def csolve_prime(f, p, e=1):
     from solution [1] (mod 3).
     """
     from sympy.polys.domains import ZZ
-    X1 = [i for i in range(p) if gf_eval(f, i, p, ZZ) == 0]
+    g = [MPZ(int(c)) for c in f]
+    # Convert to polynomial of degree at most p-1
+    for i in range(len(g) - p):
+        g[i + p - 1] += g[i]
+        g[i] = 0
+    g = gf_trunc(g, p)
+    # Checks whether g(x) is divisible by x
+    k = 0
+    while k < len(g) and g[len(g) - k - 1] == 0:
+        k += 1
+    if k:
+        g = g[:-k]
+        root_zero = [0]
+    else:
+        root_zero = []
+    if g == []:
+        X1 = list(range(p))
+    elif len(g)**2 < p:
+        # The conditions under which `_csolve_prime_las_vegas` is faster than
+        # a naive solution are worth considering.
+        X1 = root_zero + _csolve_prime_las_vegas(g, p)
+    else:
+        X1 = root_zero + [i for i in range(p) if gf_eval(g, i, p, ZZ) == 0]
     if e == 1:
         return X1
     X = []
@@ -2343,6 +2507,11 @@ def gf_csolve(f, n):
     >>> from sympy.polys.galoistools import gf_csolve
     >>> gf_csolve([1, 1, 7], 189)
     [13, 49, 76, 112, 139, 175]
+
+    See Also
+    ========
+
+    sympy.ntheory.residue_ntheory.polynomial_congruence : a higher level solving routine
 
     References
     ==========

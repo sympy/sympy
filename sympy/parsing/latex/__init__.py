@@ -1,10 +1,12 @@
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
+from sympy.parsing.latex.lark import parse_latex_lark # noqa
+
 from .errors import LaTeXParsingError  # noqa
 
 @doctest_depends_on(modules=('antlr4',))
-def parse_latex(s):
+def parse_latex(s, strict=False):
     r"""Converts the string ``s`` to a SymPy ``Expr``
 
     Parameters
@@ -15,6 +17,10 @@ def parse_latex(s):
         *raw strings* (denoted with ``r"``, like this one) are preferred,
         as LaTeX makes liberal use of the ``\`` character, which would
         trigger escaping in normal Python strings.
+    strict : bool, optional
+        If True, raise an exception if the string cannot be parsed as
+        valid LaTeX. If False, try to recover gracefully from common
+        mistakes.
 
     Examples
     ========
@@ -32,4 +38,4 @@ def parse_latex(s):
         import_kwargs={'fromlist': ['X']})
 
     if _latex is not None:
-        return _latex.parse_latex(s)
+        return _latex.parse_latex(s, strict)

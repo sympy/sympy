@@ -47,7 +47,7 @@
         <text fill="#FF0000"
               font-family="Calibri,Calibri_MSFontService,sans-serif"
               font-weight="400" font-size="64"
-              transform="matrix(1 0 0 1 2447.49 1370)">q1, u1<tspan
+              transform="matrix(1 0 0 1 2447.49 1370)">q, u<tspan
                 fill="#008000" font-size="64" x="-1301.45" y="2">parent.masscenter</tspan>
             <tspan fill="#0070C0" font-size="64" x="-132.069" y="-529">child.masscenter</tspan>
             <tspan fill="#008000" font-size="64" x="-1085.66" y="-232">parent_point</tspan>

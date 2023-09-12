@@ -3,15 +3,16 @@
 Use SymPy to solve an equation algebraically (symbolically). For example,
 solving $x^2 = y$ for $x$ yields $x \in \{-\sqrt{y},\sqrt{y}\}$.
 
-Alternatives to consider:
+## Alternatives to consider
 - SymPy can also [solve many other types of problems including sets of
 equations](index.md).
 - Some equations cannot be solved algebraically (either at all or by SymPy), so
 you may have to {func}`solve your equation numerically
 <sympy.solvers.solvers.nsolve>` instead.
 
+## Solving Functions
 There are two high-level functions to solve equations, {func}`~.solve` and
-{func}`~.solveset`. Here is a simple example of each:
+{func}`~.solveset`. Here is an example of each:
 
 {func}`~.solve`
 
@@ -54,7 +55,7 @@ Here are recommendations on when to use:
 
 Refer to
 [](solving-guidance.md#include-the-variable-to-be-solved-for-in-the-function-call)
-and [](solving-guidance.md#ensure-consistent-formatting-from).
+and [](ensure-consistent-formatting-from-solve).
 
 ## Solve an Equation Algebraically
 
@@ -310,7 +311,7 @@ Intersection({-sqrt(y), sqrt(y)}, Reals)
 
 ## Options That Can Speed up {func}`~.solve`
 
-Refer to [solving guidance](solving-guidance.md#options-that-can-speed-up).
+Refer to [solving guidance](options-that-can-speed-up-solve).
 
 ## Not All Equations Can Be Solved
 
@@ -341,3 +342,9 @@ list](https://groups.google.com/g/sympy), or open an issue on [SymPy's GitHub
 page](https://github.com/sympy/sympy/issues). Until the issue is resolved, you
 can {func}`solve your equation numerically <sympy.solvers.solvers.nsolve>`
 instead.
+
+## Report a Bug
+
+If you find a bug with a solving function, please post the problem on the
+[SymPy mailing list](https://groups.google.com/g/sympy). Until the issue is resolved,
+you can use a different method listed in [](#alternatives-to-consider).

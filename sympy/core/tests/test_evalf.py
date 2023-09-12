@@ -272,8 +272,8 @@ def test_evalf_bugs():
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
     b = floor(log(8)/log(2), evaluate=False)
-    assert a.evalf() == 3
-    assert b.evalf() == 3
+    assert a.evalf() == 3.0
+    assert b.evalf() == 3.0
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
@@ -286,10 +286,10 @@ def test_evalf_integer_parts():
     assert int(floor(GoldenRatio**1000 / sqrt(5) + S.Half)
                .evalf(1000)) == fibonacci(1000)
 
-    assert ceiling(x).evalf(subs={x: 3}) == 3
+    assert ceiling(x).evalf(subs={x: 3}) == 3.0
     assert ceiling(x).evalf(subs={x: 3*I}) == 3.0*I
     assert ceiling(x).evalf(subs={x: 2 + 3*I}) == 2.0 + 3.0*I
-    assert ceiling(x).evalf(subs={x: 3.}) == 3
+    assert ceiling(x).evalf(subs={x: 3.}) == 3.0
     assert ceiling(x).evalf(subs={x: 3.*I}) == 3.0*I
     assert ceiling(x).evalf(subs={x: 2. + 3*I}) == 2.0 + 3.0*I
 
@@ -361,11 +361,11 @@ def test_evalf_power_subs_bugs():
     assert (x**2).evalf(subs={x: 0}) == 0
     assert sqrt(x).evalf(subs={x: 0}) == 0
     assert (x**Rational(2, 3)).evalf(subs={x: 0}) == 0
-    assert (x**x).evalf(subs={x: 0}) == 1
-    assert (3**x).evalf(subs={x: 0}) == 1
-    assert exp(x).evalf(subs={x: 0}) == 1
-    assert ((2 + I)**x).evalf(subs={x: 0}) == 1
-    assert (0**x).evalf(subs={x: 0}) == 1
+    assert (x**x).evalf(subs={x: 0}) == 1.0
+    assert (3**x).evalf(subs={x: 0}) == 1.0
+    assert exp(x).evalf(subs={x: 0}) == 1.0
+    assert ((2 + I)**x).evalf(subs={x: 0}) == 1.0
+    assert (0**x).evalf(subs={x: 0}) == 1.0
 
 
 def test_evalf_arguments():
@@ -378,7 +378,7 @@ def test_implemented_function_evalf():
     f = implemented_function(f, lambda x: x + 1)
     assert str(f(x)) == "f(x)"
     assert str(f(2)) == "f(2)"
-    assert f(2).evalf() == 3
+    assert f(2).evalf() == 3.0
     assert f(x).evalf() == f(x)
     f = implemented_function(Function('sin'), lambda x: x + 1)
     assert f(2).evalf() != sin(2)
@@ -460,7 +460,7 @@ def test_old_docstring():
 
 
 def test_issue_4806():
-    assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == 0.5
+    assert integrate(atan(x)**2, (x, -1, 1)).evalf().round(1) == Float(0.5, 1)
     assert atan(0, evaluate=False).n() == 0
 
 
@@ -551,7 +551,7 @@ def test_issue_9326():
     d1 = Dummy('d')
     d2 = Dummy('d')
     e = d1 + d2
-    assert e.evalf(subs = {d1: 1, d2: 2}) == 3
+    assert e.evalf(subs = {d1: 1, d2: 2}) == 3.0
 
 
 def test_issue_10323():
@@ -681,7 +681,7 @@ def test_evalf_with_bounded_error():
         (2 - 3 * I, Rational(1, 1000), None),
         # very large eps
         (2 - 3 * I, Rational(1000), None),
-        # case where x already small, hence some cancelation in p = m + n - 1
+        # case where x already small, hence some cancellation in p = m + n - 1
         (Rational(1234, 10**8), Rational(1, 10**12), None),
     ]
     for x0, eps, m in cases:

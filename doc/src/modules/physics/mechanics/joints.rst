@@ -46,8 +46,8 @@ the joint axis is defined in the ``parent_interframe`` as $2\hat{p}_x +
 4\hat{p}_y + 3\hat{p}_z$, then this will also be $2\hat{c}_x + 4\hat{c}_y +
 3\hat{c}_z$ in the ``child_interframe``. Practically this means that in the case
 of the :class:`~.PinJoint`, also shown below, the ``joint_axis`` is the axis of
-rotation, with the generalized coordinate :math:`\theta` as the angle of
-rotation and the generalized speed :math:`\omega` as the angular velocity.
+rotation, with the generalized coordinate :math:`q` as the angle of
+rotation and the generalized speed :math:`u` as the angular velocity.
 
 .. image:: api/PinJoint.svg
    :align: center
@@ -67,16 +67,16 @@ body's frame. ::
 
    >>> from sympy.physics.mechanics import *
    >>> mechanics_printing(pretty_print=False)
-   >>> theta, omega = dynamicsymbols('theta, omega')
+   >>> q, u = dynamicsymbols('q, u')
    >>> parent = Body('parent')
    >>> child = Body('child')
    >>> joint = PinJoint(
-   ...     'hinge', parent, child, coordinates=theta, speeds=omega,
+   ...     'hinge', parent, child, coordinates=q, speeds=u,
    ...     parent_point=3 * parent.frame.x,
    ...     child_point=-3 * child.frame.x,
    ...     joint_axis=parent.frame.z)
    >>> joint.kdes
-   [omega - theta']
+   Matrix([[u - q']])
    >>> joint.parent_point.pos_from(parent.masscenter)
    3*parent_frame.x
    >>> joint.parent_interframe
@@ -86,7 +86,7 @@ body's frame. ::
    >>> child.masscenter.pos_from(parent.masscenter)
    3*parent_frame.x + 3*child_frame.x
    >>> child.masscenter.vel(parent.frame)
-   3*omega*child_frame.y
+   3*u*child_frame.y
 
 JointsMethod in Physics/Mechanics
 =================================
@@ -101,6 +101,6 @@ In the code below we form the equations of motion of the single
 
    >>> method = JointsMethod(parent, joint)
    >>> method.form_eoms()
-   Matrix([[-(child_izz + 9*child_mass)*omega']])
+   Matrix([[-(child_izz + 9*child_mass)*u']])
    >>> type(method.method)  # The method working in the backend
    <class 'sympy.physics.mechanics.kane.KanesMethod'>

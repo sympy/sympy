@@ -46,6 +46,13 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         return isinstance(other, FractionField) and \
             self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.dom.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.dom.characteristic()
+
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /

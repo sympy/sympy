@@ -193,7 +193,7 @@ def test_eval_trace():
     d = Density((up, 0.5), (down, 0.5))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
     #test dummy time dependent states
     class TestTimeDepKet(TimeDepKet):
@@ -208,7 +208,7 @@ def test_eval_trace():
                         0.5 * OuterProduct(k2, k2.dual))
 
     t = Tr(d)
-    assert t.doit() == 1
+    assert t.doit() == 1.0
 
 
 def test_fidelity():

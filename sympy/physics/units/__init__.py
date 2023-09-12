@@ -128,6 +128,7 @@ from .definitions import (
     yd, yard, yards,
     mi, mile, miles,
     nmi, nautical_mile, nautical_miles,
+    angstrom, angstroms,
     ha, hectare,
     l, L, liter, liters,
     dl, dL, deciliter, deciliters,
@@ -164,6 +165,7 @@ from .definitions import (
     josephson_constant,
     von_klitzing_constant,
     Da, dalton, amu, amus, atomic_mass_unit, atomic_mass_constant,
+    me, electron_rest_mass,
     gee, gees, acceleration_due_to_gravity,
     u0, magnetic_constant, vacuum_permeability,
     e0, electric_constant, vacuum_permittivity,
@@ -234,6 +236,8 @@ def find_unit(quantity, unit_system="SI"):
     ['C', 'coulomb', 'coulombs', 'planck_charge', 'elementary_charge']
     >>> u.find_unit("ampere")
     ['ampere', 'amperes']
+    >>> u.find_unit('angstrom')
+    ['angstrom', 'angstroms']
     >>> u.find_unit('volt')
     ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
     >>> u.find_unit(u.inch**3)[:9]
@@ -362,6 +366,7 @@ __all__ = [
     'yd', 'yard', 'yards',
     'mi', 'mile', 'miles',
     'nmi', 'nautical_mile', 'nautical_miles',
+    'angstrom', 'angstroms',
     'ha', 'hectare',
     'l', 'L', 'liter', 'liters',
     'dl', 'dL', 'deciliter', 'deciliters',
@@ -398,6 +403,7 @@ __all__ = [
     'josephson_constant',
     'von_klitzing_constant',
     'Da', 'dalton', 'amu', 'amus', 'atomic_mass_unit', 'atomic_mass_constant',
+    'me', 'electron_rest_mass',
     'gee', 'gees', 'acceleration_due_to_gravity',
     'u0', 'magnetic_constant', 'vacuum_permeability',
     'e0', 'electric_constant', 'vacuum_permittivity',

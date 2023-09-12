@@ -16,19 +16,24 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8
+
+      - run: pip install -r requirements-dev.txt
+      - run: pip install ruff
 
       - name: Basic code quality tests
         run: bin/test quality
 
       - name: Run flake8 on the sympy package
         run: flake8 sympy
+
+      - name: Run Ruff on the sympy package
+        run: ruff check .
 
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
@@ -54,12 +59,12 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath mypy
+      - run: pip install mpmath mypy hypothesis
 
       - name: Run mypy on the sympy package
         run: mypy sympy
@@ -71,10 +76,10 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -87,16 +92,16 @@ jobs:
     needs: code-quality
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Clone full git history (needed for detecting authors)
           fetch-depth: 0
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
-      - run: bin/mailmap_check.py --skip-last-commit
+      - run: bin/mailmap_check.py
 
   # -------------------- Doctests latest Python -------------------- #
 
@@ -105,44 +110,33 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
-  # -------------------- Test split 1/2 latest Python -------------- #
+  # ------------------------- Test latest Python ------------------- #
 
-  tests1-latest:
+  tests-latest:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=1/2
-
-  # -------------------- Test split 2/2 latest Python -------------- #
-
-  tests2-latest:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.10'
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=2/2
+      - run: pip install -r requirements-dev.txt
+      - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
 
@@ -150,17 +144,25 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+    timeout-minutes: 75
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
-        split: ['1/2', '2/2']
+        group: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.20.1a1/pyodide-build-0.20.1a1.tar.bz2 | tar xjf -
-      - run: python3 setup.py bdist_wheel
-      - run: node bin/test_pyodide.mjs --split=${{ matrix.split }} 2>/dev/null  # ignore node exception
+          node-version: 18.x
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install build
+      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
+      - run: python -m build --wheel
+      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -172,49 +174,45 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', 'pypy-3.8']
+        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
         experimental: [false]
-        include:
-          - python-version: '3.11.0-alpha - 3.11'
-            experimental: true
+        #
+        # For now we do not test optional dependencies with 3.12 because as of
+        # 3.12.a.5 it is not possible to pip install numpy. Building numpy,
+        # scipy etc from source is overkill for sympy CI. It is probably not
+        # possible to install builds of most of the other optional dependencies
+        # either (especially since many depend on numpy).
+        #
+        # Maybe use this to add 3.12 when the time comes:
+        #include:
+        #  - python-version: '3.12.0-alpha - 3.12'
+        #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
+      - run: pip install -r requirements-dev.txt
+
       # Install the non-Python dependencies
-      - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev
+      - run: sudo apt-get update
+      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
-      # Use various libs from git for Python 3.11
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/cython/cython@master
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/numpy/numpy@main
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/scipy/scipy@main
-      - if: ${{ contains(matrix.python-version, '3.11') }}
-        run: pip install git+https://github.com/matplotlib/matplotlib@main
-
-      # SciPy 1.9.0 and 1.9.1 fail to compile under PyPy:
-      #
-      # https://github.com/FFY00/meson-python/issues/121
-      - if: ${{ matrix.python-version == 'pypy-3.8' }}
-        run: pip install 'scipy<1.9.0'
-
       # dependencies to install in all Python versions:
-      - run: pip install mpmath numpy numexpr matplotlib ipython cython scipy \
-                         aesara wurlitzer autowrap                            \
-                         'antlr4-python3-runtime==4.10.*'
+      - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
+                         wurlitzer autowrap lxml lark z3-solver                       \
+                         'antlr4-python3-runtime==4.11.*'
+                         #
 
-      # gmpy2 is not available for pypy
-      - if: ${{ matrix.python-version != 'pypy-3.8' }}
-        run: pip install gmpy2
+      # Not available in pypy or cpython 3.11 (yet).
+      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
+        run: pip install llvmlite numba
 
-      # These are not available for pypy and cannot be installed in 3.11 (yet)
-      - if: ${{ matrix.python-version != 'pypy-3.8' && ! contains(matrix.python-version, '3.11') }}
-        run: pip install symengine llvmlite numba pymc jax jaxlib
+      # These are not available for pypy
+      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
+        run: pip install gmpy2 jax jaxlib symengine pymc libclang
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -224,6 +222,66 @@ jobs:
       # Test modules with specific dependencies
       - run: bin/test_optional_dependencies.py
 
+  # -------------------- FLINT tests -------------------------------- #
+
+  python-flint:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/polys                           \
+                    sympy/ntheory                         \
+                    sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/matrices              \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
+  # -------------------- FLINT+gmpy2 ------------------------------ #
+
+  flint-gmpy2:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint gmpy2
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/polys                           \
+                    sympy/ntheory                         \
+                    sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/matrices              \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
   # -------------------- Tensorflow tests -------------------------- #
 
   tensorflow:
@@ -232,12 +290,13 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy tensorflow
+      - run: pip install -r requirements-dev.txt
+      - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
@@ -248,116 +307,82 @@ jobs:
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy symengine
+      - run: pip install -r requirements-dev.txt
+      - run: pip install numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
         env:
           USE_SYMENGINE: '1'
 
-  # -------------------- Slow test split 1/2 ----------------------- #
+  # ------------------------- Slow tests --------------------------- #
 
-  slow1:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.10'
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
-
-  # -------------------- Slow test split 2/2 ----------------------- #
-
-  slow2:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  tests-slow:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [1, 2, 3, 4]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
+      - run: pip install -r requirements-dev.txt
+      - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
-  # -------------------- Test split 1/2 older Python --------------- #
+  # -------------------- Test older (and newer) Python --------------- #
 
-  tests1:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  tests-other-python:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
         experimental: [false]
+        group: [1, 2, 3, 4]
         # Maybe use this to add 3.12 when the time comes:
         #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
+        #  - python-version: '3.12.0-alpha - 3.12'
         #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=1/2
+      - run: pip install -r requirements-dev.txt
+      - run: bin/test --split ${{ matrix.group }}/4
 
-  # -------------------- Test split 2/2 older Python --------------- #
+  # -------------------- Doctests older (and newer) Python --------------------- #
 
-  tests2:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
-
-    runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
-        experimental: [false]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
-        #    experimental: true
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
-      - run: python -m pip install --upgrade pip
-      - run: pip install mpmath
-      - run: bin/test --force-colors --split=2/2
-
-  # -------------------- Doctests older Python --------------------- #
-
-  doctests:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+  doctests-other-python:
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.11.0-alpha - 3.11', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
         experimental: [false]
         # Maybe use this to add 3.12 when the time comes:
         #include:
-        #  - python-version: '3.11.0-alpha - 3.11'
+        #  - python-version: '3.12.0-alpha - 3.12'
         #    experimental: true
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
@@ -368,61 +393,73 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
+      # When run against master, deploy to docs.sympy.org/dev. This requires
+      # having an SSH deploy key set up. See
+      # https://github.com/marketplace/actions/deploy-to-github-pages#using-an-ssh-deploy-key-
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          folder: doc/_build/html
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+          repository-name: sympy/sympy_doc
+          target-folder: dev
 
   # -------------------- Check the error message under py2 --------- #
 
   py2-import:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '2.7'
+          python-version: 'pypy2.7'
       - run: bin/test_py2_import.py
 
   # -------------------- Check the list of files for sdist --------- #
 
   sdist-check:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - run: python setup.py sdist
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
 
   # -------- Run benchmarks against master and previous release ---- #
 
   benchmarks:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Checkout repo with full history
           fetch-depth: 0
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      - run: pip install asv virtualenv
+          python-version: '3.11'
+      - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
         # Need to make sure we can access the branches from the main repo. We
@@ -434,7 +471,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.11
+      - run: git fetch upstream 1.12
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -446,8 +483,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.11 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.12 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # This workflow does not have write permissions for the repository so
         # we save all outputs as artifacts that can be accessed by the
@@ -455,7 +492,7 @@ jobs:
         # this one completes.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: benchmarks
           path: |
@@ -467,7 +504,7 @@ jobs:
   # -------------------- Save PR number ---------------------------- #
 
   save-pr-number:
-    needs: [doctests-latest, tests1-latest, tests2-latest]
+    needs: [doctests-latest, tests-latest]
 
     # The comment-on-pr workflow needs the issue number of the PR to be able to
     # comment so we output that to a file and pass it over as an artifact.
@@ -483,7 +520,7 @@ jobs:
         run: echo -n > pr_number.txt
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pr_number
           path: pr_number.txt

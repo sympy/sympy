@@ -1,4 +1,5 @@
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
@@ -27,7 +28,7 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {"Str": Str}  # type: tDict[str, Any]
+ENV: dict[str, Any] = {"Str": Str}
 exec("from sympy import *", ENV)
 
 

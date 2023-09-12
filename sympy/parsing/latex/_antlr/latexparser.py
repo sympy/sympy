@@ -408,7 +408,7 @@ class LaTeXParser ( Parser ):
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10")
+        self.checkVersion("4.11.1")
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
@@ -519,7 +519,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 88
                     _la = self._input.LA(1)
-                    if not(((((_la - 79)) & ~0x3f) == 0 and ((1 << (_la - 79)) & ((1 << (LaTeXParser.EQUAL - 79)) | (1 << (LaTeXParser.NEQ - 79)) | (1 << (LaTeXParser.LT - 79)) | (1 << (LaTeXParser.LTE - 79)) | (1 << (LaTeXParser.GT - 79)) | (1 << (LaTeXParser.GTE - 79)))) != 0)):
+                    if not((((_la - 79)) & ~0x3f) == 0 and ((1 << (_la - 79)) & 207) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -675,7 +675,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 105
                     _la = self._input.LA(1)
-                    if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                    if not(_la==15 or _la==16):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -765,7 +765,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 116
                     _la = self._input.LA(1)
-                    if not(((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & ((1 << (LaTeXParser.MUL - 17)) | (1 << (LaTeXParser.DIV - 17)) | (1 << (LaTeXParser.CMD_TIMES - 17)) | (1 << (LaTeXParser.CMD_CDOT - 17)) | (1 << (LaTeXParser.CMD_DIV - 17)) | (1 << (LaTeXParser.COLON - 17)))) != 0)):
+                    if not((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & 290200700988686339) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -855,7 +855,7 @@ class LaTeXParser ( Parser ):
                         raise FailedPredicateException(self, "self.precpred(self._ctx, 2)")
                     self.state = 127
                     _la = self._input.LA(1)
-                    if not(((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & ((1 << (LaTeXParser.MUL - 17)) | (1 << (LaTeXParser.DIV - 17)) | (1 << (LaTeXParser.CMD_TIMES - 17)) | (1 << (LaTeXParser.CMD_CDOT - 17)) | (1 << (LaTeXParser.CMD_DIV - 17)) | (1 << (LaTeXParser.COLON - 17)))) != 0)):
+                    if not((((_la - 17)) & ~0x3f) == 0 and ((1 << (_la - 17)) & 290200700988686339) != 0):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -914,11 +914,11 @@ class LaTeXParser ( Parser ):
             self.state = 141
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.ADD, LaTeXParser.SUB]:
+            if token in [15, 16]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 134
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                if not(_la==15 or _la==16):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -926,7 +926,7 @@ class LaTeXParser ( Parser ):
                 self.state = 135
                 self.unary()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            elif token in [19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 137
                 self._errHandler.sync(self)
@@ -998,11 +998,11 @@ class LaTeXParser ( Parser ):
             self.state = 152
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.ADD, LaTeXParser.SUB]:
+            if token in [15, 16]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 143
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                if not(_la==15 or _la==16):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -1010,7 +1010,7 @@ class LaTeXParser ( Parser ):
                 self.state = 144
                 self.unary_nofunc()
                 pass
-            elif token in [LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            elif token in [19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 145
                 self.postfix()
@@ -1170,12 +1170,12 @@ class LaTeXParser ( Parser ):
             self.state = 170
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BANG]:
+            if token in [89]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 168
                 self.match(LaTeXParser.BANG)
                 pass
-            elif token in [LaTeXParser.BAR]:
+            elif token in [27]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 169
                 self.eval_at()
@@ -1456,11 +1456,11 @@ class LaTeXParser ( Parser ):
                     self.state = 206
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                    if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                         self.state = 201
                         self.atom()
                         pass
-                    elif token in [LaTeXParser.L_BRACE]:
+                    elif token in [21]:
                         self.state = 202
                         self.match(LaTeXParser.L_BRACE)
                         self.state = 203
@@ -1564,11 +1564,11 @@ class LaTeXParser ( Parser ):
                     self.state = 226
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                    if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                         self.state = 221
                         self.atom()
                         pass
-                    elif token in [LaTeXParser.L_BRACE]:
+                    elif token in [21]:
                         self.state = 222
                         self.match(LaTeXParser.L_BRACE)
                         self.state = 223
@@ -1821,7 +1821,7 @@ class LaTeXParser ( Parser ):
             self.state = 267
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.L_PAREN]:
+            if token in [19]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 251
                 self.match(LaTeXParser.L_PAREN)
@@ -1830,7 +1830,7 @@ class LaTeXParser ( Parser ):
                 self.state = 253
                 self.match(LaTeXParser.R_PAREN)
                 pass
-            elif token in [LaTeXParser.L_BRACKET]:
+            elif token in [25]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 255
                 self.match(LaTeXParser.L_BRACKET)
@@ -1839,7 +1839,7 @@ class LaTeXParser ( Parser ):
                 self.state = 257
                 self.match(LaTeXParser.R_BRACKET)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 259
                 self.match(LaTeXParser.L_BRACE)
@@ -1848,7 +1848,7 @@ class LaTeXParser ( Parser ):
                 self.state = 261
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.L_BRACE_LITERAL]:
+            elif token in [23]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 263
                 self.match(LaTeXParser.L_BRACE_LITERAL)
@@ -2062,11 +2062,11 @@ class LaTeXParser ( Parser ):
             self.state = 317
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.LETTER, LaTeXParser.SYMBOL]:
+            if token in [77, 91]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 295
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+                if not(_la==77 or _la==91):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2114,37 +2114,37 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.DIGIT]:
+            elif token in [78]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 310
                 self.number()
                 pass
-            elif token in [LaTeXParser.DIFFERENTIAL]:
+            elif token in [76]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 311
                 self.match(LaTeXParser.DIFFERENTIAL)
                 pass
-            elif token in [LaTeXParser.CMD_MATHIT]:
+            elif token in [72]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 312
                 self.mathit()
                 pass
-            elif token in [LaTeXParser.CMD_FRAC]:
+            elif token in [68]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 313
                 self.frac()
                 pass
-            elif token in [LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM]:
+            elif token in [69, 70, 71]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 314
                 self.binom()
                 pass
-            elif token in [LaTeXParser.L_ANGLE]:
+            elif token in [30]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 315
                 self.bra()
                 pass
-            elif token in [LaTeXParser.BAR, LaTeXParser.L_BAR]:
+            elif token in [27, 29]:
                 self.enterOuterAlt(localctx, 8)
                 self.state = 316
                 self.ket()
@@ -2200,7 +2200,7 @@ class LaTeXParser ( Parser ):
             self.expr()
             self.state = 321
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.BAR or _la==LaTeXParser.R_BAR):
+            if not(_la==27 or _la==28):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2249,7 +2249,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 323
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.BAR or _la==LaTeXParser.L_BAR):
+            if not(_la==27 or _la==29):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2345,7 +2345,7 @@ class LaTeXParser ( Parser ):
             self.state = 335
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            while _la==LaTeXParser.LETTER:
+            while _la==77:
                 self.state = 332
                 self.match(LaTeXParser.LETTER)
                 self.state = 337
@@ -2417,11 +2417,11 @@ class LaTeXParser ( Parser ):
             self.state = 344
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.DIGIT]:
+            if token in [78]:
                 self.state = 339
                 localctx.upperd = self.match(LaTeXParser.DIGIT)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 340
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 341
@@ -2435,11 +2435,11 @@ class LaTeXParser ( Parser ):
             self.state = 351
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.DIGIT]:
+            if token in [78]:
                 self.state = 346
                 localctx.lowerd = self.match(LaTeXParser.DIGIT)
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 347
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 348
@@ -2511,7 +2511,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 353
             _la = self._input.LA(1)
-            if not(((((_la - 69)) & ~0x3f) == 0 and ((1 << (_la - 69)) & ((1 << (LaTeXParser.CMD_BINOM - 69)) | (1 << (LaTeXParser.CMD_DBINOM - 69)) | (1 << (LaTeXParser.CMD_TBINOM - 69)))) != 0)):
+            if not((((_la - 69)) & ~0x3f) == 0 and ((1 << (_la - 69)) & 7) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2715,7 +2715,7 @@ class LaTeXParser ( Parser ):
             self.enterOuterAlt(localctx, 1)
             self.state = 369
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LaTeXParser.FUNC_EXP) | (1 << LaTeXParser.FUNC_LOG) | (1 << LaTeXParser.FUNC_LG) | (1 << LaTeXParser.FUNC_LN) | (1 << LaTeXParser.FUNC_SIN) | (1 << LaTeXParser.FUNC_COS) | (1 << LaTeXParser.FUNC_TAN) | (1 << LaTeXParser.FUNC_CSC) | (1 << LaTeXParser.FUNC_SEC) | (1 << LaTeXParser.FUNC_COT) | (1 << LaTeXParser.FUNC_ARCSIN) | (1 << LaTeXParser.FUNC_ARCCOS) | (1 << LaTeXParser.FUNC_ARCTAN) | (1 << LaTeXParser.FUNC_ARCCSC) | (1 << LaTeXParser.FUNC_ARCSEC) | (1 << LaTeXParser.FUNC_ARCCOT) | (1 << LaTeXParser.FUNC_SINH) | (1 << LaTeXParser.FUNC_COSH) | (1 << LaTeXParser.FUNC_TANH) | (1 << LaTeXParser.FUNC_ARSINH) | (1 << LaTeXParser.FUNC_ARCOSH) | (1 << LaTeXParser.FUNC_ARTANH))) != 0)):
+            if not(((_la) & ~0x3f) == 0 and ((1 << _la) & 576460614864470016) != 0):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -2852,7 +2852,7 @@ class LaTeXParser ( Parser ):
             self.state = 460
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH]:
+            if token in [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 371
                 self.func_normal()
@@ -2863,7 +2863,7 @@ class LaTeXParser ( Parser ):
                     self.state = 373
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 372
                         self.subexpr()
 
@@ -2871,7 +2871,7 @@ class LaTeXParser ( Parser ):
                     self.state = 376
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.CARET:
+                    if _la==74:
                         self.state = 375
                         self.supexpr()
 
@@ -2882,7 +2882,7 @@ class LaTeXParser ( Parser ):
                     self.state = 379
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.CARET:
+                    if _la==74:
                         self.state = 378
                         self.supexpr()
 
@@ -2890,7 +2890,7 @@ class LaTeXParser ( Parser ):
                     self.state = 382
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 381
                         self.subexpr()
 
@@ -2917,11 +2917,11 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.LETTER, LaTeXParser.SYMBOL]:
+            elif token in [77, 91]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 393
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+                if not(_la==77 or _la==91):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -2933,7 +2933,7 @@ class LaTeXParser ( Parser ):
                     self.state = 395
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 394
                         self.subexpr()
 
@@ -2941,7 +2941,7 @@ class LaTeXParser ( Parser ):
                     self.state = 398
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.SINGLE_QUOTES:
+                    if _la==90:
                         self.state = 397
                         self.match(LaTeXParser.SINGLE_QUOTES)
 
@@ -2952,7 +2952,7 @@ class LaTeXParser ( Parser ):
                     self.state = 401
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.SINGLE_QUOTES:
+                    if _la==90:
                         self.state = 400
                         self.match(LaTeXParser.SINGLE_QUOTES)
 
@@ -2960,7 +2960,7 @@ class LaTeXParser ( Parser ):
                     self.state = 404
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
-                    if _la==LaTeXParser.UNDERSCORE:
+                    if _la==73:
                         self.state = 403
                         self.subexpr()
 
@@ -2975,26 +2975,26 @@ class LaTeXParser ( Parser ):
                 self.state = 410
                 self.match(LaTeXParser.R_PAREN)
                 pass
-            elif token in [LaTeXParser.FUNC_INT]:
+            elif token in [34]:
                 self.enterOuterAlt(localctx, 3)
                 self.state = 412
                 self.match(LaTeXParser.FUNC_INT)
                 self.state = 419
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [LaTeXParser.UNDERSCORE]:
+                if token in [73]:
                     self.state = 413
                     self.subexpr()
                     self.state = 414
                     self.supexpr()
                     pass
-                elif token in [LaTeXParser.CARET]:
+                elif token in [74]:
                     self.state = 416
                     self.supexpr()
                     self.state = 417
                     self.subexpr()
                     pass
-                elif token in [LaTeXParser.ADD, LaTeXParser.SUB, LaTeXParser.L_PAREN, LaTeXParser.L_BRACE, LaTeXParser.L_BRACE_LITERAL, LaTeXParser.L_BRACKET, LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.FUNC_LIM, LaTeXParser.FUNC_INT, LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD, LaTeXParser.FUNC_EXP, LaTeXParser.FUNC_LOG, LaTeXParser.FUNC_LG, LaTeXParser.FUNC_LN, LaTeXParser.FUNC_SIN, LaTeXParser.FUNC_COS, LaTeXParser.FUNC_TAN, LaTeXParser.FUNC_CSC, LaTeXParser.FUNC_SEC, LaTeXParser.FUNC_COT, LaTeXParser.FUNC_ARCSIN, LaTeXParser.FUNC_ARCCOS, LaTeXParser.FUNC_ARCTAN, LaTeXParser.FUNC_ARCCSC, LaTeXParser.FUNC_ARCSEC, LaTeXParser.FUNC_ARCCOT, LaTeXParser.FUNC_SINH, LaTeXParser.FUNC_COSH, LaTeXParser.FUNC_TANH, LaTeXParser.FUNC_ARSINH, LaTeXParser.FUNC_ARCOSH, LaTeXParser.FUNC_ARTANH, LaTeXParser.L_FLOOR, LaTeXParser.L_CEIL, LaTeXParser.FUNC_SQRT, LaTeXParser.FUNC_OVERLINE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+                elif token in [15, 16, 19, 21, 23, 25, 27, 29, 30, 32, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 63, 64, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                     pass
                 else:
                     pass
@@ -3026,14 +3026,14 @@ class LaTeXParser ( Parser ):
 
 
                 pass
-            elif token in [LaTeXParser.FUNC_SQRT]:
+            elif token in [63]:
                 self.enterOuterAlt(localctx, 4)
                 self.state = 429
                 self.match(LaTeXParser.FUNC_SQRT)
                 self.state = 434
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la==LaTeXParser.L_BRACKET:
+                if _la==25:
                     self.state = 430
                     self.match(LaTeXParser.L_BRACKET)
                     self.state = 431
@@ -3049,7 +3049,7 @@ class LaTeXParser ( Parser ):
                 self.state = 438
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.FUNC_OVERLINE]:
+            elif token in [64]:
                 self.enterOuterAlt(localctx, 5)
                 self.state = 440
                 self.match(LaTeXParser.FUNC_OVERLINE)
@@ -3060,11 +3060,11 @@ class LaTeXParser ( Parser ):
                 self.state = 443
                 self.match(LaTeXParser.R_BRACE)
                 pass
-            elif token in [LaTeXParser.FUNC_SUM, LaTeXParser.FUNC_PROD]:
+            elif token in [35, 36]:
                 self.enterOuterAlt(localctx, 6)
                 self.state = 445
                 _la = self._input.LA(1)
-                if not(_la==LaTeXParser.FUNC_SUM or _la==LaTeXParser.FUNC_PROD):
+                if not(_la==35 or _la==36):
                     self._errHandler.recoverInline(self)
                 else:
                     self._errHandler.reportMatch(self)
@@ -3072,13 +3072,13 @@ class LaTeXParser ( Parser ):
                 self.state = 452
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [LaTeXParser.UNDERSCORE]:
+                if token in [73]:
                     self.state = 446
                     self.subeq()
                     self.state = 447
                     self.supexpr()
                     pass
-                elif token in [LaTeXParser.CARET]:
+                elif token in [74]:
                     self.state = 449
                     self.supexpr()
                     self.state = 450
@@ -3090,7 +3090,7 @@ class LaTeXParser ( Parser ):
                 self.state = 454
                 self.mp(0)
                 pass
-            elif token in [LaTeXParser.FUNC_LIM]:
+            elif token in [32]:
                 self.enterOuterAlt(localctx, 7)
                 self.state = 456
                 self.match(LaTeXParser.FUNC_LIM)
@@ -3229,7 +3229,7 @@ class LaTeXParser ( Parser ):
             self.match(LaTeXParser.L_BRACE)
             self.state = 471
             _la = self._input.LA(1)
-            if not(_la==LaTeXParser.LETTER or _la==LaTeXParser.SYMBOL):
+            if not(_la==77 or _la==91):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -3241,18 +3241,18 @@ class LaTeXParser ( Parser ):
             self.state = 482
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if _la==LaTeXParser.CARET:
+            if _la==74:
                 self.state = 474
                 self.match(LaTeXParser.CARET)
                 self.state = 480
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [LaTeXParser.L_BRACE]:
+                if token in [21]:
                     self.state = 475
                     self.match(LaTeXParser.L_BRACE)
                     self.state = 476
                     _la = self._input.LA(1)
-                    if not(_la==LaTeXParser.ADD or _la==LaTeXParser.SUB):
+                    if not(_la==15 or _la==16):
                         self._errHandler.recoverInline(self)
                     else:
                         self._errHandler.reportMatch(self)
@@ -3260,11 +3260,11 @@ class LaTeXParser ( Parser ):
                     self.state = 477
                     self.match(LaTeXParser.R_BRACE)
                     pass
-                elif token in [LaTeXParser.ADD]:
+                elif token in [15]:
                     self.state = 478
                     self.match(LaTeXParser.ADD)
                     pass
-                elif token in [LaTeXParser.SUB]:
+                elif token in [16]:
                     self.state = 479
                     self.match(LaTeXParser.SUB)
                     pass
@@ -3414,11 +3414,11 @@ class LaTeXParser ( Parser ):
             self.state = 501
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.state = 496
                 self.atom()
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 497
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 498
@@ -3479,11 +3479,11 @@ class LaTeXParser ( Parser ):
             self.state = 509
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [LaTeXParser.BAR, LaTeXParser.L_BAR, LaTeXParser.L_ANGLE, LaTeXParser.CMD_FRAC, LaTeXParser.CMD_BINOM, LaTeXParser.CMD_DBINOM, LaTeXParser.CMD_TBINOM, LaTeXParser.CMD_MATHIT, LaTeXParser.DIFFERENTIAL, LaTeXParser.LETTER, LaTeXParser.DIGIT, LaTeXParser.SYMBOL]:
+            if token in [27, 29, 30, 68, 69, 70, 71, 72, 76, 77, 78, 91]:
                 self.state = 504
                 self.atom()
                 pass
-            elif token in [LaTeXParser.L_BRACE]:
+            elif token in [21]:
                 self.state = 505
                 self.match(LaTeXParser.L_BRACE)
                 self.state = 506
