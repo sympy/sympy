@@ -26,7 +26,6 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
-from mpmath.libmp.libmpf import prec_to_dps
 
 from .utilities import _get_intermediate_simp_bool
 
@@ -2026,10 +2025,11 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **hints):
         return self.applyfunc(lambda x: x.doit(**hints))
 
-    def evalf(self, prec=15):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""
-        dps = prec_to_dps(prec)
-        return self.applyfunc(lambda e: e.evalf(dps))
+        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
+                'quad':quad, 'verbose':verbose}
+        return self.applyfunc(lambda i: i.evalf(n, **options))
 
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
                mul=True, log=True, multinomial=True, basic=True, **hints):
