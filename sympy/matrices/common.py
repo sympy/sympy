@@ -2026,7 +2026,7 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **hints):
         return self.applyfunc(lambda x: x.doit(**hints))
 
-    def evalf(self, prec):
+    def evalf(self, prec=15):
         """Apply evalf() to each element of self."""
         dps = prec_to_dps(prec)
         return self.applyfunc(lambda e: e.evalf(dps))
