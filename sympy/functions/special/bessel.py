@@ -677,14 +677,15 @@ class besselk(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            term_one = ((-1)**(nu -1)*log(z/2)*besseli(nu, z))
-            term_two = (z/2)**(-nu)*factorial(nu - 1)/2 if (nu).is_positive else S.Zero
-            term_three = (-1)**nu*(z/2)**nu/(2*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
-            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            return arg
+            if nu is S.Zero:
+                # Equation 9.6.8 of Abramowitz and Stegun (10th ed, 1972).
+                term = -log(z) - S.EulerGamma + log(2)
+            else:
+                # Equation 9.6.9 of Abramowitz and Stegun (10th ed, 1972).
+                term = gamma(Abs(nu))*(z/2)**(-Abs(nu))/2
+            return term.as_leading_term(x, logx=logx)
         elif e.is_negative:
-            # Refer Abramowitz and Stegun 1965, p. 378 for more information on
-            # asymptotic approximation of besselk function.
+            # Equation 9.7.2 of Abramowitz and Stegun (10th ed, 1972).
             return sqrt(pi)*exp(-z)/sqrt(2*z)
 
         return super(besselk, self)._eval_as_leading_term(x, logx, cdir)
