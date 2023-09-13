@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
+from mpmath.libmp.libmpf import prec_to_dps
 
 import itertools
 from collections.abc import Iterable
