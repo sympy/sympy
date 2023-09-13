@@ -9,11 +9,15 @@ _lark = import_module("lark")
 
 
 class LarkLatexParser:
-    def __init__(self, logger=False, print_debug_output=False, transform=True):
+    def __init__(self, logger=False, print_debug_output=False, transform=True, grammar_file=None, transformer=None):
         grammar_dir_path = os.path.join(os.path.dirname(__file__), "grammar/")
 
-        with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
-            latex_grammar = f.read()
+        if grammar_file is None:
+            with open(os.path.join(grammar_dir_path, "latex.lark"), encoding="utf-8") as f:
+                latex_grammar = f.read()
+        else:
+            with open(grammar_file, encoding="utf-8") as f:
+                latex_grammar = f.read()
 
         self.parser = _lark.Lark(
             latex_grammar,
@@ -31,7 +35,10 @@ class LarkLatexParser:
         self.print_debug_output = print_debug_output
         self.transform_expr = transform
 
-        self.transformer = TransformToSymPyExpr()
+        if transformer is None:
+            self.transformer = TransformToSymPyExpr()
+        else:
+            self.transformer = transformer()
 
     def doparse(self, s: str):
         if self.logger:

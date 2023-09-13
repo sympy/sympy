@@ -5,7 +5,7 @@ various operations on them.
 
 from sympy.core import Add, Mul, Pow
 from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
-        equal_valued)
+        equal_valued, int_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -1462,7 +1462,7 @@ class HolonomicFunction:
                 grp.append([i])
                 continue
             for j in grp:
-                if int(j[0] - i) == j[0] - i:
+                if int_valued(j[0] - i):
                     j.append(i)
                     intdiff = True
                     break
@@ -1474,7 +1474,7 @@ class HolonomicFunction:
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
-        allint = all(int(i) == i for i in reals)
+        allint = all(int_valued(i) for i in reals)
 
         # if initial conditions are provided
         # then use them.
@@ -1964,7 +1964,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not int_valued(i):
                     continue
 
                 i = int(i)

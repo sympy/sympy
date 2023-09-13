@@ -301,8 +301,8 @@ def test_vector_derivative_printing():
     v = omega.diff().diff().diff().diff().diff() * N.x
 
     assert vlatex(v) == r'\frac{d^{5}}{d t^{5}} \omega\mathbf{\hat{n}_x}'
-    assert unicode_vpretty(v) == '  5\n d\n───(ω) n_x\n  5\ndt'
-    assert ascii_vpretty(v) == '  5\n d\n---(omega) n_x\n  5\ndt'
+    assert unicode_vpretty(v) == ' 5\nd\n───(ω) n_x\n  5\ndt'
+    assert ascii_vpretty(v) == ' 5\nd\n---(omega) n_x\n  5\ndt'
 
 
 def test_vector_str_printing():

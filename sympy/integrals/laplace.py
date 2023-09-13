@@ -603,7 +603,7 @@ def _laplace_rule_delta(f, t, s):
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
             ro = roots(ma1[y], t)
-            if roots is not {} and set(ro.values()) == {1}:
+            if ro != {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
                 r = Add(
                     *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
@@ -1092,14 +1092,13 @@ def laplace_initial_conds(f, t, fdict, /):
     s**3*Y(s) - 2*s**2 - 4*s - 8
     """
     for y, ic in fdict.items():
-        if len(ic) >= 0:
-            for k in range(len(ic)):
-                if k == 0:
-                    f = f.replace(y(0), ic[0])
-                elif k == 1:
-                    f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
-                else:
-                    f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
+        for k in range(len(ic)):
+            if k == 0:
+                f = f.replace(y(0), ic[0])
+            elif k == 1:
+                f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
+            else:
+                f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
     return f
 
 
@@ -2034,7 +2033,7 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
             terms_t.append(Heaviside(t)*r)
         else:
             ft, cond = _inverse_laplace_transform(
-                fn, s, t, plane, simplify=simplify, dorational=False)
+                term, s, t, plane, simplify=simplify, dorational=False)
             terms_t.append(ft)
             conditions.append(cond)
 

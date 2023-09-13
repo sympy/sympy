@@ -157,6 +157,84 @@ Now they should be imported from ``sympy.physics.mechanics``:
 >>> from sympy.physics.mechanics.loads import gravity
 ```
 
+
+modularinteger-to-int=
+### The ``ModularInteger.to_int()`` method
+
+SymPy's ``GF`` domains are for modular integers e.g. ``GF(n)`` is for the
+integers modulo ``n`` and can be used like:
+```py
+>>> from sympy import GF
+>>> K = GF(5)
+>>> a = K(7)
+>>> a
+2 mod 5
+```
+
+The elements of a modular integer domain have a ``to_int()`` method that is
+deprecated since SymPy 1.13:
+```py
+>>> # this is deprecated:
+>>> a.to_int()  # doctest: +SKIP
+2
+```
+
+Instead the preferred way to achieve equivalent behavior is to use the method
+on the domain (added in SymPy 1.13) or alternatively calling ``int`` might be
+better:
+```py
+>>> K.to_int(a)
+2
+>>> int(a)
+2
+```
+
+These two ways of converting to an ``int`` are not equivalent. The domain
+``GF(p)`` can be defined with ``symmetric=True`` or ``symmetric=False``. This
+difference affects the behavior of the ``to_int`` method:
+```py
+>>> KS = GF(5, symmetric=True)
+>>> KU = GF(5, symmetric=False)
+>>> [KS.to_int(KS(n)) for n in range(10)]
+[0, 1, 2, -2, -1, 0, 1, 2, -2, -1]
+>>> [KU.to_int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KS(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+>>> [int(KU(n)) for n in range(10)]
+[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]
+```
+
+So if ``symmetric=True`` (which is the default) then the ``to_int`` method will
+sometimes return negative integers. If ``symmetric=False`` or if the ``int(a)``
+method is used the returned result is always a nonnegative integer. Note also
+that the behaviour of ``int(a)`` was changed in SymPy 1.13: in previous
+versions it was equivalent to ``a.to_int()``. To write code that behaves the
+same way in all SymPy versions you can:
+
+1. Use ``symmetric=False`` and use ``int(a)``.
+2. Define a function like
+    ```py
+    def to_int(K, a):
+        if hasattr(K, 'to_int'):
+            return K.to_int(a)
+        else:
+            return a.to_int()
+    ```
+
+The reason for this change is that it makes it possible to use python-flint's
+``nmod`` as an alternative (much faster) implementation for the elements of
+``GF(p)``. It is not possible to add a ``to_int`` method to python-flint's
+``nmod`` type or to capture the equivalent of ``symmetric=True/False`` by
+storing data in the ``nmod`` instance. Deprecating and removing the ``to_int``
+method and changing the behavior of the ``int`` method means that the element
+instances do not have any behavior that depends on whether the domain is
+considered to be "symmetric" or not. Instead the notion of "symmetric" is now
+purely a property of the domain object itself rather than of the elements and
+so the ``to_int`` method that depends on this must be a domain method rather
+than an element method.
+
+
 ## Version 1.12
 
 (managedproperties)=

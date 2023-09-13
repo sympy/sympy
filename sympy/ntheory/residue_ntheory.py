@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
+from sympy.external.gmpy import gcd, lcm, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -13,7 +13,6 @@ from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
 
-from collections import defaultdict
 from itertools import product
 
 
@@ -70,26 +69,21 @@ def n_order(a, n):
         return 1
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    # We want to calculate
-    # order = totient(n), factors = factorint(order)
-    factors = defaultdict(int)
-    for px, kx in factorint(n).items():
-        if kx > 1:
-            factors[px] += kx - 1
-        for py, ky in factorint(px - 1).items():
-            factors[py] += ky
-    order = 1
-    for px, kx in factors.items():
-        order *= px**kx
-    # Now the `order` is the order of the group.
-    # The order of `a` divides the order of the group.
-    for p, e in factors.items():
-        for _ in range(e):
-            if pow(a, order // p, n) == 1:
-                order //= p
-            else:
-                break
-    return order
+    a_order = 1
+    for p, e in factorint(n).items():
+        pe = p**e
+        pe_order = (p - 1) * p**(e - 1)
+        factors = factorint(p - 1)
+        if e > 1:
+            factors[p] = e - 1
+        order = 1
+        for px, ex in factors.items():
+            x = pow(a, pe_order // px**ex, pe)
+            while x != 1:
+                x = pow(x, px, pe)
+                order *= px
+        a_order = lcm(a_order, order)
+    return int(a_order)
 
 
 def _primitive_root_prime_iter(p):

@@ -21,6 +21,9 @@ from .ntheory import (
     jacobi as python_jacobi,
     kronecker as python_kronecker,
     iroot as python_iroot,
+    is_fermat_prp as python_is_fermat_prp,
+    is_euler_prp as python_is_euler_prp,
+    is_strong_prp as python_is_strong_prp,
 )
 
 
@@ -60,6 +63,9 @@ __all__ = [
     'jacobi',
     'kronecker',
     'iroot',
+    'is_fermat_prp',
+    'is_euler_prp',
+    'is_strong_prp',
 ]
 
 
@@ -165,6 +171,10 @@ if GROUND_TYPES == 'gmpy':
             return gmpy.iroot(x, n)
         return python_iroot(x, n)
 
+    is_fermat_prp = gmpy.is_fermat_prp
+    is_euler_prp = gmpy.is_euler_prp
+    is_strong_prp = gmpy.is_strong_prp
+
 elif GROUND_TYPES == 'flint':
 
     HAS_GMPY = 0
@@ -210,6 +220,10 @@ elif GROUND_TYPES == 'flint':
             return y, y**n == x
         return python_iroot(x, n)
 
+    is_fermat_prp = python_is_fermat_prp
+    is_euler_prp = python_is_euler_prp
+    is_strong_prp = python_is_strong_prp
+
 elif GROUND_TYPES == 'python':
 
     HAS_GMPY = 0
@@ -231,6 +245,9 @@ elif GROUND_TYPES == 'python':
     jacobi = python_jacobi
     kronecker = python_kronecker
     iroot = python_iroot
+    is_fermat_prp = python_is_fermat_prp
+    is_euler_prp = python_is_euler_prp
+    is_strong_prp = python_is_strong_prp
 
 else:
     assert False

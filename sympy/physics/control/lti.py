@@ -2513,11 +2513,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     >>> pprint(neg_feedback.doit(), use_unicode=False)
     [-1    -1  ]
     [---  -----]
-    [ 11  121*s]
+    [11   121*s]
     [          ]
     [ 0    -1  ]
     [ -    --- ]
-    [ 1     11 ]{t}
+    [ 1    11  ]{t}
 
     See Also
     ========
@@ -3002,7 +3002,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     >>> tfm_6
     TransferFunctionMatrix(((Series(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s)), Parallel(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s))),))
     >>> pprint(tfm_6, use_unicode=False)
-    [ -a + p   3     -a + p     3  ]
+    [-a + p    3    -a + p      3  ]
     [-------*-----  ------- + -----]
     [9*s - 9 s + 2  9*s - 9   s + 2]{t}
     >>> tfm_6.doit()
