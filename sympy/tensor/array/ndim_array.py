@@ -588,7 +588,7 @@ class NDimArray(Printable, EvalfMixin):
 
         return index
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf(self, prec=15):
         """Apply evalf() to each element of self."""
         dps = prec_to_dps(prec)
         return self.applyfunc(lambda e: e.evalf(dps))
