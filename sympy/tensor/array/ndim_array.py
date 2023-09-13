@@ -587,10 +587,8 @@ class NDimArray(Printable, EvalfMixin):
 
         return index
 
-    def _eval_evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def _eval_evalf(self, **options):
         """Apply evalf() to each element of self."""
-        options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
-                'quad':quad, 'verbose':verbose}
         return self.applyfunc(lambda i: i.evalf(n, **options))
 
 
