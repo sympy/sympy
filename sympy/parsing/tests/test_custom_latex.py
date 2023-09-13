@@ -25,19 +25,19 @@ modification2 = r"""
 def init_custom_parser(modification, transformer=None):
     with open(grammar_file, encoding="utf-8") as f:
         latex_grammar = f.read()
-    
+
     latex_grammar += modification
-    
+
     with tempfile.NamedTemporaryFile() as f:
         f.write(bytes(latex_grammar, encoding="utf8"))
-        
+
         parser = LarkLatexParser(grammar_file=f.name, transformer=transformer)
-    
+
     return parser
 
 def test_custom1():
     parser = init_custom_parser(modification1)
-    
+
     with raises(lark.exceptions.UnexpectedCharacters):
         parser.doparse(r"a \cdot b")
         parser.doparse(r"x \div y")
@@ -52,15 +52,14 @@ class CustomTransformer(TransformToSymPyExpr):
 
 def test_custom2():
     parser = init_custom_parser(modification2, CustomTransformer)
-    
+
     with raises(lark.exceptions.UnexpectedCharacters):
         # Asserting that the default parser cannot parse numbers which have commas as
         # the decimal separator
         parse_latex_lark("100,1")
         parse_latex_lark("0,009")
-    
+
     parser.doparse("100,1")
     parser.doparse("0,009")
     parser.doparse("2,71828")
     parser.doparse("3,14159")
-
