@@ -698,17 +698,21 @@ class besselk(BesselBase):
         _, e = arg.as_coeff_exponent(x)
 
         if e.is_positive:
-            term_one = ((-1)**(nu -1)*log(z/2)*besseli(nu, z))
-            term_two = (z/2)**(-nu)*factorial(nu - 1)/2 if (nu).is_positive else S.Zero
-            term_three = (-1)**nu*(z/2)**nu/(2*factorial(nu))*(digamma(nu + 1) - S.EulerGamma)
-            arg = Add(*[term_one, term_two, term_three]).as_leading_term(x, logx=logx)
-            return arg
-        elif e.is_negative:
-            # Refer Abramowitz and Stegun 1965, p. 378 for more information on
-            # asymptotic approximation of besselk function.
-            return sqrt(pi)*exp(-z)/sqrt(2*z)
+            if nu.is_zero:
+                # Equation 9.6.8 of Abramowitz and Stegun (10th ed, 1972).
+                term = -log(z) - S.EulerGamma + log(2)
+            elif nu.is_nonzero:
+                # Equation 9.6.9 of Abramowitz and Stegun (10th ed, 1972).
+                term = gamma(Abs(nu))*(z/2)**(-Abs(nu))/2
+            else:
+                raise NotImplementedError(f"Cannot proceed without knowing if {nu} is zero or not.")
 
-        return super(besselk, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+            return term.as_leading_term(x, logx=logx)
+        elif e.is_negative:
+            # Equation 9.7.2 of Abramowitz and Stegun (10th ed, 1972).
+            return sqrt(pi)*exp(-arg)/sqrt(2*arg)
+        else:
+            return self.func(nu, arg)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # Refer https://functions.wolfram.com/Bessel-TypeFunctions/BesselK/06/01/04/01/02/0008/
