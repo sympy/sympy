@@ -587,9 +587,9 @@ class NDimArray(Printable, EvalfMixin):
 
         return index
 
-    def _eval_evalf(self, **options):
+    def _eval_evalf(self, *args, **kwargs):
         """Apply evalf() to each element of self."""
-        return self.applyfunc(lambda i: i.evalf(n, **options))
+        return self.applyfunc(lambda i: i.evalf(*args, **kwargs))
 
 
 class ImmutableNDimArray(NDimArray, Basic):
