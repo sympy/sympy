@@ -8,8 +8,7 @@ from sympy.core.function import (
     Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
 from sympy.core.relational import (
-    _canonical, Ge, Gt, Lt, Unequality, Eq, LessThan, StrictLessThan,
-    GreaterThan, StrictGreaterThan)
+    _canonical, Ge, Gt, Lt, Unequality, Eq, Relational)
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -1009,30 +1008,21 @@ def _piecewise_to_heaviside(f, t):
     """
     x = piecewise_exclusive(f)
     r = S.Zero
-    for term in x.args:
+    for fn, cond in x.args:
         # Here we do not need to do many checks because piecewise_exclusive
         # has a clearly predictable output. However, if any of the conditions
         # is not relative to t, this function just returns the input argument.
-        fn = term[0]
-        op = term[1].func
-        if op == LessThan or op == StrictLessThan:
-            if not term[1].args[0] == t:
-                return f
-            right_boundary = term[1].args[1]
-            r = r + Heaviside(-(t-right_boundary))*fn
-        if op == GreaterThan or op == StrictGreaterThan:
-            if not term[1].args[0] == t:
-                return f
-            left_boundary = term[1].args[1]
-            r = r + Heaviside(t-left_boundary)*fn
-        if op == And:
-            if not (
-                    term[1].args[0].args[0] == t and
-                    term[1].args[1].args[0] == t):
-                return f
-            left_boundary = term[1].args[0].args[1]
-            right_boundary = term[1].args[1].args[1]
-            r = r + (Heaviside(t-right_boundary)-Heaviside(t-left_boundary))*fn
+        if isinstance(cond, Relational) and t in cond.args:
+            r = r + Heaviside(cond.gts - cond.lts)*fn
+        elif (    # And(t <= a, t > b)
+                isinstance(cond, And)
+                and len(cond.args) == 2
+                and cond.args[0].lts == cond.args[1].gts == t
+                ):
+            c0, c1 = cond.args
+            r = r + (Heaviside(c1.gts-c1.lts) - Heaviside(c0.lts-c0.gts))*fn
+        else:
+            return f
     return r
 
 
