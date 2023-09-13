@@ -3541,16 +3541,13 @@ class StateSpace(LinearTimeInvariant):
 
     """
     def __new__(cls, A=None, B=None, C=None, D=None):
-        if(A == None and B == None and C == None and D == None):
-            A = B = C = D = zeros(1)
-        elif(B == None and C == None and D == None):
-            B = zeros(A.rows,1)
+        if A is None:
+            A = zeros(1)
+        if B is None:
+            B = zeros(A.rows, 1)
+        if C is None:
             C = zeros(1, A.cols)
-            D = zeros(1)
-        elif(C == None and D == None):
-            C = zeros(1, A.cols)
-            D = zeros(1, B.cols)
-        elif(D == None):
+        if D is None:
             D = zeros(C.rows, B.cols)
 
         A = _sympify(A)
@@ -3797,7 +3794,7 @@ class StateSpace(LinearTimeInvariant):
         ========
 
         >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> from sympy.physics.control import StateSpace
         >>> A1 = Matrix([[1]])
         >>> B1 = Matrix([[2]])
         >>> C1 = Matrix([[-1]])
@@ -3848,8 +3845,7 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> from sympy.physics.control import StateSpace
         >>> s = StateSpace()
         >>> 5 + s
         StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
@@ -3865,7 +3861,7 @@ class StateSpace(LinearTimeInvariant):
         ========
 
         >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> from sympy.physics.control import StateSpace
         >>> A1 = Matrix([[1]])
         >>> B1 = Matrix([[2]])
         >>> C1 = Matrix([[-1]])
@@ -3893,8 +3889,7 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> from sympy.physics.control import StateSpace
         >>> s = StateSpace()
         >>> 5 - s
         StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
