@@ -36,6 +36,8 @@ def init_custom_parser(modification, transformer=None):
     return parser
 
 def test_custom1():
+    # Removes the parser's ability to understand \cdot and \div.
+
     parser = init_custom_parser(modification1)
 
     with raises(lark.exceptions.UnexpectedCharacters):
@@ -51,6 +53,8 @@ class CustomTransformer(TransformToSymPyExpr):
             return sympy.core.numbers.Integer(tokens[0])
 
 def test_custom2():
+    # Makes the parser parse commas as the decimal separator instead of dots
+
     parser = init_custom_parser(modification2, CustomTransformer)
 
     with raises(lark.exceptions.UnexpectedCharacters):
