@@ -69,6 +69,8 @@ def test_besselk_leading_term():
     assert besselk(0, x).as_leading_term(x) == -log(x) - S.EulerGamma + log(2)
     assert besselk(1, sin(x)).as_leading_term(x) == 1/x
     assert besselk(1, 2*sqrt(x)).as_leading_term(x) == 1/(2*sqrt(x))
+    assert besselk(S(5)/3, x).as_leading_term(x) == 2**(S(2)/3)*gamma(S(5)/3)/x**(S(5)/3)
+    assert besselk(S(2)/3, x).as_leading_term(x) == besselk(-S(2)/3, x).as_leading_term(x)
 
 
 def test_besselj_series():
