@@ -26,6 +26,7 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
+from mpmath.libmp.libmpf import prec_to_dps
 
 from .utilities import _get_intermediate_simp_bool
 
