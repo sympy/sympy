@@ -3792,6 +3792,29 @@ class StateSpace(LinearTimeInvariant):
     def __add__(self, other):
         """
         Add two State Space systems (parallel connection).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1 + ss2
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [ 2],
+        [-2]]), Matrix([[-1, 1]]), Matrix([[0]]))
+
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
@@ -3821,30 +3844,109 @@ class StateSpace(LinearTimeInvariant):
     def __radd__(self, other):
         """
         Right add two State Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> s = StateSpace()
+        >>> 5 + s
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
+
         """
         return self + other
 
     def __sub__(self, other):
         """
         Subtract two State Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A1 = Matrix([[1]])
+        >>> B1 = Matrix([[2]])
+        >>> C1 = Matrix([[-1]])
+        >>> D1 = Matrix([[-2]])
+        >>> A2 = Matrix([[-1]])
+        >>> B2 = Matrix([[-2]])
+        >>> C2 = Matrix([[1]])
+        >>> D2 = Matrix([[2]])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss2 = StateSpace(A2, B2, C2, D2)
+        >>> ss1 - ss2
+        StateSpace(Matrix([
+        [1,  0],
+        [0, -1]]), Matrix([
+        [ 2],
+        [-2]]), Matrix([[-1, -1]]), Matrix([[-4]]))
+
         """
         return self + (-other)
 
     def __rsub__(self, other):
         """
         Right subtract two tate Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> s = StateSpace()
+        >>> 5 - s
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[5]]))
+
         """
         return other + (-self)
 
     def __neg__(self):
         """
         Returns the negation of the state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> -ss
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [2],
+        [5]]), Matrix([[-1, -2]]), Matrix([[0]]))
+
         """
         return StateSpace(self._A, self._B, -self._C, -self._D)
 
     def __mul__(self, other):
         """
         Multiplication of two State Space systems (serial connection).
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss*5
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [2],
+        [5]]), Matrix([[5, 10]]), Matrix([[0]]))
+
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
@@ -3874,6 +3976,24 @@ class StateSpace(LinearTimeInvariant):
     def __rmul__(self, other):
         """
         Right multiply two tate Space systems.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> 5*ss
+        StateSpace(Matrix([
+        [-5, -1],
+        [ 3, -1]]), Matrix([
+        [10],
+        [25]]), Matrix([[1, 2]]), Matrix([[0]]))
+
         """
         if isinstance(other, (int, float, complex, Symbol)):
             A = self._A
