@@ -35,7 +35,6 @@ def test_laplace_transform():
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
-    tr = symbols('tr', real=True)
     f = Function('f')
     F = Function('F')
     g = Function('g')
@@ -339,10 +338,10 @@ def test_laplace_transform():
     X1 = LT(x1, t, s)[0]
     assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
     x1 = [
-        Piecewise((1, And(t>1, t<=3)), (2, True)),
-        Piecewise((1, And(t>=1, t<=3)), (2, True)),
-        Piecewise((1, And(t>=1, t<3)), (2, True)),
-        Piecewise((1, And(t>1, t<3)), (2, True))]
+        Piecewise((1, And(t > 1, t <= 3)), (2, True)),
+        Piecewise((1, And(t >= 1, t <= 3)), (2, True)),
+        Piecewise((1, And(t >= 1, t < 3)), (2, True)),
+        Piecewise((1, And(t > 1, t < 3)), (2, True))]
     for x2 in x1:
         assert LT(x2, t, s)[0] == 2/s - exp(-s)/s + exp(-3*s)/s
     # The following lines test whether _laplace_transform successfully
