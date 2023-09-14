@@ -16,6 +16,7 @@ from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
+from sympy.logic.boolalg import And
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.singularity_functions import SingularityFunction
@@ -34,6 +35,7 @@ def test_laplace_transform():
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a, b, c', positive=True)
     t, w, x = symbols('t, w, x')
+    tr = symbols('tr', real=True)
     f = Function('f')
     F = Function('F')
     g = Function('g')
@@ -336,6 +338,13 @@ def test_laplace_transform():
     x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
     X1 = LT(x1, t, s)[0]
     assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
+    x1 = [
+        Piecewise((1, And(t>1, t<=3)), (2, True)),
+        Piecewise((1, And(t>=1, t<=3)), (2, True)),
+        Piecewise((1, And(t>=1, t<3)), (2, True)),
+        Piecewise((1, And(t>1, t<3)), (2, True))]
+    for x2 in x1:
+        assert LT(x2, t, s)[0] == 2/s - exp(-s)/s + exp(-3*s)/s
     # The following lines test whether _laplace_transform successfully
     # removes Heaviside(1) before processing espressions. It fails if
     # Heaviside(t) remains because then meijerg functions will appear.

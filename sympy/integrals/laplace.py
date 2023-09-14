@@ -1006,24 +1006,37 @@ def _piecewise_to_heaviside(f, t):
     with Heaviside. It is not exact, but valid in the context of the Laplace
     transform.
     """
-    x = piecewise_exclusive(f)
+    tr = symbols('tr', real=True)
+    x = piecewise_exclusive(f.subs(t, tr))
     r = S.Zero
     for fn, cond in x.args:
         # Here we do not need to do many checks because piecewise_exclusive
         # has a clearly predictable output. However, if any of the conditions
         # is not relative to t, this function just returns the input argument.
-        if isinstance(cond, Relational) and t in cond.args:
+        if isinstance(cond, Relational) and tr in cond.args:
             r = r + Heaviside(cond.gts - cond.lts)*fn
+        elif (
+              isinstance(cond, Or)):
+            for c2 in cond.args:
+                if tr in c2.args:
+                    r = r + Heaviside(c2.gts - c2.lts)*fn
+                else:
+                    return f
         elif (    # And(t <= a, t > b)
                 isinstance(cond, And)
-                and len(cond.args) == 2
-                and cond.args[0].lts == cond.args[1].gts == t
-                ):
+                and len(cond.args) == 2):
             c0, c1 = cond.args
-            r = r + (Heaviside(c1.gts-c1.lts) - Heaviside(c0.lts-c0.gts))*fn
+            if tr in c0.args and tr in c1.args:
+                if '>' in c0.rel_op:
+                    c0, c1 = c1, c0
+                r = (
+                    r + (Heaviside(c1.gts-c1.lts) -
+                         Heaviside(c0.lts-c0.gts))*fn)
+            else:
+                return f
         else:
             return f
-    return r
+    return r.subs(tr, t)
 
 
 def laplace_correspondence(f, fdict, /):
