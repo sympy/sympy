@@ -1006,7 +1006,7 @@ def _piecewise_to_heaviside(f, t):
     with Heaviside. It is not exact, but valid in the context of the Laplace
     transform.
     """
-    tr = symbols('tr', real=True)
+    tr = Dummy('tr', real=True)
     x = piecewise_exclusive(f.subs(t, tr))
     r = S.Zero
     for fn, cond in x.args:
