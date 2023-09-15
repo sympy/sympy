@@ -449,7 +449,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args, evaluate=True, **kwargs):
         """Calculate the derivative of each element in the matrix.
 
         Examples
@@ -471,12 +471,11 @@ class MatrixCalculus(MatrixCommon):
         """
         # XXX this should be handled here rather than in Derivative
         from sympy.tensor.array.array_derivatives import ArrayDerivative
-        kwargs.setdefault('evaluate', True)
-        deriv = ArrayDerivative(self, *args, evaluate=True)
-        if not isinstance(self, Basic):
+        deriv = ArrayDerivative(self, *args, evaluate=evaluate)
+        # XXX This can rather changed to always return immutable matrix
+        if not isinstance(self, Basic) and evaluate:
             return deriv.as_mutable()
-        else:
-            return deriv
+        return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))

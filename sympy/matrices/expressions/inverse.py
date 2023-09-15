@@ -54,6 +54,15 @@ class Inverse(MatPow):
     def _eval_inverse(self):
         return self.arg
 
+    def _eval_transpose(self):
+        return Inverse(self.arg.transpose())
+
+    def _eval_adjoint(self):
+        return Inverse(self.arg.adjoint())
+
+    def _eval_conjugate(self):
+        return Inverse(self.arg.conjugate())
+
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import det
         return 1/det(self.arg)

@@ -1041,6 +1041,31 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.num, self.var), self.var)
 
+    def eval_frequency(self, other):
+        """
+        Returns the system response at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import I
+        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
+        >>> omega = 0.1
+        >>> tf1.eval_frequency(I*omega)
+        1/(0.99 + 0.2*I)
+        >>> tf2 = TransferFunction(s**2, a*s + p, s)
+        >>> tf2.eval_frequency(2)
+        4/(2*a + p)
+        >>> tf2.eval_frequency(I*2)
+        -4/(2*I*a + p)
+        """
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
+        return argnew.expand()
+
     def is_stable(self):
         """
         Returns True if the transfer function is asymptotically stable; else False.
@@ -2546,11 +2571,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     >>> pprint(neg_feedback.doit(), use_unicode=False)
     [-1    -1  ]
     [---  -----]
-    [ 11  121*s]
+    [11   121*s]
     [          ]
     [ 0    -1  ]
     [ -    --- ]
-    [ 1     11 ]{t}
+    [ 1    11  ]{t}
 
     See Also
     ========
@@ -3035,7 +3060,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     >>> tfm_6
     TransferFunctionMatrix(((Series(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s)), Parallel(TransferFunction(3, s + 2, s), TransferFunction(-a + p, 9*s - 9, s))),))
     >>> pprint(tfm_6, use_unicode=False)
-    [ -a + p   3     -a + p     3  ]
+    [-a + p    3    -a + p      3  ]
     [-------*-----  ------- + -----]
     [9*s - 9 s + 2  9*s - 9   s + 2]{t}
     >>> tfm_6.doit()
@@ -3456,6 +3481,35 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
         """
         return [[element.zeros() for element in row] for row in self.doit().args[0]]
+
+    def eval_frequency(self, other):
+        """
+        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, TransferFunctionMatrix
+        >>> from sympy import I
+        >>> tf_1 = TransferFunction(3, (s + 1), s)
+        >>> tf_2 = TransferFunction(s + 6, (s + 1)*(s + 2), s)
+        >>> tf_3 = TransferFunction(s + 3, s**2 + 3*s + 2, s)
+        >>> tf_4 = TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s)
+        >>> tfm_1 = TransferFunctionMatrix([[tf_1, tf_2], [tf_3, tf_4]])
+        >>> tfm_1
+        TransferFunctionMatrix(((TransferFunction(3, s + 1, s), TransferFunction(s + 6, (s + 1)*(s + 2), s)), (TransferFunction(s + 3, s**2 + 3*s + 2, s), TransferFunction(s**2 - 9*s + 20, s**2 + 5*s - 10, s))))
+        >>> tfm_1.eval_frequency(2)
+        Matrix([
+        [   1, 2/3],
+        [5/12, 3/2]])
+        >>> tfm_1.eval_frequency(I*2)
+        Matrix([
+        [   3/5 - 6*I/5,                -I],
+        [3/20 - 11*I/20, -101/74 + 23*I/74]])
+        """
+        mat = self._expr_mat.subs(self.var, other)
+        return mat.expand()
 
     def _flat(self):
         """Returns flattened list of args in TransferFunctionMatrix"""

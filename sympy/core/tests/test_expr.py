@@ -1054,6 +1054,10 @@ def test_has_basics():
 
     assert not x.has()
 
+    # see issue at https://github.com/sympy/sympy/issues/5190
+    assert not S(1).has(Wild)
+    assert not x.has(Wild)
+
 
 def test_has_multiple():
     f = x**2*y + sin(2**t + log(z))
@@ -2011,6 +2015,11 @@ def test_round():
     assert a.round(26) == Float('3.000000000000000000000000000', '')
     assert a.round(27) == Float('2.999999999999999999999999999', '')
     assert a.round(30) == Float('2.999999999999999999999999999', '')
+    #assert a.round(10) == Float('3.0000000000', '')
+    #assert a.round(25) == Float('3.0000000000000000000000000', '')
+    #assert a.round(26) == Float('3.00000000000000000000000000', '')
+    #assert a.round(27) == Float('2.999999999999999999999999999', '')
+    #assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     # XXX: Should round set the precision of the result?
     #      The previous version of the tests above is this but they only pass

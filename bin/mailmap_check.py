@@ -322,7 +322,7 @@ def read_lines(path):
 
 
 def write_lines(path, lines):
-    with open(path, 'w', encoding='utf-8') as fout:
+    with open(path, 'w', encoding='utf-8', newline='') as fout:
         fout.write('\n'.join(lines))
         fout.write('\n')
 

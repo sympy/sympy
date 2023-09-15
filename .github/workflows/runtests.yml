@@ -23,8 +23,8 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
 
-      - run: pip install -r requirements-test.txt
-      - run: pip install flake8 flake8-comprehensions ruff
+      - run: pip install -r requirements-dev.txt
+      - run: pip install ruff
 
       - name: Basic code quality tests
         run: bin/test quality
@@ -135,7 +135,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Test Pyodide on node ---------------------- #
@@ -193,7 +193,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
@@ -202,7 +202,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml lark                         \
+                         wurlitzer autowrap lxml lark z3-solver                       \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
@@ -227,17 +227,45 @@ jobs:
   python-flint:
     needs: code-quality
 
-    # Currently wheels are available for python-flint only on Windows and OSX
-    # so we use OSX rather than Ubuntu for this job.
-    runs-on: macos-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/polys                           \
+                    sympy/ntheory                         \
+                    sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/matrices              \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
+  # -------------------- FLINT+gmpy2 ------------------------------ #
+
+  flint-gmpy2:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint gmpy2
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
@@ -267,7 +295,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
@@ -284,7 +312,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
       # Test modules that can use tensorflow
       - run: bin/test_symengine.py
@@ -307,7 +335,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
 
   # -------------------- Test older (and newer) Python --------------- #
@@ -333,7 +361,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
-      - run: pip install -r requirements-test.txt
+      - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
 
   # -------------------- Doctests older (and newer) Python --------------------- #
@@ -431,7 +459,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - run: pip install asv virtualenv
+      - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
         # Need to make sure we can access the branches from the main repo. We

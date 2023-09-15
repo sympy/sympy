@@ -44,6 +44,8 @@ FUNC_EXP:  "\\exp"
 FUNC_LOG:  "\\log"
 FUNC_LN:   "\\ln"
 FUNC_LG:   "\\lg"
+FUNC_MIN: "\\min"
+FUNC_MAX: "\\max"
 
 // trigonometric functions
 FUNC_SIN:  "\\sin"
@@ -78,6 +80,8 @@ CMD_DIV:   "\\div"
 CMD_FRAC:  "\\frac" | "\\dfrac" | "\\tfrac" | "\\nicefrac"
 CMD_BINOM: "\\binom" | "\\dbinom" | "\\tbinom"
 CMD_OVERLINE: "\\overline"
+CMD_LANGLE: "\\langle"
+CMD_RANGLE: "\\rangle"
 
 CMD_MATHIT: "\\mathit"
 
@@ -100,37 +104,12 @@ GTE: "\\geq" | "\\ge" | "\\geqslant"
 DIV_SYMBOL: CMD_DIV | DIV
 MUL_SYMBOL: MUL | CMD_TIMES | CMD_CDOT
 
-// Greek symbols
-// TODO: Shouold we include the uppercase variants for the symbols where the uppercase variant doesn't have a separate meaning?
-ALPHA: "\\alpha"
-BETA: "\\beta"
-GAMMA: "\\gamma"
-DELTA: "\\delta" // TODO: Should this be included? Delta usually denotes other things.
-EPSILON: "\\epsilon" |  "\\varepsilon"
-ZETA: "\\zeta"
-ETA: "\\eta"
-THETA: "\\theta" | "\\vartheta"
-// TODO: Should I add iota to the list?
-KAPPA: "\\kappa"
-LAMBDA: "\\lambda" // TODO: What about the uppercase variant?
-MU: "\\mu"
-NU: "\\nu"
-XI: "\\xi"
-// TODO: Should there be a separate note for transforming \pi into sympy.pi?
-RHO: "\\rho" | "\\varrho"
-// TODO: What should we do about sigma?
-TAU: "\\tau"
-UPSILON: "\\upsilon"
-PHI: "\\phi" | "\\varphi"
-CHI: "\\chi"
-PSI: "\\psi"
-OMEGA: "\\omega"
+%import .greek_symbols.GREEK_SYMBOL
 
-GREEK_SYMBOL: ALPHA | BETA | GAMMA | DELTA | EPSILON | ZETA | ETA | THETA | KAPPA
-    | LAMBDA | MU | NU | XI | RHO | TAU | UPSILON | PHI | CHI | PSI | OMEGA
+UPRIGHT_DIFFERENTIAL_SYMBOL: "\\text{d}" | "\\mathrm{d}"
+DIFFERENTIAL_SYMBOL: "d" | UPRIGHT_DIFFERENTIAL_SYMBOL
 
-DIFFERENTIAL: "d" | "\\text{d}" | "\\mathrm{d}"
-
+// disallow "d" as a variable name because we want to parse "d" as a differential symbol.
 SYMBOL: /[a-zA-Z]/
 BASIC_SUBSCRIPTED_SYMBOL: /([a-zA-Z])_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]|[a-zA-Z]+)\})/
 SYMBOL_WITH_GREEK_SUBSCRIPT: /([a-zA-Z])_/ GREEK_SYMBOL | /([a-zA-Z])_/ L_BRACE GREEK_SYMBOL R_BRACE
@@ -143,27 +122,33 @@ GREEK_SUBSCRIPTED_SYMBOL: GREEK_SYMBOL /_(([A-Za-z0-9]|[a-zA-Z]+)|\{([A-Za-z0-9]
 
 //////////////////// grammar //////////////////////
 
-latex_string: relation | _expression
+latex_string: _relation | _expression
 
-_oneletter_symbol: SYMBOL
+_one_letter_symbol: SYMBOL
     | BASIC_SUBSCRIPTED_SYMBOL
     | SYMBOL_WITH_GREEK_SUBSCRIPT
     | GREEK_SUBSCRIPTED_SYMBOL
     | GREEK_SYMBOL
-multiletter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
+multi_letter_symbol: CMD_MATHIT L_BRACE /[a-zA-Z]+(\s+[a-zA-Z]+)*/ R_BRACE
 number: /\d+(\.\d*)?/
-infinity: CMD_INFTY
 
-_atomic_expr: _oneletter_symbol
-    | multiletter_symbol
+_atomic_expr: _one_letter_symbol
+    | multi_letter_symbol
     | number
-    | infinity
+    | CMD_INFTY
 
 group_round_parentheses: L_PAREN _expression R_PAREN
 group_square_brackets: L_BRACKET _expression R_BRACKET
 group_curly_parentheses: L_BRACE _expression R_BRACE
 
-relation: _expression (EQUAL | NOT_EQUAL | LT | LTE | GT | GTE) _expression
+_relation: eq | ne | lt | lte | gt | gte
+
+eq: _expression EQUAL _expression
+ne: _expression NOT_EQUAL _expression
+lt: _expression LT _expression
+lte: _expression LTE _expression
+gt: _expression GT _expression
+gte: _expression GTE _expression
 
 _expression_core: _atomic_expr | group_curly_parentheses
 
@@ -171,11 +156,10 @@ add: _expression ADD _expression_mul
 sub: _expression SUB _expression_mul
     | SUB _expression_mul
 mul: _expression_mul MUL_SYMBOL _expression_power
-    | _implicit_multiplication
 div: _expression_mul DIV_SYMBOL _expression_power
 
-_implicit_multiplication: (_oneletter_symbol | number) _expression_mul
-    | group_round_parentheses (group_round_parentheses | _oneletter_symbol)
+adjacent_expressions: (_one_letter_symbol | number) _expression_mul
+    | group_round_parentheses (group_round_parentheses | _one_letter_symbol)
     | _function _function
     | fraction _expression
 
@@ -184,11 +168,14 @@ _expression_func: _expression_core
     | fraction
     | binomial
     | _function
-    | ambiguous_sub
 
 _expression_power: _expression_func | superscript
 
-_expression_mul: _expression_power | mul | div | integral | summation | product | limit
+_expression_mul: _expression_power
+    | mul | div | adjacent_expressions
+    | _integral// | derivative
+    | summation | product
+    | limit
 
 _expression: _expression_mul | add | sub
 
@@ -200,9 +187,25 @@ group_curly_parentheses_lim: L_BRACE _expression LIM_APPROACH_SYM (limit_dir_exp
 
 limit: FUNC_LIM UNDERSCORE group_curly_parentheses_lim _expression
 
-integral: FUNC_INT _expression DIFFERENTIAL _oneletter_symbol
-    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
-    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL _oneletter_symbol
+differential: DIFFERENTIAL_SYMBOL _one_letter_symbol
+
+//_derivative_operator: CMD_FRAC L_BRACE DIFFERENTIAL_SYMBOL R_BRACE L_BRACE differential R_BRACE
+
+//derivative: _derivative_operator _expression
+
+_integral: normal_integral | integral_with_special_fraction
+
+normal_integral: FUNC_INT _expression DIFFERENTIAL_SYMBOL _one_letter_symbol
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? _expression? DIFFERENTIAL_SYMBOL _one_letter_symbol
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? _expression? DIFFERENTIAL_SYMBOL _one_letter_symbol
+
+group_curly_parentheses_int: L_BRACE _expression? differential R_BRACE
+
+special_fraction: CMD_FRAC group_curly_parentheses_int group_curly_parentheses
+
+integral_with_special_fraction: FUNC_INT special_fraction
+    | FUNC_INT (CARET _expression_core UNDERSCORE _expression_core)? special_fraction
+    | FUNC_INT (UNDERSCORE _expression_core CARET _expression_core)? special_fraction
 
 group_curly_parentheses_special: UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE CARET _expression_core
     | CARET _expression_core UNDERSCORE L_BRACE _atomic_expr EQUAL _atomic_expr R_BRACE
@@ -214,8 +217,6 @@ product: FUNC_PROD group_curly_parentheses_special _expression
     | FUNC_PROD group_curly_parentheses_special _expression
 
 superscript: _expression_func CARET _expression_power
-
-ambiguous_sub: _oneletter_symbol number
 
 fraction: _basic_fraction
     | _simple_fraction
@@ -241,7 +242,17 @@ _general_binomial: CMD_BINOM group_curly_parentheses group_curly_parentheses
 
 list_of_expressions: _expression ("," _expression)*
 
-function_applied: _oneletter_symbol L_PAREN list_of_expressions R_PAREN
+function_applied: _one_letter_symbol L_PAREN list_of_expressions R_PAREN
+
+min: FUNC_MIN L_PAREN list_of_expressions R_PAREN
+
+max: FUNC_MAX L_PAREN list_of_expressions R_PAREN
+
+bra: CMD_LANGLE _expression BAR
+
+ket: BAR _expression CMD_RANGLE
+
+inner_product: CMD_LANGLE _expression BAR _expression CMD_RANGLE
 
 _function: function_applied
     | abs | floor | ceil
@@ -253,13 +264,15 @@ _function: function_applied
     | square_root
     | factorial
     | conjugate
+    | max | min
+    | bra | ket | inner_product
 
 exponential: FUNC_EXP _expression
 
 log: FUNC_LOG _expression
     | FUNC_LN _expression
     | FUNC_LG _expression
-    | FUNC_LOG UNDERSCORE (DIGIT | _oneletter_symbol) _expression
+    | FUNC_LOG UNDERSCORE (DIGIT | _one_letter_symbol) _expression
     | FUNC_LOG UNDERSCORE group_curly_parentheses _expression
 
 square_root: FUNC_SQRT group_curly_parentheses
