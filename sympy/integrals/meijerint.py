@@ -1300,7 +1300,7 @@ def _int0oo(g1, g2, x):
     >>> g1 = meijerg([], [], [-S(1)/2, 0], [], s**2*t/4)
     >>> g2 = meijerg([], [], [m/2], [-m/2], t/4)
     >>> _int0oo(g1, g2, t)
-    4*meijerg(((1/2, 0), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
+    4*meijerg(((0, 1/2), ()), ((m/2,), (-m/2,)), s**(-2))/s**2
     """
     # See: [L, section 5.6.2, equation (1)]
     eta, _ = _get_coeff_exp(g1.argument, x)

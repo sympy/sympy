@@ -116,7 +116,7 @@ class TestTendonForceLengthDeGroote2016:
         fl_T = TendonForceLengthDeGroote2016(self.l_T_tilde, *self.constants).doit(evaluate=False)
         assert fl_T == self.c0*exp(self.c3*UnevaluatedExpr(self.l_T_tilde - self.c1)) - self.c2
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Float('0.2'),
             Float('0.995'),
@@ -124,7 +124,7 @@ class TestTendonForceLengthDeGroote2016:
             Float('33.93669377311689'),
         )
         fl_T_manual = TendonForceLengthDeGroote2016(self.l_T_tilde, *constants)
-        fl_T_constants = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T_constants = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         assert fl_T_manual == fl_T_constants
 
     def test_differentiate_wrt_l_T_tilde(self):
@@ -234,23 +234,23 @@ class TestTendonForceLengthDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         assert code_printer().doprint(fl_T) == expected
 
     def test_derivative_print_code(self):
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         dfl_T_dl_T_tilde = fl_T.diff(self.l_T_tilde)
         expected = '6.787338754623378*math.exp(33.93669377311689*(l_T_tilde - 0.995))'
         assert PythonCodePrinter().doprint(dfl_T_dl_T_tilde) == expected
 
     def test_lambdify(self):
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         fl_T_callable = lambdify(self.l_T_tilde, fl_T)
         assert fl_T_callable(1.0) == pytest.approx(-0.013014055039221595)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         fl_T_callable = lambdify(self.l_T_tilde, fl_T, 'numpy')
         l_T_tilde = numpy.array([0.95, 1.0, 1.01, 1.05])
         expected = numpy.array([
@@ -263,7 +263,7 @@ class TestTendonForceLengthDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fl_T = TendonForceLengthDeGroote2016.with_default_constants(self.l_T_tilde)
+        fl_T = TendonForceLengthDeGroote2016.with_defaults(self.l_T_tilde)
         fl_T_callable = jax.jit(lambdify(self.l_T_tilde, fl_T, 'jax'))
         l_T_tilde = jax.numpy.array([0.95, 1.0, 1.01, 1.05])
         expected = jax.numpy.array([
@@ -305,7 +305,7 @@ class TestTendonForceLengthInverseDeGroote2016:
         fl_T_inv = TendonForceLengthInverseDeGroote2016(self.fl_T, *self.constants).doit(evaluate=False)
         assert fl_T_inv == log(UnevaluatedExpr((self.fl_T + self.c2)/self.c0))/self.c3 + self.c1
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Float('0.2'),
             Float('0.995'),
@@ -313,7 +313,7 @@ class TestTendonForceLengthInverseDeGroote2016:
             Float('33.93669377311689'),
         )
         fl_T_inv_manual = TendonForceLengthInverseDeGroote2016(self.fl_T, *constants)
-        fl_T_inv_constants = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv_constants = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         assert fl_T_inv_manual == fl_T_inv_constants
 
     def test_differentiate_wrt_fl_T(self):
@@ -423,23 +423,23 @@ class TestTendonForceLengthInverseDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         assert code_printer().doprint(fl_T_inv) == expected
 
     def test_derivative_print_code(self):
-        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         dfl_T_inv_dfl_T = fl_T_inv.diff(self.fl_T)
         expected = '1/(33.93669377311689*fl_T + 8.484173443279222)'
         assert PythonCodePrinter().doprint(dfl_T_inv_dfl_T) == expected
 
     def test_lambdify(self):
-        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         fl_T_inv_callable = lambdify(self.fl_T, fl_T_inv)
         assert fl_T_inv_callable(0.0) == pytest.approx(1.0015752885)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         fl_T_inv_callable = lambdify(self.fl_T, fl_T_inv, 'numpy')
         fl_T = numpy.array([-0.2, -0.01, 0.0, 1.01, 1.02, 1.05])
         expected = numpy.array([
@@ -454,7 +454,7 @@ class TestTendonForceLengthInverseDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_default_constants(self.fl_T)
+        fl_T_inv = TendonForceLengthInverseDeGroote2016.with_defaults(self.fl_T)
         fl_T_inv_callable = jax.jit(lambdify(self.fl_T, fl_T_inv, 'jax'))
         fl_T = jax.numpy.array([-0.2, -0.01, 0.0, 1.01, 1.02, 1.05])
         expected = jax.numpy.array([
@@ -496,13 +496,13 @@ class TestFiberForceLengthPassiveDeGroote2016:
         fl_M_pas = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *self.constants).doit(evaluate=False)
         assert fl_M_pas == (exp((self.c1*UnevaluatedExpr(self.l_M_tilde - 1))/self.c0) - 1)/(exp(self.c1) - 1)
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Rational(3, 5),
             Integer(4),
         )
         fl_M_pas_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
-        fl_M_pas_constants = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas_constants = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert fl_M_pas_manual == fl_M_pas_constants
 
     def test_differentiate_wrt_l_M_tilde(self):
@@ -608,23 +608,23 @@ class TestFiberForceLengthPassiveDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert code_printer().doprint(fl_M_pas) == expected
 
     def test_derivative_print_code(self):
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_dl_M_tilde = fl_M_pas.diff(self.l_M_tilde)
         expected = '4*math.exp((20/3)*(l_M_tilde - 1))/(-3/5 + (3/5)*math.exp(4))'
         assert PythonCodePrinter().doprint(fl_M_pas_dl_M_tilde) == expected
 
     def test_lambdify(self):
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_callable = lambdify(self.l_M_tilde, fl_M_pas)
         assert fl_M_pas_callable(1.0) == pytest.approx(0.0)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_callable = lambdify(self.l_M_tilde, fl_M_pas, 'numpy')
         l_M_tilde = numpy.array([0.5, 0.8, 0.9, 1.0, 1.1, 1.2, 1.5])
         expected = numpy.array([
@@ -640,7 +640,7 @@ class TestFiberForceLengthPassiveDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_callable = jax.jit(lambdify(self.l_M_tilde, fl_M_pas, 'jax'))
         l_M_tilde = jax.numpy.array([0.5, 0.8, 0.9, 1.0, 1.1, 1.2, 1.5])
         expected = jax.numpy.array([
@@ -683,13 +683,13 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
         fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *self.constants).doit(evaluate=False)
         assert fl_M_pas_inv == self.c0*log(UnevaluatedExpr(self.fl_M_pas*(exp(self.c1) - 1)) + 1)/self.c1 + 1
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Rational(3, 5),
             Integer(4),
         )
         fl_M_pas_inv_manual = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *constants)
-        fl_M_pas_inv_constants = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv_constants = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         assert fl_M_pas_inv_manual == fl_M_pas_inv_constants
 
     def test_differentiate_wrt_fl_T(self):
@@ -791,23 +791,23 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         assert code_printer().doprint(fl_M_pas_inv) == expected
 
     def test_derivative_print_code(self):
-        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         dfl_M_pas_inv_dfl_T = fl_M_pas_inv.diff(self.fl_M_pas)
         expected = '(-3/5 + (3/5)*math.exp(4))/(4*fl_M_pas*(-1 + math.exp(4)) + 4)'
         assert PythonCodePrinter().doprint(dfl_M_pas_inv_dfl_T) == expected
 
     def test_lambdify(self):
-        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv)
         assert fl_M_pas_inv_callable(0.0) == pytest.approx(1.0)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         fl_M_pas_inv_callable = lambdify(self.fl_M_pas, fl_M_pas_inv, 'numpy')
         fl_M_pas = numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
         expected = numpy.array([
@@ -822,7 +822,7 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_default_constants(self.fl_M_pas)
+        fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         fl_M_pas_inv_callable = jax.jit(lambdify(self.fl_M_pas, fl_M_pas_inv, 'jax'))
         fl_M_pas = jax.numpy.array([-0.01, 0.0, 0.01, 0.02, 0.05, 0.1])
         expected = jax.numpy.array([
@@ -888,7 +888,7 @@ class TestFiberForceLengthActiveDeGroote2016:
             + self.c8*exp(-((UnevaluatedExpr(self.l_M_tilde - self.c9)/(self.c10 + self.c11*self.l_M_tilde))**2)/2)
         )
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Float('0.814'),
             Float('1.06'),
@@ -904,7 +904,7 @@ class TestFiberForceLengthActiveDeGroote2016:
             Integer(0),
         )
         fl_M_act_manual = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *constants)
-        fl_M_act_constants = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act_constants = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert fl_M_act_manual == fl_M_act_constants
 
     def test_differentiate_wrt_l_M_tilde(self):
@@ -1206,11 +1206,11 @@ class TestFiberForceLengthActiveDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         assert code_printer().doprint(fl_M_act) == expected
 
     def test_derivative_print_code(self):
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_act_dl_M_tilde = fl_M_act.diff(self.l_M_tilde)
         expected = (
             '(0.79798269973507 - 0.79798269973507*l_M_tilde)'
@@ -1227,13 +1227,13 @@ class TestFiberForceLengthActiveDeGroote2016:
         assert PythonCodePrinter().doprint(fl_M_act_dl_M_tilde) == expected
 
     def test_lambdify(self):
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_act_callable = lambdify(self.l_M_tilde, fl_M_act)
         assert fl_M_act_callable(1.0) == pytest.approx(0.9941398866)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_act_callable = lambdify(self.l_M_tilde, fl_M_act, 'numpy')
         l_M_tilde = numpy.array([0.0, 0.5, 1.0, 1.5, 2.0])
         expected = numpy.array([
@@ -1247,7 +1247,7 @@ class TestFiberForceLengthActiveDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fl_M_act = FiberForceLengthActiveDeGroote2016.with_default_constants(self.l_M_tilde)
+        fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_act_callable = jax.jit(lambdify(self.l_M_tilde, fl_M_act, 'jax'))
         l_M_tilde = jax.numpy.array([0.0, 0.5, 1.0, 1.5, 2.0])
         expected = jax.numpy.array([
@@ -1298,7 +1298,7 @@ class TestFiberForceVelocityDeGroote2016:
         )
         assert fv_M == expected
 
-    def test_with_default_constants(self):
+    def test_with_defaults(self):
         constants = (
             Float('-0.318'),
             Float('-8.149'),
@@ -1306,7 +1306,7 @@ class TestFiberForceVelocityDeGroote2016:
             Float('0.886'),
         )
         fv_M_manual = FiberForceVelocityDeGroote2016(self.v_M_tilde, *constants)
-        fv_M_constants = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M_constants = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         assert fv_M_manual == fv_M_constants
 
     def test_differentiate_wrt_v_M_tilde(self):
@@ -1444,23 +1444,23 @@ class TestFiberForceVelocityDeGroote2016:
         ]
     )
     def test_print_code(self, code_printer, expected):
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         assert code_printer().doprint(fv_M) == expected
 
     def test_derivative_print_code(self):
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         dfv_M_dv_M_tilde = fv_M.diff(self.v_M_tilde)
         expected = '2.591382*(1 + (-8.149*v_M_tilde - 0.374)**2)**(-1/2)'
         assert PythonCodePrinter().doprint(dfv_M_dv_M_tilde) == expected
 
     def test_lambdify(self):
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         fv_M_callable = lambdify(self.v_M_tilde, fv_M)
         assert fv_M_callable(0.0) == pytest.approx(1.002320622548512)
 
     @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
     def test_lambdify_numpy(self):
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         fv_M_callable = lambdify(self.v_M_tilde, fv_M, 'numpy')
         v_M_tilde = numpy.array([-1.0, -0.5, 0.0, 0.5])
         expected = numpy.array([
@@ -1473,7 +1473,7 @@ class TestFiberForceVelocityDeGroote2016:
 
     @pytest.mark.skipif(jax is None, reason='JAX not installed')
     def test_lambdify_jax(self):
-        fv_M = FiberForceVelocityDeGroote2016.with_default_constants(self.v_M_tilde)
+        fv_M = FiberForceVelocityDeGroote2016.with_defaults(self.v_M_tilde)
         fv_M_callable = jax.jit(lambdify(self.v_M_tilde, fv_M, 'jax'))
         v_M_tilde = jax.numpy.array([-1.0, -0.5, 0.0, 0.5])
         expected = jax.numpy.array([

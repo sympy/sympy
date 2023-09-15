@@ -13,11 +13,11 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.intfunc import trailing, integer_log, num_digits
+from sympy.core.intfunc import integer_log, num_digits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot, bit_scan1
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -255,7 +255,7 @@ def multiplicity(p, n):
     if n == 0:
         raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
     if p == 2:
-        return trailing(n)
+        return bit_scan1(n)
     if p < 2:
         raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
     if p == n:
@@ -456,7 +456,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         candidates = sorted([i for i in candidates
             if min_possible <= i < max_possible])
         if n%2 == 0:
-            e = trailing(n)
+            e = bit_scan1(n)
             candidates = [i for i in candidates if e%i == 0]
         if big:
             candidates = reversed(candidates)
@@ -477,7 +477,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if factor and n % fac == 0:
             # find what the potential power is
             if fac == 2:
-                e = trailing(n)
+                e = bit_scan1(n)
             else:
                 e = multiplicity(fac, n)
             # if it's a trivial power we are done
@@ -881,7 +881,7 @@ def _factorint_small(factors, n, limit, fail_max):
         return n, 0
 
     d = 2
-    m = trailing(n)
+    m = bit_scan1(n)
     if m:
         factors[d] = m
         n >>= m
