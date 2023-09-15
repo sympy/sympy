@@ -300,20 +300,19 @@ def monomial_ngcd(monomials):
     (1, 1)
 
     """
-    monomials_list = list(monomials)
 
-    if not monomials_list:
-        return ()
+    if not monomials:
+        return None
 
-    zero_monom = (0,) * len(monomials_list[0])
+    zero_monom = (0,) * len(monomials[0])
 
     # If the zero monomial is present in the monomials, return early
-    if zero_monom in monomials_list:
+    if zero_monom in monomials:
         return zero_monom
 
-    gcd = monomials_list[0]
+    gcd = monomials[0]
 
-    for monom in monomials_list[1:]:
+    for monom in monomials[1:]:
         gcd = monomial_gcd(gcd, monom)
 
         # If gcd becomes the zero monomial, return early

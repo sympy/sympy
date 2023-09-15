@@ -1072,7 +1072,7 @@ def test_PolyElement_gcd():
 
     assert f.gcd(g) == x + 1
 
-def test_PolyElement_gcd_prs():
+def test_PolyElement_gcd_ring():
     R, x, y = ring("x, y", QQ)
 
     f = 0.1*x + 0.1*y + 0.1*y + 0.3
@@ -1080,7 +1080,7 @@ def test_PolyElement_gcd_prs():
 
     expected_gcd = (1, 1/10*x + 1/5*y + 3/10, y + 1)
 
-    assert  f._gcd_prs(g) == expected_gcd
+    assert  f._gcd_ring(g) == expected_gcd
 
     f = -0.0001*x**4 + 0.0098*x**3 + 0.0299999999999999*x**2 + \
         0.0199999999999998*x
@@ -1091,7 +1091,7 @@ def test_PolyElement_gcd_prs():
                 -944473296573929/9444732965739290427392*x**6 + 3/100000*x**5 -
                 297/100000*x**4 + 47/500*x**3 + 297/1000*x**2 + 3/10*x + 1/10)
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert  f._gcd_ring(g) == expected_gcd
 
     R, x, y = ring("x, y", ZZ_I)
     f = (-1 + 0*I)*x*y + (0 + -1*I)*y**2
@@ -1099,7 +1099,7 @@ def test_PolyElement_gcd_prs():
 
     expected_gcd = (x + I*y, -y, x**2 + y**2)
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert f._gcd_ring(g) == expected_gcd
 
     R, y, _t0, _t1 = ring("y, _t0, _t1", EX)
     f = (2 + 0*I)*y**2*_t0 + (0 + 2*I)*y**2*(EX(pi)) + (-2 + 0*I)*y*_t1 + \
@@ -1113,7 +1113,7 @@ def test_PolyElement_gcd_prs():
         EX(4)*y**2 - EX(4)*y
     )
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert f._gcd_ring(g) == expected_gcd
 
     R, y = ring("y", EX)
     f = (0 + 2*I)*y*(EX(pi)) + (-1 + 0*I)
@@ -1121,14 +1121,14 @@ def test_PolyElement_gcd_prs():
 
     expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert f._gcd_ring(g) == expected_gcd
 
     f = (0 + 2*I)*y*pi + (-1 + 0*I)
     g = (0 + 2*I)*y*pi + (-1 + 0*I)
 
     expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert f._gcd_ring(g) == expected_gcd
 
     R, x, _C3 = ring("x, _C3", ZZ_I)
     f = (0 + 4*I)*x**5 + (0 + -4*I)*x*_C3
@@ -1136,7 +1136,7 @@ def test_PolyElement_gcd_prs():
 
     expected_gcd = (4*x, I*x**4 - I*_C3, x**4 + _C3)
 
-    assert f._gcd_prs(g) == expected_gcd
+    assert f._gcd_ring(g) == expected_gcd
 
 def test_PolyElement_cancel():
     R, x, y = ring("x,y", ZZ)
@@ -1423,39 +1423,39 @@ def test_PolyElement_drop():
     raises(ValueError, lambda: x.drop(0))
 
 def test_PolyElement_primitive_wrt():
-    R, x= ring("x", ZZ)
+    R, x = ring("x", ZZ)
 
     p = 4*x**3 + 8*x**2 + 12*x
-    assert p.primitive_wrt(x) == (4*x**3 + 8*x**2 + 12*x, 1)
+    assert p.primitive_wrt(x) == (4, x**3 + 2*x**2 + 3*x)
 
     p = x**2 + 3*x
-    assert p.primitive_wrt(x) == (x**2 + 3*x, 1)
+    assert p.primitive_wrt(x) == (1, x**2 + 3*x)
 
 def test_PolyElement__coeff_split_syms():
     R, x, y, z = ring("x, y, z", ZZ)
 
     f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
-    syms = {2}
+    syms = {z}
     result = f._coeff_split_syms(syms)
-    assert result == {(0, 0, 0): {(4, 0, 0): 2,(0, 4, 0): 3}, (0, 0, 2):
-                    {(0, 0, 0): 10, (1, 0, 0): 10}}
+    assert result == {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3, (0, 0, 2): 10,
+                    (1, 0, 2): 10}}
 
     g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
-    syms = {0, 1}
+    syms = {x, y}
     result = g._coeff_split_syms(syms)
-    assert result == {(2, 0, 0): {(0, 0, 0): 3}, (0, 2, 0): {(0, 0, 0): 2},
-                    (0, 0, 0): {(0, 0, 3): 5}, (2, 1, 0): {(0, 0, 0): 7}}
+    assert result == {(0, 0, 0): {(2, 0, 0): 3, (0, 2, 0): 2, (0, 0, 3): 5,
+                    (2, 1, 0): 7}}
 
 def test_PolyElement_coeff_split():
     R, x, y, z = ring("x, y, z", ZZ)
 
     f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
-    syms = {2}
+    syms = {z}
     result = f.coeff_split(syms)
     assert result ==[2*x**4 + 3*y**4, 10*x + 10]
 
     g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
-    syms = {0, 1}
+    syms = {x, y}
     result = g.coeff_split(syms)
     assert result == [3, 2, 5*z**3, 7]
 

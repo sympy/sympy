@@ -2193,7 +2193,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else:
-            return f._gcd_prs(g)
+            return f._gcd_ring(g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -2219,8 +2219,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return h, cff, cfg
 
-    def _gcd_prs(self, g):
-        """Helper function for ``gcd_prs`` method."""
+    def _gcd_ring(self, g):
+        """Helper function for ``_gcd`` method."""
 
         f = self
         K = f.ring.domain
@@ -2234,7 +2234,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             f = f.set_ring(ring_exact)
             g = g.set_ring(ring_exact)
 
-            h, cff, cfg = f._gcd_prs(g)
+            h, cff, cfg = f._gcd_ring(g)
 
             h = h.set_ring(ring_approx)
             cff = cff.set_ring(ring_approx)
@@ -2579,9 +2579,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> R, x, y = ring("x, y", ZZ)
         >>> p = 6*x**2*y - 9*x**3*y**2 + 3*x*y
         >>> p.primitive_wrt(x)
-        (-9*x**3*y**2 + 6*x**2*y + 3*x*y, 1)
+        (3*y, -3*x**3*y + 2*x**2 + x)
 
-        >>> p.primitive() # Difference between primitive and primitive_wrt results
+        >>> p.primitive() # Distinguishing primitive and primitive_wrt outcomes
         (3, -3*x**3*y**2 + 2*x**2*y + x*y)
         """
         p = self
@@ -2600,6 +2600,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p2 = defaultdict(dict)
         r = range(len(p1.ring.gens))
 
+        # Convert symbols to indices if they are not integers
+        if not all(isinstance(s, int) for s in syms):
+            syms = {p1.ring.gens.index(s) if isinstance(s, (str, Symbol)) else s for s in syms}
+
         # Iterate through the terms and coefficients of the input polynomial
         for m1, c1 in p1.items():
             sym_indices = set(compress(r, m1))
@@ -2612,14 +2616,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for i in sym_indices - syms:
                 m22[i] = m1[i]
 
-            key1 = tuple(m21)
-            key2 = tuple(m22)
-
-            if key1 not in p2:
-                p2[key1] = {}
-
-            # Store the coefficient in the organized structure
-            p2[key1][key2] = p2.get(key1, {}).get(key2, 0) + c1
+            p2[tuple(m21)][tuple(m22)] = c1
 
         return p2
 
@@ -2635,8 +2632,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         Parameters
         ==========
 
-        syms : set
-                A set of indices representing symbol variables.
+        syms : set or symbols
+            A set of symbols or generator objects representing symbol variables
 
         Returns
         =======
@@ -2652,7 +2649,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> R, x, y, z = ring("x, y, z", ZZ)
 
         >>> f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
-        >>> syms = {2}
+        >>> syms = {z} # Using generator
+        >>> f.coeff_split(syms)
+        [2*x**4 + 3*y**4, 10*x + 10]
+
+        >>> syms = {2} # Using generator index
         >>> f.coeff_split(syms)
         [2*x**4 + 3*y**4, 10*x + 10]
 
@@ -2662,6 +2663,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         coeff, coeffs, coeff_wrt, drop_to_ground
         """
         p1 = self
+        syms = {x if isinstance(x, int) else p1.ring.gens.index(x) for x in syms}
         p2 = p1._coeff_split_syms(syms)
         return [p1.ring(pi) for pi in p2.values()]
 
@@ -3094,15 +3096,23 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ========
 
         >>> from sympy import ZZ, ring
-        >>> R, x, y, z = ring("x, y, z", ZZ)
-        >>> p = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+        >>> R, x, y = ring("x, y", ZZ)
+        >>> p = 3*x**2 + 7*x**2*y
         >>> p.free_variables()
-        {0, 1, 2}
+        {0, 1}
 
         """
         p = self
         exponents = list(map(sum, zip(*p)))
-        return {n for n, e in enumerate(exponents) if e}
+
+        # Set to keep track of variables
+        variables = set()
+
+        for n, e in enumerate(exponents):
+            if e:
+                variables.add(n)
+
+        return variables
 
     def main_variable(self):
         """
@@ -3125,6 +3135,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         p = self
         free_sym = p.free_variables()
+        if 0 in free_sym:
+            return 0
         if not free_sym:
             return 0
         return min(free_sym)
@@ -3211,7 +3223,7 @@ def monomial_extract(polynomials):
     if any(zero_monom in poly for poly in polynomials):
         return polynomials, domain.one
 
-    monom_gcd = monomial_ngcd(monoms)
+    monom_gcd = monomial_ngcd(list(monoms))
 
     if monom_gcd == ring.zero_monom:
         return polynomials, domain.one
@@ -3354,24 +3366,17 @@ def gcd_prs(f, g):
     h = pp1.subresultants(pp2, x)[-1]
     _, h = h.primitive_wrt(x)
 
-    c *= K.canonical_unit(h.LC)
+    if not K.is_Field:
+        c *= K.canonical_unit(h.LC)
 
     h = c * h
 
     if K.is_Field:
         h = h.monic()
 
-    new_gcd = h, f.quo(h), g.quo(h)
+    cff, cfg = f.quo(h), g.quo(h)
 
-    ring = f.ring
-    old_gcd = ring.dmp_inner_gcd(f, g)
-
-    if new_gcd != old_gcd:
-        raise RuntimeError(f"GCD is different for\n\n"
-        f"f:\n{f} :\n\ng:\n{g}\n\nOld GCD = {old_gcd}\n"
-        f"New GCD = {new_gcd}")
-    else:
-        return new_gcd
+    return h, cff, cfg
 
 def gcd_terms(polynomials, ring, domain):
     """
@@ -3404,7 +3409,7 @@ def gcd_terms(polynomials, ring, domain):
             monomials.add(monomial)
             coeffs.add(coeff)
 
-    monom_gcd = monomial_ngcd(monomials)
+    monom_gcd = monomial_ngcd(list(monomials))
     coeff_gcd = domain.gcdn(coeffs)
     term_gcd = ring({monom_gcd: coeff_gcd})
 
