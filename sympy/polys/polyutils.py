@@ -14,8 +14,10 @@ import re
 
 if GROUND_TYPES == 'flint':
     import flint
+    flint_ZZ_n = (flint.nmod, flint.fmpz_mod)
 else:
     flint = None
+    flint_ZZ_n = ()
 
 
 _gens_order = {
@@ -167,7 +169,7 @@ def _sort_factors(factors, **args):
     # solution might be to add a sort key method to each domain.
     if flint is not None:
         def order_key(factor):
-            if isinstance(factor, flint.nmod):
+            if isinstance(factor, flint_ZZ_n):
                 return int(factor)
             elif isinstance(factor, list):
                 return [order_key(f) for f in factor]
