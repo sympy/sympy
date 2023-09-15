@@ -7,6 +7,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I, oo, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
@@ -344,6 +345,9 @@ def test_laplace_transform():
         Piecewise((1, And(t > 1, t < 3)), (2, True))]
     for x2 in x1:
         assert LT(x2, t, s)[0] == 2/s - exp(-s)/s + exp(-3*s)/s
+    assert (
+        LT(Piecewise((1, Eq(t, 1)), (2, True)), t, s)[0] ==
+        LaplaceTransform(Piecewise((1, Eq(t, 1)), (2, True)), t, s))
     # The following lines test whether _laplace_transform successfully
     # removes Heaviside(1) before processing espressions. It fails if
     # Heaviside(t) remains because then meijerg functions will appear.
