@@ -7,7 +7,8 @@ from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
-from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import (
+    _canonical, Ge, Gt, Lt, Unequality, Eq, Ne, Relational)
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -15,12 +16,14 @@ from sympy.functions.elementary.complexes import (
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.piecewise import (
+    Piecewise, piecewise_exclusive)
 from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
     _simplify, IntegralTransform, IntegralTransformError)
@@ -997,6 +1000,53 @@ def _laplace_apply_simple_rules(f, t, s):
     return None
 
 
+def _piecewise_to_heaviside(f, t):
+    """
+    This function converts a Piecewise expression to an expression written
+    with Heaviside. It is not exact, but valid in the context of the Laplace
+    transform.
+    """
+    if not t.is_real:
+        r = Dummy('r', real=True)
+        return _piecewise_to_heaviside(f.xreplace({t: r}), r).xreplace({r: t})
+    x = piecewise_exclusive(f)
+    r = []
+    for fn, cond in x.args:
+        # Here we do not need to do many checks because piecewise_exclusive
+        # has a clearly predictable output. However, if any of the conditions
+        # is not relative to t, this function just returns the input argument.
+        if isinstance(cond, Relational) and t in cond.args:
+            if isinstance(cond, (Eq, Ne)):
+                # We do not cover this case; these would be single-point
+                # exceptions that do not play a role in Laplace practice,
+                # except if they contain Dirac impulses, and then we can
+                # expect users to not try to use Piecewise for writing it.
+                return f
+            else:
+                r.append(Heaviside(cond.gts - cond.lts)*fn)
+        elif isinstance(cond, Or) and len(cond.args) == 2:
+            # Or(t<2, t>4), Or(t>4, t<=2), ... in any order with any <= >=
+            for c2 in cond.args:
+                if c2.lhs == t:
+                    r.append(Heaviside(c2.gts - c2.lts)*fn)
+                else:
+                    return f
+        elif isinstance(cond, And) and len(cond.args) == 2:
+            # And(t>2, t<4), And(t>4, t<=2), ...  in any order with any <= >=
+            c0, c1 = cond.args
+            if c0.lhs == t and c1.lhs == t:
+                if '>' in c0.rel_op:
+                    c0, c1 = c1, c0
+                r.append(
+                    (Heaviside(c1.gts - c1.lts) -
+                     Heaviside(c0.lts - c0.gts))*fn)
+            else:
+                return f
+        else:
+            return f
+    return Add(*r)
+
+
 def laplace_correspondence(f, fdict, /):
     """
     This helper function takes a function `f` that is the result of a
@@ -1115,26 +1165,37 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
-        if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
-            # For t>=0, Heaviside(t)=1 can be used, except if there is also
-            # a DiracDelta(t) present, in which case removing Heaviside(t)
-            # is not necessary because _laplace_rule_delta can deal with it.
-            ft = ft.subs(Heaviside(t_), 1)
-        if (
-                (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
-                (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
-                (r := _laplace_expand(ft, t_, s_)) is not None):
-            pass
-        elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
-            # If there are undefined functions f(t) then integration is
-            # unlikely to do anything useful so we skip it and given an
-            # unevaluated LaplaceTransform.
+        if ft.has(SingularityFunction):
+            ft = ft.rewrite(Heaviside)
+            # It may well be that the Singularity Function is still
+            # there after this rewrite, so we need to re-check.
+        if ft.has(SingularityFunction):
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
-        elif (r := _laplace_transform_integration(
-                ft, t_, s_, simplify=simplify)) is not None:
-            pass
         else:
-            r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+            if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
+                # For t>=0, Heaviside(t)=1 can be used, except if there is also
+                # a DiracDelta(t) present, in which case removing Heaviside(t)
+                # is unnecessary because _laplace_rule_delta can deal with it.
+                ft = ft.subs(Heaviside(t_), 1)
+            if ft.func == Piecewise and not ft.has(DiracDelta(t_)):
+                ft = _piecewise_to_heaviside(ft, t_)
+            if (
+                    (r := _laplace_apply_simple_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_apply_prog_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_expand(ft, t_, s_)) is not None):
+                pass
+            elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
+                # If there are undefined functions f(t) then integration is
+                # unlikely to do anything useful so we skip it and given an
+                # unevaluated LaplaceTransform.
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+            elif (r := _laplace_transform_integration(
+                    ft, t_, s_, simplify=simplify)) is not None:
+                pass
+            else:
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         (ri_, pi_, ci_) = r
         terms_s.append(k*ri_)
         planes.append(pi_)
