@@ -1016,7 +1016,7 @@ def _piecewise_to_heaviside(f, t):
         # has a clearly predictable output. However, if any of the conditions
         # is not relative to t, this function just returns the input argument.
         if isinstance(cond, Relational) and t in cond.args:
-            if isinstance(cond, Eq) or isinstance(cond, Ne):
+            if isinstance(cond, (Eq, Ne)):
                 # We do not cover this case; these would be single-point
                 # exceptions that do not play a role in Laplace practice,
                 # except if they contain Dirac impulses, and then we can
