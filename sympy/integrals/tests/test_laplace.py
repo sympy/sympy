@@ -7,6 +7,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import EulerGamma, Subs, Derivative, diff
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I, oo, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
@@ -14,9 +15,12 @@ from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
+from sympy.logic.boolalg import And
 from sympy.functions.special.gamma_functions import lowergamma, gamma
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
 from sympy.functions.special.error_functions import (
     fresnelc, fresnels, erf, erfc, Ei, Ci, expint, E1)
@@ -313,6 +317,37 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    # The following tests check whether _piecewise_to_heaviside works:
+    x1 = Piecewise((0, t <= 0), (1, t <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1)
+    x1 = Piecewise((0, t <= 0), (t, t <= 1), (2-t, t <= 2), (0, True))
+    X1 = LT(x1, t, s)[0].simplify()
+    assert X1 == (exp(2*s) - 2*exp(s) + 1)*exp(-2*s)/s**2
+    y1 = ILT(X1, s, t)
+    assert (
+        -y1 + t*Heaviside(t) + (t - 2)*Heaviside(t - 2) -
+        2*(t - 1)*Heaviside(t - 1)).simplify() == 0
+    x1 = Piecewise((exp(t), t <= 0), (1, t <= 1), (exp(-(t)), True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == exp(-s - 1)/(s + 1) + 1/s - exp(-s)/s
+    y1 = ILT(X1, s, t)
+    assert y1 == Heaviside(t) - Heaviside(t - 1) + exp(-t)*Heaviside(t - 1)
+    x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
+    X1 = LT(x1, t, s)[0]
+    assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
+    x1 = [
+        Piecewise((1, And(t > 1, t <= 3)), (2, True)),
+        Piecewise((1, And(t >= 1, t <= 3)), (2, True)),
+        Piecewise((1, And(t >= 1, t < 3)), (2, True)),
+        Piecewise((1, And(t > 1, t < 3)), (2, True))]
+    for x2 in x1:
+        assert LT(x2, t, s)[0] == 2/s - exp(-s)/s + exp(-3*s)/s
+    assert (
+        LT(Piecewise((1, Eq(t, 1)), (2, True)), t, s)[0] ==
+        LaplaceTransform(Piecewise((1, Eq(t, 1)), (2, True)), t, s))
     # The following lines test whether _laplace_transform successfully
     # removes Heaviside(1) before processing espressions. It fails if
     # Heaviside(t) remains because then meijerg functions will appear.
@@ -375,6 +410,11 @@ def test_laplace_transform():
     assert LT(f(t)*DiracDelta(b*t-a), t, s) == (f(a/b)*exp(-a*s/b)/b,
                                                 -oo, True)
     assert LT(f(t)*DiracDelta(b*t+a), t, s) == (0, -oo, True)
+    # SingularityFunction
+    assert LT(SingularityFunction(t, a, -1), t, s)[0] == exp(-a*s)
+    assert LT(SingularityFunction(t, a, 1), t, s)[0] == exp(-a*s)/s**2
+    assert LT(SingularityFunction(t, a, x), t, s)[0] == (
+        LaplaceTransform(SingularityFunction(t, a, x), t, s))
     # Collection of cases that cannot be fully evaluated and/or would catch
     # some common implementation errors
     assert (LT(DiracDelta(t**2), t, s, noconds=True) ==
