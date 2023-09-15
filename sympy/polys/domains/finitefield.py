@@ -29,12 +29,8 @@ def _modular_int_factory(mod, dom, symmetric, self):
             raise ValueError('modulus must be an integer, got %s' % mod)
 
         # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
-        try:
-            flint.nmod(0, mod)
-        except OverflowError:
-            pass
-        else:
-            return lambda val: flint.nmod(val, mod)
+        ctx = flint.fmpz_mod_ctx(mod)
+        return ctx
 
     # Use the Python implementation
     return ModularIntegerFactory(mod, dom, symmetric, self)
