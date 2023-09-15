@@ -303,6 +303,13 @@ class MonogenicFiniteExtension(Domain):
 
     __repr__ = __str__
 
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()
+
     def convert(self, f, base=None):
         rep = self.ring.convert(f, base)
         return ExtElem(rep % self.mod, self)

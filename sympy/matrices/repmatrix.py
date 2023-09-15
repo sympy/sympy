@@ -574,6 +574,43 @@ class MutableRepMatrix(RepMatrix):
         for j in range(self.cols):
             self[i, j] = f(self[i, j], j)
 
+    #The next three methods give direct support for the most common row operations inplace.
+    def row_mult(self,i,factor):
+        """Multiply the given row by the given factor in-place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_mult(1,7); M
+        Matrix([
+        [1, 0, 0],
+        [0, 7, 0],
+        [0, 0, 1]])
+
+        """
+        for j in range(self.cols):
+            self[i,j] *= factor
+
+    def row_add(self,s,t,k):
+        """Add k times row s (source) to row t (target) in place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_add(0, 2,3); M
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [3, 0, 1]])
+        """
+
+        for j in range(self.cols):
+            self[t,j] += k*self[s,j]
+
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
 

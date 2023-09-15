@@ -16,7 +16,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, atan
+from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
@@ -589,13 +589,21 @@ def _laplace_rule_delta(f, t, s):
             debug('      rule: multiply with DiracDelta')
             loc = ma2[a]/ma2[b]
             if re(loc) >= 0 and im(loc) == 0:
-                r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
-                return (r, S.NegativeInfinity, S.true)
+                fn = exp(-ma2[a]/ma2[b]*s)*ma1[z]
+                if fn.has(sin, cos):
+                    # Then it may be possible that a sinc() is present in the
+                    # term; let's try this:
+                    fn = fn.rewrite(sinc).ratsimp()
+                n, d = [x.subs(t, ma2[a]/ma2[b]) for x in fn.as_numer_denom()]
+                if d != 0:
+                    return (n/d/ma2[b], S.NegativeInfinity, S.true)
+                else:
+                    return None
             else:
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
             ro = roots(ma1[y], t)
-            if roots is not {} and set(ro.values()) == {1}:
+            if ro != {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
                 r = Add(
                     *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
@@ -1084,14 +1092,13 @@ def laplace_initial_conds(f, t, fdict, /):
     s**3*Y(s) - 2*s**2 - 4*s - 8
     """
     for y, ic in fdict.items():
-        if len(ic) >= 0:
-            for k in range(len(ic)):
-                if k == 0:
-                    f = f.replace(y(0), ic[0])
-                elif k == 1:
-                    f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
-                else:
-                    f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
+        for k in range(len(ic)):
+            if k == 0:
+                f = f.replace(y(0), ic[0])
+            elif k == 1:
+                f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
+            else:
+                f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
     return f
 
 
@@ -1108,6 +1115,11 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     conditions = []
     for ff in terms:
         k, ft = ff.as_independent(t_, as_Add=False)
+        if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
+            # For t>=0, Heaviside(t)=1 can be used, except if there is also
+            # a DiracDelta(t) present, in which case removing Heaviside(t)
+            # is not necessary because _laplace_rule_delta can deal with it.
+            ft = ft.subs(Heaviside(t_), 1)
         if (
                 (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
                 (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
@@ -1454,7 +1466,9 @@ def _inverse_laplace_build_rules():
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
-        (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c > 0, same, 1),
+        (
+            b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c),
+            S.true, same, 1),
         (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3),
          S.true, same, 1),
         # The next two rules must be there in that order. For the second
@@ -1488,10 +1502,10 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
-            try:
-                c = check.xreplace(ma)
-            except TypeError:
-                continue
+            c = check
+            if c is not S.true:
+                args = [x.xreplace(ma) for x in c[0]]
+                c = c[1](*args)
             if c == S.true:
                 debug('_inverse_laplace_apply_simple_rules match:')
                 debugf('      f:    %s', (f,))
@@ -1499,6 +1513,24 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
                 debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
 
+    return None
+
+
+def _inverse_laplace_diff(f, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    a = Wild('a', exclude=[s])
+    n = Wild('n', exclude=[s])
+    g = Wild('g')
+    ma = f.match(a*Derivative(g, (s, n)))
+    if ma and ma[n].is_integer:
+        debug('_inverse_laplace_apply_rules match:')
+        debugf('      f, n: %s, %s', (f, ma[n]))
+        debug('      rule: t**n*f(t) o---o (-1)**n*diff(F(s), s, n)')
+        r, c = _inverse_laplace_transform(
+            ma[g], s, t, plane, simplify=False, dorational=False)
+        return (-t)**ma[n]*r, c
     return None
 
 
@@ -1511,6 +1543,9 @@ def _inverse_laplace_time_shift(F, s, t, plane):
 
     if not F.has(s):
         return F*DiracDelta(t), S.true
+    if not F.has(exp):
+        return None
+
     ma1 = F.match(exp(a*s))
     if ma1:
         if ma1[a].is_negative:
@@ -1538,6 +1573,25 @@ def _inverse_laplace_time_shift(F, s, t, plane):
     return None
 
 
+def _inverse_laplace_freq_shift(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    if not F.has(s):
+        return F*DiracDelta(t), S.true
+    if len(args := F.args) == 1:
+        a = Wild('a', exclude=[s])
+        if (ma := args[0].match(s-a)) and re(ma[a]).is_positive:
+            debug('_inverse_laplace_freq_shift match:')
+            debugf('      f:    %s', (F,))
+            debug('      rule: F(s-a) o---o exp(-a*t)*f(t)')
+            debugf('      ma:   %s', (ma,))
+            return (
+                exp(-ma[a]*t) *
+                InverseLaplaceTransform(F.func(s), s, t, plane), S.true)
+    return None
+
+
 def _inverse_laplace_time_diff(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1561,12 +1615,345 @@ def _inverse_laplace_time_diff(F, s, t, plane):
     return None
 
 
+def _inverse_laplace_irrational(fn, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    m = Wild('m', exclude=[s])
+    n = Wild('n', exclude=[s])
+
+    result = None
+    condition = S.true
+
+    fa = fn.as_ordered_factors()
+
+    ma = [x.match((a*s**m+b)**n) for x in fa]
+
+    if None in ma:
+        return None
+
+    constants = S.One
+    zeros = []
+    poles = []
+    rest = []
+
+    for term in ma:
+        if term[a] == 0:
+            constants = constants*term
+        elif term[n].is_positive:
+            zeros.append(term)
+        elif term[n].is_negative:
+            poles.append(term)
+        else:
+            rest.append(term)
+
+    # The code below assumes that the poles are sorted in a specific way:
+    poles = sorted(poles, key=lambda x: (x[n], x[b] != 0, x[b]))
+    zeros = sorted(zeros, key=lambda x: (x[n], x[b] != 0, x[b]))
+    # XXX remove the following before merge
+    debugf('[ILT _i_l_i] matched %s', (ma, ))
+    debugf('[ILT _i_l_i] poles: %s', (poles, ))
+    debugf('[ILT _i_l_i] zeros: %s', (zeros, ))
+
+    if len(rest) != 0:
+        return None
+
+    debugf('[ILT _i_l_i] checks (%s, %s, %s)', (fn, s, t))
+
+    if len(poles) == 1 and len(zeros) == 0:
+        if poles[0][n] == -1 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0) == 1/a0 * 1/(sqrt(s)+b0/a0)
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]*constants
+            if a_.is_positive:
+                result = (
+                    k_/sqrt(pi)/sqrt(t) -
+                    k_*a_*exp(a_**2*t)*erfc(a_*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (4) returns %s', (result, ))
+        elif poles[0][n] == -2 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**2 == 1/a0**2 * 1/(sqrt(s)+b0/a0)**2
+            a_sq = poles[0][b]/poles[0][a]
+            a_ = a_sq**2
+            k_ = 1/poles[0][a]**2*constants
+            if a_sq.is_positive:
+                result = (
+                    k_*(1 - 2/sqrt(pi)*sqrt(a_)*sqrt(t) +
+                        (1-2*a_*t)*exp(a_*t)*(erf(sqrt(a_)*sqrt(t))-1)))
+                debugf('[ILT _i_l_i] Rule (10) returns %s', (result, ))
+        elif poles[0][n] == -3 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**3 == 1/a0**3 * 1/(sqrt(s)+b0/a0)**3
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**3*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*(a_**2*t+1)*sqrt(t) -
+                        a_*t*exp(a_**2*t)*(2*a_**2*t+3)*erfc(a_*sqrt(t))))
+                debugf('[ILT _i_l_i] Rule (13) returns %s', (result, ))
+        elif poles[0][n] == -4 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**4 == 1/a0**4 * 1/(sqrt(s)+b0/a0)**4
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**4*constants/3
+            if a_.is_positive:
+                result = (
+                    k_*(t*(4*a_**4*t**2+12*a_**2*t+3)*exp(a_**2*t) *
+                        erfc(a_*sqrt(t)) -
+                        2/sqrt(pi)*a_**3*t**(S(5)/2)*(2*a_**2*t+5)))
+                debugf('[ILT _i_l_i] Rule (16) returns %s', (result, ))
+        elif poles[0][n] == -S.Half and poles[0][m] == 2:
+            # 1/sqrt(a0*s**2+b0) == 1/sqrt(a0) * 1/sqrt(s**2+b0/a0)
+            a_ = sqrt(poles[0][b]/poles[0][a])
+            k_ = 1/sqrt(poles[0][a])*constants
+            result = (k_*(besselj(0, a_*t)))
+            debugf('[ILT _i_l_i] Rule (35), (44) returns %s', (result, ))
+
+    elif len(poles) == 1 and len(zeros) == 1:
+        if (
+                poles[0][n] == -3 and poles[0][m] == S.Half and
+                zeros[0][n] == S.Half and zeros[0][b] == 0):
+            # sqrt(az*s)/(ap*sqrt(s+bp)**3)
+            # == sqrt(az)/ap * sqrt(s)/(sqrt(s+bp)**3)
+            a_ = poles[0][b]
+            k_ = sqrt(zeros[0][a])/poles[0][a]*constants
+            result = (
+                k_*(2*a_**4*t**2+5*a_**2*t+1)*exp(a_**2*t) *
+                erfc(a_*sqrt(t)) - 2/sqrt(pi)*a_*(a_**2*t+2)*sqrt(t))
+            debugf('[ILT _i_l_i] Rule (14) returns %s', (result, ))
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                zeros[0][n] == S.Half and zeros[0][m] == 1):
+            # sqrt(az*s+bz)/(ap*s+bp)
+            # == sqrt(az)/ap * (sqrt(s+bz/az)/(s+bp/ap))
+            a_ = zeros[0][b]/zeros[0][a]
+            b_ = poles[0][b]/poles[0][a]
+            k_ = sqrt(zeros[0][a])/poles[0][a]*constants
+            result = (
+                k_*(exp(-a_*t)/sqrt(t)/sqrt(pi)+sqrt(a_-b_) *
+                    exp(-b_*t)*erf(sqrt(a_-b_)*sqrt(t))))
+            debugf('[ILT _i_l_i] Rule (22) returns %s', (result, ))
+
+    elif len(poles) == 2 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*s+b0)*sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((s+b0/a0)*sqrt(s))
+            a_ = -poles[0][b]/poles[0][a]
+            k_ = 1/sqrt(poles[1][a])/poles[0][a]*constants
+            if a_.is_positive:
+                result = (k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (1) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and poles[0][b] == 0 and
+                poles[1][n] == -1 and poles[1][m] == S.Half):
+            # 1/(a0*s*(a1*sqrt(s)+b1))
+            # == 1/(a0*a1) * 1/(s*(sqrt(s)+b1/a1))
+            a_ = poles[1][b]/poles[1][a]
+            k_ = 1/poles[0][a]/poles[1][a]/a_*constants
+            if a_.is_positive:
+                result = k_*(1-exp(a_**2*t)*erfc(a_*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (5) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)*(sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((sqrt(s)+b0/a0)"sqrt(s))
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/(poles[0][a]*sqrt(poles[1][a]))*constants
+            if a_.is_positive:
+                result = k_*exp(a_**2*t)*erfc(a_*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (7) returns %s', (result, ))
+        elif (
+                poles[0][n] == -S(3)/2 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half):
+            # 1/((a0**(3/2)*s**(3/2))*(a1*sqrt(s)+b1))
+            # == 1/(a0**(3/2)*a1)  1/((s**(3/2))*(sqrt(s)+b1/a1))
+            # Note that Bateman54 5.3 (8) is incorrect; there (sqrt(p)+a)
+            # should be (sqrt(p)+a)**(-1).
+            a_ = poles[1][b]/poles[1][a]
+            k_ = 1/(poles[0][a]**(S(3)/2)*poles[1][a])/a_**2*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*a_*sqrt(t)+exp(a_**2*t)*erfc(a_*sqrt(t))-1))
+                debugf('[ILT _i_l_i] Rule (8) returns %s', (result, ))
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*a1*s)
+            # == 1/a0**2/a1 * 1/(sqrt(s)+b0/a0)**2/s
+            a_sq = poles[0][b]/poles[0][a]
+            a_ = a_sq**2
+            k_ = 1/poles[0][a]**2/poles[1][a]*constants
+            if a_sq.is_positive:
+                result = (
+                    k_*(1/a_ + (2*t-1/a_)*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) -
+                        2/sqrt(pi)/sqrt(a_)*sqrt(t)))
+                debugf('[ILT _i_l_i] Rule (11) returns %s', (result, ))
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*sqrt(a1*s))
+            # == 1/a0**2/sqrt(a1) * 1/(sqrt(s)+b0/a0)**2/sqrt(s)
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**2/sqrt(poles[1][a])*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*sqrt(t) -
+                        2*a_*t*exp(a_**2*t)*erfc(a_*sqrt(t))))
+                debugf('[ILT _i_l_i] Rule (12) returns %s', (result, ))
+        elif (
+                poles[0][n] == -3 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1 / (sqrt(a1*s)*(a0*sqrt(s+b0)**3))
+            # == 1/(sqrt(a1)*a0) * 1/(sqrt(s)*(sqrt(s+b0)**3))
+            a_ = poles[0][b]
+            k_ = constants/sqrt(poles[1][a])/poles[0][a]
+            result = k_*(
+                (2*a_**2*t+1)*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                2/sqrt(pi)*a_*t**(S(3)/2))
+            debugf('[ILT _i_l_i] Rule (15) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[1][m] == 1):
+            # 1 / ( (a0*s+b0)* sqrt(a1*s+b1) )
+            # == 1/(sqrt(a1)*a0) * 1 / ( (s+b0/a0)* sqrt(s+b1/a1) )
+            a_ = poles[0][b]/poles[0][a]
+            b_ = poles[1][b]/poles[1][a]
+            k_ = constants/sqrt(poles[1][a])/poles[0][a]
+            result = k_*(
+                1/sqrt(b_-a_)*exp(-a_*t)*erf(sqrt(b_-a_)*sqrt(t)))
+            debugf('[ILT _i_l_i] Rule (23) returns %s', (result, ))
+
+    elif len(poles) == 2 and len(zeros) == 1:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                zeros[0][n] == S.Half and zeros[0][m] == 1 and
+                zeros[0][b] == 0):
+            # sqrt(za0*s)/((a0*s+b0)*(a1*sqrt(s)+b1))
+            # == sqrt(za0)/(a0*a1) * s/((s+b0/a0)*(sqrt(s)+b1/a1))
+            a_sq = poles[1][b]/poles[1][a]
+            a_ = a_sq**2
+            b_ = -poles[0][b]/poles[0][a]
+            k_ = sqrt(zeros[0][a])/poles[0][a]/poles[1][a]/(a_-b_)*constants
+            if a_sq.is_positive and b_.is_positive:
+                result = k_*(
+                    a_*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) +
+                    sqrt(a_)*sqrt(b_)*exp(b_*t)*erfc(sqrt(b_)*sqrt(t)) -
+                    b_*exp(b_*t))
+                debugf('[ILT _i_l_i] Rule (6) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half and zeros[0][n] == 1 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)/(a0*s*(a1*sqrt(s)+b1))
+            # == az/a0/a1 * (sqrt(z)+bz/az)/(s*(sqrt(s)+b1/a1))
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[1][b]/poles[1][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]/poles[0][a]/poles[1][a]*constants
+                result = k_*(
+                    2*exp(a_**2*t)*erfc(a_*sqrt(t))-1)
+                debugf('[ILT _i_l_i] Rule (17) returns %s', (result, ))
+        elif (
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0 and poles[0][n] == -2 and
+                poles[0][m] == S.Half and zeros[0][n] == 2 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)**2/(a1*s*(a0*sqrt(s)+b0)**2)
+            # == az**2/a1/a0**2 * (sqrt(z)+bz/az)**2/(s*(sqrt(s)+b0/a0)**2)
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[0][b]/poles[0][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]**2/poles[1][a]/poles[0][a]**2*constants
+                result = k_*(
+                    1 + 8*a_**2*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                    8/sqrt(pi)*a_*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (18) returns %s', (result, ))
+        elif (
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0 and poles[0][n] == -3 and
+                poles[0][m] == S.Half and zeros[0][n] == 3 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)**3/(a1*s*(a0*sqrt(s)+b0)**3)
+            # == az**3/a1/a0**3 * (sqrt(z)+bz/az)**3/(s*(sqrt(s)+b0/a0)**3)
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[0][b]/poles[0][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]**3/poles[1][a]/poles[0][a]**3*constants
+                result = k_*(
+                    2*(8*a_**4*t**2+8*a_**2*t+1)*exp(a_**2*t) *
+                    erfc(a_*sqrt(t))-8/sqrt(pi)*a_*sqrt(t)*(2*a_**2*t+1)-1)
+                debugf('[ILT _i_l_i] Rule (19) returns %s', (result, ))
+
+    elif len(poles) == 3 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][b] == 0 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[2][n] == -S.Half and poles[2][m] == 1):
+            # 1/((a0*s)*(a1*s+b1)*sqrt(a2*s))
+            # == 1/(a0*a1*sqrt(a2)) * 1/((s)*(s+b1/a1)*sqrt(s))
+            a_ = -poles[1][b]/poles[1][a]
+            k_ = 1/poles[0][a]/poles[1][a]/sqrt(poles[2][a])*constants
+            if a_.is_positive:
+                result = k_ * (
+                    a_**(-S(3)/2) * exp(a_*t) * erf(sqrt(a_)*sqrt(t)) -
+                    2/a_/sqrt(pi)*sqrt(t))
+                debugf('[ILT _i_l_i] Rule (2) returns %s', (result, ))
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                poles[2][n] == -S.Half and poles[2][m] == 1 and
+                poles[2][b] == 0):
+            # 1/((a0*s+b0)*(a1*sqrt(s)+b1)*(sqrt(a2)*sqrt(s)))
+            # == 1/(a0*a1*sqrt(a2)) * 1/((s+b0/a0)*(sqrt(s)+b1/a1)*sqrt(s))
+            a_sq = poles[1][b]/poles[1][a]
+            a_ = a_sq**2
+            b_ = -poles[0][b]/poles[0][a]
+            k_ = (
+                1/poles[0][a]/poles[1][a]/sqrt(poles[2][a]) /
+                (sqrt(b_)*(a_-b_)))
+            if a_sq.is_positive and b_.is_positive:
+                result = k_ * (
+                    sqrt(b_)*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) +
+                    sqrt(a_)*exp(b_*t)*erf(sqrt(b_)*sqrt(t)) -
+                    sqrt(b_)*exp(b_*t))
+                debugf('[ILT _i_l_i] Rule (9) returns %s', (result, ))
+
+    if result is None:
+        return None
+    else:
+        return Heaviside(t)*result, condition
+
+
+def _inverse_laplace_early_prog_rules(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    prog_rules = [_inverse_laplace_irrational]
+
+    for p_rule in prog_rules:
+        if (r := p_rule(F, s, t, plane)) is not None:
+            return r
+    return None
+
+
 def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_time_shift,
-                  _inverse_laplace_time_diff]
+    prog_rules = [_inverse_laplace_time_shift, _inverse_laplace_freq_shift,
+                  _inverse_laplace_time_diff, _inverse_laplace_diff,
+                  _inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
@@ -1646,7 +2033,7 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
             terms_t.append(Heaviside(t)*r)
         else:
             ft, cond = _inverse_laplace_transform(
-                fn, s, t, plane, simplify=simplify, dorational=False)
+                term, s, t, plane, simplify=simplify, dorational=False)
             terms_t.append(ft)
             conditions.append(cond)
 
@@ -1669,6 +2056,14 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     debugf('[ILT _i_l_t] (%s, %s, %s)', (fn, s_, t_))
 
     for term in terms:
+        if term.has(exp):
+            # Simplify expressions with exp() such that time-shifted
+            # expressions have negative exponents in the numerator instead of
+            # positive exponents in the numerator and denominator; this is a
+            # (necessary) trick. It will, for example, convert
+            # (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1)) into
+            # (s**2 + 4*exp(-s) - 4*exp(-2*s))/(s*(s**2 + 1))
+            term = term.subs(s_, -s_).together().subs(s_, -s_)
         k, f = term.as_independent(s_, as_Add=False)
         if (
                 dorational and term.is_rational_function(s_) and
@@ -1676,6 +2071,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
                     f, s_, t_, plane, simplify=simplify))
                 is not None or
                 (r := _inverse_laplace_apply_simple_rules(f, s_, t_))
+                is not None or
+                (r := _inverse_laplace_early_prog_rules(f, s_, t_, plane))
                 is not None or
                 (r := _inverse_laplace_expand(f, s_, t_, plane))
                 is not None or

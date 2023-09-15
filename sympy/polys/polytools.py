@@ -15,7 +15,8 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer, equal_valued
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -69,6 +70,9 @@ def _polifyit(func):
     def wrapper(f, g):
         g = _sympify(g)
         if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Integer):
+            g = f.from_expr(g, *f.gens, domain=f.domain)
             return func(f, g)
         elif isinstance(g, Expr):
             try:
@@ -5189,7 +5193,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the :obj:`~.mod_inverse` function:
+    use the :obj:`sympy.core.intfunc.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -5198,8 +5202,7 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
-
-    sympy.core.numbers.mod_inverse
+    sympy.core.intfunc.mod_inverse
 
     """
     options.allowed_flags(args, ['auto', 'polys'])

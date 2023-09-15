@@ -505,13 +505,13 @@ class BlockMatrix(MatrixExpr):
             [[A, B],
              [C, D]] = self.blocks.tolist()
             try:
-                A = A**0.5
+                A = A**S.Half
                 AI = A.I
             except NonInvertibleMatrixError:
                 raise NonInvertibleMatrixError('Block LU decomposition cannot be calculated when\
                     "A" is singular')
             Z = ZeroMatrix(*B.shape)
-            Q = self.schur()**0.5
+            Q = self.schur()**S.Half
             L = BlockMatrix([[A, Z], [C*AI, Q]])
             U = BlockMatrix([[A, AI*B],[Z.T, Q]])
             return L, U
@@ -795,8 +795,8 @@ def bc_dist(expr):
 
 def bc_matmul(expr):
     if isinstance(expr, MatPow):
-        if expr.args[1].is_Integer:
-            factor, matrices = (1, [expr.args[0]]*expr.args[1])
+        if expr.args[1].is_Integer and expr.args[1] > 0:
+            factor, matrices = 1, [expr.args[0]]*expr.args[1]
         else:
             return expr
     else:

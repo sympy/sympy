@@ -1,7 +1,5 @@
 """Geometry objects for use by wrapping pathways."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 
 from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
