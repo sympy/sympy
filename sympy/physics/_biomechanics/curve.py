@@ -92,7 +92,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``TendonForceLengthDeGroote2016`` is using
-    the ``with_default_constants`` constructor because this will automatically
+    the ``with_defaults`` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon length. We'll create a
@@ -101,7 +101,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     >>> from sympy import Symbol
     >>> from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
     >>> l_T_tilde = Symbol('l_T_tilde')
-    >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
+    >>> fl_T = TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
     >>> fl_T
     TendonForceLengthDeGroote2016(l_T_tilde, 0.2, 0.995, 0.25,
     33.93669377311689)
@@ -122,7 +122,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
     >>> l_T, l_T_slack = symbols('l_T l_T_slack')
     >>> l_T_tilde = l_T/l_T_slack
-    >>> fl_T = TendonForceLengthDeGroote2016.with_default_constants(l_T_tilde)
+    >>> fl_T = TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
     >>> fl_T
     TendonForceLengthDeGroote2016(l_T/l_T_slack, 0.2, 0.995, 0.25,
     33.93669377311689)
@@ -153,7 +153,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_T_tilde):
+    def with_defaults(cls, l_T_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -330,7 +330,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, fl_T):
+    def with_defaults(cls, fl_T):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -503,7 +503,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_M_tilde):
+    def with_defaults(cls, l_M_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -671,7 +671,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, fl_M_pas):
+    def with_defaults(cls, fl_M_pas):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -839,7 +839,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, l_M_tilde):
+    def with_defaults(cls, l_M_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation
@@ -1109,7 +1109,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     """
 
     @classmethod
-    def with_default_constants(cls, v_M_tilde):
+    def with_defaults(cls, v_M_tilde):
         r"""Recommended constructor that will use the published constants.
 
         Explanation

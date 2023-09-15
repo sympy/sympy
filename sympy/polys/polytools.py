@@ -71,6 +71,9 @@ def _polifyit(func):
         g = _sympify(g)
         if isinstance(g, Poly):
             return func(f, g)
+        elif isinstance(g, Integer):
+            g = f.from_expr(g, *f.gens, domain=f.domain)
+            return func(f, g)
         elif isinstance(g, Expr):
             try:
                 g = f.from_expr(g, *f.gens)

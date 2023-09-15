@@ -81,9 +81,9 @@ class Beam:
     >>> b.deflection()
     (7*x - SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 2, 4)/4 - 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     >>> b.deflection().rewrite(Piecewise)
-    (7*x - Piecewise((x**3, x > 0), (0, True))/2
-         - 3*Piecewise(((x - 4)**3, x > 4), (0, True))/2
-         + Piecewise(((x - 2)**4, x > 2), (0, True))/4)/(E*I)
+    (7*x - Piecewise((x**3, x >= 0), (0, True))/2
+         - 3*Piecewise(((x - 4)**3, x >= 4), (0, True))/2
+         + Piecewise(((x - 2)**4, x >= 2), (0, True))/4)/(E*I)
 
     Calculate the support reactions for a fully symbolic beam of length L.
     There are two simple supports below the beam, one at the starting point

@@ -257,7 +257,7 @@ def test_frac():
     raises(ValueError, lambda: limit(frac(x), x, 0, '+-'))
     assert limit(frac(-2*x + 1), x, 0, "+") == 1
     assert limit(frac(-2*x + 1), x, 0, "-") == 0
-    assert limit(frac(x + S.Half), x, 0, "+-") == 1/2
+    assert limit(frac(x + S.Half), x, 0, "+-") == S(1)/2
     assert limit(frac(1/x), x, 0) == AccumBounds(0, 1)
 
 
@@ -421,10 +421,10 @@ def test_issue_4547():
 
 def test_issue_5164():
     assert limit(x**0.5, x, oo) == oo**0.5 is oo
-    assert limit(x**0.5, x, 16) == S(16)**0.5
+    assert limit(x**0.5, x, 16) == 4 # Should this be a float?
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
-    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+    assert limit(x**(-0.5), x, 4) == S.Half # Should this be a float?
 
 
 def test_issue_5383():

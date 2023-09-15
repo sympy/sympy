@@ -254,7 +254,7 @@ class ForceActuator(ActuatorBase):
         [(pA, c*Derivative(q(t), t)*N.x), (pB, - c*Derivative(q(t), t)*N.x)]
 
         """
-        return self.pathway.compute_loads(self.force)
+        return self.pathway.to_loads(self.force)
 
     def __repr__(self):
         """Representation of a ``ForceActuator``."""

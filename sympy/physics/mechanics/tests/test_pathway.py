@@ -119,13 +119,13 @@ class TestLinearPathway:
         self.pB.set_pos(self.pA, 2*self.N.x)
         assert self.pathway.extension_velocity == 0
 
-    def test_static_pathway_compute_loads(self):
+    def test_static_pathway_to_loads(self):
         self.pB.set_pos(self.pA, 2*self.N.x)
         expected = [
             (self.pA, - self.F*self.N.x),
             (self.pB, self.F*self.N.x),
         ]
-        assert self.pathway.compute_loads(self.F) == expected
+        assert self.pathway.to_loads(self.F) == expected
 
     def test_2D_pathway_length(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
@@ -145,13 +145,13 @@ class TestLinearPathway:
         expected = 2*sqrt(self.q1**2)*self.q1d/self.q1
         assert self.pathway.extension_velocity == expected
 
-    def test_2D_pathway_compute_loads(self):
+    def test_2D_pathway_to_loads(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = [
             (self.pA, - self.F*(self.q1 / sqrt(self.q1**2))*self.N.x),
             (self.pB, self.F*(self.q1 / sqrt(self.q1**2))*self.N.x),
         ]
-        assert self.pathway.compute_loads(self.F) == expected
+        assert self.pathway.to_loads(self.F) == expected
 
     def test_3D_pathway_length(self):
         self.pB.set_pos(
@@ -174,7 +174,7 @@ class TestLinearPathway:
         )
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
-    def test_3D_pathway_compute_loads(self):
+    def test_3D_pathway_to_loads(self):
         self.pB.set_pos(
             self.pA,
             self.q1*self.N.x - self.q2*self.N.y + 2*self.q3*self.N.z,
@@ -194,7 +194,7 @@ class TestLinearPathway:
             (self.pA, pO_force),
             (self.pB, pI_force),
         ]
-        assert self.pathway.compute_loads(self.F) == expected
+        assert self.pathway.to_loads(self.F) == expected
 
 
 class TestObstacleSetPathway:
@@ -300,7 +300,7 @@ class TestObstacleSetPathway:
         pathway = ObstacleSetPathway(self.pO, self.pA, self.pB, self.pI)
         assert pathway.extension_velocity == 0
 
-    def test_static_pathway_compute_loads(self):
+    def test_static_pathway_to_loads(self):
         self.pA.set_pos(self.pO, self.N.x)
         self.pB.set_pos(self.pO, self.N.y)
         self.pI.set_pos(self.pO, self.N.z)
@@ -313,7 +313,7 @@ class TestObstacleSetPathway:
             Force(self.pB, self.F * sqrt(2) / 2 * (self.N.y - self.N.z)),
             Force(self.pI, self.F * sqrt(2) / 2 * (self.N.z - self.N.y)),
         ]
-        assert pathway.compute_loads(self.F) == expected
+        assert pathway.to_loads(self.F) == expected
 
     def test_2D_pathway_length(self):
         self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
@@ -339,7 +339,7 @@ class TestObstacleSetPathway:
         expected = - (sqrt(2) * sin(self.q) * self.qd) / (2 * sqrt(cos(self.q) + 1))
         assert (pathway.extension_velocity - expected).simplify() == 0
 
-    def test_2D_pathway_compute_loads(self):
+    def test_2D_pathway_to_loads(self):
         self.pA.set_pos(self.pO, -(self.N.x + self.N.y))
         self.pB.set_pos(
             self.pO, cos(self.q) * self.N.x - (sin(self.q) + 1) * self.N.y
@@ -362,7 +362,7 @@ class TestObstacleSetPathway:
             Force(self.pB, self.F * pB_pI_force_vec),
             Force(self.pI, -self.F * pB_pI_force_vec),
         ]
-        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
+        assert _simplify_loads(pathway.to_loads(self.F)) == expected
 
 
 class TestWrappingPathway:
@@ -559,7 +559,7 @@ class TestWrappingPathway:
             ),
         )
     )
-    def test_static_pathway_on_sphere_compute_loads(
+    def test_static_pathway_on_sphere_to_loads(
         self,
         pA_vec,
         pB_vec,
@@ -587,7 +587,7 @@ class TestWrappingPathway:
             Force(self.pB, self.F*(self.r**3/sqrt(self.r**6))*pB_vec_expected),
             Force(self.pO, self.F*(self.r**3/sqrt(self.r**6))*pO_vec_expected),
         ]
-        assert pathway.compute_loads(self.F) == expected
+        assert pathway.to_loads(self.F) == expected
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
@@ -635,7 +635,7 @@ class TestWrappingPathway:
             ),
         )
     )
-    def test_static_pathway_on_cylinder_compute_loads(
+    def test_static_pathway_on_cylinder_to_loads(
         self,
         pA_vec,
         pB_vec,
@@ -660,7 +660,7 @@ class TestWrappingPathway:
             Force(self.pB, pB_force_expected),
             Force(self.pO, pO_force_expected),
         ]
-        assert _simplify_loads(pathway.compute_loads(self.F)) == expected
+        assert _simplify_loads(pathway.to_loads(self.F)) == expected
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_length(self):
@@ -684,7 +684,7 @@ class TestWrappingPathway:
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
     @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
-    def test_2D_pathway_on_cylinder_compute_loads(self):
+    def test_2D_pathway_on_cylinder_to_loads(self):
         q = dynamicsymbols('q')
         pA_pos = self.r*self.N.x
         pB_pos = self.r*(cos(q)*self.N.x + sin(q)*self.N.y)
@@ -700,5 +700,5 @@ class TestWrappingPathway:
             Force(self.pO, pO_force),
         ]
 
-        loads = _simplify_loads(self.pathway.compute_loads(self.F))
+        loads = _simplify_loads(self.pathway.to_loads(self.F))
         assert loads == expected
