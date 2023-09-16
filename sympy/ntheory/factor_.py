@@ -287,6 +287,13 @@ def multiplicity_in_factorial(p, n):
     """return the largest integer ``m`` such that ``p**m`` divides ``n!``
     without calculating the factorial of ``n``.
 
+    Parameters
+    ==========
+
+    p : Integer
+        positive integer
+    n : Integer
+        non-negative integer
 
     Examples
     ========
@@ -311,6 +318,11 @@ def multiplicity_in_factorial(p, n):
     >>> multiplicity_in_factorial(factorial(25), 2**100)
     52818775009509558395695966887
 
+    See Also
+    ========
+
+    multiplicity
+
     """
 
     p, n = as_int(p), as_int(n)
@@ -321,31 +333,17 @@ def multiplicity_in_factorial(p, n):
     if n < 0:
         raise ValueError('expecting non-negative integer got %s' % n )
 
-    factors = factorint(p)
-
     # keep only the largest of a given multiplicity since those
     # of a given multiplicity will be goverened by the behavior
     # of the largest factor
-    test = defaultdict(int)
-    for k, v in factors.items():
-        test[v] = max(k, test[v])
-    keep = set(test.values())
-    # remove others from factors
-    for k in list(factors.keys()):
-        if k not in keep:
-            factors.pop(k)
-
-    mp = S.Infinity
-    for i in factors:
-        # multiplicity of i in n! is
-        mi = (n - (sum(digits(n, i)) - i))//(i - 1)
-        # multiplicity of p in n! depends on multiplicity
-        # of prime `i` in p, so we floor divide by factors[i]
-        # and keep it if smaller than the multiplicity of p
-        # seen so far
-        mp = min(mp, mi//factors[i])
-
-    return mp
+    f = defaultdict(int)
+    for k, v in factorint(p).items():
+        f[v] = max(k, f[v])
+    # multiplicity of p in n! depends on multiplicity
+    # of prime `k` in p, so we floor divide by `v`
+    # and keep it if smaller than the multiplicity of p
+    # seen so far
+    return min((n + k - sum(digits(n, k)))//(k - 1)//v for v, k in f.items())
 
 
 def perfect_power(n, candidates=None, big=True, factor=True):
