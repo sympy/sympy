@@ -1543,9 +1543,9 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 
 
-def quadratic_congruence(a, b, c, p):
-    """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
+def quadratic_congruence(a, b, c, n):
+    r"""
+    Find the solutions to `a x^2 + b x + c \equiv 0 \pmod{n}`.
 
     Parameters
     ==========
@@ -1553,44 +1553,61 @@ def quadratic_congruence(a, b, c, p):
     a : int
     b : int
     c : int
-    p : int
+    n : int
         A positive integer.
+
+    Returns
+    =======
+
+    list[int] :
+        A sorted list of solutions. If no solution exists, ``[]``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import quadratic_congruence
+    >>> quadratic_congruence(2, 5, 3, 7) # 2x^2 + 5x + 3 = 0 (mod 7)
+    [2, 6]
+    >>> quadratic_congruence(8, 6, 4, 15) # No solution
+    []
+
+    See Also
+    ========
+
+    polynomial_congruence : Solve the polynomial congruence
+
     """
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
-    p = as_int(p)
-    a = a % p
-    b = b % p
-    c = c % p
+    n = as_int(n)
+    if n <= 1:
+        raise ValueError("n should be an integer greater than 1")
+    a %= n
+    b %= n
+    c %= n
 
     if a == 0:
-        return linear_congruence(b, -c, p)
-    if p == 2:
+        return linear_congruence(b, -c, n)
+    if n == 2:
+        # assert a == 1
         roots = []
-        if c % 2 == 0:
+        if c == 0:
             roots.append(0)
-        if (a + b + c) % 2 == 0:
+        if (b + c) % 2:
             roots.append(1)
         return roots
-    if isprime(p):
-        inv_a = invert(a, p)
+    if gcd(2*a, n) == 1:
+        inv_a = invert(a, n)
         b *= inv_a
         c *= inv_a
-        if b % 2 == 1:
-            b = b + p
-        d = ((b * b) // 4 - c) % p
-        y = sqrt_mod(d, p, all_roots=True)
-        res = set()
-        for i in y:
-            res.add((i - b // 2) % p)
-        return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
+        if b % 2:
+            b += n
+        b >>= 1
+        return sorted((i - b) % n for i in sqrt_mod_iter(b**2 - c, n))
     res = set()
-    for i in y:
-        root = linear_congruence(2 * a, i - b, 4 * a * p)
-        for j in root:
-            res.add(j % p)
+    for i in sqrt_mod_iter(b**2 - 4*a*c, 4*a*n):
+        res.update(j % n for j in linear_congruence(2*a, i - b, 4*a*n))
     return sorted(res)
 
 
