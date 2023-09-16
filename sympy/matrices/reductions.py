@@ -293,8 +293,10 @@ def _rref_dm(dM):
 
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True):
-    """Return reduced row-echelon form of matrix and indices of pivot vars.
+        normalize_last=True, rhs=None):  # handle rhs in rref
+    """Return reduced row-echelon form of matrix and indices
+    of pivot vars. If ``rhs`` is included it will be returned
+    as the 2nd element of the tuple, before the pivots.
 
     Parameters
     ==========
@@ -320,10 +322,18 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         each pivot is normalized to be `1` before row operations are
         used to zero above and below the pivot.
 
+    rhs : Matrix
+        If ``rhs`` is passed it must have the same number of rows as ``M``.
+        Reduction steps will not take place in this matrix, but
+        the elements will be included in the reduction steps. If a single
+        column matrix of symbols is passed, the expressions in each
+        row at the end of the reduction will indicate how rows were
+        combined to perform the reduction.
+
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, symbols
     >>> from sympy.abc import x
     >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
     >>> m.rref()
@@ -341,7 +351,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     ``iszerofunc`` can correct rounding errors in matrices with float
     values. In the following example, calling ``rref()`` leads to
     floating point errors, incorrectly row reducing the matrix.
-    ``iszerofunc= lambda x: abs(x)<1e-9`` sets sufficiently small numbers
+    ``iszerofunc= lambda x: abs(x) < 1e-9`` sets sufficiently small numbers
     to zero, avoiding this error.
 
     >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
@@ -356,13 +366,20 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     [0, 1, -0.712328767123288, 0],
     [0, 0,         0,          0]]), (0, 1))
 
+    >>> Matrix([[1, 1], [2, 1]]).rref(rhs=Matrix(symbols('r1 r2')))
+    (Matrix([
+    [1, 0],
+    [0, 1]]), (0, 1), Matrix([
+    [ -r1 + r2],
+    [2*r1 - r2]]))
+
     Notes
     =====
 
     The default value of ``normalize_last=True`` can provide significant
     speedup to row reduction, especially on matrices with symbols.  However,
     if you depend on the form row reduction algorithm leaves entries
-    of the matrix, set ``noramlize_last=False``
+    of the matrix, set ``normalize_last=False``
     """
     # Try to use DomainMatrix for ZZ or QQ
     dM = _to_DM_ZZ_QQ(M)

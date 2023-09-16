@@ -177,7 +177,12 @@ class MatrixReductions(MatrixDeterminant):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True):
+            normalize_last=True, rhs=None):
+        if rhs is not None:
+            r, p = _rref(self.hstack(self, self.eye(self.rows), rhs),
+                iszerofunc=iszerofunc, simplify=simplify,
+                pivots=pivots, normalize_last=normalize_last)
+            return r[:, :self.cols], r[:, -rhs.cols:], p[:self.cols]
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
             pivots=pivots, normalize_last=normalize_last)
 
