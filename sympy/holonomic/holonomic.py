@@ -1777,7 +1777,7 @@ class HolonomicFunction:
             degree = len(listofdmp) - 1
             if - i - b <= 0 and degree - i - b >= 0:
                 s = s + listofdmp[degree - i - b] * y
-            y *= x - i
+            y *= R.from_sympy(x - i)
 
         return roots(R.to_sympy(s), x)
 
