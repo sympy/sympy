@@ -151,7 +151,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def revert(self, a):
         try:
-            return 1/a
+            return self.one/a
         except (ExactQuotientFailed, ZeroDivisionError):
             raise NotReversible('%s is not a unit' % a)
 
