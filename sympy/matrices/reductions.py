@@ -366,12 +366,13 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     [0, 1, -0.712328767123288, 0],
     [0, 0,         0,          0]]), (0, 1))
 
-    >>> Matrix([[1, 1], [2, 1]]).rref(rhs=Matrix(symbols('r1 r2')))
+    >>> r1, r2 = symbols('r1 r2')
+    >>> Matrix([[1, 1], [2, 1]]).rref(rhs=Matrix([r1, r2]))
     (Matrix([
     [1, 0],
-    [0, 1]]), (0, 1), Matrix([
+    [0, 1]]), Matrix([
     [ -r1 + r2],
-    [2*r1 - r2]]))
+    [2*r1 - r2]]), (0, 1))
 
     Notes
     =====
