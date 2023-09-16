@@ -42,17 +42,18 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1, TR2i
+from sympy.simplify.fu import TR1, TR2i, TR11
 from sympy.strategies.rl import rebuild
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polytools import gcd
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets, flatten)
+    generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1135,6 +1136,29 @@ def solve(f, *symbols, **flags):
     for i, fi in enumerate(f):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
+
+    # expand double angles; in general, expand_trig will allow
+    # more roots to be found but this is not a great solultion
+    # to not returning a parametric solution, otherwise
+    # many values can be returned that have a simple
+    # relationship between values
+    targs = {t for fi in f for t in fi.atoms(TrigonometricFunction)}
+    add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
+    trep = {}
+    for i in add:
+        a = i.args[0]
+        if len(a.args) == 2:
+            ind, dep = a.as_independent(*symbols)
+            if dep in symbols or -dep in symbols:
+                # don't let expansion expand wrt anything in ind
+                n = Dummy() if not ind.is_Number else ind
+                trep[i] = i.xreplace({ind: n}).expand(trig=True
+                    ).xreplace({n: ind})
+    if other and len(other) <= 2:
+        base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
+        for i in other:
+            trep[i] = TR11(i, base)
+    f = [fi.xreplace(trep) for fi in f]
 
     #
     # try to get a solution
