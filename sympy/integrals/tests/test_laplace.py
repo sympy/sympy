@@ -332,9 +332,10 @@ def test_laplace_transform():
         2*(t - 1)*Heaviside(t - 1)).simplify() == 0
     x1 = Piecewise((exp(t), t <= 0), (1, t <= 1), (exp(-(t)), True))
     X1 = LT(x1, t, s)[0]
-    assert X1 == exp(-s - 1)/(s + 1) + 1/s - exp(-s)/s
+    assert X1 == exp(-1)*exp(-s)/(s + 1) + 1/s - exp(-s)/s
     y1 = ILT(X1, s, t)
-    assert y1 == Heaviside(t) - Heaviside(t - 1) + exp(-t)*Heaviside(t - 1)
+    assert y1 == (
+        exp(-1)*exp(1 - t)*Heaviside(t - 1) + Heaviside(t) - Heaviside(t - 1))
     x1 = Piecewise((0, x <= 0), (1, x <= 1), (0, True))
     X1 = LT(x1, t, s)[0]
     assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
@@ -344,7 +345,7 @@ def test_laplace_transform():
         Piecewise((1, And(t >= 1, t < 3)), (2, True)),
         Piecewise((1, And(t > 1, t < 3)), (2, True))]
     for x2 in x1:
-        assert LT(x2, t, s)[0] == 2/s - exp(-s)/s + exp(-3*s)/s
+        assert LT(x2, t, s)[0].expand() == 2/s - exp(-s)/s + exp(-3*s)/s
     assert (
         LT(Piecewise((1, Eq(t, 1)), (2, True)), t, s)[0] ==
         LaplaceTransform(Piecewise((1, Eq(t, 1)), (2, True)), t, s))
