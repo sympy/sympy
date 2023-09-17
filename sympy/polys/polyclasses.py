@@ -1401,7 +1401,9 @@ class DMF(PicklableWithSlots, CantSympify):
         except (CoercionFailed, NotImplementedError):
             if f.ring is not None:
                 try:
-                    return f.add(f.ring.convert(g))
+                    res = f.add(f.ring.convert(g))
+                    raise RuntimeError("add...")
+                    return res
                 except (CoercionFailed, NotImplementedError):
                     pass
             return NotImplemented
@@ -1420,6 +1422,7 @@ class DMF(PicklableWithSlots, CantSympify):
         except (CoercionFailed, NotImplementedError):
             if f.ring is not None:
                 try:
+                    raise RuntimeError("sub...")
                     return f.sub(f.ring.convert(g))
                 except (CoercionFailed, NotImplementedError):
                     pass
@@ -1439,7 +1442,9 @@ class DMF(PicklableWithSlots, CantSympify):
         except (CoercionFailed, NotImplementedError):
             if f.ring is not None:
                 try:
-                    return f.mul(f.ring.convert(g))
+                    res = f.mul(f.ring.convert(g))
+                    raise RuntimeError("mul...")
+                    return res
                 except (CoercionFailed, NotImplementedError):
                     pass
             return NotImplemented
@@ -1461,7 +1466,9 @@ class DMF(PicklableWithSlots, CantSympify):
         except (CoercionFailed, NotImplementedError):
             if f.ring is not None:
                 try:
-                    return f.quo(f.ring.convert(g))
+                    res = f.quo(f.ring.convert(g))
+                    raise RuntimeError("div...")
+                    return res
                 except (CoercionFailed, NotImplementedError):
                     pass
             return NotImplemented
@@ -1469,6 +1476,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def __rtruediv__(self, g):
         r = self.invert(check=False)*g
         if self.ring and r not in self.ring:
+            raise RuntimeError("rtruediv...")
             from sympy.polys.polyerrors import ExactQuotientFailed
             raise ExactQuotientFailed(g, self, self.ring)
         return r
