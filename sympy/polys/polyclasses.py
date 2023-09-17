@@ -179,26 +179,15 @@ class DMP(CantSympify):
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(rep, dom=dom, lev=lev, kill=False):
-                if kill:
-                    if not lev:
-                        return rep
-                    else:
-                        lev -= 1
-
+            def per(rep, dom=dom, lev=lev):
                 return DMP(rep, dom, lev)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, kill=False):
+    def per(f, rep, dom=None, lev=None):
         """Create a DMP out of the given representation. """
-        lev = f.lev
-
-        if kill:
-            if not lev:
-                return rep
-            else:
-                lev -= 1
+        if lev is None:
+            lev = f.lev
 
         if dom is None:
             dom = f.dom
@@ -604,8 +593,12 @@ class DMP(CantSympify):
         if not isinstance(j, int):
             raise TypeError("``int`` expected, got %s" % type(j))
 
-        return f.per(dmp_eval_in(f.rep,
-            f.dom.convert(a), j, f.lev, f.dom), kill=True)
+        rep = dmp_eval_in(f.rep, f.dom.convert(a), j, f.lev, f.dom)
+
+        if f.lev:
+            return f.per(rep, lev=f.lev - 1)
+        else:
+            return rep
 
     def half_gcdex(f, g):
         """Half extended Euclidean algorithm, if univariate. """
@@ -654,12 +647,23 @@ class DMP(CantSympify):
         lev, dom, per, F, G = f.unify(g)
         if includePRS:
             res, R = dmp_resultant(F, G, lev, dom, includePRS=includePRS)
-            return per(res, kill=True), list(map(per, R))
-        return per(dmp_resultant(F, G, lev, dom), kill=True)
+            if lev:
+                res = DMP(res, dom, lev - 1)
+            return res, list(map(per, R))
+
+        res = dmp_resultant(F, G, lev, dom)
+        if lev:
+            res = DMP(res, dom, lev - 1)
+        return res
 
     def discriminant(f):
         """Computes discriminant of ``f``. """
-        return f.per(dmp_discriminant(f.rep, f.lev, f.dom), kill=True)
+        rep = dmp_discriminant(f.rep, f.lev, f.dom)
+
+        if f.lev:
+            return f.per(rep, lev=f.lev - 1)
+        else:
+            return rep
 
     def cofactors(f, g):
         """Returns GCD of ``f`` and ``g`` and their cofactors. """
