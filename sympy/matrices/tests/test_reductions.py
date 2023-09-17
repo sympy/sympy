@@ -282,8 +282,8 @@ def test_rref():
 
     a, b, c, d = symbols('a b c d')
     A = Matrix([[0, 0], [0, 0], [1, 2], [3, 4]])
-    rhs = Matrix([a, b, c, d])
-    assert A.rref(rhs=rhs) == (Matrix([
+    B = Matrix([a, b, c, d])
+    assert A.rref_rhs(B) == (Matrix([
     [1, 0],
     [0, 1],
     [0, 0],

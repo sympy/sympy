@@ -293,10 +293,9 @@ def _rref_dm(dM):
 
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
-        normalize_last=True, rhs=None):  # handle rhs in rref
+        normalize_last=True):
     """Return reduced row-echelon form of matrix and indices
-    of pivot vars. If ``rhs`` is included it will be returned
-    as the 2nd element of the tuple, before the pivots.
+    of pivot vars.
 
     Parameters
     ==========
@@ -333,7 +332,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     Examples
     ========
 
-    >>> from sympy import Matrix, symbols
+    >>> from sympy import Matrix
     >>> from sympy.abc import x
     >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
     >>> m.rref()
@@ -365,14 +364,6 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     [1, 0, -0.301369863013699, 0],
     [0, 1, -0.712328767123288, 0],
     [0, 0,         0,          0]]), (0, 1))
-
-    >>> r1, r2 = symbols('r1 r2')
-    >>> Matrix([[1, 1], [2, 1]]).rref(rhs=Matrix([r1, r2]))
-    (Matrix([
-    [1, 0],
-    [0, 1]]), Matrix([
-    [ -r1 + r2],
-    [2*r1 - r2]]), (0, 1))
 
     Notes
     =====

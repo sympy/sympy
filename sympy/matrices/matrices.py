@@ -176,13 +176,32 @@ class MatrixReductions(MatrixDeterminant):
     def rank(self, iszerofunc=_iszero, simplify=False):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
+    def rref_rhs(self, rhs, iszerofunc=_iszero, simplify=False, pivots=True,
+        normalize_last=True):
+        """Return reduced row-echelon form of matrix, matrix showing
+        rhs after reduction steps, and indices of pivot vars. All
+        parameters other than ``rhs`` have the same semantics as in
+        ``rref``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> r1, r2 = symbols('r1 r2')
+        >>> Matrix([[1, 1], [2, 1]]).rref_rhs(Matrix([r1, r2]))
+        (Matrix([
+        [1, 0],
+        [0, 1]]), Matrix([
+        [ -r1 + r2],
+        [2*r1 - r2]]), (0, 1))
+        """
+        r, p = _rref(self.hstack(self, self.eye(self.rows), rhs),
+            iszerofunc=iszerofunc, simplify=simplify,
+            pivots=pivots, normalize_last=normalize_last)
+        return r[:, :self.cols], r[:, -rhs.cols:], p[:self.cols]
+
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
-            normalize_last=True, rhs=None):
-        if rhs is not None:
-            r, p = _rref(self.hstack(self, self.eye(self.rows), rhs),
-                iszerofunc=iszerofunc, simplify=simplify,
-                pivots=pivots, normalize_last=normalize_last)
-            return r[:, :self.cols], r[:, -rhs.cols:], p[:self.cols]
+            normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
             pivots=pivots, normalize_last=normalize_last)
 
