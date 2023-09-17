@@ -925,7 +925,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> p1
   x**2 + 1
   >>> p2
-  x**2 + 1
+  DMP([1, 0, 1], ZZ, None)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
   >>> type(p1)

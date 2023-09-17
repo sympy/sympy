@@ -28,6 +28,9 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def parent(f):
         return f.ext
 
+    def as_expr(f):
+        return f.ext.to_sympy(f)
+
     def __bool__(f):
         return bool(f.rep)
 
@@ -198,7 +201,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     def __str__(f):
         from sympy.printing.str import sstr
-        return sstr(f.rep)
+        return sstr(f.as_expr())
 
     __repr__ = __str__
 
