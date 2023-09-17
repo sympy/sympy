@@ -538,13 +538,7 @@ class DMP(CantSympify):
     def exquo(f, g):
         """Computes polynomial exact quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
-        res = per(dmp_exquo(F, G, lev, dom))
-        if f.ring:
-            if res not in f.ring:
-                raise RuntimeError("exquo...")
-                from sympy.polys.polyerrors import ExactQuotientFailed
-                raise ExactQuotientFailed(f, g, f.ring)
-        return res
+        return per(dmp_exquo(F, G, lev, dom))
 
     def degree(f, j=0):
         """Returns the leading degree of ``f`` in ``x_j``. """
@@ -972,15 +966,8 @@ class DMP(CantSympify):
         if not isinstance(g, DMP):
             try:
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
-            except TypeError:
+            except (TypeError, CoercionFailed, NotImplementedError):
                 return NotImplemented
-            except (CoercionFailed, NotImplementedError):
-                if f.ring is not None:
-                    try:
-                        g = f.ring.convert(g)
-                        raise RuntimeError("add...")
-                    except (CoercionFailed, NotImplementedError):
-                        return NotImplemented
 
         return f.add(g)
 
@@ -991,15 +978,8 @@ class DMP(CantSympify):
         if not isinstance(g, DMP):
             try:
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
-            except TypeError:
+            except (TypeError, CoercionFailed, NotImplementedError):
                 return NotImplemented
-            except (CoercionFailed, NotImplementedError):
-                if f.ring is not None:
-                    try:
-                        g = f.ring.convert(g)
-                        raise RuntimeError("sub...")
-                    except (CoercionFailed, NotImplementedError):
-                        return NotImplemented
 
         return f.sub(g)
 
@@ -1012,16 +992,7 @@ class DMP(CantSympify):
         else:
             try:
                 return f.mul_ground(g)
-            except TypeError:
-                return NotImplemented
-            except (CoercionFailed, NotImplementedError):
-                if f.ring is not None:
-                    try:
-                        res = f.mul(f.ring.convert(g))
-                        raise RuntimeError("mul...")
-                        return res
-                    except (CoercionFailed, NotImplementedError):
-                        pass
+            except (TypeError, CoercionFailed, NotImplementedError):
                 return NotImplemented
 
     def __truediv__(f, g):
@@ -1030,30 +1001,17 @@ class DMP(CantSympify):
         else:
             try:
                 return f.mul_ground(g)
-            except TypeError:
-                return NotImplemented
-            except (CoercionFailed, NotImplementedError):
-                if f.ring is not None:
-                    try:
-                        res = f.exquo(f.ring.convert(g))
-                        raise RuntimeError("div...")
-                        return res
-                    except (CoercionFailed, NotImplementedError):
-                        pass
+            except (TypeError, CoercionFailed, NotImplementedError):
                 return NotImplemented
 
     def __rtruediv__(f, g):
         if isinstance(g, DMP):
             return g.exquo(f)
-        elif f.ring is not None:
+        else:
             try:
                 return f.one(f.lev, f.dom, f.ring).mul_ground(g).exquo(f)
-                res = f.ring.convert(g).exquo(f)
-                raise RuntimeError("rdiv...")
-                return res
             except (CoercionFailed, NotImplementedError):
-                pass
-        return NotImplemented
+                return NotImplemented
 
     def __rmul__(f, g):
         return f.__mul__(g)

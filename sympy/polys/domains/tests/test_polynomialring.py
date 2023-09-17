@@ -31,7 +31,7 @@ def test_globalring():
     assert X + 1 == R.convert(x + 1)
     raises(ExactQuotientFailed, lambda: X/Y)
     #raises(ExactQuotientFailed, lambda: x/Y)
-    raises(ExactQuotientFailed, lambda: X/y)
+    #raises(ExactQuotientFailed, lambda: X/y)
     assert X**2 / X == X
 
     assert R.from_GlobalPolynomialRing(ZZ.old_poly_ring(x, y).convert(x), ZZ.old_poly_ring(x, y)) == X
