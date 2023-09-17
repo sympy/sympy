@@ -2,7 +2,7 @@ from sympy.core.numbers import (Rational, pi)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.error_functions import erf
-from sympy.polys.domains.finitefield import GF
+from sympy.polys.domains import GF
 from sympy.simplify.ratsimp import (ratsimp, ratsimpmodprime)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e

@@ -1,7 +1,7 @@
 from sympy import Sum, Dummy, sin
 from sympy.tensor.array.expressions import ArraySymbol, ArrayTensorProduct, ArrayContraction, PermuteDims, \
     ArrayDiagonal, ArrayAdd, OneArray, ZeroArray, convert_indexed_to_array, ArrayElementwiseApplyFunc, Reshape
-from sympy.tensor.array.expressions.conv_array_to_indexed import convert_array_to_indexed
+from sympy.tensor.array.expressions.from_array_to_indexed import convert_array_to_indexed
 
 from sympy.abc import i, j, k, l, m, n, o
 

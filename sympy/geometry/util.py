@@ -19,11 +19,13 @@ from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
-from sympy.core.function import Function
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function, expand_mul
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
+from sympy.core.singleton import S
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import is_sequence
 
 
@@ -283,7 +285,8 @@ def closest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -304,7 +307,7 @@ def closest_points(*args):
     References
     ==========
 
-    .. [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+    .. [1] https://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
 
     .. [2] Sweep line algorithm
         https://en.wikipedia.org/wiki/Sweep_line_algorithm
@@ -403,7 +406,7 @@ def convex_hull(*args, polygon=True):
     .. [2] Andrew's Monotone Chain Algorithm
       (A.M. Andrew,
       "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-      http://geomalgorithms.com/a10-_hull-1.html
+      https://web.archive.org/web/20210511015444/http://geomalgorithms.com/a10-_hull-1.html
 
     """
     from .line import Segment
@@ -474,7 +477,8 @@ def farthest_points(*args):
     Parameters
     ==========
 
-    args : a collection of Points on 2D plane.
+    args
+        A collection of Points on 2D plane.
 
     Notes
     =====
@@ -495,7 +499,7 @@ def farthest_points(*args):
     References
     ==========
 
-    .. [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+    .. [1] https://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
 
     .. [2] Rotating Callipers Technique
         https://en.wikipedia.org/wiki/Rotating_calipers
@@ -503,7 +507,7 @@ def farthest_points(*args):
     """
 
     def rotatingCalipers(Points):
-        U, L = convex_hull(*Points, **dict(polygon=False))
+        U, L = convex_hull(*Points, **{"polygon": False})
 
         if L is None:
             if isinstance(U, Point):
@@ -615,7 +619,11 @@ def idiff(eq, y, x, n=1):
     eq = eq.subs(f)
     derivs = {}
     for i in range(n):
-        yp = solve(eq.diff(x), dydx)[0].subs(derivs)
+        # equation will be linear in dydx, a*dydx + b, so dydx = -b/a
+        deq = eq.diff(x)
+        b = deq.xreplace({dydx: S.Zero})
+        a = (deq - b).xreplace({dydx: S.One})
+        yp = factor_terms(expand_mul(cancel((-b/a).subs(derivs)), deep=False))
         if i == n - 1:
             return yp.subs([(v, k) for k, v in f.items()])
         derivs[dydx] = yp
@@ -704,7 +712,7 @@ def intersection(*entities, pairwise=False, **kwargs):
 
     # find all pairwise intersections
     ans = []
-    for j in range(0, len(entities)):
+    for j in range(len(entities)):
         for k in range(j + 1, len(entities)):
             ans.extend(intersection(entities[j], entities[k]))
     return list(ordered(set(ans)))

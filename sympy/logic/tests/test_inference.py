@@ -10,7 +10,8 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
 
 
 def test_literal():
@@ -313,3 +314,19 @@ def test_satisfiable_all_models():
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+
+def test_z3():
+    z3 = import_module("z3")
+
+    if not z3:
+        skip("z3 not installed.")
+    A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
+    z3_satisfiable = lambda expr: satisfiable(expr, algorithm="z3")
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
+    assert z3_satisfiable( A & ~A ) is False
+    assert z3_satisfiable(A & (~A | B | C)) is True
+
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False

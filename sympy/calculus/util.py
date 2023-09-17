@@ -4,6 +4,7 @@ from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
+from sympy.core.numbers import equal_valued
 from sympy.core.relational import Relational
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
@@ -228,16 +229,16 @@ def function_range(f, symbol, domain):
 def not_empty_in(finset_intersection, *syms):
     """
     Finds the domain of the functions in ``finset_intersection`` in which the
-    ``finite_set`` is not-empty
+    ``finite_set`` is not-empty.
 
     Parameters
     ==========
 
     finset_intersection : Intersection of FiniteSet
-                        The unevaluated intersection of FiniteSet containing
-                        real-valued functions with Union of Sets
+        The unevaluated intersection of FiniteSet containing
+        real-valued functions with Union of Sets
     syms : Tuple of symbols
-            Symbol for which domain is to be found
+        Symbol for which domain is to be found
 
     Raises
     ======
@@ -344,7 +345,7 @@ def periodicity(f, symbol, check=False):
     Parameters
     ==========
 
-    f : :py:class:`~.Expr`.
+    f : :py:class:`~.Expr`
         The concerned function.
     symbol : :py:class:`~.Symbol`
         The variable for which the period is to be determined.
@@ -480,9 +481,8 @@ def periodicity(f, symbol, check=False):
 
     elif f.is_Mul:
         coeff, g = f.as_independent(symbol, as_Add=False)
-        if isinstance(g, TrigonometricFunction) or coeff is not S.One:
+        if isinstance(g, TrigonometricFunction) or not equal_valued(coeff, 1):
             period = periodicity(g, symbol)
-
         else:
             period = _periodicity(g.args, symbol)
 
@@ -601,10 +601,8 @@ def lcim(numbers):
     """
     result = None
     if all(num.is_irrational for num in numbers):
-        factorized_nums = list(map(lambda num: num.factor(), numbers))
-        factors_num = list(
-            map(lambda num: num.as_coeff_Mul(),
-                factorized_nums))
+        factorized_nums = [num.factor() for num in numbers]
+        factors_num = [num.as_coeff_Mul() for num in factorized_nums]
         term = factors_num[0][1]
         if all(factor == term for coeff, factor in factors_num):
             common_term = term
@@ -652,7 +650,7 @@ def is_convex(f, *syms, domain=S.Reals):
     To determine concavity of a function pass `-f` as the concerned function.
     To determine logarithmic convexity of a function pass `\log(f)` as
     concerned function.
-    To determine logartihmic concavity of a function pass `-\log(f)` as
+    To determine logarithmic concavity of a function pass `-\log(f)` as
     concerned function.
 
     Currently, convexity check of multivariate functions is not handled.

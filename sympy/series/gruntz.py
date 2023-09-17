@@ -3,7 +3,7 @@ Limits
 ======
 
 Implemented according to the PhD thesis
-http://www.cybertester.com/data/gruntz.pdf, which contains very thorough
+https://www.cybertester.com/data/gruntz.pdf, which contains very thorough
 descriptions of the algorithm including many examples.  We summarize here
 the gist of it.
 
@@ -118,14 +118,16 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy.core import Basic, S, Mul, PoleError
+from sympy.core import Basic, S, Mul, PoleError, expand_mul
 from sympy.core.cache import cacheit
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 
@@ -313,7 +315,7 @@ def mrv(e, x):
         args = [ss.do_subs(x[1]) for x in l]
         return s, e.func(*args)
     elif e.is_Derivative:
-        raise NotImplementedError("MRV set computation for derviatives"
+        raise NotImplementedError("MRV set computation for derivatives"
                                   " not implemented yet.")
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
@@ -423,21 +425,15 @@ def sign(e, x):
 @debug
 @timeit
 @cacheit
-def limitinf(e, x, leadsimp=False):
-    """Limit e(x) for x-> oo.
-
-    Explanation
-    ===========
-
-    If ``leadsimp`` is True, an attempt is made to simplify the leading
-    term of the series expansion of ``e``. That may succeed even if
-    ``e`` cannot be simplified.
-    """
+def limitinf(e, x):
+    """Limit e(x) for x-> oo."""
     # rewrite e in terms of tractable functions only
 
+    old = e
     if not e.has(x):
         return e  # e is a constant
     from sympy.simplify.powsimp import powdenest
+    from sympy.calculus.util import AccumBounds
     if e.has(Order):
         e = e.expand().removeO()
     if not x.is_positive or x.is_integer:
@@ -449,7 +445,12 @@ def limitinf(e, x, leadsimp=False):
         x = p
     e = e.rewrite('tractable', deep=True, limitvar=x)
     e = powdenest(e)
-    c0, e0 = mrv_leadterm(e, x)
+    if isinstance(e, AccumBounds):
+        if mrv_leadterm(e.min, x) != mrv_leadterm(e.max, x):
+            raise NotImplementedError
+        c0, e0 = mrv_leadterm(e.min, x)
+    else:
+        c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
         return S.Zero  # e0>0: lim f = 0
@@ -462,9 +463,9 @@ def limitinf(e, x, leadsimp=False):
             raise ValueError("Leading term should not be 0")
         return s*oo
     elif sig == 0:
-        if leadsimp:
-            c0 = c0.simplify()
-        return limitinf(c0, x, leadsimp)  # e0=0: lim f = lim c0
+        if c0 == old:
+            c0 = c0.cancel()
+        return limitinf(c0, x)  # e0=0: lim f = lim c0
     else:
         raise ValueError("{} could not be evaluated".format(sig))
 
@@ -489,6 +490,14 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
+
+    SymPyDeprecationWarning(
+        feature="calculate_series",
+        useinstead="series() with suitable n, or as_leading_term",
+        issue=21838,
+        deprecated_since_version="1.12"
+    ).warn()
+
     from sympy.simplify.powsimp import powdenest
 
     for t in e.lseries(x, logx=logx):
@@ -544,18 +553,24 @@ def mrv_leadterm(e, x):
     #
     w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
-    series = calculate_series(f, w, logx=logw)
     try:
-        lt = series.leadterm(w, logx=logw)
-    except (ValueError, PoleError):
-        lt = f.as_coeff_exponent(w)
-        # as_coeff_exponent won't always split in required form. It may simply
-        # return (f, 0) when a better form may be obtained. Example (-x)**(-pi)
-        # can be written as (-1**(-pi), -pi) which as_coeff_exponent does not return
-        if lt[0].has(w):
-            base = f.as_base_exp()[0].as_coeff_exponent(w)
-            ex = f.as_base_exp()[1]
-            lt = (base[0]**ex, base[1]*ex)
+        lt = f.leadterm(w, logx=logw)
+    except (NotImplementedError, PoleError, ValueError):
+        n0 = 1
+        _series = Order(1)
+        incr = S.One
+        while _series.is_Order:
+            _series = f._eval_nseries(w, n=n0+incr, logx=logw)
+            incr *= 2
+        series = _series.expand().removeO()
+        try:
+            lt = series.leadterm(w, logx=logw)
+        except (NotImplementedError, PoleError, ValueError):
+            lt = f.as_coeff_exponent(w)
+            if lt[0].has(w):
+                base = f.as_base_exp()[0].as_coeff_exponent(w)
+                ex = f.as_base_exp()[1]
+                lt = (base[0]**ex, base[1]*ex)
     return (lt[0].subs(log(w), logw), lt[1])
 
 
@@ -609,6 +624,8 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
+
+    from sympy import AccumBounds
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
@@ -627,7 +644,7 @@ def rewrite(e, Omega, x, wsym):
     # g is going to be the "w" - the simplest one in the mrv set
     for g, _ in Omega:
         sig = sign(g.exp, x)
-        if sig != 1 and sig != -1:
+        if sig != 1 and sig != -1 and not sig.has(AccumBounds):
             raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
         wsym = 1/wsym  # if g goes to oo, substitute 1/w
@@ -670,6 +687,12 @@ def rewrite(e, Omega, x, wsym):
     f = f.subs({wsym: wsym**exponent})
     logw /= exponent
 
+    # bottom_up function is required for a specific case - when f is
+    # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+    # methods reduce this to 0 while not expanding polynomials.
+    f = bottom_up(f, lambda w: getattr(w, 'normal', lambda: w)())
+    f = expand_mul(f)
+
     return f, logw
 
 
@@ -695,9 +718,9 @@ def gruntz(e, z, z0, dir="+"):
 
     # convert all limits to the limit z->oo; sign of z is handled in limitinf
     r = None
-    if z0 == oo:
+    if z0 in (oo, I*oo):
         e0 = e
-    elif z0 == -oo:
+    elif z0 in (-oo, -I*oo):
         e0 = e.subs(z, -z)
     else:
         if str(dir) == "-":
@@ -707,10 +730,7 @@ def gruntz(e, z, z0, dir="+"):
         else:
             raise NotImplementedError("dir must be '+' or '-'")
 
-    try:
-        r = limitinf(e0, z)
-    except ValueError:
-        r = limitinf(e0, z, leadsimp=True)
+    r = limitinf(e0, z)
 
     # This is a bit of a heuristic for nice results... we always rewrite
     # tractable functions in terms of familiar intractable ones.

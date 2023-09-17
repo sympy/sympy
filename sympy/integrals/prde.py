@@ -14,10 +14,11 @@ right hand side of the equation (i.e., gi in k(t)), and Q is a list of terms on
 the right hand side of the equation (i.e., qi in k[t]).  See the docstring of
 each function for more information.
 """
-
+import itertools
 from functools import reduce
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core.intfunc import ilcm
+from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
@@ -274,22 +275,21 @@ def constant_system(A, u, DE):
 
     D = lambda x: derivation(x, DE, basic=True)
 
-    for j in range(A.cols):
-        for i in range(A.rows):
-            if A[i, j].expr.has(*DE.T):
-                # This assumes that const(F(t0, ..., tn) == const(K) == F
-                Ri = A[i, :]
-                # Rm+1; m = A.rows
-                DAij = D(A[i, j])
-                Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
-                um1 = D(u[i]) / DAij
+    for j, i in itertools.product(range(A.cols), range(A.rows)):
+        if A[i, j].expr.has(*DE.T):
+            # This assumes that const(F(t0, ..., tn) == const(K) == F
+            Ri = A[i, :]
+            # Rm+1; m = A.rows
+            DAij = D(A[i, j])
+            Rm1 = Ri.applyfunc(lambda x: D(x) / DAij)
+            um1 = D(u[i]) / DAij
 
-                Aj = A[:, j]
-                A = A - Aj * Rm1
-                u = u - Aj * um1
+            Aj = A[:, j]
+            A = A - Aj * Rm1
+            u = u - Aj * um1
 
-                A = A.col_join(Rm1)
-                u = u.col_join(Matrix([um1], u.gens))
+            A = A.col_join(Rm1)
+            u = u.col_join(Matrix([um1], u.gens))
 
     return (A, u)
 
@@ -337,19 +337,17 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in range(n, -1, -1):  # [n, ..., 0]
-        for i in range(m):
-            si = Q[i].nth(N + db)/b.LC()
-            sitn = Poly(si*DE.t**N, DE.t)
-            H[i] = H[i] + sitn
-            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+    for N, i in itertools.product(range(n, -1, -1), range(m)):  # [n, ..., 0]
+        si = Q[i].nth(N + db)/b.LC()
+        sitn = Poly(si*DE.t**N, DE.t)
+        H[i] = H[i] + sitn
+        Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
 
     if all(qi.is_zero for qi in Q):
         dc = -1
-        M = zeros(0, 2, DE.t)
     else:
         dc = max([qi.degree(DE.t) for qi in Q])
-        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+    M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
     A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
     c = eye(m, DE.t)
     A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
@@ -374,12 +372,11 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in range(n, 0, -1):  # [n, ..., 1]
-        for i in range(m):
-            si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
-            sitn = Poly(si*DE.t**N, DE.t)
-            H[i] = H[i] + sitn
-            Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
+    for N, i in itertools.product(range(n, 0, -1), range(m)):  # [n, ..., 1]
+        si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
+        sitn = Poly(si*DE.t**N, DE.t)
+        H[i] = H[i] + sitn
+        Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
 
     if b.degree(DE.t) > 0:
         for i in range(m):
@@ -388,10 +385,9 @@ def prde_no_cancel_b_small(b, Q, n, DE):
             Q[i] = Q[i] - derivation(si, DE) - b*si
         if all(qi.is_zero for qi in Q):
             dc = -1
-            M = Matrix()
         else:
             dc = max([qi.degree(DE.t) for qi in Q])
-            M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
+        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i), DE.t)
         A, u = constant_system(M, zeros(dc + 1, 1, DE.t), DE)
         c = eye(m, DE.t)
         A = A.row_join(zeros(A.rows, m, DE.t)).col_join(c.row_join(-c))
@@ -763,8 +759,14 @@ def param_rischDE(fa, fd, G, DE):
     # y = Sum(blk'*hk, (k, 1, v))/gamma, where k' = k + m + u.
 
     v = len(h)
-    M = Matrix([wl[:m] + wl[-v:] for wl in W])  # excise dj's.
+    shape = (len(W), m+v)
+    elements = [wl[:m] + wl[-v:] for wl in W] # excise dj's.
+    items = [e for row in elements for e in row]
+
+    # Need to set the shape in case W is empty
+    M = Matrix(*shape, items, DE.t)
     N = M.nullspace()
+
     # N = [n1, ..., ns] where the ni in Const(k)^(m + v) are column
     # vectors generating the space of linear relations between
     # c1, ..., cm, e1, ..., ev.
@@ -1186,7 +1188,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
-            n = reduce(ilcm, [i.as_numer_denom()[1] for i in u])
+            n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in u])
             u *= n
             terms = ([DE.T[i] for i in DE.indices('exp')] +
                     [DE.extargs[i] for i in DE.indices('log')])
@@ -1304,7 +1306,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         # Note: if residueterms = [], returns (1, 1)
         # f had better be 0 in that case.
-        n = reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], S.One)
+        n = S.One*reduce(ilcm, [i.as_numer_denom()[1] for _, i in residueterms], 1)
         u = Mul(*[Pow(i, j*n) for i, j in residueterms])
         return (n, u)
 
@@ -1320,8 +1322,8 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         raise ValueError("case must be one of {'primitive', 'exp', 'tan', "
         "'base', 'auto'}, not %s" % case)
 
-    common_denom = reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
-        residueterms]] + [n], S.One)
+    common_denom = S.One*reduce(ilcm, [i.as_numer_denom()[1] for i in [j for _, j in
+        residueterms]] + [n], 1)
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
     if common_denom != n*m:  # Verify exact division

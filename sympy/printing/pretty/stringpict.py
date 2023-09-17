@@ -12,7 +12,7 @@ TODO:
       top/center/bottom alignment options for left/right
 """
 
-from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width
+from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class stringPict:
@@ -40,7 +40,7 @@ class stringPict:
             return ['']
 
         width = max(line_width(line) for line in lines)
-        return [line.center(width) for line in lines]
+        return [center(line, width) for line in lines]
 
     def height(self):
         """The height of the picture in characters."""
@@ -137,10 +137,7 @@ class stringPict:
                 objects[i] = lineObj
 
         #stack the pictures, and center the result
-        newPicture = []
-        for obj in objects:
-            newPicture.extend(obj.picture)
-        newPicture = [line.center(newWidth) for line in newPicture]
+        newPicture = [center(line, newWidth) for obj in objects for line in obj.picture]
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
@@ -262,38 +259,61 @@ class stringPict:
             # Attempt to get a terminal width
             ncols = self.terminal_width()
 
-        ncols -= 2
         if ncols <= 0:
-            ncols = 78
+            ncols = 80
 
         # If smaller than the terminal width, no need to correct
         if self.width() <= ncols:
             return type(self.picture[0])(self)
 
-        # for one-line pictures we don't need v-spacers. on the other hand, for
-        # multiline-pictures, we need v-spacers between blocks, compare:
-        #
-        #    2  2        3    | a*c*e + a*c*f + a*d  | a*c*e + a*c*f + a*d  | 3.14159265358979323
-        # 6*x *y  + 4*x*y  +  |                      | *e + a*d*f + b*c*e   | 84626433832795
-        #                     | *e + a*d*f + b*c*e   | + b*c*f + b*d*e + b  |
-        #      3    4    4    |                      | *d*f                 |
-        # 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |
-        #                     |                      |                      |
-        #                     | *d*f
+        """
+        Break long-lines in a visually pleasing format.
+        without overflow indicators | with overflow indicators
+        |   2  2        3     |     |   2  2        3    ↪|
+        |6*x *y  + 4*x*y  +   |     |6*x *y  + 4*x*y  +  ↪|
+        |                     |     |                     |
+        |     3    4    4     |     |↪      3    4    4   |
+        |4*y*x  + x  + y      |     |↪ 4*y*x  + x  + y    |
+        |a*c*e + a*c*f + a*d  |     |a*c*e + a*c*f + a*d ↪|
+        |*e + a*d*f + b*c*e   |     |                     |
+        |+ b*c*f + b*d*e + b  |     |↪ *e + a*d*f + b*c* ↪|
+        |*d*f                 |     |                     |
+        |                     |     |↪ e + b*c*f + b*d*e ↪|
+        |                     |     |                     |
+        |                     |     |↪ + b*d*f            |
+        """
 
-        i = 0
-        svals = []
-        do_vspacers = (self.height() > 1)
-        while i < self.width():
-            svals.extend([ sval[i:i + ncols] for sval in self.picture ])
-            if do_vspacers:
-                svals.append("")  # a vertical spacer
-            i += ncols
+        overflow_first = ""
+        if kwargs["use_unicode"] or pretty_use_unicode():
+            overflow_start = "\N{RIGHTWARDS ARROW WITH HOOK} "
+            overflow_end   = " \N{RIGHTWARDS ARROW WITH HOOK}"
+        else:
+            overflow_start = "> "
+            overflow_end   = " >"
 
-        if svals[-1] == '':
-            del svals[-1]  # Get rid of the last spacer
+        def chunks(line):
+            """Yields consecutive chunks of line_width ncols"""
+            prefix = overflow_first
+            width, start = line_width(prefix + overflow_end), 0
+            for i, x in enumerate(line):
+                wx = line_width(x)
+                # Only flush the screen when the current character overflows.
+                # This way, combining marks can be appended even when width == ncols.
+                if width + wx > ncols:
+                    yield prefix + line[start:i] + overflow_end
+                    prefix = overflow_start
+                    width, start = line_width(prefix + overflow_end), i
+                width += wx
+            yield prefix + line[start:]
 
-        return "\n".join(svals)
+        # Concurrently assemble chunks of all lines into individual screens
+        pictures = zip(*map(chunks, self.picture))
+
+        # Join lines of each screen into sub-pictures
+        pictures = ["\n".join(picture) for picture in pictures]
+
+        # Add spacers between sub-pictures
+        return "\n\n".join(pictures)
 
     def terminal_width(self):
         """Return the terminal width if possible, otherwise return 0.
@@ -308,7 +328,7 @@ class stringPict:
             except AttributeError:
                 # windows curses doesn't implement setupterm or tigetnum
                 # code below from
-                # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440694
+                # https://code.activestate.com/recipes/440694/
                 from ctypes import windll, create_string_buffer
                 # stdin handle is -10
                 # stdout handle is -11

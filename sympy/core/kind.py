@@ -55,7 +55,7 @@ class Kind(object, metaclass=KindMeta):
 
     Kind of every object must be carefully selected so that it shows the
     intention of design. Expressions may have different kind according
-    to the kind of its arguements. For example, arguements of ``Add``
+    to the kind of its arguments. For example, arguments of ``Add``
     must have common kind since addition is group operator, and the
     resulting ``Add()`` has the same kind.
 
@@ -167,7 +167,7 @@ class _BooleanKind(Kind):
     Kind for boolean objects.
 
     SymPy's ``S.true``, ``S.false``, and built-in ``True`` and ``False``
-    have this kind. Boolean number ``1`` and ``0`` are not relevent.
+    have this kind. Boolean number ``1`` and ``0`` are not relevant.
 
     Examples
     ========

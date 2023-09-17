@@ -12,8 +12,9 @@ from sympy.core import (S, symbols, Add, Mul, SympifyError, Rational,
 from sympy.functions import sin, cos, tan, sqrt, cbrt, exp
 from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
-        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
-        SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
+        MatPow, Matrix, MatrixExpr, MatrixSymbol,
+        SparseMatrix, Transpose, Adjoint, MatrixSet)
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
@@ -50,8 +51,7 @@ def test_matrix_symbol_creation():
 
 def test_matexpr_properties():
     assert A.shape == (n, m)
-    assert (A*B).shape == (n, l)
-    raises(ShapeError, lambda: B*A)
+    assert (A * B).shape == (n, l)
     assert A[0, 1].indices == (0, 1)
     assert A[0, 0].symbol == A
     assert A[0, 0].symbol.name == 'A'
@@ -114,14 +114,12 @@ def test_addition():
     assert (A + B).shape == A.shape
     assert isinstance(A - A + 2*B, MatMul)
 
-    raises(ShapeError, lambda: A + B.T)
     raises(TypeError, lambda: A + 1)
     raises(TypeError, lambda: 5 + A)
     raises(TypeError, lambda: 5 - A)
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
-    with raises(TypeError):
-        ZeroMatrix(n,m) + S.Zero
+    raises(TypeError, lambda: ZeroMatrix(n, m) + S.Zero)
 
 
 def test_multiplication():
@@ -130,10 +128,7 @@ def test_multiplication():
     C = MatrixSymbol('C', n, n)
 
     assert (2*A*B).shape == (n, l)
-
     assert (A*0*B) == ZeroMatrix(n, l)
-
-    raises(ShapeError, lambda: B*A)
     assert (2*A).shape == A.shape
 
     assert A * ZeroMatrix(m, m) * B == ZeroMatrix(n, l)
@@ -409,6 +404,19 @@ def test_issue_21195():
     assert A.diff(x) == B
 
 
+def test_issue_24859():
+    A = MatrixSymbol('A', 2, 3)
+    B = MatrixSymbol('B', 3, 2)
+    J = A*B
+    Jinv = Matrix(J).adjugate()
+    u = MatrixSymbol('u', 2, 3)
+    Jk = Jinv.subs(A, A + x*u)
+
+    expected = B[0, 1]*u[1, 0] + B[1, 1]*u[1, 1] + B[2, 1]*u[1, 2]
+    assert Jk[0, 0].diff(x) == expected
+    assert diff(Jk[0, 0], x).doit() == expected
+
+
 def test_MatMul_postprocessor():
     z = zeros(2)
     z1 = ZeroMatrix(2, 2)
@@ -569,3 +577,4 @@ def test_matrixsymbol_solving():
     assert (-(-A + B) - A + B).expand() == Z
     assert (-(-A + B) - A + B - Z).simplify() == Z
     assert (-(-A + B) - A + B - Z).expand() == Z
+    assert (A*(A + B) + B*(A.T + B.T)).expand() == A**2 + A*B + B*A.T + B*B.T

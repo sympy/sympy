@@ -28,6 +28,7 @@ unicode_whitelist = [
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
+    r'*/sympy/printing/pretty/stringpict.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
     r'*/sympy/printing/tests/test_conventions.py',
     r'*/sympy/printing/tests/test_preview.py',
@@ -44,10 +45,15 @@ unicode_whitelist = [
 
     # joint.py uses some unicode for variable names in the docstrings
     r'*/sympy/physics/mechanics/joint.py',
+
+    # lll method has unicode in docstring references and author name
+    r'*/sympy/polys/matrices/domainmatrix.py',
 ]
 
 unicode_strict_whitelist = [
     r'*/sympy/parsing/latex/_antlr/__init__.py',
+    # test_mathematica.py uses some unicode for testing Greek characters are working #24055
+    r'*/sympy/parsing/tests/test_mathematica.py',
 ]
 
 

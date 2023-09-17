@@ -71,7 +71,6 @@ def test_implicit_application():
            lambda: parse_expr('sin**2(x)', transformations=transformations2))
 
 
-
 def test_function_exponentiation():
     cases = {
         'sin**2(x)': 'sin(x)**2',

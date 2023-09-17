@@ -76,6 +76,7 @@ Task                               Implementation
 (1) integral basis                 :py:func:`~.round_two`
 (2) prime decomposition            :py:func:`~.prime_decomp`
 (3) $\mathfrak{p}$-adic valuation  :py:func:`~.prime_valuation`
+(4) Galois group                   :py:func:`~.galois_group`
 (10) find minimal polynomial       :py:func:`~.minimal_polynomial`
 (11) subfield                      :py:func:`~.field_isomorphism`
 (12) field membership              :py:func:`~.to_number_field`
@@ -114,6 +115,14 @@ p-adic Valuation
 
 .. currentmodule:: sympy.polys.numberfields.primes
 .. autofunction:: prime_valuation
+
+
+Galois Groups
+-------------
+.. _GaloisGroups:
+
+.. currentmodule:: sympy.polys.numberfields.galoisgroups
+.. autofunction:: galois_group
 
 
 Finding Minimal Polynomials
@@ -245,7 +254,6 @@ Class Reference
    .. automethod:: EndomorphismRing.__init__
 
 .. autofunction:: find_min_poly
-
 
 Utilities
 ---------

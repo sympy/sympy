@@ -141,10 +141,6 @@ def import_module(module, min_module_version=None, min_python_version=None,
                     UserWarning, stacklevel=2)
             return
 
-    # PyPy 1.6 has rudimentary NumPy support and importing it produces errors, so skip it
-    if module == 'numpy' and '__pypy__' in sys.builtin_module_names:
-        return
-
     try:
         mod = __import__(module, **import_kwargs)
 
@@ -152,7 +148,7 @@ def import_module(module, min_module_version=None, min_python_version=None,
         ##    from matplotlib import collections
         ## gives python's stdlib collections module. explicitly re-importing
         ## the module fixes this.
-        from_list = import_kwargs.get('fromlist', tuple())
+        from_list = import_kwargs.get('fromlist', ())
         for submod in from_list:
             if submod == 'collections' and mod.__name__ == 'matplotlib':
                 __import__(module + '.' + submod)

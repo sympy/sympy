@@ -6,6 +6,7 @@ from functools import reduce
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
+from sympy.core.numbers import int_valued
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
@@ -884,7 +885,7 @@ class Permutation(Atom):
            Concrete Mathematics: A Foundation for Computer Science, 2nd ed.
            Reading, MA: Addison-Wesley, 1994.
 
-    .. [6] https://en.wikipedia.org/wiki/Permutation#Product_and_inverse
+    .. [6] https://en.wikipedia.org/w/index.php?oldid=499948155#Product_and_inverse
 
     .. [7] https://en.wikipedia.org/wiki/Lehmer_code
 
@@ -1049,6 +1050,12 @@ class Permutation(Atom):
         p._array_form = perm
         p._size = len(perm)
         return p
+
+    def copy(self):
+        return self.__class__(self.array_form)
+
+    def __getnewargs__(self):
+        return (self.array_form,)
 
     def _hashable_content(self):
         # the array_form (a list) is the Permutation arg, so we need to
@@ -1431,7 +1438,7 @@ class Permutation(Atom):
         >>> 2^p == p(2) == 9
         True
         """
-        if int(i) == i:
+        if int_valued(i):
             return self(i)
         else:
             raise NotImplementedError(
@@ -1705,7 +1712,7 @@ class Permutation(Atom):
 
         This function is similar to the ``__call__`` magic, however,
         ``__call__`` magic already has some other applications like
-        permuting an array or attatching new cycles, which would
+        permuting an array or attaching new cycles, which would
         not always be mathematically consistent.
 
         This also guarantees that the return type is a SymPy integer,
@@ -2200,7 +2207,7 @@ class Permutation(Atom):
         References
         ==========
 
-        .. [1] http://www.cp.eng.chula.ac.th/~piak/teaching/algo/algo2008/count-inv.htm
+        .. [1] https://www.cp.eng.chula.ac.th/~prabhas//teaching/algo/algo2008/count-inv.htm
 
         """
         inversions = 0
@@ -2859,7 +2866,7 @@ class Permutation(Atom):
 
         .. [1] https://en.wikipedia.org/wiki/Flavius_Josephus
         .. [2] https://en.wikipedia.org/wiki/Josephus_problem
-        .. [3] http://www.wou.edu/~burtonl/josephus.html
+        .. [3] https://web.archive.org/web/20171008094331/http://www.wou.edu/~burtonl/josephus.html
 
         """
         from collections import deque

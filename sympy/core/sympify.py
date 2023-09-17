@@ -1,8 +1,7 @@
 """sympify -- convert objects SymPy internal format"""
 
-import typing
-if typing.TYPE_CHECKING:
-    from typing import Any, Callable, Dict as tDict, Type
+from __future__ import annotations
+from typing import Any, Callable
 
 from inspect import getmro
 import string
@@ -28,10 +27,10 @@ class SympifyError(ValueError):
             str(self.base_exc)))
 
 
-converter = {}  # type: tDict[Type[Any], Callable[[Any], Basic]]
+converter: dict[type[Any], Callable[[Any], Basic]] = {}
 
 #holds the conversions defined in SymPy itself, i.e. non-user defined conversions
-_sympy_converter = {} # type: tDict[Type[Any], Callable[[Any], Basic]]
+_sympy_converter: dict[type[Any], Callable[[Any], Basic]] = {}
 
 #alias for clearer use in the library
 _external_converter = converter
@@ -190,7 +189,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     multi-letter names that are defined in ``abc``).
 
     >>> from sympy.abc import _clash1
-    >>> set(_clash1)
+    >>> set(_clash1)  # if this fails, see issue #23903
     {'E', 'I', 'N', 'O', 'Q', 'S'}
     >>> sympify('I & Q', _clash1)
     I & Q

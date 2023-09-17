@@ -4,6 +4,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.numbers import int_valued
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer, Rational, pi)
 from sympy.core.singleton import S
@@ -861,12 +862,12 @@ class WignerD(Expr):
         return WignerD(*self.args, **hints)
 
     def _eval_wignerd(self):
-        j = sympify(self.j)
-        m = sympify(self.m)
-        mp = sympify(self.mp)
-        alpha = sympify(self.alpha)
-        beta = sympify(self.beta)
-        gamma = sympify(self.gamma)
+        j = self.j
+        m = self.m
+        mp = self.mp
+        alpha = self.alpha
+        beta = self.beta
+        gamma = self.gamma
         if alpha == 0 and beta == 0 and gamma == 0:
             return KroneckerDelta(m, mp)
         if not j.is_number:
@@ -1412,7 +1413,7 @@ class CoupledSpinState(SpinState):
                 if abs(j1 - j2) > j3:
                     raise ValueError("All couplings must have |j1+j2| <= j3, "
                         "in coupling number %d got j1,j2,j3: %d,%d,%d" % (n + 1, j1, j2, j3))
-                if int(j1 + j2) == j1 + j2:
+                if int_valued(j1 + j2):
                     pass
             jvals[min(n1 + n2) - 1] = j3
         if len(jcoupling) > 0 and jcoupling[-1][2] != j:

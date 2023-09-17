@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, diff
+from sympy.core import S, diff
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
@@ -73,9 +73,9 @@ class DiracDelta(Function):
     DiracDelta(0)
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
-    >>> diff(DiracDelta(x - 1),x,2)
+    >>> diff(DiracDelta(x - 1), x, 2)
     DiracDelta(x - 1, 2)
-    >>> diff(DiracDelta(x**2 - 1),x,2)
+    >>> diff(DiracDelta(x**2 - 1), x, 2)
     2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
     >>> DiracDelta(3*x).is_simple(x)
     True
@@ -94,7 +94,7 @@ class DiracDelta(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/DeltaFunction.html
+    .. [1] https://mathworld.wolfram.com/DeltaFunction.html
 
     """
 
@@ -149,7 +149,7 @@ class DiracDelta(Function):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg, k=0):
+    def eval(cls, arg, k=S.Zero):
         """
         Returns a simplified form or a value of DiracDelta depending on the
         argument passed by the DiracDelta object.
@@ -190,9 +190,6 @@ class DiracDelta(Function):
         >>> DiracDelta(S.NaN)
         nan
 
-        >>> DiracDelta(x).eval(1)
-        0
-
         >>> DiracDelta(x - 100).subs(x, 5)
         0
 
@@ -208,11 +205,9 @@ class DiracDelta(Function):
         arg : argument passed to DiracDelta
 
         """
-        k = sympify(k)
         if not k.is_Integer or k.is_negative:
             raise ValueError("Error: the second argument of DiracDelta must be \
             a non-negative integer, %s given instead." % (k,))
-        arg = sympify(arg)
         if arg is S.NaN:
             return S.NaN
         if arg.is_nonzero:
@@ -230,6 +225,8 @@ class DiracDelta(Function):
                 return -cls(-arg, k)
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
+        elif k.is_zero:
+            return cls(arg, evaluate=False)
 
     def _eval_expand_diracdelta(self, **hints):
         """
@@ -444,8 +441,8 @@ class Heaviside(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
-    .. [2] http://dlmf.nist.gov/1.16#iv
+    .. [1] https://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [2] https://dlmf.nist.gov/1.16#iv
 
     """
 
@@ -534,9 +531,6 @@ class Heaviside(Function):
         >>> Heaviside(S.NaN)
         nan
 
-        >>> Heaviside(x).eval(42)
-        1
-
         >>> Heaviside(x - 100).subs(x, 5)
         0
 
@@ -551,8 +545,6 @@ class Heaviside(Function):
         H0 : value of Heaviside(0)
 
         """
-        H0 = sympify(H0)
-        arg = sympify(arg)
         if arg.is_extended_negative:
             return S.Zero
         elif arg.is_extended_positive:
@@ -575,23 +567,23 @@ class Heaviside(Function):
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)
-        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, True))
 
         >>> Heaviside(x,nan).rewrite(Piecewise)
-        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, True))
 
         >>> Heaviside(x - 5).rewrite(Piecewise)
-        Piecewise((0, x < 5), (1/2, Eq(x, 5)), (1, x > 5))
+        Piecewise((0, x < 5), (1/2, Eq(x, 5)), (1, True))
 
         >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-        Piecewise((0, x**2 < 1), (1/2, Eq(x**2, 1)), (1, x**2 > 1))
+        Piecewise((0, x**2 < 1), (1/2, Eq(x**2, 1)), (1, True))
 
         """
         if H0 == 0:
-            return Piecewise((0, arg <= 0), (1, arg > 0))
+            return Piecewise((0, arg <= 0), (1, True))
         if H0 == 1:
-            return Piecewise((0, arg < 0), (1, arg >= 0))
-        return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
+            return Piecewise((0, arg < 0), (1, True))
+        return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, True))
 
     def _eval_rewrite_as_sign(self, arg, H0=S.Half, **kwargs):
         """
@@ -600,7 +592,7 @@ class Heaviside(Function):
         Explanation
         ===========
 
-        The value of Heaviside(0) must be 1/2 for rewritting as sign to be
+        The value of Heaviside(0) must be 1/2 for rewriting as sign to be
         strictly equivalent. For easier usage, we also allow this rewriting
         when Heaviside(0) is undefined.
 

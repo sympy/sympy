@@ -4,9 +4,6 @@ import numbers
 import decimal
 import fractions
 import math
-import re as regex
-import sys
-from functools import lru_cache
 
 from .containers import Tuple
 from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
@@ -17,21 +14,22 @@ from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
+from .intfunc import num_digits, igcd, ilcm, mod_inverse, integer_nthroot
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
+from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
 from mpmath.libmp import bitcount, round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
-from mpmath.ctx_mp import mpnumeric
+from mpmath.ctx_mp_python import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import as_int, debug, filldedent
+from sympy.utilities.misc import debug
 from .parameters import global_parameters
 
 _LOG2 = math.log(2)
@@ -216,341 +214,64 @@ def _decimal_to_Rational_prec(dec):
         rv = Rational(s*d, 10**-e)
     return rv, prec
 
+_dig = str.maketrans(dict.fromkeys('1234567890'))
 
-_floatpat = regex.compile(r"[-+]?((\d*\.\d+)|(\d+\.?))")
-def _literal_float(f):
-    """Return True if n starts like a floating point number."""
-    return bool(_floatpat.match(f))
+def _literal_float(s):
+    """return True if s is space-trimmed number literal else False
+
+    Python allows underscore as digit separators: there must be a
+    digit on each side. So neither a leading underscore nor a
+    double underscore are valid as part of a number. A number does
+    not have to precede the decimal point, but there must be a
+    digit before the optional "e" or "E" that begins the signs
+    exponent of the number which must be an integer, perhaps with
+    underscore separators.
+
+    SymPy allows space as a separator; if the calling routine replaces
+    them with underscores then the same semantics will be enforced
+    for them as for underscores: there can only be 1 *between* digits.
+
+    We don't check for error from float(s) because we don't know
+    whether s is malicious or not. A regex for this could maybe
+    be written but will it be understood by most who read it?
+    """
+    # mantissa and exponent
+    parts = s.split('e')
+    if len(parts) > 2:
+        return False
+    if len(parts) == 2:
+        m, e = parts
+        if e.startswith(tuple('+-')):
+            e = e[1:]
+        if not e:
+            return False
+    else:
+        m, e = s, '1'
+    # integer and fraction of mantissa
+    parts = m.split('.')
+    if len(parts) > 2:
+        return False
+    elif len(parts) == 2:
+        i, f = parts
+    else:
+        i, f = m, '1'
+    if not i and not f:
+        return False
+    if i and i[0] in '+-':
+        i = i[1:]
+    if not i:  # -.3e4 -> -0.3e4
+        i = '1'
+    f = f or '1'
+    # check that all groups contain only digits and are not null
+    for n in (i, f, e):
+        for g in n.split('_'):
+            if not g or g.translate(_dig):
+                return False
+    return True
 
 # (a,b) -> gcd(a,b)
 
 # TODO caching with decorator, but not to degrade performance
-
-@lru_cache(1024)
-def igcd(*args):
-    """Computes nonnegative integer greatest common divisor.
-
-    Explanation
-    ===========
-
-    The algorithm is based on the well known Euclid's algorithm [1]_. To
-    improve speed, ``igcd()`` has its own caching mechanism.
-
-    Examples
-    ========
-
-    >>> from sympy import igcd
-    >>> igcd(2, 4)
-    2
-    >>> igcd(5, 10, 15)
-    5
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Euclidean_algorithm
-
-    """
-    if len(args) < 2:
-        raise TypeError(
-            'igcd() takes at least 2 arguments (%s given)' % len(args))
-    args_temp = [abs(as_int(i)) for i in args]
-    if 1 in args_temp:
-        return 1
-    a = args_temp.pop()
-    if HAS_GMPY: # Using gmpy if present to speed up.
-        for b in args_temp:
-            a = gmpy.gcd(a, b) if b else a
-        return as_int(a)
-    for b in args_temp:
-        a = math.gcd(a, b)
-    return a
-
-
-igcd2 = math.gcd
-
-
-def igcd_lehmer(a, b):
-    r"""Computes greatest common divisor of two integers.
-
-    Explanation
-    ===========
-
-    Euclid's algorithm for the computation of the greatest
-    common divisor ``gcd(a, b)``  of two (positive) integers
-    $a$ and $b$ is based on the division identity
-       $$ a = q \times b + r$$,
-    where the quotient  $q$  and the remainder  $r$  are integers
-    and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
-    divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.
-    The algorithm works by constructing the sequence
-    r0, r1, r2, ..., where  r0 = a, r1 = b,  and each  rn
-    is the remainder from the division of the two preceding
-    elements.
-
-    In Python, ``q = a // b``  and  ``r = a % b``  are obtained by the
-    floor division and the remainder operations, respectively.
-    These are the most expensive arithmetic operations, especially
-    for large  a  and  b.
-
-    Lehmer's algorithm [1]_ is based on the observation that the quotients
-    ``qn = r(n-1) // rn``  are in general small integers even
-    when  a  and  b  are very large. Hence the quotients can be
-    usually determined from a relatively small number of most
-    significant bits.
-
-    The efficiency of the algorithm is further enhanced by not
-    computing each long remainder in Euclid's sequence. The remainders
-    are linear combinations of  a  and  b  with integer coefficients
-    derived from the quotients. The coefficients can be computed
-    as far as the quotients can be determined from the chosen
-    most significant parts of  a  and  b. Only then a new pair of
-    consecutive remainders is computed and the algorithm starts
-    anew with this pair.
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Lehmer%27s_GCD_algorithm
-
-    """
-    a, b = abs(as_int(a)), abs(as_int(b))
-    if a < b:
-        a, b = b, a
-
-    # The algorithm works by using one or two digit division
-    # whenever possible. The outer loop will replace the
-    # pair (a, b) with a pair of shorter consecutive elements
-    # of the Euclidean gcd sequence until a and b
-    # fit into two Python (long) int digits.
-    nbits = 2*sys.int_info.bits_per_digit
-
-    while a.bit_length() > nbits and b != 0:
-        # Quotients are mostly small integers that can
-        # be determined from most significant bits.
-        n = a.bit_length() - nbits
-        x, y = int(a >> n), int(b >> n)  # most significant bits
-
-        # Elements of the Euclidean gcd sequence are linear
-        # combinations of a and b with integer coefficients.
-        # Compute the coefficients of consecutive pairs
-        #     a' = A*a + B*b, b' = C*a + D*b
-        # using small integer arithmetic as far as possible.
-        A, B, C, D = 1, 0, 0, 1  # initial values
-
-        while True:
-            # The coefficients alternate in sign while looping.
-            # The inner loop combines two steps to keep track
-            # of the signs.
-
-            # At this point we have
-            #   A > 0, B <= 0, C <= 0, D > 0,
-            #   x' = x + B <= x < x" = x + A,
-            #   y' = y + C <= y < y" = y + D,
-            # and
-            #   x'*N <= a' < x"*N, y'*N <= b' < y"*N,
-            # where N = 2**n.
-
-            # Now, if y' > 0, and x"//y' and x'//y" agree,
-            # then their common value is equal to  q = a'//b'.
-            # In addition,
-            #   x'%y" = x' - q*y" < x" - q*y' = x"%y',
-            # and
-            #   (x'%y")*N < a'%b' < (x"%y')*N.
-
-            # On the other hand, we also have  x//y == q,
-            # and therefore
-            #   x'%y" = x + B - q*(y + D) = x%y + B',
-            #   x"%y' = x + A - q*(y + C) = x%y + A',
-            # where
-            #    B' = B - q*D < 0, A' = A - q*C > 0.
-
-            if y + C <= 0:
-                break
-            q = (x + A) // (y + C)
-
-            # Now  x'//y" <= q, and equality holds if
-            #   x' - q*y" = (x - q*y) + (B - q*D) >= 0.
-            # This is a minor optimization to avoid division.
-            x_qy, B_qD = x - q*y, B - q*D
-            if x_qy + B_qD < 0:
-                break
-
-            # Next step in the Euclidean sequence.
-            x, y = y, x_qy
-            A, B, C, D = C, D, A - q*C, B_qD
-
-            # At this point the signs of the coefficients
-            # change and their roles are interchanged.
-            #   A <= 0, B > 0, C > 0, D < 0,
-            #   x' = x + A <= x < x" = x + B,
-            #   y' = y + D < y < y" = y + C.
-
-            if y + D <= 0:
-                break
-            q = (x + B) // (y + D)
-            x_qy, A_qC = x - q*y, A - q*C
-            if x_qy + A_qC < 0:
-                break
-
-            x, y = y, x_qy
-            A, B, C, D = C, D, A_qC, B - q*D
-            # Now the conditions on top of the loop
-            # are again satisfied.
-            #   A > 0, B < 0, C < 0, D > 0.
-
-        if B == 0:
-            # This can only happen when y == 0 in the beginning
-            # and the inner loop does nothing.
-            # Long division is forced.
-            a, b = b, a % b
-            continue
-
-        # Compute new long arguments using the coefficients.
-        a, b = A*a + B*b, C*a + D*b
-
-    # Small divisors. Finish with the standard algorithm.
-    while b:
-        a, b = b, a % b
-
-    return a
-
-
-def ilcm(*args):
-    """Computes integer least common multiple.
-
-    Examples
-    ========
-
-    >>> from sympy import ilcm
-    >>> ilcm(5, 10)
-    10
-    >>> ilcm(7, 3)
-    21
-    >>> ilcm(5, 10, 15)
-    30
-
-    """
-    if len(args) < 2:
-        raise TypeError(
-            'ilcm() takes at least 2 arguments (%s given)' % len(args))
-    if 0 in args:
-        return 0
-    a = args[0]
-    for b in args[1:]:
-        a = a // igcd(a, b) * b # since gcd(a,b) | a
-    return a
-
-
-def igcdex(a, b):
-    """Returns x, y, g such that g = x*a + y*b = gcd(a, b).
-
-    Examples
-    ========
-
-    >>> from sympy.core.numbers import igcdex
-    >>> igcdex(2, 3)
-    (-1, 1, 1)
-    >>> igcdex(10, 12)
-    (-1, 1, 2)
-
-    >>> x, y, g = igcdex(100, 2004)
-    >>> x, y, g
-    (-20, 1, 4)
-    >>> x*100 + y*2004
-    4
-
-    """
-    if (not a) and (not b):
-        return (0, 1, 0)
-
-    if not a:
-        return (0, b//abs(b), abs(b))
-    if not b:
-        return (a//abs(a), 0, abs(a))
-
-    if a < 0:
-        a, x_sign = -a, -1
-    else:
-        x_sign = 1
-
-    if b < 0:
-        b, y_sign = -b, -1
-    else:
-        y_sign = 1
-
-    x, y, r, s = 1, 0, 0, 1
-
-    while b:
-        (c, q) = (a % b, a // b)
-        (a, b, r, s, x, y) = (b, c, x - q*r, y - q*s, r, s)
-
-    return (x*x_sign, y*y_sign, a)
-
-
-def mod_inverse(a, m):
-    r"""
-    Return the number $c$ such that, $a \times c = 1 \pmod{m}$
-    where $c$ has the same sign as $m$. If no such value exists,
-    a ValueError is raised.
-
-    Examples
-    ========
-
-    >>> from sympy import mod_inverse, S
-
-    Suppose we wish to find multiplicative inverse $x$ of
-    3 modulo 11. This is the same as finding $x$ such
-    that $3x = 1 \pmod{11}$. One value of x that satisfies
-    this congruence is 4. Because $3 \times 4 = 12$ and $12 = 1 \pmod{11}$.
-    This is the value returned by ``mod_inverse``:
-
-    >>> mod_inverse(3, 11)
-    4
-    >>> mod_inverse(-3, 11)
-    7
-
-    When there is a common factor between the numerators of
-    `a` and `m` the inverse does not exist:
-
-    >>> mod_inverse(2, 4)
-    Traceback (most recent call last):
-    ...
-    ValueError: inverse of 2 mod 4 does not exist
-
-    >>> mod_inverse(S(2)/7, S(5)/2)
-    7/2
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
-    .. [2] https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-    """
-    c = None
-    try:
-        a, m = as_int(a), as_int(m)
-        if m != 1 and m != -1:
-            x, _, g = igcdex(a, m)
-            if g == 1:
-                c = x % m
-    except ValueError:
-        a, m = sympify(a), sympify(m)
-        if not (a.is_number and m.is_number):
-            raise TypeError(filldedent('''
-                Expected numbers for arguments; symbolic `mod_inverse`
-                is not implemented
-                but symbolic expressions can be handled with the
-                similar function,
-                sympy.polys.polytools.invert'''))
-        big = (m > 1)
-        if big not in (S.true, S.false):
-            raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
-        elif big:
-            c = 1/a
-    if c is None:
-        raise ValueError('inverse of %s (mod %s) does not exist' % (a, m))
-    return c
 
 
 class Number(AtomicExpr):
@@ -651,6 +372,11 @@ class Number(AtomicExpr):
         if other.is_finite:
             w = int(rat) if rat >= 0 else int(rat) - 1
             r = self - other*w
+            if r == Float(other):
+                w += 1
+                r = 0
+            if isinstance(self, Float) or isinstance(other, Float):
+                r = Float(r)  # in case w or r is 0
         else:
             w = 0 if not self or (sign(self) == sign(other)) else -1
             r = other if w else self
@@ -814,7 +540,7 @@ class Number(AtomicExpr):
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         # a -> c*t
         if self.is_Rational or not rational:
-            return self, tuple()
+            return self, ()
         elif self.is_negative:
             return S.NegativeOne, (-self,)
         return S.One, (self,)
@@ -822,17 +548,17 @@ class Number(AtomicExpr):
     def as_coeff_add(self, *deps):
         # a -> c + t
         if self.is_Rational:
-            return self, tuple()
+            return self, ()
         return S.Zero, (self,)
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
-        if rational and not self.is_Rational:
-            return S.One, self
-        return (self, S.One) if self else (S.One, self)
+        """Efficiently extract the coefficient of a product."""
+        if not rational:
+            return self, S.One
+        return S.One, self
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         if not rational:
             return self, S.Zero
         return S.Zero, self
@@ -1015,6 +741,9 @@ class Float(Number):
     -oo
     >>> _.is_Float
     False
+
+    Zero in Float only has a single value. Values are not separate for
+    positive and negative zeroes.
     """
     __slots__ = ('_mpf_', '_prec')
 
@@ -1031,14 +760,16 @@ class Float(Number):
 
     is_Float = True
 
+    _remove_non_digits = str.maketrans(dict.fromkeys("-+_."))
+
     def __new__(cls, num, dps=None, precision=None):
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
                              'Supply only one. ')
 
         if isinstance(num, str):
-            # Float accepts spaces as digit separators
-            num = num.replace(' ', '').lower()
+            _num = num = num.strip()  # Python ignores leading and trailing space
+            num = num.replace(' ', '_').lower()  # Float treats spaces as digit sep; E -> e
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1047,6 +778,10 @@ class Float(Number):
                 return S.Infinity
             elif num == '-inf':
                 return S.NegativeInfinity
+            elif num == 'nan':
+                return S.NaN
+            elif not _literal_float(num):
+                raise ValueError('string-float not recognized: %s' % _num)
         elif isinstance(num, float) and num == 0:
             num = '0'
         elif isinstance(num, float) and num == float('inf'):
@@ -1075,7 +810,7 @@ class Float(Number):
             dps = 15
             if isinstance(num, Float):
                 return num
-            if isinstance(num, str) and _literal_float(num):
+            if isinstance(num, str):
                 try:
                     Num = decimal.Decimal(num)
                 except decimal.InvalidOperation:
@@ -1084,28 +819,26 @@ class Float(Number):
                     isint = '.' not in num
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
-                        dps = max(dps, len(str(num).lstrip('-')))
+                        # 12e3 is shorthand for int, not float;
+                        # 12.e3 would be the float version
+                        dps = max(dps, num_digits(num))
                     dps = max(15, dps)
                     precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
                 'the number to Float is passed as a string or an integer.')
-            ok = None
-            if _literal_float(num):
-                try:
-                    Num = decimal.Decimal(num)
-                except decimal.InvalidOperation:
-                    pass
-                else:
-                    isint = '.' not in num
-                    num, dps = _decimal_to_Rational_prec(Num)
-                    if num.is_Integer and isint:
-                        dps = max(dps, len(str(num).lstrip('-')))
-                        precision = dps_to_prec(dps)
-                    ok = True
-            if ok is None:
-                raise ValueError('string-float not recognized: %s' % num)
+            try:
+                Num = decimal.Decimal(num)
+            except decimal.InvalidOperation:
+                raise ValueError('string-float not recognized by Decimal: %s' % num)
+            else:
+                isint = '.' not in num
+                num, dps = _decimal_to_Rational_prec(Num)
+                if num.is_Integer and isint:
+                    # without dec, e-notation is short for int
+                    dps = max(dps, num_digits(num))
+                    precision = dps_to_prec(dps)
 
         # decimal precision(dps) is set and maybe binary precision(precision)
         # as well.From here on binary precision is used to compute the Float.
@@ -1310,7 +1043,7 @@ class Float(Number):
                          precision=self._prec)
         if isinstance(other, Float) and global_parameters.evaluate:
             r = self/other
-            if r == int(r):
+            if int_valued(r):
                 return Float(0, precision=max(self._prec, other._prec))
         if isinstance(other, Number) and global_parameters.evaluate:
             rhs, prec = other._as_mpf_op(self._prec)
@@ -1333,7 +1066,7 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
-        if self == 0:
+        if equal_valued(self, 0):
             if expt.is_extended_positive:
                 return self
             if expt.is_extended_negative:
@@ -1367,37 +1100,22 @@ class Float(Number):
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):
-        from sympy.logic.boolalg import Boolean
-        try:
-            other = _sympify(other)
-        except SympifyError:
-            return NotImplemented
-        if isinstance(other, Boolean):
-            return False
-        if other.is_NumberSymbol:
-            if other.is_irrational:
-                return False
-            return other.__eq__(self)
-        if other.is_Float:
-            # comparison is exact
-            # so Float(.1, 3) != Float(.1, 33)
-            return self._mpf_ == other._mpf_
-        if other.is_Rational:
-            return other.__eq__(self)
-        if other.is_Number:
-            # numbers should compare at the same precision;
-            # all _as_mpf_val routines should be sure to abide
-            # by the request to change the prec if necessary; if
-            # they don't, the equality test will fail since it compares
-            # the mpf tuples
-            ompf = other._as_mpf_val(self._prec)
-            return bool(mlib.mpf_eq(self._mpf_, ompf))
-        if not self:
-            return not other
-        return False    # Float != non-Number
+        if isinstance(other, float):
+            other = Float(other)
+        return Basic.__eq__(self, other)
 
     def __ne__(self, other):
-        return not self == other
+        eq = self.__eq__(other)
+        if eq is NotImplemented:
+            return eq
+        else:
+            return not eq
+
+    def __hash__(self):
+        float_val = float(self)
+        if not math.isinf(float_val):
+            return hash(float_val)
+        return Basic.__hash__(self)
 
     def _Frel(self, other, op):
         try:
@@ -1459,9 +1177,6 @@ class Float(Number):
         if rv is None:
             return Expr.__le__(self, other)
         return rv
-
-    def __hash__(self):
-        return super().__hash__()
 
     def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
@@ -1621,10 +1336,11 @@ class Rational(Number):
 
             q = 1
             gcd = 1
+        Q = 1
 
         if not isinstance(p, SYMPY_INTS):
             p = Rational(p)
-            q *= p.q
+            Q *= p.q
             p = p.p
         else:
             p = int(p)
@@ -1632,9 +1348,10 @@ class Rational(Number):
         if not isinstance(q, SYMPY_INTS):
             q = Rational(q)
             p *= q.q
-            q = q.p
+            Q *= q.p
         else:
-            q = int(q)
+            Q *= int(q)
+        q = Q
 
         # p and q are now ints
         if q == 0:
@@ -1883,32 +1600,6 @@ class Rational(Number):
             # a Rational is always in reduced form so will never be 2/4
             # so we can just check equivalence of args
             return self.p == other.p and self.q == other.q
-        if other.is_Float:
-            # all Floats have a denominator that is a power of 2
-            # so if self doesn't, it can't be equal to other
-            if self.q & (self.q - 1):
-                return False
-            s, m, t = other._mpf_[:3]
-            if s:
-                m = -m
-            if not t:
-                # other is an odd integer
-                if not self.is_Integer or self.is_even:
-                    return False
-                return m == self.p
-
-            from .power import integer_log
-            if t > 0:
-                # other is an even integer
-                if not self.is_Integer:
-                    return False
-                # does m*2**t == self.p
-                return self.p and not self.p % m and \
-                    integer_log(self.p//m, 2) == (t, True)
-            # does non-integer s*m/2**-t = p/q?
-            if self.is_Integer:
-                return False
-            return m == self.p and integer_log(self.q, 2) == (-t, True)
         return False
 
     def __ne__(self, other):
@@ -2032,11 +1723,11 @@ class Rational(Number):
         return S.One, self
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return self, S.One
 
     def as_coeff_Add(self, rational=False):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         return self, S.Zero
 
 
@@ -2420,7 +2111,7 @@ class Integer(Rational):
             return NotImplemented
         if isinstance(other, Integer):
             return Integer(self.p // other)
-        return Integer(divmod(self, other)[0])
+        return divmod(self, other)[0]
 
     def __rfloordiv__(self, other):
         return Integer(Integer(other).p // self.p)
@@ -2864,8 +2555,7 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        .AlgebraicNumber.__new__()
-
+        AlgebraicNumber
         """
         return AlgebraicNumber(
             (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
@@ -3088,9 +2778,12 @@ class Zero(IntegerConstant, metaclass=Singleton):
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
+        if expt.is_zero:
+            return S.One
+
         # infinities are already handled with pos and neg
         # tests above; now throw away leading numbers on Mul
-        # exponent
+        # exponent since 0**-x = zoo**x even when x == 0
         coeff, terms = expt.as_coeff_Mul()
         if coeff.is_negative:
             return S.ComplexInfinity**terms
@@ -4334,7 +4027,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         elif issubclass(number_cls, Rational):
             return (Rational(9, 10, 1), S.One)
 
-    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
+    def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None, **hints):
         if (k_sym is not None) or (symbols is not None):
             return self
         from .symbol import Dummy
@@ -4429,29 +4122,157 @@ class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     def _mpc_(self):
         return (Float(0)._mpf_, Float(1)._mpf_)
 
+
 I = S.ImaginaryUnit
+
+
+def int_valued(x):
+    """return True only for a literal Number whose internal
+    representation as a fraction has a denominator of 1,
+    else False, i.e. integer, with no fractional part.
+    """
+    if isinstance(x, (SYMPY_INTS, int)):
+        return True
+    if type(x) is float:
+        return x.is_integer()
+    if isinstance(x, Integer):
+        return True
+    if isinstance(x, Float):
+        # x = s*m*2**p; _mpf_ = s,m,e,p
+        return x._mpf_[2] >= 0
+    return False  # or add new types to recognize
+
+
+def equal_valued(x, y):
+    """Compare expressions treating plain floats as rationals.
+
+    Examples
+    ========
+
+    >>> from sympy import S, symbols, Rational, Float
+    >>> from sympy.core.numbers import equal_valued
+    >>> equal_valued(1, 2)
+    False
+    >>> equal_valued(1, 1)
+    True
+
+    In SymPy expressions with Floats compare unequal to corresponding
+    expressions with rationals:
+
+    >>> x = symbols('x')
+    >>> x**2 == x**2.0
+    False
+
+    However an individual Float compares equal to a Rational:
+
+    >>> Rational(1, 2) == Float(0.5)
+    False
+
+    In a future version of SymPy this might change so that Rational and Float
+    compare unequal. This function provides the behavior currently expected of
+    ``==`` so that it could still be used if the behavior of ``==`` were to
+    change in future.
+
+    >>> equal_valued(1, 1.0) # Float vs Rational
+    True
+    >>> equal_valued(S(1).n(3), S(1).n(5)) # Floats of different precision
+    True
+
+    Explanation
+    ===========
+
+    In future SymPy verions Float and Rational might compare unequal and floats
+    with different precisions might compare unequal. In that context a function
+    is needed that can check if a number is equal to 1 or 0 etc. The idea is
+    that instead of testing ``if x == 1:`` if we want to accept floats like
+    ``1.0`` as well then the test can be written as ``if equal_valued(x, 1):``
+    or ``if equal_valued(x, 2):``. Since this function is intended to be used
+    in situations where one or both operands are expected to be concrete
+    numbers like 1 or 0 the function does not recurse through the args of any
+    compound expression to compare any nested floats.
+
+    References
+    ==========
+
+    .. [1] https://github.com/sympy/sympy/pull/20033
+    """
+    x = _sympify(x)
+    y = _sympify(y)
+
+    # Handle everything except Float/Rational first
+    if not x.is_Float and not y.is_Float:
+        return x == y
+    elif x.is_Float and y.is_Float:
+        # Compare values without regard for precision
+        return x._mpf_ == y._mpf_
+    elif x.is_Float:
+        x, y = y, x
+    if not x.is_Rational:
+        return False
+
+    # Now y is Float and x is Rational. A simple approach at this point would
+    # just be x == Rational(y) but if y has a large exponent creating a
+    # Rational could be prohibitively expensive.
+
+    sign, man, exp, _ = y._mpf_
+    p, q = x.p, x.q
+
+    if sign:
+        man = -man
+
+    if exp == 0:
+        # y odd integer
+        return q == 1 and man == p
+    elif exp > 0:
+        # y even integer
+        if q != 1:
+            return False
+        if p.bit_length() != man.bit_length() + exp:
+            return False
+        return man << exp == p
+    else:
+        # y non-integer. Need p == man and q == 2**-exp
+        if p != man:
+            return False
+        neg_exp = -exp
+        if q.bit_length() - 1 != neg_exp:
+            return False
+        return (1 << neg_exp) == q
+
 
 @dispatch(Tuple, Number) # type:ignore
 def _eval_is_eq(self, other): # noqa: F811
     return False
+
 
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
 _sympy_converter[fractions.Fraction] = sympify_fractions
 
-if HAS_GMPY:
+
+if gmpy is not None:
+
     def sympify_mpz(x):
         return Integer(int(x))
 
-    # XXX: The sympify_mpq function here was never used because it is
-    # overridden by the other sympify_mpq function below. Maybe it should just
-    # be removed or maybe it should be used for something...
     def sympify_mpq(x):
         return Rational(int(x.numerator), int(x.denominator))
 
     _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
     _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+
+
+if flint is not None:
+
+    def sympify_fmpz(x):
+        return Integer(int(x))
+
+    def sympify_fmpq(x):
+        return Rational(int(x.numerator), int(x.denominator))
+
+    _sympy_converter[type(flint.fmpz(1))] = sympify_fmpz
+    _sympy_converter[type(flint.fmpq(1, 2))] = sympify_fmpq
 
 
 def sympify_mpmath_mpq(x):
@@ -4473,11 +4294,12 @@ def sympify_complex(a):
 
 _sympy_converter[complex] = sympify_complex
 
-from .power import Pow, integer_nthroot
+from .power import Pow
 from .mul import Mul
 Mul.identity = One()
 from .add import Add
 Add.identity = Zero()
+
 
 def _register_classes():
     numbers.Number.register(Number)

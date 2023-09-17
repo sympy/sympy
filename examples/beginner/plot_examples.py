@@ -30,7 +30,7 @@ g[0].surface_color = lambda x, y: sin(x)
 param_line_2d = plot_parametric((x*cos(x), x*sin(x), (x, 0, 15)), (1.1*x*cos(x), 1.1*x*sin(x), (x, 0, 15)), show=False)
 param_line_2d[0].line_color = lambda u: sin(u)  # parametric
 param_line_2d[1].line_color = lambda u, v: u**2 + v**2  # coordinates
-param_line_2d.title = 'The inner one is colored by parameter and the outher one by coordinates'
+param_line_2d.title = 'The inner one is colored by parameter and the outer one by coordinates'
 
 param_line_3d = plot3d_parametric_line((x*cos(x), x*sin(x), x, (x, 0, 15)),
                      (1.5*x*cos(x), 1.5*x*sin(x), x, (x, 0, 15)),

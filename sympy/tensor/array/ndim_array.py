@@ -75,7 +75,7 @@ class ArrayKind(Kind):
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
-        elem_kinds = set(e.kind for e in kinds)
+        elem_kinds = {e.kind for e in kinds}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -84,7 +84,7 @@ class ArrayKind(Kind):
 
 
 class NDimArray(Printable):
-    """
+    """N-dimensional array.
 
     Examples
     ========
@@ -142,6 +142,9 @@ class NDimArray(Printable):
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
+
+    def __getitem__(self, index):
+        raise NotImplementedError("A subclass of NDimArray should implement __getitem__")
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):

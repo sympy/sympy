@@ -4,9 +4,13 @@ from subprocess import Popen, PIPE
 import os
 
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import (raises, warns_deprecated_sympy,
+                                  skip_under_pyodide)
 from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
                                   strlines, as_int, find_executable)
+from sympy.external import import_module
+
+pyodide_js = import_module('pyodide_js')
 
 
 def test_translate():
@@ -111,6 +115,7 @@ def test_translate_args():
         assert False
 
 
+@skip_under_pyodide("Cannot create subprocess under pyodide.")
 def test_debug_output():
     env = os.environ.copy()
     env['SYMPY_DEBUG'] = 'True'

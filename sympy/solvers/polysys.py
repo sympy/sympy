@@ -1,4 +1,5 @@
 """Solvers of systems of polynomial equations. """
+import itertools
 
 from sympy.core import S
 from sympy.core.sorting import default_sort_key
@@ -17,7 +18,8 @@ class SolveFailed(Exception):
 
 def solve_poly_system(seq, *gens, strict=False, **args):
     """
-    Solve a system of polynomial equations.
+    Return a list of solutions for the system of polynomial equations
+    or else None.
 
     Parameters
     ==========
@@ -35,13 +37,14 @@ def solve_poly_system(seq, *gens, strict=False, **args):
         Special options for solving the equations.
 
 
-
     Returns
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     Examples
     ========
@@ -92,8 +95,10 @@ def solve_biquadratic(f, g, opt):
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq.
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     Examples
     ========
@@ -134,12 +139,8 @@ def solve_biquadratic(f, g, opt):
     q = q.ltrim(-1)
     q_roots = list(roots(q).keys())
 
-    solutions = []
-
-    for q_root in q_roots:
-        for p_root in p_roots:
-            solution = (p_root.subs(y, q_root), q_root)
-            solutions.append(solution)
+    solutions = [(p_root.subs(y, q_root), q_root) for q_root, p_root in
+                 itertools.product(q_roots, p_roots)]
 
     return sorted(solutions, key=default_sort_key)
 
@@ -149,15 +150,16 @@ def solve_generic(polys, opt, strict=False):
     Solve a generic system of polynomial equations.
 
     Returns all possible solutions over C[x_1, x_2, ..., x_m] of a
-    set F = { f_1, f_2, ..., f_n } of polynomial equations,  using
+    set F = { f_1, f_2, ..., f_n } of polynomial equations, using
     Groebner basis approach. For now only zero-dimensional systems
     are supported, which means F can have at most a finite number
-    of solutions.
+    of solutions. If the basis contains only the ground, None is
+    returned.
 
     The algorithm works by the fact that, supposing G is the basis
-    of F with respect to an elimination order  (here lexicographic
+    of F with respect to an elimination order (here lexicographic
     order is used), G and F generate the same ideal, they have the
-    same set of solutions. By the elimination property,  if G is a
+    same set of solutions. By the elimination property, if G is a
     reduced, zero-dimensional Groebner basis, then there exists an
     univariate polynomial in G (in its last variable). This can be
     solved by computing its roots. Substituting all computed roots
@@ -185,8 +187,10 @@ def solve_generic(polys, opt, strict=False):
     =======
 
     List[Tuple]
-        A List of tuples. Solutions for symbols that satisfy the
-        equations listed in seq
+        a list of tuples with elements being solutions for the
+        symbols in the order they were passed as gens
+    None
+        None is returned when the computed basis contains only the ground.
 
     References
     ==========
@@ -203,7 +207,7 @@ def solve_generic(polys, opt, strict=False):
     ========
 
     NotImplementedError
-        If the system is not zero-dimensional. (does not have a finite
+        If the system is not zero-dimensional (does not have a finite
         number of solutions)
 
     UnsolvableFactorError
@@ -262,7 +266,7 @@ def solve_generic(polys, opt, strict=False):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             # the below line will produce UnsolvableFactorError if
-            # strict=True and the produced by roots is incomplete
+            # strict=True and the solution from `roots` is incomplete
             zeros = list(roots(system[0], gens[-1], strict=strict).keys())
             return [(zero,) for zero in zeros]
 
@@ -294,7 +298,7 @@ def solve_generic(polys, opt, strict=False):
         gen = gens[-1]
 
         # the below line will produce UnsolvableFactorError if
-        # strict=True and the produced by roots is incomplete
+        # strict=True and the solution from `roots` is incomplete
         zeros = list(roots(f.ltrim(gen), strict=strict).keys())
 
         if not zeros:
@@ -332,8 +336,6 @@ def solve_generic(polys, opt, strict=False):
 
     if result is not None:
         return sorted(result, key=default_sort_key)
-    else:
-        return None
 
 
 def solve_triangulated(polys, *gens, **args):

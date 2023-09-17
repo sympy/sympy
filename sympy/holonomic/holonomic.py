@@ -4,7 +4,8 @@ various operations on them.
 """
 
 from sympy.core import Add, Mul, Pow
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I, pi
+from sympy.core.numbers import (NaN, Infinity, NegativeInfinity, Float, I, pi,
+        equal_valued, int_valued)
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -329,9 +330,7 @@ class DifferentialOperator:
 
         # if self is `Dx`
         if self.listofpoly == self.parent.derivative_operator.listofpoly:
-            sol = []
-            for i in range(0, n):
-                sol.append(self.parent.base.zero)
+            sol = [self.parent.base.zero]*n
             sol.append(self.parent.base.one)
             return DifferentialOperator(sol, self.parent)
 
@@ -668,7 +667,7 @@ class HolonomicFunction:
                 return HolonomicFunction(sol, self.x, self.x0, y0)
 
             else:
-                # change the intiial conditions to a same point
+                # change the initial conditions to a same point
                 selfat0 = self.annihilator.is_singular(0)
                 otherat0 = other.annihilator.is_singular(0)
 
@@ -757,8 +756,8 @@ class HolonomicFunction:
             for i in self.y0:
                 c = self.y0[i]
                 c2 = []
-                for j in range(len(c)):
-                    if c[j] == 0:
+                for j, cj in enumerate(c):
+                    if cj == 0:
                         c2.append(S.Zero)
 
                     # if power on `x` is -1, the integration becomes log(x)
@@ -766,7 +765,7 @@ class HolonomicFunction:
                     elif i + j + 1 == 0:
                         raise NotImplementedError("logarithmic terms in the series are not supported")
                     else:
-                        c2.append(c[j] / S(i + j + 1))
+                        c2.append(cj / S(i + j + 1))
                 y0[i + 1] = c2
 
             if hasattr(limits, "__iter__"):
@@ -870,7 +869,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        .integrate()
+        integrate
         """
         kwargs.setdefault('evaluate', True)
         if args:
@@ -1202,7 +1201,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        from_hyper()
+        from_hyper
         """
 
         R = self.annihilator.parent
@@ -1285,13 +1284,13 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.series()
+        HolonomicFunction.series
 
         References
         ==========
 
         .. [1] https://hal.inria.fr/inria-00070025/document
-        .. [2] http://www.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
+        .. [2] https://www3.risc.jku.at/publications/download/risc_2244/DIPLFORM.pdf
 
         """
 
@@ -1463,7 +1462,7 @@ class HolonomicFunction:
                 grp.append([i])
                 continue
             for j in grp:
-                if int(j[0] - i) == j[0] - i:
+                if int_valued(j[0] - i):
                     j.append(i)
                     intdiff = True
                     break
@@ -1475,7 +1474,7 @@ class HolonomicFunction:
         independent = True if all(len(i) == 1 for i in grp) else False
 
         allpos = all(i >= 0 for i in reals)
-        allint = all(int(i) == i for i in reals)
+        allint = all(int_valued(i) for i in reals)
 
         # if initial conditions are provided
         # then use them.
@@ -1483,7 +1482,7 @@ class HolonomicFunction:
             rootstoconsider = []
             for i in ordered(self.y0.keys()):
                 for j in ordered(indicialroots.keys()):
-                    if j == i:
+                    if equal_valued(j, i):
                         rootstoconsider.append(i)
 
         elif allpos and allint:
@@ -1676,7 +1675,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        HolonomicFunction.to_sequence()
+        HolonomicFunction.to_sequence
         """
 
         if _recur is None:
@@ -1717,7 +1716,7 @@ class HolonomicFunction:
             seq.append(K.new(j.rep))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
-        sol = [i for i in recurrence.u0]
+        sol = list(recurrence.u0)
 
         if l + 1 >= n:
             pass
@@ -1965,7 +1964,7 @@ class HolonomicFunction:
             sol = S.Zero
             for j, i in enumerate(nonzeroterms):
 
-                if i < 0 or int(i) != i:
+                if i < 0 or not int_valued(i):
                     continue
 
                 i = int(i)
@@ -2145,7 +2144,7 @@ class HolonomicFunction:
         See Also
         ========
 
-        to_hyper()
+        to_hyper
         """
 
         # convert to hypergeometric first
@@ -2185,12 +2184,15 @@ def from_hyper(func, x0=0, evalf=False):
     R, Dx = DifferentialOperators(QQ.old_poly_ring(x), 'Dx')
 
     # generalized hypergeometric differential equation
+    xDx = x*Dx
     r1 = 1
-    for i in range(len(a)):
-        r1 = r1 * (x * Dx + a[i])
+    for ai in a:  # XXX gives sympify error if Mul is used with list of all factors
+        r1 *= xDx + ai
+    xDx_1 = xDx - 1
+    # r2 = Mul(*([Dx] + [xDx_1 + bi for bi in b]))  # XXX gives sympify error
     r2 = Dx
-    for i in range(len(b)):
-        r2 = r2 * (x * Dx + b[i] - 1)
+    for bi in b:
+        r2 *= xDx_1 + bi
     sol = r1 - r2
 
     simp = hyperexpand(func)
@@ -2263,17 +2265,15 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     # compute the differential equation satisfied by the
     # Meijer G-function.
-    mnp = (-1)**(m + n - p)
-    r1 = x * mnp
-
-    for i in range(len(a)):
-        r1 *= x * Dx + 1 - a[i]
-
+    xDx = x*Dx
+    xDx1 = xDx + 1
+    r1 = x*(-1)**(m + n - p)
+    for ai in a:  # XXX gives sympify error if args given in list
+        r1 *= xDx1 - ai
+    # r2 = Mul(*[xDx - bi for bi in b])  # gives sympify error
     r2 = 1
-
-    for i in range(len(b)):
-        r2 *= x * Dx - b[i]
-
+    for bi in b:
+        r2 *= xDx - bi
     sol = r1 - r2
 
     if not initcond:
@@ -2636,7 +2636,7 @@ def _extend_y0(Holonomic, n):
         if len(y0) > a:
             y1 = [y0[i] for i in range(a)]
         else:
-            y1 = [i for i  in y0]
+            y1 = list(y0)
         for i in range(n - a):
             sol = 0
             for a, b in zip(y1, list_red):

@@ -127,7 +127,7 @@ def _liupc(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -175,7 +175,7 @@ def _row_structure_symbolic_cholesky(M):
 
     .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
            Jeroen Van Grondelle (1999)
-           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+           https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -188,7 +188,7 @@ def _row_structure_symbolic_cholesky(M):
                 Lrow[k].append(j)
                 j = parent[j]
 
-        Lrow[k] = list(sorted(set(Lrow[k])))
+        Lrow[k] = sorted(set(Lrow[k]))
 
     return Lrow
 
@@ -721,7 +721,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         If the original matrix is a $m, n$ matrix:
 
         *lu* is a $m, n$ matrix, which contains result of the
-        decomposition in a compresed form. See the notes section
+        decomposition in a compressed form. See the notes section
         to see how the matrix is compressed.
 
         *row_swaps* is a $m$-element list where each element is a
@@ -1130,7 +1130,7 @@ def _singular_value_decomposition(A):
     Explanation
     ===========
 
-    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V^H$
     where
 
     - $U, V$ are column orthogonal matrix.
@@ -1145,7 +1145,7 @@ def _singular_value_decomposition(A):
     For matrices which are not square or are rank-deficient, it is
     sufficient to return a column orthogonal matrix because augmenting
     them may introduce redundant computations.
-    In condensed Singular Value Decomposition we only return column orthognal
+    In condensed Singular Value Decomposition we only return column orthogonal
     matrices because of this reason
 
     If you want to augment the results to return a full orthogonal
@@ -1153,7 +1153,7 @@ def _singular_value_decomposition(A):
 
     - Augment the $U, V$ matrices with columns that are orthogonal to every
       other columns and make it square.
-    - Augument the $\Sigma$ matrix with zero rows to make it have the same
+    - Augment the $\Sigma$ matrix with zero rows to make it have the same
       shape as the original matrix.
 
     The procedure will be illustrated in the examples section.
@@ -1313,11 +1313,7 @@ def _singular_value_decomposition(A):
 
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
-
+        S = S.diag(*Singular_vals)
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
     else:
@@ -1331,11 +1327,7 @@ def _singular_value_decomposition(A):
         U = U[:, ranked]
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i in range(len(Singular_vals)):
-            S[i, i] = Singular_vals[i]
-
+        S = S.diag(*Singular_vals)
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
 
@@ -1348,7 +1340,7 @@ def _QRdecomposition_optional(M, normalize=True):
     dps = _get_intermediate_simp(expand_mul, expand_mul)
 
     A = M.as_mutable()
-    ranked = list()
+    ranked = []
 
     Q = A
     R = A.zeros(A.cols)
@@ -1408,7 +1400,7 @@ def _QRdecomposition(M):
 
     - Augment the $Q$ matrix with columns that are orthogonal to every
       other columns and make it square.
-    - Augument the $R$ matrix with zero rows to make it have the same
+    - Augment the $R$ matrix with zero rows to make it have the same
       shape as the original matrix.
 
     The procedure will be illustrated in the examples section.
@@ -1482,11 +1474,11 @@ def _QRdecomposition(M):
     decomposition, you should augment $Q$ with an another orthogonal
     column.
 
-    You are able to append an arbitrary standard basis that are linearly
-    independent to every other columns and you can run the Gram-Schmidt
+    You are able to append an identity matrix,
+    and you can run the Gram-Schmidt
     process to make them augmented as orthogonal basis.
 
-    >>> Q_aug = Q.row_join(Matrix([0, 0, 1]))
+    >>> Q_aug = Q.row_join(Matrix.eye(3))
     >>> Q_aug = Q_aug.QRdecomposition()[0]
     >>> Q_aug
     Matrix([
@@ -1563,7 +1555,7 @@ def _QRdecomposition(M):
     return _QRdecomposition_optional(M, normalize=True)
 
 def _upper_hessenberg_decomposition(A):
-    """Converts a matrix into Hessenberg matrix H
+    """Converts a matrix into Hessenberg matrix H.
 
     Returns 2 matrices H, P s.t.
     $P H P^{T} = A$, where H is an upper hessenberg matrix

@@ -48,7 +48,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
-from sympy.core.numbers import Rational, igcd
+from sympy.core.numbers import Rational
+from sympy.core.intfunc import igcd
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
@@ -82,8 +83,8 @@ def _invert_monoms(p1):
     p = R.zero
     cv = p1.listcoeffs()
     mv = p1.listmonoms()
-    for i in range(len(mv)):
-        p[(deg - mv[i][0],)] = cv[i]
+    for mvi, cvi in zip(mv, cv):
+        p[(deg - mvi[0],)] = cvi
     return p
 
 def _giant_steps(target):
@@ -233,7 +234,7 @@ def rs_mul(p1, p2, x, prec):
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, PolyElement):
-        raise ValueError('p1 and p2 must have the same ring')
+        raise ValueError('p2 must be a polynomial')
     if R == p2.ring:
         get = p.get
         items2 = list(p2.items())

@@ -82,7 +82,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
             lints = len(intersections)
             facets = [Segment2D(intersections[i],
                                 intersections[(i + 1) % lints])
-                      for i in range(0, lints)]
+                      for i in range(lints)]
         else:
             raise NotImplementedError("Integration for H-representation 3D"
                                       "case not implemented yet.")
@@ -367,8 +367,9 @@ def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
         return S.Zero
     result = S.Zero
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         result += distance_to_side(x0, side, hp_param[0]) *\
             lineseg_integrate(facet, i, side, expr, degree)
     if not expr.is_number:
@@ -544,7 +545,7 @@ def left_integral2D(m, index, facets, x0, expr, gens):
     5
     """
     value = S.Zero
-    for j in range(0, m):
+    for j in range(m):
         intersect = ()
         if j in ((index - 1) % m, (index + 1) % m):
             intersect = intersection(facets[index], facets[j], "segment2D")
@@ -704,8 +705,9 @@ def left_integral3D(facets, index, expr, vertices, hp_param, degree):
     value = S.Zero
     facet = facets[index]
     x0 = vertices[facet[0]]
-    for i in range(len(facet)):
-        side = (vertices[facet[i]], vertices[facet[(i + 1) % len(facet)]])
+    facet_len = len(facet)
+    for i, fac in enumerate(facet):
+        side = (vertices[fac], vertices[facet[(i + 1) % facet_len]])
         value += distance_to_side(x0, side, hp_param[0]) * \
             lineseg_integrate(facet, i, side, expr, degree)
     return value
@@ -1098,12 +1100,12 @@ def point_sort(poly, normal=None, clockwise=True):
     order = S.One if clockwise else S.NegativeOne
     dim = len(pts[0])
     if dim == 2:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n)
     else:
-        center = Point(sum(map(lambda vertex: vertex.x, pts)) / n,
-                        sum(map(lambda vertex: vertex.y, pts)) / n,
-                        sum(map(lambda vertex: vertex.z, pts)) / n)
+        center = Point(sum((vertex.x for vertex in pts)) / n,
+                        sum((vertex.y for vertex in pts)) / n,
+                        sum((vertex.z for vertex in pts)) / n)
 
     def compare(a, b):
         if a.x - center.x >= S.Zero and b.x - center.x < S.Zero:
@@ -1271,8 +1273,8 @@ def plot_polytope(poly):
     """
     from sympy.plotting.plot import Plot, List2DSeries
 
-    xl = list(map(lambda vertex: vertex.x, poly.vertices))
-    yl = list(map(lambda vertex: vertex.y, poly.vertices))
+    xl = [vertex.x for vertex in poly.vertices]
+    yl = [vertex.y for vertex in poly.vertices]
 
     xl.append(poly.vertices[0].x)  # Closing the polygon
     yl.append(poly.vertices[0].y)

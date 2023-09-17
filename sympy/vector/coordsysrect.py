@@ -577,17 +577,14 @@ class CoordSys3D(Basic):
 
         """
 
-        relocated_scalars = []
         origin_coords = tuple(self.position_wrt(other).to_matrix(other))
-        for i, x in enumerate(other.base_scalars()):
-            relocated_scalars.append(x - origin_coords[i])
+        relocated_scalars = [x - origin_coords[i]
+                             for i, x in enumerate(other.base_scalars())]
 
         vars_matrix = (self.rotation_matrix(other) *
                        Matrix(relocated_scalars))
-        mapping = {}
-        for i, x in enumerate(self.base_scalars()):
-            mapping[x] = trigsimp(vars_matrix[i])
-        return mapping
+        return {x: trigsimp(vars_matrix[i])
+                for i, x in enumerate(self.base_scalars())}
 
     def locate_new(self, name, position, vector_names=None,
                    variable_names=None):

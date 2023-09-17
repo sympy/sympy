@@ -19,7 +19,7 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    elementary.rst
    combinatorial.rst

@@ -25,6 +25,7 @@ import sympy
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.utilities.exceptions import ignore_warnings
 from sympy.testing.pytest import raises
 
 
@@ -138,9 +139,11 @@ def test_Matrix1():
 
 def test_Matrix2():
     m = Matrix([[x, x**2], [5, 2/x]])
-    assert (matrix(m.subs(x, 2)) == matrix([[2, 4], [5, 1]])).all()
+    with ignore_warnings(PendingDeprecationWarning):
+        assert (matrix(m.subs(x, 2)) == matrix([[2, 4], [5, 1]])).all()
     m = Matrix([[sin(x), x**2], [5, 2/x]])
-    assert (matrix(m.subs(x, 2)) == matrix([[sin(2), 4], [5, 1]])).all()
+    with ignore_warnings(PendingDeprecationWarning):
+        assert (matrix(m.subs(x, 2)) == matrix([[sin(2), 4], [5, 1]])).all()
 
 
 def test_Matrix3():
@@ -153,17 +156,20 @@ def test_Matrix3():
 
 
 def test_Matrix4():
-    a = matrix([[2, 4], [5, 1]])
+    with ignore_warnings(PendingDeprecationWarning):
+        a = matrix([[2, 4], [5, 1]])
     assert Matrix(a) == Matrix([[2, 4], [5, 1]])
     assert Matrix(a) != Matrix([[2, 4], [5, 2]])
-    a = matrix([[sin(2), 4], [5, 1]])
+    with ignore_warnings(PendingDeprecationWarning):
+        a = matrix([[sin(2), 4], [5, 1]])
     assert Matrix(a) == Matrix([[sin(2), 4], [5, 1]])
     assert Matrix(a) != Matrix([[sin(0), 4], [5, 1]])
 
 
 def test_Matrix_sum():
     M = Matrix([[1, 2, 3], [x, y, x], [2*y, -50, z*x]])
-    m = matrix([[2, 3, 4], [x, 5, 6], [x, y, z**2]])
+    with ignore_warnings(PendingDeprecationWarning):
+        m = matrix([[2, 3, 4], [x, 5, 6], [x, y, z**2]])
     assert M + m == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
     assert m + M == Matrix([[3, 5, 7], [2*x, y + 5, x + 6], [2*y + x, y - 50, z*x + z**2]])
     assert M + m == M.add(m)
@@ -171,7 +177,8 @@ def test_Matrix_sum():
 
 def test_Matrix_mul():
     M = Matrix([[1, 2, 3], [x, y, x]])
-    m = matrix([[2, 4], [x, 6], [x, z**2]])
+    with ignore_warnings(PendingDeprecationWarning):
+        m = matrix([[2, 4], [x, 6], [x, z**2]])
     assert M*m == Matrix([
         [         2 + 5*x,        16 + 3*z**2],
         [2*x + x*y + x**2, 4*x + 6*y + x*z**2],

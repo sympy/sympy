@@ -1746,12 +1746,12 @@ def _integer_rational_reconstruction(c, m, domain):
 
     bound = sqrt(m / 2) # still correct if replaced by ZZ.sqrt(m // 2) ?
 
-    while r1 >= bound:
+    while int(r1) >= bound:
         quo = r0 // r1
         r0, r1 = r1, r0 - quo*r1
         s0, s1 = s1, s0 - quo*s1
 
-    if abs(s1) >= bound:
+    if abs(int(s1)) >= bound:
         return None
 
     if s1 < 0:
@@ -2031,7 +2031,7 @@ def _to_ZZ_poly(f, ring):
 
         for i in range(n):
             if coeff[i]:
-                c = domain(coeff[i] * den) * m
+                c = domain.convert(coeff[i] * den) * m
 
                 if (monom[0], n-i-1) not in f_:
                     f_[(monom[0], n-i-1)] = c

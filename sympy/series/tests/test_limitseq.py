@@ -131,11 +131,17 @@ def test_issue_9308():
 
 def test_issue_10382():
     n = Symbol('n', integer=True)
-    assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
+    assert limit_seq(fibonacci(n+1)/fibonacci(n), n).together() == S.GoldenRatio
 
 
 def test_issue_11672():
     assert limit_seq(Rational(-1, 2)**n, n) == 0
+
+
+def test_issue_14196():
+    k, n  = symbols('k, n', positive=True)
+    m = Symbol('m')
+    assert limit_seq(Sum(m**k, (m, 1, n)).doit()/(n**(k + 1)), n) == 1/(k + 1)
 
 
 def test_issue_16735():

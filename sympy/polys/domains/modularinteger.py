@@ -1,7 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
-
-from typing import Any, Dict as tDict, Tuple as tTuple, Type
+from __future__ import annotations
+from typing import Any
 
 import operator
 
@@ -10,6 +10,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.utilities import public
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 @public
 class ModularInteger(PicklableWithSlots, DomainElement):
@@ -38,9 +39,19 @@ class ModularInteger(PicklableWithSlots, DomainElement):
         return "%s mod %s" % (self.val, self.mod)
 
     def __int__(self):
-        return int(self.to_int())
+        return int(self.val)
 
     def to_int(self):
+
+        sympy_deprecation_warning(
+            """ModularInteger.to_int() is deprecated.
+
+            Use int(a) or K = GF(p) and K.to_int(a) instead of a.to_int().
+            """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="modularinteger-to-int",
+        )
+
         if self.sym:
             if self.val <= self.mod // 2:
                 return self.val
@@ -172,7 +183,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def invert(self):
         return self.__class__(self._invert(self.val))
 
-_modular_integer_cache = {}  # type: tDict[tTuple[Any, Any, Any], Type[ModularInteger]]
+_modular_integer_cache: dict[tuple[Any, Any, Any], type[ModularInteger]] = {}
 
 def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""
