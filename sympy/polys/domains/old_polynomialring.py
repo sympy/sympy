@@ -203,7 +203,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
         >>> R._sdm_to_vector(L, 2)
-        [x + 2*y, x*y]
+        [DMF([[1], [2, 0]], [[1]], QQ, None), DMF([[1, 0], []], [[1]], QQ, None)]
         """
         dics = self._sdm_to_dics(s, n)
         # NOTE this works for global and local rings!
