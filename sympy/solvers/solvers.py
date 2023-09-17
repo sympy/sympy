@@ -42,7 +42,7 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1, TR2i, TR11
+from sympy.simplify.fu import TR1, TR2i, TR10, TR11
 from sympy.strategies.rl import rebuild
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
@@ -1152,8 +1152,7 @@ def solve(f, *symbols, **flags):
             if dep in symbols or -dep in symbols:
                 # don't let expansion expand wrt anything in ind
                 n = Dummy() if not ind.is_Number else ind
-                trep[i] = i.xreplace({ind: n}).expand(trig=True
-                    ).xreplace({n: ind})
+                trep[i] = TR10(i.xreplace({ind: n})).xreplace({n: ind})
     if other and len(other) <= 2:
         base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
         for i in other:
