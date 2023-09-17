@@ -50,6 +50,12 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1)
 
+    def _ground_new(self, element):
+        return self.one.ground_new(element)
+
+    def _from_dict(self, element):
+        return DMP.from_dict(element, len(self.gens) - 1, self.dom)
+
     def __str__(self):
         s_order = str(self.order)
         orderstr = (
@@ -75,36 +81,36 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def from_ZZ(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_QQ(K1, a, K0):
         """Convert a Python ``Fraction`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python ``Fraction`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpz`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
-        return K1(K1.dom.convert(a, K0))
+        return K1._ground_new(K1.dom.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
         """Convert a ``ANP`` object to ``dtype``. """
         if K1.dom == K0:
-            return K1(a)
+            return K1._ground_new(a)
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a ``PolyElement`` object to ``dtype``. """
@@ -113,14 +119,14 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
                 return K1(dict(a))  # set the correct ring
             else:
                 convert_dom = lambda c: K1.dom.convert_from(c, K0.dom)
-                return K1({m: convert_dom(c) for m, c in a.items()})
+                return K1._from_dict({m: convert_dom(c) for m, c in a.items()})
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.symbols, K1.gens)
 
             if K1.dom != K0.dom:
                 coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
 
-            return K1(dict(zip(monoms, coeffs)))
+            return K1._from_dict(dict(zip(monoms, coeffs)))
 
     def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a ``DMP`` object to ``dtype``. """
@@ -241,6 +247,14 @@ class GlobalPolynomialRing(PolynomialRingBase):
     is_PolynomialRing = is_Poly = True
     dtype = DMP
 
+    def new(self, element):
+        if isinstance(element, dict):
+            return DMP.from_dict(element, len(self.gens) - 1, self.dom)
+        elif element in self.dom:
+            return self._ground_new(self.dom.convert(element))
+        else:
+            return self.dtype(element, self.dom, len(self.gens) - 1)
+
     def from_FractionField(K1, a, K0):
         """
         Convert a ``DMF`` object to ``DMP``.
@@ -280,7 +294,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)
 
-        return self(rep)
+        return DMP.from_dict(rep, self.ngens - 1, self.dom)
 
     def is_positive(self, a):
         """Returns True if ``LC(a)`` is positive. """
