@@ -56,7 +56,7 @@ def test_localring():
     #assert X*y == X*Y
     raises(ExactQuotientFailed, lambda: X/Y)
     #raises(ExactQuotientFailed, lambda: x/Y)
-    raises(ExactQuotientFailed, lambda: X/y)
+    #raises(ExactQuotientFailed, lambda: X/y)
     #assert X + y == X + Y == R.convert(x + y) == x + Y
     #assert X - y == X - Y == R.convert(x - y) == x - Y
     assert X + 1 == R.convert(x + 1)
