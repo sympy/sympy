@@ -1191,11 +1191,11 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     for ff in terms_t:
         k, ft = ff.as_independent(t_, as_Add=False)
         if ft.has(SingularityFunction):
-            _terms = Add.make_args(ft.rewrite(Heaviside))
+            _terms = Add.make_args(k*ft.rewrite(Heaviside))
             for _term in _terms:
                 terms.append(_term.as_independent(t_, as_Add=False))
         elif ft.func == Piecewise and not ft.has(DiracDelta(t_)):
-            _terms = Add.make_args(_piecewise_to_heaviside(ft, t_))
+            _terms = Add.make_args(k*_piecewise_to_heaviside(ft, t_))
             for _term in _terms:
                 terms.append(_term.as_independent(t_, as_Add=False))
         else:
