@@ -283,7 +283,7 @@ def test_PolynomialRingBase():
 def test_DMP():
     assert srepr(DMP([1, 2], ZZ)) == 'DMP([1, 2], ZZ)'
     assert srepr(ZZ.old_poly_ring(x)([1, 2])) == \
-        "DMP([1, 2], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x')))"
+        "DMP([1, 2], ZZ)"
 
 
 def test_FiniteExtension():
@@ -294,7 +294,7 @@ def test_FiniteExtension():
 def test_ExtensionElement():
     A = FiniteExtension(Poly(x**2 + 1, x))
     assert srepr(A.generator) == \
-        "ExtElem(DMP([1, 0], ZZ, ring=GlobalPolynomialRing(ZZ, Symbol('x'))), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
+        "ExtElem(DMP([1, 0], ZZ), FiniteExtension(Poly(x**2 + 1, x, domain='ZZ')))"
 
 
 def test_BooleanAtom():
