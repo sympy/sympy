@@ -477,9 +477,11 @@ class Poly(Basic):
 
         if not g.is_Poly:
             try:
-                return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
+                g_coeff = f.rep.dom.from_sympy(g)
             except CoercionFailed:
                 raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            else:
+                return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)

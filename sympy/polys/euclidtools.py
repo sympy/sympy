@@ -1642,7 +1642,7 @@ def dup_rr_lcm(f, g, K):
 
     """
     if not f or not g:
-        return K.zero
+        return dmp_zero(0)
 
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
