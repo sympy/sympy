@@ -1144,15 +1144,15 @@ def solve(f, *symbols, **flags):
     # relationship between values
     targs = {t for fi in f for t in fi.atoms(TrigonometricFunction)}
     add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
+    add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
     trep = {}
-    for i in add:
-        a = i.args[0]
-        if len(a.args) == 2:
-            ind, dep = a.as_independent(*symbols)
-            if dep in symbols or -dep in symbols:
-                # don't let expansion expand wrt anything in ind
-                n = Dummy() if not ind.is_Number else ind
-                trep[i] = TR10(i.xreplace({ind: n})).xreplace({n: ind})
+    for t in add:
+        a = t.args[0]
+        ind, dep = a.as_independent(*symbols)
+        if dep in symbols or -dep in symbols:
+            # don't let expansion expand wrt anything in ind
+            n = Dummy() if not ind.is_Number else ind
+            trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
     if other and len(other) <= 2:
         base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
         for i in other:

@@ -645,6 +645,7 @@ def test_solve_transcendental():
     # don't allow massive expansion
     assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
     assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
+    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
 
 
 def test_solve_for_functions_derivatives():
