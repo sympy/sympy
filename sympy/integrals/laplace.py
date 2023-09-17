@@ -1182,16 +1182,26 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     rules recursively, and if everything else fails, it tries to integrate.
     """
 
-    terms = Add.make_args(fn)
+    terms_t = Add.make_args(fn)
     terms_s = []
+    terms = []
     planes = []
     conditions = []
-    for ff in terms:
+
+    for ff in terms_t:
         k, ft = ff.as_independent(t_, as_Add=False)
         if ft.has(SingularityFunction):
-            ft = ft.rewrite(Heaviside)
-            # It may well be that the Singularity Function is still
-            # there after this rewrite, so we need to re-check.
+            _terms = Add.make_args(ft.rewrite(Heaviside))
+            for _term in _terms:
+                terms.append(_term.as_independent(t_, as_Add=False))
+        elif ft.func == Piecewise and not ft.has(DiracDelta(t_)):
+            _terms = Add.make_args(_piecewise_to_heaviside(ft, t_))
+            for _term in _terms:
+                terms.append(_term.as_independent(t_, as_Add=False))
+        else:
+            terms.append((k, ft))
+
+    for k, ft in terms:
         if ft.has(SingularityFunction):
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         else:
@@ -1200,8 +1210,6 @@ def _laplace_transform(fn, t_, s_, *, simplify):
                 # a DiracDelta(t) present, in which case removing Heaviside(t)
                 # is unnecessary because _laplace_rule_delta can deal with it.
                 ft = ft.subs(Heaviside(t_), 1)
-            if ft.func == Piecewise and not ft.has(DiracDelta(t_)):
-                ft = _piecewise_to_heaviside(ft, t_)
             if (
                     (r := _laplace_apply_simple_rules(ft, t_, s_))
                     is not None or
