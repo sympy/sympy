@@ -1191,13 +1191,15 @@ def _laplace_transform(fn, t_, s_, *, simplify):
     for ff in terms_t:
         k, ft = ff.as_independent(t_, as_Add=False)
         if ft.has(SingularityFunction):
-            _terms = Add.make_args(k*ft.rewrite(Heaviside))
+            _terms = Add.make_args(ft.rewrite(Heaviside))
             for _term in _terms:
-                terms.append(_term.as_independent(t_, as_Add=False))
+                k1, f1 = _term.as_independent(t_, as_Add=False)
+                terms.append((k*k1, f1))
         elif ft.func == Piecewise and not ft.has(DiracDelta(t_)):
-            _terms = Add.make_args(k*_piecewise_to_heaviside(ft, t_))
+            _terms = Add.make_args(_piecewise_to_heaviside(ft, t_))
             for _term in _terms:
-                terms.append(_term.as_independent(t_, as_Add=False))
+                k1, f1 = _term.as_independent(t_, as_Add=False)
+                terms.append((k*k1, f1))
         else:
             terms.append((k, ft))
 

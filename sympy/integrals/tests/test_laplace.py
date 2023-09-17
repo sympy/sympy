@@ -340,12 +340,12 @@ def test_laplace_transform():
     X1 = LT(x1, t, s)[0]
     assert X1 == Piecewise((0, x <= 0), (1, x <= 1), (0, True))/s
     x1 = [
-        Piecewise((1, And(t > 1, t <= 3)), (2, True)),
-        Piecewise((1, And(t >= 1, t <= 3)), (2, True)),
-        Piecewise((1, And(t >= 1, t < 3)), (2, True)),
-        Piecewise((1, And(t > 1, t < 3)), (2, True))]
+        a*Piecewise((1, And(t > 1, t <= 3)), (2, True)),
+        a*Piecewise((1, And(t >= 1, t <= 3)), (2, True)),
+        a*Piecewise((1, And(t >= 1, t < 3)), (2, True)),
+        a*Piecewise((1, And(t > 1, t < 3)), (2, True))]
     for x2 in x1:
-        assert LT(x2, t, s)[0].expand() == 2/s - exp(-s)/s + exp(-3*s)/s
+        assert LT(x2, t, s)[0].expand() == 2*a/s - a*exp(-s)/s + a*exp(-3*s)/s
     assert (
         LT(Piecewise((1, Eq(t, 1)), (2, True)), t, s)[0] ==
         LaplaceTransform(Piecewise((1, Eq(t, 1)), (2, True)), t, s))
