@@ -114,7 +114,7 @@ from sympy.polys.polyerrors import (
 class DMP(CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ('rep', 'lev', 'dom')
+    __slots__ = ('rep', 'dom', 'lev')
 
     def __new__(cls, rep, dom, lev=None):
         if lev is not None:
@@ -179,20 +179,14 @@ class DMP(CantSympify):
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(rep, dom=dom, lev=lev):
+            def per(rep):
                 return DMP(rep, dom, lev)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, lev=None):
+    def per(f, rep):
         """Create a DMP out of the given representation. """
-        if lev is None:
-            lev = f.lev
-
-        if dom is None:
-            dom = f.dom
-
-        return DMP(rep, dom, lev)
+        return DMP(rep, f.dom, f.lev)
 
     @classmethod
     def zero(cls, lev, dom):
@@ -280,15 +274,16 @@ class DMP(CantSympify):
 
     def slice(f, m, n, j=0):
         """Take a continuous subsequence of terms of ``f``. """
-        return f.per(dmp_slice_in(f.rep, m, n, j, f.lev, f.dom))
+        rep = dmp_slice_in(f.rep, m, n, j, f.lev, f.dom)
+        return f.new(rep, f.dom, f.lev)
 
     def coeffs(f, order=None):
         """Returns all non-zero coefficients from ``f`` in lex order. """
-        return [ c for _, c in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
+        return [ c for _, c in f.terms(order=order) ]
 
     def monoms(f, order=None):
         """Returns all non-zero monomials from ``f`` in lex order. """
-        return [ m for m, _ in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
+        return [ m for m, _ in f.terms(order=order) ]
 
     def terms(f, order=None):
         """Returns all non-zero terms from ``f`` in lex order. """
@@ -330,7 +325,8 @@ class DMP(CantSympify):
 
     def lift(f):
         """Convert algebraic coefficients to rationals. """
-        return f.per(dmp_lift(f.rep, f.lev, f.dom), dom=f.dom.dom)
+        r = dmp_lift(f.rep, f.lev, f.dom)
+        return f.new(r, f.dom.dom, f.lev)
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
@@ -596,7 +592,7 @@ class DMP(CantSympify):
         rep = dmp_eval_in(f.rep, f.dom.convert(a), j, f.lev, f.dom)
 
         if f.lev:
-            return f.per(rep, lev=f.lev - 1)
+            return f.new(rep, f.dom, f.lev - 1)
         else:
             return rep
 
@@ -661,7 +657,7 @@ class DMP(CantSympify):
         rep = dmp_discriminant(f.rep, f.lev, f.dom)
 
         if f.lev:
-            return f.per(rep, lev=f.lev - 1)
+            return f.new(rep, f.dom, f.lev - 1)
         else:
             return rep
 
@@ -739,8 +735,8 @@ class DMP(CantSympify):
             raise ValueError('univariate polynomial expected')
 
         lev, dom, per, P, Q = p.unify(q)
-        lev, dom, per, F, P = f.unify(per(P, dom, lev))
-        lev, dom, per, F, Q = per(F, dom, lev).unify(per(Q, dom, lev))
+        lev, dom, per, F, P = f.unify(f.new(P, dom, lev))
+        lev, dom, per, F, Q = f.new(F, dom, lev).unify(f.new(Q, dom, lev))
 
         if not lev:
             return per(dup_transform(F, P, Q, dom))
@@ -785,12 +781,12 @@ class DMP(CantSympify):
     def norm(f):
         """Computes ``Norm(f)``."""
         r = dmp_norm(f.rep, f.lev, f.dom)
-        return f.per(r, dom=f.dom.dom)
+        return f.new(r, f.dom.dom, f.lev)
 
     def sqf_norm(f):
         """Computes square-free norm of ``f``. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
-        return s, f.per(g), f.per(r, dom=f.dom.dom)
+        return s, f.per(g), f.new(r, f.dom.dom, f.lev)
 
     def sqf_part(f):
         """Computes square-free part of ``f``. """
