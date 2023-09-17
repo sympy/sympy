@@ -151,7 +151,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def revert(self, a):
         try:
-            return self.one/a
+            return self.exquo(self.one, a)
         except (ExactQuotientFailed, ZeroDivisionError):
             raise NotReversible('%s is not a unit' % a)
 
@@ -337,10 +337,6 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
             return False
         return a.denom().terms(order=self.order)[0][0] == (0,)*len(self.gens)
 
-    def from_FractionField(K1, a, K0):
-        dmf = K1.get_field().from_FractionField(a, K0)
-        return K1((dmf.num, dmf.den))
-
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
         return (basic_from_dict(a.numer().to_sympy_dict(), *self.gens) /
@@ -360,6 +356,23 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
             den[k] = self.dom.from_sympy(v)
 
         return self((num, den)).cancel()
+
+    def exquo(self, a, b):
+        """Exact quotient of ``a`` and ``b``. """
+        # Elements are DMF that will always divide (except 0). The result is
+        # not guaranteed to be in this ring, so we have to check that.
+        r = a / b
+
+        try:
+            r = self.new((r.num, r.den))
+        except CoercionFailed:
+            raise ExactQuotientFailed(a, b, self)
+
+        return r
+
+    def from_FractionField(K1, a, K0):
+        dmf = K1.get_field().from_FractionField(a, K0)
+        return K1((dmf.num, dmf.den))
 
     def _vector_to_sdm(self, v, order):
         """
