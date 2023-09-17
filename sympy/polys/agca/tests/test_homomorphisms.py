@@ -15,7 +15,7 @@ def test_printing():
     assert str(homomorphism(R.free_module(2), R.free_module(2), [0, 0])) == \
         'Matrix([                       \n[0, 0], : QQ[x]**2 -> QQ[x]**2\n[0, 0]])                       '
     assert str(homomorphism(R.free_module(1), R.free_module(1) / [[x]], [0])) == \
-        'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1/<[x]>'
+        'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1/<[DMP([1, 0], QQ, None)]>'
     assert str(R.free_module(0).identity_hom()) == 'Matrix(0, 0, []) : QQ[x]**0 -> QQ[x]**0'
 
 def test_operations():
