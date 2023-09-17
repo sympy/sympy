@@ -174,7 +174,7 @@ class DMP(CantSympify):
         obj.rep = rep
         obj.lev = lev
         obj.dom = dom
-        obj.ring = ring
+        obj.ring = None
 
         return obj
 
@@ -1100,7 +1100,7 @@ class DMF(PicklableWithSlots, CantSympify):
         self.den = den
         self.lev = lev
         self.dom = dom
-        self.ring = ring
+        self.ring = None
 
     @classmethod
     def new(cls, rep, dom, lev=None, ring=None):
@@ -1112,7 +1112,7 @@ class DMF(PicklableWithSlots, CantSympify):
         obj.den = den
         obj.lev = lev
         obj.dom = dom
-        obj.ring = ring
+        obj.ring = None
 
         return obj
 
@@ -1439,12 +1439,7 @@ class DMF(PicklableWithSlots, CantSympify):
             return NotImplemented
 
     def __rtruediv__(self, g):
-        r = self.invert(check=False)*g
-        if self.ring and r not in self.ring:
-            raise RuntimeError("rtruediv...")
-            from sympy.polys.polyerrors import ExactQuotientFailed
-            raise ExactQuotientFailed(g, self, self.ring)
-        return r
+        return self.invert(check=False)*g
 
     def __eq__(f, g):
         try:

@@ -927,7 +927,13 @@ class StrPrinter(Printer):
         return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
 
     def _print_DMF(self, expr):
-        return self._print_DMP(expr)
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+        ring = self._print(expr.ring)
+
+        return "%s(%s, %s, %s, %s)" % (cls, num, den, dom, ring)
 
     def _print_Object(self, obj):
         return 'Object("%s")' % obj.name
