@@ -1396,16 +1396,7 @@ class DMF(PicklableWithSlots, CantSympify):
 
         try:
             return f.add(f.half_per(g))
-        except TypeError:
-            return NotImplemented
-        except (CoercionFailed, NotImplementedError):
-            if f.ring is not None:
-                try:
-                    res = f.add(f.ring.convert(g))
-                    raise RuntimeError("add...")
-                    return res
-                except (CoercionFailed, NotImplementedError):
-                    pass
+        except (TypeError, CoercionFailed, NotImplementedError):
             return NotImplemented
 
     def __radd__(f, g):
@@ -1417,15 +1408,7 @@ class DMF(PicklableWithSlots, CantSympify):
 
         try:
             return f.sub(f.half_per(g))
-        except TypeError:
-            return NotImplemented
-        except (CoercionFailed, NotImplementedError):
-            if f.ring is not None:
-                try:
-                    raise RuntimeError("sub...")
-                    return f.sub(f.ring.convert(g))
-                except (CoercionFailed, NotImplementedError):
-                    pass
+        except (TypeError, CoercionFailed, NotImplementedError):
             return NotImplemented
 
     def __rsub__(f, g):
@@ -1437,16 +1420,7 @@ class DMF(PicklableWithSlots, CantSympify):
 
         try:
             return f.mul(f.half_per(g))
-        except TypeError:
-            return NotImplemented
-        except (CoercionFailed, NotImplementedError):
-            if f.ring is not None:
-                try:
-                    res = f.mul(f.ring.convert(g))
-                    raise RuntimeError("mul...")
-                    return res
-                except (CoercionFailed, NotImplementedError):
-                    pass
+        except (TypeError, CoercionFailed, NotImplementedError):
             return NotImplemented
 
     def __rmul__(f, g):
@@ -1461,16 +1435,7 @@ class DMF(PicklableWithSlots, CantSympify):
 
         try:
             return f.quo(f.half_per(g))
-        except TypeError:
-            return NotImplemented
-        except (CoercionFailed, NotImplementedError):
-            if f.ring is not None:
-                try:
-                    res = f.quo(f.ring.convert(g))
-                    raise RuntimeError("div...")
-                    return res
-                except (CoercionFailed, NotImplementedError):
-                    pass
+        except (TypeError, CoercionFailed, NotImplementedError):
             return NotImplemented
 
     def __rtruediv__(self, g):
