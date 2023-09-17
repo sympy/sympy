@@ -280,6 +280,8 @@ def test_rref():
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
 
+
+def test_rref_rhs():
     a, b, c, d = symbols('a b c d')
     A = Matrix([[0, 0], [0, 0], [1, 2], [3, 4]])
     B = Matrix([a, b, c, d])
@@ -291,7 +293,7 @@ def test_rref():
     [   -2*c + d],
     [3*c/2 - d/2],
     [          a],
-    [          b]]), (0, 1))
+    [          b]]))
 
 
 def test_issue_17827():
