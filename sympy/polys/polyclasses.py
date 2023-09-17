@@ -19,7 +19,7 @@ from sympy.polys.densebasic import (
     dup_TC, dmp_ground_TC,
     dmp_ground_nth,
     dmp_one, dmp_ground,
-    dmp_zero_p, dmp_one_p, dmp_ground_p,
+    dmp_zero, dmp_zero_p, dmp_one_p, dmp_ground_p,
     dup_from_dict, dmp_from_dict,
     dmp_to_dict,
     dmp_deflate,
@@ -117,14 +117,11 @@ class DMP(CantSympify):
     __slots__ = ('rep', 'dom', 'lev')
 
     def __new__(cls, rep, dom, lev=None):
-        if lev is not None:
-            # PolyElement is a dict subclass so use type instead of isinstance
-            if type(rep) is dict:
-                rep = dmp_from_dict(rep, lev, dom)
-            elif not isinstance(rep, list):
-                rep = dmp_ground(dom.convert(rep), lev)
-        else:
+
+        if lev is None:
             rep, lev = dmp_validate(rep)
+        elif not isinstance(rep, list):
+            raise CoercionFailed("expected list, got %s" % type(rep))
 
         return cls.new(rep, dom, lev)
 
@@ -144,6 +141,11 @@ class DMP(CantSympify):
         obj.dom = dom
 
         return obj
+
+    @classmethod
+    def from_dict(cls, rep, dom, lev):
+        rep = dmp_from_dict(rep, lev, dom)
+        return cls.new(rep, dom, lev)
 
     def ground_new(f, coeff):
         """Construct a new ground instance of ``f``. """
@@ -194,11 +196,11 @@ class DMP(CantSympify):
 
     @classmethod
     def zero(cls, lev, dom):
-        return DMP(0, dom, lev)
+        return DMP(dmp_zero(lev), dom, lev)
 
     @classmethod
     def one(cls, lev, dom):
-        return DMP(1, dom, lev)
+        return DMP(dmp_one(lev, dom), dom, lev)
 
     @classmethod
     def from_list(cls, rep, lev, dom):
@@ -518,7 +520,7 @@ class DMP(CantSympify):
                 l = list(term[0])
                 l[s] += i
                 result[tuple(l)] = term[1]
-        return DMP(result, f.dom, f.lev + int(new_symbol))
+        return DMP.from_dict(result, f.lev + int(new_symbol), f.dom)
 
     def homogeneous_order(f):
         """Returns the homogeneous order of ``f``. """
@@ -1075,6 +1077,9 @@ class DMF(PicklableWithSlots, CantSympify):
 
         return obj
 
+    def ground_new(self, rep):
+        return self.new(rep, self.dom, self.lev)
+
     @classmethod
     def _parse(cls, rep, dom, lev=None):
         if isinstance(rep, tuple):
@@ -1237,6 +1242,10 @@ class DMF(PicklableWithSlots, CantSympify):
         """Negate all coefficients in ``f``. """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
+    def add_ground(f, c):
+        """Add an element of the ground domain to ``f``. """
+        return f + f.ground_new(c)
+
     def add(f, g):
         """Add two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
@@ -1329,6 +1338,8 @@ class DMF(PicklableWithSlots, CantSympify):
     def __add__(f, g):
         if isinstance(g, (DMP, DMF)):
             return f.add(g)
+        elif g in f.dom:
+            return f.add_ground(f.dom.convert(g))
 
         try:
             return f.add(f.half_per(g))

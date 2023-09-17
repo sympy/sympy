@@ -495,7 +495,7 @@ class Poly(Basic):
                 if f.rep.dom != dom:
                     f_coeffs = [dom.convert(c, f.rep.dom) for c in f_coeffs]
 
-                F = DMP(dict(list(zip(f_monoms, f_coeffs))), dom, lev)
+                F = DMP.from_dict(dict(list(zip(f_monoms, f_coeffs))), lev, dom)
             else:
                 F = f.rep.convert(dom)
 
@@ -506,7 +506,7 @@ class Poly(Basic):
                 if g.rep.dom != dom:
                     g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
 
-                G = DMP(dict(list(zip(g_monoms, g_coeffs))), dom, lev)
+                G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
             else:
                 G = g.rep.convert(dom)
         else:
@@ -696,7 +696,7 @@ class Poly(Basic):
 
         rep = dict(list(zip(*_dict_reorder(f.rep.to_dict(), f.gens, gens))))
 
-        return f.per(DMP(rep, f.rep.dom, len(gens) - 1), gens=gens)
+        return f.per(DMP.from_dict(rep, len(gens) - 1, f.rep.dom), gens=gens)
 
     def ltrim(f, gen):
         """
