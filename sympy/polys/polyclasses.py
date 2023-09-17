@@ -133,6 +133,7 @@ class DMP(CantSympify):
         # It would be too slow to call _validate_args always at runtime.
         # Ideally this checking would be handled by a static type checker.
         #
+
         cls._validate_args(rep, dom, lev)
 
         obj = super().__new__(cls)
@@ -143,7 +144,7 @@ class DMP(CantSympify):
         return obj
 
     @classmethod
-    def from_dict(cls, rep, dom, lev):
+    def from_dict(cls, rep, lev, dom):
         rep = dmp_from_dict(rep, lev, dom)
         return cls.new(rep, dom, lev)
 
@@ -249,11 +250,6 @@ class DMP(CantSympify):
         This is needed for hashing.
         """
         return dmp_to_tuple(f.rep, f.lev)
-
-    @classmethod
-    def from_dict(cls, rep, lev, dom):
-        """Construct and instance of ``cls`` from a ``dict`` representation. """
-        return cls(dmp_from_dict(rep, lev, dom), dom, lev)
 
     @classmethod
     def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
