@@ -351,6 +351,8 @@ class DifferentialOperator:
             if j == self.parent.base.zero:
                 continue
 
+            j = self.parent.base.to_sympy(j)
+
             if i == 0:
                 print_str += '(' + sstr(j) + ')'
                 continue
