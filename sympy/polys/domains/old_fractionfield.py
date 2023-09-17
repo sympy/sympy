@@ -26,14 +26,14 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
         self.ngens = len(gens)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
+        self.zero = self.dtype.zero(lev, dom)
+        self.one = self.dtype.one(lev, dom)
 
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
 
     def new(self, element):
-        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+        return self.dtype(element, self.dom, len(self.gens) - 1)
 
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
@@ -129,7 +129,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.old_frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        DMF([1, 2], [1, 1], QQ, None)
+        DMF([1, 2], [1, 1], QQ)
 
         """
         if K1.gens == K0.gens:

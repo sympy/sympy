@@ -6,34 +6,6 @@ from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains import Domain
 
-
-class GenericPoly(PicklableWithSlots):
-    """Base class for low-level polynomial representations. """
-
-    def ground_to_ring(f):
-        """Make the ground domain a ring. """
-        return f.set_domain(f.dom.get_ring())
-
-    def ground_to_field(f):
-        """Make the ground domain a field. """
-        return f.set_domain(f.dom.get_field())
-
-    def ground_to_exact(f):
-        """Make the ground domain exact. """
-        return f.set_domain(f.dom.get_exact())
-
-    @classmethod
-    def _perify_factors(per, result, include):
-        if include:
-            coeff, factors = result
-
-        factors = [ (per(g), k) for g, k in factors ]
-
-        if include:
-            return coeff, factors
-        else:
-            return factors
-
 from sympy.polys.densebasic import (
     dmp_validate,
     dup_normal, dmp_normal,
@@ -139,16 +111,12 @@ from sympy.polys.polyerrors import (
     PolynomialError)
 
 
-def init_normal_DMP(rep, lev, dom):
-    return DMP(dmp_normal(rep, lev, dom), dom, lev)
-
-
 class DMP(CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ('rep', 'lev', 'dom', 'ring')
+    __slots__ = ('rep', 'lev', 'dom')
 
-    def __new__(cls, rep, dom, lev=None, ring=None):
+    def __new__(cls, rep, dom, lev=None):
         if lev is not None:
             # PolyElement is a dict subclass so use type instead of isinstance
             if type(rep) is dict:
@@ -158,31 +126,29 @@ class DMP(CantSympify):
         else:
             rep, lev = dmp_validate(rep)
 
-        return cls.new(rep, dom, lev, ring)
+        return cls.new(rep, dom, lev)
 
     def __getnewargs__(self):
-        return self.rep, self.dom, self.lev, self.ring
+        return self.rep, self.dom, self.lev
 
     @classmethod
-    def new(cls, rep, dom, lev, ring):
+    def new(cls, rep, dom, lev):
         # It would be too slow to call _validate_args always at runtime.
         # Ideally this checking would be handled by a static type checker.
         #
-        # cls._validate_args(rep, dom, lev, ring)
+        # cls._validate_args(rep, dom, lev)
 
         obj = super().__new__(cls)
         obj.rep = rep
         obj.lev = lev
         obj.dom = dom
-        obj.ring = None
 
         return obj
 
     @classmethod
-    def _validate_args(cls, rep, dom, lev, ring):
+    def _validate_args(cls, rep, dom, lev):
         assert isinstance(dom, Domain)
         assert isinstance(lev, int) and lev >= 0
-        assert ring is None or isinstance(ring, GlobalPolynomialRing)
 
         def validate_rep(rep, lev):
             assert isinstance(rep, list)
@@ -195,26 +161,20 @@ class DMP(CantSympify):
         validate_rep(rep, lev)
 
     def __repr__(f):
-        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
+        return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom, f.ring))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
 
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
-        if f.dom == g.dom and f.ring == g.ring:
+        if f.dom == g.dom:
             return f.lev, f.dom, f.per, f.rep, g.rep
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
-            ring = f.ring
-            if g.ring is not None:
-                if ring is not None:
-                    ring = ring.unify(g.ring)
-                else:
-                    ring = g.ring
 
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
@@ -226,11 +186,11 @@ class DMP(CantSympify):
                     else:
                         lev -= 1
 
-                return DMP(rep, dom, lev, ring)
+                return DMP(rep, dom, lev)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, kill=False, ring=None):
+    def per(f, rep, dom=None, kill=False):
         """Create a DMP out of the given representation. """
         lev = f.lev
 
@@ -243,18 +203,15 @@ class DMP(CantSympify):
         if dom is None:
             dom = f.dom
 
-        if ring is None:
-            ring = f.ring
-
-        return DMP(rep, dom, lev, ring)
+        return DMP(rep, dom, lev)
 
     @classmethod
-    def zero(cls, lev, dom, ring=None):
-        return DMP(0, dom, lev, ring)
+    def zero(cls, lev, dom):
+        return DMP(0, dom, lev)
 
     @classmethod
-    def one(cls, lev, dom, ring=None):
-        return DMP(1, dom, lev, ring)
+    def one(cls, lev, dom):
+        return DMP(1, dom, lev)
 
     @classmethod
     def from_list(cls, rep, lev, dom):
@@ -310,8 +267,8 @@ class DMP(CantSympify):
         return cls(dmp_from_dict(rep, lev, dom), dom, lev)
 
     @classmethod
-    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom, ring=None):
-        return DMP(dict(list(zip(monoms, coeffs))), dom, lev, ring)
+    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
+        return DMP(dict(list(zip(monoms, coeffs))), dom, lev)
 
     def to_ring(f):
         """Make the ground domain a ring. """
@@ -414,7 +371,7 @@ class DMP(CantSympify):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
-        ([2], DMP([[1], [1, 2]], ZZ, None))
+        ([2], DMP([[1], [1, 2]], ZZ))
 
         """
         J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
@@ -431,10 +388,10 @@ class DMP(CantSympify):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
-        DMP([[[2], []], [[1, 0], []]], ZZ, None)
+        DMP([[[2], []], [[1, 0], []]], ZZ)
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
-        DMP([[[1], []], [[2, 0], []]], ZZ, None)
+        DMP([[[1], []], [[2, 0], []]], ZZ)
 
         """
         return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
@@ -572,7 +529,7 @@ class DMP(CantSympify):
                 l = list(term[0])
                 l[s] += i
                 result[tuple(l)] = term[1]
-        return DMP(result, f.dom, f.lev + int(new_symbol), f.ring)
+        return DMP(result, f.dom, f.lev + int(new_symbol))
 
     def homogeneous_order(f):
         """Returns the homogeneous order of ``f``. """
@@ -1009,7 +966,7 @@ class DMP(CantSympify):
             return g.exquo(f)
         else:
             try:
-                return f.one(f.lev, f.dom, f.ring).mul_ground(g).exquo(f)
+                return f.one(f.lev, f.dom).mul_ground(g).exquo(f)
             except (CoercionFailed, NotImplementedError):
                 return NotImplemented
 
@@ -1090,9 +1047,9 @@ def init_normal_DMF(num, den, lev, dom):
 class DMF(PicklableWithSlots, CantSympify):
     """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ('num', 'den', 'lev', 'dom', 'ring')
+    __slots__ = ('num', 'den', 'lev', 'dom')
 
-    def __init__(self, rep, dom, lev=None, ring=None):
+    def __init__(self, rep, dom, lev=None):
         num, den, lev = self._parse(rep, dom, lev)
         num, den = dmp_cancel(num, den, lev, dom)
 
@@ -1100,10 +1057,9 @@ class DMF(PicklableWithSlots, CantSympify):
         self.den = den
         self.lev = lev
         self.dom = dom
-        self.ring = None
 
     @classmethod
-    def new(cls, rep, dom, lev=None, ring=None):
+    def new(cls, rep, dom, lev=None):
         num, den, lev = cls._parse(rep, dom, lev)
 
         obj = object.__new__(cls)
@@ -1112,7 +1068,6 @@ class DMF(PicklableWithSlots, CantSympify):
         obj.den = den
         obj.lev = lev
         obj.dom = dom
-        obj.ring = None
 
         return obj
 
@@ -1161,28 +1116,21 @@ class DMF(PicklableWithSlots, CantSympify):
         return num, den, lev
 
     def __repr__(f):
-        return "%s((%s, %s), %s, %s)" % (f.__class__.__name__, f.num, f.den,
-                                         f.dom, f.ring)
+        return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
 
     def __hash__(f):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
-            dmp_to_tuple(f.den, f.lev), f.lev, f.dom, f.ring))
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
 
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
-        if f.dom == g.dom and f.ring == g.ring:
+        if f.dom == g.dom:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
-            ring = f.ring
-            if g.ring is not None:
-                if ring is not None:
-                    ring = ring.unify(g.ring)
-                else:
-                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
@@ -1199,7 +1147,7 @@ class DMF(PicklableWithSlots, CantSympify):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev, ring=ring)
+                return f.__class__.new((num, den), dom, lev)
 
             return lev, dom, per, F, G
 
@@ -1208,17 +1156,11 @@ class DMF(PicklableWithSlots, CantSympify):
         if not isinstance(g, DMF) or f.lev != g.lev:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
-        if f.dom == g.dom and f.ring == g.ring:
+        if f.dom == g.dom:
             return (f.lev, f.dom, f.per, (f.num, f.den),
                                          (g.num, g.den))
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
-            ring = f.ring
-            if g.ring is not None:
-                if ring is not None:
-                    ring = ring.unify(g.ring)
-                else:
-                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
@@ -1236,11 +1178,11 @@ class DMF(PicklableWithSlots, CantSympify):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev, ring=ring)
+                return f.__class__.new((num, den), dom, lev)
 
             return lev, dom, per, F, G
 
-    def per(f, num, den, cancel=True, kill=False, ring=None):
+    def per(f, num, den, cancel=True, kill=False):
         """Create a DMF out of the given representation. """
         lev, dom = f.lev, f.dom
 
@@ -1253,10 +1195,7 @@ class DMF(PicklableWithSlots, CantSympify):
         if cancel:
             num, den = dmp_cancel(num, den, lev, dom)
 
-        if ring is None:
-            ring = f.ring
-
-        return f.__class__.new((num, den), dom, lev, ring=ring)
+        return f.__class__.new((num, den), dom, lev)
 
     def half_per(f, rep, kill=False):
         """Create a DMP out of the given representation. """
@@ -1271,12 +1210,12 @@ class DMF(PicklableWithSlots, CantSympify):
         return DMP(rep, f.dom, lev)
 
     @classmethod
-    def zero(cls, lev, dom, ring=None):
-        return cls.new(0, dom, lev, ring=ring)
+    def zero(cls, lev, dom):
+        return cls.new(0, dom, lev)
 
     @classmethod
-    def one(cls, lev, dom, ring=None):
-        return cls.new(1, dom, lev, ring=ring)
+    def one(cls, lev, dom):
+        return cls.new(1, dom, lev)
 
     def numer(f):
         """Returns the numerator of ``f``. """
@@ -1361,20 +1300,13 @@ class DMF(PicklableWithSlots, CantSympify):
             num = dmp_mul(F_num, G_den, lev, dom)
             den = dmp_mul(F_den, G_num, lev, dom)
 
-        res = per(num, den)
-        if f.ring is not None and res not in f.ring:
-            from sympy.polys.polyerrors import ExactQuotientFailed
-            raise ExactQuotientFailed(f, g, f.ring)
-        return res
+        return per(num, den)
 
     exquo = quo
 
     def invert(f, check=True):
         """Computes inverse of a fraction ``f``. """
-        if check and f.ring is not None and not f.ring.is_unit(f):
-            raise NotReversible(f, f.ring)
-        res = f.per(f.den, f.num, cancel=False)
-        return res
+        return f.per(f.den, f.num, cancel=False)
 
     @property
     def is_zero(f):
@@ -1766,7 +1698,3 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def __bool__(f):
         return bool(f.rep)
-
-
-# Avoid circular import:
-from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing

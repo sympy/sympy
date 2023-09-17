@@ -276,7 +276,7 @@ class MonogenicFiniteExtension(Domain):
         self.mod = mod.rep  # DMP representation
 
         self.domain = dom = mod.domain
-        self.ring = mod.rep.ring or dom.old_poly_ring(*mod.gens)
+        self.ring = dom.old_poly_ring(*mod.gens)
 
         self.zero = self.convert(self.ring.zero)
         self.one = self.convert(self.ring.one)

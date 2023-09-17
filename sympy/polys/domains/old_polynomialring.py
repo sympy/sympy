@@ -39,8 +39,8 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
         self.ngens = len(gens)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
+        self.zero = self.dtype.zero(lev, dom)
+        self.one = self.dtype.one(lev, dom)
 
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
@@ -48,7 +48,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         self.order = opts.get('order', monomial_key(self.default_order))
 
     def new(self, element):
-        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+        return self.dtype(element, self.dom, len(self.gens) - 1)
 
     def __str__(self):
         s_order = str(self.order)
@@ -203,7 +203,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
         >>> R._sdm_to_vector(L, 2)
-        [DMF([[1], [2, 0]], [[1]], QQ, None), DMF([[1, 0], []], [[1]], QQ, None)]
+        [DMF([[1], [2, 0]], [[1]], QQ), DMF([[1, 0], []], [[1]], QQ)]
         """
         dics = self._sdm_to_dics(s, n)
         # NOTE this works for global and local rings!
@@ -321,7 +321,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
     def new(self, a):
         """Construct an element of ``self`` domain from ``a``. """
-        res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
+        res = self.dtype(a, self.dom, len(self.gens) - 1)
 
         # make sure res is actually in our ring
         if res.denom().terms(order=self.order)[0][0] != (0,)*len(self.gens):
