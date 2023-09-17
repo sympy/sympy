@@ -154,15 +154,15 @@ class Limit(Expr):
 
         if(z0.has(z)):
             raise NotImplementedError("Limits approaching a variable point are"
-                    " not supported (%s -> %s)" % (z, z0))
+                    f" not supported ({z} -> {z0})")
         if isinstance(dir, str):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or "
-                    "Symbol, not %s" % type(dir))
+                    f"Symbol, not {type(dir)}")
         if str(dir) not in ('+', '-', '+-'):
             raise ValueError("direction must be one of '+', '-' "
-                    "or '+-', not %s" % dir)
+                    f"or '+-', not {dir}")
 
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
@@ -223,8 +223,7 @@ class Limit(Expr):
             if r.is_infinite and l.is_infinite:
                 return S.ComplexInfinity
             raise ValueError("The limit does not exist since "
-                             "left hand limit = %s and right hand limit = %s"
-                             % (l, r))
+                             f"left hand limit = {l} and right hand limit = {r}")
 
         if z0 is S.ComplexInfinity:
             raise NotImplementedError("Limits at complex "
