@@ -136,7 +136,7 @@ class DMP(CantSympify):
         # It would be too slow to call _validate_args always at runtime.
         # Ideally this checking would be handled by a static type checker.
         #
-        # cls._validate_args(rep, dom, lev)
+        cls._validate_args(rep, dom, lev)
 
         obj = super().__new__(cls)
         obj.rep = rep
@@ -144,6 +144,10 @@ class DMP(CantSympify):
         obj.dom = dom
 
         return obj
+
+    def ground_new(f, coeff):
+        """Construct a new ground instance of ``f``. """
+        return f.new(dmp_ground(coeff, f.lev), f.dom, f.lev)
 
     @classmethod
     def _validate_args(cls, rep, dom, lev):
@@ -180,13 +184,13 @@ class DMP(CantSympify):
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
             def per(rep):
-                return DMP(rep, dom, lev)
+                return f.new(rep, dom, lev)
 
             return lev, dom, per, F, G
 
     def per(f, rep):
         """Create a DMP out of the given representation. """
-        return DMP(rep, f.dom, f.lev)
+        return f.new(rep, f.dom, f.lev)
 
     @classmethod
     def zero(cls, lev, dom):
