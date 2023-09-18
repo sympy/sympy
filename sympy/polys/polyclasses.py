@@ -133,8 +133,7 @@ class DMP(CantSympify):
         # It would be too slow to call _validate_args always at runtime.
         # Ideally this checking would be handled by a static type checker.
         #
-
-        cls._validate_args(rep, dom, lev)
+        #cls._validate_args(rep, dom, lev)
 
         obj = super().__new__(cls)
         obj.rep = rep
