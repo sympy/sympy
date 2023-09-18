@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import S, sympify
+from sympy import S, sympify
 from sympy.physics.mechanics import (
     PathwayBase,
     PinJoint,
