@@ -7,6 +7,7 @@ import re
 
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
+from .numbers import int_valued
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
@@ -303,18 +304,6 @@ class Expr(Basic, EvalfMixin):
         return floor(other / self), Mod(other, self)
 
     def __int__(self):
-        # Although we only need to round to the units position, we'll
-        # get one more digit so the extra testing below can be avoided
-        # unless the rounded value rounded to an integer, e.g. if an
-        # expression were equal to 1.9 and we rounded to the unit position
-        # we would get a 2 and would not know if this rounded up or not
-        # without doing a test (as done below). But if we keep an extra
-        # digit we know that 1.9 is not the same as 1 and there is no
-        # need for further testing: our int value is correct. If the value
-        # were 1.99, however, this would round to 2.0 and our int value is
-        # off by one. So...if our round value is the same as the int value
-        # (regardless of how much extra work we do to calculate extra decimal
-        # places) we need to test whether we are off by one.
         from .symbol import Dummy
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
@@ -324,19 +313,13 @@ class Expr(Basic, EvalfMixin):
         if r in (S.NaN, S.Infinity, S.NegativeInfinity):
             raise TypeError("Cannot convert %s to int" % r)
         i = int(r)
-        if not i:
-            return 0
-        # off-by-one check
-        if i == r and not (self - i).equals(0):
-            isign = 1 if i > 0 else -1
-            x = Dummy()
-            # in the following (self - i).evalf(2) will not always work while
-            # (self - r).evalf(2) and the use of subs does; if the test that
-            # was added when this comment was added passes, it might be safe
-            # to simply use sign to compute this rather than doing this by hand:
-            diff_sign = 1 if (self - x).evalf(2, subs={x: i}) > 0 else -1
-            if diff_sign != isign:
-                i -= isign
+        if int_valued(r):
+            # non-integer self should pass one of these tests
+            if self > i is S.true:
+                return i
+            if self < i is S.true:
+                return i - 1
+            # is it safe to assume that self == i?
         return i
 
     def __float__(self):
