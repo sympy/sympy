@@ -58,7 +58,7 @@ def test_intersection():
             Line((0, 0), slope=1), pairwise=True) == [
         Point(0, 0), Segment((0, 0), (1, 0))]
     R = 4.0
-    intersection(
+    c = intersection(
             Ray(Point2D(0.001, -1),
             Point2D(0.0008, -1.7)),
             Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
