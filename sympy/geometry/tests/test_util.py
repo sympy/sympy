@@ -57,16 +57,23 @@ def test_intersection():
             Segment((-1, 0), (1, 0)),
             Line((0, 0), slope=1), pairwise=True) == [
         Point(0, 0), Segment((0, 0), (1, 0))]
-    assert intersection(
+    R = 4.0
+    intersection(
             Ray(Point2D(0.001, -1),
             Point2D(0.0008, -1.7)),
-            Ellipse(center=Point2D(0, 0), hradius=4.0, vradius=2.0), pairwise=True)[0].coordinates == pytest.approx(
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c == pytest.approx(
             Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
-    assert intersection(
+    # check this is responds to a lower precision parameter
+    R = Float(4, 5)
+    c2 = intersection(
             Ray(Point2D(0.001, -1),
             Point2D(0.0008, -1.7)),
-            Ellipse(center=Point2D(0, 0), hradius=Float(4,10), vradius=2.0), pairwise=True)[0].coordinates == pytest.approx(
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c2 == pytest.approx(
             Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
+    assert c[0]._prec == 53
+    assert c2[0]._prec == 20
 
 
 def test_convex_hull():
