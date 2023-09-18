@@ -321,14 +321,6 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         each pivot is normalized to be `1` before row operations are
         used to zero above and below the pivot.
 
-    rhs : Matrix
-        If ``rhs`` is passed it must have the same number of rows as ``M``.
-        Reduction steps will not take place in this matrix, but
-        the elements will be included in the reduction steps. If a single
-        column matrix of symbols is passed, the expressions in each
-        row at the end of the reduction will indicate how rows were
-        combined to perform the reduction.
-
     Examples
     ========
 
