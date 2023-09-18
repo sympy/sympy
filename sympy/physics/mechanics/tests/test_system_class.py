@@ -1,7 +1,6 @@
 import pytest
 
-from sympy.core.backend import (
-    ImmutableMatrix, _simplify_matrix, cos, eye, sin, symbols, sympify, zeros)
+from sympy import ImmutableMatrix, cos, eye, sin, symbols, sympify, zeros
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
     PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
@@ -611,10 +610,10 @@ class TestSystemExamples:
         system.validate_system()
         system.form_eoms()
         assert isinstance(system.eom_method, KanesMethod)
-        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+        assert (simplify(system.mass_matrix - ImmutableMatrix(
             [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
                 == zeros(2, 2))
-        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+        assert (simplify(system.forcing - ImmutableMatrix([
             [mp * l * up ** 2 * sin(qp) + F],
             [-mp * g * l * sin(qp) + k * qp]])) == zeros(2, 1))
 
@@ -649,10 +648,10 @@ class TestSystemExamples:
               cos(qp) - l * F * cos(qp)], [l * up ** 2 * sin(qp)]])
         Mm = (Mk.row_join(zeros(2, 2))).col_join(zeros(2, 2).row_join(Md))
         gm = gk.col_join(gd)
-        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 2)
-        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
-        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(4, 4)
-        assert _simplify_matrix(system.forcing_full - gm) == zeros(4, 1)
+        assert simplify(system.mass_matrix - Md) == zeros(2, 2)
+        assert simplify(system.forcing - gd) == zeros(2, 1)
+        assert simplify(system.mass_matrix_full - Mm) == zeros(4, 4)
+        assert simplify(system.forcing_full - gm) == zeros(4, 1)
 
     def test_cart_pendulum_lagrange(self):
         # Lagrange version of test_cart_pendulus_kanes
@@ -683,10 +682,10 @@ class TestSystemExamples:
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system(LagrangesMethod)
         system.form_eoms(LagrangesMethod)
-        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+        assert (simplify(system.mass_matrix - ImmutableMatrix(
             [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
                 == zeros(2, 2))
-        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+        assert (simplify(system.forcing - ImmutableMatrix([
             [mp * l * qpd ** 2 * sin(qp) + F], [-mp * g * l * sin(qp) + k * qp]]
         )) == zeros(2, 1))
 
@@ -720,7 +719,7 @@ class TestSystemExamples:
         Mm = (eye(2).row_join(zeros(2, 3))).col_join(zeros(3, 2).row_join(
             Md.col_join(ImmutableMatrix([l * cos(qp), 1, 0]).T)))
         gm = ImmutableMatrix([qpd, qcd] + gd[:] + [l * sin(qp) * qpd ** 2])
-        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 3)
-        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
-        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(5, 5)
-        assert _simplify_matrix(system.forcing_full - gm) == zeros(5, 1)
+        assert simplify(system.mass_matrix - Md) == zeros(2, 3)
+        assert simplify(system.forcing - gd) == zeros(2, 1)
+        assert simplify(system.mass_matrix_full - Mm) == zeros(5, 5)
+        assert simplify(system.forcing_full - gm) == zeros(5, 1)

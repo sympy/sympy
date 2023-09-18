@@ -1,4 +1,4 @@
-from sympy.core.backend import sin, cos, tan, pi, symbols, Matrix, S, Function
+from sympy import sin, cos, tan, pi, symbols, Matrix, S, Function
 from sympy.physics.mechanics import (Particle, Point, ReferenceFrame,
                                      RigidBody)
 from sympy.physics.mechanics import (angular_momentum, dynamicsymbols,
