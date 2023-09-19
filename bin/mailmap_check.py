@@ -14,7 +14,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
-import os
 if sys.version_info < (3, 8):
     sys.exit("This script requires Python 3.8 or newer")
 
@@ -323,7 +322,7 @@ def read_lines(path):
 
 
 def write_lines(path, lines):
-    with open(path, 'w', encoding='utf-8') as fout:
+    with open(path, 'w', encoding='utf-8', newline='') as fout:
         fout.write('\n'.join(lines))
         fout.write('\n')
 

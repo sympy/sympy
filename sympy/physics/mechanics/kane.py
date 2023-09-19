@@ -1,4 +1,4 @@
-from sympy.core.backend import zeros, Matrix, diff, eye
+from sympy import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
@@ -33,7 +33,7 @@ class KanesMethod(_Methods):
     q, u : Matrix
         Matrices of the generalized coordinates and speeds
     bodies : iterable
-        Iterable of Point and RigidBody objects in the system.
+        Iterable of Particle and RigidBody objects in the system.
     loads : iterable
         Iterable of (Point, vector) or (ReferenceFrame, vector) tuples
         describing the forces on the system.
@@ -53,22 +53,56 @@ class KanesMethod(_Methods):
         The "mass matrix" for the u's and q's with dynamics and kinematics
     forcing_full : Matrix
         The "forcing vector" for the u's and q's with dynamics and kinematics
+
+    Parameters
+    ==========
+
+    frame : ReferenceFrame
+        The inertial reference frame for the system.
+    q_ind : iterable of dynamicsymbols
+        Independent generalized coordinates.
+    u_ind : iterable of dynamicsymbols
+        Independent generalized speeds.
+    kd_eqs : iterable of Expr, optional
+        Kinematic differential equations, which linearly relate the generalized
+        speeds to the time-derivatives of the generalized coordinates.
+    q_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized coordinates.
+    configuration_constraints : iterable of Expr, optional
+        Constraints on the system's configuration, i.e. holonomic constraints.
+    u_dependent : iterable of dynamicsymbols, optional
+        Dependent generalized speeds.
+    velocity_constraints : iterable of Expr, optional
+        Constraints on the system's velocity, i.e. the combination of the
+        nonholonomic constraints and the time-derivative of the holonomic
+        constraints.
+    acceleration_constraints : iterable of Expr, optional
+        Constraints on the system's acceleration, by default these are the
+        time-derivative of the velocity constraints.
+    u_auxiliary : iterable of dynamicsymbols, optional
+        Auxiliary generalized speeds.
+    bodies : iterable of Particle and/or RigidBody, optional
+        The particles and rigid bodies in the system.
+    forcelist : iterable of tuple[Point | ReferenceFrame, Vector], optional
+        Forces and torques applied on the system.
     explicit_kinematics : bool
         Boolean whether the mass matrices and forcing vectors should use the
         explicit form (default) or implicit form for kinematics.
         See the notes for more details.
     kd_eqs_solver : str, callable
-        Method used to solve the kinematic differential equations. If a string is
-        supplied, it should be a valid method that can be used with the
-        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should have the format ``f(A, rhs)``, where it solves the equations and returns
-        the solution. The default utilizes LU solve. See the notes for more information.
+        Method used to solve the kinematic differential equations. If a string
+        is supplied, it should be a valid method that can be used with the
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        equations and returns the solution. The default utilizes LU solve. See
+        the notes for more information.
     constraint_solver : str, callable
         Method used to solve the velocity constraints. If a string is
         supplied, it should be a valid method that can be used with the
-        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is supplied, it
-        should have the format ``f(A, rhs)``, where it solves the equations and returns
-        the solution. The default utilizes LU solve. See the notes for more information.
+        :meth:`sympy.matrices.matrices.MatrixBase.solve`. If a callable is
+        supplied, it should have the format ``f(A, rhs)``, where it solves the
+        equations and returns the solution. The default utilizes LU solve. See
+        the notes for more information.
 
     Notes
     =====
@@ -89,6 +123,11 @@ class KanesMethod(_Methods):
     The default solver ``'LU'``, which stands for LU solve, results relatively low
     number of operations. The weakness of this method is that it can result in zero
     division errors.
+
+    If zero divisions are encountered, a possible solver which may solve the problem
+    is ``"CRAMER"``. This method uses Cramer's rule to solve the system. This method
+    is slower and results in more operations than the default solver. However it only
+    uses a single division by default per entry of the solution.
 
     While a valid list of solvers can be found at
     :meth:`sympy.matrices.matrices.MatrixBase.solve`, it is also possible to supply a

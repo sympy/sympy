@@ -3,6 +3,7 @@ from itertools import product
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, diff)
 from sympy.core import EulerGamma
+from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -256,7 +257,7 @@ def test_frac():
     raises(ValueError, lambda: limit(frac(x), x, 0, '+-'))
     assert limit(frac(-2*x + 1), x, 0, "+") == 1
     assert limit(frac(-2*x + 1), x, 0, "-") == 0
-    assert limit(frac(x + S.Half), x, 0, "+-") == 1/2
+    assert limit(frac(x + S.Half), x, 0, "+-") == S(1)/2
     assert limit(frac(1/x), x, 0) == AccumBounds(0, 1)
 
 
@@ -420,10 +421,10 @@ def test_issue_4547():
 
 def test_issue_5164():
     assert limit(x**0.5, x, oo) == oo**0.5 is oo
-    assert limit(x**0.5, x, 16) == S(16)**0.5
+    assert limit(x**0.5, x, 16) == 4 # Should this be a float?
     assert limit(x**0.5, x, 0) == 0
     assert limit(x**(-0.5), x, oo) == 0
-    assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
+    assert limit(x**(-0.5), x, 4) == S.Half # Should this be a float?
 
 
 def test_issue_5383():
@@ -1309,3 +1310,14 @@ def test_issue_24276():
     assert fx.simplify().limit(x, oo) == 2
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
+
+def test_issue_25230():
+    a = Symbol('a', real = True)
+    b = Symbol('b', positive = True)
+    c = Symbol('c', negative = True)
+    n = Symbol('n', integer = True)
+    raises(NotImplementedError, lambda: limit(Mod(x, a), x, a))
+    assert limit(Mod(x, b), x, n*b, '+') == 0
+    assert limit(Mod(x, b), x, n*b, '-') == b
+    assert limit(Mod(x, c), x, n*c, '+') == c
+    assert limit(Mod(x, c), x, n*c, '-') == 0

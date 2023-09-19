@@ -1,4 +1,4 @@
-from sympy.core.backend import sympify
+from sympy import sympify
 from sympy.physics.vector import Point, Dyadic, ReferenceFrame
 from collections import namedtuple
 

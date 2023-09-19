@@ -294,20 +294,23 @@ here to see a preview of the documentation."
 (workflow-process-run-tests)=
 ## Run the Tests
 
-There are several ways of running SymPy tests but the easiest is to use the `bin/test` script, consult 'the wiki details on running tests \<<https://github.com/sympy/sympy/wiki/Running-tests>>\`\_.
+There are several ways of running SymPy tests but the easiest is to use the
+`bin/test` script.
 
-The script takes a number of options and arguments and then passes them to `sympy.test(*paths, **kwargs)`. Run `bin/test --help` for all supported arguments.
+The script takes a number of options and arguments. Run `bin/test --help` for
+all supported arguments. Under the hood it uses `pytest`, and you can use that
+directly as well if you prefer.
 
 Run all tests by using the command:
 
 ```bash
-$ bin/test
+$ ./bin/test
 ```
 
 To run tests for a specific file, use:
 
 ```bash
-$ bin/test test_basic
+$ ./bin/test test_basic
 ```
 
 Where `test_basic` is from file `sympy/core/basic.py`.
@@ -315,7 +318,7 @@ Where `test_basic` is from file `sympy/core/basic.py`.
 To run tests for modules, use:
 
 ```bash
-$  bin/test /core /utilities
+$ ./bin/test /core /utilities
 ```
 
 This will run tests for the `core` and `utilities` modules.
@@ -323,7 +326,7 @@ This will run tests for the `core` and `utilities` modules.
 Similary, run quality tests with:
 
 ```bash
-$ bin/test code_quality
+$ ./bin/test code_quality
 ```
 
 ## Commit the changes

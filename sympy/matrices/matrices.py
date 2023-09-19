@@ -33,7 +33,8 @@ from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_bird, _det_laplace, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -58,7 +59,7 @@ from .graph import (
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
-    _pinv_solve, _solve, _solve_least_squares)
+    _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
@@ -109,6 +110,12 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
         return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
+    def _eval_det_bird(self):
+        return _det_bird(self)
+
+    def _eval_det_laplace(self):
+        return _det_laplace(self)
+
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
@@ -140,6 +147,8 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
     _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_bird.__doc__            = _det_bird.__doc__
+    _eval_det_laplace.__doc__            = _det_laplace.__doc__
     _eval_det_lu.__doc__                 = _det_LU.__doc__
     _eval_determinant.__doc__            = _det.__doc__
     adjugate.__doc__                     = _adjugate.__doc__
@@ -166,6 +175,26 @@ class MatrixReductions(MatrixDeterminant):
 
     def rank(self, iszerofunc=_iszero, simplify=False):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
+
+    def rref_rhs(self, rhs):
+        """Return reduced row-echelon form of matrix, matrix showing
+        rhs after reduction steps. ``rhs`` must have the same number
+        of rows as ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> r1, r2 = symbols('r1 r2')
+        >>> Matrix([[1, 1], [2, 1]]).rref_rhs(Matrix([r1, r2]))
+        (Matrix([
+        [1, 0],
+        [0, 1]]), Matrix([
+        [ -r1 + r2],
+        [2*r1 - r2]]))
+        """
+        r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))
+        return r[:, :self.cols], r[:, -rhs.cols:]
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True):
@@ -440,7 +469,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args, evaluate=True, **kwargs):
         """Calculate the derivative of each element in the matrix.
 
         Examples
@@ -462,12 +491,11 @@ class MatrixCalculus(MatrixCommon):
         """
         # XXX this should be handled here rather than in Derivative
         from sympy.tensor.array.array_derivatives import ArrayDerivative
-        kwargs.setdefault('evaluate', True)
-        deriv = ArrayDerivative(self, *args, evaluate=True)
-        if not isinstance(self, Basic):
+        deriv = ArrayDerivative(self, *args, evaluate=evaluate)
+        # XXX This can rather changed to always return immutable matrix
+        if not isinstance(self, Basic) and evaluate:
             return deriv.as_mutable()
-        else:
-            return deriv
+        return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
@@ -2273,6 +2301,9 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
+    def cramer_solve(self, rhs, det_method="laplace"):
+        return _cramer_solve(self, rhs, det_method=det_method)
+
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
 
@@ -2343,6 +2374,7 @@ class MatrixBase(MatrixDeprecated,
     QRsolve.__doc__                = _QRsolve.__doc__
     gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
     pinv_solve.__doc__             = _pinv_solve.__doc__
+    cramer_solve.__doc__           = _cramer_solve.__doc__
     solve.__doc__                  = _solve.__doc__
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 

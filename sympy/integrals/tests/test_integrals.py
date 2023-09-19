@@ -2074,26 +2074,42 @@ def test_mul_pow_derivative():
     assert integrate(x**3*Derivative(f(x), (x, 4))) == \
            x**3*Derivative(f(x), (x, 3)) - 3*x**2*Derivative(f(x), (x, 2)) + 6*x*Derivative(f(x), x) - 6*f(x)
 
+
 def test_issue_20782():
-    x_d = symbols('x_d')
+    fun1 = Piecewise((0, x < 0.0), (1, True))
+    fun2 = -Piecewise((0, x < 1.0), (1, True))
+    fun_sum = fun1 + fun2
+    L = (x, -float('Inf'), 1)
 
-    fun1 = lambda x : -Piecewise((0, x < 0.0), (1, True))
-    fun2 = lambda x : Piecewise((0, x < 1.0), (1, True))
-    fun_sum = lambda x : +Piecewise((0, x < 0.0), (1, True)) \
-                        -Piecewise((0, x < 1.0), (1, True))
+    assert integrate(fun1, L) == 1
+    assert integrate(fun2, L) == 0
+    assert integrate(-fun1, L) == -1
+    assert integrate(-fun2, L) == 0.
+    assert integrate(fun_sum, L) == 1.
+    assert integrate(-fun_sum, L) == -1.
 
-    fun_sum_neg = lambda x : -Piecewise((0, x < 0.0), (1, True)) \
-                            +Piecewise((0, x < 1.0), (1, True))
 
-    assert integrate(-fun1(x_d), (x_d, -float('Inf'), 1)) == 1
-    assert integrate(-fun2(x_d), (x_d, -float('Inf'), 1)) == 0
-    assert integrate(fun1(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(fun2(x_d), (x_d, -float('Inf'), 1)) == 0
-    assert integrate(fun_sum(x_d), (x_d, -float('Inf'), 1)) == 1
-    assert integrate(-fun_sum(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == -1
-    assert integrate(-fun_sum_neg(x_d), (x_d, -float('Inf'), 1)) == 1
+def test_issue_20781():
+    P = lambda a: Piecewise((0, x < a), (1, x >= a))
+    f = lambda a: P(int(a)) + P(float(a))
+    L = (x, -float('Inf'), x)
+    f1 = integrate(f(1), L)
+    assert f1 == 2*x - Min(1.0, x) - Min(x, Max(1.0, 1, evaluate=False))
+    # XXX is_zero is True for S(0) and Float(0) and this is baked into
+    # the code more deeply than the issue of Float(0) != S(0)
+    assert integrate(f(0), (x, -float('Inf'), x)
+        ) == 2*x - 2*Min(0, x)
 
-    f = Piecewise((0, x < 0.0), (1, True)) - Piecewise((0, x < 1.0), (1, True))
-    assert integrate(f, (x, -oo, 1)) == 1
-    assert integrate(-f, (x, -oo, 1)) == -1
+
+@slow
+def test_issue_19427():
+    # <https://github.com/sympy/sympy/issues/19427>
+    x = Symbol("x")
+
+    # Have always been okay:
+    assert integrate((x ** 4) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 16
+    assert integrate((-2 * x ** 2) * sqrt(1 - x ** 2), (x, -1, 1)) == -pi / 4
+    assert integrate((1) * sqrt(1 - x ** 2), (x, -1, 1)) == pi / 2
+
+    # Sum of the above, used to incorrectly return 0 for a while:
+    assert integrate((x ** 4 - 2 * x ** 2 + 1) * sqrt(1 - x ** 2), (x, -1, 1)) == 5 * pi / 16

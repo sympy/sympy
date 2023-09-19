@@ -11,6 +11,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
+from .intfunc import mod_inverse
 from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
@@ -235,7 +236,6 @@ class Expr(Basic, EvalfMixin):
             if other >= 0:
                 return _sympify(pow(_self, other, mod))
             else:
-                from .numbers import mod_inverse
                 return _sympify(mod_inverse(pow(_self, -other, mod), mod))
         except ValueError:
             power = self._pow(other)
@@ -3796,10 +3796,9 @@ class Expr(Basic, EvalfMixin):
 
         See Also
         ========
-        sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
+        sympy.core.intfunc.mod_inverse, sympy.polys.polytools.invert
         """
         if self.is_number and getattr(g, 'is_number', True):
-            from .numbers import mod_inverse
             return mod_inverse(self, g)
         from sympy.polys.polytools import invert
         return invert(self, g, *gens, **args)

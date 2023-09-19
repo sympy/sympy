@@ -104,6 +104,7 @@ class CodePrinter(StrPrinter):
             'Ei': ('li', []),
             'dirichlet_eta': ('zeta', []),
             'riemann_xi': ('zeta', ['gamma']),
+            'SingularityFunction': ('Piecewise', []),
     }
 
     def __init__(self, settings=None):
@@ -444,7 +445,8 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
             if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
-                return self._print(expr.rewrite(target_f))
+                return '(' + self._print(expr.rewrite(target_f)) + ')'
+
         if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:

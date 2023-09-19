@@ -1,11 +1,9 @@
-from sympy.core.power import integer_nthroot
-from sympy.external.gmpy import gcd, invert
+from sympy.core.random import _randint
+from sympy.external.gmpy import gcd, invert, sqrt as isqrt
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
-import random
 
-rgen = random.Random()
 
 class SievePolynomial:
     def __init__(self, modified_coeff=(), a=None, b=None):
@@ -119,8 +117,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     idx_5000 : index of prime number in the factor_base near to 5000
     seed : Generate pseudoprime numbers
     """
-    if seed is not None:
-        rgen.seed(seed)
+    randint = _randint(seed)
     approx_val = sqrt(2*N) / M
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
@@ -135,7 +132,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
         while(a < approx_val):
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
-                rand_p = rgen.randint(start, end)
+                rand_p = randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
@@ -297,7 +294,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    sqrt_n = sqrt(float(N))
+    sqrt_n = isqrt(N)
     accumulated_val = log(M * sqrt_n)*2**10 - ERROR_TERM
     smooth_relations = []
     proper_factor = set()
@@ -433,7 +430,7 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     for i in independent_v:
         v *= i
     #assert u**2 % N == v % N
-    v = integer_nthroot(v, 2)[0]
+    v = isqrt(v)
     return gcd(u - v, N)
 
 
@@ -477,7 +474,6 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
     ERROR_TERM*=2**10
-    rgen.seed(seed)
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     smooth_relations = []
     ith_poly = 0

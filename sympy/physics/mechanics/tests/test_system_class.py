@@ -1,14 +1,13 @@
 import pytest
 
-from sympy.core.backend import (
-    ImmutableMatrix, _simplify_matrix, cos, eye, sin, symbols, sympify, zeros)
+from sympy import ImmutableMatrix, cos, eye, sin, symbols, sympify, zeros
 from sympy.physics.mechanics import (
     Force, KanesMethod, LagrangesMethod, Particle, PinJoint, Point,
-    PrismaticJoint, ReferenceFrame, RigidBody, Torque, dynamicsymbols)
+    PrismaticJoint, ReferenceFrame, RigidBody, Torque, TorqueActuator,
+    dynamicsymbols)
 from sympy.physics.mechanics._system import System
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
-from sympy.physics.mechanics._actuator import TorqueActuator
 
 t = dynamicsymbols._t  # type: ignore
 q = dynamicsymbols('q:6')  # type: ignore
@@ -19,7 +18,7 @@ u = dynamicsymbols('u:6')  # type: ignore
 class TestSystemBase:
     @pytest.fixture()
     def _empty_system_setup(self):
-        self.system = System(Point('origin'), ReferenceFrame('frame'))
+        self.system = System(ReferenceFrame('frame'), Point('origin'))
 
     def _empty_system_check(self, exclude=()):
         matrices = ('q_ind', 'q_dep', 'q', 'u_ind', 'u_dep', 'u', 'kdes',
@@ -35,7 +34,7 @@ class TestSystemBase:
             assert self.system.eom_method is None
 
     def _create_filled_system(self, with_speeds=True):
-        self.system = System(Point('origin'), ReferenceFrame('frame'))
+        self.system = System(ReferenceFrame('frame'), Point('origin'))
         u = dynamicsymbols('u:6') if with_speeds else qd
         self.bodies = symbols('rb1:5', cls=RigidBody)
         self.joints = (
@@ -85,6 +84,15 @@ class TestSystemBase:
         assert ('joints' in exclude or
                 self.system.joints == tuple(self.joints))
 
+    @pytest.fixture()
+    def _moving_point_mass(self, _empty_system_setup):
+        self.system.q_ind = q[0]
+        self.system.u_ind = u[0]
+        self.system.kdes = u[0] - q[0].diff(t)
+        p = Particle('p', mass=symbols('m'))
+        self.system.add_bodies(p)
+        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
+
 
 class TestSystem(TestSystemBase):
     def test_empty_system(self, _empty_system_setup):
@@ -101,7 +109,7 @@ class TestSystem(TestSystemBase):
         if origin is None and frame is None:
             self.system = System()
         else:
-            self.system = System(origin, frame)
+            self.system = System(frame, origin)
         if origin is None:
             assert self.system.origin.name == 'inertial_origin'
         else:
@@ -440,19 +448,21 @@ class TestSystem(TestSystemBase):
         else:
             assert body == self.bodies[body_index]
 
+    @pytest.mark.parametrize('eom_method', [KanesMethod, LagrangesMethod])
+    def test_form_eoms_calls_subclass(self, _moving_point_mass, eom_method):
+        class MyMethod(eom_method):
+            pass
+
+        self.system.form_eoms(eom_method=MyMethod)
+        assert isinstance(self.system.eom_method, MyMethod)
+
     @pytest.mark.parametrize('kwargs, expected', [
         ({}, ImmutableMatrix([[-1, 0], [0, symbols('m')]])),
         ({'explicit_kinematics': True}, ImmutableMatrix([[1, 0],
                                                          [0, symbols('m')]])),
     ])
-    def test_system_kane_form_eoms_kwargs(self, _empty_system_setup, kwargs,
+    def test_system_kane_form_eoms_kwargs(self, _moving_point_mass, kwargs,
                                           expected):
-        self.system.q_ind = q[0]
-        self.system.u_ind = u[0]
-        self.system.kdes = u[0] - q[0].diff(t)
-        p = Particle('p', mass=symbols('m'))
-        self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
         self.system.form_eoms(**kwargs)
         assert self.system.mass_matrix_full == expected
 
@@ -460,12 +470,8 @@ class TestSystem(TestSystemBase):
         ({}, ImmutableMatrix([[1, 0], [0, symbols('m')]]),
          ImmutableMatrix([q[0].diff(t), 0])),
     ])
-    def test_system_lagrange_form_eoms_kwargs(self, _empty_system_setup, kwargs,
+    def test_system_lagrange_form_eoms_kwargs(self, _moving_point_mass, kwargs,
                                               mm, gm):
-        self.system.q_ind = q[0]
-        p = Particle('p', mass=symbols('m'))
-        self.system.add_bodies(p)
-        p.masscenter.set_pos(self.system.origin, q[0] * self.system.x)
         self.system.form_eoms(eom_method=LagrangesMethod, **kwargs)
         assert self.system.mass_matrix_full == mm
         assert self.system.forcing_full == gm
@@ -604,10 +610,10 @@ class TestSystemExamples:
         system.validate_system()
         system.form_eoms()
         assert isinstance(system.eom_method, KanesMethod)
-        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+        assert (simplify(system.mass_matrix - ImmutableMatrix(
             [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
                 == zeros(2, 2))
-        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+        assert (simplify(system.forcing - ImmutableMatrix([
             [mp * l * up ** 2 * sin(qp) + F],
             [-mp * g * l * sin(qp) + k * qp]])) == zeros(2, 1))
 
@@ -642,10 +648,10 @@ class TestSystemExamples:
               cos(qp) - l * F * cos(qp)], [l * up ** 2 * sin(qp)]])
         Mm = (Mk.row_join(zeros(2, 2))).col_join(zeros(2, 2).row_join(Md))
         gm = gk.col_join(gd)
-        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 2)
-        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
-        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(4, 4)
-        assert _simplify_matrix(system.forcing_full - gm) == zeros(4, 1)
+        assert simplify(system.mass_matrix - Md) == zeros(2, 2)
+        assert simplify(system.forcing - gd) == zeros(2, 1)
+        assert simplify(system.mass_matrix_full - Mm) == zeros(4, 4)
+        assert simplify(system.forcing_full - gm) == zeros(4, 1)
 
     def test_cart_pendulum_lagrange(self):
         # Lagrange version of test_cart_pendulus_kanes
@@ -676,10 +682,10 @@ class TestSystemExamples:
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system(LagrangesMethod)
         system.form_eoms(LagrangesMethod)
-        assert (_simplify_matrix(system.mass_matrix - ImmutableMatrix(
+        assert (simplify(system.mass_matrix - ImmutableMatrix(
             [[mp + mc, mp * l * cos(qp)], [mp * l * cos(qp), mp * l ** 2]]))
                 == zeros(2, 2))
-        assert (_simplify_matrix(system.forcing - ImmutableMatrix([
+        assert (simplify(system.forcing - ImmutableMatrix([
             [mp * l * qpd ** 2 * sin(qp) + F], [-mp * g * l * sin(qp) + k * qp]]
         )) == zeros(2, 1))
 
@@ -713,7 +719,7 @@ class TestSystemExamples:
         Mm = (eye(2).row_join(zeros(2, 3))).col_join(zeros(3, 2).row_join(
             Md.col_join(ImmutableMatrix([l * cos(qp), 1, 0]).T)))
         gm = ImmutableMatrix([qpd, qcd] + gd[:] + [l * sin(qp) * qpd ** 2])
-        assert _simplify_matrix(system.mass_matrix - Md) == zeros(2, 3)
-        assert _simplify_matrix(system.forcing - gd) == zeros(2, 1)
-        assert _simplify_matrix(system.mass_matrix_full - Mm) == zeros(5, 5)
-        assert _simplify_matrix(system.forcing_full - gm) == zeros(5, 1)
+        assert simplify(system.mass_matrix - Md) == zeros(2, 3)
+        assert simplify(system.forcing - gd) == zeros(2, 1)
+        assert simplify(system.mass_matrix_full - Mm) == zeros(5, 5)
+        assert simplify(system.forcing_full - gm) == zeros(5, 1)

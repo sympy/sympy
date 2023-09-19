@@ -15,7 +15,8 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer, equal_valued
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -69,6 +70,9 @@ def _polifyit(func):
     def wrapper(f, g):
         g = _sympify(g)
         if isinstance(g, Poly):
+            return func(f, g)
+        elif isinstance(g, Integer):
+            g = f.from_expr(g, *f.gens, domain=f.domain)
             return func(f, g)
         elif isinstance(g, Expr):
             try:
@@ -3594,6 +3598,8 @@ class Poly(Basic):
         """
         Return a list of real roots with multiplicities.
 
+        See :func:`real_roots` for more explanation.
+
         Examples
         ========
 
@@ -3604,7 +3610,6 @@ class Poly(Basic):
         [-1/2, 2, 2]
         >>> Poly(x**3 + x + 1).real_roots()
         [CRootOf(x**3 + x + 1, 0)]
-
         """
         reals = sympy.polys.rootoftools.CRootOf.real_roots(f, radicals=radicals)
 
@@ -3616,6 +3621,8 @@ class Poly(Basic):
     def all_roots(f, multiple=True, radicals=True):
         """
         Return a list of real and complex roots with multiplicities.
+
+        See :func:`all_roots` for more explanation.
 
         Examples
         ========
@@ -5186,7 +5193,7 @@ def invert(f, g, *gens, **args):
     NotInvertible: zero divisor
 
     For more efficient inversion of Rationals,
-    use the :obj:`~.mod_inverse` function:
+    use the :obj:`sympy.core.intfunc.mod_inverse` function:
 
     >>> mod_inverse(3, 5)
     2
@@ -5195,8 +5202,7 @@ def invert(f, g, *gens, **args):
 
     See Also
     ========
-
-    sympy.core.numbers.mod_inverse
+    sympy.core.intfunc.mod_inverse
 
     """
     options.allowed_flags(args, ['auto', 'polys'])
@@ -6669,18 +6675,133 @@ def count_roots(f, inf=None, sup=None):
 
 
 @public
-def real_roots(f, multiple=True):
+def all_roots(f, multiple=True, radicals=True):
     """
-    Return a list of real roots with multiplicities of ``f``.
+    Returns the real and complex roots of ``f`` with multiplicities.
+
+    Explanation
+    ===========
+
+    Finds all real and complex roots of a univariate polynomial with rational
+    coefficients of any degree exactly. The roots are represented in the form
+    given by :func:`~.rootof`. This is equivalent to using :func:`~.rootof` to
+    find each of the indexed roots.
 
     Examples
     ========
 
-    >>> from sympy import real_roots
-    >>> from sympy.abc import x
+    >>> from sympy import all_roots
+    >>> from sympy.abc import x, y
 
-    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4)
-    [-1/2, 2, 2]
+    >>> print(all_roots(x**3 + 1))
+    [-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2]
+
+    Simple radical formulae are used in some cases but the cubic and quartic
+    formulae are avoided. Instead most non-rational roots will be represented
+    as :class:`~.ComplexRootOf`:
+
+    >>> print(all_roots(x**3 + x + 1))
+    [CRootOf(x**3 + x + 1, 0), CRootOf(x**3 + x + 1, 1), CRootOf(x**3 + x + 1, 2)]
+
+    All roots of any polynomial with rational coefficients of any degree can be
+    represented using :py:class:`~.ComplexRootOf`. The use of
+    :py:class:`~.ComplexRootOf` bypasses limitations on the availability of
+    radical formulae for quintic and higher degree polynomials _[1]:
+
+    >>> p = x**5 - x - 1
+    >>> for r in all_roots(p): print(r)
+    CRootOf(x**5 - x - 1, 0)
+    CRootOf(x**5 - x - 1, 1)
+    CRootOf(x**5 - x - 1, 2)
+    CRootOf(x**5 - x - 1, 3)
+    CRootOf(x**5 - x - 1, 4)
+    >>> [r.evalf(3) for r in all_roots(p)]
+    [1.17, -0.765 - 0.352*I, -0.765 + 0.352*I, 0.181 - 1.08*I, 0.181 + 1.08*I]
+
+    Irrational algebraic or transcendental coefficients cannot currently be
+    handled by :func:`all_roots` (or :func:`~.rootof` more generally):
+
+    >>> from sympy import sqrt, expand
+    >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
+    >>> print(p)
+    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    >>> all_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
+
+    In the case of algebraic or transcendental coefficients
+    :func:`~.ground_roots` might be able to find some roots by factorisation:
+
+    >>> from sympy import ground_roots
+    >>> ground_roots(p, x, extension=True)
+    {sqrt(2): 1, sqrt(3): 1}
+
+    If the coefficients are numeric then :func:`~.nroots` can be used to find
+    all roots approximately:
+
+    >>> from sympy import nroots
+    >>> nroots(p, 5)
+    [1.4142, 1.732]
+
+    If the coefficients are symbolic then :func:`sympy.polys.polyroots.roots`
+    or :func:`~.ground_roots` should be used instead:
+
+    >>> from sympy import roots, ground_roots
+    >>> p = x**2 - 3*x*y + 2*y**2
+    >>> roots(p, x)
+    {y: 1, 2*y: 1}
+    >>> ground_roots(p, x)
+    {y: 1, 2*y: 1}
+
+    Parameters
+    ==========
+
+    f : :class:`~.Expr` or :class:`~.Poly`
+        A univariate polynomial with rational (or ``Float``) coefficients.
+    multiple : ``bool`` (default ``True``).
+        Whether to return a ``list`` of roots or a list of root/multiplicity
+        pairs.
+    radicals : ``bool`` (default ``True``)
+        Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
+        some irrational roots.
+
+    Returns
+    =======
+
+    A list of :class:`~.Expr` (usually :class:`~.ComplexRootOf`) representing
+    the roots is returned with each root repeated according to its multiplicity
+    as a root of ``f``. The roots are always uniquely ordered with real roots
+    coming before complex roots. The real roots are in increasing order.
+    Complex roots are ordered by increasing real part and then increasing
+    imaginary part.
+
+    If ``multiple=False`` is passed then a list of root/multiplicity pairs is
+    returned instead.
+
+    If ``radicals=False`` is passed then all roots will be represented as
+    either rational numbers or :class:`~.ComplexRootOf`.
+
+    See also
+    ========
+
+    Poly.all_roots:
+        The underlying :class:`Poly` method used by :func:`~.all_roots`.
+    rootof:
+        Compute a single numbered root of a univariate polynomial.
+    real_roots:
+        Compute all the real roots using :func:`~.rootof`.
+    ground_roots:
+        Compute some roots in the ground domain by factorisation.
+    nroots:
+        Compute all roots using approximate numerical techniques.
+    sympy.polys.polyroots.roots:
+        Compute symbolic expressions for roots using radical formulae.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Abel%E2%80%93Ruffini_theorem
     """
     try:
         F = Poly(f, greedy=False)
@@ -6693,7 +6814,180 @@ def real_roots(f, multiple=True):
         raise PolynomialError(
             "Cannot compute real roots of %s, not a polynomial" % f)
 
-    return F.real_roots(multiple=multiple)
+    return F.all_roots(multiple=multiple, radicals=radicals)
+
+
+@public
+def real_roots(f, multiple=True, radicals=True):
+    """
+    Returns the real roots of ``f`` with multiplicities.
+
+    Explanation
+    ===========
+
+    Finds all real roots of a univariate polynomial with rational coefficients
+    of any degree exactly. The roots are represented in the form given by
+    :func:`~.rootof`. This is equivalent to using :func:`~.rootof` or
+    :func:`~.all_roots` and filtering out only the real roots. However if only
+    the real roots are needed then :func:`real_roots` is more efficient than
+    :func:`~.all_roots` because it computes only the real roots and avoids
+    costly complex root isolation routines.
+
+    Examples
+    ========
+
+    >>> from sympy import real_roots
+    >>> from sympy.abc import x, y
+
+    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4)
+    [-1/2, 2, 2]
+    >>> real_roots(2*x**3 - 7*x**2 + 4*x + 4, multiple=False)
+    [(-1/2, 1), (2, 2)]
+
+    Real roots of any polynomial with rational coefficients of any degree can
+    be represented using :py:class:`~.ComplexRootOf`:
+
+    >>> p = x**9 + 2*x + 2
+    >>> print(real_roots(p))
+    [CRootOf(x**9 + 2*x + 2, 0)]
+    >>> [r.evalf(3) for r in real_roots(p)]
+    [-0.865]
+
+    All rational roots will be returned as rational numbers. Roots of some
+    simple factors will be expressed using radical or other formulae (unless
+    ``radicals=False`` is passed). All other roots will be expressed as
+    :class:`~.ComplexRootOf`.
+
+    >>> p = (x + 7)*(x**2 - 2)*(x**3 + x + 1)
+    >>> print(real_roots(p))
+    [-7, -sqrt(2), CRootOf(x**3 + x + 1, 0), sqrt(2)]
+    >>> print(real_roots(p, radicals=False))
+    [-7, CRootOf(x**2 - 2, 0), CRootOf(x**3 + x + 1, 0), CRootOf(x**2 - 2, 1)]
+
+    All returned root expressions will numerically evaluate to real numbers
+    with no imaginary part. This is in contrast to the expressions generated by
+    the cubic or quartic formulae as used by :func:`~.roots` which suffer from
+    casus irreducibilis [1]_:
+
+    >>> from sympy import roots
+    >>> p = 2*x**3 - 9*x**2 - 6*x + 3
+    >>> [r.evalf(5) for r in roots(p, multiple=True)]
+    [5.0365 - 0.e-11*I, 0.33984 + 0.e-13*I, -0.87636 + 0.e-10*I]
+    >>> [r.evalf(5) for r in real_roots(p, x)]
+    [-0.87636, 0.33984, 5.0365]
+    >>> [r.is_real for r in roots(p, multiple=True)]
+    [None, None, None]
+    >>> [r.is_real for r in real_roots(p)]
+    [True, True, True]
+
+    Using :func:`real_roots` is equivalent to using :func:`~.all_roots` (or
+    :func:`~.rootof`) and filtering out only the real roots:
+
+    >>> from sympy import all_roots
+    >>> r = [r for r in all_roots(p) if r.is_real]
+    >>> real_roots(p) == r
+    True
+
+    If only the real roots are wanted then using :func:`real_roots` is faster
+    than using :func:`~.all_roots`. Using :func:`real_roots` avoids complex root
+    isolation which can be a lot slower than real root isolation especially for
+    polynomials of high degree which typically have many more complex roots
+    than real roots.
+
+    Irrational algebraic or transcendental coefficients cannot be handled by
+    :func:`real_roots` (or :func:`~.rootof` more generally):
+
+    >>> from sympy import sqrt, expand
+    >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
+    >>> print(p)
+    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    >>> real_roots(p)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: sorted roots not supported over EX
+
+    In the case of algebraic or transcendental coefficients
+    :func:`~.ground_roots` might be able to find some roots by factorisation:
+
+    >>> from sympy import ground_roots
+    >>> ground_roots(p, x, extension=True)
+    {sqrt(2): 1, sqrt(3): 1}
+
+    If the coefficients are numeric then :func:`~.nroots` can be used to find
+    all roots approximately:
+
+    >>> from sympy import nroots
+    >>> nroots(p, 5)
+    [1.4142, 1.732]
+
+    If the coefficients are symbolic then :func:`sympy.polys.polyroots.roots`
+    or :func:`~.ground_roots` should be used instead.
+
+    >>> from sympy import roots, ground_roots
+    >>> p = x**2 - 3*x*y + 2*y**2
+    >>> roots(p, x)
+    {y: 1, 2*y: 1}
+    >>> ground_roots(p, x)
+    {y: 1, 2*y: 1}
+
+    Parameters
+    ==========
+
+    f : :class:`~.Expr` or :class:`~.Poly`
+        A univariate polynomial with rational (or ``Float``) coefficients.
+    multiple : ``bool`` (default ``True``).
+        Whether to return a ``list`` of roots or a list of root/multiplicity
+        pairs.
+    radicals : ``bool`` (default ``True``)
+        Use simple radical formulae rather than :py:class:`~.ComplexRootOf` for
+        some irrational roots.
+
+    Returns
+    =======
+
+    A list of :class:`~.Expr` (usually :class:`~.ComplexRootOf`) representing
+    the real roots is returned. The roots are arranged in increasing order and
+    are repeated according to their multiplicities as roots of ``f``.
+
+    If ``multiple=False`` is passed then a list of root/multiplicity pairs is
+    returned instead.
+
+    If ``radicals=False`` is passed then all roots will be represented as
+    either rational numbers or :class:`~.ComplexRootOf`.
+
+    See also
+    ========
+
+    Poly.real_roots:
+        The underlying :class:`Poly` method used by :func:`real_roots`.
+    rootof:
+        Compute a single numbered root of a univariate polynomial.
+    all_roots:
+        Compute all real and non-real roots using :func:`~.rootof`.
+    ground_roots:
+        Compute some roots in the ground domain by factorisation.
+    nroots:
+        Compute all roots using approximate numerical techniques.
+    sympy.polys.polyroots.roots:
+        Compute symbolic expressions for roots using radical formulae.
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Casus_irreducibilis
+    """
+    try:
+        F = Poly(f, greedy=False)
+        if not isinstance(f, Poly) and not F.gen.is_Symbol:
+            # root of sin(x) + 1 is -1 but when someone
+            # passes an Expr instead of Poly they may not expect
+            # that the generator will be sin(x), not x
+            raise PolynomialError("generator must be a Symbol")
+    except GeneratorsNeeded:
+        raise PolynomialError(
+            "Cannot compute real roots of %s, not a polynomial" % f)
+
+    return F.real_roots(multiple=multiple, radicals=radicals)
 
 
 @public

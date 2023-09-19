@@ -1313,11 +1313,7 @@ def _singular_value_decomposition(A):
 
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         V, _ = V.QRdecomposition()
         U = A * V * S.inv()
     else:
@@ -1331,11 +1327,7 @@ def _singular_value_decomposition(A):
         U = U[:, ranked]
         Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
 
-        S = S.zeros(len(Singular_vals))
-
-        for i, sv in enumerate(Singular_vals):
-            S[i, i] = sv
-
+        S = S.diag(*Singular_vals)
         U, _ = U.QRdecomposition()
         V = AH * U * S.inv()
 
@@ -1482,11 +1474,11 @@ def _QRdecomposition(M):
     decomposition, you should augment $Q$ with an another orthogonal
     column.
 
-    You are able to append an arbitrary standard basis that are linearly
-    independent to every other columns and you can run the Gram-Schmidt
+    You are able to append an identity matrix,
+    and you can run the Gram-Schmidt
     process to make them augmented as orthogonal basis.
 
-    >>> Q_aug = Q.row_join(Matrix([0, 0, 1]))
+    >>> Q_aug = Q.row_join(Matrix.eye(3))
     >>> Q_aug = Q_aug.QRdecomposition()[0]
     >>> Q_aug
     Matrix([
