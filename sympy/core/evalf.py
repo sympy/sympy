@@ -1112,10 +1112,14 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
         max_real_term: tUnion[float, int] = MINUS_INF
         max_imag_term: tUnion[float, int] = MINUS_INF
 
+        lambda_func = lambdify(integration_symbols, func, "mpmath")
         def f(*symbol_values: 'Expr') -> tUnion[mpc, mpf]:
-            nonlocal max_real_term, max_imag_term
-            subs = dict(zip(integration_symbols, symbol_values))
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': subs})
+            nonlocal have_part, max_real_term, max_imag_term
+            result = lambda_func(*symbol_values)
+            re = result.real._mpf_
+            im = None
+            if isinstance(result, mpc):
+                im = result.imag._mpf_
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1123,9 +1127,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             max_real_term = max(max_real_term, fastlog(re))
             max_imag_term = max(max_imag_term, fastlog(im))
 
-            if im:
-                return mpc(re or fzero, im)
-            return mpf(re or fzero)
+            return result
 
         if options.get('quad') == 'osc':
             if len(limits) > 1:
