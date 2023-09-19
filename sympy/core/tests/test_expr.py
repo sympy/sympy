@@ -2092,6 +2092,10 @@ def test_round():
         assert eq.round(2) == -1.0
         n = 6000002
         assert int(n*(log(n) + log(log(n)))) == 110130079
+        eq = one - 1/S(10**120)
+        assert S.true not in (eq > 1, eq < 1)
+        assert int(eq) == 0
+        assert int(-eq) == 0
 
 
 def test_held_expression_UnevaluatedExpr():
