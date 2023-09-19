@@ -311,24 +311,16 @@ class Expr(Basic, EvalfMixin):
         if r in (S.NaN, S.Infinity, S.NegativeInfinity):
             raise TypeError("Cannot convert %s to int" % r)
         i = int(r)
+        if not i:
+            return i
         if int_valued(r):
             # non-integer self should pass one of these tests
             if (self > i) is S.true:
                 return i
             if (self < i) is S.true:
                 return i - 1
-            # off-by-one check since i might be smaller than self
-            if not (self - i).equals(0):
-                from .symbol import Dummy
-                isign = 1 if i > 0 else -1
-                x = Dummy()
-                # in the following (self - i).evalf(2) will not always work while
-                # (self - r).evalf(2) and the use of subs does; if the test that
-                # was added when this comment was added passes, it might be safe
-                # to simply use sign to compute this rather than doing this by hand:
-                diff_sign = 1 if (self - x).evalf(2, subs={x: i}) > 0 else -1
-                if diff_sign != isign:
-                    i -= isign
+            # off by one
+            return i - (1 if i > 0 else -1)
         return i
 
     def __float__(self):
