@@ -303,7 +303,6 @@ class Expr(Basic, EvalfMixin):
         return floor(other / self), Mod(other, self)
 
     def __int__(self):
-        from .symbol import Dummy
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
         r = self.round(2)
