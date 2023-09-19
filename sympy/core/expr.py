@@ -3829,9 +3829,12 @@ class Expr(Basic, EvalfMixin):
                     'Expected a number but got %s:' % func_name(x))
         elif x in _illegal:
             return x
-        if x.is_extended_real is False:
+        if not (xr := x.is_extended_real):
             r, i = x.as_real_imag()
-            return r.round(n) + S.ImaginaryUnit*i.round(n)
+            if xr is False:
+                return r.round(n) + S.ImaginaryUnit*i.round(n)
+            if i.equals(0):
+                return r.round(n)
         if not x:
             return S.Zero if n is None else x
 
@@ -3901,6 +3904,11 @@ class Expr(Basic, EvalfMixin):
         # the 2nd digit from the left) we get 5700000000000000.
         #
         xf = x.n(dps + extra)*Pow(10, shift)
+        if xf._prec == 1:
+            # is x == 0?
+            if x.equals(0):
+                return Float(0)
+            raise ValueError('not computing with precision')
         xi = Integer(xf)
         # use the last digit to select the value of xi
         # nearest to x before rounding at the desired digit
