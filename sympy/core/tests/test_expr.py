@@ -2084,6 +2084,15 @@ def test_round():
         assert type(round(fi)) is int
         assert S(fi).round().is_Integer
 
+        # issue 25698
+        one = cos(2)**2 + sin(2)**2
+        eq = exp(one*I*pi)
+        qr, qi = eq.as_real_imag()
+        assert qi.round(2) == 0.0
+        assert eq.round(2) == -1.0
+        n = 6000002
+        assert int(n*(log(n) + log(log(n)))) == 110130079
+
 
 def test_held_expression_UnevaluatedExpr():
     x = symbols("x")
