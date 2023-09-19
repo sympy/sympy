@@ -57,8 +57,8 @@ def _process_summations(sum_bound, *args):
     """Substitute oo (infinity) in the lower/upper bounds of a summation with
     some integer number.
 
-        Parameters
-        ==========
+    Parameters
+    ==========
 
     sum_bound : int
         oo will be substituted with this integer number.
@@ -136,7 +136,7 @@ def _create_series(series_type, plot_expr, **kwargs):
 
 def _set_labels(series, labels, rendering_kw):
     """Apply the `label` and `rendering_kw` keyword arguments to the series.
-        """
+    """
     if not isinstance(labels, (list, tuple)):
         labels = [labels]
     if len(labels) > 0:
@@ -172,13 +172,13 @@ def plot_factory(*args, **kwargs):
         if backend == "default":
             matplotlib = import_module('matplotlib',
                 min_module_version='1.1.0', catch=(RuntimeError,))
-        if matplotlib:
+            if matplotlib:
                 return MatplotlibBackend(*args, **kwargs)
             return TextBackend(*args, **kwargs)
         return plot_backends[backend](*args, **kwargs)
     elif (type(backend) == type) and issubclass(backend, Plot):
         return backend(*args, **kwargs)
-        else:
+    else:
         raise TypeError("backend must be either a string or a subclass of ``Plot``.")
 
 
