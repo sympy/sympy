@@ -7,7 +7,6 @@ import re
 
 from .sympify import sympify, _sympify
 from .basic import Basic, Atom
-from .numbers import int_valued
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
@@ -4144,4 +4143,4 @@ from .power import Pow
 from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
-from .numbers import Float, Integer, Rational, _illegal
+from .numbers import Float, Integer, Rational, _illegal, int_valued
