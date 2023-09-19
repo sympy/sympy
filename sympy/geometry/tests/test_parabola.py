@@ -1,6 +1,6 @@
 from sympy.core.numbers import (Rational, oo)
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Dummy
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry.ellipse import (Circle, Ellipse)
@@ -141,3 +141,15 @@ def test_parabola_intersection():
            Point2D(4*sqrt(17)/3, Rational(59, 9))]
     # parabola with unsupported type
     raises(TypeError, lambda: parabola1.intersection(2))
+
+
+def test_Parabola_alt_instantiation():
+    ans = -x**2 - 3*x/2 + y/2 - S(5)/2
+    eq = 2*x**2 + 3*x + 5
+    assert Parabola(eq=eq).equation(x, y).expand() == ans
+    assert Parabola(eq=eq.subs(x, y)).equation(y, x).expand() == ans  # reversed x and y
+    raises(ValueError, lambda: Parabola(eq=x*y + y**2))
+    raises(ValueError, lambda: Parabola(eq=x*y + y**2))
+    raises(ValueError, lambda: Parabola(eq=x**2 + y**2))
+    raises(ValueError, lambda: Parabola(eq=x**2 + Dummy('x')**2))
+    raises(ValueError, lambda: Parabola(eq=2))
