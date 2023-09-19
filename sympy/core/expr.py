@@ -319,6 +319,11 @@ class Expr(Basic, EvalfMixin):
                 return i
             if (self < i) is S.true:
                 return i - 1
+            ok = self.equals(i)
+            if ok is None:
+                raise TypeError('cannot compute int value accurately')
+            if ok:
+                return i
             # off by one
             return i - (1 if i > 0 else -1)
         return i
