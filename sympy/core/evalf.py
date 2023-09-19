@@ -10,7 +10,7 @@ import math
 
 import mpmath.libmp as libmp
 from mpmath import (
-    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
+    make_mpc, make_mpf, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
 from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
         fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
