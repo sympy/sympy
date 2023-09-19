@@ -3904,7 +3904,7 @@ class Expr(Basic, EvalfMixin):
         # the 2nd digit from the left) we get 5700000000000000.
         #
         xf = x.n(dps + extra)*Pow(10, shift)
-        if xf._prec == 1:
+        if xf.is_Number and xf._prec == 1:  # case where xf.is_Add will raise below
             # is x == 0?
             if x.equals(0):
                 return Float(0)
