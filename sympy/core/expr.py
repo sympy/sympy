@@ -313,9 +313,9 @@ class Expr(Basic, EvalfMixin):
         i = int(r)
         if int_valued(r):
             # non-integer self should pass one of these tests
-            if self > i is S.true:
+            if (self > i) is S.true:
                 return i
-            if self < i is S.true:
+            if (self < i) is S.true:
                 return i - 1
             # is it safe to assume that self == i?
         return i
