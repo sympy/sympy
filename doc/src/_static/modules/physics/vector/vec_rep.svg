@@ -9,9 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="https://www.inkscape.org/namespaces/inkscape"
-   width="350"
-   height="175"
-   id="svg3229"
+   viewbox="0 0 350 175"
+   id="vec_rep_id"
    version="1.1"
    inkscape:version="0.48.1 r9760"
    sodipodi:docname="New document 9">
@@ -53,14 +52,14 @@
      id="layer1"
      transform="translate(0,-877.36218)">
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:currentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 22.862233,100.59382 135.09501,29.928741 124.70309,31.175772"
        id="path3237"
        inkscape:connector-curvature="0"
        transform="translate(0,877.36218)" />
     <path
        sodipodi:type="spiral"
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:currentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="path3239"
        sodipodi:cx="199.52495"
        sodipodi:cy="54.453682"
@@ -73,7 +72,7 @@
        transform="translate(1.6627078,889.00113)" />
     <path
        sodipodi:type="spiral"
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:currentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="path3241"
        sodipodi:cx="267.28027"
        sodipodi:cy="56.11639"
@@ -85,13 +84,13 @@
        d="m 276.00949,71.080762 c -8.15158,4.755086 -18.9385,1.916421 -23.69359,-6.235158 -4.75508,-8.151579 -1.91642,-18.9385 6.23516,-23.693586 8.15158,-4.755086 18.9385,-1.91642 23.69359,6.235159"
        transform="translate(27.019002,889.00114)" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:currentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 210.74822,958.83486 -3.74109,4.98813"
        id="path3243"
        inkscape:connector-curvature="0" />
     <text
        xml:space="preserve"
-       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:currentColor;fill-opacity:1;stroke:none;font-family:Sans"
        x="11.638955"
        y="119.71496"
        id="text3247"
@@ -103,7 +102,7 @@
          y="119.71496">Vector on page</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:currentColor;fill-opacity:1;stroke:none;font-family:Sans"
        x="163.36105"
        y="989.17932"
        id="text3251"
@@ -117,7 +116,7 @@
          y="1007.9293"
          id="tspan3255">of page</tspan></text>
     <path
-       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:none;stroke:currentColor;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 309.26367,936.80399 -1.24704,-8.31354"
        id="path3257"
        inkscape:connector-curvature="0" />
@@ -126,7 +125,7 @@
        id="text3283"
        y="990.84198"
        x="268.11163"
-       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       style="font-size:15px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:currentColor;fill-opacity:1;stroke:none;font-family:Sans"
        xml:space="preserve"><tspan
          y="990.84198"
          x="268.11163"
