@@ -14,10 +14,7 @@ A vector is a geometric object that has a magnitude (or length) and a
 direction. Vectors in 3-space are often represented on paper as:
 
 .. raw:: html
-
-    <svg class="align-center" viewbox="0 0 350 175" width="350px">
-        <use xlink:href="../../../_static/modules/physics/vector/vec_rep.svg#vec_rep_id"></use>
-    </svg>
+   :file: vec_rep.svg
 
 Vector Algebra
 ==============
