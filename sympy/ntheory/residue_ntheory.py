@@ -425,16 +425,13 @@ def _sqrt_mod_tonelli_shanks(a, p):
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
     Assume that the root exists.
-    Although ``p`` correctly returns the answer for any odd prime,
-    ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
-    a more efficient algorithm exists.
 
     Parameters
     ==========
 
     a : int
     p : int
-        Odd prime number
+        prime number. should be ``p % 8 == 1``
 
     Returns
     =======
@@ -452,17 +449,24 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
+    .. [1] Carl Pomerance, Richard Crandall, Prime Numbers: A Computational Perspective,
+           2nd Edition (2005), page 101, ISBN:978-0387252827
 
     """
     s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
-    while 1:
-        d = randint(2, p - 1)
-        r = jacobi(d, p)
-        if r == -1:
-            break
+    if p % 12 == 5:
+        # Legendre symbol (3/p) == -1 if p % 12 in [5, 7]
+        d = 3
+    elif p % 5 in [2, 3]:
+        # Legendre symbol (5/p) == -1 if p % 5 in [2, 3]
+        d = 5
+    else:
+        while 1:
+            d = randint(6, p - 1)
+            if jacobi(d, p) == -1:
+                break
     #assert legendre_symbol(d, p) == -1
     A = pow(a, t, p)
     D = pow(d, t, p)
