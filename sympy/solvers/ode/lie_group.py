@@ -230,7 +230,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     """
 
     if isinstance(eq, Equality):
-        eq = eq.lhs - eq.rhs
+        eq = eq.lhs_rhs()
     if not func:
         eq, func = _preprocess(eq)
     variables = func.args

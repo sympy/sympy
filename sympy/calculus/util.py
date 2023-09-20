@@ -422,7 +422,7 @@ def periodicity(f, symbol, check=False):
     period = None
 
     if isinstance(f, Relational):
-        f = f.lhs - f.rhs
+        f = f.lhs_rhs()
 
     f = f.simplify()
 

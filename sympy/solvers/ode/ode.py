@@ -943,7 +943,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
         "work with functions of one variable, not %s" % func)
 
     if isinstance(eq, Equality):
-        eq = eq.lhs - eq.rhs
+        eq = eq.lhs_rhs()
 
     # Some methods want the unprocessed equation
     eq_orig = eq
@@ -1213,7 +1213,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     eq, funcs = (_sympify(w) for w in [eq, funcs])
     for i, fi in enumerate(eq):
         if isinstance(fi, Equality):
-            eq[i] = fi.lhs - fi.rhs
+            eq[i] = fi.lhs_rhs()
 
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     matching_hints = {"no_of_equation":i+1}
@@ -2815,7 +2815,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
 
     """
     if isinstance(eq, Equality):
-        eq = eq.lhs - eq.rhs
+        eq = eq.lhs_rhs()
     if not func:
         eq, func = _preprocess(eq)
     variables = func.args

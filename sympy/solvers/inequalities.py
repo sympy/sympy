@@ -233,7 +233,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                 expr, rel = expr
             else:
                 if expr.is_Relational:
-                    expr, rel = expr.lhs - expr.rhs, expr.rel_op
+                    expr, rel = expr.lhs_rhs(), expr.rel_op
                 else:
                     expr, rel = expr, '=='
 
@@ -479,7 +479,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         rv = S.EmptySet
 
     else:
-        e = expr.lhs - expr.rhs
+        e = expr.lhs_rhs()
         period = periodicity(e, gen)
         if period == S.Zero:
             e = expand_mul(e)
@@ -805,7 +805,7 @@ def _solve_inequality(ie, s, linear=False):
 
     rv = None
     oo = S.Infinity
-    expr = ie.lhs - ie.rhs
+    expr = ie.lhs_rhs()
     try:
         p = Poly(expr, s)
         if p.degree() == 0:

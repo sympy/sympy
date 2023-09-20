@@ -830,7 +830,7 @@ class Piecewise(Function):
             return True
         if isinstance(cond, Eq):
             try:
-                diff = cond.lhs - cond.rhs
+                diff = cond.lhs_rhs()
                 if diff.is_commutative:
                     return diff.is_zero
             except TypeError:
