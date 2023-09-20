@@ -68,9 +68,6 @@ class Expr(Basic, EvalfMixin):
 
     is_scalar = True  # self derivative is 1
 
-    def lhs_rhs(self, evaluate=True):
-        return self  # only for Eq
-
     @property
     def _diff_wrt(self):
         """Return True if one can differentiate with respect to this

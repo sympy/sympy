@@ -468,7 +468,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
     # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
-        pde = pde.lhs_rhs()
+        pde = pde.lhs - pde.rhs
         s = simplify(pde.subs(func, sol.rhs).doit())
         return s is S.Zero, s
 

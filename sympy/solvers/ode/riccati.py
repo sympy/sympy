@@ -295,7 +295,7 @@ def match_riccati(eq, f, x):
     """
     # Group terms based on f(x)
     if isinstance(eq, Eq):
-        eq = eq.lhs_rhs()
+        eq = eq.lhs - eq.rhs
     eq = eq.expand().collect(f(x))
     cf = eq.coeff(f(x).diff(x))
 

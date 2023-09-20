@@ -560,14 +560,14 @@ def test_x_minus_y_not_same_as_x_lt_y():
 
     ineq = Lt(x, y, evaluate=False)
     raises(TypeError, lambda: ineq.doit())
-    assert ineq.lhs_rhs() < 0
+    assert ineq.lhs - ineq.rhs < 0
 
     t = Symbol('t', imaginary=True)
     x = 2 + t
     y = 3 + t
     ineq = Lt(x, y, evaluate=False)
     raises(TypeError, lambda: ineq.doit())
-    assert ineq.lhs_rhs() < 0
+    assert ineq.lhs - ineq.rhs < 0
 
     # this one should give error either way
     x = I + 2
@@ -1028,23 +1028,7 @@ def test_rel_args():
                 raises(TypeError, lambda: Relational(b, v, op))
 
 
-def test_Equality_lhs_rhs():
-    # XXX we can be strict and make every routine that want to treat
-    # Eq like Eqn for purpose of solving explicitly test for Eq
-    #     if isinstance(eq, Eq):
-    #        eq = eq.lhs_rhs()
-    # or allow Expr to pass
-    #     eq = eq.lhs_rhs() # valid for Eq or Expr
-    assert (x + 1).lhs_rhs() == x + 1
-
-    eq = Eq(x + y, y - x)
-    assert eq.lhs_rhs() == 2*x
-    assert eq.lhs_rhs(evaluate=None).args == (x, x, y, -y)
-    assert eq.lhs_rhs(evaluate=False).args == (x, y, x, -y)
-    for e in (True, False, None):
-        assert Eq(x, 0, evaluate=e).lhs_rhs() == x
-        assert Eq(0, x, evaluate=e).lhs_rhs() == x
-
+def test_nothing_happens_to_Eq_condition_during_simplify():
     # issue 25701
     r = symbols('r', real=True)
     assert Eq(2*sign(r + 3)/(5*Abs(r + 3)**Rational(3, 5)), 0

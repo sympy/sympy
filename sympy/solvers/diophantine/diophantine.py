@@ -1335,7 +1335,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     eq = _sympify(eq)
 
     if isinstance(eq, Eq):
-        eq = eq.lhs_rhs()
+        eq = eq.lhs - eq.rhs
 
     try:
         var = list(eq.expand(force=True).free_symbols)

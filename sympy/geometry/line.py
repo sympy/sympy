@@ -1192,7 +1192,7 @@ class Line(LinearEntity):
 
             equation = args[0]
             if isinstance(equation, Eq):
-                equation = equation.lhs_rhs()
+                equation = equation.lhs - equation.rhs
 
             def find_or_missing(x):
                 try:

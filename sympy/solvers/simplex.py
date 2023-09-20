@@ -734,7 +734,7 @@ def _lp_matrices(objective, constraints):
     # change Eq(x, y) to x - y <= 0 and y - x <= 0
     for i in range(len(np)):
         if isinstance(np[i], Eq):
-            np[i] = np[i].lhs_rhs() <= 0
+            np[i] = np[i].lhs - np[i].rhs <= 0
             np.append(-np[i].lhs <= 0)
 
     # convert constraints to nonpositive expressions
