@@ -467,7 +467,7 @@ class IndependentProductPSpace(ProductPSpace):
             return Mul(*[self.probability(arg) for arg in condition.args])
         elif isinstance(condition, Or): # they are independent
             return Add(*[self.probability(arg) for arg in condition.args])
-        expr = condition.lhs - condition.rhs
+        expr = condition.lhs_rhs()
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
         if any(pspace(rv).is_Continuous for rv in rvs):

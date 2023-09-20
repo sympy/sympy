@@ -4,7 +4,6 @@ Boolean algebra module for SymPy
 
 from collections import defaultdict
 from itertools import chain, combinations, product, permutations
-from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
@@ -662,7 +661,7 @@ class And(LatticeOp, BooleanFunction):
                     if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
-                                e.rewrite(Add, evaluate=False), x)
+                                e.lhs_rhs(evaluate=False), x)
                             enew = e.func(x, -b/m)
                             if measure(enew) <= ratio*measure(e):
                                 e = enew

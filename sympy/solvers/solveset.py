@@ -1065,7 +1065,7 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
+        result = solver(f.lhs_rhs(evaluate=False), symbol, domain)
 
     elif f.is_Relational:
         from .inequalities import solve_univariate_inequality
@@ -3311,7 +3311,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
-                depen1, depen2 = (eq2.rewrite(Add)).as_independent(*unsolved_syms)
+                depen1, depen2 = (eq2.lhs_rhs()).as_independent(*unsolved_syms)
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
@@ -3528,7 +3528,7 @@ def _separate_poly_nonpoly(system, symbols):
         denominators.update(_simple_dens(eq, symbols))
         # Convert equality to expression
         if isinstance(eq, Equality):
-            eq = eq.rewrite(Add)
+            eq = eq.lhs_rhs()
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:

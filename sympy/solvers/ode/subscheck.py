@@ -177,7 +177,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         if testnum == 0:
             # First pass, try substituting a solved solution directly into the
             # ODE. This has the highest chance of succeeding.
-            ode_diff = ode.lhs - ode.rhs
+            ode_diff = ode.lhs_rhs()
 
             if sol.lhs == func:
                 s = sub_func_doit(ode_diff, func, sol.rhs)
@@ -221,7 +221,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                 diffsols = {0: sol.lhs}
             else:
                 diffsols = {}
-            sol = sol.lhs - sol.rhs
+            sol = sol.lhs_rhs()
             for i in range(1, order + 1):
                 # Differentiation is a linear operator, so there should always
                 # be 1 solution. Nonetheless, we test just to make sure.
@@ -345,7 +345,7 @@ def checksysodesol(eqs, sols, func=None):
     eqs = _sympify(eqs)
     for i in range(len(eqs)):
         if isinstance(eqs[i], Equality):
-            eqs[i] = eqs[i].lhs - eqs[i].rhs
+            eqs[i] = eqs[i].lhs_rhs()
     if func is None:
         funcs = []
         for eq in eqs:

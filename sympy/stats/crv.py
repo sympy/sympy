@@ -418,7 +418,7 @@ class ContinuousPSpace(PSpace):
         # by computing a density handled by density computation
         except NotImplementedError:
             from sympy.stats.rv import density
-            expr = condition.lhs - condition.rhs
+            expr = condition.lhs_rhs()
             if not is_random(expr):
                 dens = self.density
                 comp = condition.rhs

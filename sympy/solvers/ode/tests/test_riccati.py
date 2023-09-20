@@ -717,7 +717,7 @@ def check_dummy_sol(eq, solse, dummy_sym):
     contains dummy symbols.
     """
     if isinstance(eq, Eq):
-        eq = eq.lhs - eq.rhs
+        eq = eq.lhs_rhs()
     _, funcs = match_riccati(eq, f, x)
 
     sols = solve_riccati(f(x), x, *funcs)

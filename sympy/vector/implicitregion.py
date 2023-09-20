@@ -59,7 +59,7 @@ class ImplicitRegion(Basic):
             variables = Tuple(*variables)
 
         if isinstance(equation, Eq):
-            equation = equation.lhs - equation.rhs
+            equation = equation.lhs_rhs()
 
         return super().__new__(cls, variables, equation)
 

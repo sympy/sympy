@@ -419,7 +419,7 @@ class Relational(Boolean, EvalfMixin):
         if r.is_Relational:
             if not isinstance(r.lhs, Expr) or not isinstance(r.rhs, Expr):
                 return r
-            dif = r.lhs - r.rhs
+            dif = r.lhs_rhs()
             # replace dif with a valid Number that will
             # allow a definitive comparison with 0
             v = None
@@ -437,7 +437,7 @@ class Relational(Boolean, EvalfMixin):
                 try:
                     from sympy.solvers.solveset import linear_coeffs
                     x = free.pop()
-                    dif = r.lhs - r.rhs
+                    dif = r.lhs_rhs()
                     m, b = linear_coeffs(dif, x)
                     if m.is_zero is False:
                         if m.is_negative:
@@ -467,7 +467,7 @@ class Relational(Boolean, EvalfMixin):
                     from sympy.solvers.solveset import linear_coeffs
                     from sympy.polys.polytools import gcd
                     free = list(ordered(free))
-                    dif = r.lhs - r.rhs
+                    dif = r.lhs_rhs()
                     m = linear_coeffs(dif, *free)
                     constant = m[-1]
                     del m[-1]
@@ -594,7 +594,7 @@ class Equality(Relational):
 
     Since this object is already an expression, it does not respond to
     the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
-    This can be done with the ``rewrite(Add)`` method.
+    This can be done with the ``lhs_rhs()`` method.
 
     .. deprecated:: 1.5
 
@@ -626,7 +626,7 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
-    def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
+    def lhs_rhs(self, evaluate=True):
         """
         return Eq(L, R) as L - R. To control the evaluation of
         the result set pass `evaluate=True` to give L - R;
@@ -638,17 +638,18 @@ class Equality(Relational):
         Examples
         ========
 
-        >>> from sympy import Eq, Add
+        >>> from sympy import Eq
         >>> from sympy.abc import b, x
         >>> eq = Eq(x + b, x - b)
-        >>> eq.rewrite(Add)
+        >>> eq.lhs_rhs()
         2*b
-        >>> eq.rewrite(Add, evaluate=None).args
+        >>> eq.lhs_rhs(evaluate=None).args
         (b, b, x, -x)
-        >>> eq.rewrite(Add, evaluate=False).args
+        >>> eq.lhs_rhs(evaluate=False).args
         (b, x, b, -x)
         """
         from .add import _unevaluated_Add, Add
+        L, R = self.args
         if L == 0:
             return R
         if R == 0:
@@ -683,11 +684,10 @@ class Equality(Relational):
         free = self.free_symbols
         if len(free) == 1:
             try:
-                from .add import Add
                 from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
-                    e.rewrite(Add, evaluate=False), x)
+                    e.lhs_rhs(evaluate=False), x)
                 if m.is_zero is False:
                     enew = e.func(x, -b / m)
                 else:
