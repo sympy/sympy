@@ -11,7 +11,7 @@ This module contains functions to:
     - solve a system of Non Linear Equations with N variables and M equations
 """
 from sympy.core.sympify import sympify
-from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
+from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul,
                         Add, Basic)
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
@@ -1065,7 +1065,7 @@ def _solveset(f, symbol, domain, _check=False):
             solns = solver(expr, symbol, in_set)
             result += solns
     elif isinstance(f, Eq):
-        result = solver(f.lhs_rhs(evaluate=False), symbol, domain)
+        result = solver(Add(f.lhs, -f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
         from .inequalities import solve_univariate_inequality
@@ -3017,6 +3017,10 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     if not system:
         return S.EmptySet
 
+    for i, e in enumerate(system):
+        if isinstance(e, Eq):
+            system[i] = e.lhs - e.rhs
+
     if not symbols:
         msg = ('Symbols must be given, for which solution of the '
                'system is to be found.')
@@ -3311,7 +3315,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # list.
                             result.remove(res)
                     continue  # skip as it's independent of desired symbols
-                depen1, depen2 = (eq2.lhs_rhs()).as_independent(*unsolved_syms)
+                depen1, depen2 = eq2.as_independent(*unsolved_syms)
                 if (depen1.has(Abs) or depen2.has(Abs)) and solver == solveset_complex:
                     # Absolute values cannot be inverted in the
                     # complex domain
@@ -3527,8 +3531,8 @@ def _separate_poly_nonpoly(system, symbols):
         # Store denom expressions that contain symbols
         denominators.update(_simple_dens(eq, symbols))
         # Convert equality to expression
-        if isinstance(eq, Equality):
-            eq = eq.lhs_rhs()
+        if isinstance(eq, Eq):
+            eq = eq.lhs - eq.rhs
         # try to remove sqrt and rational power
         without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:

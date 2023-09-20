@@ -3222,7 +3222,7 @@ def test_issue_23318():
         Eq(x, 0.0015 * z),
         Eq(0.0015, 7845.32 * y / z),
     ]
-    eqs_expr = [eq.lhs_rhs() for eq in eqs_eq]
+    eqs_expr = [eq.lhs - eq.rhs for eq in eqs_eq]
 
     sol = {(266.97755814852, 0.0340301680681629, 177985.03876568)}
 

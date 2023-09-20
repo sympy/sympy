@@ -238,7 +238,7 @@ class DiscretePSpace(PSpace):
             prob = self.eval_prob(_domain)
         except NotImplementedError:
             from sympy.stats.rv import density
-            expr = condition.lhs_rhs()
+            expr = condition.lhs - condition.rhs
             dens = density(expr)
             if not isinstance(dens, DiscreteDistribution):
                 from sympy.stats.drv_types import DiscreteDistributionHandmade

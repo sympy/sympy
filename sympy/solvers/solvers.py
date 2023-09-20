@@ -273,8 +273,8 @@ def checksol(f, symbol, sol=None, **flags):
             f = f.subs(sol)
             if not f.is_Boolean:
                 return
-        else:
-            f = f.lhs_rhs(evaluate=False, deep=False)
+        elif isinstance(f, Eq):
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -928,7 +928,7 @@ def solve(f, *symbols, **flags):
     for i, fi in enumerate(f):
         if isinstance(fi, (Eq, Ne)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
-                fi = fi.lhs_rhs()
+                fi = fi.lhs - fi.rhs
             else:
                 L, R = fi.args
                 if isinstance(R, BooleanAtom):
@@ -947,8 +947,8 @@ def solve(f, *symbols, **flags):
                             Unanticipated argument of Eq when other arg
                             is True or False.
                         '''))
-                else:
-                    fi = fi.lhs_rhs(evaluate=False, deep=False)
+                elif isinstance(fi, Eq):
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
@@ -2420,7 +2420,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
         raise ValueError('must provide symbols for coeffs')
 
     if isinstance(equ, Eq):
-        eq = equ.lhs_rhs()
+        eq = equ.lhs - equ.rhs
     else:
         eq = equ
 
@@ -3053,14 +3053,14 @@ def nsolve(*args, dict=False, **kwargs):
         f = list(f)
         for i, fi in enumerate(f):
             if isinstance(fi, Eq):
-                f[i] = fi.lhs_rhs()
+                f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
-            f = f.lhs_rhs()
+            f = f.lhs - f.rhs
         elif f.is_Relational:
             raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
@@ -3428,7 +3428,7 @@ def unrad(eq, *syms, **flags):
     _take = flags.setdefault('_take', _take)
 
     if isinstance(eq, Eq):
-        eq = eq.lhs_rhs()  # XXX legacy Eq as Eqn support
+        eq = eq.lhs - eq.rhs  # XXX legacy Eq as Eqn support
     elif not isinstance(eq, Expr):
         return
 

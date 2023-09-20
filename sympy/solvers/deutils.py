@@ -173,7 +173,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
     classify_pde(pde.py)
     """
     if isinstance(eq, Equality):
-        eq = eq.lhs_rhs()
+        eq = eq.lhs - eq.rhs
 
     # preprocess the equation and find func if not given
     if prep or func is None:

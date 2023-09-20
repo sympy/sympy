@@ -1557,7 +1557,7 @@ class Circle(Ellipse):
             y = kwargs.get('y', 'y')
             equation = args[0].expand()
             if isinstance(equation, Eq):
-                equation = equation.lhs_rhs()
+                equation = equation.lhs - equation.rhs
             x = find(x, equation)
             y = find(y, equation)
 

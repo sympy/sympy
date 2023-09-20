@@ -2485,7 +2485,7 @@ class ImplicitSeries(BaseSeries):
         """
         equality = False
         if isinstance(expr, Equality):
-            expr = expr.lhs_rhs()
+            expr = expr.lhs - expr.rhs
             equality = True
         elif isinstance(expr, Relational):
             expr = expr.gts - expr.lts

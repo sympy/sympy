@@ -728,7 +728,7 @@ def rsolve(f, y, init=None):
 
     """
     if isinstance(f, Equality):
-        f = f.lhs_rhs()
+        f = f.lhs - f.rhs
 
     n = y.args[0]
     k = Wild('k', exclude=(n,))
