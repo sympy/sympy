@@ -3807,11 +3807,12 @@ class StateSpace(LinearTimeInvariant):
         """
         Returns state space model where numerical expressions are evaluated into floating point numbers.
         """
+        dps = prec_to_dps(prec)
         return StateSpace(
-            self._A.evalf(prec),
-            self._B.evalf(prec),
-            self._C.evalf(prec),
-            self._D.evalf(prec))
+            self._A.evalf(n = dps),
+            self._B.evalf(n = dps),
+            self._C.evalf(n = dps),
+            self._D.evalf(n = dps))
 
     def _eval_rewrite_as_TransferFunction(self, *args):
         """
