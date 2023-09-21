@@ -273,8 +273,8 @@ def checksol(f, symbol, sol=None, **flags):
             f = f.subs(sol)
             if not f.is_Boolean:
                 return
-        else:
-            f = f.rewrite(Add, evaluate=False, deep=False)
+        elif isinstance(f, Eq):
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -947,8 +947,8 @@ def solve(f, *symbols, **flags):
                             Unanticipated argument of Eq when other arg
                             is True or False.
                         '''))
-                else:
-                    fi = fi.rewrite(Add, evaluate=False, deep=False)
+                elif isinstance(fi, Eq):
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
