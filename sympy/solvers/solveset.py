@@ -2272,7 +2272,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
         f = f.xreplace({d: e})
     f = piecewise_fold(f)
 
-    return _solveset(f, symbol, domain, _check=True)
+    rv = _solveset(f, symbol, domain, _check=True)
+    for d in _simple_dens(f, symbol):
+        omit =  _solveset(d, symbol, domain, _check=True)
+        rv -= omit
+    return rv
 
 
 def solveset_real(f, symbol):
