@@ -1251,3 +1251,8 @@ def test_weak_strict():
     eq = Le(x, 1)
     assert eq.strict == Lt(x, 1)
     assert eq.weak == eq
+
+def test_rewrite_Add():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert Eq(x, y).rewrite(Add) == x - y
