@@ -5,7 +5,7 @@ Contains
 
 """
 
-from sympy.core import S, sympify
+from sympy.core import S, sympify, Expr
 from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, symbols, Dummy
 from sympy.geometry.entity import GeometryEntity, GeometrySet
@@ -78,26 +78,27 @@ class Parabola(GeometrySet):
     The Parabola may be described by a quadratic expression,
     but without cross-terms in ``x`` and ``y``:
 
-    >>> Parabola(eq=x**2 + 2*x + 3)
+    >>> Parabola(x**2 + 2*x + 3)
     Parabola(Point2D(-1, 9/4), Line2D(Point2D(0, 7/4), Point2D(1, 7/4)))
-    >>> Parabola(eq=Eq(x, y**2 + 2*y + 3))
+    >>> Parabola(Eq(x, y**2 + 2*y + 3))
     Parabola(Point2D(9/4, -1), Line2D(Point2D(7/4, 0), Point2D(7/4, 1)))
 
     """
 
-    def __new__(cls, focus=None, directrix=None, eq=None, **kwargs):
+    def __new__(cls, focus=None, directrix=None, **kwargs):
 
-        if (directrix, eq).count(None) != 1:
-            raise ValueError('instantiate with expression or focus and directrix')
-        if directrix:
-            focus = Point(focus or (0, 0), dim=2)
+        eq_or_focus = sympify(focus)
+        if directrix is not None:
+            focus = Point(eq_or_focus or (0, 0), dim=2)
             directrix = Line(directrix)
             if directrix.contains(focus):
                 raise ValueError('The focus must not be a point of directrix')
         else:
-            eq = sympify(eq)
+            eq = eq_or_focus
             if eq.is_Equality:
                 eq = eq.lhs - eq.rhs
+            if not isinstance(eq, Expr):
+                raise ValueError('first argument should be a quadratic expression')
             eq = eq.expand()
             xy = list(ordered([i for i in eq.free_symbols if i.name in ('x','y')]))
             if len(xy) > 2:
@@ -121,7 +122,6 @@ class Parabola(GeometrySet):
                 v = xy[0]
                 a, b, c = (d.get(i, 0) for i in (v**2, v, 1))
                 h = -b/2/a
-                k = eq.subs(v, h)
                 f = 1/a/4
                 F = (h, c - b**2/a/4 + f)
                 D = F[1] - 2*f

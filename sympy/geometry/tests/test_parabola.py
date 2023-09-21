@@ -146,10 +146,10 @@ def test_parabola_intersection():
 def test_Parabola_alt_instantiation():
     ans = -x**2 - 3*x/2 + y/2 - S(5)/2
     eq = 2*x**2 + 3*x + 5
-    assert Parabola(eq=eq).equation(x, y).expand() == ans
-    assert Parabola(eq=eq.subs(x, y)).equation(y, x).expand() == ans  # reversed x and y
-    raises(ValueError, lambda: Parabola(eq=x*y + y**2))
-    raises(ValueError, lambda: Parabola(eq=x*y + y**2))
-    raises(ValueError, lambda: Parabola(eq=x**2 + y**2))
-    raises(ValueError, lambda: Parabola(eq=x**2 + Dummy('x')**2))
-    raises(ValueError, lambda: Parabola(eq=2))
+    assert Parabola(eq).equation(x, y).expand() == ans
+    assert Parabola(eq.subs(x, y)).equation(y, x).expand() == ans  # reversed x and y
+    raises(ValueError, lambda: Parabola(x*y + y**2))
+    raises(ValueError, lambda: Parabola(x*y + y**2))
+    raises(ValueError, lambda: Parabola(x**2 + y**2))
+    raises(ValueError, lambda: Parabola(x**2 + Dummy('x')**2))
+    raises(ValueError, lambda: Parabola(2))
