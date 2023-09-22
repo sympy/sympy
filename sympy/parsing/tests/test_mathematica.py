@@ -67,7 +67,8 @@ def test_mathematica():
         'LogIntegral[4]': ' li(4)',
         'PrimePi[7]': 'primepi(7)',
         'Prime[5]': 'prime(5)',
-        'PrimeQ[5]': 'isprime(5)'
+        'PrimeQ[5]': 'isprime(5)',
+        'Rational[2,19]': 'Rational(2,19)',    # test case for issue 25716
         }
 
     for e in d:
