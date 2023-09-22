@@ -672,7 +672,7 @@ class System(_Methods):
 
     @_reset_eom_method
     def apply_uniform_gravity(self, acceleration):
-        """Apply gravity to all bodies in the system.
+        """Apply uniform gravity to all bodies in the system by adding loads.
 
         Parameters
         ==========
