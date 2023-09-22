@@ -606,6 +606,11 @@ class TestValidateSystem(TestSystemBase):
             self.system.validate_system(LagrangesMethod)
         self.system.u_ind = []
         self.system.validate_system(LagrangesMethod)
+        self.system.u_aux = u[:len(self.u_ind)]
+        with pytest.raises(ValueError):
+            self.system.validate_system(LagrangesMethod)
+        self.system.u_aux = []
+        self.system.validate_system(LagrangesMethod)
         self.system.add_joints(
             PinJoint('Ju', RigidBody('rbu1'), RigidBody('rbu2')))
         self.system.u_ind = []

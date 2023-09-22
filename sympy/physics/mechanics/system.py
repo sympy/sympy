@@ -1061,6 +1061,11 @@ class System(_Methods):
                 method. Only derivatives of the generalized coordinates are
                 supported. If these symbols are used in your expressions, then
                 this will result in wrong equations of motion."""))
+            if self.u_aux:
+                msgs.append(filldedent(f"""
+                This method does not support auxiliary speeds. If these symbols
+                are used in your expressions, then this will result in wrong
+                equations of motion. The auxiliary speeds are {self.u_aux}."""))
         else:
             raise NotImplementedError(f'{eom_method} has not been implemented.')
         if check_duplicates:  # Should be redundant
