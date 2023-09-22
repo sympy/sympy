@@ -1,4 +1,4 @@
-from sympy.core.backend import symbols
+from sympy import symbols
 from sympy.physics.mechanics import Point, Particle, ReferenceFrame, inertia
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.testing.pytest import raises, warns_deprecated_sympy

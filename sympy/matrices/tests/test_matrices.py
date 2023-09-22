@@ -3,7 +3,7 @@ import concurrent.futures
 from collections.abc import Hashable
 
 from sympy.core.add import Add
-from sympy.core.function import (Function, diff, expand)
+from sympy.core.function import Function, diff, expand
 from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -38,6 +38,7 @@ from sympy.testing.pytest import (raises, XFAIL, slow, skip, skip_under_pyodide,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import MatPow
 from sympy.algebras import Quaternion
 
@@ -1164,6 +1165,25 @@ def test_col_row_op():
     assert M[0, 0] == x + 1
 
 
+def test_row_mult():
+    M = Matrix([[1,2,3],
+               [4,5,6]])
+    M.row_mult(1,3)
+    assert M[1,0] == 12
+    assert M[0,0] == 1
+    assert M[1,2] == 18
+
+
+def test_row_add():
+    M = Matrix([[1,2,3],
+               [4,5,6],
+               [1,1,1]])
+    M.row_add(2,0,5)
+    assert M[0,0] == 6
+    assert M[1,0] == 4
+    assert M[0,2] == 8
+
+
 def test_zip_row_op():
     for cls in classes[:2]: # XXX: immutable matrices don't support row ops
         M = cls.eye(3)
@@ -1948,6 +1968,9 @@ def test_diff():
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    assert A.diff(x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
+    assert diff(A, x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
 
 
 def test_diff_by_matrix():

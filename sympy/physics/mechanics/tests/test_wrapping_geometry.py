@@ -2,12 +2,11 @@
 
 import pytest
 
-from sympy.core.backend import (
+from sympy import (
     Integer,
     Rational,
     S,
     Symbol,
-    USE_SYMENGINE,
     acos,
     cos,
     pi,
@@ -89,7 +88,6 @@ class TestWrappingSphere:
         assert simplify(Eq(sphere.geodesic_length(p1, p2), expected))
 
     @staticmethod
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'position_1, position_2, vector_1, vector_2',
         [
@@ -266,7 +264,6 @@ class TestWrappingCylinder:
         assert simplify(Eq(cylinder.geodesic_length(p1, p2), expected))
 
     @staticmethod
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'axis, position_1, position_2, vector_1, vector_2',
         [

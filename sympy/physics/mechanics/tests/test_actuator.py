@@ -2,9 +2,8 @@
 
 import pytest
 
-from sympy.core.backend import (
+from sympy import (
     S,
-    USE_SYMENGINE,
     Matrix,
     Symbol,
     SympifyError,
@@ -28,10 +27,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 
-if USE_SYMENGINE:
-    from sympy.core.backend import Basic as ExprType
-else:
-    from sympy.core.expr import Expr as ExprType
+from sympy.core.expr import Expr as ExprType
 
 target = RigidBody('target')
 reaction = RigidBody('reaction')
@@ -336,14 +332,6 @@ class TestLinearDamper:
         assert isinstance(damper.pathway, LinearPathway)
         assert damper.pathway == self.pathway
 
-    @pytest.mark.skipif(
-        USE_SYMENGINE,
-        reason=(
-            'SymEngine give equivalent expression that does not compare equal;'
-            'SymPy puts the sqrt(q(t)**2) term in the numerator, while '
-            'SymEngine puts it in the denominator'
-        )
-    )
     def test_valid_constructor_force(self):
         self.pB.set_pos(self.pA, self.q*self.N.x)
         damper = LinearDamper(self.damping, self.pathway)

@@ -60,3 +60,10 @@ def test_inverse_matpow_canonicalization():
 def test_nonsquare_error():
     A = MatrixSymbol('A', 3, 4)
     raises(NonSquareMatrixError, lambda: Inverse(A))
+
+
+def test_adjoint_trnaspose_conjugate():
+    A = MatrixSymbol('A', n, n)
+    assert A.transpose().inverse() == A.inverse().transpose()
+    assert A.conjugate().inverse() == A.inverse().conjugate()
+    assert A.adjoint().inverse() == A.inverse().adjoint()

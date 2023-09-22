@@ -18,6 +18,7 @@ class _NamedMixin:
 
     Attributes
     ==========
+
     name : str
         The name identifier associated with the instance. Must be a string of
         length at least 1.

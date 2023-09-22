@@ -1,8 +1,7 @@
-from sympy.core.backend import (zeros, Matrix, symbols, lambdify, sqrt, pi,
-                                _simplify_matrix, USE_SYMENGINE)
+from sympy import (zeros, Matrix, symbols, lambdify, sqrt, pi,
+                                simplify)
 from sympy.physics.mechanics import (dynamicsymbols, cross, inertia, RigidBody,
                                      ReferenceFrame, KanesMethod)
-from sympy.testing.pytest import skip
 
 
 def _create_rolling_disc():
@@ -91,8 +90,6 @@ def _verify_rolling_disc_numerically(kane, all_zero=False):
 
 
 def test_kane_rolling_disc_lu():
-    if USE_SYMENGINE:
-        skip('symengine does not support lambdify with dynamicsymbols.')
     props = _create_rolling_disc()
     kane = KanesMethod(props['frame'], props['q_ind'], props['u_ind'],
                        props['kdes'], u_dependent=props['u_dep'],
@@ -104,15 +101,13 @@ def test_kane_rolling_disc_lu():
 
 
 def test_kane_rolling_disc_kdes_callable():
-    if USE_SYMENGINE:
-        skip('symengine does not support lambdify with dynamicsymbols.')
     props = _create_rolling_disc()
     kane = KanesMethod(
         props['frame'], props['q_ind'], props['u_ind'], props['kdes'],
         u_dependent=props['u_dep'], velocity_constraints=props['fnh'],
         bodies=props['bodies'], forcelist=props['loads'],
         explicit_kinematics=False,
-        kd_eqs_solver=lambda A, b: _simplify_matrix(A.LUsolve(b)))
+        kd_eqs_solver=lambda A, b: simplify(A.LUsolve(b)))
     q, u, p = dynamicsymbols('q1:6'), dynamicsymbols('u1:6'), symbols('g r m')
     qd = dynamicsymbols('q1:6', 1)
     eval_kdes = lambdify((q, qd, u, p), tuple(kane.kindiffdict().items()))

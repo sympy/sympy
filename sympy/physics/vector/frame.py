@@ -1,4 +1,4 @@
-from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, zeros,
+from sympy import (diff, expand, sin, cos, sympify, eye, zeros,
                                 ImmutableMatrix as Matrix, MatrixBase)
 from sympy.core.symbol import Symbol
 from sympy.simplify.trigsimp import trigsimp
