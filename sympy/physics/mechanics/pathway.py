@@ -69,7 +69,7 @@ class PathwayBase(ABC):
         pass
 
     @abstractmethod
-    def compute_loads(self, force):
+    def to_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -200,7 +200,7 @@ class LinearPathway(PathwayBase):
         """Exact analytical expression for the pathway's extension velocity."""
         return _point_pair_extension_velocity(*self.attachments)
 
-    def compute_loads(self, force):
+    def to_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -235,11 +235,11 @@ class LinearPathway(PathwayBase):
         Now create a symbol ``F`` to describe the magnitude of the (expansile)
         force that will be produced along the pathway. The list of loads that
         ``KanesMethod`` requires can be produced by calling the pathway's
-        ``compute_loads`` method with ``F`` passed as the only argument.
+        ``to_loads`` method with ``F`` passed as the only argument.
 
         >>> from sympy import symbols
         >>> F = symbols('F')
-        >>> linear_pathway.compute_loads(F)
+        >>> linear_pathway.to_loads(F)
         [(pA, - F*q(t)/sqrt(q(t)**2)*N.x), (pB, F*q(t)/sqrt(q(t)**2)*N.x)]
 
         Parameters
@@ -388,7 +388,7 @@ class ObstacleSetPathway(PathwayBase):
             extension_velocity += _point_pair_extension_velocity(*attachment_pair)
         return extension_velocity
 
-    def compute_loads(self, force):
+    def to_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -434,11 +434,11 @@ class ObstacleSetPathway(PathwayBase):
         Now create a symbol ``F`` to describe the magnitude of the (expansile)
         force that will be produced along the pathway. The list of loads that
         ``KanesMethod`` requires can be produced by calling the pathway's
-        ``compute_loads`` method with ``F`` passed as the only argument.
+        ``to_loads`` method with ``F`` passed as the only argument.
 
         >>> from sympy import Symbol
         >>> F = Symbol('F')
-        >>> obstacle_set_pathway.compute_loads(F)
+        >>> obstacle_set_pathway.to_loads(F)
         [(pA, sqrt(2)*F/2*A.x + sqrt(2)*F/2*A.y),
          (pB, - sqrt(2)*F/2*A.x - sqrt(2)*F/2*A.y),
          (pB, - F/sqrt(2*cos(q(t)) + 2)*A.y - F/sqrt(2*cos(q(t)) + 2)*B.y),
@@ -585,7 +585,7 @@ class WrappingPathway(PathwayBase):
         """Exact analytical expression for the pathway's extension velocity."""
         return self.length.diff(dynamicsymbols._t)
 
-    def compute_loads(self, force):
+    def to_loads(self, force):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -636,10 +636,10 @@ class WrappingPathway(PathwayBase):
         Now create a symbol ``F`` to describe the magnitude of the (expansile)
         force that will be produced along the pathway. The list of loads that
         ``KanesMethod`` requires can be produced by calling the pathway's
-        ``compute_loads`` method with ``F`` passed as the only argument.
+        ``to_loads`` method with ``F`` passed as the only argument.
 
         >>> F = symbols('F')
-        >>> loads = pathway.compute_loads(F)
+        >>> loads = pathway.to_loads(F)
         >>> [load.__class__(load.location, load.vector.simplify()) for load in loads]
         [(pA, F*N.y), (pB, F*sin(q(t))*N.x - F*cos(q(t))*N.y),
          (pO, - F*sin(q(t))*N.x + F*(cos(q(t)) - 1)*N.y)]

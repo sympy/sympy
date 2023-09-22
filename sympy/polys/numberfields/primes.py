@@ -396,7 +396,7 @@ def _compute_test_factor(p, gens, ZK):
     # predicts that such an element must exist, so nullspace should
     # be non-trivial.
     x = B.nullspace()[0, :].transpose()
-    beta = ZK.parent(ZK.matrix * x, denom=ZK.denom)
+    beta = ZK.parent(ZK.matrix * x.convert_to(ZZ), denom=ZK.denom)
     return beta
 
 

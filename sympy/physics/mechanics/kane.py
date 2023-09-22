@@ -1,4 +1,4 @@
-from sympy.core.backend import zeros, Matrix, diff, eye
+from sympy import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)

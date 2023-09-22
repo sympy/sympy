@@ -1,7 +1,7 @@
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.logic import fuzzy_or, fuzzy_and, FuzzyBool
+from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_not, FuzzyBool
 from sympy.core.numbers import I, pi, Rational
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import (binomial, factorial,
@@ -1366,6 +1366,12 @@ class asinh(InverseHyperbolicFunction):
     def _eval_is_zero(self):
         return self.args[0].is_zero
 
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
+
 
 class acosh(InverseHyperbolicFunction):
     """
@@ -1540,6 +1546,12 @@ class acosh(InverseHyperbolicFunction):
         if (self.args[0] - 1).is_zero:
             return True
 
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, (self.args[0] - 1).is_extended_nonnegative])
+
+    def _eval_is_finite(self):
+        return self.args[0].is_finite
+
 
 class atanh(InverseHyperbolicFunction):
     """
@@ -1683,6 +1695,12 @@ class atanh(InverseHyperbolicFunction):
         if self.args[0].is_zero:
             return True
 
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, (1 - self.args[0]).is_nonnegative, (self.args[0] + 1).is_nonnegative])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(fuzzy_or([(self.args[0] - 1).is_zero, (self.args[0] + 1).is_zero]))
+
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
 
@@ -1825,6 +1843,12 @@ class acoth(InverseHyperbolicFunction):
         Returns the inverse of this function.
         """
         return coth
+
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, fuzzy_or([(self.args[0] - 1).is_extended_nonnegative, (self.args[0] + 1).is_extended_nonpositive])])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(fuzzy_or([(self.args[0] - 1).is_zero, (self.args[0] + 1).is_zero]))
 
 
 class asech(InverseHyperbolicFunction):
@@ -2007,6 +2031,12 @@ class asech(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_acsch(self, x, **kwargs):
         return sqrt(1/x - 1)/sqrt(1 - 1/x)*(pi/2 - I*acsch(I*x, evaluate=False))
+
+    def _eval_is_extended_real(self):
+        return fuzzy_and([self.args[0].is_extended_real, self.args[0].is_nonnegative, (1 - self.args[0]).is_nonnegative])
+
+    def _eval_is_finite(self):
+        return fuzzy_not(self.args[0].is_zero)
 
 
 class acsch(InverseHyperbolicFunction):
@@ -2201,3 +2231,9 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_is_zero(self):
         return self.args[0].is_infinite
+
+    def _eval_is_extended_real(self):
+        return self.args[0].is_extended_real
+
+    def _eval_is_finite(self):
+        return fuzzy_not(self.args[0].is_zero)

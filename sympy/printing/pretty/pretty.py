@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode,  annotated
+    pretty_try_use_unicode, annotated, is_subscriptable_in_unicode, center_pad
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -727,12 +727,10 @@ class PrettyPrinter(Printer):
                 # hcenter it, +0.5 to the right                        2
                 # ( it's better to align formula starts for say 0 and r )
                 # XXX this is not good in all cases -- maybe introduce vbaseline?
-                wdelta = maxw[j] - s.width()
-                wleft = wdelta // 2
-                wright = wdelta - wleft
+                left, right = center_pad(s.width(), maxw[j])
 
-                s = prettyForm(*s.right(' '*wright))
-                s = prettyForm(*s.left(' '*wleft))
+                s = prettyForm(*s.right(right))
+                s = prettyForm(*s.left(left))
 
                 # we don't need vcenter cells -- this is automatically done in
                 # a pretty way because when their baselines are taking into
@@ -1664,8 +1662,9 @@ class PrettyPrinter(Printer):
         return self.emptyPrinter(expr)
 
     def _print_polylog(self, e):
-        if e.args[0].is_Integer and self._use_unicode:
-            return self._print_Function(Function('Li_%s' % e.args[0])(e.args[1]))
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('Li_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_lerchphi(self, e):
@@ -1811,8 +1810,9 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        if e.args[0].is_Integer and self._use_unicode:
-            return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
+        subscript = self._print(e.args[0])
+        if self._use_unicode and is_subscriptable_in_unicode(subscript):
+            return self._print_Function(Function('E_%s' % subscript)(e.args[1]))
         return self._print_Function(e)
 
     def _print_Chi(self, e):

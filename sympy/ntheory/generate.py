@@ -252,18 +252,20 @@ class Sieve:
             self._tlist += _array('L', range(n, b))
             for i in range(1, n):
                 ti = self._tlist[i]
-                startindex = (n + i - 1) // i * i
-                for j in range(startindex, b, i):
-                    self._tlist[j] -= ti
+                if ti == i - 1:
+                    startindex = (n + i - 1) // i * i
+                    for j in range(startindex, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
                     yield ti
 
             for i in range(n, b):
                 ti = self._tlist[i]
-                for j in range(2 * i, b, i):
-                    self._tlist[j] -= ti
+                if ti == i:
+                    for j in range(i, b, i):
+                        self._tlist[j] -= self._tlist[j] // i
                 if i >= a:
-                    yield ti
+                    yield self._tlist[i]
 
     def mobiusrange(self, a, b):
         """Generate all mobius numbers for the range [a, b).
@@ -436,6 +438,8 @@ def prime(nth):
     from sympy.functions.elementary.exponential import log
     from sympy.functions.special.error_functions import li
     a = 2 # Lower bound for binary search
+    # leave n inside int since int(i*r) != i*int(r) is not a valid property
+    # e.g. int(2*.5) != 2*int(.5)
     b = int(n*(log(n) + log(log(n)))) # Upper bound for the search.
 
     while a < b:

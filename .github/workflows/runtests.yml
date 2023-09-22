@@ -202,7 +202,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml lark                         \
+                         wurlitzer autowrap lxml lark z3-solver                       \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
@@ -227,9 +227,7 @@ jobs:
   python-flint:
     needs: code-quality
 
-    # Currently wheels are available for python-flint only on Windows and OSX
-    # so we use OSX rather than Ubuntu for this job.
-    runs-on: macos-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -238,6 +236,36 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
+      # Test the modules that most directly use python-flint
+      - run: pytest sympy/polys sympy/ntheory sympy/matrices
+        env:
+          SYMPY_GROUND_TYPES: flint
+      - run: bin/doctest                                  \
+                    sympy/polys                           \
+                    sympy/ntheory                         \
+                    sympy/matrices                        \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/matrices              \
+                    doc/src/tutorials/intro-tutorial/     \
+        env:
+          SYMPY_GROUND_TYPES: flint
+
+
+  # -------------------- FLINT+gmpy2 ------------------------------ #
+
+  flint-gmpy2:
+    needs: code-quality
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install python-flint gmpy2
       # Test the modules that most directly use python-flint
       - run: pytest sympy/polys sympy/ntheory sympy/matrices
         env:
@@ -431,7 +459,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - run: pip install asv virtualenv
+      - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
         # Need to make sure we can access the branches from the main repo. We

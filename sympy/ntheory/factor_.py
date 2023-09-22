@@ -13,10 +13,11 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational, Integer
-from sympy.core.power import Pow, integer_log
+from sympy.core.intfunc import integer_log, num_digits
+from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot
+from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot, bit_scan1
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -56,11 +57,6 @@ def _isperfect(n):
             PERFECT.append(t*(2*t - 1))
             j += 1
     return n in PERFECT
-
-
-small_trailing = [0] * 256
-for j in range(1,8):
-    small_trailing[1<<j::1<<(j+1)] = [j] * (1<<(7-j))
 
 
 def smoothness(n):
@@ -195,57 +191,6 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     return '\n'.join(lines)
 
 
-def trailing(n):
-    """Count the number of trailing zero digits in the binary
-    representation of n, i.e. determine the largest power of 2
-    that divides n.
-
-    Examples
-    ========
-
-    >>> from sympy import trailing
-    >>> trailing(128)
-    7
-    >>> trailing(63)
-    0
-
-    See Also
-    ========
-
-    multiplicity
-
-    """
-    n = abs(int(n))
-    if not n:
-        return 0
-    low_byte = n & 0xff
-    if low_byte:
-        return small_trailing[low_byte]
-
-    t = 8
-    n >>= 8
-    # 2**m is quick for z up through 2**30
-    z = n.bit_length() - 1
-    if n == 1 << z:
-        return z + t
-
-    if z < 300:
-        # fixed 8-byte reduction
-        while not n & 0xff:
-            n >>= 8
-            t += 8
-    else:
-        # binary reduction important when there might be a large
-        # number of trailing 0s
-        p = z >> 1
-        while not n & 0xff:
-            while n & ((1 << p) - 1):
-                p >>= 1
-            n >>= p
-            t += p
-    return t + small_trailing[n & 0xff]
-
-
 def multiplicity(p, n):
     """
     Find the greatest integer m such that p**m divides n.
@@ -310,7 +255,7 @@ def multiplicity(p, n):
     if n == 0:
         raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
     if p == 2:
-        return trailing(n)
+        return bit_scan1(n)
     if p < 2:
         raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
     if p == n:
@@ -342,6 +287,13 @@ def multiplicity_in_factorial(p, n):
     """return the largest integer ``m`` such that ``p**m`` divides ``n!``
     without calculating the factorial of ``n``.
 
+    Parameters
+    ==========
+
+    p : Integer
+        positive integer
+    n : Integer
+        non-negative integer
 
     Examples
     ========
@@ -366,6 +318,11 @@ def multiplicity_in_factorial(p, n):
     >>> multiplicity_in_factorial(factorial(25), 2**100)
     52818775009509558395695966887
 
+    See Also
+    ========
+
+    multiplicity
+
     """
 
     p, n = as_int(p), as_int(n)
@@ -376,31 +333,17 @@ def multiplicity_in_factorial(p, n):
     if n < 0:
         raise ValueError('expecting non-negative integer got %s' % n )
 
-    factors = factorint(p)
-
     # keep only the largest of a given multiplicity since those
     # of a given multiplicity will be goverened by the behavior
     # of the largest factor
-    test = defaultdict(int)
-    for k, v in factors.items():
-        test[v] = max(k, test[v])
-    keep = set(test.values())
-    # remove others from factors
-    for k in list(factors.keys()):
-        if k not in keep:
-            factors.pop(k)
-
-    mp = S.Infinity
-    for i in factors:
-        # multiplicity of i in n! is
-        mi = (n - (sum(digits(n, i)) - i))//(i - 1)
-        # multiplicity of p in n! depends on multiplicity
-        # of prime `i` in p, so we floor divide by factors[i]
-        # and keep it if smaller than the multiplicity of p
-        # seen so far
-        mp = min(mp, mi//factors[i])
-
-    return mp
+    f = defaultdict(int)
+    for k, v in factorint(p).items():
+        f[v] = max(k, f[v])
+    # multiplicity of p in n! depends on multiplicity
+    # of prime `k` in p, so we floor divide by `v`
+    # and keep it if smaller than the multiplicity of p
+    # seen so far
+    return min((n + k - sum(digits(n, k)))//(k - 1)//v for v, k in f.items())
 
 
 def perfect_power(n, candidates=None, big=True, factor=True):
@@ -469,7 +412,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     See Also
     ========
-    sympy.core.power.integer_nthroot
+    sympy.core.intfunc.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
     if isinstance(n, Rational) and not n.is_Integer:
@@ -511,7 +454,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         candidates = sorted([i for i in candidates
             if min_possible <= i < max_possible])
         if n%2 == 0:
-            e = trailing(n)
+            e = bit_scan1(n)
             candidates = [i for i in candidates if e%i == 0]
         if big:
             candidates = reversed(candidates)
@@ -532,7 +475,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         if factor and n % fac == 0:
             # find what the potential power is
             if fac == 2:
-                e = trailing(n)
+                e = bit_scan1(n)
             else:
                 e = multiplicity(fac, n)
             # if it's a trivial power we are done
@@ -936,7 +879,7 @@ def _factorint_small(factors, n, limit, fail_max):
         return n, 0
 
     d = 2
-    m = trailing(n)
+    m = bit_scan1(n)
     if m:
         factors[d] = m
         n >>= m
@@ -1426,11 +1369,11 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print(complete_msg)
             return factors
-        #Use subexponential algorithms if use_ecm
-        #Use pollard algorithms for finding small factors for 3 iterations
-        #if after small factors the number of digits of n is >= 20 then use ecm
+        # Use subexponential algorithms if use_ecm
+        # Use pollard algorithms for finding small factors for 3 iterations
+        # if after small factors the number of digits of n >= 25 then use ecm
         iteration += 1
-        if use_ecm and iteration >= 3 and len(str(n)) >= 25:
+        if use_ecm and iteration >= 3 and num_digits(n) >= 24:
             break
         low, high = high, high*2
     B1 = 10000
