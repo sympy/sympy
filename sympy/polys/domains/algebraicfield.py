@@ -179,7 +179,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K.orig_ext
     (sqrt(2), sqrt(3))
     >>> K.mod
-    DMP([1, 0, -10, 0, 1], QQ)
+    DMP_Python([1, 0, -10, 0, 1], QQ)
 
     The `discriminant`_ of the field can be obtained from the
     :py:meth:`~.discriminant` method, and an `integral basis`_ from the

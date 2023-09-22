@@ -326,7 +326,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy import QQ
         >>> from sympy.abc import x, y
         >>> list(QQ.old_poly_ring(x, y).ideal(x, y, x**2 + y).gens)
-        [DMP([[1], []], QQ), DMP([[1, 0]], QQ), DMP([[1], [], [1, 0]], QQ)]
+        [DMP_Python([[1], []], QQ), DMP_Python([[1, 0]], QQ), DMP_Python([[1], [], [1, 0]], QQ)]
         """
         return (x[0] for x in self._module.gens)
 
@@ -387,7 +387,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)
         >>> I.in_terms_of_generators(1)
-        [DMP([1], QQ), DMP([-1, 0], QQ)]
+        [DMP_Python([1], QQ), DMP_Python([-1, 0], QQ)]
         """
         return self._module.in_terms_of_generators([e])
 

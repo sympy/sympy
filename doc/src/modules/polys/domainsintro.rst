@@ -49,7 +49,7 @@ representing the implementation of those coefficients::
   >>> p.domain
   QQ
   >>> p.rep
-  DMP([1, 1/2, 0], QQ)
+  DMP_Python([1, 1/2, 0], QQ)
   >>> p.rep.rep
   [1, 1/2, 0]
   >>> type(p.rep.rep[0])  # doctest: +SKIP
@@ -925,7 +925,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> p1
   x**2 + 1
   >>> p2
-  DMP([1, 0, 1], ZZ)
+  DMP_Python([1, 0, 1], ZZ)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
   >>> type(p1)
@@ -933,13 +933,13 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> type(K2)
   <class 'sympy.polys.domains.old_polynomialring.GlobalPolynomialRing'>
   >>> type(p2)
-  <class 'sympy.polys.polyclasses.DMP'>
+  <class 'sympy.polys.polyclasses.DMP_Python'>
 
 The internal representation of the old polynomial ring domain is the
 :py:class:`~.DMP` representation as a list of (lists of) coefficients::
 
   >>> repr(p2)  # doctest: +SKIP
-  'DMP([1, 0, 1], ZZ, ZZ[x])'
+  'DMP_Python([1, 0, 1], ZZ, ZZ[x])'
 
 The most notable use of the :py:class:`~.DMP` representation of polynomials is
 as the internal representation used by :py:class:`~.Poly` (this is discussed
@@ -1364,7 +1364,7 @@ This is the internal implementation of :py:class:`~.Poly`::
 
   >>> d = p.rep  # internal representation of Poly
   >>> d
-  DMP([1, 0, 1], ZZ)
+  DMP_Python([1, 0, 1], ZZ)
   >>> d.rep      # internal representation of DMP
   [1, 0, 1]
   >>> type(d.rep)
@@ -1461,7 +1461,7 @@ then we get a fully dense DMP list of lists of lists representation::
   >>> p
   Poly(x**2*y + z, x, y, z, domain='ZZ')
   >>> p.rep
-  DMP([[[1], []], [[]], [[1, 0]]], ZZ)
+  DMP_Python([[[1], []], [[]], [[1, 0]]], ZZ)
   >>> p.rep.rep
   [[[1], []], [[]], [[1, 0]]]
   >>> p.rep.rep[0][0][0]
@@ -1476,7 +1476,7 @@ representation by choosing a generator that is not in the expression at all::
   >>> p
   Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
   >>> p.rep
-  DMP([x**2*y + z], ZZ[x,y,z])
+  DMP_Python([x**2*y + z], ZZ[x,y,z])
   >>> p.rep.rep[0]
   x**2*y + z
   >>> type(p.rep.rep[0])

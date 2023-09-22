@@ -274,7 +274,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True
         >>> type(F)
-        <class 'sympy.polys.polyclasses.DMP'>
+        <class 'sympy.polys.polyclasses.DMP_Python'>
 
         """
         if a.denom().is_one:
