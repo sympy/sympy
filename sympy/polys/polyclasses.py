@@ -346,7 +346,7 @@ class DMP(CantSympify):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
-        ([2], DMP([[1], [1, 2]], ZZ))
+        ([2], DMP_Python([[1], [1, 2]], ZZ))
 
         """
         return f._exclude()
@@ -365,10 +365,10 @@ class DMP(CantSympify):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
-        DMP([[[2], []], [[1, 0], []]], ZZ)
+        DMP_Python([[[2], []], [[1, 0], []]], ZZ)
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
-        DMP([[[1], []], [[2, 0], []]], ZZ)
+        DMP_Python([[[1], []], [[2, 0], []]], ZZ)
 
         """
         return f._permute(P)
