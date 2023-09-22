@@ -976,7 +976,7 @@ class MathematicaParser:
         "Times": Mul,
         "Plus": Add,
         "Power": Pow,
-        "Rational": lambda *a: Rational(*a),
+        "Rational": Rational,
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),
