@@ -6,6 +6,7 @@ from sympy.external import import_module
 from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
+from sympy.plotting.plot import Parametric2DLineSeries
 from sympy.plotting.series import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
@@ -15,7 +16,8 @@ __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'nyquist_numerical_data', 'nyquist_plot']
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -970,6 +972,146 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, phase_unwrap=phase_unwrap, **kwargs).title(None)
+
+    if show:
+        plt.show()
+        return
+
+    return plt
+
+
+def nyquist_numerical_data(system, initial_omega=0.01, final_omega=100, nb_of_points=1000, **kwargs):
+    """
+    Returns the numerical data of Nyquist plot of the system.
+    It is internally used by ``nyquist_plot`` to get the data
+    for plotting Nyquist plot. Users can use this data to further
+    analyse the dynamics of the system or plot using a different
+    backend/plotting-module.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The system for which the nyquist data is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 0.01.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+    nb_of_points: Number, optional
+        The number of points sampled for the data. Defaults to 1000.
+
+    Returns
+    =======
+
+    tuple : (real_points, imag_points)
+        real_points = real values of the Nyquist plot.
+        imag_points = imaginary values of the Nyquist plot.
+
+    Raises
+    ======
+
+    NotImplementedError
+        When a SISO LTI system is not passed.
+        When time delay terms are present in the system.
+    ValueError
+        When more than one free symbol is present in the system.
+        The only variable in the transfer function should be
+        the variable of the Laplace transform.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> from sympy.physics.control.control_plots import nyquist_numerical_data
+    >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+    >>> nyquist_numerical_data(tf1)   # doctest: +SKIP
+    (array([0.33337408, 0.33831157, 0.35187019, ..., 2.0007028 , 2.00070139, 2.00069999]),
+    array([ 1.44446543e-02,  1.59297201e-01,  3.05494689e-01, ..., -1.00089887e-02, -9.99898283e-03, -9.98899690e-03]))
+
+    See Also
+    ========
+    nyquist_plot
+
+    """
+    _check_system(system)
+    expr = system.to_expr()
+
+    w = Dummy('w',real = True)
+    repl = I*w
+    w_expr = expr.subs({system.var: repl})
+    w_expr = w_expr.as_real_imag()
+
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+
+    real_points, imag_points = Parametric2DLineSeries(real_expr, imag_expr, (w, initial_omega, final_omega),
+                                nb_of_points = nb_of_points, xscale = 'linear', adaptive= False).get_points()
+
+    return real_points, imag_points
+
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, nb_of_points=1000,
+                 color='b', grid=False, show=True,**kwargs):
+    r"""
+    Returns the nyquist plot of a continuous-time system.
+    A Nyquist plot is a frequency response plot used in control engineering.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant type
+        The LTI SISO system for which the Ramp Response is to be computed.
+    initial_omega : Number, optional
+        The initial value of frequency. Defaults to 0.01.
+    final_omega : Number, optional
+        The final value of frequency. Defaults to 100.
+    nb_of_points: Number, optional
+        The number of points sampled for the data. Defaults to 1000.
+    show : boolean, optional
+        If ``True``, the plot will be displayed otherwise
+        the equivalent matplotlib ``plot`` object will be returned.
+        Defaults to True.
+    show_axes : boolean, optional
+        If ``True``, the coordinate axes will be shown. Defaults to False.
+    grid : boolean, optional
+        If ``True``, the plot will have a grid. Defaults to False.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1,s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+    bode_magnitude_plot, bode_phase_plot
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/?title=Nyquist_plot&redirect=no
+
+    """
+    x, y = nyquist_numerical_data(system, initial_omega=initial_omega,
+          final_omega=final_omega, nb_of_points=nb_of_points)
+
+    plt.plot(x, y, color='blue')
+    plt.plot(x, -y, color='blue')
+    plt.axhline(y=0, color='black', linestyle='dotted', linewidth=1)
+    plt.axvline(x=0, color='black', linestyle='dotted', linewidth=1)
+    plt.xlabel('Real Axis')
+    plt.ylabel('Imaginary Axis')
+    plt.title(f'Nyquist Plot (Phase) of ${latex(system)}$', pad=20)
+
+    if grid:
+        plt.grid(True)
 
     if show:
         plt.show()
