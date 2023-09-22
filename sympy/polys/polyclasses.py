@@ -12,7 +12,7 @@ from sympy.polys.densebasic import (
     dup_convert, dmp_convert,
     dmp_from_sympy,
     dup_strip,
-    dup_degree, dmp_degree_in,
+    dmp_degree_in,
     dmp_degree_list,
     dmp_negative_p,
     dup_LC, dmp_ground_LC,
@@ -262,10 +262,6 @@ class DMP(CantSympify):
     def to_exact(f):
         """Make the ground domain exact. """
         return f.convert(f.dom.get_exact())
-
-    def convert(f, dom):
-        """Convert the ground domain of ``f``. """
-        raise NotImplementedError
 
     def slice(f, m, n, j=0):
         """Take a continuous subsequence of terms of ``f``. """
