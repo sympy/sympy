@@ -1,6 +1,7 @@
 import pytest
 
 from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import eye, zeros
 from sympy.matrices.immutable import ImmutableMatrix
