@@ -14,6 +14,7 @@ from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import filldedent
 
 __all__ = ['SymbolicSystem', 'System']
 
@@ -1010,16 +1011,17 @@ class System(_Methods):
         n_q, n_u = len(q_set), len(u_set)
         # Check number of holonomic constraints
         if n_q_dep != n_hc:
-            msgs.append(f'The number of dependent generalized coordinates '
-                        f'{n_q_dep} should be equal to the number of holonomic '
-                        f'constraints {n_hc}.')
+            msgs.append(filldedent(f"""
+            The number of dependent generalized coordinates {n_q_dep} should be
+            equal to the number of holonomic constraints {n_hc}."""))
         # Check if all joint coordinates and speeds are present
         missing_q = set()
         for joint in self.joints:
             missing_q.update(set(joint.coordinates).difference(q_set))
         if missing_q:
-            msgs.append(f'The generalized coordinates {missing_q} used in '
-                        f'joints are not added to the system.')
+            msgs.append(filldedent(f"""
+            The generalized coordinates {missing_q} used in joints are not added
+            to the system."""))
         # Method dependent checks
         if issubclass(eom_method, KanesMethod):
             n_kdes = len(self.kdes)
@@ -1029,35 +1031,36 @@ class System(_Methods):
                 missing_kdes.update(set(joint.kdes).difference(
                     self.kdes[:] + (-self.kdes)[:]))
             if missing_u:
-                msgs.append(f'The generalized speeds {missing_u} used in '
-                            f'joints are not added to the system.')
+                msgs.append(filldedent(f"""
+                The generalized speeds {missing_u} used in joints are not added
+                to the system."""))
             if missing_kdes:
-                msgs.append(f'The kinematic differential equations '
-                            f'{missing_kdes} used in joints are not added to '
-                            f'the system.')
+                msgs.append(filldedent(f"""
+                The kinematic differential equations {missing_kdes} used in
+                joints are not added to the system."""))
             if n_u_dep != n_hc + n_nhc:
-                msgs.append(f'The number of dependent generalized speeds '
-                            f'{n_u_dep} should be equal to the number of '
-                            f'velocity constraints {n_hc + n_nhc}.')
+                msgs.append(filldedent(f"""
+                The number of dependent generalized speeds {n_u_dep} should be
+                equal to the number of velocity constraints {n_hc + n_nhc}."""))
             if n_q > n_u:
-                msgs.append(f'The number of generalized coordinates {n_q} '
-                            f'should be less than or equal to the number of '
-                            f'generalized speeds {n_u}.')
+                msgs.append(filldedent(f"""
+                The number of generalized coordinates {n_q} should be less than
+                or equal to the number of generalized speeds {n_u}."""))
             if n_u != n_kdes:
-                msgs.append(f'The number of generalized speeds {n_u} should be '
-                            f'equal to the number of kinematic differential '
-                            f'equations {n_kdes}.')
+                msgs.append(filldedent(f"""
+                The number of generalized speeds {n_u} should be equal to the
+                number of kinematic differential equations {n_kdes}."""))
         elif issubclass(eom_method, LagrangesMethod):
             not_qdots = set(self.u).difference(self.q.diff(dynamicsymbols._t))
             for joint in self.joints:
                 not_qdots.update(set(
                     joint.speeds).difference(self.q.diff(dynamicsymbols._t)))
             if not_qdots:
-                msgs.append(f'The generalized speeds {not_qdots} are not '
-                            f'supported by this method. Only derivatives of the'
-                            f' generalized coordinates are supported. If these '
-                            f'symbols are used in your expressions, then this '
-                            f'will result in wrong equations of motion.')
+                msgs.append(filldedent(f"""
+                The generalized speeds {not_qdots} are not supported by this
+                method. Only derivatives of the generalized coordinates are
+                supported. If these symbols are used in your expressions, then
+                this will result in wrong equations of motion."""))
         else:
             raise NotImplementedError(f'{eom_method} has not been implemented.')
         if check_duplicates:  # Should be redundant
@@ -1070,8 +1073,9 @@ class System(_Methods):
                 seen = set()
                 duplicates = {x for x in lst if x in seen or seen.add(x)}
                 if duplicates:
-                    msgs.append(f'The {name} {duplicates} exist multiple times '
-                                f'within the system.')
+                    msgs.append(filldedent(f"""
+                    The {name} {duplicates} exist multiple times within the
+                    system."""))
         if msgs:
             raise ValueError('\n'.join(msgs))
 
