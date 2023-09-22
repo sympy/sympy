@@ -1105,6 +1105,15 @@ class PrettyPrinter(Printer):
         mat = prettyForm(*mat.right(subscript))
         return mat
 
+    def _print_StateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        return self._print(mat.blocks)
+
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
 
