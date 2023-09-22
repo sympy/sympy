@@ -157,7 +157,7 @@ class System(_Methods):
     With the kinematics established, we can now apply gravity and the cart force
     ``F``.
 
-    >>> system.apply_gravity(-g * system.y)
+    >>> system.apply_uniform_gravity(-g * system.y)
     >>> system.add_loads((cart.masscenter, F * rail.x))
     >>> system.loads
     ((rail_masscenter, - g*rail_mass*rail_frame.y),
@@ -671,7 +671,7 @@ class System(_Methods):
         self._loads.extend(loads)
 
     @_reset_eom_method
-    def apply_gravity(self, acceleration):
+    def apply_uniform_gravity(self, acceleration):
         """Apply gravity to all bodies in the system.
 
         Parameters

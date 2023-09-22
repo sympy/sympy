@@ -634,7 +634,7 @@ class TestSystemExamples:
         assert system.joints == (slider, pin)
         assert system.get_joint('slider') == slider
         assert system.get_body('bob') == bob
-        system.apply_gravity(-g * system.y)
+        system.apply_uniform_gravity(-g * system.y)
         system.add_loads((cart.masscenter, F * rail.x))
         system.add_actuators(TorqueActuator(k * qp, cart.z, bob_frame, cart))
         system.validate_system()
@@ -767,7 +767,7 @@ class TestSystemExamples:
         P.masscenter.set_vel(system.frame, u * system.x + ua * system.y)
         system.q_ind, system.u_ind, system.u_aux = [q], [u], [ua]
         system.kdes = [q.diff(t) - u]
-        system.apply_gravity(-g * system.y)
+        system.apply_uniform_gravity(-g * system.y)
         system.add_loads(
             Force(P, N * system.y),
             Force(P, F * system.x - mu * N * system.x))
