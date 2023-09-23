@@ -113,6 +113,8 @@ from sympy.polys.polyerrors import (
     PolynomialError)
 
 
+_flint_domains: tuple[Domain, ...]
+
 if GROUND_TYPES == 'flint':
     import flint
     _flint_domains = (ZZ, QQ)
