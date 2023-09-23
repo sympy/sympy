@@ -30,7 +30,7 @@ from sympy.polys.densebasic import (
     dmp_inject, dmp_eject,
     dmp_terms_gcd,
     dmp_list_terms, dmp_exclude,
-    dmp_slice_in, dmp_permute,
+    dup_slice, dmp_slice_in, dmp_permute,
     dmp_to_tuple,)
 
 from sympy.polys.densearith import (
@@ -307,18 +307,34 @@ class DMP(CantSympify):
 
     def slice(f, m, n, j=0):
         """Take a continuous subsequence of terms of ``f``. """
+        if not f.lev and not j:
+            return f._slice(m, n)
+        else:
+            return f._slice_lev(m, n, j)
+
+    def _slice(f, m, n):
+        raise NotImplementedError
+
+    def _slice_lev(f, m, n, j):
         raise NotImplementedError
 
     def coeffs(f, order=None):
         """Returns all non-zero coefficients from ``f`` in lex order. """
-        raise NotImplementedError
+        return [ c for _, c in f.terms(order=order) ]
 
     def monoms(f, order=None):
         """Returns all non-zero monomials from ``f`` in lex order. """
-        raise NotImplementedError
+        return [ m for m, _ in f.terms(order=order) ]
 
     def terms(f, order=None):
         """Returns all non-zero terms from ``f`` in lex order. """
+        if f.is_zero:
+            zero_monom = (0,)*(f.lev + 1)
+            return [(zero_monom, f.dom.zero)]
+        else:
+            return f._terms(order=order)
+
+    def _terms(f, order=None):
         raise NotImplementedError
 
     def all_coeffs(f):
@@ -1245,20 +1261,17 @@ class DMP_Python(DMP):
         """Convert the ground domain of ``f``. """
         return f._new(dmp_convert(f.rep, f.lev, f.dom, dom), dom, f.lev)
 
-    def slice(f, m, n, j=0):
+    def _slice(f, m, n):
+        """Take a continuous subsequence of terms of ``f``. """
+        rep = dup_slice(f.rep, m, n, f.dom)
+        return f._new(rep, f.dom, f.lev)
+
+    def _slice_lev(f, m, n, j):
         """Take a continuous subsequence of terms of ``f``. """
         rep = dmp_slice_in(f.rep, m, n, j, f.lev, f.dom)
         return f._new(rep, f.dom, f.lev)
 
-    def coeffs(f, order=None):
-        """Returns all non-zero coefficients from ``f`` in lex order. """
-        return [ c for _, c in f.terms(order=order) ]
-
-    def monoms(f, order=None):
-        """Returns all non-zero monomials from ``f`` in lex order. """
-        return [ m for m, _ in f.terms(order=order) ]
-
-    def terms(f, order=None):
+    def _terms(f, order=None):
         """Returns all non-zero terms from ``f`` in lex order. """
         return dmp_list_terms(f.rep, f.lev, f.dom, order=order)
 
@@ -1752,27 +1765,41 @@ class DUP_Flint(DMP):
 
     def to_tuple(f):
         """Convert ``f`` to a tuple representation with native coefficients. """
-        return f.to_DMP_Python().to_tuple()
+        return tuple(f.to_list())
 
     def _convert(f, dom):
         """Convert the ground domain of ``f``. """
-        return f.to_DMP_Python()._convert(dom).to_DUP_Flint()
+        if dom == QQ and f.dom == ZZ:
+            return f.from_rep(flint.fmpq_poly(f._rep), dom)
+        elif dom == ZZ and f.dom == QQ:
+            # XXX: python-flint should provide a faster way to do this.
+            return f.to_DMP_Python()._convert(dom).to_DUP_Flint()
+        else:
+            raise RuntimeError(f"DUP_Flint: Cannot convert {f.dom} to {dom}")
 
-    def slice(f, m, n, j=0):
+    def _slice(f, m, n):
         """Take a continuous subsequence of terms of ``f``. """
-        return f.to_DMP_Python().slice(m, n, j).to_DUP_Flint()
+        coeffs = f._rep.coeffs()[m:n]
+        return f.from_rep(f._cls(coeffs), f.dom)
 
-    def coeffs(f, order=None):
-        """Returns all non-zero coefficients from ``f`` in lex order. """
-        return f.to_DMP_Python().coeffs(order=order)
+    def _slice_lev(f, m, n, j):
+        """Take a continuous subsequence of terms of ``f``. """
+        # Only makes sense for multivariate polynomials
+        raise NotImplementedError
 
-    def monoms(f, order=None):
-        """Returns all non-zero monomials from ``f`` in lex order. """
-        return f.to_DMP_Python().monoms(order=order)
-
-    def terms(f, order=None):
+    def _terms(f, order=None):
         """Returns all non-zero terms from ``f`` in lex order. """
-        return f.to_DMP_Python().terms(order=order)
+        if order is None or order.alias == 'lex':
+            terms = [ ((n,), c) for n, c in enumerate(f._rep.coeffs()) if c ]
+            return terms[::-1]
+        else:
+            # XXX: InverseOrder (ilex) comes here. We could handle that case
+            # efficiently by reversing the coefficients but it is not clear
+            # how to test if the order is InverseOrder.
+            #
+            # Otherwise why would the order ever be different for univariate
+            # polynomials?
+            return f.to_DMP_Python()._terms(order=order)
 
     def _lift(f):
         """Convert algebraic coefficients to rationals. """
@@ -1781,6 +1808,9 @@ class DUP_Flint(DMP):
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
+        # XXX: This segfaults with python-flint:
+        # g, n = f._rep.deflation()
+        # return (n,), f.from_rep(g, f.dom)
         J, F = f.to_DMP_Python().deflate()
         return J, F.to_DUP_Flint()
 
