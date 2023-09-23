@@ -6,9 +6,15 @@ from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
-from sympy.polys.polyerrors import CoercionFailed, NotInvertible
-from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
 from sympy.polys.domains import Domain, ZZ, QQ
+
+from sympy.polys.polyerrors import (
+    CoercionFailed,
+    ExactQuotientFailed,
+    DomainError,
+    NotInvertible,
+)
 
 from sympy.polys.densebasic import (
     dmp_validate,
@@ -734,6 +740,9 @@ class DMP(CantSympify):
 
         if F.lev:
             raise ValueError('univariate polynomial expected')
+
+        if not F.dom.is_Field:
+            raise DomainError('ground domain must be a field')
 
         return F._gcdex(G)
 
@@ -1756,7 +1765,7 @@ class DUP_Flint(DMP):
         return f.ground_new(f.dom.one)
 
     def unify(f, g):
-        """Unify representations of two multivariate polynomials. """
+        """Unify representations of two polynomials. """
         raise RuntimeError
 
     def to_DMP_Python(f):
@@ -1808,11 +1817,16 @@ class DUP_Flint(DMP):
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
-        # XXX: This segfaults with python-flint:
-        # g, n = f._rep.deflation()
-        # return (n,), f.from_rep(g, f.dom)
-        J, F = f.to_DMP_Python().deflate()
-        return J, F.to_DUP_Flint()
+        # XXX: Check because otherwise this segfaults with python-flint:
+        #
+        #  >>> flint.fmpz_poly([]).deflation()
+        #  Exception (fmpz_poly_deflate). Division by zero.
+        #  Aborted (core dumped
+        #
+        if f.is_zero:
+            return (1,), f
+        g, n = f._rep.deflation()
+        return (n,), f.from_rep(g, f.dom)
 
     def inject(f, front=False):
         """Inject ground domain generators into ``f``. """
@@ -1836,28 +1850,32 @@ class DUP_Flint(DMP):
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial ``f``. """
+        # XXX: python-flint should have primitive, content, etc methods.
         J, F = f.to_DMP_Python().terms_gcd()
         return J, F.to_DUP_Flint()
 
     def _add_ground(f, c):
         """Add an element of the ground domain to ``f``. """
-        return f.to_DMP_Python()._add_ground(c).to_DUP_Flint()
+        return f.from_rep(f._rep + c, f.dom)
 
     def _sub_ground(f, c):
         """Subtract an element of the ground domain from ``f``. """
-        return f.to_DMP_Python()._sub_ground(c).to_DUP_Flint()
+        return f.from_rep(f._rep - c, f.dom)
 
     def _mul_ground(f, c):
         """Multiply ``f`` by a an element of the ground domain. """
-        return f.to_DMP_Python()._mul_ground(c).to_DUP_Flint()
+        return f.from_rep(f._rep * c, f.dom)
 
     def _quo_ground(f, c):
         """Quotient of ``f`` by a an element of the ground domain. """
-        return f.to_DMP_Python()._quo_ground(c).to_DUP_Flint()
+        return f.from_rep(f._rep // c, f.dom)
 
     def _exquo_ground(f, c):
         """Exact quotient of ``f`` by a an element of the ground domain. """
-        return f.to_DMP_Python()._exquo_ground(c).to_DUP_Flint()
+        q, r = divmod(f._rep, c)
+        if r:
+            raise ExactQuotientFailed(f, c)
+        return f.from_rep(q, f.dom)
 
     def abs(f):
         """Make all coefficients in ``f`` positive. """
@@ -1865,61 +1883,73 @@ class DUP_Flint(DMP):
 
     def neg(f):
         """Negate all coefficients in ``f``. """
-        return f.to_DMP_Python().neg().to_DUP_Flint()
+        return f.from_rep(-f._rep, f.dom)
 
     def _add(f, g):
         """Add two multivariate polynomials ``f`` and ``g``. """
-        return f.to_DMP_Python()._add(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep + g._rep, f.dom)
 
     def _sub(f, g):
         """Subtract two multivariate polynomials ``f`` and ``g``. """
-        return f.to_DMP_Python()._sub(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep - g._rep, f.dom)
 
     def _mul(f, g):
         """Multiply two multivariate polynomials ``f`` and ``g``. """
-        return f.to_DMP_Python()._mul(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep * g._rep, f.dom)
 
     def sqr(f):
         """Square a multivariate polynomial ``f``. """
-        return f.to_DMP_Python().sqr().to_DUP_Flint()
+        return f.from_rep(f._rep ** 2, f.dom)
 
     def _pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        return f.to_DMP_Python()._pow(n).to_DUP_Flint()
+        return f.from_rep(f._rep ** n, f.dom)
 
     def _pdiv(f, g):
         """Polynomial pseudo-division of ``f`` and ``g``. """
-        q, r = f.to_DMP_Python()._pdiv(g.to_DMP_Python())
-        return q.to_DUP_Flint(), r.to_DUP_Flint()
+        d = f.degree() - g.degree() + 1
+        q, r = divmod(g.LC()**d * f._rep, g._rep)
+        return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
 
     def _prem(f, g):
         """Polynomial pseudo-remainder of ``f`` and ``g``. """
-        return f.to_DMP_Python()._prem(g.to_DMP_Python()).to_DUP_Flint()
+        d = f.degree() - g.degree() + 1
+        q = (g.LC()**d * f._rep) % g._rep
+        return f.from_rep(q, f.dom)
 
     def _pquo(f, g):
         """Polynomial pseudo-quotient of ``f`` and ``g``. """
-        return f.to_DMP_Python()._pquo(g.to_DMP_Python()).to_DUP_Flint()
+        d = f.degree() - g.degree() + 1
+        r = (g.LC()**d * f._rep) // g._rep
+        return f.from_rep(r, f.dom)
 
     def _pexquo(f, g):
         """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
-        return f.to_DMP_Python()._pexquo(g.to_DMP_Python()).to_DUP_Flint()
+        d = f.degree() - g.degree() + 1
+        q, r = divmod(g.LC()**d * f._rep, g._rep)
+        if not r:
+            raise ExactQuotientFailed(f, g)
+        return q
 
     def _div(f, g):
         """Polynomial division with remainder of ``f`` and ``g``. """
-        q, r = f.to_DMP_Python()._div(g.to_DMP_Python())
-        return q.to_DUP_Flint(), r.to_DUP_Flint()
+        q, r = divmod(f._rep, g._rep)
+        return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
 
     def _rem(f, g):
         """Computes polynomial remainder of ``f`` and ``g``. """
-        return f.to_DMP_Python()._rem(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep % g._rep, f.dom)
 
     def _quo(f, g):
         """Computes polynomial quotient of ``f`` and ``g``. """
-        return f.to_DMP_Python()._quo(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep // g._rep, f.dom)
 
     def _exquo(f, g):
         """Computes polynomial exact quotient of ``f`` and ``g``. """
-        return f.to_DMP_Python()._exquo(g.to_DMP_Python()).to_DUP_Flint()
+        q, r = f._div(g)
+        if r:
+            raise ExactQuotientFailed(f, g)
+        return q
 
     def _degree(f, j=0):
         """Returns the leading degree of ``f`` in ``x_j``. """
@@ -1930,7 +1960,7 @@ class DUP_Flint(DMP):
 
     def degree_list(f):
         """Returns a list of degrees of ``f``. """
-        return f.to_DMP_Python().degree_list()
+        return ( f._degree() ,)
 
     def total_degree(f):
         """Returns the total degree of ``f``. """
@@ -1938,15 +1968,16 @@ class DUP_Flint(DMP):
 
     def LC(f):
         """Returns the leading coefficient of ``f``. """
-        return f.to_DMP_Python().LC()
+        return f._rep[f._rep.degree()]
 
     def TC(f):
         """Returns the trailing coefficient of ``f``. """
-        return f.to_DMP_Python().TC()
+        return f._rep[0]
 
     def _nth(f, N):
         """Returns the ``n``-th coefficient of ``f``. """
-        return f.to_DMP_Python()._nth(N)
+        [n] = N
+        return f._rep[n]
 
     def max_norm(f):
         """Returns maximum norm of ``f``. """
@@ -1962,16 +1993,28 @@ class DUP_Flint(DMP):
 
     def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
-        coeff, F = f.to_DMP_Python().clear_denoms()
-        return coeff, F.to_DUP_Flint()
+        denom = f._rep.denom()
+        numer = f.from_rep(f._cls(f._rep.numer()), f.dom)
+        return denom, numer
 
     def _integrate(f, m=1, j=0):
         """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
-        return f.to_DMP_Python()._integrate(m, j).to_DUP_Flint()
+        assert j == 0
+        if f.dom.is_QQ:
+            rep = f._rep
+            for i in range(m):
+                rep = rep.integral()
+            return f.from_rep(rep, f.dom)
+        else:
+            return f.to_DMP_Python()._integrate(m=m, j=j).to_DUP_Flint()
 
     def _diff(f, m=1, j=0):
-        """Computes the ``m``-th order derivative of ``f`` in ``x_j``. """
-        return f.to_DMP_Python()._diff(m, j).to_DUP_Flint()
+        """Computes the ``m``-th order derivative of ``f``. """
+        assert j == 0
+        rep = f._rep
+        for i in range(m):
+            rep = rep.derivative()
+        return f.from_rep(rep, f.dom)
 
     def _eval(f, a):
         return f.to_DMP_Python()._eval(a)
@@ -1981,14 +2024,14 @@ class DUP_Flint(DMP):
         raise NotImplementedError
 
     def _half_gcdex(f, g):
-        """Half extended Euclidean algorithm, if univariate. """
+        """Half extended Euclidean algorithm. """
         s, h = f.to_DMP_Python()._half_gcdex(g.to_DMP_Python())
         return s.to_DUP_Flint(), h.to_DUP_Flint()
 
     def _gcdex(f, g):
-        """Extended Euclidean algorithm, if univariate. """
-        s, t, h = f.to_DMP_Python()._gcdex(g.to_DMP_Python())
-        return s.to_DUP_Flint(), t.to_DUP_Flint(), h.to_DUP_Flint()
+        """Extended Euclidean algorithm. """
+        h, s, t = f._rep.xgcd(g._rep)
+        return f.from_rep(s, f.dom), f.from_rep(t, f.dom), f.from_rep(h, f.dom)
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
@@ -2018,26 +2061,61 @@ class DUP_Flint(DMP):
 
     def _cofactors(f, g):
         """Returns GCD of ``f`` and ``g`` and their cofactors. """
-        h, cff, cfg = f.to_DMP_Python()._cofactors(g.to_DMP_Python())
-        return h.to_DUP_Flint(), cff.to_DUP_Flint(), cfg.to_DUP_Flint()
+        h = f.gcd(g)
+        return h, f.exquo(h), g.exquo(h)
 
     def _gcd(f, g):
         """Returns polynomial GCD of ``f`` and ``g``. """
-        return f.to_DMP_Python()._gcd(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep.gcd(g._rep), f.dom)
 
     def _lcm(f, g):
         """Returns polynomial LCM of ``f`` and ``g``. """
-        return f.to_DMP_Python()._lcm(g.to_DMP_Python()).to_DUP_Flint()
+        # XXX: python-flint should have a lcm method
+        if not (f and g):
+            return f.ground_new(f.dom.zero)
+
+        l = f._mul(g)._exquo(f._gcd(g))
+
+        if l.LC() < 0:
+            l = l.neg()
+
+        return l
 
     def _cancel(f, g):
         """Cancel common factors in a rational function ``f/g``. """
-        cF, cG, F, G = f.to_DMP_Python()._cancel(g.to_DMP_Python())
-        return cF, cG, F.to_DUP_Flint(), G.to_DUP_Flint()
+        # Think carefully about how to handle denominators and coefficient
+        # canonicalisation if more domains are permitted...
+        assert f.dom == g.dom in (ZZ, QQ)
+
+        if f.dom.is_QQ:
+            cF, F = f.clear_denoms()
+            cG, G = g.clear_denoms()
+        else:
+            cF, F = f.dom.one, f
+            cG, G = g.dom.one, g
+
+        cH = cF.gcd(cG)
+        cF, cG = cF // cH, cG // cH
+
+        H = F._gcd(G)
+        F, G = F.exquo(H), G.exquo(H)
+
+        f_neg = F.LC() < 0
+        g_neg = G.LC() < 0
+
+        if f_neg and g_neg:
+            F, G = F.neg(), G.neg()
+        elif f_neg:
+            cF, F = -cF, F.neg()
+        elif g_neg:
+            cG, G = -cG, G.neg()
+
+        return cF, cG, F, G
 
     def _cancel_include(f, g):
         """Cancel common factors in a rational function ``f/g``. """
-        F, G = f.to_DMP_Python()._cancel_include(g.to_DMP_Python())
-        return F.to_DUP_Flint(), G.to_DUP_Flint()
+        cF, cG, F, G = f._cancel(g)
+        return F._mul_ground(cF), G._mul_ground(cG)
 
     def _trunc(f, p):
         """Reduce ``f`` modulo a constant ``p``. """
@@ -2045,21 +2123,22 @@ class DUP_Flint(DMP):
 
     def monic(f):
         """Divides all coefficients by ``LC(f)``. """
-        return f.to_DMP_Python().monic().to_DUP_Flint()
+        return f._exquo_ground(f.LC())
 
     def content(f):
         """Returns GCD of polynomial coefficients. """
+        # XXX: python-flint should have a content method
         return f.to_DMP_Python().content()
 
     def primitive(f):
         """Returns content and a primitive form of ``f``. """
-        f = f.to_DMP_Python()
-        cont, F = dmp_ground_primitive(f.rep, f.lev, f.dom)
-        return cont, f.per(F).to_DUP_Flint()
+        cont = f.content()
+        prim = f._exquo_ground(cont)
+        return cont, prim
 
     def _compose(f, g):
         """Computes functional composition of ``f`` and ``g``. """
-        return f.to_DMP_Python()._compose(g.to_DMP_Python()).to_DUP_Flint()
+        return f.from_rep(f._rep(g._rep), f.dom)
 
     def _decompose(f):
         """Computes functional decomposition of ``f``. """
@@ -2067,7 +2146,8 @@ class DUP_Flint(DMP):
 
     def _shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """
-        return f.to_DMP_Python()._shift(a).to_DUP_Flint()
+        x_plus_a = f._cls([a, f.dom.one])
+        return f.from_rep(f._rep(x_plus_a), f.dom)
 
     def _transform(f, p, q):
         """Evaluate functional transformation ``q**n * f(p/q)``."""
@@ -2107,7 +2187,7 @@ class DUP_Flint(DMP):
 
     def sqf_part(f):
         """Computes square-free part of ``f``. """
-        return f.to_DMP_Python().sqf_part().to_DUP_Flint()
+        return f._exquo(f._gcd(f._diff()))
 
     def sqf_list(f, all=False):
         """Returns a list of square-free factors of ``f``. """
@@ -2121,13 +2201,52 @@ class DUP_Flint(DMP):
 
     def factor_list(f):
         """Returns a list of irreducible factors of ``f``. """
-        coeff, factors = f.to_DMP_Python().factor_list()
-        return coeff, [ (g.to_DUP_Flint(), k) for g, k in factors ]
+
+        if f.dom.is_ZZ:
+            # python-flint matches polys here
+            coeff, factors = f._rep.factor()
+            factors = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
+
+        elif f.dom.is_QQ:
+            # python-flint returns monic factors over QQ whereas polys returns
+            # denominator free factors.
+            coeff, factors = f._rep.factor()
+            factors_monic = [ (f.from_rep(g, f.dom), k) for g, k in factors ]
+
+            # Absorb the denominators into coeff
+            factors = []
+            for g, k in factors_monic:
+                d, g = g.clear_denoms()
+                coeff /= d**k
+                factors.append((g, k))
+
+        else:
+            # Check carefully when adding more domains here...
+            raise RuntimeError("Domain %s is not supported with flint" % f.dom)
+
+        # We need to match the way that polys orders the factors
+        factors = f._sort_factors(factors)
+
+        return coeff, factors
 
     def factor_list_include(f):
         """Returns a list of irreducible factors of ``f``. """
+        # XXX: factor_list_include seems to be broken in general:
+        #
+        #   >>> Poly(2*(x - 1)**3, x).factor_list_include()
+        #   [(Poly(2*x - 2, x, domain='ZZ'), 3)]
+        #
+        # Let's not try to implement it here.
         factors = f.to_DMP_Python().factor_list_include()
         return [ (g.to_DUP_Flint(), k) for g, k in factors ]
+
+    def _sort_factors(f, factors):
+        """Sort a list of factors to canonical order. """
+        # Convert the factors to lists and use _sort_factors from polys
+        factors = [ (g.to_list(), k) for g, k in factors ]
+        factors = _sort_factors(factors, multiple=True)
+        to_dup_flint = lambda g: f.from_rep(f._cls(g[::-1]), f.dom)
+        return [ (to_dup_flint(g), k) for g, k in factors ]
 
     def _isolate_real_roots(f, eps, inf, sup, fast):
         return f.to_DMP_Python()._isolate_real_roots(eps, inf, sup, fast)
@@ -2155,42 +2274,27 @@ class DUP_Flint(DMP):
     @property
     def is_zero(f):
         """Returns ``True`` if ``f`` is a zero polynomial. """
-        return f.to_DMP_Python().is_zero
+        return not f._rep
 
     @property
     def is_one(f):
         """Returns ``True`` if ``f`` is a unit polynomial. """
-        return f.to_DMP_Python().is_one
+        return f._rep == f.dom.one
 
     @property
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
-        return f.to_DMP_Python().is_ground
-
-    @property
-    def is_sqf(f):
-        """Returns ``True`` if ``f`` is a square-free polynomial. """
-        return f.to_DMP_Python().is_sqf
-
-    @property
-    def is_monic(f):
-        """Returns ``True`` if the leading coefficient of ``f`` is one. """
-        return f.to_DMP_Python().is_monic
-
-    @property
-    def is_primitive(f):
-        """Returns ``True`` if the GCD of the coefficients of ``f`` is one. """
-        return f.to_DMP_Python().is_primitive
+        return f._rep.degree() <= 0
 
     @property
     def is_linear(f):
         """Returns ``True`` if ``f`` is linear in all its variables. """
-        return f.to_DMP_Python().is_linear
+        return f._rep.degree() <= 1
 
     @property
     def is_quadratic(f):
         """Returns ``True`` if ``f`` is quadratic in all its variables. """
-        return f.to_DMP_Python().is_quadratic
+        return f._rep.degree() <= 2
 
     @property
     def is_monomial(f):
@@ -2198,9 +2302,24 @@ class DUP_Flint(DMP):
         return f.to_DMP_Python().is_monomial
 
     @property
+    def is_monic(f):
+        """Returns ``True`` if the leading coefficient of ``f`` is one. """
+        return f.LC() == f.dom.one
+
+    @property
+    def is_primitive(f):
+        """Returns ``True`` if the GCD of the coefficients of ``f`` is one. """
+        return f.to_DMP_Python().is_primitive
+
+    @property
     def is_homogeneous(f):
         """Returns ``True`` if ``f`` is a homogeneous polynomial. """
         return f.to_DMP_Python().is_homogeneous
+
+    @property
+    def is_sqf(f):
+        """Returns ``True`` if ``f`` is a square-free polynomial. """
+        return f.to_DMP_Python().is_sqf
 
     @property
     def is_irreducible(f):
@@ -2210,7 +2329,10 @@ class DUP_Flint(DMP):
     @property
     def is_cyclotomic(f):
         """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
-        return f.to_DMP_Python().is_cyclotomic
+        if f.dom.is_ZZ:
+            return bool(f._rep.is_cyclotomic())
+        else:
+            return f.to_DMP_Python().is_cyclotomic
 
 
 def init_normal_DMF(num, den, lev, dom):
