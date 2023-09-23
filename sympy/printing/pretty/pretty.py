@@ -2765,19 +2765,21 @@ class PrettyPrinter(Printer):
         return self._print_seq(m, '[', ']')
 
     def _print_SubModule(self, M):
-        return self._print_seq(M.gens, '<', '>')
+        gens = [[M.ring.to_sympy(g) for g in gen] for gen in M.gens]
+        return self._print_seq(gens, '<', '>')
 
     def _print_FreeModule(self, M):
         return self._print(M.ring)**self._print(M.rank)
 
     def _print_ModuleImplementedIdeal(self, M):
-        return self._print_seq([x for [x] in M._module.gens], '<', '>')
+        sym = M.ring.to_sympy
+        return self._print_seq([sym(x) for [x] in M._module.gens], '<', '>')
 
     def _print_QuotientRing(self, R):
         return self._print(R.ring) / self._print(R.base_ideal)
 
     def _print_QuotientRingElement(self, R):
-        return self._print(R.data) + self._print(R.ring.base_ideal)
+        return self._print(R.ring.to_sympy(R)) + self._print(R.ring.base_ideal)
 
     def _print_QuotientModuleElement(self, m):
         return self._print(m.data) + self._print(m.module.killed_module)

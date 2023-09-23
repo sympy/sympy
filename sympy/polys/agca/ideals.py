@@ -326,7 +326,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy import QQ
         >>> from sympy.abc import x, y
         >>> list(QQ.old_poly_ring(x, y).ideal(x, y, x**2 + y).gens)
-        [x, y, x**2 + y]
+        [DMP([[1], []], QQ), DMP([[1, 0]], QQ), DMP([[1], [], [1, 0]], QQ)]
         """
         return (x[0] for x in self._module.gens)
 
@@ -366,7 +366,8 @@ class ModuleImplementedIdeal(Ideal):
 
     def __repr__(self):
         from sympy.printing.str import sstr
-        return '<' + ','.join(sstr(x) for [x] in self._module.gens) + '>'
+        gens = [self.ring.to_sympy(x) for [x] in self._module.gens]
+        return '<' + ','.join(sstr(g) for g in gens) + '>'
 
     # NOTE this is the only method using the fact that the module is a SubModule
     def _product(self, J):
@@ -386,7 +387,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)
         >>> I.in_terms_of_generators(1)
-        [1, -x]
+        [DMP([1], QQ), DMP([-1, 0], QQ)]
         """
         return self._module.in_terms_of_generators([e])
 
