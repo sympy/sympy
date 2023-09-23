@@ -48,9 +48,9 @@ representing the implementation of those coefficients::
   Poly(x**2 + 1/2*x, x, domain='QQ')
   >>> p.domain
   QQ
-  >>> p.rep
+  >>> p.rep  # doctest: +SKIP
   DMP_Python([1, 1/2, 0], QQ)
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [1, 1/2, 0]
   >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.external.pythonmpq.PythonMPQ'>
@@ -152,7 +152,7 @@ tree representations. We can see this representation from a :py:class:`~.Poly`
 instance by looking it its ``rep.rep`` attribute::
 
   >>> p = Poly(x**4 + x + 1)
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [1, 0, 0, 1, 1]
 
 In the DUP representation it is not possible to represent the same expression
@@ -226,7 +226,7 @@ Instead of lists we can use a dict mapping nonzero monomial terms to their
 coefficients. This is known as the "sparse polynomial" representation. We can
 see what this would look like using the :py:meth:`~.Poly.as_dict` method::
 
-  >>> Poly(7*x**20 + 8*x + 9).rep.rep
+  >>> Poly(7*x**20 + 8*x + 9).rep.rep  # doctest: +SKIP
   [7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 9]
   >>> Poly(7*x**20 + 8*x + 9).as_dict()
   {(0,): 9, (1,): 8, (20,): 7}
@@ -924,7 +924,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> p2 = K2.from_sympy(x**2 + 1)
   >>> p1
   x**2 + 1
-  >>> p2
+  >>> p2  # doctest: +SKIP
   DMP_Python([1, 0, 1], ZZ)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
@@ -932,7 +932,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   <class 'sympy.polys.rings.PolyElement'>
   >>> type(K2)
   <class 'sympy.polys.domains.old_polynomialring.GlobalPolynomialRing'>
-  >>> type(p2)
+  >>> type(p2)  # doctest: +SKIP
   <class 'sympy.polys.polyclasses.DMP_Python'>
 
 The internal representation of the old polynomial ring domain is the
@@ -1363,11 +1363,11 @@ internally. This is the public interface of :py:class:`~.Poly`::
 This is the internal implementation of :py:class:`~.Poly`::
 
   >>> d = p.rep  # internal representation of Poly
-  >>> d
+  >>> d  # doctest: +SKIP
   DMP_Python([1, 0, 1], ZZ)
-  >>> d.rep      # internal representation of DMP
+  >>> d.rep      # internal representation of DMP  # doctest: +SKIP
   [1, 0, 1]
-  >>> type(d.rep)
+  >>> type(d.rep)  # doctest: +SKIP
   <class 'list'>
   >>> type(d.rep[0])  # doctest: +SKIP
   <class 'int'>

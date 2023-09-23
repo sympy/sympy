@@ -91,7 +91,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
             raise NotInvertible('Zero divisor')
         elif f.ext.is_Field:
             return True
-        elif f.rep.is_ground and f.ext.domain.is_unit(f.rep.rep[0]):
+        elif f.rep.is_ground and f.ext.domain.is_unit(f.rep.to_list()[0]):
             return True
         else:
             # Some cases like (2*x + 2)/2 over ZZ will fail here. It is

@@ -132,7 +132,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Convert a ``DMP`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep)  # set the correct ring
+                return K1(a.to_list())  # set the correct ring
             else:
                 return K1(a.convert(K1.dom).rep)
         else:
@@ -273,7 +273,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
 
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True
-        >>> type(F)
+        >>> type(F)  # doctest: +SKIP
         <class 'sympy.polys.polyclasses.DMP_Python'>
 
         """

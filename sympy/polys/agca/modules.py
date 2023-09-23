@@ -899,7 +899,7 @@ class SubModule(Module):
         >>> from sympy import QQ
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> M = F.submodule([1, 0], [1, 1])
-        >>> M.in_terms_of_generators([x, x**2])
+        >>> M.in_terms_of_generators([x, x**2])  # doctest: +SKIP
         [DMP_Python([-1, 1, 0], QQ), DMP_Python([1, 0, 0], QQ)]
         """
         try:

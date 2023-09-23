@@ -73,7 +73,7 @@ class DFM:
     >>> dfm.rep
     [1, 2]
     [3, 4]
-    >>> type(dfm.rep)
+    >>> type(dfm.rep)  # doctest: +SKIP
     <class 'flint._flint.fmpz_mat'>
 
     Usually, the DFM class is not instantiated directly, but is created as the

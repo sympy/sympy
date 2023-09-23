@@ -386,7 +386,7 @@ class ModuleImplementedIdeal(Ideal):
         >>> from sympy.abc import x
         >>> from sympy import QQ
         >>> I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)
-        >>> I.in_terms_of_generators(1)
+        >>> I.in_terms_of_generators(1)  # doctest: +SKIP
         [DMP_Python([1], QQ), DMP_Python([-1, 0], QQ)]
         """
         return self._module.in_terms_of_generators([e])
