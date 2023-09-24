@@ -77,7 +77,7 @@ def test_Function():
     assert mcode(catalan(x)) == "CatalanNumber[x]"
     assert mcode(harmonic(x)) == "HarmonicNumber[x]"
     assert mcode(harmonic(x, y)) == "HarmonicNumber[x, y]"
-    assert mcode(Li(x)) == "LogIntegral[x] - LogIntegral[2]"
+    assert mcode(Li(x)) == "-LogIntegral[2] + LogIntegral[x]"
     assert mcode(LambertW(x)) == "ProductLog[x]"
     assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
     assert mcode(LambertW(x, y)) == "ProductLog[y, x]"

@@ -519,5 +519,5 @@ def test_zeta_printing_issue_14820():
 
 
 def test_automatic_rewrite():
-    assert octave_code(Li(x)) == '(logint(x) - logint(2))'
+    assert octave_code(Li(x)) == '(-logint(2) + logint(x))'
     assert octave_code(erf2(x, y)) == '(-erf(x) + erf(y))'

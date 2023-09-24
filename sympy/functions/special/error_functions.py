@@ -1668,7 +1668,7 @@ class Li(Function):
 
     >>> from sympy import li
     >>> Li(z).rewrite(li)
-    li(z) - li(2)
+    -li(2) + li(z)
 
     We can numerically evaluate the logarithmic integral to arbitrary precision
     on the whole complex plane (except the singular points):
