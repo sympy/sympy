@@ -1163,7 +1163,7 @@ class Expr(Basic, EvalfMixin):
 
             _term, ncpart = term.args_cnc()
 
-            cpart = {}
+            cpart = defaultdict(lambda: S.Zero)
 
             # collect all Rational coefficients in coeff
             coeff = S.One
@@ -1173,7 +1173,7 @@ class Expr(Basic, EvalfMixin):
                     coeff *= factor
                     continue
                 base, exp = decompose_power(factor)
-                cpart[base] = exp
+                cpart[base] += exp
                 gens.add(base)
 
             coeff = coeff, S.Zero  # XXX legacy format
