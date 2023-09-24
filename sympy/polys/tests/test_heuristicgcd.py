@@ -2,6 +2,7 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
 from sympy.polys.heuristicgcd import heugcd
 
+
 def test_heugcd_univariate_integers():
     R, x = ring("x", ZZ)
 
@@ -143,5 +144,9 @@ def test_issue_10996():
 
 
 def test_issue_25793():
-    y = x - 4851  # failure starts for values more than 4850
-    assert gcd(y, y*(2*x + 1)) == y
+    R, x = ring("x", ZZ)
+    f = x - 4851  # failure starts for values more than 4850
+    g = f*(2*x + 1)
+    H, cff, cfg = R.dup_zz_heu_gcd(f, g)
+    assert H == f
+    # needs a test for dmp, too, that fails in master before this change

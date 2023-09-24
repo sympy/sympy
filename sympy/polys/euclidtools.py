@@ -1324,7 +1324,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dmp_ground_LC(f, u, K)),
-                  g_norm // abs(dmp_ground_LC(g, u, K))) + 2)
+                  g_norm // abs(dmp_ground_LC(g, u, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dmp_eval(f, x, u, K)
