@@ -79,7 +79,7 @@ jobs:
   docker:
     uses: sagemath/sage/.github/workflows/docker.yml@develop
     with:
-      # ubuntu-focal uses system python 3.8
+      # debian-bullseye uses system python 3.9
       # archlinux-latest is at the cutting edge
       #
       # XXX: For now the archlinux job fails too often for reasons unrelated
@@ -91,9 +91,9 @@ jobs:
       # doctests.
       #
       #tox_system_factors: >-
-      # ["ubuntu-focal", "archlinux-latest"]
+      # ["debian-bullseye", "archlinux-latest"]
       tox_system_factors: >-
-        ["ubuntu-focal"]
+        ["debian-bullseye"]
       # "standard" installs lots of system packages, reducing the full build and test of the
       # Sage distribution to 3-4 hours
       tox_packages_factors: >-
