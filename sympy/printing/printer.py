@@ -346,7 +346,14 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         else:
-            return expr.as_ordered_terms(order=order)
+            terms = expr.as_ordered_terms(order=order)
+            # put real numbers first
+            front = []
+            for i in range(len(terms) - 1, -1, -1):
+                if terms[i].is_Number:
+                    front.append(terms[i])
+                    terms.pop(i)
+            return front + terms
 
 
 class _PrintFunction:
