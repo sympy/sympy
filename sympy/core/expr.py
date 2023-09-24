@@ -1167,17 +1167,18 @@ class Expr(Basic, EvalfMixin):
 
             # keep track of coefficient of number that are
             # either Number or Number + I*Number
-            coeff = S.One
+            coeff = complex(S.One)
 
             for factor in _term:
                 if (ri := pure_complex(factor, or_real=True)) is not None:
-                    coeff *= factor
+                    coeff *= complex(factor)
                     continue
                 base, exp = decompose_power(factor)
                 cpart[base] = exp
                 gens.add(base)
 
-            terms.append((term, (coeff.as_real_imag(), cpart, tuple(ncpart))))
+            coeff = coeff.real, coeff.imag
+            terms.append((term, (coeff, cpart, tuple(ncpart))))
 
         gens = sorted(gens, key=default_sort_key)
 
