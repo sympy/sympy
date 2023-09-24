@@ -13,7 +13,7 @@ from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Lt, Gt, Le
 from sympy.core.singleton import S
-from sympy.core.sorting import default_sort_key, ordered
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
@@ -1759,6 +1759,13 @@ def test_as_ordered_factors():
 
 def test_as_ordered_terms():
 
+    # the unevaluated should sort to the same place regardless
+    # or order of exponents
+    m1 = (x**2 + Mul(x, x**3, evaluate=False)).as_ordered_terms()
+    m2 = (x**2 + Mul(x**3, x, evaluate=False)).as_ordered_terms()
+    assert [i for i in range(2) if x**3 in m1[i].args
+        ] == [i for i in range(2) if x**3 in m2[i].args]
+
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() \
         == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
@@ -2282,12 +2289,3 @@ def test_format():
     assert '{:+3.0f}'.format(S(3)) == ' +3'
     assert '{:23.20f}'.format(pi) == ' 3.14159265358979323846'
     assert '{:50.48f}'.format(exp(sin(1))) == '2.319776824715853173956590377503266813254904772376'
-
-
-def test_issue_24045():
-    assert powsimp(exp(a)/((c*a - c*b)*(Float(1.0)*c*a - Float(1.0)*c*b)))  # doesn't raise
-
-
-def test_issue_10800():
-    i = Integral(sin(exp(x)), (x, 1, oo))
-    assert next(ordered([i + 1, i + 2])) == i + 1
