@@ -144,7 +144,7 @@ def test_parabola_intersection():
 
 
 def test_is_similar():
-    assert not Parabola().is_similar(Line((0, 0), slope=1)
+    assert not Parabola().is_similar(Line((0, 0), slope=1))
     assert Parabola().is_similar(abc=(1,2,3))
 
 
