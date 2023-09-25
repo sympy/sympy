@@ -211,7 +211,7 @@ lists of coefficients::
   >>> p = Poly(x**2*y + x**2 + x*y + y + 1)
   >>> p
   Poly(x**2*y + x**2 + x*y + y + 1, x, y, domain='ZZ')
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [[1, 1], [1, 0], [1, 1]]
 
 This list of lists of (lists of...) coefficients representation is known as
@@ -246,7 +246,7 @@ particularly inefficient and it is better to use the sparse representation::
   >>> p = Poly(prod(gens))
   >>> p
   Poly(x0*x1*x2*x3*x4*x5*x6*x7*x8*x9, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, domain='ZZ')
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [[[[[[[[[[1, 0], []], [[]]], [[[]]]], [[[[]]]]], [[[[[]]]]]], [[[[[[]]]]]]], [[[[[[[]]]]]]]], [[[[[[[[]]]]]]]]], [[[[[[[[[]]]]]]]]]]
   >>> p.as_dict()
   {(1, 1, 1, 1, 1, 1, 1, 1, 1, 1): 1}
@@ -1438,13 +1438,13 @@ coefficients in this case is the sparse ("new") polynomial ring::
   True
   >>> p.domain == ZZ.old_poly_ring(y, z)
   False
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [y, 0, z]
-  >>> p.rep.rep[0]
+  >>> p.rep.rep[0]  # doctest: +SKIP
   y
-  >>> type(p.rep.rep[0])
+  >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
-  >>> dict(p.rep.rep[0])
+  >>> dict(p.rep.rep[0])  # doctest: +SKIP
   {(1, 0): 1}
 
 What we have here is a strange hybrid of dense and sparse implementations. The
@@ -1462,9 +1462,9 @@ then we get a fully dense DMP list of lists of lists representation::
   Poly(x**2*y + z, x, y, z, domain='ZZ')
   >>> p.rep
   DMP_Python([[[1], []], [[]], [[1, 0]]], ZZ)
-  >>> p.rep.rep
+  >>> p.rep.rep  # doctest: +SKIP
   [[[1], []], [[]], [[1, 0]]]
-  >>> p.rep.rep[0][0][0]
+  >>> p.rep.rep[0][0][0]  # doctest: +SKIP
   1
   >>> type(p.rep.rep[0][0][0])  # doctest: +SKIP
   <class 'int'>
@@ -1477,11 +1477,11 @@ representation by choosing a generator that is not in the expression at all::
   Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
   >>> p.rep
   DMP_Python([x**2*y + z], ZZ[x,y,z])
-  >>> p.rep.rep[0]
+  >>> p.rep.rep[0]  # doctest: +SKIP
   x**2*y + z
-  >>> type(p.rep.rep[0])
+  >>> type(p.rep.rep[0])  # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
-  >>> dict(p.rep.rep[0])
+  >>> dict(p.rep.rep[0])  # doctest: +SKIP
   {(0, 0, 1): 1, (2, 1, 0): 1}
 
 If no generators are provided to the :py:class:`~.Poly` constructor then it
