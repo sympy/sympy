@@ -165,7 +165,7 @@ class DMP(CantSympify):
         """
         if flint is not None:
             if isinstance(f, DMP_Python) and f.lev == 0 and f.dom in _flint_domains:
-                return DUP_Flint.new(f.rep, f.dom, f.lev)
+                return DUP_Flint.new(f._rep, f.dom, f.lev)
 
         return f
 

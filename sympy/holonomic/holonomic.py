@@ -608,7 +608,7 @@ class HolonomicFunction:
                 if i >= len(expr.listofpoly):
                     p.append(K.zero)
                 else:
-                    p.append(K.new(expr.listofpoly[i].rep))
+                    p.append(K.new(expr.listofpoly[i].to_list()))
             r.append(p)
 
         # solving the linear system using gauss jordan solver
@@ -636,7 +636,7 @@ class HolonomicFunction:
                     if i >= len(expr.listofpoly):
                         p.append(K.zero)
                     else:
-                        p.append(K.new(expr.listofpoly[i].rep))
+                        p.append(K.new(expr.listofpoly[i].to_list()))
                 r.append(p)
 
             # solving the linear system using gauss jordan solver
@@ -908,7 +908,7 @@ class HolonomicFunction:
         R = ann.parent.base
         K = R.get_field()
 
-        seq_dmf = [K.new(i.rep) for i in ann.listofpoly]
+        seq_dmf = [K.new(i.to_list()) for i in ann.listofpoly]
 
         # -y = a1*y'/a0 + a2*y''/a0 ... + an*y^n/a0
         rhs = [i / seq_dmf[0] for i in seq_dmf[1:]]
@@ -979,10 +979,10 @@ class HolonomicFunction:
         K = R.get_field()
 
         for j in ann_self.listofpoly:
-            list_self.append(K.new(j.rep))
+            list_self.append(K.new(j.to_list()))
 
         for j in ann_other.listofpoly:
-            list_other.append(K.new(j.rep))
+            list_other.append(K.new(j.to_list()))
 
         # will be used to reduce the degree
         self_red = [-list_self[i] / list_self[a] for i in range(a)]
@@ -1715,7 +1715,7 @@ class HolonomicFunction:
         seq = []
 
         for i, j in enumerate(seq_dmp):
-            seq.append(K.new(j.rep))
+            seq.append(K.new(j.to_list()))
 
         sub = [-seq[i] / seq[k] for i in range(k)]
         sol = list(recurrence.u0)
@@ -1869,7 +1869,7 @@ class HolonomicFunction:
         parent, _ = DifferentialOperators(R, 'Dx')
         sol = []
         for j in self.annihilator.listofpoly:
-            sol.append(R(j.rep))
+            sol.append(R(j.to_list()))
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
 
@@ -2008,10 +2008,10 @@ class HolonomicFunction:
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        if isinstance(a.rep[0], (PolyElement, FracElement)):
-            c = - (S(a.rep[0].as_expr()) * m**(a.degree())) / (S(b.rep[0].as_expr()) * m**(b.degree()))
+        if isinstance(a.to_list()[0], (PolyElement, FracElement)):
+            c = - (S(a.to_list()[0].as_expr()) * m**(a.degree())) / (S(b.to_list()[0].as_expr()) * m**(b.degree()))
         else:
-            c = - (S(a.rep[0]) * m**(a.degree())) / (S(b.rep[0]) * m**(b.degree()))
+            c = - (S(a.to_list()[0]) * m**(a.degree())) / (S(b.to_list()[0]) * m**(b.degree()))
 
         sol = 0
 
@@ -2506,7 +2506,7 @@ def _normalize(list_of, parent, negative=True):
     # fraction field
     for i, j in enumerate(list_of):
         if isinstance(j, base.dtype):
-            list_of_coeff.append(K.new(j.rep))
+            list_of_coeff.append(K.new(j.to_list()))
         elif not isinstance(j, K.dtype):
             list_of_coeff.append(K.from_sympy(sympify(j)))
         else:
@@ -2525,24 +2525,24 @@ def _normalize(list_of, parent, negative=True):
     if negative:
         lcm_denom = -lcm_denom
 
-    lcm_denom = K.new(lcm_denom.rep)
+    lcm_denom = K.new(lcm_denom.to_list())
 
     # multiply the coefficients with lcm
     for i, j in enumerate(list_of_coeff):
         list_of_coeff[i] = j * lcm_denom
 
-    gcd_numer = base((list_of_coeff[-1].numer() / list_of_coeff[-1].denom()).rep)
+    gcd_numer = base((list_of_coeff[-1].numer() / list_of_coeff[-1].denom()).to_list())
 
     # gcd of numerators in the coefficients
     for i in num:
         gcd_numer = i.gcd(gcd_numer)
 
-    gcd_numer = K.new(gcd_numer.rep)
+    gcd_numer = K.new(gcd_numer.to_list())
 
     # divide all the coefficients by the gcd
     for i, j in enumerate(list_of_coeff):
         frac_ans = j / gcd_numer
-        list_of_coeff[i] = base((frac_ans.numer() / frac_ans.denom()).rep)
+        list_of_coeff[i] = base((frac_ans.numer() / frac_ans.denom()).to_list())
 
     return DifferentialOperator(list_of_coeff, parent)
 
@@ -2628,7 +2628,7 @@ def _extend_y0(Holonomic, n):
 
     for i, j in enumerate(annihilator.listofpoly):
             if isinstance(j, annihilator.parent.base.dtype):
-                listofpoly.append(K.new(j.rep))
+                listofpoly.append(K.new(j.to_list()))
 
     if len(y0) < a or n <= len(y0):
         return y0
@@ -2663,7 +2663,7 @@ def DMFdiff(frac, K):
     q = K.denom(frac)
     sol_num = - p * q.diff() + q * p.diff()
     sol_denom = q**2
-    return K((sol_num.rep, sol_denom.rep))
+    return K((sol_num.to_list(), sol_denom.to_list()))
 
 
 def DMFsubs(frac, x0, mpm=False):
@@ -2738,7 +2738,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
 
         # try to compute the conditions for singular points
         if y0 is None and x0 == 0 and is_singular:
-            rep = R.from_sympy(func).rep
+            rep = R.from_sympy(func).to_list()
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
                     continue
@@ -2765,7 +2765,7 @@ def _convert_poly_rat_alg(func, x, x0=0, y0=None, lenics=None, domain=QQ, initco
         # try to compute the conditions for singular points
         if y0 is None and x0 == 0 and is_singular and \
             (lenics is None or lenics <= 1):
-            rep = R.from_sympy(basepoly).rep
+            rep = R.from_sympy(basepoly).to_list()
             for i, j in enumerate(reversed(rep)):
                 if j == 0:
                     continue
