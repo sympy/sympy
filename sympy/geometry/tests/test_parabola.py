@@ -1,4 +1,4 @@
-from sympy.core.numbers import (Rational, oo)
+from sympy.core.numbers import (pi, Rational, oo)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Dummy
 from sympy.functions.elementary.complexes import sign
@@ -143,11 +143,16 @@ def test_parabola_intersection():
     raises(TypeError, lambda: parabola1.intersection(2))
 
 
+def test_is_similar():
+    assert not Parabola().is_similar(Line((0, 0), slope=1)
+    assert Parabola().is_similar(abc=(1,2,3))
+
+
 def test_Parabola_alt_instantiation():
     ans = -x**2 - 3*x/2 + y/2 - S(5)/2
     eq = 2*x**2 + 3*x + 5
-    assert Parabola(eq).equation(x, y).expand() == ans
-    assert Parabola(eq.subs(x, y)).equation(y, x).expand() == ans  # reversed x and y
+    assert Parabola(abc=(2, 3, 5)).equation(x, y).expand() == ans
+    assert Parabola(abc=(2, 3, 5)).rotate(-pi/2).equation(y, x).expand() == ans  # reversed x and y
     raises(ValueError, lambda: Parabola(x*y + y**2))
     raises(ValueError, lambda: Parabola(x*y + y**2))
     raises(ValueError, lambda: Parabola(x**2 + y**2))
