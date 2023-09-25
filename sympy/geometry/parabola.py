@@ -20,8 +20,8 @@ from sympy.solvers.solvers import solve
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
 
-    A parabola is declared with a point, that is called 'focus', and
-    a line, that is called 'directrix'.
+    A parabola is declared with a point (the 'focus') and
+    a line (the 'directrix') or a quadratic equation in ``x`` or ``y``.
     Only vertical or horizontal parabolas are currently supported.
 
     Parameters
@@ -30,11 +30,9 @@ class Parabola(GeometrySet):
     focus : Point
         Default value is Point(0, 0)
     directrix : Line
-    apq : tuple containing ``a``, ``p``, ``q`` for ``a*(x - p)*(x - q)``
-    ahk : tuple containing ``a``, ``h``, ``k`` for ``a*(x - h)**2 + k``
-    abc : tuple containing ``a``, ``b``, ``c`` for ``a*x**2 + b*x + c``
-    eq : an expression in terms of ``x`` and ``y`` that contains
-        either ``x**2`` or ``y**2``
+    eq : Equality or Expr
+        An expression in terms of ``x`` and ``y`` that contains
+        either ``x**2`` or ``y**2``, but not both, and no ``x*y`` term.
 
     Attributes
     ==========
@@ -52,6 +50,7 @@ class Parabola(GeometrySet):
     ValueError
         When `focus` is not a two dimensional point.
         When `focus` is a point of directrix.
+        When more than one variable has name `x` or `y` in `eq` or `eq` is not the equation of a vertical or horizontal parabola.
     NotImplementedError
         When `directrix` is neither horizontal nor vertical.
 
