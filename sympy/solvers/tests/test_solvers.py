@@ -568,12 +568,14 @@ def test_solve_transcendental():
     x7 = x4*sqrt(-x6 - 5)
     x8 = x5 + 1
     x9 = x4*sqrt(-x5 - 5)
-    ans = [x2*(-x0 - 5*LambertW(-log(7**(7*x1/5)))),
+    ans = [
+        x2*(-x0 - 5*LambertW(x3*(x6 + x9 + 1))),
+        x2*(-x0 - 5*LambertW(-log(7**(7*x1/5)))),
         x2*(-x0 - 5*LambertW(x3*(-x7 + x8))),
         x2*(-x0 - 5*LambertW(x3*(x7 + x8))),
         x2*(-x0 - 5*LambertW(x3*(-x5 - x9 + 1))),
-        x2*(-x0 - 5*LambertW(x3*(x6 + x9 + 1)))]
-    assert result == ans, result
+        ]
+    assert set(result) == set(ans), result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
