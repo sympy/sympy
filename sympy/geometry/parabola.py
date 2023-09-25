@@ -5,7 +5,7 @@ Contains
 
 """
 
-from sympy.core import S, sympify, Expr
+from sympy.core import S, sympify
 from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, symbols, Dummy
 from sympy.geometry.entity import GeometryEntity, GeometrySet
@@ -21,18 +21,17 @@ class Parabola(GeometrySet):
     """A parabolic GeometryEntity.
 
     A parabola is declared with a point (the 'focus') and
-    a line (the 'directrix') or a quadratic equation in ``x`` or ``y``.
+    a line (the 'directrix') or coefficients of ``ax^2 + bx + c``.
     Only vertical or horizontal parabolas are currently supported.
 
     Parameters
     ==========
 
     focus : Point
-        Default value is Point(0, 0)
+        default value is (0, 0)
     directrix : Line
-    eq : Equality or Expr
-        An expression in terms of ``x`` and ``y`` that contains
-        either ``x**2`` or ``y**2``, but not both, and no ``x*y`` term.
+    abc : Tuple
+        coefficients for ``ax^2 + bx + c``; default is (1, 0, 0)
 
     Attributes
     ==========
@@ -58,13 +57,13 @@ class Parabola(GeometrySet):
     ========
 
     >>> from sympy import Parabola, Point, Line, Eq
-    >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7,8)))
+    >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
     >>> p1.focus
     Point2D(0, 0)
     >>> p1.directrix
     Line2D(Point2D(5, 8), Point2D(7, 8))
 
-    You can find the intersection with an axis of interest:
+    You can find the intersection of a Parabola with an axis of interest:
 
     >>> from sympy.abc import x, y
     >>> y_axis = Line(x)
@@ -74,63 +73,53 @@ class Parabola(GeometrySet):
     >>> p1.intersection(x_axis)
     [Point2D(-8, 0), Point2D(8, 0)]
 
-    The Parabola may be described by a quadratic expression,
-    but without cross-terms in ``x`` and ``y``:
+    The Parabola may be described by passing coefficients
+    from the quadratic expression:
 
-    >>> Parabola(x**2 + 2*x + 3)
+    >>> Parabola(abc=(1, 2, 3))  # x**2 + 2*x + 3
     Parabola(Point2D(-1, 9/4), Line2D(Point2D(0, 7/4), Point2D(1, 7/4)))
-    >>> Parabola(Eq(x, y**2 + 2*y + 3))
+
+    If the coefficients were for a horizontally-oriented Parabola, then
+    a clockwise rotation can be used:
+
+    >>> p2 = _.rotate(-pi/2)  # th = -pi/2
     Parabola(Point2D(9/4, -1), Line2D(Point2D(7/4, 0), Point2D(7/4, 1)))
+
+    Every parabola is a translated, scaled (and potentially rotated)
+    version of the basic ``y = x^2`` parabola:
+
+    >>> p2.equation()
+    x - y**2 - 2*y - 3
+    >>> v = p2.vertex
+    >>> a = 4*p2.p_parameter
+    >>> th = -pi/2
+    >>> p2.translate(*-v).rotate(-th).scale(y=1/a).equation()
+    -x**2 + y
+    >>> p2.is_similar(Parabola())
+    True
 
     """
 
-    def __new__(cls, focus=None, directrix=None, **kwargs):
+    def __new__(cls, focus=None, directrix=None, abc=None, **kwargs):
 
-        eq_or_focus = sympify(focus)
         if directrix is not None:
-            focus = Point(eq_or_focus or (0, 0), dim=2)
+            if abc is not None:
+                raise ValueError('enter focus & directrix or abc')
+            focus = Point(focus or (0, 0), dim=2)
             directrix = Line(directrix)
             if directrix.contains(focus):
                 raise ValueError('The focus must not be a point of directrix')
         else:
-            eq = eq_or_focus
-            if eq.is_Equality:
-                eq = eq.lhs - eq.rhs
-            if not isinstance(eq, Expr):
-                raise ValueError('first argument should be a quadratic expression')
-            eq = eq.expand()
-            xy = list(ordered([i for i in eq.free_symbols if i.name in ('x','y')]))
-            if len(xy) > 2:
-                raise ValueError('ambiguous appearance of x or y in equation')
-            if not xy:
-                raise ValueError('there should be an x or y in equation')
-            d = eq.as_coefficients_dict(*xy)
-            for i in d:
-                if len(i.free_symbols) > 1:
-                    raise ValueError(f'cross term in equation: {i*d[i]}')
-            if len(xy) == 2:
-                x, y = ordered(xy)
-                if sum(1 for i in (x**2, y**2) if i in d) != 1:
-                    raise ValueError(f'this is not the equation of a vertical or horizontal parabola: {eq}')
-                v = x if x**2 in d else y
-                eq = -eq.subs(v, 0)  # i.e. solve for v
-                d = {i: -d[i] for i in d}
-                xy = [v]
-            if len(xy) == 1:
-                # ax**2 + b*x + c or ay**2 + by + c
-                v = xy[0]
-                a, b, c = (d.get(i, 0) for i in (v**2, v, 1))
-                h = -b/2/a
-                f = 1/a/4
-                F = (h, c - b**2/a/4 + f)
-                D = F[1] - 2*f
-                if v.name == 'x':
-                    L = Line(Dummy('y') - D)
-                else:
-                    F = F[::-1]
-                    L = Line(Dummy('x') - D)
-                focus = Point(*F)
-                directrix = L
+            if focus is not None:
+                raise ValueError('enter focus & directrix or abc')
+            a, b, c = abc or (S.One, 0, 0)
+            h = -b/2/a
+            f = 1/a/4
+            F = (h, c - b**2/a/4 + f)
+            D = F[1] - 2*f
+            L = Line(Dummy('y') - D)
+            focus = Point(*F)
+            directrix = L
 
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
 
@@ -478,3 +467,7 @@ class Parabola(GeometrySet):
         else:
             vertex = self.axis_of_symmetry.intersection(self)[0]
         return vertex
+
+    def is_similar(self, other):
+        # all parbolas are self similar
+        return is_instance(other, Parabola)
