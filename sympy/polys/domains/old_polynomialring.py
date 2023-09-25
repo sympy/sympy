@@ -134,7 +134,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
             if K1.dom == K0.dom:
                 return K1(a.to_list())  # set the correct ring
             else:
-                return K1(a.convert(K1.dom).rep)
+                return K1(a.convert(K1.dom)._rep)
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
