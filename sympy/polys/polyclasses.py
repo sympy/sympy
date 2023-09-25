@@ -134,7 +134,7 @@ else:
 class DMP(CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ('rep', 'dom', 'lev')
+    __slots__ = ()
 
     def __new__(cls, rep, dom, lev=None):
 
@@ -1208,12 +1208,12 @@ class DMP(CantSympify):
 class DMP_Python(DMP):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ('rep', 'dom', 'lev')
+    __slots__ = ('_rep', 'dom', 'lev')
 
     @classmethod
     def _new(cls, rep, dom, lev):
         obj = object.__new__(cls)
-        obj.rep = rep
+        obj._rep = rep
         obj.lev = lev
         obj.dom = dom
         return obj
@@ -1221,7 +1221,7 @@ class DMP_Python(DMP):
     def _strict_eq(f, g):
         if type(f) != type(g):
             return False
-        return f.lev == g.lev and f.dom == g.dom and f.rep == g.rep
+        return f.lev == g.lev and f.dom == g.dom and f._rep == g._rep
 
     def per(f, rep):
         """Create a DMP out of the given representation. """
@@ -1242,12 +1242,12 @@ class DMP_Python(DMP):
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom:
-            return f.lev, f.dom, f.per, f.rep, g.rep
+            return f.lev, f.dom, f.per, f._rep, g._rep
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
 
-            F = dmp_convert(f.rep, lev, f.dom, dom)
-            G = dmp_convert(g.rep, lev, g.dom, dom)
+            F = dmp_convert(f._rep, lev, f.dom, dom)
+            G = dmp_convert(g._rep, lev, g.dom, dom)
 
             def per(rep):
                 return f._new(rep, dom, lev)
@@ -1256,160 +1256,160 @@ class DMP_Python(DMP):
 
     def to_DUP_Flint(f):
         """Convert ``f`` to a Flint representation. """
-        return DUP_Flint._new(f.rep, f.dom, f.lev)
+        return DUP_Flint._new(f._rep, f.dom, f.lev)
 
     def to_list(f):
         """Convert ``f`` to a list representation with native coefficients. """
-        return f.rep
+        return list(f._rep)
 
     def to_tuple(f):
         """Convert ``f`` to a tuple representation with native coefficients. """
-        return dmp_to_tuple(f.rep, f.lev)
+        return dmp_to_tuple(f._rep, f.lev)
 
     def _convert(f, dom):
         """Convert the ground domain of ``f``. """
-        return f._new(dmp_convert(f.rep, f.lev, f.dom, dom), dom, f.lev)
+        return f._new(dmp_convert(f._rep, f.lev, f.dom, dom), dom, f.lev)
 
     def _slice(f, m, n):
         """Take a continuous subsequence of terms of ``f``. """
-        rep = dup_slice(f.rep, m, n, f.dom)
+        rep = dup_slice(f._rep, m, n, f.dom)
         return f._new(rep, f.dom, f.lev)
 
     def _slice_lev(f, m, n, j):
         """Take a continuous subsequence of terms of ``f``. """
-        rep = dmp_slice_in(f.rep, m, n, j, f.lev, f.dom)
+        rep = dmp_slice_in(f._rep, m, n, j, f.lev, f.dom)
         return f._new(rep, f.dom, f.lev)
 
     def _terms(f, order=None):
         """Returns all non-zero terms from ``f`` in lex order. """
-        return dmp_list_terms(f.rep, f.lev, f.dom, order=order)
+        return dmp_list_terms(f._rep, f.lev, f.dom, order=order)
 
     def _lift(f):
         """Convert algebraic coefficients to rationals. """
-        r = dmp_lift(f.rep, f.lev, f.dom)
+        r = dmp_lift(f._rep, f.lev, f.dom)
         return f._new(r, f.dom.dom, f.lev)
 
     def deflate(f):
         """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
-        J, F = dmp_deflate(f.rep, f.lev, f.dom)
+        J, F = dmp_deflate(f._rep, f.lev, f.dom)
         return J, f.per(F)
 
     def inject(f, front=False):
         """Inject ground domain generators into ``f``. """
-        F, lev = dmp_inject(f.rep, f.lev, f.dom, front=front)
+        F, lev = dmp_inject(f._rep, f.lev, f.dom, front=front)
         # XXX: domain and level changed here
         return f._new(F, f.dom.dom, lev)
 
     def eject(f, dom, front=False):
         """Eject selected generators into the ground domain. """
-        F = dmp_eject(f.rep, f.lev, dom, front=front)
+        F = dmp_eject(f._rep, f.lev, dom, front=front)
         # XXX: domain and level changed here
         return f._new(F, dom, f.lev - len(dom.symbols))
 
     def _exclude(f):
         """Remove useless generators from ``f``. """
-        J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
+        J, F, u = dmp_exclude(f._rep, f.lev, f.dom)
         # XXX: level changed here
         return J, f._new(F, f.dom, u)
 
     def _permute(f, P):
         """Returns a polynomial in `K[x_{P(1)}, ..., x_{P(n)}]`. """
-        return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
+        return f.per(dmp_permute(f._rep, P, f.lev, f.dom))
 
     def terms_gcd(f):
         """Remove GCD of terms from the polynomial ``f``. """
-        J, F = dmp_terms_gcd(f.rep, f.lev, f.dom)
+        J, F = dmp_terms_gcd(f._rep, f.lev, f.dom)
         return J, f.per(F)
 
     def _add_ground(f, c):
         """Add an element of the ground domain to ``f``. """
-        return f.per(dmp_add_ground(f.rep, c, f.lev, f.dom))
+        return f.per(dmp_add_ground(f._rep, c, f.lev, f.dom))
 
     def _sub_ground(f, c):
         """Subtract an element of the ground domain from ``f``. """
-        return f.per(dmp_sub_ground(f.rep, c, f.lev, f.dom))
+        return f.per(dmp_sub_ground(f._rep, c, f.lev, f.dom))
 
     def _mul_ground(f, c):
         """Multiply ``f`` by a an element of the ground domain. """
-        return f.per(dmp_mul_ground(f.rep, c, f.lev, f.dom))
+        return f.per(dmp_mul_ground(f._rep, c, f.lev, f.dom))
 
     def _quo_ground(f, c):
         """Quotient of ``f`` by a an element of the ground domain. """
-        return f.per(dmp_quo_ground(f.rep, c, f.lev, f.dom))
+        return f.per(dmp_quo_ground(f._rep, c, f.lev, f.dom))
 
     def _exquo_ground(f, c):
         """Exact quotient of ``f`` by a an element of the ground domain. """
-        return f.per(dmp_exquo_ground(f.rep, c, f.lev, f.dom))
+        return f.per(dmp_exquo_ground(f._rep, c, f.lev, f.dom))
 
     def abs(f):
         """Make all coefficients in ``f`` positive. """
-        return f.per(dmp_abs(f.rep, f.lev, f.dom))
+        return f.per(dmp_abs(f._rep, f.lev, f.dom))
 
     def neg(f):
         """Negate all coefficients in ``f``. """
-        return f.per(dmp_neg(f.rep, f.lev, f.dom))
+        return f.per(dmp_neg(f._rep, f.lev, f.dom))
 
     def _add(f, g):
         """Add two multivariate polynomials ``f`` and ``g``. """
-        return f.per(dmp_add(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_add(f._rep, g._rep, f.lev, f.dom))
 
     def _sub(f, g):
         """Subtract two multivariate polynomials ``f`` and ``g``. """
-        return f.per(dmp_sub(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_sub(f._rep, g._rep, f.lev, f.dom))
 
     def _mul(f, g):
         """Multiply two multivariate polynomials ``f`` and ``g``. """
-        return f.per(dmp_mul(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_mul(f._rep, g._rep, f.lev, f.dom))
 
     def sqr(f):
         """Square a multivariate polynomial ``f``. """
-        return f.per(dmp_sqr(f.rep, f.lev, f.dom))
+        return f.per(dmp_sqr(f._rep, f.lev, f.dom))
 
     def _pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        return f.per(dmp_pow(f.rep, n, f.lev, f.dom))
+        return f.per(dmp_pow(f._rep, n, f.lev, f.dom))
 
     def _pdiv(f, g):
         """Polynomial pseudo-division of ``f`` and ``g``. """
-        q, r = dmp_pdiv(f.rep, g.rep, f.lev, f.dom)
+        q, r = dmp_pdiv(f._rep, g._rep, f.lev, f.dom)
         return f.per(q), f.per(r)
 
     def _prem(f, g):
         """Polynomial pseudo-remainder of ``f`` and ``g``. """
-        return f.per(dmp_prem(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_prem(f._rep, g._rep, f.lev, f.dom))
 
     def _pquo(f, g):
         """Polynomial pseudo-quotient of ``f`` and ``g``. """
-        return f.per(dmp_pquo(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_pquo(f._rep, g._rep, f.lev, f.dom))
 
     def _pexquo(f, g):
         """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
-        return f.per(dmp_pexquo(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_pexquo(f._rep, g._rep, f.lev, f.dom))
 
     def _div(f, g):
         """Polynomial division with remainder of ``f`` and ``g``. """
-        q, r = dmp_div(f.rep, g.rep, f.lev, f.dom)
+        q, r = dmp_div(f._rep, g._rep, f.lev, f.dom)
         return f.per(q), f.per(r)
 
     def _rem(f, g):
         """Computes polynomial remainder of ``f`` and ``g``. """
-        return f.per(dmp_rem(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_rem(f._rep, g._rep, f.lev, f.dom))
 
     def _quo(f, g):
         """Computes polynomial quotient of ``f`` and ``g``. """
-        return f.per(dmp_quo(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_quo(f._rep, g._rep, f.lev, f.dom))
 
     def _exquo(f, g):
         """Computes polynomial exact quotient of ``f`` and ``g``. """
-        return f.per(dmp_exquo(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_exquo(f._rep, g._rep, f.lev, f.dom))
 
     def _degree(f, j=0):
         """Returns the leading degree of ``f`` in ``x_j``. """
-        return dmp_degree_in(f.rep, j, f.lev)
+        return dmp_degree_in(f._rep, j, f.lev)
 
     def degree_list(f):
         """Returns a list of degrees of ``f``. """
-        return dmp_degree_list(f.rep, f.lev)
+        return dmp_degree_list(f._rep, f.lev)
 
     def total_degree(f):
         """Returns the total degree of ``f``. """
@@ -1417,264 +1417,264 @@ class DMP_Python(DMP):
 
     def LC(f):
         """Returns the leading coefficient of ``f``. """
-        return dmp_ground_LC(f.rep, f.lev, f.dom)
+        return dmp_ground_LC(f._rep, f.lev, f.dom)
 
     def TC(f):
         """Returns the trailing coefficient of ``f``. """
-        return dmp_ground_TC(f.rep, f.lev, f.dom)
+        return dmp_ground_TC(f._rep, f.lev, f.dom)
 
     def _nth(f, N):
         """Returns the ``n``-th coefficient of ``f``. """
-        return dmp_ground_nth(f.rep, N, f.lev, f.dom)
+        return dmp_ground_nth(f._rep, N, f.lev, f.dom)
 
     def max_norm(f):
         """Returns maximum norm of ``f``. """
-        return dmp_max_norm(f.rep, f.lev, f.dom)
+        return dmp_max_norm(f._rep, f.lev, f.dom)
 
     def l1_norm(f):
         """Returns l1 norm of ``f``. """
-        return dmp_l1_norm(f.rep, f.lev, f.dom)
+        return dmp_l1_norm(f._rep, f.lev, f.dom)
 
     def l2_norm_squared(f):
         """Return squared l2 norm of ``f``. """
-        return dmp_l2_norm_squared(f.rep, f.lev, f.dom)
+        return dmp_l2_norm_squared(f._rep, f.lev, f.dom)
 
     def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
-        coeff, F = dmp_clear_denoms(f.rep, f.lev, f.dom)
+        coeff, F = dmp_clear_denoms(f._rep, f.lev, f.dom)
         return coeff, f.per(F)
 
     def _integrate(f, m=1, j=0):
         """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
-        return f.per(dmp_integrate_in(f.rep, m, j, f.lev, f.dom))
+        return f.per(dmp_integrate_in(f._rep, m, j, f.lev, f.dom))
 
     def _diff(f, m=1, j=0):
         """Computes the ``m``-th order derivative of ``f`` in ``x_j``. """
-        return f.per(dmp_diff_in(f.rep, m, j, f.lev, f.dom))
+        return f.per(dmp_diff_in(f._rep, m, j, f.lev, f.dom))
 
     def _eval(f, a):
-        return dmp_eval_in(f.rep, f.dom.convert(a), 0, f.lev, f.dom)
+        return dmp_eval_in(f._rep, f.dom.convert(a), 0, f.lev, f.dom)
 
     def _eval_lev(f, a, j):
-        rep = dmp_eval_in(f.rep, f.dom.convert(a), j, f.lev, f.dom)
+        rep = dmp_eval_in(f._rep, f.dom.convert(a), j, f.lev, f.dom)
         return f.new(rep, f.dom, f.lev - 1)
 
     def _half_gcdex(f, g):
         """Half extended Euclidean algorithm, if univariate. """
-        s, h = dup_half_gcdex(f.rep, g.rep, f.dom)
+        s, h = dup_half_gcdex(f._rep, g._rep, f.dom)
         return f.per(s), f.per(h)
 
     def _gcdex(f, g):
         """Extended Euclidean algorithm, if univariate. """
-        s, t, h = dup_gcdex(f.rep, g.rep, f.dom)
+        s, t, h = dup_gcdex(f._rep, g._rep, f.dom)
         return f.per(s), f.per(t), f.per(h)
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
-        s = dup_invert(f.rep, g.rep, f.dom)
+        s = dup_invert(f._rep, g._rep, f.dom)
         return f.per(s)
 
     def _revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
-        return f.per(dup_revert(f.rep, n, f.dom))
+        return f.per(dup_revert(f._rep, n, f.dom))
 
     def _subresultants(f, g):
         """Computes subresultant PRS sequence of ``f`` and ``g``. """
-        R = dmp_subresultants(f.rep, g.rep, f.lev, f.dom)
+        R = dmp_subresultants(f._rep, g._rep, f.lev, f.dom)
         return list(map(f.per, R))
 
     def _resultant_includePRS(f, g):
         """Computes resultant of ``f`` and ``g`` via PRS. """
-        res, R = dmp_resultant(f.rep, g.rep, f.lev, f.dom, includePRS=True)
+        res, R = dmp_resultant(f._rep, g._rep, f.lev, f.dom, includePRS=True)
         if f.lev:
             res = f.new(res, f.dom, f.lev - 1)
         return res, list(map(f.per, R))
 
     def _resultant(f, g):
-        res = dmp_resultant(f.rep, g.rep, f.lev, f.dom)
+        res = dmp_resultant(f._rep, g._rep, f.lev, f.dom)
         if f.lev:
             res = f.new(res, f.dom, f.lev - 1)
         return res
 
     def discriminant(f):
         """Computes discriminant of ``f``. """
-        res = dmp_discriminant(f.rep, f.lev, f.dom)
+        res = dmp_discriminant(f._rep, f.lev, f.dom)
         if f.lev:
             res = f.new(res, f.dom, f.lev - 1)
         return res
 
     def _cofactors(f, g):
         """Returns GCD of ``f`` and ``g`` and their cofactors. """
-        h, cff, cfg = dmp_inner_gcd(f.rep, g.rep, f.lev, f.dom)
+        h, cff, cfg = dmp_inner_gcd(f._rep, g._rep, f.lev, f.dom)
         return f.per(h), f.per(cff), f.per(cfg)
 
     def _gcd(f, g):
         """Returns polynomial GCD of ``f`` and ``g``. """
-        return f.per(dmp_gcd(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_gcd(f._rep, g._rep, f.lev, f.dom))
 
     def _lcm(f, g):
         """Returns polynomial LCM of ``f`` and ``g``. """
-        return f.per(dmp_lcm(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_lcm(f._rep, g._rep, f.lev, f.dom))
 
     def _cancel(f, g):
         """Cancel common factors in a rational function ``f/g``. """
-        cF, cG, F, G = dmp_cancel(f.rep, g.rep, f.lev, f.dom, include=False)
+        cF, cG, F, G = dmp_cancel(f._rep, g._rep, f.lev, f.dom, include=False)
         return cF, cG, f.per(F), f.per(G)
 
     def _cancel_include(f, g):
         """Cancel common factors in a rational function ``f/g``. """
-        F, G = dmp_cancel(f.rep, g.rep, f.lev, f.dom, include=True)
+        F, G = dmp_cancel(f._rep, g._rep, f.lev, f.dom, include=True)
         return f.per(F), f.per(G)
 
     def _trunc(f, p):
         """Reduce ``f`` modulo a constant ``p``. """
-        return f.per(dmp_ground_trunc(f.rep, p, f.lev, f.dom))
+        return f.per(dmp_ground_trunc(f._rep, p, f.lev, f.dom))
 
     def monic(f):
         """Divides all coefficients by ``LC(f)``. """
-        return f.per(dmp_ground_monic(f.rep, f.lev, f.dom))
+        return f.per(dmp_ground_monic(f._rep, f.lev, f.dom))
 
     def content(f):
         """Returns GCD of polynomial coefficients. """
-        return dmp_ground_content(f.rep, f.lev, f.dom)
+        return dmp_ground_content(f._rep, f.lev, f.dom)
 
     def primitive(f):
         """Returns content and a primitive form of ``f``. """
-        cont, F = dmp_ground_primitive(f.rep, f.lev, f.dom)
+        cont, F = dmp_ground_primitive(f._rep, f.lev, f.dom)
         return cont, f.per(F)
 
     def _compose(f, g):
         """Computes functional composition of ``f`` and ``g``. """
-        return f.per(dmp_compose(f.rep, g.rep, f.lev, f.dom))
+        return f.per(dmp_compose(f._rep, g._rep, f.lev, f.dom))
 
     def _decompose(f):
         """Computes functional decomposition of ``f``. """
-        return list(map(f.per, dup_decompose(f.rep, f.dom)))
+        return list(map(f.per, dup_decompose(f._rep, f.dom)))
 
     def _shift(f, a):
         """Efficiently compute Taylor shift ``f(x + a)``. """
-        return f.per(dup_shift(f.rep, a, f.dom))
+        return f.per(dup_shift(f._rep, a, f.dom))
 
     def _transform(f, p, q):
         """Evaluate functional transformation ``q**n * f(p/q)``."""
-        return f.per(dup_transform(f.rep, p.rep, q.rep, f.dom))
+        return f.per(dup_transform(f._rep, p._rep, q._rep, f.dom))
 
     def _sturm(f):
         """Computes the Sturm sequence of ``f``. """
-        return list(map(f.per, dup_sturm(f.rep, f.dom)))
+        return list(map(f.per, dup_sturm(f._rep, f.dom)))
 
     def _cauchy_upper_bound(f):
         """Computes the Cauchy upper bound on the roots of ``f``. """
-        return dup_cauchy_upper_bound(f.rep, f.dom)
+        return dup_cauchy_upper_bound(f._rep, f.dom)
 
     def _cauchy_lower_bound(f):
         """Computes the Cauchy lower bound on the nonzero roots of ``f``. """
-        return dup_cauchy_lower_bound(f.rep, f.dom)
+        return dup_cauchy_lower_bound(f._rep, f.dom)
 
     def _mignotte_sep_bound_squared(f):
         """Computes the squared Mignotte bound on root separations of ``f``. """
-        return dup_mignotte_sep_bound_squared(f.rep, f.dom)
+        return dup_mignotte_sep_bound_squared(f._rep, f.dom)
 
     def _gff_list(f):
         """Computes greatest factorial factorization of ``f``. """
-        return [ (f.per(g), k) for g, k in dup_gff_list(f.rep, f.dom) ]
+        return [ (f.per(g), k) for g, k in dup_gff_list(f._rep, f.dom) ]
 
     def norm(f):
         """Computes ``Norm(f)``."""
-        r = dmp_norm(f.rep, f.lev, f.dom)
+        r = dmp_norm(f._rep, f.lev, f.dom)
         return f.new(r, f.dom.dom, f.lev)
 
     def sqf_norm(f):
         """Computes square-free norm of ``f``. """
-        s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
+        s, g, r = dmp_sqf_norm(f._rep, f.lev, f.dom)
         return s, f.per(g), f.new(r, f.dom.dom, f.lev)
 
     def sqf_part(f):
         """Computes square-free part of ``f``. """
-        return f.per(dmp_sqf_part(f.rep, f.lev, f.dom))
+        return f.per(dmp_sqf_part(f._rep, f.lev, f.dom))
 
     def sqf_list(f, all=False):
         """Returns a list of square-free factors of ``f``. """
-        coeff, factors = dmp_sqf_list(f.rep, f.lev, f.dom, all)
+        coeff, factors = dmp_sqf_list(f._rep, f.lev, f.dom, all)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list_include(f, all=False):
         """Returns a list of square-free factors of ``f``. """
-        factors = dmp_sqf_list_include(f.rep, f.lev, f.dom, all)
+        factors = dmp_sqf_list_include(f._rep, f.lev, f.dom, all)
         return [ (f.per(g), k) for g, k in factors ]
 
     def factor_list(f):
         """Returns a list of irreducible factors of ``f``. """
-        coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom)
+        coeff, factors = dmp_factor_list(f._rep, f.lev, f.dom)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def factor_list_include(f):
         """Returns a list of irreducible factors of ``f``. """
-        factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
+        factors = dmp_factor_list_include(f._rep, f.lev, f.dom)
         return [ (f.per(g), k) for g, k in factors ]
 
     def _isolate_real_roots(f, eps, inf, sup, fast):
-        return dup_isolate_real_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+        return dup_isolate_real_roots(f._rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def _isolate_real_roots_sqf(f, eps, inf, sup, fast):
-        return dup_isolate_real_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+        return dup_isolate_real_roots_sqf(f._rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def _isolate_all_roots(f, eps, inf, sup, fast):
-        return dup_isolate_all_roots(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+        return dup_isolate_all_roots(f._rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def _isolate_all_roots_sqf(f, eps, inf, sup, fast):
-        return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
+        return dup_isolate_all_roots_sqf(f._rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def _refine_real_root(f, s, t, eps, steps, fast):
-        return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
+        return dup_refine_real_root(f._rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
 
     def count_real_roots(f, inf=None, sup=None):
         """Return the number of real roots of ``f`` in ``[inf, sup]``. """
-        return dup_count_real_roots(f.rep, f.dom, inf=inf, sup=sup)
+        return dup_count_real_roots(f._rep, f.dom, inf=inf, sup=sup)
 
     def count_complex_roots(f, inf=None, sup=None):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
-        return dup_count_complex_roots(f.rep, f.dom, inf=inf, sup=sup)
+        return dup_count_complex_roots(f._rep, f.dom, inf=inf, sup=sup)
 
     @property
     def is_zero(f):
         """Returns ``True`` if ``f`` is a zero polynomial. """
-        return dmp_zero_p(f.rep, f.lev)
+        return dmp_zero_p(f._rep, f.lev)
 
     @property
     def is_one(f):
         """Returns ``True`` if ``f`` is a unit polynomial. """
-        return dmp_one_p(f.rep, f.lev, f.dom)
+        return dmp_one_p(f._rep, f.lev, f.dom)
 
     @property
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
-        return dmp_ground_p(f.rep, None, f.lev)
+        return dmp_ground_p(f._rep, None, f.lev)
 
     @property
     def is_sqf(f):
         """Returns ``True`` if ``f`` is a square-free polynomial. """
-        return dmp_sqf_p(f.rep, f.lev, f.dom)
+        return dmp_sqf_p(f._rep, f.lev, f.dom)
 
     @property
     def is_monic(f):
         """Returns ``True`` if the leading coefficient of ``f`` is one. """
-        return f.dom.is_one(dmp_ground_LC(f.rep, f.lev, f.dom))
+        return f.dom.is_one(dmp_ground_LC(f._rep, f.lev, f.dom))
 
     @property
     def is_primitive(f):
         """Returns ``True`` if the GCD of the coefficients of ``f`` is one. """
-        return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
+        return f.dom.is_one(dmp_ground_content(f._rep, f.lev, f.dom))
 
     @property
     def is_linear(f):
         """Returns ``True`` if ``f`` is linear in all its variables. """
-        return all(sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
+        return all(sum(monom) <= 1 for monom in dmp_to_dict(f._rep, f.lev, f.dom).keys())
 
     @property
     def is_quadratic(f):
         """Returns ``True`` if ``f`` is quadratic in all its variables. """
-        return all(sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
+        return all(sum(monom) <= 2 for monom in dmp_to_dict(f._rep, f.lev, f.dom).keys())
 
     @property
     def is_monomial(f):
@@ -1689,13 +1689,13 @@ class DMP_Python(DMP):
     @property
     def is_irreducible(f):
         """Returns ``True`` if ``f`` has no factors over its domain. """
-        return dmp_irreducible_p(f.rep, f.lev, f.dom)
+        return dmp_irreducible_p(f._rep, f.lev, f.dom)
 
     @property
     def is_cyclotomic(f):
         """Returns ``True`` if ``f`` is a cyclotomic polynomial. """
         if not f.lev:
-            return dup_cyclotomic_p(f.rep, f.dom)
+            return dup_cyclotomic_p(f._rep, f.dom)
         else:
             return False
 
@@ -2427,14 +2427,14 @@ class DMF(PicklableWithSlots, CantSympify):
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom:
-            return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
+            return (f.lev, f.dom, f.per, (f.num, f.den), g._rep)
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
 
-            G = dmp_convert(g.rep, lev, g.dom, dom)
+            G = dmp_convert(g._rep, lev, g.dom, dom)
 
             def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
