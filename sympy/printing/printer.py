@@ -338,7 +338,7 @@ class Printer:
         return str(expr)
 
     def _as_ordered_terms(self, expr, order=None):
-        """A compatibility function for ordering terms in Add. """
+        """A compatibility function for ordering terms in Add."""
         order = order or self.order
 
         if order == 'old':

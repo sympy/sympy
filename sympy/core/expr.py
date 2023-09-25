@@ -1102,6 +1102,7 @@ class Expr(Basic, EvalfMixin):
     def as_ordered_terms(self, order=None, data=False):
         """
         Transform an expression to an ordered list of terms.
+        (This order is not the order necessarily used by the printer.)
 
         Examples
         ========
@@ -1113,7 +1114,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-
         from .numbers import Number, NumberSymbol
 
         if order is None and self.is_Add:
@@ -1127,7 +1127,7 @@ class Expr(Basic, EvalfMixin):
                 mul_args = sorted(Mul.make_args(add_args[1]), key=key)
                 if (len(mul_args) == 2
                     and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive
+                    and add_args[0].is_positive  # this is ok for Number
                     and mul_args[0].is_negative):
                     return add_args
 
@@ -1163,19 +1163,29 @@ class Expr(Basic, EvalfMixin):
 
             fac, ncpart = term.args_cnc()
 
-            coeff = complex(S.One)
+            # coeff is not tracking coeff, it is just
+            # tracking whether any numeric factor in a term has I
+            # in it and whether the number is more complicated
+            # than pure_complex form XXX
+            coeff = hasI, messy = [[1, (0,0)], 0]
             cpart = defaultdict(lambda: S.Zero)
-
+            from sympy.core.sorting import _nodes
             for factor in fac:
-                if factor.is_number and factor.is_real is not None:
-                    coeff *= complex(factor)
+                if factor.is_number:
+                    if (pc := pure_complex(factor, or_real=True)):
+                        if factor.is_Number:
+                            hasI[0] *= factor
+                        else:
+                            hasI[1] = pc
+                    else:
+                        messy += _nodes(factor)
                     continue
 
                 base, exp = decompose_power(factor)
                 cpart[base] += exp
                 gens.add(base)
 
-            coeff = coeff.real, coeff.imag
+            coeff = (hasI, messy)
             ncpart = tuple(ncpart)
 
             terms.append((term, (coeff, cpart, ncpart)))
