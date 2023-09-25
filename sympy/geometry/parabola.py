@@ -5,7 +5,7 @@ Contains
 
 """
 
-from sympy.core import S, sympify
+from sympy.core import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, symbols, Dummy
 from sympy.geometry.entity import GeometryEntity, GeometrySet
@@ -56,7 +56,7 @@ class Parabola(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Parabola, Point, Line, Eq
+    >>> from sympy import Parabola, Point, Line, pi
     >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
     >>> p1.focus
     Point2D(0, 0)
@@ -470,4 +470,4 @@ class Parabola(GeometrySet):
 
     def is_similar(self, other):
         # all parbolas are self similar
-        return is_instance(other, Parabola)
+        return isinstance(other, Parabola)
