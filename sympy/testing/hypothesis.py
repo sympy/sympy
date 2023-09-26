@@ -40,7 +40,7 @@ def polys(
         return Poly(draw(coefficients(empty, degree=degree)), *gens, domain=domain)
 
 
-def lattice_axioms_singular(f, g, h , func=lcm):
+def lattice_axioms_singular(f, g, h, /, *, func=lcm):
     # Associativity
     assert func(func(f, g), h) == func(f, func(g, h))
     # Commutativity
@@ -50,7 +50,7 @@ def lattice_axioms_singular(f, g, h , func=lcm):
     return True
 
 
-def lattice_axioms_dual(f, g, h, funcs=[lcm, gcd]):
+def lattice_axioms_dual(f, g, h, /, *, funcs=[lcm, gcd]):
     assert len(funcs) == 2
     # Absorption
     absorb1 = lambda func1, func2: func1(f, func2(f, g)) == f
