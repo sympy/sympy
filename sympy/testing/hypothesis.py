@@ -18,13 +18,16 @@ def coefficients(draw: st.DrawFn, empty=True, degree=None, rational=False):
         group = ZZ
         elements_strat = st.integers()
     # converting to the underlying type
-    raw_l = draw(st.lists(elements_strat, min_size=min_size, max_size=degree))
-    l = [group(i) for i in raw_l]
-    # ensuring there is no leading zero or fully zero list.
-    if len(l) > 0:
-        assume(any(l))
-        assume(l[0] != 0)
-    return l
+    raw_list = draw(st.lists(elements_strat, min_size=min_size, max_size=degree))
+    coef_list = [group(i) for i in raw_list]
+    # trim off discardable zeros
+    while len(coef_list) > min_size and coef_list[0] == 0:
+        coef_list.pop(0)
+    # check to ensure there is no leading zero or fully zero list.
+    if len(coef_list) > 0:
+        assume(any(coef_list))
+        assume(coef_list[0] != 0)
+    return coef_list
 
 
 @st.composite
@@ -37,23 +40,18 @@ def polys(
         return Poly(draw(coefficients(empty, degree=degree)), *gens, domain=domain)
 
 
-def lattice_axioms_singular(polysList, func=lcm):
-    if not polysList:
-        return ValueError("Empty list of polynomials.")
-    f, g, h = polysList[0], polysList[1], polysList[2]
+def lattice_axioms_singular(f, g, h , func=lcm):
     # Associativity
     assert func(func(f, g), h) == func(f, func(g, h))
     # Commutativity
     assert func(f, g) == func(g, f)
     # Idempotence
-    assert func(f, f) == f  # when f is a negative integer
+    assert func(f, f) == f
     return True
 
 
-def lattice_axioms_dual(polysList, funcs=[lcm, gcd]):
-    if not polysList:
-        return ValueError("Empty list of polynomials.")
-    f, g, h = polysList[0], polysList[1], polysList[2]
+def lattice_axioms_dual(f, g, h, funcs=[lcm, gcd]):
+    assert len(funcs) == 2
     # Absorption
     absorb1 = lambda func1, func2: func1(f, func2(f, g)) == f
     absorb2 = lambda func1, func2: func2(f, func1(f, g)) == f

@@ -12,7 +12,7 @@ import pytest
 )
 @pytest.mark.xfail
 def test_gcd(f, g, h):
-    assert lattice_axioms_singular([f, g, h], gcd)
+    assert lattice_axioms_singular(f, g, h, gcd)
 
     # multiply by h
     gcd_h = g.gcd(f + h * g)
@@ -22,7 +22,7 @@ def test_gcd(f, g, h):
 @given(f=polys(), g=polys(), h=polys())
 @pytest.mark.xfail
 def test_lcm(f, g, h):
-    assert lattice_axioms_singular([f, g, h], lcm)
+    assert lattice_axioms_singular(f, g, h, lcm)
     assert f * g == f.lcm(g) * f.gcd(g)
 
 
@@ -40,12 +40,14 @@ def test_lcm_gcd(f, g, h):
 )
 def test_division(f, g, h, l):
     # Integer case
-    z = f.rem(g)
-    assert g.degree() >= z.degree() or z.degree() == 0
+    z1 = f.rem(g, auto=True)
+    z2 = f.rem(g, auto=False)
+    assert z1.degree() < g.degree()
+    assert z2 == f or z2.degree() < f.degree()
 
     # Rational case
     q = h.rem(l)
-    assert l.degree() >= q.degree() or q.degree() == 0
+    assert l.degree() > q.degree()
 
 
 @given(
