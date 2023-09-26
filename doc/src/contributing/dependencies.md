@@ -111,18 +111,18 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
-- **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
+- **LaTeX**: A $\mathrm{\LaTeX}$ distributions such as [TeXLive](https://tug.org/texlive/) or
 [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
 
 Several functions in the {mod}`sympy.parsing` submodule require external
 dependencies to function. Note that not all parsers require external modules
-at this time. The Python ({func}`~.parse_expr`), Mathematca
+at this time. The Python ({func}`~.parse_expr`), Mathematica
 ({func}`~.parse_mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
 require any external dependencies.
 
-- **antlr-python-runtime**: [Antlr](https://www.antlr.org/) is used for the
+- **antlr-python-runtime**: [ANTLR](https://www.antlr.org/) is used for the
   {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
   [Autolev](autolev_parser) parsers. They both require the Antlr Python
   runtime to be installed. The package for this is called
