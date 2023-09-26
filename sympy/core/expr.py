@@ -1114,17 +1114,6 @@ class Expr(Basic, EvalfMixin):
         [sin(x)**2*cos(x), sin(x)**2, 1]
 
         """
-        from .numbers import Number, NumberSymbol
-
-        if order is None and self.is_Add:
-            # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and the second number negative
-            if len(self.args) == 2:
-                a, b = self.args
-                if isinstance(b, (Number, NumberSymbol)):
-                    a, b = b, a
-                if _coeff_isneg(b):
-                    return [a, b]
 
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
@@ -1142,6 +1131,14 @@ class Expr(Basic, EvalfMixin):
 
             ordered = sorted(_terms, key=key, reverse=True) \
                 + sorted(_order, key=key, reverse=True)
+
+        if order == None and len(ordered) == 2 and self.is_Add:
+            # For two-part adds with no explicit order and one negative term,
+            # favour putting the negative term second. list.sort() is stable.
+            ordered.sort(key=lambda t: t[0].extract_multiplicatively(-1) is not None)
+            a, b = [i[0] for i in ordered]
+            if S.ImaginaryUnit in a.args and not S.ImaginaryUnit in b.args:
+                ordered = ordered[::-1]
 
         if data:
             return ordered, gens
@@ -1164,7 +1161,6 @@ class Expr(Basic, EvalfMixin):
             # than pure_complex form XXX
             coeff = hasI, messy = [[1, (0,0)], 0]
             cpart = defaultdict(lambda: S.Zero)
-            from sympy.core.sorting import _nodes
             for factor in fac:
                 if factor.is_number:
                     if (pc := pure_complex(factor, or_real=True)):
