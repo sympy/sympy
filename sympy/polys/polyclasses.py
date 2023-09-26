@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES
 
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
 from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
@@ -156,6 +158,23 @@ class DMP(CantSympify):
                 return DUP_Flint._new(rep, dom, lev)
 
         return DMP_Python._new(rep, dom, lev)
+
+    @property
+    def rep(f):
+        """Get the representation of ``f``. """
+
+        sympy_deprecation_warning("""
+        Accessing the ``DMP.rep`` attribute is deprecated. The internal
+        representation of ``DMP`` instances can now be ``DUP_Flint`` when the
+        ground types are ``flint``. In this case the ``DMP`` instance does not
+        have a ``rep`` attribute. Use ``DMP.to_list()`` instead. Using
+        ``DMP.to_list()`` also works in previous versions of SymPy.
+        """,
+            deprecated_since_version="1.13",
+            active_deprecations_target="dmp-rep",
+        )
+
+        return f.to_list()
 
     def to_best(f):
         """Convert to DUP_Flint if possible.
