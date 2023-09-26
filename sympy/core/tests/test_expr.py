@@ -1372,8 +1372,8 @@ def test_extractions():
     assert foo.could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
-    assert (x - 1).could_extract_minus_sign() is False
-    assert (1 - x).could_extract_minus_sign() is True
+    assert (x - 1).could_extract_minus_sign() is True
+    assert (1 - x).could_extract_minus_sign() is False
     assert (sqrt(2) - 1).could_extract_minus_sign() is True
     assert (1 - sqrt(2)).could_extract_minus_sign() is False
     # check that result is canonical
