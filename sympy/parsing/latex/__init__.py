@@ -17,21 +17,21 @@ def parse_latex(s, strict=False, backend="ANTLR"):
         *raw strings* (denoted with ``r"``, like this one) are preferred,
         as LaTeX makes liberal use of the ``\`` character, which would
         trigger escaping in normal Python strings.
-    backend : str
+    backend : str, optional
         Currently, there are two backends supported: ANTLR, and Lark.
         The default setting is to use the ANTLR backend, which can be
         changed to Lark if preferred.
-        
+
         Use ``backend="ANTLR"`` for the ANTLR-based parser, and
         ``backend="Lark"`` for the Lark-based parser.
-        
+
         The ``backend`` option is case-insensitive.
     strict : bool, optional
+        This option is only available with the ANTLR backend.
+
         If True, raise an exception if the string cannot be parsed as
         valid LaTeX. If False, try to recover gracefully from common
         mistakes.
-        
-        Only available with the ANTLR backend.
 
     Examples
     ========
@@ -57,4 +57,5 @@ def parse_latex(s, strict=False, backend="ANTLR"):
     elif backend == "lark":
         return parse_latex_lark(s)
     else:
-        raise NotImplementedError(f"Using the {backend} backend is not supported.")
+        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
+                                   "parser is not supported.")
