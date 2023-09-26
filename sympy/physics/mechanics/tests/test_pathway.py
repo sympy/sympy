@@ -2,10 +2,9 @@
 
 import pytest
 
-from sympy.core.backend import (
+from sympy import (
     Rational,
     Symbol,
-    USE_SYMENGINE,
     cos,
     pi,
     sin,
@@ -132,14 +131,6 @@ class TestLinearPathway:
         expected = 2*sqrt(self.q1**2)
         assert self.pathway.length == expected
 
-    @pytest.mark.skipif(
-        USE_SYMENGINE,
-        reason=(
-            'SymEngine give equivalent expression that does not compare equal;'
-            'SymPy puts the sqrt(q(t)**2) term in the numerator, while '
-            'SymEngine puts it in the denominator'
-        )
-    )
     def test_2D_pathway_extension_velocity(self):
         self.pB.set_pos(self.pA, 2*self.q1*self.N.x)
         expected = 2*sqrt(self.q1**2)*self.q1d/self.q1
@@ -589,7 +580,6 @@ class TestWrappingPathway:
         ]
         assert pathway.to_loads(self.F) == expected
 
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     @pytest.mark.parametrize(
         'pA_vec, pB_vec, pA_vec_expected, pB_vec_expected, pO_vec_expected',
         (
@@ -662,7 +652,6 @@ class TestWrappingPathway:
         ]
         assert _simplify_loads(pathway.to_loads(self.F)) == expected
 
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_length(self):
         q = dynamicsymbols('q')
         pA_pos = self.r*self.N.x
@@ -672,7 +661,6 @@ class TestWrappingPathway:
         expected = self.r*sqrt(q**2)
         assert simplify(self.pathway.length - expected) == 0
 
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_extension_velocity(self):
         q = dynamicsymbols('q')
         qd = dynamicsymbols('q', 1)
@@ -683,7 +671,6 @@ class TestWrappingPathway:
         expected = self.r*(sqrt(q**2)/q)*qd
         assert simplify(self.pathway.extension_velocity - expected) == 0
 
-    @pytest.mark.skipif(USE_SYMENGINE, reason='SymEngine does not simplify')
     def test_2D_pathway_on_cylinder_to_loads(self):
         q = dynamicsymbols('q')
         pA_pos = self.r*self.N.x

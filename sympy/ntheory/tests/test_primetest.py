@@ -4,10 +4,16 @@ from sympy.ntheory.generate import Sieve, sieve
 from sympy.ntheory.primetest import (mr, _lucas_sequence, _lucas_selfridge_params, _lucas_extrastrong_params,
                                      is_lucas_prp, is_square,
                                      is_strong_lucas_prp, is_extra_strong_lucas_prp, isprime, is_euler_pseudoprime,
-                                     is_gaussian_prime)
+                                     is_gaussian_prime, is_fermat_pseudoprime, is_euler_jacobi_pseudoprime)
 
 from sympy.testing.pytest import slow, raises
 from sympy.core.numbers import I
+
+
+def test_is_fermat_pseudoprime():
+    assert is_fermat_pseudoprime(5, 1)
+    assert is_fermat_pseudoprime(9, 1)
+
 
 def test_euler_pseudoprimes():
     assert is_euler_pseudoprime(13, 1)
@@ -41,6 +47,11 @@ def test_euler_pseudoprimes():
             if gcd(a, p) != 1:
                 continue
             assert is_euler_pseudoprime(p, a)
+
+
+def test_is_euler_jacobi_pseudoprime():
+    assert is_euler_jacobi_pseudoprime(11, 1)
+    assert is_euler_jacobi_pseudoprime(15, 1)
 
 
 def test_lucas_sequence():

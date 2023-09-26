@@ -11,8 +11,8 @@ changes.
 
 from functools import wraps
 
-from sympy.core.backend import Basic
-from sympy.core.backend import ImmutableMatrix as Matrix
+from sympy import Basic
+from sympy import ImmutableMatrix as Matrix
 from sympy.core.containers import OrderedSet
 from sympy.physics.mechanics.actuator import ActuatorBase
 from sympy.physics.mechanics.body_base import BodyBase

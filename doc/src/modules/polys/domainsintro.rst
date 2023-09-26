@@ -49,7 +49,7 @@ representing the implementation of those coefficients::
   >>> p.domain
   QQ
   >>> p.rep
-  DMP([1, 1/2, 0], QQ, None)
+  DMP([1, 1/2, 0], QQ)
   >>> p.rep.rep
   [1, 1/2, 0]
   >>> type(p.rep.rep[0])  # doctest: +SKIP
@@ -925,7 +925,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   >>> p1
   x**2 + 1
   >>> p2
-  x**2 + 1
+  DMP([1, 0, 1], ZZ)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
   >>> type(p1)
@@ -1364,7 +1364,7 @@ This is the internal implementation of :py:class:`~.Poly`::
 
   >>> d = p.rep  # internal representation of Poly
   >>> d
-  DMP([1, 0, 1], ZZ, None)
+  DMP([1, 0, 1], ZZ)
   >>> d.rep      # internal representation of DMP
   [1, 0, 1]
   >>> type(d.rep)
@@ -1461,7 +1461,7 @@ then we get a fully dense DMP list of lists of lists representation::
   >>> p
   Poly(x**2*y + z, x, y, z, domain='ZZ')
   >>> p.rep
-  DMP([[[1], []], [[]], [[1, 0]]], ZZ, None)
+  DMP([[[1], []], [[]], [[1, 0]]], ZZ)
   >>> p.rep.rep
   [[[1], []], [[]], [[1, 0]]]
   >>> p.rep.rep[0][0][0]
@@ -1476,7 +1476,7 @@ representation by choosing a generator that is not in the expression at all::
   >>> p
   Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
   >>> p.rep
-  DMP([x**2*y + z], ZZ[x,y,z], None)
+  DMP([x**2*y + z], ZZ[x,y,z])
   >>> p.rep.rep[0]
   x**2*y + z
   >>> type(p.rep.rep[0])

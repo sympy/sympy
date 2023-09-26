@@ -23,7 +23,7 @@ def test_DMP___init__():
     assert f.dom == ZZ
     assert f.lev == 1
 
-    f = DMP({(1, 1): ZZ(1), (0, 0): ZZ(2)}, ZZ, 1)
+    f = DMP.from_dict({(1, 1): ZZ(1), (0, 0): ZZ(2)}, 1, ZZ)
 
     assert f.rep == [[1, 0], [2]]
     assert f.dom == ZZ

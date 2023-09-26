@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
+from sympy.external.gmpy import gcd, lcm, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -13,7 +13,6 @@ from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
 
-from collections import defaultdict
 from itertools import product
 
 
@@ -70,26 +69,21 @@ def n_order(a, n):
         return 1
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    # We want to calculate
-    # order = totient(n), factors = factorint(order)
-    factors = defaultdict(int)
-    for px, kx in factorint(n).items():
-        if kx > 1:
-            factors[px] += kx - 1
-        for py, ky in factorint(px - 1).items():
-            factors[py] += ky
-    order = 1
-    for px, kx in factors.items():
-        order *= px**kx
-    # Now the `order` is the order of the group.
-    # The order of `a` divides the order of the group.
-    for p, e in factors.items():
-        for _ in range(e):
-            if pow(a, order // p, n) == 1:
-                order //= p
-            else:
-                break
-    return order
+    a_order = 1
+    for p, e in factorint(n).items():
+        pe = p**e
+        pe_order = (p - 1) * p**(e - 1)
+        factors = factorint(p - 1)
+        if e > 1:
+            factors[p] = e - 1
+        order = 1
+        for px, ex in factors.items():
+            x = pow(a, pe_order // px**ex, pe)
+            while x != 1:
+                x = pow(x, px, pe)
+                order *= px
+        a_order = lcm(a_order, order)
+    return int(a_order)
 
 
 def _primitive_root_prime_iter(p):
@@ -431,16 +425,13 @@ def _sqrt_mod_tonelli_shanks(a, p):
     Returns the square root in the case of ``p`` prime with ``p == 1 (mod 8)``
 
     Assume that the root exists.
-    Although ``p`` correctly returns the answer for any odd prime,
-    ``p != 1 (mod 8)``, there is no advantage to using this algorithm since
-    a more efficient algorithm exists.
 
     Parameters
     ==========
 
     a : int
     p : int
-        Odd prime number
+        prime number. should be ``p % 8 == 1``
 
     Returns
     =======
@@ -458,17 +449,24 @@ def _sqrt_mod_tonelli_shanks(a, p):
     References
     ==========
 
-    .. [1] R. Crandall and C. Pomerance "Prime Numbers", 2nd Ed., page 101
+    .. [1] Carl Pomerance, Richard Crandall, Prime Numbers: A Computational Perspective,
+           2nd Edition (2005), page 101, ISBN:978-0387252827
 
     """
     s = bit_scan1(p - 1)
     t = p >> s
     # find a non-quadratic residue
-    while 1:
-        d = randint(2, p - 1)
-        r = jacobi(d, p)
-        if r == -1:
-            break
+    if p % 12 == 5:
+        # Legendre symbol (3/p) == -1 if p % 12 in [5, 7]
+        d = 3
+    elif p % 5 in [2, 3]:
+        # Legendre symbol (5/p) == -1 if p % 5 in [2, 3]
+        d = 5
+    else:
+        while 1:
+            d = randint(6, p - 1)
+            if jacobi(d, p) == -1:
+                break
     #assert legendre_symbol(d, p) == -1
     A = pow(a, t, p)
     D = pow(d, t, p)
@@ -1549,9 +1547,9 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
 
 
-def quadratic_congruence(a, b, c, p):
-    """
-    Find the solutions to ``a x**2 + b x + c = 0 mod p``.
+def quadratic_congruence(a, b, c, n):
+    r"""
+    Find the solutions to `a x^2 + b x + c \equiv 0 \pmod{n}`.
 
     Parameters
     ==========
@@ -1559,44 +1557,61 @@ def quadratic_congruence(a, b, c, p):
     a : int
     b : int
     c : int
-    p : int
+    n : int
         A positive integer.
+
+    Returns
+    =======
+
+    list[int] :
+        A sorted list of solutions. If no solution exists, ``[]``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import quadratic_congruence
+    >>> quadratic_congruence(2, 5, 3, 7) # 2x^2 + 5x + 3 = 0 (mod 7)
+    [2, 6]
+    >>> quadratic_congruence(8, 6, 4, 15) # No solution
+    []
+
+    See Also
+    ========
+
+    polynomial_congruence : Solve the polynomial congruence
+
     """
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
-    p = as_int(p)
-    a = a % p
-    b = b % p
-    c = c % p
+    n = as_int(n)
+    if n <= 1:
+        raise ValueError("n should be an integer greater than 1")
+    a %= n
+    b %= n
+    c %= n
 
     if a == 0:
-        return linear_congruence(b, -c, p)
-    if p == 2:
+        return linear_congruence(b, -c, n)
+    if n == 2:
+        # assert a == 1
         roots = []
-        if c % 2 == 0:
+        if c == 0:
             roots.append(0)
-        if (a + b + c) % 2 == 0:
+        if (b + c) % 2:
             roots.append(1)
         return roots
-    if isprime(p):
-        inv_a = invert(a, p)
+    if gcd(2*a, n) == 1:
+        inv_a = invert(a, n)
         b *= inv_a
         c *= inv_a
-        if b % 2 == 1:
-            b = b + p
-        d = ((b * b) // 4 - c) % p
-        y = sqrt_mod(d, p, all_roots=True)
-        res = set()
-        for i in y:
-            res.add((i - b // 2) % p)
-        return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
+        if b % 2:
+            b += n
+        b >>= 1
+        return sorted((i - b) % n for i in sqrt_mod_iter(b**2 - c, n))
     res = set()
-    for i in y:
-        root = linear_congruence(2 * a, i - b, 4 * a * p)
-        for j in root:
-            res.add(j % p)
+    for i in sqrt_mod_iter(b**2 - 4*a*c, 4*a*n):
+        res.update(j % n for j in linear_congruence(2*a, i - b, 4*a*n))
     return sorted(res)
 
 

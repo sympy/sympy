@@ -76,6 +76,16 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(eq-rewrite-Add)=
+### Deprecate Eq.rewrite(Add)
+The ability to rewrite ``eq = Eq(x, y)`` like ``eq.rewrite(Add)`` to give ``x - y``
+has been deprecated in favor of writing ``eq.lhs - eq.rhs``. A replacement
+property/method was not deemed necessary given the clarity of the explicit
+use of ``lhs`` and ``rhs``, and the inclusion of this functionality in the
+rewrite apparatus leads to failures when a node expecting a Boolean is re-
+written as an Expr.
+
+
 (deprecated-markers-annotations-fill-rectangles)=
 ### Deprecate markers, annotations, fill, rectangles of the Plot class
 The properties ``markers, annotations, fill, rectangles`` (containing

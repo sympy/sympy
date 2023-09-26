@@ -176,6 +176,26 @@ class MatrixReductions(MatrixDeterminant):
     def rank(self, iszerofunc=_iszero, simplify=False):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
+    def rref_rhs(self, rhs):
+        """Return reduced row-echelon form of matrix, matrix showing
+        rhs after reduction steps. ``rhs`` must have the same number
+        of rows as ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> r1, r2 = symbols('r1 r2')
+        >>> Matrix([[1, 1], [2, 1]]).rref_rhs(Matrix([r1, r2]))
+        (Matrix([
+        [1, 0],
+        [0, 1]]), Matrix([
+        [ -r1 + r2],
+        [2*r1 - r2]]))
+        """
+        r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))
+        return r[:, :self.cols], r[:, -rhs.cols:]
+
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,

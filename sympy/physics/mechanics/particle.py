@@ -1,4 +1,4 @@
-from sympy.core.backend import S
+from sympy import S
 from sympy.physics.vector import cross, dot
 from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.inertia import inertia_of_point_mass

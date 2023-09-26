@@ -28,6 +28,9 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def parent(f):
         return f.ext
 
+    def as_expr(f):
+        return f.ext.to_sympy(f)
+
     def __bool__(f):
         return bool(f.rep)
 
@@ -198,7 +201,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     def __str__(f):
         from sympy.printing.str import sstr
-        return sstr(f.rep)
+        return sstr(f.as_expr())
 
     __repr__ = __str__
 
@@ -273,7 +276,7 @@ class MonogenicFiniteExtension(Domain):
         self.mod = mod.rep  # DMP representation
 
         self.domain = dom = mod.domain
-        self.ring = mod.rep.ring or dom.old_poly_ring(*mod.gens)
+        self.ring = dom.old_poly_ring(*mod.gens)
 
         self.zero = self.convert(self.ring.zero)
         self.one = self.convert(self.ring.one)
@@ -302,6 +305,13 @@ class MonogenicFiniteExtension(Domain):
         return "%s/(%s)" % (self.ring, self.modulus.as_expr())
 
     __repr__ = __str__
+
+    @property
+    def has_CharacteristicZero(self):
+        return self.domain.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.domain.characteristic()
 
     def convert(self, f, base=None):
         rep = self.ring.convert(f, base)

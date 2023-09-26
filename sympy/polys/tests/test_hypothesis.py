@@ -70,3 +70,13 @@ def test_addition(f, g):
 def test_dispersion(f, g):
     assert f.dispersion() == f.dispersion(f)
     assert f.dispersion(g) == 0
+
+@given(f=polys(), g=polys(), r=polys())
+def test_gcd_hypothesis(f, g, r):
+    gcd_1 = f.gcd(g)
+    gcd_2 = g.gcd(f)
+    assert gcd_1 == gcd_2
+
+    # multiply by r
+    gcd_3 = g.gcd(f + r * g)
+    assert gcd_1 == gcd_3

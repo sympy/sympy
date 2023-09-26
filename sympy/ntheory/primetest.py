@@ -8,8 +8,55 @@ from itertools import count
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
-                                 bit_scan1)
+                                 bit_scan1, is_fermat_prp, is_euler_prp)
 from sympy.utilities.misc import as_int
+
+
+def is_fermat_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
+
+    .. math ::
+        a^{n-1} \equiv 1 \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Fermat pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_fermat_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_fermat_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
+    645
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Fermat_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_fermat_prp(n, a)
 
 
 def is_euler_pseudoprime(n, a):
@@ -68,6 +115,51 @@ def is_euler_pseudoprime(n, a):
     return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
 
+def is_euler_jacobi_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
+
+    .. math ::
+        a^{(n-1)/2} \equiv \left(\frac{a}{n}\right) \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler-Jacobi pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_jacobi_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_jacobi_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    561
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Jacobi_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_euler_prp(n, a)
+
+
 def is_square(n, prep=True):
     """Return True if n == a * a for some integer a, else False.
     If n is suspected of *not* being a square then this is a
@@ -110,14 +202,13 @@ def _test(n, base, s, t):
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
-    else:
-        for j in range(1, s):
-            b = pow(b, 2, n)
-            if b == n - 1:
-                return True
-            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
-            if b == 1:
-                return False
+    for _ in range(s - 1):
+        b = pow(b, 2, n)
+        if b == n - 1:
+            return True
+        # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+        if b == 1:
+            return False
     return False
 
 
@@ -616,10 +707,10 @@ def isprime(n):
     >>> near_int == int(near_int)
     False
     >>> n = Float(near_int, 10)  # truncated by precision
-    >>> n == int(n)
+    >>> n % 1 == 0
     True
     >>> n = Float(near_int, 20)
-    >>> n == int(n)
+    >>> n % 1 == 0
     False
 
     See Also
@@ -657,8 +748,9 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n < 31417:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
+    if n < 65077:
+        # There are only five Euler pseudoprimes with a least prime factor greater than 47
+        return pow(2, n >> 1, n) in [1, n - 1] and n not in [8321, 31621, 42799, 49141, 49981]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s

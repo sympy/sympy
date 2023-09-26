@@ -2015,6 +2015,11 @@ def test_round():
     assert a.round(26) == Float('3.000000000000000000000000000', '')
     assert a.round(27) == Float('2.999999999999999999999999999', '')
     assert a.round(30) == Float('2.999999999999999999999999999', '')
+    #assert a.round(10) == Float('3.0000000000', '')
+    #assert a.round(25) == Float('3.0000000000000000000000000', '')
+    #assert a.round(26) == Float('3.00000000000000000000000000', '')
+    #assert a.round(27) == Float('2.999999999999999999999999999', '')
+    #assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     # XXX: Should round set the precision of the result?
     #      The previous version of the tests above is this but they only pass
@@ -2078,6 +2083,19 @@ def test_round():
         assert S(i).round().is_Integer
         assert type(round(fi)) is int
         assert S(fi).round().is_Integer
+
+        # issue 25698
+        n = 6000002
+        assert int(n*(log(n) + log(log(n)))) == 110130079
+        one = cos(2)**2 + sin(2)**2
+        eq = exp(one*I*pi)
+        qr, qi = eq.as_real_imag()
+        assert qi.round(2) == 0.0
+        assert eq.round(2) == -1.0
+        eq = one - 1/S(10**120)
+        assert S.true not in (eq > 1, eq < 1)
+        assert int(eq) == int(.9) == 0
+        assert int(-eq) == int(-.9) == 0
 
 
 def test_held_expression_UnevaluatedExpr():

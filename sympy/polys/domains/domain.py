@@ -5,7 +5,7 @@ from typing import Any
 
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
-from sympy.core.sorting import default_sort_key, ordered
+from sympy.core.sorting import ordered
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
@@ -673,6 +673,39 @@ class Domain:
 
         return K0.unify(K1)
 
+    def unify_composite(K0, K1):
+        """Unify two domains where at least one is composite."""
+        K0_ground = K0.dom if K0.is_Composite else K0
+        K1_ground = K1.dom if K1.is_Composite else K1
+
+        K0_symbols = K0.symbols if K0.is_Composite else ()
+        K1_symbols = K1.symbols if K1.is_Composite else ()
+
+        domain = K0_ground.unify(K1_ground)
+        symbols = _unify_gens(K0_symbols, K1_symbols)
+        order = K0.order if K0.is_Composite else K1.order
+
+        # E.g. ZZ[x].unify(QQ.frac_field(x)) -> ZZ.frac_field(x)
+        if ((K0.is_FractionField and K1.is_PolynomialRing or
+             K1.is_FractionField and K0.is_PolynomialRing) and
+             (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
+             and domain.has_assoc_Ring):
+            domain = domain.get_ring()
+
+        if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
+            cls = K0.__class__
+        else:
+            cls = K1.__class__
+
+        # Here cls might be PolynomialRing, FractionField, GlobalPolynomialRing
+        # (dense/old Polynomialring) or dense/old FractionField.
+
+        from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+        if cls == GlobalPolynomialRing:
+            return cls(domain, symbols)
+
+        return cls(domain, symbols, order)
+
     def unify(K0, K1, symbols=None):
         """
         Construct a minimal domain that contains elements of ``K0`` and ``K1``.
@@ -695,6 +728,19 @@ class Domain:
 
         if K0 == K1:
             return K0
+
+        if not (K0.has_CharacteristicZero and K1.has_CharacteristicZero):
+            # Reject unification of domains with different characteristics.
+            if K0.characteristic() != K1.characteristic():
+                raise UnificationFailed("Cannot unify %s with %s" % (K0, K1))
+
+            # We do not get here if K0 == K1. The two domains have the same
+            # characteristic but are unequal so at least one is composite and
+            # we are unifying something like GF(3).unify(GF(3)[x]).
+            return K0.unify_composite(K1)
+
+        # From here we know both domains have characteristic zero and it can be
+        # acceptable to fall back on EX.
 
         if K0.is_EXRAW:
             return K0
@@ -722,32 +768,7 @@ class Domain:
                 return K0.set_domain(K1)
 
         if K0.is_Composite or K1.is_Composite:
-            K0_ground = K0.dom if K0.is_Composite else K0
-            K1_ground = K1.dom if K1.is_Composite else K1
-
-            K0_symbols = K0.symbols if K0.is_Composite else ()
-            K1_symbols = K1.symbols if K1.is_Composite else ()
-
-            domain = K0_ground.unify(K1_ground)
-            symbols = _unify_gens(K0_symbols, K1_symbols)
-            order = K0.order if K0.is_Composite else K1.order
-
-            if ((K0.is_FractionField and K1.is_PolynomialRing or
-                 K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
-                 and domain.has_assoc_Ring):
-                domain = domain.get_ring()
-
-            if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
-                cls = K0.__class__
-            else:
-                cls = K1.__class__
-
-            from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
-            if cls == GlobalPolynomialRing:
-                return cls(domain, symbols)
-
-            return cls(domain, symbols, order)
+            return K0.unify_composite(K1)
 
         def mkinexact(cls, K0, K1):
             prec = max(K0.precision, K1.precision)
@@ -808,9 +829,6 @@ class Domain:
             return K0
         if K1.is_IntegerRing:
             return K1
-
-        if K0.is_FiniteField and K1.is_FiniteField:
-            return K0.__class__(max(K0.mod, K1.mod, key=default_sort_key))
 
         from sympy.polys.domains import EX
         return EX
