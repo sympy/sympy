@@ -10,6 +10,7 @@ from typing import Any
 def coefficients(draw: st.DrawFn, empty=True, degree=None, rational=False):
     min_size = 0 if empty else 1
     elements_strat = Any
+    group = Any
     if rational:
         group = QQ
         elements_strat = st.fractions()
