@@ -1119,17 +1119,12 @@ class Expr(Basic, EvalfMixin):
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
             # first number positive and the second number negative
-            key = lambda x:not isinstance(x, (Number, NumberSymbol))
-            add_args = sorted(Add.make_args(self), key=key)
-            if (len(add_args) == 2
-                and isinstance(add_args[0], (Number, NumberSymbol))
-                and isinstance(add_args[1], Mul)):
-                mul_args = sorted(Mul.make_args(add_args[1]), key=key)
-                if (len(mul_args) == 2
-                    and isinstance(mul_args[0], Number)
-                    and add_args[0].is_positive  # this is ok for Number
-                    and mul_args[0].is_negative):
-                    return add_args
+            if len(self.args) == 2:
+                a, b = self.args
+                if isinstance(b, (Number, NumberSymbol)):
+                    a, b = b, a
+                if _coeff_isneg(b):
+                    return [a, b]
 
         key, reverse = self._parse_order(order)
         terms, gens = self.as_terms()
@@ -4157,7 +4152,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Function, _derivative_dispatch
+from .function import Function, _derivative_dispatch, _coeff_isneg
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Float, Integer, Rational, _illegal, int_valued
