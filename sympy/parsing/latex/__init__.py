@@ -5,8 +5,8 @@ from sympy.parsing.latex.lark import parse_latex_lark # noqa
 
 from .errors import LaTeXParsingError  # noqa
 
-@doctest_depends_on(modules=('antlr4',))
-def parse_latex(s, strict=False):
+@doctest_depends_on(modules=('antlr4', 'lark'))
+def parse_latex(s, strict=False, backend="ANTLR"):
     r"""Converts the string ``s`` to a SymPy ``Expr``
 
     Parameters
@@ -17,10 +17,21 @@ def parse_latex(s, strict=False):
         *raw strings* (denoted with ``r"``, like this one) are preferred,
         as LaTeX makes liberal use of the ``\`` character, which would
         trigger escaping in normal Python strings.
+    backend : str
+        Currently, there are two backends supported: ANTLR, and Lark.
+        The default setting is to use the ANTLR backend, which can be
+        changed to Lark if preferred.
+        
+        Use ``backend="ANTLR"`` for the ANTLR-based parser, and
+        ``backend="Lark"`` for the Lark-based parser.
+        
+        The ``backend`` option is case-insensitive.
     strict : bool, optional
         If True, raise an exception if the string cannot be parsed as
         valid LaTeX. If False, try to recover gracefully from common
         mistakes.
+        
+        Only available with the ANTLR backend.
 
     Examples
     ========
@@ -31,11 +42,19 @@ def parse_latex(s, strict=False):
     (sqrt(a) + 1)/b
     >>> expr.evalf(4, subs=dict(a=5, b=2))
     1.618
+    >>> func = parse_latex(r"\int_1^x \dfrac{\mathrm{d}t}{t}", backend="Lark")
+    >>> func.evalf(subs={x: 2})
     """
 
-    _latex = import_module(
-        'sympy.parsing.latex._parse_latex_antlr',
-        import_kwargs={'fromlist': ['X']})
+    backend = backend.lower()
+    if backend == "antlr":
+        _latex = import_module(
+            'sympy.parsing.latex._parse_latex_antlr',
+            import_kwargs={'fromlist': ['X']})
 
-    if _latex is not None:
-        return _latex.parse_latex(s, strict)
+        if _latex is not None:
+            return _latex.parse_latex(s, strict)
+    elif backend == "lark":
+        return parse_latex_lark(s)
+    else:
+        raise NotImplementedError(f"Using the {backend} backend is not supported.")
