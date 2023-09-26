@@ -3,11 +3,13 @@ from hypothesis import assume
 from sympy.abc import x
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly, lcm, gcd
+from typing import Any
 
 
 @st.composite
 def coefficients(draw: st.DrawFn, empty=True, degree=None, rational=False):
     min_size = 0 if empty else 1
+    elements_strat = Any
     if rational:
         group = QQ
         elements_strat = st.fractions()
