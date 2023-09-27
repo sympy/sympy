@@ -1372,10 +1372,10 @@ def test_extractions():
     assert foo.could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
-    assert (x - 1).could_extract_minus_sign() is True
-    assert (1 - x).could_extract_minus_sign() is False
-    assert (sqrt(2) - 1).could_extract_minus_sign() is True
-    assert (1 - sqrt(2)).could_extract_minus_sign() is False
+    assert (x - 1).could_extract_minus_sign() is False
+    assert (1 - x).could_extract_minus_sign() is True
+    assert (sqrt(2) - 1).could_extract_minus_sign() is False
+    assert (1 - sqrt(2)).could_extract_minus_sign() is True
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq.args == eq.func(*eq.args).args
@@ -1758,7 +1758,6 @@ def test_as_ordered_factors():
 
 
 def test_as_ordered_terms():
-
     # the unevaluated should sort to the same place regardless
     # or order of exponents
     m1 = (x**2 + Mul(x, x**3, evaluate=False)).as_ordered_terms()
@@ -1766,16 +1765,30 @@ def test_as_ordered_terms():
     assert [i for i in range(2) if x**3 in m1[i].args
         ] == [i for i in range(2) if x**3 in m2[i].args]
 
+    e = x**2*y**2 + x*y**4 + y + 2
+    assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
+    assert e.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
+    assert e.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
+    assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+
+    k = symbols('k')
+    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
+
+    # XXX
+    # `as_ordered_terms()` with no argument is not giving the
+    # print order, it is giving a fast, canonical order of elements
+    # so these tests are arbitrary
+
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() \
-        == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1]
+        == [sin(x)**2*cos(x), sin(x)*cos(x)**2, 1][::-1]
 
     args = [f(1), f(2), f(3), f(1, 2, 3), g(1), g(2), g(3), g(1, 2, 3)]
     expr = Add(*args)
 
     assert expr.as_ordered_terms() == args
 
-    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [4*pi*x*sqrt(3), 1]
+    assert (1 + 4*sqrt(3)*pi*x).as_ordered_terms() == [1, 4*pi*x*sqrt(3)]
 
     assert ( 2 + 3*I).as_ordered_terms() == [2, 3*I]
     assert (-2 + 3*I).as_ordered_terms() == [-2, 3*I]
@@ -1786,16 +1799,6 @@ def test_as_ordered_terms():
     assert (-4 + 3*I).as_ordered_terms() == [-4, 3*I]
     assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
-
-    e = x**2*y**2 + x*y**4 + y + 2
-
-    assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
-    assert e.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
-    assert e.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
-    assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
-
-    k = symbols('k')
-    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
 
 
 def test_sort_key_atomic_expr():

@@ -1102,6 +1102,9 @@ class Expr(Basic, EvalfMixin):
     def as_ordered_terms(self, order=None, data=False):
         """
         Transform an expression to an ordered list of terms.
+        The default values give a fast canonical representation
+        *not* necessarily the order that the terms will be
+        printed.
 
         Examples
         ========
@@ -1110,7 +1113,7 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy.abc import x
 
         >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
-        [sin(x)**2*cos(x), sin(x)**2, 1]
+        [1, sin(x)**2, sin(x)**2*cos(x)]
 
         """
 
@@ -1315,7 +1318,7 @@ class Expr(Basic, EvalfMixin):
         >>> (-2*x*A*B*y).args_cnc(split_1=False)
         [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
-        [{-1, 2, x, y}, []]
+        [[], [-2 + x + A]]
 
         The arg is always treated as a Mul:
 
@@ -1430,7 +1433,7 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy import factor_terms
         >>> factor_terms(x + z*(x + x*y)).coeff(x)
-        z*(y + 1) + 1
+        1 + z*(1 + y)
 
         >>> n, m, o = symbols('n m o', commutative=False)
         >>> n.coeff(n)
