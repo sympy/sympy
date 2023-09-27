@@ -44,6 +44,7 @@ def parse_latex(s, strict=False, backend="ANTLR"):
     1.618
     >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="Lark")
     >>> func.evalf(subs={"alpha": 2})
+    0.693147180559945
     """
 
     backend = backend.lower()
