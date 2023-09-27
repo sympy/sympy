@@ -108,6 +108,8 @@ equivalent list:
 >>> p.rep.to_list()
 [1, 2, 3]
 ```
+The ``.to_list()`` method is also available in previous versions of SymPy and
+its behaviour is unchanged.
 
 (eq-rewrite-Add)=
 ### Deprecate Eq.rewrite(Add)

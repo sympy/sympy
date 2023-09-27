@@ -2008,10 +2008,10 @@ class HolonomicFunction:
         b = r.listofpoly[-1]
 
         # the constant multiple of argument of hypergeometric function
-        if isinstance(a.to_list()[0], (PolyElement, FracElement)):
-            c = - (S(a.to_list()[0].as_expr()) * m**(a.degree())) / (S(b.to_list()[0].as_expr()) * m**(b.degree()))
+        if isinstance(a.LC(), (PolyElement, FracElement)):
+            c = - (S(a.LC().as_expr()) * m**(a.degree())) / (S(b.LC().as_expr()) * m**(b.degree()))
         else:
-            c = - (S(a.to_list()[0]) * m**(a.degree())) / (S(b.to_list()[0]) * m**(b.degree()))
+            c = - (S(a.LC()) * m**(a.degree())) / (S(b.LC()) * m**(b.degree()))
 
         sol = 0
 
