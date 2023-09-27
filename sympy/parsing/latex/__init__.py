@@ -42,8 +42,8 @@ def parse_latex(s, strict=False, backend="ANTLR"):
     (sqrt(a) + 1)/b
     >>> expr.evalf(4, subs=dict(a=5, b=2))
     1.618
-    >>> func = parse_latex(r"\int_1^x \dfrac{\mathrm{d}t}{t}", backend="Lark")
-    >>> func.evalf(subs={x: 2})
+    >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="Lark")
+    >>> func.evalf(subs={"alpha": 2})
     """
 
     backend = backend.lower()
