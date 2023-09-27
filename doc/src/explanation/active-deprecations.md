@@ -92,6 +92,7 @@ DMP([1, 2, 3], ZZ)
 >>> p.rep.rep  # doctest: +SKIP
 [1, 2, 3]
 ```
+
 As of SymPy 1.13 the ``DMP`` type may be implemented by one of two subclasses:
 
 - ``DMP_Python`` which is like the previous ``DMP`` type and has a list as its
@@ -108,6 +109,7 @@ equivalent list:
 >>> p.rep.to_list()
 [1, 2, 3]
 ```
+
 The ``.to_list()`` method is also available in previous versions of SymPy and
 its behaviour is unchanged.
 
