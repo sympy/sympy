@@ -1099,7 +1099,7 @@ class Expr(Basic, EvalfMixin):
             # GeneratorsNeeded is caught for e.g. S(2).as_poly()
             return None
 
-    def as_ordered_terms(self, order=None, data=False):
+    def as_ordered_terms(self, order=False, data=False):
         """
         Transform an expression to an ordered list of terms.
         The default values give a fast canonical representation
@@ -1117,7 +1117,7 @@ class Expr(Basic, EvalfMixin):
 
         """
 
-        if order is None and not data:
+        if order is False and not data:
             # return a canonical representation quickly
 
             # split Order from non-Order terms
