@@ -1102,7 +1102,6 @@ class Expr(Basic, EvalfMixin):
     def as_ordered_terms(self, order=None, data=False):
         """
         Transform an expression to an ordered list of terms.
-        (This order is not the order necessarily used by the printer.)
 
         Examples
         ========
@@ -1115,38 +1114,71 @@ class Expr(Basic, EvalfMixin):
 
         """
 
-        key, reverse = self._parse_order(order)
-        terms, gens = self.as_terms()
+        if order is None and not data:
+            # return a canonical representation quickly
 
-        if not any(term.is_Order for term, _ in terms):
-            ordered = sorted(terms, key=key, reverse=reverse)
-        else:
+            # split Order from non-Order terms
             _terms, _order = [], []
-
-            for term, repr in terms:
+            for term in Add.make_args(self):
                 if not term.is_Order:
-                    _terms.append((term, repr))
+                    _terms.append(term)
                 else:
-                    _order.append((term, repr))
+                    _order.append(term)
 
-            ordered = sorted(_terms, key=key, reverse=True) \
-                + sorted(_order, key=key, reverse=True)
+            _addsort(_terms)
+            _addsort(_order)
+            return _terms + _order
 
-        if order == None and len(ordered) == 2 and self.is_Add:
-            # For two-part adds with no explicit order and one negative term,
-            # favour putting the negative term second. list.sort() is stable.
-            ordered.sort(key=lambda t: t[0].extract_multiplicatively(-1) is not None)
-            a, b = [i[0] for i in ordered]
-            if S.ImaginaryUnit in a.args and not S.ImaginaryUnit in b.args:
-                ordered = ordered[::-1]
+        key, reverse = self._parse_order(order)
+        terms, gens = self._as_terms()
+
+        _terms, _order = [], []
+
+        for term, repr in terms:
+            if not term.is_Order:
+                _terms.append((term, repr))
+            else:
+                _order.append((term, repr))
+
+        if _order:
+            reverse = True
+        rv = sorted(_terms, key=key, reverse=reverse) \
+            + sorted(_order, key=key, reverse=reverse)
 
         if data:
-            return ordered, gens
+            return rv, gens
         else:
-            return [term for term, _ in ordered]
+            return [term for term, _ in rv]
 
-    def as_terms(self):
-        """Transform an expression to a list of terms. """
+    def _as_terms(self):
+        """this helper for as_ordered_terms returns `(T, G)`:
+        `T` is a list of `(t, ((re, im), monom, ncpart))` where
+        `t = (re + I*im)*prod(gi**mi for gi, mi in zip(G, monom))*prod(ncpart)`
+        is a term in self. `T` will be used during sorting to create
+        a decorator for each `t` that is ``monom, ncpart, ((bool(im), im), (re, im))``
+        where `monom` may be negated, `ncpart` elements, `ni` are
+        converted to keys with `ni.sort_key(order=order)`.
+
+        The goal is to
+        have a unique key to sort the terms. If the `monom` is the same and
+        the noncommutative parts are the same for two terms, then the
+        sort must put the terms in order based on their numeric coefficients.
+        If coeff == (r, i) for a term with a numerical coefficient of (r + i*I)
+        then the real coefficients will appear first (ordered from negative to
+        positive) with non-real numbers following, (ordered the same way wrt
+        the imaginary parts) with the real parts breaking ties.
+
+        Examples (not up to date)
+        ========
+
+        >> from sympy import I, Add
+        >> from sympy.abc import x, y
+        >> x.as_terms()
+        ([(x, ((1.0, 0.0), (1,), ()))], [x])
+        >> [(t, ((r, i), m, n))], g = _
+        >> (r + I*i)*prod(gi**mi for gi, mi in zip(g, m))*prod(n)
+        1.0*x
+        """
         from .exprtools import decompose_power
 
         gens, terms = set(), []
@@ -1155,28 +1187,24 @@ class Expr(Basic, EvalfMixin):
 
             fac, ncpart = term.args_cnc()
 
-            # coeff is not tracking coeff, it is just
-            # tracking whether any numeric factor in a term has I
-            # in it and whether the number is more complicated
-            # than pure_complex form XXX
-            coeff = hasI, messy = [[1, (0,0)], 0]
+            # coeff (r, i) will be sorted as (bool(i), i), (r, i)
+            # and must be capable of breaking ties for two terms
+            # that differ only in coefficients.
+            coeff = complex(1)
             cpart = defaultdict(lambda: S.Zero)
             for factor in fac:
-                if factor.is_number:
-                    if (pc := pure_complex(factor, or_real=True)):
-                        if factor.is_Number:
-                            hasI[0] *= factor
-                        else:
-                            hasI[1] = pc
-                    else:
-                        messy += _nodes(factor)
+                if factor.is_number and (
+                        pc := pure_complex(factor, or_real=True)):
+                    # this only involves Number operations
+                    # and happens once for each pure_complex factor in a term
+                    coeff *= complex(factor)
                     continue
 
                 base, exp = decompose_power(factor)
                 cpart[base] += exp
                 gens.add(base)
 
-            coeff = (hasI, messy)
+            coeff = coeff.real, coeff.imag
             ncpart = tuple(ncpart)
 
             terms.append((term, (coeff, cpart, ncpart)))
@@ -4142,7 +4170,7 @@ class ExprBuilder:
 
 
 from .mul import Mul
-from .add import Add
+from .add import Add, _addsort
 from .power import Pow
 from .function import Function, _derivative_dispatch
 from .mod import Mod

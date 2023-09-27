@@ -214,11 +214,15 @@ from typing import Any, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
+from collections import Counter
+
 
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.basic import Basic
-
-from sympy.core.function import AppliedUndef, UndefinedFunction, Function
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.function import AppliedUndef, UndefinedFunction, Function, _coeff_isneg
 
 
 
@@ -346,7 +350,48 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         else:
-            return expr.as_ordered_terms(order=order)
+            ordered = expr.as_ordered_terms(order=order)
+            # TOUCH UP
+            # (1) prefer y - x to -x + y but -1 + sqrt(2) to sqrt(2) - 1
+            def _has_radical(e):
+                from sympy.simplify.radsimp import denom
+                return any(denom(i.exp) != 1 for i in e.atoms(Pow))
+            def _powers(e):
+                p = Counter()
+                for f in Mul.make_args(e):
+                    if f.is_number:
+                        continue
+                    base, exp = f.as_base_exp()
+                    p[base] += exp
+                return p
+            def _do_swap(a, b):
+                if _coeff_isneg(a) and not _coeff_isneg(b):
+                    # don't do unless all bases in common
+                    # have the same power
+                    pa = _powers(a)
+                    pb = _powers(b)
+                    if all(pa[i] == pb[i] for i in set(pa) & set(pb)):
+                        return True
+                return False
+            if len(ordered) == 2 and expr.is_Add:
+                a, b = ordered
+                if  _do_swap(a, b):
+                    ordered = ordered[::-1]
+                    a, b = b, a
+                if _has_radical(a) and not _has_radical(b):
+                    ordered = ordered[::-1]
+
+            # (2) always put I-containing terms last
+            n = len(ordered)
+            i = 0
+            while n:
+                if ordered[0].has(S.ImaginaryUnit):
+                    ordered.append(ordered.pop(i))
+                else:
+                    i += 1
+                n -= 1
+
+            return ordered
 
 
 class _PrintFunction:
