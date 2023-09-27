@@ -179,7 +179,7 @@ Here is a list of the things which are supported:
   (i.e., ``\tanh^{-1} x`` is interpreted as ``\arctanh x``).
 * ``AppliedFunctions``, like `f(x, y, z)`.
 * All types of fractions (``\frac``, ``\tfrac``, ``\dfrac``, ``\nicefrac``) and
-  binomials (``\binom``, ``\tbinom``, ``\dbinom``) are supported. 
+  binomials (``\binom``, ``\tbinom``, ``\dbinom``) are supported.
 * Integrals, both definite and indefinite. When the integrand is a fraction,
   having the differential in the numerator is allowed. The differential is
   allowed to be ``d``, ``\text{d}``, or ``\mathrm{d}``.
