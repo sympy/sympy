@@ -131,10 +131,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def from_GlobalPolynomialRing(K1, a, K0):
         """Convert a ``DMP`` object to ``dtype``. """
         if K1.gens == K0.gens:
-            if K1.dom == K0.dom:
-                return K1(a.to_list())  # set the correct ring
-            else:
-                return K1(a.convert(K1.dom)._rep)
+            if K1.dom != K0.dom:
+                a = a.convert(K1.dom)
+            return K1(a.to_list())
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
