@@ -9,7 +9,7 @@ _lark = import_module("lark")
 
 
 class LarkLaTeXParser:
-    """Class for converting input `\mathrm{\LaTeX}` strings into SymPy Expressions.
+    r"""Class for converting input `\mathrm{\LaTeX}` strings into SymPy Expressions.
     It holds all the necessary internal data for doing so, and exposes hooks for
     customizing its behavior.
 
