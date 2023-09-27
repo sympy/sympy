@@ -1,13 +1,13 @@
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
-from sympy.parsing.latex.lark import parse_latex_lark # noqa
+from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, parse_latex_lark # noqa
 
 from .errors import LaTeXParsingError  # noqa
 
 @doctest_depends_on(modules=('antlr4', 'lark'))
 def parse_latex(s, strict=False, backend="ANTLR"):
-    r"""Converts the string ``s`` to a SymPy ``Expr``
+    r"""Converts the input LaTeX string ``s`` to a SymPy ``Expr``.
 
     Parameters
     ==========
