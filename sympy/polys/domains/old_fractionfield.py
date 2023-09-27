@@ -101,9 +101,9 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a ``DMF`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep)
+                return K1(a.to_list())
             else:
-                return K1(a.convert(K1.dom).rep)
+                return K1(a.convert(K1.dom).to_list())
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
