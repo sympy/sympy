@@ -25,9 +25,9 @@ We calculate a generic Jones vector:
 >>> psi, chi, p, I0 = symbols("psi, chi, p, I0", real=True)
 >>> x0 = jones_vector(psi, chi)
 >>> pprint(x0, use_unicode=True)
-⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
-⎢                                ⎥
-⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
+⎡cos(χ)⋅cos(ψ) - ⅈ⋅sin(χ)⋅sin(ψ)⎤
+⎢                               ⎥
+⎣sin(ψ)⋅cos(χ) + ⅈ⋅sin(χ)⋅cos(ψ)⎦
 
 And the more general Stokes vector:
 
@@ -126,9 +126,9 @@ def jones_vector(psi, chi):
     A general Jones vector.
 
     >>> pprint(jones_vector(psi, chi), use_unicode=True)
-    ⎡-ⅈ⋅sin(χ)⋅sin(ψ) + cos(χ)⋅cos(ψ)⎤
-    ⎢                                ⎥
-    ⎣ⅈ⋅sin(χ)⋅cos(ψ) + sin(ψ)⋅cos(χ) ⎦
+    ⎡cos(χ)⋅cos(ψ) - ⅈ⋅sin(χ)⋅sin(ψ)⎤
+    ⎢                               ⎥
+    ⎣sin(ψ)⋅cos(χ) + ⅈ⋅sin(χ)⋅cos(ψ)⎦
 
     Horizontal polarization.
 
@@ -435,13 +435,13 @@ def phase_retarder(theta=0, delta=0):
     >>> pprint(R, use_unicode=True)
     ⎡                          -ⅈ⋅δ               -ⅈ⋅δ               ⎤
     ⎢                          ─────              ─────              ⎥
-    ⎢⎛ ⅈ⋅δ    2         2   ⎞    2    ⎛     ⅈ⋅δ⎞    2                ⎥
-    ⎢⎝ℯ   ⋅sin (θ) + cos (θ)⎠⋅ℯ       ⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
+    ⎢⎛   2       ⅈ⋅δ    2   ⎞    2    ⎛     ⅈ⋅δ⎞    2                ⎥
+    ⎢⎝cos (θ) + ℯ   ⋅sin (θ)⎠⋅ℯ       ⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
     ⎢                                                                ⎥
     ⎢            -ⅈ⋅δ                                           -ⅈ⋅δ ⎥
     ⎢            ─────                                          ─────⎥
-    ⎢⎛     ⅈ⋅δ⎞    2                  ⎛ ⅈ⋅δ    2         2   ⎞    2  ⎥
-    ⎣⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝ℯ   ⋅cos (θ) + sin (θ)⎠⋅ℯ     ⎦
+    ⎢⎛     ⅈ⋅δ⎞    2                  ⎛   2       ⅈ⋅δ    2   ⎞    2  ⎥
+    ⎣⎝1 - ℯ   ⎠⋅ℯ     ⋅sin(θ)⋅cos(θ)  ⎝sin (θ) + ℯ   ⋅cos (θ)⎠⋅ℯ     ⎦
 
     """
     R = Matrix([[cos(theta)**2 + exp(I*delta)*sin(theta)**2,
@@ -476,11 +476,11 @@ def half_wave_retarder(theta):
     >>> theta= symbols("theta", real=True)
     >>> HWP = half_wave_retarder(theta)
     >>> pprint(HWP, use_unicode=True)
-    ⎡   ⎛     2         2   ⎞                        ⎤
-    ⎢-ⅈ⋅⎝- sin (θ) + cos (θ)⎠    -2⋅ⅈ⋅sin(θ)⋅cos(θ)  ⎥
-    ⎢                                                ⎥
-    ⎢                             ⎛   2         2   ⎞⎥
-    ⎣   -2⋅ⅈ⋅sin(θ)⋅cos(θ)     -ⅈ⋅⎝sin (θ) - cos (θ)⎠⎦
+    ⎡   ⎛   2         2   ⎞                        ⎤
+    ⎢-ⅈ⋅⎝cos (θ) - sin (θ)⎠    -2⋅ⅈ⋅sin(θ)⋅cos(θ)  ⎥
+    ⎢                                              ⎥
+    ⎢                           ⎛   2         2   ⎞⎥
+    ⎣  -2⋅ⅈ⋅sin(θ)⋅cos(θ)    -ⅈ⋅⎝sin (θ) - cos (θ)⎠⎦
 
     """
     return phase_retarder(theta, pi)
@@ -513,8 +513,8 @@ def quarter_wave_retarder(theta):
     >>> pprint(QWP, use_unicode=True)
     ⎡                       -ⅈ⋅π            -ⅈ⋅π               ⎤
     ⎢                       ─────           ─────              ⎥
-    ⎢⎛     2         2   ⎞    4               4                ⎥
-    ⎢⎝ⅈ⋅sin (θ) + cos (θ)⎠⋅ℯ       (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
+    ⎢⎛   2           2   ⎞    4               4                ⎥
+    ⎢⎝cos (θ) + ⅈ⋅sin (θ)⎠⋅ℯ       (1 - ⅈ)⋅ℯ     ⋅sin(θ)⋅cos(θ)⎥
     ⎢                                                          ⎥
     ⎢         -ⅈ⋅π                                        -ⅈ⋅π ⎥
     ⎢         ─────                                       ─────⎥

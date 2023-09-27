@@ -186,11 +186,11 @@ def gosper_sum(f, k):
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
     >>> gosper_sum(f, (k, 0, n))
-    (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)
+    (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
     >>> _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])
     True
     >>> gosper_sum(f, (k, 3, n))
-    (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))
+    (factorial(2*n + 1) - 60*factorial(n))/(60*factorial(2*n + 1))
     >>> _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])
     True
 

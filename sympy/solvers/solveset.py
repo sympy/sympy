@@ -149,7 +149,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
     When does exp(x) == y?
 
     >>> invert_complex(exp(x), y, x)
-    (x, ImageSet(Lambda(_n, I*(2*_n*pi + arg(y)) + log(Abs(y))), Integers))
+    (x, ImageSet(Lambda(_n, log(Abs(y)) + I*(2*_n*pi + arg(y))), Integers))
     >>> invert_real(exp(x), y, x)
     (x, Intersection({log(y)}, Reals))
 
@@ -1530,7 +1530,7 @@ def _solve_exponential(lhs, rhs, symbol, domain):
     >>> solve_expo(a**x - b**x, 0, x, S.Reals)  # solvable but incorrect assumptions
     ConditionSet(x, (a > 0) & (b > 0), {0})
     >>> solve_expo(3**(2*x) - 2**(x + 3), 0, x, S.Reals)
-    {-3*log(2)/(-2*log(3) + log(2))}
+    {-3*log(2)/(log(2) - 2*log(3))}
     >>> solve_expo(2**x - 4**x, 0, x, S.Reals)
     {0}
 
@@ -1934,7 +1934,7 @@ def _transolve(f, symbol, domain):
     >>> from sympy import symbols, S, pprint
     >>> x = symbols('x', real=True) # assumption added
     >>> transolve(5**(x - 3) - 3**(2*x + 1), x, S.Reals)
-    {-(log(3) + 3*log(5))/(-log(5) + 2*log(3))}
+    {-(log(3) + 3*log(5))/(2*log(3) - log(5))}
 
     How ``_transolve`` works
     ========================
@@ -1978,8 +1978,8 @@ def _transolve(f, symbol, domain):
     >>> f = 3**(2*x) - 2**(x + 3)
     >>> pprint(transolve(f, x, S.Reals), use_unicode=False)
         -3*log(2)
-    {------------------}
-     -2*log(3) + log(2)
+    {-----------------}
+     log(2) - 2*log(3)
     >>> pprint(tsolve(f, x), use_unicode=False)
          /   3     \
          | --------|
@@ -2780,7 +2780,7 @@ def linsolve(system, *symbols):
     >>> a, b, c, d, e, f = symbols('a, b, c, d, e, f')
     >>> eqns = [a*x + b*y - c, d*x + e*y - f]
     >>> linsolve(eqns, x, y)
-    {((-b*f + c*e)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
+    {((c*e - b*f)/(a*e - b*d), (a*f - c*d)/(a*e - b*d))}
 
     * A degenerate system returns solution as set of given
       symbols.
@@ -3000,17 +3000,11 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
-    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
-     (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers)),
-     (ImageSet(Lambda(_n, 2*_n*I*pi - log(3)), Integers),
-      ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
+    {(-log(3), -sqrt(-exp(2*x) - sin(log(3)))), (-log(3), sqrt(-exp(2*x) - sin(log(3)))), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, -sqrt(-exp(2*x) + sin(-log(3) + 2*_n*I*pi))), Integers)), (ImageSet(Lambda(_n, -log(3) + 2*_n*I*pi), Integers), ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(-log(3) + 2*_n*I*pi))), Integers))}
 
     """
 
@@ -3734,8 +3728,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, I*(2*_n*pi + pi) + log(sin(2))), Integers), -2),
-     (ImageSet(Lambda(_n, 2*_n*I*pi + log(sin(2))), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using

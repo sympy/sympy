@@ -1999,7 +1999,7 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        exp(I*x)/2 + cos(x) - exp(-I*x)/2
+        cos(x) + exp(I*x)/2 - exp(-I*x)/2
         >>> expr.rewrite([cos,], exp)
         exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
         >>> expr.rewrite([cos, sin], exp)
@@ -2017,7 +2017,7 @@ class Basic(Printable):
         ...         if rule == sqrt:
         ...             return sqrt(1 - cos(x)**2)
         >>> MySin(MySin(x)).rewrite(cos)
-        cos(-cos(-x + pi/2) + pi/2)
+        cos(pi/2 - cos(pi/2 - x))
         >>> MySin(x).rewrite(sqrt)
         sqrt(1 - cos(x)**2)
 
@@ -2030,7 +2030,7 @@ class Basic(Printable):
         ...         x, = args
         ...         return cos(pi/2 - x, evaluate=False)
         >>> MySin(x).rewrite(cos)
-        cos(-x + pi/2)
+        cos(pi/2 - x)
 
         """
         if not args:

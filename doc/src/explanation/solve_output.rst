@@ -64,7 +64,7 @@ Single Dictionary
     >>> solve(eq, {a, b})  # undetermined coefficients
     {a: 2, b: 5}
     >>> solve([eq], {a, b})  # algebraic
-    {a: -b/x + (2*x + 5)/x}
+    {a: (2*x + 5)/x - b/x}
 
 List of Tuples
 --------------

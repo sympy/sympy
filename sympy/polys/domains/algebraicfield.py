@@ -116,13 +116,13 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> xk * yk  # doctest: +SKIP
     ANP([17, 30], [1, 0, -2], QQ)
     >>> K.to_sympy(xk * yk)
-    17*sqrt(2) + 30
+    30 + 17*sqrt(2)
     >>> K.to_sympy(xk + yk)
     5 + 7*sqrt(2)
     >>> K.to_sympy(xk ** 2)
-    24*sqrt(2) + 41
+    41 + 24*sqrt(2)
     >>> K.to_sympy(xk / yk)
-    sqrt(2)/14 + 9/7
+    9/7 + sqrt(2)/14
 
     Any expression representing an algebraic number can be used to generate
     a :ref:`QQ(a)` domain provided its `minimal polynomial`_ can be computed.

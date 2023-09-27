@@ -2595,8 +2595,8 @@ class DomainMatrix:
         x**2*y*z - x*y*z**2
         >>> xnum.to_Matrix()
         Matrix([
-        [ a*x*z - b*x*z],
-        [-a*y*z + b*x*y]])
+        [a*x*z - b*x*z],
+        [b*x*y - a*y*z]])
         >>> M * xnum == xden * b
         True
 
@@ -2606,8 +2606,8 @@ class DomainMatrix:
         >>> xsol = xnum.to_field() / xden
         >>> xsol.to_Matrix()
         Matrix([
-        [           (a - b)/(x*y - y*z)],
-        [(-a*z + b*x)/(x**2*z - x*z**2)]])
+        [          (a - b)/(x*y - y*z)],
+        [(b*x - a*z)/(x**2*z - x*z**2)]])
         >>> (M * xsol).to_Matrix() == b.to_Matrix()
         True
 
@@ -2620,8 +2620,8 @@ class DomainMatrix:
         >>> xsol_uncancelled = xnum.to_Matrix() / xnum.domain.to_sympy(xden)
         >>> xsol_uncancelled
         Matrix([
-        [ (a*x*z - b*x*z)/(x**2*y*z - x*y*z**2)],
-        [(-a*y*z + b*x*y)/(x**2*y*z - x*y*z**2)]])
+        [(a*x*z - b*x*z)/(x**2*y*z - x*y*z**2)],
+        [(b*x*y - a*y*z)/(x**2*y*z - x*y*z**2)]])
         >>> from sympy import cancel
         >>> cancel(xsol_uncancelled) == xsol.to_Matrix()
         True

@@ -101,14 +101,13 @@ class lerchphi(Function):
     2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
                 polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
     >>> expand_func(lerchphi(z, s, S(3)/2))
-    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
-                          polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
+    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) - polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
 
     The derivatives with respect to $z$ and $a$ can be computed in
     closed form:
 
     >>> lerchphi(z, s, a).diff(z)
-    (-a*lerchphi(z, s, a) + lerchphi(z, s - 1, a))/z
+    (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
     >>> lerchphi(z, s, a).diff(a)
     -s*lerchphi(z, s + 1, a)
 

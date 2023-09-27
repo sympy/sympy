@@ -290,7 +290,7 @@ def scalar_potential_difference(field, frame, point1, point2, origin):
     2*R_x**2*R_y
     >>> Q = O.locatenew('O', 3*R.x + R.y + 2*R.z)
     >>> scalar_potential_difference(vectfield, R, P, Q, O)
-    -2*R_x**2*R_y + 18
+    18 - 2*R_x**2*R_y
 
     """
 

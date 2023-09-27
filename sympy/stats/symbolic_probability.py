@@ -57,7 +57,7 @@ class Probability(Expr):
     Evaluation of the integral:
 
     >>> prob.evaluate_integral()
-    sqrt(2)*(-sqrt(2)*sqrt(pi)*erf(sqrt(2)/2) + sqrt(2)*sqrt(pi))/(4*sqrt(pi))
+    sqrt(2)*(sqrt(2)*sqrt(pi) - sqrt(2)*sqrt(pi)*erf(sqrt(2)/2))/(4*sqrt(pi))
     """
     def __new__(cls, prob, condition=None, **kwargs):
         prob = _sympify(prob)
@@ -347,12 +347,12 @@ class Variance(Expr):
     Integral representation, without expanding the PDF:
 
     >>> Variance(X).rewrite(Probability)
-    -Integral(x*Probability(Eq(X, x)), (x, -oo, oo))**2 + Integral(x**2*Probability(Eq(X, x)), (x, -oo, oo))
+    Integral(x**2*Probability(Eq(X, x)), (x, -oo, oo)) - Integral(x*Probability(Eq(X, x)), (x, -oo, oo))**2
 
     Rewrite the variance in terms of the expectation
 
     >>> Variance(X).rewrite(Expectation)
-    -Expectation(X)**2 + Expectation(X**2)
+    Expectation(X**2) - Expectation(X)**2
 
     Some transformations based on the properties of the variance may happen:
 

@@ -1358,7 +1358,7 @@ recursively use the `as_real_imag()` that is already defined for `1 - cos(x)`.
 ...     def as_real_imag(self, deep=True, **hints):
 ...         return (1 - cos(self.args[0])).as_real_imag(deep=deep, **hints)
 >>> versin(x).as_real_imag()
-(-cos(re(x))*cosh(im(x)) + 1, sin(re(x))*sinh(im(x)))
+(1 - cos(re(x))*cosh(im(x)), sin(re(x))*sinh(im(x)))
 ```
 
 Defining `as_real_imag()` also automatically makes {func}`~.expand_complex`
@@ -1366,7 +1366,7 @@ work.
 
 ```py
 >>> versin(x).expand(complex=True)
-I*sin(re(x))*sinh(im(x)) - cos(re(x))*cosh(im(x)) + 1
+-cos(re(x))*cosh(im(x)) + 1 + I*sin(re(x))*sinh(im(x))
 ```
 
 #### Miscellaneous `_eval_*` methods
@@ -1520,7 +1520,7 @@ None
 >>> versin(2*x).expand(trig=True)
 2 - 2*cos(x)**2
 >>> versin(a + b*I).expand(complex=True)
-I*sin(a)*sinh(b) - cos(a)*cosh(b) + 1
+-cos(a)*cosh(b) + 1 + I*sin(a)*sinh(b)
 ```
 
 **Differentiation:**

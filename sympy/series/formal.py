@@ -77,7 +77,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     (-1/((-1)**k*k), 0, 1)
 
     >>> ra(atan(x), x, k, full=True)
-    ((-I/(2*(-I)**k) + I/(2*I**k))/k, 0, 1)
+    ((I/(2*I**k) - I/(2*(-I)**k))/k, 0, 1)
 
     Notes
     =====
@@ -266,7 +266,7 @@ def exp_re(DE, r, k):
     >>> f, r = Function('f'), Function('r')
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
-    -r(k) + r(k + 1)
+    r(k + 1) - r(k)
     >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 

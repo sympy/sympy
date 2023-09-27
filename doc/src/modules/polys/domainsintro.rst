@@ -702,7 +702,7 @@ The printing support for these is less developed but we can use
   >>> b ** 2  # doctest: +SKIP
   ANP([2, 3], [1, 0, -2], QQ)
   >>> K.to_sympy(b**2)
-  2*sqrt(2) + 3
+  3 + 2*sqrt(2)
 
 The raw printed display immediately shows the internal representation of the
 elements as :py:class:`~.ANP` instances. The field `\mathbb{Q}(\sqrt{2})`
@@ -737,7 +737,7 @@ generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
   >>> K.to_sympy(p)
   1 + sqrt(2) + sqrt(3) + sqrt(6)
   >>> K.to_sympy(p**2)
-  4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2) + 12
+  12 + 4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2)
 
 Here the algebraic extension `\mathbb{Q}(\sqrt{2},\sqrt{3})` is converted to
 the (isomorphic) `\mathbb{Q}(\sqrt{2}+\sqrt{3})` with a single generator

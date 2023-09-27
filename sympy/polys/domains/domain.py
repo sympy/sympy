@@ -931,7 +931,7 @@ class Domain:
         >>> L.ext.minpoly == g
         True
         >>> L.to_sympy(L([1, 1, 1]))
-        alpha**2 + alpha + 1
+        1 + alpha + alpha**2
 
         """
         from sympy.polys.rootoftools import CRootOf

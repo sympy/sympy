@@ -276,10 +276,10 @@ def _sqrtdenest_rec(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrtdenest_rec
     >>> _sqrtdenest_rec(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
-    -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)
+    9 - sqrt(10) + sqrt(2) + 9*sqrt(5)
     >>> w=-6*sqrt(55)-6*sqrt(35)-2*sqrt(22)-2*sqrt(14)+2*sqrt(77)+6*sqrt(10)+65
     >>> _sqrtdenest_rec(sqrt(w))
-    -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)
+    -sqrt(7) - sqrt(11) + sqrt(2) + 3*sqrt(5)
     """
     from sympy.simplify.radsimp import radsimp, rad_rationalize, split_surds
     if not expr.is_Pow:
@@ -399,7 +399,7 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55
     >>> _sqrt_symbolic_denest(a, b, r)
-    sqrt(11 - 2*sqrt(29)) + sqrt(5)
+    sqrt(5) + sqrt(11 - 2*sqrt(29))
 
     If the expression is numeric, it will be simplified:
 
@@ -411,13 +411,13 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> w = w.subs(sqrt(3), sqrt(x + 3))
     >>> sqrtdenest(sqrt((w**2).expand()))
-    sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)
+    sqrt((sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1 + sqrt(2))**2)
 
     Notice that the argument of the sqrt is a square. If x is made positive
     then the sqrt of the square is resolved:
 
     >>> _.subs(x, Symbol('x', positive=True))
-    sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)
+    sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1 + sqrt(2)
     """
 
     a, b, r = map(sympify, (a, b, r))
@@ -507,7 +507,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
     >>> a, b, r = _sqrt_match(z**2)
     >>> d2 = a**2 - b**2*r
     >>> sqrt_biquadratic_denest(z, a, b, r, d2)
-    sqrt(2) + sqrt(sqrt(2) + 2) + 2
+    2 + sqrt(2) + sqrt(2 + sqrt(2))
     """
     from sympy.simplify.radsimp import radsimp, rad_rationalize
     if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:

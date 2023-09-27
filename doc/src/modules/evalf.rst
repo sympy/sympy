@@ -400,17 +400,17 @@ Here are several more advanced examples:
     --------
        10
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify(2 + exp(2*atan('1/4')*I))
     49   8*I
     -- + ---
     17    17
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
                ___________
-              /   ___
-    1        /  \/ 5    1
-    - - I*  /   ----- + -
-    2     \/      10    4
+              /       ___
+    1        /  1   \/ 5
+    - - I*  /   - + -----
+    2     \/    4    10
     >>> nsimplify(I**I, [pi])
      -pi
      ----

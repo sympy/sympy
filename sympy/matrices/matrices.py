@@ -190,7 +190,7 @@ class MatrixReductions(MatrixDeterminant):
         (Matrix([
         [1, 0],
         [0, 1]]), Matrix([
-        [ -r1 + r2],
+        [  r2 - r1],
         [2*r1 - r2]]))
         """
         r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))

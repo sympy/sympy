@@ -42,7 +42,7 @@ Suppose a user wants to calculate the perimeter of a triangle. Determining the p
 >>> from sympy.geometry import Point, Polygon
 >>> triangle = Polygon(Point(1, 2), (3, 5), (1,6))
 >>> vector_integrate(1, triangle)
-sqrt(5) + sqrt(13) + 4
+4 + sqrt(5) + sqrt(13)
 
 To define a solid sphere, we need to use three parameters (r, theta and phi). For :class:`~sympy.vector.parametricregion.ParametricRegion` obextj, the order of limits determine the sign of the integral.
 
@@ -142,4 +142,4 @@ Example 2
     >>> cube = ParametricRegion((x, y, z), (x, 0, 1), (y, 0, 1), (z, 0, 1))
     >>> field = 2*C.x*C.y*C.i + 3*C.x*C.y*C.j + C.z*exp(C.x + C.y)*C.k
     >>> vector_integrate(divergence(field), cube)
-    -E + 7/2 + E*(-1 + E)
+    7/2 - E + E*(E - 1)

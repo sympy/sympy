@@ -706,14 +706,14 @@ def given(expr, condition=None, **kwargs):
     >>> X = Normal('X', 0, 1)
     >>> Y = Normal('Y', 0, 1)
     >>> pprint(density(X + Y, Y)(z), use_unicode=False)
-                    2
-           -(-Y + z)
-           -----------
-      ___       2
+                   2
+           -(z - Y)
+           ----------
+      ___      2
     \/ 2 *e
-    ------------------
-             ____
-         2*\/ pi
+    -----------------
+            ____
+        2*\/ pi
     """
 
     if not is_random(condition) or pspace_independent(expr, condition):
@@ -970,7 +970,7 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
     {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}
 
     >>> cdf(X)
-    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)
+    Lambda(_z, 1/2 + erf(sqrt(2)*_z/2)/2)
     """
     if condition is not None:  # If there is a condition
         # Recompute on new conditional expr
@@ -1006,7 +1006,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
 
     >>> Z = Poisson('Z', 2)
     >>> characteristic_function(Z)
-    Lambda(_t, exp(2*exp(_t*I) - 2))
+    Lambda(_t, exp(-2 + 2*exp(_t*I)))
     """
     if condition is not None:
         return characteristic_function(given(expr, condition, **kwargs), **kwargs)

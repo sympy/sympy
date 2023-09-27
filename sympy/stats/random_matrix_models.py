@@ -297,7 +297,7 @@ def CircularUnitaryEnsemble(sym, dim):
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CUE('U', 1)
     >>> joint_eigen_distribution(C)
-    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**2, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+    Lambda(t[1], Product(Abs(-exp(I*t[_j]) + exp(I*t[_k]))**2, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====
@@ -322,7 +322,7 @@ def CircularOrthogonalEnsemble(sym, dim):
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = COE('O', 1)
     >>> joint_eigen_distribution(C)
-    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k])), (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+    Lambda(t[1], Product(Abs(-exp(I*t[_j]) + exp(I*t[_k])), (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====
@@ -347,7 +347,7 @@ def CircularSymplecticEnsemble(sym, dim):
     >>> from sympy.stats import joint_eigen_distribution
     >>> C = CSE('S', 1)
     >>> joint_eigen_distribution(C)
-    Lambda(t[1], Product(Abs(exp(I*t[_j]) - exp(I*t[_k]))**4, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
+    Lambda(t[1], Product(Abs(-exp(I*t[_j]) + exp(I*t[_k]))**4, (_j, _k + 1, 1), (_k, 1, 0))/(2*pi))
 
     Note
     ====

@@ -212,7 +212,7 @@ class Integral(AddWithLimits):
         transform can change the variable of integration
 
         >>> i.transform(x, u)
-        Integral(u*cos(u**2 - 1), (u, 0, 1))
+        Integral(u*cos(1 - u**2), (u, 0, 1))
 
         transform can perform u-substitution as long as a unique
         integrand is obtained:
@@ -1235,7 +1235,7 @@ class Integral(AddWithLimits):
         interval:
 
         >>> e.as_sum(2, 'left')
-        2*sin(5) + 2*sin(3)
+        2*sin(3) + 2*sin(5)
 
         The midpoint rule uses evaluations at the center of each interval:
 
@@ -1253,7 +1253,7 @@ class Integral(AddWithLimits):
         right hand rule results:
 
         >>> e.as_sum(2, 'trapezoid')
-        2*sin(5) + sin(3) + sin(7)
+        sin(3) + sin(7) + 2*sin(5)
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
         True
 
@@ -1532,7 +1532,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     >>> from sympy import sqrt
     >>> integrate(sqrt(1 + x), (x, 0, x))
-    2*(x + 1)**(3/2)/3 - 2/3
+    -2/3 + 2*(x + 1)**(3/2)/3
     >>> integrate(sqrt(1 + x), x)
     2*(x + 1)**(3/2)/3
 

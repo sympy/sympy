@@ -2271,9 +2271,9 @@ class WienerProcess(CountingProcess):
     Reals
     >>> t1, t2 = symbols('t1 t2', positive=True)
     >>> P(X(t1) < 7).simplify()
-    erf(7*sqrt(2)/(2*sqrt(t1)))/2 + 1/2
+    1/2 + erf(7*sqrt(2)/(2*sqrt(t1)))/2
     >>> P((X(t1) > 2) | (X(t1) < 4), Contains(t1, Interval.Ropen(2, 4))).simplify()
-    -erf(1)/2 + erf(2)/2 + 1
+    1 - erf(1)/2 + erf(2)/2
     >>> E(X(t1))
     0
     >>> E(X(t1) + 2*X(t2),  Contains(t1, Interval.Lopen(0, 1))
@@ -2338,7 +2338,7 @@ class GammaProcess(CountingProcess):
     lowergamma(2*t, 1)/gamma(2*t)
     >>> P(Not((X(t) < 5) & (X(d) > 3)), Contains(t, Interval.Ropen(2, 4)) &
     ... Contains(d, Interval.Lopen(7, 8))).simplify()
-    -4*exp(-3) + 472*exp(-8)/3 + 1
+    1 - 4*exp(-3) + 472*exp(-8)/3
     >>> E(X(2) + x*E(X(5)))
     10*x + 4
 

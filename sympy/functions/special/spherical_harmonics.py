@@ -93,7 +93,7 @@ class Ynm(Function):
     >>> phi = Symbol("phi")
 
     >>> diff(Ynm(n, m, theta, phi), theta)
-    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((-m + n)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
+    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((n - m)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
 
     >>> diff(Ynm(n, m, theta, phi), phi)
     I*m*Ynm(n, m, theta, phi)
@@ -117,7 +117,7 @@ class Ynm(Function):
     >>> phi = Symbol("phi")
 
     >>> expand_func(Ynm(n, m, theta, phi))
-    sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
+    sqrt((2*n + 1)*factorial(n - m)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
 
     See Also
     ========
@@ -246,7 +246,7 @@ def Ynm_c(n, m, theta, phi):
     >>> simplify(Ynm_c(0, 0, theta, phi).expand(func=True))
     1/(2*sqrt(pi))
     >>> simplify(Ynm_c(1, -1, theta, phi).expand(func=True))
-    sqrt(6)*exp(I*(-phi + 2*conjugate(phi)))*sin(theta)/(4*sqrt(pi))
+    sqrt(6)*exp(I*(2*conjugate(phi) - phi))*sin(theta)/(4*sqrt(pi))
 
     See Also
     ========

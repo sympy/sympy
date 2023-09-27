@@ -105,8 +105,7 @@ class Del(Basic):
         >>> delop = Del()
         >>> v = C.x*C.y*C.z * (C.i + C.j + C.k)
         >>> delop.cross(v, doit = True)
-        (-C.x*C.y + C.x*C.z)*C.i + (C.x*C.y - C.y*C.z)*C.j +
-            (-C.x*C.z + C.y*C.z)*C.k
+        (C.x*C.z - C.x*C.y)*C.i + (C.x*C.y - C.y*C.z)*C.j + (C.y*C.z - C.x*C.z)*C.k
         >>> (delop ^ C.i).doit()
         0
 

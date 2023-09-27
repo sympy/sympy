@@ -365,11 +365,11 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    (-1 + 1/x)/(x*(1 - 1/x)**2) - 1/(x*(-1 + 1/x))
+    -1/(x*(1/x - 1)) + (1/x - 1)/(x*(1 - 1/x)**2)
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(-1 + 1/x) + x*(1 - 1/x)
+    x*(1 - 1/x) + x*(1/x - 1)
     >>> signsimp(_)
     0
 
@@ -382,7 +382,7 @@ def signsimp(expr, evaluate=None):
     exponent into canonical form:
 
     >>> n**i
-    (-1 + 1/x)**i
+    (1/x - 1)**i
 
     By default, signsimp does not leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
@@ -1342,7 +1342,7 @@ def nthroot(expr, n, max_len=4, prec=15):
     >>> from sympy.simplify.simplify import nthroot
     >>> from sympy import sqrt
     >>> nthroot(90 + 34*sqrt(7), 3)
-    sqrt(7) + 3
+    3 + sqrt(7)
 
     """
     expr = sympify(expr)
@@ -1413,9 +1413,9 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
 
     >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, pi
     >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-    -2 + 2*GoldenRatio
+    2*GoldenRatio - 2
     >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    1/2 - I*sqrt(1/4 + sqrt(5)/10)
     >>> nsimplify(I**I, [pi])
     exp(-pi/2)
     >>> nsimplify(pi, tolerance=0.01)
@@ -1528,7 +1528,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     >>> from sympy.abc import x
 
     >>> _real_to_rational(.76 + .1*x**.5)
-    sqrt(x)/10 + 19/25
+    19/25 + sqrt(x)/10
 
     If rational_conversion='base10', this uses the base-10 string. If
     rational_conversion='exact', the exact, base-2 representation is used.

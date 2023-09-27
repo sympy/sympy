@@ -6373,7 +6373,7 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    (-2, [(1 - x*(1 + sqrt(2))/2, 1), (-1 - x*(1 + sqrt(2)), 1), (1 - x*(1 + sqrt(2)), 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
@@ -6726,7 +6726,7 @@ def all_roots(f, multiple=True, radicals=True):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -6902,7 +6902,7 @@ def real_roots(f, multiple=True, radicals=True):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(3)*x - sqrt(2)*x + sqrt(6)
+    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
     >>> real_roots(p)
     Traceback (most recent call last):
     ...

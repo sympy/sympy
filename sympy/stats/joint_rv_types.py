@@ -242,7 +242,7 @@ def MultivariateNormal(name, mu, sigma):
     calculated using a matrix argument, as shown below.
 
     >>> density(X)(obs)
-    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(obs - mu))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
 
     References
     ==========
@@ -315,7 +315,7 @@ def MultivariateLaplace(name, mu, sigma):
     >>> y, z = symbols('y z')
     >>> X = MultivariateLaplace('X', [2, 4], [[3, 1], [1, 3]])
     >>> density(X)(y, z)
-    sqrt(2)*exp(y/4 + 5*z/4)*besselk(0, sqrt(15*y*(3*y/8 - z/8)/2 + 15*z*(-y/8 + 3*z/8)/2))/(4*pi)
+    sqrt(2)*exp(y/4 + 5*z/4)*besselk(0, sqrt(15*y*(3*y/8 - z/8)/2 + 15*z*(3*z/8 - y/8)/2))/(4*pi)
     >>> density(X)(1, 2)
     sqrt(2)*exp(11/4)*besselk(0, sqrt(165)/4)/(4*pi)
 

@@ -63,12 +63,12 @@ represent the constraint forces in those directions. ::
   Matrix([
   [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
   [                                       -2*u1*u3/3],
-  [                          (-2*u2 + u3*tan(q2))*u1]])
+  [                           (u3*tan(q2) - 2*u2)*u1]])
   >>> from sympy import trigsimp, signsimp, collect, factor_terms
   >>> def simplify_auxiliary_eqs(w):
   ...     return signsimp(trigsimp(collect(collect(factor_terms(w), f2), m*r)))
   >>> mprint(KM.auxiliary_eqs.applyfunc(simplify_auxiliary_eqs))
   Matrix([
-  [                                      -m*r*(u1*u3 + u2') + f1],
+  [                                       f1 - m*r*(u1*u3 + u2')],
   [-m*r*u1**2*sin(q2) - m*r*u2*u3/cos(q2) + m*r*cos(q2)*u1' + f2],
   [                -g*m + m*r*(u1**2*cos(q2) + sin(q2)*u1') + f3]])

@@ -1119,9 +1119,9 @@ class hn1(SphericalHankelBase):
     >>> print(expand_func(hn1(0, z)))
     sin(z)/z - I*cos(z)/z
     >>> print(expand_func(hn1(1, z)))
-    -I*sin(z)/z - cos(z)/z + sin(z)/z**2 - I*cos(z)/z**2
+    -cos(z)/z + sin(z)/z**2 - I*sin(z)/z - I*cos(z)/z**2
     >>> hn1(nu, z).rewrite(jn)
-    (-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    jn(nu, z) + (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn1(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
     >>> hn1(nu, z).rewrite(hankel1)
@@ -1175,11 +1175,11 @@ class hn2(SphericalHankelBase):
     >>> print(expand_func(hn2(0, z)))
     sin(z)/z + I*cos(z)/z
     >>> print(expand_func(hn2(1, z)))
-    I*sin(z)/z - cos(z)/z + sin(z)/z**2 + I*cos(z)/z**2
+    -cos(z)/z + sin(z)/z**2 + I*sin(z)/z + I*cos(z)/z**2
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
     >>> hn2(nu, z).rewrite(jn)
-    -(-1)**(nu + 1)*I*jn(-nu - 1, z) + jn(nu, z)
+    jn(nu, z) - (-1)**(nu + 1)*I*jn(-nu - 1, z)
     >>> hn2(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) - I*yn(nu, z)
 
@@ -1383,7 +1383,7 @@ class airyai(AiryBase):
 
     >>> from sympy import hyper
     >>> airyai(z).rewrite(hyper)
-    -3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3)) + 3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+    3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3)) - 3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3))
 
     See Also
     ========
@@ -2020,7 +2020,7 @@ class marcumq(Function):
 
     >>> from sympy import diff
     >>> diff(marcumq(m, a, b), a)
-    a*(-marcumq(m, a, b) + marcumq(m + 1, a, b))
+    a*(marcumq(m + 1, a, b) - marcumq(m, a, b))
     >>> diff(marcumq(m, a, b), b)
     -a**(1 - m)*b**m*exp(-a**2/2 - b**2/2)*besseli(m - 1, a*b)
 

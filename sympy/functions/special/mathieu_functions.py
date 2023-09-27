@@ -172,7 +172,7 @@ class mathieusprime(MathieuBase):
     sqrt(a)*cos(sqrt(a)*z)
 
     >>> diff(mathieusprime(a, q, z), z)
-    (-a + 2*q*cos(2*z))*mathieus(a, q, z)
+    (2*q*cos(2*z) - a)*mathieus(a, q, z)
 
     See Also
     ========
@@ -234,7 +234,7 @@ class mathieucprime(MathieuBase):
     -sqrt(a)*sin(sqrt(a)*z)
 
     >>> diff(mathieucprime(a, q, z), z)
-    (-a + 2*q*cos(2*z))*mathieuc(a, q, z)
+    (2*q*cos(2*z) - a)*mathieuc(a, q, z)
 
     See Also
     ========

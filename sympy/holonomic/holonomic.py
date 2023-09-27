@@ -2176,7 +2176,7 @@ def from_hyper(func, x0=0, evalf=False):
     >>> from sympy import symbols, hyper, S
     >>> x = symbols('x')
     >>> from_hyper(hyper([], [S(3)/2], x**2/4))
-    HolonomicFunction((-x) + (2)*Dx + (x)*Dx**2, x, 1, [sinh(1), -sinh(1) + cosh(1)])
+    HolonomicFunction((-x) + (2)*Dx + (x)*Dx**2, x, 1, [sinh(1), cosh(1) - sinh(1)])
     """
 
     a = func.ap

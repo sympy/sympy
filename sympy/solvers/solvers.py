@@ -469,7 +469,7 @@ def solve(f, *symbols, **flags):
         >>> solve(e, [a, b])
         {a: 2, b: 3}
         >>> solve([e], [a, b])
-        {a: -b/x + (2*x + 3)/x}
+        {a: (2*x + 3)/x - b/x}
 
     When there is no solution for any given symbol which will make all
     expressions zero, the empty list is returned (or an empty set in
@@ -498,7 +498,7 @@ def solve(f, *symbols, **flags):
         >>> solve(f(x).diff(x) - f(x) - x, f(x).diff(x))
         [x + f(x)]
         >>> solve(f(x).diff(x) - f(x) - x, f(x))
-        [-x + Derivative(f(x), x)]
+        [Derivative(f(x), x) - x]
         >>> solve(x + exp(x)**2, exp(x), set=True)
         ([exp(x)], {(-sqrt(-x),), (sqrt(-x),)})
 
@@ -543,7 +543,7 @@ def solve(f, *symbols, **flags):
             >>> solve(x - y + 1, 1)  # /!\ -1 is targeted, too
             [x/(y - 1)]
             >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
-            [-x + y]
+            [y - x]
 
     **Additional Examples**
 
@@ -653,12 +653,7 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) -
-        (-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3,
-        -(-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/((-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)),
-        -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
-        1/(3*sqrt(69)/2 + 27/2)**(1/3)]
+        [-(-1/2 - sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)/3 - 1/((-1/2 - sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)), -(-1/2 + sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)/3 - 1/((-1/2 + sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)), -1/(27/2 + 3*sqrt(69)/2)**(1/3) - (27/2 + 3*sqrt(69)/2)**(1/3)/3]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -676,7 +671,7 @@ def solve(f, *symbols, **flags):
 
         >>> eq = x**3 + 3*x**2 + x - 1
         >>> solve(eq, cubics=False)
-        [-1, -1 + sqrt(2), -sqrt(2) - 1]
+        [-1, -1 - sqrt(2), -1 + sqrt(2)]
 
     **Solving Equations Involving Radicals**
 
@@ -2660,7 +2655,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> list(ordered(tsolve(3**(2*x + 5) - 4, x)))
-    [-5/2 + log(2)/log(3), (-5*log(3)/2 + log(2) + I*pi)/log(3)]
+    [log(2)/log(3) - 5/2, (-5*log(3)/2 + log(2) + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
@@ -3136,7 +3131,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(sqrt(x) + y, y)
     (-sqrt(x), y)
     >>> invert(sqrt(x) + y, x, y)
-    (0, sqrt(x) + y)
+    (0, y + sqrt(x))
 
     If there is more than one symbol in a power's base and the exponent
     is not an Integer, then the principal root will be used for the
@@ -3351,7 +3346,7 @@ def unrad(eq, *syms, **flags):
     >>> from sympy import sqrt, Rational, root
 
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
-    (x**5 - 64, [])
+    (64 - x**5, [])
     >>> unrad(sqrt(x) + root(x + 1, 3))
     (-x**3 + x**2 + 2*x + 1, [])
     >>> eq = sqrt(x) + root(x, 3) - 2

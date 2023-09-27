@@ -521,7 +521,7 @@ def test_piecewise_simplify():
     assert p.simplify() == Piecewise(
         (0, t < -2), ((t + 1)*(t + 2)**2/2, t < -1), (-3*t**3/2
         - 5*t**2/2 + 1, t < 0), (3*t**3/2 - 5*t**2/2 + 1, t < 1), ((1 -
-        t)*(t - 2)**2/2, t < 2), (0, True))
+        t)*(2 - t)**2/2, t < 2), (0, True))
 
     # coverage
     nan = Undefined
@@ -1557,7 +1557,7 @@ def test_issue_20360():
     n = symbols("n", integer=True)
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
-    assert eq.simplify() == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+    assert eq == 2*exp(pi*t*(n - S.Half))/(2*pi*n - pi) - 2/(2*pi*n - pi)
 
 
 def test_piecewise_eval():

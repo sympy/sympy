@@ -1383,7 +1383,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> Xs
     m*v/(d*s + k + m*s**2)
     >>> inverse_laplace_transform(Xs, s, t)
-    2*v*exp(-d*t/(2*m))*sin(t*sqrt((-d**2 + 4*k*m)/m**2)/2)*Heaviside(t)/sqrt((-d**2 + 4*k*m)/m**2)
+    2*v*exp(-d*t/(2*m))*sin(t*sqrt((4*k*m - d**2)/m**2)/2)*Heaviside(t)/sqrt((4*k*m - d**2)/m**2)
 
     References
     ==========
@@ -2283,7 +2283,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)
-    Heaviside(-a + t)
+    Heaviside(t - a)
 
     See Also
     ========

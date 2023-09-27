@@ -625,7 +625,7 @@ class log(Function):
     >>> log(8, 2)
     3
     >>> log(S(8)/3, 2)
-    -log(3)/log(2) + 3
+    3 - log(3)/log(2)
     >>> log(-1 + I*sqrt(3))
     log(2) + 2*I*pi/3
 

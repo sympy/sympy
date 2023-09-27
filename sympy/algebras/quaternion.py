@@ -259,19 +259,14 @@ class Quaternion(Expr):
 
         >>> q2.product_matrix_right * q1.to_Matrix()
         Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
+        [a - d],
+        [b + c],
+        [c - b],
+        [a + d]])
 
-        This is equivalent to:
+        >>> _ == (q1 * q2).to_Matrix()  # another way to do the same
+        True
 
-        >>> (q1 * q2).to_Matrix()
-        Matrix([
-        [ a - d],
-        [ b + c],
-        [-b + c],
-        [ a + d]])
         """
         return Matrix([
                 [self.a, -self.b, -self.c, -self.d],
@@ -488,9 +483,7 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        (-atan2(-b, c) + atan2(d, a),
-         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-         atan2(-b, c) + atan2(d, a))
+        (atan2(d, a) - atan2(-b, c), 2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)), atan2(-b, c) + atan2(d, a))
 
 
         References
@@ -1131,10 +1124,10 @@ class Quaternion(Expr):
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q))
-        (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
+        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
-        (sqrt(2)*cos(x + pi/4), sqrt(2)*sin(x + pi/4), 1)
+        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(x + pi/4), 1)
 
         """
         if isinstance(r, tuple):

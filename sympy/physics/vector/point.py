@@ -48,7 +48,7 @@ class Point:
     >>> A.set_vel(N, u1 * N.x + u2 * N.y)
     >>> B.set_vel(N, u2 * N.x + u1 * N.y)
     >>> A.acc(N) - B.acc(N)
-    (u1' - u2')*N.x + (-u1' + u2')*N.y
+    (u1' - u2')*N.x + (u2' - u1')*N.y
 
     """
 
@@ -156,7 +156,7 @@ class Point:
         >>> P.set_vel(B, qd * B.x + q2d * B.y)
         >>> O.set_vel(N, 0)
         >>> P.a1pt_theory(O, N, B)
-        (-25*q + q'')*B.x + q2''*B.y - 10*q'*B.z
+        (q'' - 25*q)*B.x + q2''*B.y - 10*q'*B.z
 
         """
 

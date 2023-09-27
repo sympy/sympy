@@ -1003,7 +1003,7 @@ class erf2inv(Function):
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
-    exp(-x**2 + erf2inv(x, y)**2)
+    exp(erf2inv(x, y)**2 - x**2)
     >>> diff(erf2inv(x, y), y)
     sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
@@ -1325,9 +1325,9 @@ class expint(Function):
 
     >>> from sympy import exp_polar, pi, I
     >>> expint(4, z*exp_polar(2*pi*I))
-    I*pi*z**3/3 + expint(4, z)
+    expint(4, z) + I*pi*z**3/3
     >>> expint(nu, z*exp_polar(2*pi*I))
-    z**(nu - 1)*(exp(2*I*pi*nu) - 1)*gamma(1 - nu) + expint(nu, z)
+    expint(nu, z) + z**(nu - 1)*(-1 + exp(2*I*pi*nu))*gamma(1 - nu)
 
     See Also
     ========
@@ -1538,9 +1538,9 @@ class li(Function):
 
     >>> from sympy import Si, Ci, Shi, Chi
     >>> li(z).rewrite(Si)
-    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    -log(1/log(z))/2 + log(log(z))/2 + Shi(log(z)) - log(I*log(z)) + Ci(I*log(z))
     >>> li(z).rewrite(Ci)
-    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    -log(1/log(z))/2 + log(log(z))/2 + Shi(log(z)) - log(I*log(z)) + Ci(I*log(z))
     >>> li(z).rewrite(Shi)
     -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
     >>> li(z).rewrite(Chi)
@@ -1668,7 +1668,7 @@ class Li(Function):
 
     >>> from sympy import li
     >>> Li(z).rewrite(li)
-    -li(2) + li(z)
+    li(z) - li(2)
 
     We can numerically evaluate the logarithmic integral to arbitrary precision
     on the whole complex plane (except the singular points):
@@ -1838,8 +1838,7 @@ class Si(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Si(z).rewrite(expint)
-    -I*(-expint(1, z*exp_polar(-I*pi/2))/2 +
-         expint(1, z*exp_polar(I*pi/2))/2) + pi/2
+    pi/2 - I*(expint(1, z*exp_polar(I*pi/2))/2 - expint(1, z*exp_polar(-I*pi/2))/2)
 
     It can be rewritten in the form of sinc function (by definition):
 

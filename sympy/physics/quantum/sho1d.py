@@ -314,9 +314,9 @@ class NumberOp(SHOOp):
         >>> N.rewrite('a').doit()
         RaisingOp(a)*a
         >>> N.rewrite('xp').doit()
-        -1/2 + (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega)
+        (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega) - 1/2
         >>> N.rewrite('H').doit()
-        -1/2 + H/(hbar*omega)
+        H/(hbar*omega) - 1/2
 
     Take the Commutator of the Number Operator with other Operators:
 

@@ -605,7 +605,7 @@ class BeamParameter(Expr):
         >>> from sympy.physics.optics import BeamParameter
         >>> p = BeamParameter(530e-9, 1, w=1e-3)
         >>> p.w
-        0.001*sqrt(0.2809/pi**2 + 1)
+        0.001*sqrt(1 + 0.2809/pi**2)
         """
         return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
 
@@ -825,7 +825,7 @@ def gaussian_conj(s_in, z_r_in, f):
     >>> s_in, z_r_in, f = symbols('s_in z_r_in f')
 
     >>> gaussian_conj(s_in, z_r_in, f)[0]
-    1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)
+    1/(1/f - 1/(s_in + z_r_in**2/(s_in - f)))
 
     >>> gaussian_conj(s_in, z_r_in, f)[1]
     z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)

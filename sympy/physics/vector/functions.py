@@ -260,7 +260,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
     >>> q1, q2, q3 = dynamicsymbols('q1 q2 q3')
     >>> vprint(kinematic_equations([u1,u2,u3], [q1,q2,q3], 'body', '313'),
     ...     order=None)
-    [-(u1*sin(q3) + u2*cos(q3))/sin(q2) + q1', -u1*cos(q3) + u2*sin(q3) + q2', (u1*sin(q3) + u2*cos(q3))*cos(q2)/sin(q2) - u3 + q3']
+    [q1' - (u1*sin(q3) + u2*cos(q3))/sin(q2), -u1*cos(q3) + u2*sin(q3) + q2', (u1*sin(q3) + u2*cos(q3))*cos(q2)/sin(q2) - u3 + q3']
 
     """
 

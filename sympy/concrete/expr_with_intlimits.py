@@ -63,7 +63,7 @@ class ExprWithIntLimits(ExprWithLimits):
 
         >>> Sn = S.change_index(x, x+u)
         >>> Sn
-        Sum(-u + x, (x, a + u, b + u))
+        Sum(x - u, (x, a + u, b + u))
         >>> Sn.doit()
         -a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u
         >>> simplify(Sn.doit())
@@ -92,9 +92,9 @@ class ExprWithIntLimits(ExprWithLimits):
 
         >>> Sn = S.change_index(x, u*x+v, y)
         >>> Sn
-        Sum((-v + y)/u, (y, b*u + v, a*u + v))
+        Sum((y - v)/u, (y, b*u + v, a*u + v))
         >>> Sn.doit()
-        -v*(a*u - b*u + 1)/u + (a**2*u**2/2 + a*u*v + a*u/2 - b**2*u**2/2 - b*u*v + b*u/2 + v)/u
+        (a**2*u**2/2 + a*u*v + a*u/2 - b**2*u**2/2 - b*u*v + b*u/2 + v)/u - v*(a*u - b*u + 1)/u
         >>> simplify(Sn.doit())
         a**2*u/2 + a/2 - b**2*u/2 + b/2
 

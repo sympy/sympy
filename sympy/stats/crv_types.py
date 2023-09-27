@@ -294,12 +294,10 @@ def Arcsin(name, a=0, b=1):
     >>> X = Arcsin("x", a, b)
 
     >>> density(X)(z)
-    1/(pi*sqrt((-a + z)*(b - z)))
+    1/(pi*sqrt((b - z)*(z - a)))
 
     >>> cdf(X)(z)
-    Piecewise((0, a > z),
-            (2*asin(sqrt((-a + z)/(-a + b)))/pi, b >= z),
-            (1, True))
+    Piecewise((0, a > z), (2*asin(sqrt((z - a)/(b - a)))/pi, b >= z), (1, True))
 
 
     References
@@ -693,7 +691,7 @@ def BoundedPareto(name, alpha, left, right):
     >>> density(X)(x)
     2*L**2/(x**3*(1 - L**2/H**2))
     >>> cdf(X)(x)
-    Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), L <= x), (0, True))
+    Piecewise((H**2/(H**2 - L**2) - H**2*L**2/(x**2*(H**2 - L**2)), L <= x), (0, True))
     >>> E(X).simplify()
     2*H*L/(H + L)
 
@@ -773,7 +771,7 @@ def Cauchy(name, x0, gamma):
     >>> X = Cauchy("x", x0, gamma)
 
     >>> density(X)(z)
-    1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
+    1/(pi*gamma*(1 + (z - x0)**2/gamma**2))
 
     References
     ==========
@@ -1170,7 +1168,7 @@ def Davis(name, b, n, mu):
     >>> z = Symbol("z")
     >>> X = Davis("x", b, n, mu)
     >>> density(X)(z)
-    b**n*(-mu + z)**(-n - 1)/((exp(b/(-mu + z)) - 1)*gamma(n)*zeta(n))
+    b**n*(z - mu)**(-n - 1)/((exp(b/(z - mu)) - 1)*gamma(n)*zeta(n))
 
     References
     ==========
@@ -1355,7 +1353,7 @@ def ExGaussian(name, mean, std, rate):
                                          2
 
     >>> cdf(X)(z)
-    -(erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(-mu + z))/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) + erf(sqrt(2)*(-mu + z)/(2*sigma))/2 + 1/2
+    -(1/2 + erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(z - mu))/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
 
     >>> E(X)
     (lamda*mu + 1)/lamda
@@ -1562,7 +1560,7 @@ def ExponentialPower(name, mu, alpha, beta):
      2*alpha*Gamma|----|
                   \beta/
     >>> cdf(X)(z)
-    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(-mu + z)/(2*gamma(1/beta))
+    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta))
 
     References
     ==========
@@ -1807,10 +1805,10 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)(z)
-    a*((-m + z)/s)**(-a - 1)*exp(-1/((-m + z)/s)**a)/s
+    a*((z - m)/s)**(-a - 1)*exp(-1/((z - m)/s)**a)/s
 
     >>> cdf(X)(z)
-    Piecewise((exp(-1/((-m + z)/s)**a), m <= z), (0, True))
+    Piecewise((exp(-1/((z - m)/s)**a), m <= z), (0, True))
 
     References
     ==========
@@ -2102,9 +2100,9 @@ def Gumbel(name, beta, mu, minimum=False):
     >>> beta = Symbol("beta", positive=True)
     >>> X = Gumbel("x", beta, mu)
     >>> density(X)(x)
-    exp(-exp(-(-mu + x)/beta) - (-mu + x)/beta)/beta
+    exp(-exp(-(x - mu)/beta) - (x - mu)/beta)/beta
     >>> cdf(X)(x)
-    exp(-exp(-(-mu + x)/beta))
+    exp(-exp(-(x - mu)/beta))
 
     References
     ==========
@@ -2342,7 +2340,7 @@ def Laplace(name, mu, b):
     exp(-Abs(mu - z)/b)/(2*b)
 
     >>> cdf(X)(z)
-    Piecewise((exp((-mu + z)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
+    Piecewise((exp((z - mu)/b)/2, mu > z), (1 - exp((mu - z)/b)/2, True))
 
     >>> L = Laplace('L', [1, 2], [[1, 0], [0, 1]])
     >>> pprint(density(L)(1, 2), use_unicode=False)
@@ -2432,10 +2430,10 @@ def Levy(name, mu, c):
     >>> X = Levy("x", mu, c)
 
     >>> density(X)(z)
-    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
+    sqrt(2)*sqrt(c)*exp(-c/(2*z - 2*mu))/(2*sqrt(pi)*(z - mu)**(3/2))
 
     >>> cdf(X)(z)
-    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
+    erfc(sqrt(c)*sqrt(1/(2*z - 2*mu)))
 
     References
     ==========
@@ -2511,7 +2509,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    atan(5*log(z) - 10)/pi + 1/2
+    1/2 - atan(10 - 5*log(z))/pi
 
     References
     ==========
@@ -2756,23 +2754,23 @@ def LogitNormal(name, mu, s):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                              2
-            /         /  z  \\
-           -|-mu + log|-----||
-            \         \1 - z//
-           ---------------------
-                       2
-      ___           2*s
+                             2
+            /   /  z  \     \
+           -|log|-----| - mu|
+            \   \1 - z/     /
+           --------------------
+                      2
+      ___          2*s
     \/ 2 *e
-    ----------------------------
-            ____
-        2*\/ pi *s*z*(1 - z)
+    ---------------------------
+           ____
+       2*\/ pi *s*z*(1 - z)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
+    sqrt(2)*exp(-(log(z/(1 - z)) - mu)**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
-    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+    1/2 + erf(sqrt(2)*(log(z/(1 - z)) - mu)/(2*s))/2
 
 
     References
@@ -2854,15 +2852,15 @@ def LogNormal(name, mean, std):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                          2
-           -(-mu + log(z))
-           -----------------
+                         2
+           -(log(z) - mu)
+           ----------------
                       2
       ___      2*sigma
     \/ 2 *e
-    ------------------------
-            ____
-        2*\/ pi *sigma*z
+    -----------------------
+           ____
+       2*\/ pi *sigma*z
 
 
     >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
@@ -3013,7 +3011,7 @@ def Maxwell(name, a):
     2*sqrt(2)*a/sqrt(pi)
 
     >>> simplify(variance(X))
-    a**2*(-8 + 3*pi)/pi
+    a**2*(3*pi - 8)/pi
 
     References
     ==========
@@ -3091,7 +3089,7 @@ def Moyal(name, mu, sigma):
     >>> z = Symbol("z")
     >>> X = Moyal("x", mu, sigma)
     >>> density(X)(z)
-    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (z - mu)/(2*sigma))/(2*sqrt(pi)*sigma)
     >>> simplify(cdf(X)(z))
     1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
 
@@ -3270,16 +3268,16 @@ def Normal(name, mean, std):
     >>> X = Normal("x", mu, sigma)
 
     >>> density(X)(z)
-    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
+    sqrt(2)*exp(-(z - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-       /  ___          \
-       |\/ 2 *(-mu + z)|
-    erf|---------------|
-       \    2*sigma    /   1
-    -------------------- + -
-             2             2
+           /  ___         \
+           |\/ 2 *(z - mu)|
+        erf|--------------|
+    1      \   2*sigma    /
+    - + -------------------
+    2            2
 
     >>> quantile(X)(p)
     mu + sqrt(2)*sigma*erfinv(2*p - 1)
@@ -3404,15 +3402,15 @@ def GaussianInverse(name, mean, shape):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                       2
-                      -lambda*(-mu + z)
-                      -------------------
-                                2
-      ___   ________        2*mu *z
+                                      2
+                      -lambda*(z - mu)
+                      ------------------
+                               2
+      ___   ________       2*mu *z
     \/ 2 *\/ lambda *e
-    -------------------------------------
-                    ____  3/2
-                2*\/ pi *z
+    ------------------------------------
+                   ____  3/2
+               2*\/ pi *z
 
     >>> E(X)
     mu
@@ -3584,7 +3582,7 @@ def PowerFunction(name, alpha, a, b):
     >>> X = PowerFunction("X", 2, a, b)
 
     >>> density(X)(z)
-    (-2*a + 2*z)/(-a + b)**2
+    (2*z - 2*a)/(b - a)**2
 
     >>> cdf(X)(z)
     Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
@@ -3687,8 +3685,8 @@ def QuadraticU(name, a, b):
     |12*|- - - - + z|
     |   \  2   2    /
     <-----------------  for And(b >= z, a <= z)
-    |            3
-    |    (-a + b)
+    |           3
+    |    (b - a)
     |
     \        0                 otherwise
 
@@ -3771,13 +3769,13 @@ def RaisedCosine(name, mu, s):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-    /   /pi*(-mu + z)\
-    |cos|------------| + 1
-    |   \     s      /
-    <---------------------  for And(z >= mu - s, z <= mu + s)
-    |         2*s
+    /   /pi*(z - mu)\
+    |cos|-----------| + 1
+    |   \     s     /
+    <--------------------  for And(z >= mu - s, z <= mu + s)
+    |        2*s
     |
-    \          0                        otherwise
+    \         0                        otherwise
 
     References
     ==========
@@ -3860,7 +3858,7 @@ def Rayleigh(name, sigma):
     sqrt(2)*sqrt(pi)*sigma/2
 
     >>> variance(X)
-    -pi*sigma**2/2 + 2*sigma**2
+    2*sigma**2 - pi*sigma**2/2
 
     References
     ==========
@@ -3917,7 +3915,7 @@ def Reciprocal(name, a, b):
     >>> R = Reciprocal('R', a, b)
 
     >>> density(R)(x)
-    1/(x*(-log(a) + log(b)))
+    1/(x*(log(b) - log(a)))
     >>> cdf(R)(x)
     Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
 
@@ -4159,19 +4157,19 @@ def Trapezoidal(name, a, b, c, d):
     >>> X = Trapezoidal("x", a,b,c,d)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /        -2*a + 2*z
-    |-------------------------  for And(a <= z, b > z)
-    |(-a + b)*(-a - b + c + d)
+    /       2*z - 2*a
+    |------------------------  for And(a <= z, b > z)
+    |(b - a)*(-a - b + c + d)
     |
     |           2
-    |     --------------        for And(b <= z, c > z)
+    |     --------------       for And(b <= z, c > z)
     <     -a - b + c + d
     |
-    |        2*d - 2*z
-    |-------------------------  for And(d >= z, c <= z)
-    |(-c + d)*(-a - b + c + d)
+    |       2*d - 2*z
+    |------------------------  for And(d >= z, c <= z)
+    |(d - c)*(-a - b + c + d)
     |
-    \            0                     otherwise
+    \           0                     otherwise
 
     References
     ==========
@@ -4260,19 +4258,19 @@ def Triangular(name, a, b, c):
     >>> X = Triangular("x", a,b,c)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /    -2*a + 2*z
-    |-----------------  for And(a <= z, c > z)
-    |(-a + b)*(-a + c)
+    /   2*z - 2*a
+    |---------------  for And(a <= z, c > z)
+    |(b - a)*(c - a)
     |
     |       2
-    |     ------              for c = z
-    <     -a + b
+    |     -----             for c = z
+    <     b - a
     |
     |   2*b - 2*z
-    |----------------   for And(b >= z, c < z)
-    |(-a + b)*(b - c)
+    |---------------  for And(b >= z, c < z)
+    |(b - a)*(b - c)
     |
-    \        0                otherwise
+    \       0               otherwise
 
     References
     ==========
@@ -4373,10 +4371,10 @@ def Uniform(name, left, right):
     >>> X = Uniform("x", a, b)
 
     >>> density(X)(z)
-    Piecewise((1/(-a + b), (b >= z) & (a <= z)), (0, True))
+    Piecewise((1/(b - a), (b >= z) & (a <= z)), (0, True))
 
     >>> cdf(X)(z)
-    Piecewise((0, a > z), ((-a + z)/(-a + b), b >= z), (1, True))
+    Piecewise((0, a > z), ((z - a)/(b - a), b >= z), (1, True))
 
     >>> E(X)
     a/2 + b/2
@@ -4472,17 +4470,16 @@ def UniformSum(name, n):
     floor(z)
       ___
       \  `
-       \         k         n - 1 /n\
-        )    (-1) *(-k + z)     *| |
-       /                         \k/
+       \         k        n - 1 /n\
+        )    (-1) *(z - k)     *| |
+       /                        \k/
       /__,
      k = 0
-    --------------------------------
-                (n - 1)!
+    -------------------------------
+               (n - 1)!
 
     >>> cdf(X)(z)
-    Piecewise((0, z < 0), (Sum((-1)**_k*(-_k + z)**n*binomial(n, _k),
-                    (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
+    Piecewise((0, z < 0), (Sum((-1)**_k*(z - _k)**n*binomial(n, _k), (_k, 0, floor(z)))/factorial(n), n >= z), (1, True))
 
 
     Compute cdf with specific 'x' and 'n' values as follows :
@@ -4641,7 +4638,7 @@ def Weibull(name, alpha, beta):
     lambda*gamma(1 + 1/k)
 
     >>> simplify(variance(X))
-    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
+    lambda**2*(gamma(1 + 2/k) - gamma(1 + 1/k)**2)
 
     References
     ==========

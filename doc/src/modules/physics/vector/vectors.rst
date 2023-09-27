@@ -651,15 +651,15 @@ the new frame. An example follows: ::
   >>> B.orient(Bp,'Axis', [q3, Bp.z])
   >>> N.dcm(B)
   Matrix([
-  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],
-  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],
-  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
+  [                          cos(q2)*cos(q3),                          -sin(q3)*cos(q2),          sin(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3), sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
   >>> B.orient(N,'Body',[q1,q2,q3],'XYZ')
   >>> N.dcm(B)
   Matrix([
-  [                          cos(q2)*cos(q3),                           -sin(q3)*cos(q2),          sin(q2)],
-  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), -sin(q1)*sin(q2)*sin(q3) + cos(q1)*cos(q3), -sin(q1)*cos(q2)],
-  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3),  sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
+  [                          cos(q2)*cos(q3),                          -sin(q3)*cos(q2),          sin(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3), sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
 
 Space orientations are similar to body orientation, but applied from the frame
 to body. Body and space rotations can involve either two or three axes: 'XYZ'
@@ -725,7 +725,7 @@ and can take derivatives and time derivatives with ease. Some examples follow.
   >>> (B.y*q2 + B.z).diff(q2, N)
   B.y
   >>> (B.y*q2 + B.z).dt(N)
-  (-q1' + q2')*B.y + q2*q1'*B.z
+  (q2' - q1')*B.y + q2*q1'*B.z
 
 Note that the output vectors are kept in the same frames that they were
 provided in. This remains true for vectors with components made of basis

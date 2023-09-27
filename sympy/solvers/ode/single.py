@@ -680,8 +680,8 @@ class AlmostLinear(SinglePatternODESolver):
     sin(f(x)) + cos(f(x))*--(f(x)) + 1
                         dx
     >>> pprint(dsolve(example, f(x), hint='almost_linear'))
-                    /    -x    \             /    -x    \
-    [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
+                /    -x    \                   /    -x    \
+    [f(x) = asin\C1*e   + 1/ + pi, f(x) = -asin\C1*e   + 1/]
 
 
     References
@@ -750,19 +750,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                                -1
-                                                                                                               -----
-                                                                                                               n - 1
-               //         /                                 /                            \                    \
-               ||        |                                 |                             |                    |
-               ||        |                  /              |                  /          |            /       |
-               ||        |                 |               |                 |           |           |        |
-               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||        |                 |               |                 |           |           |        |
-               ||        |                /                |                /            |          /         |
-        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
-               ||        |                                 |                             |                    |
-               \\       /                                 /                              /                    /
+                                                                                                                1
+                                                                                                              -----
+                                                                                                              1 - n
+               //         /                                /                           \                     \
+               ||        |                                |                            |                     |
+               ||        |                 /              |                 /          |             /       |
+               ||        |                |               |                |           |            |        |
+               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
+               ||        |                |               |                |           |            |        |
+               ||        |               /                |               /            |           /         |
+        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                   |
+               ||        |                                |                            |                     |
+               \\       /                                /                             /                     /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -770,14 +770,15 @@ class Bernoulli(SinglePatternODESolver):
 
     >>> pprint(dsolve(Eq(f(x).diff(x) + P(x)*f(x), Q(x)*f(x)), f(x),
     ... hint='separable_Integral'))
-    f(x)
-        /
-    |                /
-    |  1            |
-    |  - dy = C1 +  | (-P(x) + Q(x)) dx
-    |  y            |
-    |              /
-    /
+     f(x)
+       /
+      |                /
+      |  1            |
+      |  - dy = C1 +  | (Q(x) - P(x)) dx
+      |  y            |
+      |              /
+     /
+    <BLANKLINE>
 
 
     Examples
@@ -1343,11 +1344,11 @@ class SeparableReduced(Separable):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (sqrt(C1*x**2 + 1) + 1)/x)]
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (1 + sqrt(C1*x**2 + 1))/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
-                   ___________            ___________
-                  /     2                /     2
-            1 - \/  C1*x  + 1          \/  C1*x  + 1  + 1
+                   ___________                ___________
+                  /     2                    /     2
+            1 - \/  C1*x  + 1          1 + \/  C1*x  + 1
     [f(x) = ------------------, f(x) = ------------------]
                     x                          x
 
@@ -1950,7 +1951,7 @@ class NthOrderReducible(SingleODESolver):
     >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+    Eq(f(x), C1 - sqrt(-1/C2)*log(x - C2*sqrt(-1/C2)) + sqrt(-1/C2)*log(x + C2*sqrt(-1/C2)))
 
     """
     hint = "nth_order_reducible"

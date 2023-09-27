@@ -112,7 +112,7 @@ def _separate_sq(p):
     >>> from sympy.polys.numberfields.minpoly import _separate_sq
     >>> p= -x + sqrt(2) + sqrt(3) + sqrt(7)
     >>> p = _separate_sq(p); p
-    -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 2*sqrt(21) - 8
+    -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 8 - 2*sqrt(21)
     >>> p = _separate_sq(p); p
     -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
     >>> p = _separate_sq(p); p

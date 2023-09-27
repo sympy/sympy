@@ -156,17 +156,15 @@ An example of Mathematica code printer::
     >>> expr = x_(n*T) * sin((t - n*T) / T)
     >>> expr = expr / ((-T*n + t) / T)
     >>> expr
-                ⎛-T⋅n + t⎞
-    T⋅x(T⋅n)⋅sin⎜────────⎟
-                ⎝   T    ⎠
-    ──────────────────────
-           -T⋅n + t
+                ⎛t - T⋅n⎞
+    T⋅x(T⋅n)⋅sin⎜───────⎟
+                ⎝   T   ⎠
+    ─────────────────────
+           t - T⋅n
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T ↪
-    <BLANKLINE>
-    ↪ ]/t)
+    T*(x[T]*Sin[(t - T)/T]/(t - T) + x[-T]*Sin[(T + t)/T]/(T + t) + x[0]*Sin[t/T]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::

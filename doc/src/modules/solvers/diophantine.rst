@@ -169,7 +169,7 @@ When `\Delta = 0` we might have either no solutions or parameterized solutions.
 >>> diophantine(3*x**2 - 6*x*y + 3*y**2 - 3*x + 7*y - 5)
 set()
 >>> diophantine(x**2 - 4*x*y + 4*y**2 - 3*x + 7*y - 5)
-{(-2*t**2 - 7*t + 10, -t**2 - 3*t + 5)}
+ {(-2*t**2 + 7*t + 10, -t**2 + 3*t + 5)}
 >>> diophantine(x**2 + 2*x*y + y**2 - 3*x - 3*y)
 {(t_0, -t_0), (t_0, 3 - t_0)}
 

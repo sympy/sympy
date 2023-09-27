@@ -1725,7 +1725,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     state. This is done by passing coupled=False to the rewrite function:
 
         >>> JzKetCoupled(1, 0, (1, 1)).rewrite('Jz', coupled=False)
-        -sqrt(2)*|1,-1>x|1,1>/2 + sqrt(2)*|1,1>x|1,-1>/2
+        sqrt(2)*|1,1>x|1,-1>/2 - sqrt(2)*|1,-1>x|1,1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -1830,7 +1830,7 @@ def couple(expr, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKet, couple
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> couple(TensorProduct(JzKet(1,0), JzKet(1,1)))
-        -sqrt(2)*|1,1,j1=1,j2=1>/2 + sqrt(2)*|2,1,j1=1,j2=1>/2
+        sqrt(2)*|2,1,j1=1,j2=1>/2 - sqrt(2)*|1,1,j1=1,j2=1>/2
 
 
     Numerical coupling of three spaces using the default coupling method, i.e.

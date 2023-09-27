@@ -110,11 +110,11 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     >>> n1, n2 = symbols('n1, n2')
     >>> refraction_angle(r1, n1, n2, n)
     Matrix([
-    [                                n1/n2],
-    [                                n1/n2],
-    [-sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)]])
+    [                               n1/n2],
+    [                               n1/n2],
+    [-sqrt(3)*sqrt(1 - 2*n1**2/(3*n2**2))]])
     >>> refraction_angle(r1, n1, n2, plane=P)
-    Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(-2*n1**2/(3*n2**2) + 1)))
+    Ray3D(Point3D(0, 0, 0), Point3D(n1/n2, n1/n2, -sqrt(3)*sqrt(1 - 2*n1**2/(3*n2**2))))
     >>> round(refraction_angle(pi/6, 1.2, 1.5), 5)
     0.41152
     """
@@ -336,7 +336,7 @@ def deviation(incident, medium1, medium2, normal=None, plane=None):
     >>> deviation(r1, 1, 1, n)
     0
     >>> deviation(r1, n1, n2, plane=P)
-    -acos(-sqrt(-2*n1**2/(3*n2**2) + 1)) + acos(-sqrt(3)/3)
+    acos(-sqrt(3)/3) - acos(-sqrt(1 - 2*n1**2/(3*n2**2)))
     >>> round(deviation(0.1, 1.2, 1.5), 5)
     -0.02005
     """
@@ -526,9 +526,9 @@ def mirror_formula(focal_length=None, u=None, v=None):
     >>> from sympy.physics.optics import mirror_formula
     >>> from sympy.abc import f, u, v
     >>> mirror_formula(focal_length=f, u=u)
-    f*u/(-f + u)
+    f*u/(u - f)
     >>> mirror_formula(focal_length=f, v=v)
-    f*v/(-f + v)
+    f*v/(v - f)
     >>> mirror_formula(u=u, v=v)
     u*v/(u + v)
 

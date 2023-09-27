@@ -1302,7 +1302,7 @@ class CylindricalJoint(Joint):
     >>> flag.masscenter.vel(floor.frame).to_matrix(tube.frame).simplify()
     Matrix([
     [-l*u0_C2(t)*cos(q0_C2(t)) - r*u0_C1(t) - w*u0_C1(t) - q1_C2(t)*u0_C1(t)],
-    [                    -l*u0_C1(t)*sin(q0_C2(t)) + Derivative(q1_C2(t), t)],
+    [                     Derivative(q1_C2(t), t) - l*u0_C1(t)*sin(q0_C2(t))],
     [                                    l*u0_C2(t)*sin(q0_C2(t)) + u1_C1(t)]])
 
     """
@@ -1884,9 +1884,9 @@ class SphericalJoint(Joint):
     [u2_PC(t)]])
     >>> child.frame.ang_vel_in(parent.frame).to_matrix(child.frame)
     Matrix([
-    [ u0_PC(t)*cos(q1_PC(t))*cos(q2_PC(t)) + u1_PC(t)*sin(q2_PC(t))],
-    [-u0_PC(t)*sin(q2_PC(t))*cos(q1_PC(t)) + u1_PC(t)*cos(q2_PC(t))],
-    [                             u0_PC(t)*sin(q1_PC(t)) + u2_PC(t)]])
+    [u0_PC(t)*cos(q1_PC(t))*cos(q2_PC(t)) + u1_PC(t)*sin(q2_PC(t))],
+    [u1_PC(t)*cos(q2_PC(t)) - u0_PC(t)*sin(q2_PC(t))*cos(q1_PC(t))],
+    [                            u0_PC(t)*sin(q1_PC(t)) + u2_PC(t)]])
     >>> child.frame.x.to_matrix(parent.frame)
     Matrix([
     [                                            cos(q1_PC(t))*cos(q2_PC(t))],

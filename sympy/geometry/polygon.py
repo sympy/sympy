@@ -310,7 +310,7 @@ class Polygon(GeometrySet):
         >>> p1, p2, p3, p4 = map(Point, [(0, 0), (1, 0), (5, 1), (0, 1)])
         >>> poly = Polygon(p1, p2, p3, p4)
         >>> poly.perimeter
-        sqrt(17) + 7
+        7 + sqrt(17)
         """
         p = 0
         args = self.vertices

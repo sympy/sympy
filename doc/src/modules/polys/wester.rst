@@ -296,7 +296,7 @@ domains, which includes:
     >>> alg = AlgebraicNumber((sqrt(5) - 1)/2, alias='alpha')
 
     >>> factor(f, extension=alg)
-    (x - α)⋅(x + α)⋅(x - 1 - α)⋅(x + α + 1)
+    (x - α)⋅(x + α)⋅(x - 1 - α)⋅(x + 1 + α)
 
 Factoring polynomials into linear factors
 -----------------------------------------

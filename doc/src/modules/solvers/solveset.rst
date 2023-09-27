@@ -354,7 +354,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
    >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
-   {r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
+   {r⋅(cos(θ) + ⅈ⋅sin(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
 
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value

@@ -1379,7 +1379,7 @@ def polarify(eq, subs=True, lift=False):
     Adds are treated carefully:
 
     >>> polarify(1 + sin((1 + I)*x))
-    (sin(_x*polar_lift(1 + I)) + 1, {_x: x})
+    (1 + sin(_x*polar_lift(1 + I)), {_x: x})
     """
     if lift:
         subs = False

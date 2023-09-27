@@ -278,7 +278,7 @@ class BlockMatrix(MatrixExpr):
         The default Schur Complement is evaluated with "A"
 
         >>> X.schur()
-        -C*A**(-1)*B + D
+        D - C*A**(-1)*B
         >>> X.schur('D')
         A - B*D**(-1)*C
 
@@ -290,7 +290,7 @@ class BlockMatrix(MatrixExpr):
         >>> X.schur('B', generalized=True)
         C - D*(B.T*B)**(-1)*B.T*A
         >>> X.schur('C', generalized=True)
-        -A*(C.T*C)**(-1)*C.T*D + B
+        B - A*(C.T*C)**(-1)*C.T*D
 
         Returns
         =======

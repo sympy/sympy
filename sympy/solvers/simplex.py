@@ -132,9 +132,9 @@ def _pivot(M, i, j):
     [g, h, i]])
     >>> _pivot(_, 1, 0)
     Matrix([
-    [-a/d, -a*e/d + b, -a*f/d + c],
-    [ 1/d,        e/d,        f/d],
-    [-g/d,  h - e*g/d,  i - f*g/d]])
+    [-a/d, b - a*e/d, c - a*f/d],
+    [ 1/d,       e/d,       f/d],
+    [-g/d, h - e*g/d, i - f*g/d]])
     """
     Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
     if Mij == 0:
@@ -527,26 +527,17 @@ def _primal_dual(M, factor=True):
     ... [ 0,  1, -3,  0]])
 
     >>> _primal_dual(m, False)  # last condition is 2*x1 >= -2
-    ((x2 - 3*x3,
-        [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]),
-    (-2*y1 - 2*y2,
-        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+    ((x2 - 3*x3, [-3*x1 - 2*x2 + 4*x3 >= -2, 2*x1 >= -2]), (-2*y1 - 2*y2, [2*y2 - 3*y1 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
     >>> _primal_dual(m)  # condition now x1 >= -1
-    ((x2 - 3*x3,
-        [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]),
-    (-2*y1 - 2*y2,
-        [-3*y1 + 2*y2 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
+    ((x2 - 3*x3, [-3*x1 - 2*x2 + 4*x3 >= -2, x1 >= -1]), (-2*y1 - 2*y2, [2*y2 - 3*y1 <= 0, -2*y1 <= 1, 4*y1 <= -3]))
 
     If you pass the transpose of the matrix, the primal will be
     identified as the standard minimization problem and the
     dual as the standard maximization:
 
     >>> _primal_dual(m.T)
-    ((-2*x1 - 2*x2,
-        [-3*x1 + 2*x2 >= 0, -2*x1 >= 1, 4*x1 >= -3]),
-    (y2 - 3*y3,
-        [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
+    ((-2*x1 - 2*x2, [2*x2 - 3*x1 >= 0, -2*x1 >= 1, 4*x1 >= -3]), (y2 - 3*y3, [-3*y1 - 2*y2 + 4*y3 <= -2, y1 <= -1]))
 
     A matrix must have some size or else None will be returned for
     the functions:
@@ -622,7 +613,7 @@ def _rel_as_nonpos(constr, syms):
     >>> from sympy.solvers.simplex import _rel_as_nonpos
     >>> from sympy.abc import x, y
     >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
-    ([-x + y], {}, [])
+    ([y - x], {}, [])
     >>> _rel_as_nonpos([x >= 3, x <= 5], [x])
     ([_z1 - 2], {x: _z1 + 3}, [_z1])
     >>> _rel_as_nonpos([x <= 5], [x])

@@ -212,12 +212,12 @@ def continued_fraction_reduce(cf):
     >>> continued_fraction_reduce([2, 1, 2, 1, 1, 4, 1, 1, 6, 1, 1, 8]).n(10)
     2.718281835
     >>> continued_fraction_reduce([1, 4, 2, [3, 1]])
-    (sqrt(21) + 287)/238
+    (287 + sqrt(21))/238
     >>> continued_fraction_reduce([[1]])
     (1 + sqrt(5))/2
     >>> from sympy.ntheory.continued_fraction import continued_fraction_periodic
     >>> continued_fraction_reduce(continued_fraction_periodic(8, 5, 13))
-    (sqrt(13) + 8)/5
+    (8 + sqrt(13))/5
 
     See Also
     ========

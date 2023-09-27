@@ -533,11 +533,11 @@ def matrix_exp(A, t):
     Now, exp(A*t) is given as follows:
 
     >>> pprint(matrix_exp(A, t))
-    [   -t           -t                    -t              ]
-    [3*e  *sin(t) + e  *cos(t)         -5*e  *sin(t)       ]
-    [                                                      ]
-    [         -t                     -t           -t       ]
-    [      2*e  *sin(t)         - 3*e  *sin(t) + e  *cos(t)]
+    [   -t           -t                   -t             ]
+    [3*e  *sin(t) + e  *cos(t)        -5*e  *sin(t)      ]
+    [                                                    ]
+    [         -t                 -t             -t       ]
+    [      2*e  *sin(t)         e  *cos(t) - 3*e  *sin(t)]
 
     Parameters
     ==========

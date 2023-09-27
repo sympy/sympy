@@ -533,9 +533,9 @@ def dsolve(eq, func=None, hint="default", simplify=True,
 
     >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
     >>> dsolve(eq, hint='1st_exact')
-    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
+    [Eq(f(x), 2*pi - acos(C1/cos(x))), Eq(f(x), acos(C1/cos(x)))]
     >>> dsolve(eq, hint='almost_linear')
-    [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
+    [Eq(f(x), 2*pi - acos(C1/cos(x))), Eq(f(x), acos(C1/cos(x)))]
     >>> t = symbols('t')
     >>> x, y = symbols('x, y', cls=Function)
     >>> eq = (Eq(Derivative(x(t),t), 12*t*x(t) + 8*y(t)), Eq(Derivative(y(t),t), 21*x(t) + 7*t*y(t)))

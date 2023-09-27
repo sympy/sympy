@@ -137,7 +137,7 @@ class Add(Expr, AssocOp):
     >>> Add(x, x)
     2*x
     >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
-    2*x**2 + 17*x/5 + 3.0*y + I*y + 1
+    2*x**2 + 17*x/5 + 3.0*y + 1 + I*y
 
     If ``evaluate=False`` is passed, result is not evaluated.
 

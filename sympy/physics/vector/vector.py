@@ -618,9 +618,9 @@ class Vector(Printable, EvalfMixin):
         >>> A = N.orientnew('A', 'Axis', (beta, N.x))
         >>> vector.to_matrix(A)
         Matrix([
-        [                         a],
-        [ b*cos(beta) + c*sin(beta)],
-        [-b*sin(beta) + c*cos(beta)]])
+        [                        a],
+        [b*cos(beta) + c*sin(beta)],
+        [c*cos(beta) - b*sin(beta)]])
 
         """
 

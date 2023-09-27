@@ -74,9 +74,9 @@ class DiracDelta(Function):
     >>> diff(DiracDelta(x))
     DiracDelta(x, 1)
     >>> diff(DiracDelta(x - 1), x, 2)
-    DiracDelta(x - 1, 2)
+    DiracDelta(1 - x, 2)
     >>> diff(DiracDelta(x**2 - 1), x, 2)
-    2*(2*x**2*DiracDelta(x**2 - 1, 2) + DiracDelta(x**2 - 1, 1))
+    2*(2*x**2*DiracDelta(1 - x**2, 2) - DiracDelta(1 - x**2, 1))
     >>> DiracDelta(3*x).is_simple(x)
     True
     >>> DiracDelta(x**2).is_simple(x)

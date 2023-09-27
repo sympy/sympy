@@ -590,7 +590,7 @@ def collect_abs(expr):
     >>> from sympy.simplify.radsimp import collect_abs
     >>> from sympy.abc import x
     >>> collect_abs(abs(x + 1)/abs(x**2 - 1))
-    Abs((x + 1)/(x**2 - 1))
+    Abs((x + 1)/(1 - x**2))
     >>> collect_abs(abs(1/x))
     Abs(1/x)
     """
@@ -665,14 +665,14 @@ def collect_const(expr, *vars, Numbers=True):
     >>> from sympy.abc import s, x, y, z
     >>> from sympy.simplify.radsimp import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
-    sqrt(3)*(sqrt(2) + 2)
+    sqrt(3)*(2 + sqrt(2))
     >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
     (sqrt(3) + sqrt(7))*(s + 1)
     >>> s = sqrt(2) + 2
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
-    (sqrt(2) + 3)*(sqrt(3) + sqrt(7))
+    (3 + sqrt(2))*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
+    sqrt(7) + sqrt(3)*(3 + sqrt(2)) + sqrt(7)*(2 + sqrt(2))
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -806,19 +806,19 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> r2 = sqrt(2)
     >>> r5 = sqrt(5)
     >>> ans = radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)); pprint(ans)
-        ___       ___       ___       ___
-      \/ 5 *a + \/ 5 *b - \/ 2 *x - \/ 2 *y
-    ------------------------------------------
-       2               2      2              2
-    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
+          ___       ___       ___       ___
+      - \/ 5 *a - \/ 5 *b + \/ 2 *x + \/ 2 *y
+    --------------------------------------------
+         2               2      2              2
+    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
 
     >>> n, d = fraction(ans)
     >>> pprint(factor_terms(signsimp(collect_sqrt(n))/d, radical=True))
-            ___             ___
-          \/ 5 *(a + b) - \/ 2 *(x + y)
-    ------------------------------------------
-       2               2      2              2
-    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
+             ___             ___
+           \/ 2 *(x + y) - \/ 5 *(a + b)
+    --------------------------------------------
+         2               2      2              2
+    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
 
     If radicals in the denominator cannot be removed or there is no denominator,
     the original expression will be returned.
@@ -1029,7 +1029,7 @@ def rad_rationalize(num, den):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)
-    (-sqrt(3) + sqrt(6)/3, -7/9)
+    (sqrt(6)/3 - sqrt(3), -7/9)
     """
     if not den.is_Add:
         return num, den
@@ -1170,7 +1170,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, sqrt(2) + sqrt(5) + 3, sqrt(5)/7 + sqrt(10))
+    (3, 3 + sqrt(2) + sqrt(5), sqrt(5)/7 + sqrt(10))
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

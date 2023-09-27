@@ -60,7 +60,7 @@ def euler_equations(L, funcs=(), vars=()):
     >>> x = Symbol('x')
     >>> L = (u(t, x).diff(t))**2/2 - (u(t, x).diff(x))**2/2
     >>> euler_equations(L, u(t, x), [t, x])
-    [Eq(-Derivative(u(t, x), (t, 2)) + Derivative(u(t, x), (x, 2)), 0)]
+    [Eq(Derivative(u(t, x), (x, 2)) - Derivative(u(t, x), (t, 2)), 0)]
 
     References
     ==========

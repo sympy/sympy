@@ -382,9 +382,7 @@ class Beam:
         >>> b.load
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
-        (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        (80.0/(E*I) - ((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E)*SingularityFunction(x, 2, 0) - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I) + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
@@ -580,7 +578,7 @@ class Beam:
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 2, 2) + 2*SingularityFunction(x, 3, 0) + 4*SingularityFunction(x, 3, 1) + 2*SingularityFunction(x, 3, 2)
         >>> b.remove_load(-2, 2, 2, end = 3)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1)
+        4*SingularityFunction(x, 2, -1) - 3*SingularityFunction(x, 0, -2)
         """
         x = self.variable
         value = sympify(value)
@@ -680,7 +678,7 @@ class Beam:
         >>> b.apply_load(4, 2, -1)
         >>> b.apply_load(5, 2, -1)
         >>> b.load
-        -3*SingularityFunction(x, 0, -2) + 9*SingularityFunction(x, 2, -1)
+        9*SingularityFunction(x, 2, -1) - 3*SingularityFunction(x, 0, -2)
         >>> b.applied_loads
         [(-3, 0, -2, None), (4, 2, -1, None), (5, 2, -1, None)]
         """
@@ -722,15 +720,9 @@ class Beam:
         >>> b.reaction_loads
         {A1: -5*P/18, A2: -13*P/18, M1: 5*P*l/18, M2: -4*P*l/9}
         >>> b.slope()
-        (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, 0, 0)/(E*I)
-        - (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
-        + (P*l**2/18 - 4*P*l*SingularityFunction(-l + x, 2*l, 1)/9 - 5*P*SingularityFunction(-l + x, 0, 2)/36 + P*SingularityFunction(-l + x, l, 2)/2
-        - 13*P*SingularityFunction(-l + x, 2*l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
+        (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, 0, 0)/(E*I) - (5*P*l*SingularityFunction(x, 0, 1)/18 - 5*P*SingularityFunction(x, 0, 2)/36 + 5*P*SingularityFunction(x, l, 2)/36)*SingularityFunction(x, l, 0)/(E*I) + (P*l**2/18 - 4*P*l*SingularityFunction(x - l, 2*l, 1)/9 - 5*P*SingularityFunction(x - l, 0, 2)/36 + P*SingularityFunction(x - l, l, 2)/2 - 13*P*SingularityFunction(x - l, 2*l, 2)/36)*SingularityFunction(x, l, 0)/(E*I)
         >>> b.deflection()
-        (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, 0, 0)/(E*I)
-        - (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
-        + (5*P*l**3/54 + P*l**2*(-l + x)/18 - 2*P*l*SingularityFunction(-l + x, 2*l, 2)/9 - 5*P*SingularityFunction(-l + x, 0, 3)/108 + P*SingularityFunction(-l + x, l, 3)/6
-        - 13*P*SingularityFunction(-l + x, 2*l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
+        (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, 0, 0)/(E*I) - (5*P*l*SingularityFunction(x, 0, 2)/36 - 5*P*SingularityFunction(x, 0, 3)/108 + 5*P*SingularityFunction(x, l, 3)/108)*SingularityFunction(x, l, 0)/(E*I) + (5*P*l**3/54 + P*l**2*(x - l)/18 - 2*P*l*SingularityFunction(x - l, 2*l, 2)/9 - 5*P*SingularityFunction(x - l, 0, 3)/108 + P*SingularityFunction(x - l, l, 3)/6 - 13*P*SingularityFunction(x - l, 2*l, 3)/108)*SingularityFunction(x, l, 0)/(E*I)
         """
         x = self.variable
         l = self._hinge_position
@@ -2426,8 +2418,7 @@ class Beam3D(Beam):
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
     >>> factor(b.slope())
-    [0, 0, x*(-l + x)*(-A*G*l**3*q + 2*A*G*l**2*q*x - 12*E*I*l*q
-        - 72*E*I*m + 24*E*I*q*x)/(12*E*I*(A*G*l**2 + 12*E*I))]
+    [0, 0, x*(x - l)*(-A*G*l**3*q + 2*A*G*l**2*q*x - 12*E*I*l*q - 72*E*I*m + 24*E*I*q*x)/(12*E*I*(A*G*l**2 + 12*E*I))]
     >>> dx, dy, dz = b.deflection()
     >>> dy = collect(simplify(dy), x)
     >>> dx == dz == 0
@@ -3694,7 +3685,7 @@ class Beam3D(Beam):
             >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
             >>> b.solve_slope_deflection()
             >>> b.max_deflection()
-            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, (10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560)]
+            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, -20/7 + 20*sqrt(10793)/301 - (-10 + 10*sqrt(10793)/43)**3/160 + (-10 + 10*sqrt(10793)/43)**4/6400 + 27*(-10 + 10*sqrt(10793)/43)**2/560)]
         """
 
         max_def = []

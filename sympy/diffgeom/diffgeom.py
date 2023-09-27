@@ -1856,7 +1856,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 
     >>> equations, init_cond = intcurve_diffequ(vector_field, t, start_point)
     >>> equations
-    [f_1(t) + Derivative(f_0(t), t), -f_0(t) + Derivative(f_1(t), t)]
+    [f_1(t) + Derivative(f_0(t), t), Derivative(f_1(t), t) - f_0(t)]
     >>> init_cond
     [f_0(0), f_1(0) - 1]
 

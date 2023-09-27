@@ -461,7 +461,7 @@ class frac(Function):
     >>> r = Symbol('r', real=True)
     >>> t = Symbol('t', real=True)
     >>> frac(t + I*r)
-    I*frac(r) + frac(t)
+    frac(t) + I*frac(r)
 
     See Also
     ========

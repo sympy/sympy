@@ -34,7 +34,7 @@ class ImplicitRegion(Basic):
     >>> parabola.degree
     2
     >>> parabola.equation
-    -4*x + y**2
+    y**2 - 4*x
     >>> parabola.rational_parametrization(t)
     (4/t**2, 4/t)
 
@@ -369,7 +369,7 @@ class ImplicitRegion(Basic):
 
         >>> sphere = ImplicitRegion((x, y, z), x**2 + y**2 + z**2 - 4)
         >>> sphere.rational_parametrization(parameters=(t, s))
-        (-2 + 4/(s**2 + t**2 + 1), 4*s/(s**2 + t**2 + 1), 4*t/(s**2 + t**2 + 1))
+        (4/(s**2 + t**2 + 1) - 2, 4*s/(s**2 + t**2 + 1), 4*t/(s**2 + t**2 + 1))
 
         For some conics, regular_points() is unable to find a point on curve.
         To calulcate the parametric representation in such cases, user need

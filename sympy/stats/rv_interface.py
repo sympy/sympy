@@ -125,7 +125,7 @@ def entropy(expr, condition=None, **kwargs):
     >>> from sympy.stats import Normal, Die, entropy
     >>> X = Normal('X', 0, 1)
     >>> entropy(X)
-    log(2)/2 + 1/2 + log(pi)/2
+    1/2 + log(2)/2 + log(pi)/2
 
     >>> D = Die('D', 4)
     >>> entropy(D)
@@ -295,7 +295,7 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(X)
     0
     >>> skewness(X, X > 0) # find skewness given X > 0
-    (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
+    (4*sqrt(2)/pi**(3/2) - sqrt(2)/sqrt(pi))/(1 - 2/pi)**(3/2)
 
     >>> rate = Symbol('lambda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
@@ -333,7 +333,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> kurtosis(X)
     3
     >>> kurtosis(X, X > 0) # find kurtosis given X > 0
-    (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
+    (3 - 12/pi**2 - 4/pi)/(1 - 2/pi)**2
 
     >>> rate = Symbol('lamda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)

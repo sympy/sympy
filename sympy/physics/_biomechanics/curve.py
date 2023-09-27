@@ -135,7 +135,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     canonical form and won't simplify any constants.
 
     >>> fl_T.doit(evaluate=False)
-    -0.25 + 0.2*exp(33.93669377311689*(l_T/l_T_slack - 0.995))
+    0.2*exp(33.93669377311689*(l_T/l_T_slack - 0.995)) - 0.25
 
     The function can also be differentiated. We'll differentiate with respect
     to l_T using the ``diff`` method on an instance with the single positional

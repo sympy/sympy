@@ -36,7 +36,7 @@ them into a normal form. For this ``complex`` keyword is used. Note that it will
 always perform arithmetic expand to obtain the desired normal form:
 
     >>> (x + I*y).expand(complex=True)
-    re(x) + I*re(y) + I*im(x) - im(y)
+    re(x) - im(y) + I*re(y) + I*im(x)
 
     >>> sin(x + I*y).expand(complex=True)
     sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))
@@ -85,8 +85,8 @@ in the ``cse`` function. Examples::
     ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
-    ⎛                          ⎡  ____     ⎤⎞
-    ⎝[(x₀, (x - y)⋅(-y + z))], ⎣╲╱ x₀  + x₀⎦⎠
+    ⎛                         ⎡       ____⎤⎞
+    ⎝[(x₀, (x - y)⋅(z - y))], ⎣x₀ + ╲╱ x₀ ⎦⎠
 
 Optimizations to be performed before and after common subexpressions
 elimination can be passed in the ``optimizations`` optional argument. A set of
@@ -95,8 +95,8 @@ predefined basic optimizations can be applied by passing
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y)), optimizations='basic'),
     ...     use_unicode=True)
-    ⎛                          ⎡  ____     ⎤⎞
-    ⎝[(x₀, -(x - y)⋅(y - z))], ⎣╲╱ x₀  + x₀⎦⎠
+    ⎛                          ⎡       ____⎤⎞
+    ⎝[(x₀, -(x - y)⋅(y - z))], ⎣x₀ + ╲╱ x₀ ⎦⎠
 
 However, these optimizations can be very slow for large expressions. Moreover,
 if speed is a concern, one can pass the option ``order='none'``. Order of

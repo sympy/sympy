@@ -579,10 +579,10 @@ In :command:`isympy`, with the :command:`ipython` shell::
     >>> (x + 1)**2
     (x + 1)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
-        2*x
-       x
-    - ----- + 3
-      x + 1
+         2*x
+        x
+    3 - -----
+        x + 1
 
 
 Inverse Trig Functions
@@ -650,7 +650,7 @@ Example:
     >>> print(a)
     [2, 1]
     >>> print(solve(x**2 + 2*x - 1, x)) # Some functions return lists
-    [-1 + sqrt(2), -sqrt(2) - 1]
+    [-1 - sqrt(2), -1 + sqrt(2)]
 
 
 .. note::

@@ -33,13 +33,13 @@ def symmetrize(F, *gens, **args):
     >>> from sympy.abc import x, y
 
     >>> symmetrize(x**2 + y**2)
-    (-2*x*y + (x + y)**2, 0)
+    ((x + y)**2 - 2*x*y, 0)
 
     >>> symmetrize(x**2 + y**2, formal=True)
     (s1**2 - 2*s2, 0, [(s1, x + y), (s2, x*y)])
 
     >>> symmetrize(x**2 - y**2)
-    (-2*x*y + (x + y)**2, -2*y**2)
+    ((x + y)**2 - 2*x*y, -2*y**2)
 
     >>> symmetrize(x**2 - y**2, formal=True)
     (s1**2 - 2*s2, -2*y**2, [(s1, x + y), (s2, x*y)])
@@ -178,7 +178,7 @@ def interpolate(data, x):
     Symbolic coordinates are also supported:
 
     >>> [(i,interpolate((a, b), i)) for i in range(1, 4)]
-    [(1, a), (2, b), (3, -a + 2*b)]
+    [(1, a), (2, b), (3, 2*b - a)]
     """
     n = len(data)
 
