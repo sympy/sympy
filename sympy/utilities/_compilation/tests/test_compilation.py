@@ -1,8 +1,11 @@
 import shutil
+import os
+import subprocess
+import tempfile
 from sympy.external import import_module
 from sympy.testing.pytest import skip
 
-from sympy.utilities._compilation.compilation import compile_link_import_strings
+from sympy.utilities._compilation.compilation import compile_link_import_strings, compile_sources, get_abspath
 
 numpy = import_module('numpy')
 cython = import_module('cython')
@@ -60,3 +63,28 @@ def test_compile_link_import_strings():
     finally:
         if info and info['build_dir']:
             shutil.rmtree(info['build_dir'])
+
+
+def test_compile_sources():
+    from sympy.utilities._compilation import has_c
+    if not has_c():
+        skip("No C compiler found.")
+
+    with tempfile.TemporaryDirectory("sympy_test_compilation") as build_dir:
+        _handle, file_path = tempfile.mkstemp('.c', dir=build_dir)
+        with open(file_path, 'wt') as ofh:
+            ofh.write("""
+            int foo(int bar) {
+                return 2*bar;
+            }
+            """)
+        obj, = compile_sources([file_path], cwd=build_dir)
+        obj_path = get_abspath(obj, cwd=build_dir)
+        assert os.path.exists(obj_path)
+        try:
+            subprocess.check_call(["nm", "--help"])
+        except subprocess.CalledProcessError:
+            pass  # we cannot test contents of object file
+        else:
+            nm_out = subprocess.check_output(["nm", obj_path])
+            assert 'foo' in nm_out.decode('utf-8')
