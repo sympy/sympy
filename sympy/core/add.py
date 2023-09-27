@@ -27,7 +27,7 @@ def _could_extract_minus_sign(expr):
     # choose based on .sort_key() to prefer
     # x - 1 instead of 1 - x and
     # 3 - sqrt(2) instead of -3 + sqrt(2)
-    return bool(expr.sort_key() > (-expr).sort_key())
+    return bool(expr.sort_key() < (-expr).sort_key())
 
 
 def _addsort(args):

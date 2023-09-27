@@ -1196,10 +1196,12 @@ class Expr(Basic, EvalfMixin):
             coeff = complex(1)
             cpart = defaultdict(lambda: S.Zero)
             for factor in fac:
-                if factor.is_number and (
-                        pc := pure_complex(factor, or_real=True)):
+                if factor.is_number and pure_complex(
+                        factor, or_real=True):
                     # this only involves Number operations
                     # and happens once for each pure_complex factor in a term
+                    # and not during default as_ordered_terms() since False is
+                    # the default XXX does this work ok with core and tests?
                     coeff *= complex(factor)
                     continue
 
@@ -1318,7 +1320,7 @@ class Expr(Basic, EvalfMixin):
         >>> (-2*x*A*B*y).args_cnc(split_1=False)
         [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
-        [[], [-2 + x + A]]
+        [{-1, 2, x, y}, []]
 
         The arg is always treated as a Mul:
 
@@ -1433,7 +1435,7 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy import factor_terms
         >>> factor_terms(x + z*(x + x*y)).coeff(x)
-        1 + z*(1 + y)
+        z*(y + 1) + 1
 
         >>> n, m, o = symbols('n m o', commutative=False)
         >>> n.coeff(n)
@@ -2939,10 +2941,9 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (1 + tan(2)**2)*(x - 2) + (x - 2)**2*(tan(2) + tan(2)**3) + (x - 2)**3*(1/3 + tan(2)**4 + 4*tan(2)**2/3) + (x - 2)**4*(2*tan(2)/3 + tan(2)**5 + 5*tan(2)**3/3) + (x - 2)**5*(2/15 + tan(2)**6 + 17*tan(2)**2/15 + 2*tan(2)**4) + O((x - 2)**6, (x, 2))
-
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
         >>> f.series(x, 2, 3, "-")
-        tan(2) + (-1 - tan(2)**2)*(2 - x) + (2 - x)**2*(tan(2) + tan(2)**3) + O((x - 2)**3, (x, 2))
+        tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 
         For rational expressions this method may return original expression without the Order term.
         >>> (1/x).series(x, n=8)
