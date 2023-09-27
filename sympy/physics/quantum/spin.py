@@ -1217,7 +1217,7 @@ class JzKet(SpinState, Ket):
     Note: that the resulting eigenstates are JxKet's
 
         >>> JzKet(1,1).rewrite("Jx")
-        |1,-1>/2 - sqrt(2)*|1,0>/2 + |1,1>/2
+        -sqrt(2)*|1,0>/2 + |1,-1>/2 + |1,1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -1837,7 +1837,7 @@ def couple(expr, jcoupling_list=None):
     first and second spaces couple, then this couples to the third space:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)))
-        sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,2)=2>/3 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,2)=2>/3
+        sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,2)=2>/3 + sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,2)=2>/3
 
     Perform this same coupling, but we define the coupling to first couple
     the first and third spaces:

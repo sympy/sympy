@@ -574,7 +574,7 @@ class Dyadic(Printable, EvalfMixin):
         >>> ((1 + x*y) * D).xreplace({x: pi})
         (pi*y + 1)*(N.x|N.x)
         >>> ((1 + x*y) * D).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*(N.x|N.x)
+        (2*pi + 1)*(N.x|N.x)
 
         Replacements occur only if an entire node in the expression tree is
         matched:

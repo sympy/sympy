@@ -593,7 +593,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
 
     >>> ((tf9 + tf10) * tf12).doit()
-    TransferFunction((1 - s)*((s + 1)*(s + 3) + (s - p)*(s**2 + s + 1)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    TransferFunction((1 - s)*((s - p)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
     >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
     TransferFunction((s - 1)*(s + 1)*(s - p)*(s**2 + 4) - (1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
 
@@ -1378,7 +1378,7 @@ class Series(SISOLinearTimeInvariant):
 
     >>> S3 = Series(tf1, tf2, -tf3)
     >>> S3.doit()
-    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
+    TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
     >>> S4 = Series(tf2, Parallel(tf1, -tf3))
     >>> S4.doit()
     TransferFunction((s**3 - 2)*((p + s)*(a*p**2 + b*s) - p**2*(s - p)), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
@@ -1842,7 +1842,7 @@ class Parallel(SISOLinearTimeInvariant):
     You can get the resultant transfer function by using ``.doit()`` method:
 
     >>> Parallel(tf1, tf2, -tf3).doit()
-    TransferFunction(-p**2*(s - p)*(s**4 + 5*s + 6) + (p + s)*(s - p)*(s**3 - 2) + (p + s)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
+    TransferFunction(-p**2*(s - p)*(s**4 + 5*s + 6) + (s - p)*(p + s)*(s**3 - 2) + (p + s)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
     TransferFunction((p + s)*(s - p)*(s**3 - 2) - p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
 
@@ -3197,7 +3197,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     ``.rewrite(TransferFunctionMatrix)``.
 
     >>> (-tfm_8 + tfm_10 + tfm_8*tfm_9).doit()
-    TransferFunctionMatrix(((TransferFunction((a + s)*(s + 2)**3 - 3*(s + 2)**2*(s**2 + s + 1) - 9*(s + 2)*(s**2 + s + 1), (s + 2)**3*(s**2 + s + 1), s),), (TransferFunction((p + s)*(-3*p**4 + 9*p - 6), (p + s)**2*(s + 2), s),), (TransferFunction((a + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + (3*a + 3*s)*(9*s - 9)*(s**2 + s + 1) + (p - a)*(s + 2)*(s**2 + s + 1)**2, (s + 2)*(9*s - 9)*(s**2 + s + 1)**2, s),)))
+    TransferFunctionMatrix(((TransferFunction((a + s)*(s + 2)**3 - 3*(s + 2)**2*(s**2 + s + 1) - 9*(s + 2)*(s**2 + s + 1), (s + 2)**3*(s**2 + s + 1), s),), (TransferFunction((p + s)*(-3*p**4 + 9*p - 6), (p + s)**2*(s + 2), s),), (TransferFunction((p - a)*(s + 2)*(s**2 + s + 1)**2 + (a + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + (3*a + 3*s)*(9*s - 9)*(s**2 + s + 1), (s + 2)*(9*s - 9)*(s**2 + s + 1)**2, s),)))
     >>> (-tfm_12 * -tfm_8 * -tfm_9).rewrite(TransferFunctionMatrix)
     TransferFunctionMatrix(((TransferFunction(3*(-3*a - 3*s)*(p + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + 3*(a + s)*(s + 2)**2*(9*s - 9)*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(p + s)*(3*p - 3*a)*(s + 2)*(s**2 + s + 1)**2, (p + s)*(s + 2)**3*(9*s - 9)*(s**2 + s + 1)**2, s),), (TransferFunction(3*(3*a + 3*s)*(p + s)**2*(s + 2)*(9*s - 9) + 3*(p - a)*(p + s)*(s + 2)**2*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(p + s)*(s + 2)*(9*s - 9)*(-3*p**4 + 9*p - 6)*(s**2 + s + 1), (p + s)**2*(s + 2)**3*(9*s - 9)*(s**2 + s + 1), s),)))
 

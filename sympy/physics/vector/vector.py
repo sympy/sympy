@@ -823,7 +823,7 @@ class Vector(Printable, EvalfMixin):
         >>> ((1 + x*y) * A.x).xreplace({x: pi})
         (pi*y + 1)*A.x
         >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*A.x
+        (2*pi + 1)*A.x
 
         Replacements occur only if an entire node in the expression tree is
         matched:

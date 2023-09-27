@@ -276,7 +276,7 @@ def _sqrtdenest_rec(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrtdenest_rec
     >>> _sqrtdenest_rec(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))
-    9 - sqrt(10) + sqrt(2) + 9*sqrt(5)
+    -sqrt(10) + sqrt(2) + 9*sqrt(5) + 9
     >>> w=-6*sqrt(55)-6*sqrt(35)-2*sqrt(22)-2*sqrt(14)+2*sqrt(77)+6*sqrt(10)+65
     >>> _sqrtdenest_rec(sqrt(w))
     -sqrt(7) - sqrt(11) + sqrt(2) + 3*sqrt(5)
@@ -405,13 +405,13 @@ def _sqrt_symbolic_denest(a, b, r):
 
     >>> w = sqrt(sqrt(sqrt(3) + 1) + 1) + 1 + sqrt(2)
     >>> sqrtdenest(sqrt((w**2).expand()))
-    1 + sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3)))
+    sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3))) + 1
 
     Otherwise, it will only be simplified if assumptions allow:
 
     >>> w = w.subs(sqrt(3), sqrt(x + 3))
     >>> sqrtdenest(sqrt((w**2).expand()))
-    sqrt((sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1 + sqrt(2))**2)
+    sqrt((sqrt(2) + sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1)**2)
 
     Notice that the argument of the sqrt is a square. If x is made positive
     then the sqrt of the square is resolved:

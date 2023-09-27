@@ -28,7 +28,7 @@ def interactive_traversal(expr):
 
         if isinstance(expr, Basic):
             if expr.is_Add:
-                args = expr.as_ordered_terms()
+                args = expr.as_ordered_terms(None)
             elif expr.is_Mul:
                 args = expr.as_ordered_factors()
             else:

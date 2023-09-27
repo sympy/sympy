@@ -945,9 +945,9 @@ class Basic(Printable):
         >>> (1 + x*y).subs(x, pi)
         pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
+        2*pi + 1
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        1 + 2*pi
+        2*pi + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
@@ -1271,13 +1271,13 @@ class Basic(Printable):
         >>> (1 + x*y).xreplace({x: pi})
         pi*y + 1
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        1 + 2*pi
+        2*pi + 1
 
         Replacements occur only if an entire node in the expression tree is
         matched:
 
         >>> (x*y + z).xreplace({x*y: pi})
-        z + pi
+        pi + z
         >>> (x*y*z).xreplace({x*y: pi})
         x*y*z
         >>> (2*x).xreplace({2*x: y, x: z})
@@ -1999,7 +1999,7 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        cos(x) + exp(I*x)/2 - exp(-I*x)/2
+        cos(x) - exp(-I*x)/2 + exp(I*x)/2
         >>> expr.rewrite([cos,], exp)
         exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
         >>> expr.rewrite([cos, sin], exp)

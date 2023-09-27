@@ -365,7 +365,7 @@ def signsimp(expr, evaluate=None):
     >>> i = symbols('i', odd=True)
     >>> n = -1 + 1/x
     >>> n/x/(-n)**2 - 1/n/x
-    -1/(x*(1/x - 1)) + (1/x - 1)/(x*(1 - 1/x)**2)
+    (1/x - 1)/(x*(1 - 1/x)**2) - 1/(x*(1/x - 1))
     >>> signsimp(_)
     0
     >>> x*n + x*-n

@@ -312,7 +312,7 @@ class GLSLPrinter(CodePrinter):
         if self._settings['use_operators']:
             return CodePrinter._print_Add(self, expr, order=order)
 
-        terms = expr.as_ordered_terms()
+        terms = expr.as_ordered_terms(None)
 
         def partition(p,l):
             return reduce(lambda x, y: (x[0]+[y], x[1]) if p(y) else (x[0], x[1]+[y]), l,  ([], []))

@@ -710,7 +710,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             1.28333333333333
             >>> s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()
             >>> s
-            7/20 - log(2) + log(5)
+            -log(2) + log(5) + 7/20
             >>> from sympy import sstr
             >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
@@ -721,7 +721,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             >>> s
             -log(a) + log(b) + 1/(2*b) + 1/(2*a)
             >>> e
-            Abs(1/(12*a**2) - 1/(12*b**2))
+            Abs(1/(12*b**2) - 1/(12*a**2))
 
         If the function is a polynomial of degree at most 2n+1, the
         Euler-Maclaurin formula becomes exact (and e = 0 is returned):
@@ -1415,21 +1415,21 @@ def eval_sum_residue(f, i_a_b):
     Infinite series of even rational functions.
 
     >>> Sum(1 / (x**2 + 1), (x, 0, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
 
     Infinite series of alternating even rational functions.
 
     >>> Sum((-1)**x / (x**2 + 1), (x, 0, oo)).doit()
-    1/2 + pi/(2*sinh(pi))
+    pi/(2*sinh(pi)) + 1/2
 
     This also have heuristics to transform arbitrarily shifted summand or
     arbitrarily shifted summation range to the canonical problem the
     formula can handle.
 
     >>> Sum(1 / (x**2 + 2*x + 2), (x, -1, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 4*x + 5), (x, -2, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 1), (x, 1, oo)).doit()
     pi/(2*tanh(pi)) - 1/2
     >>> Sum(1 / (x**2 + 1), (x, 2, oo)).doit()

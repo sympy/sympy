@@ -910,10 +910,10 @@ class loggamma(Function):
     -5*log(3) + log(4) + log(7) + log(10) + log(13) + loggamma(1/3)
     >>> L = loggamma(S(19)/4)
     >>> expand_func(L).doit()
-    -4*log(4) + log(3) + log(7) + log(11) + log(15) + loggamma(3/4)
+    log(3) - 4*log(4) + log(7) + log(11) + log(15) + loggamma(3/4)
     >>> L = loggamma(S(23)/7)
     >>> expand_func(L).doit()
-    -3*log(7) + log(2) + log(9) + log(16) + loggamma(2/7)
+    log(2) - 3*log(7) + log(9) + log(16) + loggamma(2/7)
 
     The ``loggamma`` function has the following limits towards infinity:
 

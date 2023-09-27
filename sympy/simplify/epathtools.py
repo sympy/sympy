@@ -119,7 +119,7 @@ class EPath:
     def _get_ordered_args(self, expr):
         """Sort ``expr.args`` using printing order. """
         if expr.is_Add:
-            return expr.as_ordered_terms()
+            return expr.as_ordered_terms(None)
         elif expr.is_Mul:
             return expr.as_ordered_factors()
         else:
@@ -242,7 +242,7 @@ class EPath:
         >>> expr = t + sin(x + 1) + cos(x + y + E)
 
         >>> path.select(expr)
-        [x, x, y]
+        [x, y, x]
 
         """
         result = []
@@ -341,7 +341,7 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     >>> expr = t + sin(x + 1) + cos(x + y + E)
 
     >>> epath(path, expr)
-    [x, x, y]
+    [x, y, x]
     >>> epath(path, expr, lambda expr: 2*expr)
     t + sin(2*x + 1) + cos(2*x + 2*y + E)
 

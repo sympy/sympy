@@ -6518,7 +6518,7 @@ def factor(f, *gens, deep=False, **args):
     will not be combined. By default it is True.
 
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
-    (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
+    (3*exp(2) + 5*x*exp(7*x))*exp(-7*x)
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
     5*x + 3*exp(2)*exp(-7*x)
 

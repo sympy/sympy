@@ -806,11 +806,11 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> r2 = sqrt(2)
     >>> r5 = sqrt(5)
     >>> ans = radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)); pprint(ans)
-          ___       ___       ___       ___
-      - \/ 5 *a - \/ 5 *b + \/ 2 *x + \/ 2 *y
-    --------------------------------------------
-         2               2      2              2
-    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
+         ___       ___       ___       ___
+     - \/ 2 *x - \/ 2 *y + \/ 5 *a + \/ 5 *b
+    ------------------------------------------
+       2               2      2              2
+    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
 
     >>> n, d = fraction(ans)
     >>> pprint(factor_terms(signsimp(collect_sqrt(n))/d, radical=True))
