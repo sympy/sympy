@@ -696,7 +696,7 @@ For example
 >>> f = Function('f')
 >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
 ...        f(x), hint='1st_exact')
-Eq(x*cos(f(x)) + f(x)**3/3, C1)
+Eq(f(x)**3/3 + x*cos(f(x)), C1)
 ```
 
 The doctest output should look exactly as it would in a `python` session, with
@@ -896,7 +896,7 @@ Here are some additional tips for writing doctests:
   >>> {'b', 'a'}
   {'a', 'b'}
   >>> y + x
-  x + y
+  y + x
   ```
 
 (writing-tests-updating-existing-tests)=

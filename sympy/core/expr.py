@@ -1807,7 +1807,7 @@ class Expr(Basic, EvalfMixin):
         -- force self to be treated as a Mul:
 
         >>> (3+x).as_independent(x, as_Add=False)
-        (1, 3 + x)
+        (1, x + 3)
         >>> (-3+x).as_independent(x, as_Add=False)
         (1, x - 3)
 
@@ -1843,9 +1843,9 @@ class Expr(Basic, EvalfMixin):
         >>> (x + x*y).as_independent(y)
         (x, x*y)
         >>> separatevars(x + x*y).as_independent(y)
-        (x, 1 + y)
+        (x, y + 1)
         >>> (x*(1 + y)).as_independent(y)
-        (x, 1 + y)
+        (x, y + 1)
         >>> (x*(1 + y)).expand(mul=True).as_independent(y)
         (x, x*y)
         >>> a, b=symbols('a b', positive=True)
@@ -2107,7 +2107,7 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy.abc import x
         >>> (3*(x + 1)**2).primitive()
-        (3, (1 + x)**2)
+        (3, (x + 1)**2)
         >>> a = (6*x + 2); a.primitive()
         (2, 1 + 3*x)
         >>> b = (x/2 + 3); b.primitive()
@@ -2141,27 +2141,27 @@ class Expr(Basic, EvalfMixin):
         The as_content_primitive function is recursive and retains structure:
 
         >>> eq.as_content_primitive()
-        (2, x + 3*y*(1 + y) + 1)
+        (2, x + 3*y*(y + 1) + 1)
 
         Integer powers will have Rationals extracted from the base:
 
         >>> ((2 + 6*x)**2).as_content_primitive()
-        (4, (1 + 3*x)**2)
+        (4, (3*x + 1)**2)
         >>> ((2 + 6*x)**(2*y)).as_content_primitive()
-        (1, (2*(1 + 3*x))**(2*y))
+        (1, (2*(3*x + 1))**(2*y))
 
         Terms may end up joining once their as_content_primitives are added:
 
         >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-        (11, x*(1 + y))
+        (11, x*(y + 1))
         >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
-        (9, x*(1 + y))
+        (9, x*(y + 1))
         >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
-        (1, 3*z*(1 + y) + 6.0*x*(1 + y))
+        (1, 3*z*(y + 1) + 6.0*x*(y + 1))
         >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
-        (121, x**2*(1 + y)**2)
+        (121, x**2*(y + 1)**2)
         >>> ((x*(1 + y) + 0.4*x*(3 + 3*y))**2).as_content_primitive()
-        (1, 4.84*x**2*(1 + y)**2)
+        (1, 4.84*x**2*(y + 1)**2)
 
         Radical content can also be factored out of the primitive:
 
@@ -2634,7 +2634,7 @@ class Expr(Basic, EvalfMixin):
         >>> a.is_polynomial(y)
         False
         >>> factor(a)
-        1 + y
+        y + 1
         >>> factor(a).is_polynomial(y)
         True
 
@@ -2642,7 +2642,7 @@ class Expr(Basic, EvalfMixin):
         >>> b.is_polynomial(y)
         False
         >>> cancel(b)
-        1 + y
+        y + 1
         >>> cancel(b).is_polynomial(y)
         True
 
@@ -2921,7 +2921,7 @@ class Expr(Basic, EvalfMixin):
         cos(1) - (x - 1)*sin(1) + O((x - 1)**2, (x, 1))
         >>> e = cos(x + exp(y))
         >>> e.series(y, n=2)
-        cos(1 + x) - y*sin(1 + x) + O(y**2)
+        cos(x + 1) - y*sin(x + 1) + O(y**2)
         >>> e.series(x, n=2)
         cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
@@ -2941,7 +2941,7 @@ class Expr(Basic, EvalfMixin):
         -x
         >>> f = tan(x)
         >>> f.series(x, 2, 6, "+")
-        tan(2) + (x - 2)*(1 + tan(2)**2) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
+        tan(2) + (x - 2)*(tan(2)**2 + 1) + (x - 2)**2*(tan(2)**3 + tan(2)) + (x - 2)**3*(tan(2)**4 + 4*tan(2)**2/3 + 1/3) + (x - 2)**4*(tan(2)**5 + 5*tan(2)**3/3 + 2*tan(2)/3) + (x - 2)**5*(tan(2)**6 + 2*tan(2)**4 + 17*tan(2)**2/15 + 2/15) + O((x - 2)**6, (x, 2))
         >>> f.series(x, 2, 3, "-")
         tan(2) + (2 - x)*(-tan(2)**2 - 1) + (2 - x)**2*(tan(2)**3 + tan(2)) + O((x - 2)**3, (x, 2))
 

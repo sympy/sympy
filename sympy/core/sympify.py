@@ -179,7 +179,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> exec('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
-    1 + O
+    O + 1
 
     If you want *all* single-letter and Greek-letter variables to be symbols
     then you can use the clashing-symbols dictionaries that have been defined

@@ -248,12 +248,12 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(1 - x), 'lgf': 1/(1 + x), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
     >>> ggf(l)
-    {'ogf': (3/2 + x)/(11*x**2 - 3*x + 1)}
+    {'ogf': (x + 3/2)/(11*x**2 - 3*x + 1)}
 
     >>> from sympy import fibonacci
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])

@@ -2506,7 +2506,7 @@ def LogCauchy(name, mu, sigma):
     >>> X = LogCauchy("x", mu, sigma)
 
     >>> density(X)(z)
-    1/(5*pi*z*(1/25 + (log(z) - 2)**2))
+    1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
     1/2 - atan(10 - 5*log(z))/pi
@@ -2925,7 +2925,7 @@ def Lomax(name, alpha, lamda):
     >>> X = Lomax('X', a, l)
     >>> x = symbols('x')
     >>> density(X)(x)
-    a*(1 + x/l)**(-a - 1)/l
+    a*(x/l + 1)**(-a - 1)/l
     >>> cdf(X)(x)
     Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
     >>> a = 2
@@ -4635,7 +4635,7 @@ def Weibull(name, alpha, beta):
     k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
-    lambda*gamma(1 + 1/k)
+    lambda*gamma(1/k + 1)
 
     >>> simplify(variance(X))
     lambda**2*(gamma(1 + 2/k) - gamma(1 + 1/k)**2)

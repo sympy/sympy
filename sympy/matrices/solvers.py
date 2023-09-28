@@ -488,7 +488,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
     Matrix([
     [-2*tau0 - 3*tau1 + 2],
     [                tau0],
-    [          5 + 2*tau1],
+    [          2*tau1 + 5],
     [                tau1]])
     >>> params
     Matrix([
@@ -534,7 +534,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
     Matrix([
     [-2*tau0 - 3*tau1 + 2],
     [                tau0],
-    [          5 + 2*tau1],
+    [          2*tau1 + 5],
     [                tau1]])
     >>> params
     Matrix([

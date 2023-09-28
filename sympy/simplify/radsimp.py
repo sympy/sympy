@@ -72,7 +72,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     in specification order::
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
-        x**2*(1 + y) + x*y + y*(1 + a)
+        x**2*(y + 1) + x*y + y*(a + 1)
 
     Also more complicated expressions can be used as patterns::
 
@@ -123,7 +123,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*exp(x) + 3*x + (2 + y)*sin(x)
+        x*exp(x) + 3*x + (y + 2)*sin(x)
         >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
         x*(1 + b) + x*y*(1 + a)
 
@@ -667,7 +667,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(2 + sqrt(2))
     >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
-    (sqrt(3) + sqrt(7))*(1 + s)
+    (sqrt(3) + sqrt(7))*(s + 1)
     >>> s = sqrt(2) + 2
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (3 + sqrt(2))*(sqrt(3) + sqrt(7))

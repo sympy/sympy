@@ -699,7 +699,7 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(ccode(expr, tau, standard='C89'))
     if (x > 0) {
-       tau = 1 + x;
+       tau = x + 1;
     }
     else {
        tau = x;
@@ -824,7 +824,7 @@ def fcode(expr, assign_to=None, **settings):
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(fcode(expr, tau))
           if (x > 0) then
-             tau = 1 + x
+             tau = x + 1
           else
              tau = x
           end if

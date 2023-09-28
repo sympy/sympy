@@ -37,9 +37,9 @@ def finite_diff_kauers(sum):
     >>> from sympy import Sum
     >>> from sympy.abc import x, y, m, n, k
     >>> finite_diff_kauers(Sum(k, (k, 1, n)))
-    1 + n
+    n + 1
     >>> finite_diff_kauers(Sum(1/k, (k, 1, n)))
-    1/(1 + n)
+    1/(n + 1)
     >>> finite_diff_kauers(Sum((x*y**2), (x, 1, n), (y, 1, m)))
     (1 + m)**2*(1 + n)
     >>> finite_diff_kauers(Sum((x*y), (x, 1, m), (y, 1, n)))

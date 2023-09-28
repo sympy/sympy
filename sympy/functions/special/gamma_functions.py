@@ -630,7 +630,7 @@ class polygamma(Function):
 
     >>> n = Symbol("n")
     >>> diff(polygamma(n, x), x)
-    polygamma(1 + n, x)
+    polygamma(n + 1, x)
     >>> diff(polygamma(n, x), x, 2)
     polygamma(2 + n, x)
 
@@ -900,7 +900,7 @@ class loggamma(Function):
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
-    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(1/2 + n/2))
+    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
 
     And general rational arguments:
 

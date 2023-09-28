@@ -249,9 +249,9 @@ For polynomials the division identity is given in SymPy by the function
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-    5   5*x
-    - + ---
-    2    2
+    5*x   5
+    --- + -
+     2    2
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -288,7 +288,7 @@ For univariate polynomials over a field the function has its common name
     >>> f = 4*x**2 - 1
     >>> g = 8*x**3 + 1
     >>> gcd(f, g, domain=QQ)
-    1/2 + x
+    x + 1/2
 
 
 Divisibility of polynomials
@@ -369,9 +369,9 @@ SymPy::
     >>> f = 4*x**2 - 1
     >>> g = 8*x**3 + 1
     >>> gcd(f, g)
-    1 + 2*x
+    2*x + 1
     >>> gcd(6*f, 3*g)
-    3 + 6*x
+    6*x + 3
 
 Basic functionality
 ===================
@@ -393,9 +393,9 @@ defined this way::
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-    5   5*x
-    - + ---
-    2    2
+    5*x   5
+    --- + -
+     2    2
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -423,7 +423,7 @@ remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide
     >>> q
     x
     >>> r
-    3 + 9*x
+    9*x + 3
     >>> (q*g + r).expand()
        2
     5*x  + 10*x + 3
@@ -516,12 +516,12 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
 
     >>> sqf_list(f)
                            2
-    (1, [(2 + x, 1), (x + x , 2)])
+    (1, [(x + 2, 1), (x + x , 2)])
 
     >>> sqf(f)
                     2
             /     2\
-    (2 + x)*\x + x /
+    (x + 2)*\x + x /
 
 Factorization
 -------------
@@ -531,7 +531,7 @@ with rational coefficients::
 
     >>> factor(x**4/2 + 5*x**3/12 - x**2/3)
      2
-    x *(2*x - 1)*(4 + 3*x)
+    x *(2*x - 1)*(3*x + 4)
     ----------------------
               12
 

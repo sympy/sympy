@@ -1826,7 +1826,7 @@ class Derivative(Expr):
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_difference()
-        f(1/2 + x) - f(x - 1/2)
+        f(x + 1/2) - f(x - 1/2)
 
         The default step size and number of points are 1 and
         ``order + 1`` respectively. We can change the step size by
@@ -2702,7 +2702,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         >>> expand((x + y)*y/x/(x + 1), frac=True)
         (y**2 + x*y)/(x + x**2)
         >>> expand((x + y)*y/x/(x + 1), numer=True)
-        (y**2 + x*y)/(x*(1 + x))
+        (y**2 + x*y)/(x*(x + 1))
         >>> expand((x + y)*y/x/(x + 1), denom=True)
         y*(x + y)/(x**2 + x)
 

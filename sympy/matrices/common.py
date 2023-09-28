@@ -2041,7 +2041,7 @@ class MatrixOperations(MatrixRequired):
         >>> from sympy.abc import x
         >>> from sympy import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
-        Matrix([[x*(1 + x)]])
+        Matrix([[x*(x + 1)]])
         >>> _.expand()
         Matrix([[x**2 + x]])
 

@@ -819,7 +819,7 @@ class harmonic(Function):
     harmonic(1/3)
     >>> He = expand_func(H)
     >>> He
-    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(1 + 3*_k), (_k, 0, 0))
+    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
     >>> He.doit()
     -sqrt(3)*pi/6 - log(6) - log(sqrt(3)/2) + 3
     >>> H = harmonic(25/S(7))
@@ -837,16 +837,16 @@ class harmonic(Function):
     >>> m = Symbol("m", integer=True, positive=True)
 
     >>> harmonic(n).rewrite(digamma)
-    EulerGamma + polygamma(0, 1 + n)
+    EulerGamma + polygamma(0, n + 1)
 
     >>> harmonic(n).rewrite(polygamma)
-    EulerGamma + polygamma(0, 1 + n)
+    EulerGamma + polygamma(0, n + 1)
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, 1 + n)/2 + zeta(3)
+    polygamma(2, n + 1)/2 + zeta(3)
 
     >>> simplify(harmonic(n,m).rewrite(polygamma))
-    Piecewise((EulerGamma + polygamma(0, 1 + n), Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, 1 + n)/factorial(m - 1), True))
+    Piecewise((EulerGamma + polygamma(0, n + 1), Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1), True))
 
     Integer offsets in the argument can be pulled out:
 
@@ -1209,10 +1209,10 @@ class catalan(Function):
     expressions involving other mathematical functions
 
     >>> catalan(n).rewrite(binomial)
-    binomial(2*n, n)/(1 + n)
+    binomial(2*n, n)/(n + 1)
 
     >>> catalan(n).rewrite(gamma)
-    4**n*gamma(1/2 + n)/(sqrt(pi)*gamma(2 + n))
+    4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
     hyper((-n, 1 - n), (2,), 1)

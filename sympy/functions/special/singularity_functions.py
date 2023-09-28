@@ -37,7 +37,7 @@ class SingularityFunction(Function):
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)
     >>> SingularityFunction(y, -10, n)
-    (10 + y)**n
+    (y + 10)**n
     >>> y = Symbol('y', negative=True)
     >>> SingularityFunction(y, 10, n)
     0
@@ -57,7 +57,7 @@ class SingularityFunction(Function):
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)
     >>> expr.subs({x: y, a: -10, n: n})
-    (10 + y)**n
+    (y + 10)**n
 
     The methods ``rewrite(DiracDelta)``, ``rewrite(Heaviside)``, and
     ``rewrite('HeavisideDiracDelta')`` returns the same output. One can use any
@@ -65,11 +65,11 @@ class SingularityFunction(Function):
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     >>> expr.rewrite(Heaviside)
-    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(3 + x) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite(DiracDelta)
-    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(3 + x) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite('HeavisideDiracDelta')
-    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(3 + x) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4, 1) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
     See Also
     ========

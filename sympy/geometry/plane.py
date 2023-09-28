@@ -158,7 +158,7 @@ class Plane(GeometryEntity):
         >>> from sympy.abc import u, v, t, r
         >>> p = Plane((1, 1, 1), normal_vector=(1, 0, 0))
         >>> p.arbitrary_point(u, v)
-        Point3D(1, 1 + u, 1 + v)
+        Point3D(1, u + 1, v + 1)
         >>> p.arbitrary_point(t)
         Point3D(1, 1 + cos(t), 1 + sin(t))
 

@@ -582,7 +582,7 @@ def rust_code(expr, assign_to=None, **settings):
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(rust_code(expr, tau))
     tau = if (x > 0) {
-        1 + x
+        x + 1
     } else {
         x
     };

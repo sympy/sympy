@@ -209,15 +209,15 @@ class Mul(Expr, AssocOp):
                 >>> from sympy import Mul, sqrt
                 >>> from sympy.abc import x, y, z
                 >>> 2*(x + 1) # this is the 2-arg Mul behavior
-                2 + 2*x
+                2*x + 2
                 >>> y*(x + 1)*2
-                2*y*(1 + x)
+                2*y*(x + 1)
                 >>> 2*(x + 1)*y # 2-arg result will be obtained first
-                y*(2 + 2*x)
+                y*(2*x + 2)
                 >>> Mul(2, x + 1, y) # all 3 args simultaneously processed
-                2*y*(1 + x)
+                2*y*(x + 1)
                 >>> 2*((x + 1)*y) # parentheses can control this behavior
-                2*y*(1 + x)
+                2*y*(x + 1)
 
                 Powers with compound bases may not find a single base to
                 combine with unless all arguments are processed at once.
@@ -2131,7 +2131,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     >>> from sympy import S
 
     >>> _keep_coeff(S.Half, x + 2)
-    (2 + x)/2
+    (x + 2)/2
     >>> _keep_coeff(S.Half, x + 2, clear=False)
     1 + x/2
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)

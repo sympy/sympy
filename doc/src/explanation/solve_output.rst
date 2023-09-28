@@ -46,7 +46,7 @@ List Of Values
     >>> solve(x**2 - 4)
     [-2, 2]
     >>> solve(x - y - 1, x)
-    [1 + y]
+    [y + 1]
 
 Single Dictionary
 -----------------
@@ -64,7 +64,7 @@ Single Dictionary
     >>> solve(eq, {a, b})  # undetermined coefficients
     {a: 2, b: 5}
     >>> solve([eq], {a, b})  # algebraic
-    {a: (5 + 2*x)/x - b/x}
+    {a: (2*x + 5)/x - b/x}
 
 List of Tuples
 --------------
@@ -99,7 +99,7 @@ List of Dictionaries
     [{x: 0}]
     >>> system = [x + y - z, x**2 - y + z, exp(z) + 1/x + 1/y - 2]
     >>> sol = solve(system[:2]); sol
-    [{x: -1, y: 1 + z}, {x: 0, y: z}]
+    [{x: -1, y: z + 1}, {x: 0, y: z}]
 
     The dictionaries only contain values that are distinct from the keys.
     In the last example above, there is no key for ``z`` in the dictionary
@@ -111,7 +111,7 @@ List of Dictionaries
 
         >>> from sympy import nsolve
         >>> [system[-1].subs(s) for s in sol]
-        [exp(z) - 3 + 1/(1 + z), zoo + exp(z) + 1/z]
+        [exp(z) - 3 + 1/(z + 1), zoo + exp(z) + 1/z]
         >>> z_eq = _[0]
         >>> zsol = nsolve(z_eq, 1); zsol
         0.906425478894557

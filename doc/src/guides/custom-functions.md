@@ -589,7 +589,7 @@ avoided.
 
   ```py
   >>> divides(2, (m**2 + m)/2)
-  divides(2, m**2/2 + m/2)
+  divides(2, m/2 + m**2/2)
   >>> _.subs(m, 2)
   0
   >>> n, m = symbols('n m') # Redefine n and m without the integer assumption
@@ -685,7 +685,7 @@ nonnegative for nonreal $x$, for example:
 ```py
 >>> from sympy import I
 >>> 1 - cos(pi + I*pi)
-1 + cosh(pi)
+cosh(pi) + 1
 >>> (1 - cos(pi + I*pi)).evalf()
 12.5919532755215
 ```
@@ -1058,7 +1058,7 @@ but it would also be useful in some contexts to "evaluate" `FMA(x, y, z)` to
 >>> FMA(x, y, z)
 FMA(x, y, z)
 >>> FMA(x, y, z).doit()
-x*y + z
+z + x*y
 ```
 
 Most custom functions will not want to define `doit()` in this way. However,
@@ -1518,7 +1518,7 @@ None
 >>> versin(x).rewrite(sin)
 2*sin(x/2)**2
 >>> versin(2*x).expand(trig=True)
-2 - 2*cos(x)**2
+-2*cos(x)**2 + 2
 >>> versin(a + b*I).expand(complex=True)
 -cos(a)*cosh(b) + 1 + I*sin(a)*sinh(b)
 ```
@@ -1800,9 +1800,9 @@ serve as an example.
 >>> FMA(x, y, z)
 FMA(x, y, z)
 >>> FMA(x, y, z).doit()
-x*y + z
+z + x*y
 >>> FMA(x, y, z).rewrite(Add)
-x*y + z
+z + x*y
 >>> FMA(2, pi, 1).evalf()
 7.28318530717959
 ```

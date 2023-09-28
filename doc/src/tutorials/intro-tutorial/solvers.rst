@@ -80,19 +80,19 @@ is an example of the syntax of ``linsolve``.
 * List of Equations Form:
 
     >>> linsolve([x + y + z - 1, x + y + 2*z - 3 ], (x, y, z))
-    {(-1 - y, y, 2)}
+    {(-y - 1, y, 2)}
 
 * Augmented Matrix Form:
 
     >>> linsolve(Matrix(([1, 1, 1, 1], [1, 1, 2, 3])), (x, y, z))
-    {(-1 - y, y, 2)}
+    {(-y - 1, y, 2)}
 
 * A*x = b Form
 
     >>> M = Matrix(((1, 1, 1, 1), (1, 1, 2, 3)))
     >>> system = A, b = M[:, :-1], M[:, -1]
     >>> linsolve(system, x, y, z)
-    {(-1 - y, y, 2)}
+    {(-y - 1, y, 2)}
 
 .. note::
 

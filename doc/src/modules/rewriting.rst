@@ -77,12 +77,12 @@ in the ``cse`` function. Examples::
 
     >>> pprint(cse(sqrt(sin(x)+5)*sqrt(sin(x)+4)), use_unicode=True)
     ⎛                ⎡  ________   ________⎤⎞
-    ⎝[(x₀, sin(x))], ⎣╲╱ 4 + x₀ ⋅╲╱ 5 + x₀ ⎦⎠
+    ⎝[(x₀, sin(x))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))),
     ...     use_unicode=True)
     ⎛                             ⎡  ________   ________⎤⎞
-    ⎝[(x₀, cos(y) + sin(1 + x))], ⎣╲╱ 4 + x₀ ⋅╲╱ 5 + x₀ ⎦⎠
+    ⎝[(x₀, cos(y) + sin(x + 1))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
     ⎛                         ⎡       ____⎤⎞

@@ -383,7 +383,7 @@ under which the statement "``a`` and ``b`` are both positive" would be true:
     False
     >>> x, y = symbols("x, y")
     >>> both_positive_better(x, y + 1)
-    (x > 0) & (1 + y > 0)
+    (x > 0) & (y + 1 > 0)
     >>> both_positive_better(x, S(3))
     x > 0
 
@@ -419,7 +419,7 @@ particular values:
     >>> condition
     (x + y > 0) & (x/y > 0)
     >>> condition.subs(x, 1)
-    (1/y > 0) & (1 + y > 0)
+    (1/y > 0) & (y + 1 > 0)
     >>> condition.subs(x, 1).subs(y, 2)
     True
 

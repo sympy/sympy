@@ -371,7 +371,7 @@ def rcode(expr, assign_to=None, **settings):
     >>> from sympy import Piecewise
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(rcode(expr, assign_to=tau))
-    tau = ifelse(x > 0,1 + x,x);
+    tau = ifelse(x > 0,x + 1,x);
 
     Support for loops is provided through ``Indexed`` types. With
     ``contract=True`` these expressions will be turned into loops, whereas

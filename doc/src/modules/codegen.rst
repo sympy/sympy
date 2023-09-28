@@ -70,7 +70,7 @@ example that shows the use of ``Assignment`` in C code::
 
     >>> from sympy.codegen.ast import Assignment
     >>> print(ccode(Assignment(x, y + 1)))
-    x = 1 + y;
+    x = y + 1;
 
 Here is another simple example of printing a C version of a SymPy expression::
 
@@ -102,7 +102,7 @@ an expression that may not evaluate to anything. A use case for ``Piecewise``::
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(fcode(expr, tau))
           if (x > 0) then
-             tau = 1 + x
+             tau = x + 1
           else
              tau = x
           end if
@@ -119,7 +119,7 @@ looped over::
     >>> i = Idx('i', len_y-1)
     >>> eq = Eq(Dy[i], (mat_1[i+1] - mat_1[i]) / (mat_2[i+1] - mat_2[i]))
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
-    Dy[i] = (mat_1[1 + i] - mat_1[i])/(mat_2[1 + i] - mat_2[i]);
+    Dy[i] = (mat_1[i + 1] - mat_1[i])/(mat_2[i + 1] - mat_2[i]);
     >>> Res = IndexedBase('Res', shape=(len_y,))
     >>> j = Idx('j', len_y)
     >>> eq = Eq(Res[j], mat_1[j]*mat_2[j])
@@ -288,12 +288,12 @@ For example::
     >>> [arg.result_var for arg in routine.results]   # doctest: +SKIP
     [result₅₁₄₂₃₄₁₆₈₁₃₉₇₇₁₉₄₂₈]
     >>> [arg.expr for arg in routine.results]
-    ⎡                __________                                          ⎤
-    ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 1 + 2⋅y, 4⋅x)⎥
-    ⎢            ╲╱   (3 + y)!                                           ⎥
-    ⎢────────────────────────────────────────────────────────────────────⎥
-    ⎣                                 3                                  ⎦
+    ⎡                ___________                                           ⎤
+    ⎢          y    ╱ (-y + 2)!   -2⋅x                                     ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ───────── ⋅ℯ    ⋅assoc_laguerre(-y + 2, 2⋅y + 1, 4⋅x)⎥
+    ⎢            ╲╱   (y + 3)!                                             ⎥
+    ⎢──────────────────────────────────────────────────────────────────────⎥
+    ⎣                                  3                                   ⎦
     >>> [arg.name for arg in routine.arguments]
     [x, y]
 
@@ -504,9 +504,9 @@ Let us see an example for some quantitative analysis::
     >>> from sympy.physics.hydrogen import R_nl
     >>> expr = R_nl(3, 1, x, 6)
     >>> expr
-                   -2⋅x
-    8⋅x⋅(4 - 4⋅x)⋅ℯ
-    ───────────────────
+                    -2⋅x
+    8⋅x⋅(-4⋅x + 4)⋅ℯ
+    ────────────────────
              3
 
 The lambdify function translates SymPy expressions into Python functions,

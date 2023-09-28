@@ -126,7 +126,7 @@ Take the derivative of `\sin{(x)}e^x`.
 
  >>> diff(sin(x)*exp(x), x)
   x           x
- ℯ ⋅sin(x) + ℯ ⋅cos(x)
+ ℯ ⋅cos(x) + ℯ ⋅sin(x)
 
 Compute `\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx`.
 

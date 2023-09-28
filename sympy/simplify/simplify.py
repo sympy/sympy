@@ -90,7 +90,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
     >>> e = 2*x**2*z*sin(y)+2*z*x**2
     >>> separatevars(e)
-    2*x**2*z*(1 + sin(y))
+    2*x**2*z*(sin(y) + 1)
     >>> separatevars(e, symbols=(x, y), dict=True)
     {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
     >>> separatevars(e, [x, y, alpha], dict=True)
@@ -442,7 +442,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> a
     (x + x**2)/(x*cos(y)**2 + x*sin(y)**2)
     >>> simplify(a)
-    1 + x
+    x + 1
 
     Note that we could have obtained the same result by using specific
     simplification functions:
@@ -451,7 +451,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> trigsimp(a)
     (x + x**2)/x
     >>> cancel(_)
-    1 + x
+    x + 1
 
     In some cases, applying :func:`simplify` may actually result in some more
     complicated expression. The default ``ratio=1.7`` prevents more extreme

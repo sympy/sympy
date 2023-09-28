@@ -667,7 +667,7 @@ def octave_code(expr, assign_to=None, **settings):
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
     >>> octave_code(pw, assign_to=tau)
-    'tau = ((x > 0).*(1 + x) + (~(x > 0)).*(x));'
+    'tau = ((x > 0).*(x + 1) + (~(x > 0)).*(x));'
 
     Note that any expression that can be generated normally can also exist
     inside a Matrix:

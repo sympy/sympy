@@ -943,16 +943,16 @@ class Basic(Printable):
         >>> from sympy import pi, exp, limit, oo
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
-        1 + pi*y
+        pi*y + 1
         >>> (1 + x*y).subs({x:pi, y:2})
-        1 + 2*pi
+        2*pi + 1
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        1 + 2*pi
+        2*pi + 1
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
         >>> (x + y).subs(reversed(reps))
-        2 + x**2
+        x**2 + 2
 
         >>> (x**2 + x**4).subs(x**2, y)
         y + y**2
@@ -1269,9 +1269,9 @@ class Basic(Printable):
         >>> from sympy import symbols, pi, exp
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
-        1 + pi*y
+        pi*y + 1
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        1 + 2*pi
+        2*pi + 1
 
         Replacements occur only if an entire node in the expression tree is
         matched:

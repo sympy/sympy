@@ -88,19 +88,19 @@ class Product(ExprWithIntLimits):
 
     >>> W = Product(2*i/(2*i-1) * 2*i/(2*i+1), (i, 1, oo))
     >>> W
-    Product(4*i**2/((2*i - 1)*(1 + 2*i)), (i, 1, oo))
+    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, oo))
 
     Direct computation currently fails:
 
     >>> W.doit()
-    Product(4*i**2/((2*i - 1)*(1 + 2*i)), (i, 1, oo))
+    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, oo))
 
     But we can approach the infinite product by a limit of finite products:
 
     >>> from sympy import limit
     >>> W2 = Product(2*i/(2*i-1)*2*i/(2*i+1), (i, 1, n))
     >>> W2
-    Product(4*i**2/((2*i - 1)*(1 + 2*i)), (i, 1, n))
+    Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
     4**n*factorial(n)**2/(2**(2*n)*RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
@@ -116,11 +116,11 @@ class Product(ExprWithIntLimits):
     pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2
     >>> Pe = P.doit()
     >>> Pe
-    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(1 + pi/2, n)/(2*factorial(n)**2)
+    pi**2*RisingFactorial(1 - pi/2, n)*RisingFactorial(pi/2 + 1, n)/(2*factorial(n)**2)
     >>> limit(Pe, n, oo).gammasimp()
     sin(pi**2/2)
     >>> Pe.rewrite(gamma)
-    (-1)**n*pi**2*gamma(pi/2)*gamma(pi/2 + n + 1)/(2*gamma(1 + pi/2)*gamma(pi/2 - n)*gamma(1 + n)**2)
+    (-1)**n*pi**2*gamma(pi/2)*gamma(pi/2 + n + 1)/(2*gamma(pi/2 + 1)*gamma(pi/2 - n)*gamma(n + 1)**2)
 
     Products with the lower limit being larger than the upper one:
 
@@ -499,17 +499,17 @@ class Product(ExprWithIntLimits):
         >>> P = Product(x, (x, a, b))
         >>> Pr = P.reverse_order(x)
         >>> Pr
-        Product(1/x, (x, 1 + b, a - 1))
+        Product(1/x, (x, b + 1, a - 1))
         >>> Pr = Pr.doit()
         >>> Pr
-        1/RisingFactorial(1 + b, a - b - 1)
+        1/RisingFactorial(b + 1, a - b - 1)
         >>> simplify(Pr.rewrite(gamma))
-        Piecewise((gamma(1 + b)/gamma(a), b > -1), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
+        Piecewise((gamma(b + 1)/gamma(a), b > -1), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
         >>> P = P.doit()
         >>> P
         RisingFactorial(a, -a + b + 1)
         >>> simplify(P.rewrite(gamma))
-        Piecewise((gamma(1 + b)/gamma(a), a > 0), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
+        Piecewise((gamma(b + 1)/gamma(a), a > 0), ((-1)**(-a + b + 1)*gamma(1 - a)/gamma(-b), True))
 
         While one should prefer variable names when specifying which limits
         to reverse, the index counting notation comes in handy in case there
@@ -520,17 +520,17 @@ class Product(ExprWithIntLimits):
         Sum(x*y, (x, a, b), (y, c, d))
         >>> S0 = S.reverse_order(0)
         >>> S0
-        Sum(-x*y, (x, 1 + b, a - 1), (y, c, d))
+        Sum(-x*y, (x, b + 1, a - 1), (y, c, d))
         >>> S1 = S0.reverse_order(1)
         >>> S1
-        Sum(x*y, (x, 1 + b, a - 1), (y, 1 + d, c - 1))
+        Sum(x*y, (x, b + 1, a - 1), (y, d + 1, c - 1))
 
         Of course we can mix both notations:
 
         >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1)
-        Sum(x*y, (x, 1 + b, a - 1), (y, 6, 1))
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
         >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x)
-        Sum(x*y, (x, 1 + b, a - 1), (y, 6, 1))
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
         See Also
         ========

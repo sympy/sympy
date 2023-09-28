@@ -90,9 +90,9 @@ this representation using the :py:func:`~.srepr` function::
   >>> x = Symbol('x')
   >>> e = 1 + 1/(2 + x**2)
   >>> e
-  1 + 1/(x**2 + 2)
+  1/(x**2 + 2) + 1
   >>> print(srepr(e))
-  Add(Integer(1), Pow(Add(Pow(Symbol('x'), Integer(2)), Integer(2)), Integer(-1)))
+  Add(Pow(Add(Pow(Symbol('x'), Integer(2)), Integer(2)), Integer(-1)), Integer(1))
 
 Here the expression ``e`` is represented as an :py:class:`~.Add` node which
 has two children ``1`` and ``1/(x**2 + 2)``. The child ``1`` is represented as
@@ -114,14 +114,14 @@ different ways e.g.::
   >>> e
   x*(x + 1)
   >>> e.expand()
-  x**2 + x
+  x + x**2
 
 These two expression although equivalent have different tree representations::
 
   >>> print(srepr(e))
   Mul(Symbol('x'), Add(Symbol('x'), Integer(1)))
   >>> print(srepr(e.expand()))
-  Add(Pow(Symbol('x'), Integer(2)), Symbol('x'))
+  Add(Symbol('x'), Pow(Symbol('x'), Integer(2)))
 
 Being able to represent the same expression in different ways is both a
 strength and a weakness. It is useful to be able to convert an
@@ -735,9 +735,9 @@ generators such as `\mathbb{Q}(\sqrt{2},\sqrt{3})`::
   >>> p  # doctest: +SKIP
   ANP([1/2, 1, -3/2], [1, 0, -10, 0, 1], QQ)
   >>> K.to_sympy(p)
-  1 + sqrt(2) + sqrt(3) + sqrt(6)
+  sqrt(2) + sqrt(3) + sqrt(6) + 1
   >>> K.to_sympy(p**2)
-  12 + 4*sqrt(6) + 6*sqrt(3) + 8*sqrt(2)
+  8*sqrt(2) + 6*sqrt(3) + 4*sqrt(6) + 12
 
 Here the algebraic extension `\mathbb{Q}(\sqrt{2},\sqrt{3})` is converted to
 the (isomorphic) `\mathbb{Q}(\sqrt{2}+\sqrt{3})` with a single generator
@@ -818,7 +818,7 @@ it possible to represent equivalent expressions in different ways e.g.::
   >>> x = symbols('x')
   >>> p_expr = x*(x + 1) + x
   >>> p_expr
-  x*(x + 1) + x
+  x + x*(x + 1)
   >>> p_expr.expand()
   x**2 + 2*x
 
@@ -847,7 +847,7 @@ expanded::
   >>> x_dom = K(x)
   >>> p_expr = x * (x + 1) + x
   >>> p_expr
-  x*(x + 1) + x
+  x + x*(x + 1)
   >>> p_dom = x_dom * (x_dom + K.one) + x_dom
   >>> p_dom
   x**2 + 2*x
@@ -1474,7 +1474,7 @@ representation by choosing a generator that is not in the expression at all::
 
   >>> p = Poly(x**2*y + z, t)
   >>> p
-  Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
+  Poly(z + x**2*y, t, domain='ZZ[x,y,z]')
   >>> p.rep
   DMP_Python([x**2*y + z], ZZ[x,y,z])
   >>> p.rep.rep[0]  # doctest: +SKIP

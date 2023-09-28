@@ -133,7 +133,7 @@ class Add(Expr, AssocOp):
     >>> from sympy import Add, I
     >>> from sympy.abc import x, y
     >>> Add(x, 1)
-    1 + x
+    x + 1
     >>> Add(x, x)
     2*x
     >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
@@ -142,7 +142,7 @@ class Add(Expr, AssocOp):
     If ``evaluate=False`` is passed, result is not evaluated.
 
     >>> Add(1, 2, evaluate=False)
-    1 + 2
+    2 + 1
     >>> Add(x, x, evaluate=False)
     x + x
 
@@ -159,7 +159,7 @@ class Add(Expr, AssocOp):
     Note that the printers do not display in args order.
 
     >>> Add(x, 1)
-    1 + x
+    x + 1
     >>> Add(x, 1).args
     (1, x)
 

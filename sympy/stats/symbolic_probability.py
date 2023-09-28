@@ -188,9 +188,9 @@ class Expectation(Expr):
     To evaluate the ``Expectation``, use ``doit()``:
 
     >>> Expectation(X + Y).doit()
-    1 + mu
+    mu + 1
     >>> Expectation(X + Expectation(Y + Expectation(2*X))).doit()
-    1 + 3*mu
+    3*mu + 1
 
     To prevent evaluating nested ``Expectation``, use ``doit(deep=False)``
 

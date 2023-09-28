@@ -572,9 +572,9 @@ class Dyadic(Printable, EvalfMixin):
         >>> D = outer(N.x, N.x)
         >>> x, y, z = symbols('x y z')
         >>> ((1 + x*y) * D).xreplace({x: pi})
-        (1 + pi*y)*(N.x|N.x)
+        (pi*y + 1)*(N.x|N.x)
         >>> ((1 + x*y) * D).xreplace({x: pi, y: 2})
-        (1 + 2*pi)*(N.x|N.x)
+        (2*pi + 1)*(N.x|N.x)
 
         Replacements occur only if an entire node in the expression tree is
         matched:

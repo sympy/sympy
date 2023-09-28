@@ -5010,7 +5010,7 @@ def rem(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> rem(x**2 + 1, 2*x - 4, domain=ZZ)
-    1 + x**2
+    x**2 + 1
     >>> rem(x**2 + 1, 2*x - 4, domain=QQ)
     5
 
@@ -5650,7 +5650,7 @@ def terms_gcd(f, *gens, **args):
     >>> from sympy import terms_gcd, cos
     >>> from sympy.abc import x, y
     >>> terms_gcd(x**6*y**2 + x**3*y, x, y)
-    x**3*y*(1 + x**3*y)
+    x**3*y*(x**3*y + 1)
 
     The default action of polys routines is to expand the expression
     given to them. terms_gcd follows this behavior:
@@ -5663,15 +5663,15 @@ def terms_gcd(f, *gens, **args):
     of one or more terms:
 
     >>> terms_gcd((3+3*x)*(x+x*y), expand=False)
-    (3 + 3*x)*(x + x*y)
+    (3*x + 3)*(x + x*y)
 
     In order to traverse factors of a Mul or the arguments of other
     functions, the ``deep`` hint can be used:
 
     >>> terms_gcd((3 + 3*x)*(x + x*y), expand=False, deep=True)
-    3*x*(1 + x)*(1 + y)
+    3*x*(x + 1)*(y + 1)
     >>> terms_gcd(cos(x + x*y), deep=True)
-    cos(x*(1 + y))
+    cos(x*(y + 1))
 
     Rationals are factored out by default:
 
@@ -6485,12 +6485,12 @@ def factor(f, *gens, deep=False, **args):
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    2*(x + y)*(1 + x**2)**2
+    2*(x + y)*(x**2 + 1)**2
 
     >>> factor(x**2 + 1)
-    1 + x**2
+    x**2 + 1
     >>> factor(x**2 + 1, modulus=2)
-    (1 + x)**2
+    (x + 1)**2
     >>> factor(x**2 + 1, gaussian=True)
     (x - I)*(x + I)
 
@@ -6498,7 +6498,7 @@ def factor(f, *gens, deep=False, **args):
     (x - sqrt(2))*(x + sqrt(2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    (x - 1)*(1 + x)/(2 + x)**2
+    (x - 1)*(x + 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
     (2 + x)**20000000*(1 + x**2)
 
@@ -7110,7 +7110,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    (2 + 2*x)/(x - 1)
+    (2*x + 2)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
 

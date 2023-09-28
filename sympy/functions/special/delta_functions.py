@@ -604,13 +604,13 @@ class Heaviside(Function):
         >>> y = Symbol('y')
 
         >>> Heaviside(x).rewrite(sign)
-        1/2 + sign(x)/2
+        sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
-        Piecewise((1/2 + sign(x)/2, Ne(x, 0)), (0, True))
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
         >>> Heaviside(x, nan).rewrite(sign)
-        Piecewise((1/2 + sign(x)/2, Ne(x, 0)), (nan, True))
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (nan, True))
 
         >>> Heaviside(x - 2).rewrite(sign)
         1/2 + sign(x - 2)/2

@@ -91,7 +91,7 @@ We can query assumptions on any expression not just a symbol:
     >>> x = Symbol('x', positive=True)
     >>> expr = 1 + x**2
     >>> expr
-    1 + x**2
+    x**2 + 1
     >>> expr.is_positive
     True
     >>> expr.is_negative
@@ -150,7 +150,7 @@ terms it would be a harder query:
     >>> x = Symbol('x', real=True)
     >>> expr = 1 + (x - 2)**2
     >>> expr
-    1 + (x - 2)**2
+    (x - 2)**2 + 1
     >>> expr.is_positive
     True
     >>> expr2 = expr.expand()
@@ -943,11 +943,11 @@ number with :py:meth:`~.EvalfMixin.evalf`:
     >>> x = Symbol('x')
     >>> expr2 = 1 + x
     >>> expr2
-    1 + x
+    x + 1
     >>> expr2.is_number
     False
     >>> expr2.evalf()
-    1.0 + x
+    x + 1.0
 
 The primary reason for checking ``expr.is_number`` is to predict whether a
 call to :py:meth:`~.EvalfMixin.evalf` will fully evaluate. The

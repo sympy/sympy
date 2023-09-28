@@ -1285,7 +1285,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(exp(x), 7), S(5), n, x)
     (Mod(exp(x), 7), 5)
     >>> invert_modular(Mod(x, 7), S(5), n, x)
-    (x, ImageSet(Lambda(_n, 5 + 7*_n), Integers))
+    (x, ImageSet(Lambda(_n, 7*_n + 5), Integers))
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 6 + 7*_n), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
@@ -1400,9 +1400,9 @@ def _solve_modular(f, symbol, domain):
     >>> from sympy import S, Symbol, sin, Intersection, Interval, Mod
     >>> x = Symbol('x')
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
-    ImageSet(Lambda(_n, 5 + 7*_n), Integers)
+    ImageSet(Lambda(_n, 7*_n + 5), Integers)
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Reals)  # domain should be subset of integers.
-    ConditionSet(x, Eq(Mod(6 + 5*x, 7) - 3, 0), Reals)
+    ConditionSet(x, Eq(Mod(5*x + 6, 7) - 3, 0), Reals)
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
@@ -2749,7 +2749,7 @@ def linsolve(system, *symbols):
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
     >>> linsolve((A, b), x, y, z)
-    {(z - 1, 2 - 2*z, z)}
+    {(z - 1, -2*z + 2, z)}
 
     If no symbols are given, internally generated symbols will be used.
     The ``tau0`` in the third position indicates (as before) that the third
@@ -3000,7 +3000,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(pi + 2*_n*pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
@@ -3720,7 +3720,7 @@ def nonlinsolve(system, *symbols):
     {(---, -d, -, {d} \ {0}), (-, -d, ---, {d} \ {0})}
        d       d               d       d
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    {(2 - y, y)}
+    {(-y + 2, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
     will call the ``substitution`` function and return real and complex solutions,
@@ -3728,7 +3728,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(pi + 2*_n*pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using

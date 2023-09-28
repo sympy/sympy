@@ -147,11 +147,11 @@ We can visualize this fact by factoring the polynomials::
 
     >>> factor(3*x**4 + 3*x**3 + x**2 - x - 2)
             ⎛   3        ⎞
-    (1 + x)⋅⎝3⋅x  + x - 2⎠
+    (x + 1)⋅⎝3⋅x  + x - 2⎠
 
     >>> factor(x**3 - 3*x**2 + x + 5)
             ⎛ 2          ⎞
-    (1 + x)⋅⎝x  - 4⋅x + 5⎠
+    (x + 1)⋅⎝x  - 4⋅x + 5⎠
 
 In both cases we obtained the factor `x + 1` which tells us that the common
 root is `x = -1`.
@@ -165,7 +165,7 @@ function the elegant way, use :func:`~.cancel` function. For example::
     >>> cancel((x**2 - 4)/(x**2 + 4*x + 4))
     x - 2
     ─────
-    2 + x
+    x + 2
 
 Expanding expressions and factoring back
 ----------------------------------------
@@ -180,13 +180,13 @@ factor the result back::
 
     >>> factor(g)
               19
-    20⋅(1 + x)
+    20⋅(x + 1)
 
 The same can be achieved in factored form::
 
     >>> diff((x + 1)**20, x)
               19
-    20⋅(1 + x)
+    20⋅(x + 1)
 
 Factoring in terms of cyclotomic polynomials
 --------------------------------------------
@@ -289,7 +289,7 @@ domains, which includes:
 
     >>> factor(f, modulus=5)
            2        2
-    (x - 2) ⋅(2 + x)
+    (x - 2) ⋅(x + 2)
 
 * algebraic numbers::
 
@@ -440,8 +440,8 @@ To decompose ``f`` into partial fractions use :func:`~.apart` function::
     >>> apart(f)
       3       2        2
     ───── - ───── + ────────
-    2 + x   1 + x          2
-                    (1 + x)
+    x + 2   x + 1          2
+                    (x + 1)
 
 To return from partial fractions to the rational function use
 a composition of :func:`~.together` and :func:`~.cancel`::

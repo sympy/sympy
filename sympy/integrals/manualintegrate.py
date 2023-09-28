@@ -2003,7 +2003,7 @@ def integral_steps(integrand, symbol, **options):
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
     # doctest: +NORMALIZE_WHITESPACE
-    URule(integrand=exp(x)/(1 + exp(2*x)), variable=x, u_var=_u, u_func=exp(x), substep=ArctanRule(integrand=1/(1 + _u**2), variable=_u, a=1, b=1, c=1))
+    URule(integrand=exp(x)/(exp(2*x) + 1), variable=x, u_var=_u, u_func=exp(x), substep=ArctanRule(integrand=1/(_u**2 + 1), variable=_u, a=1, b=1, c=1))
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     SinRule(integrand=sin(x), variable=x)

@@ -72,13 +72,13 @@ class jacobi(OrthogonalPolynomial):
     jacobi(n, a, b, x)
 
     >>> jacobi(n, a, a, x)
-    RisingFactorial(1 + a, n)*gegenbauer(n, 1/2 + a, x)/RisingFactorial(1 + 2*a, n)
+    RisingFactorial(a + 1, n)*gegenbauer(n, a + 1/2, x)/RisingFactorial(2*a + 1, n)
 
     >>> jacobi(n, 0, 0, x)
     legendre(n, x)
 
     >>> jacobi(n, S(1)/2, S(1)/2, x)
-    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(1 + n)
+    RisingFactorial(3/2, n)*chebyshevu(n, x)/factorial(n + 1)
 
     >>> jacobi(n, -S(1)/2, -S(1)/2, x)
     RisingFactorial(1/2, n)*chebyshevt(n, x)/factorial(n)
@@ -87,7 +87,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    gamma(a + n + 1)*hyper((-n, -b - n), (1 + a,), -1)/(2**n*factorial(n)*gamma(1 + a))
+    gamma(a + n + 1)*hyper((-n, -b - n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(1 + a, n)/factorial(n)
 
@@ -319,7 +319,7 @@ class gegenbauer(OrthogonalPolynomial):
     (-1)**n*gegenbauer(n, a, x)
 
     >>> gegenbauer(n, a, 0)
-    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(1/2 - n/2)*gamma(1 + n))
+    2**n*sqrt(pi)*gamma(a + n/2)/(gamma(a)*gamma(-n/2 + 1/2)*gamma(n + 1))
     >>> gegenbauer(n, a, 1)
     gamma(n + 2*a)/(gamma(2*a)*gamma(1 + n))
 
@@ -1330,7 +1330,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     >>> assoc_laguerre(1, a, x)
     a - x + 1
     >>> assoc_laguerre(2, a, x)
-    a**2/2 + 3*a/2 + x**2/2 + x*(-2 - a) + 1
+    a**2/2 + 3*a/2 + x**2/2 + x*(-a - 2) + 1
     >>> assoc_laguerre(3, a, x)
     a**3/6 + a**2 + 11*a/6 - x**3/6 + x**2*(3/2 + a/2) + x*(-a**2/2 - 5*a/2 - 3) + 1
 

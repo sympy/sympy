@@ -99,8 +99,8 @@ factor
 the rational numbers.  For example:
 
     >>> factor(x**3 - x**2 + x - 1)
-            ⎛     2⎞
-    (x - 1)⋅⎝1 + x ⎠
+            ⎛ 2    ⎞
+    (x - 1)⋅⎝x  + 1⎠
     >>> factor(x**2*z + 4*x*y*z + 4*y**2*z)
                2
     z⋅(x + 2⋅y)
@@ -140,13 +140,13 @@ collect
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
      3    2
-    x  + x ⋅(2 - z) + x⋅(1 + y) - 3
+    x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
-    2 - z
+    -z + 2
 
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
@@ -160,7 +160,7 @@ no common factors, and the leading coefficients of `p` and `q` do not have
 denominators (i.e., are integers).
 
     >>> cancel((x**2 + 2*x + 1)/(x**2 + x))
-    1 + x
+    x + 1
     ─────
       x
 
@@ -220,7 +220,7 @@ function.
     >>> apart(expr)
      2⋅x - 1       1     3
     ────────── - ───── + ─
-     2           4 + x   x
+     2           x + 4   x
     x  + x + 1
 
 Trigonometric Simplification
@@ -252,9 +252,9 @@ To simplify expressions using trigonometric identities, use ``trigsimp()``.
     >>> trigsimp(sin(x)**2 + cos(x)**2)
     1
     >>> trigsimp(sin(x)**4 - 2*cos(x)**2*sin(x)**2 + cos(x)**4)
-    1   cos(4⋅x)
-    ─ + ────────
-    2      2
+    cos(4⋅x)   1
+    ──────── + ─
+       2       2
     >>> trigsimp(sin(x)*tan(x)/sec(x))
        2
     sin (x)
@@ -630,7 +630,7 @@ To rewrite an expression in terms of a function, use
     ──────────
       cos(x)
     >>> factorial(x).rewrite(gamma)
-    Γ(1 + x)
+    Γ(x + 1)
 
 For some tips on applying more targeted rewriting, see the
 :ref:`tutorial-manipulation` section.
@@ -642,7 +642,7 @@ To expand special functions in terms of some identities, use
 ``expand_func()``.  For example
 
     >>> expand_func(gamma(x + 3))
-    x⋅(1 + x)⋅(2 + x)⋅Γ(x)
+    x⋅(x + 1)⋅(x + 2)⋅Γ(x)
 
 hyperexpand
 -----------
@@ -679,9 +679,9 @@ To simplify combinatorial expressions, use ``combsimp()``.
     >>> combsimp(factorial(n)/factorial(n - 3))
     n⋅(n - 2)⋅(n - 1)
     >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
-    1 + n
+    n + 1
     ─────
-    1 + k
+    k + 1
 
 gammasimp
 ---------
@@ -802,7 +802,7 @@ Now we repeat this process
 
     >>> frac = apart(frac, a1)
     >>> frac
-             1 + a₃⋅a₄
+             a₃⋅a₄ + 1
     a₁ + ──────────────────
          a₂⋅a₃⋅a₄ + a₂ + a₄
     >>> l.append(a1)
@@ -811,7 +811,7 @@ Now we repeat this process
     >>> frac
             a₄
     a₂ + ─────────
-         1 + a₃⋅a₄
+         a₃⋅a₄ + 1
     >>> l.append(a2)
     >>> frac = 1/(frac - a2)
     >>> frac = apart(frac, a3)

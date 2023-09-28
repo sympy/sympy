@@ -1740,24 +1740,24 @@ class Pow(Expr):
         >>> from sympy.abc import x, y
 
         >>> ((2*x + 2)**2).as_content_primitive()
-        (4, (1 + x)**2)
+        (4, (x + 1)**2)
         >>> (4**((1 + y)/2)).as_content_primitive()
         (2, 4**(y/2))
         >>> (3**((1 + y)/2)).as_content_primitive()
-        (1, 3**((1 + y)/2))
+        (1, 3**((y + 1)/2))
         >>> (3**((5 + y)/2)).as_content_primitive()
-        (9, 3**((1 + y)/2))
+        (9, 3**((y + 1)/2))
         >>> eq = 3**(2 + 2*x)
         >>> powsimp(eq) == eq
         True
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        3**(2 + 2*x)
+        3**(2*x + 2)
 
         >>> eq = (2 + 2*x)**y
         >>> s = expand_power_base(eq); s.is_Mul, s
-        (False, (2 + 2*x)**y)
+        (False, (2*x + 2)**y)
         >>> eq.as_content_primitive()
         (1, (2*(1 + x))**y)
         >>> s = expand_power_base(_[1]); s.is_Mul, s

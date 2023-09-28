@@ -179,13 +179,13 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮ ⎛ 4    2  x    2        x          x⎞  x
     ⎮ ⎝x  + x ⋅ℯ  - x  - 2⋅x⋅ℯ  - 2⋅x - ℯ ⎠⋅ℯ
     ⎮ ──────────────────────────────────────── dx
-    ⎮               2        2 ⎛     x⎞
-    ⎮        (x - 1) ⋅(1 + x) ⋅⎝1 + ℯ ⎠
+    ⎮               2        2 ⎛ x    ⎞
+    ⎮        (x - 1) ⋅(x + 1) ⋅⎝ℯ  + 1⎠
     ⌡
     >>> integ.doit()
        x
-      ℯ         ⎛     x⎞
-    ────── + log⎝1 + ℯ ⎠
+      ℯ         ⎛ x    ⎞
+    ────── + log⎝ℯ  + 1⎠
      2
     x  - 1
 
@@ -211,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(1 + y)    for re(y) > -1
+    ⎧ Γ(y + 1)    for re(y) > -1
     ⎪
     ⎪∞
     ⎪⌠
@@ -339,7 +339,7 @@ the ``differentiate_finite`` function:
 
     >>> f, g = symbols('f g', cls=Function)
     >>> differentiate_finite(f(x)*g(x))
-    f(1/2 + x)⋅g(1/2 + x) - f(x - 1/2)⋅g(x - 1/2)
+    f(x + 1/2)⋅g(x + 1/2) - f(x - 1/2)⋅g(x - 1/2)
 
 If you already have a ``Derivative`` instance, you can use the
 ``as_finite_difference`` method to generate approximations of the
@@ -348,7 +348,7 @@ derivative to arbitrary order:
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
     >>> dfdx.as_finite_difference()
-    f(1/2 + x) - f(x - 1/2)
+    f(x + 1/2) - f(x - 1/2)
 
 here the first order derivative was approximated around x using a
 minimum number of points (2 for 1st order derivative) evaluated

@@ -40,7 +40,7 @@ To define variables, we must use ``symbols``.
 
     >>> x = symbols('x')
     >>> x + 1
-    1 + x
+    x + 1
 
 ``symbols`` takes a string of variable names separated by spaces or commas,
 and creates Symbols out of them.  We can then assign these to variable names.
@@ -66,7 +66,7 @@ Here we have done the very confusing thing of assigning a Symbol with the name
 
     >>> crazy = symbols('unrelated')
     >>> crazy + 1
-    1 + unrelated
+    unrelated + 1
 
 This also shows that Symbols can have names longer than one character if we
 want.
@@ -96,7 +96,7 @@ you're wrong.  Let's see what really happens
     >>> expr = x + 1
     >>> x = 2
     >>> print(expr)
-    1 + x
+    x + 1
 
 Changing ``x`` to ``2`` had no effect on ``expr``.  This is because ``x = 2``
 changes the Python variable ``x`` to ``2``, but has no effect on the SymPy
@@ -164,7 +164,7 @@ the result of ``==``.  There is a separate object, called ``Eq``, which can be
 used to create symbolic equalities
 
     >>> Eq(x + 1, 4)
-    Eq(1 + x, 4)
+    Eq(x + 1, 4)
 
 There is one additional caveat about ``==`` as well.  Suppose we want to know
 if `(x + 1)^2 = x^2 + 2x + 1`.  We might try something like this:
@@ -274,14 +274,14 @@ This problem also comes up whenever we have a larger symbolic expression with
 ``int/int`` in it.  For example:
 
     >>> x + 1/2
-    0.5 + x
+    x + 0.5
 
 This happens because Python first evaluates ``1/2`` into ``0.5``, and then
 that is cast into a SymPy type when it is added to ``x``.  Again, we can get
 around this by explicitly creating a Rational:
 
     >>> x + Rational(1, 2)
-    1/2 + x
+    x + 1/2
 
 There are several tips on avoiding this situation in the :ref:`gotchas`
 document.

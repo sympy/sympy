@@ -115,11 +115,11 @@ def parametric_region_list(reg):
 
     >>> e = Ellipse(Point(1, 3), 2, 3)
     >>> parametric_region_list(e)
-    [ParametricRegion((1 + 2*cos(t), 3 + 3*sin(t)), (t, 0, 2*pi))]
+    [ParametricRegion((2*cos(t) + 1, 3*sin(t) + 3), (t, 0, 2*pi))]
 
     >>> s = Segment(Point(1, 3), Point(2, 6))
     >>> parametric_region_list(s)
-    [ParametricRegion((1 + t, 3 + 3*t), (t, 0, 1))]
+    [ParametricRegion((t + 1, 3*t + 3), (t, 0, 1))]
 
     >>> p1, p2, p3, p4 = [(0, 1), (2, -3), (5, 3), (-2, 3)]
     >>> poly = Polygon(p1, p2, p3, p4)

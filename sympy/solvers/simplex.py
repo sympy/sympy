@@ -615,7 +615,7 @@ def _rel_as_nonpos(constr, syms):
     >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
     ([y - x], {}, [])
     >>> _rel_as_nonpos([x >= 3, x <= 5], [x])
-    ([_z1 - 2], {x: 3 + _z1}, [_z1])
+    ([_z1 - 2], {x: _z1 + 3}, [_z1])
     >>> _rel_as_nonpos([x <= 5], [x])
     ([], {x: 5 - _z1}, [_z1])
     >>> _rel_as_nonpos([x >= 1], [x])

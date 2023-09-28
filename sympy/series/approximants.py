@@ -40,7 +40,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
     >>> y = approximants(p, t)
     >>> for k in range(3): print(next(y))
     1
-    (1 + x)/((-1 - x)*(t*(1 + x) + (1 + x)/(-1 - x)))
+    (x + 1)/((-x - 1)*(t*(x + 1) + (x + 1)/(-x - 1)))
     nan
 
     >>> y = approximants(p, t, simplify=True)

@@ -822,9 +822,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         >>> Sum(x*y, (x, 1, 5), (y, 0, 6)).reverse_order(x, y)
         Sum(x*y, (x, 6, 0), (y, 7, -1))
         >>> Sum(x, (x, a, b)).reverse_order(x)
-        Sum(-x, (x, 1 + b, a - 1))
+        Sum(-x, (x, b + 1, a - 1))
         >>> Sum(x, (x, a, b)).reverse_order(0)
-        Sum(-x, (x, 1 + b, a - 1))
+        Sum(-x, (x, b + 1, a - 1))
 
         While one should prefer variable names when specifying which limits
         to reverse, the index counting notation comes in handy in case there
@@ -835,17 +835,17 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum(x**2, (x, a, b), (x, c, d))
         >>> S0 = S.reverse_order(0)
         >>> S0
-        Sum(-x**2, (x, 1 + b, a - 1), (x, c, d))
+        Sum(-x**2, (x, b + 1, a - 1), (x, c, d))
         >>> S1 = S0.reverse_order(1)
         >>> S1
-        Sum(x**2, (x, 1 + b, a - 1), (x, 1 + d, c - 1))
+        Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))
 
         Of course we can mix both notations:
 
         >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(x, 1)
-        Sum(x*y, (x, 1 + b, a - 1), (y, 6, 1))
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
         >>> Sum(x*y, (x, a, b), (y, 2, 5)).reverse_order(y, x)
-        Sum(x*y, (x, 1 + b, a - 1), (y, 6, 1))
+        Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
         See Also
         ========

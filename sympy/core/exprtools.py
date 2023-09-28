@@ -1008,24 +1008,24 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
-    y*(1 + x)*(x + y + 1)
+    y*(x + 1)*(x + y + 1)
     >>> gcd_terms(x/2 + 1)
-    (2 + x)/2
+    (x + 2)/2
     >>> gcd_terms(x/2 + 1, clear=False)
-    1 + x/2
+    x/2 + 1
     >>> gcd_terms(x/2 + y/2, clear=False)
     (x + y)/2
     >>> gcd_terms(x/2 + 1/x)
-    (2 + x**2)/(2*x)
+    (x**2 + 2)/(2*x)
     >>> gcd_terms(x/2 + 1/x, fraction=False)
     (x + 2/x)/2
     >>> gcd_terms(x/2 + 1/x, fraction=False, clear=False)
     1/x + x/2
 
     >>> gcd_terms(x/2/y + 1/x/y)
-    (2 + x**2)/(2*x*y)
+    (x**2 + 2)/(2*x*y)
     >>> gcd_terms(x/2/y + 1/x/y, clear=False)
-    (1 + x**2/2)/(x*y)
+    (x**2/2 + 1)/(x*y)
     >>> gcd_terms(x/2/y + 1/x/y, clear=False, fraction=False)
     (x/2 + 1/x)/y
 
@@ -1184,7 +1184,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
-    x*(1 + 8*(1 + 2*y)**3)
+    x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
     >>> factor_terms(x*A + x*A + x*y*A)
     x*(2*A + y*A)
@@ -1194,9 +1194,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     fractions:
 
     >>> factor_terms(x/2 + 1, clear=False)
-    1 + x/2
+    x/2 + 1
     >>> factor_terms(x/2 + 1, clear=True)
-    (2 + x)/2
+    (x + 2)/2
 
     If a -1 is all that can be factored out, to *not* factor it out, the
     flag ``sign`` must be False:

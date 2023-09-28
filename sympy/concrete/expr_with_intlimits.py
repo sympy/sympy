@@ -51,7 +51,7 @@ class ExprWithIntLimits(ExprWithLimits):
 
         >>> Sn = S.change_index(x, x + 1, y)
         >>> Sn
-        Sum(y - 1, (y, 1 + a, 1 + b))
+        Sum(y - 1, (y, a + 1, b + 1))
         >>> Sn.doit()
         -a**2/2 + a/2 + b**2/2 + b/2
 
@@ -82,10 +82,10 @@ class ExprWithIntLimits(ExprWithLimits):
         Product(i*j**2, (i, a, b), (j, c, d))
         >>> P2 = P.change_index(i, i+3, k)
         >>> P2
-        Product(j**2*(k - 3), (k, 3 + a, 3 + b), (j, c, d))
+        Product(j**2*(k - 3), (k, a + 3, b + 3), (j, c, d))
         >>> P3 = P2.change_index(j, -j, l)
         >>> P3
-        Product(l**2*(k - 3), (k, 3 + a, 3 + b), (l, -d, -c))
+        Product(l**2*(k - 3), (k, a + 3, b + 3), (l, -d, -c))
 
         When dealing with symbols only, we can make a
         general linear transformation:

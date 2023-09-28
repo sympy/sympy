@@ -189,7 +189,7 @@ example $\sin(x) = 0$ for $x = n * \pi$ for every integer value of $n$:
 >>> from sympy.abc import x
 >>> solution = solveset(sin(x), x)
 >>> pprint(solution)
-{2*n*pi | n in Integers} U {2*n*pi + pi | n in Integers}
+{2*n*pi | n in Integers} U {pi + 2*n*pi | n in Integers}
 ```
 
 However, {func}`~.solve` will return only a finite number of solutions:

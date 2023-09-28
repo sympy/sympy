@@ -55,11 +55,11 @@ equation formulation $Ax=b$ where
 >>> A.solve(b)
 ⎡  2⋅e  ⎤
 ⎢───────⎥
-⎢c⋅e + d⎥
+⎢d + c⋅e⎥
 ⎢       ⎥
 ⎢   2   ⎥
 ⎢───────⎥
-⎣c⋅e + d⎦
+⎣d + c⋅e⎦
 ```
 
 ## Guidance
@@ -129,13 +129,13 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
     ⎣0⎦
 >>> solution2 = A.LUsolve(b2)
 >>> solution2
-    ⎡  4⋅e  ⎤
-    ⎢───────⎥
-    ⎢c⋅e + d⎥
-    ⎢       ⎥
-    ⎢   4   ⎥
-    ⎢───────⎥
-    ⎣c⋅e + d⎦
+⎡  4⋅e  ⎤
+⎢───────⎥
+⎢d + c⋅e⎥
+⎢       ⎥
+⎢   4   ⎥
+⎢───────⎥
+⎣d + c⋅e⎦
 >>> # Demonstrate that solution2 is correct
 >>> simplify(A * solution2)
     ⎡4⎤
@@ -163,13 +163,13 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
     ⎣0⎦
 >>> inv = A.inv()
 >>> inv
-    ⎡   e        d   ⎤
-    ⎢───────  ───────⎥
-    ⎢c⋅e + d  c⋅e + d⎥
-    ⎢                ⎥
-    ⎢   1       -c   ⎥
-    ⎢───────  ───────⎥
-    ⎣c⋅e + d  c⋅e + d⎦
+⎡   e        d   ⎤
+⎢───────  ───────⎥
+⎢d + c⋅e  d + c⋅e⎥
+⎢                ⎥
+⎢   1       -c   ⎥
+⎢───────  ───────⎥
+⎣d + c⋅e  d + c⋅e⎦
 >>> # Solves Ax = b for x
 >>> solution = inv * b
 >>> solution
@@ -188,13 +188,13 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 >>> # Solves Ax = b2 for x
 >>> solution2 = inv * b2
 >>> solution2
-    ⎡  4⋅e  ⎤
-    ⎢───────⎥
-    ⎢c⋅e + d⎥
-    ⎢       ⎥
-    ⎢   4   ⎥
-    ⎢───────⎥
-    ⎣c⋅e + d⎦
+⎡  4⋅e  ⎤
+⎢───────⎥
+⎢d + c⋅e⎥
+⎢       ⎥
+⎢   4   ⎥
+⎢───────⎥
+⎣d + c⋅e⎦
 >>> # Demonstrate that solution2 is correct
 >>> simplify(A * solution2)
     ⎡4⎤
@@ -281,11 +281,11 @@ produces the constants vector $b$:
     ⎣d + c⋅e⎦
 >>> # Not immediately obvious whether this result is a zeroes vector
 >>> (A * solution) - b
-    ⎡ 2⋅c⋅e      2⋅d      ⎤
-    ⎢─────── + ─────── - 2⎥
-    ⎢c⋅e + d   c⋅e + d    ⎥
-    ⎢                     ⎥
-    ⎣          0          ⎦
+⎡ 2⋅c⋅e      2⋅d      ⎤
+⎢─────── + ─────── - 2⎥
+⎢d + c⋅e   d + c⋅e    ⎥
+⎢                     ⎥
+⎣          0          ⎦
 >>> # simplify reveals that this result is a zeroes vector
 >>> simplify((A * solution) - b)
     ⎡0⎤
@@ -305,18 +305,18 @@ list of the elements using list comprehension
 
 ```py
 >>> [element for element in solution]
-    ⎡  2⋅e       2   ⎤
-    ⎢───────, ───────⎥
-    ⎣c⋅e + d  c⋅e + d⎦
+⎡  2⋅e       2   ⎤
+⎢───────, ───────⎥
+⎣d + c⋅e  d + c⋅e⎦
 ```
 
 or you can extract individual elements by subscripting
 
 ```py
 >>> solution[0]
-      2⋅e
-    ───────
-    c⋅e + d
+  2⋅e
+───────
+d + c⋅e
 ```
 
 ## Equations With No Solution

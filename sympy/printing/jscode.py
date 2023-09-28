@@ -289,7 +289,7 @@ def jscode(expr, assign_to=None, **settings):
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(jscode(expr, tau))
     if (x > 0) {
-       tau = 1 + x;
+       tau = x + 1;
     }
     else {
        tau = x;
