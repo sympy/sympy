@@ -34,7 +34,9 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 
     return check_satisfiability(props, _props, assumptions)
 
-
+# Some predicates such as Q.prime can't be handled by lra_satask.
+# For example, (x > 0) & (x < 1) & Q.prime(x) is unsat but lra_satask would think it was sat.
+# WHITE_LIST is a list of predicates that can always be handled.
 WHITE_LIST = ALLOWED_PRED | BENIGN_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
                                             Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
                                             Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
@@ -47,7 +49,7 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    all_pred, all_exprs = get_all_pred_and_expr(sat_true)
+    all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
 
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
@@ -58,9 +60,9 @@ def check_satisfiability(prop, _prop, factbase):
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
 
-    # add any old assumptions and raise
-    # exceptions if there are any unhandled assumptions
-    for assm in extract_old_assumptions(all_exprs):
+    # convert old assumptions into predicates and add them to sat_true and sat_false
+    # also check for unhandled predicates
+    for assm in extract_pred_from_old_assum(all_exprs):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -211,7 +213,7 @@ pred_to_pos_neg_zero = {
     Q.positive_infinite: False
 }
 
-def get_all_pred_and_expr(enc_cnf):
+def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     all_exprs = set()
     all_pred = set()
     for pred in enc_cnf.encoding.keys():
@@ -222,7 +224,7 @@ def get_all_pred_and_expr(enc_cnf):
 
     return all_pred, all_exprs
 
-def extract_old_assumptions(all_exprs):
+def extract_pred_from_old_assum(all_exprs):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
@@ -243,10 +245,10 @@ def extract_old_assumptions(all_exprs):
 
     Example
     =======
-    >>> from sympy.assumptions.lra_satask import extract_old_assumptions
+    >>> from sympy.assumptions.lra_satask import extract_pred_from_old_assum
     >>> from sympy import symbols
     >>> x, y = symbols("x y", positive=True)
-    >>> extract_old_assumptions([x, y, 2])
+    >>> extract_pred_from_old_assum([x, y, 2])
     [Q.positive(x), Q.positive(y)]
     """
     ret = []
