@@ -2362,7 +2362,7 @@ class AlgebraicNumber(Expr):
         >>> a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1),
         ...                  [-1, -1, 0, 0], alias=zeta)
         >>> a5.as_poly().as_expr()
-        -zeta**3 - zeta**2
+        -zeta**2 - zeta**3
         >>> a5.evalf()
         1.61803398874989
 

@@ -1808,7 +1808,7 @@ class Beam:
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
-            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
+            {R_0: x/7 - 22/7, R_7: -20/7 - x/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
             Plot[0]:Plot object containing:
@@ -2413,7 +2413,7 @@ class Beam3D(Beam):
     >>> b.shear_force()
     [0, -q*x, 0]
     >>> b.bending_moment()
-    [0, 0, -m*x + q*x**2/2]
+    [0, 0, q*x**2/2 - m*x]
     >>> b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()

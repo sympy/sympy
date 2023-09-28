@@ -1826,20 +1826,20 @@ class Derivative(Expr):
         >>> x, h = symbols('x h')
         >>> f = Function('f')
         >>> f(x).diff(x).as_finite_difference()
-        f(x + 1/2) - f(x - 1/2)
+        f(1/2 + x) - f(x - 1/2)
 
         The default step size and number of points are 1 and
         ``order + 1`` respectively. We can change the step size by
         passing a symbol as a parameter:
 
         >>> f(x).diff(x).as_finite_difference(h)
-        f(h/2 + x)/h - f(x - h/2)/h
+        f(x + h/2)/h - f(x - h/2)/h
 
         We can also specify the discretized values to be used in a
         sequence:
 
         >>> f(x).diff(x).as_finite_difference([x, x+h, x+2*h])
-        -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
+        -3*f(x)/(2*h) + 2*f(h + x)/h - f(x + 2*h)/(2*h)
 
         The algorithm is not restricted to use equidistant spacing, nor
         do we need to make the approximation around ``x0``, but we can get
@@ -1848,7 +1848,7 @@ class Derivative(Expr):
         >>> e, sq2 = exp(1), sqrt(2)
         >>> xl = [x-h, x+h, x+e*h]
         >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
-        2*h*((h + sqrt(2)*h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(E*h + x)/((h + E*h)*(E*h - h)) + ((E*h - sqrt(2)*h)/(2*h) - (h + sqrt(2)*h)/(2*h))*f(h + x)/(E*h - h) + (-(h - sqrt(2)*h)/(2*h) - (E*h - sqrt(2)*h)/(2*h))*f(x - h)/(h + E*h)
+        2*h*((h + sqrt(2)*h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(x + E*h)/((E*h - h)*(h + E*h)) + (-(h - sqrt(2)*h)/(2*h) - (E*h - sqrt(2)*h)/(2*h))*f(x - h)/(h + E*h) + ((E*h - sqrt(2)*h)/(2*h) - (h + sqrt(2)*h)/(2*h))*f(h + x)/(E*h - h)
 
         To approximate ``Derivative`` around ``x0`` using a non-equidistant
         spacing step, the algorithm supports assignment of undefined
@@ -1863,7 +1863,7 @@ class Derivative(Expr):
         >>> y = Symbol('y')
         >>> d2fdxdy=f(x,y).diff(x,y)
         >>> d2fdxdy.as_finite_difference(wrt=x)
-        Derivative(f(x + 1/2, y), y) - Derivative(f(x - 1/2, y), y)
+        Derivative(f(1/2 + x, y), y) - Derivative(f(x - 1/2, y), y)
 
         We can apply ``as_finite_difference`` to ``Derivative`` instances in
         compound expressions using ``replace``:
@@ -2700,9 +2700,9 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
       The parts of a rational expression can be targeted::
 
         >>> expand((x + y)*y/x/(x + 1), frac=True)
-        (x*y + y**2)/(x**2 + x)
+        (y**2 + x*y)/(x + x**2)
         >>> expand((x + y)*y/x/(x + 1), numer=True)
-        (x*y + y**2)/(x*(x + 1))
+        (y**2 + x*y)/(x*(1 + x))
         >>> expand((x + y)*y/x/(x + 1), denom=True)
         y*(x + y)/(x**2 + x)
 
@@ -2997,7 +2997,7 @@ def expand_power_base(expr, deep=True, force=False):
     sin(x**z*y**z)
 
     >>> expand_power_base((2*sin(x))**y + (2*cos(x))**y)
-    2**y*sin(x)**y + 2**y*cos(x)**y
+    2**y*cos(x)**y + 2**y*sin(x)**y
 
     >>> expand_power_base((2*exp(y))**x)
     2**x*exp(y)**x
@@ -3014,7 +3014,7 @@ def expand_power_base(expr, deep=True, force=False):
     x**2*z**2 + 2*x*y*z**2 + y**2*z**2
 
     >>> expand_power_base((2*y)**(1+z))
-    2**(z + 1)*y**(z + 1)
+    2**(1 + z)*y**(1 + z)
     >>> ((2*y)**(1+z)).expand()
     2*2**z*y**(z + 1)
 
@@ -3108,7 +3108,7 @@ def count_ops(expr, visual=False):
     Here, there are two Adds and a Pow:
 
     >>> (1 + a + b**2).count_ops(visual=True)
-    2*ADD + POW
+    POW + 2*ADD
 
     In the following, an Add, Mul, Pow and two functions:
 

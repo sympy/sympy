@@ -819,7 +819,7 @@ class harmonic(Function):
     harmonic(1/3)
     >>> He = expand_func(H)
     >>> He
-    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(3*_k + 1), (_k, 0, 0))
+    -sqrt(3)*pi/6 - log(6) + 2*Sum(log(sin(_k*pi/3))*cos(2*_k*pi/3), (_k, 1, 1)) + 3*Sum(1/(1 + 3*_k), (_k, 0, 0))
     >>> He.doit()
     -sqrt(3)*pi/6 - log(6) - log(sqrt(3)/2) + 3
     >>> H = harmonic(25/S(7))
@@ -837,23 +837,23 @@ class harmonic(Function):
     >>> m = Symbol("m", integer=True, positive=True)
 
     >>> harmonic(n).rewrite(digamma)
-    EulerGamma + polygamma(0, n + 1)
+    EulerGamma + polygamma(0, 1 + n)
 
     >>> harmonic(n).rewrite(polygamma)
-    EulerGamma + polygamma(0, n + 1)
+    EulerGamma + polygamma(0, 1 + n)
 
     >>> harmonic(n,3).rewrite(polygamma)
-    polygamma(2, n + 1)/2 + zeta(3)
+    polygamma(2, 1 + n)/2 + zeta(3)
 
     >>> simplify(harmonic(n,m).rewrite(polygamma))
-    Piecewise((polygamma(0, n + 1) + EulerGamma, Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, n + 1)/factorial(m - 1), True))
+    Piecewise((EulerGamma + polygamma(0, 1 + n), Eq(m, 1)), (zeta(m) - (-1)**m*polygamma(m - 1, 1 + n)/factorial(m - 1), True))
 
     Integer offsets in the argument can be pulled out:
 
     >>> from sympy import expand_func
 
     >>> expand_func(harmonic(n+4))
-    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    harmonic(n) + 1/(4 + n) + 1/(3 + n) + 1/(2 + n) + 1/(1 + n)
 
     >>> expand_func(harmonic(n-4))
     harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
@@ -1209,10 +1209,10 @@ class catalan(Function):
     expressions involving other mathematical functions
 
     >>> catalan(n).rewrite(binomial)
-    binomial(2*n, n)/(n + 1)
+    binomial(2*n, n)/(1 + n)
 
     >>> catalan(n).rewrite(gamma)
-    4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
+    4**n*gamma(1/2 + n)/(sqrt(pi)*gamma(2 + n))
 
     >>> catalan(n).rewrite(hyper)
     hyper((-n, 1 - n), (2,), 1)
@@ -1227,7 +1227,7 @@ class catalan(Function):
     continuous real function in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
+    (log(4) + polygamma(0, 1/2 + n) - polygamma(0, 2 + n))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:

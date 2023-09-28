@@ -28,7 +28,7 @@ def decompogen(f, symbol):
     >>> decompogen(sqrt(6*x**2 - 5), x)
     [sqrt(x), 6*x**2 - 5]
     >>> decompogen(sin(sqrt(cos(x**2 + 1))), x)
-    [sin(x), sqrt(x), cos(x), x**2 + 1]
+    [sin(x), sqrt(x), cos(x), 1 + x**2]
     >>> decompogen(x**4 + 2*x**3 - x - 1, x)
     [x**2 - x - 1, x**2 + x]
 
@@ -111,7 +111,7 @@ def compogen(g_s, symbol):
     >>> compogen([sqrt(x), 6*x**2 - 5], x)
     sqrt(6*x**2 - 5)
     >>> compogen([sin(x), sqrt(x), cos(x), x**2 + 1], x)
-    sin(sqrt(cos(x**2 + 1)))
+    sin(sqrt(cos(1 + x**2)))
     >>> compogen([x**2 - x - 1, x**2 + x], x)
     -x**2 - x + (x**2 + x)**2 - 1
     """

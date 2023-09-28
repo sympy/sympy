@@ -821,9 +821,9 @@ class Vector(Printable, EvalfMixin):
         >>> A = ReferenceFrame('A')
         >>> x, y, z = symbols('x y z')
         >>> ((1 + x*y) * A.x).xreplace({x: pi})
-        (pi*y + 1)*A.x
+        (1 + pi*y)*A.x
         >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
-        (2*pi + 1)*A.x
+        (1 + 2*pi)*A.x
 
         Replacements occur only if an entire node in the expression tree is
         matched:

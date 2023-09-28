@@ -229,7 +229,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     >>> list(ordered([y + 2, x + 2, x**2 + y + 3],
     ...    count_ops, default=False, warn=False))
     ...
-    [y + 2, x + 2, x**2 + y + 3]
+    [2 + y, 2 + x, x**2 + y + 3]
 
     The default_sort_key allows the tie to be broken:
 

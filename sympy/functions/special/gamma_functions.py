@@ -591,7 +591,7 @@ class polygamma(Function):
     >>> polygamma(0, 1/S(2))
     -EulerGamma - 2*log(2)
     >>> polygamma(0, 1/S(3))
-    -EulerGamma - log(3) - log(sqrt(3)) - sqrt(3)*pi/6
+    -sqrt(3)*pi/6 - EulerGamma - log(3) - log(sqrt(3))
     >>> polygamma(0, 1/S(4))
     -EulerGamma - pi/2 - log(2) - log(4)
     >>> polygamma(0, 2)
@@ -630,9 +630,9 @@ class polygamma(Function):
 
     >>> n = Symbol("n")
     >>> diff(polygamma(n, x), x)
-    polygamma(n + 1, x)
+    polygamma(1 + n, x)
     >>> diff(polygamma(n, x), x, 2)
-    polygamma(n + 2, x)
+    polygamma(2 + n, x)
 
     We can rewrite ``polygamma`` functions in terms of harmonic numbers:
 
@@ -900,7 +900,7 @@ class loggamma(Function):
     >>> loggamma(S(5)/2)
     log(3*sqrt(pi)/4)
     >>> loggamma(n/2)
-    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(n/2 + 1/2))
+    log(2**(1 - n)*sqrt(pi)*gamma(n)/gamma(1/2 + n/2))
 
     And general rational arguments:
 

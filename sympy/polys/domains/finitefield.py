@@ -42,26 +42,26 @@ class FiniteField(Field, SimpleDomain):
 
     >>> from sympy import factor, GF
     >>> factor(x**2 + 1)
-    x**2 + 1
+    1 + x**2
     >>> factor(x**2 + 1, modulus=2)
-    (x + 1)**2
+    (1 + x)**2
     >>> factor(x**2 + 1, domain=GF(2))
-    (x + 1)**2
+    (1 + x)**2
     >>> factor(x**2 + 1, domain='GF(2)')
-    (x + 1)**2
+    (1 + x)**2
 
     It is also possible to use :ref:`GF(p)` with the :py:func:`~.cancel`
     and :py:func:`~.gcd` functions.
 
     >>> from sympy import cancel, gcd
     >>> cancel((x**2 + 1)/(x + 1))
-    (x**2 + 1)/(x + 1)
+    (1 + x**2)/(1 + x)
     >>> cancel((x**2 + 1)/(x + 1), domain=GF(2))
-    x + 1
+    1 + x
     >>> gcd(x**2 + 1, x + 1)
     1
     >>> gcd(x**2 + 1, x + 1, domain=GF(2))
-    x + 1
+    1 + x
 
     When using the domain directly :ref:`GF(p)` can be used as a constructor
     to create instances which then support the operations ``+,-,*,**,/``

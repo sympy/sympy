@@ -667,14 +667,14 @@ def octave_code(expr, assign_to=None, **settings):
     >>> from sympy import Piecewise
     >>> pw = Piecewise((x + 1, x > 0), (x, True))
     >>> octave_code(pw, assign_to=tau)
-    'tau = ((x > 0).*(x + 1) + (~(x > 0)).*(x));'
+    'tau = ((x > 0).*(1 + x) + (~(x > 0)).*(x));'
 
     Note that any expression that can be generated normally can also exist
     inside a Matrix:
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> octave_code(mat, assign_to='A')
-    'A = [x.^2 ((x > 0).*(x + 1) + (~(x > 0)).*(x)) sin(x)];'
+    'A = [x.^2 ((x > 0).*(1 + x) + (~(x > 0)).*(x)) sin(x)];'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the

@@ -59,9 +59,9 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     >>> solveset(x - x, x, domain=S.Reals)
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
-    ⎧        π │      ⎫
-    ⎨2⋅n⋅π + ─ │ n ∊ ℤ⎬
-    ⎩        2 │      ⎭
+    ⎧π         │      ⎫
+    ⎨─ + 2⋅n⋅π │ n ∊ ℤ⎬
+    ⎩2         │      ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it
@@ -80,19 +80,19 @@ is an example of the syntax of ``linsolve``.
 * List of Equations Form:
 
     >>> linsolve([x + y + z - 1, x + y + 2*z - 3 ], (x, y, z))
-    {(-y - 1, y, 2)}
+    {(-1 - y, y, 2)}
 
 * Augmented Matrix Form:
 
     >>> linsolve(Matrix(([1, 1, 1, 1], [1, 1, 2, 3])), (x, y, z))
-    {(-y - 1, y, 2)}
+    {(-1 - y, y, 2)}
 
 * A*x = b Form
 
     >>> M = Matrix(((1, 1, 1, 1), (1, 1, 2, 3)))
     >>> system = A, b = M[:, :-1], M[:, -1]
     >>> linsolve(system, x, y, z)
-    {(-y - 1, y, 2)}
+    {(-1 - y, y, 2)}
 
 .. note::
 
@@ -232,9 +232,9 @@ would thus use
 To solve the ODE, pass it and the function to solve for to ``dsolve``.
 
     >>> dsolve(diffeq, f(x))
-                        x   cos(x)
-    f(x) = (C₁ + C₂⋅x)⋅ℯ  + ──────
-                              2
+           cos(x)                x
+    f(x) = ────── + (C₁ + C₂⋅x)⋅ℯ
+             2
 
 ``dsolve`` returns an instance of ``Eq``.  This is because, in general,
 solutions to differential equations cannot be solved explicitly for the

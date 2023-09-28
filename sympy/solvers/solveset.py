@@ -89,7 +89,7 @@ def _masked(f, *atoms):
     >>> f
     _a1
     >>> reps
-    [(_a1, cos(_a0 + 1)), (_a0, cos(x))]
+    [(_a1, cos(1 + _a0)), (_a0, cos(x))]
     >>> for d, e in reps:
     ...     f = f.xreplace({d: e})
     >>> f
@@ -948,9 +948,9 @@ def solve_decomposition(f, symbol, domain):
     {0, log(2)}
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
-              3*pi
-    {2*n*pi + ---- | n in Integers}
-               2
+     3*pi
+    {---- + 2*n*pi | n in Integers}
+      2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
     {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
@@ -1285,9 +1285,9 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(exp(x), 7), S(5), n, x)
     (Mod(exp(x), 7), 5)
     >>> invert_modular(Mod(x, 7), S(5), n, x)
-    (x, ImageSet(Lambda(_n, 7*_n + 5), Integers))
+    (x, ImageSet(Lambda(_n, 5 + 7*_n), Integers))
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
-    (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
+    (x, ImageSet(Lambda(_n, 6 + 7*_n), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
     (x, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
@@ -1400,13 +1400,13 @@ def _solve_modular(f, symbol, domain):
     >>> from sympy import S, Symbol, sin, Intersection, Interval, Mod
     >>> x = Symbol('x')
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
-    ImageSet(Lambda(_n, 7*_n + 5), Integers)
+    ImageSet(Lambda(_n, 5 + 7*_n), Integers)
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Reals)  # domain should be subset of integers.
-    ConditionSet(x, Eq(Mod(5*x + 6, 7) - 3, 0), Reals)
+    ConditionSet(x, Eq(Mod(6 + 5*x, 7) - 3, 0), Reals)
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
+    ImageSet(Lambda(_n, 2 + 6*_n), Naturals0)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))

@@ -1884,13 +1884,13 @@ class SphericalJoint(Joint):
     [u2_PC(t)]])
     >>> child.frame.ang_vel_in(parent.frame).to_matrix(child.frame)
     Matrix([
-    [u0_PC(t)*cos(q1_PC(t))*cos(q2_PC(t)) + u1_PC(t)*sin(q2_PC(t))],
+    [u1_PC(t)*sin(q2_PC(t)) + u0_PC(t)*cos(q1_PC(t))*cos(q2_PC(t))],
     [u1_PC(t)*cos(q2_PC(t)) - u0_PC(t)*sin(q2_PC(t))*cos(q1_PC(t))],
     [                            u0_PC(t)*sin(q1_PC(t)) + u2_PC(t)]])
     >>> child.frame.x.to_matrix(parent.frame)
     Matrix([
     [                                            cos(q1_PC(t))*cos(q2_PC(t))],
-    [sin(q0_PC(t))*sin(q1_PC(t))*cos(q2_PC(t)) + sin(q2_PC(t))*cos(q0_PC(t))],
+    [sin(q2_PC(t))*cos(q0_PC(t)) + sin(q0_PC(t))*sin(q1_PC(t))*cos(q2_PC(t))],
     [sin(q0_PC(t))*sin(q2_PC(t)) - sin(q1_PC(t))*cos(q0_PC(t))*cos(q2_PC(t))]])
     >>> joint.child_point.pos_from(joint.parent_point)
     0
@@ -1930,7 +1930,7 @@ class SphericalJoint(Joint):
     Matrix([
     [u1_S(t)*cos(q0_S(t)) + u2_S(t)*sin(q0_S(t))*sin(q1_S(t))],
     [u1_S(t)*sin(q0_S(t)) - u2_S(t)*sin(q1_S(t))*cos(q0_S(t))],
-    [                          u0_S(t) + u2_S(t)*cos(q1_S(t))]])
+    [                          u2_S(t)*cos(q1_S(t)) + u0_S(t)]])
 
     Finally, the linear velocity of the bob's center of mass can be computed.
 

@@ -61,7 +61,7 @@ There are two common issues with substitution in mechanics:
     >>> expr = x.diff() + x
     >>> sub_dict = {x: 1}
     >>> expr.subs(sub_dict)
-    Derivative(1, t) + 1
+    1 + Derivative(1, t)
 
   In this case, ``x`` was replaced with 1 inside the ``Derivative`` as well,
   which is undesired.

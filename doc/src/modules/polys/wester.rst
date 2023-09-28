@@ -147,11 +147,11 @@ We can visualize this fact by factoring the polynomials::
 
     >>> factor(3*x**4 + 3*x**3 + x**2 - x - 2)
             ⎛   3        ⎞
-    (x + 1)⋅⎝3⋅x  + x - 2⎠
+    (1 + x)⋅⎝3⋅x  + x - 2⎠
 
     >>> factor(x**3 - 3*x**2 + x + 5)
             ⎛ 2          ⎞
-    (x + 1)⋅⎝x  - 4⋅x + 5⎠
+    (1 + x)⋅⎝x  - 4⋅x + 5⎠
 
 In both cases we obtained the factor `x + 1` which tells us that the common
 root is `x = -1`.
@@ -165,7 +165,7 @@ function the elegant way, use :func:`~.cancel` function. For example::
     >>> cancel((x**2 - 4)/(x**2 + 4*x + 4))
     x - 2
     ─────
-    x + 2
+    2 + x
 
 Expanding expressions and factoring back
 ----------------------------------------
@@ -180,13 +180,13 @@ factor the result back::
 
     >>> factor(g)
               19
-    20⋅(x + 1)
+    20⋅(1 + x)  
 
 The same can be achieved in factored form::
 
     >>> diff((x + 1)**20, x)
               19
-    20⋅(x + 1)
+    20⋅(1 + x)  
 
 Factoring in terms of cyclotomic polynomials
 --------------------------------------------
@@ -240,11 +240,11 @@ We would like to reduce degrees of the numerator and the denominator of a
 rational function ``f/g``. To do this we employ :func:`~.cancel` function::
 
     >>> cancel(f/g)
-     3      2       2
-    x  - 2⋅x  + √2⋅x  - 3⋅x - 2⋅√2⋅x - 3⋅√2
+        2                    3      2      
+    √2⋅x  - 2⋅√2⋅x - 3⋅√2 + x  - 2⋅x  - 3⋅x
     ───────────────────────────────────────
-                      2
-                     x  - 2
+                     2                     
+                    x  - 2                 
 
 Unfortunately nothing interesting happened. This is because by default SymPy
 treats `\sqrt{2}` as a generator, obtaining a bivariate polynomial for the
@@ -289,14 +289,14 @@ domains, which includes:
 
     >>> factor(f, modulus=5)
            2        2
-    (x - 2) ⋅(x + 2)
+    (x - 2) ⋅(2 + x) 
 
 * algebraic numbers::
 
     >>> alg = AlgebraicNumber((sqrt(5) - 1)/2, alias='alpha')
 
     >>> factor(f, extension=alg)
-    (x - α)⋅(x + α)⋅(x - 1 - α)⋅(x + 1 + α)
+    (x - α)⋅(x + α)⋅(x - α - 1)⋅(x + α + 1)
 
 Factoring polynomials into linear factors
 -----------------------------------------
@@ -438,10 +438,10 @@ Consider a univariate rational function ``f`` with integer coefficients::
 To decompose ``f`` into partial fractions use :func:`~.apart` function::
 
     >>> apart(f)
-      3       2        2
+      3       2        2    
     ───── - ───── + ────────
-    x + 2   x + 1          2
-                    (x + 1)
+    2 + x   1 + x          2
+                    (1 + x) 
 
 To return from partial fractions to the rational function use
 a composition of :func:`~.together` and :func:`~.cancel`::

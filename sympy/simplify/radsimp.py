@@ -72,7 +72,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     in specification order::
 
         >>> collect(x**2 + y*x**2 + x*y + y + a*y, [x, y])
-        x**2*(y + 1) + x*y + y*(a + 1)
+        x**2*(1 + y) + x*y + y*(1 + a)
 
     Also more complicated expressions can be used as patterns::
 
@@ -123,9 +123,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     ``exact`` to None:
 
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
-        x*exp(x) + 3*x + (y + 2)*sin(x)
+        x*exp(x) + 3*x + (2 + y)*sin(x)
         >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
-        x*y*(a + 1) + x*(b + 1)
+        x*(1 + b) + x*y*(1 + a)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -146,7 +146,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
-        (a + b)*f(x) + (a + b)*Derivative(f(x), x)
+        (a + b)*Derivative(f(x), x) + (a + b)*f(x)
 
     Or you can even match both derivative order and exponent at the same time::
 
@@ -667,7 +667,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(2 + sqrt(2))
     >>> collect_const(sqrt(3)*s + sqrt(7)*s + sqrt(3) + sqrt(7))
-    (sqrt(3) + sqrt(7))*(s + 1)
+    (sqrt(3) + sqrt(7))*(1 + s)
     >>> s = sqrt(2) + 2
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (3 + sqrt(2))*(sqrt(3) + sqrt(7))
@@ -814,11 +814,11 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     >>> n, d = fraction(ans)
     >>> pprint(factor_terms(signsimp(collect_sqrt(n))/d, radical=True))
-             ___             ___
-           \/ 2 *(x + y) - \/ 5 *(a + b)
-    --------------------------------------------
-         2               2      2              2
-    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
+            ___             ___
+          \/ 5 *(a + b) - \/ 2 *(x + y)
+    ------------------------------------------
+       2               2      2              2
+    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
 
     If radicals in the denominator cannot be removed or there is no denominator,
     the original expression will be returned.
@@ -1092,7 +1092,7 @@ def fraction(expr, exact=False):
 
        >>> u = Mul(2, x + 1, evaluate=False)
        >>> fraction(u)
-       (2*x + 2, 1)
+       (2 + 2*x, 1)
        >>> fraction(u, exact=True)
        (2*(x  + 1), 1)
     """

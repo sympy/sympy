@@ -1532,9 +1532,9 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     >>> from sympy import sqrt
     >>> integrate(sqrt(1 + x), (x, 0, x))
-    -2/3 + 2*(x + 1)**(3/2)/3
+    -2/3 + 2*(1 + x)**(3/2)/3
     >>> integrate(sqrt(1 + x), x)
-    2*(x + 1)**(3/2)/3
+    2*(1 + x)**(3/2)/3
 
     >>> integrate(x*y)
     Traceback (most recent call last):
@@ -1545,11 +1545,10 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), re(a) > -1),
-        (Integral(x**a*exp(-x), (x, 0, oo)), True))
+    Piecewise((gamma(1 + a), re(a) > -1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
-    gamma(a + 1)
+    gamma(1 + a)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
     (gamma(a + 1), re(a) > -1)

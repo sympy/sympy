@@ -392,7 +392,7 @@ def TR7(rv):
     >>> from sympy.abc import x
     >>> from sympy import cos
     >>> TR7(cos(x)**2)
-    cos(2*x)/2 + 1/2
+    1/2 + cos(2*x)/2
     >>> TR7(cos(x)**2 + 1)
     cos(2*x)/2 + 3/2
 
@@ -587,7 +587,7 @@ def TR10(rv, first=True):
     >>> TR10(cos(a + b))
     cos(a)*cos(b) - sin(a)*sin(b)
     >>> TR10(sin(a + b))
-    sin(a)*cos(b) + sin(b)*cos(a)
+    sin(b)*cos(a) + sin(a)*cos(b)
     >>> TR10(sin(a + b + c))
     (sin(a)*cos(b) + sin(b)*cos(a))*cos(c) + (cos(a)*cos(b) - sin(a)*sin(b))*sin(c)
     """

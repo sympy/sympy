@@ -46,15 +46,15 @@ def together(expr, deep=False, fraction=True):
     (x + y)/(x*y**2)
 
     >>> together(1/(1 + 1/x) + 1/(1 + 1/y))
-    (x*(y + 1) + y*(x + 1))/((x + 1)*(y + 1))
+    (x*(1 + y) + y*(1 + x))/((1 + x)*(1 + y))
 
     >>> together(exp(1/x + 1/y))
-    exp(1/y + 1/x)
+    exp(1/x + 1/y)
     >>> together(exp(1/x + 1/y), deep=True)
     exp((x + y)/(x*y))
 
     >>> together(1/exp(x) + 1/(x*exp(x)))
-    (x + 1)*exp(-x)/x
+    (1 + x)*exp(-x)/x
 
     >>> together(1/exp(2*x) + 1/(x*exp(3*x)))
     (x*exp(x) + 1)*exp(-3*x)/x

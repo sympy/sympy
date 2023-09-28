@@ -76,7 +76,7 @@ minimal degree. Otherwise is will return `None` to say that sequence is not
 hypergeometric:
 
     >>> hypersimp(factorial(2*n), n)
-    2*(n + 1)*(2*n + 1)
+    2*(1 + n)*(1 + 2*n)
     >>> hypersimp(factorial(n**2), n)
 
 

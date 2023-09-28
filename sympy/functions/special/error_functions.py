@@ -680,7 +680,7 @@ class erf2(Function):
     >>> erf2(x, oo)
     1 - erf(x)
     >>> erf2(x, -oo)
-    -erf(x) - 1
+    -1 - erf(x)
     >>> erf2(oo, y)
     erf(y) - 1
     >>> erf2(-oo, y)
@@ -1538,9 +1538,9 @@ class li(Function):
 
     >>> from sympy import Si, Ci, Shi, Chi
     >>> li(z).rewrite(Si)
-    -log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)) - log(I*log(z))
+    -log(1/log(z))/2 + log(log(z))/2 + Shi(log(z)) - log(I*log(z)) + Ci(I*log(z))
     >>> li(z).rewrite(Ci)
-    -log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)) - log(I*log(z))
+    -log(1/log(z))/2 + log(log(z))/2 + Shi(log(z)) - log(I*log(z)) + Ci(I*log(z))
     >>> li(z).rewrite(Shi)
     -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
     >>> li(z).rewrite(Chi)

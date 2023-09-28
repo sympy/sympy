@@ -31,7 +31,7 @@ def difference_delta(expr, n=None, step=1):
     >>> from sympy import difference_delta as dd
     >>> from sympy.abc import n
     >>> dd(n*(n + 1), n)
-    2*n + 2
+    2 + 2*n
     >>> dd(n*(n + 1), n, 2)
     4*n + 6
 

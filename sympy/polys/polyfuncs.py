@@ -99,15 +99,15 @@ def horner(f, *gens, **args):
     >>> from sympy.abc import x, y, a, b, c, d, e
 
     >>> horner(9*x**4 + 8*x**3 + 7*x**2 + 6*x + 5)
-    x*(x*(x*(9*x + 8) + 7) + 6) + 5
+    5 + x*(6 + x*(7 + x*(8 + 9*x)))
 
     >>> horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)
-    e + x*(d + x*(c + x*(a*x + b)))
+    e + x*(d + x*(c + x*(b + a*x)))
 
     >>> f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y
 
     >>> horner(f, wrt=x)
-    x*(x*y*(4*y + 2) + y*(2*y + 1))
+    x*(y*(1 + 2*y) + x*y*(2 + 4*y))
 
     >>> horner(f, wrt=y)
     y*(x*y*(4*x + 2) + x*(2*x + 1))
@@ -165,9 +165,9 @@ def interpolate(data, x):
     dictionary (and the points need not be equispaced):
 
     >>> interpolate([(-1, 2), (1, 2), (2, 5)], x)
-    x**2 + 1
+    1 + x**2
     >>> interpolate({-1: 2, 1: 2, 2: 5}, x)
-    x**2 + 1
+    1 + x**2
 
     If the interpolation is going to be used only once then the
     value of interest can be passed instead of passing a symbol:
@@ -222,7 +222,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
     >>> data = [(1, -210), (2, -35), (3, 105), (4, 231), (5, 350), (6, 465)]
     >>> rational_interpolate(data, 2)
-    (105*x**2 - 525)/(x + 1)
+    (105*x**2 - 525)/(1 + x)
 
     Values do not need to be integers:
 
@@ -230,7 +230,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     >>> x = [1, 2, 3, 4, 5, 6]
     >>> y = sympify("[-1, 0, 2, 22/5, 7, 68/7]")
     >>> rational_interpolate(zip(x, y), 2)
-    (3*x**2 - 7*x + 2)/(x + 1)
+    (3*x**2 - 7*x + 2)/(1 + x)
 
     The symbol for the variable can be changed if needed:
     >>> from sympy import symbols

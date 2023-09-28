@@ -1124,10 +1124,10 @@ class Quaternion(Expr):
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), q))
-        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(pi/4 + x), 1)
+        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(x + pi/4), 1)
         >>> (axis, angle) = q.to_axis_angle()
         >>> trigsimp(Quaternion.rotate_point((1, 1, 1), (axis, angle)))
-        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(pi/4 + x), 1)
+        (sqrt(2)*sin(pi/4 - x), sqrt(2)*sin(x + pi/4), 1)
 
         """
         if isinstance(r, tuple):

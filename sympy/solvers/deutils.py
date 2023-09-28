@@ -37,7 +37,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     of interest:
 
     >>> _preprocess(Derivative(f(x) + x, x))
-    (Derivative(f(x), x) + 1, f(x))
+    (1 + Derivative(f(x), x), f(x))
 
     Do others if the differentiation variable(s) intersect with those
     of the function of interest or contain the function of interest:

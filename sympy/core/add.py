@@ -133,7 +133,7 @@ class Add(Expr, AssocOp):
     >>> from sympy import Add, I
     >>> from sympy.abc import x, y
     >>> Add(x, 1)
-    x + 1
+    1 + x
     >>> Add(x, x)
     2*x
     >>> 2*x**2 + 3*x + I*y + 2*y + 2*x/5 + 1.0*y + 1
@@ -159,7 +159,7 @@ class Add(Expr, AssocOp):
     Note that the printers do not display in args order.
 
     >>> Add(x, 1)
-    x + 1
+    1 + x
     >>> Add(x, 1).args
     (1, x)
 
@@ -1111,7 +1111,7 @@ class Add(Expr, AssocOp):
         (2, x + 2*y)
 
         >>> (2*x/3 + 4*y/9).primitive()
-        (2/9, 3*x + 2*y)
+        (2/9, 2*y + 3*x)
 
         >>> (2*x/3 + 4.2*y).primitive()
         (1/3, 2*x + 12.6*y)
@@ -1119,7 +1119,7 @@ class Add(Expr, AssocOp):
         No subprocessing of term factors is performed:
 
         >>> ((2 + 2*x)*x + 2).primitive()
-        (1, x*(2*x + 2) + 2)
+        (1, 2 + x*(2 + 2*x))
 
         Recursive processing can be done with the ``as_content_primitive()``
         method:

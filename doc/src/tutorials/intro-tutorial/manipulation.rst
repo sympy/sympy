@@ -275,7 +275,7 @@ different.  You may have also noticed this phenomenon earlier in the
 tutorial.  For example
 
      >>> 1 + x
-     x + 1
+     1 + x
 
 This because in SymPy, the arguments of the commutative operations ``Add`` and
 ``Mul`` are stored in an arbitrary (but consistent!) order, which is
@@ -441,7 +441,7 @@ Let's test our function.
 
     >>> expr = x*y + 1
     >>> pre(expr)
-    x*y + 1
+    1 + x*y
     1
     x*y
     x
@@ -457,7 +457,7 @@ traversals easy.  We could have also written our algorithm as
 
     >>> for arg in preorder_traversal(expr):
     ...     print(arg)
-    x*y + 1
+    1 + x*y
     1
     x*y
     x

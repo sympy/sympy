@@ -142,4 +142,4 @@ Example 2
     >>> cube = ParametricRegion((x, y, z), (x, 0, 1), (y, 0, 1), (z, 0, 1))
     >>> field = 2*C.x*C.y*C.i + 3*C.x*C.y*C.j + C.z*exp(C.x + C.y)*C.k
     >>> vector_integrate(divergence(field), cube)
-    7/2 - E + E*(E - 1)
+    E*(E - 1) - E + 7/2

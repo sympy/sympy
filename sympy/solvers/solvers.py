@@ -469,7 +469,7 @@ def solve(f, *symbols, **flags):
         >>> solve(e, [a, b])
         {a: 2, b: 3}
         >>> solve([e], [a, b])
-        {a: (2*x + 3)/x - b/x}
+        {a: (3 + 2*x)/x - b/x}
 
     When there is no solution for any given symbol which will make all
     expressions zero, the empty list is returned (or an empty set in
@@ -523,16 +523,16 @@ def solve(f, *symbols, **flags):
         >>> solve(x + 2 + sqrt(3), x + 2)
         [-sqrt(3)]
         >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
-        {y: -2 + sqrt(3), x + 2: -sqrt(3)}
+        {y: -2 + sqrt(3), 2 + x: -sqrt(3)}
 
         * Nothing heroic is done in this implicit solving so you may end up
           with a symbol still in the solution:
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: -sqrt(3)/(x + 3), x + 2: sqrt(3)/(x + 3) - 2*x/(x + 3) - 6/(x + 3)}
+            {y: -sqrt(3)/(3 + x), 2 + x: sqrt(3)/(3 + x) - 2*x/(3 + x) - 6/(3 + x)}
             >>> solve(eqs, y*x, x)
-            {x: -y - 4, x*y: -3*y - sqrt(3)}
+            {x: -4 - y, x*y: -3*y - sqrt(3)}
 
         * If you attempt to solve for a number, remember that the number
           you have obtained does not necessarily mean that the value is
@@ -653,7 +653,7 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-(-1/2 - sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)/3 - 1/((-1/2 - sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)), -(-1/2 + sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)/3 - 1/((-1/2 + sqrt(3)*I/2)*(27/2 + 3*sqrt(69)/2)**(1/3)), -1/(27/2 + 3*sqrt(69)/2)**(1/3) - (27/2 + 3*sqrt(69)/2)**(1/3)/3]
+        [-1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)) - (27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)/3, -1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)) - (27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)/3, -1/(27/2 + 3*sqrt(69)/2)**(1/3) - (27/2 + 3*sqrt(69)/2)**(1/3)/3]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),

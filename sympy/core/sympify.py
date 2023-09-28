@@ -179,7 +179,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> exec('from sympy.abc import O', ns)  # method 2
     >>> ns.update(dict(O=Symbol("O")))  # method 3
     >>> sympify("O + 1", locals=ns)
-    O + 1
+    1 + O
 
     If you want *all* single-letter and Greek-letter variables to be symbols
     then you can use the clashing-symbols dictionaries that have been defined
@@ -230,11 +230,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify('2**2 / 3 + 5')
     19/3
     >>> sympify('2**2 / 3 + 5', evaluate=False)
-    5 + 2**2/3
+    2**2/3 + 5
     >>> sympify('4/2+7', evaluate=True)
     9
     >>> sympify('4/2+7', evaluate=False)
-    7 + 4/2
+    4/2 + 7
     >>> sympify(4/2+7, evaluate=False)
     9.00000000000000
 
@@ -523,7 +523,7 @@ def kernS(s):
     of an expression, but kernS will prevent that:
 
     >>> 2*(x + y), -(x + 1)
-    (2*x + 2*y, -x - 1)
+    (2*x + 2*y, -1 - x)
     >>> kernS('2*(x + y)')
     2*(x + y)
     >>> kernS('-(x + 1)')

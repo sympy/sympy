@@ -93,7 +93,7 @@ class Ynm(Function):
     >>> phi = Symbol("phi")
 
     >>> diff(Ynm(n, m, theta, phi), theta)
-    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((n - m)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
+    m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((n - m)*(m + n + 1))*exp(-I*phi)*Ynm(n, 1 + m, theta, phi)
 
     >>> diff(Ynm(n, m, theta, phi), phi)
     I*m*Ynm(n, m, theta, phi)

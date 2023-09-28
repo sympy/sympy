@@ -122,7 +122,7 @@ class RecurrenceOperator:
     (1)Sn + (n**2)Sn**2
 
     >>> Sn*n
-    (n + 1)Sn
+    (1 + n)Sn
 
     >>> n*Sn*n + 1 - Sn**2*n
     (1) + (n**2 + n)Sn + (-n - 2)Sn**2

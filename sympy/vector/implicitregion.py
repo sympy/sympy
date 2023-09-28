@@ -357,7 +357,7 @@ class ImplicitRegion(Basic):
 
         >>> circle = ImplicitRegion((x, y), Eq(x**2 + y**2, 4))
         >>> circle.rational_parametrization()
-        (4*t/(t**2 + 1), 4*t**2/(t**2 + 1) - 2)
+        (4*t/(1 + t**2), 4*t**2/(1 + t**2) - 2)
 
         >>> I = ImplicitRegion((x, y), x**3 + x**2 - y**2)
         >>> I.rational_parametrization()

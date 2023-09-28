@@ -3198,23 +3198,23 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     >>> expr = sin(alpha*y) + exp(I*alpha) - cos(log(y))
     >>> print(multiline_latex(x, expr))
     \begin{align*}
-    x = &- \cos{\left(\log{\left(y \right)} \right)} \\
-    & + e^{i \alpha} \\
-    & + \sin{\left(\alpha y \right)}
+    x = & e^{i \alpha} \\
+    & + \sin{\left(\alpha y \right)} \\
+    & - \cos{\left(\log{\left(y \right)} \right)}
     \end{align*}
 
     Using at most two terms per line:
     >>> print(multiline_latex(x, expr, 2))
     \begin{align*}
-    x = &- \cos{\left(\log{\left(y \right)} \right)} + e^{i \alpha} \\
-    & + \sin{\left(\alpha y \right)}
+    x = & e^{i \alpha} + \sin{\left(\alpha y \right)} \\
+    & - \cos{\left(\log{\left(y \right)} \right)}
     \end{align*}
 
     Using ``eqnarray`` and dots:
     >>> print(multiline_latex(x, expr, terms_per_line=2, environment="eqnarray", use_dots=True))
     \begin{eqnarray}
-    x & = &- \cos{\left(\log{\left(y \right)} \right)} + e^{i \alpha} \dots\nonumber\\
-    & & + \sin{\left(\alpha y \right)}
+    x & = & e^{i \alpha} + \sin{\left(\alpha y \right)} \dots\nonumber\\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
     \end{eqnarray}
 
     Using ``IEEEeqnarray``:

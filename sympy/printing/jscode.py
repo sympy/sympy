@@ -289,7 +289,7 @@ def jscode(expr, assign_to=None, **settings):
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(jscode(expr, tau))
     if (x > 0) {
-       tau = x + 1;
+       tau = 1 + x;
     }
     else {
        tau = x;
@@ -308,7 +308,7 @@ def jscode(expr, assign_to=None, **settings):
     >>> i = Idx('i', len_y-1)
     >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
     >>> jscode(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+    'Dy[i] = (y[1 + i] - y[i])/(t[1 + i] - t[i]);'
 
     Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
     must be provided to ``assign_to``. Note that any expression that can be

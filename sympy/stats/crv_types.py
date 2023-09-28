@@ -1353,13 +1353,13 @@ def ExGaussian(name, mean, std, rate):
                                          2
 
     >>> cdf(X)(z)
-    -(1/2 + erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(z - mu))/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
+    -(1/2 + erf(sqrt(2)*(lamda*(z - mu) - lamda**2*sigma**2)/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
 
     >>> E(X)
-    (lamda*mu + 1)/lamda
+    (1 + lamda*mu)/lamda
 
     >>> simplify(variance(X))
-    sigma**2 + lamda**(-2)
+    lamda**(-2) + sigma**2
 
     >>> simplify(skewness(X))
     2/(lamda**2*sigma**2 + 1)**(3/2)
@@ -2506,7 +2506,7 @@ def LogCauchy(name, mu, sigma):
     >>> X = LogCauchy("x", mu, sigma)
 
     >>> density(X)(z)
-    1/(5*pi*z*((log(z) - 2)**2 + 1/25))
+    1/(5*pi*z*(1/25 + (log(z) - 2)**2))
 
     >>> cdf(X)(z)
     1/2 - atan(10 - 5*log(z))/pi
@@ -2586,7 +2586,7 @@ def Logistic(name, mu, s):
     >>> X = Logistic("x", mu, s)
 
     >>> density(X)(z)
-    exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
+    exp((mu - z)/s)/(s*(1 + exp((mu - z)/s))**2)
 
     >>> cdf(X)(z)
     1/(exp((mu - z)/s) + 1)
@@ -3176,7 +3176,7 @@ def Nakagami(name, mu, omega):
                 Gamma(mu)
 
     >>> simplify(E(X))
-    sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
+    sqrt(mu)*sqrt(omega)*gamma(1/2 + mu)/gamma(1 + mu)
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
@@ -4056,13 +4056,13 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-               nu   1
-             - -- - -
-               2    2
-     /     2\
-     |    z |
-     |1 + --|
-     \    nu/
+              1   nu
+            - - - --
+              2   2
+    /     2\
+    |    z |
+    |1 + --|
+    \    nu/
     -----------------
       ____  /     nu\
     \/ nu *B|1/2, --|

@@ -67,7 +67,7 @@ Usage::
     >>> from sympy.functions import sin, cos, Abs, gamma
     >>> from sympy.abc import x
     >>> print_ccode(sin(x)**2 + cos(x)**2, standard='C89')
-    pow(sin(x), 2) + pow(cos(x), 2)
+    pow(cos(x), 2) + pow(sin(x), 2)
     >>> print_ccode(2*x + cos(x), assign_to="result", standard='C89')
     result = 2*x + cos(x);
     >>> print_ccode(Abs(x**2), standard='C89')
@@ -139,7 +139,7 @@ Usage::
     >>> from sympy.functions import sin, cos, Abs
     >>> from sympy.abc import x
     >>> print_rcode(sin(x)**2 + cos(x)**2)
-    sin(x)^2 + cos(x)^2
+    cos(x)^2 + sin(x)^2
     >>> print_rcode(2*x + cos(x), assign_to="result")
     result = 2*x + cos(x);
     >>> print_rcode(Abs(x**2))
@@ -249,11 +249,11 @@ function.
     >>> print(fcode(x - pi**2 - E))
           parameter (E = 2.7182818284590452d0)
           parameter (pi = 3.1415926535897932d0)
-          x - E - pi**2
+          -E - pi**2 + x
     >>> print(fcode(x - pi**2 - E, precision=25))
           parameter (E = 2.718281828459045235360287d0)
           parameter (pi = 3.141592653589793238462643d0)
-          x - E - pi**2
+          -E - pi**2 + x
     >>> print(fcode(N(x - pi**2, 25)))
           x - 9.869604401089358618834491d0
 

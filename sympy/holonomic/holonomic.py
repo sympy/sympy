@@ -1277,7 +1277,7 @@ class HolonomicFunction:
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
         >>> HolonomicFunction(Dx - 1, x, 0, [1]).to_sequence()
-        [(HolonomicSequence((-1) + (n + 1)Sn, n), u(0) = 1, 0)]
+        [(HolonomicSequence((-1) + (1 + n)Sn, n), u(0) = 1, 0)]
         >>> HolonomicFunction((1 + x)*Dx**2 + Dx, x, 0, [0, 1]).to_sequence()
         [(HolonomicSequence((n**2) + (n**2 + n)Sn, n), u(0) = 0, u(1) = 1, u(2) = -1/2, 2)]
         >>> HolonomicFunction(-S(1)/2 + x*Dx, x, 0, {S(1)/2: [1]}).to_sequence()

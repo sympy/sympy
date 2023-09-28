@@ -131,7 +131,7 @@ class SeriesApprox(Optimization):
     >>> series_approx8 = SeriesApprox(bounds, reltol=1e-8)
     >>> expr = sin(x)*sin(y)
     >>> optimize(expr, [series_approx2])
-    x*(-y + (y - pi)**3/6 + pi)
+    x*(pi - y + (y - pi)**3/6)
     >>> optimize(expr, [series_approx3])
     (-x**3/6 + x)*sin(y)
     >>> optimize(expr, [series_approx8])

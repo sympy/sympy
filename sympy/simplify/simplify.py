@@ -90,9 +90,9 @@ def separatevars(expr, symbols=[], dict=False, force=False):
 
     >>> e = 2*x**2*z*sin(y)+2*z*x**2
     >>> separatevars(e)
-    2*x**2*z*(sin(y) + 1)
+    2*x**2*z*(1 + sin(y))
     >>> separatevars(e, symbols=(x, y), dict=True)
-    {'coeff': 2*z, x: x**2, y: sin(y) + 1}
+    {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
     >>> separatevars(e, [x, y, alpha], dict=True)
     {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
@@ -440,18 +440,18 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> from sympy.abc import x, y
     >>> a = (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
     >>> a
-    (x**2 + x)/(x*sin(y)**2 + x*cos(y)**2)
+    (x + x**2)/(x*cos(y)**2 + x*sin(y)**2)
     >>> simplify(a)
-    x + 1
+    1 + x
 
     Note that we could have obtained the same result by using specific
     simplification functions:
 
     >>> from sympy import trigsimp, cancel
     >>> trigsimp(a)
-    (x**2 + x)/x
+    (x + x**2)/x
     >>> cancel(_)
-    x + 1
+    1 + x
 
     In some cases, applying :func:`simplify` may actually result in some more
     complicated expression. The default ``ratio=1.7`` prevents more extreme
@@ -1597,7 +1597,7 @@ def clear_coefficients(expr, rhs=S.Zero):
     >>> from sympy import Dummy
     >>> expr = 4*y*(6*x + 3)
     >>> clear_coefficients(expr - 2)
-    (y*(2*x + 1), 1/6)
+    (y*(1 + 2*x), 1/6)
 
     When solving 2 or more expressions like `expr = a`,
     `expr = b`, etc..., it is advantageous to provide a Dummy symbol

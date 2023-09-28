@@ -21,7 +21,7 @@ For example
 
     >>> expr = cos(x) + 1
     >>> expr.subs(x, y)
-    cos(y) + 1
+    1 + cos(y)
 
 Substitution is usually done for one of two reasons:
 

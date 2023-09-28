@@ -93,12 +93,12 @@ Consider the following:
     >>> a = Symbol('a')  # Symbol, `a`, stored as variable "a"
     >>> b = a + 1        # an expression involving `a` stored as variable "b"
     >>> print(b)
-    a + 1
+    1 + a
     >>> a = 4            # "a" now points to literal integer 4, not Symbol('a')
     >>> print(a)
     4
     >>> print(b)          # "b" is still pointing at the expression involving `a`
-    a + 1
+    1 + a
 
 Changing quantity ``a`` does not change ``b``; you are not working
 with a set of simultaneous equations. It might be helpful to remember
@@ -577,12 +577,12 @@ In :command:`isympy`, with the :command:`ipython` shell::
     ...
     TypeError: unsupported operand type(s) for ^: 'Add' and 'int'
     >>> (x + 1)**2
-    (x + 1)**2
+    (1 + x)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
-         2*x
-        x
+         2*x 
+        x    
     3 - -----
-        x + 1
+        1 + x
 
 
 Inverse Trig Functions

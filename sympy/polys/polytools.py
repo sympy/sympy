@@ -1220,7 +1220,7 @@ class Poly(Basic):
         >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
 
         >>> f.eject(x)
-        Poly(x*y**3 + (x**2 + x)*y + 1, y, domain='ZZ[x]')
+        Poly(x*y**3 + (x + x**2)*y + 1, y, domain='ZZ[x]')
         >>> f.eject(y)
         Poly(y*x**2 + (y**3 + y)*x + 1, x, domain='ZZ[y]')
 
@@ -4908,7 +4908,7 @@ def pquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> pquo(x**2 + 1, 2*x - 4)
-    2*x + 4
+    4 + 2*x
     >>> pquo(x**2 - 1, 2*x - 1)
     2*x + 1
 
@@ -4978,7 +4978,7 @@ def div(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> div(x**2 + 1, 2*x - 4, domain=ZZ)
-    (0, x**2 + 1)
+    (0, 1 + x**2)
     >>> div(x**2 + 1, 2*x - 4, domain=QQ)
     (x/2 + 1, 5)
 
@@ -5010,7 +5010,7 @@ def rem(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> rem(x**2 + 1, 2*x - 4, domain=ZZ)
-    x**2 + 1
+    1 + x**2
     >>> rem(x**2 + 1, 2*x - 4, domain=QQ)
     5
 
@@ -5042,7 +5042,7 @@ def quo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> quo(x**2 + 1, 2*x - 4)
-    x/2 + 1
+    1 + x/2
     >>> quo(x**2 - 1, x - 1)
     x + 1
 
@@ -5650,7 +5650,7 @@ def terms_gcd(f, *gens, **args):
     >>> from sympy import terms_gcd, cos
     >>> from sympy.abc import x, y
     >>> terms_gcd(x**6*y**2 + x**3*y, x, y)
-    x**3*y*(x**3*y + 1)
+    x**3*y*(1 + x**3*y)
 
     The default action of polys routines is to expand the expression
     given to them. terms_gcd follows this behavior:
@@ -5663,20 +5663,20 @@ def terms_gcd(f, *gens, **args):
     of one or more terms:
 
     >>> terms_gcd((3+3*x)*(x+x*y), expand=False)
-    (3*x + 3)*(x*y + x)
+    (3 + 3*x)*(x + x*y)
 
     In order to traverse factors of a Mul or the arguments of other
     functions, the ``deep`` hint can be used:
 
     >>> terms_gcd((3 + 3*x)*(x + x*y), expand=False, deep=True)
-    3*x*(x + 1)*(y + 1)
+    3*x*(1 + x)*(1 + y)
     >>> terms_gcd(cos(x + x*y), deep=True)
-    cos(x*(y + 1))
+    cos(x*(1 + y))
 
     Rationals are factored out by default:
 
     >>> terms_gcd(x + y/2)
-    (2*x + y)/2
+    (y + 2*x)/2
 
     Only the y-term had a coefficient that was a fraction; if one
     does not want to factor out the 1/2 in cases like this, the
@@ -5860,7 +5860,7 @@ def primitive(f, *gens, **args):
     for recursive, non-destructive Rational extraction.
 
     >>> primitive(eq, expand=False)
-    (1, x*(2*x + 2) + 2)
+    (1, 2 + x*(2 + 2*x))
 
     >>> eq.as_content_primitive()
     (2, x*(x + 1) + 1)
@@ -6485,12 +6485,12 @@ def factor(f, *gens, deep=False, **args):
     >>> from sympy.abc import x, y
 
     >>> factor(2*x**5 + 2*x**4*y + 4*x**3 + 4*x**2*y + 2*x + 2*y)
-    2*(x + y)*(x**2 + 1)**2
+    2*(x + y)*(1 + x**2)**2
 
     >>> factor(x**2 + 1)
-    x**2 + 1
+    1 + x**2
     >>> factor(x**2 + 1, modulus=2)
-    (x + 1)**2
+    (1 + x)**2
     >>> factor(x**2 + 1, gaussian=True)
     (x - I)*(x + I)
 
@@ -6498,9 +6498,9 @@ def factor(f, *gens, deep=False, **args):
     (x - sqrt(2))*(x + sqrt(2))
 
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
-    (x - 1)*(x + 1)/(x + 2)**2
+    (x - 1)*(1 + x)/(2 + x)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (x + 2)**20000000*(x**2 + 1)
+    (2 + x)**20000000*(1 + x**2)
 
     By default, factor deals with an expression as a whole:
 
@@ -7110,7 +7110,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
-    (2*x + 2)/(x - 1)
+    (2 + 2*x)/(x - 1)
     >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
     sqrt(6)/2
 
@@ -7118,7 +7118,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     will appear as a sum. To recover a rational form use `together` on the result:
 
     >>> cancel(x/2 + 1)
-    x/2 + 1
+    1 + x/2
     >>> together(_)
     (x + 2)/2
     """

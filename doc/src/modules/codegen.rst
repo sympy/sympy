@@ -70,7 +70,7 @@ example that shows the use of ``Assignment`` in C code::
 
     >>> from sympy.codegen.ast import Assignment
     >>> print(ccode(Assignment(x, y + 1)))
-    x = y + 1;
+    x = 1 + y;
 
 Here is another simple example of printing a C version of a SymPy expression::
 
@@ -102,7 +102,7 @@ an expression that may not evaluate to anything. A use case for ``Piecewise``::
     >>> expr = Piecewise((x + 1, x > 0), (x, True))
     >>> print(fcode(expr, tau))
           if (x > 0) then
-             tau = x + 1
+             tau = 1 + x
           else
              tau = x
           end if
@@ -119,7 +119,7 @@ looped over::
     >>> i = Idx('i', len_y-1)
     >>> eq = Eq(Dy[i], (mat_1[i+1] - mat_1[i]) / (mat_2[i+1] - mat_2[i]))
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
-    Dy[i] = (mat_1[i + 1] - mat_1[i])/(mat_2[i + 1] - mat_2[i]);
+    Dy[i] = (mat_1[1 + i] - mat_1[i])/(mat_2[1 + i] - mat_2[i]);
     >>> Res = IndexedBase('Res', shape=(len_y,))
     >>> j = Idx('j', len_y)
     >>> eq = Eq(Res[j], mat_1[j]*mat_2[j])
@@ -129,7 +129,7 @@ looped over::
     }
     for (var j=0; j<5; j++){
        for (var j=0; j<5; j++){
-          Res[j] = Res[j] + mat_1[j]*mat_2[j];
+          Res[j] = mat_1[j]*mat_2[j] + Res[j];
        }
     }
     >>> print(jscode(eq.rhs, assign_to=eq.lhs, contract=False))
@@ -164,7 +164,7 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*(x[T]*Sin[(t - T)/T]/(t - T) + x[-T]*Sin[(T + t)/T]/(T + t) + x[0]*Sin[t/T]/t)
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(t - T)/T]/(t - T) + x[0]*Sin[t/T]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -290,8 +290,8 @@ For example::
     >>> [arg.expr for arg in routine.results]
     ⎡                __________                                          ⎤
     ⎢          y    ╱ (2 - y)!   -2⋅x                                    ⎥
-    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 2⋅y + 1, 4⋅x)⎥
-    ⎢            ╲╱   (y + 3)!                                           ⎥
+    ⎢4⋅√6⋅(4⋅x) ⋅  ╱  ──────── ⋅ℯ    ⋅assoc_laguerre(2 - y, 1 + 2⋅y, 4⋅x)⎥
+    ⎢            ╲╱   (3 + y)!                                           ⎥
     ⎢────────────────────────────────────────────────────────────────────⎥
     ⎣                                 3                                  ⎦
     >>> [arg.name for arg in routine.arguments]

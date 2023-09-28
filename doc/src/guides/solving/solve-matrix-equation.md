@@ -112,11 +112,11 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
 >>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
-    ⎢c⋅e + d⎥
+    ⎢d + c⋅e⎥
     ⎢       ⎥
     ⎢   2   ⎥
     ⎢───────⎥
-    ⎣c⋅e + d⎦
+    ⎣d + c⋅e⎦
 >>> # Demonstrate that solution is correct
 >>> simplify(A * solution)
     ⎡2⎤
@@ -175,11 +175,11 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 >>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
-    ⎢c⋅e + d⎥
+    ⎢d + c⋅e⎥
     ⎢       ⎥
     ⎢   2   ⎥
     ⎢───────⎥
-    ⎣c⋅e + d⎦
+    ⎣d + c⋅e⎦
 >>> # Demonstrate that solution is correct
 >>> simplify(A * solution)
     ⎡2⎤
@@ -274,11 +274,11 @@ produces the constants vector $b$:
 >>> solution
     ⎡  2⋅e  ⎤
     ⎢───────⎥
-    ⎢c⋅e + d⎥
+    ⎢d + c⋅e⎥
     ⎢       ⎥
     ⎢   2   ⎥
     ⎢───────⎥
-    ⎣c⋅e + d⎦
+    ⎣d + c⋅e⎦
 >>> # Not immediately obvious whether this result is a zeroes vector
 >>> (A * solution) - b
     ⎡ 2⋅c⋅e      2⋅d      ⎤

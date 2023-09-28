@@ -84,14 +84,14 @@ class DiophantineSolutionSet(set):
         >>> s3.subs(t, -1)
         {(1, u - 1)}
         >>> s3.subs(t, 3)
-        {(9, u + 3)}
+        {(9, 3 + u)}
 
     Evaluation at specific values. Positional arguments are given in the same order as the parameters:
 
         >>> s3(-2, 3)
         {(4, 1)}
         >>> s3(5)
-        {(25, u + 5)}
+        {(25, 5 + u)}
         >>> s3(None, 2)
         {(t**2, t + 2)}
     """

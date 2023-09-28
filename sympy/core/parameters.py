@@ -119,7 +119,7 @@ def distribute(x):
     >>> from sympy.abc import x
     >>> from sympy.core.parameters import distribute
     >>> print(2*(x + 1))
-    2*x + 2
+    2 + 2*x
     >>> with distribute(False):
     ...     print(2*(x + 1))
     2*(x + 1)

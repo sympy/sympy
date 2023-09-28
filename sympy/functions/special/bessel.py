@@ -918,9 +918,9 @@ class jn(SphericalBesselBase):
     >>> expand_func(jn(1, z)) == sin(z)/z**2 - cos(z)/z
     True
     >>> expand_func(jn(3, z))
-    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)
+    (1/z - 15/z**3)*cos(z) + (-6/z**2 + 15/z**4)*sin(z)
     >>> jn(nu, z).rewrite(besselj)
-    sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(nu + 1/2, z)/2
+    sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(1/2 + nu, z)/2
     >>> jn(nu, z).rewrite(bessely)
     (-1)**nu*sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(-nu - 1/2, z)/2
     >>> jn(2, 5.2+0.3j).evalf(20)
@@ -997,7 +997,7 @@ class yn(SphericalBesselBase):
     >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
     True
     >>> yn(nu, z).rewrite(besselj)
-    (-1)**(nu + 1)*sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(-nu - 1/2, z)/2
+    (-1)**(1 + nu)*sqrt(2)*sqrt(pi)*sqrt(1/z)*besselj(-1/2 - nu, z)/2
     >>> yn(nu, z).rewrite(bessely)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*bessely(nu + 1/2, z)/2
     >>> yn(2, 5.2+0.3j).evalf(20)
@@ -1121,7 +1121,7 @@ class hn1(SphericalHankelBase):
     >>> print(expand_func(hn1(1, z)))
     -cos(z)/z + sin(z)/z**2 - I*sin(z)/z - I*cos(z)/z**2
     >>> hn1(nu, z).rewrite(jn)
-    jn(nu, z) + (-1)**(nu + 1)*I*jn(-nu - 1, z)
+    jn(nu, z) + (-1)**(1 + nu)*I*jn(-1 - nu, z)
     >>> hn1(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) + I*yn(nu, z)
     >>> hn1(nu, z).rewrite(hankel1)
@@ -1179,7 +1179,7 @@ class hn2(SphericalHankelBase):
     >>> hn2(nu, z).rewrite(hankel2)
     sqrt(2)*sqrt(pi)*sqrt(1/z)*hankel2(nu, z)/2
     >>> hn2(nu, z).rewrite(jn)
-    jn(nu, z) - (-1)**(nu + 1)*I*jn(-nu - 1, z)
+    jn(nu, z) - (-1)**(1 + nu)*I*jn(-1 - nu, z)
     >>> hn2(nu, z).rewrite(yn)
     (-1)**nu*yn(-nu - 1, z) - I*yn(nu, z)
 

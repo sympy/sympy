@@ -91,7 +91,7 @@ We can query assumptions on any expression not just a symbol:
     >>> x = Symbol('x', positive=True)
     >>> expr = 1 + x**2
     >>> expr
-    x**2 + 1
+    1 + x**2
     >>> expr.is_positive
     True
     >>> expr.is_negative
@@ -150,7 +150,7 @@ terms it would be a harder query:
     >>> x = Symbol('x', real=True)
     >>> expr = 1 + (x - 2)**2
     >>> expr
-    (x - 2)**2 + 1
+    1 + (x - 2)**2
     >>> expr.is_positive
     True
     >>> expr2 = expr.expand()
@@ -943,11 +943,11 @@ number with :py:meth:`~.EvalfMixin.evalf`:
     >>> x = Symbol('x')
     >>> expr2 = 1 + x
     >>> expr2
-    x + 1
+    1 + x
     >>> expr2.is_number
     False
     >>> expr2.evalf()
-    x + 1.0
+    1.0 + x
 
 The primary reason for checking ``expr.is_number`` is to predict whether a
 call to :py:meth:`~.EvalfMixin.evalf` will fully evaluate. The
@@ -1078,7 +1078,7 @@ the argument will not be rejected. The first reason for allowing
     >>> expr.expand().is_extended_real
     True
     >>> expreal(expr)
-    expreal(sqrt(2)*(1 - I)/2 + sqrt(2)*(1 + I)/2)
+    expreal(sqrt(2)*(1 + I)/2 + sqrt(2)*(1 - I)/2)
 
 Validating the argument in ``expreal.eval`` does mean that it will not be
 validated when ``evaluate=False`` is passed but there is not really a better

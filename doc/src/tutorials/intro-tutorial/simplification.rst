@@ -99,8 +99,8 @@ factor
 the rational numbers.  For example:
 
     >>> factor(x**3 - x**2 + x - 1)
-            ⎛ 2    ⎞
-    (x - 1)⋅⎝x  + 1⎠
+            ⎛     2⎞
+    (x - 1)⋅⎝1 + x ⎠
     >>> factor(x**2*z + 4*x*y*z + 4*y**2*z)
                2
     z⋅(x + 2⋅y)
@@ -126,7 +126,7 @@ is no longer a polynomial over the rationals).
     sin (x) + 2⋅sin(x)⋅cos(x) + cos (x)
     >>> factor(cos(x)**2 + 2*cos(x)*sin(x) + sin(x)**2)
                      2
-    (sin(x) + cos(x))
+    (cos(x) + sin(x)) 
 
 collect
 -------
@@ -139,8 +139,8 @@ collect
     x  - x ⋅z + 2⋅x  + x⋅y + x - 3
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
-     3    2
-    x  + x ⋅(2 - z) + x⋅(y + 1) - 3
+     3    2                        
+    x  + x ⋅(2 - z) + x⋅(1 + y) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
@@ -160,23 +160,23 @@ no common factors, and the leading coefficients of `p` and `q` do not have
 denominators (i.e., are integers).
 
     >>> cancel((x**2 + 2*x + 1)/(x**2 + x))
-    x + 1
+    1 + x
     ─────
-      x
+      x  
 
     >>> expr = 1/x + (3*x/2 - 2)/(x - 4)
     >>> expr
-    3⋅x
-    ─── - 2
-     2        1
-    ─────── + ─
-     x - 4    x
+        3⋅x    
+        ─── - 2
+    1    2     
+    ─ + ───────
+    x    x - 4 
     >>> cancel(expr)
-       2
+       2          
     3⋅x  - 2⋅x - 8
     ──────────────
-         2
-      2⋅x  - 8⋅x
+               2  
+     -8⋅x + 2⋅x   
 
     >>> expr = (x*y**2 - 2*x*y*z + x*z**2 + y**2 - 2*y*z + z**2)/(x**2 - 1)
     >>> expr
@@ -220,8 +220,8 @@ function.
     >>> apart(expr)
      2⋅x - 1       1     3
     ────────── - ───── + ─
-     2           x + 4   x
-    x  + x + 1
+     2           4 + x   x
+    x  + x + 1            
 
 Trigonometric Simplification
 ============================
@@ -252,9 +252,9 @@ To simplify expressions using trigonometric identities, use ``trigsimp()``.
     >>> trigsimp(sin(x)**2 + cos(x)**2)
     1
     >>> trigsimp(sin(x)**4 - 2*cos(x)**2*sin(x)**2 + cos(x)**4)
-    cos(4⋅x)   1
-    ──────── + ─
-       2       2
+    1   cos(4⋅x)
+    ─ + ────────
+    2      2    
     >>> trigsimp(sin(x)*tan(x)/sec(x))
        2
     sin (x)
@@ -276,7 +276,7 @@ To expand trigonometric functions, that is, apply the sum or double angle
 identities, use ``expand_trig()``.
 
     >>> expand_trig(sin(x + y))
-    sin(x)⋅cos(y) + sin(y)⋅cos(x)
+    sin(y)⋅cos(x) + sin(x)⋅cos(y)
     >>> expand_trig(tan(2*x))
       2⋅tan(x)
     ───────────
@@ -630,7 +630,7 @@ To rewrite an expression in terms of a function, use
     ──────────
       cos(x)
     >>> factorial(x).rewrite(gamma)
-    Γ(x + 1)
+    Γ(1 + x)
 
 For some tips on applying more targeted rewriting, see the
 :ref:`tutorial-manipulation` section.
@@ -642,7 +642,7 @@ To expand special functions in terms of some identities, use
 ``expand_func()``.  For example
 
     >>> expand_func(gamma(x + 3))
-    x⋅(x + 1)⋅(x + 2)⋅Γ(x)
+    x⋅(1 + x)⋅(2 + x)⋅Γ(x)
 
 hyperexpand
 -----------
@@ -679,9 +679,9 @@ To simplify combinatorial expressions, use ``combsimp()``.
     >>> combsimp(factorial(n)/factorial(n - 3))
     n⋅(n - 2)⋅(n - 1)
     >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
-    n + 1
+    1 + n
     ─────
-    k + 1
+    1 + k
 
 gammasimp
 ---------
@@ -802,16 +802,16 @@ Now we repeat this process
 
     >>> frac = apart(frac, a1)
     >>> frac
-             a₃⋅a₄ + 1
+             1 + a₃⋅a₄     
     a₁ + ──────────────────
          a₂⋅a₃⋅a₄ + a₂ + a₄
     >>> l.append(a1)
     >>> frac = 1/(frac - a1)
     >>> frac = apart(frac, a2)
     >>> frac
-             a₄
+            a₄    
     a₂ + ─────────
-         a₃⋅a₄ + 1
+         1 + a₃⋅a₄
     >>> l.append(a2)
     >>> frac = 1/(frac - a2)
     >>> frac = apart(frac, a3)

@@ -943,24 +943,24 @@ class Basic(Printable):
         >>> from sympy import pi, exp, limit, oo
         >>> from sympy.abc import x, y
         >>> (1 + x*y).subs(x, pi)
-        pi*y + 1
+        1 + pi*y
         >>> (1 + x*y).subs({x:pi, y:2})
-        2*pi + 1
+        1 + 2*pi
         >>> (1 + x*y).subs([(x, pi), (y, 2)])
-        2*pi + 1
+        1 + 2*pi
         >>> reps = [(y, x**2), (x, 2)]
         >>> (x + y).subs(reps)
         6
         >>> (x + y).subs(reversed(reps))
-        x**2 + 2
+        2 + x**2
 
         >>> (x**2 + x**4).subs(x**2, y)
-        y**2 + y
+        y + y**2
 
         To replace only the x**2 but not the x**4, use xreplace:
 
         >>> (x**2 + x**4).xreplace({x**2: y})
-        x**4 + y
+        y + x**4
 
         To delay evaluation until all substitutions have been made,
         set the keyword ``simultaneous`` to True:
@@ -1145,7 +1145,7 @@ class Basic(Printable):
         so it makes the change:
 
         >>> (x + y + z).subs(x + y, 1)
-        z + 1
+        1 + z
 
         Add's _eval_subs does not need to know how to find x + y in
         the following:
@@ -1269,9 +1269,9 @@ class Basic(Printable):
         >>> from sympy import symbols, pi, exp
         >>> x, y, z = symbols('x y z')
         >>> (1 + x*y).xreplace({x: pi})
-        pi*y + 1
+        1 + pi*y
         >>> (1 + x*y).xreplace({x: pi, y: 2})
-        2*pi + 1
+        1 + 2*pi
 
         Replacements occur only if an entire node in the expression tree is
         matched:
@@ -1606,7 +1606,7 @@ class Basic(Printable):
 
             >>> e = x*(x*y + 1)
             >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
-            2*x*(2*x*y + 1)
+            2*x*(1 + 2*x*y)
 
         When matching a single symbol, `exact` will default to True, but
         this may or may not be the behavior that is desired:

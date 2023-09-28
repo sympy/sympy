@@ -249,9 +249,9 @@ For polynomials the division identity is given in SymPy by the function
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-    5*x   5
-    --- + -
-     2    2
+    5   5*x
+    - + ---
+    2    2 
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -288,7 +288,7 @@ For univariate polynomials over a field the function has its common name
     >>> f = 4*x**2 - 1
     >>> g = 8*x**3 + 1
     >>> gcd(f, g, domain=QQ)
-    x + 1/2
+    1/2 + x
 
 
 Divisibility of polynomials
@@ -369,9 +369,9 @@ SymPy::
     >>> f = 4*x**2 - 1
     >>> g = 8*x**3 + 1
     >>> gcd(f, g)
-    2*x + 1
+    1 + 2*x
     >>> gcd(6*f, 3*g)
-    6*x + 3
+    3 + 6*x
 
 Basic functionality
 ===================
@@ -393,9 +393,9 @@ defined this way::
 
     >>> q, r = div(f, g, domain='QQ')
     >>> q
-    5*x   5
-    --- + -
-     2    2
+    5   5*x
+    - + ---
+    2    2 
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -423,7 +423,7 @@ remainder doesn't need to be smaller than that of ``f``. Since 2 doesn't divide
     >>> q
     x
     >>> r
-    9*x + 3
+    3 + 9*x
     >>> (q*g + r).expand()
        2
     5*x  + 10*x + 3
@@ -497,14 +497,14 @@ The lcm is connected with the gcd and one can be computed using the other::
     >>> gcd(f, g)
     x*y
     >>> lcm(f, g)
-     3  2    2  3
-    x *y  + x *y
+     2  3    3  2
+    x *y  + x *y 
     >>> (f*g).expand()
-     4  3    3  4
-    x *y  + x *y
+     3  4    4  3
+    x *y  + x *y 
     >>> (gcd(f, g, x, y)*lcm(f, g, x, y)).expand()
-     4  3    3  4
-    x *y  + x *y
+     3  4    4  3
+    x *y  + x *y 
 
 Square-free factorization
 -------------------------
@@ -515,13 +515,13 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-                       2
-    (1, [(x + 2, 1), (x  + x, 2)])
+                           2      
+    (1, [(2 + x, 1), (x + x , 2)])
 
     >>> sqf(f)
                     2
-            / 2    \
-    (x + 2)*\x  + x/
+            /     2\ 
+    (2 + x)*\x + x / 
 
 Factorization
 -------------
@@ -530,10 +530,10 @@ This function provides factorization of univariate and multivariate polynomials
 with rational coefficients::
 
     >>> factor(x**4/2 + 5*x**3/12 - x**2/3)
-     2
-    x *(2*x - 1)*(3*x + 4)
+     2                    
+    x *(2*x - 1)*(4 + 3*x)
     ----------------------
-              12
+              12          
 
     >>> factor(x**2 + 4*x*y + 4*y**2)
              2

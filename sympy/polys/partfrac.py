@@ -41,7 +41,7 @@ def apart(f, x=None, full=False, **options):
     By default, using the undetermined coefficients method:
 
     >>> apart(y/(x + 2)/(x + 1), x)
-    y/(x + 1) - y/(x + 2)
+    y/(1 + x) - y/(2 + x)
 
     The undetermined coefficients method does not provide a result when the
     denominators roots are not rational:
@@ -274,7 +274,7 @@ def apart_list(f, x=None, dummies=None, **options):
 
     >>> pfd = apart_list(t/(x**2 + x + t), x)
     >>> pfd
-    (1, Poly(0, x, domain='ZZ[t]'), [(Poly(_w**2 + _w + t, _w, domain='ZZ[t]'), Lambda(_a, -2*_a*t/(4*t - 1) - t/(4*t - 1)), Lambda(_a, x - _a), 1)])
+    (1, Poly(0, x, domain='ZZ[t]'), [(Poly(_w**2 + _w + t, _w, domain='ZZ[t]'), Lambda(_a, -t/(4*t - 1) - 2*_a*t/(4*t - 1)), Lambda(_a, x - _a), 1)])
 
     >>> assemble_partfrac_list(pfd)
     RootSum(_w**2 + _w + t, Lambda(_a, (-2*_a*t/(4*t - 1) - t/(4*t - 1))/(x - _a)))
@@ -284,10 +284,10 @@ def apart_list(f, x=None, dummies=None, **options):
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
     >>> pfd
-    (1, Poly(0, x, domain='ZZ'), [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, x - _a), 1), (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, x - _a), 2), (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, x - _a), 1)])
+    (1, Poly(0, x, domain='ZZ'), [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, x - _a), 1), (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -6 - 3*_a), Lambda(_a, x - _a), 2), (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, x - _a), 1)])
 
     >>> assemble_partfrac_list(pfd)
-    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
+    -4/(1 + x) - 3/(1 + x)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     See also
     ========
@@ -419,10 +419,10 @@ def assemble_partfrac_list(partial_list):
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
     >>> pfd
-    (1, Poly(0, x, domain='ZZ'), [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, x - _a), 1), (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, x - _a), 2), (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, x - _a), 1)])
+    (1, Poly(0, x, domain='ZZ'), [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, x - _a), 1), (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -6 - 3*_a), Lambda(_a, x - _a), 2), (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, x - _a), 1)])
 
     >>> assemble_partfrac_list(pfd)
-    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
+    -4/(1 + x) - 3/(1 + x)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     If we happen to know some roots we can provide them easily inside the structure:
 

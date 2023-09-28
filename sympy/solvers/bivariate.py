@@ -61,7 +61,7 @@ def _mostfunc(lhs, func, X=None):
     >>> from sympy import exp
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
-    exp(exp(x) + 2)
+    exp(2 + exp(x))
     >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp)
     exp(exp(y) + 2)
     >>> _mostfunc(exp(x) + exp(exp(y) + 2), exp, x)

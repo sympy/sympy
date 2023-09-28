@@ -95,7 +95,7 @@ def find_simple_recurrence(v, A=Function('a'), N=Symbol('n')):
     >>> from sympy.concrete.guess import find_simple_recurrence
     >>> from sympy import fibonacci
     >>> find_simple_recurrence([fibonacci(k) for k in range(12)])
-    -a(n) - a(n + 1) + a(n + 2)
+    -a(n) - a(1 + n) + a(2 + n)
 
     >>> from sympy import Function, Symbol
     >>> a = [1, 1, 1]
@@ -248,16 +248,16 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy.concrete.guess import guess_generating_function as ggf
     >>> ggf([k+1 for k in range(12)], types=['ogf', 'lgf', 'hlgf'])
-    {'hlgf': 1/(1 - x), 'lgf': 1/(x + 1), 'ogf': 1/(x**2 - 2*x + 1)}
+    {'hlgf': 1/(1 - x), 'lgf': 1/(1 + x), 'ogf': 1/(x**2 - 2*x + 1)}
 
     >>> from sympy import sympify
     >>> l = sympify("[3/2, 11/2, 0, -121/2, -363/2, 121]")
     >>> ggf(l)
-    {'ogf': (x + 3/2)/(11*x**2 - 3*x + 1)}
+    {'ogf': (3/2 + x)/(11*x**2 - 3*x + 1)}
 
     >>> from sympy import fibonacci
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
-    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
+    {'ogf': (5 + 3*x)/(-x**2 - x + 1)}
 
     >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])

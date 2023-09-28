@@ -302,14 +302,14 @@ class ObstacleSetPathway(PathwayBase):
     >>> pB.pos_from(pA)
     - N.x - N.y
     >>> pC.pos_from(pA)
-    cos(q(t))*N.x + (-sin(q(t)) - 1)*N.y
+    cos(q(t))*N.x + (-1 - sin(q(t)))*N.y
     >>> pD.pos_from(pA)
     sin(q(t))*N.x + (cos(q(t)) - 1)*N.y
 
     A pathway's length can be accessed via its ``length`` attribute.
 
     >>> obstacle_set_pathway.length.simplify()
-    sqrt(2)*(2 + sqrt(cos(q(t)) + 1))
+    sqrt(2)*(2 + sqrt(1 + cos(q(t))))
 
     A pathway's extension velocity can be accessed similarly via its
     ``extension_velocity`` attribute.

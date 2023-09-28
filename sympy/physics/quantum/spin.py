@@ -2015,13 +2015,13 @@ def uncouple(expr, jn=None, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
         >>> from sympy import S
         >>> uncouple(JzKetCoupled(1, 0, (S(1)/2, S(1)/2)))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2 + sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKet
         >>> uncouple(JzKet(1, 0), (S(1)/2, S(1)/2))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2 + sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 

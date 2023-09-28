@@ -433,7 +433,7 @@ class Hamiltonian(SHOOp):
         >>> H.rewrite('a').doit()
         hbar*omega*(1/2 + RaisingOp(a)*a)
         >>> H.rewrite('xp').doit()
-        (m**2*omega**2*X**2 + Px**2)/(2*m)
+        (Px**2 + m**2*omega**2*X**2)/(2*m)
         >>> H.rewrite('N').doit()
         hbar*omega*(1/2 + N)
 

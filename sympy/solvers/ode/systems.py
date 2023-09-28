@@ -2026,7 +2026,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     >>> eqs = [Eq(f(x).diff(x), g(x)), Eq(g(x).diff(x), f(x))]
     >>> dsolve_system(eqs)
-    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+    [[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     You can also pass the initial conditions for the system of ODEs:
 
@@ -2038,7 +2038,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     >>> funcs = [f(x), g(x)]
     >>> dsolve_system(eqs, funcs=funcs, t=x)
-    [[Eq(f(x), -C1*exp(-x) + C2*exp(x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
+    [[Eq(f(x), C2*exp(x) - C1*exp(-x)), Eq(g(x), C1*exp(-x) + C2*exp(x))]]
 
     Lets look at an implicit system of ODEs:
 

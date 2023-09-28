@@ -355,7 +355,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy.abc import x
         >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.shiftx(1).truncate()
-        pi**2/3 - 4*cos(x + 1) + cos(2*x + 2)
+        pi**2/3 - 4*cos(1 + x) + cos(2 + 2*x)
         """
         s, x = sympify(s), self.x
 
@@ -688,7 +688,7 @@ def fourier_series(f, limits=None, finite=True):
     >>> s.shift(1).truncate()
     pi**2/3 - 4*cos(x) + cos(2*x) + 1
     >>> s.shiftx(1).truncate()
-    pi**2/3 - 4*cos(x + 1) + cos(2*x + 2)
+    pi**2/3 - 4*cos(1 + x) + cos(2 + 2*x)
 
     Scaling of the Fourier series:
 

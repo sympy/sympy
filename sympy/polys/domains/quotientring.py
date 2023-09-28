@@ -101,15 +101,15 @@ class QuotientRing(Ring):
     >>> from sympy import QQ
     >>> I = QQ.old_poly_ring(x).ideal(x**3 + 1)
     >>> QQ.old_poly_ring(x).quotient_ring(I)
-    QQ[x]/<x**3 + 1>
+    QQ[x]/<1 + x**3>
 
     Shorter versions are possible:
 
     >>> QQ.old_poly_ring(x)/I
-    QQ[x]/<x**3 + 1>
+    QQ[x]/<1 + x**3>
 
     >>> QQ.old_poly_ring(x)/[x**3 + 1]
-    QQ[x]/<x**3 + 1>
+    QQ[x]/<1 + x**3>
 
     Attributes:
 

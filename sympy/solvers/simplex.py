@@ -212,7 +212,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> (C*X - D)[0]
     x + y + 1
     >>> [i >= j for i, j in zip(A*X, B)]
-    [2*x + y >= 4]
+    [y + 2*x >= 4]
 
     Since `_simplex` will do a minimization for constraints given as
     ``A*x <= B``, the signs of ``A`` and ``B`` must be negated since
@@ -615,7 +615,7 @@ def _rel_as_nonpos(constr, syms):
     >>> _rel_as_nonpos([x >= y, x >= 0, y >= 0], (x, y))
     ([y - x], {}, [])
     >>> _rel_as_nonpos([x >= 3, x <= 5], [x])
-    ([_z1 - 2], {x: _z1 + 3}, [_z1])
+    ([_z1 - 2], {x: 3 + _z1}, [_z1])
     >>> _rel_as_nonpos([x <= 5], [x])
     ([], {x: 5 - _z1}, [_z1])
     >>> _rel_as_nonpos([x >= 1], [x])

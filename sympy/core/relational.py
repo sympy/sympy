@@ -81,7 +81,7 @@ class Relational(Boolean, EvalfMixin):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x + x**2, '==')
-    Eq(y, x**2 + x)
+    Eq(y, x + x**2)
 
     A relation's type can be defined upon creation using ``rop``.
     The relation type of an existing expression can be obtained
@@ -117,11 +117,11 @@ class Relational(Boolean, EvalfMixin):
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x + x**2, '==')
-        Eq(y, x**2 + x)
+        Eq(y, x + x**2)
     >>> Rel(y, x + x**2, 'eq')
-        Eq(y, x**2 + x)
+        Eq(y, x + x**2)
     >>> Rel(y, x + x**2)
-        Eq(y, x**2 + x)
+        Eq(y, x + x**2)
     >>> Rel(y, x + x**2, 'lt')
         y < x**2 + x
 
@@ -557,7 +557,7 @@ class Equality(Relational):
     >>> from sympy import Eq, simplify, exp, cos
     >>> from sympy.abc import x, y
     >>> Eq(y, x + x**2)
-    Eq(y, x**2 + x)
+    Eq(y, x + x**2)
     >>> Eq(2, 5)
     False
     >>> Eq(2, 5, evaluate=False)

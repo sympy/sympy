@@ -1344,7 +1344,7 @@ class SeparableReduced(Separable):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (1 + sqrt(C1*x**2 + 1))/x)]
+    [Eq(f(x), (1 - sqrt(1 + C1*x**2))/x), Eq(f(x), (1 + sqrt(1 + C1*x**2))/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
                    ___________                ___________
                   /     2                    /     2
@@ -1589,9 +1589,9 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> f, g, h = map(Function, ['f', 'g', 'h'])
     >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
     >>> pprint(genform)
-     / x  \    / x  \ d
-    g|----| + h|----|*--(f(x))
-     \f(x)/    \f(x)/ dx
+     / x  \ d           / x  \
+    h|----|*--(f(x)) + g|----|
+     \f(x)/ dx          \f(x)/
     >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
                  x
