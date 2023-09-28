@@ -95,16 +95,6 @@ def test_all_pred():
     assert lra_satask(Q.positive_infinite(x)) is False
     assert lra_satask(Q.negative_infinite(x)) is False
 
-    # test benign pred
-    assert lra_satask((x > 0), (x > 2) & Q.complex(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.rational(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.irrational(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.algebraic(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.finite(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.transcendental(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.real(x)) is True
-    assert lra_satask((x > 0), (x > 2) & Q.extended_real(x)) is True
-
     # test disallowed pred
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.prime(x)))
     raises(UnhandledInput, lambda: lra_satask((x > 0), (x > 2) & Q.composite(x)))

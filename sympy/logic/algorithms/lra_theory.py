@@ -137,9 +137,6 @@ class UnhandledInput(Exception):
 # predicates that LRASolver understands and makes use of
 ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
 
-# predicates that can safely be ignored in the context of an LRA solver
-BENIGN_PRED = {Q.algebraic, Q.finite, Q.transcendental, Q.real, Q.extended_real, Q.irrational, Q.rational}
-
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
 
@@ -272,9 +269,6 @@ class LRASolver():
                     continue
 
                 raise ValueError(f"Unhandled Predicate: {prop}")
-
-            if prop.function in BENIGN_PRED:
-                continue
 
             assert prop.function in ALLOWED_PRED
             if prop.lhs == S.NaN or prop.rhs == S.NaN:

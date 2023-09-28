@@ -2,7 +2,7 @@ from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
-from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED, BENIGN_PRED
+from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
 from sympy.matrices.common import MatrixKind
 from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
@@ -37,7 +37,7 @@ def lra_satask(proposition, assumptions=True, context=global_assumptions):
 # Some predicates such as Q.prime can't be handled by lra_satask.
 # For example, (x > 0) & (x < 1) & Q.prime(x) is unsat but lra_satask would think it was sat.
 # WHITE_LIST is a list of predicates that can always be handled.
-WHITE_LIST = ALLOWED_PRED | BENIGN_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
+WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpositive, Q.nonnegative,
                                             Q.extended_positive, Q.extended_negative, Q.extended_nonpositive,
                                             Q.extended_negative, Q.extended_nonzero, Q.negative_infinite,
                                             Q.positive_infinite}
