@@ -350,11 +350,12 @@ class Printer:
         elif order == 'none':
             return list(expr.args)
         elif order is not None:
-            ordered = expr.as_ordered_terms(order=order)
+            return expr.as_ordered_terms(order=order)
         else:
-            ordered = list(expr.args)[::-1]
-            if ordered[0].is_Order:
-                ordered.append(ordered.pop(0))
+            if len(expr.args) > 2:
+                ordered = expr.as_ordered_terms(None)
+            else:
+                ordered = list(expr.args)
             # TOUCH UP
             # (1) prefer y - x to -x + y but -1 + sqrt(2) to sqrt(2) - 1
             def _has_radical(e):
