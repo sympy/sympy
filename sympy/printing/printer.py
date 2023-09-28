@@ -349,8 +349,12 @@ class Printer:
             return sorted(Add.make_args(expr), key=cmp_to_key(Basic._compare_pretty))
         elif order == 'none':
             return list(expr.args)
-        else:
+        elif order is not None:
             ordered = expr.as_ordered_terms(order=order)
+        else:
+            ordered = list(expr.args)[::-1]
+            if ordered[0].is_Order:
+                ordered.append(ordered.pop(0))
             # TOUCH UP
             # (1) prefer y - x to -x + y but -1 + sqrt(2) to sqrt(2) - 1
             def _has_radical(e):
@@ -385,7 +389,7 @@ class Printer:
             n = len(ordered)
             i = 0
             while n:
-                if ordered[0].has(S.ImaginaryUnit):
+                if ordered[i].has(S.ImaginaryUnit):
                     ordered.append(ordered.pop(i))
                 else:
                     i += 1
