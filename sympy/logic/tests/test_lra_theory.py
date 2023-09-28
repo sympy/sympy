@@ -321,9 +321,7 @@ def test_binrel_evaluation():
     assert conflicts == [[-1]]
 
 
-def test_negation_version1():
-    # There are multiple ways to handle negation.
-    # Version1 is not compatible with version2.
+def test_negation():
     assert HANDLE_NEGATION is True
     bf = Q.gt(x, 1) & ~Q.gt(x, 0)
     enc = boolean_formula_to_encoded_cnf(bf)
@@ -372,41 +370,6 @@ def test_negation_version1():
     assert lra.check()[0] == False
     assert len(lra.check()[1]) == 3
     assert all(i > 0 for i in lra.check()[1])
-
-
-@XFAIL
-def test_negation_version2():
-    # There are multiple ways to handle negation.
-    # Version1 is not compatible with version2.
-
-    # note that SymPy assumes variables are complex by default
-    # thus Not(x > 0) implies (x <= 0) OR (x has imaginary component)
-
-    bf = ~Q.gt(x, 0) & Q.gt(x, 1)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
-    for lit in enc.encoding.values():
-        if lra.assert_lit(lit) is not None:
-            break
-    assert lra.check()[0] is False
-
-    bf = ~Q.gt(x, 0) & ~Q.le(x, 0)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
-    for lit in enc.encoding.values():
-        if lra.assert_lit(lit) is not None:
-            break
-    assert lra.check()[0] is True
-
-    bf = ~Q.gt(x, 0) & ~Q.le(x, 0) & Q.lt(x, 100)
-    enc = boolean_formula_to_encoded_cnf(bf)
-    lra, _ = LRASolver.from_encoded_cnf(enc)
-    for lit in enc.encoding.values():
-        if lra.assert_lit(lit) is not None:
-            break
-    res = lra.check()
-    assert res[0] is False
-    assert len(res[1]) == 3
 
 
 def test_unhandled_input():
