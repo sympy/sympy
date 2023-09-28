@@ -549,7 +549,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 if v.is_extended_real is False:
                     return S.false
                 else:
-                    v = v.n(2)
+                    v = v.n(2, chop=True)
                     if v.is_comparable:
                         return expr.func(v, 0)
                     # not comparable or couldn't be evaluated
