@@ -364,15 +364,23 @@ class Printer:
             def _powers(e):
                 p = Counter()
                 for f in Mul.make_args(e):
-                    if f.is_number:
+                    if not f.is_NumberSymbol and f.is_number:
                         continue
                     base, exp = f.as_base_exp()
                     p[base] += exp
                 return p
             def _do_swap(a, b):
+                if b.is_Order:
+                    return False
+                if a is S.One:
+                    return not _coeff_isneg(b)
+                if a.is_Number and not b.is_number:
+                    return True # +/-2 -/- x -> +/-x +/- 2
                 if _coeff_isneg(a) and not _coeff_isneg(b):
                     # don't do unless all bases in common
-                    # have the same power
+                    # have the same power (and bases will
+                    # inlcude NumberSymbol so pi/2 + 2*n*pi will remain
+                    # unchanged
                     pa = _powers(a)
                     pb = _powers(b)
                     if all(pa[i] == pb[i] for i in set(pa) & set(pb)):

@@ -180,13 +180,13 @@ factor the result back::
 
     >>> factor(g)
               19
-    20⋅(1 + x)  
+    20⋅(1 + x)
 
 The same can be achieved in factored form::
 
     >>> diff((x + 1)**20, x)
               19
-    20⋅(1 + x)  
+    20⋅(1 + x)
 
 Factoring in terms of cyclotomic polynomials
 --------------------------------------------
@@ -240,11 +240,11 @@ We would like to reduce degrees of the numerator and the denominator of a
 rational function ``f/g``. To do this we employ :func:`~.cancel` function::
 
     >>> cancel(f/g)
-        2                    3      2      
+        2                    3      2
     √2⋅x  - 2⋅√2⋅x - 3⋅√2 + x  - 2⋅x  - 3⋅x
     ───────────────────────────────────────
-                     2                     
-                    x  - 2                 
+                     2
+                    x  - 2
 
 Unfortunately nothing interesting happened. This is because by default SymPy
 treats `\sqrt{2}` as a generator, obtaining a bivariate polynomial for the
@@ -289,7 +289,7 @@ domains, which includes:
 
     >>> factor(f, modulus=5)
            2        2
-    (x - 2) ⋅(2 + x) 
+    (x - 2) ⋅(2 + x)
 
 * algebraic numbers::
 
@@ -438,10 +438,10 @@ Consider a univariate rational function ``f`` with integer coefficients::
 To decompose ``f`` into partial fractions use :func:`~.apart` function::
 
     >>> apart(f)
-      3       2        2    
+      3       2        2
     ───── - ───── + ────────
     2 + x   1 + x          2
-                    (1 + x) 
+                    (1 + x)
 
 To return from partial fractions to the rational function use
 a composition of :func:`~.together` and :func:`~.cancel`::

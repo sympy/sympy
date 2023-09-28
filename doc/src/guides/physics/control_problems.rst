@@ -33,7 +33,7 @@ Solution
     >>> b = [-1, -2-I, -2+I]            # Poles at -1, (-2, j) and (-2, -j) in S plane
     >>> tf = TransferFunction.from_zpk(a, b, gain, s)
     >>> pprint(tf)
-               k*(3 + s)           
+               k*(3 + s)
     -------------------------------
     (1 + s)*(s + 2 - I)*(s + 2 + I)
     >>> gain = tf.dc_gain()
@@ -42,11 +42,11 @@ Solution
     >>> K = solve(gain - 20, k)[0]               # Solve for k
     >>> tf = tf.subs({k: K})                     # Reconstruct the TransferFunction using .subs()
     >>> pprint(tf.expand())
-              100*s    
-        100 + -----    
-                3      
+              100*s
+        100 + -----
+                3
     -------------------
-     3      2          
+     3      2
     s  + 5*s  + 9*s + 5
 
     Subpart 2
@@ -182,11 +182,11 @@ Solution
 
     >>> tf1 = G[0, 0]
     >>> pprint(tf1)
-                2    
+                2
     -s + (1 + s)  - 1
     -----------------
-               3     
-        (1 + s)      
+               3
+        (1 + s)
     >>> step_response_plot(tf1)  # doctest: +SKIP
 
     .. plot:: guides/physics/generate_plots.py q3_4
@@ -238,52 +238,52 @@ Solution
     >>> C = TransferFunctionMatrix.from_Matrix(C_mat, var=s)
     >>> # Series equivalent, considering (Input)→[P]→[C]→(Output). Note that order of matrix multiplication is opposite to the order in which the elements are arranged.
     >>> pprint(C*P)
-    [1  1]    [1    2  ]   
-    [-  -]    [-  -----]   
-    [1  1]    [s  2 + s]   
-    [    ]   *[        ]   
-    [2  2]    [0    3  ]   
-    [-  -]    [-    -  ]   
+    [1  1]    [1    2  ]
+    [-  -]    [-  -----]
+    [1  1]    [s  2 + s]
+    [    ]   *[        ]
+    [2  2]    [0    3  ]
+    [-  -]    [-    -  ]
     [1  1]{t} [1    1  ]{t}
     >>> # Series equivalent, considering (Input)→[C]→[P]→(Output).
     >>> pprint(P*C)
-    [1    2  ]    [1  1]   
-    [-  -----]    [-  -]   
-    [s  2 + s]    [1  1]   
-    [        ]   *[    ]   
-    [0    3  ]    [2  2]   
-    [-    -  ]    [-  -]   
+    [1    2  ]    [1  1]
+    [-  -----]    [-  -]
+    [s  2 + s]    [1  1]
+    [        ]   *[    ]
+    [0    3  ]    [2  2]
+    [-    -  ]    [-  -]
     [1    1  ]{t} [1  1]{t}
     >>> pprint((C*P).doit())
-    [1  8 + 3*s ]   
-    [-  ------- ]   
-    [s   2 + s  ]   
-    [           ]   
-    [2  16 + 6*s]   
-    [-  --------]   
+    [1  8 + 3*s ]
+    [-  ------- ]
+    [s   2 + s  ]
+    [           ]
+    [2  16 + 6*s]
+    [-  --------]
     [s   2 + s  ]{t}
     >>> pprint((P*C).doit())
-    [ 2 + 5*s    2 + 5*s ]   
-    [---------  ---------]   
-    [s*(2 + s)  s*(2 + s)]   
-    [                    ]   
-    [    6          6    ]   
-    [    -          -    ]   
+    [ 2 + 5*s    2 + 5*s ]
+    [---------  ---------]
+    [s*(2 + s)  s*(2 + s)]
+    [                    ]
+    [    6          6    ]
+    [    -          -    ]
     [    1          1    ]{t}
 
     Subpart 2
 
     >>> tfm_feedback = MIMOFeedback(P, C, sign=-1)
     >>> pprint(tfm_feedback.doit())  # ((I + P*C)**-1)*P
-    [   14 + 7*s          -6 - s     ]   
-    [---------------  ---------------]   
-    [   2                2           ]   
-    [7*s  + 19*s + 2  7*s  + 19*s + 2]   
-    [                                ]   
-    [                    2           ]   
-    [   -12 - 6*s     3*s  + 9*s + 6 ]   
-    [---------------  ---------------]   
-    [   2                2           ]   
+    [   14 + 7*s          -6 - s     ]
+    [---------------  ---------------]
+    [   2                2           ]
+    [7*s  + 19*s + 2  7*s  + 19*s + 2]
+    [                                ]
+    [                    2           ]
+    [   -12 - 6*s     3*s  + 9*s + 6 ]
+    [---------------  ---------------]
+    [   2                2           ]
     [7*s  + 19*s + 2  7*s  + 19*s + 2]{t}
 
 

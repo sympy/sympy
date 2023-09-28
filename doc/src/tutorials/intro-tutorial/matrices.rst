@@ -406,7 +406,7 @@ expensive to calculate.
     >>> lamda = symbols('lamda')
     >>> p = M.charpoly(lamda)
     >>> factor(p.as_expr())
-           2                
+           2
     (λ - 5) ⋅(λ - 3)⋅(2 + λ)
 
 .. TODO: Add an example for ``jordan_form``, once it is fully implemented.

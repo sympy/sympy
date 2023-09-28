@@ -126,7 +126,7 @@ is no longer a polynomial over the rationals).
     sin (x) + 2⋅sin(x)⋅cos(x) + cos (x)
     >>> factor(cos(x)**2 + 2*cos(x)*sin(x) + sin(x)**2)
                      2
-    (cos(x) + sin(x)) 
+    (cos(x) + sin(x))
 
 collect
 -------
@@ -139,7 +139,7 @@ collect
     x  - x ⋅z + 2⋅x  + x⋅y + x - 3
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
-     3    2                        
+     3    2
     x  + x ⋅(2 - z) + x⋅(1 + y) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
@@ -162,21 +162,21 @@ denominators (i.e., are integers).
     >>> cancel((x**2 + 2*x + 1)/(x**2 + x))
     1 + x
     ─────
-      x  
+      x
 
     >>> expr = 1/x + (3*x/2 - 2)/(x - 4)
     >>> expr
-        3⋅x    
+        3⋅x
         ─── - 2
-    1    2     
+    1    2
     ─ + ───────
-    x    x - 4 
+    x    x - 4
     >>> cancel(expr)
-       2          
+       2
     3⋅x  - 2⋅x - 8
     ──────────────
-               2  
-     -8⋅x + 2⋅x   
+               2
+     -8⋅x + 2⋅x
 
     >>> expr = (x*y**2 - 2*x*y*z + x*z**2 + y**2 - 2*y*z + z**2)/(x**2 - 1)
     >>> expr
@@ -221,7 +221,7 @@ function.
      2⋅x - 1       1     3
     ────────── - ───── + ─
      2           4 + x   x
-    x  + x + 1            
+    x  + x + 1
 
 Trigonometric Simplification
 ============================
@@ -254,7 +254,7 @@ To simplify expressions using trigonometric identities, use ``trigsimp()``.
     >>> trigsimp(sin(x)**4 - 2*cos(x)**2*sin(x)**2 + cos(x)**4)
     1   cos(4⋅x)
     ─ + ────────
-    2      2    
+    2      2
     >>> trigsimp(sin(x)*tan(x)/sec(x))
        2
     sin (x)
@@ -802,14 +802,14 @@ Now we repeat this process
 
     >>> frac = apart(frac, a1)
     >>> frac
-             1 + a₃⋅a₄     
+             1 + a₃⋅a₄
     a₁ + ──────────────────
          a₂⋅a₃⋅a₄ + a₂ + a₄
     >>> l.append(a1)
     >>> frac = 1/(frac - a1)
     >>> frac = apart(frac, a2)
     >>> frac
-            a₄    
+            a₄
     a₂ + ─────────
          1 + a₃⋅a₄
     >>> l.append(a2)

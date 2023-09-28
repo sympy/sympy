@@ -27,9 +27,9 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 Rational functions::
 
     >>> integrate(x/(x**2+2*x+1), x)
-      1               
+      1
     ----- + log(1 + x)
-    1 + x             
+    1 + x
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
@@ -275,12 +275,12 @@ Single Polynomial::
 List of specified polynomials::
 
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [3, x*y + y**2, x**4], max_degree=4)
-              4         2            
+              4         2
     {3: 3/2, x : 1/30, y  + x*y: 1/8}
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [1.125, x, x**2, 6.89*x**3, x*y + y**2, x**4], max_degree=4)
-                           2              3  689    4         2            
+                           2              3  689    4         2
     {1.125: 9/16, x: 1/6, x : 1/12, 6.89*x : ----, x : 1/30, y  + x*y: 1/8}
-                                             2000                          
+                                             2000
 
 Computing all monomials up to a maximum degree::
 
@@ -308,12 +308,12 @@ Single Polynomial::
 List of specified polynomials::
 
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [3, x*y + y**2, x**4], max_degree=4)
-              4         2            
+              4         2
     {3: 3/2, x : 1/30, y  + x*y: 1/8}
     >>> polytope_integrate(Polygon((0, 0), (0, 1), (1, 0)), [1.125, x, x**2, 6.89*x**3, x*y + y**2, x**4], max_degree=4)
-                           2              3  689    4         2            
+                           2              3  689    4         2
     {1.125: 9/16, x: 1/6, x : 1/12, 6.89*x : ----, x : 1/30, y  + x*y: 1/8}
-                                             2000                          
+                                             2000
 
 Computing all monomials up to a maximum degree::
 

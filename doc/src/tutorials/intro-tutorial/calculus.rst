@@ -89,11 +89,11 @@ Derivatives of unspecified order can be created using tuple ``(x, n)`` where
     >>> m, n, a, b = symbols('m n a b')
     >>> expr = (a*x + b)**m
     >>> expr.diff((x, n))
-     n             
+     n
     ∂  ⎛         m⎞
     ───⎝(b + a⋅x) ⎠
-      n            
-    ∂x             
+      n
+    ∂x
 
 Integrals
 =========
@@ -175,19 +175,19 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     >>> integ = Integral((x**4 + x**2*exp(x) - x**2 - 2*x*exp(x) - 2*x -
     ...     exp(x))*exp(x)/((x - 1)**2*(x + 1)**2*(exp(x) + 1)), x)
     >>> integ
-    ⌠                                            
-    ⎮ ⎛ 4    2  x    2        x          x⎞  x   
-    ⎮ ⎝x  + x ⋅ℯ  - x  - 2⋅x⋅ℯ  - 2⋅x - ℯ ⎠⋅ℯ    
+    ⌠
+    ⎮ ⎛ 4    2  x    2        x          x⎞  x
+    ⎮ ⎝x  + x ⋅ℯ  - x  - 2⋅x⋅ℯ  - 2⋅x - ℯ ⎠⋅ℯ
     ⎮ ──────────────────────────────────────── dx
-    ⎮               2        2 ⎛     x⎞          
-    ⎮        (x - 1) ⋅(1 + x) ⋅⎝1 + ℯ ⎠          
-    ⌡                                            
+    ⎮               2        2 ⎛     x⎞
+    ⎮        (x - 1) ⋅(1 + x) ⋅⎝1 + ℯ ⎠
+    ⌡
     >>> integ.doit()
-       x                
+       x
       ℯ         ⎛     x⎞
     ────── + log⎝1 + ℯ ⎠
-     2                  
-    x  - 1              
+     2
+    x  - 1
 
     >>> integ = Integral(sin(x**2), x)
     >>> integ
@@ -212,14 +212,14 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     0
     >>> integ.doit()
     ⎧ Γ(1 + y)    for re(y) > -1
-    ⎪                           
-    ⎪∞                          
-    ⎪⌠                          
-    ⎨⎮  y  -x                   
-    ⎪⎮ x ⋅ℯ   dx    otherwise   
-    ⎪⌡                          
-    ⎪0                          
-    ⎩                           
+    ⎪
+    ⎪∞
+    ⎪⌠
+    ⎨⎮  y  -x
+    ⎪⎮ x ⋅ℯ   dx    otherwise
+    ⎪⌡
+    ⎪0
+    ⎩
 
 This last example returned a ``Piecewise`` expression because the integral
 does not converge unless `\Re(y) > 1.`

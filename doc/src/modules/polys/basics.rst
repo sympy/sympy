@@ -251,7 +251,7 @@ For polynomials the division identity is given in SymPy by the function
     >>> q
     5   5*x
     - + ---
-    2    2 
+    2    2
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -395,7 +395,7 @@ defined this way::
     >>> q
     5   5*x
     - + ---
-    2    2 
+    2    2
     >>> r
     -2
     >>> (q*g + r).expand()
@@ -498,13 +498,13 @@ The lcm is connected with the gcd and one can be computed using the other::
     x*y
     >>> lcm(f, g)
      2  3    3  2
-    x *y  + x *y 
+    x *y  + x *y
     >>> (f*g).expand()
      3  4    4  3
-    x *y  + x *y 
+    x *y  + x *y
     >>> (gcd(f, g, x, y)*lcm(f, g, x, y)).expand()
      3  4    4  3
-    x *y  + x *y 
+    x *y  + x *y
 
 Square-free factorization
 -------------------------
@@ -515,13 +515,13 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-                           2      
+                           2
     (1, [(2 + x, 1), (x + x , 2)])
 
     >>> sqf(f)
                     2
-            /     2\ 
-    (2 + x)*\x + x / 
+            /     2\
+    (2 + x)*\x + x /
 
 Factorization
 -------------
@@ -530,10 +530,10 @@ This function provides factorization of univariate and multivariate polynomials
 with rational coefficients::
 
     >>> factor(x**4/2 + 5*x**3/12 - x**2/3)
-     2                    
+     2
     x *(2*x - 1)*(4 + 3*x)
     ----------------------
-              12          
+              12
 
     >>> factor(x**2 + 4*x*y + 4*y**2)
              2
