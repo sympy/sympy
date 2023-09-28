@@ -446,6 +446,10 @@ def test_issue_10671_12466():
         Interval.Lopen(6, 7)
 
 
+def test_issue_25697():
+    assert reduce_inequalities([log(x, 3) <= 2], x) === True
+
+
 def test__solve_inequality():
     for op in (Gt, Lt, Le, Ge, Eq, Ne):
         assert _solve_inequality(op(x, 1), x).lhs == x
