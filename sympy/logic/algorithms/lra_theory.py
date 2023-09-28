@@ -134,8 +134,13 @@ class UnhandledInput(Exception):
     or non-rational numbers are present.
     """
 
+# predicates that LRASolver understands and makes use of
 ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
-BENIGN_PRED = {Q.algebraic, Q.finite, Q.transcendental, Q.real, Q.extended_real, Q.irrational, Q.rational, Q.complex}
+
+# predicates that can safely be ignored in the context of an LRA solver
+BENIGN_PRED = {Q.algebraic, Q.finite, Q.transcendental, Q.real, Q.extended_real, Q.irrational, Q.rational}
+
+# if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
 
 class LRASolver():
