@@ -2059,9 +2059,9 @@ def print_mathml(expr, printer='content', **settings):
     >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
-    	<plus/>
-    	<cn>1</cn>
-    	<ci>x</ci>
+        <plus/>
+        <cn>1</cn>
+        <ci>x</ci>
     </apply>
     <BLANKLINE>
     >>> print_mathml(x+1, printer='presentation')
