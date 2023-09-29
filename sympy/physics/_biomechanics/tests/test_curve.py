@@ -1665,3 +1665,36 @@ class TestFiberForceVelocityInverseDeGroote2016:
             '- 2.78616352201258)'
         )
         assert PythonCodePrinter().doprint(dfv_M_inv_dfv_M) == expected
+
+    def test_lambdify(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = lambdify(self.fv_M, fv_M_inv)
+        assert fv_M_inv_callable(1.0) == pytest.approx(-0.0009548832444487479)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = lambdify(self.fv_M, fv_M_inv, 'numpy')
+        fv_M = numpy.array([0.8, 0.9, 1.0, 1.1, 1.2])
+        expected = numpy.array([
+            -0.0794881459,
+            -0.0404909338,
+            -0.0009548832,
+            0.043061991,
+            0.0959484397,
+        ])
+        numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = jax.jit(lambdify(self.fv_M, fv_M_inv, 'jax'))
+        fv_M = jax.numpy.array([0.8, 0.9, 1.0, 1.1, 1.2])
+        expected = jax.numpy.array([
+            -0.0794881459,
+            -0.0404909338,
+            -0.0009548832,
+            0.043061991,
+            0.0959484397,
+        ])
+        numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
