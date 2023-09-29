@@ -8,7 +8,7 @@ from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import sinh
+from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.curve import (
     CharacteristicCurveFunction,
@@ -1527,3 +1527,28 @@ class TestFiberForceVelocityInverseDeGroote2016:
         fv_M_inv_manual = FiberForceVelocityInverseDeGroote2016(self.fv_M, *constants)
         fv_M_inv_constants = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
         assert fv_M_inv_manual == fv_M_inv_constants
+
+    def test_differentiate_wrt_fv_M(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = cosh((self.fv_M - self.c3)/self.c0)/(self.c0*self.c1)
+        assert fv_M_inv.diff(self.fv_M) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = (self.c3 - self.fv_M)*cosh((self.fv_M - self.c3)/self.c0)/(self.c0**2*self.c1)
+        assert fv_M_inv.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = (self.c2 - sinh((self.fv_M - self.c3)/self.c0))/self.c1**2
+        assert fv_M_inv.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = -1/self.c1
+        assert fv_M_inv.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = -cosh((self.fv_M - self.c3)/self.c0)/(self.c0*self.c1)
+        assert fv_M_inv.diff(self.c3) == expected
