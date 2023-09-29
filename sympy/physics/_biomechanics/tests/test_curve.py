@@ -1560,3 +1560,13 @@ class TestFiberForceVelocityInverseDeGroote2016:
     def test_inverse(self):
         fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
         assert fv_M_inv.inverse() is FiberForceVelocityDeGroote2016
+
+    def test_function_print_latex(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = r'\left( \operatorname{fv}^M \right)^{-1} \left( fv_{M} \right)'
+        assert LatexPrinter().doprint(fv_M_inv) == expected
+
+    def test_expression_print_latex(self):
+        fv_M = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = r'\frac{- c_{2} + \sinh{\left(\frac{- c_{3} + fv_{M}}{c_{0}} \right)}}{c_{1}}'
+        assert LatexPrinter().doprint(fv_M.doit()) == expected
