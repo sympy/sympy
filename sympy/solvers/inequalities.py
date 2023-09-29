@@ -892,7 +892,6 @@ def _reduce_inequalities(inequalities, symbols):
 
         expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
 
-
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
         # reduce_rational_inequalities
@@ -921,7 +920,6 @@ def _reduce_inequalities(inequalities, symbols):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
-
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
