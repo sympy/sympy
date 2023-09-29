@@ -1519,7 +1519,7 @@ class TestFiberForceVelocityInverseDeGroote2016:
 
     def test_doit_evaluate_false(self):
         fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants).doit(evaluate=False)
-        assert fv_M_inv == (sinh((self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
+        assert fv_M_inv == (sinh(UnevaluatedExpr(self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
 
     def test_with_defaults(self):
         constants = (
