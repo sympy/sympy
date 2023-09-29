@@ -124,7 +124,6 @@ from sympy.core.add import Add
 from sympy.core.relational import Eq, Ne
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
-from sympy import SYMPY_DEBUG
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
 
@@ -559,7 +558,6 @@ class LRASolver():
         iteration = 0
         while True:
             iteration += 1
-            _debug_internal_state_printer1(iteration, M, basic, self.all_var, self)
 
             if self.run_checks:
                 # nonbasic variables must always be within bounds
@@ -604,7 +602,6 @@ class LRASolver():
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: str(v))[0]
-                _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.lower)
 
             if xi.assign > xi.upper:
@@ -624,7 +621,6 @@ class LRASolver():
                     conflict = [-neg*self.boundary_to_enc[c] for c, neg in conflict]
                     return False, conflict
                 xj = sorted(cand, key=lambda v: v.col_idx)[0]
-                _debug_internal_state_printer2(xi, xj)
                 M = self._pivot_and_update(M, basic, nonbasic, xi, xj, xi.upper)
 
     def _pivot_and_update(self, M, basic, nonbasic, xi, xj, v):
@@ -917,34 +913,3 @@ class LRAVariable():
 
     def __hash__(self):
         return hash(self.var)
-
-
-def _debug_internal_state_printer1(iteration, A, bas, variables, lra):
-    if not SYMPY_DEBUG:
-        return
-    import sys
-    from sympy.matrices.dense import Matrix
-    from sympy import pprint
-
-    bvar = [None]*len(bas)
-    for v, idx in bas.items():
-        bvar[idx] = v
-
-    r1 = Matrix([variables])
-    c1 = Matrix(bvar)
-    corner = Matrix([[iteration]])
-
-    tableau = Matrix([[corner, r1], [c1, A]])
-    pprint(tableau)
-    sys.stderr.write("\n")
-    assign = {v: v.assign for v in lra.all_var}
-    sys.stderr.write(f"{assign}\n")
-    for v in lra.all_var:
-        sys.stderr.write(str(v.lower) + " <= " + str(v) + " <= " + str(v.upper) + "\n")
-
-
-def _debug_internal_state_printer2(xi, xj):
-    if not SYMPY_DEBUG:
-        return
-    import sys
-    sys.stderr.write(f"\npivoting {xi} with {xj}\n\n")
