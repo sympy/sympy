@@ -754,6 +754,48 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     passive fiber force very close to 0 for all normalized fiber lengths
     between 0 and 1.
 
+    Examples
+    ========
+
+    The preferred way to instantiate
+    ``FiberForceLengthPassiveInverseDeGroote2016`` is using the
+    ``with_defaults`` constructor because this will automatically populate the
+    constants within the characteristic curve equation with the floating point
+    values from the original publication. This constructor takes a single
+    argument corresponding to the normalized passive muscle fiber length-force
+    component of the muscle fiber force. We'll create a ``Symbol`` called
+    ``fl_M_pas`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    >>> fl_M_pas = Symbol('fl_M_pas')
+    >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas)
+    >>> l_M_tilde
+    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, 3/5, 4)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1 = symbols('c0 c1')
+    >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
+    >>> l_M_tilde
+    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> l_M_tilde.doit(evaluate=False)
+    c0*log(1 + fl_M_pas*(exp(c1) - 1))/c1 + 1
+
+    The function can also be differentiated. We'll differentiate with respect
+    to fl_M_pas using the ``diff`` method on an instance with the single positional
+    argument ``fl_M_pas``.
+
+    >>> l_M_tilde.diff(fl_M_pas)
+    c0*(exp(c1) - 1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+
     References
     ==========
 
