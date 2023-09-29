@@ -552,7 +552,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     if v.is_comparable:
                         return expr.func(v, 0)
                     if v.equals(0):
-                        return expr.func(0, 0) 
+                        return expr.func(0, 0)
                     # not comparable or couldn't be evaluated
                     raise NotImplementedError(
                         'relationship did not evaluate: %s' % r)
