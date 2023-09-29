@@ -1304,6 +1304,59 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     normalized muscle fiber force of 1 when the muscle fibers are contracting
     isometrically (they have an extension rate of 0).
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceVelocityDeGroote2016`` is using
+    the ``with_defaults`` constructor because this will automatically populate
+    the constants within the characteristic curve equation with the floating
+    point values from the original publication. This constructor takes a single
+    argument corresponding to normalized muscle fiber extension velocity. We'll
+    create a ``Symbol`` called ``v_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+    >>> v_M_tilde = Symbol('v_M_tilde')
+    >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M_tilde, -0.318, -8.149, -0.374, 0.886)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> fv_M = FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``v_M`` and
+    ``v_M_max``, representing muscle fiber extension velocity and maximum
+    muscle fiber extension velocity respectively. We can then represent
+    ``v_M_tilde`` as an expression, the ratio of these.
+
+    >>> v_M, v_M_max = symbols('v_M v_M_max')
+    >>> v_M_tilde = v_M/v_M_max
+    >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M/v_M_max, -0.318, -8.149, -0.374, 0.886)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fv_M.doit(evaluate=False)
+    0.886 - 0.318*log(-8.149*v_M/v_M_max - 0.374 + sqrt(1 + (-8.149*v_M/v_M_max
+    - 0.374)**2))
+
+    The function can also be differentiated. We'll differentiate with respect
+    to v_M using the ``diff`` method on an instance with the single positional
+    argument ``v_M``.
+
+    >>> fv_M.diff(v_M)
+    2.591382*(1 + (-8.149*v_M/v_M_max - 0.374)**2)**(-1/2)/v_M_max
+
     References
     ==========
 
