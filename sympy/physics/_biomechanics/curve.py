@@ -4,6 +4,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.precedence import PRECEDENCE
 
@@ -1353,3 +1354,35 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     def _eval_evalf(self, prec):
         """Evaluate the expression numerically using ``evalf``."""
         return self.doit(deep=False, evaluate=False)._eval_evalf(prec)
+
+    def doit(self, deep=True, evaluate=True, **hints):
+        """Evaluate the expression defining the function.
+
+        Parameters
+        ==========
+
+        deep : bool
+            Whether ``doit`` should be recursively called. Default is ``True``.
+        evaluate : bool.
+            Whether the SymPy expression should be evaluated as it is
+            constructed. If ``False``, then no constant folding will be
+            conducted which will leave the expression in a more numerically-
+            stable for values of ``fv_M`` that correspond to a sensible
+            operating range for a musculotendon. Default is ``True``.
+        **kwargs : dict[str, Any]
+            Additional keyword argument pairs to be recursively passed to
+            ``doit``.
+
+        """
+        fv_M, *constants = self.args
+        if deep:
+            hints['evaluate'] = evaluate
+            fv_M = fv_M.doit(deep=deep, **hints)
+            c0, c1, c2, c3 = [c.doit(deep=deep, **hints) for c in constants]
+        else:
+            c0, c1, c2, c3 = constants
+
+        if evaluate:
+            return (sinh((fv_M - c3)/c0) - c2)/c1
+
+        return (sinh(UnevaluatedExpr(fv_M - c3)/c0) - c2)/c1
