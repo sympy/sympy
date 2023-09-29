@@ -357,7 +357,11 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install --upgrade pip
+      # PyPy requires OpenBLAS for install SciPy.
+      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
+        run: sudo apt-get update
+        run: sudo apt-get install libopenblas-dev
+      - run: python -m pip install --upgrade pip wheel setuptools
       - run: pip install mpmath numpy scipy matplotlib
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
