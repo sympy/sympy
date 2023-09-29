@@ -1424,3 +1424,17 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
 
         """
         return FiberForceVelocityDeGroote2016
+
+    def _latex(self, printer):
+        """Print a LaTeX representation of the function defining the curve.
+
+        Parameters
+        ==========
+
+        printer : Printer
+            The printer to be used to print the LaTeX string representation.
+
+        """
+        fv_M = self.args[0]
+        _fv_M = printer._print(fv_M)
+        return r'\left( \operatorname{fv}^M \right)^{-1} \left( %s \right)' % _fv_M
