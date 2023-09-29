@@ -1232,6 +1232,18 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
         raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return FiberForceVelocityInverseDeGroote2016
+
     def _latex(self, printer):
         """Print a LaTeX representation of the function defining the curve.
 
