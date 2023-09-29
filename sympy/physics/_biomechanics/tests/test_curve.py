@@ -1348,6 +1348,10 @@ class TestFiberForceVelocityDeGroote2016:
         expected = Integer(1)
         assert fv_M.diff(self.c3) == expected
 
+    def test_inverse(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        assert fv_M.inverse() is FiberForceVelocityInverseDeGroote2016
+
     def test_function_print_latex(self):
         fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
         expected = r'\operatorname{fv}^M \left( v_{M tilde} \right)'
@@ -1552,3 +1556,7 @@ class TestFiberForceVelocityInverseDeGroote2016:
         fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
         expected = -cosh((self.fv_M - self.c3)/self.c0)/(self.c0*self.c1)
         assert fv_M_inv.diff(self.c3) == expected
+
+    def test_inverse(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        assert fv_M_inv.inverse() is FiberForceVelocityDeGroote2016
