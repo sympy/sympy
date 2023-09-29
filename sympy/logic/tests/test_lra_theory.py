@@ -15,9 +15,10 @@ from sympy.logic.algorithms.lra_theory import LRASolver, UnhandledInput, LRARati
 from sympy.core.random import random, choice, randint
 from sympy.core.sympify import sympify
 from sympy.ntheory.generate import randprime
+from sympy.core.relational import StrictLessThan, StrictGreaterThan
+import itertools
 
 from sympy.testing.pytest import raises, XFAIL, skip
-import time
 
 def make_random_problem(num_variables=2, num_constraints=2, sparsity=.1, rational=True,
                         disable_strict = False, disable_nonstrict=False, disable_equality=False):
@@ -125,11 +126,8 @@ def test_random_problems():
     if z3 is None:
         skip("z3 is not installed")
 
-    from sympy.core.relational import StrictLessThan, StrictGreaterThan
-    import itertools
-
     special_cases = []; x1, x2, x3 = symbols("x1 x2 x3")
-    #special_cases.append([x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3]) bug with smtlib_code
+    special_cases.append([x1 - 3 * x2 <= -5, 6 * x1 + 4 * x2 <= 0, -7 * x1 + 3 * x2 <= 3])
     special_cases.append([-3 * x1 >= 3, Eq(4 * x1, -1)])
     special_cases.append([-4 * x1 < 4, 6 * x1 <= -6])
     special_cases.append([-3 * x2 >= 7, 6 * x1 <= -5, -3 * x2 <= -4])
@@ -146,10 +144,6 @@ def test_random_problems():
     special_cases.append([x1 + 5*x2 >= -6, 9*x1 - 3*x2 >= -9, 6*x1 + 6*x2 < -10, -3*x1 + 3*x2 < -7])
     special_cases.append([-9*x1 < 7, -5*x1 - 7*x2 < -1, 3*x1 + 7*x2 > 1, -6*x1 - 6*x2 > 9])
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
-
-    check_time = 0.0
-    from_encoded_time = 0.0
-    assert_time = 0.0
 
     feasible_count = 0
     for i in range(300):
@@ -168,11 +162,6 @@ def test_random_problems():
         if i < len(special_cases):
             constraints = special_cases[i]
 
-        # constraints = make_random_problem(num_variables=1, num_constraints=4, rational=False, disable_strict=False,
-        #                                  disable_nonstrict=False, disable_equality=False, allow_negation=True)
-
-
-
         if False in constraints or True in constraints:
             continue
 
@@ -183,11 +172,8 @@ def test_random_problems():
         enc.from_cnf(cnf)
         assert all(0 not in clause for clause in enc.data)
 
-        start = time.time()
         lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
         s_subs = lra.s_subs
-        end = time.time()
-        from_encoded_time += end - start
 
         lra.run_checks = True
         s_subs_rev = {value: key for key, value in s_subs.items()}
@@ -196,19 +182,12 @@ def test_random_problems():
         bounds = [(lra.enc_to_boundary[l], l) for l in lits if l in lra.enc_to_boundary]
         bounds = sorted(bounds, key=lambda x: (str(x[0].var), x[0].bound, str(x[0].upper))) # to remove nondeterminism
 
-        start = time.time()
         for b, l in bounds:
             if lra.result and lra.result[0] == False:
                 break
             lra.assert_lit(l)
 
-        end = time.time()
-        assert_time += end - start
-
-        start = time.time()
         feasible = lra.check()
-        end = time.time()
-        check_time += end - start
 
         if feasible[0] == True:
             feasible_count += 1

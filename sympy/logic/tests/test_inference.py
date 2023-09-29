@@ -16,7 +16,6 @@ from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.tests.test_lra_theory import make_random_problem
 from sympy.core.random import randint
-import time
 
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
@@ -366,25 +365,14 @@ def test_z3_vs_lra_dpll2():
 
     lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
 
-    lra_dpll2_time = 0
-    z3_time = 0
-    sat_count = 0
     for _ in range(50):
         cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
 
         try:
-            start = time.time()
             z3_sat = z3_satisfiable(cnf)
-            stop = time.time()
-            z3_time += stop - start
         except z3.z3types.Z3Exception:
             continue
 
-        start = time.time()
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
-        stop = time.time()
-        lra_dpll2_time += stop - start
 
         assert z3_sat == lra_dpll2_sat
-        if z3_sat:
-            sat_count += 1
