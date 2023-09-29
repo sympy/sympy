@@ -1502,3 +1502,8 @@ class TestFiberForceVelocityInverseDeGroote2016:
         assert issubclass(FiberForceVelocityInverseDeGroote2016, Function)
         assert issubclass(FiberForceVelocityInverseDeGroote2016, CharacteristicCurveFunction)
         assert FiberForceVelocityInverseDeGroote2016.__name__ == 'FiberForceVelocityInverseDeGroote2016'
+
+    def test_instance(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        assert isinstance(fv_M_inv, FiberForceVelocityInverseDeGroote2016)
+        assert str(fv_M_inv) == 'FiberForceVelocityInverseDeGroote2016(fv_M, c_0, c_1, c_2, c_3)'
