@@ -115,7 +115,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath numpy scipy matplotlib
+      - run: pip install mpmath
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
@@ -357,12 +357,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      # PyPy requires OpenBLAS for install SciPy.
-      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: sudo apt-get update
-        run: sudo apt-get install libopenblas-dev
-      - run: python -m pip install --upgrade pip wheel setuptools
-      - run: pip install mpmath numpy scipy matplotlib
+      - run: python -m pip install --upgrade pip
+      - run: pip install mpmath
       - run: bin/doctest --force-colors
       - run: examples/all.py -q
 
