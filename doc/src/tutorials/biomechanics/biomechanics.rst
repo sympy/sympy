@@ -1405,7 +1405,8 @@ will be able to produce a maximum force of 10 N to lift a mass of 0.5 kg:
 Our tendon is rigid, so the length of the muscle will be
 :math:`q-l_{T_\textrm{slack}}` and we want to give an initial muscle length
 near its force producing peak, so we choose :math:`q_0=l_{M_\textrm{opt}} +
-l_{T_\textrm{slack}}`:
+l_{T_\textrm{slack}}`. Let's also give the muscle a small initial activation so
+that it produces a non-zero force:
 
 .. plot::
    :format: doctest
@@ -1416,7 +1417,7 @@ l_{T_\textrm{slack}}`:
    >>> x_vals = np.array([
    ...     p_vals[3] + p_vals[4],  # q [m]
    ...     0.0,  # u [m/s]
-   ...     0.0,  # a [unitless]
+   ...     0.1,  # a [unitless]
    ... ])
    ...
 
@@ -1433,9 +1434,9 @@ Set the excitation to 1.0 and test the numerical functions:
    ... ])
    ...
    >>> eval_eom(x_vals, r_vals, p_vals)
-   (0.0, 9.81, 133.33333307568913)
+   (0.0, 7.817106179880225, 92.30769105034034)
    >>> eval_force(x_vals, p_vals)
-   1.4499681738213515e-16
+   -0.9964469100598874
 
 The two functions work so we can now simulate this system to see if and how the
 muscle lifts the mass:
