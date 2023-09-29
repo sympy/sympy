@@ -8,6 +8,7 @@ from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.curve import (
     CharacteristicCurveFunction,
@@ -1507,3 +1508,11 @@ class TestFiberForceVelocityInverseDeGroote2016:
         fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
         assert isinstance(fv_M_inv, FiberForceVelocityInverseDeGroote2016)
         assert str(fv_M_inv) == 'FiberForceVelocityInverseDeGroote2016(fv_M, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants).doit()
+        assert fv_M_inv == (sinh((self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
+
+    def test_doit_evaluate_false(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants).doit(evaluate=False)
+        assert fv_M_inv == (sinh((self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
