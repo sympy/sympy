@@ -1090,8 +1090,8 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
     The function is defined by the equation:
 
-    $fv^M = c_0 \log{\left(c1 v_M_tilde + c2\right)
-        + \sqrt{\left(c1 v_M_tilde + c2\right)^2 + 1}} + c3
+    $fv^M = c_0 \log{\left(c_1 v_M_tilde + c_2\right)
+        + \sqrt{\left(c_1 v_M_tilde + c_2\right)^2 + 1}} + c_3
 
     with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
     $c_3 = 0.886$.
