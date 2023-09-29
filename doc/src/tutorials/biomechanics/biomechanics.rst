@@ -1278,7 +1278,7 @@ state and ordinary differential equation as the activation model:
    :nofigs:
 
    >>> muscle.musculotendon_dynamics
-   MusculotendonFormulation.RIGID_TENDON
+   0
    >>> muscle.x
    Matrix([[a_muscle(t)]])
    >>> muscle.r
