@@ -1412,3 +1412,15 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
             return -cosh((fv_M - c3)/c0)/(c0*c1)
 
         raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """Inverse function.
+
+        Parameters
+        ==========
+
+        argindex : int
+            Value to start indexing the arguments at. Default is ``1``.
+
+        """
+        return FiberForceVelocityDeGroote2016
