@@ -647,6 +647,9 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     Explanation
     ===========
 
+    Gives the normalized muscle fiber length that produces a specific normalized
+    passive muscle fiber force.
+
     The function is defined by the equation:
 
     ${fl^M_{pas}}^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_pas + 1}}{c_1} + 1$
