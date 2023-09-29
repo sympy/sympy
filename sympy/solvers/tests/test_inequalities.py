@@ -447,8 +447,8 @@ def test_issue_10671_12466():
 
 
 def test_issue_25697():
-    assert reduce_inequalities([log(x, 3) <= 2], x) == (x <= 9) & (0 < x)
-    assert reduce_inequalities([log(x, 3) < 2], x) == (x < 9) & (0 < x)
+    assert reduce_inequalities([log(x, 3) <= 2], x) == (x <= 9) & (S(0) < x)
+    assert reduce_inequalities([log(x, 3) < 2], x) == (x < 9) & (S(0) < x)
 
 
 def test__solve_inequality():
