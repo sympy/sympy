@@ -13,6 +13,7 @@ __all__ = [
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
     'FiberForceVelocityDeGroote2016',
+    'FiberForceVelocityInverseDeGroote2016',
     'TendonForceLengthDeGroote2016',
     'TendonForceLengthInverseDeGroote2016',
 ]
@@ -1241,3 +1242,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
         v_M_tilde = self.args[0]
         _v_M_tilde = printer._print(v_M_tilde)
         return r'\operatorname{fv}^M \left( %s \right)' % _v_M_tilde
+
+
+class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
+    pass
