@@ -1,4 +1,4 @@
-"""Implementations of, and factories for, musculotendon models.
+"""Implementations of musculotendon models.
 
 Musculotendon models are a critical component of biomechanical models, one that
 differentiates them from pure multibody systems. Musculotendon models produce a
