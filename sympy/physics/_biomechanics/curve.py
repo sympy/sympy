@@ -319,6 +319,48 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     force when the tendon is in an unstrained state. It also produces a force
     of 1 normalized unit when the tendon is under a 5% strain.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``TendonForceLengthInverseDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized tendon force-length, which is
+    equal to the tendon force. We'll create a ``Symbol`` called ``fl_T`` to
+    represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import TendonForceLengthInverseDeGroote2016
+    >>> fl_T = Symbol('fl_T')
+    >>> l_T_tilde = TendonForceLengthInverseDeGroote2016.with_defaults(fl_T)
+    >>> l_T_tilde
+    TendonForceLengthInverseDeGroote2016(fl_T, 0.2, 0.995, 0.25,
+    33.93669377311689)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> l_T_tilde = TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
+    >>> l_T_tilde
+    TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> l_T_tilde.doit(evaluate=False)
+    c1 + log((c2 + fl_T)/c0)/c3
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_T using the ``diff`` method on an instance with the single positional
+    argument ``l_T``.
+
+    >>> l_T_tilde.diff(fl_T)
+    1/(c3*(c2 + fl_T))
+
     References
     ==========
 
