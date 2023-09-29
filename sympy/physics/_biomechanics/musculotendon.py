@@ -73,6 +73,22 @@ class MusculotendonFormulation(IntEnum):
     FIBER_LENGTH_IMPLICIT = 3
     TENDON_FORCE_IMPLICIT = 4
 
+    def __str__(self):
+        """Returns a string representation of the enumeration value.
+
+        Notes
+        =====
+
+        This hard coding is required due to an incompatibility between the
+        ``IntEnum`` implementations in Python 3.10 and Python 3.11
+        (https://github.com/python/cpython/issues/84247). From Python 3.11
+        onwards, the ``__str__`` method uses ``int.__str__``, whereas prior it
+        used ``Enum.__str__``. Once Python 3.11 becomes the minimum version
+        supported by SymPy, this method override can be removed.
+
+        """
+        return str(self.value)
+
 
 _DEFAULT_MUSCULOTENDON_FORMULATION = MusculotendonFormulation.RIGID_TENDON
 
