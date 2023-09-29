@@ -222,6 +222,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     >>> reduce_rational_inequalities([[y + 2 > 0]], y)
     (-2 < y) & (y < oo)
     """
+
     exact = True
     eqs = []
     solution = S.Reals if exprs else S.EmptySet
@@ -261,7 +262,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution &= solve_univariate_inequality(expr, gen, relational=False)
+                solution |= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
@@ -303,6 +304,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     reduce_abs_inequalities
     """
+
     if gen.is_extended_real is False:
          raise TypeError(filldedent('''
             Cannot solve inequalities with absolute values containing
@@ -375,6 +377,7 @@ def reduce_abs_inequalities(exprs, gen):
 
     reduce_abs_inequality
     """
+
     return And(*[ reduce_abs_inequality(expr, rel, gen)
         for expr, rel in exprs ])
 
@@ -882,13 +885,13 @@ def _solve_inequality(ie, s, linear=False):
 
 def _reduce_inequalities(inequalities, symbols):
     # helper for reduce_inequalities
-
     poly_part, abs_part = {}, {}
     other = []
 
     for inequality in inequalities:
 
         expr, rel = inequality.lhs, inequality.rel_op  # rhs is 0
+
 
         # check for gens using atoms which is more strict than free_symbols to
         # guard against EX domain which won't be handled by
@@ -918,6 +921,7 @@ def _reduce_inequalities(inequalities, symbols):
                 abs_part.setdefault(gen, []).append((expr, rel))
             else:
                 other.append(_solve_inequality(Relational(expr, 0, rel), gen))
+
 
     poly_reduced = [reduce_rational_inequalities([exprs], gen) for gen, exprs in poly_part.items()]
     abs_reduced = [reduce_abs_inequalities(exprs, gen) for gen, exprs in abs_part.items()]
