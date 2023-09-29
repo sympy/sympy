@@ -656,7 +656,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
     with constant values of $c_0 = 0.6$ and $c_1 = 4.0$. This function is the
     exact analytical inverse of the related tendon force-length curve
-    ``fl_M_pas_de_groote_2016``.
+    ``FiberForceLengthPassiveDeGroote2016``.
 
     While it is possible to change the constant values, these were carefully
     selected in the original publication to give the characteristic curve
