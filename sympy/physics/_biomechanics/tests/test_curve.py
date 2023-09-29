@@ -1496,3 +1496,9 @@ class TestFiberForceVelocityInverseDeGroote2016:
         self.c2 = Symbol('c_2')
         self.c3 = Symbol('c_3')
         self.constants = (self.c0, self.c1, self.c2, self.c3)
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceVelocityInverseDeGroote2016, Function)
+        assert issubclass(FiberForceVelocityInverseDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceVelocityInverseDeGroote2016.__name__ == 'FiberForceVelocityInverseDeGroote2016'
