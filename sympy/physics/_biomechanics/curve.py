@@ -4,7 +4,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import sinh
+from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.precedence import PRECEDENCE
 
@@ -1386,3 +1386,29 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
             return (sinh((fv_M - c3)/c0) - c2)/c1
 
         return (sinh(UnevaluatedExpr(fv_M - c3)/c0) - c2)/c1
+
+    def fdiff(self, argindex=1):
+        """Derivative of the function with respect to a single argument.
+
+        Parameters
+        ==========
+
+        argindex : int
+            The index of the function's arguments with respect to which the
+            derivative should be taken. Argument indexes start at ``1``.
+            Default is ``1``.
+
+        """
+        fv_M, c0, c1, c2, c3 = self.args
+        if argindex == 1:
+            return cosh((fv_M - c3)/c0)/(c0*c1)
+        elif argindex == 2:
+            return (c3 - fv_M)*cosh((fv_M - c3)/c0)/(c0**2*c1)
+        elif argindex == 3:
+            return (c2 - sinh((fv_M - c3)/c0))/c1**2
+        elif argindex == 4:
+            return -1/c1
+        elif argindex == 5:
+            return -cosh((fv_M - c3)/c0)/(c0*c1)
+
+        raise ArgumentIndexError(self, argindex)
