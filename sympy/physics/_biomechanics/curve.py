@@ -1245,4 +1245,35 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
-    pass
+    r"""Inverse muscle fiber force-velocity curve based on De Groote et al.,
+    2016 [1].
+
+    Explanation
+    ===========
+
+    Gives the normalized muscle fiber velocity that produces a specific
+    normalized muscle fiber force.
+
+    The function is defined by the equation:
+
+    ${fv^M}^{-1} = \frac{\sinh{\frac{fv^M - c_3}{c_0}} - c_2}{c_1}$
+
+    with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
+    $c_3 = 0.886$. This function is the exact analytical inverse of the related
+    muscle fiber force-velocity curve ``FiberForceVelocityDeGroote2016``.
+
+    While it is possible to change the constant values, these were carefully
+    selected in the original publication to give the characteristic curve
+    specific and required properties. For example, the function produces a
+    normalized muscle fiber force of 1 when the muscle fibers are contracting
+    isometrically (they have an extension rate of 0).
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
