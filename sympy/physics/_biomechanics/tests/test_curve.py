@@ -15,6 +15,7 @@ from sympy.physics._biomechanics.curve import (
     FiberForceLengthPassiveDeGroote2016,
     FiberForceLengthPassiveInverseDeGroote2016,
     FiberForceVelocityDeGroote2016,
+    FiberForceVelocityInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -1483,3 +1484,15 @@ class TestFiberForceVelocityDeGroote2016:
             1.5850003903,
         ])
         numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
+
+
+class TestFiberForceVelocityInverseDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _tendon_force_length_inverse_arguments_fixture(self):
+        self.fv_M = Symbol('fv_M')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.c2 = Symbol('c_2')
+        self.c3 = Symbol('c_3')
+        self.constants = (self.c0, self.c1, self.c2, self.c3)
