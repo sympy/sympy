@@ -964,6 +964,76 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     active fiber force of 1 at a normalized fiber length of 1, and an active
     fiber force of 0 at normalized fiber lengths of 0 and 2.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceLengthActiveDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized muscle fiber length. We'll
+    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+    >>> l_M_tilde = Symbol('l_M_tilde')
+    >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M_tilde, 0.814, 1.06, 0.162, 0.0633,
+    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = symbols('c0:12')
+    >>> fl_M = FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3,
+    ...     c4, c5, c6, c7, c8, c9, c10, c11)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3, c4, c5, c6,
+    c7, c8, c9, c10, c11)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``l_M`` and
+    ``l_M_opt``, representing muscle fiber length and optimal muscle fiber
+    length respectively. We can then represent ``l_M_tilde`` as an expression,
+    the ratio of these.
+
+    >>> l_M, l_M_opt = symbols('l_M l_M_opt')
+    >>> l_M_tilde = l_M/l_M_opt
+    >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M/l_M_opt, 0.814, 1.06, 0.162, 0.0633,
+    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fl_M.doit(evaluate=False)
+    0.814*exp(-19.0519737844841*(l_M/l_M_opt
+        - 1.06)**2/(0.390740740740741*l_M/l_M_opt + 1)**2)
+    + 0.433*exp(-25*(l_M/l_M_opt - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2))
+    + exp(-3.98991349867535*(l_M/l_M_opt - 1)**2)/10
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_M using the ``diff`` method on an instance with the single positional
+    argument ``l_M``.
+
+    >>> fl_M.diff(l_M)
+    ((-0.79798269973507*l_M/l_M_opt
+    + 0.79798269973507)*exp(-3.98991349867535*(l_M/l_M_opt - 1)**2)
+    + (10.825*(-l_M/l_M_opt + 0.717)/(l_M/l_M_opt - 0.1495)**2
+    + 10.825*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt
+    - 0.1495)**3)*exp(-25*(l_M/l_M_opt
+    - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2))
+    + (31.0166133211401*(-l_M/l_M_opt
+    + 1.06)/(0.390740740740741*l_M/l_M_opt + 1)**2
+    + 13.6174190361677*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt
+    + 1)**3)*exp(-21.4067977442463*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**2))/l_M_opt
+
     References
     ==========
 
