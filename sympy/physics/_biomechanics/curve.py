@@ -1284,6 +1284,47 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     normalized muscle fiber force of 1 when the muscle fibers are contracting
     isometrically (they have an extension rate of 0).
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceVelocityInverseDeGroote2016``
+    is using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized muscle fiber force-velocity
+    component of the muscle fiber force. We'll create a ``Symbol`` called
+    ``fv_M`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceVelocityInverseDeGroote2016
+    >>> fv_M = Symbol('fv_M')
+    >>> v_M_tilde = FiberForceVelocityInverseDeGroote2016.with_defaults(fv_M)
+    >>> v_M_tilde
+    FiberForceVelocityInverseDeGroote2016(fv_M, -0.318, -8.149, -0.374, 0.886)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> v_M_tilde = FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3)
+    >>> v_M_tilde
+    FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> v_M_tilde.doit(evaluate=False)
+    (-c2 + sinh((-c3 + fv_M)/c0))/c1
+
+    The function can also be differentiated. We'll differentiate with respect
+    to fv_M using the ``diff`` method on an instance with the single positional
+    argument ``fv_M``.
+
+    >>> v_M_tilde.diff(fv_M)
+    cosh((-c3 + fv_M)/c0)/(c0*c1)
+
     References
     ==========
 
