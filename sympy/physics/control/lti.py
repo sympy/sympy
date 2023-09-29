@@ -620,11 +620,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
-            obj = super(TransferFunction, cls).__new__(cls, num, den, var)
-            obj._num = num
-            obj._den = den
-            obj._var = var
-            return obj
+            return super(TransferFunction, cls).__new__(cls, num, den, var)
 
         else:
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
@@ -831,7 +827,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         (p - 3)*(p + 5)
 
         """
-        return self._num
+        return self.args[0]
 
     @property
     def den(self):
@@ -851,7 +847,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         4
 
         """
-        return self._den
+        return self.args[1]
 
     @property
     def var(self):
@@ -872,7 +868,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         s
 
         """
-        return self._var
+        return self.args[2]
 
     def _eval_subs(self, old, new):
         arg_num = self.num.subs(old, new)
