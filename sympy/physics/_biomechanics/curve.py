@@ -534,6 +534,58 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     passive fiber force very close to 0 for all normalized fiber lengths
     between 0 and 1.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceLengthPassiveDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized muscle fiber length. We'll
+    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+    >>> l_M_tilde = Symbol('l_M_tilde')
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M_tilde, 3/5, 4)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1 = symbols('c0 c1')
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``l_M`` and
+    ``l_M_opt``, representing muscle fiber length and optimal muscle fiber
+    length respectively. We can then represent ``l_M_tilde`` as an expression,
+    the ratio of these.
+
+    >>> l_M, l_M_opt = symbols('l_M l_M_opt')
+    >>> l_M_tilde = l_M/l_M_opt
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 3/5, 4)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fl_M.doit(evaluate=False)
+    (-1 + exp(20*(l_M/l_M_opt - 1)/3))/(-1 + exp(4))
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_M using the ``diff`` method on an instance with the single positional
+    argument ``l_M``.
+
+    >>> fl_M.diff(l_M)
+    4*exp(20*(l_M/l_M_opt - 1)/3)/(l_M_opt*(-3/5 + 3*exp(4)/5))
+
     References
     ==========
 
