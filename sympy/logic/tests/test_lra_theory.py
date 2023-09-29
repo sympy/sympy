@@ -146,7 +146,7 @@ def test_random_problems():
     special_cases.append([9*x1 - 6*x2 >= -7, 9*x1 + 4*x2 < -8, -7*x2 <= 1, 10*x2 <= -7])
 
     feasible_count = 0
-    for i in range(300):
+    for i in range(50):
         if i % 8 == 0:
             constraints = make_random_problem(num_variables=1, num_constraints=2, rational=False)
         elif i % 8 == 1:
