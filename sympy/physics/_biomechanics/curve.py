@@ -319,6 +319,48 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     force when the tendon is in an unstrained state. It also produces a force
     of 1 normalized unit when the tendon is under a 5% strain.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``TendonForceLengthInverseDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized tendon force-length, which is
+    equal to the tendon force. We'll create a ``Symbol`` called ``fl_T`` to
+    represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import TendonForceLengthInverseDeGroote2016
+    >>> fl_T = Symbol('fl_T')
+    >>> l_T_tilde = TendonForceLengthInverseDeGroote2016.with_defaults(fl_T)
+    >>> l_T_tilde
+    TendonForceLengthInverseDeGroote2016(fl_T, 0.2, 0.995, 0.25,
+    33.93669377311689)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> l_T_tilde = TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
+    >>> l_T_tilde
+    TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> l_T_tilde.doit(evaluate=False)
+    c1 + log((c2 + fl_T)/c0)/c3
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_T using the ``diff`` method on an instance with the single positional
+    argument ``l_T``.
+
+    >>> l_T_tilde.diff(fl_T)
+    1/(c3*(c2 + fl_T))
+
     References
     ==========
 
@@ -492,6 +534,58 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     passive fiber force very close to 0 for all normalized fiber lengths
     between 0 and 1.
 
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceLengthPassiveDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized muscle fiber length. We'll
+    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+    >>> l_M_tilde = Symbol('l_M_tilde')
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M_tilde, 3/5, 4)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1 = symbols('c0 c1')
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M_tilde, c0, c1)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``l_M`` and
+    ``l_M_opt``, representing muscle fiber length and optimal muscle fiber
+    length respectively. We can then represent ``l_M_tilde`` as an expression,
+    the ratio of these.
+
+    >>> l_M, l_M_opt = symbols('l_M l_M_opt')
+    >>> l_M_tilde = l_M/l_M_opt
+    >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 3/5, 4)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fl_M.doit(evaluate=False)
+    (-1 + exp(20*(l_M/l_M_opt - 1)/3))/(-1 + exp(4))
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_M using the ``diff`` method on an instance with the single positional
+    argument ``l_M``.
+
+    >>> fl_M.diff(l_M)
+    4*exp(20*(l_M/l_M_opt - 1)/3)/(l_M_opt*(-3/5 + 3*exp(4)/5))
+
     References
     ==========
 
@@ -660,6 +754,48 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     passive fiber force very close to 0 for all normalized fiber lengths
     between 0 and 1.
 
+    Examples
+    ========
+
+    The preferred way to instantiate
+    ``FiberForceLengthPassiveInverseDeGroote2016`` is using the
+    ``with_defaults`` constructor because this will automatically populate the
+    constants within the characteristic curve equation with the floating point
+    values from the original publication. This constructor takes a single
+    argument corresponding to the normalized passive muscle fiber length-force
+    component of the muscle fiber force. We'll create a ``Symbol`` called
+    ``fl_M_pas`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    >>> fl_M_pas = Symbol('fl_M_pas')
+    >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas)
+    >>> l_M_tilde
+    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, 3/5, 4)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1 = symbols('c0 c1')
+    >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
+    >>> l_M_tilde
+    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> l_M_tilde.doit(evaluate=False)
+    c0*log(1 + fl_M_pas*(exp(c1) - 1))/c1 + 1
+
+    The function can also be differentiated. We'll differentiate with respect
+    to fl_M_pas using the ``diff`` method on an instance with the single positional
+    argument ``fl_M_pas``.
+
+    >>> l_M_tilde.diff(fl_M_pas)
+    c0*(exp(c1) - 1)/(c1*(fl_M_pas*(exp(c1) - 1) + 1))
+
     References
     ==========
 
@@ -827,6 +963,76 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     specific and required properties. For example, the function produces a
     active fiber force of 1 at a normalized fiber length of 1, and an active
     fiber force of 0 at normalized fiber lengths of 0 and 2.
+
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceLengthActiveDeGroote2016`` is
+    using the ``with_defaults`` constructor because this will automatically
+    populate the constants within the characteristic curve equation with the
+    floating point values from the original publication. This constructor takes
+    a single argument corresponding to normalized muscle fiber length. We'll
+    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+    >>> l_M_tilde = Symbol('l_M_tilde')
+    >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M_tilde, 0.814, 1.06, 0.162, 0.0633,
+    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+
+    It's also possible to populate the two constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11 = symbols('c0:12')
+    >>> fl_M = FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3,
+    ...     c4, c5, c6, c7, c8, c9, c10, c11)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M_tilde, c0, c1, c2, c3, c4, c5, c6,
+    c7, c8, c9, c10, c11)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``l_M`` and
+    ``l_M_opt``, representing muscle fiber length and optimal muscle fiber
+    length respectively. We can then represent ``l_M_tilde`` as an expression,
+    the ratio of these.
+
+    >>> l_M, l_M_opt = symbols('l_M l_M_opt')
+    >>> l_M_tilde = l_M/l_M_opt
+    >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
+    >>> fl_M
+    FiberForceLengthActiveDeGroote2016(l_M/l_M_opt, 0.814, 1.06, 0.162, 0.0633,
+    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fl_M.doit(evaluate=False)
+    0.814*exp(-19.0519737844841*(l_M/l_M_opt
+        - 1.06)**2/(0.390740740740741*l_M/l_M_opt + 1)**2)
+    + 0.433*exp(-25*(l_M/l_M_opt - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2))
+    + exp(-3.98991349867535*(l_M/l_M_opt - 1)**2)/10
+
+    The function can also be differentiated. We'll differentiate with respect
+    to l_M using the ``diff`` method on an instance with the single positional
+    argument ``l_M``.
+
+    >>> fl_M.diff(l_M)
+    ((-0.79798269973507*l_M/l_M_opt
+    + 0.79798269973507)*exp(-3.98991349867535*(l_M/l_M_opt - 1)**2)
+    + (10.825*(-l_M/l_M_opt + 0.717)/(l_M/l_M_opt - 0.1495)**2
+    + 10.825*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt
+    - 0.1495)**3)*exp(-25*(l_M/l_M_opt
+    - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2))
+    + (31.0166133211401*(-l_M/l_M_opt
+    + 1.06)/(0.390740740740741*l_M/l_M_opt + 1)**2
+    + 13.6174190361677*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt
+    + 1)**3)*exp(-21.4067977442463*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**2))/l_M_opt
 
     References
     ==========
@@ -1097,6 +1303,59 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     specific and required properties. For example, the function produces a
     normalized muscle fiber force of 1 when the muscle fibers are contracting
     isometrically (they have an extension rate of 0).
+
+    Examples
+    ========
+
+    The preferred way to instantiate ``FiberForceVelocityDeGroote2016`` is using
+    the ``with_defaults`` constructor because this will automatically populate
+    the constants within the characteristic curve equation with the floating
+    point values from the original publication. This constructor takes a single
+    argument corresponding to normalized muscle fiber extension velocity. We'll
+    create a ``Symbol`` called ``v_M_tilde`` to represent this.
+
+    >>> from sympy import Symbol
+    >>> from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+    >>> v_M_tilde = Symbol('v_M_tilde')
+    >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M_tilde, -0.318, -8.149, -0.374, 0.886)
+
+    It's also possible to populate the four constants with your own values too.
+
+    >>> from sympy import symbols
+    >>> c0, c1, c2, c3 = symbols('c0 c1 c2 c3')
+    >>> fv_M = FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3)
+
+    You don't just have to use symbols as the arguments, it's also possible to
+    use expressions. Let's create a new pair of symbols, ``v_M`` and
+    ``v_M_max``, representing muscle fiber extension velocity and maximum
+    muscle fiber extension velocity respectively. We can then represent
+    ``v_M_tilde`` as an expression, the ratio of these.
+
+    >>> v_M, v_M_max = symbols('v_M v_M_max')
+    >>> v_M_tilde = v_M/v_M_max
+    >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
+    >>> fv_M
+    FiberForceVelocityDeGroote2016(v_M/v_M_max, -0.318, -8.149, -0.374, 0.886)
+
+    To inspect the actual symbolic expression that this function represents,
+    we can call the ``doit`` method on an instance. We'll use the keyword
+    argument ``evaluate=False`` as this will keep the expression in its
+    canonical form and won't simplify any constants.
+
+    >>> fv_M.doit(evaluate=False)
+    0.886 - 0.318*log(-8.149*v_M/v_M_max - 0.374 + sqrt(1 + (-8.149*v_M/v_M_max
+    - 0.374)**2))
+
+    The function can also be differentiated. We'll differentiate with respect
+    to v_M using the ``diff`` method on an instance with the single positional
+    argument ``v_M``.
+
+    >>> fv_M.diff(v_M)
+    2.591382*(1 + (-8.149*v_M/v_M_max - 0.374)**2)**(-1/2)/v_M_max
 
     References
     ==========
