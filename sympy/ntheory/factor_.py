@@ -386,7 +386,7 @@ def _perfect_power(n, k=2):
         if g == 1:
             return False
         factors[n] = multi
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
@@ -400,7 +400,7 @@ def _perfect_power(n, k=2):
         else:
             if n > 1:
                 return False
-            return math.prod(p**(e//g) for p, e in factors.items()), g
+            return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
 
     # divide by 2
     if k < 3:
@@ -411,13 +411,13 @@ def _perfect_power(n, k=2):
             n >>= g
             factors[2] = g
             if n == 1:
-                return 2, g
+                return 2, int(g)
             else:
                 # If `m**g`, then we have found perfect power.
                 # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
                 m, _exact = iroot(n, g)
                 if _exact:
-                    return 2*m, g
+                    return int(2*m), int(g)
                 elif isprime(g):
                     return False
         k = 3
