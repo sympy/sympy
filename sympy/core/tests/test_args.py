@@ -3402,6 +3402,12 @@ def test_sympy__physics___biomechanics__curve__FiberForceVelocityDeGroote2016():
     assert _test_args(FiberForceVelocityDeGroote2016(v_M_tilde, c0, c1, c2, c3))
 
 
+def test_sympy__physics___biomechanics__curve__FiberForceVelocityInverseDeGroote2016():
+    from sympy.physics._biomechanics import FiberForceVelocityInverseDeGroote2016
+    fv_M, c0, c1, c2, c3 = symbols('fv_M, c0, c1, c2, c3')
+    assert _test_args(FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3))
+
+
 def test_sympy__physics__paulialgebra__Pauli():
     from sympy.physics.paulialgebra import Pauli
     assert _test_args(Pauli(1))

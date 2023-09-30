@@ -8,6 +8,7 @@ from sympy.core.numbers import Float, Integer, Rational
 from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.curve import (
     CharacteristicCurveFunction,
@@ -15,6 +16,7 @@ from sympy.physics._biomechanics.curve import (
     FiberForceLengthPassiveDeGroote2016,
     FiberForceLengthPassiveInverseDeGroote2016,
     FiberForceVelocityDeGroote2016,
+    FiberForceVelocityInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
@@ -1346,6 +1348,10 @@ class TestFiberForceVelocityDeGroote2016:
         expected = Integer(1)
         assert fv_M.diff(self.c3) == expected
 
+    def test_inverse(self):
+        fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
+        assert fv_M.inverse() is FiberForceVelocityInverseDeGroote2016
+
     def test_function_print_latex(self):
         fv_M = FiberForceVelocityDeGroote2016(self.v_M_tilde, *self.constants)
         expected = r'\operatorname{fv}^M \left( v_{M tilde} \right)'
@@ -1483,3 +1489,212 @@ class TestFiberForceVelocityDeGroote2016:
             1.5850003903,
         ])
         numpy.testing.assert_allclose(fv_M_callable(v_M_tilde), expected)
+
+
+class TestFiberForceVelocityInverseDeGroote2016:
+
+    @pytest.fixture(autouse=True)
+    def _tendon_force_length_inverse_arguments_fixture(self):
+        self.fv_M = Symbol('fv_M')
+        self.c0 = Symbol('c_0')
+        self.c1 = Symbol('c_1')
+        self.c2 = Symbol('c_2')
+        self.c3 = Symbol('c_3')
+        self.constants = (self.c0, self.c1, self.c2, self.c3)
+
+    @staticmethod
+    def test_class():
+        assert issubclass(FiberForceVelocityInverseDeGroote2016, Function)
+        assert issubclass(FiberForceVelocityInverseDeGroote2016, CharacteristicCurveFunction)
+        assert FiberForceVelocityInverseDeGroote2016.__name__ == 'FiberForceVelocityInverseDeGroote2016'
+
+    def test_instance(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        assert isinstance(fv_M_inv, FiberForceVelocityInverseDeGroote2016)
+        assert str(fv_M_inv) == 'FiberForceVelocityInverseDeGroote2016(fv_M, c_0, c_1, c_2, c_3)'
+
+    def test_doit(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants).doit()
+        assert fv_M_inv == (sinh((self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
+
+    def test_doit_evaluate_false(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants).doit(evaluate=False)
+        assert fv_M_inv == (sinh(UnevaluatedExpr(self.fv_M - self.c3)/self.c0) - self.c2)/self.c1
+
+    def test_with_defaults(self):
+        constants = (
+            Float('-0.318'),
+            Float('-8.149'),
+            Float('-0.374'),
+            Float('0.886'),
+        )
+        fv_M_inv_manual = FiberForceVelocityInverseDeGroote2016(self.fv_M, *constants)
+        fv_M_inv_constants = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        assert fv_M_inv_manual == fv_M_inv_constants
+
+    def test_differentiate_wrt_fv_M(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = cosh((self.fv_M - self.c3)/self.c0)/(self.c0*self.c1)
+        assert fv_M_inv.diff(self.fv_M) == expected
+
+    def test_differentiate_wrt_c0(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = (self.c3 - self.fv_M)*cosh((self.fv_M - self.c3)/self.c0)/(self.c0**2*self.c1)
+        assert fv_M_inv.diff(self.c0) == expected
+
+    def test_differentiate_wrt_c1(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = (self.c2 - sinh((self.fv_M - self.c3)/self.c0))/self.c1**2
+        assert fv_M_inv.diff(self.c1) == expected
+
+    def test_differentiate_wrt_c2(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = -1/self.c1
+        assert fv_M_inv.diff(self.c2) == expected
+
+    def test_differentiate_wrt_c3(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = -cosh((self.fv_M - self.c3)/self.c0)/(self.c0*self.c1)
+        assert fv_M_inv.diff(self.c3) == expected
+
+    def test_inverse(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        assert fv_M_inv.inverse() is FiberForceVelocityDeGroote2016
+
+    def test_function_print_latex(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = r'\left( \operatorname{fv}^M \right)^{-1} \left( fv_{M} \right)'
+        assert LatexPrinter().doprint(fv_M_inv) == expected
+
+    def test_expression_print_latex(self):
+        fv_M = FiberForceVelocityInverseDeGroote2016(self.fv_M, *self.constants)
+        expected = r'\frac{- c_{2} + \sinh{\left(\frac{- c_{3} + fv_{M}}{c_{0}} \right)}}{c_{1}}'
+        assert LatexPrinter().doprint(fv_M.doit()) == expected
+
+    @pytest.mark.parametrize(
+        'code_printer, expected',
+        [
+            (
+                C89CodePrinter,
+                '(-0.12271444348999878*(0.374 - sinh(3.1446540880503142*(fv_M '
+                '- 0.88600000000000001))))',
+            ),
+            (
+                C99CodePrinter,
+                '(-0.12271444348999878*(0.374 - sinh(3.1446540880503142*(fv_M '
+                '- 0.88600000000000001))))',
+            ),
+            (
+                C11CodePrinter,
+                '(-0.12271444348999878*(0.374 - sinh(3.1446540880503142*(fv_M '
+                '- 0.88600000000000001))))',
+            ),
+            (
+                CXX98CodePrinter,
+                '(-0.12271444348999878*(0.374 - sinh(3.1446540880503142*(fv_M '
+                '- 0.88600000000000001))))',
+            ),
+            (
+                CXX11CodePrinter,
+                '(-0.12271444348999878*(0.374 - std::sinh(3.1446540880503142'
+                '*(fv_M - 0.88600000000000001))))',
+            ),
+            (
+                CXX17CodePrinter,
+                '(-0.12271444348999878*(0.374 - std::sinh(3.1446540880503142'
+                '*(fv_M - 0.88600000000000001))))',
+            ),
+            (
+                FCodePrinter,
+                '      (-0.122714443489999d0*(0.374d0 - sinh(3.1446540880503142d0*(fv_M -\n'
+                '     @ 0.886d0))))',
+            ),
+            (
+                OctaveCodePrinter,
+                '(-0.122714443489999*(0.374 - sinh(3.14465408805031*(fv_M '
+                '- 0.886))))',
+            ),
+            (
+                PythonCodePrinter,
+                '(-0.122714443489999*(0.374 - math.sinh(3.14465408805031*(fv_M '
+                '- 0.886))))',
+            ),
+            (
+                NumPyPrinter,
+                '(-0.122714443489999*(0.374 - numpy.sinh(3.14465408805031'
+                '*(fv_M - 0.886))))',
+            ),
+            (
+                SciPyPrinter,
+                '(-0.122714443489999*(0.374 - numpy.sinh(3.14465408805031'
+                '*(fv_M - 0.886))))',
+            ),
+            (
+                CuPyPrinter,
+                '(-0.122714443489999*(0.374 - cupy.sinh(3.14465408805031*(fv_M '
+                '- 0.886))))',
+            ),
+            (
+                JaxPrinter,
+                '(-0.122714443489999*(0.374 - jax.numpy.sinh(3.14465408805031'
+                '*(fv_M - 0.886))))',
+            ),
+            (
+                MpmathPrinter,
+                '(-mpmath.mpf((0, 8842507551592581, -56, 53))*(mpmath.mpf((0, '
+                '3368692521273131, -53, 52)) - mpmath.sinh(mpmath.mpf((0, '
+                '7081131489576251, -51, 53))*(fv_M + mpmath.mpf((1, '
+                '7980378539700519, -53, 53))))))',
+            ),
+            (
+                LambdaPrinter,
+                '(-0.122714443489999*(0.374 - math.sinh(3.14465408805031*(fv_M '
+                '- 0.886))))',
+            ),
+        ]
+    )
+    def test_print_code(self, code_printer, expected):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        assert code_printer().doprint(fv_M_inv) == expected
+
+    def test_derivative_print_code(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        dfv_M_inv_dfv_M = fv_M_inv.diff(self.fv_M)
+        expected = (
+            '0.385894476383644*math.cosh(3.14465408805031*fv_M '
+            '- 2.78616352201258)'
+        )
+        assert PythonCodePrinter().doprint(dfv_M_inv_dfv_M) == expected
+
+    def test_lambdify(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = lambdify(self.fv_M, fv_M_inv)
+        assert fv_M_inv_callable(1.0) == pytest.approx(-0.0009548832444487479)
+
+    @pytest.mark.skipif(numpy is None, reason='NumPy not installed')
+    def test_lambdify_numpy(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = lambdify(self.fv_M, fv_M_inv, 'numpy')
+        fv_M = numpy.array([0.8, 0.9, 1.0, 1.1, 1.2])
+        expected = numpy.array([
+            -0.0794881459,
+            -0.0404909338,
+            -0.0009548832,
+            0.043061991,
+            0.0959484397,
+        ])
+        numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
+
+    @pytest.mark.skipif(jax is None, reason='JAX not installed')
+    def test_lambdify_jax(self):
+        fv_M_inv = FiberForceVelocityInverseDeGroote2016.with_defaults(self.fv_M)
+        fv_M_inv_callable = jax.jit(lambdify(self.fv_M, fv_M_inv, 'jax'))
+        fv_M = jax.numpy.array([0.8, 0.9, 1.0, 1.1, 1.2])
+        expected = jax.numpy.array([
+            -0.0794881459,
+            -0.0404909338,
+            -0.0009548832,
+            0.043061991,
+            0.0959484397,
+        ])
+        numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
