@@ -125,7 +125,7 @@ def entropy(expr, condition=None, **kwargs):
     >>> from sympy.stats import Normal, Die, entropy
     >>> X = Normal('X', 0, 1)
     >>> entropy(X)
-    1/2 + log(2)/2 + log(pi)/2
+    log(2)/2 + log(pi)/2 + 1/2
 
     >>> D = Die('D', 4)
     >>> entropy(D)
@@ -212,7 +212,7 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> correlation(X, Y)
     0
     >>> correlation(X, Y + rate*X)
-    1/sqrt(1 + lambda**(-2))
+    1/sqrt(lambda**(-2) + 1)
     """
     return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs)
      * std(Y, condition, **kwargs))
@@ -333,7 +333,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> kurtosis(X)
     3
     >>> kurtosis(X, X > 0) # find kurtosis given X > 0
-    (3 - 12/pi**2 - 4/pi)/(1 - 2/pi)**2
+    (3 - 4/pi - 12/pi**2)/(1 - 2/pi)**2
 
     >>> rate = Symbol('lamda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
@@ -493,7 +493,7 @@ def coskewness(X, Y, Z, condition=None, **kwargs):
     >>> coskewness(Y, Y, Y) == skewness(Y)
     True
     >>> coskewness(X, Y + p*X, Y + 2*p*X)
-    4/(sqrt(1 + 1/(4*p**2))*sqrt(4 + 1/(4*p**2)))
+    4/(sqrt(1/(4*p**2) + 1)*sqrt(1/(4*p**2) + 4))
 
     Returns
     =======

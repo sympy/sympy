@@ -580,7 +580,7 @@ class Dyadic(Printable, EvalfMixin):
         matched:
 
         >>> ((x*y + z) * D).xreplace({x*y: pi})
-        (z + pi)*(N.x|N.x)
+        (pi + z)*(N.x|N.x)
         >>> ((x*y*z) * D).xreplace({x*y: pi})
         x*y*z*(N.x|N.x)
 

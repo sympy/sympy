@@ -392,7 +392,7 @@ def TR7(rv):
     >>> from sympy.abc import x
     >>> from sympy import cos
     >>> TR7(cos(x)**2)
-    1/2 + cos(2*x)/2
+    cos(2*x)/2 + 1/2
     >>> TR7(cos(x)**2 + 1)
     cos(2*x)/2 + 3/2
 
@@ -500,7 +500,7 @@ def TR9(rv):
     was not changed, the original expression will be returned:
 
     >>> TR9(cos(3) + cos(3)*cos(2))
-    cos(3) + cos(2)*cos(3)
+    cos(2)*cos(3) + cos(3)
 
     """
 
@@ -587,9 +587,9 @@ def TR10(rv, first=True):
     >>> TR10(cos(a + b))
     cos(a)*cos(b) - sin(a)*sin(b)
     >>> TR10(sin(a + b))
-    sin(b)*cos(a) + sin(a)*cos(b)
+    sin(a)*cos(b) + sin(b)*cos(a)
     >>> TR10(sin(a + b + c))
-    (sin(a)*cos(b) + sin(b)*cos(a))*cos(c) + (cos(a)*cos(b) - sin(a)*sin(b))*sin(c)
+    (cos(a)*cos(b) - sin(a)*sin(b))*sin(c) + (sin(a)*cos(b) + sin(b)*cos(a))*cos(c)
     """
 
     def f(rv):
@@ -637,7 +637,7 @@ def TR10i(rv):
     >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3) + cos(3))
     sin(4) + cos(3)
     >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
-    2*sqrt(2)*x*sin(x + pi/6)
+    2*sqrt(2)*x*sin(pi/6 + x)
 
     """
     global _ROOT2, _ROOT3, _invROOT3
@@ -792,7 +792,7 @@ def TR11(rv, base=None):
     the 3*pi/7 base:
 
     >>> TR11(_, 3*pi/7)
-    cos(3*pi/7) - sin(3*pi/7)**2 + cos(3*pi/7)**2
+    -sin(3*pi/7)**2 + cos(3*pi/7)**2 + cos(3*pi/7)
 
     """
 
@@ -1064,7 +1064,7 @@ def TR13(rv):
     >>> TR13(tan(3)*tan(2))
     -tan(2)/tan(5) - tan(3)/tan(5) + 1
     >>> TR13(cot(3)*cot(2))
-    1 + cot(2)*cot(5) + cot(3)*cot(5)
+    cot(2)*cot(5) + cot(3)*cot(5) + 1
     """
 
     def f(rv):
@@ -1604,7 +1604,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     CTR4 example
 
     >>> fu(sqrt(3)*cos(x)/2 + sin(x)/2)
-    sin(x + pi/3)
+    sin(pi/3 + x)
 
     Example 1
 

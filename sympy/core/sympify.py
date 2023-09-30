@@ -234,7 +234,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify('4/2+7', evaluate=True)
     9
     >>> sympify('4/2+7', evaluate=False)
-    4/2 + 7
+    7 + 4/2
     >>> sympify(4/2+7, evaluate=False)
     9.00000000000000
 
@@ -523,7 +523,7 @@ def kernS(s):
     of an expression, but kernS will prevent that:
 
     >>> 2*(x + y), -(x + 1)
-    (2*x + 2*y, -1 - x)
+    (2*x + 2*y, -x - 1)
     >>> kernS('2*(x + y)')
     2*(x + y)
     >>> kernS('-(x + 1)')

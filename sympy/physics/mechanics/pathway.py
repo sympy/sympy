@@ -309,7 +309,7 @@ class ObstacleSetPathway(PathwayBase):
     A pathway's length can be accessed via its ``length`` attribute.
 
     >>> obstacle_set_pathway.length.simplify()
-    sqrt(2)*(2 + sqrt(1 + cos(q(t))))
+    sqrt(2)*(2 + sqrt(cos(q(t)) + 1))
 
     A pathway's extension velocity can be accessed similarly via its
     ``extension_velocity`` attribute.

@@ -129,7 +129,7 @@ def refine_Pow(expr, assumptions):
     >>> refine_Pow((-1)**(x+y+z), Q.odd(x) & Q.odd(z))
     (-1)**y
     >>> refine_Pow((-1)**(x+y+2), Q.odd(x))
-    (-1)**(1 + y)
+    (-1)**(y + 1)
     >>> refine_Pow((-1)**(x+3), True)
     (-1)**(x + 1)
 
@@ -221,7 +221,7 @@ def refine_atan2(expr, assumptions):
     >>> refine_atan2(atan2(y,x), Q.negative(y) & Q.negative(x))
     atan(y/x) - pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.negative(x))
-    atan(y/x) + pi
+    pi + atan(y/x)
     >>> refine_atan2(atan2(y,x), Q.zero(y) & Q.negative(x))
     pi
     >>> refine_atan2(atan2(y,x), Q.positive(y) & Q.zero(x))

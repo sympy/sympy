@@ -652,13 +652,13 @@ the new frame. An example follows: ::
   >>> N.dcm(B)
   Matrix([
   [                          cos(q2)*cos(q3),                          -sin(q3)*cos(q2),          sin(q2)],
-  [sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
   [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3), sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
   >>> B.orient(N,'Body',[q1,q2,q3],'XYZ')
   >>> N.dcm(B)
   Matrix([
   [                          cos(q2)*cos(q3),                          -sin(q3)*cos(q2),          sin(q2)],
-  [sin(q3)*cos(q1) + sin(q1)*sin(q2)*cos(q3), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
+  [sin(q1)*sin(q2)*cos(q3) + sin(q3)*cos(q1), cos(q1)*cos(q3) - sin(q1)*sin(q2)*sin(q3), -sin(q1)*cos(q2)],
   [sin(q1)*sin(q3) - sin(q2)*cos(q1)*cos(q3), sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),  cos(q1)*cos(q2)]])
 
 Space orientations are similar to body orientation, but applied from the frame

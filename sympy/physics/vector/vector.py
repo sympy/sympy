@@ -829,7 +829,7 @@ class Vector(Printable, EvalfMixin):
         matched:
 
         >>> ((x*y + z) * A.x).xreplace({x*y: pi})
-        (z + pi)*A.x
+        (pi + z)*A.x
         >>> ((x*y*z) * A.x).xreplace({x*y: pi})
         x*y*z*A.x
 

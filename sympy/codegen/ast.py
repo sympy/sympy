@@ -97,7 +97,7 @@ Newton's method::
     >>> py_str = pycode(whl)
     >>> print(py_str)
     while (abs(delta) > tol):
-        delta = (val**3 - math.cos(val))/(-math.sin(val) - 3*val**2)
+        delta = (val**3 - math.cos(val))/(-3*val**2 - math.sin(val))
         val += delta
         print(val)
     >>> import math

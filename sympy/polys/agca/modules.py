@@ -567,7 +567,7 @@ class FreeModuleQuotientRing(FreeModule):
         >>> F = (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)
         >>> e = F.convert([1, 0])
         >>> e
-        [1 + <1 + x**2>, 0 + <1 + x**2>]
+        [1 + <x**2 + 1>, 0 + <x**2 + 1>]
         >>> L = F.quot
         >>> l = F.lift(e)
         >>> l

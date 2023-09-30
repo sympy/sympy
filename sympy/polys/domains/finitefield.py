@@ -42,7 +42,7 @@ class FiniteField(Field, SimpleDomain):
 
     >>> from sympy import factor, GF
     >>> factor(x**2 + 1)
-    x + 1**2
+    x**2 + 1
     >>> factor(x**2 + 1, modulus=2)
     (x + 1)**2
     >>> factor(x**2 + 1, domain=GF(2))

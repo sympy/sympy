@@ -77,7 +77,7 @@ class gamma(Function):
 
     >>> from sympy import series
     >>> series(gamma(x), x, 0, 3)
-    1/x - EulerGamma + x*(pi**2/12 + EulerGamma**2/2) + x**2*(-zeta(3)/3 - EulerGamma**3/6 - EulerGamma*pi**2/12) + O(x**3)
+    1/x + x*(EulerGamma**2/2 + pi**2/12) + x**2*(-EulerGamma**3/6 - EulerGamma*pi**2/12 - zeta(3)/3) - EulerGamma + O(x**3)
 
     We can numerically evaluate the ``gamma`` function to arbitrary precision
     on the whole complex plane:
@@ -632,7 +632,7 @@ class polygamma(Function):
     >>> diff(polygamma(n, x), x)
     polygamma(n + 1, x)
     >>> diff(polygamma(n, x), x, 2)
-    polygamma(2 + n, x)
+    polygamma(n + 2, x)
 
     We can rewrite ``polygamma`` functions in terms of harmonic numbers:
 
@@ -941,7 +941,7 @@ class loggamma(Function):
 
     >>> from sympy import series
     >>> series(loggamma(x), x, 0, 4).cancel()
-    -log(x) - EulerGamma*x + pi**2*x**2/12 - x**3*zeta(3)/3 + O(x**4)
+    -log(x) - x**3*zeta(3)/3 + pi**2*x**2/12 - EulerGamma*x + O(x**4)
 
     We can numerically evaluate the ``loggamma`` function
     to arbitrary precision on the whole complex plane:

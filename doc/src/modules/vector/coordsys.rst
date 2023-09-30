@@ -226,7 +226,7 @@ For purposes of this section, assume the following initializations:
 
   >>> v1 = N.i + N.j + N.k
   >>> express(v1, M)
-  (cos(a) + sin(a))*M.i + (cos(a) - sin(a))*M.j + M.k
+  (sin(a) + cos(a))*M.i + (cos(a) - sin(a))*M.j + M.k
   >>> v2 = N.i + M.j
   >>> express(v2, N)
   (1 - sin(a))*N.i + (cos(a))*N.j
@@ -293,7 +293,7 @@ different results depending on the coordinate system being provided.
   >>> v = N.i + N.j + N.k
   >>> v.to_matrix(M)
   Matrix([
-  [cos(a) + sin(a)],
+  [sin(a) + cos(a)],
   [cos(a) - sin(a)],
   [              1]])
   >>> v.to_matrix(N)

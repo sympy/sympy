@@ -59,9 +59,9 @@ an ``Interval`` or ``ImageSet`` of the solutions.
     >>> solveset(x - x, x, domain=S.Reals)
     ℝ
     >>> solveset(sin(x) - 1, x, domain=S.Reals)
-    ⎧π         │      ⎫
-    ⎨─ + 2⋅n⋅π │ n ∊ ℤ⎬
-    ⎩2         │      ⎭
+    ⎧        π │      ⎫
+    ⎨2⋅n⋅π + ─ │ n ∊ ℤ⎬
+    ⎩        2 │      ⎭
 
 
 If there are no solutions, an ``EmptySet`` is returned and if it
@@ -232,9 +232,9 @@ would thus use
 To solve the ODE, pass it and the function to solve for to ``dsolve``.
 
     >>> dsolve(diffeq, f(x))
-           cos(x)                x
-    f(x) = ────── + (C₁ + C₂⋅x)⋅ℯ
-             2
+                        x   cos(x)
+    f(x) = (C₁ + C₂⋅x)⋅ℯ  + ──────
+                              2
 
 ``dsolve`` returns an instance of ``Eq``.  This is because, in general,
 solutions to differential equations cannot be solved explicitly for the

@@ -1808,7 +1808,7 @@ class Beam:
             >>> b.apply_load(5,4,-1)
             >>> b.solve_for_ild_reactions(1,R_0,R_7)
             >>> b.ild_reactions
-            {R_0: x/7 - 22/7, R_7: -20/7 - x/7}
+            {R_0: x/7 - 22/7, R_7: -x/7 - 20/7}
             >>> b.plot_ild_reactions()
             PlotGrid object containing:
             Plot[0]:Plot object containing:
@@ -2413,7 +2413,7 @@ class Beam3D(Beam):
     >>> b.shear_force()
     [0, -q*x, 0]
     >>> b.bending_moment()
-    [0, 0, q*x**2/2 - m*x]
+    [0, 0, -m*x + q*x**2/2]
     >>> b.bc_slope = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.bc_deflection = [(0, [0, 0, 0]), (l, [0, 0, 0])]
     >>> b.solve_slope_deflection()
@@ -3685,7 +3685,7 @@ class Beam3D(Beam):
             >>> b.solve_for_reaction_loads(R1, R2, R3, R4)
             >>> b.solve_slope_deflection()
             >>> b.max_deflection()
-            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, -20/7 + 20*sqrt(10793)/301 - (-10 + 10*sqrt(10793)/43)**3/160 + (-10 + 10*sqrt(10793)/43)**4/6400 + 27*(-10 + 10*sqrt(10793)/43)**2/560)]
+            [(0, 0), (10, 495/14), (-10 + 10*sqrt(10793)/43, 20*sqrt(10793)/301 + (-10 + 10*sqrt(10793)/43)**4/6400 - (-10 + 10*sqrt(10793)/43)**3/160 + 27*(-10 + 10*sqrt(10793)/43)**2/560 - 20/7)]
         """
 
         max_def = []

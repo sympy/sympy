@@ -26,7 +26,7 @@ class ArrayComprehension(Basic):
     >>> i, j, k = symbols('i j k')
     >>> a = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
     >>> a
-    ArrayComprehension(j + 10*i, (i, 1, 4), (j, 1, 3))
+    ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, 3))
     >>> a.doit()
     [[11, 12, 13], [21, 22, 23], [31, 32, 33], [41, 42, 43]]
     >>> b = ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))

@@ -497,13 +497,13 @@ The lcm is connected with the gcd and one can be computed using the other::
     >>> gcd(f, g)
     x*y
     >>> lcm(f, g)
-     2  3    3  2
+     3  2    2  3
     x *y  + x *y
     >>> (f*g).expand()
-     3  4    4  3
+     4  3    3  4
     x *y  + x *y
     >>> (gcd(f, g, x, y)*lcm(f, g, x, y)).expand()
-     3  4    4  3
+     4  3    3  4
     x *y  + x *y
 
 Square-free factorization
@@ -515,13 +515,13 @@ factors (not necessarily irreducible) of degree 1, 2 etc.::
     >>> f = 2*x**2 + 5*x**3 + 4*x**4 + x**5
 
     >>> sqf_list(f)
-                           2
-    (1, [(x + 2, 1), (x + x , 2)])
+                       2
+    (1, [(x + 2, 1), (x  + x, 2)])
 
     >>> sqf(f)
                     2
-            /     2\
-    (x + 2)*\x + x /
+            / 2    \
+    (x + 2)*\x  + x/
 
 Factorization
 -------------

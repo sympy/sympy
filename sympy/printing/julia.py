@@ -613,7 +613,7 @@ def julia_code(expr, assign_to=None, **settings):
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x .^ 2 ((x > 0) ? (1 + x) : (x)) sin(x)]'
+    'A = [x .^ 2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the

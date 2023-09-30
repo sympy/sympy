@@ -127,7 +127,7 @@ def round_two(T, radicals=None):
     >>> print(K.discriminant())
     -503
     >>> print(K.integral_basis(fmt='sympy'))
-    [1, theta, theta/2 + theta**2/2]
+    [1, theta, theta**2/2 + theta/2]
 
     Calling directly:
 

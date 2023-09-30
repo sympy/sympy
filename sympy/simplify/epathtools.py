@@ -172,7 +172,7 @@ class EPath:
         >>> expr = t + sin(x + 1) + cos(x + y + E)
 
         >>> path.apply(expr, lambda expr: 2*expr)
-        t + sin(2*x + 1) + cos(2*x + 2*y + E)
+        t + sin(2*x + 1) + cos(E + 2*x + 2*y)
 
         """
         def _apply(path, expr, func):
@@ -343,7 +343,7 @@ def epath(path, expr=None, func=None, args=None, kwargs=None):
     >>> epath(path, expr)
     [x, x, y]
     >>> epath(path, expr, lambda expr: 2*expr)
-    t + sin(2*x + 1) + cos(2*x + 2*y + E)
+    t + sin(2*x + 1) + cos(E + 2*x + 2*y)
 
     """
     _epath = EPath(path)

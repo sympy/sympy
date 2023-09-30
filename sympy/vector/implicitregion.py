@@ -377,7 +377,8 @@ class ImplicitRegion(Basic):
 
         >>> c = ImplicitRegion((x, y), (x  - 1/2)**2 + (y)**2 - (1/4)**2)
         >>> c.rational_parametrization(reg_point=(3/4, 0))
-        (0.75 - 0.5/(t**2 + 1), -0.5*t/(t**2 + 1))
+        (-0.5/(t**2 + 1) + 0.75, -0.5*t/(t**2 + 1))
+
 
         References
         ==========

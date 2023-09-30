@@ -102,12 +102,12 @@ def horner(f, *gens, **args):
     x*(x*(x*(9*x + 8) + 7) + 6) + 5
 
     >>> horner(a*x**4 + b*x**3 + c*x**2 + d*x + e)
-    e + x*(d + x*(c + x*(b + a*x)))
+    e + x*(d + x*(c + x*(a*x + b)))
 
     >>> f = 4*x**2*y**2 + 2*x**2*y + 2*x*y**2 + x*y
 
     >>> horner(f, wrt=x)
-    x*(y*(2*y + 1) + x*y*(4*y + 2))
+    x*(x*y*(4*y + 2) + y*(2*y + 1))
 
     >>> horner(f, wrt=y)
     y*(x*y*(4*x + 2) + x*(2*x + 1))
@@ -230,7 +230,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
     >>> x = [1, 2, 3, 4, 5, 6]
     >>> y = sympify("[-1, 0, 2, 22/5, 7, 68/7]")
     >>> rational_interpolate(zip(x, y), 2)
-    (3*x**2 - 7*x + 2)/(1 + x)
+    (3*x**2 - 7*x + 2)/(x + 1)
 
     The symbol for the variable can be changed if needed:
     >>> from sympy import symbols

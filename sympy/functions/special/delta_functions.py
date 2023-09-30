@@ -613,7 +613,7 @@ class Heaviside(Function):
         Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (nan, True))
 
         >>> Heaviside(x - 2).rewrite(sign)
-        1/2 + sign(x - 2)/2
+        sign(x - 2)/2 + 1/2
 
         >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2

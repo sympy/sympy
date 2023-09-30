@@ -95,7 +95,7 @@ def find_simple_recurrence(v, A=Function('a'), N=Symbol('n')):
     >>> from sympy.concrete.guess import find_simple_recurrence
     >>> from sympy import fibonacci
     >>> find_simple_recurrence([fibonacci(k) for k in range(12)])
-    -a(n) - a(1 + n) + a(2 + n)
+    -a(n) - a(n + 1) + a(n + 2)
 
     >>> from sympy import Function, Symbol
     >>> a = [1, 1, 1]
@@ -257,7 +257,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> from sympy import fibonacci
     >>> ggf([fibonacci(k) for k in range(5, 15)], types=['ogf'])
-    {'ogf': (5 + 3*x)/(-x**2 - x + 1)}
+    {'ogf': (3*x + 5)/(-x**2 - x + 1)}
 
     >>> from sympy import factorial
     >>> ggf([factorial(k) for k in range(12)], types=['ogf', 'egf', 'lgf'])

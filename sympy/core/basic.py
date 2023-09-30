@@ -955,12 +955,12 @@ class Basic(Printable):
         x**2 + 2
 
         >>> (x**2 + x**4).subs(x**2, y)
-        y + y**2
+        y**2 + y
 
         To replace only the x**2 but not the x**4, use xreplace:
 
         >>> (x**2 + x**4).xreplace({x**2: y})
-        y + x**4
+        x**4 + y
 
         To delay evaluation until all substitutions have been made,
         set the keyword ``simultaneous`` to True:
@@ -1145,7 +1145,7 @@ class Basic(Printable):
         so it makes the change:
 
         >>> (x + y + z).subs(x + y, 1)
-        1 + z
+        z + 1
 
         Add's _eval_subs does not need to know how to find x + y in
         the following:
@@ -1606,7 +1606,7 @@ class Basic(Printable):
 
             >>> e = x*(x*y + 1)
             >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
-            2*x*(1 + 2*x*y)
+            2*x*(2*x*y + 1)
 
         When matching a single symbol, `exact` will default to True, but
         this may or may not be the behavior that is desired:
@@ -1999,7 +1999,7 @@ class Basic(Printable):
         Pattern can be a type or an iterable of types.
 
         >>> expr.rewrite(sin, exp)
-        cos(x) - exp(-I*x)/2 + exp(I*x)/2
+        cos(x) + exp(I*x)/2 - exp(-I*x)/2
         >>> expr.rewrite([cos,], exp)
         exp(I*x)/2 + I*sin(x) + exp(-I*x)/2
         >>> expr.rewrite([cos, sin], exp)

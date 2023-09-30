@@ -279,7 +279,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy.abc import x
         >>> s = fourier_series(x, (x, -pi, pi))
         >>> s.sigma_approximation(4)
-        2*sin(x)*sinc(pi/4) - 2*sin(2*x)/pi + 2*sin(3*x)*sinc(3*pi/4)/3
+        2*sin(x)*sinc(pi/4) + 2*sin(3*x)*sinc(3*pi/4)/3 - 2*sin(2*x)/pi
 
         See Also
         ========
@@ -420,7 +420,7 @@ class FourierSeries(SeriesBase):
         >>> from sympy.abc import x
         >>> s = fourier_series(x**2, (x, -pi, pi))
         >>> s.scalex(2).truncate()
-        -4*cos(2*x) + cos(4*x) + pi**2/3
+        pi**2/3 - 4*cos(2*x) + cos(4*x)
         """
         s, x = sympify(s), self.x
 
@@ -695,7 +695,7 @@ def fourier_series(f, limits=None, finite=True):
     >>> s.scale(2).truncate()
     2*pi**2/3 - 8*cos(x) + 2*cos(2*x)
     >>> s.scalex(2).truncate()
-    -4*cos(2*x) + cos(4*x) + pi**2/3
+    pi**2/3 - 4*cos(2*x) + cos(4*x)
 
     Computing the Fourier series of $f(x) = x$:
 

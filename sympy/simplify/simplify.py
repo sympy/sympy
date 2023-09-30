@@ -92,7 +92,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     >>> separatevars(e)
     2*x**2*z*(sin(y) + 1)
     >>> separatevars(e, symbols=(x, y), dict=True)
-    {'coeff': 2*z, x: x**2, y: 1 + sin(y)}
+    {'coeff': 2*z, x: x**2, y: sin(y) + 1}
     >>> separatevars(e, [x, y, alpha], dict=True)
     {'coeff': 2*z, alpha: 1, x: x**2, y: sin(y) + 1}
 
@@ -369,7 +369,7 @@ def signsimp(expr, evaluate=None):
     >>> signsimp(_)
     0
     >>> x*n + x*-n
-    x*(1 - 1/x) + x*(1/x - 1)
+    x*(1/x - 1) + x*(1 - 1/x)
     >>> signsimp(_)
     0
 
@@ -440,7 +440,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     >>> from sympy.abc import x, y
     >>> a = (x + x**2)/(x*sin(y)**2 + x*cos(y)**2)
     >>> a
-    (x + x**2)/(x*cos(y)**2 + x*sin(y)**2)
+    (x**2 + x)/(x*sin(y)**2 + x*cos(y)**2)
     >>> simplify(a)
     x + 1
 
@@ -449,7 +449,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     >>> from sympy import trigsimp, cancel
     >>> trigsimp(a)
-    (x + x**2)/x
+    (x**2 + x)/x
     >>> cancel(_)
     x + 1
 
@@ -1597,7 +1597,7 @@ def clear_coefficients(expr, rhs=S.Zero):
     >>> from sympy import Dummy
     >>> expr = 4*y*(6*x + 3)
     >>> clear_coefficients(expr - 2)
-    (y*(1 + 2*x), 1/6)
+    (y*(2*x + 1), 1/6)
 
     When solving 2 or more expressions like `expr = a`,
     `expr = b`, etc..., it is advantageous to provide a Dummy symbol

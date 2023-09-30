@@ -101,7 +101,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     >>> Sum(k, (k, 1, m))
     Sum(k, (k, 1, m))
     >>> Sum(k, (k, 1, m)).doit()
-    m/2 + m**2/2
+    m**2/2 + m/2
     >>> Sum(k**2, (k, 1, m))
     Sum(k**2, (k, 1, m))
     >>> Sum(k**2, (k, 1, m)).doit()
@@ -1415,21 +1415,21 @@ def eval_sum_residue(f, i_a_b):
     Infinite series of even rational functions.
 
     >>> Sum(1 / (x**2 + 1), (x, 0, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
 
     Infinite series of alternating even rational functions.
 
     >>> Sum((-1)**x / (x**2 + 1), (x, 0, oo)).doit()
-    1/2 + pi/(2*sinh(pi))
+    pi/(2*sinh(pi)) + 1/2
 
     This also have heuristics to transform arbitrarily shifted summand or
     arbitrarily shifted summation range to the canonical problem the
     formula can handle.
 
     >>> Sum(1 / (x**2 + 2*x + 2), (x, -1, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 4*x + 5), (x, -2, oo)).doit()
-    1/2 + pi/(2*tanh(pi))
+    pi/(2*tanh(pi)) + 1/2
     >>> Sum(1 / (x**2 + 1), (x, 1, oo)).doit()
     pi/(2*tanh(pi)) - 1/2
     >>> Sum(1 / (x**2 + 1), (x, 2, oo)).doit()

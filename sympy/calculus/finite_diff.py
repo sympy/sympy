@@ -131,7 +131,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     [x - h, x - sqrt(2)*h/2, x, x + sqrt(2)*h/2, h + x]
     >>> mycoeffs = finite_diff_weights(1, x_list, 0)[1][4]
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
-    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4, (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, (6*h**2*x - 8*x**3)/h**4, (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4, (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
+    [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4, (-sqrt(2)*h**3 + 3*sqrt(2)*h*x**2 - 4*h**2*x + 8*x**3)/h**4, (6*h**2*x - 8*x**3)/h**4, (sqrt(2)*h**3 - 3*sqrt(2)*h*x**2 - 4*h**2*x + 8*x**3)/h**4, (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
     =====
@@ -311,19 +311,19 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> x, h = symbols('x h')
     >>> f = Function('f')
     >>> _as_finite_diff(f(x).diff(x))
-    f(1/2 + x) - f(x - 1/2)
+    f(x + 1/2) - f(x - 1/2)
 
     The default step size and number of points are 1 and ``order + 1``
     respectively. We can change the step size by passing a symbol
     as a parameter:
 
     >>> _as_finite_diff(f(x).diff(x), h)
-    f(x + h/2)/h - f(x - h/2)/h
+    f(h/2 + x)/h - f(x - h/2)/h
 
     We can also specify the discretized values to be used in a sequence:
 
     >>> _as_finite_diff(f(x).diff(x), [x, x+h, x+2*h])
-    -3*f(x)/(2*h) + 2*f(h + x)/h - f(x + 2*h)/(2*h)
+    -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
     The algorithm is not restricted to use equidistant spacing, nor
     do we need to make the approximation around ``x0``, but we can get
@@ -332,7 +332,7 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
     >>> _as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
-    2*h*((h + sqrt(2)*h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(x + E*h)/((E*h - h)*(h + E*h)) + (-(h - sqrt(2)*h)/(2*h) - (E*h - sqrt(2)*h)/(2*h))*f(x - h)/(h + E*h) + ((E*h - sqrt(2)*h)/(2*h) - (h + sqrt(2)*h)/(2*h))*f(h + x)/(E*h - h)
+    2*h*((h + sqrt(2)*h)/(2*h) - (h - sqrt(2)*h)/(2*h))*f(E*h + x)/((E*h - h)*(E*h + h)) + (-(h - sqrt(2)*h)/(2*h) - (E*h - sqrt(2)*h)/(2*h))*f(x - h)/(E*h + h) + ((E*h - sqrt(2)*h)/(2*h) - (h + sqrt(2)*h)/(2*h))*f(h + x)/(E*h - h)
 
     Partial derivatives are also supported:
 
@@ -427,7 +427,7 @@ def differentiate_finite(expr, *symbols,
     >>> differentiate_finite(f(x) + sin(x), x, 2)
     -2*f(x) + f(x - 1) + f(x + 1) - 2*sin(x) + sin(x - 1) + sin(x + 1)
     >>> differentiate_finite(f(x, y), x, y)
-    f(x - 1/2, y - 1/2) - f(x - 1/2, 1/2 + y) - f(1/2 + x, y - 1/2) + f(1/2 + x, 1/2 + y)
+    f(x - 1/2, y - 1/2) - f(x - 1/2, y + 1/2) - f(x + 1/2, y - 1/2) + f(x + 1/2, y + 1/2)
     >>> differentiate_finite(f(x)*g(x).diff(x), x)
     (g(x + 1) - g(x))*f(x + 1/2) - (g(x) - g(x - 1))*f(x - 1/2)
 

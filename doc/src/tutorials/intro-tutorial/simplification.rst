@@ -126,7 +126,7 @@ is no longer a polynomial over the rationals).
     sin (x) + 2⋅sin(x)⋅cos(x) + cos (x)
     >>> factor(cos(x)**2 + 2*cos(x)*sin(x) + sin(x)**2)
                      2
-    (cos(x) + sin(x))
+    (sin(x) + cos(x))
 
 collect
 -------
@@ -140,13 +140,13 @@ collect
     >>> collected_expr = collect(expr, x)
     >>> collected_expr
      3    2
-    x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
+    x  + x ⋅(2 - z) + x⋅(y + 1) - 3
 
 ``collect()`` is particularly useful in conjunction with the ``.coeff()``
 method.  ``expr.coeff(x, n)`` gives the coefficient of ``x**n`` in ``expr``:
 
     >>> collected_expr.coeff(x, 2)
-    -z + 2
+    2 - z
 
 .. TODO: Discuss coeff method in more detail in some other section (maybe
    basic expression manipulation tools)
@@ -166,17 +166,17 @@ denominators (i.e., are integers).
 
     >>> expr = 1/x + (3*x/2 - 2)/(x - 4)
     >>> expr
-        3⋅x
-        ─── - 2
-    1    2
-    ─ + ───────
-    x    x - 4
+    3⋅x
+    ─── - 2
+     2        1
+    ─────── + ─
+     x - 4    x
     >>> cancel(expr)
        2
     3⋅x  - 2⋅x - 8
     ──────────────
-               2
-     -8⋅x + 2⋅x
+         2
+      2⋅x  - 8⋅x
 
     >>> expr = (x*y**2 - 2*x*y*z + x*z**2 + y**2 - 2*y*z + z**2)/(x**2 - 1)
     >>> expr
@@ -276,7 +276,7 @@ To expand trigonometric functions, that is, apply the sum or double angle
 identities, use ``expand_trig()``.
 
     >>> expand_trig(sin(x + y))
-    sin(y)⋅cos(x) + sin(x)⋅cos(y)
+    sin(x)⋅cos(y) + sin(y)⋅cos(x)
     >>> expand_trig(tan(2*x))
       2⋅tan(x)
     ───────────

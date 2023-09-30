@@ -2008,7 +2008,7 @@ def vectors_in_basis(expr, to_sys):
     >>> from sympy.diffgeom.rn import R2_r, R2_p
 
     >>> vectors_in_basis(R2_r.e_x, R2_p)
-    x*e_rho/sqrt(x**2 + y**2) - y*e_theta/(x**2 + y**2)
+    -y*e_theta/(x**2 + y**2) + x*e_rho/sqrt(x**2 + y**2)
     >>> vectors_in_basis(R2_p.e_r, R2_r)
     sin(theta)*e_y + cos(theta)*e_x
 

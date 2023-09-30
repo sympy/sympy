@@ -89,7 +89,7 @@ def _masked(f, *atoms):
     >>> f
     _a1
     >>> reps
-    [(_a1, cos(1 + _a0)), (_a0, cos(x))]
+    [(_a1, cos(_a0 + 1)), (_a0, cos(x))]
     >>> for d, e in reps:
     ...     f = f.xreplace({d: e})
     >>> f
@@ -948,12 +948,12 @@ def solve_decomposition(f, symbol, domain):
     {0, log(2)}
     >>> f2 = sin(x)**2 + 2*sin(x) + 1
     >>> pprint(sd(f2, x, S.Reals), use_unicode=False)
-     3*pi
-    {---- + 2*n*pi | n in Integers}
-      2
+              3*pi
+    {2*n*pi + ---- | n in Integers}
+               2
     >>> f3 = sin(x + 2)
     >>> pprint(sd(f3, x, S.Reals), use_unicode=False)
-    {2*n*pi - 2 | n in Integers} U {2*n*pi - 2 + pi | n in Integers}
+    {2*n*pi - 2 | n in Integers} U {2*n*pi + pi - 2 | n in Integers}
 
     """
     from sympy.solvers.decompogen import decompogen
@@ -1287,7 +1287,7 @@ def _invert_modular(modterm, rhs, n, symbol):
     >>> invert_modular(Mod(x, 7), S(5), n, x)
     (x, ImageSet(Lambda(_n, 7*_n + 5), Integers))
     >>> invert_modular(Mod(3*x + 8, 7), S(5), n, x)
-    (x, ImageSet(Lambda(_n, 6 + 7*_n), Integers))
+    (x, ImageSet(Lambda(_n, 7*_n + 6), Integers))
     >>> invert_modular(Mod(x**4, 7), S(5), n, x)
     (x, EmptySet)
     >>> invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x)
@@ -1406,7 +1406,7 @@ def _solve_modular(f, symbol, domain):
     >>> solve_modulo(-7 + Mod(x, 5), x, S.Integers)
     EmptySet
     >>> solve_modulo(Mod(12**x, 21) - 18, x, S.Integers)
-    ImageSet(Lambda(_n, 2 + 6*_n), Naturals0)
+    ImageSet(Lambda(_n, 6*_n + 2), Naturals0)
     >>> solve_modulo(Mod(sin(x), 7) - 3, x, S.Integers) # not solvable
     ConditionSet(x, Eq(Mod(sin(x), 7) - 3, 0), Integers)
     >>> solve_modulo(3 - Mod(x, 5), x, Intersection(S.Integers, Interval(0, 100)))
@@ -2749,7 +2749,7 @@ def linsolve(system, *symbols):
     >>> A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     >>> b = Matrix([3, 6, 9])
     >>> linsolve((A, b), x, y, z)
-    {(z - 1, -2*z + 2, z)}
+    {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
     The ``tau0`` in the third position indicates (as before) that the third
@@ -3000,7 +3000,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> x, y, z = symbols('x, y, z')
     >>> from sympy import exp, sin
     >>> substitution([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(pi + 2*_n*pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     >>> eqs = [z**2 + exp(2*x) - sin(y), -3 + exp(-y)]
     >>> substitution(eqs, [y, z])
@@ -3720,7 +3720,7 @@ def nonlinsolve(system, *symbols):
     {(---, -d, -, {d} \ {0}), (-, -d, ---, {d} \ {0})}
        d       d               d       d
     >>> nonlinsolve([(x+y)**2 - 4, x + y - 2], [x, y])
-    {(-y + 2, y)}
+    {(2 - y, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
     will call the ``substitution`` function and return real and complex solutions,
@@ -3728,7 +3728,7 @@ def nonlinsolve(system, *symbols):
 
     >>> from sympy import exp, sin
     >>> nonlinsolve([exp(x) - sin(y), y**2 - 4], [x, y])
-    {(ImageSet(Lambda(_n, log(sin(2)) + I*(pi + 2*_n*pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
+    {(ImageSet(Lambda(_n, log(sin(2)) + I*(2*_n*pi + pi)), Integers), -2), (ImageSet(Lambda(_n, log(sin(2)) + 2*_n*I*pi), Integers), 2)}
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using

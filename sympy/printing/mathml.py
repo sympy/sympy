@@ -2060,8 +2060,8 @@ def print_mathml(expr, printer='content', **settings):
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>
         <plus/>
-        <cn>1</cn>
         <ci>x</ci>
+        <cn>1</cn>
     </apply>
     <BLANKLINE>
     >>> print_mathml(x+1, printer='presentation')

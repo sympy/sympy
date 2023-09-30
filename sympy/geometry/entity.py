@@ -380,7 +380,7 @@ class GeometryEntity(Basic, EvalfMixin):
         >>> pent = RegularPolygon((1, 2), 1, 5)
         >>> rpent = pent.reflect(l)
         >>> rpent
-        RegularPolygon(Point2D(-1/3 + 4*sqrt(2)/3 - 2*sqrt(2)*pi/3, 2/3 + 2*pi/3 + 2*sqrt(2)/3), -1, 5, 3*pi/5 - atan(2*sqrt(2)))
+        RegularPolygon(Point2D(-2*sqrt(2)*pi/3 + 4*sqrt(2)/3 - 1/3, 2*sqrt(2)/3 + 2*pi/3 + 2/3), -1, 5, 3*pi/5 - atan(2*sqrt(2)))
 
         >>> from sympy import pi, Line, Circle, Point
         >>> l = Line((0, pi), slope=1)

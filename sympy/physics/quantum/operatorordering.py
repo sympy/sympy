@@ -150,7 +150,7 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     >>> from sympy.physics.quantum.operatorordering import normal_ordered_form
     >>> a = BosonOp("a")
     >>> normal_ordered_form(a * Dagger(a))
-    1 + Dagger(a)*a
+    Dagger(a)*a + 1
     """
 
     if _recursive_depth > recursive_limit:

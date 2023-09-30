@@ -587,7 +587,7 @@ class Factors:
         2**(2*x)/2.
 
         >>> Factors(2**(2*x + 2)).div(S(8))
-        (Factors({2: 2 + 2*x}), Factors({8: 1}))
+        (Factors({2: 2*x + 2}), Factors({8: 1}))
 
         factor_terms can clean up such Rational-bases powers:
 
@@ -1020,7 +1020,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     >>> gcd_terms(x/2 + 1/x, fraction=False)
     (x + 2/x)/2
     >>> gcd_terms(x/2 + 1/x, fraction=False, clear=False)
-    1/x + x/2
+    x/2 + 1/x
 
     >>> gcd_terms(x/2/y + 1/x/y)
     (x**2 + 2)/(2*x*y)
@@ -1187,7 +1187,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     x*(8*(2*y + 1)**3 + 1)
     >>> A = Symbol('A', commutative=False)
     >>> factor_terms(x*A + x*A + x*y*A)
-    x*(2*A + y*A)
+    x*(y*A + 2*A)
 
     When ``clear`` is False, a rational will only be factored out of an
     Add expression if all terms of the Add have coefficients that are

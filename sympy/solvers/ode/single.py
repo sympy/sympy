@@ -680,8 +680,8 @@ class AlmostLinear(SinglePatternODESolver):
     sin(f(x)) + cos(f(x))*--(f(x)) + 1
                         dx
     >>> pprint(dsolve(example, f(x), hint='almost_linear'))
-                /    -x    \                   /    -x    \
-    [f(x) = asin\C1*e   + 1/ + pi, f(x) = -asin\C1*e   + 1/]
+                     /    -x    \             /    -x    \
+    [f(x) = pi - asin\C1*e   - 1/, f(x) = asin\C1*e   - 1/]
 
 
     References
@@ -750,19 +750,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                                1
-                                                                                                              -----
-                                                                                                              1 - n
-               //         /                                /                           \                     \
-               ||        |                                |                            |                     |
-               ||        |                 /              |                 /          |             /       |
-               ||        |                |               |                |           |            |        |
-               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  -(1 - n)* | P(x) dx|
-               ||        |                |               |                |           |            |        |
-               ||        |               /                |               /            |           /         |
-        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                   |
-               ||        |                                |                            |                     |
-               \\       /                                /                             /                     /
+                                                                                                                -1
+                                                                                                               -----
+                                                                                                               n - 1
+               //         /                                 /                            \                    \
+               ||        |                                 |                             |                    |
+               ||        |                  /              |                  /          |            /       |
+               ||        |                 |               |                 |           |           |        |
+               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                 |               |                 |           |           |        |
+               ||        |                /                |                /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
+               ||        |                                 |                             |                    |
+               \\       /                                 /                              /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -1344,7 +1344,7 @@ class SeparableReduced(Separable):
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
     >>> dsolve(eq, hint='separable_reduced')
-    [Eq(f(x), (1 - sqrt(1 + C1*x**2))/x), Eq(f(x), (1 + sqrt(1 + C1*x**2))/x)]
+    [Eq(f(x), (1 - sqrt(C1*x**2 + 1))/x), Eq(f(x), (1 + sqrt(C1*x**2 + 1))/x)]
     >>> pprint(dsolve(eq, hint='separable_reduced'))
                    ___________                ___________
                   /     2                    /     2
@@ -1589,9 +1589,9 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> f, g, h = map(Function, ['f', 'g', 'h'])
     >>> genform = g(x/f(x)) + h(x/f(x))*f(x).diff(x)
     >>> pprint(genform)
-     / x  \ d           / x  \
-    h|----|*--(f(x)) + g|----|
-     \f(x)/ dx          \f(x)/
+     / x  \    / x  \ d
+    g|----| + h|----|*--(f(x))
+     \f(x)/    \f(x)/ dx
     >>> pprint(dsolve(genform, f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral'))
                  x

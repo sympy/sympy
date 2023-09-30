@@ -568,4 +568,4 @@ This is the particle moving on a ring, again. ::
   >>> Q.v2pt_theory(O, N, C)
   l*u1*C.y
   >>> P.v1pt_theory(Q, N, C)
-  - R*u2*sin(q2)*C.x + (l*u1 + R*u2*cos(q2))*C.y + R*u1*sin(q2)*C.z
+  - R*u2*sin(q2)*C.x + (R*u2*cos(q2) + l*u1)*C.y + R*u1*sin(q2)*C.z

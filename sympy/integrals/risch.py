@@ -1691,7 +1691,7 @@ class NonElementaryIntegral(Integral):
     >>> expr = (2*log(x)**2 - log(x) - x**2)/(log(x)**3 - x**2*log(x))
     >>> b = integrate(expr, x, risch=True)
     >>> print(b)
-    log(x + log(x))/2 - log(log(x) - x)/2 + Integral(1/log(x), x)
+    -log(log(x) - x)/2 + log(x + log(x))/2 + Integral(1/log(x), x)
     >>> type(b.atoms(Integral).pop())
     <class 'sympy.integrals.risch.NonElementaryIntegral'>
 
@@ -1765,13 +1765,13 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     >>> pprint(risch_integrate((2*log(x)**2 - log(x) - x**2)/(log(x)**3 -
     ... x**2*log(x)), x))
+                                            /
+                                           |
+      log(log(x) - x)   log(x + log(x))    |   1
+    - --------------- + --------------- +  | ------ dx
+             2                 2           | log(x)
+                                           |
                                           /
-                                         |
-    log(x + log(x))   log(log(x) - x)    |   1
-    --------------- - --------------- +  | ------ dx
-           2                 2           | log(x)
-                                         |
-                                        /
 
     This means that it has proven that the integral of 1/log(x) is
     nonelementary.  This function is also known as the logarithmic integral,

@@ -2362,7 +2362,7 @@ class AlgebraicNumber(Expr):
         >>> a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1),
         ...                  [-1, -1, 0, 0], alias=zeta)
         >>> a5.as_poly().as_expr()
-        -zeta**2 - zeta**3
+        -zeta**3 - zeta**2
         >>> a5.evalf()
         1.61803398874989
 
@@ -3872,7 +3872,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
     >>> S.TribonacciConstant > 1
     True
     >>> S.TribonacciConstant.expand(func=True)
-    1/3 + (19 - 3*sqrt(33))**(1/3)/3 + (19 + 3*sqrt(33))**(1/3)/3
+    (19 - 3*sqrt(33))**(1/3)/3 + (19 + 3*sqrt(33))**(1/3)/3 + 1/3
     >>> S.TribonacciConstant.is_irrational
     True
     >>> S.TribonacciConstant.n(20)

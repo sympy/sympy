@@ -704,7 +704,7 @@ def trigsimp_old(expr, *, first=True, **opts):
     >>> trigsimp(e, old=True)
     2
     >>> trigsimp(log(e), old=True)
-    log(2*cos(x)**2 + 2*sin(x)**2)
+    log(2*sin(x)**2 + 2*cos(x)**2)
     >>> trigsimp(log(e), deep=True, old=True)
     log(2)
 

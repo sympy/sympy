@@ -589,7 +589,7 @@ and for the third one
    >>> z = Symbol("z")
    >>> B2 = sinh(2*sqrt(z))*sqrt(z)
    >>> expand(z * diff(B2, z))
-   z*cosh(2*sqrt(z)) + sqrt(z)*sinh(2*sqrt(z))/2
+   sqrt(z)*sinh(2*sqrt(z))/2 + z*cosh(2*sqrt(z))
 
 Now we have computed the entries of this matrix to be
 

@@ -294,7 +294,7 @@ def Arcsin(name, a=0, b=1):
     >>> X = Arcsin("x", a, b)
 
     >>> density(X)(z)
-    1/(pi*sqrt((b - z)*(z - a)))
+    1/(pi*sqrt((z - a)*(b - z)))
 
     >>> cdf(X)(z)
     Piecewise((0, a > z), (2*asin(sqrt((z - a)/(b - a)))/pi, b >= z), (1, True))
@@ -771,7 +771,7 @@ def Cauchy(name, x0, gamma):
     >>> X = Cauchy("x", x0, gamma)
 
     >>> density(X)(z)
-    1/(pi*gamma*(1 + (z - x0)**2/gamma**2))
+    1/(pi*gamma*((z - x0)**2/gamma**2 + 1))
 
     References
     ==========
@@ -1096,7 +1096,7 @@ def Dagum(name, p, a, b):
     a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     >>> cdf(X)(z)
-    Piecewise(((1 + (z/b)**(-a))**(-p), z >= 0), (0, True))
+    Piecewise((((z/b)**(-a) + 1)**(-p), z >= 0), (0, True))
 
 
     References
@@ -1353,13 +1353,13 @@ def ExGaussian(name, mean, std, rate):
                                          2
 
     >>> cdf(X)(z)
-    -(1/2 + erf(sqrt(2)*(lamda*(z - mu) - lamda**2*sigma**2)/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
+    -(1/2 + erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(z - mu))/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(z - mu)) + erf(sqrt(2)*(z - mu)/(2*sigma))/2 + 1/2
 
     >>> E(X)
-    (1 + lamda*mu)/lamda
+    (lamda*mu + 1)/lamda
 
     >>> simplify(variance(X))
-    lamda**(-2) + sigma**2
+    sigma**2 + lamda**(-2)
 
     >>> simplify(skewness(X))
     2/(lamda**2*sigma**2 + 1)**(3/2)
@@ -1560,7 +1560,7 @@ def ExponentialPower(name, mu, alpha, beta):
      2*alpha*Gamma|----|
                   \beta/
     >>> cdf(X)(z)
-    1/2 + lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta))
+    lowergamma(1/beta, (Abs(mu - z)/alpha)**beta)*sign(z - mu)/(2*gamma(1/beta)) + 1/2
 
     References
     ==========
@@ -2509,7 +2509,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    1/2 - atan(10 - 5*log(z))/pi
+    atan(5*log(z) - 10)/pi + 1/2
 
     References
     ==========
@@ -2586,7 +2586,7 @@ def Logistic(name, mu, s):
     >>> X = Logistic("x", mu, s)
 
     >>> density(X)(z)
-    exp((mu - z)/s)/(s*(1 + exp((mu - z)/s))**2)
+    exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
 
     >>> cdf(X)(z)
     1/(exp((mu - z)/s) + 1)
@@ -2683,7 +2683,7 @@ def LogLogistic(name, alpha, beta):
           \\alpha/        /
 
     >>> cdf(X)(z)
-    1/(1 + (z/alpha)**(-beta))
+    1/((z/alpha)**(-beta) + 1)
 
     >>> quantile(X)(p)
     alpha*(p/(1 - p))**(1/beta)
@@ -2927,7 +2927,7 @@ def Lomax(name, alpha, lamda):
     >>> density(X)(x)
     a*(x/l + 1)**(-a - 1)/l
     >>> cdf(X)(x)
-    Piecewise((1 - 1/(1 + x/l)**a, x >= 0), (0, True))
+    Piecewise((1 - 1/(x/l + 1)**a, x >= 0), (0, True))
     >>> a = 2
     >>> X = Lomax('X', a, l)
     >>> E(X)
@@ -3176,7 +3176,7 @@ def Nakagami(name, mu, omega):
                 Gamma(mu)
 
     >>> simplify(E(X))
-    sqrt(mu)*sqrt(omega)*gamma(1/2 + mu)/gamma(1 + mu)
+    sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
@@ -4056,13 +4056,13 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-              1   nu
-            - - - --
-              2   2
-    /     2\
-    |    z |
-    |1 + --|
-    \    nu/
+              nu   1
+            - -- - -
+              2    2
+    / 2    \
+    |z     |
+    |-- + 1|
+    \nu    /
     -----------------
       ____  /     nu\
     \/ nu *B|1/2, --|
@@ -4638,7 +4638,7 @@ def Weibull(name, alpha, beta):
     lambda*gamma(1/k + 1)
 
     >>> simplify(variance(X))
-    lambda**2*(gamma(1 + 2/k) - gamma(1 + 1/k)**2)
+    lambda**2*(gamma(2/k + 1) - gamma(1/k + 1)**2)
 
     References
     ==========

@@ -145,7 +145,7 @@ def _sqrt_match(p):
     >>> from sympy.functions.elementary.miscellaneous import sqrt
     >>> from sympy.simplify.sqrtdenest import _sqrt_match
     >>> _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))
-    [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]
+    [sqrt(2) + sqrt(6) + 1, 2, 1 + sqrt(5)]
     """
     from sympy.simplify.radsimp import split_surds
 
@@ -279,7 +279,7 @@ def _sqrtdenest_rec(expr):
     -sqrt(10) + sqrt(2) + 9*sqrt(5) + 9
     >>> w=-6*sqrt(55)-6*sqrt(35)-2*sqrt(22)-2*sqrt(14)+2*sqrt(77)+6*sqrt(10)+65
     >>> _sqrtdenest_rec(sqrt(w))
-    -sqrt(7) - sqrt(11) + sqrt(2) + 3*sqrt(5)
+    -sqrt(11) + sqrt(2) + 3*sqrt(5) - sqrt(7)
     """
     from sympy.simplify.radsimp import radsimp, rad_rationalize, split_surds
     if not expr.is_Pow:
@@ -417,7 +417,7 @@ def _sqrt_symbolic_denest(a, b, r):
     then the sqrt of the square is resolved:
 
     >>> _.subs(x, Symbol('x', positive=True))
-    sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1 + sqrt(2)
+    sqrt(2) + sqrt(1 + sqrt(1 + sqrt(x + 3))) + 1
     """
 
     a, b, r = map(sympify, (a, b, r))
@@ -507,7 +507,7 @@ def sqrt_biquadratic_denest(expr, a, b, r, d2):
     >>> a, b, r = _sqrt_match(z**2)
     >>> d2 = a**2 - b**2*r
     >>> sqrt_biquadratic_denest(z, a, b, r, d2)
-    2 + sqrt(2) + sqrt(2 + sqrt(2))
+    sqrt(2) + sqrt(2 + sqrt(2)) + 2
     """
     from sympy.simplify.radsimp import radsimp, rad_rationalize
     if r <= 0 or d2 < 0 or not b or sqrt_depth(expr.base) < 2:

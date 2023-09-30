@@ -11,7 +11,7 @@ def finite_diff(expression, variable, increment=1):
     >>> from sympy.abc import x, y, z
     >>> from sympy.series.kauers import finite_diff
     >>> finite_diff(x**2, x)
-    1 + 2*x
+    2*x + 1
     >>> finite_diff(y**3 + 2*y**2 + 3*y + 4, y)
     3*y**2 + 7*y + 6
     >>> finite_diff(x**2 + 3*x + 8, x, 2)
@@ -41,7 +41,7 @@ def finite_diff_kauers(sum):
     >>> finite_diff_kauers(Sum(1/k, (k, 1, n)))
     1/(n + 1)
     >>> finite_diff_kauers(Sum((x*y**2), (x, 1, n), (y, 1, m)))
-    (1 + m)**2*(1 + n)
+    (m + 1)**2*(n + 1)
     >>> finite_diff_kauers(Sum((x*y), (x, 1, m), (y, 1, n)))
     (m + 1)*(n + 1)
     """

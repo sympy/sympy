@@ -114,7 +114,7 @@ def _separate_sq(p):
     >>> p = _separate_sq(p); p
     -2*sqrt(21) + 2*sqrt(3)*x + 2*sqrt(7)*x - x**2 - 8
     >>> p = _separate_sq(p); p
-    -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
+    4*sqrt(7)*x**3 + 8*sqrt(7)*x - x**4 - 32*x**2 + 20
     >>> p = _separate_sq(p); p
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 

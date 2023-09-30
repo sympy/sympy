@@ -1443,7 +1443,7 @@ class Expr(Basic, EvalfMixin):
         >>> (3*n).coeff(n)
         3
         >>> (n*m + m*n*m).coeff(n) # = (1 + m)*n*m
-        1 + m
+        m + 1
         >>> (n*m + m*n*m).coeff(n, right=True) # = (1 + m)*n*m
         m
 
@@ -1686,7 +1686,7 @@ class Expr(Basic, EvalfMixin):
         desired.)
 
         >>> (2*E + x*E).as_coefficient(E)
-        2 + x
+        x + 2
         >>> _.args[0]  # just want the exact match
         2
         >>> p = Poly(2*E + x*E); p
@@ -1762,11 +1762,11 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy.abc import x, y, z
 
         >>> (x + x*y).as_independent(x)
-        (0, x + x*y)
+        (0, x*y + x)
         >>> (x + x*y).as_independent(y)
         (x, x*y)
         >>> (2*x*sin(x) + y + x + z).as_independent(x)
-        (y + z, x + 2*x*sin(x))
+        (y + z, 2*x*sin(x) + x)
         >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
         (z, 2*x*sin(x) + x + y)
 
@@ -2086,7 +2086,7 @@ class Expr(Basic, EvalfMixin):
         >>> (3 + x).as_coeff_add()
         (3, (x,))
         >>> (3 + x + y).as_coeff_add(x)
-        (3 + y, (x,))
+        (y + 3, (x,))
         >>> (3 + y).as_coeff_add(x)
         (y + 3, ())
 
@@ -2109,7 +2109,7 @@ class Expr(Basic, EvalfMixin):
         >>> (3*(x + 1)**2).primitive()
         (3, (x + 1)**2)
         >>> a = (6*x + 2); a.primitive()
-        (2, 1 + 3*x)
+        (2, 3*x + 1)
         >>> b = (x/2 + 3); b.primitive()
         (1/2, x + 6)
         >>> (a*b).primitive() == (1, a*b)
@@ -2157,7 +2157,7 @@ class Expr(Basic, EvalfMixin):
         >>> ((3*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive()
         (9, x*(y + 1))
         >>> ((3*(z*(1 + y)) + 2.0*x*(3 + 3*y))).as_content_primitive()
-        (1, 3*z*(y + 1) + 6.0*x*(y + 1))
+        (1, 6.0*x*(y + 1) + 3*z*(y + 1))
         >>> ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive()
         (121, x**2*(y + 1)**2)
         >>> ((x*(1 + y) + 0.4*x*(3 + 3*y))**2).as_content_primitive()
@@ -2361,7 +2361,7 @@ class Expr(Basic, EvalfMixin):
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
-        2 + x
+        x + 2
         >>> e.extract_additively(3*x)
         >>> e.extract_additively(4)
         >>> (y*(x + 1)).extract_additively(x + 1)

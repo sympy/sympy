@@ -252,7 +252,7 @@ documentation:
     >>> f = Function('f')
     >>> dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x),
     ... f(x), hint='1st_exact')
-    Eq(f(x)**3/3 + x*cos(f(x)), C1)
+    Eq(x*cos(f(x)) + f(x)**3/3, C1)
 
 Here ``dsolve(cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x), f(x), hint='1st_exact')`` is too long, so we line break it after a comma so that it
 is readable, and put ``...`` on the continuation lines. If this is not done

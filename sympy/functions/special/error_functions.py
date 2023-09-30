@@ -680,7 +680,7 @@ class erf2(Function):
     >>> erf2(x, oo)
     1 - erf(x)
     >>> erf2(x, -oo)
-    -1 - erf(x)
+    -erf(x) - 1
     >>> erf2(oo, y)
     erf(y) - 1
     >>> erf2(-oo, y)
@@ -1131,7 +1131,7 @@ class Ei(Function):
 
     >>> from sympy import expint, Shi
     >>> Ei(x).rewrite(expint)
-    -expint(1, x*exp_polar(I*pi)) - I*pi
+    -I*pi - expint(1, x*exp_polar(I*pi))
     >>> Ei(x).rewrite(Shi)
     Chi(x) + Shi(x)
 
@@ -2093,7 +2093,7 @@ class Shi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Shi(z).rewrite(expint)
-    expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    expint(1, z)/2 - I*pi/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========
@@ -2210,7 +2210,7 @@ class Chi(TrigonometricIntegral):
 
     >>> from sympy import expint
     >>> Chi(z).rewrite(expint)
-    -expint(1, z)/2 - expint(1, z*exp_polar(I*pi))/2 - I*pi/2
+    -expint(1, z)/2 - I*pi/2 - expint(1, z*exp_polar(I*pi))/2
 
     See Also
     ========

@@ -114,14 +114,14 @@ different ways e.g.::
   >>> e
   x*(x + 1)
   >>> e.expand()
-  x + x**2
+  x**2 + x
 
 These two expression although equivalent have different tree representations::
 
   >>> print(srepr(e))
   Mul(Symbol('x'), Add(Symbol('x'), Integer(1)))
   >>> print(srepr(e.expand()))
-  Add(Symbol('x'), Pow(Symbol('x'), Integer(2)))
+  Add(Pow(Symbol('x'), Integer(2)), Symbol('x'))
 
 Being able to represent the same expression in different ways is both a
 strength and a weakness. It is useful to be able to convert an
@@ -818,7 +818,7 @@ it possible to represent equivalent expressions in different ways e.g.::
   >>> x = symbols('x')
   >>> p_expr = x*(x + 1) + x
   >>> p_expr
-  x + x*(x + 1)
+  x*(x + 1) + x
   >>> p_expr.expand()
   x**2 + 2*x
 
@@ -847,7 +847,7 @@ expanded::
   >>> x_dom = K(x)
   >>> p_expr = x * (x + 1) + x
   >>> p_expr
-  x + x*(x + 1)
+  x*(x + 1) + x
   >>> p_dom = x_dom * (x_dom + K.one) + x_dom
   >>> p_dom
   x**2 + 2*x
@@ -1474,7 +1474,7 @@ representation by choosing a generator that is not in the expression at all::
 
   >>> p = Poly(x**2*y + z, t)
   >>> p
-  Poly(z + x**2*y, t, domain='ZZ[x,y,z]')
+  Poly(x**2*y + z, t, domain='ZZ[x,y,z]')
   >>> p.rep
   DMP_Python([x**2*y + z], ZZ[x,y,z])
   >>> p.rep.rep[0]  # doctest: +SKIP

@@ -91,7 +91,7 @@ class DiophantineSolutionSet(set):
         >>> s3(-2, 3)
         {(4, 1)}
         >>> s3(5)
-        {(25, 5 + u)}
+        {(25, u + 5)}
         >>> s3(None, 2)
         {(t**2, t + 2)}
     """

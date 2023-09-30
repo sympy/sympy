@@ -2273,7 +2273,7 @@ class WienerProcess(CountingProcess):
     >>> P(X(t1) < 7).simplify()
     1/2 + erf(7*sqrt(2)/(2*sqrt(t1)))/2
     >>> P((X(t1) > 2) | (X(t1) < 4), Contains(t1, Interval.Ropen(2, 4))).simplify()
-    1 - erf(1)/2 + erf(2)/2
+    -erf(1)/2 + erf(2)/2 + 1
     >>> E(X(t1))
     0
     >>> E(X(t1) + 2*X(t2),  Contains(t1, Interval.Lopen(0, 1))

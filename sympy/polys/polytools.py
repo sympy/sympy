@@ -1220,7 +1220,7 @@ class Poly(Basic):
         >>> f = Poly(x**2*y + x*y**3 + x*y + 1, x, y)
 
         >>> f.eject(x)
-        Poly(x*y**3 + (x + x**2)*y + 1, y, domain='ZZ[x]')
+        Poly(x*y**3 + (x**2 + x)*y + 1, y, domain='ZZ[x]')
         >>> f.eject(y)
         Poly(y*x**2 + (y**3 + y)*x + 1, x, domain='ZZ[y]')
 
@@ -4908,7 +4908,7 @@ def pquo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> pquo(x**2 + 1, 2*x - 4)
-    4 + 2*x
+    2*x + 4
     >>> pquo(x**2 - 1, 2*x - 1)
     2*x + 1
 
@@ -4978,7 +4978,7 @@ def div(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> div(x**2 + 1, 2*x - 4, domain=ZZ)
-    (0, 1 + x**2)
+    (0, x**2 + 1)
     >>> div(x**2 + 1, 2*x - 4, domain=QQ)
     (x/2 + 1, 5)
 
@@ -5042,7 +5042,7 @@ def quo(f, g, *gens, **args):
     >>> from sympy.abc import x
 
     >>> quo(x**2 + 1, 2*x - 4)
-    1 + x/2
+    x/2 + 1
     >>> quo(x**2 - 1, x - 1)
     x + 1
 
@@ -5663,7 +5663,7 @@ def terms_gcd(f, *gens, **args):
     of one or more terms:
 
     >>> terms_gcd((3+3*x)*(x+x*y), expand=False)
-    (3*x + 3)*(x + x*y)
+    (3*x + 3)*(x*y + x)
 
     In order to traverse factors of a Mul or the arguments of other
     functions, the ``deep`` hint can be used:
@@ -5676,7 +5676,7 @@ def terms_gcd(f, *gens, **args):
     Rationals are factored out by default:
 
     >>> terms_gcd(x + y/2)
-    (y + 2*x)/2
+    (2*x + y)/2
 
     Only the y-term had a coefficient that was a fraction; if one
     does not want to factor out the 1/2 in cases like this, the
@@ -5860,7 +5860,7 @@ def primitive(f, *gens, **args):
     for recursive, non-destructive Rational extraction.
 
     >>> primitive(eq, expand=False)
-    (1, 2 + x*(2 + 2*x))
+    (1, x*(2*x + 2) + 2)
 
     >>> eq.as_content_primitive()
     (2, x*(x + 1) + 1)
@@ -6039,7 +6039,7 @@ def sqf_norm(f, *gens, **args):
     >>> from sympy.abc import x
 
     >>> sqf_norm(x**2 + 1, extension=[sqrt(3)])
-    (1, x**2 - 2*sqrt(3)*x + 4, x**4 - 4*x**2 + 16)
+    (1, -2*sqrt(3)*x + x**2 + 4, x**4 - 4*x**2 + 16)
 
     """
     options.allowed_flags(args, ['polys'])
@@ -6378,7 +6378,7 @@ def _torational_factor_list(p, x):
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
     >>> factors = _torational_factor_list(p, x); factors
-    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    (1, [(sqrt(2) + x - 2, 1), (sqrt(2) + x - 1, 1), (sqrt(2) + x + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
 
@@ -6500,7 +6500,7 @@ def factor(f, *gens, deep=False, **args):
     >>> factor((x**2 - 1)/(x**2 + 4*x + 4))
     (x - 1)*(x + 1)/(x + 2)**2
     >>> factor((x**2 + 4*x + 4)**10000000*(x**2 + 1))
-    (2 + x)**20000000*(1 + x**2)
+    (x + 2)**20000000*(x**2 + 1)
 
     By default, factor deals with an expression as a whole:
 
@@ -6520,7 +6520,7 @@ def factor(f, *gens, deep=False, **args):
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
     (3*exp(2) + 5*x*exp(7*x))*exp(-7*x)
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True, fraction=False)
-    5*x + 3*exp(2)*exp(-7*x)
+    3*exp(2)*exp(-7*x) + 5*x
 
     See Also
     ========
@@ -6726,7 +6726,7 @@ def all_roots(f, multiple=True, radicals=True):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
+    -sqrt(2)*x - sqrt(3)*x + sqrt(6) + x**2
     >>> all_roots(p)
     Traceback (most recent call last):
     ...
@@ -6902,7 +6902,7 @@ def real_roots(f, multiple=True, radicals=True):
     >>> from sympy import sqrt, expand
     >>> p = expand((x - sqrt(2))*(x - sqrt(3)))
     >>> print(p)
-    x**2 - sqrt(2)*x - sqrt(3)*x + sqrt(6)
+    -sqrt(2)*x - sqrt(3)*x + sqrt(6) + x**2
     >>> real_roots(p)
     Traceback (most recent call last):
     ...
@@ -7118,7 +7118,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     will appear as a sum. To recover a rational form use `together` on the result:
 
     >>> cancel(x/2 + 1)
-    1 + x/2
+    x/2 + 1
     >>> together(_)
     (x + 2)/2
     """

@@ -600,7 +600,7 @@ def solve(f, *symbols, **flags):
         >>> solve([x < 3, x**2 > 4], x)
         ((-oo < x) & (x < -2)) | ((2 < x) & (x < 3))
         >>> solve([x + y - 3, x > 3], x)
-        (3 < x) & (x < oo) & Eq(x, -y + 3)
+        (3 < x) & (x < oo) & Eq(x, 3 - y)
 
     Although checking of assumptions on symbols in relationals
     is not done, setting assumptions will affect how certain
@@ -653,7 +653,7 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)) - (27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)/3, -1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)) - (27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)/3, -1/(27/2 + 3*sqrt(69)/2)**(1/3) - (27/2 + 3*sqrt(69)/2)**(1/3)/3]
+        [-(27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)/3 - 1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 - sqrt(3)*I/2)), -(27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)/3 - 1/((27/2 + 3*sqrt(69)/2)**(1/3)*(-1/2 + sqrt(3)*I/2)), -(27/2 + 3*sqrt(69)/2)**(1/3)/3 - 1/(27/2 + 3*sqrt(69)/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -2655,7 +2655,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> list(ordered(tsolve(3**(2*x + 5) - 4, x)))
-    [log(2)/log(3) - 5/2, (-5*log(3)/2 + log(2) + I*pi)/log(3)]
+    [log(2)/log(3) - 5/2, (log(2) - 5*log(3)/2 + I*pi)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
@@ -3346,7 +3346,7 @@ def unrad(eq, *syms, **flags):
     >>> from sympy import sqrt, Rational, root
 
     >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
-    (64 - x**5, [])
+    (x**5 - 64, [])
     >>> unrad(sqrt(x) + root(x + 1, 3))
     (-x**3 + x**2 + 2*x + 1, [])
     >>> eq = sqrt(x) + root(x, 3) - 2

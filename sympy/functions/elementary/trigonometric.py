@@ -143,7 +143,7 @@ def _peeloff_pi(arg):
     >>> _peeloff_pi(x + pi/2)
     (x, 1/2)
     >>> _peeloff_pi(x + 2*pi/3 + pi*y)
-    (x + pi*y + pi/6, 1/2)
+    (pi*y + pi/6 + x, 1/2)
 
     """
     pi_coeff = S.Zero

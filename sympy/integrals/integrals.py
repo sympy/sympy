@@ -212,7 +212,7 @@ class Integral(AddWithLimits):
         transform can change the variable of integration
 
         >>> i.transform(x, u)
-        Integral(u*cos(1 - u**2), (u, 0, 1))
+        Integral(u*cos(u**2 - 1), (u, 0, 1))
 
         transform can perform u-substitution as long as a unique
         integrand is obtained:
@@ -1285,7 +1285,7 @@ class Integral(AddWithLimits):
         term decays as the square of n:
 
         >>> e.as_sum(method='midpoint').expand()
-        8/3 - 2/(3*_n**2)
+        -2/(3*_n**2) + 8/3
 
         A symbolic sum is returned with evaluate=False:
 
@@ -1548,7 +1548,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     Piecewise((gamma(a + 1), re(a) > -1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
-    gamma(1 + a)
+    gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
     (gamma(a + 1), re(a) > -1)

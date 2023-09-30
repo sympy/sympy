@@ -91,7 +91,7 @@ Derivatives of unspecified order can be created using tuple ``(x, n)`` where
     >>> expr.diff((x, n))
      n
     ∂  ⎛         m⎞
-    ───⎝(b + a⋅x) ⎠
+    ───⎝(a⋅x + b) ⎠
       n
     ∂x
 
@@ -183,11 +183,11 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎮        (x - 1) ⋅(x + 1) ⋅⎝ℯ  + 1⎠
     ⌡
     >>> integ.doit()
-       x
-      ℯ         ⎛ x    ⎞
-    ────── + log⎝ℯ  + 1⎠
-     2
-    x  - 1
+                     x
+       ⎛ x    ⎞     ℯ
+    log⎝ℯ  + 1⎠ + ──────
+                   2
+                  x  - 1
 
     >>> integ = Integral(sin(x**2), x)
     >>> integ

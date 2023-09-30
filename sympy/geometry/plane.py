@@ -160,7 +160,7 @@ class Plane(GeometryEntity):
         >>> p.arbitrary_point(u, v)
         Point3D(1, u + 1, v + 1)
         >>> p.arbitrary_point(t)
-        Point3D(1, 1 + cos(t), 1 + sin(t))
+        Point3D(1, cos(t) + 1, sin(t) + 1)
 
         While arbitrary values of u and v can move the point anywhere in
         the plane, the single-parameter point can be used to construct a

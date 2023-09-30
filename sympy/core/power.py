@@ -1759,7 +1759,7 @@ class Pow(Expr):
         >>> s = expand_power_base(eq); s.is_Mul, s
         (False, (2*x + 2)**y)
         >>> eq.as_content_primitive()
-        (1, (2*(1 + x))**y)
+        (1, (2*(x + 1))**y)
         >>> s = expand_power_base(_[1]); s.is_Mul, s
         (True, 2**y*(x + 1)**y)
 

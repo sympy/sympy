@@ -74,7 +74,7 @@ def bernoulli_poly(n, x=None, polys=False):
     >>> psum(1, 1, x).factor()
     x*(x + 1)/2
     >>> psum(2, 1, x).factor()
-    x*(1 + x)*(1 + 2*x)/6
+    x*(x + 1)*(2*x + 1)/6
     >>> psum(3, 1, x).factor()
     x**2*(x + 1)**2/4
 

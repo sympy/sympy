@@ -677,9 +677,9 @@ class LRASolver():
 
         >>> LRASolver._pivot(_, 1, 0)
         Matrix([
-        [ 0, -a*e/d + b, -a*f/d + c],
-        [-1,       -e/d,       -f/d],
-        [ 0,  h - e*g/d,  i - f*g/d]])
+        [ 0, b - a*e/d, c - a*f/d],
+        [-1,      -e/d,      -f/d],
+        [ 0, h - e*g/d, i - f*g/d]])
 
         We rearrange equation 1 in terms of variable 0 (x)
         and substitute to remove x from the other equations.

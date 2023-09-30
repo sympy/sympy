@@ -1255,7 +1255,7 @@ class JzKet(SpinState, Ket):
     up the tensor product is rewritten to the new basis:
 
         >>> TensorProduct(JzKet(1,1),JxKet(1,1)).rewrite('Jz')
-        |1,1>x|1,-1>/2 + sqrt(2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
+        sqrt(2)*|1,1>x|1,0>/2 + |1,1>x|1,-1>/2 + |1,1>x|1,1>/2
 
     The represent method for TensorProduct's gives the vector representation of
     the state. Note that the state in the product basis is the equivalent of the
@@ -1719,7 +1719,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     Note: that the resulting eigenstates are JxKetCoupled
 
         >>> JzKetCoupled(1,1,(1,1)).rewrite("Jx")
-        |1,-1,j1=1,j2=1>/2 - sqrt(2)*|1,0,j1=1,j2=1>/2 + |1,1,j1=1,j2=1>/2
+        -sqrt(2)*|1,0,j1=1,j2=1>/2 + |1,-1,j1=1,j2=1>/2 + |1,1,j1=1,j2=1>/2
 
     The rewrite method can be used to convert a coupled state to an uncoupled
     state. This is done by passing coupled=False to the rewrite function:
@@ -1843,7 +1843,7 @@ def couple(expr, jcoupling_list=None):
     the first and third spaces:
 
         >>> couple(TensorProduct(JzKet(1,1), JzKet(1,1), JzKet(1,0)), ((1,3),(1,2)) )
-        sqrt(2)*|2,2,j1=1,j2=1,j3=1,j(1,3)=1>/2 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,3)=2>/6 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,3)=2>/3
+        sqrt(2)*|2,2,j1=1,j2=1,j3=1,j(1,3)=1>/2 + sqrt(3)*|3,2,j1=1,j2=1,j3=1,j(1,3)=2>/3 - sqrt(6)*|2,2,j1=1,j2=1,j3=1,j(1,3)=2>/6
 
     Couple a tensor product of symbolic states:
 
@@ -2015,13 +2015,13 @@ def uncouple(expr, jn=None, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
         >>> from sympy import S
         >>> uncouple(JzKetCoupled(1, 0, (S(1)/2, S(1)/2)))
-        sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2 + sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2
+        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKet
         >>> uncouple(JzKet(1, 0), (S(1)/2, S(1)/2))
-        sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2 + sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2
+        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 

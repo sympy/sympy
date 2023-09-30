@@ -532,7 +532,7 @@ def glsl_code(expr,assign_to=None,**settings):
     >>> i = Idx('i', len_y-1)
     >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
     >>> glsl_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[1 + i] - y[i])/(t[1 + i] - t[i]);'
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])

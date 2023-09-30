@@ -46,7 +46,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
     >>> y = approximants(p, t, simplify=True)
     >>> for k in range(3): print(next(y))
     1
-    1/(1 - t*(x + 1))
+    -1/(t*(x + 1) - 1)
     nan
 
     See Also

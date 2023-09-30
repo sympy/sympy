@@ -528,7 +528,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
     >>> tf2
-    TransferFunction(a*p**3 - a*p**2 + p*s, p + a**2, p)
+    TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
     >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
     >>> tf3
     TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
@@ -537,7 +537,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     >>> tf4 = TransferFunction(-a + s, p**2 + s, p)
     >>> -tf4
-    TransferFunction(a - s, s + p**2, p)
+    TransferFunction(a - s, p**2 + s, p)
     >>> tf5 = TransferFunction(s**4 - 2*s**3 + 5*s + 4, s + 4, s)
     >>> -tf5
     TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
@@ -593,9 +593,9 @@ class TransferFunction(SISOLinearTimeInvariant):
     resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
 
     >>> ((tf9 + tf10) * tf12).doit()
-    TransferFunction((1 - s)*((s + 1)*(s + 3) + (s - p)*(s**2 + s + 1)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    TransferFunction((1 - s)*((s - p)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
     >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
-    TransferFunction((s - 1)*(s + 1)*(s - p)*(s**2 + 4) - (1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    TransferFunction((s - p)*(s - 1)*(s + 1)*(s**2 + 4) - (1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
 
     See Also
     ========
@@ -664,7 +664,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
         >>> tf2 = TransferFunction.from_rational_expression(expr2, p)
         >>> tf2
-        TransferFunction(a*p**3 - a*p**2 + p*s, p + a**2, p)
+        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
 
         In case of conflict between two or more variables in a expression, SymPy will
         raise a ``ValueError``, if ``var`` is not passed by the user.
@@ -738,7 +738,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> den = [3, 2, 2, 1]
         >>> tf = TransferFunction.from_coeff_lists(num, den, s)
         >>> tf
-        TransferFunction(2 + s**2, 3*s**3 + 2*s**2 + 2*s + 1, s)
+        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
 
         # Create a Transfer Function with more than one variable
         >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
@@ -1381,7 +1381,7 @@ class Series(SISOLinearTimeInvariant):
     TransferFunction(-p**2*(s**3 - 2)*(a*p**2 + b*s), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
     >>> S4 = Series(tf2, Parallel(tf1, -tf3))
     >>> S4.doit()
-    TransferFunction((s**3 - 2)*((p + s)*(a*p**2 + b*s) - p**2*(s - p)), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
+    TransferFunction((s**3 - 2)*((p + s)*(a*p**2 + b*s) - p**2*(s - p)), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
 
     Notes
     =====
@@ -1644,7 +1644,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     [ - ]                 [-  -]
     [ 1 ]{t}              [s  1]{t}
     >>> MIMOSeries(tfm_c, tfm_b, tfm_a).doit()
-    TransferFunctionMatrix(((TransferFunction(25*s + 150*s**4, 6*s**3, s), TransferFunction(5*s + 150*s**4, 6*s**2, s)), (TransferFunction(150*s**3 + 25, 6*s**3, s), TransferFunction(150*s**3 + 5, 6*s**2, s))))
+    TransferFunctionMatrix(((TransferFunction(150*s**4 + 25*s, 6*s**3, s), TransferFunction(150*s**4 + 5*s, 6*s**2, s)), (TransferFunction(150*s**3 + 25, 6*s**3, s), TransferFunction(150*s**3 + 5, 6*s**2, s))))
     >>> pprint(_, use_unicode=False)  # (2 Inputs -A-> 2 Outputs) -> (2 Inputs -B-> 1 Output) -> (1 Input -C-> 2 Outputs) is equivalent to (2 Inputs -Series Equivalent-> 2 Outputs).
     [     4              4      ]
     [150*s  + 25*s  150*s  + 5*s]
@@ -1844,7 +1844,7 @@ class Parallel(SISOLinearTimeInvariant):
     >>> Parallel(tf1, tf2, -tf3).doit()
     TransferFunction(-p**2*(s - p)*(s**4 + 5*s + 6) + (s - p)*(p + s)*(s**3 - 2) + (p + s)*(a*p**2 + b*s)*(s**4 + 5*s + 6), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
     >>> Parallel(tf2, Series(tf1, -tf3)).doit()
-    TransferFunction((p + s)*(s - p)*(s**3 - 2) - p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6), (p + s)*(s - p)*(s**4 + 5*s + 6), s)
+    TransferFunction((s - p)*(p + s)*(s**3 - 2) - p**2*(a*p**2 + b*s)*(s**4 + 5*s + 6), (s - p)*(p + s)*(s**4 + 5*s + 6), s)
 
     Notes
     =====
@@ -1902,7 +1902,7 @@ class Parallel(SISOLinearTimeInvariant):
         >>> Parallel(tf2, tf1).doit()
         TransferFunction((s - p)*(s**3 - 2) + (a*p**2 + b*s)*(s**4 + 5*s + 6), (s - p)*(s**4 + 5*s + 6), s)
         >>> Parallel(-tf1, -tf2).doit()
-        TransferFunction((2 - s**3)*(s - p) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (s - p)*(s**4 + 5*s + 6), s)
+        TransferFunction((s - p)*(2 - s**3) + (-a*p**2 - b*s)*(s**4 + 5*s + 6), (s - p)*(s**4 + 5*s + 6), s)
 
         """
 
@@ -2075,7 +2075,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     [ 2        1   ]      [  1      2    ]      [  s      2    ]
     [s  - 1        ]{t}   [        s  - 1]{t}   [        s  - 1]{t}
     >>> MIMOParallel(tfm_a, tfm_b, tfm_c).doit()
-    TransferFunctionMatrix(((TransferFunction(s**2 + s*(2 + 2*s) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(2 + s) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
+    TransferFunctionMatrix(((TransferFunction(s**2 + s*(2*s + 2) - 1, s*(s**2 - 1), s), TransferFunction(2*s**2 + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s)), (TransferFunction(s**2 + s*(s + 2) + 5*s*(s**2 - 1) - 1, s*(s**2 - 1), s), TransferFunction(5*s**2 + 2*s - 3, s**2 - 1, s))))
     >>> pprint(_, use_unicode=False)
     [       2                              2       / 2    \    ]
     [      s  + s*(2*s + 2) - 1         2*s  + 5*s*\s  - 1/ - 1]
@@ -2272,7 +2272,7 @@ class Feedback(SISOLinearTimeInvariant):
     interconnection using ``.doit()`` method.
 
     >>> F1.doit()
-    TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((5*s - 10)*(3*s**2 + 7*s - 3) + (s + 7)*(s**2 - 4*s + 2))*(s**2 - 4*s + 2), s)
+    TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
     >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
     >>> C = TransferFunction(5*s + 10, s + 10, s)
     >>> F2 = Feedback(G*C, TransferFunction(1, 1, s))
@@ -2282,7 +2282,7 @@ class Feedback(SISOLinearTimeInvariant):
     To negate a ``Feedback`` object, the ``-`` operator can be prepended:
 
     >>> -F1
-    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(10 - 5*s, 7 + s, s), -1)
+    Feedback(TransferFunction(-3*s**2 - 7*s + 3, s**2 - 4*s + 2, s), TransferFunction(10 - 5*s, s + 7, s), -1)
     >>> -F2
     Feedback(Series(TransferFunction(-1, 1, s), TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s), TransferFunction(5*s + 10, s + 10, s)), TransferFunction(-1, 1, s), -1)
 
@@ -2442,7 +2442,7 @@ class Feedback(SISOLinearTimeInvariant):
         >>> controller = TransferFunction(5*s - 10, s + 7, s)
         >>> F1 = Feedback(plant, controller)
         >>> F1.doit()
-        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((5*s - 10)*(3*s**2 + 7*s - 3) + (s + 7)*(s**2 - 4*s + 2))*(s**2 - 4*s + 2), s)
+        TransferFunction((s + 7)*(s**2 - 4*s + 2)*(3*s**2 + 7*s - 3), ((s + 7)*(s**2 - 4*s + 2) + (5*s - 10)*(3*s**2 + 7*s - 3))*(s**2 - 4*s + 2), s)
         >>> G = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
         >>> F2 = Feedback(G, TransferFunction(1, 1, s))
         >>> F2.doit()
@@ -2789,13 +2789,13 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         |    [  -    -----]    [-  -]   |     [  -    -----]
         \    [  1      s  ]{t} [1  1]{t}/     [  1      s  ]{t}
         >>> pprint(F_1.doit(), use_unicode=False)
-        [  -s           1 - s       ]
+        [  -s           s - 1       ]
         [-------     -----------    ]
-        [6*s - 1     s*(1 - 6*s)    ]
+        [6*s - 1     s*(6*s - 1)    ]
         [                           ]
-        [5*s - 5  (1 - s)*(6*s + 24)]
+        [5*s - 5  (s - 1)*(6*s + 24)]
         [-------  ------------------]
-        [6*s - 1     s*(1 - 6*s)    ]{t}
+        [6*s - 1     s*(6*s - 1)    ]{t}
 
         If the user wants the resultant ``TransferFunctionMatrix`` object without
         canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
@@ -2814,16 +2814,16 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         the ``expand`` kwarg should be passed as ``True``.
 
         >>> pprint(F_1.doit(expand=True), use_unicode=False)  # XXX prefer -num/-den in bot right
-        [  -s           1 - s       ]
-        [-------      ----------    ]
-        [6*s - 1           2        ]
-        [             - 6*s  + s    ]
-        [                           ]
-        [              2            ]
-        [5*s - 5  - 6*s  - 18*s + 24]
-        [-------  ------------------]
-        [6*s - 1           2        ]
-        [             - 6*s  + s    ]{t}
+        [  -s          s - 1      ]
+        [-------      --------    ]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]
+        [                         ]
+        [            2            ]
+        [5*s - 5  6*s  + 18*s - 24]
+        [-------  ----------------]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]{t}
 
         """
         _mat = self.sensitivity * self.sys1.doit()._expr_mat
@@ -3056,9 +3056,9 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     >>> tfm_6
     TransferFunctionMatrix(((Series(TransferFunction(3, s + 2, s), TransferFunction(p - a, 9*s - 9, s)), Parallel(TransferFunction(3, s + 2, s), TransferFunction(p - a, 9*s - 9, s))),))
     >>> pprint(tfm_6, use_unicode=False)
-    [ p - a    3      3      p - a ]
-    [-------*-----  ----- + -------]
-    [9*s - 9 s + 2  s + 2   9*s - 9]{t}
+    [ p - a    3     p - a      3  ]
+    [-------*-----  ------- + -----]
+    [9*s - 9 s + 2  9*s - 9   s + 2]{t}
     >>> tfm_6.doit()
     TransferFunctionMatrix(((TransferFunction(3*p - 3*a, (s + 2)*(9*s - 9), s), TransferFunction(27*s + (p - a)*(s + 2) - 27, (s + 2)*(9*s - 9), s)),))
     >>> pprint(_, use_unicode=False)
@@ -3076,20 +3076,20 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     [   2    s   ]
     [s*s         ]
     [            ]
-    [ 1    1   1 ]
-    [ --   - + --]
-    [  2   s    2]
-    [ s        s ]{t}
+    [ 1    1    1]
+    [ --   -- + -]
+    [  2    2   s]
+    [ s    s     ]{t}
     >>> tfm_7.doit()
-    TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s + s**2, s**3, s))))
+    TransferFunctionMatrix(((TransferFunction(1, s**3, s), TransferFunction(1, s, s)), (TransferFunction(1, s**2, s), TransferFunction(s**2 + s, s**3, s))))
     >>> pprint(_, use_unicode=False)
     [1     1   ]
     [--    -   ]
     [ 3    s   ]
     [s         ]
     [          ]
-    [         2]
-    [1   s + s ]
+    [     2    ]
+    [1   s  + s]
     [--  ------]
     [ 2     3  ]
     [s     s   ]{t}
@@ -3199,7 +3199,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     >>> (-tfm_8 + tfm_10 + tfm_8*tfm_9).doit()
     TransferFunctionMatrix(((TransferFunction((a + s)*(s + 2)**3 - 3*(s + 2)**2*(s**2 + s + 1) - 9*(s + 2)*(s**2 + s + 1), (s + 2)**3*(s**2 + s + 1), s),), (TransferFunction((p + s)*(-3*p**4 + 9*p - 6), (p + s)**2*(s + 2), s),), (TransferFunction((p - a)*(s + 2)*(s**2 + s + 1)**2 + (a + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + (3*a + 3*s)*(9*s - 9)*(s**2 + s + 1), (s + 2)*(9*s - 9)*(s**2 + s + 1)**2, s),)))
     >>> (-tfm_12 * -tfm_8 * -tfm_9).rewrite(TransferFunctionMatrix)
-    TransferFunctionMatrix(((TransferFunction(3*(-3*a - 3*s)*(p + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + 3*(a + s)*(s + 2)**2*(9*s - 9)*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(p + s)*(3*p - 3*a)*(s + 2)*(s**2 + s + 1)**2, (p + s)*(s + 2)**3*(9*s - 9)*(s**2 + s + 1)**2, s),), (TransferFunction(3*(3*a + 3*s)*(p + s)**2*(s + 2)*(9*s - 9) + 3*(p - a)*(p + s)*(s + 2)**2*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(p + s)*(s + 2)*(9*s - 9)*(-3*p**4 + 9*p - 6)*(s**2 + s + 1), (p + s)**2*(s + 2)**3*(9*s - 9)*(s**2 + s + 1), s),)))
+    TransferFunctionMatrix(((TransferFunction(3*(3*p - 3*a)*(p + s)*(s + 2)*(s**2 + s + 1)**2 + 3*(-3*a - 3*s)*(p + s)*(s + 2)*(9*s - 9)*(s**2 + s + 1) + 3*(a + s)*(s + 2)**2*(9*s - 9)*(-p**4 + 3*p - 2)*(s**2 + s + 1), (p + s)*(s + 2)**3*(9*s - 9)*(s**2 + s + 1)**2, s),), (TransferFunction(3*(p - a)*(p + s)*(s + 2)**2*(-p**4 + 3*p - 2)*(s**2 + s + 1) + 3*(3*a + 3*s)*(p + s)**2*(s + 2)*(9*s - 9) + 3*(p + s)*(s + 2)*(9*s - 9)*(-3*p**4 + 9*p - 6)*(s**2 + s + 1), (p + s)**2*(s + 2)**3*(9*s - 9)*(s**2 + s + 1), s),)))
 
     See Also
     ========

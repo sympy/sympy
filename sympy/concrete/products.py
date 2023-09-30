@@ -167,7 +167,7 @@ class Product(ExprWithIntLimits):
     RisingFactorial(b, a - b + 1)
     >>> P2 = Product(i, (i, a+1, b-1)).doit()
     >>> P2
-    RisingFactorial(1 + a, -a + b - 1)
+    RisingFactorial(a + 1, -a + b - 1)
     >>> P1 * P2
     RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)
     >>> combsimp(P1 * P2)

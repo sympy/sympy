@@ -243,7 +243,7 @@ def vsprint(expr, **settings):
     >>> u1, u2 = dynamicsymbols('u1 u2')
     >>> u2d = dynamicsymbols('u2', level=1)
     >>> print("%s = %s" % (u1, u2 + u2d))
-    u1(t) = Derivative(u2(t), t) + u2(t)
+    u1(t) = u2(t) + Derivative(u2(t), t)
     >>> print("%s = %s" % (vsprint(u1), vsprint(u2 + u2d)))
     u1 = u2 + u2'
 

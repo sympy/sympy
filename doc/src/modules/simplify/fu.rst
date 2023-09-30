@@ -96,7 +96,7 @@ help with the simplification, it is not retained, so
 (but unsimplified in the trigonometric sense) expression:
 
     >>> fu(a*cos(x)*cos(y) + a*sin(x)*sin(z))
-    a*cos(x)*cos(y) + a*sin(x)*sin(z)
+    a*sin(x)*sin(z) + a*cos(x)*cos(y)
 
 In some cases factoring might be a good idea, but the user is left
 to make that decision. For example:

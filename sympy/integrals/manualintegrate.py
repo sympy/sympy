@@ -2011,10 +2011,10 @@ def integral_steps(integrand, symbol, **options):
     # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(integrand=(x**2 + 3)**2, variable=x, rewritten=x**4 + 6*x**2 + 9,
     substep=AddRule(integrand=x**4 + 6*x**2 + 9, variable=x,
-    substeps=[PowerRule(integrand=x**4, variable=x, base=x, exp=4),
+    substeps=[ConstantRule(integrand=9, variable=x),
+    PowerRule(integrand=x**4, variable=x, base=x, exp=4),
     ConstantTimesRule(integrand=6*x**2, variable=x, constant=6, other=x**2,
-    substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2)),
-    ConstantRule(integrand=9, variable=x)]))
+    substep=PowerRule(integrand=x**2, variable=x, base=x, exp=2))]))
 
     Returns
     =======
@@ -2140,9 +2140,9 @@ def manualintegrate(f, var):
     >>> integrate(cos(x)**4 * sin(x), x)
     -cos(x)**5/5
     >>> manualintegrate(cos(x)**4 * sin(x)**3, x)
-    -cos(x)**5/5 + cos(x)**7/7
+    cos(x)**7/7 - cos(x)**5/5
     >>> integrate(cos(x)**4 * sin(x)**3, x)
-    -cos(x)**5/5 + cos(x)**7/7
+    cos(x)**7/7 - cos(x)**5/5
     >>> manualintegrate(tan(x), x)
     -log(cos(x))
     >>> integrate(tan(x), x)

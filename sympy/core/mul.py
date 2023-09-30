@@ -2133,7 +2133,7 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
     >>> _keep_coeff(S.Half, x + 2)
     (x + 2)/2
     >>> _keep_coeff(S.Half, x + 2, clear=False)
-    1 + x/2
+    x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
     >>> _keep_coeff(S(-1), x + y)

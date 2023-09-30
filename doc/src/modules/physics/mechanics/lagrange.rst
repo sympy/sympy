@@ -94,7 +94,7 @@ general, there will be as many multipliers as there are constraint equations. ::
 
   >>> LM.form_lagranges_equations()
   Matrix([
-  [2*q1'' + lam1],
+  [lam1 + 2*q1''],
   [2*q2'' - lam1]])
 
 Also in the case of systems with constraints, the 'full' mass matrix is

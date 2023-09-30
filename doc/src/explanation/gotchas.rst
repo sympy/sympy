@@ -579,10 +579,10 @@ In :command:`isympy`, with the :command:`ipython` shell::
     >>> (x + 1)**2
     (x + 1)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
-       2*x
-      x
-    - ----- + 3
-      x + 1
+         2*x
+        x
+    3 - -----
+        x + 1
 
 
 Inverse Trig Functions

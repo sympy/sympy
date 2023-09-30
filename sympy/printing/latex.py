@@ -3220,9 +3220,9 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     Using ``IEEEeqnarray``:
     >>> print(multiline_latex(x, expr, environment="IEEEeqnarray"))
     \begin{IEEEeqnarray}{rCl}
-    x & = &- \cos{\left(\log{\left(y \right)} \right)} \nonumber\\
-    & & + e^{i \alpha} \nonumber\\
-    & & + \sin{\left(\alpha y \right)}
+    x & = & e^{i \alpha} \nonumber\\
+    & & + \sin{\left(\alpha y \right)} \nonumber\\
+    & & - \cos{\left(\log{\left(y \right)} \right)}
     \end{IEEEeqnarray}
 
     Notes

@@ -39,7 +39,7 @@ always perform arithmetic expand to obtain the desired normal form:
     re(x) - im(y) + I*re(y) + I*im(x)
 
     >>> sin(x + I*y).expand(complex=True)
-    sin(re(x) - im(y))*cosh(im(x) + re(y)) + I*cos(re(x) - im(y))*sinh(im(x) + re(y))
+    sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))
 
 Note also that the same behavior can be obtained by using ``as_real_imag()``
 method. However it will return a tuple containing the real part in the first
@@ -47,10 +47,10 @@ place and the imaginary part in the other. This can be also done in a two step
 process by using ``collect`` function:
 
     >>> (x + I*y).as_real_imag()
-    (re(x) - im(y), im(x) + re(y))
+    (re(x) - im(y), re(y) + im(x))
 
     >>> collect((x + I*y).expand(complex=True), I, evaluate=False)
-    {1: re(x) - im(y), I: im(x) + re(y)}
+    {1: re(x) - im(y), I: re(y) + im(x)}
 
 There is also possibility for expanding expressions in terms of expressions of
 different kind. This is very general type of expanding and usually you would
@@ -82,7 +82,7 @@ in the ``cse`` function. Examples::
     >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))),
     ...     use_unicode=True)
     ⎛                             ⎡  ________   ________⎤⎞
-    ⎝[(x₀, cos(y) + sin(x + 1))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
+    ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
     ⎛                         ⎡       ____⎤⎞

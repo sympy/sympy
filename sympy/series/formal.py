@@ -266,7 +266,7 @@ def exp_re(DE, r, k):
     >>> f, r = Function('f'), Function('r')
 
     >>> exp_re(-f(x) + Derivative(f(x)), r, k)
-    r(1 + k) - r(k)
+    r(k + 1) - r(k)
     >>> exp_re(Derivative(f(x), x) + Derivative(f(x), (x, 2)), r, k)
     r(k) + r(k + 1)
 
@@ -317,7 +317,7 @@ def hyper_re(DE, r, k):
     >>> f, r = Function('f'), Function('r')
 
     >>> hyper_re(-f(x) + Derivative(f(x)), r, k)
-    (1 + k)*r(1 + k) - r(k)
+    (k + 1)*r(k + 1) - r(k)
     >>> hyper_re(-x*f(x) + Derivative(f(x), (x, 2)), r, k)
     (k + 2)*(k + 3)*r(k + 3) - r(k)
 

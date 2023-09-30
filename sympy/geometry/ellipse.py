@@ -502,7 +502,7 @@ class Ellipse(GeometrySet):
         >>> from sympy import Point, Ellipse
         >>> e1 = Ellipse(Point(1, 0), 3, 2)
         >>> e1.evolute()
-        2**(2/3)*y**(2/3) + (3*x - 3)**(2/3) - 5**(2/3)
+        2**(2/3)*y**(2/3) - 5**(2/3) + (3*x - 3)**(2/3)
         """
         if len(self.args) != 3:
             raise NotImplementedError('Evolute of arbitrary Ellipse is not supported.')

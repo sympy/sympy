@@ -212,7 +212,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> (C*X - D)[0]
     x + y + 1
     >>> [i >= j for i, j in zip(A*X, B)]
-    [y + 2*x >= 4]
+    [2*x + y >= 4]
 
     Since `_simplex` will do a minimization for constraints given as
     ``A*x <= B``, the signs of ``A`` and ``B`` must be negated since

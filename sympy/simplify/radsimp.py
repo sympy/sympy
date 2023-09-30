@@ -125,7 +125,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         >>> collect(x*exp(x) + sin(x)*y + sin(x)*2 + 3*x, x, exact=None)
         x*exp(x) + 3*x + (y + 2)*sin(x)
         >>> collect(a*x*y + x*y + b*x + x, [x, y], exact=None)
-        x*(1 + b) + x*y*(1 + a)
+        x*y*(a + 1) + x*(b + 1)
 
     You can also apply this function to differential equations, where
     derivatives of arbitrary order can be collected. Note that if you
@@ -146,7 +146,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         a*Derivative(f(x), (x, 2)) + b*Derivative(f(x), (x, 2))
 
         >>> collect(a*D(f,x) + b*D(f,x) + a*f + b*f, f)
-        (a + b)*Derivative(f(x), x) + (a + b)*f(x)
+        (a + b)*f(x) + (a + b)*Derivative(f(x), x)
 
     Or you can even match both derivative order and exponent at the same time::
 
@@ -524,7 +524,7 @@ def collect_sqrt(expr, evaluate=None):
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r3)
     sqrt(2)*(a + b) + sqrt(3)*(a + b)
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5)
-    sqrt(3)*a + sqrt(5)*b + sqrt(2)*(a + b)
+    sqrt(2)*(a + b) + sqrt(3)*a + sqrt(5)*b
 
     If evaluate is False then the arguments will be sorted and
     returned as a list and a count of the number of sqrt-containing
@@ -590,7 +590,7 @@ def collect_abs(expr):
     >>> from sympy.simplify.radsimp import collect_abs
     >>> from sympy.abc import x
     >>> collect_abs(abs(x + 1)/abs(x**2 - 1))
-    Abs((x + 1)/(1 - x**2))
+    Abs((x + 1)/(x**2 - 1))
     >>> collect_abs(abs(1/x))
     Abs(1/x)
     """
@@ -672,7 +672,7 @@ def collect_const(expr, *vars, Numbers=True):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7))
     (3 + sqrt(2))*(sqrt(3) + sqrt(7))
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
-    sqrt(7) + sqrt(3)*(3 + sqrt(2)) + sqrt(7)*(2 + sqrt(2))
+    sqrt(3)*(3 + sqrt(2)) + sqrt(7)*(2 + sqrt(2)) + sqrt(7)
 
     The collection is sign-sensitive, giving higher precedence to the
     unsigned values:
@@ -1092,7 +1092,7 @@ def fraction(expr, exact=False):
 
        >>> u = Mul(2, x + 1, evaluate=False)
        >>> fraction(u)
-       (2 + 2*x, 1)
+       (2*x + 2, 1)
        >>> fraction(u, exact=True)
        (2*(x  + 1), 1)
     """
@@ -1170,7 +1170,7 @@ def split_surds(expr):
     >>> from sympy import sqrt
     >>> from sympy.simplify.radsimp import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
-    (3, 3 + sqrt(2) + sqrt(5), sqrt(5)/7 + sqrt(10))
+    (3, sqrt(2) + sqrt(5) + 3, sqrt(10) + sqrt(5)/7)
     """
     args = sorted(expr.args, key=default_sort_key)
     coeff_muls = [x.as_coeff_Mul() for x in args]

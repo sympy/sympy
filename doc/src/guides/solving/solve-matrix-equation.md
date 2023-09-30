@@ -55,11 +55,11 @@ equation formulation $Ax=b$ where
 >>> A.solve(b)
 ⎡  2⋅e  ⎤
 ⎢───────⎥
-⎢d + c⋅e⎥
+⎢c⋅e + d⎥
 ⎢       ⎥
 ⎢   2   ⎥
 ⎢───────⎥
-⎣d + c⋅e⎦
+⎣c⋅e + d⎦
 ```
 
 ## Guidance
@@ -110,13 +110,13 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
     ⎣0⎦
 >>> solution = A.LUsolve(b)
 >>> solution
-    ⎡  2⋅e  ⎤
-    ⎢───────⎥
-    ⎢d + c⋅e⎥
-    ⎢       ⎥
-    ⎢   2   ⎥
-    ⎢───────⎥
-    ⎣d + c⋅e⎦
+⎡  2⋅e  ⎤
+⎢───────⎥
+⎢c⋅e + d⎥
+⎢       ⎥
+⎢   2   ⎥
+⎢───────⎥
+⎣c⋅e + d⎦
 >>> # Demonstrate that solution is correct
 >>> simplify(A * solution)
     ⎡2⎤
@@ -131,11 +131,11 @@ via {meth}`~sympy.matrices.matrices.MatrixBase.LUsolve`:
 >>> solution2
 ⎡  4⋅e  ⎤
 ⎢───────⎥
-⎢d + c⋅e⎥
+⎢c⋅e + d⎥
 ⎢       ⎥
 ⎢   4   ⎥
 ⎢───────⎥
-⎣d + c⋅e⎦
+⎣c⋅e + d⎦
 >>> # Demonstrate that solution2 is correct
 >>> simplify(A * solution2)
     ⎡4⎤
@@ -165,21 +165,21 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 >>> inv
 ⎡   e        d   ⎤
 ⎢───────  ───────⎥
-⎢d + c⋅e  d + c⋅e⎥
+⎢c⋅e + d  c⋅e + d⎥
 ⎢                ⎥
 ⎢   1       -c   ⎥
 ⎢───────  ───────⎥
-⎣d + c⋅e  d + c⋅e⎦
+⎣c⋅e + d  c⋅e + d⎦
 >>> # Solves Ax = b for x
 >>> solution = inv * b
 >>> solution
-    ⎡  2⋅e  ⎤
-    ⎢───────⎥
-    ⎢d + c⋅e⎥
-    ⎢       ⎥
-    ⎢   2   ⎥
-    ⎢───────⎥
-    ⎣d + c⋅e⎦
+⎡  2⋅e  ⎤
+⎢───────⎥
+⎢c⋅e + d⎥
+⎢       ⎥
+⎢   2   ⎥
+⎢───────⎥
+⎣c⋅e + d⎦
 >>> # Demonstrate that solution is correct
 >>> simplify(A * solution)
     ⎡2⎤
@@ -190,11 +190,11 @@ is not a priority, you can use {meth}`~sympy.matrices.matrices.MatrixBase.inv`:
 >>> solution2
 ⎡  4⋅e  ⎤
 ⎢───────⎥
-⎢d + c⋅e⎥
+⎢c⋅e + d⎥
 ⎢       ⎥
 ⎢   4   ⎥
 ⎢───────⎥
-⎣d + c⋅e⎦
+⎣c⋅e + d⎦
 >>> # Demonstrate that solution2 is correct
 >>> simplify(A * solution2)
     ⎡4⎤
@@ -272,18 +272,18 @@ produces the constants vector $b$:
 >>> b = Matrix([2, 0])
 >>> solution = A.solve(b)
 >>> solution
-    ⎡  2⋅e  ⎤
-    ⎢───────⎥
-    ⎢d + c⋅e⎥
-    ⎢       ⎥
-    ⎢   2   ⎥
-    ⎢───────⎥
-    ⎣d + c⋅e⎦
+⎡  2⋅e  ⎤
+⎢───────⎥
+⎢c⋅e + d⎥
+⎢       ⎥
+⎢   2   ⎥
+⎢───────⎥
+⎣c⋅e + d⎦
 >>> # Not immediately obvious whether this result is a zeroes vector
 >>> (A * solution) - b
 ⎡ 2⋅c⋅e      2⋅d      ⎤
 ⎢─────── + ─────── - 2⎥
-⎢d + c⋅e   d + c⋅e    ⎥
+⎢c⋅e + d   c⋅e + d    ⎥
 ⎢                     ⎥
 ⎣          0          ⎦
 >>> # simplify reveals that this result is a zeroes vector
@@ -307,7 +307,7 @@ list of the elements using list comprehension
 >>> [element for element in solution]
 ⎡  2⋅e       2   ⎤
 ⎢───────, ───────⎥
-⎣d + c⋅e  d + c⋅e⎦
+⎣c⋅e + d  c⋅e + d⎦
 ```
 
 or you can extract individual elements by subscripting
@@ -316,7 +316,7 @@ or you can extract individual elements by subscripting
 >>> solution[0]
   2⋅e
 ───────
-d + c⋅e
+c⋅e + d
 ```
 
 ## Equations With No Solution

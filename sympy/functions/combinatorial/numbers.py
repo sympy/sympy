@@ -853,7 +853,7 @@ class harmonic(Function):
     >>> from sympy import expand_func
 
     >>> expand_func(harmonic(n+4))
-    harmonic(n) + 1/(4 + n) + 1/(3 + n) + 1/(2 + n) + 1/(1 + n)
+    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
 
     >>> expand_func(harmonic(n-4))
     harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
@@ -1227,7 +1227,7 @@ class catalan(Function):
     continuous real function in n:
 
     >>> diff(catalan(n), n)
-    (log(4) + polygamma(0, 1/2 + n) - polygamma(0, 2 + n))*catalan(n)
+    (log(4) + polygamma(0, n + 1/2) - polygamma(0, n + 2))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:

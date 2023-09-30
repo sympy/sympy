@@ -1111,7 +1111,7 @@ class Add(Expr, AssocOp):
         (2, x + 2*y)
 
         >>> (2*x/3 + 4*y/9).primitive()
-        (2/9, 2*y + 3*x)
+        (2/9, 3*x + 2*y)
 
         >>> (2*x/3 + 4.2*y).primitive()
         (1/3, 2*x + 12.6*y)
@@ -1119,7 +1119,7 @@ class Add(Expr, AssocOp):
         No subprocessing of term factors is performed:
 
         >>> ((2 + 2*x)*x + 2).primitive()
-        (1, 2 + x*(2 + 2*x))
+        (1, x*(2*x + 2) + 2)
 
         Recursive processing can be done with the ``as_content_primitive()``
         method:

@@ -106,7 +106,7 @@ again are calculated automatically when first needed. ::
   >>> Steer.v2pt_theory(WR_mc, N, Frame)
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y
   >>> Frame_mc.v2pt_theory(WR_mc, N, Frame)
-  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framecg3*(u1*sin(q2) + u4)*Frame.x + (-framecg1*(u2*sin(htangle + q4) + u1*cos(htangle + q4)*cos(q2)) - framecg3*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2)))*Frame.y + framecg1*(u1*sin(q2) + u4)*Frame.z
+  WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framecg3*(u1*sin(q2) + u4)*Frame.x + (-framecg1*(u1*cos(htangle + q4)*cos(q2) + u2*sin(htangle + q4)) - framecg3*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2)))*Frame.y + framecg1*(u1*sin(q2) + u4)*Frame.z
   >>> Fork_mc.v2pt_theory(Steer, N, Fork)
   WRrad*(u1*sin(q2) + u3 + u4)*R.x - WRrad*u2*R.y + framelength*(u1*sin(q2) + u4)*Frame.x - framelength*(u2*cos(htangle + q4) - u1*sin(htangle + q4)*cos(q2))*Frame.y + forkcg3*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.x + (-forkcg1*((cos(htangle + q4)*cos(q2)*cos(q5) - sin(q2)*sin(q5))*u1 + u2*sin(htangle + q4)*cos(q5) - u4*sin(q5)) - forkcg3*(-u1*sin(htangle + q4)*cos(q2) + u2*cos(htangle + q4) + u5))*Fork.y + forkcg1*((sin(q2)*cos(q5) + sin(q5)*cos(htangle + q4)*cos(q2))*u1 + u2*sin(htangle + q4)*sin(q5) + u4*cos(q5))*Fork.z
   >>> WF_mc.v2pt_theory(Steer, N, Fork)

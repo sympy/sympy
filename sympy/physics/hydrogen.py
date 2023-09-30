@@ -35,7 +35,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(1, 0, r, Z)
     2*sqrt(Z**3)*exp(-Z*r)
     >>> R_nl(2, 0, r, Z)
-    sqrt(2)*(-Z*r + 2)*sqrt(Z**3)*exp(-Z*r/2)/4
+    sqrt(2)*(2 - Z*r)*sqrt(Z**3)*exp(-Z*r/2)/4
     >>> R_nl(2, 1, r, Z)
     sqrt(6)*Z*r*sqrt(Z**3)*exp(-Z*r/2)/12
 
@@ -44,7 +44,7 @@ def R_nl(n, l, r, Z=1):
     >>> R_nl(1, 0, r)
     2*exp(-r)
     >>> R_nl(2, 0, r)
-    sqrt(2)*(-r + 2)*exp(-r/2)/4
+    sqrt(2)*(2 - r)*exp(-r/2)/4
     >>> R_nl(3, 0, r)
     2*sqrt(3)*(2*r**2/9 - 2*r + 3)*exp(-r/3)/27
 

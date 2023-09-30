@@ -536,7 +536,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
     >>> from sympy import factor, QQ_I
     >>> factor(x**2/4 + 1)
-    (4 + x**2)/4
+    (x**2 + 4)/4
     >>> factor(x**2/4 + 1, domain='QQ_I')
     (x - 2*I)*(x + 2*I)/4
     >>> factor(x**2/4 + 1, domain=QQ_I)
