@@ -206,7 +206,7 @@ def test_impulse_response():
     assert impulse_res_tester(tf4, exp4)
     assert impulse_res_tester(tf5, exp5)
     assert impulse_res_tester(tf7, exp6)
-    assert impulse_res_tester(ser1, exp7),ser1
+    assert impulse_res_tester(ser1, exp7)
 
 
 def test_step_response():
