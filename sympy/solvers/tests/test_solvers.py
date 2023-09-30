@@ -558,22 +558,21 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
-    x0 = -log(2401)
+    x0 = log(2401)
     x1 = 3**Rational(1, 5)
-    x2 = log(7**(7*x1/20))
-    x3 = sqrt(2)
-    x4 = sqrt(5)
-    x5 = x3*sqrt(x4 - 5)
-    x6 = x4 + 1
-    x7 = 1/(3*log(7))
-    x8 = -x4
-    x9 = x3*sqrt(x8 - 5)
-    x10 = x8 + 1
-    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
-           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
-           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
+    x2 = 1/(3*log(7))
+    x3 = log(7**(7*x1/20))
+    x4 = sqrt(2)
+    x5 = sqrt(5)
+    x6 = -x5
+    x7 = x4*sqrt(-x6 - 5)
+    x8 = x5 + 1
+    x9 = x4*sqrt(-x5 - 5)
+    ans = [x2*(-x0 - 5*LambertW(-log(7**(7*x1/5)))),
+        x2*(-x0 - 5*LambertW(x3*(-x7 + x8))),
+        x2*(-x0 - 5*LambertW(x3*(x7 + x8))),
+        x2*(-x0 - 5*LambertW(x3*(-x5 - x9 + 1))),
+        x2*(-x0 - 5*LambertW(x3*(x6 + x9 + 1)))]
     assert result == ans, result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
