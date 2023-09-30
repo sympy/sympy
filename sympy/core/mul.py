@@ -1,11 +1,11 @@
 from typing import Tuple as tTuple
 from collections import defaultdict
-from functools import cmp_to_key, reduce
+from functools import reduce
 from itertools import product
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, _args_sortkey
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -29,8 +29,6 @@ class NC_Marker:
     is_commutative = False
 
 
-# Key for sorting commutative args in canonical order
-_args_sortkey = cmp_to_key(Basic.compare)
 def _mulsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
