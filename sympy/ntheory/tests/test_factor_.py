@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.numbers import Integer, Rational
+from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
@@ -108,11 +109,18 @@ def test_private_perfect_power():
                 assert _perfect_power(x**y, k=3) == (x, y)
             if x == 100003:
                 assert _perfect_power(x**y, k=100003) == (x, y)
-            assert _perfect_power(11*x**y) == False
+            assert _perfect_power(101*x**y) == False
             # Catalan's conjecture
             if x**y not in [8, 9]:
                 assert _perfect_power(x**y + 1) == False
                 assert _perfect_power(x**y - 1) == False
+    for x in range(1, 10):
+        for y in range(1, 10):
+            g = gcd(x, y)
+            if g == 1:
+                assert _perfect_power(5**x * 101**y) == False
+            else:
+                assert _perfect_power(5**x * 101**y) == (5**(x//g) * 101**(y//g), g)
 
 
 def test_perfect_power():
