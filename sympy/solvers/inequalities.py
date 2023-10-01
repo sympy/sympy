@@ -10,6 +10,7 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul, expand_log
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
