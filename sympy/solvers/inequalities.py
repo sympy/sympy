@@ -549,18 +549,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 if v.is_extended_real is False:
                     return S.false
                 else:
-                    if v.is_comparable:
-                        return expr.func(v, 0)
+                    v2 = v.n(2)
+                    if v2.is_comparable:
+                        return expr.func(v2, 0)
                     # if v is not comparable it could mean that it is an
                     # expression that equals 0. Rather than include every
                     # simplification strategy to try show that v == 0, include
                     # here the specific simplification step needed to try prove
                     # that v == 0 for a case that was not yet handled
                     # ------ specific cases to try show v == 0
+                    v0 = v2
                     if v.has(log):  # log(b**a)/log(b) - a case
-                        v = expand_log(v)
+                        v0 = expand_log(v)
                     # ------ end of simplification help
-                    if v == 0:  # because something helped make it so
+                    if v0 == 0:  # because something helped make it so
                         return expr.func(0, 0)
                     # not comparable or couldn't be evaluated
                     raise NotImplementedError(
