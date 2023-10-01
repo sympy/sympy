@@ -9,7 +9,7 @@ from sympy.core.relational import Relational, Lt, Ge, Eq
 from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
-from sympy.core.function import expand_mul
+from sympy.core.function import expand_mul, expand_log
 from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
@@ -551,7 +551,16 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 else:
                     if v.is_comparable:
                         return expr.func(v, 0)
-                    if v.equals(0):
+                    # if v is not comparable it could mean that it is an
+                    # expression that equals 0. Rather than include every
+                    # simplification strategy to try show that v == 0, include
+                    # here the specific simplification step needed to try prove
+                    # that v == 0 for a case that was not yet handled
+                    # ------ specific cases to try show v == 0
+                    if v.has(log):  # log(b**a)/log(b) - a case
+                        v = expand_log(v)
+                    # ------ end of simplification help
+                    if v == 0:  # because something helped make it so
                         return expr.func(0, 0)
                     # not comparable or couldn't be evaluated
                     raise NotImplementedError(
