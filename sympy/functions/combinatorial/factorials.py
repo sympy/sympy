@@ -17,13 +17,13 @@ from math import factorial as _factorial, prod, sqrt as _sqrt
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
-    def _eval_simplify(self, **kwargs):
+    def _eval_simplify(self, measure=None , ratio=None):
         from sympy.simplify.combsimp import combsimp
         # combinatorial function with non-integer arguments is
         # automatically passed to gammasimp
         expr = combsimp(self)
-        measure = kwargs['measure']
-        if measure(expr) <= kwargs['ratio']*measure(self):
+        #measure = kwargs['measure']
+        if measure(expr) <= ratio*measure(self):
             return expr
         return self
 
