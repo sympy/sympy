@@ -386,21 +386,17 @@ def _perfect_power(n, k=2):
         if g == 1:
             return False
         factors[n] = multi
-        return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
+        return math.prod(p**(e//g) for p, e in factors.items()), g
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
-        n, next_p = _factorint_small(factors, n, 1_000, 1_000)
-        if factors:
-            g = gcd(*factors.values())
-            if g == 1:
-                return False
-        if next_p:
-            k = max(k, next_p)
-        else:
-            if n > 1:
-                return False
-            return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
+        n = _factorint_small(factors, n, 1_000, 1_000)[0]
+        if n > 1:
+            return False
+        g = gcd(*factors.values())
+        if g == 1:
+            return False
+        return math.prod(p**(e//g) for p, e in factors.items()), g
 
     # divide by 2
     if k < 3:
@@ -411,13 +407,13 @@ def _perfect_power(n, k=2):
             n >>= g
             factors[2] = g
             if n == 1:
-                return 2, int(g)
+                return 2, g
             else:
                 # If `m**g`, then we have found perfect power.
                 # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
                 m, _exact = iroot(n, g)
                 if _exact:
-                    return int(2*m), int(g)
+                    return 2*m, g
                 elif isprime(g):
                     return False
         k = 3
@@ -449,14 +445,14 @@ def _perfect_power(n, k=2):
                     return False
                 factors[p] = t
                 if n == 1:
-                    return int(math.prod(p**(e//_g)
-                                        for p, e in factors.items())), int(_g)
+                    return math.prod(p**(e//_g)
+                                        for p, e in factors.items()), _g
                 elif g == 0 or _g < g: # If g is updated
                     g = _g
-                    m, _exact = iroot(n, g)
+                    m, _exact = iroot(n**multi, g)
                     if _exact:
-                        return int(m**multi * math.prod(p**(e//g)
-                                    for p, e in factors.items())), int(g)
+                        return m * math.prod(p**(e//g)
+                                            for p, e in factors.items()), g
                     elif isprime(g):
                         return False
         k = tf_max
@@ -993,7 +989,7 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
         for b, e in facs.items():
             if verbose:
                 print(factor_msg % (b, e))
-            factors[b] = exp*e
+            factors[b] = int(exp*e)
         raise StopIteration
 
     if isprime(n):
