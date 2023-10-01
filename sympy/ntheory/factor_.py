@@ -449,14 +449,14 @@ def _perfect_power(n, k=2):
                     return False
                 factors[p] = t
                 if n == 1:
-                    return math.prod(p**(e//_g)
-                                        for p, e in factors.items()), _g
+                    return int(math.prod(p**(e//_g)
+                                        for p, e in factors.items())), int(_g)
                 elif g == 0 or _g < g: # If g is updated
                     g = _g
                     m, _exact = iroot(n, g)
                     if _exact:
-                        return m**multi * math.prod(p**(e//g)
-                                    for p, e in factors.items()), g
+                        return int(m**multi * math.prod(p**(e//g)
+                                    for p, e in factors.items())), int(g)
                     elif isprime(g):
                         return False
         k = tf_max
