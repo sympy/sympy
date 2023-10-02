@@ -12,6 +12,8 @@ from .activation import (
    ZerothOrderActivation,
 )
 from .curve import (
+   CharacteristicCurveCollection,
+   CharacteristicCurveFunction,
    FiberForceLengthActiveDeGroote2016,
    FiberForceLengthPassiveDeGroote2016,
    FiberForceLengthPassiveInverseDeGroote2016,
@@ -25,6 +27,8 @@ from .musculotendon import MusculotendonDeGroote2016, MusculotendonFormulation
 
 __all__ = [
    # Musculotendon characteristic curve functions
+   'CharacteristicCurveCollection',
+   'CharacteristicCurveFunction',
    'FiberForceLengthActiveDeGroote2016',
    'FiberForceLengthPassiveDeGroote2016',
    'FiberForceLengthPassiveInverseDeGroote2016',
