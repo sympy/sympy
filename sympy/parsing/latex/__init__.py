@@ -22,10 +22,11 @@ def parse_latex(s, strict=False, backend="ANTLR"):
         The default setting is to use the ANTLR backend, which can be
         changed to Lark if preferred.
 
-        Use ``backend="ANTLR"`` for the ANTLR-based parser, and
-        ``backend="Lark"`` for the Lark-based parser.
+        Use ``backend="antlr"`` for the ANTLR-based parser, and
+        ``backend="lark"`` for the Lark-based parser.
 
-        The ``backend`` option is case-insensitive.
+        The ``backend`` option is case-sensitive, and must be in
+        all lowercase.
     strict : bool, optional
         This option is only available with the ANTLR backend.
 
@@ -42,12 +43,11 @@ def parse_latex(s, strict=False, backend="ANTLR"):
     (sqrt(a) + 1)/b
     >>> expr.evalf(4, subs=dict(a=5, b=2))
     1.618
-    >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="Lark")
+    >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="lark")
     >>> func.evalf(subs={"alpha": 2})
     0.693147180559945
     """
 
-    backend = backend.lower()
     if backend == "antlr":
         _latex = import_module(
             'sympy.parsing.latex._parse_latex_antlr',
