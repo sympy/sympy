@@ -640,3 +640,8 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             f'optimal_pennation_angle={self._alpha_opt!r}, '
             f'fiber_damping_coefficient={self._beta!r})'
         )
+
+    def __str__(self):
+        """Returns a string representation of the expression for musculotendon
+        force."""
+        return str(self.force)
