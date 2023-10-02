@@ -359,7 +359,7 @@ def _perfect_power(n, k=2):
     ==========
 
     n : int
-        Positive integer
+        assume that n is a nonnegative integer
     k : int
         Assume that n has no factor less than k.
         i.e., all(n % p for p in range(2, k)) is True
