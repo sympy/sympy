@@ -83,8 +83,8 @@ future releases.
 ANTLR `\mathrm{\LaTeX}` Parser Caveats
 """"""""""""""""""""""""""""""""""""""
 
-In its current definition, the parser will at times will fail to fully parse
-the expression, but not throw a warning::
+In its current definition, the parser may fail to fully parse
+an expression, yet not throw a warning::
 
     parse_latex(r'x -')
 
@@ -149,7 +149,7 @@ some expression types of interest where it may fail.
 
 Here is a list of the things which are supported:
 
-* Symbols which consist of one letter. I.e., things like ``a``, ``b``, ``x``, etc.
+* Symbols which consist of one letter, e.g., ``a``, ``b``, ``x``, etc.
   Greek symbols and symbols with subscripts are also supported. Numbers are also
   supported, as is ``\infty``.
 * Symbols with multiple letters are supported, as long as they are wrapped in
