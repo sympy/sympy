@@ -344,50 +344,212 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def tendon_slack_length(self):
+        """Symbol or value corresponding to the tendon slack length constant.
+
+        Explanation
+        ===========
+
+        The length of the tendon when the musculotendon is in its unloaded
+        state. In a rigid tendon model the tendon length is the tendon slack
+        length. In all musculotendon models, tendon slack length is used to
+        normalize tendon length to give
+        :math:`\tilde{l}^T = \frac{l^T}{l^T_{slack}}`.
+
+        The alias ``l_T_slack`` can also be used to access the same attribute.
+
+        """
         return self._l_T_slack
 
     @property
     def l_T_slack(self):
+        """Symbol or value corresponding to the tendon slack length constant.
+
+        Explanation
+        ===========
+
+        The length of the tendon when the musculotendon is in its unloaded
+        state. In a rigid tendon model the tendon length is the tendon slack
+        length. In all musculotendon models, tendon slack length is used to
+        normalize tendon length to give
+        :math:`\tilde{l}^T = \frac{l^T}{l^T_{slack}}`.
+
+        The alias ``tendon_slack_length`` can also be used to access the same
+        attribute.
+
+        """
         return self._l_T_slack
 
     @property
     def peak_isometric_force(self):
+        """Symbol or value corresponding to the peak isometric force constant.
+
+        Explanation
+        ===========
+
+        The maximum force that the muscle fiber can produce when it is
+        undergoing an isometric contraction (no lengthening velocity). In all
+        musculotendon models, peak isometric force is used to normalized tendon
+        and muscle fiber force to give
+        :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`.
+
+        The alias ``F_M_max`` can also be used to access the same attribute.
+
+        """
         return self._F_M_max
 
     @property
     def F_M_max(self):
+        """Symbol or value corresponding to the peak isometric force constant.
+
+        Explanation
+        ===========
+
+        The maximum force that the muscle fiber can produce when it is
+        undergoing an isometric contraction (no lengthening velocity). In all
+        musculotendon models, peak isometric force is used to normalized tendon
+        and muscle fiber force to give
+        :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`.
+
+        The alias ``peak_isometric_force`` can also be used to access the same
+        attribute.
+
+        """
         return self._F_M_max
 
     @property
     def optimal_fiber_length(self):
+        """Symbol or value corresponding to the optimal fiber length constant.
+
+        Explanation
+        ===========
+
+        The muscle fiber length at which the muscle fibers produce no passive
+        force and their maximum active force. In all musculotendon models,
+        optimal fiber length is used to normalize muscle fiber length to give
+        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`.
+
+        The alias ``l_M_opt`` can also be used to access the same attribute.
+
+        """
         return self._l_M_opt
 
     @property
     def l_M_opt(self):
+        """Symbol or value corresponding to the optimal fiber length constant.
+
+        Explanation
+        ===========
+
+        The muscle fiber length at which the muscle fibers produce no passive
+        force and their maximum active force. In all musculotendon models,
+        optimal fiber length is used to normalize muscle fiber length to give
+        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`.
+
+        The alias ``optimal_fiber_length`` can also be used to access the same
+        attribute.
+
+        """
         return self._l_M_opt
 
     @property
     def maximal_fiber_velocity(self):
+        """Symbol or value corresponding to the maximal fiber velocity constant.
+
+        Explanation
+        ===========
+
+        The fiber velocity at which, during muscle fiber shortening, the muscle
+        fibers are unable to produce any active force. In all musculotendon
+        models, maximal fiber velocity is used to normalize muscle fiber
+        extension velocity to give :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`.
+
+        The alias ``v_M_max`` can also be used to access the same attribute.
+
+        """
         return self._v_M_max
 
     @property
     def v_M_max(self):
+        """Symbol or value corresponding to the maximal fiber velocity constant.
+
+        Explanation
+        ===========
+
+        The fiber velocity at which, during muscle fiber shortening, the muscle
+        fibers are unable to produce any active force. In all musculotendon
+        models, maximal fiber velocity is used to normalize muscle fiber
+        extension velocity to give :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`.
+
+        The alias ``maximal_fiber_velocity`` can also be used to access the same
+        attribute.
+
+        """
         return self._v_M_max
 
     @property
     def optimal_pennation_angle(self):
+        """Symbol or value corresponding to the optimal pennation angle
+        constant.
+
+        Explanation
+        ===========
+
+        The pennation angle when muscle fiber length equals the optimal fiber
+        length.
+
+        The alias ``alpha_opt`` can also be used to access the same attribute.
+
+        """
         return self._alpha_opt
 
     @property
     def alpha_opt(self):
+        """Symbol or value corresponding to the optimal pennation angle
+        constant.
+
+        Explanation
+        ===========
+
+        The pennation angle when muscle fiber length equals the optimal fiber
+        length.
+
+        The alias ``optimal_pennation_angle`` can also be used to access the
+        same attribute.
+
+        """
         return self._alpha_opt
 
     @property
     def fiber_damping_coefficient(self):
+        """Symbol or value corresponding to the fiber damping coefficient
+        constant.
+
+        Explanation
+        ===========
+
+        The coefficient of damping to be used in the damping element in the
+        muscle fiber model.
+
+        The alias ``beta`` can also be used to access the same attribute.
+
+        """
         return self._beta
 
     @property
     def beta(self):
+        """Symbol or value corresponding to the fiber damping coefficient
+        constant.
+
+        Explanation
+        ===========
+
+        The coefficient of damping to be used in the damping element in the
+        muscle fiber model.
+
+        The alias ``fiber_damping_coefficient`` can also be used to access the
+        same attribute.
+
+        """
         return self._beta
 
     @property
@@ -454,6 +616,20 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def musculotendon_dynamics(self):
+        """The formulation of musculotendon dynamics that should be used
+        internally
+
+        Explanation
+        ===========
+
+        The formulation of musculotendon dynamics that should be used
+        internally, i.e. rigid or elastic tendon model, the choice of
+        musculotendon state etc. This must be a member of the integer
+        enumeration ``MusculotendonFormulation`` or an integer that can be cast
+        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
+        (or ``0``), which corresponds to a rigid tendon formulation.
+
+        """
         return self._musculotendon_dynamics
 
     def _rigid_tendon_musculotendon_dynamics(self):
