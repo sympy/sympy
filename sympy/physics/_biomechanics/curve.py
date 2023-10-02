@@ -1746,7 +1746,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
 
 @dataclass(frozen=True, kw_only=True)
 class CharacteristicCurveCollection:
-    """Simple data container to group """
+    """Simple data container to group together related characteristic curves."""
     tendon_force_length: CharacteristicCurveFunction
     tendon_force_length_inverse: CharacteristicCurveFunction
     fiber_force_length_passive: CharacteristicCurveFunction
