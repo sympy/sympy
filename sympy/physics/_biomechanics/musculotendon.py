@@ -251,6 +251,74 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         peak_isometric_force=None,
         optimal_fiber_length=None,
     ):
+        r"""Recommended constructor that will use the published constants.
+
+        Explanation
+        ===========
+
+        Returns a new instance of the musculotendon class using recommended
+        values for ``v_M_max``, ``alpha_opt``, and ``beta``. The values are:
+
+        $v^M_{max} = 10$
+        $\alpha_{opt} = 0$
+        $\beta = \frac{1}{10}$
+
+        The musculotendon curves are also instantiated using the constants from
+        the original publication.
+
+        Parameters
+        ==========
+
+        name : str
+            The name identifier associated with the musculotendon. This name is
+            used as a suffix when automatically generated symbols are
+            instantiated. It must be a string of nonzero length.
+        pathway : PathwayBase
+            The pathway that the actuator follows. This must be an instance of a
+            concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+        activation_dynamics : ActivationBase
+            The activation dynamics that will be modeled within the
+            musculotendon. This must be an instance of a concrete subclass of
+            ``ActivationBase``, e.g. ``FirstOrderActivationDeGroote2016``.
+        musculotendon_dynamics : MusculotendonFormulation | int
+            The formulation of musculotendon dynamics that should be used
+            internally, i.e. rigid or elastic tendon model, the choice of
+            musculotendon state etc. This must be a member of the integer
+            enumeration ``MusculotendonFormulation`` or an integer that can be
+            cast to a member. The default is
+            ``MusculotendonFormulation.RIGID_TENDON`` (or ``0``), which
+            corresponds to a rigid tendon formulation.
+        tendon_slack_length : Expr | None
+            The length of the tendon when the musculotendon is in its unloaded
+            state. In a rigid tendon model the tendon length is the tendon slack
+            length. In all musculotendon models, tendon slack length is used to
+            normalize tendon length to give
+            :math:`\tilde{l}^T = \frac{l^T}{l^T_{slack}}`.
+        peak_isometric_force : Expr | None
+            The maximum force that the muscle fiber can produce when it is
+            undergoing an isometric contraction (no lengthening velocity). In
+            all musculotendon models, peak isometric force is used to normalized
+            tendon and muscle fiber force to give
+            :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`.
+        optimal_fiber_length : Expr | None
+            The muscle fiber length at which the muscle fibers produce no
+            passive force and their maximum active force. In all musculotendon
+            models, optimal fiber length is used to normalize muscle fiber
+            length to give :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`.
+        maximal_fiber_velocity : Expr | None
+            The fiber velocity at which, during muscle fiber shortening, the
+            muscle fibers are unable to produce any active force. In all
+            musculotendon models, maximal fiber velocity is used to normalize
+            muscle fiber extension velocity to give
+            :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`.
+        optimal_pennation_angle : Expr | None
+            The pennation angle when muscle fiber length equals the optimal
+            fiber length.
+        fiber_damping_coefficient : Expr | None
+            The coefficient of damping to be used in the damping element in the
+            muscle fiber model.
+
+        """
         v_M_max = Integer(10)
         alpha_opt = Integer(0)
         beta = Rational(1, 10)
