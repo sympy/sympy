@@ -198,9 +198,9 @@ class TestMusculotendonRigidTendon:
 
     def test_repr(self):
         expected = (
-            'MusculotendonDeGroote2016('name', '
+            'MusculotendonDeGroote2016(\'name\', '
             'pathway=LinearPathway(pO, pI), '
-            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_dynamics=FirstOrderActivationDeGroote2016(\'name\', '
             'activation_time_constant=tau_a_name, '
             'deactivation_time_constant=tau_d_name, '
             'smoothing_rate=b_name), '
@@ -364,9 +364,9 @@ class TestFiberLengthExplicit:
 
     def test_repr(self):
         expected = (
-            'MusculotendonDeGroote2016('name', '
+            'MusculotendonDeGroote2016(\'name\', '
             'pathway=LinearPathway(pO, pI), '
-            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_dynamics=FirstOrderActivationDeGroote2016(\'name\', '
             'activation_time_constant=tau_a_name, '
             'deactivation_time_constant=tau_d_name, '
             'smoothing_rate=b_name), '
@@ -673,9 +673,9 @@ class TestMusculotendonDeGroote2016:
             fiber_damping_coefficient=self.beta,
         )
         expected = (
-            'MusculotendonDeGroote2016('name', '
+            'MusculotendonDeGroote2016(\'name\', '
             'pathway=LinearPathway(pO, pI), '
-            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_dynamics=FirstOrderActivationDeGroote2016(\'name\', '
             'activation_time_constant=tau_a_name, '
             'deactivation_time_constant=tau_d_name, '
             'smoothing_rate=b_name), '
