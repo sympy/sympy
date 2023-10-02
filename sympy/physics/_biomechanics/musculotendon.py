@@ -127,12 +127,13 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The maximum force that the muscle fiber can produce when it is
         undergoing an isometric contraction (no lengthening velocity). In all
         musculotendon models, peak isometric force is used to normalized tendon
-        and muscle fiber force to give :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`
+        and muscle fiber force to give
+        :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`.
     optimal_fiber_length : Expr | None
         The muscle fiber length at which the muscle fibers produce no passive
         force and their maximum active force. In all musculotendon models,
         optimal fiber length is used to normalize muscle fiber length to give
-        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`
+        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`.
     maximal_fiber_velocity : Expr | None
         The fiber velocity at which, during muscle fiber shortening, the muscle
         fibers are unable to produce any active force. In all musculotendon
@@ -342,7 +343,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        The alias `e` can also be used to access the same attribute.
+        The alias ``e`` can also be used to access the same attribute.
 
         """
         return self._activation_dynamics._e
@@ -354,7 +355,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        The alias `excitation` can also be used to access the same attribute.
+        The alias ``excitation`` can also be used to access the same attribute.
 
         """
         return self._activation_dynamics._e
@@ -366,7 +367,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        The alias `a` can also be used to access the same attribute.
+        The alias ``a`` can also be used to access the same attribute.
 
         """
         return self._activation_dynamics._a
@@ -378,7 +379,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        The alias `activation` can also be used to access the same attribute.
+        The alias ``activation`` can also be used to access the same attribute.
 
         """
         return self._activation_dynamics._a
