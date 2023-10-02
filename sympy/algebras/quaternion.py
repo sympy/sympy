@@ -1001,10 +1001,7 @@ class Quaternion(Expr):
     def _eval_subs(self, *args):
         elements = [i.subs(*args) for i in self.args]
         norm = self._norm
-        try:
-            norm = norm.subs(*args)
-        except AttributeError:
-            pass
+        norm = norm.subs(*args)
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 
