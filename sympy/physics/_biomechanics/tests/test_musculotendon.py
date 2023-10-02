@@ -74,7 +74,7 @@ class TestMusculotendonBase:
     def test_class():
         assert issubclass(MusculotendonBase, ForceActuator)
         assert issubclass(MusculotendonBase, _NamedMixin)
-        assert MusculotendonBase.__name__ == "MusculotendonBase"
+        assert MusculotendonBase.__name__ == 'MusculotendonBase'
 
     @staticmethod
     def test_cannot_instantiate_directly():
@@ -87,11 +87,11 @@ class TestMusculotendonRigidTendon:
 
     @pytest.fixture(autouse=True)
     def _musculotendon_rigid_tendon_fixture(self, musculotendon_concrete):
-        self.name = "name"
-        self.N = ReferenceFrame("N")
-        self.q = dynamicsymbols("q")
-        self.origin = Point("pO")
-        self.insertion = Point("pI")
+        self.name = 'name'
+        self.N = ReferenceFrame('N')
+        self.q = dynamicsymbols('q')
+        self.origin = Point('pO')
+        self.insertion = Point('pI')
         self.insertion.set_pos(self.origin, self.q*self.N.x)
         self.pathway = LinearPathway(self.origin, self.insertion)
         self.activation = FirstOrderActivationDeGroote2016(self.name)
@@ -101,12 +101,12 @@ class TestMusculotendonRigidTendon:
         self.tau_d = self.activation.deactivation_time_constant
         self.b = self.activation.smoothing_rate
         self.formulation = MusculotendonFormulation.RIGID_TENDON
-        self.l_T_slack = Symbol("l_T_slack")
-        self.F_M_max = Symbol("F_M_max")
-        self.l_M_opt = Symbol("l_M_opt")
-        self.v_M_max = Symbol("v_M_max")
-        self.alpha_opt = Symbol("alpha_opt")
-        self.beta = Symbol("beta")
+        self.l_T_slack = Symbol('l_T_slack')
+        self.F_M_max = Symbol('F_M_max')
+        self.l_M_opt = Symbol('l_M_opt')
+        self.v_M_max = Symbol('v_M_max')
+        self.alpha_opt = Symbol('alpha_opt')
+        self.beta = Symbol('beta')
         self.instance = musculotendon_concrete(
             self.name,
             self.pathway,
@@ -127,8 +127,8 @@ class TestMusculotendonRigidTendon:
         )*(self.e - self.a)
 
     def test_state_vars(self):
-        assert hasattr(self.instance, "x")
-        assert hasattr(self.instance, "state_vars")
+        assert hasattr(self.instance, 'x')
+        assert hasattr(self.instance, 'state_vars')
         assert self.instance.x == self.instance.state_vars
         x_expected = Matrix([self.a])
         assert self.instance.x == x_expected
@@ -139,8 +139,8 @@ class TestMusculotendonRigidTendon:
         assert self.instance.state_vars.shape == (1, 1)
 
     def test_input_vars(self):
-        assert hasattr(self.instance, "r")
-        assert hasattr(self.instance, "input_vars")
+        assert hasattr(self.instance, 'r')
+        assert hasattr(self.instance, 'input_vars')
         assert self.instance.r == self.instance.input_vars
         r_expected = Matrix([self.e])
         assert self.instance.r == r_expected
@@ -151,8 +151,8 @@ class TestMusculotendonRigidTendon:
         assert self.instance.input_vars.shape == (1, 1)
 
     def test_constants(self):
-        assert hasattr(self.instance, "p")
-        assert hasattr(self.instance, "constants")
+        assert hasattr(self.instance, 'p')
+        assert hasattr(self.instance, 'constants')
         assert self.instance.p == self.instance.constants
         p_expected = Matrix(
             [
@@ -175,21 +175,21 @@ class TestMusculotendonRigidTendon:
         assert self.instance.constants.shape == (9, 1)
 
     def test_M(self):
-        assert hasattr(self.instance, "M")
+        assert hasattr(self.instance, 'M')
         M_expected = Matrix([1])
         assert self.instance.M == M_expected
         assert isinstance(self.instance.M, Matrix)
         assert self.instance.M.shape == (1, 1)
 
     def test_F(self):
-        assert hasattr(self.instance, "F")
+        assert hasattr(self.instance, 'F')
         F_expected = Matrix([self.da_expr])
         assert self.instance.F == F_expected
         assert isinstance(self.instance.F, Matrix)
         assert self.instance.F.shape == (1, 1)
 
     def test_rhs(self):
-        assert hasattr(self.instance, "rhs")
+        assert hasattr(self.instance, 'rhs')
         rhs_expected = Matrix([self.da_expr])
         rhs = self.instance.rhs()
         assert isinstance(rhs, Matrix)
@@ -198,19 +198,19 @@ class TestMusculotendonRigidTendon:
 
     def test_repr(self):
         expected = (
-            "MusculotendonDeGroote2016('name', "
-            "pathway=LinearPathway(pO, pI), "
-            "activation_dynamics=FirstOrderActivationDeGroote2016('name', "
-            "activation_time_constant=tau_a_name, "
-            "deactivation_time_constant=tau_d_name, "
-            "smoothing_rate=b_name), "
-            "musculotendon_dynamics=0, "
-            "tendon_slack_length=l_T_slack, "
-            "peak_isometric_force=F_M_max, "
-            "optimal_fiber_length=l_M_opt, "
-            "maximal_fiber_velocity=v_M_max, "
-            "optimal_pennation_angle=alpha_opt, "
-            "fiber_damping_coefficient=beta)"
+            'MusculotendonDeGroote2016('name', '
+            'pathway=LinearPathway(pO, pI), '
+            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_time_constant=tau_a_name, '
+            'deactivation_time_constant=tau_d_name, '
+            'smoothing_rate=b_name), '
+            'musculotendon_dynamics=0, '
+            'tendon_slack_length=l_T_slack, '
+            'peak_isometric_force=F_M_max, '
+            'optimal_fiber_length=l_M_opt, '
+            'maximal_fiber_velocity=v_M_max, '
+            'optimal_pennation_angle=alpha_opt, '
+            'fiber_damping_coefficient=beta)'
         )
         assert repr(self.instance) == expected
 
@@ -240,11 +240,11 @@ class TestFiberLengthExplicit:
         musculotendon_concrete,
         curve,
     ):
-        self.name = "name"
-        self.N = ReferenceFrame("N")
-        self.q = dynamicsymbols("q")
-        self.origin = Point("pO")
-        self.insertion = Point("pI")
+        self.name = 'name'
+        self.N = ReferenceFrame('N')
+        self.q = dynamicsymbols('q')
+        self.origin = Point('pO')
+        self.insertion = Point('pI')
         self.insertion.set_pos(self.origin, self.q*self.N.x)
         self.pathway = LinearPathway(self.origin, self.insertion)
         self.activation = FirstOrderActivationDeGroote2016(self.name)
@@ -254,12 +254,12 @@ class TestFiberLengthExplicit:
         self.tau_d = self.activation.deactivation_time_constant
         self.b = self.activation.smoothing_rate
         self.formulation = MusculotendonFormulation.FIBER_LENGTH_EXPLICIT
-        self.l_T_slack = Symbol("l_T_slack")
-        self.F_M_max = Symbol("F_M_max")
-        self.l_M_opt = Symbol("l_M_opt")
-        self.v_M_max = Symbol("v_M_max")
-        self.alpha_opt = Symbol("alpha_opt")
-        self.beta = Symbol("beta")
+        self.l_T_slack = Symbol('l_T_slack')
+        self.F_M_max = Symbol('F_M_max')
+        self.l_M_opt = Symbol('l_M_opt')
+        self.v_M_max = Symbol('v_M_max')
+        self.alpha_opt = Symbol('alpha_opt')
+        self.beta = Symbol('beta')
         self.instance = musculotendon_concrete(
             self.name,
             self.pathway,
@@ -273,7 +273,7 @@ class TestFiberLengthExplicit:
             fiber_damping_coefficient=self.beta,
             with_defaults=True,
         )
-        self.l_M_tilde = dynamicsymbols("l_M_tilde_name")
+        self.l_M_tilde = dynamicsymbols('l_M_tilde_name')
         l_MT = self.pathway.length
         l_M = self.l_M_tilde*self.l_M_opt
         l_T = l_MT - sqrt(l_M**2 - (self.l_M_opt*sin(self.alpha_opt))**2)
@@ -293,8 +293,8 @@ class TestFiberLengthExplicit:
         )*(self.e - self.a)
 
     def test_state_vars(self):
-        assert hasattr(self.instance, "x")
-        assert hasattr(self.instance, "state_vars")
+        assert hasattr(self.instance, 'x')
+        assert hasattr(self.instance, 'state_vars')
         assert self.instance.x == self.instance.state_vars
         x_expected = Matrix([self.l_M_tilde, self.a])
         assert self.instance.x == x_expected
@@ -305,8 +305,8 @@ class TestFiberLengthExplicit:
         assert self.instance.state_vars.shape == (2, 1)
 
     def test_input_vars(self):
-        assert hasattr(self.instance, "r")
-        assert hasattr(self.instance, "input_vars")
+        assert hasattr(self.instance, 'r')
+        assert hasattr(self.instance, 'input_vars')
         assert self.instance.r == self.instance.input_vars
         r_expected = Matrix([self.e])
         assert self.instance.r == r_expected
@@ -317,8 +317,8 @@ class TestFiberLengthExplicit:
         assert self.instance.input_vars.shape == (1, 1)
 
     def test_constants(self):
-        assert hasattr(self.instance, "p")
-        assert hasattr(self.instance, "constants")
+        assert hasattr(self.instance, 'p')
+        assert hasattr(self.instance, 'constants')
         assert self.instance.p == self.instance.constants
         p_expected = Matrix(
             [
@@ -341,21 +341,21 @@ class TestFiberLengthExplicit:
         assert self.instance.constants.shape == (9, 1)
 
     def test_M(self):
-        assert hasattr(self.instance, "M")
+        assert hasattr(self.instance, 'M')
         M_expected = eye(2)
         assert self.instance.M == M_expected
         assert isinstance(self.instance.M, Matrix)
         assert self.instance.M.shape == (2, 2)
 
     def test_F(self):
-        assert hasattr(self.instance, "F")
+        assert hasattr(self.instance, 'F')
         F_expected = Matrix([self.dl_M_tilde_expr, self.da_expr])
         assert self.instance.F == F_expected
         assert isinstance(self.instance.F, Matrix)
         assert self.instance.F.shape == (2, 1)
 
     def test_rhs(self):
-        assert hasattr(self.instance, "rhs")
+        assert hasattr(self.instance, 'rhs')
         rhs_expected = Matrix([self.dl_M_tilde_expr, self.da_expr])
         rhs = self.instance.rhs()
         assert isinstance(rhs, Matrix)
@@ -364,19 +364,19 @@ class TestFiberLengthExplicit:
 
     def test_repr(self):
         expected = (
-            "MusculotendonDeGroote2016('name', "
-            "pathway=LinearPathway(pO, pI), "
-            "activation_dynamics=FirstOrderActivationDeGroote2016('name', "
-            "activation_time_constant=tau_a_name, "
-            "deactivation_time_constant=tau_d_name, "
-            "smoothing_rate=b_name), "
-            "musculotendon_dynamics=1, "
-            "tendon_slack_length=l_T_slack, "
-            "peak_isometric_force=F_M_max, "
-            "optimal_fiber_length=l_M_opt, "
-            "maximal_fiber_velocity=v_M_max, "
-            "optimal_pennation_angle=alpha_opt, "
-            "fiber_damping_coefficient=beta)"
+            'MusculotendonDeGroote2016('name', '
+            'pathway=LinearPathway(pO, pI), '
+            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_time_constant=tau_a_name, '
+            'deactivation_time_constant=tau_d_name, '
+            'smoothing_rate=b_name), '
+            'musculotendon_dynamics=1, '
+            'tendon_slack_length=l_T_slack, '
+            'peak_isometric_force=F_M_max, '
+            'optimal_fiber_length=l_M_opt, '
+            'maximal_fiber_velocity=v_M_max, '
+            'optimal_pennation_angle=alpha_opt, '
+            'fiber_damping_coefficient=beta)'
         )
         assert repr(self.instance) == expected
 
@@ -387,23 +387,23 @@ class TestMusculotendonDeGroote2016:
     def test_class():
         assert issubclass(MusculotendonDeGroote2016, ForceActuator)
         assert issubclass(MusculotendonDeGroote2016, _NamedMixin)
-        assert MusculotendonDeGroote2016.__name__ == "MusculotendonDeGroote2016"
+        assert MusculotendonDeGroote2016.__name__ == 'MusculotendonDeGroote2016'
 
     @staticmethod
     def test_instance():
-        origin = Point("pO")
-        insertion = Point("pI")
-        insertion.set_pos(origin, dynamicsymbols("q")*ReferenceFrame("N").x)
+        origin = Point('pO')
+        insertion = Point('pI')
+        insertion.set_pos(origin, dynamicsymbols('q')*ReferenceFrame('N').x)
         pathway = LinearPathway(origin, insertion)
-        activation = FirstOrderActivationDeGroote2016("name")
-        l_T_slack = Symbol("l_T_slack")
-        F_M_max = Symbol("F_M_max")
-        l_M_opt = Symbol("l_M_opt")
-        v_M_max = Symbol("v_M_max")
-        alpha_opt = Symbol("alpha_opt")
-        beta = Symbol("beta")
+        activation = FirstOrderActivationDeGroote2016('name')
+        l_T_slack = Symbol('l_T_slack')
+        F_M_max = Symbol('F_M_max')
+        l_M_opt = Symbol('l_M_opt')
+        v_M_max = Symbol('v_M_max')
+        alpha_opt = Symbol('alpha_opt')
+        beta = Symbol('beta')
         instance = MusculotendonDeGroote2016(
-            "name",
+            'name',
             pathway,
             activation,
             musculotendon_dynamics=MusculotendonFormulation.RIGID_TENDON,
@@ -418,35 +418,35 @@ class TestMusculotendonDeGroote2016:
 
     @pytest.fixture(autouse=True)
     def _musculotendon_fixture(self):
-        self.name = "name"
-        self.N = ReferenceFrame("N")
-        self.q = dynamicsymbols("q")
-        self.origin = Point("pO")
-        self.insertion = Point("pI")
+        self.name = 'name'
+        self.N = ReferenceFrame('N')
+        self.q = dynamicsymbols('q')
+        self.origin = Point('pO')
+        self.insertion = Point('pI')
         self.insertion.set_pos(self.origin, self.q*self.N.x)
         self.pathway = LinearPathway(self.origin, self.insertion)
         self.activation = FirstOrderActivationDeGroote2016(self.name)
-        self.l_T_slack = Symbol("l_T_slack")
-        self.F_M_max = Symbol("F_M_max")
-        self.l_M_opt = Symbol("l_M_opt")
-        self.v_M_max = Symbol("v_M_max")
-        self.alpha_opt = Symbol("alpha_opt")
-        self.beta = Symbol("beta")
+        self.l_T_slack = Symbol('l_T_slack')
+        self.F_M_max = Symbol('F_M_max')
+        self.l_M_opt = Symbol('l_M_opt')
+        self.v_M_max = Symbol('v_M_max')
+        self.alpha_opt = Symbol('alpha_opt')
+        self.beta = Symbol('beta')
 
     def test_with_defaults(self):
-        origin = Point("pO")
-        insertion = Point("pI")
-        insertion.set_pos(origin, dynamicsymbols("q")*ReferenceFrame("N").x)
+        origin = Point('pO')
+        insertion = Point('pI')
+        insertion.set_pos(origin, dynamicsymbols('q')*ReferenceFrame('N').x)
         pathway = LinearPathway(origin, insertion)
-        activation = FirstOrderActivationDeGroote2016("name")
-        l_T_slack = Symbol("l_T_slack")
-        F_M_max = Symbol("F_M_max")
-        l_M_opt = Symbol("l_M_opt")
+        activation = FirstOrderActivationDeGroote2016('name')
+        l_T_slack = Symbol('l_T_slack')
+        F_M_max = Symbol('F_M_max')
+        l_M_opt = Symbol('l_M_opt')
         v_M_max = Integer(10)
         alpha_opt = Integer(0)
         beta = Rational(1, 10)
         instance = MusculotendonDeGroote2016.with_defaults(
-            "name",
+            'name',
             pathway,
             activation,
             musculotendon_dynamics=MusculotendonFormulation.RIGID_TENDON,
@@ -462,12 +462,12 @@ class TestMusculotendonDeGroote2016:
         assert instance.fiber_damping_coefficient == beta
 
     @pytest.mark.parametrize(
-        "l_T_slack, expected",
+        'l_T_slack, expected',
         [
-            (None, Symbol("l_T_slack_name")),
-            (Symbol("l_T_slack"), Symbol("l_T_slack")),
+            (None, Symbol('l_T_slack_name')),
+            (Symbol('l_T_slack'), Symbol('l_T_slack')),
             (Rational(1, 2), Rational(1, 2)),
-            (Float("0.5"), Float("0.5")),
+            (Float('0.5'), Float('0.5')),
         ],
     )
     def test_tendon_slack_length(self, l_T_slack, expected):
@@ -487,12 +487,12 @@ class TestMusculotendonDeGroote2016:
         assert instance.tendon_slack_length == expected
 
     @pytest.mark.parametrize(
-        "F_M_max, expected",
+        'F_M_max, expected',
         [
-            (None, Symbol("F_M_max_name")),
-            (Symbol("F_M_max"), Symbol("F_M_max")),
+            (None, Symbol('F_M_max_name')),
+            (Symbol('F_M_max'), Symbol('F_M_max')),
             (Integer(1000), Integer(1000)),
-            (Float("1000.0"), Float("1000.0")),
+            (Float('1000.0'), Float('1000.0')),
         ],
     )
     def test_peak_isometric_force(self, F_M_max, expected):
@@ -512,12 +512,12 @@ class TestMusculotendonDeGroote2016:
         assert instance.peak_isometric_force == expected
 
     @pytest.mark.parametrize(
-        "l_M_opt, expected",
+        'l_M_opt, expected',
         [
-            (None, Symbol("l_M_opt_name")),
-            (Symbol("l_M_opt"), Symbol("l_M_opt")),
+            (None, Symbol('l_M_opt_name')),
+            (Symbol('l_M_opt'), Symbol('l_M_opt')),
             (Rational(1, 2), Rational(1, 2)),
-            (Float("0.5"), Float("0.5")),
+            (Float('0.5'), Float('0.5')),
         ],
     )
     def test_optimal_fiber_length(self, l_M_opt, expected):
@@ -537,12 +537,12 @@ class TestMusculotendonDeGroote2016:
         assert instance.optimal_fiber_length == expected
 
     @pytest.mark.parametrize(
-        "v_M_max, expected",
+        'v_M_max, expected',
         [
-            (None, Symbol("v_M_max_name")),
-            (Symbol("v_M_max"), Symbol("v_M_max")),
+            (None, Symbol('v_M_max_name')),
+            (Symbol('v_M_max'), Symbol('v_M_max')),
             (Integer(10), Integer(10)),
-            (Float("10.0"), Float("10.0")),
+            (Float('10.0'), Float('10.0')),
         ],
     )
     def test_maximal_fiber_velocity(self, v_M_max, expected):
@@ -562,12 +562,12 @@ class TestMusculotendonDeGroote2016:
         assert instance.maximal_fiber_velocity == expected
 
     @pytest.mark.parametrize(
-        "alpha_opt, expected",
+        'alpha_opt, expected',
         [
-            (None, Symbol("alpha_opt_name")),
-            (Symbol("alpha_opt"), Symbol("alpha_opt")),
+            (None, Symbol('alpha_opt_name')),
+            (Symbol('alpha_opt'), Symbol('alpha_opt')),
             (Integer(0), Integer(0)),
-            (Float("0.1"), Float("0.1")),
+            (Float('0.1'), Float('0.1')),
         ],
     )
     def test_optimal_pennation_angle(self, alpha_opt, expected):
@@ -587,13 +587,13 @@ class TestMusculotendonDeGroote2016:
         assert instance.optimal_pennation_angle == expected
 
     @pytest.mark.parametrize(
-        "beta, expected",
+        'beta, expected',
         [
-            (None, Symbol("beta_name")),
-            (Symbol("beta"), Symbol("beta")),
+            (None, Symbol('beta_name')),
+            (Symbol('beta'), Symbol('beta')),
             (Integer(0), Integer(0)),
             (Rational(1, 10), Rational(1, 10)),
-            (Float("0.1"), Float("0.1")),
+            (Float('0.1'), Float('0.1')),
         ],
     )
     def test_fiber_damping_coefficient(self, beta, expected):
@@ -618,9 +618,9 @@ class TestMusculotendonDeGroote2016:
             self.pathway,
             self.activation,
         )
-        assert hasattr(instance, "e")
-        assert hasattr(instance, "excitation")
-        e_expected = dynamicsymbols("e_name")
+        assert hasattr(instance, 'e')
+        assert hasattr(instance, 'excitation')
+        e_expected = dynamicsymbols('e_name')
         assert instance.e == e_expected
         assert instance.excitation == e_expected
         assert instance.e is instance.excitation
@@ -642,9 +642,9 @@ class TestMusculotendonDeGroote2016:
             self.pathway,
             self.activation,
         )
-        assert hasattr(instance, "a")
-        assert hasattr(instance, "activation")
-        a_expected = dynamicsymbols("a_name")
+        assert hasattr(instance, 'a')
+        assert hasattr(instance, 'activation')
+        a_expected = dynamicsymbols('a_name')
         assert instance.a == a_expected
         assert instance.activation == a_expected
 
@@ -673,18 +673,18 @@ class TestMusculotendonDeGroote2016:
             fiber_damping_coefficient=self.beta,
         )
         expected = (
-            "MusculotendonDeGroote2016('name', "
-            "pathway=LinearPathway(pO, pI), "
-            "activation_dynamics=FirstOrderActivationDeGroote2016('name', "
-            "activation_time_constant=tau_a_name, "
-            "deactivation_time_constant=tau_d_name, "
-            "smoothing_rate=b_name), "
-            "musculotendon_dynamics=0, "
-            "tendon_slack_length=l_T_slack, "
-            "peak_isometric_force=F_M_max, "
-            "optimal_fiber_length=l_M_opt, "
-            "maximal_fiber_velocity=v_M_max, "
-            "optimal_pennation_angle=alpha_opt, "
-            "fiber_damping_coefficient=beta)"
+            'MusculotendonDeGroote2016('name', '
+            'pathway=LinearPathway(pO, pI), '
+            'activation_dynamics=FirstOrderActivationDeGroote2016('name', '
+            'activation_time_constant=tau_a_name, '
+            'deactivation_time_constant=tau_d_name, '
+            'smoothing_rate=b_name), '
+            'musculotendon_dynamics=0, '
+            'tendon_slack_length=l_T_slack, '
+            'peak_isometric_force=F_M_max, '
+            'optimal_fiber_length=l_M_opt, '
+            'maximal_fiber_velocity=v_M_max, '
+            'optimal_pennation_angle=alpha_opt, '
+            'fiber_damping_coefficient=beta)'
         )
         assert repr(instance) == expected
