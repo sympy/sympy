@@ -1,5 +1,7 @@
 """Tests for the ``sympy.physics._biomechanics.musculotendon.py`` module."""
 
+import abc
+
 import pytest
 
 from sympy.core.numbers import Float, Integer, Rational
@@ -18,6 +20,7 @@ from sympy.physics._biomechanics.curve import (
     TendonForceLengthDeGroote2016,
 )
 from sympy.physics._biomechanics.musculotendon import (
+    MusculotendonBase,
     MusculotendonDeGroote2016,
     MusculotendonFormulation,
 )
@@ -57,12 +60,22 @@ class TestMusculotendonFormulation:
         assert MusculotendonFormulation.TENDON_FORCE_IMPLICIT == 4
 
 
-class TestMusculotendonDeGroote2016:
+class TestMusculotendonBase:
+
+    @staticmethod
+    def test_is_abstract_base_class():
+        assert issubclass(MusculotendonBase, abc.ABC)
+
     @staticmethod
     def test_class():
-        assert issubclass(MusculotendonDeGroote2016, ForceActuator)
-        assert issubclass(MusculotendonDeGroote2016, _NamedMixin)
-        assert MusculotendonDeGroote2016.__name__ == "MusculotendonDeGroote2016"
+        assert issubclass(MusculotendonBase, ForceActuator)
+        assert issubclass(MusculotendonBase, _NamedMixin)
+        assert MusculotendonBase.__name__ == "MusculotendonBase"
+
+    @staticmethod
+    def test_cannot_instantiate_directly():
+        with pytest.raises(TypeError):
+            _ = MusculotendonBase()
 
     @staticmethod
     def test_instance():
