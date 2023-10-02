@@ -163,6 +163,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         maximal_fiber_velocity=None,
         optimal_pennation_angle=None,
         fiber_damping_coefficient=None,
+        with_defaults=False,
     ):
         self.name = name
 
@@ -208,6 +209,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._beta = Symbol(f'beta_{self.name}')
 
         # Musculotendon dynamics
+        self._with_defaults = with_defaults
         if musculotendon_dynamics == MusculotendonFormulation.RIGID_TENDON:
             self._rigid_tendon_musculotendon_dynamics()
         elif musculotendon_dynamics == MusculotendonFormulation.FIBER_LENGTH_EXPLICIT:
@@ -262,6 +264,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             maximal_fiber_velocity=v_M_max,
             optimal_pennation_angle=alpha_opt,
             fiber_damping_coefficient=beta,
+            with_defaults=True,
         )
 
     @abstractmethod
@@ -394,14 +397,25 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         self._l_M_tilde = self._l_M/self._l_M_opt
         self._v_M = self._v_MT*(self._l_MT - self._l_T_slack)/self._l_M
         self._v_M_tilde = self._v_M/self._v_M_max
-        self._fl_T = TendonForceLengthDeGroote2016.with_defaults(self._l_T_tilde)
-        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self._l_M_tilde)
-        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self._l_M_tilde)
-        self._fv_M = FiberForceVelocityDeGroote2016.with_defaults(self._v_M_tilde)
+        if self._with_defaults:
+            self._fl_T = self.curves.tendon_force_length.with_defaults(self._l_T_tilde)
+            self._fl_M_pas = self.curves.fiber_force_length_passive.with_defaults(self._l_M_tilde)
+            self._fl_M_act = self.curves.fiber_force_length_active.with_defaults(self._l_M_tilde)
+            self._fv_M = self.curves.fiber_force_velocity.with_defaults(self._v_M_tilde)
+        else:
+            fl_T_constants = symbols('c_0:4_fl_T')
+            self._fl_T = self.curves.tendon_force_length(self._l_T_tilde, *fl_T_constants)
+            fl_M_pas_constants = symbols('c_0:2_fl_M_pas')
+            self._fl_M_pas = self.curves.fiber_force_length_passive(self._l_M_tilde, *fl_M_pas_constants)
+            fl_M_act_constants = symbols('c_0:12_fl_M_act')
+            self._fl_M_act = self.curves.fiber_force_length_active(self._l_M_tilde, *fl_M_act_constants)
+            fv_M_constants = symbols('c_0:4_fv_M')
+            self._fv_M = self.curves.fiber_force_velocity(self._v_M_tilde, *fv_M_constants)
         self._F_M_tilde = self.a*self._fl_M_act*self._fv_M + self._fl_M_pas + self._beta*self._v_M_tilde
         self._F_T_tilde = self._F_M_tilde
         self._F_M = self._F_M_tilde*self._F_M_max
-        self._F_T = self._F_M
+        self._cos_alpha = cos(self._alpha_opt)
+        self._F_T = self._F_M*self._cos_alpha
 
         # Containers
         self._state_vars = zeros(0, 1)
@@ -417,15 +431,27 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         self._l_T = self._l_MT - sqrt(self._l_M**2 - (self._l_M_opt*sin(self._alpha_opt))**2)
         self._l_T_tilde = self._l_T/self._l_T_slack
         self._cos_alpha = (self._l_MT - self._l_T)/self._l_M
-        self._fl_T = TendonForceLengthDeGroote2016.with_defaults(self._l_T_tilde)
-        self._fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self._l_M_tilde)
-        self._fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(self._l_M_tilde)
+        if self._with_defaults:
+            self._fl_T = self.curves.tendon_force_length.with_defaults(self._l_T_tilde)
+            self._fl_M_pas = self.curves.fiber_force_length_passive.with_defaults(self._l_M_tilde)
+            self._fl_M_act = self.curves.fiber_force_length_active.with_defaults(self._l_M_tilde)
+        else:
+            fl_T_constants = symbols('c_0:4_fl_T')
+            self._fl_T = self.curves.tendon_force_length(self._l_T_tilde, *fl_T_constants)
+            fl_M_pas_constants = symbols('c_0:2_fl_M_pas')
+            self._fl_M_pas = self.curves.fiber_force_length_passive(self._l_M_tilde, *fl_M_pas_constants)
+            fl_M_act_constants = symbols('c_0:12_fl_M_act')
+            self._fl_M_act = self.curves.fiber_force_length_active(self._l_M_tilde, *fl_M_act_constants)
         self._F_T_tilde = self._fl_T
         self._F_T = self._F_T_tilde*self._F_M_max
         self._F_M = self._F_T/self._cos_alpha
         self._F_M_tilde = self._F_M/self._F_M_max
         self._fv_M = (self._F_M_tilde - self._fl_M_pas)/(self.a*self._fl_M_act)
-        self._v_M_tilde = FiberForceVelocityDeGroote2016.with_defaults(self._fv_M)
+        if self._with_defaults:
+            self._v_M_tilde = self.curves.fiber_force_velocity_inverse.with_defaults(self._fv_M)
+        else:
+            fv_M_constants = symbols('c_0:4_fv_M')
+            self._v_M_tilde = self.curves.fiber_force_velocity_inverse(self._fv_M, *fv_M_constants)
         self._dl_M_tilde_dt = (self._v_M_max/self._l_M_opt)*self._v_M_tilde
 
         self._state_vars = Matrix([self._l_M_tilde])
@@ -435,6 +461,51 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
     def _tendon_force_explicit_musculotendon_dynamics(self):
         """Elastic tendon musculotendon using `F_T_tilde` as a state."""
         raise NotImplementedError
+        self._F_T_tilde = dynamicsymbols(f'F_T_tilde_{self.name}')
+        self._l_MT = self.pathway.length
+        self._v_MT = self.pathway.extension_velocity
+        self._fl_T = self._F_T_tilde
+        if self._with_defaults:
+            self._fl_T_inv = self.curves.tendon_force_length_inverse.with_defaults(self._fl_T)
+        else:
+            fl_T_constants = symbols('c_0:4_fl_T')
+            self._fl_T_inv = self.curves.tendon_force_length_inverse(self._fl_T, *fl_T_constants)
+        self._l_T_tilde = self._fl_T_inv
+        self._l_T = self._l_T_tilde*self._l_T_slack
+        self._l_M = sqrt((self._l_MT - self._l_T)**2 + (self._l_M_opt*sin(self._alpha_opt))**2)
+        self._l_M_tilde = self._l_M/self._l_M_opt
+        if self._with_defaults:
+            self._fl_M_pas = self.curves.fiber_force_length_passive.with_defaults(self._l_M_tilde)
+            self._fl_M_act = self.curves.fiber_force_length_active.with_defaults(self._l_M_tilde)
+        else:
+            fl_M_pas_constants = symbols('c_0:2_fl_M_pas')
+            self._fl_M_pas = self.curves.fiber_force_length_passive(self._l_M_tilde, *fl_M_pas_constants)
+            fl_M_act_constants = symbols('c_0:12_fl_M_act')
+            self._fl_M_act = self.curves.fiber_force_length_active(self._l_M_tilde, *fl_M_act_constants)
+        self._cos_alpha = (self._l_MT - self._l_T)/self._l_M
+        self._F_T = self._F_T_tilde*self._F_M_max
+        self._F_M = self._F_T/self._cos_alpha
+        self._F_M_tilde = self._F_M/self._F_M_max
+        self._fv_M = (self._F_M_tilde - self._fl_M_pas)/(self.a*self._fl_M_act)
+        if self._with_defaults:
+            self._fv_M_inv = self.curves.fiber_force_velocity_inverse.with_defaults(self._fv_M)
+        else:
+            fv_M_constants = symbols('c_0:4_fv_M')
+            self._fv_M_inv = self.curves.fiber_force_velocity_inverse(self._fv_M, *fv_M_constants)
+        self._v_M_tilde = self._fv_M_inv
+        self._v_M = self._v_M_tilde*self._v_M_max
+        self._v_T = self._v_MT - (self._v_M/self._cos_alpha)
+        self._v_T_tilde = self._v_T/self._l_T_slack
+        if self._with_defaults:
+            self._fl_T = self.curves.tendon_force_length.with_defaults(self._l_T_tilde)
+        else:
+            fl_T_constants = symbols('c_0:4_fl_T')
+            self._fl_T = self.curves.tendon_force_length(self._l_T_tilde, *fl_T_constants)
+        self._dF_T_tilde_dt = self._fl_T.diff(dynamicsymbols._t).subs({self._l_T_tilde.diff(dynamicsymbols._t): self._v_T_tilde})
+
+        self._state_vars = Matrix([self._F_T_tilde])
+        self._input_vars = zeros(0, 1)
+        self._state_eqns = Matrix([self._dF_T_tilde_dt])
 
     def _fiber_length_implicit_musculotendon_dynamics(self):
         raise NotImplementedError
