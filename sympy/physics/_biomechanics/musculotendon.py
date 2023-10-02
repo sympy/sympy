@@ -49,20 +49,20 @@ class MusculotendonFormulation(IntEnum):
     =======
 
     RIGID_TENDON : 0
-        Uses a rigid tendon model.
+        A rigid tendon model.
     FIBER_LENGTH_EXPLICIT : 1
-        Uses an explicit elastic tendon model with the muscle fiber length
-        (l_M) as the state variable.
-    TENDON_FORCE_EXPLICIT : 2
-        Uses an explicit elastic tendon model with the tendon force (F_T) as
+        An explicit elastic tendon model with the muscle fiber length (l_M) as
         the state variable.
+    TENDON_FORCE_EXPLICIT : 2
+        An explicit elastic tendon model with the tendon force (F_T) as the
+        state variable.
     FIBER_LENGTH_IMPLICIT : 3
-        Uses an implicit elastic tendon model with the muscle fiber length
-        (l_M) as the state variable and the muscle fiber velocity as an
-        additional input variable.
+        An implicit elastic tendon model with the muscle fiber length (l_M) as
+        the state variable and the muscle fiber velocity as an additional input
+        variable.
     TENDON_FORCE_IMPLICIT : 4
-        Uses an implicit elastic tendon model with the tendon force (F_T) as
-        the state variable as the muscle fiber velocity as an additional input
+        An implicit elastic tendon model with the tendon force (F_T) as the
+        state variable as the muscle fiber velocity as an additional input
         variable.
 
     """
@@ -77,8 +77,8 @@ class MusculotendonFormulation(IntEnum):
 _DEFAULT_MUSCULOTENDON_FORMULATION = MusculotendonFormulation.RIGID_TENDON
 
 
-class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
-    """Abstract base class for all musculotendon classes to inherit from.
+class MusculotendonBase(ForceActuator, _NamedMixin):
+    r"""Abstract base class for all musculotendon classes to inherit from.
 
     Explanation
     ===========
@@ -92,6 +92,7 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
 
     Parameters
     ==========
+
     name : str
         The name identifier associated with the musculotendon. This name is used
         as a suffix when automatically generated symbols are instantiated. It
@@ -100,20 +101,46 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
         The pathway that the actuator follows. This must be an instance of a
         concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
     activation_dynamics : ActivationBase
-
+        The activation dynamics that will be modeled within the musculotendon.
+        This must be an instance of a concrete subclass of ``ActivationBase``,
+        e.g. ``FirstOrderActivationDeGroote2016``.
     musculotendon_dynamics : MusculotendonFormulation | int
-
-    tendon_slack_length :
-
-    peak_isometric_force :
-
-    optimal_fiber_length :
-
-    maximal_fiber_velocity :
-
-    optimal_pennation_angle :
-
-    fiber_damping_coefficient :
+        The formulation of musculotendon dynamics that should be used
+        internally, i.e. rigid or elastic tendon model, the choice of
+        musculotendon state etc. This must be a member of the integer
+        enumeration ``MusculotendonFormulation`` or an integer that can be cast
+        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
+        (or ``0``), which corresponds to a rigid tendon formulation.
+    tendon_slack_length : Expr | None
+        The length of the tendon when the musculotendon is in its unloaded
+        state. In a rigid tendon model the tendon length is the tendon slack
+        length. In all musculotendon models, tendon slack length is used to
+        normalize tendon length to give
+        :math:`\tilde{l}^T = \frac{l^T}{l^T_{slack}}`.
+    peak_isometric_force : Expr | None
+        The maximum force that the muscle fiber can produce when it is
+        undergoing an isometric contraction (no lengthening velocity). In all
+        musculotendon models, peak isometric force is used to normalized tendon
+        and muscle fiber force to give :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`
+    optimal_fiber_length : Expr | None
+        The muscle fiber length at which the muscle fibers produce no passive
+        force and their maximum active force. In all musculotendon models,
+        optimal fiber length is used to normalize muscle fiber length to give
+        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`
+    maximal_fiber_velocity : Expr | None
+        The fiber velocity at which, during muscle fiber shortening, the muscle
+        fibers are unable to produce any active force. In all musculotendon
+        models, maximal fiber velocity is used to normalize muscle fiber
+        extension velocity to give :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`.
+    optimal_pennation_angle : Expr | None
+        The pennation angle when muscle fiber length equals the optimal fiber
+        length.
+    fiber_damping_coefficient : Expr | None
+        The coefficient of damping to be used in the damping element in the
+        muscle fiber model.
+    with_defaults : bool
+        Whether ``with_defaults`` alternate constructors should be used when
+        automatically constructing child classes. Default is ``False``.
 
     """
 
@@ -600,6 +627,7 @@ class MusculotendonDeGroote2016(ForceActuator, _NamedMixin):
         return self.M.solve(self.F)
 
     def __repr__(self):
+        """Returns a string representation to reinstantiate the model."""
         return (
             f'{self.__class__.__name__}({self.name!r}, '
             f'pathway={self.pathway!r}, '
