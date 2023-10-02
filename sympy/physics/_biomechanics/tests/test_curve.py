@@ -11,6 +11,7 @@ from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.curve import (
+    CharacteristicCurveCollection,
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
@@ -1698,3 +1699,85 @@ class TestFiberForceVelocityInverseDeGroote2016:
             0.0959484397,
         ])
         numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
+
+
+class TestCharacteristicCurveCollection:
+
+    @staticmethod
+    def test_valid_constructor():
+        curves = CharacteristicCurveCollection(
+            tendon_force_length=TendonForceLengthDeGroote2016,
+            tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
+            fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
+            fiber_force_length_passive_inverse=FiberForceLengthPassiveInverseDeGroote2016,
+            fiber_force_length_active=FiberForceLengthActiveDeGroote2016,
+            fiber_force_velocity=FiberForceVelocityDeGroote2016,
+            fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
+        )
+        assert curves.tendon_force_length is TendonForceLengthDeGroote2016
+        assert curves.tendon_force_length_inverse is TendonForceLengthInverseDeGroote2016
+        assert curves.fiber_force_length_passive is FiberForceLengthPassiveDeGroote2016
+        assert curves.fiber_force_length_passive_inverse is FiberForceLengthPassiveInverseDeGroote2016
+        assert curves.fiber_force_length_active is FiberForceLengthActiveDeGroote2016
+        assert curves.fiber_force_velocity is FiberForceVelocityDeGroote2016
+        assert curves.fiber_force_velocity_inverse is FiberForceVelocityInverseDeGroote2016
+
+    @staticmethod
+    def test_invalid_constructor_keyword_only():
+        with pytest.raises(TypeError):
+            _ = CharacteristicCurveCollection(
+                TendonForceLengthDeGroote2016,
+                TendonForceLengthInverseDeGroote2016,
+                FiberForceLengthPassiveDeGroote2016,
+                FiberForceLengthPassiveInverseDeGroote2016,
+                FiberForceLengthActiveDeGroote2016,
+                FiberForceVelocityDeGroote2016,
+                FiberForceVelocityInverseDeGroote2016,
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'kwargs',
+        [
+            {'tendon_force_length': TendonForceLengthDeGroote2016},
+            {
+                'tendon_force_length': TendonForceLengthDeGroote2016,
+                'tendon_force_length_inverse': TendonForceLengthInverseDeGroote2016,
+                'fiber_force_length_passive': FiberForceLengthPassiveDeGroote2016,
+                'fiber_force_length_passive_inverse': FiberForceLengthPassiveInverseDeGroote2016,
+                'fiber_force_length_active': FiberForceLengthActiveDeGroote2016,
+                'fiber_force_velocity': FiberForceVelocityDeGroote2016,
+                'fiber_force_velocity_inverse': FiberForceVelocityInverseDeGroote2016,
+                'extra_kwarg': None,
+            },
+        ]
+    )
+    def test_invalid_constructor_wrong_number_args(kwargs):
+        with pytest.raises(TypeError):
+            _ = CharacteristicCurveCollection(**kwargs)
+
+    @staticmethod
+    def test_instance_is_immutable():
+        curves = CharacteristicCurveCollection(
+            tendon_force_length=TendonForceLengthDeGroote2016,
+            tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
+            fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
+            fiber_force_length_passive_inverse=FiberForceLengthPassiveInverseDeGroote2016,
+            fiber_force_length_active=FiberForceLengthActiveDeGroote2016,
+            fiber_force_velocity=FiberForceVelocityDeGroote2016,
+            fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
+        )
+        with pytest.raises(AttributeError):
+            curves.tendon_force_length = None
+        with pytest.raises(AttributeError):
+            curves.tendon_force_length_inverse = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_passive = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_passive_inverse = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_active = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_velocity = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_velocity_inverse = None
