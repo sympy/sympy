@@ -10,6 +10,7 @@ and are specific to a given musculotendon model.
 
 """
 
+from abc import abstractmethod
 from enum import IntEnum, unique
 
 from sympy.core.numbers import Integer, Rational
@@ -19,10 +20,14 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, diag, eye, zeros
 from sympy.physics._biomechanics.activation import ActivationBase
 from sympy.physics._biomechanics.curve import (
+    CharacteristicCurveCollection,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
+    FiberForceLengthPassiveInverseDeGroote2016,
     FiberForceVelocityDeGroote2016,
+    FiberForceVelocityInverseDeGroote2016,
     TendonForceLengthDeGroote2016,
+    TendonForceLengthInverseDeGroote2016,
 )
 from sympy.physics._biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
@@ -30,6 +35,7 @@ from sympy.physics.vector.functions import dynamicsymbols
 
 
 __all__ = [
+    'MusculotendonBase',
     'MusculotendonDeGroote2016',
     'MusculotendonFormulation',
 ]
@@ -257,6 +263,12 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             optimal_pennation_angle=alpha_opt,
             fiber_damping_coefficient=beta,
         )
+
+    @abstractmethod
+    def curves(cls):
+        """Return a ``CharacteristicCurveCollection`` of the curves related to
+        the specific model."""
+        pass
 
     @property
     def tendon_slack_length(self):
@@ -645,3 +657,27 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         """Returns a string representation of the expression for musculotendon
         force."""
         return str(self.force)
+
+
+class MusculotendonDeGroote2016(MusculotendonBase):
+    """Musculotendon model using the curves of De Groote et al., 2016 [1].
+
+    References
+    ==========
+
+    .. [1] De Groote, F., Kinney, A. L., Rao, A. V., & Fregly, B. J., Evaluation
+           of direct collocation optimal control problem formulations for
+           solving the muscle redundancy problem, Annals of biomedical
+           engineering, 44(10), (2016) pp. 2922-2936
+
+    """
+
+    curves = CharacteristicCurveCollection(
+        tendon_force_length=TendonForceLengthDeGroote2016,
+        tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
+        fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
+        fiber_force_length_passive_inverse=FiberForceLengthPassiveInverseDeGroote2016,
+        fiber_force_length_active=FiberForceLengthActiveDeGroote2016,
+        fiber_force_velocity=FiberForceVelocityDeGroote2016,
+        fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
+    )
