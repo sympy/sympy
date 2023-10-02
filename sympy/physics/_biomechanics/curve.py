@@ -13,6 +13,7 @@ from sympy.printing.precedence import PRECEDENCE
 
 __all__ = [
     'CharacteristicCurveCollection',
+    'CharacteristicCurveFunction',
     'FiberForceLengthActiveDeGroote2016',
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
