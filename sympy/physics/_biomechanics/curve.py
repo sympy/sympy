@@ -1,5 +1,7 @@
 """Implementations of characteristic curves for musculotendon models."""
 
+from dataclasses import dataclass
+
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
 from sympy.core.numbers import Float, Integer, Rational
@@ -10,6 +12,7 @@ from sympy.printing.precedence import PRECEDENCE
 
 
 __all__ = [
+    'CharacteristicCurveCollection',
     'FiberForceLengthActiveDeGroote2016',
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
@@ -1738,3 +1741,15 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
         fv_M = self.args[0]
         _fv_M = printer._print(fv_M)
         return r'\left( \operatorname{fv}^M \right)^{-1} \left( %s \right)' % _fv_M
+
+
+@dataclass(frozen=True)
+class CharacteristicCurveCollection:
+    """Simple data container to group """
+    tendon_force_length: CharacteristicCurveFunction
+    tendon_force_length_inverse: CharacteristicCurveFunction
+    fiber_force_length_passive: CharacteristicCurveFunction
+    fiber_force_length_passive_inverse: CharacteristicCurveFunction
+    fiber_force_length_active: CharacteristicCurveFunction
+    fiber_force_velocity: CharacteristicCurveFunction
+    fiber_force_velocity_inverse: CharacteristicCurveFunction
