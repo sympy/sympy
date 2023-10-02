@@ -14,9 +14,9 @@ from abc import abstractmethod
 from enum import IntEnum, unique
 
 from sympy.core.numbers import Integer, Rational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, diag, eye, zeros
 from sympy.physics._biomechanics.activation import ActivationBase
 from sympy.physics._biomechanics.curve import (
