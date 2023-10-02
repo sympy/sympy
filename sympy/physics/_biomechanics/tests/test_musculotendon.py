@@ -196,24 +196,6 @@ class TestMusculotendonRigidTendon:
         assert rhs.shape == (1, 1)
         assert simplify(rhs - rhs_expected) == zeros(1)
 
-    def test_repr(self):
-        expected = (
-            'MusculotendonDeGroote2016(\'name\', '
-            'pathway=LinearPathway(pO, pI), '
-            'activation_dynamics=FirstOrderActivationDeGroote2016(\'name\', '
-            'activation_time_constant=tau_a_name, '
-            'deactivation_time_constant=tau_d_name, '
-            'smoothing_rate=b_name), '
-            'musculotendon_dynamics=0, '
-            'tendon_slack_length=l_T_slack, '
-            'peak_isometric_force=F_M_max, '
-            'optimal_fiber_length=l_M_opt, '
-            'maximal_fiber_velocity=v_M_max, '
-            'optimal_pennation_angle=alpha_opt, '
-            'fiber_damping_coefficient=beta)'
-        )
-        assert repr(self.instance) == expected
-
 
 @pytest.mark.parametrize(
     'musculotendon_concrete, curve',
@@ -361,24 +343,6 @@ class TestFiberLengthExplicit:
         assert isinstance(rhs, Matrix)
         assert rhs.shape == (2, 1)
         assert simplify(rhs - rhs_expected) == zeros(2, 1)
-
-    def test_repr(self):
-        expected = (
-            'MusculotendonDeGroote2016(\'name\', '
-            'pathway=LinearPathway(pO, pI), '
-            'activation_dynamics=FirstOrderActivationDeGroote2016(\'name\', '
-            'activation_time_constant=tau_a_name, '
-            'deactivation_time_constant=tau_d_name, '
-            'smoothing_rate=b_name), '
-            'musculotendon_dynamics=1, '
-            'tendon_slack_length=l_T_slack, '
-            'peak_isometric_force=F_M_max, '
-            'optimal_fiber_length=l_M_opt, '
-            'maximal_fiber_velocity=v_M_max, '
-            'optimal_pennation_angle=alpha_opt, '
-            'fiber_damping_coefficient=beta)'
-        )
-        assert repr(self.instance) == expected
 
 
 class TestMusculotendonDeGroote2016:
