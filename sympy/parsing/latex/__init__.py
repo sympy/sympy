@@ -6,7 +6,7 @@ from sympy.parsing.latex.lark import LarkLaTeXParser, TransformToSymPyExpr, pars
 from .errors import LaTeXParsingError  # noqa
 
 @doctest_depends_on(modules=('antlr4', 'lark'))
-def parse_latex(s, strict=False, backend="ANTLR"):
+def parse_latex(s, strict=False, backend="antlr"):
     r"""Converts the input LaTeX string ``s`` to a SymPy ``Expr``.
 
     Parameters
@@ -59,4 +59,4 @@ def parse_latex(s, strict=False, backend="ANTLR"):
         return parse_latex_lark(s)
     else:
         raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   "parser is not supported.")
+                                   " parser is not supported.")
