@@ -353,8 +353,7 @@ def _perfect_power(n, k=2):
     Explanation
     ===========
 
-    ``perfect_power`` exists, but this function is a low-function,
-    fast version for internal use.
+    This is a low-level helper for ``perfect_power``, for internal use.
 
     Parameters
     ==========
