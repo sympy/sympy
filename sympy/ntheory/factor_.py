@@ -347,7 +347,7 @@ def multiplicity_in_factorial(p, n):
 
 
 def _perfect_power(n, k=2):
-    """ Return ``(b, e)`` such that ``n == b**e`` if ``n`` is a unique
+    """ Return integers ``(b, e)`` such that ``n == b**e`` if ``n`` is a unique
     perfect power with ``e > 1``, else ``False`` (e.g. 1 is not a perfect power).
 
     Explanation
