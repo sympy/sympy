@@ -951,6 +951,17 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         column ``Matrix`` with shape (0, 1).
 
         """
+        is_explicit = (
+            MusculotendonFormulation.FIBER_LENGTH_EXPLICIT,
+            MusculotendonFormulation.TENDON_FORCE_EXPLICIT,
+        )
+        if self.musculotendon_dynamics is MusculotendonFormulation.RIGID_TENDON:
+            child_rhs = [child.rhs() for child in self._child_objects]
+            return Matrix.vstack(*child_rhs)
+        elif self.musculotendon_dynamics in is_explicit:
+            rhs = self._state_eqns
+            child_rhs = [child.rhs() for child in self._child_objects]
+            return Matrix.vstack(rhs, *child_rhs)
         return self.M.solve(self.F)
 
     def __repr__(self):
