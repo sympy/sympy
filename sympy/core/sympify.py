@@ -401,13 +401,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     _sympy_ = getattr(a, "_sympy_", None)
     if _sympy_ is not None:
-        try:
-            return a._sympy_()
-        # XXX: Catches AttributeError: 'SymPyConverter' object has no
-        # attribute 'tuple'
-        # This is probably a bug somewhere but for now we catch it here.
-        except AttributeError:
-            pass
+        return a._sympy_()
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
