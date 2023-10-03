@@ -282,7 +282,7 @@ def test_set_signs():
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
 
     # https://github.com/sympy/sympy/issues/9449
-    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == 1/sign(y)
 
     # https://github.com/sympy/sympy/issues/12398
     assert limit(Abs(log(x)/x**3), x, oo) == 0

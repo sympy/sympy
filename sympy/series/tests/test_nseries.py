@@ -477,7 +477,7 @@ def test_abs():
     assert abs(x + 1).nseries(x, n=4) == x + 1
     assert abs(sin(x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
     assert abs(sin(-x)).nseries(x, n=4) == x - Rational(1, 6)*x**3 + O(x**4)
-    assert abs(x - a).nseries(x, 1) == -a*sign(1 - a) + (x - 1)*sign(1 - a) + sign(1 - a)
+    assert abs(x - a).nseries(x, 1) == -a/sign(1 - a) + (x - 1)/sign(1 - a) + 1/sign(1 - a)
 
 
 def test_dir():
