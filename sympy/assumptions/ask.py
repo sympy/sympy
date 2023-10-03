@@ -76,7 +76,7 @@ class AssumptionKeys:
 
     @memoize_property
     def noninteger(self):
-        from .handlers.sets import NonIntegerPredicate
+        from .predicates.sets import NonIntegerPredicate
         return NonIntegerPredicate()
 
     @memoize_property
