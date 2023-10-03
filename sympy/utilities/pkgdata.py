@@ -19,7 +19,6 @@ object (such as StringIO).
 
 import sys
 import os
-from io import StringIO
 
 
 def get_resource(identifier, pkgname=__name__):
@@ -47,5 +46,5 @@ def get_resource(identifier, pkgname=__name__):
     path = os.path.join(os.path.dirname(fn), identifier)
     loader = getattr(mod, '__loader__', None)
     if loader is not None:
-        data = loader.get_data(path)
+        return loader.get_data(path)
     return open(os.path.normpath(path), 'rb')
