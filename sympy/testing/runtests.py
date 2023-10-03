@@ -1742,15 +1742,11 @@ class SymPyDocTestFinder(DocTestFinder):
             lineno = int(matches[0][5:])
 
         else:
-            try:
-                if obj.__doc__ is None:
-                    docstring = ''
-                else:
-                    docstring = obj.__doc__
-                    if not isinstance(docstring, str):
-                        docstring = str(docstring)
-            except (TypeError, AttributeError):
+            docstring = getattr(obj, '__doc__', '')
+            if docstring is None:
                 docstring = ''
+            if not isinstance(docstring, str):
+                docstring = str(docstring)
 
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
