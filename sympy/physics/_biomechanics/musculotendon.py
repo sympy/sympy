@@ -705,7 +705,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     def _tendon_force_explicit_musculotendon_dynamics(self):
         """Elastic tendon musculotendon using `F_T_tilde` as a state."""
-        raise NotImplementedError
         self._F_T_tilde = dynamicsymbols(f'F_T_tilde_{self.name}')
         self._l_MT = self.pathway.length
         self._v_MT = self.pathway.extension_velocity
