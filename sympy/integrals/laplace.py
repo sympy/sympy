@@ -565,27 +565,27 @@ def _laplace_rule_heaviside(f, t, s):
     a = Wild('a', exclude=[t])
     y = Wild('y')
     g = Wild('g')
-    ma1 = f.match(Heaviside(y)*g)
-    if ma1:
-        ma2 = ma1[y].match(t-a)
-        if ma2 and ma2[a].is_positive:
-            _debug('     rule: time shift (4.1.4)')
-            r, pr, cr = _laplace_transform(
-                ma1[g].subs(t, t+ma2[a]), t, s, simplify=False)
-            return (exp(-ma2[a]*s)*r, pr, cr)
-        if ma2 and ma2[a].is_negative:
-            _debug('     rule: Heaviside factor, negative time shift (4.1.4)')
-            r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
-            return (r, pr, cr)
-        ma2 = ma1[y].match(a-t)
-        if ma2 and ma2[a].is_positive:
-            _debug('     rule: Heaviside window open')
-            r, pr, cr = _laplace_transform(
-                (1-Heaviside(t-ma2[a]))*ma1[g], t, s, simplify=False)
-            return (r, pr, cr)
-        if ma2 and ma2[a].is_negative:
-            _debug('     rule: Heaviside window closed')
-            return (0, 0, S.true)
+    if ma1 := f.match(Heaviside(y) * g):
+        if ma2 := ma1[y].match(t - a):
+            if ma2[a].is_positive:
+                _debug('     rule: time shift (4.1.4)')
+                r, pr, cr = _laplace_transform(
+                    ma1[g].subs(t, t + ma2[a]), t, s, simplify=False)
+                return (exp(-ma2[a] * s) * r, pr, cr)
+            if ma2[a].is_negative:
+                _debug(
+                    '     rule: Heaviside factor, negative time shift (4.1.4)')
+                r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
+                return (r, pr, cr)
+        if ma2 := ma1[y].match(a - t):
+            if ma2[a].is_positive:
+                _debug('     rule: Heaviside window open')
+                r, pr, cr = _laplace_transform(
+                    (1 - Heaviside(t - ma2[a])) * ma1[g], t, s, simplify=False)
+                return (r, pr, cr)
+            if ma2[a].is_negative:
+                _debug('     rule: Heaviside window closed')
+                return (0, 0, S.true)
     return None
 
 
@@ -956,10 +956,10 @@ def _laplace_rule_sdiff(f, t, s):
     # integer exponent.
     n = Wild('n', exclude=[t])
     g = Wild('g')
-    ma1 = f.match(t**n*g)
-    if ma1 and ma1[n].is_integer and ma1[n].is_positive:
-        r_, p_, c_ = _laplace_transform(ma1[g], t, s, simplify=False)
-        return (-1)**ma1[n]*diff(r_, (s, ma1[n])), p_, c_
+    if ma1 := f.match(t**n*g):
+        if ma1[n].is_integer and ma1[n].is_positive:
+            r_, p_, c_ = _laplace_transform(ma1[g], t, s, simplify=False)
+            return (-1)**ma1[n]*diff(r_, (s, ma1[n])), p_, c_
     return None
 
 
