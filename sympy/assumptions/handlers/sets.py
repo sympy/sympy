@@ -20,9 +20,9 @@ from sympy.multipledispatch import MDNotImplementedError
 
 from .common import test_closed_group
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
-   IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
-   HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-   AntihermitianPredicate, AlgebraicPredicate)
+    IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
+    HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
+    AntihermitianPredicate, AlgebraicPredicate)
 
 
 # IntegerPredicate
