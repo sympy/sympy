@@ -18,7 +18,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import atan, cos, sin
 from sympy.logic.boolalg import And
-from sympy.functions.special.gamma_functions import lowergamma, gamma
+from sympy.functions.special.gamma_functions import (
+    lowergamma, gamma, uppergamma)
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
@@ -34,7 +35,8 @@ from sympy.abc import s
 def test_laplace_transform():
     LT = laplace_transform
     ILT = inverse_laplace_transform
-    a, b, c, = symbols('a, b, c', positive=True)
+    a, b, c = symbols('a, b, c', positive=True)
+    np = symbols('np', integer=True, positive=True)
     t, w, x = symbols('t, w, x')
     f = Function('f')
     F = Function('F')
@@ -70,8 +72,8 @@ def test_laplace_transform():
     assert (LT(1/(a*sqrt(t) + t**(3/2)), t, s) ==
             (pi*sqrt(a)*exp(a*s)*erfc(sqrt(a)*sqrt(s)), 0, True))
     assert (LT((t+a)**b, t, s) ==
-            (s**(-b - 1)*exp(-a*s)*lowergamma(b + 1, a*s), 0, True))
-    assert LT(t**5/(t+a), t, s) == (120*a**5*lowergamma(-5, a*s), 0, True)
+            (s**(-b - 1)*exp(-a*s)*uppergamma(b + 1, a*s), 0, True))
+    assert LT(t**5/(t+a), t, s) == (120*a**5*uppergamma(-5, a*s), 0, True)
     assert LT(exp(t), t, s) == (1/(s - 1), 1, True)
     assert LT(exp(2*t), t, s) == (1/(s - 2), 2, True)
     assert LT(exp(a*t), t, s) == (1/(s - a), a, True)
@@ -317,6 +319,9 @@ def test_laplace_transform():
             (a*Derivative(LaplaceTransform(f(t), t, s), (s, 2)) -
              b*Derivative(LaplaceTransform(f(t), t, s), s) +
             c*LaplaceTransform(f(t), t, s), -oo, True))
+    assert (LT(t**np*g(t), t, s) ==
+            ((-1)**np*Derivative(LaplaceTransform(g(t), t, s), (s, np)),
+             -oo, True))
     # The following tests check whether _piecewise_to_heaviside works:
     x1 = Piecewise((0, t <= 0), (1, t <= 1), (0, True))
     X1 = LT(x1, t, s)[0]
@@ -437,6 +442,18 @@ def test_laplace_transform():
             (1/s - exp(-2*s)/s, 0, True))
     assert (LT(g(t)*Heaviside(t - w), t, s) ==
             (LaplaceTransform(g(t)*Heaviside(t - w), t, s), -oo, True))
+    assert (
+        LT(Heaviside(t-a)*g(t), t, s) ==
+        (LaplaceTransform(g(a + t), t, s)*exp(-a*s), -oo, True))
+    assert (
+        LT(Heaviside(t+a)*g(t), t, s) ==
+        (LaplaceTransform(g(t), t, s), -oo, True))
+    assert (
+        LT(Heaviside(-t+a)*g(t), t, s) ==
+        (LaplaceTransform(g(t), t, s) -
+         LaplaceTransform(g(a + t), t, s)*exp(-a*s), -oo, True))
+    assert (
+        LT(Heaviside(-t-a)*g(t), t, s) == (0, 0, True))
     # Fresnel functions
     assert (laplace_transform(fresnels(t), t, s, simplify=True) ==
             ((-sin(s**2/(2*pi))*fresnels(s/pi) +
