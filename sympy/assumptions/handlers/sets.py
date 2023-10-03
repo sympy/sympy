@@ -19,10 +19,10 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.multipledispatch import MDNotImplementedError
 
 from .common import test_closed_group
-from ..predicates.sets import (IntegerPredicate, RationalPredicate,
-    IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
-    HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+from ..predicates.sets import (IntegerPredicate, NonIntegerPredicate,
+   RationalPredicate, IrrationalPredicate, RealPredicate,
+   ExtendedRealPredicate, HermitianPredicate, ComplexPredicate,
+   ImaginaryPredicate, AntihermitianPredicate, AlgebraicPredicate)
 
 
 # IntegerPredicate
