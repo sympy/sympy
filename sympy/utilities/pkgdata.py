@@ -47,10 +47,5 @@ def get_resource(identifier, pkgname=__name__):
     path = os.path.join(os.path.dirname(fn), identifier)
     loader = getattr(mod, '__loader__', None)
     if loader is not None:
-        try:
-            data = loader.get_data(path)
-        except (OSError, AttributeError):
-            pass
-        else:
-            return StringIO(data.decode('utf-8'))
+        data = loader.get_data(path)
     return open(os.path.normpath(path), 'rb')
