@@ -426,14 +426,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                                        evaluate=evaluate)
                     except SympifyError:
                         pass
-        else:
+        elif hasattr(a, '__float__'):
             # float and int can coerce size-one numpy arrays to their lone
             # element.  See issue https://github.com/numpy/numpy/issues/10404.
-            for coerce in (float, int):
-                try:
-                    return sympify(coerce(a))
-                except (TypeError, ValueError, AttributeError, SympifyError):
-                    continue
+            return sympify(float(a))
+        elif hasattr(a, '__int__'):
+            return sympify(int(a))
 
     if strict:
         raise SympifyError(a)
