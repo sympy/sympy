@@ -521,7 +521,8 @@ def test_piecewise_simplify():
     assert p.simplify() == Piecewise(
         (0, t < -2), ((t + 1)*(t + 2)**2/2, t < -1), (-3*t**3/2
         - 5*t**2/2 + 1, t < 0), (3*t**3/2 - 5*t**2/2 + 1, t < 1), ((1 -
-        t)*(2 - t)**2/2, t < 2), (0, True))
+        t)*(t - 2)**2/2, t < 2), (0, True))
+
 
     # coverage
     nan = Undefined

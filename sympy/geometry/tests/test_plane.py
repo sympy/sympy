@@ -2,7 +2,7 @@ from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (asin, cos, sin)
+from sympy.functions.elementary.trigonometric import (asin, cos, sin, acos)
 from sympy.geometry import Line, Point, Ray, Segment, Point3D, Line3D, Ray3D, Segment3D, Plane, Circle
 from sympy.geometry.util import are_coplanar
 from sympy.testing.pytest import raises
@@ -260,7 +260,7 @@ def test_parameter_value():
     t, u, v = symbols("t, u v")
     p1, p2, p3 = Point(0, 0, 0), Point(0, 0, 1), Point(0, 1, 0)
     p = Plane(p1, p2, p3)
-    assert p.parameter_value((0, -3, 2), t) == {t: asin(2*sqrt(13)/13)}
+    assert p.parameter_value((0, -3, 2), t) == {t: acos(3*sqrt(13)/13)}
     assert p.parameter_value((0, -3, 2), u, v) == {u: 3, v: 2}
     assert p.parameter_value(p1, t) == p1
     raises(ValueError, lambda: p.parameter_value((1, 0, 0), t))

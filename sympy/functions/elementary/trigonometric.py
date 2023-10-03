@@ -1151,11 +1151,12 @@ class tan(TrigonometricFunction):
 
         elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff.is_Integer and coeff > 1:
+            if coeff.is_Integer and abs(coeff) > 1:
                 I = S.ImaginaryUnit
                 z = Symbol('dummy', real=True)
-                P = ((1 + I*z)**coeff).expand()
-                return (im(P)/re(P)).subs([(z, tan(terms))])
+                P = ((1 + I*z)**abs(coeff)).expand()
+                sign = (1 if coeff > 0 else -1)
+                return (im(P)/re(P)).subs([(z, sign*tan(terms))])
         return tan(arg)
 
     def _eval_rewrite_as_exp(self, arg, **kwargs):
@@ -1521,11 +1522,12 @@ class cot(TrigonometricFunction):
             return (p[0]/p[1]).subs(list(zip(Y, CX)))
         elif arg.is_Mul:
             coeff, terms = arg.as_coeff_Mul(rational=True)
-            if coeff.is_Integer and coeff > 1:
+            if coeff.is_Integer and abs(coeff) > 1:
                 I = S.ImaginaryUnit
                 z = Symbol('dummy', real=True)
-                P = ((z + I)**coeff).expand()
-                return (re(P)/im(P)).subs([(z, cot(terms))])
+                P = ((z + I)**abs(coeff)).expand()
+                sign = 1 if coeff > 0 else -1
+                return (re(P)/im(P)).subs([(z, sign*cot(terms))])
         return cot(arg)  # XXX sec and csc return 1/cos and 1/sin
 
     def _eval_is_finite(self):

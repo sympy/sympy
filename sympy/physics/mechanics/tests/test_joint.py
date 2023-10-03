@@ -533,12 +533,9 @@ def test_pin_joint_arbitrary_axis():
     assert expand_mul(N.x.angle_between(A.x + A.y - A.z)) == 0  # Axis aligned
     assert (A.x + A.y - A.z).express(N).simplify() == sqrt(3)*N.x
     assert simplify(A.dcm(N)) == Matrix([
-        [sqrt(3)/3, -sqrt(6)*sin(q + pi/4)/3,
-         sqrt(6)*cos(q + pi/4)/3],
-        [sqrt(3)/3, sqrt(6)*cos(q + pi/12)/3,
-         sqrt(6)*sin(q + pi/12)/3],
-        [-sqrt(3)/3, sqrt(6)*cos(q + 5*pi/12)/3,
-         sqrt(6)*sin(q + 5*pi/12)/3]])
+        [sqrt(3)/3, -sqrt(6)*sin(pi/4 + q)/3, sqrt(6)*sin(pi/4 - q)/3],
+        [sqrt(3)/3, (-3 + sqrt(3))*sin(q)/6 + (3 + sqrt(3))*cos(q)/6, (3 - sqrt(3))*cos(q)/6 + (3 + sqrt(3))*sin(q)/6],
+        [-sqrt(3)/3, (-3 + sqrt(3))*cos(q)/-6 - (3 + sqrt(3))*sin(q)/6, (3 - sqrt(3))*sin(q)/6 + (3 + sqrt(3))*cos(q)/6]])
     assert A.ang_vel_in(N) == u*N.x
     assert A.ang_vel_in(N).express(A).simplify() == (u*A.x + u*A.y -
                                                      u*A.z)/sqrt(3)
@@ -547,11 +544,10 @@ def test_pin_joint_arbitrary_axis():
     assert angle.xreplace({u: 1}).simplify() == 0
     assert C.masscenter.vel(N).simplify() == (u*A.y + u*A.z)/sqrt(3)
     assert C.masscenter.pos_from(P.masscenter) == N.x - A.x
-    assert (C.masscenter.pos_from(P.masscenter).express(N).simplify() ==
-            (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(q + pi/4)/3*N.y -
-            sqrt(6)*cos(q + pi/4)/3*N.z)
+    assert C.masscenter.pos_from(P.masscenter).express(N).simplify(
+        ) == (1 - sqrt(3)/3)*N.x + sqrt(6)*sin(pi/4 + q)/3*N.y - sqrt(6)*sin(pi/4 - q)/3*N.z
     assert (C.masscenter.vel(N).express(N).simplify() ==
-            sqrt(6)*u*cos(q + pi/4)/3*N.y +
+            sqrt(6)*u*sin(pi/4 - q)/3*N.y +
             sqrt(6)*u*sin(q + pi/4)/3*N.z)
     assert C.masscenter.vel(N).angle_between(A.x) == pi/2
 
@@ -1111,7 +1107,7 @@ def test_spherical_joint_orient_space():
         [u1 * cos(q0) + u2 * sin(q0) * cos(q1)], [u0 - u2 * sin(q1)]])
     N_v_Co = Matrix([
         [u0 - u2 * sin(q1)], [u0 - u2 * sin(q1)],
-        [sqrt(2) * (-u1 * sin(q0 + pi / 4) + u2 * cos(q0 + pi / 4) * cos(q1))]])
+        [sqrt(2)*(u2*sin(pi/4 - q0)*cos(q1) - u1*sin(pi/4 + q0))]])
     # Test default rot_type='BODY', rot_order=123
     N, A, P, C, Pint, Cint = _generate_body(True)
     S = SphericalJoint('S', P, C, coordinates=[q0, q1, q2], speeds=[u0, u1, u2],

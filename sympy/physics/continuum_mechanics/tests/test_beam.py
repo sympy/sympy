@@ -756,6 +756,7 @@ def test_max_bending_moment_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     assert b.max_bmoment() == [(0, 0), (20, 3000), (20, 16000)]
 
+
 def test_max_deflection_Beam3D():
     x = symbols('x')
     b = Beam3D(20, 40, 21, 100, 25)
@@ -765,8 +766,9 @@ def test_max_deflection_Beam3D():
     b.solve_slope_deflection()
     c = sympify("495/14")
     p = sympify("-10 + 10*sqrt(10793)/43")
-    q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
+    q = sympify("20*sqrt(10793)/301 + (-10 + 10*sqrt(10793)/43)**4/6400 - (-10 + 10*sqrt(10793)/43)**3/160 + 27*(-10 + 10*sqrt(10793)/43)**2/560 - 20/7")
     assert b.max_deflection() == [(0, 0), (10, c), (p, q)]
+
 
 def test_torsion_Beam3D():
     x = symbols('x')

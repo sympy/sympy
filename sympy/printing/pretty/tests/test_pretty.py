@@ -1073,14 +1073,13 @@ def test_Mul():
 def test_issue_5524():
     assert pretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
-         2           /         ___    \\\n\
-- (5 - y)  + (x - 5)*\\-x - 2*\\/ 2  + 5/\
+         2           /      ___        \\
+- (5 - y)  + (x - 5)*\\- 2*\\/ 2  - x + 5/\
 """
-
     assert upretty(-(-x + 5)*(-x - 2*sqrt(2) + 5) - (-y + 5)*(-y + 5)) == \
 """\
          2                          \n\
-- (5 - y)  + (x - 5)⋅(-x - 2⋅√2 + 5)\
+- (5 - y)  + (x - 5)⋅(-2⋅√2 - x + 5)\
 """
 
 
@@ -2096,26 +2095,26 @@ E \n\
 """\
 E         \n\
      1    \n\
- ---------\n\
-       1  \n\
- 1 + -----\n\
-         1\n\
-     1 + -\n\
-         n\
+ ---------
+   1      \n\
+ ----- + 1
+ 1        \n\
+ - + 1    \n\
+ n        \
 """
 
     ucode_str = \
 """\
 E         \n\
      1    \n\
- ─────────\n\
-       1  \n\
- 1 + ─────\n\
-         1\n\
-     1 + ─\n\
-         n\
+ ─────────
+   1      \n\
+ ───── + 1
+ 1        \n\
+ ─ + 1    \n\
+ n        \n\\
 """
-    assert pretty(expr) == ascii_str
+    assert pretty(expr) == ascii_str, pretty(expr)+'{'
     assert upretty(expr) == ucode_str
 
     expr = euler(n, x)
