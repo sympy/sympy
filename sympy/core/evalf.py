@@ -437,12 +437,8 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
                     try:
                         as_int(v, strict=False)
                     except ValueError:
-                        try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
+                        [as_int(i, strict=False) for i in v.as_real_imag()]
+                        continue
                 if doit:
                     re_im = re_im.subs(s)
 
