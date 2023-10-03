@@ -912,7 +912,7 @@ class StrPrinter(Printer):
 
     def _print_DMP(self, p):
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
 
         return "%s(%s, %s)" % (cls, rep, dom)

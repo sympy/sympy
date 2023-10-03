@@ -76,6 +76,43 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(dmp-rep)=
+### Deprecate the DMP.rep attribute.
+
+The internal type of ``Poly`` is the ``DMP`` class which previously could be
+used to access the coefficients of a polynomial as a list like:
+```pycon
+>>> from sympy import symbols, Poly
+>>> x = symbols('x')
+>>> p = Poly(x**2 + 2*x + 3)
+>>> p
+Poly(x**2 + 2*x + 3, x, domain='ZZ')
+>>> p.rep  # doctest: +SKIP
+DMP([1, 2, 3], ZZ)
+>>> p.rep.rep  # doctest: +SKIP
+[1, 2, 3]
+```
+
+As of SymPy 1.13 the ``DMP`` type may be implemented by one of two subclasses:
+
+- ``DMP_Python`` which is like the previous ``DMP`` type and has a list as its
+  internal representation.
+- ``DUP_Flint`` which wraps a Flint polynomial from python-flint.
+
+The ``DUP_Flint`` type does not have an attribute that is analogous to the list
+that ``DMP_Python`` has. Accessing ``.rep`` will still generate a list but now
+gives a deprecation warning.
+
+Instead of ``.rep`` use the ``DMP.to_list()`` method which returns an
+equivalent list:
+```pycon
+>>> p.rep.to_list()
+[1, 2, 3]
+```
+
+The ``.to_list()`` method is also available in previous versions of SymPy and
+its behaviour is unchanged.
+
 (eq-rewrite-Add)=
 ### Deprecate Eq.rewrite(Add)
 The ability to rewrite ``eq = Eq(x, y)`` like ``eq.rewrite(Add)`` to give ``x - y``
