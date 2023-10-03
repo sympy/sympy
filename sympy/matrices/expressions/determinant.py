@@ -3,6 +3,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.matrices import MatrixBase
 
 
 class Determinant(Expr):
@@ -96,9 +97,9 @@ class Permanent(Expr):
         return self.args[0]
 
     def doit(self, expand=False, **hints):
-        try:
+        if isinstance(self.arg, MatrixBase):
             return self.arg.per()
-        except (AttributeError, NotImplementedError):
+        else:
             return self
 
 def per(matexpr):
