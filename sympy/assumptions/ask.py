@@ -75,6 +75,11 @@ class AssumptionKeys:
         return IntegerPredicate()
 
     @memoize_property
+    def noninteger(self):
+        from .handlers.sets import NonIntegerPredicate
+        return NonIntegerPredicate()
+
+    @memoize_property
     def rational(self):
         from .handlers.sets import RationalPredicate
         return RationalPredicate()
