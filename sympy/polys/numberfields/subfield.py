@@ -251,7 +251,7 @@ def _switch_domain(g, K):
 
 def _linsolve(p):
     # Compute root of linear polynomial.
-    c, d = p.rep.rep
+    c, d = p.rep.to_list()
     return -d/c
 
 

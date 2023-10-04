@@ -2426,7 +2426,7 @@ class AlgebraicNumber(Expr):
 
         if rep0 is not None:
             from sympy.polys.densetools import dup_compose
-            c = dup_compose(rep.rep, rep0.rep, dom)
+            c = dup_compose(rep.to_list(), rep0.to_list(), dom)
             rep = DMP.from_list(c, 0, dom)
             scoeffs = Tuple(*c)
 
