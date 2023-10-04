@@ -485,3 +485,7 @@ def test__pt():
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+
+
+def test_issue_25697():
+    assert _solve_inequality(log(x, 3) <= 2, x) == (x <= 9) & (S.Zero < x)
