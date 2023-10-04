@@ -1,4 +1,5 @@
 from sympy.core import symbols, Lambda
+from sympy.core.sympify import SympifyError
 from sympy.functions import KroneckerDelta
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
@@ -19,9 +20,7 @@ def test_funcmatrix_creation():
     raises(ValueError, lambda: FunctionMatrix(0, 2j, Lambda((i, j), 0)))
 
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda(i, 0)))
-    with warns(SymPyDeprecationWarning, test_stacklevel=False):
-        # This raises a deprecation warning from sympify()
-        raises(ValueError, lambda: FunctionMatrix(2, 2, lambda i, j: 0))
+    raises(SympifyError, lambda: FunctionMatrix(2, 2, lambda i, j: 0))
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i,), 0)))
     raises(ValueError, lambda: FunctionMatrix(2, 2, Lambda((i, j, k), 0)))
     raises(ValueError, lambda: FunctionMatrix(2, 2, i+j))
