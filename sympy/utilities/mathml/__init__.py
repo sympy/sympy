@@ -4,7 +4,9 @@ content in MathML presentation.
 To use this module, you will need lxml.
 """
 
-from sympy.utilities.pkgdata import get_resource
+from importlib.resources import files
+from pathlib import Path
+
 from sympy.utilities.decorator import doctest_depends_on
 
 
@@ -18,6 +20,23 @@ def add_mathml_headers(s):
         http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd">""" + s + "</math>"
 
 
+def _read_xsl(xsl):
+    # Previously these values were allowed:
+    if xsl == 'mathml/data/simple_mmlctop.xsl':
+        xsl = 'simple_mmlctop.xsl'
+    elif xsl == 'mathml/data/mmlctop.xsl':
+        xsl = 'mmlctop.xsl'
+    elif xsl == 'mathml/data/mmltex.xsl':
+        xsl = 'mmltex.xsl'
+
+    if xsl in ['simple_mmlctop.xsl', 'mmlctop.xsl', 'mmltex.xsl']:
+        xslfile = files('sympy.utilities.mathml.data').joinpath(xsl)
+    else:
+        xslfile = Path(xsl)
+
+    return xslfile.read_bytes()
+
+
 @doctest_depends_on(modules=('lxml',))
 def apply_xsl(mml, xsl):
     """Apply a xsl to a MathML string.
@@ -28,25 +47,37 @@ def apply_xsl(mml, xsl):
     mml
         A string with MathML code.
     xsl
-        A string representing a path to a xsl (xml stylesheet) file.
-        This file name is relative to the PYTHONPATH.
+        A string giving the name of an xsl (xml stylesheet) file which can be
+        found in sympy/utilities/mathml/data. The following files are supplied
+        with SymPy:
+
+        - mmlctop.xsl
+        - mmltex.xsl
+        - simple_mmlctop.xsl
+
+        Alternatively, a full path to an xsl file can be given.
 
     Examples
     ========
 
     >>> from sympy.utilities.mathml import apply_xsl
-    >>> xsl = 'mathml/data/simple_mmlctop.xsl'
+    >>> xsl = 'simple_mmlctop.xsl'
     >>> mml = '<apply> <plus/> <ci>a</ci> <ci>b</ci> </apply>'
     >>> res = apply_xsl(mml,xsl)
-    >>> ''.join(res.splitlines())
-    '<?xml version="1.0"?><mrow xmlns="http://www.w3.org/1998/Math/MathML">  <mi>a</mi>  <mo> + </mo>  <mi>b</mi></mrow>'
+    >>> print(res)
+    <?xml version="1.0"?>
+    <mrow xmlns="http://www.w3.org/1998/Math/MathML">
+      <mi>a</mi>
+      <mo> + </mo>
+      <mi>b</mi>
+    </mrow>
     """
     from lxml import etree
 
     parser = etree.XMLParser(resolve_entities=False)
     ac = etree.XSLTAccessControl.DENY_ALL
 
-    s = etree.XML(get_resource(xsl).read(), parser=parser)
+    s = etree.XML(_read_xsl(xsl), parser=parser)
     transform = etree.XSLT(s, access_control=ac)
     doc = etree.XML(mml, parser=parser)
     result = transform(doc)
