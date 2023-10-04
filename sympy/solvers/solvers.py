@@ -3144,7 +3144,7 @@ def _invert(eq, *symbols, **kwargs):
 
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
-    >>> invert(sqrt(x + y) - 2)
+    >>> invert(sqrt(x + y) + 2)  # note +2 instead of -2
     (4, x + y)
 
     If the exponent is an Integer, setting ``integer_power`` to True
