@@ -3,7 +3,7 @@ from sympy.core.sympify import SympifyError
 from sympy.functions import KroneckerDelta
 from sympy.matrices import Matrix
 from sympy.matrices.expressions import FunctionMatrix, MatrixExpr, Identity
-from sympy.testing.pytest import raises, warns
+from sympy.testing.pytest import raises
 
 
 def test_funcmatrix_creation():
