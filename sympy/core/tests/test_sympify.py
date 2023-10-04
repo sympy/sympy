@@ -22,7 +22,7 @@ from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
-from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
