@@ -2361,9 +2361,6 @@ class ImplicitSeries(BaseSeries):
                 )
             self.adaptive = False
         except TypeError:
-            # XXX: AttributeError("'list' object has no attribute 'is_real'")
-            # That needs fixing somehow - we shouldn't be catching
-            # AttributeError here.
             warnings.warn(
                 "Adaptive meshing could not be applied to the"
                 " expression. Using uniform meshing.")
