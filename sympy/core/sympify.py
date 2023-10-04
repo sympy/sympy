@@ -9,7 +9,6 @@ from sympy.core.random import choice
 
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
