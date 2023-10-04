@@ -24,7 +24,7 @@ def _evalf(func, points, derivatives=False, method='RK4'):
 
     dmf = []
     for j in ann.listofpoly:
-        dmf.append(K.new(j.rep))
+        dmf.append(K.new(j.to_list()))
 
     red = [-dmf[i] / dmf[a] for i in range(a)]
 
