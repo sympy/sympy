@@ -4,7 +4,6 @@ content in MathML presentation.
 To use this module, you will need lxml.
 """
 
-from importlib.resources import files
 from pathlib import Path
 
 from sympy.utilities.decorator import doctest_depends_on
@@ -20,6 +19,19 @@ def add_mathml_headers(s):
         http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd">""" + s + "</math>"
 
 
+def _read_binary(pkgname, filename):
+    import sys
+
+    if sys.version_info >= (3, 10):
+        # files was added in Python 3.9 but only seems to work here in 3.10+
+        from importlib.resources import files
+        return files(pkgname).joinpath(filename).read_bytes()
+    else:
+        # read_binary was deprecated in Python 3.11
+        from importlib.resources import read_binary
+        return read_binary(pkgname, filename)
+
+
 def _read_xsl(xsl):
     # Previously these values were allowed:
     if xsl == 'mathml/data/simple_mmlctop.xsl':
@@ -30,11 +42,11 @@ def _read_xsl(xsl):
         xsl = 'mmltex.xsl'
 
     if xsl in ['simple_mmlctop.xsl', 'mmlctop.xsl', 'mmltex.xsl']:
-        xslfile = files('sympy.utilities.mathml.data').joinpath(xsl)
+        xslbytes = _read_binary('sympy.utilities.mathml.data', xsl)
     else:
-        xslfile = Path(xsl)
+        xslbytes = Path(xsl).read_bytes()
 
-    return xslfile.read_bytes()
+    return xslbytes
 
 
 @doctest_depends_on(modules=('lxml',))
