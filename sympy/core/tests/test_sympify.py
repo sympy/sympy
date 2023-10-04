@@ -286,8 +286,7 @@ def test_sympify_raises():
         def __str__(self):
             return 'x'
 
-    with warns_deprecated_sympy():
-        assert sympify(A()) == Symbol('x')
+    raises(SympifyError, lambda: sympify(A()))
 
 
 def test__sympify():

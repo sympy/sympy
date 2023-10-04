@@ -1182,6 +1182,12 @@ See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
 
+UPDATE: The string fallback in `sympify` was deprecated in SymPy 1.6 and is now
+an error in SymPy 1.13 and later. Keeping this behaviour around even in
+deprecated form was too problematic so it is now removed entirely. In the cases
+where the string fallback would have been used a `SympifyError` will now be
+raised instead.
+
 The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
 various methods to try to convert `expr` into a SymPy objects. If all these
 methods fail, it takes `str(expr)` and tries to parse it using
