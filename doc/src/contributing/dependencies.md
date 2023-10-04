@@ -111,24 +111,27 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
-- **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
+- **LaTeX**: A $\mathrm{\LaTeX}$ distributions such as [TeXLive](https://tug.org/texlive/) or
 [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
 
 Several functions in the {mod}`sympy.parsing` submodule require external
 dependencies to function. Note that not all parsers require external modules
-at this time. The Python ({func}`~.parse_expr`), Mathematca
+at this time. The Python ({func}`~.parse_expr`), Mathematica
 ({func}`~.parse_mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
 require any external dependencies.
 
-- **antlr-python-runtime**: [Antlr](https://www.antlr.org/) is used for the
-  {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
-  [Autolev](autolev_parser) parsers. They both require the Antlr Python
+- **antlr-python-runtime**: [ANTLR](https://www.antlr.org/) can be used for the
+  {func}`LaTeX parser <sympy.parsing.latex.parse_latex>`, and is used in the
+  [Autolev](autolev_parser) parsers. They both require the ANTLR Python
   runtime to be installed. The package for this is called
-  `antlr-python-runtime` with conda and `antlr4-python3-runtime` with pip).
-  Also be aware that the version of the Antlr Python runtime must match the
+  `antlr-python-runtime` with conda and `antlr4-python3-runtime` with pip.
+  Also be aware that the version of the ANTLR Python runtime must match the
   version that was used to compile the LaTeX and Autolev parsers (4.10).
+
+- **lark**: [Lark](https://lark-parser.readthedocs.io/en/stable/) can be used
+  as an alternative backend for the {func}`LaTeX parser <sympy.parsing.latex.parse_latex>`.
 
 - **Clang Python Bindings**: The C parser (`sympy.parsing.c.parse_c`) requires
   the Clang Python bindings. The package for this is called `python-clang`
