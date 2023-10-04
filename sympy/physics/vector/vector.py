@@ -256,7 +256,6 @@ class Vector(Printable, EvalfMixin):
     def _pretty(self, printer):
         """Pretty Printing method. """
         from sympy.printing.pretty.stringpict import prettyForm
-        e = self
 
         terms = []
 
