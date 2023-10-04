@@ -29,7 +29,7 @@ if os.path.isdir(sympy_dir):
 from sympy.core.assumptions import _generate_assumption_rules
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.facts import (get_known_facts,
-    generate_known_facts_dict, get_known_facts_keys)
+    generate_known_facts_dict, get_known_facts_keys, get_matrix_facts, get_number_facts)
 from sympy.core import Symbol
 from textwrap import dedent, wrap
 
@@ -57,6 +57,24 @@ def generate_code():
         }
 
     @cacheit
+    def get_all_known_matrix_facts():
+        """
+        Known facts between unary predicates for matrices as CNF clauses.
+        """
+        return {
+            %s
+        }
+
+    @cacheit
+    def get_all_known_number_facts():
+        """
+        Known facts between unary predicates for numbers as CNF clauses.
+        """
+        return {
+            %s
+        }
+
+    @cacheit
     def get_known_facts_dict():
         """
         Logical relations between unary predicates as dictionary.
@@ -73,10 +91,28 @@ def generate_code():
 
     x = Symbol('x')
     fact = get_known_facts(x)
+    matrix_fact = get_matrix_facts(x)
+    number_fact = get_number_facts(x)
 
     # Generate CNF of facts between known unary predicates
     cnf = CNF.to_CNF(fact)
-    p = LINE.join(sorted([
+    all_clauses = LINE.join(sorted([
+        'frozenset(('
+         + ', '.join(str(Literal(lit.arg.function, lit.is_Not))
+                     for lit in sorted(clause, key=str))
+        + '))' for clause in cnf.clauses]))
+
+    # Generate CNF of matrix facts
+    cnf = CNF.to_CNF(matrix_fact)
+    matrix_clauses = LINE.join(sorted([
+        'frozenset(('
+         + ', '.join(str(Literal(lit.arg.function, lit.is_Not))
+                     for lit in sorted(clause, key=str))
+        + '))' for clause in cnf.clauses]))
+
+    # Generate CNF of number facts
+    cnf = CNF.to_CNF(number_fact)
+    number_clauses = LINE.join(sorted([
         'frozenset(('
          + ', '.join(str(Literal(lit.arg.function, lit.is_Not))
                      for lit in sorted(clause, key=str))
@@ -96,7 +132,7 @@ def generate_code():
             break_long_words=False))
         for k, v in zip(keys, values)]) + ','
 
-    return code_string % (p, m)
+    return code_string % (all_clauses, matrix_clauses, number_clauses, m)
 
 with open('sympy/assumptions/ask_generated.py', 'w') as f:
     code = generate_code()
