@@ -122,11 +122,7 @@ def precedence(item):
     """
     if hasattr(item, "precedence"):
         return item.precedence
-    try:
-        mro = item.__class__.__mro__
-    except AttributeError:
-        return PRECEDENCE["Atom"]
-    for i in mro:
+    for i in type(item).mro():
         n = i.__name__
         if n in PRECEDENCE_FUNCTIONS:
             return PRECEDENCE_FUNCTIONS[n](item)
