@@ -403,6 +403,10 @@ def _laplace_build_rules():
          Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.31
         (exp(-2*sqrt(a*t))/sqrt(t), (pi/s)**(S(1)/2)*exp(a/s)*erfc(sqrt(a/s)),
          Abs(arg(a)) < pi, S.Zero, dco),  # 4.5.33
+        (exp(-a*exp(-t)), a**(-s)*lowergamma(s, a),
+         S.true, S.Zero, dco),  # 4.5.36
+        (exp(-a*exp(t)), a**s*uppergamma(-s, a),
+         re(a) > 0, S.Zero, dco),  # 4.5.37
         (log(a*t), -log(exp(S.EulerGamma)*s/a)/s,
          a > 0, S.Zero, dco),  # 4.6.1
         (log(1+a*t), -exp(s/a)/s*Ei(-s/a),

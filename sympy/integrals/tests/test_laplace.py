@@ -81,6 +81,8 @@ def test_laplace_transform():
     assert LT(t*exp(-a*(t)), t, s) == ((a + s)**(-2), -a, True)
     assert LT(t*exp(-a*(t-b)), t, s) == (exp(a*b)/(a + s)**2, -a, True)
     assert LT(b*t*exp(-a*t), t, s) == (b/(a + s)**2, -a, True)
+    assert LT(exp(-a*exp(-t)), t, s) == (lowergamma(s, a)/a**s, 0, True)
+    assert LT(exp(-a*exp(t)), t, s) == (a**s*uppergamma(-s, a), 0, True)
     assert (LT(t**(S(7)/4)*exp(-8*t)/gamma(S(11)/4), t, s) ==
             ((s + 8)**(-S(11)/4), -8, True))
     assert (LT(t**(S(3)/2)*exp(-8*t), t, s) ==
