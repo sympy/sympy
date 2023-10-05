@@ -2677,6 +2677,8 @@ class atan(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # atan
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0.is_zero:
             return arg.as_leading_term(x)
         # Handling branch points
