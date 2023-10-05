@@ -7,7 +7,7 @@ from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, multiplicity, perfect_power
+from .factor_ import factorint, multiplicity, _perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
@@ -308,7 +308,7 @@ def primitive_root(p, smallest=True):
     if isprime(q):
         e = 1
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return None
         q, e = m
@@ -408,7 +408,7 @@ def is_primitive_root(a, p):
         group_order = q - 1
         factors = factorint(q - 1).keys()
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return False
         q, e = m

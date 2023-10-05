@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.numbers import Integer, Rational
+from sympy.external.gmpy import gcd, GROUND_TYPES, SYMPY_INTS
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
@@ -16,7 +17,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
     udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable, dra, drm)
+    is_deficient, is_amicable, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -94,6 +95,32 @@ def test_multiplicity_in_factorial():
     n = fac(1000)
     for i in (2, 4, 6, 12, 30, 36, 48, 60, 72, 96):
         assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
+
+
+def test_private_perfect_power():
+    assert _perfect_power(0) is False
+    assert _perfect_power(1) is False
+    assert _perfect_power(2) is False
+    assert _perfect_power(3) is False
+    for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
+        for y in range(2, 100):
+            assert _perfect_power(x**y) == (x, y)
+            if x != 2:
+                assert _perfect_power(x**y, k=3) == (x, y)
+            if x == 100003:
+                assert _perfect_power(x**y, k=100003) == (x, y)
+            assert _perfect_power(101*x**y) == False
+            # Catalan's conjecture
+            if x**y not in [8, 9]:
+                assert _perfect_power(x**y + 1) == False
+                assert _perfect_power(x**y - 1) == False
+    for x in range(1, 10):
+        for y in range(1, 10):
+            g = gcd(x, y)
+            if g == 1:
+                assert _perfect_power(5**x * 101**y) == False
+            else:
+                assert _perfect_power(5**x * 101**y) == (5**(x//g) * 101**(y//g), g)
 
 
 def test_perfect_power():
@@ -272,6 +299,18 @@ def test_factorint():
     n = {4: 2, 12: 3}
     assert str(factorint(n)) == sans
     assert str(factorint(Dict(n))) == sans
+
+
+def test_factorint_flint_int_issue():
+    """
+    Because of a bug in flint, we are temporarily wrapping int in `factorint`.
+    When this fails, the int wrapper is no longer needed in factorint.
+
+    https://github.com/flintlib/python-flint/issues/92
+    https://github.com/sympy/sympy/pull/25749
+    """
+    if GROUND_TYPES == 'flint':
+        assert pow(2, 5, SYMPY_INTS[1](1000)) == 1
 
 
 def test_divisors_and_divisor_count():
