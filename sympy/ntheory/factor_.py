@@ -346,6 +346,155 @@ def multiplicity_in_factorial(p, n):
     return min((n + k - sum(digits(n, k)))//(k - 1)//v for v, k in f.items())
 
 
+def _perfect_power(n, k=2):
+    """ Return integers ``(b, e)`` such that ``n == b**e`` if ``n`` is a unique
+    perfect power with ``e > 1``, else ``False`` (e.g. 1 is not a perfect power).
+
+    Explanation
+    ===========
+
+    This is a low-level helper for ``perfect_power``, for internal use.
+
+    Parameters
+    ==========
+
+    n : int
+        assume that n is a nonnegative integer
+    k : int
+        Assume that n has no factor less than k.
+        i.e., all(n % p for p in range(2, k)) is True
+
+    Examples
+    ========
+    >>> from sympy.ntheory.factor_ import _perfect_power
+    >>> _perfect_power(16)
+    (2, 4)
+    >>> _perfect_power(17)
+    False
+
+    """
+    if n <= 3:
+        return False
+
+    factors = {}
+    g = 0
+    multi = 1
+
+    def done(n, factors, g, multi):
+        g = gcd(g, multi)
+        if g == 1:
+            return False
+        factors[n] = multi
+        return math.prod(p**(e//g) for p, e in factors.items()), g
+
+    # If n is small, only trial factoring is faster
+    if n <= 1_000_000:
+        n = _factorint_small(factors, n, 1_000, 1_000)[0]
+        if n > 1:
+            return False
+        g = gcd(*factors.values())
+        if g == 1:
+            return False
+        return math.prod(p**(e//g) for p, e in factors.items()), g
+
+    # divide by 2
+    if k < 3:
+        g = bit_scan1(n)
+        if g:
+            if g == 1:
+                return False
+            n >>= g
+            factors[2] = g
+            if n == 1:
+                return 2, g
+            else:
+                # If `m**g`, then we have found perfect power.
+                # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
+                m, _exact = iroot(n, g)
+                if _exact:
+                    return 2*m, g
+                elif isprime(g):
+                    return False
+        k = 3
+
+    # square number?
+    while n & 7 == 1: # n % 8 == 1:
+        m, _exact = iroot(n, 2)
+        if _exact:
+            n = m
+            multi <<= 1
+        else:
+            break
+    if n < k**3:
+        return done(n, factors, g, multi)
+
+    # trial factoring
+    # Since the maximum value an exponent can take is `log_k(n)`,
+    # the number of exponents to be checked can be reduced by performing a trial factoring.
+    # The value of `tf_max` needs more consideration.
+    tf_max = n.bit_length()//27 + 24
+    if k < tf_max:
+        for p in primerange(k, tf_max):
+            t = multiplicity(p, n)
+            if t:
+                n //= p**t
+                t *= multi
+                _g = gcd(g, t)
+                if _g == 1:
+                    return False
+                factors[p] = t
+                if n == 1:
+                    return math.prod(p**(e//_g)
+                                        for p, e in factors.items()), _g
+                elif g == 0 or _g < g: # If g is updated
+                    g = _g
+                    m, _exact = iroot(n**multi, g)
+                    if _exact:
+                        return m * math.prod(p**(e//g)
+                                            for p, e in factors.items()), g
+                    elif isprime(g):
+                        return False
+        k = tf_max
+    if n < k**3:
+        return done(n, factors, g, multi)
+
+    # check iroot
+    if g:
+        # If g is non-zero, the exponent is a divisor of g.
+        # 2 can be omitted since it has already been checked.
+        prime_iter = sorted(factorint(g >> bit_scan1(g)).keys())
+    else:
+        # The maximum possible value of the exponent is `log_k(n)`.
+        # To compensate for the presence of computational error, 2 is added.
+        prime_iter = primerange(3, int(math.log(n, k)) + 2)
+    logn = math.log2(n)
+    threshold = logn / 40 # Threshold for direct calculation
+    for p in prime_iter:
+        if threshold < p:
+            # If p is large, find the power root p directly without `iroot`.
+            while True:
+                b = pow(2, logn / p)
+                rb = int(b + 0.5)
+                if abs(rb - b) < 0.01 and rb**p == n:
+                    n = rb
+                    multi *= p
+                    logn = math.log2(n)
+                else:
+                    break
+        else:
+            while True:
+                m, _exact = iroot(n, p)
+                if _exact:
+                    n = m
+                    multi *= p
+                    logn = math.log2(n)
+                else:
+                    break
+        if n < k**(p + 2):
+            break
+    return done(n, factors, g, multi)
+
+
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
     Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a unique
@@ -439,6 +588,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
             if e % 2:
                 return -b, e
         return False
+
+    if candidates is None and big:
+        return _perfect_power(n)
 
     if n <= 3:
         # no unique exponent for 0, 1
@@ -824,7 +976,7 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
 
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
-    p = perfect_power(n, factor=False)
+    p = _perfect_power(n)
     if p is not False:
         base, exp = p
         if limitp1:
@@ -836,7 +988,7 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
         for b, e in facs.items():
             if verbose:
                 print(factor_msg % (b, e))
-            factors[b] = exp*e
+            factors[b] = int(exp*e)  # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
         raise StopIteration
 
     if isprime(n):
