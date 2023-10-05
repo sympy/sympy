@@ -432,16 +432,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
       ...
     ValueError: inconsistent assumptions Q.even(x) & Q.odd(x)
 
-    Notes
-    =====
-
-    Relations in assumptions are not implemented (yet), so the following
-    will not give a meaningful result.
-
-    >>> ask(Q.positive(x), x > 0)
-
-    It is however a work in progress.
-
     See Also
     ========
 
