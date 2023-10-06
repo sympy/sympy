@@ -489,3 +489,8 @@ def test__pt():
 
 def test_issue_25697():
     assert _solve_inequality(log(x, 3) <= 2, x) == (x <= 9) & (S.Zero < x)
+
+
+def test_issue_25738():
+    assert reduce_inequalities(3 < abs(x)
+        ) == reduce_inequalities(pi < abs(x)).subs(pi, 3)

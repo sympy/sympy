@@ -224,10 +224,12 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.Reals if exprs else S.EmptySet
+    solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
+        if not _exprs:
+            continue
         _eqs = []
-
+        _sol = S.Reals
         for expr in _exprs:
             if isinstance(expr, tuple):
                 expr, rel = expr
@@ -261,10 +263,11 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution &= solve_univariate_inequality(expr, gen, relational=False)
+                _sol &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
+        solution |= _sol
         if _eqs:
             eqs.append(_eqs)
 
