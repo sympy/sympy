@@ -1,4 +1,4 @@
-from sympy.external.ntheory import (bit_scan1, bit_scan0, is_fermat_prp,
+from sympy.external.ntheory import (bit_scan1, remove, bit_scan0, is_fermat_prp,
                                     is_euler_prp, is_strong_prp)
 from sympy.testing.pytest import raises
 
@@ -29,6 +29,15 @@ def test_bit_scan0():
     assert bit_scan0(0) == 0
     assert bit_scan0(1) == 1
     assert bit_scan0(-2) == 0
+
+
+def test_remove():
+    raises(ValueError, lambda: remove(1, 1))
+    assert remove(0, 3) == (0, 0)
+    for f in range(2, 10):
+        for y in range(2, 1000):
+            for z in [1, 17, 101, 1009]:
+                assert remove(z*f**y, f) == (z, y)
 
 
 def test_is_fermat_prp():
