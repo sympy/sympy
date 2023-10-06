@@ -76,6 +76,60 @@ SymPy deprecation warnings.
 
 ## Version 1.13
 
+(deprecated-sympify-string-fallback)=
+### The string fallback in `sympify()`
+
+The `sympify` function would previously convert an unrecognized object to a
+string and retry sympification. This was deprecated in SymPy 1.6 and was
+removed in SymPy 1.13.
+
+The behavior of {func}`~.sympify` is that `sympify(expr)` tries various methods
+to try to convert `expr` into a SymPy objects. Previously if all these methods
+would fail, it would take `str(expr)` and try to parse it using
+{func}`~.parse_expr`. This string fallback feature was deprecated in SymPy 1.6
+and was removed in SymPy 1.13.
+
+This behaviour was problematic for a few reasons:
+
+- It could affect performance in major ways. See for instance issues
+  [#18056](https://github.com/sympy/sympy/issues/18056) and
+  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
+  100x slowdowns. The issue is that SymPy functions automatically call
+  `sympify` on their arguments. Whenever a function is passed something that
+  `sympify` doesn't know how to convert to a SymPy object, for instance, a
+  Python function type, it passes the string to {func}`~.parse_expr`. This is
+  significantly slower than the direct conversions that happen by default.
+  This occurs specifically whenever `sympify()` is used in library code
+  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
+  presently this is done a lot. Using `strict=True` will at some point be the
+  default for all library code, but this is a [harder change to
+  make](https://github.com/sympy/sympy/issues/11003).
+
+- It can cause security issues, since strings are evaled, and objects can
+  return whatever string they want in their `__repr__`. See also
+  https://github.com/sympy/sympy/pull/12524.
+
+- It really wasn't very useful to begin with. Just because an object's string
+  form can be parsed into a SymPy expression doesn't mean it should be parsed
+  that way. This is usually correct for custom numeric types, but an object's
+  repr could be anything. For instance, if the string form of an object looks
+  like a valid Python identifier, it would parse as a `Symbol`.
+
+There are plenty of ways to make custom objects work inside of
+{func}`~.sympify`.
+
+- Firstly, if an object is intended to work alongside other SymPy expressions,
+  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
+  {func}`~.sympify` will just return it unchanged because it will already be a
+  valid SymPy object.
+
+- For objects that you control, you can add the `_sympy_` method. The [sympify
+  docstring](sympy.core.sympify.sympify) has an example of this.
+
+- For objects that you don't control, you can add a custom converter to the
+  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
+  also has an example of this.
+
 (dmp-rep)=
 ### Deprecate the DMP.rep attribute.
 
@@ -1178,59 +1232,6 @@ integral as an {class}`~.Expr` object, call the {meth}`.Poly.as_expr` method
 first.
 
 See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
-
-(deprecated-sympify-string-fallback)=
-### The string fallback in `sympify()`
-
-The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
-various methods to try to convert `expr` into a SymPy objects. If all these
-methods fail, it takes `str(expr)` and tries to parse it using
-{func}`~.parse_expr`. This string fallback feature is deprecated. It is
-problematic for a few reasons:
-
-- It can affect performance in major ways. See for instance issues
-  [#18056](https://github.com/sympy/sympy/issues/18056) and
-  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
-  100x slowdowns. The issue is that SymPy functions automatically call
-  `sympify` on their arguments. Whenever a function is passed something that
-  `sympify` doesn't know how to convert to a SymPy object, for instance, a
-  Python function type, it passes the string to {func}`~.parse_expr`. This is
-  significantly slower than the direct conversions that happen by default.
-  This occurs specifically whenever `sympify()` is used in library code
-  instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
-  presently this is done a lot. Using `strict=True` will at some point be the
-  default for all library code, but this is a [harder change to
-  make](https://github.com/sympy/sympy/issues/11003).
-
-- It can cause security issues, since strings are evaled, and objects can
-  return whatever string they want in their `__repr__`. See also
-  https://github.com/sympy/sympy/pull/12524.
-
-- It really isn't very useful to begin with. Just because an object's string
-  form can be parsed into a SymPy expression doesn't mean it should be parsed
-  that way. This is usually correct for custom numeric types, but an object's
-  repr could be anything. For instance, if the string form of an object looks
-  like a valid Python identifier, it will parse as a `Symbol`.
-
-There are plenty of ways to make custom objects work inside of
-{func}`~.sympify`.
-
-- Firstly, if an object is intended to work alongside other SymPy expressions,
-  it should subclass from {class}`~.Basic` (or {class}`~.Expr`). If it does,
-  {func}`~.sympify` will just return it unchanged because it will already be a
-  valid SymPy object.
-
-- For objects that you control, you can add the `_sympy_` method. The [sympify
-  docstring](sympy.core.sympify.sympify) has an example of this.
-
-- For objects that you don't control, you can add a custom converter to the
-  `sympy.core.sympify.converter` dictionary. The {func}`~.sympify` docstring
-  also has an example of this.
-
-To silence this deprecation warning in all cases, you can pass `strict=True`
-to `sympify()`. However, note that this will also disable some other
-conversions such as conversion of strings (for converting strings to SymPy
-types, you can explicitly use {func}`~.parse_expr`).
 
 (deprecated-indefinite-integral-eq)=
 ### Creating an indefinite `Integral` with an `Eq` argument

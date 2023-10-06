@@ -9,7 +9,6 @@ from sympy.core.random import choice
 
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
@@ -457,26 +456,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             pass
 
     if not isinstance(a, str):
-        try:
-            a = str(a)
-        except Exception as exc:
-            raise SympifyError(a, exc)
-        sympy_deprecation_warning(
-            f"""
-The string fallback in sympify() is deprecated.
-
-To explicitly convert the string form of an object, use
-sympify(str(obj)). To add define sympify behavior on custom
-objects, use sympy.core.sympify.converter or define obj._sympy_
-(see the sympify() docstring).
-
-sympify() performed the string fallback resulting in the following string:
-
-{a!r}
-            """,
-            deprecated_since_version='1.6',
-            active_deprecations_target="deprecated-sympify-string-fallback",
-        )
+        raise SympifyError('cannot sympify object of type %r' % type(a))
 
     from sympy.parsing.sympy_parser import (parse_expr, TokenError,
                                             standard_transformations)
