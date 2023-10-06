@@ -2789,12 +2789,10 @@ class ANP(PicklableWithSlots, CantSympify):
 
     @property
     def rep(self):
-        raise RuntimeError("ANP.rep")
         return self._rep.to_list()
 
     @property
     def mod(self):
-        raise RuntimeError("ANP.mod")
         return self._mod.to_list()
 
     def __repr__(f):
@@ -2805,6 +2803,10 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
+
+        # XXX: This unify method is not used any more because unify_ANP is used
+        # instead.
+
         if not isinstance(g, ANP) or f.mod != g.mod:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
@@ -2833,10 +2835,11 @@ class ANP(PicklableWithSlots, CantSympify):
         if not isinstance(g, ANP) or f._mod != g._mod:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
-        # There could be something here to convert the domains but as of now
-        # the domain will always be QQ.
+        # The domain is almost always QQ but there are some tests involving ZZ
         if f.dom != g.dom:
-            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            dom = f.dom.unify(g.dom)
+            f = f.convert(dom)
+            g = g.convert(dom)
 
         return f, g, f._mod, f.dom
 
@@ -2846,6 +2849,13 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def per(f, rep):
         return f.new(rep, f._mod, f.dom)
+
+    def convert(f, dom):
+        """Convert ``f`` to a ``ANP`` over a new domain. """
+        if f.dom == dom:
+            return f
+        else:
+            return f.new(f._rep.convert(dom), f._mod.convert(dom), dom)
 
     @classmethod
     def zero(cls, mod, dom):
