@@ -422,8 +422,8 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f._mod.to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     rep = {1: QQ(1), 0: QQ(1)}
@@ -431,19 +431,19 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f._mod.to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP(1, mod, QQ)
 
-    assert f.rep == [QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1)]
+    assert f._mod.to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP([1, 0.5], mod, QQ)
 
-    assert all(QQ.of_type(a) for a in f.rep)
+    assert all(QQ.of_type(a) for a in f.to_list())
 
     raises(CoercionFailed, lambda: ANP([sqrt(2)], mod, QQ))
 
