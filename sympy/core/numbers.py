@@ -900,11 +900,10 @@ class Float(Number):
                     return Float._new(
                         (num[0], num[1], num[2], bitcount(num[1])),
                         precision)
+        elif isinstance(num, (Number, NumberSymbol)):
+            _mpf_ = num._as_mpf_val(precision)
         else:
-            try:
-                _mpf_ = num._as_mpf_val(precision)
-            except (NotImplementedError, AttributeError):
-                _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -3899,6 +3898,9 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
 
     def __int__(self):
         return 1
+
+    def _as_mpf_val(self, prec):
+        return self._eval_evalf(prec)._mpf_
 
     def _eval_evalf(self, prec):
         rv = self._eval_expand_func(function=True)._eval_evalf(prec + 4)
