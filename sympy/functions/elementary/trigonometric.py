@@ -2222,8 +2222,11 @@ class asin(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asin
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0.is_zero:
             return arg.as_leading_term(x)
+
         # Handling branch points
         if x0 in (-S.One, S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
@@ -2438,6 +2441,8 @@ class acos(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acos
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
@@ -2894,6 +2899,8 @@ class acot(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acot
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         if x0 is S.ComplexInfinity:
             return (1/arg).as_leading_term(x)
         # Handling branch points
@@ -3107,6 +3114,8 @@ class asec(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # asec
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 == 1:
             return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
@@ -3315,6 +3324,8 @@ class acsc(InverseTrigonometricFunction):
     def _eval_as_leading_term(self, x, logx=None, cdir=0):  # acsc
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
+        if x0 is S.NaN:
+            raise PoleError()
         # Handling branch points
         if x0 in (-S.One, S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()

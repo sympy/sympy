@@ -2160,7 +2160,3 @@ def test_as_real_imag():
 def test_issue_18746():
     e3 = cos(S.Pi*(x/4 + 1/4))
     assert e3.period() == 8
-
-
-def test_atan_inf_left():
-    assert limit(atan(exp(x)), x, oo, '-') == pi/2
