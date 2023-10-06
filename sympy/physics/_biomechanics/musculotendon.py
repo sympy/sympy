@@ -250,6 +250,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         tendon_slack_length=None,
         peak_isometric_force=None,
         optimal_fiber_length=None,
+        v_M_max=Integer(10),
+        alpha_opt=Integer(0),
+        beta=Rational(1, 10),
     ):
         r"""Recommended constructor that will use the published constants.
 
@@ -319,9 +322,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             muscle fiber model.
 
         """
-        v_M_max = Integer(10)
-        alpha_opt = Integer(0)
-        beta = Rational(1, 10)
         return cls(
             name,
             pathway,
