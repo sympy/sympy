@@ -1726,6 +1726,9 @@ class DUP_Flint(DMP):
 
     __slots__ = ('_rep', 'dom', '_cls')
 
+    def __reduce__(self):
+        return self.__class__, (self.to_list(), self.dom, self.lev)
+
     @classmethod
     def _new(cls, rep, dom, lev):
         rep = cls._flint_poly(rep[::-1], dom, lev)
@@ -2055,7 +2058,9 @@ class DUP_Flint(DMP):
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
         if f.dom.is_QQ:
-            _, F_inv, _ = f._rep.xgcd(g._rep)
+            gcd, F_inv, _ = f._rep.xgcd(g._rep)
+            if gcd != 1:
+                raise NotInvertible("zero divisor")
             return f.from_rep(F_inv, f.dom)
         else:
             return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
@@ -2760,7 +2765,7 @@ def init_normal_ANP(rep, mod, dom):
                dup_normal(mod, dom), dom)
 
 
-class ANP(PicklableWithSlots, CantSympify):
+class ANP(CantSympify):
     """Dense Algebraic Number Polynomials over a field. """
 
     __slots__ = ('_rep', '_mod', 'dom')
@@ -2795,6 +2800,12 @@ class ANP(PicklableWithSlots, CantSympify):
         obj._mod = mod
         obj.dom = dom
         return obj
+
+    # XXX: It should be possible to use __getnewargs__ rather than __reduce__
+    # but it doesn't work for some reason. Probably this would be easier if
+    # python-flint supported pickling for polynomial types.
+    def __reduce__(self):
+        return ANP, (self.rep, self.mod, self.dom)
 
     @property
     def rep(self):
