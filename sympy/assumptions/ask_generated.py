@@ -273,6 +273,7 @@ def get_known_facts_dict():
         Q.irrational, Q.negative, Q.nonnegative, Q.nonpositive,
         Q.nonzero, Q.odd, Q.positive, Q.positive_infinite, Q.prime,
         Q.rational, Q.real, Q.transcendental, Q.zero])),
+        Q.noninteger: (set([Q.noninteger]), set([])),
         Q.nonnegative: (set([Q.commutative, Q.complex, Q.extended_nonnegative,
         Q.extended_real, Q.finite, Q.hermitian, Q.nonnegative,
         Q.real]), set([Q.extended_negative, Q.imaginary, Q.infinite,

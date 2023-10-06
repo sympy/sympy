@@ -167,6 +167,13 @@ equivalent list:
 The ``.to_list()`` method is also available in previous versions of SymPy and
 its behaviour is unchanged.
 
+(pkgdata)=
+### Deprecate the pkgdata module
+
+The ``sympy.utilities.pkdata`` module is deprecated and will be removed. It is
+no longer used anywhere in SymPy and is unsuitable for use by any downstream
+code. Use the stdlib ``importlib.resources`` module instead.
+
 (eq-rewrite-Add)=
 ### Deprecate Eq.rewrite(Add)
 The ability to rewrite ``eq = Eq(x, y)`` like ``eq.rewrite(Add)`` to give ``x - y``

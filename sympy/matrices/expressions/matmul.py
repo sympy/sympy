@@ -170,8 +170,6 @@ class MatMul(MatrixExpr, Mul):
         if factor != 1:
             from .trace import trace
             return factor * trace(mmul.doit())
-        else:
-            raise NotImplementedError("Can't simplify any further")
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant

@@ -84,17 +84,13 @@ def _convert_numpy_types(a, **sympify_args):
         else:
             return sympify(a.item(), **sympify_args)
     else:
-        try:
-            from .numbers import Float
-            prec = np.finfo(a).nmant + 1
-            # E.g. double precision means prec=53 but nmant=52
-            # Leading bit of mantissa is always 1, so is not stored
-            a = str(list(np.reshape(np.asarray(a),
-                                    (1, np.size(a)))[0]))[1:-1]
-            return Float(a, precision=prec)
-        except NotImplementedError:
-            raise SympifyError('Translation for numpy float : %s '
-                               'is not implemented' % a)
+        from .numbers import Float
+        prec = np.finfo(a).nmant + 1
+        # E.g. double precision means prec=53 but nmant=52
+        # Leading bit of mantissa is always 1, so is not stored
+        a = str(list(np.reshape(np.asarray(a),
+                                (1, np.size(a)))[0]))[1:-1]
+        return Float(a, precision=prec)
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
@@ -400,13 +396,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     _sympy_ = getattr(a, "_sympy_", None)
     if _sympy_ is not None:
-        try:
-            return a._sympy_()
-        # XXX: Catches AttributeError: 'SymPyConverter' object has no
-        # attribute 'tuple'
-        # This is probably a bug somewhere but for now we catch it here.
-        except AttributeError:
-            pass
+        return a._sympy_()
 
     if not strict:
         # Put numpy array conversion _before_ float/int, see
@@ -435,14 +425,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
                                        evaluate=evaluate)
                     except SympifyError:
                         pass
-        else:
+        elif hasattr(a, '__float__'):
             # float and int can coerce size-one numpy arrays to their lone
             # element.  See issue https://github.com/numpy/numpy/issues/10404.
-            for coerce in (float, int):
-                try:
-                    return sympify(coerce(a))
-                except (TypeError, ValueError, AttributeError, SympifyError):
-                    continue
+            return sympify(float(a))
+        elif hasattr(a, '__int__'):
+            return sympify(int(a))
 
     if strict:
         raise SympifyError(a)
