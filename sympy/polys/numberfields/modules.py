@@ -830,7 +830,7 @@ class PowerBasis(Module):
 
     def element_from_ANP(self, a):
         """Convert an ANP into a PowerBasisElement. """
-        return self._element_from_rep_and_mod(a.rep, a.mod)
+        return self._element_from_rep_and_mod(a.to_list(), a._mod.to_list())
 
     def element_from_alg_num(self, a):
         """Convert an AlgebraicNumber into a PowerBasisElement. """
