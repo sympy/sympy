@@ -2054,8 +2054,11 @@ class DUP_Flint(DMP):
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
-        _, F_inv, _ = f._rep.xgcd(g._rep)
-        return f.from_rep(F_inv, f.dom)
+        if f.dom.is_QQ:
+            _, F_inv, _ = f._rep.xgcd(g._rep)
+            return f.from_rep(F_inv, f.dom)
+        else:
+            return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
 
     def _revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
