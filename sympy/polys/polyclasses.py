@@ -2054,7 +2054,8 @@ class DUP_Flint(DMP):
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
-        return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
+        _, F_inv, _ = f._rep.xgcd(g._rep)
+        return f.from_rep(F_inv, f.dom)
 
     def _revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
@@ -2761,31 +2762,36 @@ class ANP(PicklableWithSlots, CantSympify):
 
     __slots__ = ('_rep', '_mod', 'dom')
 
-    def __init__(self, rep, mod, dom):
-        # Not possible to check with isinstance
-        if type(rep) is dict:
+    def __new__(cls, rep, mod, dom):
+        if isinstance(rep, DMP):
+            pass
+        elif type(rep) is dict: # don't use isinstance
             rep = DMP(dup_from_dict(rep, dom), dom, 0)
         else:
             if isinstance(rep, list):
                 rep = [dom.convert(a) for a in rep]
-            elif isinstance(rep, DMP):
-                rep = rep.to_list()
             else:
                 rep = [dom.convert(rep)]
-
             rep = DMP(dup_strip(rep), dom, 0)
 
         if isinstance(mod, DMP):
             pass
+        elif isinstance(mod, dict):
+            mod = DMP(dup_from_dict(mod, dom), dom, 0)
         else:
-            if isinstance(mod, dict):
-                mod = DMP(dup_from_dict(mod, dom), dom, 0)
-            else:
-                mod = DMP(dup_strip(mod), dom, 0)
+            mod = DMP(dup_strip(mod), dom, 0)
 
-        self._rep = rep
-        self._mod = mod
-        self.dom = dom
+        return cls.new(rep, mod, dom)
+
+    @classmethod
+    def new(cls, rep, mod, dom):
+        if not (rep.dom == mod.dom == dom):
+            raise RuntimeError("Inconsistent domain")
+        obj = super().__new__(cls)
+        obj._rep = rep
+        obj._mod = mod
+        obj.dom = dom
+        return obj
 
     @property
     def rep(self):
@@ -2795,11 +2801,21 @@ class ANP(PicklableWithSlots, CantSympify):
     def mod(self):
         return self._mod.to_list()
 
+    def per(f, rep):
+        return f.new(rep, f._mod, f.dom)
+
     def __repr__(f):
         return "%s(%s, %s, %s)" % (f.__class__.__name__, f._rep.to_list(), f._mod.to_list(), f.dom)
 
     def __hash__(f):
         return hash((f.__class__.__name__, f.to_tuple(), f._mod.to_tuple(), f.dom))
+
+    def convert(f, dom):
+        """Convert ``f`` to a ``ANP`` over a new domain. """
+        if f.dom == dom:
+            return f
+        else:
+            return f.new(f._rep.convert(dom), f._mod.convert(dom), dom)
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
@@ -2844,20 +2860,6 @@ class ANP(PicklableWithSlots, CantSympify):
         return f, g, f._mod, f.dom
 
     @classmethod
-    def new(cls, rep, mod, dom):
-        return cls(rep, mod, dom)
-
-    def per(f, rep):
-        return f.new(rep, f._mod, f.dom)
-
-    def convert(f, dom):
-        """Convert ``f`` to a ``ANP`` over a new domain. """
-        if f.dom == dom:
-            return f
-        else:
-            return f.new(f._rep.convert(dom), f._mod.convert(dom), dom)
-
-    @classmethod
     def zero(cls, mod, dom):
         return ANP(0, mod, dom)
 
@@ -2898,6 +2900,22 @@ class ANP(PicklableWithSlots, CantSympify):
     def from_list(cls, rep, mod, dom):
         return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
 
+    def add_ground(f, c):
+        """Add an element of the ground domain to ``f``. """
+        return f.per(f._rep.add_ground(c))
+
+    def sub_ground(f, c):
+        """Subtract an element of the ground domain from ``f``. """
+        return f.per(f._rep.sub_ground(c))
+
+    def mul_ground(f, c):
+        """Multiply ``f`` by an element of the ground domain. """
+        return f.per(f._rep.mul_ground(c))
+
+    def quo_ground(f, c):
+        """Quotient of ``f`` by an element of the ground domain. """
+        return f.per(f._rep.quo_ground(c))
+
     def neg(f):
         return f.per(f._rep.neg())
 
@@ -2917,11 +2935,12 @@ class ANP(PicklableWithSlots, CantSympify):
         """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             if n < 0:
-                F, n = dup_invert(f._rep.to_list(), f._mod.to_list(), f.dom), -n
+                F, n = f._rep.invert(f._mod), -n
             else:
-                F = f._rep.to_list()
+                F = f._rep
 
-            return ANP(dup_rem(dup_pow(F, n, f.dom), f._mod.to_list(), f.dom), f._mod, f.dom)
+            # XXX: Need a pow_mod method for DMP
+            return f.per(F.pow(n).rem(f._mod))
         else:
             raise TypeError("``int`` expected, got %s" % type(n))
 
@@ -2955,7 +2974,7 @@ class ANP(PicklableWithSlots, CantSympify):
     @property
     def is_zero(f):
         """Returns ``True`` if ``f`` is a zero algebraic number. """
-        return not f
+        return f._rep.is_zero
 
     @property
     def is_one(f):
@@ -2965,7 +2984,7 @@ class ANP(PicklableWithSlots, CantSympify):
     @property
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
-        return not f.to_list() or len(f.to_list()) == 1
+        return f._rep.is_ground
 
     def __pos__(f):
         return f
@@ -2976,11 +2995,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __add__(f, g):
         if isinstance(g, ANP):
             return f.add(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.add(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.add_ground(g)
 
     def __radd__(f, g):
         return f.__add__(g)
@@ -2988,11 +3008,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __sub__(f, g):
         if isinstance(g, ANP):
             return f.sub(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.sub(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.sub_ground(g)
 
     def __rsub__(f, g):
         return (-f).__add__(g)
@@ -3000,11 +3021,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __mul__(f, g):
         if isinstance(g, ANP):
             return f.mul(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.mul(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.mul_ground(g)
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -3021,11 +3043,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __truediv__(f, g):
         if isinstance(g, ANP):
             return f.quo(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.quo(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.quo_ground(g)
 
     def __eq__(f, g):
         try:
