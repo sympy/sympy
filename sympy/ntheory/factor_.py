@@ -17,7 +17,8 @@ from sympy.core.intfunc import integer_log, num_digits
 from sympy.core.power import Pow
 from sympy.core.random import _randint
 from sympy.core.singleton import S
-from sympy.external.gmpy import SYMPY_INTS, gcd, lcm, sqrt as isqrt, sqrtrem, iroot, bit_scan1
+from sympy.external.gmpy import (SYMPY_INTS, gcd, lcm, sqrt as isqrt,
+                                 sqrtrem, iroot, bit_scan1, remove)
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
@@ -254,33 +255,7 @@ def multiplicity(p, n):
 
     if n == 0:
         raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
-    if p == 2:
-        return bit_scan1(n)
-    if p < 2:
-        raise ValueError('p must be an integer, 2 or larger, but got %s' % p)
-    if p == n:
-        return 1
-
-    m = 0
-    n, rem = divmod(n, p)
-    while not rem:
-        m += 1
-        if m > 5:
-            # The multiplicity could be very large. Better
-            # to increment in powers of two
-            e = 2
-            while 1:
-                ppow = p**e
-                if ppow < n:
-                    nnew, rem = divmod(n, ppow)
-                    if not rem:
-                        m += e
-                        e *= 2
-                        n = nnew
-                        continue
-                return m + multiplicity(p, n)
-        n, rem = divmod(n, p)
-    return m
+    return remove(n, p)[1]
 
 
 def multiplicity_in_factorial(p, n):
@@ -435,9 +410,9 @@ def _perfect_power(n, k=2):
     tf_max = n.bit_length()//27 + 24
     if k < tf_max:
         for p in primerange(k, tf_max):
-            t = multiplicity(p, n)
+            m, t = remove(n, p)
             if t:
-                n //= p**t
+                n = m
                 t *= multi
                 _g = gcd(g, t)
                 if _g == 1:
@@ -626,10 +601,7 @@ def perfect_power(n, candidates=None, big=True, factor=True):
         # see if there is a factor present
         if factor and n % fac == 0:
             # find what the potential power is
-            if fac == 2:
-                e = bit_scan1(n)
-            else:
-                e = multiplicity(fac, n)
+            e = remove(n, fac)[1]
             # if it's a trivial power we are done
             if e == 1:
                 return False
@@ -954,8 +926,7 @@ def _trial(factors, n, candidates, verbose=False):
     nfactors = len(factors)
     for d in candidates:
         if n % d == 0:
-            m = multiplicity(d, n)
-            n //= d**m
+            n, m = remove(n, d)
             factors[d] = m
     if verbose:
         for k in sorted(set(factors).difference(set(factors0))):
@@ -1046,9 +1017,8 @@ def _factorint_small(factors, n, limit, fail_max):
         n //= d
         m += 1
         if m == 20:
-            mm = multiplicity(d, n)
+            n, mm = remove(n, d)
             m += mm
-            n //= d**mm
             break
     if m:
         factors[d] = m
@@ -1073,9 +1043,8 @@ def _factorint_small(factors, n, limit, fail_max):
             n //= d
             m += 1
             if m == 20:
-                mm = multiplicity(d, n)
+                n, mm = remove(n, d)
                 m += mm
-                n //= d**mm
                 break
         if m:
             factors[d] = m
@@ -1093,9 +1062,8 @@ def _factorint_small(factors, n, limit, fail_max):
             n //= d
             m += 1
             if m == 20:
-                mm = multiplicity(d, n)
+                n, mm = remove(n, d)
                 m += mm
-                n //= d**mm
                 break
         if m:
             factors[d] = m
