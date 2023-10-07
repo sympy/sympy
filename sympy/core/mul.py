@@ -439,18 +439,19 @@ class Mul(Expr, AssocOp):
                     # not an Add. This allow things like a**2*b**3 == a**5
                     # if a.is_commutative == False, but prohibits
                     # a**x*a**y and x**a*x**b from combining (x,y commute).
-                    if b1 == b2 and (not new_exp.is_Add):
-                        o12 = b1 ** new_exp
+                    # if b1 == b2 and (not new_exp.is_Add):
+                    #     o12 = b1 ** new_exp
 
-                        # now o12 could be a commutative object
-                        if o12.is_commutative:
-                            seq.append(o12)
-                            continue
-                        else:
-                            nc_seq.insert(0, o12)
+                    #     # now o12 could be a commutative object
+                    #     if o12.is_commutative:
+                    #         seq.append(o12)
+                    #         continue
+                    #     else:
+                    #         nc_seq.insert(0, o12)
 
-                    else:
-                        nc_part.extend([o1, o])
+                    # else:
+                    #     nc_part.extend([o1, o])
+                    nc_part.extend([o1, o])
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
