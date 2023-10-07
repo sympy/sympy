@@ -1180,6 +1180,8 @@ class DMP(CantSympify):
                 return NotImplemented
 
     def __eq__(f, g):
+        if f is g:
+            return True
         if not isinstance(g, DMP):
             return NotImplemented
         try:
@@ -1191,9 +1193,6 @@ class DMP(CantSympify):
 
     def _strict_eq(f, g):
         raise NotImplementedError
-
-    def __ne__(f, g):
-        return not f == g
 
     def eq(f, g, strict=False):
         if not strict:
@@ -2871,7 +2870,7 @@ class ANP(CantSympify):
             f = f.convert(dom)
             g = g.convert(dom)
 
-        return f, g, f._mod, f.dom
+        return f._rep, g._rep, f._mod, f.dom
 
     @classmethod
     def zero(cls, mod, dom):
@@ -2935,47 +2934,48 @@ class ANP(CantSympify):
 
     def add(f, g):
         F, G, mod, dom = f.unify_ANP(g)
-        return F.per(F._rep.add(G._rep))
+        return f.new(F.add(G), mod, dom)
 
     def sub(f, g):
         F, G, mod, dom = f.unify_ANP(g)
-        return F.per(F._rep.sub(G._rep))
+        return f.new(F.sub(G), mod, dom)
 
     def mul(f, g):
         F, G, mod, dom = f.unify_ANP(g)
-        return F.per(F._rep.mul(G._rep).rem(mod))
+        return f.new(F.mul(G).rem(mod), mod, dom)
 
     def pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        if isinstance(n, int):
-            if n < 0:
-                F, n = f._rep.invert(f._mod), -n
-            else:
-                F = f._rep
-
-            # XXX: Need a pow_mod method for DMP
-            return f.per(F.pow(n).rem(f._mod))
-        else:
+        if not isinstance(n, int):
             raise TypeError("``int`` expected, got %s" % type(n))
 
-    def div(f, g):
+        mod = f._mod
+        F = f._rep
+
+        if n < 0:
+            F, n = F.invert(mod), -n
+
+        # XXX: Need a pow_mod method for DMP
+        return f.new(F.pow(n).rem(f._mod), mod, f.dom)
+
+    def exquo(f, g):
         F, G, mod, dom = f.unify_ANP(g)
-        return F.per(F._rep.mul(G._rep.invert(mod)).rem(mod)), F.zero(mod, dom)
+        return f.new(F.mul(G.invert(mod)).rem(mod), mod, dom)
+
+    def div(f, g):
+        return f.exquo(g), f.zero(f._mod, f.dom)
+
+    def quo(f, g):
+        return f.exquo(g)
 
     def rem(f, g):
         F, G, mod, dom = f.unify_ANP(g)
-        s, h = F._rep.half_gcdex(G._rep)
+        s, h = F.half_gcdex(G)
 
         if h.is_one:
             return f.zero(mod, dom)
         else:
             raise NotInvertible("zero divisor")
-
-    def quo(f, g):
-        F, G, mod, dom = f.unify_ANP(g)
-        return F.per(F._rep.mul(G._rep.invert(mod)).rem(mod))
-
-    exquo = quo
 
     def LC(f):
         """Returns the leading coefficient of ``f``. """
@@ -3067,34 +3067,32 @@ class ANP(CantSympify):
     def __eq__(f, g):
         try:
             F, G, _, _ = f.unify_ANP(g)
-
-            return F._rep == G._rep
         except UnificationFailed:
-            return False
+            return NotImplemented
+        return F == G
 
     def __ne__(f, g):
         try:
             F, G, _, _ = f.unify_ANP(g)
-
-            return F._rep != G._rep
         except UnificationFailed:
-            return True
+            return NotImplemented
+        return F != G
 
     def __lt__(f, g):
         F, G, _, _ = f.unify_ANP(g)
-        return F._rep < G._rep
+        return F < G
 
     def __le__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F <= G
 
     def __gt__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F > G
 
     def __ge__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F >= G
 
     def __bool__(f):
-        return f._rep.is_zero == False
+        return bool(f._rep)
