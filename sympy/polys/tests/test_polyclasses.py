@@ -6,28 +6,35 @@ from sympy.polys.polyclasses import DMP, DMF, ANP
 from sympy.polys.polyerrors import (CoercionFailed, ExactQuotientFailed,
                                     NotInvertible)
 from sympy.polys.specialpolys import f_polys
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
 def test_DMP___init__():
     f = DMP([[ZZ(0)], [], [ZZ(0), ZZ(1), ZZ(2)], [ZZ(3)]], ZZ)
 
-    assert f.rep == [[1, 2], [3]]
+    assert f._rep == [[1, 2], [3]]
     assert f.dom == ZZ
     assert f.lev == 1
 
     f = DMP([[ZZ(1), ZZ(2)], [ZZ(3)]], ZZ, 1)
 
-    assert f.rep == [[1, 2], [3]]
+    assert f._rep == [[1, 2], [3]]
     assert f.dom == ZZ
     assert f.lev == 1
 
     f = DMP.from_dict({(1, 1): ZZ(1), (0, 0): ZZ(2)}, 1, ZZ)
 
-    assert f.rep == [[1, 0], [2]]
+    assert f._rep == [[1, 0], [2]]
     assert f.dom == ZZ
     assert f.lev == 1
+
+
+def test_DMP_rep_deprecation():
+    f = DMP([1, 2, 3], ZZ)
+
+    with warns_deprecated_sympy():
+        assert f.rep == [1, 2, 3]
 
 
 def test_DMP___eq__():

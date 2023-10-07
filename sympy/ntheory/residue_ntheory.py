@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from sympy.core.function import Function
 from sympy.core.singleton import S
-from sympy.external.gmpy import gcd, lcm, invert, sqrt, legendre, jacobi, kronecker, bit_scan1
+from sympy.external.gmpy import (gcd, lcm, invert, sqrt, legendre, jacobi,
+                                 kronecker, bit_scan1, remove)
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
 from .primetest import isprime
-from .factor_ import factorint, multiplicity, perfect_power
+from .factor_ import factorint, _perfect_power
 from .modular import crt
 from sympy.utilities.misc import as_int
 from sympy.utilities.iterables import iproduct
@@ -308,7 +309,7 @@ def primitive_root(p, smallest=True):
     if isprime(q):
         e = 1
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return None
         q, e = m
@@ -408,7 +409,7 @@ def is_primitive_root(a, p):
         group_order = q - 1
         factors = factorint(q - 1).keys()
     else:
-        m = perfect_power(q)
+        m = _perfect_power(q, 3)
         if not m:
             return False
         q, e = m
@@ -674,10 +675,10 @@ def _sqrt_mod1(a, p, n):
         # case gcd(a, p**k) = p**n
         return range(0, pn, p**((n + 1) // 2))
     # case gcd(a, p**k) = p**r, r < n
-    r = multiplicity(p, a)
+    a, r = remove(a, p)
     if r % 2 == 1:
         return None
-    res = _sqrt_mod_prime_power(a // p**r, p, n - r)
+    res = _sqrt_mod_prime_power(a, p, n - r)
     if res is None:
         return None
     m = r // 2
@@ -769,8 +770,8 @@ def is_quad_residue(a, p):
             a_ = a % px**ex
             if a_ == 0:
                 continue
-            r = multiplicity(px, a_)
-            if r % 2 or jacobi(a_ // px**r, px) != 1:
+            a_, r = remove(a_, px)
+            if r % 2 or jacobi(a_, px) != 1:
                 return False
     return True
 
@@ -822,10 +823,9 @@ def _is_nthpow_residue_bign_prime_power(a, n, p, k):
         a %= pow(p, k)
         if not a:
             return True
-        mu = multiplicity(p, a)
+        a, mu = remove(a, p)
         if mu % n:
             return False
-        a //= pow(p, mu)
         k -= mu
     if p != 2:
         f = p**(k - 1)*(p - 1) # f = totient(p**k)

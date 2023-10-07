@@ -149,6 +149,7 @@ modules = [
     'sympy.utilities',
     'sympy.utilities._compilation',
     'sympy.utilities.mathml',
+    'sympy.utilities.mathml.data',
     'sympy.vector',
 ]
 
@@ -325,7 +326,7 @@ if __name__ == '__main__':
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
-              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.utilities.mathml.data': ['*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': [
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
