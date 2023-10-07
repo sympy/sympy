@@ -2812,7 +2812,13 @@ class ANP(CantSympify):
 
     @property
     def mod(self):
-        return self._mod.to_list()
+        return self.mod_to_list()
+
+    def to_DMP(self):
+        return self._rep
+
+    def mod_to_DMP(self):
+        return self._mod
 
     def per(f, rep):
         return f.new(rep, f._mod, f.dom)
@@ -2896,6 +2902,10 @@ class ANP(CantSympify):
     def to_list(f):
         """Convert ``f`` to a list representation with native coefficients. """
         return f._rep.to_list()
+
+    def mod_to_list(f):
+        """Return ``f.mod`` as a list with native coefficients. """
+        return f._mod.to_list()
 
     def to_sympy_list(f):
         """Convert ``f`` to a list representation with SymPy coefficients. """
