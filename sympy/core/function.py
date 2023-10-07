@@ -2413,9 +2413,6 @@ class Subs(Expr):
         return self.expr.as_leading_term(x)
     
 
-
-    
-
 def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
