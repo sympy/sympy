@@ -597,7 +597,7 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        ai = a.rep[::-1]
+        ai = a.to_list()[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]
         coeffs_sympy = [tosympy(c) for c in coeffs_dom]

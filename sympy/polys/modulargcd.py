@@ -2018,12 +2018,12 @@ def _to_ZZ_poly(f, ring):
     den = domain.one
 
     for coeff in f.itercoeffs():
-        for c in coeff.rep:
+        for c in coeff.to_list():
             if c:
                 den = domain.lcm(den, c.denominator)
 
     for monom, coeff in f.iterterms():
-        coeff = coeff.rep
+        coeff = coeff.to_list()
         m = ring.domain.one
         if isinstance(ring.domain, PolynomialRing):
             m = m.mul_monom(monom[1:])

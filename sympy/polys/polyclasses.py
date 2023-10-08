@@ -27,8 +27,8 @@ from sympy.polys.densebasic import (
     dmp_degree_in,
     dmp_degree_list,
     dmp_negative_p,
-    dup_LC, dmp_ground_LC,
-    dup_TC, dmp_ground_TC,
+    dmp_ground_LC,
+    dmp_ground_TC,
     dmp_ground_nth,
     dmp_one, dmp_ground,
     dmp_zero, dmp_zero_p, dmp_one_p, dmp_ground_p,
@@ -48,18 +48,18 @@ from sympy.polys.densearith import (
     dmp_quo_ground,
     dmp_exquo_ground,
     dmp_abs,
-    dup_neg, dmp_neg,
-    dup_add, dmp_add,
-    dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dmp_neg,
+    dmp_add,
+    dmp_sub,
+    dmp_mul,
     dmp_sqr,
-    dup_pow, dmp_pow,
+    dmp_pow,
     dmp_pdiv,
     dmp_prem,
     dmp_pquo,
     dmp_pexquo,
     dmp_div,
-    dup_rem, dmp_rem,
+    dmp_rem,
     dmp_quo,
     dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
@@ -1180,6 +1180,8 @@ class DMP(CantSympify):
                 return NotImplemented
 
     def __eq__(f, g):
+        if f is g:
+            return True
         if not isinstance(g, DMP):
             return NotImplemented
         try:
@@ -1191,9 +1193,6 @@ class DMP(CantSympify):
 
     def _strict_eq(f, g):
         raise NotImplementedError
-
-    def __ne__(f, g):
-        return not f == g
 
     def eq(f, g, strict=False):
         if not strict:
@@ -1726,6 +1725,9 @@ class DUP_Flint(DMP):
 
     __slots__ = ('_rep', 'dom', '_cls')
 
+    def __reduce__(self):
+        return self.__class__, (self.to_list(), self.dom, self.lev)
+
     @classmethod
     def _new(cls, rep, dom, lev):
         rep = cls._flint_poly(rep[::-1], dom, lev)
@@ -2054,7 +2056,13 @@ class DUP_Flint(DMP):
 
     def _invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """
-        return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
+        if f.dom.is_QQ:
+            gcd, F_inv, _ = f._rep.xgcd(g._rep)
+            if gcd != 1:
+                raise NotInvertible("zero divisor")
+            return f.from_rep(F_inv, f.dom)
+        else:
+            return f.to_DMP_Python()._invert(g.to_DMP_Python()).to_DUP_Flint()
 
     def _revert(f, n):
         """Compute ``f**(-1)`` mod ``x**n``. """
@@ -2756,41 +2764,84 @@ def init_normal_ANP(rep, mod, dom):
                dup_normal(mod, dom), dom)
 
 
-class ANP(PicklableWithSlots, CantSympify):
+class ANP(CantSympify):
     """Dense Algebraic Number Polynomials over a field. """
 
-    __slots__ = ('rep', 'mod', 'dom')
+    __slots__ = ('_rep', '_mod', 'dom')
 
-    def __init__(self, rep, mod, dom):
-        # Not possible to check with isinstance
-        if type(rep) is dict:
-            self.rep = dup_from_dict(rep, dom)
+    def __new__(cls, rep, mod, dom):
+        if isinstance(rep, DMP):
+            pass
+        elif type(rep) is dict: # don't use isinstance
+            rep = DMP(dup_from_dict(rep, dom), dom, 0)
         else:
             if isinstance(rep, list):
                 rep = [dom.convert(a) for a in rep]
             else:
                 rep = [dom.convert(rep)]
-
-            self.rep = dup_strip(rep)
+            rep = DMP(dup_strip(rep), dom, 0)
 
         if isinstance(mod, DMP):
-            self.mod = mod.rep
+            pass
+        elif isinstance(mod, dict):
+            mod = DMP(dup_from_dict(mod, dom), dom, 0)
         else:
-            if isinstance(mod, dict):
-                self.mod = dup_from_dict(mod, dom)
-            else:
-                self.mod = dup_strip(mod)
+            mod = DMP(dup_strip(mod), dom, 0)
 
-        self.dom = dom
+        return cls.new(rep, mod, dom)
+
+    @classmethod
+    def new(cls, rep, mod, dom):
+        if not (rep.dom == mod.dom == dom):
+            raise RuntimeError("Inconsistent domain")
+        obj = super().__new__(cls)
+        obj._rep = rep
+        obj._mod = mod
+        obj.dom = dom
+        return obj
+
+    # XXX: It should be possible to use __getnewargs__ rather than __reduce__
+    # but it doesn't work for some reason. Probably this would be easier if
+    # python-flint supported pickling for polynomial types.
+    def __reduce__(self):
+        return ANP, (self.rep, self.mod, self.dom)
+
+    @property
+    def rep(self):
+        return self._rep.to_list()
+
+    @property
+    def mod(self):
+        return self.mod_to_list()
+
+    def to_DMP(self):
+        return self._rep
+
+    def mod_to_DMP(self):
+        return self._mod
+
+    def per(f, rep):
+        return f.new(rep, f._mod, f.dom)
 
     def __repr__(f):
-        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.mod, f.dom)
+        return "%s(%s, %s, %s)" % (f.__class__.__name__, f._rep.to_list(), f._mod.to_list(), f.dom)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, f.to_tuple(), dmp_to_tuple(f.mod, 0), f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f._mod.to_tuple(), f.dom))
+
+    def convert(f, dom):
+        """Convert ``f`` to a ``ANP`` over a new domain. """
+        if f.dom == dom:
+            return f
+        else:
+            return f.new(f._rep.convert(dom), f._mod.convert(dom), dom)
 
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
+
+        # XXX: This unify method is not used any more because unify_ANP is used
+        # instead.
+
         if not isinstance(g, ANP) or f.mod != g.mod:
             raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
@@ -2814,8 +2865,18 @@ class ANP(PicklableWithSlots, CantSympify):
 
         return dom, per, F, G, mod
 
-    def per(f, rep, mod=None, dom=None):
-        return ANP(rep, mod or f.mod, dom or f.dom)
+    def unify_ANP(f, g):
+        """Unify and return ``DMP`` instances of ``f`` and ``g``. """
+        if not isinstance(g, ANP) or f._mod != g._mod:
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+
+        # The domain is almost always QQ but there are some tests involving ZZ
+        if f.dom != g.dom:
+            dom = f.dom.unify(g.dom)
+            f = f.convert(dom)
+            g = g.convert(dom)
+
+        return f._rep, g._rep, f._mod, f.dom
 
     @classmethod
     def zero(cls, mod, dom):
@@ -2827,7 +2888,7 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def to_dict(f):
         """Convert ``f`` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.rep, 0, f.dom)
+        return f._rep.to_dict()
 
     def to_sympy_dict(f):
         """Convert ``f`` to a dict representation with SymPy coefficients. """
@@ -2840,11 +2901,15 @@ class ANP(PicklableWithSlots, CantSympify):
 
     def to_list(f):
         """Convert ``f`` to a list representation with native coefficients. """
-        return f.rep
+        return f._rep.to_list()
+
+    def mod_to_list(f):
+        """Return ``f.mod`` as a list with native coefficients. """
+        return f._mod.to_list()
 
     def to_sympy_list(f):
         """Convert ``f`` to a list representation with SymPy coefficients. """
-        return [ f.dom.to_sympy(c) for c in f.rep ]
+        return [ f.dom.to_sympy(c) for c in f.to_list() ]
 
     def to_tuple(f):
         """
@@ -2852,81 +2917,98 @@ class ANP(PicklableWithSlots, CantSympify):
 
         This is needed for hashing.
         """
-        return dmp_to_tuple(f.rep, 0)
+        return f._rep.to_tuple()
 
     @classmethod
     def from_list(cls, rep, mod, dom):
         return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
 
+    def add_ground(f, c):
+        """Add an element of the ground domain to ``f``. """
+        return f.per(f._rep.add_ground(c))
+
+    def sub_ground(f, c):
+        """Subtract an element of the ground domain from ``f``. """
+        return f.per(f._rep.sub_ground(c))
+
+    def mul_ground(f, c):
+        """Multiply ``f`` by an element of the ground domain. """
+        return f.per(f._rep.mul_ground(c))
+
+    def quo_ground(f, c):
+        """Quotient of ``f`` by an element of the ground domain. """
+        return f.per(f._rep.quo_ground(c))
+
     def neg(f):
-        return f.per(dup_neg(f.rep, f.dom))
+        return f.per(f._rep.neg())
 
     def add(f, g):
-        dom, per, F, G, mod = f.unify(g)
-        return per(dup_add(F, G, dom))
+        F, G, mod, dom = f.unify_ANP(g)
+        return f.new(F.add(G), mod, dom)
 
     def sub(f, g):
-        dom, per, F, G, mod = f.unify(g)
-        return per(dup_sub(F, G, dom))
+        F, G, mod, dom = f.unify_ANP(g)
+        return f.new(F.sub(G), mod, dom)
 
     def mul(f, g):
-        dom, per, F, G, mod = f.unify(g)
-        return per(dup_rem(dup_mul(F, G, dom), mod, dom))
+        F, G, mod, dom = f.unify_ANP(g)
+        return f.new(F.mul(G).rem(mod), mod, dom)
 
     def pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        if isinstance(n, int):
-            if n < 0:
-                F, n = dup_invert(f.rep, f.mod, f.dom), -n
-            else:
-                F = f.rep
-
-            return f.per(dup_rem(dup_pow(F, n, f.dom), f.mod, f.dom))
-        else:
+        if not isinstance(n, int):
             raise TypeError("``int`` expected, got %s" % type(n))
 
+        mod = f._mod
+        F = f._rep
+
+        if n < 0:
+            F, n = F.invert(mod), -n
+
+        # XXX: Need a pow_mod method for DMP
+        return f.new(F.pow(n).rem(f._mod), mod, f.dom)
+
+    def exquo(f, g):
+        F, G, mod, dom = f.unify_ANP(g)
+        return f.new(F.mul(G.invert(mod)).rem(mod), mod, dom)
+
     def div(f, g):
-        dom, per, F, G, mod = f.unify(g)
-        return (per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom)), f.zero(mod, dom))
+        return f.exquo(g), f.zero(f._mod, f.dom)
+
+    def quo(f, g):
+        return f.exquo(g)
 
     def rem(f, g):
-        dom, _, _, G, mod = f.unify(g)
+        F, G, mod, dom = f.unify_ANP(g)
+        s, h = F.half_gcdex(G)
 
-        s, h = dup_half_gcdex(G, mod, dom)
-
-        if h == [dom.one]:
+        if h.is_one:
             return f.zero(mod, dom)
         else:
             raise NotInvertible("zero divisor")
 
-    def quo(f, g):
-        dom, per, F, G, mod = f.unify(g)
-        return per(dup_rem(dup_mul(F, dup_invert(G, mod, dom), dom), mod, dom))
-
-    exquo = quo
-
     def LC(f):
         """Returns the leading coefficient of ``f``. """
-        return dup_LC(f.rep, f.dom)
+        return f._rep.LC()
 
     def TC(f):
         """Returns the trailing coefficient of ``f``. """
-        return dup_TC(f.rep, f.dom)
+        return f._rep.TC()
 
     @property
     def is_zero(f):
         """Returns ``True`` if ``f`` is a zero algebraic number. """
-        return not f
+        return f._rep.is_zero
 
     @property
     def is_one(f):
         """Returns ``True`` if ``f`` is a unit algebraic number. """
-        return f.rep == [f.dom.one]
+        return f._rep.is_one
 
     @property
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
-        return not f.rep or len(f.rep) == 1
+        return f._rep.is_ground
 
     def __pos__(f):
         return f
@@ -2937,11 +3019,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __add__(f, g):
         if isinstance(g, ANP):
             return f.add(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.add(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.add_ground(g)
 
     def __radd__(f, g):
         return f.__add__(g)
@@ -2949,11 +3032,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __sub__(f, g):
         if isinstance(g, ANP):
             return f.sub(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.sub(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.sub_ground(g)
 
     def __rsub__(f, g):
         return (-f).__add__(g)
@@ -2961,11 +3045,12 @@ class ANP(PicklableWithSlots, CantSympify):
     def __mul__(f, g):
         if isinstance(g, ANP):
             return f.mul(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.mul(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.mul_ground(g)
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -2982,43 +3067,42 @@ class ANP(PicklableWithSlots, CantSympify):
     def __truediv__(f, g):
         if isinstance(g, ANP):
             return f.quo(g)
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            try:
-                return f.quo(f.per(g))
-            except (CoercionFailed, TypeError):
-                return NotImplemented
+            return f.quo_ground(g)
 
     def __eq__(f, g):
         try:
-            _, _, F, G, _ = f.unify(g)
-
-            return F == G
+            F, G, _, _ = f.unify_ANP(g)
         except UnificationFailed:
-            return False
+            return NotImplemented
+        return F == G
 
     def __ne__(f, g):
         try:
-            _, _, F, G, _ = f.unify(g)
-
-            return F != G
+            F, G, _, _ = f.unify_ANP(g)
         except UnificationFailed:
-            return True
+            return NotImplemented
+        return F != G
 
     def __lt__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F < G
 
     def __le__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F <= G
 
     def __gt__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F > G
 
     def __ge__(f, g):
-        _, _, F, G, _ = f.unify(g)
+        F, G, _, _ = f.unify_ANP(g)
         return F >= G
 
     def __bool__(f):
-        return bool(f.rep)
+        return bool(f._rep)

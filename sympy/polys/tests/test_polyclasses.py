@@ -422,8 +422,8 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     rep = {1: QQ(1), 0: QQ(1)}
@@ -431,19 +431,19 @@ def test_ANP___init__():
 
     f = ANP(rep, mod, QQ)
 
-    assert f.rep == [QQ(1), QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1), QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP(1, mod, QQ)
 
-    assert f.rep == [QQ(1)]
-    assert f.mod == [QQ(1), QQ(0), QQ(1)]
+    assert f.to_list() == [QQ(1)]
+    assert f.mod_to_list() == [QQ(1), QQ(0), QQ(1)]
     assert f.dom == QQ
 
     f = ANP([1, 0.5], mod, QQ)
 
-    assert all(QQ.of_type(a) for a in f.rep)
+    assert all(QQ.of_type(a) for a in f.to_list())
 
     raises(CoercionFailed, lambda: ANP([sqrt(2)], mod, QQ))
 
@@ -533,12 +533,18 @@ def test_ANP_arithmetics():
     assert q == a/b # == c
 
 def test_ANP_unify():
-    mod = [QQ(1), QQ(0), QQ(-2)]
+    mod_z = [ZZ(1), ZZ(0), ZZ(-2)]
+    mod_q = [QQ(1), QQ(0), QQ(-2)]
 
-    a = ANP([QQ(1)], mod, QQ)
-    b = ANP([ZZ(1)], mod, ZZ)
+    a = ANP([QQ(1)], mod_q, QQ)
+    b = ANP([ZZ(1)], mod_z, ZZ)
 
     assert a.unify(b)[0] == QQ
     assert b.unify(a)[0] == QQ
     assert a.unify(a)[0] == QQ
     assert b.unify(b)[0] == ZZ
+
+    assert a.unify_ANP(b)[-1] == QQ
+    assert b.unify_ANP(a)[-1] == QQ
+    assert a.unify_ANP(a)[-1] == QQ
+    assert b.unify_ANP(b)[-1] == ZZ
