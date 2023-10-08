@@ -580,6 +580,21 @@ class Abs(Function):
                 a, b = log(base).as_real_imag()
                 z = a + I*b
                 return exp(re(exponent*z))
+        if isinstance(arg, Expr):
+        # Handle other cases here as needed.
+          if arg.is_Add:
+              # If the argument is an addition expression, check each term.
+              new_args = []
+              for term in arg.args:
+                  if isinstance(term, Mul):
+                      # If the term is a multiplication expression, simplify it.
+                      simplified_term = term.simplify()
+                      new_args.append(simplified_term)
+                  else:
+                      new_args.append(term)
+              # Reconstruct the expression with simplified terms.
+              simplified_arg = Add(*new_args).simplify()
+              return simplified_arg
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
