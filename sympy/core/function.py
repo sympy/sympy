@@ -2411,7 +2411,7 @@ class Subs(Expr):
             return self
         # The variable is independent of the substitution:
         return self.expr.as_leading_term(x)
-    
+
 
 def diff(f, *symbols, **kwargs):
     """
