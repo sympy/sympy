@@ -988,6 +988,289 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 class MusculotendonDeGroote2016(MusculotendonBase):
     """Musculotendon model using the curves of De Groote et al., 2016 [1].
 
+    Examples
+    ========
+
+    This class models the musculotendon actuator parametrized by the
+    characteristic curves described in De Groote et al., 2016 [1]. Like all
+    musculotendon models in SymPy's biomechanics module, it requires a pathway
+    to define its line of action. We'll begin by creating a simple
+    ``LinearPathway`` between two points that our musculotendon will follow.
+    We'll create a point ``O`` to represent the musculotendon's origin and
+    another ``I`` to represent its insertion.
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import (LinearPathway, Point,
+    ...     ReferenceFrame, dynamicsymbols)
+
+    >>> N = ReferenceFrame('N')
+    >>> O, I = O, P = symbols('O, I', cls=Point)
+    >>> q, u = dynamicsymbols('q, u', real=True)
+    >>> I.set_pos(O, q*N.x)
+    >>> O.set_vel(N, 0)
+    >>> I.set_vel(N, u*N.x)
+    >>> pathway = LinearPathway(O, I)
+    >>> pathway.attachments
+    (O, I)
+    >>> pathway.length
+    Abs(q(t))
+    >>> pathway.extension_velocity
+    sign(q(t))*Derivative(q(t), t)
+
+    A musculotendon also takes an instance of an activation dynamics model as
+    this will be used to provide symbols for the activation in the formulation
+    of the musculotendon dynamics. We'll use an instance of
+    ``FirstOrderActivationDeGroote2016`` to represent first-order activation
+    dynamics. Note that a single name argument needs to be provided as SymPy
+    will use this as a suffix.
+
+    >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
+
+    >>> activation = FirstOrderActivationDeGroote2016('muscle')
+    >>> activation.x
+    Matrix([[a_muscle(t)]])
+    >>> activation.r
+    Matrix([[e_muscle(t)]])
+    >>> activation.p
+    Matrix([
+    [tau_a_muscle],
+    [tau_d_muscle],
+    [    b_muscle]])
+    >>> activation.rhs()
+    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)...]])
+
+    The musculotendon class requires symbols or values to be passed to represent
+    the constants in the musculotendon dynamics. We'll use SymPy's ``symbols``
+    function to create symbols for the maximum isometric force ``F_M_max``,
+    optimal fiber length ``l_M_opt``, tendon slack length ``l_T_slack``, maximum
+    fiber velocity ``v_M_max``, optimal pennation angle ``alpha_opt, and fiber
+    damping coefficient ``beta``.
+
+    >>> F_M_max = symbols('F_M_max', real=True)
+    >>> l_M_opt = symbols('l_M_opt', real=True)
+    >>> l_T_slack = symbols('l_T_slack', real=True)
+    >>> v_M_max = symbols('v_M_max', real=True)
+    >>> alpha_opt = symbols('alpha_opt', real=True)
+    >>> beta = symbols('beta', real=True)
+
+    We can then import the class ``MusculotendonDeGroote2016`` from the
+    biomechanics module and create an instance by passing in the various objects
+    we have previously instantiated. By default, a musculotendon model with
+    rigid tendon musculotendon dynamics will be created.
+
+    >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
+
+    >>> rigid_tendon_muscle = MusculotendonDeGroote2016(
+    ...     'muscle',
+    ...     pathway,
+    ...     activation,
+    ...     tendon_slack_length=l_T_slack,
+    ...     peak_isometric_force=F_M_max,
+    ...     optimal_fiber_length=l_M_opt,
+    ...     maximal_fiber_velocity=v_M_max,
+    ...     optimal_pennation_angle=alpha_opt,
+    ...     fiber_damping_coefficient=beta,
+    ... )
+
+    We can inspect the various properties of the musculotendon, including
+    getting the symbolic expression describing the force it produces using its
+    ``force`` attribute.
+
+    >>> rigid_tendon_muscle.force
+    -F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))...
+
+    When we created the musculotendon object, we passed in an instance of an
+    activation dynamics object that governs the activation within the
+    musculotendon. SymPy makes a design choice here that the activation dynamics
+    instance will be treated as a child object of the musculotendon dynamics.
+    Therefore, if we want to inspect the state and input variables associated
+    with the musculotendon model, we will also be returned the state and input
+    variables associated with the child object, or the activation dynamics in
+    this case. As the musculotendon model that we created here uses rigid tendon
+    dynamics, no additional states or inputs relating to the musculotendon are
+    introduces. Consequently, the model has a single state associated with it,
+    the activation, and a single input associated with it, the excitation. The
+    states and inputs can be inspected using the ``x`` and ``r`` attributes
+    respectively. Note that both ``x`` and ``r`` have the alias attributes of
+    ``state_vars`` and ``input_vars``.
+
+    >>> rigid_tendon_muscle.x
+    Matrix([[a_muscle(t)]])
+    >>> rigid_tendon_muscle.r
+    Matrix([[e_muscle(t)]])
+
+    To see which constants are symbolic in the musculotendon model, we can use
+    the ``p`` or ``constants`` attribute. This returns a ``Matrix`` populated
+    by the constants that are represented by a ``Symbol`` rather than a numeric
+    value.
+
+    >>> rigid_tendon_muscle.p
+    Matrix([
+    [   l_T_slack],
+    [     F_M_max],
+    [     l_M_opt],
+    [     v_M_max],
+    [   alpha_opt],
+    [        beta],
+    [tau_a_muscle],
+    [tau_d_muscle],
+    [    b_muscle]])
+
+    Finally, we can call the ``rhs`` method to return a ``Matrix`` that
+    contains as its elements the righthand side of the ordinary differential
+    equations corresponding to each of the musculotendon's states. Like the
+    method with the same name on the ``Method`` classes in SymPy's mechanics
+    module, this returns a column vector where the number of rows corresponds to
+    the number of states. For our example here, we have a single state, the
+    dynamic symbol ``a_muscle(t)``, so the returned value is a 1-by-1
+    ``Matrix``.
+
+    >>> rigid_tendon_muscle.rhs()
+    Matrix([[((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3...]])
+
+    The musculotendon class supports elastic tendon musculotendon models in
+    addition to rigid tendon ones. You can choose to either use the fiber length
+    or tendon force as an additional state. You can also specify whether an
+    explicit or implicit formulation should be used. To select a formulation,
+    pass a member of the ``MusculotendonFormulation`` enumeration to the
+    ``musculotendon_dynamics`` parameter when calling the constructor. This
+    enumeration is an ``IntEnum``, so you can also pass an integer, however it
+    is recommended to use the enumeration as it is clearer which formulation you
+    are actually selecting. Below, we'll use the ``FIBER_LENGTH_EXPLICIT``
+    member to create a musculotendon with an elastic tendon that will use the
+    (normalized) muscle fiber length as an additional state and will produce
+    the governing ordinary differential equation in explicit form.
+
+    >>> from sympy.physics._biomechanics import MusculotendonFormulation
+
+    >>> elastic_tendon_muscle = MusculotendonDeGroote2016(
+    ...     'muscle',
+    ...     pathway,
+    ...     activation,
+    ...     musculotendon_dynamics=MusculotendonFormulation.FIBER_LENGTH_EXPLICIT,
+    ...     tendon_slack_length=l_T_slack,
+    ...     peak_isometric_force=F_M_max,
+    ...     optimal_fiber_length=l_M_opt,
+    ...     maximal_fiber_velocity=v_M_max,
+    ...     optimal_pennation_angle=alpha_opt,
+    ...     fiber_damping_coefficient=beta,
+    ... )
+
+    >>> elastic_tendon_muscle.force
+    -F_M_max*TendonForceLengthDeGroote2016((-sqrt(l_M_opt**2*...
+    >>> elastic_tendon_muscle.x
+    Matrix([
+    [l_M_tilde_muscle(t)],
+    [        a_muscle(t)]])
+    >>> elastic_tendon_muscle.r
+    Matrix([[e_muscle(t)]])
+    >>> elastic_tendon_muscle.p
+    Matrix([
+    [   l_T_slack],
+    [     F_M_max],
+    [     l_M_opt],
+    [     v_M_max],
+    [   alpha_opt],
+    [        beta],
+    [tau_a_muscle],
+    [tau_d_muscle],
+    [    b_muscle]])
+    >>> elastic_tendon_muscle.rhs()
+    Matrix([
+    [v_M_max*FiberForceVelocityInverseDeGroote2016((l_M_opt*...],
+    [ ((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)...]])
+
+    It is strongly recommended to use the alternate ``with_defaults``
+    constructor when creating an instance because this will ensure that the
+    published constants are used in the musculotendon characteristic curves.
+
+    >>> elastic_tendon_muscle = MusculotendonDeGroote2016.with_defaults(
+    ...     'muscle',
+    ...     pathway,
+    ...     activation,
+    ...     musculotendon_dynamics=MusculotendonFormulation.FIBER_LENGTH_EXPLICIT,
+    ...     tendon_slack_length=l_T_slack,
+    ...     peak_isometric_force=F_M_max,
+    ...     optimal_fiber_length=l_M_opt,
+    ... )
+
+    >>> elastic_tendon_muscle.force
+    -F_M_max*TendonForceLengthDeGroote2016((-sqrt(l_M_tilde_muscle(t)**2)*...
+    >>> elastic_tendon_muscle.x
+    Matrix([
+    [l_M_tilde_muscle(t)],
+    [        a_muscle(t)]])
+    >>> elastic_tendon_muscle.r
+    Matrix([[e_muscle(t)]])
+    >>> elastic_tendon_muscle.p
+    Matrix([
+    [   l_T_slack],
+    [     F_M_max],
+    [     l_M_opt],
+    [          10],
+    [           0],
+    [        1/10],
+    [tau_a_muscle],
+    [tau_d_muscle],
+    [    b_muscle]])
+    >>> elastic_tendon_muscle.rhs()
+    Matrix([
+    [10*FiberForceVelocityInverseDeGroote2016((l_M_opt*l_M_tilde_muscle(t)*...],
+    [ ((1/2 - tanh(b_muscle*(-a_muscle(t) + e_muscle(t)))/2)*(3*...]])
+
+    Parameters
+    ==========
+
+    name : str
+        The name identifier associated with the musculotendon. This name is used
+        as a suffix when automatically generated symbols are instantiated. It
+        must be a string of nonzero length.
+    pathway : PathwayBase
+        The pathway that the actuator follows. This must be an instance of a
+        concrete subclass of ``PathwayBase``, e.g. ``LinearPathway``.
+    activation_dynamics : ActivationBase
+        The activation dynamics that will be modeled within the musculotendon.
+        This must be an instance of a concrete subclass of ``ActivationBase``,
+        e.g. ``FirstOrderActivationDeGroote2016``.
+    musculotendon_dynamics : MusculotendonFormulation | int
+        The formulation of musculotendon dynamics that should be used
+        internally, i.e. rigid or elastic tendon model, the choice of
+        musculotendon state etc. This must be a member of the integer
+        enumeration ``MusculotendonFormulation`` or an integer that can be cast
+        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
+        (or ``0``), which corresponds to a rigid tendon formulation.
+    tendon_slack_length : Expr | None
+        The length of the tendon when the musculotendon is in its unloaded
+        state. In a rigid tendon model the tendon length is the tendon slack
+        length. In all musculotendon models, tendon slack length is used to
+        normalize tendon length to give
+        :math:`\tilde{l}^T = \frac{l^T}{l^T_{slack}}`.
+    peak_isometric_force : Expr | None
+        The maximum force that the muscle fiber can produce when it is
+        undergoing an isometric contraction (no lengthening velocity). In all
+        musculotendon models, peak isometric force is used to normalized tendon
+        and muscle fiber force to give
+        :math:`\tilde{F}^T = \frac{F^T}{F^M_{max}}`.
+    optimal_fiber_length : Expr | None
+        The muscle fiber length at which the muscle fibers produce no passive
+        force and their maximum active force. In all musculotendon models,
+        optimal fiber length is used to normalize muscle fiber length to give
+        :math:`\tilde{l}^M = \frac{l^M}{l^M_{opt}}`.
+    maximal_fiber_velocity : Expr | None
+        The fiber velocity at which, during muscle fiber shortening, the muscle
+        fibers are unable to produce any active force. In all musculotendon
+        models, maximal fiber velocity is used to normalize muscle fiber
+        extension velocity to give :math:`\tilde{v}^M = \frac{v^M}{v^M_{max}}`.
+    optimal_pennation_angle : Expr | None
+        The pennation angle when muscle fiber length equals the optimal fiber
+        length.
+    fiber_damping_coefficient : Expr | None
+        The coefficient of damping to be used in the damping element in the
+        muscle fiber model.
+    with_defaults : bool
+        Whether ``with_defaults`` alternate constructors should be used when
+        automatically constructing child classes. Default is ``False``.
+
     References
     ==========
 
