@@ -1723,6 +1723,7 @@ class TestCharacteristicCurveCollection:
         assert curves.fiber_force_velocity_inverse is FiberForceVelocityInverseDeGroote2016
 
     @staticmethod
+    @pytest.mark.skip(reason='kw_only dataclasses only valid in Python >3.10')
     def test_invalid_constructor_keyword_only():
         with pytest.raises(TypeError):
             _ = CharacteristicCurveCollection(
