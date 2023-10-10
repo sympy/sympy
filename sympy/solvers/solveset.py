@@ -314,7 +314,7 @@ def _invert_real(f, g_ys, symbol):
                 if isinstance(trig, (sin, csc)):
                     F = asin if isinstance(trig, sin) else acsc
                     return (
-                        lambda a: 2*n*pi + F(a)),
+                        lambda a: 2*n*pi + F(a),
                         lambda a: 2*n*pi + pi - F(a))
                 if isinstance(trig, (cos, sec)):
                     F = acos if isinstance(trig, cos) else asec
@@ -3280,12 +3280,12 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         total_solvest_call = 0
         total_conditionst = 0
 
-        # sort equations to the one with the fewest potential
+        # sort equations so the one with the fewest potential
         # symbols appears first
         for index, eq in enumerate(eqs_in_better_order):
             newresult = []
             original_imageset = {}
-            # if imageset, expr is used to solve other symbol
+            # if imageset, expr is used to solve for other symbol
             imgset_yes = False
             result = _new_order_result(result, eq)
             for res in result:
