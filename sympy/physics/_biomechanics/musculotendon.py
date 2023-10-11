@@ -1204,9 +1204,9 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     [   l_T_slack],
     [     F_M_max],
     [     l_M_opt],
-    [          10],
-    [           0],
-    [        1/10],
+    [        10.0],
+    [         0.0],
+    [         0.1],
     [tau_a_muscle],
     [tau_d_muscle],
     [    b_muscle]])
