@@ -616,8 +616,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def musculotendon_dynamics(self):
-        """The formulation of musculotendon dynamics that should be used
-        internally
+        """The choice of rigid or type of elastic tendon musculotendon dynamics.
 
         Explanation
         ===========
