@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics._biomechanics.characteristic.py`` module."""
+"""Tests for the ``sympy.physics.biomechanics.characteristic.py`` module."""
 
 import pytest
 
@@ -10,7 +10,7 @@ from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.physics._biomechanics.curve import (
+from sympy.physics.biomechanics.curve import (
     CharacteristicCurveCollection,
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
