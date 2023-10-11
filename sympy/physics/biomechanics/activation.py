@@ -507,16 +507,21 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
     The function is defined by the equation:
 
-    $\frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
-        + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
-        + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
-        \left(e - a\right)$
+    .. math::
+
+        \frac{da}{dt} = \left(\frac{\frac{1}{2} + a0}{\tau_a \left(\frac{1}{2}
+            + \frac{3a}{2}\right)} + \frac{\left(\frac{1}{2}
+            + \frac{3a}{2}\right) \left(\frac{1}{2} - a0\right)}{\tau_d}\right)
+            \left(e - a\right)
 
     where
 
-    $a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}$
+    .. math::
 
-    with constant values of $tau_a = 0.015$, $tau_d = 0.060$, and $b = 10$.
+        a0 = \frac{\tanh{\left(b \left(e - a\right) \right)}}{2}
+
+    with constant values of :math:`tau_a = 0.015`, :math:`tau_d = 0.060`, and
+    :math:`b = 10`.
 
     References
     ==========
@@ -572,9 +577,9 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
         These have the values:
 
-        $tau_a = 0.015$
-        $tau_d = 0.060$
-        $b = 10$
+        :math:`tau_a = 0.015`
+        :math:`tau_d = 0.060`
+        :math:`b = 10`
 
         """
         tau_a = Float('0.015')

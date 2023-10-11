@@ -276,9 +276,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Returns a new instance of the musculotendon class using recommended
         values for ``v_M_max``, ``alpha_opt``, and ``beta``. The values are:
 
-        $v^M_{max} = 10$
-        $\alpha_{opt} = 0$
-        $\beta = \frac{1}{10}$
+            :math:`v^M_{max} = 10`
+            :math:`\alpha_{opt} = 0`
+            :math:`\beta = \frac{1}{10}`
 
         The musculotendon curves are also instantiated using the constants from
         the original publication.
