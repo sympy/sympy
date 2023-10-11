@@ -373,7 +373,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def tendon_slack_length(self):
-        """Symbol or value corresponding to the tendon slack length constant.
+        r"""Symbol or value corresponding to the tendon slack length constant.
 
         Explanation
         ===========
@@ -391,7 +391,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def l_T_slack(self):
-        """Symbol or value corresponding to the tendon slack length constant.
+        r"""Symbol or value corresponding to the tendon slack length constant.
 
         Explanation
         ===========
@@ -410,7 +410,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def peak_isometric_force(self):
-        """Symbol or value corresponding to the peak isometric force constant.
+        r"""Symbol or value corresponding to the peak isometric force constant.
 
         Explanation
         ===========
@@ -428,7 +428,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def F_M_max(self):
-        """Symbol or value corresponding to the peak isometric force constant.
+        r"""Symbol or value corresponding to the peak isometric force constant.
 
         Explanation
         ===========
@@ -447,7 +447,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def optimal_fiber_length(self):
-        """Symbol or value corresponding to the optimal fiber length constant.
+        r"""Symbol or value corresponding to the optimal fiber length constant.
 
         Explanation
         ===========
@@ -464,7 +464,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def l_M_opt(self):
-        """Symbol or value corresponding to the optimal fiber length constant.
+        r"""Symbol or value corresponding to the optimal fiber length constant.
 
         Explanation
         ===========
@@ -482,7 +482,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def maximal_fiber_velocity(self):
-        """Symbol or value corresponding to the maximal fiber velocity constant.
+        r"""Symbol or value corresponding to the maximal fiber velocity constant.
 
         Explanation
         ===========
@@ -499,7 +499,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def v_M_max(self):
-        """Symbol or value corresponding to the maximal fiber velocity constant.
+        r"""Symbol or value corresponding to the maximal fiber velocity constant.
 
         Explanation
         ===========
@@ -1039,7 +1039,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
 
 class MusculotendonDeGroote2016(MusculotendonBase):
-    """Musculotendon model using the curves of De Groote et al., 2016 [1].
+    r"""Musculotendon model using the curves of De Groote et al., 2016 [1].
 
     Examples
     ========
