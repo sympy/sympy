@@ -899,16 +899,18 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        constants = [Matrix([
+        constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
             self._v_M_max,
             self._alpha_opt,
             self._beta,
-        ])]
+        ]
+        constants = [Matrix([c for c in constants if not c.is_number])]
         for child in self._child_objects:
             constants.append(child.constants)
+        constants.append(self._curve_constants)
         return Matrix.vstack(*constants)
 
     @property
@@ -929,16 +931,18 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        constants = [Matrix([
+        constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
             self._v_M_max,
             self._alpha_opt,
             self._beta,
-        ])]
+        ]
+        constants = [Matrix([c for c in constants if not c.is_number])]
         for child in self._child_objects:
             constants.append(child.constants)
+        constants.append(self._curve_constants)
         return Matrix.vstack(*constants)
 
     @property
