@@ -4,7 +4,7 @@ import pytest
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
-from sympy.core.numbers import Float, Integer, Rational
+from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
