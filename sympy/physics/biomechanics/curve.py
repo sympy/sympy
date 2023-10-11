@@ -105,7 +105,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     ``Symbol`` called ``l_T_tilde`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import TendonForceLengthDeGroote2016
+    >>> from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
     >>> l_T_tilde = Symbol('l_T_tilde')
     >>> fl_T = TendonForceLengthDeGroote2016.with_defaults(l_T_tilde)
     >>> fl_T
@@ -337,7 +337,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import TendonForceLengthInverseDeGroote2016
+    >>> from sympy.physics.biomechanics import TendonForceLengthInverseDeGroote2016
     >>> fl_T = Symbol('fl_T')
     >>> l_T_tilde = TendonForceLengthInverseDeGroote2016.with_defaults(fl_T)
     >>> l_T_tilde
@@ -551,7 +551,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     create a ``Symbol`` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveDeGroote2016
+    >>> from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
     >>> l_M_tilde = Symbol('l_M_tilde')
     >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
@@ -776,7 +776,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     ``fl_M_pas`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import FiberForceLengthPassiveInverseDeGroote2016
+    >>> from sympy.physics.biomechanics import FiberForceLengthPassiveInverseDeGroote2016
     >>> fl_M_pas = Symbol('fl_M_pas')
     >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas)
     >>> l_M_tilde
@@ -984,7 +984,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     create a ``Symbol`` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import FiberForceLengthActiveDeGroote2016
+    >>> from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
     >>> l_M_tilde = Symbol('l_M_tilde')
     >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
@@ -1322,7 +1322,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     create a ``Symbol`` called ``v_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import FiberForceVelocityDeGroote2016
+    >>> from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
     >>> v_M_tilde = Symbol('v_M_tilde')
     >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M_tilde)
     >>> fv_M
@@ -1557,7 +1557,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     ``fv_M`` to represent this.
 
     >>> from sympy import Symbol
-    >>> from sympy.physics._biomechanics import FiberForceVelocityInverseDeGroote2016
+    >>> from sympy.physics.biomechanics import FiberForceVelocityInverseDeGroote2016
     >>> fv_M = Symbol('fv_M')
     >>> v_M_tilde = FiberForceVelocityInverseDeGroote2016.with_defaults(fv_M)
     >>> v_M_tilde
