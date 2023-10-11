@@ -825,10 +825,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        As zeroth-order activation dynamics simply maps excitation to
-        activation, this class has no associated state variables and so this
-        property return an empty column ``Matrix`` with shape (0, 1).
-
         The alias ``x`` can also be used to access the same attribute.
 
         """
@@ -844,10 +840,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         Explanation
         ===========
-
-        As zeroth-order activation dynamics simply maps excitation to
-        activation, this class has no associated state variables and so this
-        property return an empty column ``Matrix`` with shape (0, 1).
 
         The alias ``state_vars`` can also be used to access the same attribute.
 
@@ -865,10 +857,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        Excitation is the only input in zeroth-order activation dynamics and so
-        this property returns a column ``Matrix`` with one entry, ``e``, and
-        shape (1, 1).
-
         The alias ``r`` can also be used to access the same attribute.
 
         """
@@ -885,10 +873,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Explanation
         ===========
 
-        Excitation is the only input in zeroth-order activation dynamics and so
-        this property returns a column ``Matrix`` with one entry, ``e``, and
-        shape (1, 1).
-
         The alias ``input_vars`` can also be used to access the same attribute.
 
         """
@@ -904,10 +888,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         Explanation
         ===========
-
-        As zeroth-order activation dynamics simply maps excitation to
-        activation, this class has no associated constants and so this property
-        return an empty column ``Matrix`` with shape (0, 1).
 
         The alias ``p`` can also be used to access the same attribute.
 
@@ -931,10 +911,6 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
         Explanation
         ===========
-
-        As zeroth-order activation dynamics simply maps excitation to
-        activation, this class has no associated constants and so this property
-        return an empty column ``Matrix`` with shape (0, 1).
 
         The alias ``constants`` can also be used to access the same attribute.
 
