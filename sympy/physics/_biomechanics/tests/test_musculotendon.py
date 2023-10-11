@@ -167,14 +167,36 @@ class TestMusculotendonRigidTendon:
                 self.tau_a,
                 self.tau_d,
                 self.b,
+                Symbol('c_0_fl_T_name'),
+                Symbol('c_1_fl_T_name'),
+                Symbol('c_2_fl_T_name'),
+                Symbol('c_3_fl_T_name'),
+                Symbol('c_0_fl_M_pas_name'),
+                Symbol('c_1_fl_M_pas_name'),
+                Symbol('c_0_fl_M_act_name'),
+                Symbol('c_1_fl_M_act_name'),
+                Symbol('c_2_fl_M_act_name'),
+                Symbol('c_3_fl_M_act_name'),
+                Symbol('c_4_fl_M_act_name'),
+                Symbol('c_5_fl_M_act_name'),
+                Symbol('c_6_fl_M_act_name'),
+                Symbol('c_7_fl_M_act_name'),
+                Symbol('c_8_fl_M_act_name'),
+                Symbol('c_9_fl_M_act_name'),
+                Symbol('c_10_fl_M_act_name'),
+                Symbol('c_11_fl_M_act_name'),
+                Symbol('c_0_fv_M_name'),
+                Symbol('c_1_fv_M_name'),
+                Symbol('c_2_fv_M_name'),
+                Symbol('c_3_fv_M_name'),
             ]
         )
         assert self.instance.p == p_expected
         assert self.instance.constants == p_expected
         assert isinstance(self.instance.p, Matrix)
         assert isinstance(self.instance.constants, Matrix)
-        assert self.instance.p.shape == (9, 1)
-        assert self.instance.constants.shape == (9, 1)
+        assert self.instance.p.shape == (31, 1)
+        assert self.instance.constants.shape == (31, 1)
 
     def test_M(self):
         assert hasattr(self.instance, 'M')
