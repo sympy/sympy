@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics._biomechanics.activation.py`` module."""
+"""Tests for the ``sympy.physics.biomechanics.activation.py`` module."""
 
 import pytest
 
@@ -8,12 +8,12 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.matrices import Matrix
 from sympy.matrices.dense import zeros
 from sympy.physics.mechanics import dynamicsymbols
-from sympy.physics._biomechanics import (
+from sympy.physics.biomechanics import (
     ActivationBase,
     FirstOrderActivationDeGroote2016,
     ZerothOrderActivation,
 )
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.simplify.simplify import simplify
 
 

@@ -18,8 +18,8 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, diag, eye, zeros
-from sympy.physics._biomechanics.activation import ActivationBase
-from sympy.physics._biomechanics.curve import (
+from sympy.physics.biomechanics.activation import ActivationBase
+from sympy.physics.biomechanics.curve import (
     CharacteristicCurveCollection,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
@@ -29,7 +29,7 @@ from sympy.physics._biomechanics.curve import (
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
 from sympy.physics.vector.functions import dynamicsymbols
 
@@ -1077,7 +1077,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     dynamics. Note that a single name argument needs to be provided as SymPy
     will use this as a suffix.
 
-    >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
+    >>> from sympy.physics.biomechanics import FirstOrderActivationDeGroote2016
 
     >>> activation = FirstOrderActivationDeGroote2016('muscle')
     >>> activation.x
@@ -1111,7 +1111,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     we have previously instantiated. By default, a musculotendon model with
     rigid tendon musculotendon dynamics will be created.
 
-    >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
+    >>> from sympy.physics.biomechanics import MusculotendonDeGroote2016
 
     >>> rigid_tendon_muscle = MusculotendonDeGroote2016(
     ...     'muscle',
@@ -1216,7 +1216,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     (normalized) muscle fiber length as an additional state and will produce
     the governing ordinary differential equation in explicit form.
 
-    >>> from sympy.physics._biomechanics import MusculotendonFormulation
+    >>> from sympy.physics.biomechanics import MusculotendonFormulation
 
     >>> elastic_tendon_muscle = MusculotendonDeGroote2016(
     ...     'muscle',
