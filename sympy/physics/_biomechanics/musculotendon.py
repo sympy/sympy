@@ -13,7 +13,7 @@ and are specific to a given musculotendon model.
 from abc import abstractmethod
 from enum import IntEnum, unique
 
-from sympy.core.numbers import Integer, Rational
+from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -250,9 +250,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         tendon_slack_length=None,
         peak_isometric_force=None,
         optimal_fiber_length=None,
-        v_M_max=Integer(10),
-        alpha_opt=Integer(0),
-        beta=Rational(1, 10),
+        v_M_max=Float('10.0'),
+        alpha_opt=Float('0.0'),
+        beta=Float('0.1'),
     ):
         r"""Recommended constructor that will use the published constants.
 
