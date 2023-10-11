@@ -1,4 +1,4 @@
-"""Activation dynamics for musclotendon models.
+r"""Activation dynamics for musclotendon models.
 
 Musculotendon models are able to produce active force when they are activated,
 which is when a chemical process has taken place within the muscle fibers
@@ -567,7 +567,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
 
     @classmethod
     def with_defaults(cls, name):
-        """Alternate constructor that will use the published constants.
+        r"""Alternate constructor that will use the published constants.
 
         Explanation
         ===========
