@@ -4,13 +4,14 @@ import pytest
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Function
-from sympy.core.numbers import Float, Integer, Rational
+from sympy.core.numbers import Float, Integer
 from sympy.core.symbol import Symbol, symbols
 from sympy.external.importtools import import_module
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics._biomechanics.curve import (
+    CharacteristicCurveCollection,
     CharacteristicCurveFunction,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
@@ -500,8 +501,8 @@ class TestFiberForceLengthPassiveDeGroote2016:
 
     def test_with_defaults(self):
         constants = (
-            Rational(3, 5),
-            Integer(4),
+            Float('0.6'),
+            Float('4.0'),
         )
         fl_M_pas_manual = FiberForceLengthPassiveDeGroote2016(self.l_M_tilde, *constants)
         fl_M_pas_constants = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
@@ -547,65 +548,65 @@ class TestFiberForceLengthPassiveDeGroote2016:
         [
             (
                 C89CodePrinter,
-                '((-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4)))',
+                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 C99CodePrinter,
-                '((-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4)))',
+                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 C11CodePrinter,
-                '((-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4)))',
+                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 CXX98CodePrinter,
-                '((-1 + exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + exp(4)))',
+                '(0.01865736036377405*(-1 + exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 CXX11CodePrinter,
-                '((-1 + std::exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + std::exp(4)))',
+                '(0.01865736036377405*(-1 + std::exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 CXX17CodePrinter,
-                '((-1 + std::exp((20.0/3.0)*(l_M_tilde - 1)))/(-1 + std::exp(4)))',
+                '(0.01865736036377405*(-1 + std::exp(6.666666666666667*(l_M_tilde - 1))))',
             ),
             (
                 FCodePrinter,
-                '      ((-1 + exp(6.6666666666666667d0*(l_M_tilde - 1)))/(-1 +\n'
-                '     @ 54.598150033144239d0))',
+                '      (0.0186573603637741d0*(-1 + exp(6.666666666666667d0*(l_M_tilde - 1\n'
+                '     @ ))))',
             ),
             (
                 OctaveCodePrinter,
-                '((-1 + exp(20*(l_M_tilde - 1)/3))/(-1 + exp(4)))',
+                '(0.0186573603637741*(-1 + exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 PythonCodePrinter,
-                '((-1 + math.exp((20/3)*(l_M_tilde - 1)))/(-1 + math.exp(4)))',
+                '(0.0186573603637741*(-1 + math.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 NumPyPrinter,
-                '((-1 + numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + numpy.exp(4)))',
+                '(0.0186573603637741*(-1 + numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 SciPyPrinter,
-                '((-1 + numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + numpy.exp(4)))',
+                '(0.0186573603637741*(-1 + numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 CuPyPrinter,
-                '((-1 + cupy.exp((20/3)*(l_M_tilde - 1)))/(-1 + cupy.exp(4)))',
+                '(0.0186573603637741*(-1 + cupy.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 JaxPrinter,
-                '((-1 + jax.numpy.exp((20/3)*(l_M_tilde - 1)))/(-1 + jax.numpy.exp(4)))',
+                '(0.0186573603637741*(-1 + jax.numpy.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
             (
                 MpmathPrinter,
-                '((-1 + mpmath.exp((mpmath.mpf(20)/mpmath.mpf(3))*(l_M_tilde - 1)))'
-                '/(-1 + mpmath.exp(4)))',
+                '(mpmath.mpf((0, 672202249456079, -55, 50))*(-1 + mpmath.exp('
+                'mpmath.mpf((0, 7505999378950827, -50, 53))*(l_M_tilde - 1))))',
             ),
             (
                 LambdaPrinter,
-                '((-1 + math.exp((20/3)*(l_M_tilde - 1)))/(-1 + math.exp(4)))',
+                '(0.0186573603637741*(-1 + math.exp(6.66666666666667*(l_M_tilde - 1))))',
             ),
         ]
     )
@@ -616,7 +617,7 @@ class TestFiberForceLengthPassiveDeGroote2016:
     def test_derivative_print_code(self):
         fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(self.l_M_tilde)
         fl_M_pas_dl_M_tilde = fl_M_pas.diff(self.l_M_tilde)
-        expected = '4*math.exp((20/3)*(l_M_tilde - 1))/(-3/5 + (3/5)*math.exp(4))'
+        expected = '0.12438240242516*math.exp(6.66666666666667*(l_M_tilde - 1))'
         assert PythonCodePrinter().doprint(fl_M_pas_dl_M_tilde) == expected
 
     def test_lambdify(self):
@@ -687,8 +688,8 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
 
     def test_with_defaults(self):
         constants = (
-            Rational(3, 5),
-            Integer(4),
+            Float('0.6'),
+            Float('4.0'),
         )
         fl_M_pas_inv_manual = FiberForceLengthPassiveInverseDeGroote2016(self.fl_M_pas, *constants)
         fl_M_pas_inv_constants = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
@@ -731,64 +732,64 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
         [
             (
                 C89CodePrinter,
-                '(1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4))))',
+                '(1 + 0.14999999999999999*log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 C99CodePrinter,
-                '(1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4))))',
+                '(1 + 0.14999999999999999*log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 C11CodePrinter,
-                '(1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4))))',
+                '(1 + 0.14999999999999999*log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 CXX98CodePrinter,
-                '(1 + (3.0/20.0)*log(1 + fl_M_pas*(-1 + exp(4))))',
+                '(1 + 0.14999999999999999*log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 CXX11CodePrinter,
-                '(1 + (3.0/20.0)*std::log(1 + fl_M_pas*(-1 + std::exp(4))))',
+                '(1 + 0.14999999999999999*std::log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 CXX17CodePrinter,
-                '(1 + (3.0/20.0)*std::log(1 + fl_M_pas*(-1 + std::exp(4))))',
+                '(1 + 0.14999999999999999*std::log(1 + 53.598150033144236*fl_M_pas))',
             ),
             (
                 FCodePrinter,
-                '      (1 + (3.0d0/20.0d0)*log(1.0d0 + fl_M_pas*(-1 +\n'
-                '     @ 54.598150033144239d0)))',
+                '      (1 + 0.15d0*log(1.0d0 + 53.5981500331442d0*fl_M_pas))',
             ),
             (
                 OctaveCodePrinter,
-                '(1 + 3*log(1 + fl_M_pas.*(-1 + exp(4)))/20)',
+                '(1 + 0.15*log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 PythonCodePrinter,
-                '(1 + (3/20)*math.log(1 + fl_M_pas*(-1 + math.exp(4))))',
+                '(1 + 0.15*math.log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 NumPyPrinter,
-                '(1 + (3/20)*numpy.log(1 + fl_M_pas*(-1 + numpy.exp(4))))',
+                '(1 + 0.15*numpy.log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 SciPyPrinter,
-                '(1 + (3/20)*numpy.log(1 + fl_M_pas*(-1 + numpy.exp(4))))',
+                '(1 + 0.15*numpy.log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 CuPyPrinter,
-                '(1 + (3/20)*cupy.log(1 + fl_M_pas*(-1 + cupy.exp(4))))',
+                '(1 + 0.15*cupy.log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 JaxPrinter,
-                '(1 + (3/20)*jax.numpy.log(1 + fl_M_pas*(-1 + jax.numpy.exp(4))))',
+                '(1 + 0.15*jax.numpy.log(1 + 53.5981500331442*fl_M_pas))',
             ),
             (
                 MpmathPrinter,
-                '(1 + (mpmath.mpf(3)/mpmath.mpf(20))*mpmath.log(1 + fl_M_pas*(-1 + mpmath.exp(4))))',
+                '(1 + mpmath.mpf((0, 5404319552844595, -55, 53))*mpmath.log(1 '
+                '+ mpmath.mpf((0, 942908627019595, -44, 50))*fl_M_pas))',
             ),
             (
                 LambdaPrinter,
-                '(1 + (3/20)*math.log(1 + fl_M_pas*(-1 + math.exp(4))))',
+                '(1 + 0.15*math.log(1 + 53.5981500331442*fl_M_pas))',
             ),
         ]
     )
@@ -799,7 +800,7 @@ class TestFiberForceLengthPassiveInverseDeGroote2016:
     def test_derivative_print_code(self):
         fl_M_pas_inv = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(self.fl_M_pas)
         dfl_M_pas_inv_dfl_T = fl_M_pas_inv.diff(self.fl_M_pas)
-        expected = '(-3/5 + (3/5)*math.exp(4))/(4*fl_M_pas*(-1 + math.exp(4)) + 4)'
+        expected = '32.1588900198865/(214.392600132577*fl_M_pas + 4.0)'
         assert PythonCodePrinter().doprint(dfl_M_pas_inv_dfl_T) == expected
 
     def test_lambdify(self):
@@ -899,11 +900,11 @@ class TestFiberForceLengthActiveDeGroote2016:
             Float('0.433'),
             Float('0.717'),
             Float('-0.0299'),
-            Rational(1, 5),
-            Rational(1, 10),
-            Integer(1),
+            Float('0.2'),
+            Float('0.1'),
+            Float('1.0'),
             Float('0.354'),
-            Integer(0),
+            Float('0.0'),
         )
         fl_M_act_manual = FiberForceLengthActiveDeGroote2016(self.l_M_tilde, *constants)
         fl_M_act_constants = FiberForceLengthActiveDeGroote2016.with_defaults(self.l_M_tilde)
@@ -1037,11 +1038,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*exp(-19.051973784484073'
                     '*pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*exp(-25.0/2.0'
+                    '+ 0.433*exp(-12.499999999999998'
                     '*pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*exp(-3.9899134986753491'
-                    '*pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*exp(-3.9899134986753491'
+                    '*pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1050,11 +1051,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*exp(-19.051973784484073'
                     '*pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*exp(-25.0/2.0'
+                    '+ 0.433*exp(-12.499999999999998'
                     '*pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*exp(-3.9899134986753491'
-                    '*pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*exp(-3.9899134986753491'
+                    '*pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1063,11 +1064,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*exp(-19.051973784484073'
                     '*pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*exp(-25.0/2.0'
+                    '+ 0.433*exp(-12.499999999999998'
                     '*pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*exp(-3.9899134986753491'
-                    '*pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*exp(-3.9899134986753491'
+                    '*pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1076,11 +1077,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*exp(-19.051973784484073'
                     '*std::pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/std::pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*exp(-25.0/2.0'
+                    '+ 0.433*exp(-12.499999999999998'
                     '*std::pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/std::pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*exp(-3.9899134986753491'
-                    '*std::pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*exp(-3.9899134986753491'
+                    '*std::pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1089,11 +1090,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*std::exp(-19.051973784484073'
                     '*std::pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/std::pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*std::exp(-25.0/2.0'
+                    '+ 0.433*std::exp(-12.499999999999998'
                     '*std::pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/std::pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*std::exp(-3.9899134986753491'
-                    '*std::pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*std::exp(-3.9899134986753491'
+                    '*std::pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1102,11 +1103,11 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '(0.81399999999999995*std::exp(-19.051973784484073'
                     '*std::pow(l_M_tilde - 1.0600000000000001, 2)'
                     '/std::pow(0.39074074074074072*l_M_tilde + 1, 2)) '
-                    '+ 0.433*std::exp(-25.0/2.0'
+                    '+ 0.433*std::exp(-12.499999999999998'
                     '*std::pow(l_M_tilde - 0.71699999999999997, 2)'
                     '/std::pow(l_M_tilde - 0.14949999999999999, 2)) '
-                    '+ (1.0/10.0)*std::exp(-3.9899134986753491'
-                    '*std::pow(l_M_tilde - 1, 2)))'
+                    '+ 0.10000000000000001*std::exp(-3.9899134986753491'
+                    '*std::pow(l_M_tilde - 1.0, 2)))'
                 ),
             ),
             (
@@ -1114,9 +1115,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '      (0.814d0*exp(-19.051973784484073d0*(l_M_tilde - 1.06d0)**2/(\n'
                     '     @ 0.39074074074074072d0*l_M_tilde + 1.0d0)**2) + 0.433d0*exp(\n'
-                    '     @ -12.5d0*(l_M_tilde - 0.717d0)**2/(l_M_tilde -\n'
-                    '     @ 0.14949999999999999d0)**2) + (1.0d0/10.0d0)*exp(\n'
-                    '     @ -3.9899134986753491d0*(l_M_tilde - 1)**2))'
+                    '     @ -12.499999999999998d0*(l_M_tilde - 0.717d0)**2/(l_M_tilde -\n'
+                    '     @ 0.14949999999999999d0)**2) + 0.1d0*exp(-3.9899134986753491d0*(\n'
+                    '     @ l_M_tilde - 1.0d0)**2))'
                 ),
             ),
             (
@@ -1124,9 +1125,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*exp(-19.0519737844841*(l_M_tilde - 1.06).^2'
                     './(0.390740740740741*l_M_tilde + 1).^2) '
-                    '+ 0.433*exp(-25*(l_M_tilde - 0.717).^2'
-                    './(2*(l_M_tilde - 0.1495).^2)) '
-                    '+ exp(-3.98991349867535*(l_M_tilde - 1).^2)/10)'
+                    '+ 0.433*exp(-12.5*(l_M_tilde - 0.717).^2'
+                    './(l_M_tilde - 0.1495).^2) '
+                    '+ 0.1*exp(-3.98991349867535*(l_M_tilde - 1.0).^2))'
                 ),
             ),
             (
@@ -1134,9 +1135,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*math.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*math.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*math.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*math.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*math.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
             (
@@ -1144,9 +1145,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*numpy.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*numpy.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*numpy.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*numpy.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*numpy.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
             (
@@ -1154,9 +1155,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*numpy.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*numpy.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*numpy.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*numpy.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*numpy.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
             (
@@ -1164,9 +1165,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*cupy.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*cupy.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*cupy.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*cupy.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*cupy.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
             (
@@ -1174,9 +1175,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*jax.numpy.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*jax.numpy.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*jax.numpy.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*jax.numpy.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*jax.numpy.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
             (
@@ -1187,12 +1188,12 @@ class TestFiberForceLengthActiveDeGroote2016:
                     '*(l_M_tilde + mpmath.mpf((1, 2386907802506363, -51, 52)))**2'
                     '/(mpmath.mpf((0, 3519479708796943, -53, 52))*l_M_tilde + 1)**2) '
                     '+ mpmath.mpf((0, 7800234554605699, -54, 53))'
-                    '*mpmath.exp(-mpmath.mpf(25)/mpmath.mpf(2)'
+                    '*mpmath.exp(-mpmath.mpf((0, 7036874417766399, -49, 53))'
                     '*(l_M_tilde + mpmath.mpf((1, 6458161865649291, -53, 53)))**2'
                     '/(l_M_tilde + mpmath.mpf((1, 5386305154335113, -55, 53)))**2) '
-                    '+ (mpmath.mpf(1)/mpmath.mpf(10))'
+                    '+ mpmath.mpf((0, 3602879701896397, -55, 52))'
                     '*mpmath.exp(-mpmath.mpf((0, 8984486472937407, -51, 53))'
-                    '*(l_M_tilde - 1)**2))'
+                    '*(l_M_tilde + mpmath.mpf((1, 1, 0, 1)))**2))'
                 ),
             ),
             (
@@ -1200,9 +1201,9 @@ class TestFiberForceLengthActiveDeGroote2016:
                 (
                     '(0.814*math.exp(-19.0519737844841*(l_M_tilde - 1.06)**2'
                     '/(0.390740740740741*l_M_tilde + 1)**2) '
-                    '+ 0.433*math.exp(-25/2*(l_M_tilde - 0.717)**2'
+                    '+ 0.433*math.exp(-12.5*(l_M_tilde - 0.717)**2'
                     '/(l_M_tilde - 0.1495)**2) '
-                    '+ (1/10)*math.exp(-3.98991349867535*(l_M_tilde - 1)**2))'
+                    '+ 0.1*math.exp(-3.98991349867535*(l_M_tilde - 1.0)**2))'
                 ),
             ),
         ]
@@ -1216,10 +1217,10 @@ class TestFiberForceLengthActiveDeGroote2016:
         fl_M_act_dl_M_tilde = fl_M_act.diff(self.l_M_tilde)
         expected = (
             '(0.79798269973507 - 0.79798269973507*l_M_tilde)'
-            '*math.exp(-3.98991349867535*(l_M_tilde - 1)**2) '
+            '*math.exp(-3.98991349867535*(l_M_tilde - 1.0)**2) '
             '+ (10.825*(0.717 - l_M_tilde)/(l_M_tilde - 0.1495)**2 '
             '+ 10.825*(l_M_tilde - 0.717)**2/(l_M_tilde - 0.1495)**3)'
-            '*math.exp(-25/2*(l_M_tilde - 0.717)**2/(l_M_tilde - 0.1495)**2) '
+            '*math.exp(-12.5*(l_M_tilde - 0.717)**2/(l_M_tilde - 0.1495)**2) '
             '+ (31.0166133211401*(1.06 - l_M_tilde)/(0.390740740740741*l_M_tilde + 1)**2 '
             '+ 13.6174190361677*(0.943396226415094*l_M_tilde - 1)**2'
             '/(0.390740740740741*l_M_tilde + 1)**3)'
@@ -1698,3 +1699,86 @@ class TestFiberForceVelocityInverseDeGroote2016:
             0.0959484397,
         ])
         numpy.testing.assert_allclose(fv_M_inv_callable(fv_M), expected)
+
+
+class TestCharacteristicCurveCollection:
+
+    @staticmethod
+    def test_valid_constructor():
+        curves = CharacteristicCurveCollection(
+            tendon_force_length=TendonForceLengthDeGroote2016,
+            tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
+            fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
+            fiber_force_length_passive_inverse=FiberForceLengthPassiveInverseDeGroote2016,
+            fiber_force_length_active=FiberForceLengthActiveDeGroote2016,
+            fiber_force_velocity=FiberForceVelocityDeGroote2016,
+            fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
+        )
+        assert curves.tendon_force_length is TendonForceLengthDeGroote2016
+        assert curves.tendon_force_length_inverse is TendonForceLengthInverseDeGroote2016
+        assert curves.fiber_force_length_passive is FiberForceLengthPassiveDeGroote2016
+        assert curves.fiber_force_length_passive_inverse is FiberForceLengthPassiveInverseDeGroote2016
+        assert curves.fiber_force_length_active is FiberForceLengthActiveDeGroote2016
+        assert curves.fiber_force_velocity is FiberForceVelocityDeGroote2016
+        assert curves.fiber_force_velocity_inverse is FiberForceVelocityInverseDeGroote2016
+
+    @staticmethod
+    @pytest.mark.skip(reason='kw_only dataclasses only valid in Python >3.10')
+    def test_invalid_constructor_keyword_only():
+        with pytest.raises(TypeError):
+            _ = CharacteristicCurveCollection(
+                TendonForceLengthDeGroote2016,
+                TendonForceLengthInverseDeGroote2016,
+                FiberForceLengthPassiveDeGroote2016,
+                FiberForceLengthPassiveInverseDeGroote2016,
+                FiberForceLengthActiveDeGroote2016,
+                FiberForceVelocityDeGroote2016,
+                FiberForceVelocityInverseDeGroote2016,
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'kwargs',
+        [
+            {'tendon_force_length': TendonForceLengthDeGroote2016},
+            {
+                'tendon_force_length': TendonForceLengthDeGroote2016,
+                'tendon_force_length_inverse': TendonForceLengthInverseDeGroote2016,
+                'fiber_force_length_passive': FiberForceLengthPassiveDeGroote2016,
+                'fiber_force_length_passive_inverse': FiberForceLengthPassiveInverseDeGroote2016,
+                'fiber_force_length_active': FiberForceLengthActiveDeGroote2016,
+                'fiber_force_velocity': FiberForceVelocityDeGroote2016,
+                'fiber_force_velocity_inverse': FiberForceVelocityInverseDeGroote2016,
+                'extra_kwarg': None,
+            },
+        ]
+    )
+    def test_invalid_constructor_wrong_number_args(kwargs):
+        with pytest.raises(TypeError):
+            _ = CharacteristicCurveCollection(**kwargs)
+
+    @staticmethod
+    def test_instance_is_immutable():
+        curves = CharacteristicCurveCollection(
+            tendon_force_length=TendonForceLengthDeGroote2016,
+            tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
+            fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
+            fiber_force_length_passive_inverse=FiberForceLengthPassiveInverseDeGroote2016,
+            fiber_force_length_active=FiberForceLengthActiveDeGroote2016,
+            fiber_force_velocity=FiberForceVelocityDeGroote2016,
+            fiber_force_velocity_inverse=FiberForceVelocityInverseDeGroote2016,
+        )
+        with pytest.raises(AttributeError):
+            curves.tendon_force_length = None
+        with pytest.raises(AttributeError):
+            curves.tendon_force_length_inverse = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_passive = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_passive_inverse = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_length_active = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_velocity = None
+        with pytest.raises(AttributeError):
+            curves.fiber_force_velocity_inverse = None
