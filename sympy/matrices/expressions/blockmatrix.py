@@ -197,10 +197,8 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[trace(self.blocks[i, i])
-                        for i in range(self.blockshape[0])])
-        raise NotImplementedError(
-            "Can't perform trace of irregular blockshape")
+            blocks = [self.blocks[i, i] for i in range(self.blockshape[0])]
+            return Add(*[trace(block) for block in blocks])
 
     def _eval_determinant(self):
         if self.blockshape == (1, 1):

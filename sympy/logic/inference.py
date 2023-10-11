@@ -24,14 +24,11 @@ def literal_symbol(literal):
 
     if literal is True or literal is False:
         return literal
-    try:
-        if literal.is_Symbol:
-            return literal
-        if literal.is_Not:
-            return literal_symbol(literal.args[0])
-        else:
-            raise ValueError
-    except (AttributeError, ValueError):
+    elif literal.is_Symbol:
+        return literal
+    elif literal.is_Not:
+        return literal_symbol(literal.args[0])
+    else:
         raise ValueError("Argument must be a boolean literal.")
 
 

@@ -10,6 +10,7 @@ from .pythonmpq import PythonMPQ
 from .ntheory import (
     bit_scan1 as python_bit_scan1,
     bit_scan0 as python_bit_scan0,
+    remove as python_remove,
     factorial as python_factorial,
     sqrt as python_sqrt,
     sqrtrem as python_sqrtrem,
@@ -52,6 +53,7 @@ __all__ = [
 
     'bit_scan1',
     'bit_scan0',
+    'remove',
     'factorial',
     'sqrt',
     'is_square',
@@ -153,6 +155,7 @@ if GROUND_TYPES == 'gmpy':
 
     bit_scan1 = gmpy.bit_scan1
     bit_scan0 = gmpy.bit_scan0
+    remove = gmpy.remove
     factorial = gmpy.fac
     sqrt = gmpy.isqrt
     is_square = gmpy.is_square
@@ -185,6 +188,7 @@ elif GROUND_TYPES == 'flint':
 
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
 
     def sqrt(x):
@@ -234,6 +238,7 @@ elif GROUND_TYPES == 'python':
 
     bit_scan1 = python_bit_scan1
     bit_scan0 = python_bit_scan0
+    remove = python_remove
     factorial = python_factorial
     sqrt = python_sqrt
     is_square = python_is_square

@@ -1,5 +1,7 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from sympy.external.gmpy import GROUND_TYPES
+
 from sympy.core.random import _randint
 
 from sympy.polys.galoistools import (
@@ -74,6 +76,12 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
+
+
+if GROUND_TYPES == 'flint':
+    from flint import fmpz_poly
+else:
+    fmpz_poly = None
 
 
 def dup_trial_division(f, factors, K):
@@ -662,6 +670,12 @@ def dup_zz_factor(f, K):
     .. [1] [Gathen99]_
 
     """
+    if GROUND_TYPES == 'flint':
+        f_flint = fmpz_poly(f[::-1])
+        cont, factors = f_flint.factor()
+        factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
+        return cont, factors
+
     cont, g = dup_primitive(f, K)
 
     n = dup_degree(g)

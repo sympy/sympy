@@ -172,6 +172,13 @@ class ActivationBase(ABC, _NamedMixin):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
@@ -185,6 +192,13 @@ class ActivationBase(ABC, _NamedMixin):
     def p(self):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
+
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
 
         Explanation
         ===========
@@ -381,6 +395,13 @@ class ZerothOrderActivation(ActivationBase):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
@@ -397,6 +418,13 @@ class ZerothOrderActivation(ActivationBase):
     def p(self):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
+
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
 
         Explanation
         ===========
@@ -551,7 +579,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """
         tau_a = Float('0.015')
         tau_d = Float('0.060')
-        b = Integer(10)
+        b = Float('10.0')
         return cls(name, tau_a, tau_d, b)
 
     @property
@@ -723,13 +751,22 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """Ordered column matrix of non-time varying symbols present in ``M``
         and ``F``.
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         Explanation
         ===========
 
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants)
 
     @property
     def p(self):
@@ -739,10 +776,19 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         Explanation
         ===========
 
+        Only symbolic constants are returned. If a numeric type (e.g. ``Float``)
+        has been used instead of ``Symbol`` for a constant then that attribute
+        will not be included in the matrix returned by this property. This is
+        because the primary use of this property attribute is to provide an
+        ordered sequence of the still-free symbols that require numeric values
+        during code generation.
+
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants)
 
     @property
     def M(self):

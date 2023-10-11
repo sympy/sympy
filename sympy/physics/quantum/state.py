@@ -109,6 +109,9 @@ class StateBase(QExpr):
     def _represent_default_basis(self, **options):
         return self._represent(basis=self.operators)
 
+    def _apply_operator(self, op, **options):
+        return None
+
     #-------------------------------------------------------------------------
     # Dagger/dual
     #-------------------------------------------------------------------------

@@ -1973,7 +1973,10 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, TypeError, PoleError):
+            # XXX: Catching so many generic exceptions around a large block of
+            # code will mask bugs. Whatever purpose catching these exceptions
+            # serves should be handled in a different way.
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero

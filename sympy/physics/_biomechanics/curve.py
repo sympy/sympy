@@ -1,8 +1,10 @@
 """Implementations of characteristic curves for musculotendon models."""
 
+from dataclasses import dataclass
+
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
-from sympy.core.numbers import Float, Integer, Rational
+from sympy.core.numbers import Float, Integer
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -10,6 +12,8 @@ from sympy.printing.precedence import PRECEDENCE
 
 
 __all__ = [
+    'CharacteristicCurveCollection',
+    'CharacteristicCurveFunction',
     'FiberForceLengthActiveDeGroote2016',
     'FiberForceLengthPassiveDeGroote2016',
     'FiberForceLengthPassiveInverseDeGroote2016',
@@ -551,7 +555,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     >>> l_M_tilde = Symbol('l_M_tilde')
     >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
-    FiberForceLengthPassiveDeGroote2016(l_M_tilde, 3/5, 4)
+    FiberForceLengthPassiveDeGroote2016(l_M_tilde, 0.6, 4.0)
 
     It's also possible to populate the two constants with your own values too.
 
@@ -571,7 +575,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     >>> l_M_tilde = l_M/l_M_opt
     >>> fl_M = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
-    FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 3/5, 4)
+    FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 0.6, 4.0)
 
     To inspect the actual symbolic expression that this function represents,
     we can call the ``doit`` method on an instance. We'll use the keyword
@@ -579,14 +583,14 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     canonical form and won't simplify any constants.
 
     >>> fl_M.doit(evaluate=False)
-    (exp(20*(l_M/l_M_opt - 1)/3) - 1)/(exp(4) - 1)
+    0.0186573603637741*(-1 + exp(6.66666666666667*(l_M/l_M_opt - 1)))
 
     The function can also be differentiated. We'll differentiate with respect
     to l_M using the ``diff`` method on an instance with the single positional
     argument ``l_M``.
 
     >>> fl_M.diff(l_M)
-    4*exp(20*(l_M/l_M_opt - 1)/3)/(l_M_opt*(3*exp(4)/5 - 3/5))
+    0.12438240242516*exp(6.66666666666667*(l_M/l_M_opt - 1))/l_M_opt
 
     References
     ==========
@@ -621,8 +625,8 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber length.
 
         """
-        c0 = Rational(3, 5)
-        c1 = Integer(4)
+        c0 = Float('0.6')
+        c1 = Float('4.0')
         return cls(l_M_tilde, c0, c1)
 
     @classmethod
@@ -776,7 +780,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     >>> fl_M_pas = Symbol('fl_M_pas')
     >>> l_M_tilde = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas)
     >>> l_M_tilde
-    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, 3/5, 4)
+    FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, 0.6, 4.0)
 
     It's also possible to populate the two constants with your own values too.
 
@@ -835,8 +839,8 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
             length.
 
         """
-        c0 = Rational(3, 5)
-        c1 = Integer(4)
+        c0 = Float('0.6')
+        c1 = Float('4.0')
         return cls(fl_M_pas, c0, c1)
 
     @classmethod
@@ -985,7 +989,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
     FiberForceLengthActiveDeGroote2016(l_M_tilde, 0.814, 1.06, 0.162, 0.0633,
-    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+    0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
     It's also possible to populate the two constants with your own values too.
 
@@ -1008,7 +1012,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     >>> fl_M = FiberForceLengthActiveDeGroote2016.with_defaults(l_M_tilde)
     >>> fl_M
     FiberForceLengthActiveDeGroote2016(l_M/l_M_opt, 0.814, 1.06, 0.162, 0.0633,
-    0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+    0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
     To inspect the actual symbolic expression that this function represents,
     we can call the ``doit`` method on an instance. We'll use the keyword
@@ -1017,16 +1021,25 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
 
     >>> fl_M.doit(evaluate=False)
     0.814*exp(-19.0519737844841*(l_M/l_M_opt
-        - 1.06)**2/(0.390740740740741*l_M/l_M_opt + 1)**2)
-    + 0.433*exp(-25*(l_M/l_M_opt - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2))
-    + exp(-3.98991349867535*(l_M/l_M_opt - 1)**2)/10
+    - 1.06)**2/(0.390740740740741*l_M/l_M_opt + 1)**2)
+    + 0.433*exp(-12.5*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt - 0.1495)**2)
+    + 0.1*exp(-3.98991349867535*(l_M/l_M_opt - 1.0)**2)
 
     The function can also be differentiated. We'll differentiate with respect
     to l_M using the ``diff`` method on an instance with the single positional
     argument ``l_M``.
 
     >>> fl_M.diff(l_M)
-    ((0.79798269973507 - 0.79798269973507*l_M/l_M_opt)*exp(-3.98991349867535*(l_M/l_M_opt - 1)**2) + (10.825*(0.717 - l_M/l_M_opt)/(l_M/l_M_opt - 0.1495)**2 + 10.825*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt - 0.1495)**3)*exp(-25*(l_M/l_M_opt - 0.717)**2/(2*(l_M/l_M_opt - 0.1495)**2)) + (31.0166133211401*(1.06 - l_M/l_M_opt)/(0.390740740740741*l_M/l_M_opt + 1)**2 + 13.6174190361677*(0.943396226415094*l_M/l_M_opt - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**3)*exp(-21.4067977442463*(0.943396226415094*l_M/l_M_opt - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**2))/l_M_opt
+    ((-0.79798269973507*l_M/l_M_opt
+    + 0.79798269973507)*exp(-3.98991349867535*(l_M/l_M_opt - 1.0)**2)
+    + (10.825*(-l_M/l_M_opt + 0.717)/(l_M/l_M_opt - 0.1495)**2
+    + 10.825*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt
+    - 0.1495)**3)*exp(-12.5*(l_M/l_M_opt - 0.717)**2/(l_M/l_M_opt - 0.1495)**2)
+    + (31.0166133211401*(-l_M/l_M_opt + 1.06)/(0.390740740740741*l_M/l_M_opt
+    + 1)**2 + 13.6174190361677*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt
+    + 1)**3)*exp(-21.4067977442463*(0.943396226415094*l_M/l_M_opt
+    - 1)**2/(0.390740740740741*l_M/l_M_opt + 1)**2))/l_M_opt
 
     References
     ==========
@@ -1079,11 +1092,11 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
         c4 = Float('0.433')
         c5 = Float('0.717')
         c6 = Float('-0.0299')
-        c7 = Rational(1, 5)
-        c8 = Rational(1, 10)
-        c9 = Integer(1)
+        c7 = Float('0.2')
+        c8 = Float('0.1')
+        c9 = Float('1.0')
         c10 = Float('0.354')
-        c11 = Integer(0)
+        c11 = Float('0.0')
         return cls(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
 
     @classmethod
@@ -1384,10 +1397,10 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber extension velocity.
 
         """
-        c0=Float('-0.318')
-        c1=Float('-8.149')
-        c2=Float('-0.374')
-        c3=Float('0.886')
+        c0 = Float('-0.318')
+        c1 = Float('-8.149')
+        c2 = Float('-0.374')
+        c3 = Float('0.886')
         return cls(v_M_tilde, c0, c1, c2, c3)
 
     @classmethod
@@ -1607,10 +1620,10 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber extension velocity.
 
         """
-        c0=Float('-0.318')
-        c1=Float('-8.149')
-        c2=Float('-0.374')
-        c3=Float('0.886')
+        c0 = Float('-0.318')
+        c1 = Float('-8.149')
+        c2 = Float('-0.374')
+        c3 = Float('0.886')
         return cls(fv_M, c0, c1, c2, c3)
 
     @classmethod
@@ -1726,3 +1739,25 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
         fv_M = self.args[0]
         _fv_M = printer._print(fv_M)
         return r'\left( \operatorname{fv}^M \right)^{-1} \left( %s \right)' % _fv_M
+
+
+@dataclass(frozen=True)
+class CharacteristicCurveCollection:
+    """Simple data container to group together related characteristic curves."""
+    tendon_force_length: CharacteristicCurveFunction
+    tendon_force_length_inverse: CharacteristicCurveFunction
+    fiber_force_length_passive: CharacteristicCurveFunction
+    fiber_force_length_passive_inverse: CharacteristicCurveFunction
+    fiber_force_length_active: CharacteristicCurveFunction
+    fiber_force_velocity: CharacteristicCurveFunction
+    fiber_force_velocity_inverse: CharacteristicCurveFunction
+
+    def __iter__(self):
+        """Iterator support for ``CharacteristicCurveCollection``."""
+        yield self.tendon_force_length
+        yield self.tendon_force_length_inverse
+        yield self.fiber_force_length_passive
+        yield self.fiber_force_length_passive_inverse
+        yield self.fiber_force_length_active
+        yield self.fiber_force_velocity
+        yield self.fiber_force_velocity_inverse
