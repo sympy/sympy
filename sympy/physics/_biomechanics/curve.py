@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import ArgumentIndexError, Function
-from sympy.core.numbers import Float, Integer, Rational
+from sympy.core.numbers import Float, Integer
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -625,8 +625,8 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber length.
 
         """
-        c0 = Rational(3, 5)
-        c1 = Integer(4)
+        c0 = Float('0.6')
+        c1 = Float('4.0')
         return cls(l_M_tilde, c0, c1)
 
     @classmethod
@@ -839,8 +839,8 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
             length.
 
         """
-        c0 = Rational(3, 5)
-        c1 = Integer(4)
+        c0 = Float('0.6')
+        c1 = Float('4.0')
         return cls(fl_M_pas, c0, c1)
 
     @classmethod
@@ -1094,11 +1094,11 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
         c4 = Float('0.433')
         c5 = Float('0.717')
         c6 = Float('-0.0299')
-        c7 = Rational(1, 5)
-        c8 = Rational(1, 10)
-        c9 = Integer(1)
+        c7 = Float('0.2')
+        c8 = Float('0.1')
+        c9 = Float('1.0')
         c10 = Float('0.354')
-        c11 = Integer(0)
+        c11 = Float('0.0')
         return cls(l_M_tilde, c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11)
 
     @classmethod
@@ -1400,10 +1400,10 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber extension velocity.
 
         """
-        c0=Float('-0.318')
-        c1=Float('-8.149')
-        c2=Float('-0.374')
-        c3=Float('0.886')
+        c0 = Float('-0.318')
+        c1 = Float('-8.149')
+        c2 = Float('-0.374')
+        c3 = Float('0.886')
         return cls(v_M_tilde, c0, c1, c2, c3)
 
     @classmethod
@@ -1623,10 +1623,10 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
             Normalized muscle fiber extension velocity.
 
         """
-        c0=Float('-0.318')
-        c1=Float('-8.149')
-        c2=Float('-0.374')
-        c3=Float('0.886')
+        c0 = Float('-0.318')
+        c1 = Float('-8.149')
+        c2 = Float('-0.374')
+        c3 = Float('0.886')
         return cls(fv_M, c0, c1, c2, c3)
 
     @classmethod

@@ -551,7 +551,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """
         tau_a = Float('0.015')
         tau_d = Float('0.060')
-        b = Integer(10)
+        b = Float('10.0')
         return cls(name, tau_a, tau_d, b)
 
     @property
