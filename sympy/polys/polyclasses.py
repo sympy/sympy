@@ -19,6 +19,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.densebasic import (
+    ninf,
     dmp_validate,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
@@ -1976,7 +1977,7 @@ class DUP_Flint(DMP):
         """Returns the leading degree of ``f`` in ``x_j``. """
         d = f._rep.degree()
         if d == -1:
-            d = -oo
+            d = ninf
         return d
 
     def degree_list(f):
