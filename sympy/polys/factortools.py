@@ -894,7 +894,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in K.map(range(0, d)):
+        for k in range(0, d):
             if dmp_zero_p(c, u):
                 break
 
@@ -902,7 +902,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, n, u, K)
 
             if not dmp_zero_p(C, v):
-                C = dmp_quo_ground(C, K.factorial(k + 1), v, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), v, K)
                 T = dmp_zz_diophantine(G, C, A, d, p, v, K)
 
                 for i, t in enumerate(T):
@@ -949,7 +949,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in K.map(range(0, dj)):
+        for k in range(0, dj):
             if dmp_zero_p(c, w):
                 break
 
@@ -957,7 +957,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, w, w, K)
 
             if not dmp_zero_p(C, w - 1):
-                C = dmp_quo_ground(C, K.factorial(k + 1), w - 1, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), w - 1, K)
                 T = dmp_zz_diophantine(G, C, I, d, p, w - 1, K)
 
                 for i, (h, t) in enumerate(zip(H, T)):

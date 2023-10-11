@@ -1890,7 +1890,10 @@ class Poly(Basic):
         j = f._gen_to_level(gen)
 
         if hasattr(f.rep, 'degree'):
-            return f.rep.degree(j)
+            d = f.rep.degree(j)
+            if d < 0:
+                d = S.NegativeInfinity
+            return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
