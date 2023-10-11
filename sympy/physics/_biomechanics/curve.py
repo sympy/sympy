@@ -1752,3 +1752,13 @@ class CharacteristicCurveCollection:
     fiber_force_length_active: CharacteristicCurveFunction
     fiber_force_velocity: CharacteristicCurveFunction
     fiber_force_velocity_inverse: CharacteristicCurveFunction
+
+    def __iter__(self):
+        """Iterator support for ``CharacteristicCurveCollection``."""
+        yield self.tendon_force_length
+        yield self.tendon_force_length_inverse
+        yield self.fiber_force_length_passive
+        yield self.fiber_force_length_passive_inverse
+        yield self.fiber_force_length_active
+        yield self.fiber_force_velocity
+        yield self.fiber_force_velocity_inverse
