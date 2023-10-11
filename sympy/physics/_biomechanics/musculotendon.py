@@ -713,7 +713,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             + fl_M_pas_constants
             + fl_M_act_constants
             + fv_M_constants
-        )
+        ) if not self._with_defaults else zeros(0, 1)
 
     def _fiber_length_explicit_musculotendon_dynamics(self):
         """Elastic tendon musculotendon using `l_M_tilde` as a state."""
@@ -755,7 +755,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             + fl_M_pas_constants
             + fl_M_act_constants
             + fv_M_constants
-        )
+        ) if not self._with_defaults else zeros(0, 1)
 
     def _tendon_force_explicit_musculotendon_dynamics(self):
         """Elastic tendon musculotendon using `F_T_tilde` as a state."""
@@ -809,7 +809,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             + fl_M_pas_constants
             + fl_M_act_constants
             + fv_M_constants
-        )
+        ) if not self._with_defaults else zeros(0, 1)
 
     def _fiber_length_implicit_musculotendon_dynamics(self):
         raise NotImplementedError
