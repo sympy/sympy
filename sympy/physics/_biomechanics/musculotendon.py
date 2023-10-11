@@ -115,8 +115,22 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         internally, i.e. rigid or elastic tendon model, the choice of
         musculotendon state etc. This must be a member of the integer
         enumeration ``MusculotendonFormulation`` or an integer that can be cast
-        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
-        (or ``0``), which corresponds to a rigid tendon formulation.
+        to a member. To use a rigid tendon formulation, set this to
+        ``MusculotendonFormulation.RIGID_TENDON`` (or the integer value ``0``,
+        which will be cast to the enumeration member). There are four possible
+        formulations for an elastic tendon model. To use an explicit formulation
+        with the fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_EXPLICIT`` (or the integer value
+        ``1``). To use an explicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_EXPLICIT``
+        (or the integer value ``2``). To use an implicit formulation with the
+        fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_IMPLICIT`` (or the integer value
+        ``3``). To use an implicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_IMPLICIT``
+        (or the integer value ``4``). The default is
+        ``MusculotendonFormulation.RIGID_TENDON``, which corresponds to a rigid
+        tendon formulation.
     tendon_slack_length : Expr | None
         The length of the tendon when the musculotendon is in its unloaded
         state. In a rigid tendon model the tendon length is the tendon slack
@@ -288,9 +302,24 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             internally, i.e. rigid or elastic tendon model, the choice of
             musculotendon state etc. This must be a member of the integer
             enumeration ``MusculotendonFormulation`` or an integer that can be
-            cast to a member. The default is
-            ``MusculotendonFormulation.RIGID_TENDON`` (or ``0``), which
-            corresponds to a rigid tendon formulation.
+            cast to a member. To use a rigid tendon formulation, set this to
+            ``MusculotendonFormulation.RIGID_TENDON`` (or the integer value
+            ``0``, which will be cast to the enumeration member). There are four
+            possible formulations for an elastic tendon model. To use an
+            explicit formulation with the fiber length as the state, set this to
+            ``MusculotendonFormulation.FIBER_LENGTH_EXPLICIT`` (or the integer
+            value ``1``). To use an explicit formulation with the tendon force
+            as the state, set this to
+            ``MusculotendonFormulation.TENDON_FORCE_EXPLICIT`` (or the integer
+            value ``2``). To use an implicit formulation with the fiber length
+            as the state, set this to
+            ``MusculotendonFormulation.FIBER_LENGTH_IMPLICIT`` (or the integer
+            value ``3``). To use an implicit formulation with the tendon force
+            as the state, set this to
+            ``MusculotendonFormulation.TENDON_FORCE_IMPLICIT`` (or the integer
+            value ``4``). The default is
+            ``MusculotendonFormulation.RIGID_TENDON``, which corresponds to a
+            rigid tendon formulation.
         tendon_slack_length : Expr | None
             The length of the tendon when the musculotendon is in its unloaded
             state. In a rigid tendon model the tendon length is the tendon slack
@@ -625,8 +654,22 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         internally, i.e. rigid or elastic tendon model, the choice of
         musculotendon state etc. This must be a member of the integer
         enumeration ``MusculotendonFormulation`` or an integer that can be cast
-        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
-        (or ``0``), which corresponds to a rigid tendon formulation.
+        to a member. To use a rigid tendon formulation, set this to
+        ``MusculotendonFormulation.RIGID_TENDON`` (or the integer value ``0``,
+        which will be cast to the enumeration member). There are four possible
+        formulations for an elastic tendon model. To use an explicit formulation
+        with the fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_EXPLICIT`` (or the integer value
+        ``1``). To use an explicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_EXPLICIT``
+        (or the integer value ``2``). To use an implicit formulation with the
+        fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_IMPLICIT`` (or the integer value
+        ``3``). To use an implicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_IMPLICIT``
+        (or the integer value ``4``). The default is
+        ``MusculotendonFormulation.RIGID_TENDON``, which corresponds to a rigid
+        tendon formulation.
 
         """
         return self._musculotendon_dynamics
@@ -1230,8 +1273,22 @@ class MusculotendonDeGroote2016(MusculotendonBase):
         internally, i.e. rigid or elastic tendon model, the choice of
         musculotendon state etc. This must be a member of the integer
         enumeration ``MusculotendonFormulation`` or an integer that can be cast
-        to a member. The default is ``MusculotendonFormulation.RIGID_TENDON``
-        (or ``0``), which corresponds to a rigid tendon formulation.
+        to a member. To use a rigid tendon formulation, set this to
+        ``MusculotendonFormulation.RIGID_TENDON`` (or the integer value ``0``,
+        which will be cast to the enumeration member). There are four possible
+        formulations for an elastic tendon model. To use an explicit formulation
+        with the fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_EXPLICIT`` (or the integer value
+        ``1``). To use an explicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_EXPLICIT``
+        (or the integer value ``2``). To use an implicit formulation with the
+        fiber length as the state, set this to
+        ``MusculotendonFormulation.FIBER_LENGTH_IMPLICIT`` (or the integer value
+        ``3``). To use an implicit formulation with the tendon force as the
+        state, set this to ``MusculotendonFormulation.TENDON_FORCE_IMPLICIT``
+        (or the integer value ``4``). The default is
+        ``MusculotendonFormulation.RIGID_TENDON``, which corresponds to a rigid
+        tendon formulation.
     tendon_slack_length : Expr | None
         The length of the tendon when the musculotendon is in its unloaded
         state. In a rigid tendon model the tendon length is the tendon slack
