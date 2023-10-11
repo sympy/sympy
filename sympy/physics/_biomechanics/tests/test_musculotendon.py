@@ -567,9 +567,9 @@ class TestMusculotendonDeGroote2016:
         l_T_slack = Symbol('l_T_slack')
         F_M_max = Symbol('F_M_max')
         l_M_opt = Symbol('l_M_opt')
-        v_M_max = Integer(10)
-        alpha_opt = Integer(0)
-        beta = Rational(1, 10)
+        v_M_max = Float('10.0')
+        alpha_opt = Float('0.0')
+        beta = Float('0.1')
         instance = MusculotendonDeGroote2016.with_defaults(
             'name',
             pathway,
