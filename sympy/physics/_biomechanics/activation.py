@@ -764,7 +764,9 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants)
 
     @property
     def p(self):
@@ -784,7 +786,9 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        return Matrix([self._tau_a, self._tau_d, self._b])
+        constants = [self._tau_a, self._tau_d, self._b]
+        symbolic_constants = [c for c in constants if not c.is_number]
+        return Matrix(symbolic_constants)
 
     @property
     def M(self):
