@@ -1292,6 +1292,31 @@ class Domain:
         """Returns GCD of ``a`` and ``b``. """
         raise NotImplementedError
 
+    def gcdn(self, coeff_lst):
+        """
+        Return the greatest common divisor (GCD) of a list of coefficients of a
+        polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> coeff_lst = [ZZ(12), ZZ(18), ZZ(24)]
+        >>> domain = ZZ
+        >>> domain.gcdn(coeff_lst)
+        6
+
+        """
+        domain = self
+        coeff_lst = list(coeff_lst)
+        gcd = domain.gcd
+        res = coeff_lst[0]
+        for coeff in coeff_lst[1:]:
+            res = gcd(res, coeff)
+            if res == domain.one:
+                break
+        return res
+
     def lcm(self, a, b):
         """Returns LCM of ``a`` and ``b``. """
         raise NotImplementedError

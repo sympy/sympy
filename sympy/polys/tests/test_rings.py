@@ -3,15 +3,19 @@
 from functools import reduce
 from operator import add, mul
 
+from sympy.core.numbers import I
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
-from sympy.polys.domains import ZZ, QQ, RR, FF, EX
+from sympy.polys.domains import ZZ, QQ, RR, FF, EX, ZZ_I
 from sympy.polys.orderings import lex, grlex
+from sympy.polys.rings import monomial_extract, gcd_terms, \
+    _gcd_preprocess_polys, gcd_prs, gcd_extract
+
 from sympy.polys.polyerrors import GeneratorsError, \
     ExactQuotientFailed, MultivariatePolynomialError, CoercionFailed
 
 from sympy.testing.pytest import raises
-from sympy.core import Symbol, symbols
+from sympy.core import Symbol, symbols, ordered
 from sympy.core.singleton import S
 from sympy.core.numbers import (oo, pi)
 from sympy.functions.elementary.exponential import exp
@@ -1068,6 +1072,72 @@ def test_PolyElement_gcd():
 
     assert f.gcd(g) == x + 1
 
+def test_PolyElement_gcd_ring():
+    R, x, y = ring("x, y", QQ)
+
+    f = 0.1*x + 0.1*y + 0.1*y + 0.3
+    g = y + 1.0
+
+    expected_gcd = (1, 1/10*x + 1/5*y + 3/10, y + 1)
+
+    assert  f._gcd_ring(g) == expected_gcd
+
+    f = -0.0001*x**4 + 0.0098*x**3 + 0.0299999999999999*x**2 + \
+        0.0199999999999998*x
+    g = -1.0e-7*x**6 + 3.0e-5*x**5 - 0.00297*x**4 + 0.094*x**3 + 0.297*x**2 \
+        + 0.3*x + 0.1
+
+    expected_gcd = (1, -1/10000*x**4 + 49/5000*x**3 + 3/100*x**2 + 1/50*x,
+                -944473296573929/9444732965739290427392*x**6 + 3/100000*x**5 -
+                297/100000*x**4 + 47/500*x**3 + 297/1000*x**2 + 3/10*x + 1/10)
+
+    assert  f._gcd_ring(g) == expected_gcd
+
+    R, x, y = ring("x, y", ZZ_I)
+    f = (-1 + 0*I)*x*y + (0 + -1*I)*y**2
+    g = x**3 + (0 + 1*I)*x**2*y + x*y**2 + (0 + 1*I)*y**3
+
+    expected_gcd = (x + I*y, -y, x**2 + y**2)
+
+    assert f._gcd_ring(g) == expected_gcd
+
+    R, y, _t0, _t1 = ring("y, _t0, _t1", EX)
+    f = (2 + 0*I)*y**2*_t0 + (0 + 2*I)*y**2*(EX(pi)) + (-2 + 0*I)*y*_t1 + \
+                        (0 + -2*I)*y*(EX(pi)) + (-2 + 0*I)*y*_t0
+
+    g = (4 + 0*I)*y**3 + (-4 + 0*I)*y**2
+
+    expected_gcd = (
+        y,
+        EX(2)*y*_t0 + EX(2*I*pi)*y - EX(2)*_t0 - EX(2)*_t1 + EX(-2*I*pi),
+        EX(4)*y**2 - EX(4)*y
+    )
+
+    assert f._gcd_ring(g) == expected_gcd
+
+    R, y = ring("y", EX)
+    f = (0 + 2*I)*y*(EX(pi)) + (-1 + 0*I)
+    g = (0 + 2*I)*y*(EX(pi)) + (-1 + 0*I)
+
+    expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
+
+    assert f._gcd_ring(g) == expected_gcd
+
+    f = (0 + 2*I)*y*pi + (-1 + 0*I)
+    g = (0 + 2*I)*y*pi + (-1 + 0*I)
+
+    expected_gcd = (y + EX(I/(2*pi)), EX(2*I*pi), EX(2*I*pi))
+
+    assert f._gcd_ring(g) == expected_gcd
+
+    R, x, _C3 = ring("x, _C3", ZZ_I)
+    f = (0 + 4*I)*x**5 + (0 + -4*I)*x*_C3
+    g = (4 + 0*I)*x**5 + (4 + 0*I)*x*_C3
+
+    expected_gcd = (4*x, I*x**4 - I*_C3, x**4 + _C3)
+
+    assert f._gcd_ring(g) == expected_gcd
+
 def test_PolyElement_cancel():
     R, x, y = ring("x,y", ZZ)
 
@@ -1352,6 +1422,43 @@ def test_PolyElement_drop():
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
 
+def test_PolyElement_primitive_wrt():
+    R, x = ring("x", ZZ)
+
+    p = 4*x**3 + 8*x**2 + 12*x
+    assert p.primitive_wrt(x) == (4, x**3 + 2*x**2 + 3*x)
+
+    p = x**2 + 3*x
+    assert p.primitive_wrt(x) == (1, x**2 + 3*x)
+
+def test_PolyElement__coeff_split_syms():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+    syms = {z}
+    result = f._coeff_split_syms(syms)
+    assert result == {(0, 0, 0): {(4, 0, 0): 2, (0, 4, 0): 3, (0, 0, 2): 10,
+                    (1, 0, 2): 10}}
+
+    g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+    syms = {x, y}
+    result = g._coeff_split_syms(syms)
+    assert result == {(0, 0, 0): {(2, 0, 0): 3, (0, 2, 0): 2, (0, 0, 3): 5,
+                    (2, 1, 0): 7}}
+
+def test_PolyElement_coeff_split():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 2*x**4 + 3*y**4 + 10*z**2 + 10*x*z**2
+    syms = {z}
+    result = f.coeff_split(syms)
+    assert result ==[2*x**4 + 3*y**4, 10*x + 10]
+
+    g = 3*x**2 + 2*y**2 + 5*z**3 + 7*x**2*y
+    syms = {x, y}
+    result = g.coeff_split(syms)
+    assert result == [3, 2, 5*z**3, 7]
+
 def test_PolyElement_coeff_wrt():
     R, x, y, z = ring("x, y, z", ZZ)
 
@@ -1454,6 +1561,117 @@ def test_PolyElement_subresultants():
 
     f, g = x**2 + x, x**2 + x # f and g are same polynomial
     assert f.subresultants(g) == [x**2 + x, x**2 + x]
+
+def test_PolyElement_main_variable():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    p = x**2 + y**3 + z - 2*x*z**2
+    assert p.main_variable() == 0
+
+def test_monomial_extract():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = x**2*y + z**3
+    g = x**3*y + z**3
+    h = x**2*y**2 + z**3
+    polynomials = [f, g, h]
+    result = monomial_extract(polynomials)
+
+    assert result == (polynomials, 1)
+
+    f = x**2*y
+    g = x**2*y + x*y
+    h = x*y + y**2
+    polynomials = [f, g, h]
+    result = monomial_extract(polynomials)
+    assert result == ([x**2, x**2 + x, x + y], y)
+
+def test_gcd_preprocess_polys():
+    R, x, y = ring("x, y", ZZ)
+
+    f = x**2*y + x*y
+    g = x**3*y**2 + x*y**2
+    polynomials = [f, g]
+    result = _gcd_preprocess_polys(polynomials)
+    expected = ([x**2*y + x*y, x**3*y**2 + x*y**2], {0, 1})
+    assert list(ordered(result[0])), result[1] == expected
+
+    f = x**2 - y**2
+    g = x**2 - 2*x*y + y**2
+    polynomials = [f, g]
+    result = _gcd_preprocess_polys(polynomials)
+    expected = ([x**2 - y**2, x**2 - 2*x*y + y**2], {0, 1})
+    assert list(ordered(result[0])), result[1] == expected
+
+def test_gcd_terms():
+    from sympy import ring
+    R, x, y = ring("x, y", ZZ)
+
+    polynomials = [x**2 - y**2, x - y]
+    ring = polynomials[0].ring
+    domain = ring.domain
+    result = gcd_terms(polynomials, ring, domain)
+    assert result == 1
+
+def test_gcd_extract():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = x - y
+    g = x**2 - y**2
+    assert gcd_extract([f, g]) == x - y
+
+    f = x*y + y*z
+    g = x*z - y*z
+    assert gcd_extract([f, g]) == 1
+
+    f = x**2 - x
+    g = x**3 - x**2
+    assert gcd_extract([f, g]) == x**2 - x
+
+    # Polynomials with rational coefficients
+    Q, a, b = ring("a, b", QQ)
+    f = a**2 - 2*a*b + b**2
+    g = a**3 - b**3
+    assert gcd_extract([f, g]) == a - b
+
+    f = x*y*z
+    g = x**2*y - x*y**2
+    h = x**3 - y**3
+    assert gcd_extract([f, g, h]) == 1
+
+    f = x*y - y*z
+    g = x*z - x*y
+    h = x**2 - y**2
+    assert gcd_extract([f, g, h]) == 1
+
+def test_gcd_prs():
+    R, x, y, z = ring("x, y, z", ZZ)
+
+    f = 4*x**2 + 8*x + 10
+    g = 2*x**2 + 6*x + 10
+    result = gcd_prs(f, g)[0]
+    assert result == 2
+
+    h = 3*x**2 + 9*x + 15
+    result = gcd_prs(f, h)[0]
+    assert result == 1
+
+    i = 2*x**3 + 4*x**2 + 2*x
+    result = gcd_prs(f, i)[0]
+    assert result == 2
+
+    f = 4*x**2 + 8*x + 10*y
+    g = 2*x**2 + 6*x + 10*y
+    result = gcd_prs(f, g)[0]
+    assert result == 2
+
+    h = 3*x**2 + 9*x + 15*y
+    result = gcd_prs(f, h)[0]
+    assert result == 1
+
+    i = 2*x**3 + 4*x**2*y + 2*x*y**2
+    result = gcd_prs(f, i)[0]
+    assert result == 2
 
 def test_PolyElement_resultant():
     _, x = ring("x", ZZ)

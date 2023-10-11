@@ -274,6 +274,53 @@ def monomial_gcd(A, B):
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
+def monomial_ngcd(monomials):
+    """
+    Computes the greatest common divisor (GCD) of the exponents for each
+    variable in the monomials.
+
+    Parameters
+    ==========
+
+    monomials : iterable of tuples
+        Represents monomials, where each monomial is a tuple of exponents for variables.
+
+    Returns
+    =======
+
+    tuple
+        The greatest common divisor of the exponents for each variable in the
+        monomials.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.monomials import monomial_ngcd
+    >>> monomial_ngcd([(2, 3), (3, 2), (1, 4), (4, 1)])
+    (1, 1)
+
+    """
+
+    if not monomials:
+        return None
+
+    zero_monom = (0,) * len(monomials[0])
+
+    # If the zero monomial is present in the monomials, return early
+    if zero_monom in monomials:
+        return zero_monom
+
+    gcd = monomials[0]
+
+    for monom in monomials[1:]:
+        gcd = monomial_gcd(gcd, monom)
+
+        # If gcd becomes the zero monomial, return early
+        if gcd == zero_monom:
+            return zero_monom
+
+    return gcd
+
 def monomial_lcm(A, B):
     """
     Least common multiple of tuples representing monomials.
@@ -390,6 +437,7 @@ def term_div(a, b, domain):
             return monom, domain.quo(a_lc, b_lc)
         else:
             return None
+
 
 class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
