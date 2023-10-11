@@ -1,4 +1,4 @@
-"""Tests for the ``sympy.physics._biomechanics.musculotendon.py`` module."""
+"""Tests for the ``sympy.physics.biomechanics.musculotendon.py`` module."""
 
 import abc
 
@@ -12,10 +12,10 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, eye, zeros
-from sympy.physics._biomechanics.activation import (
+from sympy.physics.biomechanics.activation import (
     FirstOrderActivationDeGroote2016
 )
-from sympy.physics._biomechanics.curve import (
+from sympy.physics.biomechanics.curve import (
     CharacteristicCurveCollection,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
@@ -25,12 +25,12 @@ from sympy.physics._biomechanics.curve import (
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
-from sympy.physics._biomechanics.musculotendon import (
+from sympy.physics.biomechanics.musculotendon import (
     MusculotendonBase,
     MusculotendonDeGroote2016,
     MusculotendonFormulation,
 )
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
 from sympy.physics.mechanics.pathway import LinearPathway
 from sympy.physics.vector.frame import ReferenceFrame

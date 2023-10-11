@@ -18,8 +18,8 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.dense import MutableDenseMatrix as Matrix, diag, eye, zeros
-from sympy.physics._biomechanics.activation import ActivationBase
-from sympy.physics._biomechanics.curve import (
+from sympy.physics.biomechanics.activation import ActivationBase
+from sympy.physics.biomechanics.curve import (
     CharacteristicCurveCollection,
     FiberForceLengthActiveDeGroote2016,
     FiberForceLengthPassiveDeGroote2016,
@@ -29,7 +29,7 @@ from sympy.physics._biomechanics.curve import (
     TendonForceLengthDeGroote2016,
     TendonForceLengthInverseDeGroote2016,
 )
-from sympy.physics._biomechanics._mixin import _NamedMixin
+from sympy.physics.biomechanics._mixin import _NamedMixin
 from sympy.physics.mechanics.actuator import ForceActuator
 from sympy.physics.vector.functions import dynamicsymbols
 
@@ -276,9 +276,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         Returns a new instance of the musculotendon class using recommended
         values for ``v_M_max``, ``alpha_opt``, and ``beta``. The values are:
 
-        $v^M_{max} = 10$
-        $\alpha_{opt} = 0$
-        $\beta = \frac{1}{10}$
+            :math:`v^M_{max} = 10`
+            :math:`\alpha_{opt} = 0`
+            :math:`\beta = \frac{1}{10}`
 
         The musculotendon curves are also instantiated using the constants from
         the original publication.
@@ -373,7 +373,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def tendon_slack_length(self):
-        """Symbol or value corresponding to the tendon slack length constant.
+        r"""Symbol or value corresponding to the tendon slack length constant.
 
         Explanation
         ===========
@@ -391,7 +391,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def l_T_slack(self):
-        """Symbol or value corresponding to the tendon slack length constant.
+        r"""Symbol or value corresponding to the tendon slack length constant.
 
         Explanation
         ===========
@@ -410,7 +410,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def peak_isometric_force(self):
-        """Symbol or value corresponding to the peak isometric force constant.
+        r"""Symbol or value corresponding to the peak isometric force constant.
 
         Explanation
         ===========
@@ -428,7 +428,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def F_M_max(self):
-        """Symbol or value corresponding to the peak isometric force constant.
+        r"""Symbol or value corresponding to the peak isometric force constant.
 
         Explanation
         ===========
@@ -447,7 +447,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def optimal_fiber_length(self):
-        """Symbol or value corresponding to the optimal fiber length constant.
+        r"""Symbol or value corresponding to the optimal fiber length constant.
 
         Explanation
         ===========
@@ -464,7 +464,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def l_M_opt(self):
-        """Symbol or value corresponding to the optimal fiber length constant.
+        r"""Symbol or value corresponding to the optimal fiber length constant.
 
         Explanation
         ===========
@@ -482,7 +482,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def maximal_fiber_velocity(self):
-        """Symbol or value corresponding to the maximal fiber velocity constant.
+        r"""Symbol or value corresponding to the maximal fiber velocity constant.
 
         Explanation
         ===========
@@ -499,7 +499,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
     @property
     def v_M_max(self):
-        """Symbol or value corresponding to the maximal fiber velocity constant.
+        r"""Symbol or value corresponding to the maximal fiber velocity constant.
 
         Explanation
         ===========
@@ -1039,7 +1039,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
 
 class MusculotendonDeGroote2016(MusculotendonBase):
-    """Musculotendon model using the curves of De Groote et al., 2016 [1].
+    r"""Musculotendon model using the curves of De Groote et al., 2016 [1].
 
     Examples
     ========
@@ -1077,7 +1077,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     dynamics. Note that a single name argument needs to be provided as SymPy
     will use this as a suffix.
 
-    >>> from sympy.physics._biomechanics import FirstOrderActivationDeGroote2016
+    >>> from sympy.physics.biomechanics import FirstOrderActivationDeGroote2016
 
     >>> activation = FirstOrderActivationDeGroote2016('muscle')
     >>> activation.x
@@ -1111,7 +1111,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     we have previously instantiated. By default, a musculotendon model with
     rigid tendon musculotendon dynamics will be created.
 
-    >>> from sympy.physics._biomechanics import MusculotendonDeGroote2016
+    >>> from sympy.physics.biomechanics import MusculotendonDeGroote2016
 
     >>> rigid_tendon_muscle = MusculotendonDeGroote2016(
     ...     'muscle',
@@ -1216,7 +1216,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
     (normalized) muscle fiber length as an additional state and will produce
     the governing ordinary differential equation in explicit form.
 
-    >>> from sympy.physics._biomechanics import MusculotendonFormulation
+    >>> from sympy.physics.biomechanics import MusculotendonFormulation
 
     >>> elastic_tendon_muscle = MusculotendonDeGroote2016(
     ...     'muscle',
