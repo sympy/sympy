@@ -88,7 +88,6 @@ class TestZerothOrderActivation:
         assert self.instance.r.shape == (1, 1)
         assert self.instance.input_vars.shape == (1, 1)
 
-
     def test_constants_attribute(self):
         assert hasattr(self.instance, 'p')
         assert hasattr(self.instance, 'constants')
