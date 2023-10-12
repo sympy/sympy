@@ -1,5 +1,5 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
-    ImmutableMatrix as Matrix, _simplify_matrix)
+from sympy import (S, sympify, expand, sqrt, Add, zeros, acos,
+                                ImmutableMatrix as Matrix, simplify)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -29,7 +29,7 @@ class Vector(Printable, EvalfMixin):
     is_number = False
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.  You shouldn't be
+        """This is the constructor for the Vector class.  You should not be
         calling this, it should only be used by other functions. You should be
         treating Vectors like you would with if you were doing the math by
         hand, and getting the first 3 from the standard basis vectors from a
@@ -111,13 +111,13 @@ class Vector(Printable, EvalfMixin):
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
         if Vector.simp:
-            return trigsimp(sympify(out), recursive=True)
+            return trigsimp(out, recursive=True)
         else:
-            return sympify(out)
+            return out
 
     def __truediv__(self, other):
         """This uses mul and inputs self and 1 divided by other. """
-        return self.__mul__(sympify(1) / other)
+        return self.__mul__(S.One / other)
 
     def __eq__(self, other):
         """Tests for equality.
@@ -170,13 +170,11 @@ class Vector(Printable, EvalfMixin):
 
         """
 
-        newlist = [v for v in self.args]
+        newlist = list(self.args)
+        other = sympify(other)
         for i, v in enumerate(newlist):
-            newlist[i] = (sympify(other) * newlist[i][0], newlist[i][1])
+            newlist[i] = (other * newlist[i][0], newlist[i][1])
         return Vector(newlist)
-
-    def __ne__(self, other):
-        return not self == other
 
     def __neg__(self):
         return self * -1
@@ -258,49 +256,28 @@ class Vector(Printable, EvalfMixin):
     def _pretty(self, printer):
         """Pretty Printing method. """
         from sympy.printing.pretty.stringpict import prettyForm
-        e = self
 
-        class Fake:
+        terms = []
 
-            def render(self, *args, **kwargs):
-                ar = e.args  # just to shorten things
-                if len(ar) == 0:
-                    return str(0)
-                pforms = []  # output list, to be concatenated to a string
-                for i, v in enumerate(ar):
-                    for j in 0, 1, 2:
-                        # if the coef of the basis vector is 1, we skip the 1
-                        if ar[i][0][j] == 1:
-                            pform = printer._print(ar[i][1].pretty_vecs[j])
-                        # if the coef of the basis vector is -1, we skip the 1
-                        elif ar[i][0][j] == -1:
-                            pform = printer._print(ar[i][1].pretty_vecs[j])
-                            pform = prettyForm(*pform.left(" - "))
-                            bin = prettyForm.NEG
-                            pform = prettyForm(binding=bin, *pform)
-                        elif ar[i][0][j] != 0:
-                            # If the basis vector coeff is not 1 or -1,
-                            # we might wrap it in parentheses, for readability.
-                            pform = printer._print(ar[i][0][j])
+        def juxtapose(a, b):
+            pa = printer._print(a)
+            pb = printer._print(b)
+            if a.is_Add:
+                pa = prettyForm(*pa.parens())
+            return printer._print_seq([pa, pb], delimiter=' ')
 
-                            if isinstance(ar[i][0][j], Add):
-                                tmp = pform.parens()
-                                pform = prettyForm(tmp[0], tmp[1])
+        for M, N in self.args:
+            for i in range(3):
+                if M[i] == 0:
+                    continue
+                elif M[i] == 1:
+                    terms.append(prettyForm(N.pretty_vecs[i]))
+                elif M[i] == -1:
+                    terms.append(prettyForm.NEG + prettyForm(N.pretty_vecs[i]))
+                else:
+                    terms.append(juxtapose(M[i], N.pretty_vecs[i]))
 
-                            pform = prettyForm(*pform.right(" ",
-                                                ar[i][1].pretty_vecs[j]))
-                        else:
-                            continue
-                        pforms.append(pform)
-
-                pform = prettyForm.__add__(*pforms)
-                kwargs["wrap_line"] = kwargs.get("wrap_line")
-                kwargs["num_columns"] = kwargs.get("num_columns")
-                out_str = pform.render(*args, **kwargs)
-                mlines = [line.rstrip() for line in out_str.split("\n")]
-                return "\n".join(mlines)
-
-        return Fake()
+        return prettyForm.__add__(*terms)
 
     def __ror__(self, other):
         """Outer product between two Vectors.
@@ -403,16 +380,17 @@ class Vector(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame, cross
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> N.x ^ N.y
+        >>> cross(N.x, N.y)
         N.z
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-        >>> A.x ^ N.y
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
+        >>> cross(A.x, N.y)
         N.z
-        >>> N.y ^ A.x
+        >>> cross(N.y, A.x)
         - sin(q1)*A.y - cos(q1)*A.z
 
         """
@@ -428,7 +406,7 @@ class Vector(Printable, EvalfMixin):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
             SymPy's Matrix will not take in Vector, so need a custom function.
-            You shouldn't be calling this.
+            You should not be calling this.
 
             """
 
@@ -443,9 +421,10 @@ class Vector(Printable, EvalfMixin):
             tempx = v[1].x
             tempy = v[1].y
             tempz = v[1].z
-            tempm = ([[tempx, tempy, tempz], [self & tempx, self & tempy,
-                self & tempz], [Vector([ar[i]]) & tempx,
-                Vector([ar[i]]) & tempy, Vector([ar[i]]) & tempz]])
+            tempm = ([[tempx, tempy, tempz],
+                      [self & tempx, self & tempy, self & tempz],
+                      [Vector([ar[i]]) & tempx, Vector([ar[i]]) & tempy,
+                       Vector([ar[i]]) & tempz]])
             outlist += _det(tempm).args
         return Vector(outlist)
 
@@ -513,15 +492,15 @@ class Vector(Printable, EvalfMixin):
 
         >>> from sympy import Symbol
         >>> from sympy.physics.vector import dynamicsymbols, ReferenceFrame
-        >>> from sympy.physics.vector import Vector
         >>> from sympy.physics.vector import init_vprinting
         >>> init_vprinting(pretty_print=False)
-        >>> Vector.simp = True
         >>> t = Symbol('t')
         >>> q1 = dynamicsymbols('q1')
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
+        - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
+        >>> A.x.diff(t, N).express(A).simplify()
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
@@ -533,8 +512,8 @@ class Vector(Printable, EvalfMixin):
 
         from sympy.physics.vector.frame import _check_frame
 
-        var = sympify(var)
         _check_frame(frame)
+        var = sympify(var)
 
         inlist = []
 
@@ -548,12 +527,11 @@ class Vector(Printable, EvalfMixin):
                 # with the derivative frame does not contain the variable.
                 if not var_in_dcm or (frame.dcm(component_frame).diff(var) ==
                                       zeros(3, 3)):
-                    inlist += [(measure_number.diff(var),
-                                        component_frame)]
+                    inlist += [(measure_number.diff(var), component_frame)]
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
-                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+                    inlist += Vector([(deriv, frame)]).args
 
         return Vector(inlist)
 
@@ -656,7 +634,7 @@ class Vector(Printable, EvalfMixin):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = _simplify_matrix(v[0])
+            d[v[1]] = simplify(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):
@@ -735,10 +713,9 @@ class Vector(Printable, EvalfMixin):
         Warnings
         ========
 
-        Python ignores the leading negative sign so that might
-        give wrong results.
-        ``-A.x.angle_between()`` would be treated as ``-(A.x.angle_between())``,
-        instead of ``(-A.x).angle_between()``.
+        Python ignores the leading negative sign so that might give wrong
+        results. ``-A.x.angle_between()`` would be treated as
+        ``-(A.x.angle_between())``, instead of ``(-A.x).angle_between()``.
 
         """
 
@@ -748,20 +725,47 @@ class Vector(Printable, EvalfMixin):
         return angle
 
     def free_symbols(self, reference_frame):
-        """
-        Returns the free symbols in the measure numbers of the vector
+        """Returns the free symbols in the measure numbers of the vector
         expressed in the given reference frame.
 
-        Parameter
-        =========
-
+        Parameters
+        ==========
         reference_frame : ReferenceFrame
-            The frame with respect to which the free symbols of the
-            given vector is to be determined.
+            The frame with respect to which the free symbols of the given
+            vector is to be determined.
+
+        Returns
+        =======
+        set of Symbol
+            set of symbols present in the measure numbers of
+            ``reference_frame``.
 
         """
 
         return self.to_matrix(reference_frame).free_symbols
+
+    def free_dynamicsymbols(self, reference_frame):
+        """Returns the free dynamic symbols (functions of time ``t``) in the
+        measure numbers of the vector expressed in the given reference frame.
+
+        Parameters
+        ==========
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free dynamic symbols of the
+            given vector is to be determined.
+
+        Returns
+        =======
+        set
+            Set of functions of time ``t``, e.g.
+            ``Function('f')(me.dynamicsymbols._t)``.
+
+        """
+        # TODO : Circular dependency if imported at top. Should move
+        # find_dynamicsymbols into physics.vector.functions.
+        from sympy.physics.mechanics.functions import find_dynamicsymbols
+
+        return find_dynamicsymbols(self, reference_frame=reference_frame)
 
     def _eval_evalf(self, prec):
         if not self.args:
@@ -773,8 +777,8 @@ class Vector(Printable, EvalfMixin):
         return Vector(new_args)
 
     def xreplace(self, rule):
-        """
-        Replace occurrences of objects within the measure numbers of the vector.
+        """Replace occurrences of objects within the measure numbers of the
+        vector.
 
         Parameters
         ==========
@@ -815,6 +819,7 @@ class Vector(Printable, EvalfMixin):
             mat = mat.xreplace(rule)
             new_args.append([mat, frame])
         return Vector(new_args)
+
 
 class VectorTypeError(TypeError):
 

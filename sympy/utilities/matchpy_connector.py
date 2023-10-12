@@ -3,7 +3,7 @@ The objects in this module allow the usage of the MatchPy pattern matching
 library on SymPy expressions.
 """
 import re
-from typing import List, Callable
+from typing import List, Callable, NamedTuple, Any, Dict
 
 from sympy.core.sympify import _sympify
 from sympy.external import import_module
@@ -101,7 +101,7 @@ if matchpy:
 
     @create_operation_expression.register(Basic)
     def sympy_op_factory(old_operation, new_operands, variable_name=True):
-         return type(old_operation)(*new_operands)
+        return type(old_operation)(*new_operands)
 
 
 if matchpy:
@@ -109,13 +109,16 @@ if matchpy:
 else:
     class Wildcard: # type: ignore
         def __init__(self, min_length, fixed_size, variable_name, optional):
-            pass
+            self.min_count = min_length
+            self.fixed_size = fixed_size
+            self.variable_name = variable_name
+            self.optional = optional
 
 
 @doctest_depends_on(modules=('matchpy',))
 class _WildAbstract(Wildcard, Symbol):
-    min_length: int # abstract field required in subclasses
-    fixed_size: bool # abstract field required in subclasses
+    min_length: int  # abstract field required in subclasses
+    fixed_size: bool  # abstract field required in subclasses
 
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length
@@ -124,12 +127,21 @@ class _WildAbstract(Wildcard, Symbol):
             optional = _sympify(optional)
         Wildcard.__init__(self, min_length, fixed_size, str(variable_name), optional)
 
+    def __getstate__(self):
+        return {
+            "min_length": self.min_length,
+            "fixed_size": self.fixed_size,
+            "min_count": self.min_count,
+            "variable_name": self.variable_name,
+            "optional": self.optional,
+        }
+
     def __new__(cls, variable_name=None, optional=None, **assumptions):
         cls._sanitize(assumptions, cls)
         return _WildAbstract.__xnew__(cls, variable_name, optional, **assumptions)
 
     def __getnewargs__(self):
-        return self.min_count, self.fixed_size, self.variable_name, self.optional
+        return self.variable_name, self.optional
 
     @staticmethod
     def __xnew__(cls, variable_name=None, optional=None, **assumptions):
@@ -176,6 +188,11 @@ def _get_srepr(expr):
     s = re.sub(r"WildPlus\('(\w+)'\)", r"*\1", s)
     s = re.sub(r"WildStar\('(\w+)'\)", r"*\1", s)
     return s
+
+
+class ReplacementInfo(NamedTuple):
+    replacement: Any
+    info: Any
 
 
 @doctest_depends_on(modules=('matchpy',))
@@ -231,21 +248,24 @@ class Replacer:
     and the pattern matcher will not iterate again if given the same expression)
 
     >>> replacer.add(Equality(a_*x, b_), b_/a_)
-    >>> replacer._replacer.matcher.clear()
+    >>> replacer._matcher.clear()
     >>> replacer.replace(eq)
     4/3
     """
 
-    def __init__(self, common_constraints: list = []):
-        self._replacer = matchpy.ManyToOneReplacer()
+    def __init__(self, common_constraints: list = [], lambdify: bool = False, info: bool = False):
+        self._matcher = matchpy.ManyToOneMatcher()
         self._common_constraint = common_constraints
+        self._lambdify = lambdify
+        self._info = info
+        self._wildcards: Dict[str, Wildcard] = {}
 
     def _get_lambda(self, lambda_str: str) -> Callable[..., Expr]:
         exec("from sympy import *")
         return eval(lambda_str, locals())
 
     def _get_custom_constraint(self, constraint_expr: Expr, condition_template: str) -> Callable[..., Expr]:
-        wilds = list(map(lambda x: x.name, constraint_expr.atoms(_WildAbstract)))
+        wilds = [x.name for x in constraint_expr.atoms(_WildAbstract)]
         lambdaargs = ', '.join(wilds)
         fullexpr = _get_srepr(constraint_expr)
         condition = condition_template.format(fullexpr)
@@ -258,11 +278,10 @@ class Replacer:
     def _get_custom_constraint_true(self, constraint_expr: Expr) -> Callable[..., Expr]:
         return self._get_custom_constraint(constraint_expr, "({}) == True")
 
-    def add(self, expr: Expr, result: Expr, conditions_true: List[Expr] = [], conditions_nonfalse: List[Expr] = []) -> None:
+    def add(self, expr: Expr, replacement, conditions_true: List[Expr] = [],
+            conditions_nonfalse: List[Expr] = [], info: Any = None) -> None:
         expr = _sympify(expr)
-        result = _sympify(result)
-        lambda_str = f"lambda {', '.join(map(lambda x: x.name, expr.atoms(_WildAbstract)))}: {_get_srepr(result)}"
-        lambda_expr = self._get_lambda(lambda_str)
+        replacement = _sympify(replacement)
         constraints = self._common_constraint[:]
         constraint_conditions_true = [
             self._get_custom_constraint_true(cond) for cond in conditions_true]
@@ -270,8 +289,47 @@ class Replacer:
             self._get_custom_constraint_nonfalse(cond) for cond in conditions_nonfalse]
         constraints.extend(constraint_conditions_true)
         constraints.extend(constraint_conditions_nonfalse)
-        self._replacer.add(
-            matchpy.ReplacementRule(matchpy.Pattern(expr, *constraints), lambda_expr))
+        pattern = matchpy.Pattern(expr, *constraints)
+        if self._lambdify:
+            lambda_str = f"lambda {', '.join((x.name for x in expr.atoms(_WildAbstract)))}: {_get_srepr(replacement)}"
+            lambda_expr = self._get_lambda(lambda_str)
+            replacement = lambda_expr
+        else:
+            self._wildcards.update({str(i): i for i in expr.atoms(Wildcard)})
+        if self._info:
+            replacement = ReplacementInfo(replacement, info)
+        self._matcher.add(pattern, replacement)
 
-    def replace(self, expr: Expr) -> Expr:
-        return self._replacer.replace(expr)
+    def replace(self, expression, max_count: int = -1):
+        # This method partly rewrites the .replace method of ManyToOneReplacer
+        # in MatchPy.
+        # License: https://github.com/HPAC/matchpy/blob/master/LICENSE
+        infos = []
+        replaced = True
+        replace_count = 0
+        while replaced and (max_count < 0 or replace_count < max_count):
+            replaced = False
+            for subexpr, pos in matchpy.preorder_iter_with_position(expression):
+                try:
+                    replacement_data, subst = next(iter(self._matcher.match(subexpr)))
+                    if self._info:
+                        replacement = replacement_data.replacement
+                        infos.append(replacement_data.info)
+                    else:
+                        replacement = replacement_data
+
+                    if self._lambdify:
+                        result = replacement(**subst)
+                    else:
+                        result = replacement.xreplace({self._wildcards[k]: v for k, v in subst.items()})
+
+                    expression = matchpy.functions.replace(expression, pos, result)
+                    replaced = True
+                    break
+                except StopIteration:
+                    pass
+            replace_count += 1
+        if self._info:
+            return expression, infos
+        else:
+            return expression

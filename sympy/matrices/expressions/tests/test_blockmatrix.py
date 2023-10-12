@@ -4,13 +4,17 @@ from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
     BlockMatrix, bc_dist, bc_matadd, bc_transpose, bc_inverse,
     blockcut, reblock_2x2, deblock)
-from sympy.matrices.expressions import (MatrixSymbol, Identity,
-        Inverse, trace, Transpose, det, ZeroMatrix)
+from sympy.matrices.expressions import (
+    MatrixSymbol, Identity, trace, det, ZeroMatrix, OneMatrix)
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import (
-    Matrix, ImmutableMatrix, ImmutableSparseMatrix)
-from sympy.core import Tuple, symbols, Expr
-from sympy.functions import transpose
+    Matrix, ImmutableMatrix, ImmutableSparseMatrix, zeros)
+from sympy.core import Tuple, Expr, S, Function
+from sympy.core.symbol import Symbol, symbols
+from sympy.functions import transpose, im, re
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -415,3 +419,51 @@ def test_block_lu_decomposition():
     #LU decomposition
     L, U = X.LUdecomposition()
     assert block_collapse(L*U) == X
+
+def test_issue_21866():
+    n  = 10
+    I  = Identity(n)
+    O  = ZeroMatrix(n, n)
+    A  = BlockMatrix([[  I,  O,  O,  O ],
+                      [  O,  I,  O,  O ],
+                      [  O,  O,  I,  O ],
+                      [  I,  O,  O,  I ]])
+    Ainv = block_collapse(A.inv())
+    AinvT = BlockMatrix([[  I,  O,  O,  O ],
+                      [  O,  I,  O,  O ],
+                      [  O,  O,  I,  O ],
+                      [  -I,  O,  O,  I ]])
+    assert Ainv == AinvT
+
+
+def test_adjoint_and_special_matrices():
+    A = Identity(3)
+    B = OneMatrix(3, 2)
+    C = ZeroMatrix(2, 3)
+    D = Identity(2)
+    X = BlockMatrix([[A, B], [C, D]])
+    X2 = BlockMatrix([[A, S.ImaginaryUnit*B], [C, D]])
+    assert X.adjoint() == BlockMatrix([[A, ZeroMatrix(3, 2)], [OneMatrix(2, 3), D]])
+    assert re(X) == X
+    assert X2.adjoint() == BlockMatrix([[A, ZeroMatrix(3, 2)], [-S.ImaginaryUnit*OneMatrix(2, 3), D]])
+    assert im(X2) == BlockMatrix([[ZeroMatrix(3, 3), OneMatrix(3, 2)], [ZeroMatrix(2, 3), ZeroMatrix(2, 2)]])
+
+
+def test_block_matrix_derivative():
+    x = symbols('x')
+    A = Matrix(3, 3, [Function(f'a{i}')(x) for i in range(9)])
+    bc = BlockMatrix([[A[:2, :2], A[:2, 2]], [A[2, :2], A[2:, 2]]])
+    assert Matrix(bc.diff(x)) - A.diff(x) == zeros(3, 3)
+
+
+def test_transpose_inverse_commute():
+    n = Symbol('n')
+    I = Identity(n)
+    Z = ZeroMatrix(n, n)
+    A = BlockMatrix([[I, Z], [Z, I]])
+
+    assert block_collapse(A.transpose().inverse()) == A
+    assert block_collapse(A.inverse().transpose()) == A
+
+    assert block_collapse(MatPow(A.transpose(), -2)) == MatPow(A, -2)
+    assert block_collapse(MatPow(A, -2).transpose()) == MatPow(A, -2)

@@ -2,12 +2,11 @@
 
 from contextlib import contextmanager
 import inspect
-from sympy.core.assumptions import ManagedProperties
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 
@@ -142,7 +141,7 @@ class AppliedPredicate(Boolean):
         """
         Return the predicate.
         """
-        # Will be changed to self.args[0] after args overridding is removed
+        # Will be changed to self.args[0] after args overriding is removed
         return self._args[0]
 
     @property
@@ -150,7 +149,7 @@ class AppliedPredicate(Boolean):
         """
         Return the arguments which are applied to the predicate.
         """
-        # Will be changed to self.args[1:] after args overridding is removed
+        # Will be changed to self.args[1:] after args overriding is removed
         return self._args[1:]
 
     def _eval_ask(self, assumptions):
@@ -172,7 +171,7 @@ class AppliedPredicate(Boolean):
         return set()
 
 
-class PredicateMeta(ManagedProperties):
+class PredicateMeta(type):
     def __new__(cls, clsname, bases, dct):
         # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
@@ -296,7 +295,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)
+    .. [1] https://en.wikipedia.org/wiki/Predicate_%28mathematical_logic%29
     .. [2] https://en.wikipedia.org/wiki/Sexy_prime
 
     """
@@ -403,32 +402,40 @@ class UndefinedPredicate(Predicate):
         return AppliedPredicate(self, expr)
 
     def add_handler(self, handler):
-        SymPyDeprecationWarning(
-            feature="Predicate.add_handler() method",
-            useinstead="multipledispatch handler of Predicate",
-            issue=20873,
-            deprecated_since_version="1.8"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The AskHandler system is deprecated. Predicate.add_handler()
+            should be replaced with the multipledispatch handler of Predicate.
+            """,
+            deprecated_since_version="1.8",
+            active_deprecations_target='deprecated-askhandler',
+        )
         self.handlers.append(handler)
 
     def remove_handler(self, handler):
-        SymPyDeprecationWarning(
-            feature="Predicate.remove_handler() method",
-            useinstead="multipledispatch handler of Predicate",
-            issue=20873,
-            deprecated_since_version="1.8"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The AskHandler system is deprecated. Predicate.remove_handler()
+            should be replaced with the multipledispatch handler of Predicate.
+            """,
+            deprecated_since_version="1.8",
+            active_deprecations_target='deprecated-askhandler',
+        )
         self.handlers.remove(handler)
 
     def eval(self, args, assumptions=True):
         # Support for deprecated design
         # When old design is removed, this will always return None
-        SymPyDeprecationWarning(
-            feature="Evaluating UndefinedPredicate",
-            useinstead="multipledispatch handler of Predicate",
-            issue=20873,
-            deprecated_since_version="1.8"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The AskHandler system is deprecated. Evaluating UndefinedPredicate
+            objects should be replaced with the multipledispatch handler of
+            Predicate.
+            """,
+            deprecated_since_version="1.8",
+            active_deprecations_target='deprecated-askhandler',
+            stacklevel=5,
+        )
         expr, = args
         res, _res = None, None
         mro = inspect.getmro(type(expr))
@@ -461,7 +468,7 @@ def assuming(*assumptions):
     Examples
     ========
 
-    >>> from sympy.assumptions import assuming, Q, ask
+    >>> from sympy import assuming, Q, ask
     >>> from sympy.abc import x, y
     >>> print(ask(Q.integer(x + y)))
     None

@@ -18,16 +18,20 @@ import warnings
 
 from itertools import cycle
 
-from sympy.ntheory.generate import nextprime
-from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse, igcd
+from sympy.core import Symbol
+from sympy.core.numbers import Rational
+from sympy.core.random import _randrange, _randint
+from sympy.external.gmpy import gcd, invert
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
+from sympy.ntheory import totient as _euler
+from sympy.ntheory import reduced_totient as _carmichael
+from sympy.ntheory.generate import nextprime
+from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
-from sympy.polys.polytools import gcd, Poly
+from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
-from sympy.testing.randtest import _randrange, _randint
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -38,7 +42,7 @@ class NonInvertibleCipherWarning(RuntimeWarning):
     def __str__(self):
         return '\n\t' + self.fullMessage
 
-    def warn(self, stacklevel=2):
+    def warn(self, stacklevel=3):
         warnings.warn(self, stacklevel=stacklevel)
 
 
@@ -146,7 +150,7 @@ def check_and_join(phrase, symbols=None, filter=None):
     rv = ''.join(''.join(phrase))
     if symbols is not None:
         symbols = check_and_join(symbols)
-        missing = ''.join(list(sorted(set(rv) - set(symbols))))
+        missing = ''.join(sorted(set(rv) - set(symbols)))
         if missing:
             if not filter:
                 raise ValueError(
@@ -253,7 +257,7 @@ def encipher_shift(msg, key, symbols=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Caesar_cipher
-    .. [2] http://mathworld.wolfram.com/CaesarsMethod.html
+    .. [2] https://mathworld.wolfram.com/CaesarsMethod.html
 
     See Also
     ========
@@ -426,7 +430,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     a, b = key
     assert gcd(a, N) == 1
     if _inverse:
-        c = mod_inverse(a, N)
+        c = invert(a, N)
         d = -b*c
         a, b = c, d
     B = ''.join([A[(a*i + b) % N] for i in range(N)])
@@ -739,8 +743,7 @@ def encipher_vigenere(msg, key, symbols=None):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Vigenere_cipher
-    .. [2] http://web.archive.org/web/20071116100808/
-    .. [3] http://filebox.vt.edu/users/batman/kryptos.html
+    .. [2] https://web.archive.org/web/20071116100808/https://filebox.vt.edu/users/batman/kryptos.html
        (short URL: https://goo.gl/ijr22d)
 
     """
@@ -1483,7 +1486,6 @@ def _decipher_rsa_crt(i, d, factors):
     >>> decrypted
     65
     """
-    from sympy.ntheory.modular import crt
     moduluses = [pow(i, d, p) for p in factors]
 
     result = crt(factors, moduluses)
@@ -1507,8 +1509,6 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     multipower : bool, optional
         Flag to bypass warning for multipower RSA.
     """
-    from sympy.ntheory import totient as _euler
-    from sympy.ntheory import reduced_totient as _carmichael
 
     if len(args) < 2:
         return False
@@ -1557,10 +1557,12 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 'the flag multipower=True if you want to suppress this '
                 'warning.'
                 .format(primes, n, n)
-                ).warn()
+                # stacklevel=4 because most users will call a function that
+                # calls this function
+                ).warn(stacklevel=4)
         phi = _totient._from_factors(tally)
 
-    if igcd(e, phi) == 1:
+    if gcd(e, phi) == 1:
         if public and not private:
             if isinstance(index, int):
                 e = e % phi
@@ -1568,7 +1570,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
             return n, e
 
         if private and not public:
-            d = mod_inverse(e, phi)
+            d = invert(e, phi)
             if isinstance(index, int):
                 d += index * phi
             return n, d
@@ -1675,7 +1677,7 @@ def rsa_public_key(*args, **kwargs):
     multipower : bool, optional
         Any pair of non-distinct primes found in the RSA specification
         will restrict the domain of the cryptosystem, as noted in the
-        explaination of the parameter ``args``.
+        explanation of the parameter ``args``.
 
         SymPy RSA key generator may give a warning before dispatching it
         as a multi-power RSA, however, you can disable the warning if
@@ -1739,11 +1741,11 @@ def rsa_public_key(*args, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+    .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+    .. [3] https://link.springer.com/content/pdf/10.1007/BFb0055738.pdf
 
-    .. [4] http://www.itiis.org/digital-library/manuscript/1381
+    .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=True, private=False, **kwargs)
 
@@ -1861,11 +1863,11 @@ def rsa_private_key(*args, **kwargs):
 
     .. [1] https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29
 
-    .. [2] http://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
+    .. [2] https://cacr.uwaterloo.ca/techreports/2006/cacr2006-16.pdf
 
-    .. [3] https://link.springer.com/content/pdf/10.1007%2FBFb0055738.pdf
+    .. [3] https://link.springer.com/content/pdf/10.1007/BFb0055738.pdf
 
-    .. [4] http://www.itiis.org/digital-library/manuscript/1381
+    .. [4] https://www.itiis.org/digital-library/manuscript/1381
     """
     return _rsa_key(*args, public=False, private=True, **kwargs)
 
@@ -1879,7 +1881,7 @@ def _encipher_decipher_rsa(i, key, factors=None):
         is_coprime_set = True
         for i in range(len(l)):
             for j in range(i+1, len(l)):
-                if igcd(l[i], l[j]) != 1:
+                if gcd(l[i], l[j]) != 1:
                     is_coprime_set = False
                     break
         return is_coprime_set
@@ -2007,7 +2009,7 @@ def decipher_rsa(i, key, factors=None):
         very large cases (Like 2048-bit RSA keys) since the
         overhead of using pure Python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
-        theoritical speed advantage.
+        theoretical speed advantage.
 
     Notes
     =====
@@ -2382,7 +2384,7 @@ def lfsr_sequence(key, fill, n):
         s = s[1:k]
         x = sum([int(key[i]*s0[i]) for i in range(k)])
         s.append(F(x))
-    return L       # use [x.to_int() for x in L] for int version
+    return L       # use [int(x) for x in L] for int version
 
 
 def lfsr_autocorrelation(L, P, k):
@@ -2430,7 +2432,7 @@ def lfsr_autocorrelation(L, P, k):
     k = int(k)
     L0 = L[:P]     # slices makes a copy
     L1 = L0 + L0[:k]
-    L2 = [(-1)**(L1[i].to_int() + L1[i + k].to_int()) for i in range(P)]
+    L2 = [(-1)**(int(L1[i]) + int(L1[i + k])) for i in range(P)]
     tot = sum(L2)
     return Rational(tot, P)
 
@@ -2506,10 +2508,10 @@ def lfsr_connection_polynomial(s):
             r = min(L + 1, dC + 1)
             coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
                 for i in range(1, dC + 1)]
-            d = (s[N].to_int() + sum([coeffsC[i]*s[N - i].to_int()
+            d = (int(s[N]) + sum([coeffsC[i]*int(s[N - i])
                 for i in range(1, r)])) % p
         if L == 0:
-            d = s[N].to_int()*x**0
+            d = int(s[N])*x**0
         if d == 0:
             m += 1
             N += 1
@@ -2542,7 +2544,7 @@ def elgamal_private_key(digit=10, seed=None):
     Explanation
     ===========
 
-    Elgamal encryption is based on the mathmatical problem
+    Elgamal encryption is based on the mathematical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
     `a^{b} \equiv c \pmod p`
@@ -2571,7 +2573,7 @@ def elgamal_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========
@@ -2656,7 +2658,7 @@ def encipher_elgamal(i, key, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========
@@ -2715,7 +2717,7 @@ def decipher_elgamal(msg, key):
     """
     p, _, d = key
     c1, c2 = msg
-    u = igcdex(c1**d, p)[0]
+    u = pow(c1, -d, p)
     return u * c2 % p
 
 
@@ -2764,7 +2766,7 @@ def dh_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========
@@ -3344,7 +3346,7 @@ def decipher_bg(message, key):
     r_p = pow(int(y), int(p_t), int(p))
     r_q = pow(int(y), int(q_t), int(q))
 
-    x = (q * mod_inverse(q, p) * r_p + p * mod_inverse(p, q) * r_q) % public_key
+    x = (q * invert(q, p) * r_p + p * invert(p, q) * r_q) % public_key
 
     orig_bits = []
     for _ in range(L):

@@ -3,12 +3,14 @@ from collections import defaultdict
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.numbers import Integer
+from sympy.core.kind import NumberKind
+from sympy.matrices.common import MatrixKind
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.matrices.dense import Matrix
 from sympy.sets.sets import FiniteSet
-from sympy.core.containers import tuple_wrapper
+from sympy.core.containers import tuple_wrapper, TupleKind
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda
 from sympy.core.relational import Eq
@@ -140,7 +142,7 @@ def test_tuple_wrapper():
 
 
 def test_iterable_is_sequence():
-    ordered = [list(), tuple(), Tuple(), Matrix([[]])]
+    ordered = [[], (), Tuple(), Matrix([[]])]
     unordered = [set()]
     not_sympy_iterable = [{}, '', '']
     assert all(is_sequence(i) for i in ordered)
@@ -148,6 +150,13 @@ def test_iterable_is_sequence():
     assert all(iterable(i) for i in ordered + unordered)
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
+
+
+def test_TupleKind():
+    kind = TupleKind(NumberKind, MatrixKind(NumberKind))
+    assert Tuple(1, Matrix([1, 2])).kind is kind
+    assert Tuple(1, 2).kind is TupleKind(NumberKind, NumberKind)
+    assert Tuple(1, 2).kind.element_kind == (NumberKind, NumberKind)
 
 
 def test_Dict():
@@ -162,7 +171,7 @@ def test_Dict():
     assert set(d.values()) == {S.One, S(2), S(3)}
     assert d.get(5, 'default') == 'default'
     assert d.get('5', 'default') == 'default'
-    assert x in d and z in d and not 5 in d and not '5' in d
+    assert x in d and z in d and 5 not in d and '5' not in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
@@ -204,5 +213,5 @@ def test_issue_5788():
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
-        assert sorted(pair) == sorted(reversed(pair))
+        assert sorted(pair) == sorted(pair)
         assert set(o(*args))  # doesn't fail

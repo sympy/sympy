@@ -9,7 +9,7 @@ from sympy.core.logic import _fuzzy_group
 from sympy.core.numbers import NaN, Number
 from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
     Equivalent, Implies, Not, Or)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
 
@@ -17,12 +17,14 @@ from ..predicates.common import CommutativePredicate, IsTruePredicate
 class AskHandler:
     """Base class that all Ask Handlers must inherit."""
     def __new__(cls, *args, **kwargs):
-        SymPyDeprecationWarning(
-            feature="AskHandler() class",
-            useinstead="multipledispatch handler",
-            issue=20873,
-            deprecated_since_version="1.8"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The AskHandler system is deprecated. The AskHandler class should
+            be replaced with the multipledispatch handler of Predicate
+            """,
+            deprecated_since_version="1.8",
+            active_deprecations_target='deprecated-askhandler',
+        )
         return super().__new__(cls, *args, **kwargs)
 
 
@@ -47,7 +49,7 @@ class CommonHandler(AskHandler):
 
 # CommutativePredicate
 
-@CommutativePredicate.register(Symbol) # type: ignore
+@CommutativePredicate.register(Symbol)
 def _(expr, assumptions):
     """Objects are expected to be commutative unless otherwise stated"""
     assumps = conjuncts(assumptions)
@@ -59,41 +61,41 @@ def _(expr, assumptions):
         return False
     return True
 
-@CommutativePredicate.register(Basic) # type: ignore
+@CommutativePredicate.register(Basic)
 def _(expr, assumptions):
     for arg in expr.args:
         if not ask(Q.commutative(arg), assumptions):
             return False
     return True
 
-@CommutativePredicate.register(Number) # type: ignore
+@CommutativePredicate.register(Number)
 def _(expr, assumptions):
     return True
 
-@CommutativePredicate.register(NaN) # type: ignore
+@CommutativePredicate.register(NaN)
 def _(expr, assumptions):
     return True
 
 
 # IsTruePredicate
 
-@IsTruePredicate.register(bool) # type: ignore
+@IsTruePredicate.register(bool)
 def _(expr, assumptions):
     return expr
 
-@IsTruePredicate.register(BooleanTrue) # type: ignore
+@IsTruePredicate.register(BooleanTrue)
 def _(expr, assumptions):
     return True
 
-@IsTruePredicate.register(BooleanFalse) # type: ignore
+@IsTruePredicate.register(BooleanFalse)
 def _(expr, assumptions):
     return False
 
-@IsTruePredicate.register(AppliedPredicate) # type: ignore
+@IsTruePredicate.register(AppliedPredicate)
 def _(expr, assumptions):
     return ask(expr, assumptions)
 
-@IsTruePredicate.register(Not) # type: ignore
+@IsTruePredicate.register(Not)
 def _(expr, assumptions):
     arg = expr.args[0]
     if arg.is_Symbol:
@@ -105,7 +107,7 @@ def _(expr, assumptions):
     else:
         return None
 
-@IsTruePredicate.register(Or) # type: ignore
+@IsTruePredicate.register(Or)
 def _(expr, assumptions):
     result = False
     for arg in expr.args:
@@ -116,7 +118,7 @@ def _(expr, assumptions):
             result = None
     return result
 
-@IsTruePredicate.register(And) # type: ignore
+@IsTruePredicate.register(And)
 def _(expr, assumptions):
     result = True
     for arg in expr.args:
@@ -127,12 +129,12 @@ def _(expr, assumptions):
             result = None
     return result
 
-@IsTruePredicate.register(Implies) # type: ignore
+@IsTruePredicate.register(Implies)
 def _(expr, assumptions):
     p, q = expr.args
     return ask(~p | q, assumptions=assumptions)
 
-@IsTruePredicate.register(Equivalent) # type: ignore
+@IsTruePredicate.register(Equivalent)
 def _(expr, assumptions):
     p, q = expr.args
     pt = ask(p, assumptions=assumptions)

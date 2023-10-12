@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from random import random
+from sympy.core.random import random
 from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify

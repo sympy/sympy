@@ -52,7 +52,7 @@ def _simpsol(soleq):
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
         coeff = piecewise_fold(coeff)
-        if type(coeff) is Piecewise:
+        if isinstance(coeff, Piecewise):
             coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
         else:
             coeff = ratsimp(coeff).collect(syms)
@@ -197,7 +197,6 @@ def simpsol(sol, wrt1, wrt2, doit=True):
         rep = {}
 
     sol = [Eq(s.lhs, simprhs(s.rhs, rep, wrt1, wrt2)) for s in sol]
-
     return sol
 
 
@@ -282,7 +281,7 @@ def linodesolve_type(A, t, b=None):
     ======
 
     NotImplementedError
-        When the coefficient matrix doesn't have a commutative antiderivative
+        When the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -351,7 +350,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     matrix differential equation [1]. For example the system $x' = x + y + 1$
     and $y' = x - y$ can be represented as
 
-    .. math:: A_1 X' = A0 X + b
+    .. math:: A_1 X' = A_0 X + b
 
     where $A_1$ and $A_0$ are $2 \times 2$ matrices and $b$, $X$ and $X'$ are
     $2 \times 1$ matrices with $X = [x, y]^T$.
@@ -468,13 +467,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
 
     for o in range(order, -1, -1):
         # Work from the highest derivative down
-        funcs_deriv = [func.diff(t, o) for func in funcs]
-
-        # linear_eq_to_matrix expects a proper symbol so substitute e.g.
-        # Derivative(x(t), t) for a Dummy.
-        rep = {func_deriv: Dummy() for func_deriv in funcs_deriv}
-        eqs = [eq.subs(rep) for eq in eqs]
-        syms = [rep[func_deriv] for func_deriv in funcs_deriv]
+        syms = [func.diff(t, o) for func in funcs]
 
         # Ai is the matrix for X(t).diff(t, o)
         # eqs is minus the remainder of the equations.
@@ -697,7 +690,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     Explanation
     ===========
 
-    This solver solves the system of ODEs of the follwing form:
+    This solver solves the system of ODEs of the following form:
 
     .. math::
         X'(t) = A(t) X(t) +  b(t)
@@ -882,13 +875,13 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
-        or the antiderivative, if passed, aren't a matrix or
+        or the antiderivative, if passed, are not a matrix or
         do not have correct dimensions
     NonSquareMatrixError
-        When the coefficient matrix or its antiderivative, if passed isn't a square
-        matrix
+        When the coefficient matrix or its antiderivative, if passed is not a
+        square matrix
     NotImplementedError
-        If the coefficient matrix doesn't have a commutative antiderivative
+        If the coefficient matrix does not have a commutative antiderivative
 
     See Also
     ========
@@ -945,9 +938,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     n = A.rows
 
     # constants = numbered_symbols(prefix='C', cls=Dummy, start=const_idx+1)
-    Cvect = Matrix(list(Dummy() for _ in range(n)))
+    Cvect = Matrix([Dummy() for _ in range(n)])
 
-    if any(type == typ for typ in ["type2", "type4", "type6"]) and b is None:
+    if b is None and any(type == typ for typ in ["type2", "type4", "type6"]):
         b = zeros(n, 1)
 
     is_transformed = tau is not None
@@ -973,6 +966,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
+    intx_wrtt = lambda x: Integral(x, t) if x else 0
     if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
@@ -980,8 +974,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
-
+            Jinv = J.subs(t, -t)
+            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(intx_wrtt) + Cvect)
     else:
         if B is None:
             B, _ = _is_commutative_anti_derivative(A, t)
@@ -989,7 +983,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type == "type3":
             sol_vector = B.exp() * Cvect
         else:
-            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(intx_wrtt) + Cvect)
 
     if is_transformed:
         sol_vector = sol_vector.subs(t, tau)
@@ -1814,7 +1808,7 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     Here, $A2$ is the coefficient matrix for the vector $X''$ and $b$ is the non-homogeneous
     term.
 
-    Default value for `b` is None but if `A1` and `A0` are passed and `b` isn't passed, then the
+    Default value for `b` is None but if `A1` and `A0` are passed and `b` is not passed, then the
     system will be assumed homogeneous.
 
     """
@@ -1888,7 +1882,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
         t_ = Symbol('{}_'.format(t))
         new_funcs = [Function(Dummy('{}_'.format(f.func.__name__)))(t_) for f in funcs]
         max_order = max(sys_order[func] for func in funcs)
-        subs_dict = {func: new_func for func, new_func in zip(funcs, new_funcs)}
+        subs_dict = dict(zip(funcs, new_funcs))
         subs_dict[t] = exp(t_)
 
         free_function = Function(Dummy())
@@ -1991,7 +1985,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     5. Any implicit system which can be divided into system of ODEs which is of the above 4 forms
     6. Any higher order linear system of ODEs that can be reduced to one of the 5 forms of systems described above.
 
-    The types of systems described above aren't limited by the number of equations, i.e. this
+    The types of systems described above are not limited by the number of equations, i.e. this
     function can solve the above types irrespective of the number of equations in the system passed.
     But, the bigger the system, the more time it will take to solve the system.
 
@@ -2016,11 +2010,11 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     doit : Boolean
         Evaluate the solutions if True. Default value is True. Can be
         set to false if the integral evaluation takes too much time and/or
-        isn't required.
+        is not required.
     simplify: Boolean
         Simplify the solutions for the systems. Default value is True.
         Can be set to false if simplification takes too much time and/or
-        isn't required.
+        is not required.
 
     Examples
     ========
@@ -2063,7 +2057,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     NotImplementedError
         When the system of ODEs is not solvable by this function.
     ValueError
-        When the parameters passed aren't in the required form.
+        When the parameters passed are not in the required form.
 
     """
     from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
@@ -2096,7 +2090,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if t is not None and not isinstance(t, Symbol):
         raise ValueError(filldedent('''
-            The indepedent variable must be of type Symbol
+            The independent variable must be of type Symbol
         '''))
 
     if t is None:

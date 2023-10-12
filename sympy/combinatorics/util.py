@@ -18,8 +18,8 @@ def _base_ordering(base, degree):
     Parameters
     ==========
 
-    ``base`` : the base
-    ``degree`` : the degree of the associated permutation group
+    base : the base
+    degree : the degree of the associated permutation group
 
     Returns
     =======
@@ -30,7 +30,7 @@ def _base_ordering(base, degree):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _base_ordering
     >>> S = SymmetricGroup(4)
     >>> S.schreier_sims()
@@ -81,7 +81,7 @@ def _check_cycles_alt_sym(perm):
     ========
 
     >>> from sympy.combinatorics.util import _check_cycles_alt_sym
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics import Permutation
     >>> a = Permutation([[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], [11, 12]])
     >>> _check_cycles_alt_sym(a)
     False
@@ -101,7 +101,7 @@ def _check_cycles_alt_sym(perm):
     total_len = 0
     used = set()
     for i in range(n//2):
-        if not i in used and i < n//2 - total_len:
+        if i not in used and i < n//2 - total_len:
             current_len = 1
             used.add(i)
             j = i
@@ -129,18 +129,17 @@ def _distribute_gens_by_base(base, gens):
     Parameters
     ==========
 
-    ``base`` : a sequence of points in `\{0, 1, \dots, n-1\}`
-    ``gens`` : a list of elements of a permutation group of degree `n`.
+    base : a sequence of points in `\{0, 1, \dots, n-1\}`
+    gens : a list of elements of a permutation group of degree `n`.
 
     Returns
     =======
-
-    List of length `k`, where `k` is
-    the length of ``base``. The `i`-th entry contains those elements in
-    ``gens`` which fix the first `i` elements of ``base`` (so that the
-    `0`-th entry is equal to ``gens`` itself). If no element fixes the first
-    `i` elements of ``base``, the `i`-th element is set to a list containing
-    the identity element.
+    list
+        List of length `k`, where `k` is the length of *base*. The `i`-th entry
+        contains those elements in *gens* which fix the first `i` elements of
+        *base* (so that the `0`-th entry is equal to *gens* itself). If no
+        element fixes the first `i` elements of *base*, the `i`-th element is
+        set to a list containing the identity element.
 
     Examples
     ========
@@ -196,20 +195,19 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
     Parameters
     ==========
 
-    ``base`` - the base
-    ``strong_gens`` - the strong generators
-    ``transversals`` - basic transversals
-    ``basic_orbits`` - basic orbits
-    ``strong_gens_distr`` - strong generators distributed by membership in basic
-    stabilizers
+    base : the base
+    strong_gens : the strong generators
+    transversals : basic transversals
+    basic_orbits : basic orbits
+    strong_gens_distr : strong generators distributed by membership in basic stabilizers
 
     Returns
     =======
 
-    ``(transversals, basic_orbits, strong_gens_distr)`` where ``transversals``
-    are the basic transversals, ``basic_orbits`` are the basic orbits, and
-    ``strong_gens_distr`` are the strong generators distributed by membership
-    in basic stabilizers.
+    (transversals, basic_orbits, strong_gens_distr)
+        where *transversals* are the basic transversals, *basic_orbits* are the
+        basic orbits, and *strong_gens_distr* are the strong generators distributed
+        by membership in basic stabilizers.
 
     Examples
     ========
@@ -262,13 +260,12 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     Parameters
     ==========
 
-    ``base`` - The base.
-    ``strong_gens_distr`` - Strong generators distributed by membership in basic
-    stabilizers.
-    ``transversals_only`` - bool
+    base : The base.
+    strong_gens_distr : Strong generators distributed by membership in basic stabilizers.
+    transversals_only : bool, default: False
         A flag switching between returning only the
         transversals and both orbits and transversals.
-    ``slp`` -
+    slp : bool, default: False
         If ``True``, return a list of dictionaries containing the
         generator presentations of the elements of the transversals,
         i.e. the list of indices of generators from ``strong_gens_distr[i]``
@@ -277,7 +274,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _distribute_gens_by_base
     >>> S = SymmetricGroup(3)
     >>> S.schreier_sims()
@@ -319,11 +316,10 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     Parameters
     ==========
 
-    ``base`` - a base
-    ``strong_gens`` - a strong generating set relative to ``base``
-    ``basic_orbits`` - basic orbits
-    ``strong_gens_distr`` - strong generators distributed by membership in basic
-    stabilizers
+    base : a base
+    strong_gens : a strong generating set relative to *base*
+    basic_orbits : basic orbits
+    strong_gens_distr : strong generators distributed by membership in basic stabilizers
 
     Returns
     =======
@@ -334,7 +330,7 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import _remove_gens
     >>> from sympy.combinatorics.testutil import _verify_bsgs
     >>> S = SymmetricGroup(15)
@@ -398,7 +394,7 @@ def _strip(g, base, orbits, transversals):
 
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
-    doesn't end with the identity element.
+    does not end with the identity element.
 
     The argument ``transversals`` is a list of dictionaries that provides
     transversal elements for the orbits ``orbits``.
@@ -406,21 +402,21 @@ def _strip(g, base, orbits, transversals):
     Parameters
     ==========
 
-    ``g`` - permutation to be decomposed
-    ``base`` - sequence of points
-    ``orbits`` - a list in which the ``i``-th entry is an orbit of ``base[i]``
-    under some subgroup of the pointwise stabilizer of `
-    `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
-    in this function since the only information we need is encoded in the orbits
-    and transversals
-    ``transversals`` - a list of orbit transversals associated with the orbits
-    ``orbits``.
+    g : permutation to be decomposed
+    base : sequence of points
+    orbits : list
+        A list in which the ``i``-th entry is an orbit of ``base[i]``
+        under some subgroup of the pointwise stabilizer of `
+        `base[0], base[1], ..., base[i - 1]``. The groups themselves are implicit
+        in this function since the only information we need is encoded in the orbits
+        and transversals
+    transversals : list
+        A list of orbit transversals associated with the orbits *orbits*.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
-    >>> from sympy.combinatorics.permutations import Permutation
+    >>> from sympy.combinatorics import Permutation, SymmetricGroup
     >>> from sympy.combinatorics.util import _strip
     >>> S = SymmetricGroup(5)
     >>> S.schreier_sims()
@@ -504,13 +500,12 @@ def _strong_gens_from_distr(strong_gens_distr):
     Parameters
     ==========
 
-    ``strong_gens_distr`` - strong generators distributed by membership in basic
-    stabilizers
+    strong_gens_distr : strong generators distributed by membership in basic stabilizers
 
     Examples
     ========
 
-    >>> from sympy.combinatorics.named_groups import SymmetricGroup
+    >>> from sympy.combinatorics import SymmetricGroup
     >>> from sympy.combinatorics.util import (_strong_gens_from_distr,
     ... _distribute_gens_by_base)
     >>> S = SymmetricGroup(3)

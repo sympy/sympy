@@ -1,11 +1,19 @@
 """ Tools for doing common subexpression elimination.
 """
+from collections import defaultdict
+
 from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol
+from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
+                            SparseMatrix, ImmutableSparseMatrix)
+from sympy.matrices.expressions import (MatrixExpr, MatrixSymbol, MatMul,
+                                        MatAdd, MatPow, Inverse)
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.rootoftools import RootOf
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
 
@@ -265,7 +273,6 @@ class FuncArgTracker:
         ``argset``. Entries have at least 2 items in common.  All keys have
         value at least ``min_func_i``.
         """
-        from collections import defaultdict
         count_map = defaultdict(lambda: 0)
         if not argset:
             return count_map
@@ -478,13 +485,13 @@ def opt_cse(exprs, order='canonical'):
     >>> print((k, v.as_unevaluated_basic()))
     (x**(-2), 1/(x**2))
     """
-    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
-    opt_subs = dict()
+    opt_subs = {}
 
     adds = OrderedSet()
     muls = OrderedSet()
 
     seen_subexp = set()
+    collapsible_subexp = set()
 
     def _find_opts(expr):
 
@@ -504,18 +511,35 @@ def opt_cse(exprs, order='canonical'):
 
         list(map(_find_opts, expr.args))
 
-        if expr.could_extract_minus_sign():
-            neg_expr = -expr
+        if not isinstance(expr, MatrixExpr) and expr.could_extract_minus_sign():
+            # XXX -expr does not always work rigorously for some expressions
+            # containing UnevaluatedExpr.
+            # https://github.com/sympy/sympy/issues/24818
+            if isinstance(expr, Add):
+                neg_expr = Add(*(-i for i in expr.args))
+            else:
+                neg_expr = -expr
+
             if not neg_expr.is_Atom:
                 opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
                 seen_subexp.add(neg_expr)
                 expr = neg_expr
 
         if isinstance(expr, (Mul, MatMul)):
-            muls.add(expr)
+            if len(expr.args) == 1:
+                collapsible_subexp.add(expr)
+            else:
+                muls.add(expr)
 
         elif isinstance(expr, (Add, MatAdd)):
-            adds.add(expr)
+            if len(expr.args) == 1:
+                collapsible_subexp.add(expr)
+            else:
+                adds.add(expr)
+
+        elif isinstance(expr, Inverse):
+            # Do not want to treat `Inverse` as a `MatPow`
+            pass
 
         elif isinstance(expr, (Pow, MatPow)):
             base, exp = expr.base, expr.exp
@@ -525,6 +549,12 @@ def opt_cse(exprs, order='canonical'):
     for e in exprs:
         if isinstance(e, (Basic, Unevaluated)):
             _find_opts(e)
+
+    # Handle collapsing of multinary operations with single arguments
+    edges = [(s, s.args[0]) for s in collapsible_subexp
+             if s.args[0] in collapsible_subexp]
+    for e in reversed(topological_sort((collapsible_subexp, edges))):
+        opt_subs[e] = opt_subs.get(e.args[0], e.args[0])
 
     # split muls into commutative
     commutative_muls = OrderedSet()
@@ -536,7 +566,10 @@ def opt_cse(exprs, order='canonical'):
                 if c_mul == 1:
                     new_obj = m.func(*nc)
                 else:
-                    new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
+                    if isinstance(m, MatMul):
+                        new_obj = m.func(c_mul, *nc, evaluate=False)
+                    else:
+                        new_obj = m.func(c_mul, m.func(*nc), evaluate=False)
                 opt_subs[m] = new_obj
             if len(c) > 1:
                 commutative_muls.add(c_mul)
@@ -566,11 +599,8 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     ignore : iterable of Symbols
         Substitutions containing any Symbol from ``ignore`` will be ignored.
     """
-    from sympy.matrices.expressions import MatrixExpr, MatrixSymbol, MatMul, MatAdd
-    from sympy.polys.rootoftools import RootOf
-
     if opt_subs is None:
-        opt_subs = dict()
+        opt_subs = {}
 
     ## Find repeated sub-expressions
 
@@ -586,9 +616,12 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         if isinstance(expr, RootOf):
             return
 
-        if isinstance(expr, Basic) and (expr.is_Atom or expr.is_Order):
+        if isinstance(expr, Basic) and (
+                expr.is_Atom or
+                expr.is_Order or
+                isinstance(expr, (MatrixSymbol, MatrixElement))):
             if expr.is_Symbol:
-                excluded_symbols.add(expr)
+                excluded_symbols.add(expr.name)
             return
 
         if iterable(expr):
@@ -619,11 +652,11 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     ## Rebuild tree
 
     # Remove symbols from the generator that conflict with names in the expressions.
-    symbols = (symbol for symbol in symbols if symbol not in excluded_symbols)
+    symbols = (_ for _ in symbols if _.name not in excluded_symbols)
 
     replacements = []
 
-    subs = dict()
+    subs = {}
 
     def _rebuild(expr):
         if not isinstance(expr, (Basic, Unevaluated)):
@@ -633,7 +666,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
             return expr
 
         if iterable(expr):
-            new_args = [_rebuild(arg) for arg in expr]
+            new_args = [_rebuild(arg) for arg in expr.args]
             return expr.func(*new_args)
 
         if expr in subs:
@@ -772,9 +805,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> cse(x, list=False)
     ([], x)
     """
-    from sympy.matrices import (MatrixBase, Matrix, ImmutableMatrix,
-                                SparseMatrix, ImmutableSparseMatrix)
-
     if not list:
         return _cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,

@@ -9,10 +9,12 @@ complete source code files.
 
 """
 
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from re import search
@@ -56,7 +58,7 @@ class JuliaCodePrinter(CodePrinter):
         'not': '!',
     }
 
-    _default_settings = {
+    _default_settings: dict[str, Any] = {
         'order': None,
         'full_prec': 'auto',
         'precision': 17,
@@ -65,7 +67,7 @@ class JuliaCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }  # type: tDict[str, Any]
+    }
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
@@ -153,11 +155,12 @@ class JuliaCodePrinter(CodePrinter):
                     if len(item.args[0].args) != 1 and isinstance(item.base, Mul):   # To avoid situations like #14160
                         pow_paren.append(item)
                     b.append(Pow(item.base, -item.exp))
-            elif item.is_Rational and item is not S.Infinity:
-                if item.p != 1:
-                    a.append(Rational(item.p))
-                if item.q != 1:
-                    b.append(Rational(item.q))
+            elif item.is_Rational and item is not S.Infinity and item.p == 1:
+                # Save the Rational type in julia Unless the numerator is 1.
+                # For example:
+                # julia_code(Rational(3, 7)*x) --> (3 // 7) * x
+                # julia_code(x/3) --> x / 3 but not x * (1 // 3)
+                b.append(Rational(item.q))
             else:
                 a.append(item)
 
@@ -177,18 +180,17 @@ class JuliaCodePrinter(CodePrinter):
             r = a_str[0]
             for i in range(1, len(a)):
                 mulsym = '*' if a[i-1].is_number else '.*'
-                r = r + mulsym + a_str[i]
+                r = "%s %s %s" % (r, mulsym, a_str[i])
             return r
 
         if not b:
             return sign + multjoin(a, a_str)
         elif len(b) == 1:
             divsym = '/' if b[0].is_number else './'
-            return sign + multjoin(a, a_str) + divsym + b_str[0]
+            return "%s %s %s" % (sign+multjoin(a, a_str), divsym, b_str[0])
         else:
             divsym = '/' if all(bi.is_number for bi in b) else './'
-            return (sign + multjoin(a, a_str) +
-                    divsym + "(%s)" % multjoin(b, b_str))
+            return "%s %s (%s)" % (sign + multjoin(a, a_str), divsym, multjoin(b, b_str))
 
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -201,24 +203,24 @@ class JuliaCodePrinter(CodePrinter):
 
         PREC = precedence(expr)
 
-        if expr.exp == S.Half:
+        if equal_valued(expr.exp, 0.5):
             return "sqrt(%s)" % self._print(expr.base)
 
         if expr.is_commutative:
-            if expr.exp == -S.Half:
+            if equal_valued(expr.exp, -0.5):
                 sym = '/' if expr.base.is_number else './'
-                return "1" + sym + "sqrt(%s)" % self._print(expr.base)
-            if expr.exp == -S.One:
+                return "1 %s sqrt(%s)" % (sym, self._print(expr.base))
+            if equal_valued(expr.exp, -1):
                 sym = '/' if expr.base.is_number else './'
-                return "1" + sym + "%s" % self.parenthesize(expr.base, PREC)
+                return  "1 %s %s" % (sym, self.parenthesize(expr.base, PREC))
 
-        return '%s%s%s' % (self.parenthesize(expr.base, PREC), powsymbol,
+        return '%s %s %s' % (self.parenthesize(expr.base, PREC), powsymbol,
                            self.parenthesize(expr.exp, PREC))
 
 
     def _print_MatPow(self, expr):
         PREC = precedence(expr)
-        return '%s^%s' % (self.parenthesize(expr.base, PREC),
+        return '%s ^ %s' % (self.parenthesize(expr.base, PREC),
                           self.parenthesize(expr.exp, PREC))
 
 
@@ -395,7 +397,7 @@ class JuliaCodePrinter(CodePrinter):
         return "eye(%s)" % self._print(expr.shape[0])
 
     def _print_HadamardProduct(self, expr):
-        return '.*'.join([self.parenthesize(arg, precedence(expr))
+        return ' .* '.join([self.parenthesize(arg, precedence(expr))
                           for arg in expr.args])
 
     def _print_HadamardPower(self, expr):
@@ -405,7 +407,12 @@ class JuliaCodePrinter(CodePrinter):
             self.parenthesize(expr.exp, PREC)
             ])
 
-    # Note: as of 2015, Julia doesn't have spherical Bessel functions
+    def _print_Rational(self, expr):
+        if expr.q == 1:
+            return str(expr.p)
+        return "%s // %s" % (expr.p, expr.q)
+
+    # Note: as of 2022, Julia doesn't have spherical Bessel functions
     def _print_jn(self, expr):
         from sympy.functions import sqrt, besselj
         x = expr.argument
@@ -455,6 +462,23 @@ class JuliaCodePrinter(CodePrinter):
                 if i == len(expr.args) - 1:
                     lines.append("end")
             return "\n".join(lines)
+
+    def _print_MatMul(self, expr):
+        c, m = expr.as_coeff_mmul()
+
+        sign = ""
+        if c.is_number:
+            re, im = c.as_real_imag()
+            if im.is_zero and re.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+            elif re.is_zero and im.is_negative:
+                expr = _keep_coeff(-c, m)
+                sign = "-"
+
+        return sign + ' * '.join(
+            (self.parenthesize(arg, precedence(expr)) for arg in expr.args)
+        )
 
 
     def indent_code(self, code):
@@ -530,19 +554,19 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import julia_code, symbols, sin, pi
     >>> x = symbols('x')
     >>> julia_code(sin(x).series(x).removeO())
-    'x.^5/120 - x.^3/6 + x'
+    'x .^ 5 / 120 - x .^ 3 / 6 + x'
 
     >>> from sympy import Rational, ceiling
     >>> x, y, tau = symbols("x, y, tau")
     >>> julia_code((2*tau)**Rational(7, 2))
-    '8*sqrt(2)*tau.^(7/2)'
+    '8 * sqrt(2) * tau .^ (7 // 2)'
 
     Note that element-wise (Hadamard) operations are used by default between
     symbols.  This is because its possible in Julia to write "vectorized"
     code.  It is harmless if the values are scalars.
 
     >>> julia_code(sin(pi*x*y), assign_to="s")
-    's = sin(pi*x.*y)'
+    's = sin(pi * x .* y)'
 
     If you need a matrix product "*" or matrix power "^", you can specify the
     symbol as a ``MatrixSymbol``.
@@ -551,7 +575,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> n = Symbol('n', integer=True, positive=True)
     >>> A = MatrixSymbol('A', n, n)
     >>> julia_code(3*pi*A**3)
-    '(3*pi)*A^3'
+    '(3 * pi) * A ^ 3'
 
     This class uses several rules to decide which symbol to use a product.
     Pure numbers use "*", Symbols use ".*" and MatrixSymbols use "*".
@@ -562,7 +586,7 @@ def julia_code(expr, assign_to=None, **settings):
     while a human programmer might write "(x^2*y)*A^3", we generate:
 
     >>> julia_code(x**2*y*A**3)
-    '(x.^2.*y)*A^3'
+    '(x .^ 2 .* y) * A ^ 3'
 
     Matrices are supported using Julia inline notation.  When using
     ``assign_to`` with matrices, the name can be specified either as a string
@@ -571,7 +595,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> from sympy import Matrix, MatrixSymbol
     >>> mat = Matrix([[x**2, sin(x), ceiling(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 sin(x) ceil(x)]'
+    'A = [x .^ 2 sin(x) ceil(x)]'
 
     ``Piecewise`` expressions are implemented with logical masking by default.
     Alternatively, you can pass "inline=False" to use if-else conditionals.
@@ -589,7 +613,7 @@ def julia_code(expr, assign_to=None, **settings):
 
     >>> mat = Matrix([[x**2, pw, sin(x)]])
     >>> julia_code(mat, assign_to='A')
-    'A = [x.^2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
+    'A = [x .^ 2 ((x > 0) ? (x + 1) : (x)) sin(x)]'
 
     Custom printing can be defined for certain types by passing a dictionary of
     "type" : "function" to the ``user_functions`` kwarg.  Alternatively, the
@@ -621,7 +645,7 @@ def julia_code(expr, assign_to=None, **settings):
     >>> i = Idx('i', len_y-1)
     >>> e = Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
     >>> julia_code(e.rhs, assign_to=e.lhs, contract=False)
-    'Dy[i] = (y[i + 1] - y[i])./(t[i + 1] - t[i])'
+    'Dy[i] = (y[i + 1] - y[i]) ./ (t[i + 1] - t[i])'
     """
     return JuliaCodePrinter(settings).doprint(expr, assign_to)
 

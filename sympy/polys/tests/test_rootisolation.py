@@ -1,8 +1,12 @@
 """Tests for real and complex root isolation and refinement algorithms. """
 
 from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ, QQ, EX
-from sympy.polys.polyerrors import DomainError, RefinementFailed
+from sympy.polys.domains import ZZ, QQ, ZZ_I, EX
+from sympy.polys.polyerrors import DomainError, RefinementFailed, PolynomialError
+from sympy.polys.rootisolation import (
+    dup_cauchy_upper_bound, dup_cauchy_lower_bound,
+    dup_mignotte_sep_bound_squared,
+)
 from sympy.testing.pytest import raises
 
 def test_dup_sturm():
@@ -13,6 +17,31 @@ def test_dup_sturm():
 
     f = x**3 - 2*x**2 + 3*x - 5
     assert R.dup_sturm(f) == [f, 3*x**2 - 4*x + 3, -QQ(10,9)*x + QQ(13,3), -QQ(3303,100)]
+
+
+def test_dup_cauchy_upper_bound():
+    raises(PolynomialError, lambda: dup_cauchy_upper_bound([], QQ))
+    raises(PolynomialError, lambda: dup_cauchy_upper_bound([QQ(1)], QQ))
+    raises(DomainError, lambda: dup_cauchy_upper_bound([ZZ_I(1), ZZ_I(1)], ZZ_I))
+
+    assert dup_cauchy_upper_bound([QQ(1), QQ(0), QQ(0)], QQ) == QQ.zero
+    assert dup_cauchy_upper_bound([QQ(1), QQ(0), QQ(-2)], QQ) == QQ(3)
+
+
+def test_dup_cauchy_lower_bound():
+    raises(PolynomialError, lambda: dup_cauchy_lower_bound([], QQ))
+    raises(PolynomialError, lambda: dup_cauchy_lower_bound([QQ(1)], QQ))
+    raises(PolynomialError, lambda: dup_cauchy_lower_bound([QQ(1), QQ(0), QQ(0)], QQ))
+    raises(DomainError, lambda: dup_cauchy_lower_bound([ZZ_I(1), ZZ_I(1)], ZZ_I))
+
+    assert dup_cauchy_lower_bound([QQ(1), QQ(0), QQ(-2)], QQ) == QQ(2, 3)
+
+
+def test_dup_mignotte_sep_bound_squared():
+    raises(PolynomialError, lambda: dup_mignotte_sep_bound_squared([], QQ))
+    raises(PolynomialError, lambda: dup_mignotte_sep_bound_squared([QQ(1)], QQ))
+
+    assert dup_mignotte_sep_bound_squared([QQ(1), QQ(0), QQ(-2)], QQ) == QQ(3, 5)
 
 
 def test_dup_refine_real_root():

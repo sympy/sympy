@@ -40,7 +40,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sec, sin, tan)
@@ -59,7 +59,7 @@ from sympy.solvers.ode.single import (FirstLinear, ODEMatchError,
 
 from sympy.solvers.ode.subscheck import checkodesol
 
-from sympy.testing.pytest import raises, slow, ON_TRAVIS
+from sympy.testing.pytest import raises, slow, ON_CI
 import traceback
 
 
@@ -274,7 +274,7 @@ def _test_particular_example(our_hint, ode_example, solver_flag=False):
             if len(expected_sol) == 1:
                 expected_checkodesol = (True, 0)
 
-            if not (checkodesol_too_slow and ON_TRAVIS):
+            if not (checkodesol_too_slow and ON_CI):
                 if not checkodesol_XFAIL:
                     if checkodesol(eq, dsolve_sol, func, solve_for_func=False) != expected_checkodesol:
                         result['unsolve_list'] = example
@@ -442,6 +442,7 @@ def test_2nd_nonlinear_autonomous_conserved_integral():
     assert checkodesol(eq, [s.doit() for s in solved]) == [(True, 0), (True, 0)]
 
 
+@slow
 def test_2nd_linear_bessel_equation():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel)
 
@@ -511,6 +512,7 @@ def test_slow_examples_separable():
     _ode_solver_test(_get_examples_ode_sol_separable, run_slow_test=True)
 
 
+@slow
 def test_nth_linear_constant_coeff_undetermined_coefficients():
     #issue-https://github.com/sympy/sympy/issues/5787
     # This test case is to show the classification of imaginary constants under
@@ -570,6 +572,7 @@ def test_almost_linear():
    _ode_solver_test(_get_examples_ode_sol_almost_linear)
 
 
+@slow
 def test_Liouville_ODE():
     hint = 'Liouville'
     not_Liouville1 = classify_ode(diff(f(x), x)/x + f(x)*diff(f(x), x, x)/2 -
@@ -612,6 +615,7 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_undetermined_coefficients():
     _ode_solver_test(_get_examples_ode_sol_euler_undetermined_coeff)
 
 
+@slow
 def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     x, t = symbols('x, t')
     a, b, c, d = symbols('a, b, c, d', integer=True)
@@ -949,8 +953,8 @@ def _get_examples_ode_sol_factorable():
     'fact_06': {
         'eq': (f(x).diff(x, 2)-exp(f(x)))*f(x).diff(x),
         'sol': [
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
-            Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
+            Eq(f(x), log(-C1/(cos(sqrt(-C1)*(C2 + x)) + 1))),
+            Eq(f(x), log(-C1/(cos(sqrt(-C1)*(C2 - x)) + 1))),
             Eq(f(x), C1)
         ],
         'slow': True,
@@ -1632,15 +1636,15 @@ def _get_examples_ode_sol_nth_linear_undetermined_coefficients():
     # https://github.com/sympy/sympy/issues/12623
     'undet_38': {
         'eq': Eq( u(t).diff(t,t) + R /L*u(t).diff(t) + 1/(L*C)*u(t), alpha),
-        'sol': [Eq(u(t), C*L*alpha + C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
-        + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))],
+        'sol': [Eq(u(t), C*L*alpha + C2*exp(-t*(R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        + C1*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L)))],
         'func': u(t)
     },
 
     'undet_39': {
         'eq': Eq( L*C*u(t).diff(t,t) + R*C*u(t).diff(t) + u(t), E_0*exp(I*omega*t) ),
-        'sol': [Eq(u(t), C1*exp(t*(-R - sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
-        + C2*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        'sol': [Eq(u(t), C2*exp(-t*(R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
+        + C1*exp(t*(-R + sqrt(C*R**2 - 4*L)/sqrt(C))/(2*L))
         - E_0*exp(I*omega*t)/(C*L*omega**2 - I*C*R*omega - 1))],
         'func': u(t),
     },
@@ -2479,13 +2483,13 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
 
     'lin_const_coeff_hom_06': {
         'eq': Eq(f(x).diff(x, 2) + 2*f(x).diff(x) - f(x), 0),
-        'sol': [Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(x*(-sqrt(2) - 1)))],
+        'sol': [Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(-x*(sqrt(2) + 1)))],
         'slow': True,
     },
 
     'lin_const_coeff_hom_07': {
         'eq': diff(f(x), x, 3) + diff(f(x), x, 2) - 10*diff(f(x), x) - 6*f(x),
-        'sol': [Eq(f(x), C1*exp(3*x) + C2*exp(x*(-2 - sqrt(2))) + C3*exp(x*(-2 + sqrt(2))))],
+        'sol': [Eq(f(x), C1*exp(3*x) + C3*exp(-x*(2 + sqrt(2))) + C2*exp(x*(-2 + sqrt(2))))],
         'slow': True,
     },
 
@@ -2855,7 +2859,8 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
 
     '1st_homogeneous_coeff_best_08': {
         'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),
-        'sol': [Eq(log(x), C1 - log(f(x)/x) + acosh(f(x)/x))],
+        'sol': [Eq(f(x), -sqrt(-x*exp(2*C1)/(x - 2*exp(C1)))), Eq(f(x), sqrt(-x*exp(2*C1)/(x - 2*exp(C1))))],
+        'checkodesol_XFAIL': True  # solutions are valid in a range
     },
     }
     }

@@ -1,5 +1,6 @@
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
-from sympy.functions import binomial, sin, cos, Piecewise
+from sympy.functions import binomial, sin, cos, Piecewise, Abs
+from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -51,7 +52,7 @@ def trigintegrate(f, x, conds='piecewise'):
     References
     ==========
 
-    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    .. [1] https://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========
@@ -59,7 +60,6 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    from sympy.integrals.integrals import integrate
     pat, a, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')
@@ -134,8 +134,8 @@ def trigintegrate(f, x, conds='piecewise'):
     # then S   is integrated with recursive formula
 
     # take largest n or m -- to choose simplest substitution
-    n_ = (abs(n) > abs(m))
-    m_ = (abs(m) > abs(n))
+    n_ = (Abs(n) > Abs(m))
+    m_ = (Abs(m) > Abs(n))
     res = S.Zero
 
     if n_:
@@ -143,7 +143,7 @@ def trigintegrate(f, x, conds='piecewise'):
         # C   = (1 - S )  = sum(i, (-) * B(k, i) * S  )
         if m > 0:
             for i in range(0, m//2 + 1):
-                res += ((-1)**i * binomial(m//2, i) *
+                res += (S.NegativeOne**i * binomial(m//2, i) *
                         _sin_pow_integrate(n + 2*i, x))
 
         elif m == 0:
@@ -189,7 +189,7 @@ def trigintegrate(f, x, conds='piecewise'):
             #
 
             for i in range(0, n//2 + 1):
-                res += ((-1)**i * binomial(n//2, i) *
+                res += (S.NegativeOne**i * binomial(n//2, i) *
                         _cos_pow_integrate(m + 2*i, x))
 
         elif n == 0:

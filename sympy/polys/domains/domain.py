@@ -1,17 +1,17 @@
 """Implementation of :class:`Domain` class. """
 
+from __future__ import annotations
+from typing import Any
 
-from typing import Any, Optional, Type
-
+from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
-from sympy.core.sorting import default_sort_key, ordered
-from sympy.external.gmpy import HAS_GMPY
+from sympy.core.sorting import ordered
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import public
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import is_sequence
 
 
@@ -187,7 +187,7 @@ class Domain:
 
     """
 
-    dtype = None        # type: Optional[Type]
+    dtype: type | None = None
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
     >>> from sympy import ZZ, QQ, Symbol
@@ -210,7 +210,7 @@ class Domain:
     of_type
     """
 
-    zero = None         # type: Optional[Any]
+    zero: Any = None
     """The zero element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -226,7 +226,7 @@ class Domain:
     one
     """
 
-    one = None          # type: Optional[Any]
+    one: Any = None
     """The one element of the :py:class:`~.Domain`:
 
     >>> from sympy import QQ
@@ -353,18 +353,8 @@ class Domain:
 
     has_CharacteristicZero = False
 
-    rep = None  # type: Optional[str]
-    alias = None  # type: Optional[str]
-
-    @property  # type: ignore
-    @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
-    def has_Field(self):
-        return self.is_Field
-
-    @property  # type: ignore
-    @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
-    def has_Ring(self):
-        return self.is_Ring
+    rep: str | None = None
+    alias: str | None = None
 
     def __init__(self):
         raise NotImplementedError
@@ -432,14 +422,11 @@ class Domain:
         if isinstance(element, int):
             return self.convert_from(ZZ(element), ZZ)
 
-        if HAS_GMPY:
-            integers = ZZ
-            if isinstance(element, integers.tp):
-                return self.convert_from(element, integers)
-
-            rationals = QQ
-            if isinstance(element, rationals.tp):
-                return self.convert_from(element, rationals)
+        if GROUND_TYPES != 'python':
+            if isinstance(element, ZZ.tp):
+                return self.convert_from(element, ZZ)
+            if isinstance(element, QQ.tp):
+                return self.convert_from(element, QQ)
 
         if isinstance(element, float):
             parent = RealField(tol=False)
@@ -609,7 +596,7 @@ class Domain:
         raise NotImplementedError
 
     def sum(self, args):
-        return sum(args)
+        return sum(args, start=self.zero)
 
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to ``dtype``. """
@@ -686,6 +673,39 @@ class Domain:
 
         return K0.unify(K1)
 
+    def unify_composite(K0, K1):
+        """Unify two domains where at least one is composite."""
+        K0_ground = K0.dom if K0.is_Composite else K0
+        K1_ground = K1.dom if K1.is_Composite else K1
+
+        K0_symbols = K0.symbols if K0.is_Composite else ()
+        K1_symbols = K1.symbols if K1.is_Composite else ()
+
+        domain = K0_ground.unify(K1_ground)
+        symbols = _unify_gens(K0_symbols, K1_symbols)
+        order = K0.order if K0.is_Composite else K1.order
+
+        # E.g. ZZ[x].unify(QQ.frac_field(x)) -> ZZ.frac_field(x)
+        if ((K0.is_FractionField and K1.is_PolynomialRing or
+             K1.is_FractionField and K0.is_PolynomialRing) and
+             (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
+             and domain.has_assoc_Ring):
+            domain = domain.get_ring()
+
+        if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
+            cls = K0.__class__
+        else:
+            cls = K1.__class__
+
+        # Here cls might be PolynomialRing, FractionField, GlobalPolynomialRing
+        # (dense/old Polynomialring) or dense/old FractionField.
+
+        from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
+        if cls == GlobalPolynomialRing:
+            return cls(domain, symbols)
+
+        return cls(domain, symbols, order)
+
     def unify(K0, K1, symbols=None):
         """
         Construct a minimal domain that contains elements of ``K0`` and ``K1``.
@@ -708,6 +728,19 @@ class Domain:
 
         if K0 == K1:
             return K0
+
+        if not (K0.has_CharacteristicZero and K1.has_CharacteristicZero):
+            # Reject unification of domains with different characteristics.
+            if K0.characteristic() != K1.characteristic():
+                raise UnificationFailed("Cannot unify %s with %s" % (K0, K1))
+
+            # We do not get here if K0 == K1. The two domains have the same
+            # characteristic but are unequal so at least one is composite and
+            # we are unifying something like GF(3).unify(GF(3)[x]).
+            return K0.unify_composite(K1)
+
+        # From here we know both domains have characteristic zero and it can be
+        # acceptable to fall back on EX.
 
         if K0.is_EXRAW:
             return K0
@@ -735,32 +768,7 @@ class Domain:
                 return K0.set_domain(K1)
 
         if K0.is_Composite or K1.is_Composite:
-            K0_ground = K0.dom if K0.is_Composite else K0
-            K1_ground = K1.dom if K1.is_Composite else K1
-
-            K0_symbols = K0.symbols if K0.is_Composite else ()
-            K1_symbols = K1.symbols if K1.is_Composite else ()
-
-            domain = K0_ground.unify(K1_ground)
-            symbols = _unify_gens(K0_symbols, K1_symbols)
-            order = K0.order if K0.is_Composite else K1.order
-
-            if ((K0.is_FractionField and K1.is_PolynomialRing or
-                 K1.is_FractionField and K0.is_PolynomialRing) and
-                 (not K0_ground.is_Field or not K1_ground.is_Field) and domain.is_Field
-                 and domain.has_assoc_Ring):
-                domain = domain.get_ring()
-
-            if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
-                cls = K0.__class__
-            else:
-                cls = K1.__class__
-
-            from sympy.polys.domains.old_polynomialring import GlobalPolynomialRing
-            if cls == GlobalPolynomialRing:
-                return cls(domain, symbols)
-
-            return cls(domain, symbols, order)
+            return K0.unify_composite(K1)
 
         def mkinexact(cls, K0, K1):
             prec = max(K0.precision, K1.precision)
@@ -822,14 +830,12 @@ class Domain:
         if K1.is_IntegerRing:
             return K1
 
-        if K0.is_FiniteField and K1.is_FiniteField:
-            return K0.__class__(max(K0.mod, K1.mod, key=default_sort_key))
-
         from sympy.polys.domains import EX
         return EX
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
+        # XXX: Remove this.
         return isinstance(other, Domain) and self.dtype == other.dtype
 
     def __ne__(self, other):
@@ -887,9 +893,93 @@ class Domain:
         from sympy.polys.domains.old_fractionfield import FractionField
         return FractionField(self, *symbols, **kwargs)
 
-    def algebraic_field(self, *extension):
+    def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
         raise DomainError("Cannot create algebraic field over %s" % self)
+
+    def alg_field_from_poly(self, poly, alias=None, root_index=-1):
+        r"""
+        Convenience method to construct an algebraic extension on a root of a
+        polynomial, chosen by root index.
+
+        Parameters
+        ==========
+
+        poly : :py:class:`~.Poly`
+            The polynomial whose root generates the extension.
+        alias : str, optional (default=None)
+            Symbol name for the generator of the extension.
+            E.g. "alpha" or "theta".
+        root_index : int, optional (default=-1)
+            Specifies which root of the polynomial is desired. The ordering is
+            as defined by the :py:class:`~.ComplexRootOf` class. The default of
+            ``-1`` selects the most natural choice in the common cases of
+            quadratic and cyclotomic fields (the square root on the positive
+            real or imaginary axis, resp. $\mathrm{e}^{2\pi i/n}$).
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, Poly
+        >>> from sympy.abc import x
+        >>> f = Poly(x**2 - 2)
+        >>> K = QQ.alg_field_from_poly(f)
+        >>> K.ext.minpoly == f
+        True
+        >>> g = Poly(8*x**3 - 6*x - 1)
+        >>> L = QQ.alg_field_from_poly(g, "alpha")
+        >>> L.ext.minpoly == g
+        True
+        >>> L.to_sympy(L([1, 1, 1]))
+        alpha**2 + alpha + 1
+
+        """
+        from sympy.polys.rootoftools import CRootOf
+        root = CRootOf(poly, root_index)
+        alpha = AlgebraicNumber(root, alias=alias)
+        return self.algebraic_field(alpha, alias=alias)
+
+    def cyclotomic_field(self, n, ss=False, alias="zeta", gen=None, root_index=-1):
+        r"""
+        Convenience method to construct a cyclotomic field.
+
+        Parameters
+        ==========
+
+        n : int
+            Construct the nth cyclotomic field.
+        ss : boolean, optional (default=False)
+            If True, append *n* as a subscript on the alias string.
+        alias : str, optional (default="zeta")
+            Symbol name for the generator.
+        gen : :py:class:`~.Symbol`, optional (default=None)
+            Desired variable for the cyclotomic polynomial that defines the
+            field. If ``None``, a dummy variable will be used.
+        root_index : int, optional (default=-1)
+            Specifies which root of the polynomial is desired. The ordering is
+            as defined by the :py:class:`~.ComplexRootOf` class. The default of
+            ``-1`` selects the root $\mathrm{e}^{2\pi i/n}$.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, latex
+        >>> K = QQ.cyclotomic_field(5)
+        >>> K.to_sympy(K([-1, 1]))
+        1 - zeta
+        >>> L = QQ.cyclotomic_field(7, True)
+        >>> a = L.to_sympy(L([-1, 1]))
+        >>> print(a)
+        1 - zeta7
+        >>> print(latex(a))
+        1 - \zeta_{7}
+
+        """
+        from sympy.polys.specialpolys import cyclotomic_poly
+        if ss:
+            alias += str(n)
+        return self.alg_field_from_poly(cyclotomic_poly(n, gen), alias=alias,
+                                        root_index=root_index)
 
     def inject(self, *symbols):
         """Inject generators into this domain. """
@@ -1029,12 +1119,20 @@ class Domain:
 
         Since the default :py:attr:`~.Domain.dtype` for :ref:`ZZ` is ``int``
         (or ``mpz``) division as ``a / b`` should not be used as it would give
-        a ``float``.
+        a ``float`` which is not a domain element.
 
-        >>> ZZ(4) / ZZ(2)
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
         2.0
-        >>> ZZ(5) / ZZ(2)
+        >>> ZZ(5) / ZZ(2) # doctest: +SKIP
         2.5
+
+        On the other hand with `SYMPY_GROUND_TYPES=flint` elements of :ref:`ZZ`
+        are ``flint.fmpz`` and division would raise an exception:
+
+        >>> ZZ(4) / ZZ(2) # doctest: +SKIP
+        Traceback (most recent call last):
+        ...
+        TypeError: unsupported operand type(s) for /: 'fmpz' and 'fmpz'
 
         Using ``/`` with :ref:`ZZ` will lead to incorrect results so
         :py:meth:`~.Domain.exquo` should be used instead.
@@ -1203,7 +1301,51 @@ class Domain:
         raise NotImplementedError
 
     def sqrt(self, a):
-        """Returns square root of ``a``. """
+        """Returns a (possibly inexact) square root of ``a``.
+
+        Explanation
+        ===========
+        There is no universal definition of "inexact square root" for all
+        domains. It is not recommended to implement this method for domains
+        other then :ref:`ZZ`.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def is_square(self, a):
+        """Returns whether ``a`` is a square in the domain.
+
+        Explanation
+        ===========
+        Returns ``True`` if there is an element ``b`` in the domain such that
+        ``b * b == a``, otherwise returns ``False``. For inexact domains like
+        :ref:`RR` and :ref:`CC`, a tiny difference in this equality can be
+        tolerated.
+
+        See also
+        ========
+        exsqrt
+        """
+        raise NotImplementedError
+
+    def exsqrt(self, a):
+        """Principal square root of a within the domain if ``a`` is square.
+
+        Explanation
+        ===========
+        The implementation of this method should return an element ``b`` in the
+        domain such that ``b * b == a``, or ``None`` if there is no such ``b``.
+        For inexact domains like :ref:`RR` and :ref:`CC`, a tiny difference in
+        this equality can be tolerated. The choice of a "principal" square root
+        should follow a consistent rule whenever possible.
+
+        See also
+        ========
+        sqrt, is_square
+        """
         raise NotImplementedError
 
     def evalf(self, a, prec=None, **options):

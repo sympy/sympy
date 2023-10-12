@@ -74,11 +74,7 @@ def express(expr, system, system2=None, variables=False):
         if variables:
             # If variables attribute is True, substitute
             # the coordinate variables in the Vector
-            system_list = []
-            for x in expr.atoms(BaseScalar, BaseVector):
-                if x.system != system:
-                    system_list.append(x.system)
-            system_list = set(system_list)
+            system_list = {x.system for x in expr.atoms(BaseScalar, BaseVector)} - {system}
             subs_dict = {}
             for f in system_list:
                 subs_dict.update(f.scalar_map(system))
@@ -157,8 +153,8 @@ def directional_derivative(field, direction_vector):
     5*R.x**2 + 30*R.x*R.z
 
     """
-    from sympy.vector.operators import _get_coord_sys_from_expr
-    coord_sys = _get_coord_sys_from_expr(field)
+    from sympy.vector.operators import _get_coord_systems
+    coord_sys = _get_coord_systems(field)
     if len(coord_sys) > 0:
         # TODO: This gets a random coordinate system in case of multiple ones:
         coord_sys = next(iter(coord_sys))

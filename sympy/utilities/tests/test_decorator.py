@@ -1,6 +1,7 @@
 from functools import wraps
 
-from sympy.utilities.decorator import threaded, xthreaded, memoize_property
+from sympy.utilities.decorator import threaded, xthreaded, memoize_property, deprecated
+from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy.core.basic import Basic
 from sympy.core.relational import Eq
@@ -65,3 +66,64 @@ def test_memoize_property():
     obj1 = member.prop
     obj2 = member.prop
     assert obj1 is obj2
+
+def test_deprecated():
+    @deprecated('deprecated_function is deprecated',
+                deprecated_since_version='1.10',
+                # This is the target at the top of the file, which will never
+                # go away.
+                active_deprecations_target='active-deprecations')
+    def deprecated_function(x):
+        return x
+
+    with warns_deprecated_sympy():
+        assert deprecated_function(1) == 1
+
+    @deprecated('deprecated_class is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class:
+        pass
+
+    with warns_deprecated_sympy():
+        assert isinstance(deprecated_class(), deprecated_class)
+
+    # Ensure the class decorator works even when the class never returns
+    # itself
+    @deprecated('deprecated_class_new is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class_new:
+        def __new__(cls, arg):
+            return arg
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_new(1) == 1
+
+    @deprecated('deprecated_class_init is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class_init:
+        def __init__(self, arg):
+            self.arg = 1
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_init(1).arg == 1
+
+    @deprecated('deprecated_class_new_init is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class_new_init:
+        def __new__(cls, arg):
+            if arg == 0:
+                return arg
+            return object.__new__(cls)
+
+        def __init__(self, arg):
+            self.arg = 1
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_new_init(0) == 0
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_new_init(1).arg == 1

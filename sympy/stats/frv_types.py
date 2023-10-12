@@ -35,6 +35,8 @@ from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random
+from sympy.utilities.iterables import multiset
+from sympy.utilities.misc import filldedent
 
 
 __all__ = ['FiniteRV',
@@ -93,8 +95,8 @@ def FiniteRV(name, density, **kwargs):
 
     name : Symbol
         Represents name of the random variable.
-    density: A dict
-        Dictionary conatining the pdf of finite distribution
+    density : dict
+        Dictionary containing the pdf of finite distribution
     check : bool
         If True, it will check whether the given density
         integrates to 1 over the given set. If False, it
@@ -130,8 +132,6 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         # not using _value_check since there is a
         # suggestion for the user
         if len(set(args)) != len(args):
-            from sympy.utilities.iterables import multiset
-            from sympy.utilities.misc import filldedent
             weights = multiset(args)
             n = Integer(len(args))
             for k in weights:
@@ -170,7 +170,7 @@ def DiscreteUniform(name, items):
     Parameters
     ==========
 
-    items: list/tuple
+    items : list/tuple
         Items over which Uniform distribution is to be made
 
     Examples
@@ -196,7 +196,7 @@ def DiscreteUniform(name, items):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Discrete_uniform_distribution
-    .. [2] http://mathworld.wolfram.com/DiscreteUniformDistribution.html
+    .. [2] https://mathworld.wolfram.com/DiscreteUniformDistribution.html
 
     """
     return rv(name, DiscreteUniformDistribution, *items)
@@ -226,7 +226,7 @@ class DieDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.sides))
-        return set(map(Integer, list(range(1, self.sides + 1))))
+        return set(map(Integer, range(1, self.sides + 1)))
 
     def pmf(self, x):
         x = sympify(x)
@@ -243,7 +243,7 @@ def Die(name, sides=6):
     Parameters
     ==========
 
-    sides: Integer
+    sides : Integer
         Represents the number of sides of the Die, by default is 6
 
     Examples
@@ -335,7 +335,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Bernoulli_distribution
-    .. [2] http://mathworld.wolfram.com/BernoulliDistribution.html
+    .. [2] https://mathworld.wolfram.com/BernoulliDistribution.html
 
     """
 
@@ -349,7 +349,7 @@ def Coin(name, p=S.Half):
     Parameters
     ==========
 
-    p : Rational Numeber between 0 and 1
+    p : Rational Number between 0 and 1
       Represents probability of getting "Heads", by default is Half
 
     Examples
@@ -474,7 +474,7 @@ def Binomial(name, n, p, succ=1, fail=0):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BinomialDistribution.html
 
     """
 
@@ -511,7 +511,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     def set(self):
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
-        return set(map(Integer, list(range(0, self.n + 1))))
+        return set(map(Integer, range(self.n + 1)))
 
     def pmf(self, k):
         n, a, b = self.n, self.alpha, self.beta
@@ -548,7 +548,7 @@ def BetaBinomial(name, n, alpha, beta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Beta-binomial_distribution
-    .. [2] http://mathworld.wolfram.com/BetaBinomialDistribution.html
+    .. [2] https://mathworld.wolfram.com/BetaBinomialDistribution.html
 
     """
 
@@ -584,7 +584,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
-        return {i for i in range(max(0, n + m - N), min(n, m) + 1)}
+        return set(range(max(0, n + m - N), min(n, m) + 1))
 
     def pmf(self, k):
         N, m, n = self.N, self.m, self.n
@@ -624,7 +624,7 @@ def Hypergeometric(name, N, m, n):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Hypergeometric_distribution
-    .. [2] http://mathworld.wolfram.com/HypergeometricDistribution.html
+    .. [2] https://mathworld.wolfram.com/HypergeometricDistribution.html
 
     """
     return rv(name, HypergeometricDistribution, N, m, n)
@@ -690,7 +690,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(Range(1, self.k+1)))
+        return set(map(Integer, range(1, self.k + 1)))
 
     @property # type: ignore
     @cacheit
@@ -698,7 +698,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         if self.k.is_Symbol:
             return Density(self)
         d = {1: Rational(1, self.k)}
-        d.update(dict((i, Rational(1, i*(i - 1))) for i in range(2, self.k + 1)))
+        d.update({i: Rational(1, i*(i - 1)) for i in range(2, self.k + 1)})
         return d
 
     def pmf(self, x):
@@ -753,7 +753,7 @@ def IdealSoliton(name, k):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Ideal_distribution
-    .. [2] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     """
     return rv(name, IdealSolitonDistribution, k)
@@ -792,7 +792,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return set(list(Range(1, self.k+1)))
+        return set(map(Integer, range(1, self.k + 1)))
 
     @property
     def is_symbolic(self):
@@ -863,8 +863,8 @@ def RobustSoliton(name, k, delta, c):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Soliton_distribution#Robust_distribution
-    .. [2] http://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
-    .. [3] http://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
+    .. [2] https://www.inference.org.uk/mackay/itprnn/ps/588.596.pdf
+    .. [3] https://pages.cs.wisc.edu/~suman/courses/740/papers/luby02lt.pdf
 
     '''
     return rv(name, RobustSolitonDistribution, k, delta, c)

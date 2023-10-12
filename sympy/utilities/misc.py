@@ -1,6 +1,6 @@
-"""Miscellaneous stuff that doesn't really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywhere else."""
 
-from typing import List
+from __future__ import annotations
 
 import operator
 import sys
@@ -16,20 +16,23 @@ class Undecidable(ValueError):
     pass
 
 
-def filldedent(s, w=70):
+def filldedent(s, w=70, **kwargs):
     """
-    Strips leading and trailing empty lines from a copy of `s`, then dedents,
+    Strips leading and trailing empty lines from a copy of ``s``, then dedents,
     fills and returns it.
 
     Empty line stripping serves to deal with docstrings like this one that
     start with a newline after the initial triple quote, inserting an empty
     line at the beginning of the string.
 
+    Additional keyword arguments will be passed to ``textwrap.fill()``.
+
     See Also
     ========
     strlines, rawlines
+
     """
-    return '\n' + fill(dedent(str(s)).strip('\n'), width=w)
+    return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
 def strlines(s, c=64, short=False):
@@ -61,7 +64,7 @@ def strlines(s, c=64, short=False):
     ========
     filldedent, rawlines
     """
-    if type(s) is not str:
+    if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
@@ -169,10 +172,10 @@ def rawlines(s):
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
-# XXX: PyPy doesn't support hash randomization
+# XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
-_debug_tmp = []  # type: List[str]
+_debug_tmp: list[str] = []
 _debug_iter = 0
 
 def debug_decorator(func):
@@ -246,16 +249,31 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+def debugf(string, args):
+    """
+    Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
+    intended for debug messages using formatted strings.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        print(string%args, file=sys.stderr)
+
+
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
     found
     """
-    from .exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(useinstead="the builtin ``shutil.which`` function",
-                            issue=19634,
-                            deprecated_since_version="1.7").warn()
+    from .exceptions import sympy_deprecation_warning
+    sympy_deprecation_warning(
+        """
+        sympy.utilities.misc.find_executable() is deprecated. Use the standard
+        library shutil.which() function instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-find-executable",
+    )
     if path is None:
         path = os.environ['PATH']
     paths = path.split(os.pathsep)
@@ -375,11 +393,11 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/how-to-replace-multiple-substrings-of-a-string
     """
     if len(reps) == 1:
         kv = reps[0]
-        if type(kv) is dict:
+        if isinstance(kv, dict):
             reps = kv
         else:
             return string.replace(*kv)
@@ -439,7 +457,7 @@ def translate(s, a, b=None, c=None):
         c = b
         a = b = ''
     else:
-        if type(a) is dict:
+        if isinstance(a, dict):
             short = {}
             for k in list(a.keys()):
                 if len(k) == 1 and len(a[k]) == 1:
@@ -542,6 +560,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n != result:
+        if n - result:
             raise ValueError('%s is not an integer' % (n,))
         return result

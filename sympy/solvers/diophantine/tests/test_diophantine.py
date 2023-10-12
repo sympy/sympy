@@ -575,7 +575,6 @@ def test_diophantine():
     assert diophantine((y**2-x), t) == {(t**2, -t)}
 
 
-
 def test_general_pythagorean():
     from sympy.abc import a, b, c, d, e
 
@@ -623,12 +622,23 @@ def test_diop_general_sum_of_squares_quick():
     raises(NotImplementedError, lambda: classify_diop(-eq))
 
 
+def test_issue_23807():
+    # fixes recursion error
+    eq = x**2 + y**2 + z**2 - 1000000
+    base_soln = {(0, 0, 1000), (0, 352, 936), (480, 600, 640), (24, 640, 768), (192, 640, 744),
+                 (192, 480, 856), (168, 224, 960), (0, 600, 800), (280, 576, 768), (152, 480, 864),
+                 (0, 280, 960), (352, 360, 864), (424, 480, 768), (360, 480, 800), (224, 600, 768),
+                 (96, 360, 928), (168, 576, 800), (96, 480, 872)}
+
+    assert diophantine(eq) == base_soln
+
+
 def test_diop_partition():
     for n in [8, 10]:
         for k in range(1, 8):
             for p in partition(n, k):
                 assert len(p) == k
-    assert [p for p in partition(3, 5)] == []
+    assert list(partition(3, 5)) == []
     assert [list(p) for p in partition(3, 5, 1)] == [
         [0, 0, 0, 0, 3], [0, 0, 0, 1, 2], [0, 0, 1, 1, 1]]
     assert list(partition(0)) == [()]
@@ -658,7 +668,7 @@ def test_sum_of_three_squares():
 
 
 def test_sum_of_four_squares():
-    from random import randint
+    from sympy.core.random import randint
 
     # this should never fail
     n = randint(1, 100000000000000)

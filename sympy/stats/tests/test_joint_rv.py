@@ -28,10 +28,11 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
                 GeneralizedMultivariateLogGamma as GMVLG, MultivariateEwens,
                 Multinomial, NegativeMultinomial, MultivariateNormal,
                 MultivariateLaplace)
-from sympy.testing.pytest import raises, XFAIL, skip
+from sympy.testing.pytest import raises, XFAIL, skip, slow
 from sympy.external import import_module
 
 from sympy.abc import x, y
+
 
 
 def test_Normal():
@@ -46,7 +47,7 @@ def test_Normal():
     assert density(m)(x, y) == density(p)(x, y)
     assert marginal_distribution(n, 0, 1)(1, 2) == 1/(2*pi)
     raises(ValueError, lambda: marginal_distribution(m))
-    assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
+    assert integrate(density(m)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1.0
     N = Normal('N', [1, 2], [[x, 0], [0, y]])
     assert density(N)(0, 0) == exp(-((4*x + y)/(2*x*y)))/(2*pi*sqrt(x*y))
 
@@ -100,7 +101,7 @@ def test_MultivariateTDist():
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     assert integrate(density(t1)(x, y), (x, -oo, oo), \
-        (y, -oo, oo)).evalf() == 1
+        (y, -oo, oo)).evalf() == 1.0
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
     t2 = MultivariateT('t2', [1, 2], [[x, 0], [0, y]], 1)
     assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
@@ -272,10 +273,12 @@ def test_NegativeMultinomial():
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
 
+@slow
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
-    assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
-        8*polar_lift(x**2/2 + 1)**Rational(5, 2))
+    got = marginal_distribution(T, T[1])(x)
+    ans = sqrt(2)*(x**2/2 + 1)/(4*polar_lift(x**2/2 + 1)**(S(5)/2))
+    assert got == ans, got
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
 
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
@@ -294,6 +297,7 @@ def test_JointRV():
 def test_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
     assert simplify(E(m[1])) == y
+
 
 @XFAIL
 def test_joint_vector_expectation():
@@ -344,23 +348,23 @@ def test_sample_scipy():
         raises(NotImplementedError, lambda: sample(N_c))
 
 
-def test_sample_pymc3():
-    distribs_pymc3 = [
+def test_sample_pymc():
+    distribs_pymc = [
         MultivariateNormal("M", [5, 2], [[1, 0], [0, 1]]),
         MultivariateBeta("B", [0.4, 5, 15]),
         Multinomial("N", 4, [0.3, 0.2, 0.1, 0.4])
     ]
     size = 3
-    pymc3 = import_module('pymc3')
-    if not pymc3:
-        skip('PyMC3 is not installed. Abort tests for _sample_pymc3.')
+    pymc = import_module('pymc')
+    if not pymc:
+        skip('PyMC is not installed. Abort tests for _sample_pymc.')
     else:
-        for X in distribs_pymc3:
-            samps = sample(X, size=size, library='pymc3')
+        for X in distribs_pymc:
+            samps = sample(X, size=size, library='pymc')
             for sam in samps:
                 assert tuple(sam.flatten()) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
-        raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
+        raises(NotImplementedError, lambda: sample(N_c, library='pymc'))
 
 
 def test_sample_seed():
@@ -368,7 +372,7 @@ def test_sample_seed():
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
     X = JointRV('x', pdf)
 
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ['scipy', 'numpy', 'pymc']
     for lib in libraries:
         try:
             imported_lib = import_module(lib)
@@ -382,20 +386,49 @@ def test_sample_seed():
         except NotImplementedError:
             continue
 
-
+#
+# XXX: This fails for pymc. Previously the test appeared to pass but that is
+# just because the library argument was not passed so the test always used
+# scipy.
+#
 def test_issue_21057():
     m = Normal("x", [0, 0], [[0, 0], [0, 0]])
     n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
     p = Normal("x", [0, 0], [[0, 0], [0, 1]])
     assert m == n
-    libraries = ['scipy', 'numpy', 'pymc3']
+    libraries = ('scipy', 'numpy')  # , 'pymc')  # <-- pymc fails
     for library in libraries:
         try:
             imported_lib = import_module(library)
             if imported_lib:
-                s1 = sample(m, size=8)
-                s2 = sample(n, size=8)
-                s3 = sample(p, size=8)
+                s1 = sample(m, size=8, library=library)
+                s2 = sample(n, size=8, library=library)
+                s3 = sample(p, size=8, library=library)
+                assert tuple(s1.flatten()) == tuple(s2.flatten())
+                for s in s3:
+                    assert tuple(s.flatten()) in p.pspace.distribution.set
+        except NotImplementedError:
+            continue
+
+
+#
+# When this passes the pymc part can be uncommented in test_issue_21057 above
+# and this can be deleted.
+#
+@XFAIL
+def test_issue_21057_pymc():
+    m = Normal("x", [0, 0], [[0, 0], [0, 0]])
+    n = MultivariateNormal("x", [0, 0], [[0, 0], [0, 0]])
+    p = Normal("x", [0, 0], [[0, 0], [0, 1]])
+    assert m == n
+    libraries = ('pymc',)
+    for library in libraries:
+        try:
+            imported_lib = import_module(library)
+            if imported_lib:
+                s1 = sample(m, size=8, library=library)
+                s2 = sample(n, size=8, library=library)
+                s3 = sample(p, size=8, library=library)
                 assert tuple(s1.flatten()) == tuple(s2.flatten())
                 for s in s3:
                     assert tuple(s.flatten()) in p.pspace.distribution.set

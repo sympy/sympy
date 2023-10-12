@@ -219,7 +219,7 @@ def canonicalize_naive(g, dummies, sym, *v):
     msym : Symmetry of the metric.
     v : A list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`.
         base_i, gens_i BSGS for tensors of this type
-        n_i  number ot tensors of type `i`
+        n_i  number of tensors of type `i`
 
     Returns
     =======

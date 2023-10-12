@@ -1,3 +1,5 @@
+from bisect import bisect, bisect_left
+
 from sympy.core.numbers import (I, Rational, nan, zoo)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -129,8 +131,38 @@ def test_generate():
 
     assert nextprime(90) == 97
     assert nextprime(10**40) == (10**40 + 121)
+    primelist = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31,
+                 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
+                 79, 83, 89, 97, 101, 103, 107, 109, 113,
+                 127, 131, 137, 139, 149, 151, 157, 163,
+                 167, 173, 179, 181, 191, 193, 197, 199,
+                 211, 223, 227, 229, 233, 239, 241, 251,
+                 257, 263, 269, 271, 277, 281, 283, 293]
+    for i in range(len(primelist) - 2):
+        for j in range(2, len(primelist) - i):
+            assert nextprime(primelist[i], j) == primelist[i + j]
+            if 3 < i:
+                assert nextprime(primelist[i] - 1, j) == primelist[i + j - 1]
+    raises(ValueError, lambda: nextprime(2, 0))
+    raises(ValueError, lambda: nextprime(2, -1))
     assert prevprime(97) == 89
     assert prevprime(10**40) == (10**40 - 17)
+
+    raises(ValueError, lambda: Sieve(0))
+    raises(ValueError, lambda: Sieve(-1))
+    for sieve_interval in [1, 10, 11, 1_000_000]:
+        s = Sieve(sieve_interval=sieve_interval)
+        for head in range(s._list[-1] + 1, (s._list[-1] + 1)**2, 2):
+            for tail in range(head + 1, (s._list[-1] + 1)**2):
+                A = list(s._primerange(head, tail))
+                B = primelist[bisect(primelist, head):bisect_left(primelist, tail)]
+                assert A == B
+        for k in range(s._list[-1], primelist[-1] - 1, 2):
+            s = Sieve(sieve_interval=sieve_interval)
+            s.extend(k)
+            assert list(s._list) == primelist[:bisect(primelist, k)]
+            s.extend(primelist[-1])
+            assert list(s._list) == primelist
 
     assert list(sieve.primerange(10, 1)) == []
     assert list(sieve.primerange(5, 9)) == [5, 7]
@@ -167,6 +199,25 @@ def test_generate():
             A = list(s.primerange(i, i + j))
             B = list(primerange(i, i + j))
             assert A == B
+    s = Sieve()
+    sieve._reset(prime=True)
+    sieve.extend(13)
+    for i in range(200):
+        for j in range(i, 200):
+            A = list(s.primerange(i, j))
+            B = list(primerange(i, j))
+            assert A == B
+    sieve.extend(1000)
+    for a, b in [(901, 1103), # a < 1000 < b < 1000**2
+                 (806, 1002007), # a < 1000 < 1000**2 < b
+                 (2000, 30001), # 1000 < a < b < 1000**2
+                 (100005, 1010001), # 1000 < a < 1000**2 < b
+                 (1003003, 1005000), # 1000**2 < a < b
+                 ]:
+        assert list(primerange(a, b)) == list(s.primerange(a, b))
+    sieve._reset(prime=True)
+    sieve.extend(100000)
+    assert len(sieve._list) == len(set(sieve._list))
     s = Sieve()
     assert s[10] == 29
 

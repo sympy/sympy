@@ -1,9 +1,9 @@
 from types import FunctionType
 
-from sympy.simplify.simplify import (
-    simplify as _simplify, dotprodsimp as _dotprodsimp)
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.domains import ZZ, QQ
 
-from .utilities import _get_intermediate_simp, _iszero
+from .utilities import _get_intermediate_simp, _iszero, _dotprodsimp, _simplify
 from .determinant import _find_reasonable_pivot
 
 
@@ -228,7 +228,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     if M.rows == 2 and M.cols == 2:
         zeros = [iszerofunc(x) for x in M]
 
-        if not False in zeros and not None in zeros:
+        if False not in zeros and None not in zeros:
             return 0
 
         d = M.det()
@@ -245,9 +245,57 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     return len(pivots)
 
 
+def _to_DM_ZZ_QQ(M):
+    # We have to test for _rep here because there are tests that otherwise fail
+    # with e.g. "AttributeError: 'SubspaceOnlyMatrix' object has no attribute
+    # '_rep'." There is almost certainly no value in such tests. The
+    # presumption seems to be that someone could create a new class by
+    # inheriting some of the Matrix classes and not the full set that is used
+    # by the standard Matrix class but if anyone tried that it would fail in
+    # many ways.
+    if not hasattr(M, '_rep'):
+        return None
+
+    rep = M._rep
+    K = rep.domain
+
+    if K.is_ZZ:
+        return rep
+    elif K.is_QQ:
+        try:
+            return rep.convert_to(ZZ)
+        except CoercionFailed:
+            return rep
+    else:
+        if not all(e.is_Rational for e in M):
+            return None
+        try:
+            return rep.convert_to(ZZ)
+        except CoercionFailed:
+            return rep.convert_to(QQ)
+
+
+def _rref_dm(dM):
+    """Compute the reduced row echelon form of a DomainMatrix."""
+    K = dM.domain
+
+    if K.is_ZZ:
+        dM_rref, den, pivots = dM.rref_den(keep_domain=False)
+        dM_rref = dM_rref.to_field() / den
+    elif K.is_QQ:
+        dM_rref, pivots = dM.rref()
+    else:
+        assert False  # pragma: no cover
+
+    M_rref = dM_rref.to_Matrix()
+
+    return M_rref, pivots
+
+
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
-    """Return reduced row-echelon form of matrix and indices of pivot vars.
+    """Return reduced row-echelon form of matrix and indices
+    of pivot vars.
 
     Parameters
     ==========
@@ -291,21 +339,49 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     >>> rref_pivots
     (0, 1)
 
+    ``iszerofunc`` can correct rounding errors in matrices with float
+    values. In the following example, calling ``rref()`` leads to
+    floating point errors, incorrectly row reducing the matrix.
+    ``iszerofunc= lambda x: abs(x) < 1e-9`` sets sufficiently small numbers
+    to zero, avoiding this error.
+
+    >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
+    >>> m.rref()
+    (Matrix([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0]]), (0, 1, 2))
+    >>> m.rref(iszerofunc=lambda x:abs(x)<1e-9)
+    (Matrix([
+    [1, 0, -0.301369863013699, 0],
+    [0, 1, -0.712328767123288, 0],
+    [0, 0,         0,          0]]), (0, 1))
+
     Notes
     =====
 
     The default value of ``normalize_last=True`` can provide significant
     speedup to row reduction, especially on matrices with symbols.  However,
     if you depend on the form row reduction algorithm leaves entries
-    of the matrix, set ``noramlize_last=False``
+    of the matrix, set ``normalize_last=False``
     """
+    # Try to use DomainMatrix for ZZ or QQ
+    dM = _to_DM_ZZ_QQ(M)
 
-    simpfunc = simplify if isinstance(simplify, FunctionType) else _simplify
+    if dM is not None:
+        # Use DomainMatrix for ZZ or QQ
+        mat, pivot_cols = _rref_dm(dM)
+    else:
+        # Use the generic Matrix routine.
+        if isinstance(simplify, FunctionType):
+            simpfunc = simplify
+        else:
+            simpfunc = _simplify
 
-    mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
-            normalize_last, normalize=True, zero_above=True)
+        mat, pivot_cols, _ = _row_reduce(M, iszerofunc, simpfunc,
+                normalize_last, normalize=True, zero_above=True)
 
     if pivots:
-        mat = (mat, pivot_cols)
-
-    return mat
+        return mat, pivot_cols
+    else:
+        return mat

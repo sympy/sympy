@@ -1,17 +1,20 @@
 """Tests for solvers of systems of polynomial equations. """
-
 from sympy.core.numbers import (I, Integer, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.polyerrors import UnsolvableFactorError
+from sympy.polys.polyoptions import Options
 from sympy.polys.polytools import Poly
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import flatten
 from sympy.abc import x, y, z
 from sympy.polys import PolynomialError
 from sympy.solvers.polysys import (solve_poly_system,
-    solve_triangulated, solve_biquadratic, SolveFailed)
+                                   solve_triangulated,
+                                   solve_biquadratic, SolveFailed,
+                                   solve_generic)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 
@@ -59,6 +62,35 @@ def test_solve_poly_system():
           [x-1,], (x, y)))
     raises(NotImplementedError, lambda: solve_poly_system(
           [y-1,], (x, y)))
+
+    # solve_poly_system should ideally construct solutions using
+    # CRootOf for the following four tests
+    assert solve_poly_system([x**5 - x + 1], [x], strict=False) == []
+    raises(UnsolvableFactorError, lambda: solve_poly_system(
+        [x**5 - x + 1], [x], strict=True))
+
+    assert solve_poly_system([(x - 1)*(x**5 - x + 1), y**2 - 1], [x, y],
+                             strict=False) == [(1, -1), (1, 1)]
+    raises(UnsolvableFactorError,
+           lambda: solve_poly_system([(x - 1)*(x**5 - x + 1), y**2-1],
+                                     [x, y], strict=True))
+
+
+def test_solve_generic():
+    NewOption = Options((x, y), {'domain': 'ZZ'})
+    assert solve_generic([x**2 - 2*y**2, y**2 - y + 1], NewOption) == \
+           [(-sqrt(-1 - sqrt(3)*I), Rational(1, 2) - sqrt(3)*I/2),
+            (sqrt(-1 - sqrt(3)*I), Rational(1, 2) - sqrt(3)*I/2),
+            (-sqrt(-1 + sqrt(3)*I), Rational(1, 2) + sqrt(3)*I/2),
+            (sqrt(-1 + sqrt(3)*I), Rational(1, 2) + sqrt(3)*I/2)]
+
+    # solve_generic should ideally construct solutions using
+    # CRootOf for the following two tests
+    assert solve_generic(
+        [2*x - y, (y - 1)*(y**5 - y + 1)], NewOption, strict=False) == \
+        [(Rational(1, 2), 1)]
+    raises(UnsolvableFactorError, lambda: solve_generic(
+        [2*x - y, (y - 1)*(y**5 - y + 1)], NewOption, strict=True))
 
 
 def test_solve_biquadratic():

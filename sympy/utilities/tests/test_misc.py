@@ -4,15 +4,20 @@ from subprocess import Popen, PIPE
 import os
 
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises
-from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines, as_int
+from sympy.testing.pytest import (raises, warns_deprecated_sympy,
+                                  skip_under_pyodide)
+from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
+                                  strlines, as_int, find_executable)
+from sympy.external import import_module
+
+pyodide_js = import_module('pyodide_js')
 
 
 def test_translate():
     abc = 'abc'
-    translate(abc, None, 'a') == 'bc'
-    translate(abc, None, '') == 'abc'
-    translate(abc, {'a': 'x'}, 'c') == 'xb'
+    assert translate(abc, None, 'a') == 'bc'
+    assert translate(abc, None, '') == 'abc'
+    assert translate(abc, {'a': 'x'}, 'c') == 'xb'
     assert translate(abc, {'a': 'bc'}, 'c') == 'bcb'
     assert translate(abc, {'ab': 'x'}, 'c') == 'x'
     assert translate(abc, {'ab': ''}, 'c') == ''
@@ -110,6 +115,7 @@ def test_translate_args():
         assert False
 
 
+@skip_under_pyodide("Cannot create subprocess under pyodide.")
 def test_debug_output():
     env = os.environ.copy()
     env['SYMPY_DEBUG'] = 'True'
@@ -139,3 +145,7 @@ def test_as_int():
     raises(ValueError, lambda : as_int(1e23))
     raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
     assert as_int(True, strict=False) == 1
+
+def test_deprecated_find_executable():
+    with warns_deprecated_sympy():
+        find_executable('python')

@@ -1,4 +1,4 @@
-from typing import Dict as tDict, List
+from __future__ import annotations
 
 from itertools import permutations
 from functools import reduce
@@ -6,15 +6,16 @@ from functools import reduce
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
+from sympy.core.traversal import iterfreeargs
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
-from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
+from sympy.functions import log, sinh, cosh, tanh, coth, asinh
 from sympy.functions import sqrt, erf, erfi, li, Ei
 from sympy.functions import besselj, bessely, besseli, besselk
 from sympy.functions import hankel1, hankel2, jn, yn
@@ -29,7 +30,7 @@ from sympy.simplify.radsimp import collect
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor_list, cancel, PolynomialError
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
@@ -64,7 +65,7 @@ def components(f, x):
     """
     result = set()
 
-    if x in f.free_symbols:
+    if f.has_free(x):
         if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -87,7 +88,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: tDict[str, List[Dummy]]
+_symbols_cache: dict[str, list[Dummy]] = {}
 
 
 # NB @cacheit is not convenient here
@@ -136,20 +137,25 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
                    unnecessary_permutations, _try_heurisch)
     if not isinstance(res, Basic):
         return res
+
     # We consider each denominator in the expression, and try to find
     # cases where one or more symbolic denominator might be zero. The
     # conditions for these cases are stored in the list slns.
+    #
+    # Since denoms returns a set we use ordered. This is important because the
+    # ordering of slns determines the order of the resulting Piecewise so we
+    # need a deterministic order here to make the output deterministic.
     slns = []
-    for d in denoms(res):
+    for d in ordered(denoms(res)):
         try:
-            slns += solve(d, dict=True, exclude=(x,))
+            slns += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     if not slns:
@@ -159,7 +165,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     slns0 = []
     for d in denoms(f):
         try:
-            slns0 += solve(d, dict=True, exclude=(x,))
+            slns0 += solve([d], dict=True, exclude=(x,))
         except NotImplementedError:
             pass
     slns = [s for s in slns if s not in slns0]
@@ -309,8 +315,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     recursive Risch algorithm in such case.  It's an open question if
     this algorithm can be made a full decision procedure.
 
-    This is an internal integrator procedure. You should use toplevel
-    'integrate' function in most cases,  as this procedure needs some
+    This is an internal integrator procedure. You should use top level
+    'integrate' function in most cases, as this procedure needs some
     preprocessing steps and otherwise may fail.
 
     Specification
@@ -344,7 +350,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     References
     ==========
 
-    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    .. [1] https://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
@@ -378,7 +384,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
             return
 
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     if not f.is_Add:
@@ -402,6 +408,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             rewrite = True
 
     terms = components(f, x)
+    dcache = DiffCache(x)
 
     if hints is not None:
         if not hints:
@@ -461,7 +468,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
                         if M is not None and M[b].is_positive:
                             if M[a].is_positive:
-                                terms.add(acosh(sqrt(M[a]/M[b])*x))
+                                dF = 1/sqrt(M[a]*x**2 - M[b])
+                                F = log(2*sqrt(M[a])*sqrt(M[a]*x**2 - M[b]) + 2*M[a]*x)/sqrt(M[a])
+                                dcache.cache[F] = dF  # hack: F.diff(x) doesn't automatically simplify to f
+                                terms.add(F)
                             elif M[a].is_negative:
                                 terms.add(-M[b]/2*sqrt(-M[a])*
                                            atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b])))
@@ -469,10 +479,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         else:
             terms |= set(hints)
 
-    dcache = DiffCache(x)
-
     for g in set(terms):  # using copy of terms
         terms |= components(dcache.get_diff(g), x)
+
+    # XXX: The commented line below makes heurisch more deterministic wrt
+    # PYTHONHASHSEED and the iteration order of sets. There are other places
+    # where sets are iterated over but this one is possibly the most important.
+    # Theoretically the order here should not matter but different orderings
+    # can expose potential bugs in the different code paths so potentially it
+    # is better to keep the non-determinism.
+    #
+    # terms = list(ordered(terms))
 
     # TODO: caching is significant factor for why permutations work at all. Change this.
     V = _symbols('x', len(terms))
@@ -609,42 +626,31 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     reducibles = set()
 
-    for poly in polys:
-        if poly.has(*V):
-            try:
-                factorization = factor(poly, greedy=True)
-            except PolynomialError:
-                factorization = poly
-
-            if factorization.is_Mul:
-                factors = factorization.args
-            else:
-                factors = (factorization, )
-
-            for fact in factors:
-                if fact.is_Pow:
-                    reducibles.add(fact.base)
-                else:
-                    reducibles.add(fact)
+    for poly in ordered(polys):
+        coeff, factors = factor_list(poly, *V)
+        reducibles.add(coeff)
+        for fact, mul in factors:
+            reducibles.add(fact)
 
     def _integrate(field=None):
-        irreducibles = set()
         atans = set()
         pairs = set()
 
-        for poly in reducibles:
-            for z in poly.free_symbols:
-                if z in V:
-                    break  # should this be: `irreducibles |= \
-            else:          # set(root_factors(poly, z, filter=field))`
-                continue   # and the line below deleted?
-                           #               |
-                           #               V
-            irreducibles |= set(root_factors(poly, z, filter=field))
+        if field == 'Q':
+            irreducibles = set(reducibles)
+        else:
+            setV = set(V)
+            irreducibles = set()
+            for poly in ordered(reducibles):
+                zV = setV & set(iterfreeargs(poly))
+                for z in ordered(zV):
+                    s = set(root_factors(poly, z, filter=field))
+                    irreducibles |= s
+                    break
 
         log_part, atan_part = [], []
 
-        for poly in list(irreducibles):
+        for poly in ordered(irreducibles):
             m = collect(poly, I, evaluate=False)
             y = m.get(I, S.Zero)
             if y:
@@ -702,7 +708,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.free_symbols & syms:
+            elif not expr.has_free(*syms):
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -732,7 +738,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             return candidate.xreplace(solution).xreplace(
                 dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
-    if not (F.free_symbols - set(V)):
+    if all(isinstance(_, Symbol) for _ in V):
+        more_free = F.free_symbols - set(V)
+    else:
+        Fd = F.as_dummy()
+        more_free = Fd.xreplace(dict(zip(V, (Dummy() for _ in V)))
+            ).free_symbols & Fd.free_symbols
+    if not more_free:
+        # all free generators are identified in V
         solution = _integrate('Q')
 
         if solution is None:

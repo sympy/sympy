@@ -2,6 +2,7 @@ from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -13,6 +14,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
@@ -37,7 +39,7 @@ from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
@@ -51,8 +53,8 @@ def test_swap_back():
     fx, gx = f(x), g(x)
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
-    assert solve(fx + gx*x - 2, [fx, gx], dict=True)[0] == {fx: 2, gx: 0}
-    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y - gx**2*x}]
+    assert solve(fx + gx*x - 2, [fx, gx], dict=True) == [{fx: 2, gx: 0}]
+    assert solve(fx + gx**2*x - y, [fx, gx], dict=True) == [{fx: y, gx: 0}]
     assert solve([f(1) - 2, x + 2], dict=True) == [{x: -2, f(1): 2}]
 
 
@@ -128,8 +130,17 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
-    # duplicate symbols removed
-    assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
+    assert solve([sqrt(2)],[x]) == []
+    # duplicate symbols raises
+    raises(ValueError, lambda: solve((x - 3, y + 2), x, y, x))
+    raises(ValueError, lambda: solve(x, x, x))
+    # no error in exclude
+    assert solve(x, x, exclude=[y, y]) == [0]
+    # duplicate symbols raises
+    raises(ValueError, lambda: solve((x - 3, y + 2), x, y, x))
+    raises(ValueError, lambda: solve(x, x, x))
+    # no error in exclude
+    assert solve(x, x, exclude=[y, y]) == [0]
     # unordered symbols
     # only 1
     assert solve(y - 3, {y}) == [3]
@@ -144,21 +155,22 @@ def test_solve_args():
     assert solve(x + y - 3) == [{x: 3 - y}]
     # multiple symbols might represent an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
-    args = (a + b)*x - b**2 + 2, a, b
-    assert solve(*args) == \
-        [(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]
-    assert solve(*args, set=True) == \
-        ([a, b], {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))})
-    assert solve(*args, dict=True) == \
-        [{b: sqrt(2), a: -sqrt(2)}, {b: -sqrt(2), a: sqrt(2)}]
+    assert solve((a + b)*x + b - c, [a, b]) == {a: -c, b: c}
     eq = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
-    flags = dict(dict=True)
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: c - b**2/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    flags.update(dict(simplify=False))
-    assert solve(eq, [h, p, k], exclude=[a, b, c], **flags) == \
-        [{k: (4*a*c - b**2)/(4*a), h: -b/(2*a), p: 1/(4*a)}]
-    # failing undetermined system
+    # - check that flags are obeyed
+    sol = solve(eq, [h, p, k], exclude=[a, b, c])
+    assert sol == {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
+    assert solve(eq, [h, p, k], dict=True) == [sol]
+    assert solve(eq, [h, p, k], set=True) == \
+        ([h, p, k], {(-b/(2*a), 1/(4*a), (4*a*c - b**2)/(4*a))})
+    # issue 23889 - polysys not simplified
+    assert solve(eq, [h, p, k], exclude=[a, b, c], simplify=False) == \
+        {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
+    # but this only happens when system has a single solution
+    args = (a + b)*x - b**2 + 2, a, b
+    assert solve(*args) == [((b**2 - b*x - 2)/x, b)]
+    # and if the system has a solution; the following doesn't so
+    # an algebraic solution is returned
     assert solve(a*x + b**2/(x + 4) - 3*x - 4/x, a, b, dict=True) == \
         [{a: (-b**2*x + 3*x**3 + 12*x**2 + 4*x + 16)/(x**2*(x + 4))}]
     # failed single equation
@@ -167,23 +179,30 @@ def test_solve_args():
         NotImplementedError, lambda: solve(exp(x) + sin(x) + exp(y) + sin(y)))
     # failed system
     # --  when no symbols given, 1 fails
-    assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
+    assert solve([y, exp(x) + x]) == [{x: -LambertW(1), y: 0}]
     #     both fail
     assert solve(
-        (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
+        (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
-    solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
+    assert solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
+    # nonlinear system
+    assert solve((x**2 - 4, y - 2), x, y) == [(-2, 2), (2, 2)]
+    assert solve((x**2 - 4, y - 2), y, x) == [(2, -2), (2, 2)]
+    assert solve((x**2 - 4 + z, y - 2 - z), a, z, y, x, set=True
+        ) == ([a, z, y, x], {
+        (a, z, z + 2, -sqrt(4 - z)),
+        (a, z, z + 2, sqrt(4 - z))})
     # overdetermined system
     # - nonlinear
     assert solve([(x + y)**2 - 4, x + y - 2]) == [{x: -y + 2}]
     # - linear
     assert solve((x + y - 2, 2*x + 2*y - 4)) == {x: -y + 2}
     # When one or more args are Boolean
-    assert solve(Eq(x**2, 0.0)) == [0]  # issue 19048
+    assert solve(Eq(x**2, 0.0)) == [0.0]  # issue 19048
     assert solve([True, Eq(x, 0)], [x], dict=True) == [{x: 0}]
     assert solve([Eq(x, x), Eq(x, 0), Eq(x, x+1)], [x], dict=True) == []
     assert not solve([Eq(x, x+1), x < 2], x)
@@ -191,6 +210,14 @@ def test_solve_args():
     assert solve([Eq(x, x), Eq(x, x+1)], x) == []
     assert solve(True, x) == []
     assert solve([x - 1, False], [x], set=True) == ([], set())
+    assert solve([-y*(x + y - 1)/2, (y - 1)/x/y + 1/y],
+        set=True, check=False) == ([x, y], {(1 - y, y), (x, 0)})
+    # ordering should be canonical, fastest to order by keys instead
+    # of by size
+    assert list(solve((y - 1, x - sqrt(3)*z)).keys()) == [x, y]
+    # as set always returns as symbols, set even if no solution
+    assert solve([x - 1, x], (y, x), set=True) == ([y, x], set())
+    assert solve([x - 1, x], {y, x}, set=True) == ([x, y], set())
 
 
 def test_solve_polynomial1():
@@ -212,7 +239,7 @@ def test_solve_polynomial1():
             y: (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
         }
 
-    solution = {y: S.Zero, x: S.Zero}
+    solution = {x: S.Zero, y: S.Zero}
 
     assert solve((x - y, x + y), x, y ) == solution
     assert solve((x - y, x + y), (x, y)) == solution
@@ -323,6 +350,7 @@ def test_solve_conjugate():
     """Test solve for simple conjugate functions"""
     assert solve(conjugate(x) -3 + I) == [3 + I]
 
+
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: -x*sqrt(exp(x))},
@@ -350,6 +378,14 @@ def test_issue_21004():
     assert solve(f_diff, x) == []
 
 
+def test_issue_24650():
+    x = symbols('x')
+    r = solve(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0))
+    assert r == [0]
+    r = checksol(Eq(Piecewise((x, Eq(x, 0) | (x > 1))), 0), x, sol=0)
+    assert r is True
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -365,7 +401,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-        {x: t*(-n-1)/n, z: t*(-n-1)/n, y: 0}
+        {x: t*(-n-1)/n, y: 0, z: t*(-n-1)/n}
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
@@ -602,6 +638,15 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
+    # issue 25685 (basic trig identies should give simple solutions)
+    for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
+        sol = solve([cos(x) - S(3)/5, yi - y])
+        assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
+    # don't allow massive expansion
+    assert solve(cos(1000*x) - S.Half) == [pi/3000, pi/600]
+    assert solve(cos(x - 1000*y) - 1, x) == [2*atan(tan(500*y))]
+    assert solve(cos(x + y + z) - 1, x) == [-2*atan(tan(y/2 + z/2))]
+
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
@@ -647,7 +692,7 @@ def test_solve_for_functions_derivatives():
     f = Function('f')
     soln = solve([f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
             f(x).diff(x), f(x).diff(x, 2))
-    assert soln == { f(x).diff(x, 2): 1/2, f(x).diff(x): 1/2 }
+    assert soln == { f(x).diff(x, 2): S(1)/2, f(x).diff(x): S(1)/2 }
 
     soln = solve([f(x).diff(x, 2) + f(x).diff(x, 3) - 1, 1 - f(x).diff(x, 2) -
             f(x).diff(x, 3), 1 - f(x).diff(x,3)], f(x).diff(x, 2), f(x).diff(x, 3))
@@ -710,15 +755,43 @@ def test_solve_linear():
 
 
 def test_solve_undetermined_coeffs():
-    assert solve_undetermined_coeffs(a*x**2 + b*x**2 + b*x + 2*c*x + c + 1, [a, b, c], x) == \
-        {a: -2, b: 2, c: -1}
+    assert solve_undetermined_coeffs(
+        a*x**2 + b*x**2 + b*x + 2*c*x + c + 1, [a, b, c], x
+        ) == {a: -2, b: 2, c: -1}
     # Test that rational functions work
-    assert solve_undetermined_coeffs(a/x + b/(x + 1) - (2*x + 1)/(x**2 + x), [a, b], x) == \
-        {a: 1, b: 1}
+    assert solve_undetermined_coeffs(a/x + b/(x + 1)
+        - (2*x + 1)/(x**2 + x), [a, b], x) == {a: 1, b: 1}
     # Test cancellation in rational functions
-    assert solve_undetermined_coeffs(((c + 1)*a*x**2 + (c + 1)*b*x**2 +
-    (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
+    assert solve_undetermined_coeffs(
+        ((c + 1)*a*x**2 + (c + 1)*b*x**2 +
+        (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1),
+        [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
+    # multivariate
+    X, Y, Z = y, x**y, y*x**y
+    eq = a*X + b*Y + c*Z - X - 2*Y - 3*Z
+    coeffs = a, b, c
+    syms = x, y
+    assert solve_undetermined_coeffs(eq, coeffs) == {
+        a: 1, b: 2, c: 3}
+    assert solve_undetermined_coeffs(eq, coeffs, syms) == {
+        a: 1, b: 2, c: 3}
+    assert solve_undetermined_coeffs(eq, coeffs, *syms) == {
+        a: 1, b: 2, c: 3}
+    # check output format
+    assert solve_undetermined_coeffs(a*x + a - 2, [a]) == []
+    assert solve_undetermined_coeffs(a**2*x - 4*x, [a]) == [
+        {a: -2}, {a: 2}]
+    assert solve_undetermined_coeffs(0, [a]) == []
+    assert solve_undetermined_coeffs(0, [a], dict=True) == []
+    assert solve_undetermined_coeffs(0, [a], set=True) == ([], {})
+    assert solve_undetermined_coeffs(1, [a]) == []
+    abeq = a*x - 2*x + b - 3
+    s = {b, a}
+    assert solve_undetermined_coeffs(abeq, s, x) == {a: 2, b: 3}
+    assert solve_undetermined_coeffs(abeq, s, x, set=True) == ([a, b], {(2, 3)})
+    assert solve_undetermined_coeffs(sin(a*x) - sin(2*x), (a,)) is None
+    assert solve_undetermined_coeffs(a*x + b*x - 2*x, (a, b)) == {a: 2 - b}
 
 
 def test_solve_inequalities():
@@ -839,7 +912,7 @@ def test_issue_5197():
     assert solve([x + 5*y - 2, -3*x + 6*y - 15], x, y) == []
                  # not {x: -3, y: 1} b/c x is positive
     # The solution following should not contain (-sqrt(2), sqrt(2))
-    assert solve((x + y)*n - y**2 + 2, x, y) == [(sqrt(2), -sqrt(2))]
+    assert solve([(x + y), 2 - y**2], x, y) == [(sqrt(2), -sqrt(2))]
     y = Symbol('y', positive=True)
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
@@ -959,6 +1032,48 @@ def _test_issue_5335_float():
 def test_issue_5767():
     assert set(solve([x**2 + y + 4], [x])) == \
         {(-sqrt(-y - 4),), (sqrt(-y - 4),)}
+
+
+def _make_example_24609():
+    D, R, H, B_g, V, D_c = symbols("D, R, H, B_g, V, D_c", real=True, positive=True)
+    Sigma_f, Sigma_a, nu = symbols("Sigma_f, Sigma_a, nu", real=True, positive=True)
+    x = symbols("x", real=True, positive=True)
+    eq = (
+        2**(S(2)/3)*pi**(S(2)/3)*D_c*(S(231361)/10000 + pi**2/x**2)
+        /(6*V**(S(2)/3)*x**(S(1)/3))
+      - 2**(S(2)/3)*pi**(S(8)/3)*D_c/(2*V**(S(2)/3)*x**(S(7)/3))
+    )
+    expected = 100*sqrt(2)*pi/481
+    return eq, expected, x
+
+
+def test_issue_24609():
+    # https://github.com/sympy/sympy/issues/24609
+    eq, expected, x = _make_example_24609()
+    assert solve(eq, x, simplify=True) == [expected]
+    [solapprox] = solve(eq.n(), x)
+    assert abs(solapprox - expected.n()) < 1e-14
+
+
+@XFAIL
+def test_issue_24609_xfail():
+    #
+    # This returns 5 solutions when it should be 1 (with x positive).
+    # Simplification reveals all solutions to be equivalent. It is expected
+    # that solve without simplify=True returns duplicate solutions in some
+    # cases but the core of this equation is a simple quadratic that can easily
+    # be solved without introducing any redundant solutions:
+    #
+    #     >>> print(factor_terms(eq.as_numer_denom()[0]))
+    #     2**(2/3)*pi**(2/3)*D_c*V**(2/3)*x**(7/3)*(231361*x**2 - 20000*pi**2)
+    #
+    eq, expected, x = _make_example_24609()
+    assert len(solve(eq, x)) == [expected]
+    #
+    # We do not want to pass this test just by using simplify so if the above
+    # passes then uncomment the additional test below:
+    #
+    # assert len(solve(eq, x, simplify=False)) == 1
 
 
 def test_polysys():
@@ -1275,6 +1390,11 @@ def test_unrad1():
     # make sure numerators which are already polynomial are rejected
     assert unrad((x/(x + 1) + 3)**(-2), x) is None
 
+    # https://github.com/sympy/sympy/issues/23707
+    eq = sqrt(x - y)*exp(t*sqrt(x - y)) - exp(t*sqrt(x - y))
+    assert solve(eq, y) == [x - 1]
+    assert unrad(eq) is None
+
 
 @slow
 def test_unrad_slow():
@@ -1309,6 +1429,15 @@ def test_checksol():
     assert checksol([x - 1, x**2 - 1], x, 1) is True
     assert checksol([x - 1, x**2 - 2], x, 1) is False
     assert checksol(Poly(x**2 - 1), x, 1) is True
+    assert checksol(0, {}) is True
+    assert checksol([1e-10, x - 2], x, 2) is False
+    assert checksol([0.5, 0, x], x, 0) is False
+    assert checksol(y, x, 2) is False
+    assert checksol(x+1e-10, x, 0, numerical=True) is True
+    assert checksol(x+1e-10, x, 0, numerical=False) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2)}) is False
+    assert checksol(exp(92*x), {x: log(sqrt(2)/2) + I*pi}) is False
+    assert checksol(1/x**5, x, 1000) is False
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 
@@ -1375,7 +1504,8 @@ def test_issue_5849():
 
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
     assert solve(e, *v, manual=True, check=False, dict=True) == ans
-    assert solve(e, *v, manual=True, check=False) == ans[0]
+    assert solve(e, *v, manual=True, check=False) == [
+        tuple([a.get(i, i) for i in v]) for a in ans]
     assert solve(e, *v, manual=True) == []
     assert solve(e, *v) == []
 
@@ -1431,10 +1561,11 @@ def test_issue_21882():
     answer = [
         {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
         {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
-        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
-    ]
-
-    assert solve(equations, unknowns, dict=True) == answer
+        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0}]
+    # but not {a: 0, f: 0, b: 0, k: S(3)/2, c: 0, d: 0, g: 0}
+    # since this is already covered by the first solution
+    got = solve(equations, unknowns, dict=True)
+    assert got == answer, (got,answer)
 
 
 def test_issue_5901():
@@ -1451,14 +1582,15 @@ def test_issue_5901():
     assert solve([f(x) - 3*f(x).diff(x)], f(x)) == \
         {f(x): 3*D}
     assert solve([f(x) - 3*f(x).diff(x), f(x)**2 - y + 4], f(x), y) == \
-        [{f(x): 3*D, y: 9*D**2 + 4}]
+        [(3*D, 9*D**2 + 4)]
     assert solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
                 h(a), g(a), set=True) == \
-        ([g(a)], {
-        (-sqrt(h(a)**2*f(a)**2 + G)/f(a),),
-        (sqrt(h(a)**2*f(a)**2+ G)/f(a),)})
-    args = [f(x).diff(x, 2)*(f(x) + g(x)) - g(x)**2 + 2, f(x), g(x)]
-    assert set(solve(*args)) == \
+        ([h(a), g(a)], {
+        (-sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a)),
+        (sqrt(f(a)**2*g(a)**2 - G)/f(a), g(a))}), solve(-f(a)**2*g(a)**2 + f(a)**2*h(a)**2 + g(a).diff(a),
+                h(a), g(a), set=True)
+    args = [[f(x).diff(x, 2)*(f(x) + g(x)), 2 - g(x)**2], f(x), g(x)]
+    assert solve(*args, set=True)[1] == \
         {(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))}
     eqs = [f(x)**2 + g(x) - 2*f(x).diff(x), g(x)**2 - 4]
     assert solve(eqs, f(x), g(x), set=True) == \
@@ -1604,14 +1736,47 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
+    pqt = {"quick": True, "particular": True}
+    pqf = {"quick": False, "particular": True}
+    assert solve([x + y - 5, 2*x - y - 1], **pqt) == {x: 2, y: 3}
+    assert solve([x + y - 5, 2*x - y - 1], **pqf) == {x: 2, y: 3}
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
-        == 3
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
-        == 3
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a + t], **pqt)) == 3
+    assert count(solve([x + y + z, y + z + a + t], **pqf)) == 3
+    assert count(solve([x + y + z, y + z + a], **pqt)) == 1
+    assert count(solve([x + y + z, y + z + a], **pqf)) == 2
+    # issue 22718
+    A = Matrix([
+        [ 1,  1,  1,  0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  0],
+        [ 1,  1,  0,  1,  1,  0,  1,  0,  1,  0, -1, -1,  0,  0],
+        [-1, -1,  0,  0, -1,  0,  0,  0,  0,  0,  1,  1,  0,  1],
+        [ 1,  0,  1,  1,  0,  1,  1,  0,  0,  1, -1,  0, -1,  0],
+        [-1,  0, -1,  0,  0, -1,  0,  0,  0,  0,  1,  0,  1,  1],
+        [-1,  0,  0, -1,  0,  0, -1,  0,  0,  0, -1,  0,  0, -1],
+        [ 0,  1,  1,  1,  0,  0,  0,  1,  1,  1,  0, -1, -1,  0],
+        [ 0, -1, -1,  0,  0,  0,  0, -1,  0,  0,  0,  1,  1,  1],
+        [ 0, -1,  0, -1,  0,  0,  0,  0, -1,  0,  0, -1,  0, -1],
+        [ 0,  0, -1, -1,  0,  0,  0,  0,  0, -1,  0,  0, -1, -1],
+        [ 0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  0,  0,  0,  0],
+        [ 0,  0,  0,  0, -1, -1,  0, -1,  0,  0,  0,  0,  0,  0]])
+    v = Matrix(symbols("v:14", integer=True))
+    B = Matrix([[2], [-2], [0], [0], [0], [0], [0], [0], [0],
+        [0], [0], [0]])
+    eqs = A@v-B
+    assert solve(eqs) == []
+    assert solve(eqs, particular=True) == []  # assumption violated
+    assert all(v for v in solve([x + y + z, y + z + a]).values())
+    for _q in (True, False):
+        assert not all(v for v in solve(
+            [x + y + z, y + z + a], quick=_q,
+            particular=True).values())
+        # raise error if quick used w/o particular=True
+        raises(ValueError, lambda: solve([x + 1], quick=_q))
+        raises(ValueError, lambda: solve([x + 1], quick=_q, particular=False))
+    # and give a good error message if someone tries to use
+    # particular with a single equation
+    raises(ValueError, lambda: solve(x + 1, particular=True))
 
 
 def test_real_roots():
@@ -1720,6 +1885,13 @@ def test_issues_6819_6820_6821_6248_8692():
 
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+def test_issue_17638():
+
+    assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
+
 
 
 def test_issue_14607():
@@ -1854,6 +2026,19 @@ def test_lambert_bivariate():
     # this is slow but not exceedingly slow
     assert solve((x**3)**(x/2) + pi/2, x) == [
         exp(LambertW(-2*log(2)/3 + 2*log(pi)/3 + I*pi*Rational(2, 3)))]
+
+    # issue 23253
+    assert solve((1/log(sqrt(x) + 2)**2 - 1/x)) == [
+        (LambertW(-exp(-2), -1) + 2)**2]
+    assert solve((1/log(1/sqrt(x) + 2)**2 - x)) == [
+        (LambertW(-exp(-2), -1) + 2)**-2]
+    assert solve((1/log(x**2 + 2)**2 - x**-4)) == [
+        -I*sqrt(2 - LambertW(exp(2))),
+        -I*sqrt(LambertW(-exp(-2)) + 2),
+        sqrt(-2 - LambertW(-exp(-2))),
+        sqrt(-2 + LambertW(exp(2))),
+        -sqrt(-2 - LambertW(-exp(-2), -1)),
+        sqrt(-2 - LambertW(-exp(-2), -1))]
 
 
 def test_rewrite_trig():
@@ -1999,6 +2184,7 @@ def test_nsolve():
     raises(ValueError, lambda: nsolve(x, (-1, 1), method='bisect'))
     raises(TypeError, lambda: nsolve((x - y + 3,x + y,z - y),(x,y,z),(-50,50)))
     raises(TypeError, lambda: nsolve((x + y, x - y), (0, 1)))
+    raises(TypeError, lambda: nsolve(x < 0.5, x, 1))
 
 
 @slow
@@ -2052,7 +2238,7 @@ def test_issue_8828():
     v = x, y, z
 
     f1 = (x - x1)**2 + (y - y1)**2 - (r1 - z)**2
-    f2 = (x2 - x)**2 + (y2 - y)**2 - z**2
+    f2 = (x - x2)**2 + (y - y2)**2 - z**2
     f3 = (x - x3)**2 + (y - y3)**2 - (r3 - z)**2
     F = f1,f2,f3
 
@@ -2069,20 +2255,12 @@ def test_issue_8828():
     assert p == q == r
 
 
-@slow
 def test_issue_2840_8155():
-    assert solve(sin(3*x) + sin(6*x)) == [
-        0, pi*Rational(-5, 3), pi*Rational(-4, 3), -pi, pi*Rational(-2, 3),
-        pi*Rational(-4, 9), -pi/3, pi*Rational(-2, 9), pi*Rational(2, 9),
-        pi/3, pi*Rational(4, 9), pi*Rational(2, 3), pi, pi*Rational(4, 3),
-        pi*Rational(14, 9), pi*Rational(5, 3), pi*Rational(16, 9), 2*pi,
-        -2*I*log(-(-1)**Rational(1, 9)), -2*I*log(-(-1)**Rational(2, 9)),
-        -2*I*log(-sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(-sin(pi/18) + I*cos(pi/18)),
-        -2*I*log(sin(pi/18) - I*cos(pi/18)),
-        -2*I*log(sin(pi/18) + I*cos(pi/18))]
-    assert solve(2*sin(x) - 2*sin(2*x)) == [
-        0, pi*Rational(-5, 3), -pi, -pi/3, pi/3, pi, pi*Rational(5, 3)]
+    # with parameter-free solutions (i.e. no `n`), we want to avoid
+    # excessive periodic solutions
+    assert solve(sin(3*x) + sin(6*x)) == [0, -2*pi/9, 2*pi/9]
+    assert solve(sin(300*x) + sin(600*x)) == [0, -pi/450, pi/450]
+    assert solve(2*sin(x) - 2*sin(2*x)) == [0, -pi/3, pi/3]
 
 
 def test_issue_9567():
@@ -2110,27 +2288,23 @@ def test_issue_12114():
     a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
     terms = [1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f,
              g - a**2 - d**2, g - b**2 - e**2, g - c**2 - f**2]
-    s = solve(terms, [a, b, c, d, e, f, g], dict=True)
-    assert s == [{a: -sqrt(-f**2 - 1), b: -sqrt(-f**2 - 1),
-                  c: -sqrt(-f**2 - 1), d: f, e: f, g: -1},
-                 {a: sqrt(-f**2 - 1), b: sqrt(-f**2 - 1),
-                  c: sqrt(-f**2 - 1), d: f, e: f, g: -1},
-                 {a: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
-                  b: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
-                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
-                  b: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
-                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
-                  b: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
-                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
-                  b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
-                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+    sol = solve(terms, [a, b, c, d, e, f, g], dict=True)
+    s = sqrt(-f**2 - 1)
+    s2 = sqrt(2 - f**2)
+    s3 = sqrt(6 - 3*f**2)
+    s4 = sqrt(3)*f
+    s5 = sqrt(3)*s2
+    assert sol == [
+        {a: -s, b: -s, c: -s, d: f, e: f, g: -1},
+        {a: s, b: s, c: s, d: f, e: f, g: -1},
+        {a: -s4/2 - s2/2, b: s4/2 - s2/2, c: s2,
+            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2},
+        {a: -s4/2 + s2/2, b: s4/2 + s2/2, c: -s2,
+            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
+        {a: s4/2 - s2/2, b: -s4/2 - s2/2, c: s2,
+            d: -f/2 - s3/2, e: -f/2 + s5/2, g: 2},
+        {a: s4/2 + s2/2, b: -s4/2 + s2/2, c: -s2,
+            d: -f/2 + s3/2, e: -f/2 - s5/2, g: 2}]
 
 
 def test_inf():
@@ -2380,6 +2554,7 @@ def test_issue_20747():
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
 
+
 def test_issue_20902():
     f = (t / ((1 + t) ** 2))
     assert solve(f.subs({t: 3 * x + 2}).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
@@ -2391,13 +2566,12 @@ def test_issue_20902():
 def test_issue_21034():
     a = symbols('a', real=True)
     system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
-    assert solve(system, x, y, z) == {x: cosh(cos(4)), z: tanh(cosh(cos(4))),
-        y: sinh(cos(a))}
-    #Constants inside hyperbolic functions should not be rewritten in terms of exp
+    # constants inside hyperbolic functions should not be rewritten in terms of exp
+    assert solve(system, x, y, z) == [(cosh(cos(4)), sinh(cos(a)), tanh(cosh(cos(4))))]
+    # but if the variable of interest is present in a hyperbolic function,
+    # then it should be rewritten in terms of exp and solved further
     newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]
     assert solve(newsystem, x) == {x: 5}
-    #If the variable of interest is present in hyperbolic function, only then
-    # it shouuld be rewritten in terms of exp and solved further
 
 
 def test_issue_4886():
@@ -2425,4 +2599,84 @@ def test_issue_21852():
 def test_issue_21942():
     eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
     sol = solve(eq, c, simplify=False, check=False)
-    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]
+    assert sol == [((a*b**(1 - e) - b**(1 - e) +
+        d**(1 - e))/a)**(1/(1 - e))]
+
+
+def test_solver_flags():
+    root = solve(x**5 + x**2 - x - 1, cubics=False)
+    rad = solve(x**5 + x**2 - x - 1, cubics=True)
+    assert root != rad
+
+
+def test_issue_22768():
+    eq = 2*x**3 - 16*(y - 1)**6*z**3
+    assert solve(eq.expand(), x, simplify=False
+        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
+        -z*(1 + sqrt(3)*I)*(y - 1)**2]
+
+
+def test_issue_22717():
+    assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
+        {y: -1, x: E}, {y: 1, x: E}]
+
+
+def test_issue_10169():
+    eq = S(-8*a - x**5*(a + b + c + e) - x**4*(4*a - 2**Rational(3,4)*c + 4*c +
+        d + 2**Rational(3,4)*e + 4*e + k) - x**3*(-4*2**Rational(3,4)*c + sqrt(2)*c -
+        2**Rational(3,4)*d + 4*d + sqrt(2)*e + 4*2**Rational(3,4)*e + 2**Rational(3,4)*k + 4*k) -
+        x**2*(4*sqrt(2)*c - 4*2**Rational(3,4)*d + sqrt(2)*d + 4*sqrt(2)*e +
+        sqrt(2)*k + 4*2**Rational(3,4)*k) - x*(2*a + 2*b + 4*sqrt(2)*d +
+        4*sqrt(2)*k) + 5)
+    assert solve_undetermined_coeffs(eq, [a, b, c, d, e, k], x) == {
+        a: Rational(5,8),
+        b: Rational(-5,1032),
+        c: Rational(-40,129) - 5*2**Rational(3,4)/129 + 5*2**Rational(1,4)/1032,
+        d: -20*2**Rational(3,4)/129 - 10*sqrt(2)/129 - 5*2**Rational(1,4)/258,
+        e: Rational(-40,129) - 5*2**Rational(1,4)/1032 + 5*2**Rational(3,4)/129,
+        k: -10*sqrt(2)/129 + 5*2**Rational(1,4)/258 + 20*2**Rational(3,4)/129
+    }
+
+
+def test_solve_undetermined_coeffs_issue_23927():
+    A, B, r, phi = symbols('A, B, r, phi')
+    e = Eq(A*sin(t) + B*cos(t), r*sin(t - phi))
+    eq = (e.lhs - e.rhs).expand(trig=True)
+    soln = solve_undetermined_coeffs(eq, (r, phi), t)
+    assert soln == [{
+        phi: 2*atan((A - sqrt(A**2 + B**2))/B),
+        r: (-A**2 + A*sqrt(A**2 + B**2) - B**2)/(A - sqrt(A**2 + B**2))
+        }, {
+        phi: 2*atan((A + sqrt(A**2 + B**2))/B),
+        r: (A**2 + A*sqrt(A**2 + B**2) + B**2)/(A + sqrt(A**2 + B**2))/-1
+        }]
+
+def test_issue_24368():
+    # Ideally these would produce a solution, but for now just check that they
+    # don't fail with a RuntimeError
+    raises(NotImplementedError, lambda: solve(Mod(x**2, 49), x))
+    s2 = Symbol('s2', integer=True, positive=True)
+    f = floor(s2/2 - S(1)/2)
+    raises(NotImplementedError, lambda: solve((Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1))*f + Mod(f**2/(f + 1) + 2*f/(f + 1) + 1/(f + 1), 1), s2))
+
+
+def test_solve_Piecewise():
+    assert [S(10)/3] == solve(3*Piecewise(
+        (S.NaN, x <= 0),
+        (20*x - 3*(x - 6)**2/2 - 176, (x >= 0) & (x >= 2) & (x>= 4) & (x >= 6) & (x < 10)),
+        (100 - 26*x, (x >= 0) & (x >= 2) & (x >= 4) & (x < 10)),
+        (16*x - 3*(x - 6)**2/2 - 176, (x >= 2) & (x >= 4) & (x >= 6) & (x < 10)),
+        (100 - 30*x, (x >= 2) & (x >= 4) & (x < 10)),
+        (30*x - 3*(x - 6)**2/2 - 196, (x>= 0) & (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 16*x, (x >= 0) & (x >= 4) & (x < 10)),
+        (26*x - 3*(x - 6)**2/2 - 196, (x >= 4) & (x >= 6) & (x < 10)),
+        (80 - 20*x, (x >= 4) & (x < 10)),
+        (40*x - 3*(x - 6)**2/2 - 256, (x >= 0) & (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 6*x, (x >= 0) & (x >= 2) & (x < 10)),
+        (36*x - 3*(x - 6)**2/2 - 256, (x >= 2) & (x >= 6) & (x < 10)),
+        (20 - 10*x, (x >= 2) & (x < 10)),
+        (50*x - 3*(x - 6)**2/2 - 276, (x >= 0) & (x >= 6) & (x < 10)),
+        (4*x, (x >= 0) & (x < 10)),
+        (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
+        (0, x < 10),  # this will simplify away
+        (S.NaN,True)))

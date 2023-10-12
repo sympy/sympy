@@ -4,7 +4,7 @@
 Import diagnostics. Run bin/diagnose_imports.py --help for details.
 """
 
-from typing import Dict as tDict
+from __future__ import annotations
 
 if __name__ == "__main__":
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                 repr(self.name), repr(self.definer))
 
     # Maps each function/variable to name of module to define it
-    symbol_definers = {}  # type: tDict[Definition, str]
+    symbol_definers: dict[Definition, str] = {}
 
     def in_module(a, b):
         """Is a the same module as or a submodule of b?"""
@@ -159,7 +159,7 @@ if __name__ == "__main__":
             for symbol in result.__dict__.iterkeys():
                 definition = Definition(
                     symbol, result.__dict__[symbol], importer_module)
-                if not definition in symbol_definers:
+                if definition not in symbol_definers:
                     symbol_definers[definition] = importee_module
             if hasattr(result, '__path__'):
                 ##PACKAGE##
@@ -174,16 +174,14 @@ if __name__ == "__main__":
             if fromlist != None:
                 symbol_list = fromlist
                 if '*' in symbol_list:
-                    if (importer_filename.endswith('__init__.py')
-                        or importer_filename.endswith('__init__.pyc')
-                        or importer_filename.endswith('__init__.pyo')):
+                    if (importer_filename.endswith(("__init__.py", "__init__.pyc", "__init__.pyo"))):
                         # We do not check starred imports inside __init__
                         # That's the normal "please copy over its imports to my namespace"
                         symbol_list = []
                     else:
                         symbol_list = result.__dict__.iterkeys()
                 for symbol in symbol_list:
-                    if not symbol in result.__dict__:
+                    if symbol not in result.__dict__:
                         if options.by_origin:
                             msg('Error: %s.%s is not defined (yet), but %s tries to import it',
                                 importee_module, symbol, importer_reference)

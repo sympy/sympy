@@ -2,7 +2,8 @@
 
 
 from sympy.polys.densearith import (
-    dup_neg, dup_rshift, dup_rem)
+    dup_neg, dup_rshift, dup_rem,
+    dup_l2_norm_squared)
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
@@ -16,11 +17,14 @@ from sympy.polys.densetools import (
     dup_eval, dmp_eval_in,
     dup_sign_variations,
     dup_real_imag)
+from sympy.polys.euclidtools import (
+    dup_discriminant)
 from sympy.polys.factortools import (
     dup_factor_list)
 from sympy.polys.polyerrors import (
     RefinementFailed,
-    DomainError)
+    DomainError,
+    PolynomialError)
 from sympy.polys.sqfreetools import (
     dup_sqf_part, dup_sqf_list)
 
@@ -123,6 +127,78 @@ def dup_root_lower_bound(f, K):
         return 1/bound
     else:
         return None
+
+def dup_cauchy_upper_bound(f, K):
+    """
+    Compute the Cauchy upper bound on the absolute value of all roots of f,
+    real or complex.
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots#Lagrange's_and_Cauchy's_bounds
+    """
+    n = dup_degree(f)
+    if n < 1:
+        raise PolynomialError('Polynomial has no roots.')
+
+    if K.is_ZZ:
+        L = K.get_field()
+        f, K = dup_convert(f, K, L), L
+    elif not K.is_QQ or K.is_RR or K.is_CC:
+        # We need to compute absolute value, and we are not supporting cases
+        # where this would take us outside the domain (or its quotient field).
+        raise DomainError('Cauchy bound not supported over %s' % K)
+    else:
+        f = f[:]
+
+    while K.is_zero(f[-1]):
+        f.pop()
+    if len(f) == 1:
+        # Monomial. All roots are zero.
+        return K.zero
+
+    lc = f[0]
+    return K.one + max(abs(n / lc) for n in f[1:])
+
+def dup_cauchy_lower_bound(f, K):
+    """Compute the Cauchy lower bound on the absolute value of all non-zero
+       roots of f, real or complex."""
+    g = dup_reverse(f)
+    if len(g) < 2:
+        raise PolynomialError('Polynomial has no non-zero roots.')
+    if K.is_ZZ:
+        K = K.get_field()
+    b = dup_cauchy_upper_bound(g, K)
+    return K.one / b
+
+def dup_mignotte_sep_bound_squared(f, K):
+    """
+    Return the square of the Mignotte lower bound on separation between
+    distinct roots of f. The square is returned so that the bound lies in
+    K or its quotient field.
+
+    References
+    ==========
+
+    .. [1] Mignotte, Maurice. "Some useful bounds." Computer algebra.
+        Springer, Vienna, 1982. 259-263.
+        https://people.dm.unipi.it/gianni/AC-EAG/Mignotte.pdf
+    """
+    n = dup_degree(f)
+    if n < 2:
+        raise PolynomialError('Polynomials of degree < 2 have no distinct roots.')
+
+    if K.is_ZZ:
+        L = K.get_field()
+        f, K = dup_convert(f, K, L), L
+    elif not K.is_QQ or K.is_RR or K.is_CC:
+        # We need to compute absolute value, and we are not supporting cases
+        # where this would take us outside the domain (or its quotient field).
+        raise DomainError('Mignotte bound not supported over %s' % K)
+
+    D = dup_discriminant(f, K)
+    l2sq = dup_l2_norm_squared(f, K)
+    return K(3)*K.abs(D) / ( K(n)**(n+1) * l2sq**(n-1) )
 
 def _mobius_from_interval(I, field):
     """Convert an open interval to a Mobius transform. """
@@ -1694,7 +1770,7 @@ class RealInterval:
         return (i.mobius + (i.neg,), i.f, i.dom)
 
     def __eq__(self, other):
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
         return self.args == other.args
 
@@ -1732,12 +1808,35 @@ class RealInterval:
         """Return the center of the real isolating interval. """
         return (self.a + self.b)/2
 
+    @property
+    def max_denom(self):
+        """Return the largest denominator occurring in either endpoint. """
+        return max(self.a.denominator, self.b.denominator)
+
     def as_tuple(self):
         """Return tuple representation of real isolating interval. """
         return (self.a, self.b)
 
     def __repr__(self):
         return "(%s, %s)" % (self.a, self.b)
+
+    def __contains__(self, item):
+        """
+        Say whether a complex number belongs to this real interval.
+
+        Parameters
+        ==========
+
+        item : pair (re, im) or number re
+            Either a pair giving the real and imaginary parts of the number,
+            or else a real number.
+
+        """
+        if isinstance(item, tuple):
+            re, im = item
+        else:
+            re, im = item, 0
+        return im == 0 and self.a <= re <= self.b
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
@@ -1944,7 +2043,7 @@ class ComplexInterval:
         return (i.a, i.b, i.I, i.Q, i.F1, i.F2, i.f1, i.f2, i.dom, i.conj)
 
     def __eq__(self, other):
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
         return self.args == other.args
 
@@ -1989,6 +2088,12 @@ class ComplexInterval:
         """Return the center of the complex isolating interval. """
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
+    @property
+    def max_denom(self):
+        """Return the largest denominator occurring in either endpoint. """
+        return max(self.ax.denominator, self.bx.denominator,
+                   self.ay.denominator, self.by.denominator)
+
     def as_tuple(self):
         """Return tuple representation of the complex isolating
         interval's SW and NE corners, respectively. """
@@ -2001,6 +2106,25 @@ class ComplexInterval:
         """This complex interval really is located in lower half-plane. """
         return ComplexInterval(self.a, self.b, self.I, self.Q,
             self.F1, self.F2, self.f1, self.f2, self.dom, conj=True)
+
+    def __contains__(self, item):
+        """
+        Say whether a complex number belongs to this complex rectangular
+        region.
+
+        Parameters
+        ==========
+
+        item : pair (re, im) or number re
+            Either a pair giving the real and imaginary parts of the number,
+            or else a real number.
+
+        """
+        if isinstance(item, tuple):
+            re, im = item
+        else:
+            re, im = item, 0
+        return self.ax <= re <= self.bx and self.ay <= im <= self.by
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """

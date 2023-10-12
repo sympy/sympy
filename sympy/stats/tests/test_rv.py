@@ -23,7 +23,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         moment, median)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
-from sympy.testing.pytest import raises, skip, XFAIL
+from sympy.testing.pytest import raises, skip, XFAIL, warns_deprecated_sympy
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -218,8 +218,8 @@ def test_Sample():
 
     raises(TypeError, lambda: P(Y > z, numsamples=5))
 
-    assert P(sin(Y) <= 1, numsamples=10) == 1
-    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1
+    assert P(sin(Y) <= 1, numsamples=10) == 1.0
+    assert P(sin(Y) <= 1, cos(Y) < 1, numsamples=10) == 1.0
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
@@ -232,6 +232,8 @@ def test_Sample():
     assert isinstance(sample(Y), numpy.float64)
     assert isinstance(sample(X, size=2), numpy.ndarray)
 
+    with warns_deprecated_sympy():
+        sample(X, numsamples=2)
 
 @XFAIL
 def test_samplingE():
@@ -295,8 +297,8 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x = Symbol('x', real=True, finite=True)
-    z = Symbol('z', real=True, finite=True)
+    x = Symbol('x', real=True)
+    z = Symbol('z', real=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
@@ -311,7 +313,7 @@ def test_NamedArgsMixin():
     class Foo(Basic, NamedArgsMixin):
         _argnames = 'foo', 'bar'
 
-    a = Foo(1, 2)
+    a = Foo(S(1), S(2))
 
     assert a.foo == 1
     assert a.bar == 2
@@ -321,7 +323,7 @@ def test_NamedArgsMixin():
     class Bar(Basic, NamedArgsMixin):
         pass
 
-    raises(AttributeError, lambda: Bar(1, 2).foo)
+    raises(AttributeError, lambda: Bar(S(1), S(2)).foo)
 
 def test_density_constant():
     assert density(3)(2) == 0

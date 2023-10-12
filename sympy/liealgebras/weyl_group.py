@@ -2,9 +2,10 @@
 
 from .cartan_type import CartanType
 from mpmath import fac
-from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
+from sympy.core.backend import Matrix, eye, Rational, igcd
+from sympy.core.basic import Atom
 
-class WeylGroup(Basic):
+class WeylGroup(Atom):
 
     """
     For each semisimple Lie group, we have a Weyl group.  It is a subgroup of
@@ -16,7 +17,7 @@ class WeylGroup(Basic):
     """
 
     def __new__(cls, cartantype):
-        obj = Basic.__new__(cls, cartantype)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 

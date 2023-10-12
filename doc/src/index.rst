@@ -1,60 +1,60 @@
 .. _documentation:
 
-.. SymPy documentation master file, created by sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. module:: sympy
 
 Welcome to SymPy's documentation!
 ----------------------------------
 
-A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
+A `PDF version of these docs <https://github.com/sympy/sympy/releases>`_ is also available.
 
 `SymPy <https://sympy.org>`_ is a Python library for symbolic mathematics.
-If you are new to SymPy, start with the :ref:`Tutorial <tutorial>`.
+If you are new to SymPy, start with the :ref:`introductory tutorial <intro-tutorial>`.
 
 This is the central page for all of SymPy's documentation.
 
 ==================================================================
 
-..  rst-class:: column
+:ref:`Installation <installation>`
+----------------------------------
 
-:ref:`SymPy Tutorials <tutorial>`
--------------------------------------------------------
+Instructions on how to install SymPy.
 
-*Master SymPy concepts and features*
+:ref:`Tutorials <tutorials>`
+----------------------------
 
-
-..  rst-class:: column
+Tutorials are the best place to start for anyone new to SymPy or one of
+SymPy's features.
 
 :ref:`How-to Guides <guides>`
--------------------------------------------------------
+-----------------------------
 
-*Step-by-step intructions on how to do different key developer tasks*
+How-to guides are step-by-step instructions on how to do specific tasks.
 
+:ref:`Explanations <explanations>`
+----------------------------------
 
-..  rst-class:: column clearfix
+Explanations provide in-depth discussions about select SymPy features. These
+topic guides talk about things like the motivation behind design decisions,
+technical implementation details, and opinionated recommendations.
 
-:ref:`Explanation <explanation>`
--------------------------------------------------------
+:ref:`API Reference <reference>`
+--------------------------------
 
-*Common pitfalls and advanced topics*
+The API reference is a detailed description of the SymPy API. Every SymPy
+function and class is enumerated here with detailed information on what each
+function does.
 
+:ref:`Contributing <contributing>`
+----------------------------------
 
-..  rst-class:: column
-
-:ref:`SymPy API Reference <reference>`
--------------------------------------------------------
-
-*SymPy internal and public modules*
-
-
-..  rst-class:: clearfix row custom-headings
+The contributing guide goes over the details necessary to contribute to SymPy.
 
 .. toctree::
    :hidden:
 
-   tutorial/index.rst
+   install.md
+   tutorials/index.rst
+   guides/index.rst
    explanation/index.rst
    reference/index.rst
-   guides/index.rst
-   miscellaneous/index.rst
+   contributing/index.rst

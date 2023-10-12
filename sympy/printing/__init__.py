@@ -14,6 +14,8 @@ from .codeprinter import print_ccode, print_fcode
 
 from .codeprinter import ccode, fcode, cxxcode # noqa:F811
 
+from .smtlib import smtlib_code
+
 from .glsl import glsl_code, print_glsl
 
 from .rcode import rcode, print_rcode
@@ -63,6 +65,9 @@ __all__ = [
 
     # sympy.printing.codeprinter
     'ccode', 'print_ccode', 'cxxcode', 'fcode', 'print_fcode',
+
+    # sympy.printing.smtlib
+    'smtlib_code',
 
     # sympy.printing.glsl
     'glsl_code', 'print_glsl',

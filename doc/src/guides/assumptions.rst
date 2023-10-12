@@ -1,4 +1,4 @@
-.. _assumptions:
+.. _assumptions-guide:
 
 =============
  Assumptions
@@ -113,7 +113,7 @@ interpreted as meaning that the result is *unknown*.
 
 .. note:: We need to use ``print`` in the above examples because the special
           value ``None`` does not display by default in the Python
-          interpretter.
+          interpreter.
 
 There are several reasons why an assumptions query might give ``None``. It is
 possible that the query is *unknowable* as in the case of ``x`` above. Since
@@ -353,6 +353,8 @@ rational number.
 
 A full table of the possible predicates and their definitions is given below.
 
+.. _assumptions-guide-predicates:
+
 .. list-table:: Assumptions predicates for the (old) assumptions
     :widths: 20, 45, 35
     :header-rows: 1
@@ -589,7 +591,7 @@ References for the above definitions
 .. [rational] https://en.wikipedia.org/wiki/Rational_number
 .. [irrational] https://en.wikipedia.org/wiki/Irrational_number
 .. [integer] https://en.wikipedia.org/wiki/Integer
-.. [parity] https://en.wikipedia.org/wiki/Parity_(mathematics)
+.. [parity] https://en.wikipedia.org/wiki/Parity_%28mathematics%29
 .. [prime] https://en.wikipedia.org/wiki/Prime_number
 .. [composite] https://en.wikipedia.org/wiki/Composite_number
 .. [zero] https://en.wikipedia.org/wiki/0
@@ -849,6 +851,8 @@ extended real or any of the standard infinities (even ``zoo`` is commutative).
 We are left with very little that we can say about what such an expression
 *does* represent.
 
+
+.. _assumptions-guide-other-is-properties:
 
 Other is_* properties
 =====================
@@ -1162,11 +1166,11 @@ assumptions system. Briefly these are:
    efficiently applying the implication rules. This happens once when SymPy is
    imported before even the :class:`~.Basic` class is defined.
 
-2. The ``ManagedProperties`` metaclass is defined which is the metaclass for
-   all :class:`~.Basic` subclasses. This class will post-process every
+2. The ``Basic.__init_subclass__`` method will post-process every
    :class:`~.Basic` subclass to add the relevant properties needed for
-   assumptions queries.  This also adds the ``default_assumptions`` attribute
-   to the class. This happens each time a :class:`~.Basic` subclass is defined.
+   assumptions queries. This also adds the ``default_assumptions`` attribute
+   to the class. This happens each time a :class:`~.Basic` subclass is
+   defined (when its containing module is imported).
 
 3. Every :class:`~.Basic` instance initially uses the ``default_assumptions`` class
    attribute. When an assumptions query is made on a :class:`~.Basic` instance
@@ -1219,7 +1223,7 @@ object directly like (full output omitted):
       ('composite', False),
       ...
 
-The ``ManagedProperties`` metaclass will inspect the attributes of each
+The ``Basic.__init_subclass__`` method will inspect the attributes of each
 ``Basic`` class to see if any assumptions related attributes are defined. An
 example of these is the ``is_extended_nonnegative = True`` attribute defined
 in the ``expreal`` class. The implications of any such attributes will be
@@ -1429,16 +1433,9 @@ assumptions can be specified. However the algorithms to make use of that
 information are not yet implemented and the exact API for specifying
 relational assumptions has not been decided upon.
 
-Dynamic changing assumptions
-----------------------------
-
-Selectively controlling evaluation
-----------------------------------
-
-Extensibility
--------------
-
-New assumptions
-===============
-
-ZZZ: Talk about the new assumptions here...
+..
+  Titles That can be added:
+  1. Dynamic changing assumptions
+  2. Selectively controlling evaluation
+  3. Extensibility
+  4. New assumptions

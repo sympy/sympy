@@ -16,7 +16,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.exponential import log
-from sympy.core.basic import sympify
+from sympy.core.basic import _sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
@@ -66,9 +66,10 @@ class QubitState(State):
 
         # Turn strings into tuple of strings
         if len(args) == 1 and isinstance(args[0], str):
-            args = tuple(args[0])
-
-        args = sympify(args)
+            args = tuple( S.Zero if qb == "0" else S.One for qb in args[0])
+        else:
+            args = tuple( S.Zero if qb == "0" else S.One if qb == "1" else qb for qb in args)
+        args = tuple(_sympify(arg) for arg in args)
 
         # Validate input (must have 0 or 1 input)
         for element in args:
@@ -186,9 +187,9 @@ class Qubit(QubitState, Ket):
 
     def _eval_innerproduct_QubitBra(self, bra, **hints):
         if self.label == bra.label:
-            return Integer(1)
+            return S.One
         else:
-            return Integer(0)
+            return S.Zero
 
     def _represent_default_basis(self, **options):
         return self._represent_ZGate(None, **options)
@@ -208,7 +209,7 @@ class Qubit(QubitState, Ket):
             return Matrix(result)
         elif _format == 'numpy':
             import numpy as np
-            return np.matrix(result, dtype='complex').transpose()
+            return np.array(result, dtype='complex').transpose()
         elif _format == 'scipy.sparse':
             from scipy import sparse
             return sparse.csr_matrix(result, dtype='complex').transpose()

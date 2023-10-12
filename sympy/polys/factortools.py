@@ -1,5 +1,8 @@
 """Polynomial factorization routines in characteristic zero. """
 
+from sympy.external.gmpy import GROUND_TYPES
+
+from sympy.core.random import _randint
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
@@ -70,10 +73,15 @@ from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import (
     ExtraneousFactors, DomainError, CoercionFailed, EvaluationFailed)
 
-from sympy.ntheory import nextprime, isprime, factorint
 from sympy.utilities import subsets
 
 from math import ceil as _ceil, log as _log
+
+
+if GROUND_TYPES == 'flint':
+    from flint import fmpz_poly
+else:
+    fmpz_poly = None
 
 
 def dup_trial_division(f, factors, K):
@@ -163,7 +171,6 @@ def dup_zz_mignotte_bound(f, K):
 
     """
     from sympy.functions.combinatorial.factorials import binomial
-
     d = dup_degree(f)
     delta = _ceil(d / 2)
     delta2 = _ceil(delta / 2)
@@ -319,6 +326,8 @@ def dup_zz_zassenhaus(f, K):
     if n == 1:
         return [f]
 
+    from sympy.ntheory import isprime
+
     fc = f[-1]
     A = dup_max_norm(f, K)
     b = dup_LC(f, K)
@@ -423,6 +432,7 @@ def dup_zz_irreducible_p(f, K):
     e_fc = dup_content(f[1:], K)
 
     if e_fc:
+        from sympy.ntheory import factorint
         e_ff = factorint(int(e_fc))
 
         for p in e_ff.keys():
@@ -447,6 +457,13 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
     >>> R.dup_cyclotomic_p(g)
     True
+
+    References
+    ==========
+
+    Bradford, Russell J., and James H. Davenport. "Effective tests for
+    cyclotomic polynomials." In International Symposium on Symbolic and
+    Algebraic Computation, pp. 244-251. Springer, Berlin, Heidelberg, 1988.
 
     """
     if K.is_QQ:
@@ -508,6 +525,7 @@ def dup_cyclotomic_p(f, K, irreducible=False):
 
 def dup_zz_cyclotomic_poly(n, K):
     """Efficiently generate n-th cyclotomic polynomial. """
+    from sympy.ntheory import factorint
     h = [K.one, -K.one]
 
     for p, k in factorint(n).items():
@@ -518,6 +536,8 @@ def dup_zz_cyclotomic_poly(n, K):
 
 
 def _dup_cyclotomic_decompose(n, K):
+    from sympy.ntheory import factorint
+
     H = [[K.one, -K.one]]
 
     for p, k in factorint(n).items():
@@ -650,6 +670,12 @@ def dup_zz_factor(f, K):
     .. [1] [Gathen99]_
 
     """
+    if GROUND_TYPES == 'flint':
+        f_flint = fmpz_poly(f[::-1])
+        cont, factors = f_flint.factor()
+        factors = [(fac.coeffs()[::-1], exp) for fac, exp in factors]
+        return cont, factors
+
     cont, g = dup_primitive(f, K)
 
     n = dup_degree(g)
@@ -868,7 +894,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
         m = dmp_nest([K.one, -a], n, K)
         M = dmp_one(n, K)
 
-        for k in K.map(range(0, d)):
+        for k in range(0, d):
             if dmp_zero_p(c, u):
                 break
 
@@ -876,7 +902,7 @@ def dmp_zz_diophantine(F, c, A, d, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, n, u, K)
 
             if not dmp_zero_p(C, v):
-                C = dmp_quo_ground(C, K.factorial(k + 1), v, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), v, K)
                 T = dmp_zz_diophantine(G, C, A, d, p, v, K)
 
                 for i, t in enumerate(T):
@@ -923,7 +949,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
         dj = dmp_degree_in(s, w, w)
 
-        for k in K.map(range(0, dj)):
+        for k in range(0, dj):
             if dmp_zero_p(c, w):
                 break
 
@@ -931,7 +957,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
             C = dmp_diff_eval_in(c, k + 1, a, w, w, K)
 
             if not dmp_zero_p(C, w - 1):
-                C = dmp_quo_ground(C, K.factorial(k + 1), w - 1, K)
+                C = dmp_quo_ground(C, K.factorial(K(k) + 1), w - 1, K)
                 T = dmp_zz_diophantine(G, C, I, d, p, w - 1, K)
 
                 for i, (h, t) in enumerate(zip(H, T)):
@@ -977,7 +1003,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.testing.randtest import _randint
+    from sympy.ntheory import nextprime
 
     randint = _randint(seed)
 
@@ -1177,7 +1203,7 @@ def dup_zz_i_factor(f, K0):
         # Extract content
         fac_denom, fac_num = dup_clear_denoms(fac, K1)
         fac_num_ZZ_I = dup_convert(fac_num, K1, K0)
-        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K1)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K0)
 
         coeff = (coeff * content ** i) // fac_denom ** i
         new_factors.append((fac_prim, i))
@@ -1210,7 +1236,7 @@ def dmp_zz_i_factor(f, u, K0):
         # Extract content
         fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
         fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
-        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K0)
 
         coeff = (coeff * content ** i) // fac_denom ** i
         new_factors.append((fac_prim, i))

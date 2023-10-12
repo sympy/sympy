@@ -24,7 +24,7 @@ class PermutationMatrix(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, PermutationMatrix
+    >>> from sympy import Matrix, PermutationMatrix
     >>> from sympy.combinatorics import Permutation
 
     Creating a permutation matrix:
@@ -75,7 +75,7 @@ class PermutationMatrix(MatrixExpr):
     def is_Identity(self):
         return self.args[0].is_Identity
 
-    def doit(self):
+    def doit(self, **hints):
         if self.is_Identity:
             return Identity(self.rows)
         return self
@@ -189,7 +189,7 @@ class MatrixPermute(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, MatrixPermute
+    >>> from sympy import Matrix, MatrixPermute
     >>> from sympy.combinatorics import Permutation
 
     Permuting the matrix rows:
@@ -251,12 +251,12 @@ class MatrixPermute(MatrixExpr):
 
         return super().__new__(cls, mat, perm, axis)
 
-    def doit(self, deep=True):
+    def doit(self, deep=True, **hints):
         mat, perm, axis = self.args
 
         if deep:
-            mat = mat.doit(deep=deep)
-            perm = perm.doit(deep=deep)
+            mat = mat.doit(deep=deep, **hints)
+            perm = perm.doit(deep=deep, **hints)
 
         if perm.is_Identity:
             return mat

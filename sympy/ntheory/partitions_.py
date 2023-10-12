@@ -1,9 +1,8 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
-from sympy.core.numbers import igcd
-from .residue_ntheory import (_sqrt_mod_prime_power,
-    legendre_symbol, jacobi_symbol, is_quad_residue)
+from sympy.external.gmpy import gcd, legendre, jacobi
+from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
 
 import math
 
@@ -37,7 +36,7 @@ def _a(n, k, prec):
     References
     ==========
 
-    .. [1] http://msp.org/pjm/1956/6-1/pjm-v6-n1-p18-p.pdf
+    .. [1] https://msp.org/pjm/1956/6-1/pjm-v6-n1-p18-p.pdf
 
     """
     if k == 1:
@@ -63,7 +62,7 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(
                 from_int(4*m), pi, prec), from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int((-1)**e*jacobi_symbol(m - 1, m)),
+                from_int((-1)**e*jacobi(m - 1, m)),
                 mpf_sqrt(from_int(k), prec), prec),
                 mpf_sin(arg, prec), prec)
         if p == 3:
@@ -75,14 +74,14 @@ def _a(n, k, prec):
             arg = mpf_div(mpf_mul(from_int(4*m), pi, prec),
                 from_int(mod), prec)
             return mpf_mul(mpf_mul(
-                from_int(2*(-1)**(e + 1)*legendre_symbol(m, 3)),
+                from_int(2*(-1)**(e + 1)*legendre(m, 3)),
                 mpf_sqrt(from_int(k//3), prec), prec),
                 mpf_sin(arg, prec), prec)
         v = k + v % k
         if v % p == 0:
             if e == 1:
                 return mpf_mul(
-                    from_int(jacobi_symbol(3, k)),
+                    from_int(jacobi(3, k)),
                     mpf_sqrt(from_int(k), prec), prec)
             return fzero
         if not is_quad_residue(v, p):
@@ -94,12 +93,12 @@ def _a(n, k, prec):
             mpf_mul(from_int(4*m), pi, prec),
             from_int(k), prec)
         return mpf_mul(mpf_mul(
-            from_int(2*jacobi_symbol(3, k)),
+            from_int(2*jacobi(3, k)),
             mpf_sqrt(from_int(k), prec), prec),
             mpf_cos(arg, prec), prec)
 
     if p != 2 or e >= 3:
-        d1, d2 = igcd(k1, 24), igcd(k2, 24)
+        d1, d2 = gcd(k1, 24), gcd(k2, 24)
         e = 24//(d1*d2)
         n1 = ((d2*e*n + (k2**2 - 1)//d1)*
             pow(e*k2*k2*d2, _totient[k1] - 1, k1)) % k1
@@ -143,7 +142,7 @@ def npartitions(n, verbose=False):
     P(n) is computed using the Hardy-Ramanujan-Rademacher formula [1]_.
 
 
-    The correctness of this implementation has been tested through 10**10.
+    The correctness of this implementation has been tested through $10^{10}$.
 
     Examples
     ========
@@ -155,7 +154,7 @@ def npartitions(n, verbose=False):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/PartitionFunctionP.html
+    .. [1] https://mathworld.wolfram.com/PartitionFunctionP.html
 
     """
     n = int(n)

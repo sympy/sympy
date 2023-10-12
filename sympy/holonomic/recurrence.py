@@ -17,7 +17,7 @@ def RecurrenceOperators(base, generator):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy import symbols
     >>> from sympy.holonomic.recurrence import RecurrenceOperators
     >>> n = symbols('n', integer=True)
@@ -41,7 +41,7 @@ class RecurrenceOperatorAlgebra:
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy import symbols
     >>> from sympy.holonomic.recurrence import RecurrenceOperators
     >>> n = symbols('n', integer=True)
@@ -113,7 +113,7 @@ class RecurrenceOperator:
     ========
 
     >>> from sympy.holonomic.recurrence import RecurrenceOperator, RecurrenceOperators
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy import symbols
     >>> n = symbols('n', integer=True)
     >>> R, Sn = RecurrenceOperators(ZZ.old_poly_ring(n),'Sn')
@@ -279,6 +279,8 @@ class RecurrenceOperator:
         for i, j in enumerate(listofpoly):
             if j == self.parent.base.zero:
                 continue
+
+            j = self.parent.base.to_sympy(j)
 
             if i == 0:
                 print_str += '(' + sstr(j) + ')'

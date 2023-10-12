@@ -1,19 +1,27 @@
 """Computational algebraic field theory. """
 
 __all__ = [
-    'AlgebraicNumber',
+    'minpoly', 'minimal_polynomial',
 
-    'minpoly', 'minimal_polynomial', 'primitive_element',
+    'field_isomorphism', 'primitive_element', 'to_number_field',
 
-    'field_isomorphism',
+    'isolate',
 
-    'to_number_field', 'isolate',
+    'round_two',
+
+    'prime_decomp', 'prime_valuation',
+
+    'galois_group',
 ]
 
-from sympy.core.numbers import AlgebraicNumber
+from .minpoly import minpoly, minimal_polynomial
 
-from .minpoly import minpoly, minimal_polynomial, primitive_element
+from .subfield import field_isomorphism, primitive_element, to_number_field
 
-from .isomorphism import field_isomorphism
+from .utilities import isolate
 
-from .numbers import to_number_field, isolate
+from .basis import round_two
+
+from .primes import prime_decomp, prime_valuation
+
+from .galoisgroups import galois_group

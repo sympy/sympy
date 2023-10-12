@@ -125,7 +125,6 @@ if lfortran and cin:
         )
 
 
-
     def test_convert_py():
         src1 = (
             src +

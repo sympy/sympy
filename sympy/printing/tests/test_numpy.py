@@ -1,31 +1,36 @@
 from sympy.concrete.summations import Sum
 from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)
+from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import polygamma
+from sympy.functions.special.error_functions import (Si, Ci)
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 
-from sympy.matrices.dense import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
     _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
-from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
 
-from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 
 np = import_module('numpy')
 
+if np:
+    deafult_float_info = np.finfo(np.array([]).dtype)
+    NUMPY_DEFAULT_EPSILON = deafult_float_info.eps
 
 def test_numpy_piecewise_regression():
     """
@@ -89,9 +94,9 @@ def test_codegen_einsum():
     cg = convert_matrix_to_array(M * N)
     f = lambdify((M, N), cg, 'numpy')
 
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    assert (f(ma, mb) == ma*mb).all()
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    assert (f(ma, mb) == np.matmul(ma, mb)).all()
 
 
 def test_codegen_extra():
@@ -102,10 +107,10 @@ def test_codegen_extra():
     N = MatrixSymbol("N", 2, 2)
     P = MatrixSymbol("P", 2, 2)
     Q = MatrixSymbol("Q", 2, 2)
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    mc = np.matrix([[2, 0], [1, 2]])
-    md = np.matrix([[1,-1], [4, 7]])
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    mc = np.array([[2, 0], [1, 2]])
+    md = np.array([[1,-1], [4, 7]])
 
     cg = ArrayTensorProduct(M, N)
     f = lambdify((M, N), cg, 'numpy')
@@ -211,7 +216,7 @@ def test_expm1():
         skip("NumPy not installed")
 
     f = lambdify((a,), expm1(a), 'numpy')
-    assert abs(f(1e-10) - 1e-10 - 5e-21) < 1e-22
+    assert abs(f(1e-10) - 1e-10 - 5e-21) <= 1e-10 * NUMPY_DEFAULT_EPSILON
 
 
 def test_log1p():
@@ -219,41 +224,41 @@ def test_log1p():
         skip("NumPy not installed")
 
     f = lambdify((a,), log1p(a), 'numpy')
-    assert abs(f(1e-99) - 1e-99) < 1e-100
+    assert abs(f(1e-99) - 1e-99) <= 1e-99 * NUMPY_DEFAULT_EPSILON
 
 def test_hypot():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a, b), hypot(a, b), 'numpy')(3, 4) - 5) < 1e-16
+    assert abs(lambdify((a, b), hypot(a, b), 'numpy')(3, 4) - 5) <= NUMPY_DEFAULT_EPSILON
 
 def test_log10():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), log10(a), 'numpy')(100) - 2) < 1e-16
+    assert abs(lambdify((a,), log10(a), 'numpy')(100) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_exp2():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), exp2(a), 'numpy')(5) - 32) < 1e-16
+    assert abs(lambdify((a,), exp2(a), 'numpy')(5) - 32) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_log2():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), log2(a), 'numpy')(256) - 8) < 1e-16
+    assert abs(lambdify((a,), log2(a), 'numpy')(256) - 8) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_Sqrt():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), Sqrt(a), 'numpy')(4) - 2) < 1e-16
+    assert abs(lambdify((a,), Sqrt(a), 'numpy')(4) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_sqrt():
     if not np:
         skip("NumPy not installed")
-    assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) < 1e-16
+    assert abs(lambdify((a,), sqrt(a), 'numpy')(4) - 2) <= NUMPY_DEFAULT_EPSILON
 
 
 def test_matsolve():
@@ -276,19 +281,6 @@ def test_matsolve():
 
     assert np.allclose(f_matsolve(m0, x0), f(m0, x0))
 
-
-def test_issue_15601():
-    if not np:
-        skip("Numpy not installed")
-
-    M = MatrixSymbol("M", 3, 3)
-    N = MatrixSymbol("N", 3, 3)
-    expr = M*N
-    f = lambdify((M, N), expr, "numpy")
-
-    with warns_deprecated_sympy():
-        ans = f(eye(3), eye(3))
-        assert np.array_equal(ans, np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]))
 
 def test_16857():
     if not np:
@@ -322,6 +314,10 @@ def test_issue_17006():
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
 
+def test_numpy_array():
+    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
+    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
+
 def test_numpy_known_funcs_consts():
     assert _numpy_known_constants['NaN'] == 'numpy.nan'
     assert _numpy_known_constants['EulerGamma'] == 'numpy.euler_gamma'
@@ -348,3 +344,8 @@ def test_scipy_print_methods():
     assert hasattr(prntr, '_print_erf')
     assert hasattr(prntr, '_print_factorial')
     assert hasattr(prntr, '_print_chebyshevt')
+    k = Symbol('k', integer=True, nonnegative=True)
+    x = Symbol('x', real=True)
+    assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
+    assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
+    assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"

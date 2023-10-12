@@ -89,14 +89,14 @@ def shape(expr):
 
     This function returns the shape of any object representing matrix or array.
 
-    >>> from sympy import shape, Array, Matrix, Integral
+    >>> from sympy import shape, Array, ImmutableDenseMatrix, Integral
     >>> from sympy.abc import x
     >>> A = Array([1, 2])
     >>> shape(A)
     (2,)
     >>> shape(Integral(A, x))
     (2,)
-    >>> M = Matrix([1, 2])
+    >>> M = ImmutableDenseMatrix([1, 2])
     >>> shape(M)
     (2, 1)
     >>> shape(Integral(M, x))

@@ -549,10 +549,6 @@ In :mod:`sympy.physics.vector` multiple interfaces to vector multiplication have
 implemented, at the operator level, method level, and function level. The
 vector dot product can work as follows: ::
 
-  >>> N.x & N.x
-  1
-  >>> N.x & N.y
-  0
   >>> N.x.dot(N.x)
   1
   >>> N.x.dot(N.y)
@@ -573,17 +569,13 @@ The cross product is the other vector multiplication which will be discussed
 here. It offers similar interfaces to the dot product, and comes with the same
 warnings. ::
 
-  >>> N.x ^ N.x
-  0
-  >>> N.x ^ N.y
-  N.z
   >>> N.x.cross(N.x)
   0
   >>> N.x.cross(N.z)
   - N.y
   >>> cross(N.x, N.y)
   N.z
-  >>> N.x ^ (N.y + N.z)
+  >>> cross(N.x, (N.y + N.z))
   - N.y + N.z
 
 Two additional operations can be done with vectors: normalizing the vector to

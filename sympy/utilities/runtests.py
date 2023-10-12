@@ -1,9 +1,13 @@
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+"""
+.. deprecated:: 1.6
 
-SymPyDeprecationWarning(
-    feature="Import sympy.utilities.runtests",
-    useinstead="Import from sympy.testing.runtests",
-    issue=18095,
-    deprecated_since_version="1.6").warn()
+   sympy.utilities.runtests has been renamed to sympy.testing.runtests.
+"""
+
+from sympy.utilities.exceptions import sympy_deprecation_warning
+
+sympy_deprecation_warning("The sympy.utilities.runtests submodule is deprecated. Use sympy.testing.runtests instead.",
+    deprecated_since_version="1.6",
+    active_deprecations_target="deprecated-sympy-utilities-submodules")
 
 from sympy.testing.runtests import *  # noqa:F401

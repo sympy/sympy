@@ -63,8 +63,8 @@ def richardson(A, k, n, N):
     """
     s = S.Zero
     for j in range(0, N + 1):
-        s += A.subs(k, Integer(n + j)).doit() * (n + j)**N * (-1)**(j + N) / \
-            (factorial(j) * factorial(N - j))
+        s += (A.subs(k, Integer(n + j)).doit() * (n + j)**N *
+              S.NegativeOne**(j + N) / (factorial(j) * factorial(N - j)))
     return s
 
 

@@ -5,19 +5,19 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
-from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
+from sympy.external.gmpy import gcd, GROUND_TYPES, SYMPY_INTS
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
     primerange, pollard_rho, perfect_power, multiplicity, multiplicity_in_factorial,
-    trailing, divisor_count, primorial, pollard_pm1, divisor_sigma,
+    divisor_count, primorial, pollard_pm1, divisor_sigma,
     factorrat, reduced_totient)
 from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     antidivisors, antidivisor_count, core, udivisors, udivisor_sigma,
-    udivisor_count, proper_divisor_count, primenu, primeomega, small_trailing,
+    udivisor_count, proper_divisor_count, primenu, primeomega,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
-    is_deficient, is_amicable, dra, drm)
+    is_deficient, is_amicable, dra, drm, _perfect_power)
 
 from sympy.testing.pytest import raises, slow
 
@@ -66,24 +66,6 @@ def multiproduct(seq=(), start=1):
     return units * multiproduct(multi)**2
 
 
-def test_trailing_bitcount():
-    assert trailing(0) == 0
-    assert trailing(1) == 0
-    assert trailing(-1) == 0
-    assert trailing(2) == 1
-    assert trailing(7) == 0
-    assert trailing(-7) == 0
-    for i in range(100):
-        assert trailing(1 << i) == i
-        assert trailing((1 << i) * 31337) == i
-    assert trailing(1 << 1000001) == 1000001
-    assert trailing((1 << 273956)*7**37) == 273956
-    # issue 12709
-    big = small_trailing[-1]*2
-    assert trailing(-big) == trailing(big)
-    assert bitcount(-big) == bitcount(big)
-
-
 def test_multiplicity():
     for b in range(2, 20):
         for i in range(100):
@@ -115,9 +97,35 @@ def test_multiplicity_in_factorial():
         assert multiplicity(i, n) == multiplicity_in_factorial(i, 1000)
 
 
+def test_private_perfect_power():
+    assert _perfect_power(0) is False
+    assert _perfect_power(1) is False
+    assert _perfect_power(2) is False
+    assert _perfect_power(3) is False
+    for x in [2, 3, 5, 6, 7, 12, 15, 105, 100003]:
+        for y in range(2, 100):
+            assert _perfect_power(x**y) == (x, y)
+            if x != 2:
+                assert _perfect_power(x**y, k=3) == (x, y)
+            if x == 100003:
+                assert _perfect_power(x**y, k=100003) == (x, y)
+            assert _perfect_power(101*x**y) == False
+            # Catalan's conjecture
+            if x**y not in [8, 9]:
+                assert _perfect_power(x**y + 1) == False
+                assert _perfect_power(x**y - 1) == False
+    for x in range(1, 10):
+        for y in range(1, 10):
+            g = gcd(x, y)
+            if g == 1:
+                assert _perfect_power(5**x * 101**y) == False
+            else:
+                assert _perfect_power(5**x * 101**y) == (5**(x//g) * 101**(y//g), g)
+
+
 def test_perfect_power():
-    raises(ValueError, lambda: perfect_power(0))
-    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
+    raises(ValueError, lambda: perfect_power(0.1))
+    assert perfect_power(0) is False
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False
@@ -156,6 +164,12 @@ def test_perfect_power():
         assert m and m[1] == d or d == 1
         m = perfect_power(t*3**d, big=False)
         assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
+
+    # negatives and non-integer rationals
+    assert perfect_power(-4) is False
+    assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
+    assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
 
 @slow
@@ -285,6 +299,18 @@ def test_factorint():
     n = {4: 2, 12: 3}
     assert str(factorint(n)) == sans
     assert str(factorint(Dict(n))) == sans
+
+
+def test_factorint_flint_int_issue():
+    """
+    Because of a bug in flint, we are temporarily wrapping int in `factorint`.
+    When this fails, the int wrapper is no longer needed in factorint.
+
+    https://github.com/flintlib/python-flint/issues/92
+    https://github.com/sympy/sympy/pull/25749
+    """
+    if GROUND_TYPES == 'flint':
+        assert pow(2, 5, SYMPY_INTS[1](1000)) == 1
 
 
 def test_divisors_and_divisor_count():
@@ -453,7 +479,7 @@ def test_issue_4356():
 
 def test_divisors():
     assert divisors(28) == [1, 2, 4, 7, 14, 28]
-    assert [x for x in divisors(3*5*7, 1)] == [1, 3, 5, 15, 7, 21, 35, 105]
+    assert list(divisors(3*5*7, 1)) == [1, 3, 5, 15, 7, 21, 35, 105]
     assert divisors(0) == []
 
 
@@ -465,7 +491,7 @@ def test_divisor_count():
 def test_proper_divisors():
     assert proper_divisors(-1) == []
     assert proper_divisors(28) == [1, 2, 4, 7, 14]
-    assert [x for x in proper_divisors(3*5*7, True)] == [1, 3, 5, 15, 7, 21, 35]
+    assert list(proper_divisors(3*5*7, True)) == [1, 3, 5, 15, 7, 21, 35]
 
 
 def test_proper_divisor_count():
@@ -517,7 +543,7 @@ def test_visual_factorint():
     assert type(forty2) == Mul
     assert str(forty2) == '2**1*3**1*7**1'
     assert factorint(1, visual=True) is S.One
-    no = dict(evaluate=False)
+    no = {"evaluate": False}
     assert factorint(42**2, visual=True) == Mul(Pow(2, 2, **no),
                                                 Pow(3, 2, **no),
                                                 Pow(7, 2, **no), **no)
@@ -567,7 +593,7 @@ def test_visual_io():
     assert [fi(th, visual=0) for th in [d, m, n]] == [m, d, d]
 
     # test reevaluation
-    no = dict(evaluate=False)
+    no = {"evaluate": False}
     assert sm({4: 2}, visual=False) == sm(16)
     assert sm(Mul(*[Pow(k, v, **no) for k, v in {4: 2, 2: 6}.items()], **no),
               visual=False) == sm(2**10)

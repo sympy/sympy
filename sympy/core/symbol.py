@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
@@ -17,6 +19,8 @@ import string
 import re as _re
 import random
 from itertools import product
+from typing import Any
+
 
 class Str(Atom):
     """
@@ -124,32 +128,51 @@ def _symbol(s, matching_symbol=None, **assumptions):
         raise ValueError('symbol must be string for symbol name or Symbol')
 
 def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by appending numbers (default) but this can be
-    customized with the keyword 'modify'.
+    """
+    Return a symbol whose name is derivated from *xname* but is unique
+    from any other symbols in *exprs*.
+
+    *xname* and symbol names in *exprs* are passed to *compare* to be
+    converted to comparable forms. If ``compare(xname)`` is not unique,
+    it is recursively passed to *modify* until unique name is acquired.
 
     Parameters
     ==========
 
-        xname : a string or a Symbol (when symbol xname <- str(xname))
+    xname : str or Symbol
+        Base name for the new symbol.
 
-        compare : a single arg function that takes a symbol and returns
-            a string to be compared with xname (the default is the str
-            function which indicates how the name will look when it
-            is printed, e.g. this includes underscores that appear on
-            Dummy symbols)
+    exprs : Expr or iterable of Expr
+        Expressions whose symbols are compared to *xname*.
 
-        modify : a single arg function that changes its string argument
-            in some way (the default is to append numbers)
+    compare : function
+        Unary function which transforms *xname* and symbol names from
+        *exprs* to comparable form.
+
+    modify : function
+        Unary function which modifies the string. Default is appending
+        the number, or increasing the number if exists.
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import uniquely_named_symbol
-    >>> from sympy.abc import x
-    >>> uniquely_named_symbol('x', x)
+    By default, a number is appended to *xname* to generate unique name.
+    If the number already exists, it is recursively increased.
+
+    >>> from sympy.core.symbol import uniquely_named_symbol, Symbol
+    >>> uniquely_named_symbol('x', Symbol('x'))
     x0
+    >>> uniquely_named_symbol('x', (Symbol('x'), Symbol('x0')))
+    x1
+    >>> uniquely_named_symbol('x0', (Symbol('x1'), Symbol('x0')))
+    x2
+
+    Name generation can be controlled by passing *modify* parameter.
+
+    >>> from sympy.abc import x
+    >>> uniquely_named_symbol('x', x, modify=lambda s: 2*s)
+    xx
+
     """
     def numbered_string_incr(s, start=0):
         if not s:
@@ -165,7 +188,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     default = None
     if is_sequence(xname):
         xname, default = xname
-    x = str(xname)
+    x = compare(xname)
     if not exprs:
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
@@ -201,7 +224,7 @@ class Symbol(AtomicExpr, Boolean):
 
     is_comparable = False
 
-    __slots__ = ('name',)
+    __slots__ = ('name', '_assumptions_orig', '_assumptions0')
 
     name: str
 
@@ -230,7 +253,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @staticmethod
     def _sanitize(assumptions, obj=None):
-        """Remove None, covert values to bool, check commutativity *in place*.
+        """Remove None, convert values to bool, check commutativity *in place*.
         """
 
         # be strict about commutativity: cannot be None
@@ -272,37 +295,59 @@ class Symbol(AtomicExpr, Boolean):
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
-    def __new_stage2__(cls, name, **assumptions):
+    @staticmethod
+    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
+
+        # This is retained purely so that srepr can include commutative=True if
+        # that was explicitly specified but not if it was not. Ideally srepr
+        # should not distinguish these cases because the symbols otherwise
+        # compare equal and are considered equivalent.
+        #
+        # See https://github.com/sympy/sympy/issues/8873
+        #
+        assumptions_orig = assumptions.copy()
+
+        # The only assumption that is assumed by default is comutative=True:
+        assumptions.setdefault('commutative', True)
+
+        assumptions_kb = StdFactKB(assumptions)
+        assumptions0 = dict(assumptions_kb)
 
         obj = Expr.__new__(cls)
         obj.name = name
 
-        # TODO: Issue #8873: Forcing the commutative assumption here means
-        # later code such as ``srepr()`` cannot tell whether the user
-        # specified ``commutative=True`` or omitted it.  To workaround this,
-        # we keep a copy of the assumptions dict, then create the StdFactKB,
-        # and finally overwrite its ``._generator`` with the dict copy.  This
-        # is a bit of a hack because we assume StdFactKB merely copies the
-        # given dict as ``._generator``, but future modification might, e.g.,
-        # compute a minimal equivalent assumption set.
-        tmp_asm_copy = assumptions.copy()
+        obj._assumptions = assumptions_kb
+        obj._assumptions_orig = assumptions_orig
+        obj._assumptions0 = assumptions0
 
-        # be strict about commutativity
-        is_commutative = fuzzy_bool(assumptions.get('commutative', True))
-        assumptions['commutative'] = is_commutative
-        obj._assumptions = StdFactKB(assumptions)
-        obj._assumptions._generator = tmp_asm_copy  # Issue #8873
+        # The three assumptions dicts are all a little different:
+        #
+        #   >>> from sympy import Symbol
+        #   >>> x = Symbol('x', finite=True)
+        #   >>> x.is_positive  # query an assumption
+        #   >>> x._assumptions
+        #   {'finite': True, 'infinite': False, 'commutative': True, 'positive': None}
+        #   >>> x._assumptions0
+        #   {'finite': True, 'infinite': False, 'commutative': True}
+        #   >>> x._assumptions_orig
+        #   {'finite': True}
+        #
+        # Two symbols with the same name are equal if their _assumptions0 are
+        # the same. Arguably it should be _assumptions_orig that is being
+        # compared because that is more transparent to the user (it is
+        # what was passed to the constructor modulo changes made by _sanitize).
+
         return obj
 
-    __xnew__ = staticmethod(
-        __new_stage2__)            # never cached (e.g. dummy)
-    __xnew_cached_ = staticmethod(
-        cacheit(__new_stage2__))   # symbols are always cached
+    @staticmethod
+    @cacheit
+    def __xnew_cached_(cls, name, **assumptions):  # symbols are always cached
+        return Symbol.__xnew__(cls, name, **assumptions)
 
     def __getnewargs_ex__(self):
-        return ((self.name,), self.assumptions0)
+        return ((self.name,), self._assumptions_orig)
 
     # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
     # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
@@ -327,8 +372,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return {key: value for key, value
-                in self._assumptions.items() if value is not None}
+        return self._assumptions0.copy()
 
     @cacheit
     def sort_key(self, order=None):
@@ -349,7 +393,7 @@ class Symbol(AtomicExpr, Boolean):
     def is_constant(self, *wrt, **flags):
         if not wrt:
             return False
-        return not self in wrt
+        return self not in wrt
 
     @property
     def free_symbols(self):
@@ -418,7 +462,7 @@ class Dummy(Symbol):
         return obj
 
     def __getnewargs_ex__(self):
-        return ((self.name, self.dummy_index), self.assumptions0)
+        return ((self.name, self.dummy_index), self._assumptions_orig)
 
     @cacheit
     def sort_key(self, order=None):
@@ -489,7 +533,7 @@ class Wild(Symbol):
     This is technically correct, because
     (2/x)*x + 3*y == 2 + 3*y, but you probably
     wanted it to not match at all. The issue is that
-    you really didn't want a and b to include x and y,
+    you really did not want a and b to include x and y,
     and the exclude parameter lets you specify exactly
     this.  With the exclude parameter, the pattern will
     not match.
@@ -549,7 +593,7 @@ class Wild(Symbol):
         if not all(f(expr) for f in self.properties):
             return None
         if repl_dict is None:
-            repl_dict = dict()
+            repl_dict = {}
         else:
             repl_dict = repl_dict.copy()
         repl_dict[self] = expr
@@ -558,7 +602,8 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-def symbols(names, *, cls=Symbol, **args):
+
+def symbols(names, *, cls=Symbol, **args) -> Any:
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
@@ -678,16 +723,16 @@ def symbols(names, *, cls=Symbol, **args):
 
     if isinstance(names, str):
         marker = 0
-        literals = [r'\,', r'\:', r'\ ']
-        for i in range(len(literals)):
-            lit = literals.pop(0)
-            if lit in names:
+        splitters = r'\,', r'\:', r'\ '
+        literals: list[tuple[str, str]] = []
+        for splitter in splitters:
+            if splitter in names:
                 while chr(marker) in names:
                     marker += 1
                 lit_char = chr(marker)
                 marker += 1
-                names = names.replace(lit, lit_char)
-                literals.append((lit_char, lit[1:]))
+                names = names.replace(splitter, lit_char)
+                literals.append((lit_char, splitter[1:]))
         def literal(s):
             if literals:
                 for c, l in literals:
@@ -720,7 +765,8 @@ def symbols(names, *, cls=Symbol, **args):
                 result.append(symbol)
                 continue
 
-            split = _range.split(name)
+            split: list[str] = _range.split(name)
+            split_list: list[list[str]] = []
             # remove 1 layer of bounding parentheses around ranges
             for i in range(len(split) - 1):
                 if i and ':' in split[i] and split[i] != ':' and \
@@ -728,30 +774,30 @@ def symbols(names, *, cls=Symbol, **args):
                         split[i + 1].startswith(')'):
                     split[i - 1] = split[i - 1][:-1]
                     split[i + 1] = split[i + 1][1:]
-            for i, s in enumerate(split):
+            for s in split:
                 if ':' in s:
-                    if s[-1].endswith(':'):
+                    if s.endswith(':'):
                         raise ValueError('missing end range')
                     a, b = s.split(':')
                     if b[-1] in string.digits:
-                        a = 0 if not a else int(a)
-                        b = int(b)
-                        split[i] = [str(c) for c in range(a, b)]
+                        a_i = 0 if not a else int(a)
+                        b_i = int(b)
+                        split_list.append([str(c) for c in range(a_i, b_i)])
                     else:
                         a = a or 'a'
-                        split[i] = [string.ascii_letters[c] for c in range(
+                        split_list.append([string.ascii_letters[c] for c in range(
                             string.ascii_letters.index(a),
-                            string.ascii_letters.index(b) + 1)]  # inclusive
-                    if not split[i]:
+                            string.ascii_letters.index(b) + 1)])  # inclusive
+                    if not split_list[-1]:
                         break
                 else:
-                    split[i] = [s]
+                    split_list.append([s])
             else:
                 seq = True
-                if len(split) == 1:
-                    names = split[0]
+                if len(split_list) == 1:
+                    names = split_list[0]
                 else:
-                    names = [''.join(s) for s in product(*split)]
+                    names = [''.join(s) for s in product(*split_list)]
                 if literals:
                     result.extend([cls(literal(s), **args) for s in names])
                 else:
@@ -765,7 +811,7 @@ def symbols(names, *, cls=Symbol, **args):
         return tuple(result)
     else:
         for name in names:
-            result.append(symbols(name, **args))
+            result.append(symbols(name, cls=cls, **args))
 
         return type(names)(result)
 

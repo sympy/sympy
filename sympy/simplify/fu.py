@@ -243,7 +243,7 @@ def TR3(rv):
             return rv
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
-            rv = fmap[rv.func](S.Pi/2 - rv.args[0])
+            rv = fmap[type(rv)](S.Pi/2 - rv.args[0])
         return rv
 
     return bottom_up(rv, f)
@@ -443,14 +443,14 @@ def TR8(rv, first=True):
             return rv
 
         args = {cos: [], sin: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (cos, sin):
-                args[a.func].append(a.args[0])
+                args[type(a)].append(a.args[0])
             elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and \
                     a.base.func in (cos, sin)):
                 # XXX this is ok but pathological expression could be handled
                 # more efficiently as in TRmorrie
-                args[a.base.func].extend([a.base.args[0]]*a.exp)
+                args[type(a.base)].extend([a.base.args[0]]*a.exp)
             else:
                 args[None].append(a)
         c = args[cos]
@@ -497,7 +497,7 @@ def TR9(rv):
     If no change is made by TR9, no re-arrangement of the
     expression will be made. For example, though factoring
     of common term is attempted, if the factored expression
-    wasn't changed, the original expression will be returned:
+    was not changed, the original expression will be returned:
 
     >>> TR9(cos(3) + cos(3)*cos(2))
     cos(3) + cos(2)*cos(3)
@@ -594,7 +594,7 @@ def TR10(rv, first=True):
     """
 
     def f(rv):
-        if not rv.func in (cos, sin):
+        if rv.func not in (cos, sin):
             return rv
 
         f = rv.func
@@ -798,7 +798,7 @@ def TR11(rv, base=None):
     """
 
     def f(rv):
-        if not rv.func in (cos, sin):
+        if rv.func not in (cos, sin):
             return rv
 
         if base:
@@ -807,7 +807,7 @@ def TR11(rv, base=None):
             co = S.One
             if t.is_Mul:
                 co, t = t.as_coeff_Mul()
-            if not t.func in (cos, sin):
+            if t.func not in (cos, sin):
                 return rv
             if rv.args[0] == t.args[0]:
                 c = cos(base)
@@ -869,7 +869,7 @@ def _TR11(rv):
                 b, e = fi.as_base_exp()
                 if e.is_Integer and e > 0:
                     if b.func in (cos, sin):
-                        args[b.func].add(b.args[0])
+                        args[type(b)].add(b.args[0])
             return args
         num_args, den_args = map(sincos_args, rv.as_numer_denom())
         def handle_match(rv, num_args, den_args):
@@ -1074,9 +1074,9 @@ def TR13(rv):
 
         # XXX handle products of powers? or let power-reducing handle it?
         args = {tan: [], cot: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (tan, cot):
-                args[a.func].append(a.args[0])
+                args[type(a)].append(a.args[0])
             else:
                 args[None].append(a)
         t = args[tan]
@@ -1499,14 +1499,14 @@ def TRpower(rv):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range((n + 1)/2)])
             elif n.is_odd and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**((n-1)/2)*Add(*[binomial(n, k)*
-                    (-1)**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
+                rv = 2**(1-n)*S.NegativeOne**((n-1)/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
             elif n.is_even and isinstance(b, cos):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range(n/2)])
             elif n.is_even and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**(n/2)*Add(*[binomial(n, k)*
-                    (-1)**k*cos((n - 2*k)*x) for k in range(n/2)])
+                rv = 2**(1-n)*S.NegativeOne**(n/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*cos((n - 2*k)*x) for k in range(n/2)])
             if n.is_even:
                 rv += 2**(-n)*binomial(n, n/2)
         return rv
@@ -1634,7 +1634,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     References
     ==========
 
-    .. [1] https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.657.2478&rep=rep1&type=pdf
+    .. [1] https://www.sciencedirect.com/science/article/pii/S0895717706001609
     """
     fRL1 = greedy(RL1, measure)
     fRL2 = greedy(RL2, measure)

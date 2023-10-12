@@ -1,6 +1,7 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Integer,
+    Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -8,7 +9,7 @@ from sympy.functions.elementary.trigonometric import sin
 from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
@@ -17,7 +18,9 @@ from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
+from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.rings import ring
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.fields import field
 
 from sympy.polys.agca.extensions import FiniteExtension
@@ -28,7 +31,6 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
-from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
 
@@ -41,18 +43,26 @@ def unify(K0, K1):
 
 def test_Domain_unify():
     F3 = GF(3)
+    F5 = GF(5)
 
     assert unify(F3, F3) == F3
-    assert unify(F3, ZZ) == ZZ
-    assert unify(F3, QQ) == QQ
-    assert unify(F3, ALG) == ALG
-    assert unify(F3, RR) == RR
-    assert unify(F3, CC) == CC
-    assert unify(F3, ZZ[x]) == ZZ[x]
-    assert unify(F3, ZZ.frac_field(x)) == ZZ.frac_field(x)
-    assert unify(F3, EX) == EX
+    raises(UnificationFailed, lambda: unify(F3, ZZ))
+    raises(UnificationFailed, lambda: unify(F3, QQ))
+    raises(UnificationFailed, lambda: unify(F3, ZZ_I))
+    raises(UnificationFailed, lambda: unify(F3, QQ_I))
+    raises(UnificationFailed, lambda: unify(F3, ALG))
+    raises(UnificationFailed, lambda: unify(F3, RR))
+    raises(UnificationFailed, lambda: unify(F3, CC))
+    raises(UnificationFailed, lambda: unify(F3, ZZ[x]))
+    raises(UnificationFailed, lambda: unify(F3, ZZ.frac_field(x)))
+    raises(UnificationFailed, lambda: unify(F3, EX))
 
-    assert unify(ZZ, F3) == ZZ
+    assert unify(F5, F5) == F5
+    raises(UnificationFailed, lambda: unify(F5, F3))
+    raises(UnificationFailed, lambda: unify(F5, F3[x]))
+    raises(UnificationFailed, lambda: unify(F5, F3.frac_field(x)))
+
+    raises(UnificationFailed, lambda: unify(ZZ, F3))
     assert unify(ZZ, ZZ) == ZZ
     assert unify(ZZ, QQ) == QQ
     assert unify(ZZ, ALG) == ALG
@@ -62,7 +72,7 @@ def test_Domain_unify():
     assert unify(ZZ, ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ, EX) == EX
 
-    assert unify(QQ, F3) == QQ
+    raises(UnificationFailed, lambda: unify(QQ, F3))
     assert unify(QQ, ZZ) == QQ
     assert unify(QQ, QQ) == QQ
     assert unify(QQ, ALG) == ALG
@@ -72,7 +82,7 @@ def test_Domain_unify():
     assert unify(QQ, ZZ.frac_field(x)) == QQ.frac_field(x)
     assert unify(QQ, EX) == EX
 
-    assert unify(ZZ_I, F3) == ZZ_I
+    raises(UnificationFailed, lambda: unify(ZZ_I, F3))
     assert unify(ZZ_I, ZZ) == ZZ_I
     assert unify(ZZ_I, ZZ_I) == ZZ_I
     assert unify(ZZ_I, QQ) == QQ_I
@@ -85,7 +95,7 @@ def test_Domain_unify():
     assert unify(ZZ_I, ZZ_I.frac_field(x)) == ZZ_I.frac_field(x)
     assert unify(ZZ_I, EX) == EX
 
-    assert unify(QQ_I, F3) == QQ_I
+    raises(UnificationFailed, lambda: unify(QQ_I, F3))
     assert unify(QQ_I, ZZ) == QQ_I
     assert unify(QQ_I, ZZ_I) == QQ_I
     assert unify(QQ_I, QQ) == QQ_I
@@ -102,7 +112,7 @@ def test_Domain_unify():
     assert unify(QQ_I, QQ_I.frac_field(x)) == QQ_I.frac_field(x)
     assert unify(QQ_I, EX) == EX
 
-    assert unify(RR, F3) == RR
+    raises(UnificationFailed, lambda: unify(RR, F3))
     assert unify(RR, ZZ) == RR
     assert unify(RR, QQ) == RR
     assert unify(RR, ALG) == RR
@@ -113,7 +123,7 @@ def test_Domain_unify():
     assert unify(RR, EX) == EX
     assert RR[x].unify(ZZ.frac_field(y)) == RR.frac_field(x, y)
 
-    assert unify(CC, F3) == CC
+    raises(UnificationFailed, lambda: unify(CC, F3))
     assert unify(CC, ZZ) == CC
     assert unify(CC, QQ) == CC
     assert unify(CC, ALG) == CC
@@ -123,7 +133,7 @@ def test_Domain_unify():
     assert unify(CC, ZZ.frac_field(x)) == CC.frac_field(x)
     assert unify(CC, EX) == EX
 
-    assert unify(ZZ[x], F3) == ZZ[x]
+    raises(UnificationFailed, lambda: unify(ZZ[x], F3))
     assert unify(ZZ[x], ZZ) == ZZ[x]
     assert unify(ZZ[x], QQ) == QQ[x]
     assert unify(ZZ[x], ALG) == ALG[x]
@@ -133,7 +143,7 @@ def test_Domain_unify():
     assert unify(ZZ[x], ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ[x], EX) == EX
 
-    assert unify(ZZ.frac_field(x), F3) == ZZ.frac_field(x)
+    raises(UnificationFailed, lambda: unify(ZZ.frac_field(x), F3))
     assert unify(ZZ.frac_field(x), ZZ) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), QQ) == QQ.frac_field(x)
     assert unify(ZZ.frac_field(x), ALG) == ALG.frac_field(x)
@@ -143,7 +153,7 @@ def test_Domain_unify():
     assert unify(ZZ.frac_field(x), ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), EX) == EX
 
-    assert unify(EX, F3) == EX
+    raises(UnificationFailed, lambda: unify(EX, F3))
     assert unify(EX, ZZ) == EX
     assert unify(EX, QQ) == EX
     assert unify(EX, ALG) == EX
@@ -488,6 +498,14 @@ def test_Domain__contains__():
     assert (Rational(3, 2)*x/(y + 1) - z in QQ[x, y, z]) is False
 
 
+def test_issue_14433():
+    assert (Rational(2, 3)*x in QQ.frac_field(1/x)) is True
+    assert (1/x in QQ.frac_field(x)) is True
+    assert ((x**2 + y**2) in QQ.frac_field(1/x, 1/y)) is True
+    assert ((x + y) in QQ.frac_field(1/x, y)) is True
+    assert ((x - y) in QQ.frac_field(x, 1/y)) is True
+
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring is True
     assert QQ.has_assoc_Ring is True
@@ -549,6 +567,8 @@ def test_Domain_get_exact():
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
     assert RR.get_exact() == QQ
+    # XXX: This should also be like RR:
+    # assert CC.get_exact() == QQ_I
     assert ALG.get_exact() == ALG
     assert ZZ[x].get_exact() == ZZ[x]
     assert QQ[x].get_exact() == QQ[x]
@@ -558,6 +578,17 @@ def test_Domain_get_exact():
     assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
     assert ZZ.frac_field(x, y).get_exact() == ZZ.frac_field(x, y)
     assert QQ.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+
+
+def test_Domain_characteristic():
+    for F, c in [(FF(3), 3), (FF(5), 5), (FF(7), 7)]:
+        for R in F, F[x], F.frac_field(x), F.old_poly_ring(x), F.old_frac_field(x):
+            assert R.has_CharacteristicZero is False
+            assert R.characteristic() == c
+    for D in ZZ, QQ, ZZ_I, QQ_I, ALG:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            assert R.has_CharacteristicZero is True
+            assert R.characteristic() == 0
 
 
 def test_Domain_is_unit():
@@ -725,6 +756,38 @@ def test_Domain__algebraic_field():
     assert alg.dom == QQ
 
 
+def test_Domain_alg_field_from_poly():
+    f = Poly(x**2 - 2)
+    g = Poly(x**2 - 3)
+    h = Poly(x**4 - 10*x**2 + 1)
+
+    alg = ZZ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = QQ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = alg.alg_field_from_poly(g)
+    assert alg.ext.minpoly == h
+    assert alg.dom == QQ
+
+
+def test_Domain_cyclotomic_field():
+    K = ZZ.cyclotomic_field(12)
+    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.dom == QQ
+
+    F = QQ.cyclotomic_field(3)
+    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.dom == QQ
+
+    E = F.cyclotomic_field(4)
+    assert field_isomorphism(E.ext, K.ext) is not None
+    assert E.dom == QQ
+
+
 def test_PolynomialRing_from_FractionField():
     F, x,y = field("x,y", ZZ)
     R, X,Y = ring("x,y", ZZ)
@@ -778,8 +841,8 @@ def test_RealField_from_sympy():
 
 
 def test_not_in_any_domain():
-    check = illegal + [x] + [
-        float(i) for i in illegal if i != S.ComplexInfinity]
+    check = list(_illegal) + [x] + [
+        float(i) for i in _illegal[:3]]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:
@@ -982,11 +1045,11 @@ def test_CC_double():
 
 def test_gaussian_domains():
     I = S.ImaginaryUnit
-    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
-    ZZ_I.gcd(a, b) == b
-    ZZ_I.gcd(a, c) == b
-    ZZ_I.lcm(a, b) == a
-    ZZ_I.lcm(a, c) == d
+    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5*I)]
+    assert ZZ_I.gcd(a, b) == b
+    assert ZZ_I.gcd(a, c) == b
+    assert ZZ_I.lcm(a, b) == a
+    assert ZZ_I.lcm(a, c) == d
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?
@@ -1067,8 +1130,14 @@ def test_gaussian_domains():
             assert G.is_nonnegative(qi) is False
             assert G.is_nonpositive(qi) is False
 
-        domains = [ZZ_python(), QQ_python(), AlgebraicField(QQ, I)]
-        if HAS_GMPY:
+        domains = [ZZ, QQ, AlgebraicField(QQ, I)]
+
+        # XXX: These domains are all obsolete because ZZ/QQ with MPZ/MPQ
+        # already use either gmpy, flint or python depending on the
+        # availability of these libraries. We can keep these tests for now but
+        # ideally we should remove these alternate domains entirely.
+        domains += [ZZ_python(), QQ_python()]
+        if GROUND_TYPES == 'gmpy':
             domains += [ZZ_gmpy(), QQ_gmpy()]
 
         for K in domains:
@@ -1127,6 +1196,11 @@ def test_EX_EXRAW():
 
     assert EXRAW.unify(EX) == EXRAW
     assert EX.unify(EXRAW) == EXRAW
+
+
+def test_EX_ordering():
+    elements = [EX(1), EX(x), EX(3)]
+    assert sorted(elements) == [EX(1), EX(3), EX(x)]
 
 
 def test_canonical_unit():
@@ -1193,3 +1267,98 @@ def test_exponential_domain():
     eK = K.from_sympy(E)
     assert K.from_sympy(exp(3)) == eK ** 3
     assert K.convert(exp(3)) == eK ** 3
+
+
+def test_AlgebraicField_alias():
+    # No default alias:
+    k = QQ.algebraic_field(sqrt(2))
+    assert k.ext.alias is None
+
+    # For a single extension, its alias is used:
+    alpha = AlgebraicNumber(sqrt(2), alias='alpha')
+    k = QQ.algebraic_field(alpha)
+    assert k.ext.alias.name == 'alpha'
+
+    # Can override the alias of a single extension:
+    k = QQ.algebraic_field(alpha, alias='theta')
+    assert k.ext.alias.name == 'theta'
+
+    # With multiple extensions, no default alias:
+    k = QQ.algebraic_field(sqrt(2), sqrt(3))
+    assert k.ext.alias is None
+
+    # With multiple extensions, no default alias, even if one of
+    # the extensions has one:
+    k = QQ.algebraic_field(alpha, sqrt(3))
+    assert k.ext.alias is None
+
+    # With multiple extensions, may set an alias:
+    k = QQ.algebraic_field(sqrt(2), sqrt(3), alias='theta')
+    assert k.ext.alias.name == 'theta'
+
+    # Alias is passed to constructed field elements:
+    k = QQ.algebraic_field(alpha)
+    beta = k.to_alg_num(k([1, 2, 3]))
+    assert beta.alias is alpha.alias
+
+
+def test_exsqrt():
+    assert ZZ.is_square(ZZ(4)) is True
+    assert ZZ.exsqrt(ZZ(4)) == ZZ(2)
+    assert ZZ.is_square(ZZ(42)) is False
+    assert ZZ.exsqrt(ZZ(42)) is None
+    assert ZZ.is_square(ZZ(0)) is True
+    assert ZZ.exsqrt(ZZ(0)) == ZZ(0)
+    assert ZZ.is_square(ZZ(-1)) is False
+    assert ZZ.exsqrt(ZZ(-1)) is None
+
+    assert QQ.is_square(QQ(9, 4)) is True
+    assert QQ.exsqrt(QQ(9, 4)) == QQ(3, 2)
+    assert QQ.is_square(QQ(18, 8)) is True
+    assert QQ.exsqrt(QQ(18, 8)) == QQ(3, 2)
+    assert QQ.is_square(QQ(-9, -4)) is True
+    assert QQ.exsqrt(QQ(-9, -4)) == QQ(3, 2)
+    assert QQ.is_square(QQ(11, 4)) is False
+    assert QQ.exsqrt(QQ(11, 4)) is None
+    assert QQ.is_square(QQ(9, 5)) is False
+    assert QQ.exsqrt(QQ(9, 5)) is None
+    assert QQ.is_square(QQ(4)) is True
+    assert QQ.exsqrt(QQ(4)) == QQ(2)
+    assert QQ.is_square(QQ(0)) is True
+    assert QQ.exsqrt(QQ(0)) == QQ(0)
+    assert QQ.is_square(QQ(-16, 9)) is False
+    assert QQ.exsqrt(QQ(-16, 9)) is None
+
+    assert RR.is_square(RR(6.25)) is True
+    assert RR.exsqrt(RR(6.25)) == RR(2.5)
+    assert RR.is_square(RR(2)) is True
+    assert RR.almosteq(RR.exsqrt(RR(2)), RR(1.4142135623730951), tolerance=1e-15)
+    assert RR.is_square(RR(0)) is True
+    assert RR.exsqrt(RR(0)) == RR(0)
+    assert RR.is_square(RR(-1)) is False
+    assert RR.exsqrt(RR(-1)) is None
+
+    assert CC.is_square(CC(2)) is True
+    assert CC.almosteq(CC.exsqrt(CC(2)), CC(1.4142135623730951), tolerance=1e-15)
+    assert CC.is_square(CC(0)) is True
+    assert CC.exsqrt(CC(0)) == CC(0)
+    assert CC.is_square(CC(-1)) is True
+    assert CC.exsqrt(CC(-1)) == CC(0, 1)
+    assert CC.is_square(CC(0, 2)) is True
+    assert CC.exsqrt(CC(0, 2)) == CC(1, 1)
+    assert CC.is_square(CC(-3, -4)) is True
+    assert CC.exsqrt(CC(-3, -4)) == CC(1, -2)
+
+    F2 = FF(2)
+    assert F2.is_square(F2(1)) is True
+    assert F2.exsqrt(F2(1)) == F2(1)
+    assert F2.is_square(F2(0)) is True
+    assert F2.exsqrt(F2(0)) == F2(0)
+
+    F7 = FF(7)
+    assert F7.is_square(F7(2)) is True
+    assert F7.exsqrt(F7(2)) == F7(3)
+    assert F7.is_square(F7(3)) is False
+    assert F7.exsqrt(F7(3)) is None
+    assert F7.is_square(F7(0)) is True
+    assert F7.exsqrt(F7(0)) == F7(0)

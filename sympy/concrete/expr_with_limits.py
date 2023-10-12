@@ -10,12 +10,13 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.tensor.indexed import Idx
+from sympy.matrices.matrices import MatrixBase
 from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def _common_new(cls, function, *symbols, discrete, **assumptions):
@@ -29,12 +30,20 @@ def _common_new(cls, function, *symbols, discrete, **assumptions):
         # but that is only valid for definite integrals.
         limits, orientation = _process_limits(*symbols, discrete=discrete)
         if not (limits and all(len(limit) == 3 for limit in limits)):
-            SymPyDeprecationWarning(
-                feature='Integral(Eq(x, y))',
-                useinstead='Eq(Integral(x, z), Integral(y, z))',
-                issue=18053,
-                deprecated_since_version=1.6,
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                Creating a indefinite integral with an Eq() argument is
+                deprecated.
+
+                This is because indefinite integrals do not preserve equality
+                due to the arbitrary constants. If you want an equality of
+                indefinite integrals, use Eq(Integral(a, x), Integral(b, x))
+                explicitly.
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-indefinite-integral-eq",
+                stacklevel=5,
+            )
 
         lhs = function.lhs
         rhs = function.rhs
@@ -140,12 +149,12 @@ def _process_limits(*symbols, discrete=None):
                     raise NotImplementedError(
                         'expecting Range' if discrete else
                         'Relational or single Interval' )
-            V = sympify(flatten(V))  # a list of sympified elements
+            V = sympify(flatten(V))  # list of sympified elements/None
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 3:
                     # general case
-                    if V[2] is None and not V[1] is None:
+                    if V[2] is None and V[1] is not None:
                         orientation *= -1
                     V = [newsymbol] + [i for i in V[1:] if i is not None]
 
@@ -311,18 +320,25 @@ class ExprWithLimits(Expr):
         # should be returned, e.g. don't return set() if the
         # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
+        # mask off non-symbol integration variables that have
+        # more than themself as a free symbol
+        reps = {i[0]: i[0] if i[0].free_symbols == {i[0]} else Dummy()
+            for i in self.limits}
+        function = function.xreplace(reps)
         isyms = function.free_symbols
         for xab in limits:
+            v = reps[xab[0]]
             if len(xab) == 1:
-                isyms.add(xab[0])
+                isyms.add(v)
                 continue
             # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
+            if v in isyms:
+                isyms.remove(v)
             # add in the new symbols
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
-        return isyms
+        reps = {v: k for k, v in reps.items()}
+        return {reps.get(_, _) for _ in isyms}
 
     @property
     def is_number(self):
@@ -524,6 +540,8 @@ class AddWithLimits(ExprWithLimits):
         Parent class for Integral and Sum.
     """
 
+    __slots__ = ()
+
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.concrete.summations import Sum
         pre = _common_new(cls, function, *symbols,
@@ -573,10 +591,10 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
-        from sympy.matrices.matrices import MatrixBase
-
         summand = self.function.expand(**hints)
-        if summand.is_Add and summand.is_commutative:
+        force = hints.get('force', False)
+        if (summand.is_Add and (force or summand.is_commutative and
+                 self.has_finite_limits is not False)):
             return Add(*[self.func(i, *self.limits) for i in summand.args])
         elif isinstance(summand, MatrixBase):
             return summand.applyfunc(lambda x: self.func(x, *self.limits))

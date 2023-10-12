@@ -1,7 +1,7 @@
 # Ported from latex2sympy by @augustt198
 # https://github.com/augustt198/latex2sympy
 # See license in LICENSE.txt
-
+from importlib.metadata import version
 import sympy
 from sympy.external import import_module
 from sympy.printing.str import StrPrinter
@@ -28,7 +28,7 @@ ErrorListener = import_module('antlr4.error.ErrorListener',
 
 
 if ErrorListener:
-    class MathErrorListener(ErrorListener.ErrorListener):  # type: ignore
+    class MathErrorListener(ErrorListener.ErrorListener):  # type:ignore # noqa:F811
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()
             self.src = src
@@ -58,15 +58,16 @@ if ErrorListener:
             raise LaTeXParsingError(err)
 
 
-def parse_latex(sympy):
-    antlr4 = import_module('antlr4', warn_not_installed=True)
+def parse_latex(sympy, strict=False):
+    antlr4 = import_module('antlr4')
 
-    if None in [antlr4, MathErrorListener]:
+    if None in [antlr4, MathErrorListener] or \
+            not version('antlr4-python3-runtime').startswith('4.11'):
         raise ImportError("LaTeX parsing requires the antlr4 Python package,"
-                          " provided by pip (antlr4-python2-runtime or"
-                          " antlr4-python3-runtime) or"
-                          " conda (antlr-python-runtime)")
+                          " provided by pip (antlr4-python3-runtime) or"
+                          " conda (antlr-python-runtime), version 4.11")
 
+    sympy = sympy.strip()
     matherror = MathErrorListener(sympy)
 
     stream = antlr4.InputStream(sympy)
@@ -82,6 +83,8 @@ def parse_latex(sympy):
     parser.addErrorListener(matherror)
 
     relation = parser.math().relation()
+    if strict and (relation.start.start != 0 or relation.stop.stop != len(sympy) - 1):
+        raise LaTeXParsingError("Invalid LaTeX")
     expr = convert_relation(relation)
 
     return expr
@@ -119,8 +122,9 @@ def convert_add(add):
     elif add.SUB():
         lh = convert_add(add.additive(0))
         rh = convert_add(add.additive(1))
-        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False),
-                         evaluate=False)
+        if hasattr(rh, "is_Atom") and rh.is_Atom:
+            return sympy.Add(lh, -1 * rh, evaluate=False)
+        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False), evaluate=False)
     else:
         return convert_mp(add.mp())
 
@@ -189,8 +193,7 @@ def convert_postfix_list(arr, i=0):
                         sympy.Symbol)
                     # if the left and right sides contain no variables and the
                     # symbol in between is 'x', treat as multiplication.
-                    if len(left_syms) == 0 and len(right_syms) == 0 and str(
-                            res) == "x":
+                    if not (left_syms or right_syms) and str(res) == 'x':
                         return convert_postfix_list(arr, i + 1)
             # multiply by next
             return sympy.Mul(
@@ -278,10 +281,6 @@ def convert_comp(comp):
         return sympy.Abs(convert_expr(comp.abs_group().expr()), evaluate=False)
     elif comp.atom():
         return convert_atom(comp.atom())
-    elif comp.frac():
-        return convert_frac(comp.frac())
-    elif comp.binom():
-        return convert_binom(comp.binom())
     elif comp.floor():
         return convert_floor(comp.floor())
     elif comp.ceil():
@@ -292,15 +291,16 @@ def convert_comp(comp):
 
 def convert_atom(atom):
     if atom.LETTER():
-        subscriptName = ''
+        sname = atom.LETTER().getText()
         if atom.subexpr():
-            subscript = None
             if atom.subexpr().expr():  # subscript is expr
                 subscript = convert_expr(atom.subexpr().expr())
             else:  # subscript is atom
                 subscript = convert_atom(atom.subexpr().atom())
-            subscriptName = '_{' + StrPrinter().doprint(subscript) + '}'
-        return sympy.Symbol(atom.LETTER().getText() + subscriptName)
+            sname += '_{' + StrPrinter().doprint(subscript) + '}'
+        if atom.SINGLE_QUOTES():
+            sname += atom.SINGLE_QUOTES().getText()  # put after subscript for easy identify
+        return sympy.Symbol(sname)
     elif atom.SYMBOL():
         s = atom.SYMBOL().getText()[1:]
         if s == "infty":
@@ -315,8 +315,8 @@ def convert_atom(atom):
                 subscriptName = StrPrinter().doprint(subscript)
                 s += '_{' + subscriptName + '}'
             return sympy.Symbol(s)
-    elif atom.NUMBER():
-        s = atom.NUMBER().getText().replace(",", "")
+    elif atom.number():
+        s = atom.number().getText().replace(",", "")
         return sympy.Number(s)
     elif atom.DIFFERENTIAL():
         var = get_differential_var(atom.DIFFERENTIAL())
@@ -324,6 +324,10 @@ def convert_atom(atom):
     elif atom.mathit():
         text = rule2text(atom.mathit().mathit_text())
         return sympy.Symbol(text)
+    elif atom.frac():
+        return convert_frac(atom.frac())
+    elif atom.binom():
+        return convert_binom(atom.binom())
     elif atom.bra():
         val = convert_expr(atom.bra().expr())
         return Bra(val)
@@ -345,43 +349,49 @@ def rule2text(ctx):
 def convert_frac(frac):
     diff_op = False
     partial_op = False
-    lower_itv = frac.lower.getSourceInterval()
-    lower_itv_len = lower_itv[1] - lower_itv[0] + 1
-    if (frac.lower.start == frac.lower.stop
-            and frac.lower.start.type == LaTeXLexer.DIFFERENTIAL):
-        wrt = get_differential_var_str(frac.lower.start.text)
-        diff_op = True
-    elif (lower_itv_len == 2 and frac.lower.start.type == LaTeXLexer.SYMBOL
-          and frac.lower.start.text == '\\partial'
-          and (frac.lower.stop.type == LaTeXLexer.LETTER
-               or frac.lower.stop.type == LaTeXLexer.SYMBOL)):
-        partial_op = True
-        wrt = frac.lower.stop.text
-        if frac.lower.stop.type == LaTeXLexer.SYMBOL:
-            wrt = wrt[1:]
+    if frac.lower and frac.upper:
+        lower_itv = frac.lower.getSourceInterval()
+        lower_itv_len = lower_itv[1] - lower_itv[0] + 1
+        if (frac.lower.start == frac.lower.stop
+                and frac.lower.start.type == LaTeXLexer.DIFFERENTIAL):
+            wrt = get_differential_var_str(frac.lower.start.text)
+            diff_op = True
+        elif (lower_itv_len == 2 and frac.lower.start.type == LaTeXLexer.SYMBOL
+              and frac.lower.start.text == '\\partial'
+              and (frac.lower.stop.type == LaTeXLexer.LETTER
+                   or frac.lower.stop.type == LaTeXLexer.SYMBOL)):
+            partial_op = True
+            wrt = frac.lower.stop.text
+            if frac.lower.stop.type == LaTeXLexer.SYMBOL:
+                wrt = wrt[1:]
 
-    if diff_op or partial_op:
-        wrt = sympy.Symbol(wrt)
-        if (diff_op and frac.upper.start == frac.upper.stop
-                and frac.upper.start.type == LaTeXLexer.LETTER
-                and frac.upper.start.text == 'd'):
-            return [wrt]
-        elif (partial_op and frac.upper.start == frac.upper.stop
-              and frac.upper.start.type == LaTeXLexer.SYMBOL
-              and frac.upper.start.text == '\\partial'):
-            return [wrt]
-        upper_text = rule2text(frac.upper)
+        if diff_op or partial_op:
+            wrt = sympy.Symbol(wrt)
+            if (diff_op and frac.upper.start == frac.upper.stop
+                    and frac.upper.start.type == LaTeXLexer.LETTER
+                    and frac.upper.start.text == 'd'):
+                return [wrt]
+            elif (partial_op and frac.upper.start == frac.upper.stop
+                  and frac.upper.start.type == LaTeXLexer.SYMBOL
+                  and frac.upper.start.text == '\\partial'):
+                return [wrt]
+            upper_text = rule2text(frac.upper)
 
-        expr_top = None
-        if diff_op and upper_text.startswith('d'):
-            expr_top = parse_latex(upper_text[1:])
-        elif partial_op and frac.upper.start.text == '\\partial':
-            expr_top = parse_latex(upper_text[len('\\partial'):])
-        if expr_top:
-            return sympy.Derivative(expr_top, wrt)
-
-    expr_top = convert_expr(frac.upper)
-    expr_bot = convert_expr(frac.lower)
+            expr_top = None
+            if diff_op and upper_text.startswith('d'):
+                expr_top = parse_latex(upper_text[1:])
+            elif partial_op and frac.upper.start.text == '\\partial':
+                expr_top = parse_latex(upper_text[len('\\partial'):])
+            if expr_top:
+                return sympy.Derivative(expr_top, wrt)
+    if frac.upper:
+        expr_top = convert_expr(frac.upper)
+    else:
+        expr_top = sympy.Number(frac.upperd.text)
+    if frac.lower:
+        expr_bot = convert_expr(frac.lower)
+    else:
+        expr_bot = sympy.Number(frac.lowerd.text)
     inverse_denom = sympy.Pow(expr_bot, -1, evaluate=False)
     if expr_top == 1:
         return inverse_denom
@@ -423,15 +433,15 @@ def convert_func(func):
         if name == "exp":
             expr = sympy.exp(arg, evaluate=False)
 
-        if (name == "log" or name == "ln"):
+        if name in ("log", "lg", "ln"):
             if func.subexpr():
                 if func.subexpr().expr():
                     base = convert_expr(func.subexpr().expr())
                 else:
                     base = convert_atom(func.subexpr().atom())
-            elif name == "log":
+            elif name == "lg":  # ISO 80000-2:2019
                 base = 10
-            elif name == "ln":
+            elif name in ("ln", "log"):  # SymPy's latex printer prints ln as log by default
                 base = sympy.E
             expr = sympy.log(arg, base, evaluate=False)
 
@@ -463,13 +473,14 @@ def convert_func(func):
             fname = func.SYMBOL().getText()[1:]
         fname = str(fname)  # can't be unicode
         if func.subexpr():
-            subscript = None
             if func.subexpr().expr():  # subscript is expr
                 subscript = convert_expr(func.subexpr().expr())
             else:  # subscript is atom
                 subscript = convert_atom(func.subexpr().atom())
             subscriptName = StrPrinter().doprint(subscript)
             fname += '_{' + subscriptName + '}'
+        if func.SINGLE_QUOTES():
+            fname += func.SINGLE_QUOTES().getText()
         input_args = func.args()
         output_args = []
         while input_args.args():  # handle multiple arguments to function
@@ -569,8 +580,10 @@ def handle_limit(func):
         var = sympy.Symbol('x')
     if sub.SUB():
         direction = "-"
-    else:
+    elif sub.ADD():
         direction = "+"
+    else:
+        direction = "+-"
     approaching = convert_expr(sub.expr())
     content = convert_mp(func.mp())
 

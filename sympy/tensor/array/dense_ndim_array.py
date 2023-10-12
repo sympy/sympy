@@ -5,7 +5,6 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
-from sympy.simplify.simplify import simplify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
 from sympy.utilities.iterables import flatten
@@ -123,17 +122,14 @@ class DenseNDimArray(NDimArray):
         """
         new_total_size = functools.reduce(lambda x,y: x*y, newshape)
         if new_total_size != self._loop_size:
-            raise ValueError("Invalid reshape parameters " + newshape)
+            raise ValueError('Expecting reshape size to %d but got prod(%s) = %d' % (
+                self._loop_size, str(newshape), new_total_size))
 
         # there is no `.func` as this class does not subtype `Basic`:
         return type(self)(self._array, newshape)
 
 
 class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignore
-    """
-
-    """
-
     def __new__(cls, iterable, shape=None, **kwargs):
         return cls._new(iterable, shape, **kwargs)
 
@@ -158,6 +154,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
         return MutableDenseNDimArray(self)
 
     def _eval_simplify(self, **kwargs):
+        from sympy.simplify.simplify import simplify
         return self.applyfunc(simplify)
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):

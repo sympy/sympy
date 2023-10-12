@@ -1,13 +1,14 @@
-from typing import Callable, Dict as tDict, Optional, Tuple as tTuple, Union as tUnion
+from __future__ import annotations
+from typing import Callable, Optional
 
 from collections import OrderedDict
-from distutils.errors import CompileError
 import os
 import re
 import subprocess
+import warnings
 
 from .util import (
-    find_binary_of_command, unique_list
+    find_binary_of_command, unique_list, CompileError
 )
 
 
@@ -50,18 +51,22 @@ class CompilerRunner:
 
     """
 
+    environ_key_compiler: str  # e.g. 'CC', 'CXX', ...
+    environ_key_flags: str  # e.g. 'CFLAGS', 'CXXFLAGS', ...
+    environ_key_ldflags: str = "LDFLAGS"  # typically 'LDFLAGS'
+
     # Subclass to vendor/binary dict
-    compiler_dict = None  # type: tDict[str, str]
+    compiler_dict: dict[str, str]
 
     # Standards should be a tuple of supported standards
     # (first one will be the default)
-    standards = None  # type: tTuple[tUnion[None, str], ...]
+    standards: tuple[None | str, ...]
 
     # Subclass to dict of binary/formater-callback
-    std_formater = None  # type: tDict[str, Callable[[Optional[str]], str]]
+    std_formater: dict[str, Callable[[Optional[str]], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
-    compiler_name_vendor_mapping = None  # type: tDict[str, str]
+    compiler_name_vendor_mapping: dict[str, str]
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,
@@ -71,9 +76,22 @@ class CompilerRunner:
         self.sources = list(sources)
         self.out = out
         self.flags = flags or []
+        if os.environ.get(self.environ_key_flags):
+            self.flags += os.environ[self.environ_key_flags].split()
         self.cwd = cwd
         if compiler:
             self.compiler_name, self.compiler_binary = compiler
+        elif os.environ.get(self.environ_key_compiler):
+            self.compiler_binary = os.environ[self.environ_key_compiler]
+            for k, v in self.compiler_dict.items():
+                if k in self.compiler_binary:
+                    self.compiler_vendor = k
+                    self.compiler_name = v
+                    break
+            else:
+                self.compiler_vendor, self.compiler_name = list(self.compiler_dict.items())[0]
+                warnings.warn("failed to determine what kind of compiler %s is, assuming %s" %
+                              (self.compiler_binary, self.compiler_name))
         else:
             # Find a compiler
             if preferred_vendor is None:
@@ -99,7 +117,9 @@ class CompilerRunner:
             self.flags.append(self.std_formater[
                 self.compiler_name](self.std))
 
-        self.linkline = linkline or []
+        self.linkline = (linkline or []) + [lf for lf in map(
+            str.strip, os.environ.get(self.environ_key_ldflags, "").split()
+        ) if lf != ""]
 
         if strict_aliasing is not None:
             nsa_re = re.compile("no-strict-aliasing$")
@@ -193,6 +213,9 @@ class CompilerRunner:
 
 class CCompilerRunner(CompilerRunner):
 
+    environ_key_compiler = 'CC'
+    environ_key_flags = 'CFLAGS'
+
     compiler_dict = OrderedDict([
         ('gnu', 'gcc'),
         ('intel', 'icc'),
@@ -230,6 +253,9 @@ def _mk_flag_filter(cmplr_name):  # helper for class initialization
 
 class CppCompilerRunner(CompilerRunner):
 
+    environ_key_compiler = 'CXX'
+    environ_key_flags = 'CXXFLAGS'
+
     compiler_dict = OrderedDict([
         ('gnu', 'g++'),
         ('intel', 'icpc'),
@@ -253,6 +279,9 @@ class CppCompilerRunner(CompilerRunner):
 
 
 class FortranCompilerRunner(CompilerRunner):
+
+    environ_key_compiler = 'FC'
+    environ_key_flags = 'FFLAGS'
 
     standards = (None, 'f77', 'f95', 'f2003', 'f2008')
 

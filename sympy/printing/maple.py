@@ -9,7 +9,7 @@ FIXME: This module is still under actively developed. Some functions may be not 
 """
 
 from sympy.core import S
-from sympy.core.numbers import Integer, IntegerConstant
+from sympy.core.numbers import Integer, IntegerConstant, equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -98,7 +98,7 @@ class MapleCodePrinter(CodePrinter):
 
     def __init__(self, settings=None):
         if settings is None:
-            settings = dict()
+            settings = {}
         super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -130,11 +130,11 @@ class MapleCodePrinter(CodePrinter):
 
     def _print_Pow(self, expr, **kwargs):
         PREC = precedence(expr)
-        if expr.exp == -1:
+        if equal_valued(expr.exp, -1):
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp in (0.5, S.Half):
+        elif equal_valued(expr.exp, 0.5):
             return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp in (-0.5, -S.Half):
+        elif equal_valued(expr.exp, -0.5):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
@@ -303,8 +303,7 @@ def print_maple_code(expr, **settings):
     Examples
     ========
 
-    >>> from sympy.printing.maple import print_maple_code
-    >>> from sympy import symbols
+    >>> from sympy import print_maple_code, symbols
     >>> x, y = symbols('x y')
     >>> print_maple_code(x, assign_to=y)
     y := x

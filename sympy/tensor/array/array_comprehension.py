@@ -1,7 +1,7 @@
 import functools, itertools
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.core.expr import Expr
-from sympy.core import Basic
+from sympy.core import Basic, Tuple
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer
@@ -225,8 +225,18 @@ class ArrayComprehension(Basic):
 
     @classmethod
     def _check_limits_validity(cls, function, limits):
-        limits = sympify(limits)
+        #limits = sympify(limits)
+        new_limits = []
         for var, inf, sup in limits:
+            var = _sympify(var)
+            inf = _sympify(inf)
+            #since this is stored as an argument, it should be
+            #a Tuple
+            if isinstance(sup, list):
+                sup = Tuple(*sup)
+            else:
+                sup = _sympify(sup)
+            new_limits.append(Tuple(var, inf, sup))
             if any((not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
                                                                 for i in [inf, sup]):
                 raise TypeError('Bounds should be an Expression(combination of Integer and Symbol)')
@@ -234,7 +244,7 @@ class ArrayComprehension(Basic):
                 raise ValueError('Lower bound should be inferior to upper bound')
             if var in inf.free_symbols or var in sup.free_symbols:
                 raise ValueError('Variable should not be part of its bounds')
-        return limits
+        return new_limits
 
     @classmethod
     def _calculate_shape_from_limits(cls, limits):
@@ -250,7 +260,7 @@ class ArrayComprehension(Basic):
 
         return loop_size
 
-    def doit(self):
+    def doit(self, **hints):
         if not self.is_shape_numeric:
             return self
 

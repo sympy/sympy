@@ -28,7 +28,8 @@ from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -40,8 +41,8 @@ from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan, sin, cos,
     tan, acot, cot, asin, acos)
-from sympy.integrals import integrate, Integral
-from sympy.integrals.heurisch import _symbols
+from .integrals import integrate, Integral
+from .heurisch import _symbols
 from sympy.polys.polyerrors import DomainError, PolynomialError
 from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
@@ -296,6 +297,8 @@ class DifferentialExtension:
         """
         Rewrite exps/pows for better processing.
         """
+        from .prde import is_deriv_k
+
         # Pre-preparsing.
         #################
         # Get all exp arguments, so we can avoid ahead of time doing
@@ -303,15 +306,13 @@ class DifferentialExtension:
 
         # Things like sqrt(exp(x)) do not automatically simplify to
         # exp(x/2), so they will be viewed as algebraic.  The easiest way
-        # to handle this is to convert all instances of (a**b)**Rational
-        # to a**(Rational*b) before doing anything else.  Note that the
+        # to handle this is to convert all instances of exp(a)**Rational
+        # to exp(Rational*a) before doing anything else.  Note that the
         # _exp_part code can generate terms of this form, so we do need to
         # do this at each pass (or else modify it to not do that).
 
-        from sympy.integrals.prde import is_deriv_k
-
-        ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
-            if (i.base.is_Pow or isinstance(i.base, exp) and i.exp.is_Rational)]
+        ratpows = [i for i in self.newf.atoms(Pow)
+                   if (isinstance(i.base, exp) and i.exp.is_Rational)]
 
         ratpows_repl = [
             (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -382,7 +383,7 @@ class DifferentialExtension:
                 # that, this will break, which maybe is a sign that you
                 # shouldn't be changing that.  Actually, if anything, this
                 # auto-simplification should be removed.  See
-                # http://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
+                # https://groups.google.com/group/sympy/browse_thread/thread/a61d48235f16867f
 
                 self.newf = self.newf.xreplace({i: newterm})
 
@@ -461,8 +462,7 @@ class DifferentialExtension:
         way around an algebraic extension (e.g., exp(log(x)/2)), it will raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_log_deriv_k_t_radical
-
+        from .prde import is_log_deriv_k_t_radical
         new_extension = False
         restart = False
         expargs = [i.exp for i in exps]
@@ -572,8 +572,7 @@ class DifferentialExtension:
         way, so this function does not ever return None or raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_deriv_k
-
+        from .prde import is_deriv_k
         new_extension = False
         logargs = [i.args[0] for i in logs]
         for arg in ordered(logargs):
@@ -871,7 +870,7 @@ def as_poly_1t(p, t, z):
         # issue 4950
         raise NotImplementedError(e)
     # Compute the negative degree parts.
-    one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
+    one_t_part = Poly.from_list(reversed(one_t_part.rep.to_list()), *one_t_part.gens,
         domain=one_t_part.domain)
     if 0 < r < oo:
         one_t_part *= Poly(t**r, t)
@@ -1256,8 +1255,8 @@ def recognize_log_derivative(a, d, DE, z=None):
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
     for s, _ in Sp:
-        # TODO also consider the complex roots
-        # incase we have complex roots it should turn the flag false
+        # TODO also consider the complex roots which should
+        # turn the flag false
         a = real_roots(s.as_poly(z))
 
         if not all(j.is_Integer for j in a):
@@ -1389,14 +1388,13 @@ def integrate_primitive_polynomial(p, DE):
     True, or r = p - Dq does not have an elementary integral over k(t) if b is
     False.
     """
-    from sympy.integrals.prde import limited_integrate
-
     Zero = Poly(0, DE.t)
     q = Poly(0, DE.t)
 
     if not p.expr.has(DE.t):
         return (Zero, p, True)
 
+    from .prde import limited_integrate
     while True:
         if not p.expr.has(DE.t):
             return (q, p, True)
@@ -1484,8 +1482,6 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
     or p - Dq does not have an elementary integral over k(t) if b is False.
     """
-    from sympy.integrals.rde import rischDE
-
     t1 = DE.t
     dtt = DE.d.exquo(Poly(DE.t, DE.t))
     qa = Poly(0, DE.t)
@@ -1494,6 +1490,8 @@ def integrate_hyperexponential_polynomial(p, DE, z):
 
     if p.is_zero:
         return(qa, qd, b)
+
+    from sympy.integrals.rde import rischDE
 
     with DecrementLevel(DE):
         for i in range(-p.degree(z), p.degree(t1) + 1):

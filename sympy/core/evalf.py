@@ -2,8 +2,9 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-
-from typing import Tuple as tTuple
+from __future__ import annotations
+from typing import Tuple as tTuple, Optional, Union as tUnion, Callable, List, Dict as tDict, Type, TYPE_CHECKING, \
+    Any, overload
 
 import math
 
@@ -12,7 +13,7 @@ from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
 from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
-        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+        fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
@@ -20,7 +21,6 @@ from mpmath.libmp import bitcount as mpmath_bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-from mpmath.libmp.gammazeta import mpf_bernoulli
 
 from .sympify import sympify
 from .singleton import S
@@ -28,6 +28,21 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core.power import Pow
+    from sympy.core.symbol import Symbol
+    from sympy.integrals.integrals import Integral
+    from sympy.concrete.summations import Sum
+    from sympy.concrete.products import Product
+    from sympy.functions.elementary.exponential import exp, log
+    from sympy.functions.elementary.complexes import Abs, re, im
+    from sympy.functions.elementary.integers import ceiling, floor
+    from sympy.functions.elementary.trigonometric import atan
+    from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -62,7 +77,10 @@ An mpf value tuple is a tuple of integers (sign, man, exp, bc)
 representing a floating-point number: [1, -1][sign]*man*2**exp where
 sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
+"""
+MPF_TUP = tTuple[int, int, int, int]  # mpf value tuple
 
+"""
 Explanation
 ===========
 
@@ -81,9 +99,19 @@ relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
 """
+TMP_RES = Any  # temporary result, should be some variant of
+# tUnion[tTuple[Optional[MPF_TUP], Optional[MPF_TUP],
+#               Optional[int], Optional[int]],
+#        'ComplexInfinity']
+# but mypy reports error because it doesn't know as we know
+# 1. re and re_acc are either both None or both MPF_TUP
+# 2. sometimes the result can't be zoo
+
+# type of the "options" parameter in internal evalf functions
+OPT_DICT = tDict[str, Any]
 
 
-def fastlog(x):
+def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
     """Fast approximation of log2(x) for an mpf value tuple x.
 
     Explanation
@@ -119,7 +147,7 @@ def fastlog(x):
     return x[2] + x[3]
 
 
-def pure_complex(v, or_real=False):
+def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -140,16 +168,27 @@ def pure_complex(v, or_real=False):
     (0, 1)
     """
     h, t = v.as_coeff_Add()
-    if not t:
-        if or_real:
-            return h, t
-        return
-    c, i = t.as_coeff_Mul()
-    if i is S.ImaginaryUnit:
-        return h, c
+    if t:
+        c, i = t.as_coeff_Mul()
+        if i is S.ImaginaryUnit:
+            return h, c
+    elif or_real:
+        return h, S.Zero
+    return None
 
 
-def scaled_zero(mag, sign=1):
+# I don't know what this is, see function scaled_zero below
+SCALED_ZERO_TUP = tTuple[List[int], int, int, int]
+
+
+@overload
+def scaled_zero(mag: SCALED_ZERO_TUP, sign=1) -> MPF_TUP:
+    ...
+@overload
+def scaled_zero(mag: int, sign=1) -> tTuple[SCALED_ZERO_TUP, int]:
+    ...
+def scaled_zero(mag: tUnion[SCALED_ZERO_TUP, int], sign=1) -> \
+        tUnion[MPF_TUP, tTuple[SCALED_ZERO_TUP, int]]:
     """Return an mpf representing a power of two with magnitude ``mag``
     and -1 for precision. Or, if ``mag`` is a scaled_zero tuple, then just
     remove the sign from within the list that it was initially wrapped
@@ -187,13 +226,13 @@ def scaled_zero(mag, sign=1):
         raise ValueError('scaled zero expects int or scaled_zero tuple.')
 
 
-def iszero(mpf, scaled=False):
+def iszero(mpf: tUnion[MPF_TUP, SCALED_ZERO_TUP, None], scaled=False) -> Optional[bool]:
     if not scaled:
         return not mpf or not mpf[1] and not mpf[-1]
     return mpf and isinstance(mpf[0], list) and mpf[1] == mpf[-1] == 1
 
 
-def complex_accuracy(result):
+def complex_accuracy(result: TMP_RES) -> tUnion[int, Any]:
     """
     Returns relative accuracy of a complex number with given accuracies
     for the real and imaginary parts. The relative accuracy is defined
@@ -206,6 +245,8 @@ def complex_accuracy(result):
     In the worst case (re and im equal), this is wrong by a factor
     sqrt(2), or by log2(sqrt(2)) = 0.5 bit.
     """
+    if result is S.ComplexInfinity:
+        return INF
     re, im, re_acc, im_acc = result
     if not im:
         if not re:
@@ -220,9 +261,11 @@ def complex_accuracy(result):
     return -relative_error
 
 
-def get_abs(expr, prec, options):
-    re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
-
+def get_abs(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+    result = evalf(expr, prec + 2, options)
+    if result is S.ComplexInfinity:
+        return finf, None, prec, None
+    re, im, re_acc, im_acc = result
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
@@ -240,12 +283,14 @@ def get_abs(expr, prec, options):
         return None, None, None, None
 
 
-def get_complex_part(expr, no, prec, options):
+def get_complex_part(expr: 'Expr', no: int, prec: int, options: OPT_DICT) -> TMP_RES:
     """no = 0 for real part, no = 1 for imaginary part"""
     workprec = prec
     i = 0
     while 1:
         res = evalf(expr, workprec, options)
+        if res is S.ComplexInfinity:
+            return fnan, None, prec, None
         value, accuracy = res[no::2]
         # XXX is the last one correct? Consider re((1+I)**2).n()
         if (not value) or accuracy >= prec or -value[2] > prec:
@@ -254,19 +299,19 @@ def get_complex_part(expr, no, prec, options):
         i += 1
 
 
-def evalf_abs(expr, prec, options):
+def evalf_abs(expr: 'Abs', prec: int, options: OPT_DICT) -> TMP_RES:
     return get_abs(expr.args[0], prec, options)
 
 
-def evalf_re(expr, prec, options):
+def evalf_re(expr: 're', prec: int, options: OPT_DICT) -> TMP_RES:
     return get_complex_part(expr.args[0], 0, prec, options)
 
 
-def evalf_im(expr, prec, options):
+def evalf_im(expr: 'im', prec: int, options: OPT_DICT) -> TMP_RES:
     return get_complex_part(expr.args[0], 1, prec, options)
 
 
-def finalize_complex(re, im, prec):
+def finalize_complex(re: MPF_TUP, im: MPF_TUP, prec: int) -> TMP_RES:
     if re == fzero and im == fzero:
         raise ValueError("got complex zero with unknown accuracy")
     elif re == fzero:
@@ -285,10 +330,12 @@ def finalize_complex(re, im, prec):
     return re, im, re_acc, im_acc
 
 
-def chop_parts(value, prec):
+def chop_parts(value: TMP_RES, prec: int) -> TMP_RES:
     """
     Chop off tiny real or complex parts.
     """
+    if value is S.ComplexInfinity:
+        return value
     re, im, re_acc, im_acc = value
     # Method 1: chop based on absolute value
     if re and re not in _infs_nan and (fastlog(re) < -prec + 4):
@@ -305,7 +352,7 @@ def chop_parts(value, prec):
     return re, im, re_acc, im_acc
 
 
-def check_target(expr, result, prec):
+def check_target(expr: 'Expr', result: TMP_RES, prec: int):
     a = complex_accuracy(result)
     if a < prec:
         raise PrecisionExhausted("Failed to distinguish the expression: \n\n%s\n\n"
@@ -313,7 +360,8 @@ def check_target(expr, result, prec):
             "a higher maxn for evalf" % (expr))
 
 
-def get_integer_part(expr, no, options, return_ints=False):
+def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False) -> \
+        tUnion[TMP_RES, tTuple[int, int]]:
     """
     With no = 1, computes ceiling(expr)
     With no = -1, computes floor(expr)
@@ -323,7 +371,10 @@ def get_integer_part(expr, no, options, return_ints=False):
     from sympy.functions.elementary.complexes import re, im
     # The expression is likely less than 2^30 or so
     assumed_size = 30
-    ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
+    result = evalf(expr, assumed_size, options)
+    if result is S.ComplexInfinity:
+        raise ValueError("Cannot get integer part of Complex Infinity")
+    ire, iim, ire_acc, iim_acc = result
 
     # We now know the size, so we can calculate how much extra precision
     # (if any) is needed to get within the nearest integer
@@ -352,7 +403,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
-    def calc_part(re_im, nexpr):
+    def calc_part(re_im: 'Expr', nexpr: MPF_TUP):
         from .add import Add
         _, _, exponent, _ = nexpr
         is_int = exponent == 0
@@ -379,20 +430,21 @@ def get_integer_part(expr, no, options, return_ints=False):
             # expression
             s = options.get('subs', False)
             if s:
-                doit = True
                 # use strict=False with as_int because we take
                 # 2.0 == 2
-                for v in s.values():
+                def is_int_reim(x):
+                    """Check for integer or integer + I*integer."""
                     try:
-                        as_int(v, strict=False)
+                        as_int(x, strict=False)
+                        return True
                     except ValueError:
                         try:
-                            [as_int(i, strict=False) for i in v.as_real_imag()]
-                            continue
-                        except (ValueError, AttributeError):
-                            doit = False
-                            break
-                if doit:
+                            [as_int(i, strict=False) for i in x.as_real_imag()]
+                            return True
+                        except ValueError:
+                            return False
+
+                if all(is_int_reim(v) for v in s.values()):
                     re_im = re_im.subs(s)
 
             re_im = Add(re_im, -nint, evaluate=False)
@@ -419,12 +471,24 @@ def get_integer_part(expr, no, options, return_ints=False):
     return re_, im_, re_acc, im_acc
 
 
-def evalf_ceiling(expr, prec, options):
+def evalf_ceiling(expr: 'ceiling', prec: int, options: OPT_DICT) -> TMP_RES:
     return get_integer_part(expr.args[0], 1, options)
 
 
-def evalf_floor(expr, prec, options):
+def evalf_floor(expr: 'floor', prec: int, options: OPT_DICT) -> TMP_RES:
     return get_integer_part(expr.args[0], -1, options)
+
+
+def evalf_float(expr: 'Float', prec: int, options: OPT_DICT) -> TMP_RES:
+    return expr._mpf_, None, prec, None
+
+
+def evalf_rational(expr: 'Rational', prec: int, options: OPT_DICT) -> TMP_RES:
+    return from_rational(expr.p, expr.q, prec), None, prec, None
+
+
+def evalf_integer(expr: 'Integer', prec: int, options: OPT_DICT) -> TMP_RES:
+    return from_int(expr.p, prec), None, prec, None
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -433,7 +497,8 @@ def evalf_floor(expr, prec, options):
 #----------------------------------------------------------------------------#
 
 
-def add_terms(terms, prec, target_prec):
+def add_terms(terms: list, prec: int, target_prec: int) -> \
+        tTuple[tUnion[MPF_TUP, SCALED_ZERO_TUP, None], Optional[int]]:
     """
     Helper for evalf_add. Adds a list of (mpfval, accuracy) terms.
 
@@ -475,13 +540,14 @@ def add_terms(terms, prec, target_prec):
         return rv[0], rv[2]
 
     working_prec = 2*prec
-    sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
+    sum_man, sum_exp = 0, 0
+    absolute_err: List[int] = []
 
     for x, accuracy in terms:
         sign, man, exp, bc = x
         if sign:
             man = -man
-        absolute_error = max(absolute_error, bc + exp - accuracy)
+        absolute_err.append(bc + exp - accuracy)
         delta = exp - sum_exp
         if exp >= sum_exp:
             # x much larger than existing sum?
@@ -502,6 +568,7 @@ def add_terms(terms, prec, target_prec):
             else:
                 sum_man = (sum_man << delta) + man
                 sum_exp = exp
+    absolute_error = max(absolute_err)
     if not sum_man:
         return scaled_zero(absolute_error)
     if sum_man < 0:
@@ -516,7 +583,7 @@ def add_terms(terms, prec, target_prec):
     return r
 
 
-def evalf_add(v, prec, options):
+def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
     res = pure_complex(v)
     if res:
         h, c = res
@@ -532,10 +599,17 @@ def evalf_add(v, prec, options):
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
+        n = terms.count(S.ComplexInfinity)
+        if n >= 2:
+            return fnan, None, prec, None
         re, re_acc = add_terms(
-            [a[0::2] for a in terms if a[0]], prec, target_prec)
+            [a[0::2] for a in terms if isinstance(a, tuple) and a[0]], prec, target_prec)
         im, im_acc = add_terms(
-            [a[1::2] for a in terms if a[1]], prec, target_prec)
+            [a[1::2] for a in terms if isinstance(a, tuple) and a[1]], prec, target_prec)
+        if n == 1:
+            if re in (finf, fninf, fnan) or im in (finf, fninf, fnan):
+                return fnan, None, prec, None
+            return S.ComplexInfinity
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
@@ -558,7 +632,7 @@ def evalf_add(v, prec, options):
     return re, im, re_acc, im_acc
 
 
-def evalf_mul(v, prec, options):
+def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -568,19 +642,30 @@ def evalf_mul(v, prec, options):
     args = list(v.args)
 
     # see if any argument is NaN or oo and thus warrants a special return
+    has_zero = False
     special = []
     from .numbers import Float
     for arg in args:
-        arg = evalf(arg, prec, options)
-        if arg[0] is None:
+        result = evalf(arg, prec, options)
+        if result is S.ComplexInfinity:
+            special.append(result)
             continue
-        arg = Float._new(arg[0], 1)
-        if arg is S.NaN or arg.is_infinite:
-            special.append(arg)
+        if result[0] is None:
+            if result[1] is None:
+                has_zero = True
+            continue
+        num = Float._new(result[0], 1)
+        if num is S.NaN:
+            return fnan, None, prec, None
+        if num.is_infinite:
+            special.append(num)
     if special:
+        if has_zero:
+            return fnan, None, prec, None
         from .mul import Mul
-        special = Mul(*special)
-        return evalf(special, prec + 4, {})
+        return evalf(Mul(*special), prec + 4, {})
+    if has_zero:
+        return None, None, None, None
 
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
@@ -624,9 +709,10 @@ def evalf_mul(v, prec, options):
         man *= m
         exp += e
         bc += b
-        if bc > 3*working_prec:
+        while bc > 3*working_prec:
             man >>= working_prec
             exp += working_prec
+            bc -= working_prec
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     if not complex_factors:
@@ -672,7 +758,7 @@ def evalf_mul(v, prec, options):
         return re, im, acc, acc
 
 
-def evalf_pow(v, prec, options):
+def evalf_pow(v: 'Pow', prec: int, options) -> TMP_RES:
 
     target_prec = prec
     base, exp = v.args
@@ -681,14 +767,19 @@ def evalf_pow(v, prec, options):
     # faster, because we avoid calling evalf on the exponent, and 2) it
     # allows better handling of real/imaginary parts that are exactly zero
     if exp.is_Integer:
-        p = exp.p
+        p: int = exp.p  # type: ignore
         # Exact
         if not p:
             return fone, None, prec, None
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
         prec += int(math.log(abs(p), 2))
-        re, im, re_acc, im_acc = evalf(base, prec + 5, options)
+        result = evalf(base, prec + 5, options)
+        if result is S.ComplexInfinity:
+            if p < 0:
+                return None, None, None, None
+            return result
+        re, im, re_acc, im_acc = result
         # Real to integer power
         if re and not im:
             return mpf_pow_int(re, p, target_prec), None, target_prec, None
@@ -706,15 +797,25 @@ def evalf_pow(v, prec, options):
                 return None, mpf_neg(z), None, target_prec
         # Zero raised to an integer power
         if not re:
+            if p < 0:
+                return S.ComplexInfinity
             return None, None, None, None
         # General complex number to arbitrary integer power
         re, im = libmp.mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
         return finalize_complex(re, im, target_prec)
 
+    result = evalf(base, prec + 5, options)
+    if result is S.ComplexInfinity:
+        if exp.is_Rational:
+            if exp < 0:
+                return None, None, None, None
+            return result
+        raise NotImplementedError
+
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = evalf(base, prec + 5, options)
+        xre, xim, _, _ = result
         # General complex square root
         if xim:
             re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
@@ -730,7 +831,10 @@ def evalf_pow(v, prec, options):
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
     prec += 10
-    yre, yim, _, _ = evalf(exp, prec, options)
+    result = evalf(exp, prec, options)
+    if result is S.ComplexInfinity:
+        return fnan, None, prec, None
+    yre, yim, _, _ = result
     # Special cases: x**0
     if not (yre or yim):
         return fone, None, prec, None
@@ -752,6 +856,10 @@ def evalf_pow(v, prec, options):
     xre, xim, _, _ = evalf(base, prec + 5, options)
     # 0**y
     if not (xre or xim):
+        if yim:
+            return fnan, None, prec, None
+        if yre[0] == 1:  # y < 0
+            return S.ComplexInfinity
         return None, None, None, None
 
     # (real ** complex) or (complex ** complex)
@@ -778,7 +886,14 @@ def evalf_pow(v, prec, options):
 #                            Special functions                               #
 #                                                                            #
 #----------------------------------------------------------------------------#
-def evalf_trig(v, prec, options):
+
+
+def evalf_exp(expr: 'exp', prec: int, options: OPT_DICT) -> TMP_RES:
+    from .power import Pow
+    return evalf_pow(Pow(S.Exp1, expr.exp, evaluate=False), prec, options)
+
+
+def evalf_trig(v: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     """
     This function handles sin and cos of complex arguments.
 
@@ -839,14 +954,16 @@ def evalf_trig(v, prec, options):
             return y, None, prec, None
 
 
-def evalf_log(expr, prec, options):
-
+def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
     if len(expr.args)>1:
         expr = expr.doit()
         return evalf(expr, prec, options)
     arg = expr.args[0]
     workprec = prec + 10
-    xre, xim, xacc, _ = evalf(arg, workprec, options)
+    result = evalf(arg, workprec, options)
+    if result is S.ComplexInfinity:
+        return result
+    xre, xim, xacc, _ = result
 
     # evalf can return NoneTypes if chop=True
     # issue 18516, 19623
@@ -876,8 +993,8 @@ def evalf_log(expr, prec, options):
     if prec - size > workprec and re != fzero:
         from .add import Add
         # We actually need to compute 1+x accurately, not x
-        arg = Add(S.NegativeOne, arg, evaluate=False)
-        xre, xim, _, _ = evalf_add(arg, prec, options)
+        add = Add(S.NegativeOne, arg, evaluate=False)
+        xre, xim, _, _ = evalf_add(add, prec, options)
         prec2 = workprec - fastlog(xre)
         # xre is now x - 1 so we add 1 back here to calculate x
         re = mpf_log(mpf_abs(mpf_add(xre, fone, prec2)), prec, rnd)
@@ -890,7 +1007,7 @@ def evalf_log(expr, prec, options):
         return re, None, re_acc, None
 
 
-def evalf_atan(v, prec, options):
+def evalf_atan(v: 'atan', prec: int, options: OPT_DICT) -> TMP_RES:
     arg = v.args[0]
     xre, xim, reacc, imacc = evalf(arg, prec + 5, options)
     if xre is xim is None:
@@ -900,7 +1017,7 @@ def evalf_atan(v, prec, options):
     return mpf_atan(xre, prec, rnd), None, prec, None
 
 
-def evalf_subs(prec, subs):
+def evalf_subs(prec: int, subs: dict) -> dict:
     """ Change all Float entries in `subs` to have precision prec. """
     newsubs = {}
     for a, b in subs.items():
@@ -911,7 +1028,7 @@ def evalf_subs(prec, subs):
     return newsubs
 
 
-def evalf_piecewise(expr, prec, options):
+def evalf_piecewise(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     from .numbers import Float, Integer
     if 'subs' in options:
         expr = expr.subs(evalf_subs(prec, options['subs']))
@@ -928,15 +1045,8 @@ def evalf_piecewise(expr, prec, options):
     raise NotImplementedError
 
 
-def evalf_bernoulli(expr, prec, options):
-    arg = expr.args[0]
-    if not arg.is_Integer:
-        raise ValueError("Bernoulli number index must be an integer")
-    n = int(arg)
-    b = mpf_bernoulli(n, prec, rnd)
-    if b == fzero:
-        return None, None, None, None
-    return b, None, prec, None
+def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES:
+    return evalf(a.to_root(), prec, options)
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -945,23 +1055,21 @@ def evalf_bernoulli(expr, prec, options):
 #----------------------------------------------------------------------------#
 
 
-def as_mpmath(x, prec, options):
+def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
-    if isinstance(x, Zero) or x == 0:
+    if isinstance(x, Zero) or x == 0.0:
         return mpf(0)
     if isinstance(x, Infinity):
         return mpf('inf')
     if isinstance(x, NegativeInfinity):
         return mpf('-inf')
     # XXX
-    re, im, _, _ = evalf(x, prec, options)
-    if im:
-        return mpc(re or fzero, im)
-    return mpf(re)
+    result = evalf(x, prec, options)
+    return quad_to_mpmath(result)
 
 
-def do_integral(expr, prec, options):
+def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     func = expr.args[0]
     x, xlow, xhigh = expr.args[1]
     if xlow == xhigh:
@@ -993,17 +1101,18 @@ def do_integral(expr, prec, options):
         from .symbol import Wild
 
         have_part = [False, False]
-        max_real_term = [MINUS_INF]
-        max_imag_term = [MINUS_INF]
+        max_real_term: tUnion[float, int] = MINUS_INF
+        max_imag_term: tUnion[float, int] = MINUS_INF
 
-        def f(t):
+        def f(t: 'Expr') -> tUnion[mpc, mpf]:
+            nonlocal max_real_term, max_imag_term
             re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
 
-            max_real_term[0] = max(max_real_term[0], fastlog(re))
-            max_imag_term[0] = max(max_imag_term[0], fastlog(im))
+            max_real_term = max(max_real_term, fastlog(re))
+            max_imag_term = max(max_imag_term, fastlog(im))
 
             if im:
                 return mpc(re or fzero, im)
@@ -1024,32 +1133,30 @@ def do_integral(expr, prec, options):
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_error = quadts(f, [xlow, xhigh], error=1)
-            quadrature_error = fastlog(quadrature_error._mpf_)
+            result, quadrature_err = quadts(f, [xlow, xhigh], error=1)
+            quadrature_error = fastlog(quadrature_err._mpf_)
 
     options['maxprec'] = oldmaxprec
 
     if have_part[0]:
-        re = result.real._mpf_
+        re: Optional[MPF_TUP] = result.real._mpf_
+        re_acc: Optional[int]
         if re == fzero:
-            re, re_acc = scaled_zero(
-                min(-prec, -max_real_term[0], -quadrature_error))
-            re = scaled_zero(re)  # handled ok in evalf_integral
+            re_s, re_acc = scaled_zero(int(-max(prec, max_real_term, quadrature_error)))
+            re = scaled_zero(re_s)  # handled ok in evalf_integral
         else:
-            re_acc = -max(max_real_term[0] - fastlog(re) -
-                          prec, quadrature_error)
+            re_acc = int(-max(max_real_term - fastlog(re) - prec, quadrature_error))
     else:
         re, re_acc = None, None
 
     if have_part[1]:
-        im = result.imag._mpf_
+        im: Optional[MPF_TUP] = result.imag._mpf_
+        im_acc: Optional[int]
         if im == fzero:
-            im, im_acc = scaled_zero(
-                min(-prec, -max_imag_term[0], -quadrature_error))
-            im = scaled_zero(im)  # handled ok in evalf_integral
+            im_s, im_acc = scaled_zero(int(-max(prec, max_imag_term, quadrature_error)))
+            im = scaled_zero(im_s)  # handled ok in evalf_integral
         else:
-            im_acc = -max(max_imag_term[0] - fastlog(im) -
-                          prec, quadrature_error)
+            im_acc = int(-max(max_imag_term - fastlog(im) - prec, quadrature_error))
     else:
         im, im_acc = None, None
 
@@ -1057,7 +1164,7 @@ def do_integral(expr, prec, options):
     return result
 
 
-def evalf_integral(expr, prec, options):
+def evalf_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
@@ -1083,7 +1190,7 @@ def evalf_integral(expr, prec, options):
     return result
 
 
-def check_convergence(numer, denom, n):
+def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tTuple[int, Any, Any]:
     """
     Returns
     =======
@@ -1115,7 +1222,8 @@ def check_convergence(numer, denom, n):
     if rate:
         return rate, None, None
     constant = dpol.LC() / npol.LC()
-    if abs(constant) != 1:
+    from .numbers import equal_valued
+    if not equal_valued(abs(constant), 1):
         return rate, constant, None
     if npol.degree() == dpol.degree() == 0:
         return rate, constant, 0
@@ -1124,14 +1232,14 @@ def check_convergence(numer, denom, n):
     return rate, constant, (qc - pc)/dpol.LC()
 
 
-def hypsum(expr, n, start, prec):
+def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
     """
     Sum a rapidly convergent infinite hypergeometric series with
     given general term, e.g. e = hypsum(1/factorial(n), n). The
     quotient between successive terms must be a quotient of integer
     polynomials.
     """
-    from .numbers import Float
+    from .numbers import Float, equal_valued
     from sympy.simplify.simplify import hypersimp
 
     if prec == float('inf'):
@@ -1171,7 +1279,7 @@ def hypsum(expr, n, start, prec):
         alt = g < 0
         if abs(g) < 1:
             raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (p == 1 and not alt):
+        if p < 1 or (equal_valued(p, 1) and not alt):
             raise ValueError("Sum diverges like n^%i" % (-p))
         # We have polynomial convergence: use Richardson extrapolation
         vold = None
@@ -1201,16 +1309,16 @@ def hypsum(expr, n, start, prec):
         return v._mpf_
 
 
-def evalf_prod(expr, prec, options):
+def evalf_prod(expr: 'Product', prec: int, options: OPT_DICT) -> TMP_RES:
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
-        re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
+        result = evalf(expr.doit(), prec=prec, options=options)
     else:
         from sympy.concrete.summations import Sum
-        re, im, re_acc, im_acc = evalf(expr.rewrite(Sum), prec=prec, options=options)
-    return re, im, re_acc, im_acc
+        result = evalf(expr.rewrite(Sum), prec=prec, options=options)
+    return result
 
 
-def evalf_sum(expr, prec, options):
+def evalf_sum(expr: 'Sum', prec: int, options: OPT_DICT) -> TMP_RES:
     from .numbers import Float
     if 'subs' in options:
         expr = expr.subs(options['subs'])
@@ -1258,14 +1366,14 @@ def evalf_sum(expr, prec, options):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def evalf_symbol(x, prec, options):
+def evalf_symbol(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     val = options['subs'][x]
     if isinstance(val, mpf):
         if not val:
             return None, None, None, None
         return val._mpf_, None, prec, None
     else:
-        if not '_cache' in options:
+        if '_cache' not in options:
             options['_cache'] = {}
         cache = options['_cache']
         cached, cached_prec = cache.get(x, (None, MINUS_INF))
@@ -1275,17 +1383,18 @@ def evalf_symbol(x, prec, options):
         cache[x] = (v, prec)
         return v
 
-evalf_table = None
+
+evalf_table: tDict[Type['Expr'], Callable[['Expr', int, OPT_DICT], TMP_RES]] = {}
 
 
 def _create_evalf_table():
     global evalf_table
-    from sympy.functions.combinatorial.numbers import bernoulli
     from sympy.concrete.products import Product
     from sympy.concrete.summations import Sum
     from .add import Add
     from .mul import Mul
-    from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, \
+        Zero, ComplexInfinity, AlgebraicNumber
     from .power import Pow
     from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1297,9 +1406,9 @@ def _create_evalf_table():
     evalf_table = {
         Symbol: evalf_symbol,
         Dummy: evalf_symbol,
-        Float: lambda x, prec, options: (x._mpf_, None, prec, None),
-        Rational: lambda x, prec, options: (from_rational(x.p, x.q, prec), None, prec, None),
-        Integer: lambda x, prec, options: (from_int(x.p, prec), None, prec, None),
+        Float: evalf_float,
+        Rational: evalf_rational,
+        Integer: evalf_integer,
         Zero: lambda x, prec, options: (None, None, prec, None),
         One: lambda x, prec, options: (fone, None, prec, None),
         Half: lambda x, prec, options: (fhalf, None, prec, None),
@@ -1307,10 +1416,10 @@ def _create_evalf_table():
         Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
+        ComplexInfinity: lambda x, prec, options: S.ComplexInfinity,
         NaN: lambda x, prec, options: (fnan, None, prec, None),
 
-        exp: lambda x, prec, options: evalf_pow(
-            Pow(S.Exp1, x.exp, evaluate=False), prec, options),
+        exp: evalf_exp,
 
         cos: evalf_trig,
         sin: evalf_trig,
@@ -1333,20 +1442,20 @@ def _create_evalf_table():
         Product: evalf_prod,
         Piecewise: evalf_piecewise,
 
-        bernoulli: evalf_bernoulli,
+        AlgebraicNumber: evalf_alg_num,
     }
 
 
-def evalf(x, prec, options):
+def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     """
-    Evaluate the ``Basic`` instance, ``x``
+    Evaluate the ``Expr`` instance, ``x``
     to a binary precision of ``prec``. This
     function is supposed to be used internally.
 
     Parameters
     ==========
 
-    x : Basic
+    x : Expr
         The formula to evaluate to a float.
     prec : int
         The binary precision that the output should have.
@@ -1370,7 +1479,7 @@ def evalf(x, prec, options):
     """
     from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
-        rf = evalf_table[x.func]
+        rf = evalf_table[type(x)]
         r = rf(x, prec, options)
     except KeyError:
         # Fall back to ordinary evalf if possible
@@ -1385,7 +1494,7 @@ def evalf(x, prec, options):
         re, im = as_real_imag()
         if re.has(re_) or im.has(im_):
             raise NotImplementedError
-        if re == 0:
+        if re == 0.0:
             re = None
             reprec = None
         elif re.is_number:
@@ -1393,7 +1502,7 @@ def evalf(x, prec, options):
             reprec = prec
         else:
             raise NotImplementedError
-        if im == 0:
+        if im == 0.0:
             im = None
             imprec = None
         elif im.is_number:
@@ -1405,7 +1514,7 @@ def evalf(x, prec, options):
 
     if options.get("verbose"):
         print("### input", x)
-        print("### output", to_str(r[0] or fzero, 50))
+        print("### output", to_str(r[0] or fzero, 50) if isinstance(r, tuple) else r)
         print("### raw", r) # r[0], r[2]
         print()
     chop = options.get('chop', False)
@@ -1425,8 +1534,25 @@ def evalf(x, prec, options):
     return r
 
 
+def quad_to_mpmath(q, ctx=None):
+    """Turn the quad returned by ``evalf`` into an ``mpf`` or ``mpc``. """
+    mpc = make_mpc if ctx is None else ctx.make_mpc
+    mpf = make_mpf if ctx is None else ctx.make_mpf
+    if q is S.ComplexInfinity:
+        raise NotImplementedError
+    re, im, _, _ = q
+    if im:
+        if not re:
+            re = fzero
+        return mpc((re, im))
+    elif re:
+        return mpf(re)
+    else:
+        return mpf(fzero)
+
+
 class EvalfMixin:
-    """Mixin class adding evalf capabililty."""
+    """Mixin class adding evalf capability."""
 
     __slots__ = ()  # type: tTuple[str, ...]
 
@@ -1536,6 +1662,8 @@ class EvalfMixin:
             except NotImplementedError:
                 # Probably contains symbols or unknown functions
                 return v
+        if result is S.ComplexInfinity:
+            return result
         re, im, re_acc, im_acc = result
         if re is S.NaN or im is S.NaN:
             return S.NaN
@@ -1571,15 +1699,8 @@ class EvalfMixin:
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:
-            re, im, _, _ = evalf(self, prec, {})
-            if im:
-                if not re:
-                    re = fzero
-                return make_mpc((re, im))
-            elif re:
-                return make_mpf(re)
-            else:
-                return make_mpf(fzero)
+            result = evalf(self, prec, {})
+            return quad_to_mpmath(result)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
@@ -1627,3 +1748,55 @@ def N(x, n=15, **options):
     # by using rational=True, any evaluation of a string
     # will be done using exact values for the Floats
     return sympify(x, rational=True).evalf(n, **options)
+
+
+def _evalf_with_bounded_error(x: 'Expr', eps: 'Optional[Expr]' = None,
+                              m: int = 0,
+                              options: Optional[OPT_DICT] = None) -> TMP_RES:
+    """
+    Evaluate *x* to within a bounded absolute error.
+
+    Parameters
+    ==========
+
+    x : Expr
+        The quantity to be evaluated.
+    eps : Expr, None, optional (default=None)
+        Positive real upper bound on the acceptable error.
+    m : int, optional (default=0)
+        If *eps* is None, then use 2**(-m) as the upper bound on the error.
+    options: OPT_DICT
+        As in the ``evalf`` function.
+
+    Returns
+    =======
+
+    A tuple ``(re, im, re_acc, im_acc)``, as returned by ``evalf``.
+
+    See Also
+    ========
+
+    evalf
+
+    """
+    if eps is not None:
+        if not (eps.is_Rational or eps.is_Float) or not eps > 0:
+            raise ValueError("eps must be positive")
+        r, _, _, _ = evalf(1/eps, 1, {})
+        m = fastlog(r)
+
+    c, d, _, _ = evalf(x, 1, {})
+    # Note: If x = a + b*I, then |a| <= 2|c| and |b| <= 2|d|, with equality
+    # only in the zero case.
+    # If a is non-zero, then |c| = 2**nc for some integer nc, and c has
+    # bitcount 1. Therefore 2**fastlog(c) = 2**(nc+1) = 2|c| is an upper bound
+    # on |a|. Likewise for b and d.
+    nr, ni = fastlog(c), fastlog(d)
+    n = max(nr, ni) + 1
+    # If x is 0, then n is MINUS_INF, and p will be 1. Otherwise,
+    # n - 1 bits get us past the integer parts of a and b, and +1 accounts for
+    # the factor of <= sqrt(2) that is |x|/max(|a|, |b|).
+    p = max(1, m + n + 1)
+
+    options = options or {}
+    return evalf(x, p, options)

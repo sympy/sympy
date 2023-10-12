@@ -19,6 +19,7 @@ Rn is a GeometrySet representing n-dimensional Euclidean space. R2 and
 R3 are currently the only ambient spaces implemented.
 
 """
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -29,9 +30,11 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin, atan
 from sympy.matrices import eye
 from sympy.multipledispatch import dispatch
+from sympy.printing import sstr
 from sympy.sets import Set, Union, FiniteSet
 from sympy.sets.handlers.intersection import intersection_sets
 from sympy.sets.handlers.union import union_sets
+from sympy.solvers.solvers import solve
 from sympy.utilities.misc import func_name
 from sympy.utilities.iterables import is_sequence
 
@@ -61,13 +64,19 @@ ordering_of_classes = [
 ]
 
 
+x, y = [Dummy('entity_dummy') for i in range(2)]
+T = Dummy('entity_dummy', real=True)
+
+
 class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
-    This class doesn't represent any particular geometric entity, it only
+    This class does not represent any particular geometric entity, it only
     provides the implementation of some methods common to all subclasses.
 
     """
+
+    __slots__: tuple[str, ...] = ()
 
     def __cmp__(self, other):
         """Comparison of two GeometryEntities."""
@@ -101,7 +110,7 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
-        if type(self) == type(other):
+        if type(self) is type(other):
             return self == other
         raise NotImplementedError()
 
@@ -148,7 +157,6 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def __str__(self):
         """String representation of a GeometryEntity."""
-        from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
     def _eval_subs(self, old, new):
@@ -388,15 +396,15 @@ class GeometryEntity(Basic, EvalfMixin):
         l = line
         o = Point(0, 0)
         if l.slope.is_zero:
-            y = l.args[0].y
-            if not y:  # x-axis
+            v = l.args[0].y
+            if not v:  # x-axis
                 return g.scale(y=-1)
-            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
+            reps = [(p, p.translate(y=2*(v - p.y))) for p in g.atoms(Point)]
         elif l.slope is oo:
-            x = l.args[0].x
-            if not x:  # y-axis
+            v = l.args[0].x
+            if not v:  # y-axis
                 return g.scale(x=-1)
-            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+            reps = [(p, p.translate(x=2*(v - p.x))) for p in g.atoms(Point)]
         else:
             if not hasattr(g, 'reflect') and not all(
                     isinstance(arg, Point) for arg in g.args):
@@ -406,7 +414,6 @@ class GeometryEntity(Basic, EvalfMixin):
             c = l.coefficients
             d = -c[-1]/c[1]  # y-intercept
             # apply the transform to a single point
-            x, y = Dummy(), Dummy()
             xf = Point(x, y)
             xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
                 ).rotate(a, o).translate(y=d)
@@ -520,12 +527,10 @@ class GeometryEntity(Basic, EvalfMixin):
         Point2D(1, 1)
         """
         from sympy.geometry.point import Point
-        from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
             raise ValueError("other must be a point")
-        T = Dummy('t', real=True)
         sol = solve(self.arbitrary_point(T) - other, T, dict=True)
         if not sol:
             raise ValueError("Given point is not on %s" % func_name(self))
@@ -536,6 +541,8 @@ class GeometrySet(GeometryEntity, Set):
     """Parent class of all GeometryEntity that are also Sets
     (compatible with sympy.sets)
     """
+    __slots__ = ()
+
     def _contains(self, other):
         """sympy.sets uses the _contains method, so include it for compatibility."""
 
@@ -567,7 +574,7 @@ def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.geometry import Point
+    from sympy.geometry.point import Point
 
     try:
         # if o is a FiniteSet, find the intersection directly

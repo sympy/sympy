@@ -23,7 +23,7 @@ from sympy.core.basic import Basic
 from sympy.core.sympify import SympifyError
 
 from ast import parse, NodeTransformer, Call, Name, Load, \
-    fix_missing_locations, Str, Tuple
+    fix_missing_locations, Constant, Tuple
 
 class Transform(NodeTransformer):
 
@@ -32,11 +32,11 @@ class Transform(NodeTransformer):
         self.local_dict = local_dict
         self.global_dict = global_dict
 
-    def visit_Num(self, node):
-        if isinstance(node.n, int):
+    def visit_Constant(self, node):
+        if isinstance(node.value, int):
             return fix_missing_locations(Call(func=Name('Integer', Load()),
                     args=[node], keywords=[]))
-        elif isinstance(node.n, float):
+        elif isinstance(node.value, float):
             return fix_missing_locations(Call(func=Name('Float', Load()),
                     args=[node], keywords=[]))
         return node
@@ -52,7 +52,7 @@ class Transform(NodeTransformer):
         elif node.id in ['True', 'False']:
             return node
         return fix_missing_locations(Call(func=Name('Symbol', Load()),
-                args=[Str(node.id)], keywords=[]))
+                args=[Constant(node.id)], keywords=[]))
 
     def visit_Lambda(self, node):
         args = [self.visit(arg) for arg in node.args.args]

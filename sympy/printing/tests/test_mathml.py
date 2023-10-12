@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -129,6 +129,16 @@ def test_content_mathml_functions():
     assert mml_3.childNodes[1].nodeName == 'bvar'
     assert mml_3.childNodes[1].childNodes[
         0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+
+    mml_4 = mp._print(Lambda((x, y), x * y))
+    assert mml_4.nodeName == 'lambda'
+    assert mml_4.childNodes[0].nodeName == 'bvar'
+    assert mml_4.childNodes[0].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+    assert mml_4.childNodes[1].nodeName == 'bvar'
+    assert mml_4.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>y/ci>
+    assert mml_4.childNodes[2].nodeName == 'apply'
 
 
 def test_content_mathml_limits():
@@ -1205,24 +1215,6 @@ def test_presentation_settings():
                                      method="garbage"))
 
 
-def test_toprettyxml_hooking():
-    # test that the patch doesn't influence the behavior of the standard
-    # library
-    import xml.dom.minidom
-    doc1 = xml.dom.minidom.parseString(
-        "<apply><plus/><ci>x</ci><cn>1</cn></apply>")
-    doc2 = xml.dom.minidom.parseString(
-        "<mrow><mi>x</mi><mo>+</mo><mn>1</mn></mrow>")
-    prettyxml_old1 = doc1.toprettyxml()
-    prettyxml_old2 = doc2.toprettyxml()
-
-    mp.apply_patch()
-    mp.restore_patch()
-
-    assert prettyxml_old1 == doc1.toprettyxml()
-    assert prettyxml_old2 == doc2.toprettyxml()
-
-
 def test_print_domains():
     from sympy.sets import Integers, Naturals, Naturals0, Reals, Complexes
 
@@ -1249,12 +1241,12 @@ def test_print_AssocOp():
         identity = 0
 
     expr = TestAssocOp(1, 2)
-    mpp.doprint(expr) == \
-        '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+    assert mpp.doprint(expr) == \
+        '<mrow><mi>testassocop</mi><mn>1</mn><mn>2</mn></mrow>'
 
 
 def test_print_basic():
-    expr = Basic(1, 2)
+    expr = Basic(S(1), S(2))
     assert mpp.doprint(expr) == \
         '<mrow><mi>basic</mi><mfenced><mn>1</mn><mn>2</mn></mfenced></mrow>'
     assert mp.doprint(expr) == '<basic><cn>1</cn><cn>2</cn></basic>'

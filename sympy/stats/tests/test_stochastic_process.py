@@ -27,7 +27,8 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.testing.pytest import raises, skip, ignore_warnings
+from sympy.testing.pytest import (raises, skip, ignore_warnings,
+                                  warns_deprecated_sympy)
 from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
@@ -63,8 +64,8 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
-    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
-                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain("Y", (1,2,3))],
+                    Tuple(S(1), exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
                     [rainy, cloudy, sunny]]
     chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
 
@@ -79,7 +80,7 @@ def test_DiscreteMarkovChain():
 
         raises(ValueError, lambda: next(sample_stochastic_process(Y)))
 
-    raises(TypeError, lambda: DiscreteMarkovChain("Y", dict((1, 1))))
+    raises(TypeError, lambda: DiscreteMarkovChain("Y", {1: 1}))
     Y = DiscreteMarkovChain("Y", Range(1, t, 2))
     assert Y.number_of_states == ceiling((t-1)/2)
 
@@ -125,11 +126,11 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
@@ -158,6 +159,8 @@ def test_DiscreteMarkovChain():
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+    with warns_deprecated_sympy():
+        Y6.absorbing_probabilites()
     TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     assert Y7.is_absorbing_chain() == False
@@ -221,7 +224,7 @@ def test_DiscreteMarkovChain():
     assert periods == (1, 1, 1, 1, 1)
 
     # test canonical form
-    # see https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # see https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     # example 11.13
     T = Matrix([[1, 0, 0, 0, 0],
                 [S(1) / 2, 0, S(1) / 2, 0, 0],
@@ -243,7 +246,7 @@ def test_DiscreteMarkovChain():
                                  [0, S(1)/2, 0, S(1)/2, 0]])
 
     # test regular and ergodic
-    # https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    # https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     T = Matrix([[0, 4, 0, 0, 0],
                 [1, 0, 3, 0, 0],
                 [0, 2, 0, 2, 0],
@@ -350,10 +353,10 @@ def test_DiscreteMarkovChain():
     assert query.subs({a:15, b:0, c:10, d:1}).evalf().round(4) == P(Eq(Y[15], 0), Eq(Y[10], 1)).round(4)
     query_gt = P(Gt(Y[a], b), Eq(Y[c], d))
     query_le = P(Le(Y[a], b), Eq(Y[c], d))
-    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1
+    assert query_gt.subs({a:5, b:2, c:1, d:0}).evalf() + query_le.subs({a:5, b:2, c:1, d:0}).evalf() == 1.0
     query_ge = P(Ge(Y[a], b), Eq(Y[c], d))
     query_lt = P(Lt(Y[a], b), Eq(Y[c], d))
-    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1
+    assert query_ge.subs({a:4, b:1, c:0, d:2}).evalf() + query_lt.subs({a:4, b:1, c:0, d:2}).evalf() == 1.0
 
     #test issue 20078
     assert (2*Y[1] + 3*Y[1]).simplify() == 5*Y[1]
@@ -443,10 +446,10 @@ def test_ContinuousMarkovChain():
     assert query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10) == P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
     query_gt = P(Gt(C(a), b), Eq(C(c), d))
     query_le = P(Le(C(a), b), Eq(C(c), d))
-    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1
+    assert query_gt.subs({a:13.2, b:0, c:3.29, d:2}).evalf() + query_le.subs({a:13.2, b:0, c:3.29, d:2}).evalf() == 1.0
     query_ge = P(Ge(C(a), b), Eq(C(c), d))
     query_lt = P(Lt(C(a), b), Eq(C(c), d))
-    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1
+    assert query_ge.subs({a:7.43, b:1, c:1.45, d:0}).evalf() + query_lt.subs({a:7.43, b:1, c:1.45, d:0}).evalf() == 1.0
 
     #test issue 20078
     assert (2*C(1) + 3*C(1)).simplify() == 5*C(1)
@@ -502,7 +505,7 @@ def test_BernoulliProcess():
     assert P(B[1] > 0, B[2] <= 1).round(2) == Float(0.60, 2)
     assert P(B[12] * B[5] > 0).round(2) == Float(0.36, 2)
     assert P(B[12] * B[5] > 0, B[4] < 1).round(2) == Float(0.36, 2)
-    assert P(Eq(B[2], 1), B[2] > 0) == 1
+    assert P(Eq(B[2], 1), B[2] > 0) == 1.0
     assert P(Eq(B[5], 3)) == 0
     assert P(Eq(B[1], 1), B[1] < 0) == 0
     assert P(B[2] > 0, Eq(B[2], 1)) == 1
@@ -539,6 +542,8 @@ def test_PoissonProcess():
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.distribution(t) == PoissonDistribution(3*t)
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-5))
@@ -653,6 +658,8 @@ def test_WienerProcess():
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.distribution(t) == NormalDistribution(0, sqrt(t))
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-2))
@@ -704,6 +711,8 @@ def test_GammaProcess_symbolic():
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.state_space == Interval(0, oo)
     assert X.distribution(t) == GammaDistribution(g*t, 1/l)
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g
         - 1)/(gamma(3*g)*gamma(5*g))))

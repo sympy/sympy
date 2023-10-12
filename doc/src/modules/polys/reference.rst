@@ -60,6 +60,7 @@ Basic polynomial manipulation functions
 .. autofunction:: intervals
 .. autofunction:: refine_root
 .. autofunction:: count_roots
+.. autofunction:: all_roots
 .. autofunction:: real_roots
 .. autofunction:: nroots
 .. autofunction:: ground_roots
@@ -94,21 +95,6 @@ Domain constructors
 .. currentmodule:: sympy.polys.constructor
 
 .. autofunction:: construct_domain
-
-Algebraic number fields
-=======================
-
-.. currentmodule:: sympy.polys.numberfields
-
-.. autofunction:: minimal_polynomial
-.. autofunction:: minpoly
-.. autofunction:: primitive_element
-.. autofunction:: field_isomorphism
-.. autofunction:: to_number_field
-.. autofunction:: isolate
-
-.. autoclass:: AlgebraicNumber
-   :members:
 
 Monomials encoded as tuples
 ===========================
@@ -175,10 +161,22 @@ Orthogonal polynomials
 .. autofunction:: chebyshevu_poly
 .. autofunction:: gegenbauer_poly
 .. autofunction:: hermite_poly
+.. autofunction:: hermite_prob_poly
 .. autofunction:: jacobi_poly
 .. autofunction:: legendre_poly
 .. autofunction:: laguerre_poly
 .. autofunction:: spherical_bessel_fn
+
+Appell sequences
+================
+
+.. currentmodule:: sympy.polys.appellseqs
+
+.. autofunction:: bernoulli_poly
+.. autofunction:: bernoulli_c_poly
+.. autofunction:: genocchi_poly
+.. autofunction:: euler_poly
+.. autofunction:: andre_poly
 
 Manipulation of rational functions
 ==================================

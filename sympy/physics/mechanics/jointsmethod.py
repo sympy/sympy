@@ -1,6 +1,8 @@
 from sympy.physics.mechanics import (Body, Lagrangian, KanesMethod, LagrangesMethod,
                                     RigidBody, Particle)
+from sympy.physics.mechanics.body_base import BodyBase
 from sympy.physics.mechanics.method import _Methods
+from sympy import Matrix
 
 __all__ = ['JointsMethod']
 
@@ -75,7 +77,7 @@ class JointsMethod(_Methods):
     """
 
     def __init__(self, newtonion, *joints):
-        if isinstance(newtonion, Body):
+        if isinstance(newtonion, BodyBase):
             self.frame = newtonion.frame
         else:
             self.frame = newtonion
@@ -151,7 +153,8 @@ class JointsMethod(_Methods):
     def _generate_loadlist(self):
         load_list = []
         for body in self.bodies:
-            load_list.extend(body.loads)
+            if isinstance(body, Body):
+                load_list.extend(body.loads)
         return load_list
 
     def _generate_q(self):
@@ -161,7 +164,7 @@ class JointsMethod(_Methods):
                 if coordinate in q_ind:
                     raise ValueError('Coordinates of joints should be unique.')
                 q_ind.append(coordinate)
-        return q_ind
+        return Matrix(q_ind)
 
     def _generate_u(self):
         u_ind = []
@@ -170,18 +173,21 @@ class JointsMethod(_Methods):
                 if speed in u_ind:
                     raise ValueError('Speeds of joints should be unique.')
                 u_ind.append(speed)
-        return u_ind
+        return Matrix(u_ind)
 
     def _generate_kdes(self):
-        kd_ind = []
+        kd_ind = Matrix(1, 0, []).T
         for joint in self._joints:
-            kd_ind.extend(joint.kdes)
+            kd_ind = kd_ind.col_join(joint.kdes)
         return kd_ind
 
     def _convert_bodies(self):
         # Convert `Body` to `Particle` and `RigidBody`
         bodylist = []
         for body in self.bodies:
+            if not isinstance(body, Body):
+                bodylist.append(body)
+                continue
             if body.is_rigidbody:
                 rb = RigidBody(body.name, body.masscenter, body.frame, body.mass,
                     (body.central_inertia, body.masscenter))
@@ -263,14 +269,14 @@ class JointsMethod(_Methods):
         ========
 
         Matrix
-            Numerically solveable equations.
+            Numerically solvable equations.
 
         See Also
         ========
 
-        sympy.physics.mechanics.KanesMethod.rhs():
+        sympy.physics.mechanics.kane.KanesMethod.rhs:
             KanesMethod's rhs function.
-        sympy.physics.mechanics.LagrangesMethod.rhs():
+        sympy.physics.mechanics.lagrange.LagrangesMethod.rhs:
             LagrangesMethod's rhs function.
 
         """

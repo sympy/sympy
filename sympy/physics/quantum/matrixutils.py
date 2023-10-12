@@ -1,7 +1,8 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Integer)
+from sympy.core.numbers import I
+from sympy.core.singleton import S
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
@@ -39,13 +40,7 @@ if not scipy:
     sparse = None
 else:
     sparse = scipy.sparse
-    # Try to find spmatrix.
-    if hasattr(sparse, 'base'):
-        # Newer versions have it under scipy.sparse.base.
-        scipy_sparse_matrix = sparse.base.spmatrix  # type: ignore
-    elif hasattr(sparse, 'sparse'):
-        # Older versions have it under scipy.sparse.sparse.
-        scipy_sparse_matrix = sparse.sparse.spmatrix  # type: ignore
+    scipy_sparse_matrix = sparse.spmatrix # type: ignore
 
 
 def sympy_to_numpy(m, **options):
@@ -54,7 +49,7 @@ def sympy_to_numpy(m, **options):
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
-        return np.matrix(m.tolist(), dtype=dtype)
+        return np.array(m.tolist(), dtype=dtype)
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
             return complex(m)
@@ -67,7 +62,7 @@ def sympy_to_scipy_sparse(m, **options):
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
-        return sparse.csr_matrix(np.matrix(m.tolist(), dtype=dtype))
+        return sparse.csr_matrix(np.array(m.tolist(), dtype=dtype))
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
             return complex(m)
@@ -188,7 +183,7 @@ def _numpy_eye(n):
     """numpy version of complex eye."""
     if not np:
         raise ImportError
-    return np.matrix(np.eye(n, dtype='complex'))
+    return np.array(np.eye(n, dtype='complex'))
 
 
 def _scipy_sparse_eye(n):
@@ -269,7 +264,7 @@ def matrix_to_zero(e):
     """Convert a zero matrix to the scalar zero."""
     if isinstance(e, MatrixBase):
         if zeros(*e.shape) == e:
-            e = Integer(0)
+            e = S.Zero
     elif isinstance(e, numpy_ndarray):
         e = _numpy_matrix_to_zero(e)
     elif isinstance(e, scipy_sparse_matrix):

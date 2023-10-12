@@ -27,9 +27,9 @@ SymPy can integrate a vast array of functions. It can integrate polynomial funct
 Rational functions::
 
     >>> integrate(x/(x**2+2*x+1), x)
-    1
+                   1
     log(x + 1) + -----
-    x + 1
+                 x + 1
 
 
 Exponential-polynomial functions. These multiplicative combinations of polynomials and the functions ``exp``, ``cos`` and ``sin`` can be integrated by hand using repeated integration by parts, which is an extremely tedious process. Happily, SymPy will deal with these integrals.
@@ -46,11 +46,11 @@ Exponential-polynomial functions. These multiplicative combinations of polynomia
 
 even a few nonelementary integrals (in particular, some integrals involving the error function) can be evaluated::
 
-	>>> integrate(exp(-x**2)*erf(x), x)
-	  ____    2
-	\/ pi *erf (x)
-	--------------
-	      4
+    >>> integrate(exp(-x**2)*erf(x), x)
+      ____    2
+    \/ pi *erf (x)
+    --------------
+          4
 
 
 Integral Transforms
@@ -67,12 +67,13 @@ SymPy has special support for definite integrals, and integral transforms.
 .. autoclass:: InverseMellinTransform
    :members:
 .. autofunction:: laplace_transform
+.. autofunction:: laplace_correspondence
+.. autofunction:: laplace_initial_conds
 .. autoclass:: LaplaceTransform
    :members:
 .. autofunction:: inverse_laplace_transform
 .. autoclass:: InverseLaplaceTransform
    :members:
-.. autofunction:: _fast_inverse_laplace
 .. autofunction:: fourier_transform
 .. autofunction:: _fourier_transform
 .. autoclass:: FourierTransform
@@ -201,7 +202,7 @@ TODO and Bugs
 There are still lots of functions that SymPy does not know how to integrate. For bugs related to this module, see https://github.com/sympy/sympy/issues?q=is%3Aissue+is%3Aopen+label%3Aintegrals
 
 Numeric Integrals
-=================
+-----------------
 
 SymPy has functions to calculate points and weights for Gaussian quadrature of
 any order and any precision:

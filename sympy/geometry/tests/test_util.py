@@ -1,10 +1,12 @@
+import pytest
+from sympy.core.numbers import Float
 from sympy.core.function import (Derivative, Function)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.exponential import exp
+from sympy.functions import exp, cos, sin, tan, cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
-    intersection, centroid, Point3D, Line3D
+    intersection, centroid, Point3D, Line3D, Ray, Ellipse
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
 from sympy.solvers.solvers import solve
 from sympy.testing.pytest import raises
@@ -18,18 +20,22 @@ def test_idiff():
     g = Function('g')
     # the use of idiff in ellipse also provides coverage
     circ = x**2 + y**2 - 4
-    ans = 3*x*(-x**2 - y**2)/y**5
-    assert ans == idiff(circ, y, x, 3).simplify()
-    assert ans == idiff(circ, [y], x, 3).simplify()
-    assert idiff(circ, y, x, 3).simplify() == ans
+    ans = -3*x*(x**2/y**2 + 1)/y**3
+    assert ans == idiff(circ, y, x, 3), idiff(circ, y, x, 3)
+    assert ans == idiff(circ, [y], x, 3)
+    assert idiff(circ, y, x, 3) == ans
     explicit  = 12*x/sqrt(-x**2 + 4)**5
     assert ans.subs(y, solve(circ, y)[0]).equals(explicit)
     assert True in [sol.diff(x, 3).equals(explicit) for sol in solve(circ, y)]
     assert idiff(x + t + y, [y, t], x) == -Derivative(t, x) - 1
-    assert idiff(f(x) * exp(f(x)) - x * exp(x), f(x), x) == (x + 1) * exp(x - f(x))/(f(x) + 1)
-    assert idiff(f(x) - y * exp(x), [f(x), y], x) == (y + Derivative(y, x)) * exp(x)
-    assert idiff(f(x) - y * exp(x), [y, f(x)], x) == -y + exp(-x) * Derivative(f(x), x)
+    assert idiff(f(x) * exp(f(x)) - x * exp(x), f(x), x) == (x + 1)*exp(x)*exp(-f(x))/(f(x) + 1)
+    assert idiff(f(x) - y * exp(x), [f(x), y], x) == (y + Derivative(y, x))*exp(x)
+    assert idiff(f(x) - y * exp(x), [y, f(x)], x) == -y + Derivative(f(x), x)*exp(-x)
     assert idiff(f(x) - g(x), [f(x), g(x)], x) == Derivative(g(x), x)
+    # this should be fast
+    fxy = y - (-10*(-sin(x) + 1/x)**2 + tan(x)**2 + 2*cosh(x/10))
+    assert idiff(fxy, y, x) == -20*sin(x)*cos(x) + 2*tan(x)**3 + \
+        2*tan(x) + sinh(x/10)/5 + 20*cos(x)/x - 20*sin(x)/x**2 + 20/x**3
 
 
 def test_intersection():
@@ -51,12 +57,29 @@ def test_intersection():
             Segment((-1, 0), (1, 0)),
             Line((0, 0), slope=1), pairwise=True) == [
         Point(0, 0), Segment((0, 0), (1, 0))]
+    R = 4.0
+    c = intersection(
+            Ray(Point2D(0.001, -1),
+            Point2D(0.0008, -1.7)),
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c == pytest.approx(
+            Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
+    # check this is responds to a lower precision parameter
+    R = Float(4, 5)
+    c2 = intersection(
+            Ray(Point2D(0.001, -1),
+            Point2D(0.0008, -1.7)),
+            Ellipse(center=Point2D(0, 0), hradius=R, vradius=2.0), pairwise=True)[0].coordinates
+    assert c2 == pytest.approx(
+            Point2D(0.000714285723396502, -1.99999996811224, evaluate=False).coordinates)
+    assert c[0]._prec == 53
+    assert c2[0]._prec == 20
 
 
 def test_convex_hull():
     raises(TypeError, lambda: convex_hull(Point(0, 0), 3))
     points = [(1, -1), (1, -2), (3, -1), (-5, -2), (15, -4)]
-    assert convex_hull(*points, **dict(polygon=False)) == (
+    assert convex_hull(*points, **{"polygon": False}) == (
         [Point2D(-5, -2), Point2D(1, -1), Point2D(3, -1), Point2D(15, -4)],
         [Point2D(-5, -2), Point2D(15, -4)])
 
@@ -73,11 +96,11 @@ def test_centroid():
 
 
 def test_farthest_points_closest_points():
-    from random import randint
+    from sympy.core.random import randint
     from sympy.utilities.iterables import subsets
 
     for how in (min, max):
-        if how is min:
+        if how == min:
             func = closest_points
         else:
             func = farthest_points
@@ -100,10 +123,10 @@ def test_farthest_points_closest_points():
         x = Symbol('x', positive=True)
         s = [Point2D(a) for a in ((x, 1), (x + 3, 2), (x + 2, 2))]
 
-        for points in (p1, p2, p3, p4, p5, s, dup):
-            d = how(i.distance(j) for i, j in subsets(points, 2))
+        for points in (p1, p2, p3, p4, p5, dup, s):
+            d = how(i.distance(j) for i, j in subsets(set(points), 2))
             ans = a, b = list(func(*points))[0]
-            a.distance(b) == d
+            assert a.distance(b) == d
             assert ans == _ordered_points(ans)
 
         # if the following ever fails, the above tests were not sufficient
@@ -114,7 +137,7 @@ def test_farthest_points_closest_points():
         points = list(points)
         d = how(i.distance(j) for i, j in subsets(points, 2))
         ans = a, b = list(func(*points))[0]
-        a.distance(b) == d
+        assert a.distance(b) == d
         assert ans == _ordered_points(ans)
 
     # equidistant points

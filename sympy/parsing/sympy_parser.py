@@ -8,17 +8,26 @@ from keyword import iskeyword
 import ast
 import unicodedata
 from io import StringIO
+import builtins
+import types
+from typing import Tuple as tTuple, Dict as tDict, Any, Callable, \
+    List, Optional, Union as tUnion
 
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
-from sympy.core.function import arity, Function
-from sympy.utilities.iterables import iterable
-from sympy.utilities.misc import filldedent, func_name
+from sympy.core.function import Function
+from sympy.utilities.misc import func_name
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 
+null = ''
 
-def _token_splittable(token):
+TOKEN = tTuple[int, str]
+DICT = tDict[str, Any]
+TRANS = Callable[[List[TOKEN], DICT, DICT], List[TOKEN]]
+
+def _token_splittable(token_name: str) -> bool:
     """
     Predicate for whether a token name can be split into multiple tokens.
 
@@ -26,19 +35,15 @@ def _token_splittable(token):
     it is not the name of a Greek letter. This is used to implicitly convert
     expressions like 'xyz' into 'x*y*z'.
     """
-    if '_' in token:
+    if '_' in token_name:
         return False
-    else:
-        try:
-            return not unicodedata.lookup('GREEK SMALL LETTER ' + token)
-        except KeyError:
-            pass
-    if len(token) > 1:
-        return True
-    return False
+    try:
+        return not unicodedata.lookup('GREEK SMALL LETTER ' + token_name)
+    except KeyError:
+        return len(token_name) > 1
 
 
-def _token_callable(token, local_dict, global_dict, nextToken=None):
+def _token_callable(token: TOKEN, local_dict: DICT, global_dict: DICT, nextToken=None):
     """
     Predicate for whether a token name represents a callable function.
 
@@ -51,7 +56,7 @@ def _token_callable(token, local_dict, global_dict, nextToken=None):
     return callable(func) and not isinstance(func, Symbol)
 
 
-def _add_factorial_tokens(name, result):
+def _add_factorial_tokens(name: str, result: List[TOKEN]) -> List[TOKEN]:
     if result == [] or result[-1][1] == '(':
         raise TokenError()
 
@@ -79,13 +84,18 @@ def _add_factorial_tokens(name, result):
     return result
 
 
+class ParenthesisGroup(List[TOKEN]):
+    """List of tokens representing an expression in parentheses."""
+    pass
+
+
 class AppliedFunction:
     """
     A group of tokens representing a function and its arguments.
 
     `exponent` is for handling the shorthand sin^2, ln^2, etc.
     """
-    def __init__(self, function, args, exponent=None):
+    def __init__(self, function: TOKEN, args: ParenthesisGroup, exponent=None):
         if exponent is None:
             exponent = []
         self.function = function
@@ -93,12 +103,9 @@ class AppliedFunction:
         self.exponent = exponent
         self.items = ['function', 'args', 'exponent']
 
-    def expand(self):
+    def expand(self) -> List[TOKEN]:
         """Return a list of tokens representing the function"""
-        result = []
-        result.append(self.function)
-        result.extend(self.args)
-        return result
+        return [self.function, *self.args]
 
     def __getitem__(self, index):
         return getattr(self, self.items[index])
@@ -108,13 +115,8 @@ class AppliedFunction:
                                                 self.exponent)
 
 
-class ParenthesisGroup(list):
-    """List of tokens representing an expression in parentheses."""
-    pass
-
-
-def _flatten(result):
-    result2 = []
+def _flatten(result: List[tUnion[TOKEN, AppliedFunction]]):
+    result2: List[TOKEN] = []
     for tok in result:
         if isinstance(tok, AppliedFunction):
             result2.extend(tok.expand())
@@ -123,15 +125,15 @@ def _flatten(result):
     return result2
 
 
-def _group_parentheses(recursor):
-    def _inner(tokens, local_dict, global_dict):
+def _group_parentheses(recursor: TRANS):
+    def _inner(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
         """Group tokens between parentheses with ParenthesisGroup.
 
         Also processes those tokens recursively.
 
         """
-        result = []
-        stacks = []
+        result: List[tUnion[TOKEN, ParenthesisGroup]] = []
+        stacks: List[ParenthesisGroup] = []
         stacklevel = 0
         for token in tokens:
             if token[0] == OP:
@@ -167,32 +169,32 @@ def _group_parentheses(recursor):
     return _inner
 
 
-def _apply_functions(tokens, local_dict, global_dict):
+def _apply_functions(tokens: List[tUnion[TOKEN, ParenthesisGroup]], local_dict: DICT, global_dict: DICT):
     """Convert a NAME token + ParenthesisGroup into an AppliedFunction.
 
     Note that ParenthesisGroups, if not applied to any function, are
     converted back into lists of tokens.
 
     """
-    result = []
+    result: List[tUnion[TOKEN, AppliedFunction]] = []
     symbol = None
     for tok in tokens:
-        if tok[0] == NAME:
-            symbol = tok
-            result.append(tok)
-        elif isinstance(tok, ParenthesisGroup):
+        if isinstance(tok, ParenthesisGroup):
             if symbol and _token_callable(symbol, local_dict, global_dict):
                 result[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:
                 result.extend(tok)
+        elif tok[0] == NAME:
+            symbol = tok
+            result.append(tok)
         else:
             symbol = None
             result.append(tok)
     return result
 
 
-def _implicit_multiplication(tokens, local_dict, global_dict):
+def _implicit_multiplication(tokens: List[tUnion[TOKEN, AppliedFunction]], local_dict: DICT, global_dict: DICT):
     """Implicitly adds '*' tokens.
 
     Cases:
@@ -208,7 +210,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     - AppliedFunction next to an implicitly applied function ("sin(x)cos x")
 
     """
-    result = []
+    result: List[tUnion[TOKEN, AppliedFunction]] = []
     skip = False
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
@@ -219,54 +221,47 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
             # Dotted name. Do not do implicit multiplication
             skip = True
             continue
-        if (isinstance(tok, AppliedFunction) and
-              isinstance(nextTok, AppliedFunction)):
-            result.append((OP, '*'))
-        elif (isinstance(tok, AppliedFunction) and
-              nextTok[0] == OP and nextTok[1] == '('):
-            # Applied function followed by an open parenthesis
-            if tok.function[1] == "Function":
-                result[-1].function = (result[-1].function[0], 'Symbol')
-            result.append((OP, '*'))
-        elif (tok[0] == OP and tok[1] == ')' and
-              isinstance(nextTok, AppliedFunction)):
-            # Close parenthesis followed by an applied function
-            result.append((OP, '*'))
-        elif (tok[0] == OP and tok[1] == ')' and
-              nextTok[0] == NAME):
-            # Close parenthesis followed by an implicitly applied function
-            result.append((OP, '*'))
-        elif (tok[0] == nextTok[0] == OP
-              and tok[1] == ')' and nextTok[1] == '('):
-            # Close parenthesis followed by an open parenthesis
-            result.append((OP, '*'))
-        elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
-            # Applied function followed by implicitly applied function
-            result.append((OP, '*'))
-        elif (tok[0] == NAME and
-              not _token_callable(tok, local_dict, global_dict) and
-              nextTok[0] == OP and nextTok[1] == '('):
-            # Constant followed by parenthesis
-            result.append((OP, '*'))
-        elif (tok[0] == NAME and
-              not _token_callable(tok, local_dict, global_dict) and
-              nextTok[0] == NAME and
-              not _token_callable(nextTok, local_dict, global_dict)):
-            # Constant followed by constant
-            result.append((OP, '*'))
-        elif (tok[0] == NAME and
-              not _token_callable(tok, local_dict, global_dict) and
-              (isinstance(nextTok, AppliedFunction) or nextTok[0] == NAME)):
-            # Constant followed by (implicitly applied) function
-            result.append((OP, '*'))
+        if isinstance(tok, AppliedFunction):
+            if isinstance(nextTok, AppliedFunction):
+                result.append((OP, '*'))
+            elif nextTok == (OP, '('):
+                # Applied function followed by an open parenthesis
+                if tok.function[1] == "Function":
+                    tok.function = (tok.function[0], 'Symbol')
+                result.append((OP, '*'))
+            elif nextTok[0] == NAME:
+                # Applied function followed by implicitly applied function
+                result.append((OP, '*'))
+        else:
+            if tok == (OP, ')'):
+                if isinstance(nextTok, AppliedFunction):
+                    # Close parenthesis followed by an applied function
+                    result.append((OP, '*'))
+                elif nextTok[0] == NAME:
+                    # Close parenthesis followed by an implicitly applied function
+                    result.append((OP, '*'))
+                elif nextTok == (OP, '('):
+                    # Close parenthesis followed by an open parenthesis
+                    result.append((OP, '*'))
+            elif tok[0] == NAME and not _token_callable(tok, local_dict, global_dict):
+                if isinstance(nextTok, AppliedFunction) or \
+                    (nextTok[0] == NAME and _token_callable(nextTok, local_dict, global_dict)):
+                    # Constant followed by (implicitly applied) function
+                    result.append((OP, '*'))
+                elif nextTok == (OP, '('):
+                    # Constant followed by parenthesis
+                    result.append((OP, '*'))
+                elif nextTok[0] == NAME:
+                    # Constant followed by constant
+                    result.append((OP, '*'))
     if tokens:
         result.append(tokens[-1])
     return result
 
 
-def _implicit_application(tokens, local_dict, global_dict):
+def _implicit_application(tokens: List[tUnion[TOKEN, AppliedFunction]], local_dict: DICT, global_dict: DICT):
     """Adds parentheses as needed after functions."""
-    result = []
+    result: List[tUnion[TOKEN, AppliedFunction]] = []
     appendParen = 0  # number of closing parentheses to add
     skip = 0  # number of tokens to delay before adding a ')' (to
               # capture **, ^, etc.)
@@ -275,12 +270,12 @@ def _implicit_application(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and nextTok[0] not in [OP, ENDMARKER, NEWLINE]):
-            if _token_callable(tok, local_dict, global_dict, nextTok):
+            if _token_callable(tok, local_dict, global_dict, nextTok):  # type: ignore
                 result.append((OP, '('))
                 appendParen += 1
         # name followed by exponent - function exponentiation
         elif (tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**'):
-            if _token_callable(tok, local_dict, global_dict):
+            if _token_callable(tok, local_dict, global_dict):  # type: ignore
                 exponentSkip = True
         elif exponentSkip:
             # if the last token added was an applied function (i.e. the
@@ -315,7 +310,7 @@ def _implicit_application(tokens, local_dict, global_dict):
     return result
 
 
-def function_exponentiation(tokens, local_dict, global_dict):
+def function_exponentiation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
 
     Examples
@@ -327,8 +322,8 @@ def function_exponentiation(tokens, local_dict, global_dict):
     >>> parse_expr('sin**4(x)', transformations=transformations)
     sin(x)**4
     """
-    result = []
-    exponent = []
+    result: List[TOKEN] = []
+    exponent: List[TOKEN] = []
     consuming_exponent = False
     level = 0
     for tok, nextTok in zip(tokens, tokens[1:]):
@@ -367,7 +362,7 @@ def function_exponentiation(tokens, local_dict, global_dict):
     return result
 
 
-def split_symbols_custom(predicate):
+def split_symbols_custom(predicate: Callable[[str], bool]):
     """Creates a transformation that splits symbol names.
 
     ``predicate`` should return True if the symbol name is to be split.
@@ -389,8 +384,8 @@ def split_symbols_custom(predicate):
     ... (transformation, implicit_multiplication))
     unsplittable
     """
-    def _split_symbols(tokens, local_dict, global_dict):
-        result = []
+    def _split_symbols(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
+        result: List[TOKEN] = []
         split = False
         split_previous=False
 
@@ -417,13 +412,13 @@ def split_symbols_custom(predicate):
                         if char in local_dict or char in global_dict:
                             result.append((NAME, "%s" % char))
                         elif char.isdigit():
-                            char = [char]
+                            chars = [char]
                             for i in range(i + 1, len(symbol)):
                                 if not symbol[i].isdigit():
                                   i -= 1
                                   break
-                                char.append(symbol[i])
-                            char = ''.join(char)
+                                chars.append(symbol[i])
+                            char = ''.join(chars)
                             result.extend([(NAME, 'Number'), (OP, '('),
                                            (NAME, "'%s'" % char), (OP, ')')])
                         else:
@@ -457,7 +452,8 @@ def split_symbols_custom(predicate):
 split_symbols = split_symbols_custom(_token_splittable)
 
 
-def implicit_multiplication(result, local_dict, global_dict):
+def implicit_multiplication(tokens: List[TOKEN], local_dict: DICT,
+                            global_dict: DICT) -> List[TOKEN]:
     """Makes the multiplication operator optional in most cases.
 
     Use this before :func:`implicit_application`, otherwise expressions like
@@ -473,16 +469,15 @@ def implicit_multiplication(result, local_dict, global_dict):
     3*x*y
     """
     # These are interdependent steps, so we don't expose them separately
-    for step in (_group_parentheses(implicit_multiplication),
-                 _apply_functions,
-                 _implicit_multiplication):
-        result = step(result, local_dict, global_dict)
-
-    result = _flatten(result)
+    res1 = _group_parentheses(implicit_multiplication)(tokens, local_dict, global_dict)
+    res2 = _apply_functions(res1, local_dict, global_dict)
+    res3 = _implicit_multiplication(res2, local_dict, global_dict)
+    result = _flatten(res3)
     return result
 
 
-def implicit_application(result, local_dict, global_dict):
+def implicit_application(tokens: List[TOKEN], local_dict: DICT,
+                         global_dict: DICT) -> List[TOKEN]:
     """Makes parentheses optional in some cases for function calls.
 
     Use this after :func:`implicit_multiplication`, otherwise expressions
@@ -498,16 +493,15 @@ def implicit_application(result, local_dict, global_dict):
     >>> parse_expr('cot z + csc z', transformations=transformations)
     cot(z) + csc(z)
     """
-    for step in (_group_parentheses(implicit_application),
-                 _apply_functions,
-                 _implicit_application,):
-        result = step(result, local_dict, global_dict)
-
-    result = _flatten(result)
+    res1 = _group_parentheses(implicit_application)(tokens, local_dict, global_dict)
+    res2 = _apply_functions(res1, local_dict, global_dict)
+    res3 = _implicit_application(res2, local_dict, global_dict)
+    result = _flatten(res3)
     return result
 
 
-def implicit_multiplication_application(result, local_dict, global_dict):
+def implicit_multiplication_application(result: List[TOKEN], local_dict: DICT,
+                                        global_dict: DICT) -> List[TOKEN]:
     """Allows a slightly relaxed syntax.
 
     - Parentheses for single-argument method calls are optional.
@@ -537,12 +531,12 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     return result
 
 
-def auto_symbol(tokens, local_dict, global_dict):
+def auto_symbol(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
-    result = []
-    prevTok = (None, None)
+    result: List[TOKEN] = []
+    prevTok = (-1, '')
 
-    tokens.append((None, None))  # so zip traverses all tokens
+    tokens.append((-1, ''))  # so zip traverses all tokens
     for tok, nextTok in zip(tokens, tokens[1:]):
         tokNum, tokVal = tok
         nextTokNum, nextTokVal = nextTok
@@ -557,11 +551,11 @@ def auto_symbol(tokens, local_dict, global_dict):
                     or (prevTok[0] == OP and prevTok[1] in ('(', ',')
                         and nextTokNum == OP and nextTokVal == '=')
                     # the name has already been defined
-                    or name in local_dict and local_dict[name] is not None):
+                    or name in local_dict and local_dict[name] is not null):
                 result.append((NAME, name))
                 continue
             elif name in local_dict:
-                local_dict.setdefault(None, set()).add(name)
+                local_dict.setdefault(null, set()).add(name)
                 if nextTokVal == '(':
                     local_dict[name] = Function(name)
                 else:
@@ -588,13 +582,13 @@ def auto_symbol(tokens, local_dict, global_dict):
     return result
 
 
-def lambda_notation(tokens, local_dict, global_dict):
+def lambda_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Substitutes "lambda" with its SymPy equivalent Lambda().
-    However, the conversion doesn't take place if only "lambda"
+    However, the conversion does not take place if only "lambda"
     is passed because that is a syntax error.
 
     """
-    result = []
+    result: List[TOKEN] = []
     flag = False
     toknum, tokval = tokens[0]
     tokLen = len(tokens)
@@ -628,12 +622,15 @@ def lambda_notation(tokens, local_dict, global_dict):
     return result
 
 
-def factorial_notation(tokens, local_dict, global_dict):
+def factorial_notation(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Allows standard notation for factorial."""
-    result = []
+    result: List[TOKEN] = []
     nfactorial = 0
     for toknum, tokval in tokens:
-        if toknum == ERRORTOKEN:
+        if toknum == OP and tokval == "!":
+            # In Python 3.12 "!" are OP instead of ERRORTOKEN
+            nfactorial += 1
+        elif toknum == ERRORTOKEN:
             op = tokval
             if op == '!':
                 nfactorial += 1
@@ -652,9 +649,9 @@ def factorial_notation(tokens, local_dict, global_dict):
     return result
 
 
-def convert_xor(tokens, local_dict, global_dict):
+def convert_xor(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Treats XOR, ``^``, as exponentiation, ``**``."""
-    result = []
+    result: List[TOKEN] = []
     for toknum, tokval in tokens:
         if toknum == OP:
             if tokval == '^':
@@ -667,20 +664,20 @@ def convert_xor(tokens, local_dict, global_dict):
     return result
 
 
-def repeated_decimals(tokens, local_dict, global_dict):
+def repeated_decimals(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """
     Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
 
     Run this before auto_number.
 
     """
-    result = []
+    result: List[TOKEN] = []
 
     def is_digit(s):
         return all(i in '0123456789_' for i in s)
 
     # num will running match any DECIMAL [ INTEGER ]
-    num = []
+    num: List[TOKEN] = []
     for toknum, tokval in tokens:
         if toknum == NUMBER:
             if (not num and '.' in tokval and 'e' not in tokval.lower() and
@@ -758,7 +755,7 @@ def repeated_decimals(tokens, local_dict, global_dict):
     return result
 
 
-def auto_number(tokens, local_dict, global_dict):
+def auto_number(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """
     Converts numeric literals to use SymPy equivalents.
 
@@ -766,19 +763,19 @@ def auto_number(tokens, local_dict, global_dict):
     literals use ``Float``.
 
     """
-    result = []
+    result: List[TOKEN] = []
 
     for toknum, tokval in tokens:
         if toknum == NUMBER:
             number = tokval
             postfix = []
 
-            if number.endswith('j') or number.endswith('J'):
+            if number.endswith(('j', 'J')):
                 number = number[:-1]
                 postfix = [(OP, '*'), (NAME, 'I')]
 
             if '.' in number or (('e' in number or 'E' in number) and
-                    not (number.startswith('0x') or number.startswith('0X'))):
+                    not (number.startswith(('0x', '0X')))):
                 seq = [(NAME, 'Float'), (OP, '('),
                     (NUMBER, repr(str(number))), (OP, ')')]
             else:
@@ -792,9 +789,9 @@ def auto_number(tokens, local_dict, global_dict):
     return result
 
 
-def rationalize(tokens, local_dict, global_dict):
+def rationalize(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
-    result = []
+    result: List[TOKEN] = []
     passed_float = False
     for toknum, tokval in tokens:
         if toknum == NAME:
@@ -811,7 +808,7 @@ def rationalize(tokens, local_dict, global_dict):
     return result
 
 
-def _transform_equals_sign(tokens, local_dict, global_dict):
+def _transform_equals_sign(tokens: List[TOKEN], local_dict: DICT, global_dict: DICT):
     """Transforms the equals sign ``=`` to instances of Eq.
 
     This is a helper function for ``convert_equals_signs``.
@@ -825,11 +822,11 @@ def _transform_equals_sign(tokens, local_dict, global_dict):
     This does not deal with function arguments yet.
 
     """
-    result = []
+    result: List[TOKEN] = []
     if (OP, "=") in tokens:
         result.append((NAME, "Eq"))
         result.append((OP, "("))
-        for index, token in enumerate(tokens):
+        for token in tokens:
             if token == (OP, "="):
                 result.append((OP, ","))
                 continue
@@ -840,7 +837,8 @@ def _transform_equals_sign(tokens, local_dict, global_dict):
     return result
 
 
-def convert_equals_signs(result, local_dict, global_dict):
+def convert_equals_signs(tokens: List[TOKEN], local_dict: DICT,
+                         global_dict: DICT) -> List[TOKEN]:
     """ Transforms all the equals signs ``=`` to instances of Eq.
 
     Parses the equals signs in the expression and replaces them with
@@ -868,23 +866,23 @@ def convert_equals_signs(result, local_dict, global_dict):
     Eq(Eq(2, x), False)
 
     """
-    for step in (_group_parentheses(convert_equals_signs),
-                  _apply_functions,
-                  _transform_equals_sign):
-        result = step(result, local_dict, global_dict)
-
-    result = _flatten(result)
+    res1 = _group_parentheses(convert_equals_signs)(tokens, local_dict, global_dict)
+    res2 = _apply_functions(res1, local_dict, global_dict)
+    res3 = _transform_equals_sign(res2, local_dict, global_dict)
+    result = _flatten(res3)
     return result
 
 
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`~.Symbol`, :class:`~.Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
-standard_transformations = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
-    factorial_notation)
+standard_transformations: tTuple[TRANS, ...] \
+    = (lambda_notation, auto_symbol, repeated_decimals, auto_number,
+       factorial_notation)
 
 
-def stringify_expr(s, local_dict, global_dict, transformations):
+def stringify_expr(s: str, local_dict: DICT, global_dict: DICT,
+        transformations: tTuple[TRANS, ...]) -> str:
     """
     Converts the string ``s`` to Python code, in ``local_dict``
 
@@ -902,7 +900,7 @@ def stringify_expr(s, local_dict, global_dict, transformations):
     return untokenize(tokens)
 
 
-def eval_expr(code, local_dict, global_dict):
+def eval_expr(code, local_dict: DICT, global_dict: DICT):
     """
     Evaluate Python code generated by ``stringify_expr``.
 
@@ -913,9 +911,11 @@ def eval_expr(code, local_dict, global_dict):
     return expr
 
 
-def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
-    """Converts the string ``s`` to a SymPy expression, in ``local_dict``
+def parse_expr(s: str, local_dict: Optional[DICT] = None,
+               transformations: tUnion[tTuple[TRANS, ...], str] \
+                   = standard_transformations,
+               global_dict: Optional[DICT] = None, evaluate=True):
+    """Converts the string ``s`` to a SymPy expression, in ``local_dict``.
 
     Parameters
     ==========
@@ -931,12 +931,13 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         with ``from sympy import *``; provide this parameter to override
         this behavior (for instance, to parse ``"Q & S"``).
 
-    transformations : tuple, optional
+    transformations : tuple or str
         A tuple of transformation functions used to modify the tokens of the
         parsed expression before evaluation. The default transformations
         convert numeric literals into their SymPy equivalents, convert
         undefined variables into SymPy symbols, and allow the use of standard
-        mathematical factorial notation (e.g. ``x!``).
+        mathematical factorial notation (e.g. ``x!``). Selection via
+        string is available (see below).
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -975,6 +976,62 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> b.args
     (x, 1)
 
+    Note, however, that when these expressions are printed they will
+    appear the same:
+
+    >>> assert str(a) == str(b)
+
+    As a convenience, transformations can be seen by printing ``transformations``:
+
+    >>> from sympy.parsing.sympy_parser import transformations
+
+    >>> print(transformations)
+    0: lambda_notation
+    1: auto_symbol
+    2: repeated_decimals
+    3: auto_number
+    4: factorial_notation
+    5: implicit_multiplication_application
+    6: convert_xor
+    7: implicit_application
+    8: implicit_multiplication
+    9: convert_equals_signs
+    10: function_exponentiation
+    11: rationalize
+
+    The ``T`` object provides a way to select these transformations:
+
+    >>> from sympy.parsing.sympy_parser import T
+
+    If you print it, you will see the same list as shown above.
+
+    >>> str(T) == str(transformations)
+    True
+
+    Standard slicing will return a tuple of transformations:
+
+    >>> T[:5] == standard_transformations
+    True
+
+    So ``T`` can be used to specify the parsing transformations:
+
+    >>> parse_expr("2x", transformations=T[:5])
+    Traceback (most recent call last):
+    ...
+    SyntaxError: invalid syntax
+    >>> parse_expr("2x", transformations=T[:6])
+    2*x
+    >>> parse_expr('.3', transformations=T[3, 11])
+    3/10
+    >>> parse_expr('.3x', transformations=T[:])
+    3*x/10
+
+    As a further convenience, strings 'implicit' and 'all' can be used
+    to select 0-5 and all the transformations, respectively.
+
+    >>> parse_expr('.3x', transformations='all')
+    3*x/10
+
     See Also
     ========
 
@@ -987,55 +1044,62 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         local_dict = {}
     elif not isinstance(local_dict, dict):
         raise TypeError('expecting local_dict to be a dict')
+    elif null in local_dict:
+        raise ValueError('cannot use "" in local_dict')
 
     if global_dict is None:
         global_dict = {}
         exec('from sympy import *', global_dict)
+
+        builtins_dict = vars(builtins)
+        for name, obj in builtins_dict.items():
+            if isinstance(obj, types.BuiltinFunctionType):
+                global_dict[name] = obj
+        global_dict['max'] = Max
+        global_dict['min'] = Min
+
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
     transformations = transformations or ()
-    if transformations:
-        if not iterable(transformations):
-            raise TypeError(
-                '`transformations` should be a list of functions.')
-        for _ in transformations:
-            if not callable(_):
-                raise TypeError(filldedent('''
-                    expected a function in `transformations`,
-                    not %s''' % func_name(_)))
-            if arity(_) != 3:
-                raise TypeError(filldedent('''
-                    a transformation should be function that
-                    takes 3 arguments'''))
-    code = stringify_expr(s, local_dict, global_dict, transformations)
+    if isinstance(transformations, str):
+        if transformations == 'all':
+            _transformations = T[:]
+        elif transformations == 'implicit':
+            _transformations = T[:6]
+        else:
+            raise ValueError('unknown transformation group name')
+    else:
+        _transformations = transformations
+
+    code = stringify_expr(s, local_dict, global_dict, _transformations)
 
     if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval')
+        code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
 
     try:
         rv = eval_expr(code, local_dict, global_dict)
         # restore neutral definitions for names
-        for i in local_dict.pop(None, ()):
-            local_dict[i] = None
+        for i in local_dict.pop(null, ()):
+            local_dict[i] = null
         return rv
     except Exception as e:
         # restore neutral definitions for names
-        for i in local_dict.pop(None, ()):
-            local_dict[i] = None
+        for i in local_dict.pop(null, ()):
+            local_dict[i] = null
         raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
-def evaluateFalse(s):
+def evaluateFalse(s: str):
     """
     Replaces operators with the SymPy equivalent and sets evaluate=False.
     """
     node = ast.parse(s)
-    node = EvaluateFalseTransformer().visit(node)
+    transformed_node = EvaluateFalseTransformer().visit(node)
     # node is a Module, we want an Expression
-    node = ast.Expression(node.body[0].value)
+    transformed_node = ast.Expression(transformed_node.body[0].value)
 
-    return ast.fix_missing_locations(node)
+    return ast.fix_missing_locations(transformed_node)
 
 
 class EvaluateFalseTransformer(ast.NodeTransformer):
@@ -1057,6 +1121,29 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
         'exp', 'ln', 'log', 'sqrt', 'cbrt',
     )
+
+    relational_operators = {
+        ast.NotEq: 'Ne',
+        ast.Lt: 'Lt',
+        ast.LtE: 'Le',
+        ast.Gt: 'Gt',
+        ast.GtE: 'Ge',
+        ast.Eq: 'Eq'
+    }
+    def visit_Compare(self, node):
+        if node.ops[0].__class__ in self.relational_operators:
+            sympy_class = self.relational_operators[node.ops[0].__class__]
+            right = self.visit(node.comparators[0])
+            left = self.visit(node.left)
+            new_node = ast.Call(
+                func=ast.Name(id=sympy_class, ctx=ast.Load()),
+                args=[left, right],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
+                starargs=None,
+                kwargs=None
+            )
+            return new_node
+        return node
 
     def flatten(self, args, func):
         result = []
@@ -1083,8 +1170,8 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             if isinstance(node.op, ast.Sub):
                 right = ast.Call(
                     func=ast.Name(id='Mul', ctx=ast.Load()),
-                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Num(1)), right],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1)), right],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1094,16 +1181,16 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                     rev = True
                     left = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[left, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
                 else:
                     right = ast.Call(
                     func=ast.Name(id='Pow', ctx=ast.Load()),
-                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Num(1))],
-                    keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                    args=[right, ast.UnaryOp(op=ast.USub(), operand=ast.Constant(1))],
+                    keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                     starargs=None,
                     kwargs=None
                 )
@@ -1113,7 +1200,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             new_node = ast.Call(
                 func=ast.Name(id=sympy_class, ctx=ast.Load()),
                 args=[left, right],
-                keywords=[ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load()))],
+                keywords=[ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load()))],
                 starargs=None,
                 kwargs=None
             )
@@ -1128,5 +1215,53 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
     def visit_Call(self, node):
         new_node = self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
-            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load())))
+            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False, ctx=ast.Load())))
         return new_node
+
+
+_transformation = {  # items can be added but never re-ordered
+0: lambda_notation,
+1: auto_symbol,
+2: repeated_decimals,
+3: auto_number,
+4: factorial_notation,
+5: implicit_multiplication_application,
+6: convert_xor,
+7: implicit_application,
+8: implicit_multiplication,
+9: convert_equals_signs,
+10: function_exponentiation,
+11: rationalize}
+
+transformations = '\n'.join('%s: %s' % (i, func_name(f)) for i, f in _transformation.items())
+
+
+class _T():
+    """class to retrieve transformations from a given slice
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.parsing.sympy_parser import T, standard_transformations
+    >>> assert T[:5] == standard_transformations
+    """
+    def __init__(self):
+        self.N = len(_transformation)
+
+    def __str__(self):
+        return transformations
+
+    def __getitem__(self, t):
+        if not type(t) is tuple:
+            t = (t,)
+        i = []
+        for ti in t:
+            if type(ti) is int:
+                i.append(range(self.N)[ti])
+            elif type(ti) is slice:
+                i.extend(range(*ti.indices(self.N)))
+            else:
+                raise TypeError('unexpected slice arg')
+        return tuple([_transformation[_] for _ in i])
+
+T = _T()

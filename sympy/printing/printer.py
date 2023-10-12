@@ -135,8 +135,7 @@ Example of Custom Printing Method
 In the example below, the latex printing of the modulo operator is modified.
 This is done by overriding the method ``_latex`` of ``Mod``.
 
->>> from sympy import Symbol, Mod, Integer
->>> from sympy.printing.latex import print_latex
+>>> from sympy import Symbol, Mod, Integer, print_latex
 
 >>> # Always use printer._print()
 >>> class ModOp(Mod):
@@ -167,7 +166,7 @@ an expression when customizing a printer. Mistakes include:
     ...         a, b = [printer.doprint(i) for i in self.args]
     ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
-    This fails when the `mode` argument is passed to the printer:
+    This fails when the ``mode`` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
     $\\operatorname{Mod}{\\left(x, m\\right)}$
@@ -209,8 +208,9 @@ an expression when customizing a printer. Mistakes include:
 
 """
 
+from __future__ import annotations
 import sys
-from typing import Any, Dict as tDict, Type
+from typing import Any, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -218,7 +218,6 @@ from functools import cmp_to_key, update_wrapper
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 
-from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 
 
@@ -242,9 +241,9 @@ class Printer:
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}  # type: tDict[str, Any]
+    _global_settings: dict[str, Any] = {}
 
-    _default_settings = {}  # type: tDict[str, Any]
+    _default_settings: dict[str, Any] = {}
 
     printmethod = None  # type: str
 
@@ -260,7 +259,7 @@ class Printer:
         self._str = str
 
         self._settings = self._get_initial_settings()
-        self._context = dict()  # mutable during printing
+        self._context = {}  # mutable during printing
 
         if settings is not None:
             self._settings.update(settings)
@@ -292,7 +291,7 @@ class Printer:
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, **kwargs):
+    def _print(self, expr, **kwargs) -> str:
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -305,9 +304,9 @@ class Printer:
             # If the printer defines a name for a printing method
             # (Printer.printmethod) and the object knows for itself how it
             # should be printed, use that method.
-            if (self.printmethod and hasattr(expr, self.printmethod)
-                    and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, **kwargs)
+            if self.printmethod and hasattr(expr, self.printmethod):
+                if not (isinstance(expr, type) and issubclass(expr, Basic)):
+                    return getattr(expr, self.printmethod)(self, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
@@ -390,7 +389,7 @@ def print_function(print_cls):
         if sys.version_info < (3, 9):
             # We have to create a subclass so that `help` actually shows the docstring in older Python versions.
             # IPython and Sphinx do not need this, only a raw Python console.
-            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
+            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), {"__doc__": f.__doc__})
         else:
             cls = _PrintFunction
         return cls(f, print_cls)

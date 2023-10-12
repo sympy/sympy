@@ -164,8 +164,9 @@ An example of Mathematica code printer::
 
     >>> expr = summation(expr, (n, -1, 1))
     >>> mathematica_code(expr)
-    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T
-    ]/t)
+    T*(x[-T]*Sin[(T + t)/T]/(T + t) + x[T]*Sin[(-T + t)/T]/(-T + t) + x[0]*Sin[t/T ↪
+    <BLANKLINE>
+    ↪ ]/t)
 
 We can go through a common expression in different languages we support and see
 how it works::
@@ -186,7 +187,7 @@ how it works::
     >>> print(fcode(expr, assign_to="H_is"))
           H_is = I*S*gamma_1*gamma_2*k*(3*cos(beta)**2 - 1)/r**3
     >>> print(julia_code(expr, assign_to="H_is"))
-    H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3
+    H_is = I .* S .* gamma_1 .* gamma_2 .* k .* (3 * cos(beta) .^ 2 - 1) ./ r .^ 3
     >>> print(octave_code(expr, assign_to="H_is"))
     H_is = I.*S.*gamma_1.*gamma_2.*k.*(3*cos(beta).^2 - 1)./r.^3;
     >>> print(rust_code(expr, assign_to="H_is"))
@@ -486,7 +487,7 @@ implies 'Universal functions' and follows an ideology set by NumPy. The main
 point of ufuncify as compared to autowrap is that it allows arrays as arguments
 and can operate in an element-by-element fashion. The core operation done
 element-wise is in accordance to Numpy's array broadcasting rules. See `this
-<https://docs.scipy.org/doc/numpy/reference/ufuncs.html>`_ for more.
+<https://numpy.org/doc/stable/reference/ufuncs.html>`_ for more.
 
     >>> from sympy import *
     >>> from sympy.abc import x

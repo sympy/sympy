@@ -14,7 +14,8 @@ from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, Lambda, Subs,
     diff, expand, expand_func)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational,
     nan, oo, pi, zoo)
 from sympy.core.relational import Eq, Lt
 from sympy.core.singleton import S
@@ -76,7 +77,7 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import Ci, Si, erf
 from sympy.functions.special.zeta_functions import zeta
-from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_TRAVIS,
+from sympy.testing.pytest import (XFAIL, slow, SKIP, skip, ON_CI,
     raises)
 from sympy.utilities.iterables import partitions
 from mpmath import mpi, mpc
@@ -84,7 +85,6 @@ from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
-from sympy.assumptions import assuming
 from sympy.polys.rings import PolyRing
 from sympy.polys.fields import FracField
 from sympy.polys.solvers import solve_lin_sys
@@ -93,7 +93,7 @@ from sympy.concrete.products import Product
 from sympy.integrals import integrate
 from sympy.integrals.transforms import laplace_transform,\
     inverse_laplace_transform, LaplaceTransform, fourier_transform,\
-    mellin_transform
+    mellin_transform, laplace_correspondence, laplace_initial_conds
 from sympy.solvers.recurr import rsolve
 from sympy.solvers.solveset import solveset, solveset_real, linsolve
 from sympy.solvers.ode import dsolve
@@ -486,6 +486,7 @@ def test_H8():
 
 
 def test_H9():
+    x = Symbol('x', zero=False)
     p1 = 2*x**(n + 4) - x**(n + 2)
     p2 = 4*x**(n + 1) + 3*x**n
     assert gcd(p1, p2) == x**n
@@ -834,12 +835,12 @@ def test_K8():
 
 
 def test_K9():
-    z = symbols('z', real=True, positive=True)
+    z = symbols('z', positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
 
 def test_K10():
-    z = symbols('z', real=True, negative=True)
+    z = symbols('z', negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
 
 # This goes up to K25
@@ -919,17 +920,17 @@ def test_M6():
 
 def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
-    sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)
-    assert [s.simplify() for s in sol] == [
-        1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*I*sqrt(3 + 4*sqrt (3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2]
+    assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+        226*x**2 - 140*x + 46, x)) == {
+        1 - sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        }
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -949,11 +950,12 @@ def test_M8():
 @XFAIL
 def test_M9():
     # x = symbols('x')
+    # solutions are 1/2*(1 +/- sqrt(9 + 8*I*pi*n)) for integer n
     raise NotImplementedError("solveset(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 
 def test_M10():
-    # TODO: Replace solve with solveset, as of now test fails for solveset
+    # TODO: Replace solve with solveset when it gives Lambert solution
     assert solve(exp(x) - x, x) == [-LambertW(-1)]
 
 
@@ -1056,9 +1058,11 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    with assuming(sin(cos(1/E**2) + 1) + b > 0):
-        # TODO: Replace solve with solveset
-        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
+    # TODO: Replace solve with solveset which gives both [+/- current answer]
+    # note that there is a typo in this test in the wester.pdf; there is no
+    # real solution for the equation as it appears in wester.pdf
+    assert solve(log(acos(asin(x**R(2, 3) - b)) - 1) + 2, x
+        ) == [(b + sin(cos(exp(-2) + 1)))**R(3, 2)]
 
 
 @XFAIL
@@ -1764,9 +1768,13 @@ def test_P38():
     M=Matrix([[0, 1, 0],
               [0, 0, 0],
               [0, 0, 0]])
-    #raises ValueError: Matrix det == 0; not invertible
-    M**S.Half
 
+    with raises(AssertionError):
+        # raises ValueError: Matrix det == 0; not invertible
+        M**S.Half
+        # if it doesn't raise then this assertion will be
+        # raised and the test will be flagged as not XFAILing
+        assert None
 
 @XFAIL
 def test_P39():
@@ -2145,13 +2153,13 @@ def test_T7():
 
 
 def test_T8():
-    a, z = symbols('a z', real=True, positive=True)
+    a, z = symbols('a z', positive=True)
     assert limit(gamma(z + a)/gamma(z)*exp(-a*log(z)), z, oo) == 1
 
 
 @XFAIL
 def test_T9():
-    z, k = symbols('z k', real=True, positive=True)
+    z, k = symbols('z k', positive=True)
     # raises NotImplementedError:
     #           Don't know how to calculate the mrv of '(1, k)'
     assert limit(hyper((1, k), (1,), z/k), k, oo) == exp(z)
@@ -2378,7 +2386,7 @@ def test_V8_V9():
 
 
 def test_V10():
-    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + R(3, 4))/4
+    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(4*tan(x/2) + 3)/4
 
 
 def test_V11():
@@ -2477,7 +2485,7 @@ def test_W6():
 
 
 def test_W7():
-    a = symbols('a', real=True, positive=True)
+    a = symbols('a', positive=True)
     r1 = integrate(cos(x)/(x**2 + a**2), (x, -oo, oo))
     assert r1.simplify() == pi*exp(-a)/a
 
@@ -2520,7 +2528,7 @@ def test_W11():
 
 
 def test_W12():
-    p = symbols('p', real=True, positive=True)
+    p = symbols('p', positive=True)
     q = symbols('q', real=True)
     r1 = integrate(x*exp(-p*x**2 + 2*q*x), (x, -oo, oo))
     assert r1.simplify() == sqrt(pi)*q*exp(q**2/p)/p**R(3, 2)
@@ -2549,7 +2557,7 @@ def test_W16():
 
 
 def test_W17():
-    a, b = symbols('a b', real=True, positive=True)
+    a, b = symbols('a b', positive=True)
     assert integrate(exp(-a*x)*besselj(0, b*x),
                  (x, 0, oo)) == 1/(b*sqrt(a**2/b**2 + 1))
 
@@ -2588,14 +2596,14 @@ def test_W22():
 
 @slow
 def test_W23():
-    a, b = symbols('a b', real=True, positive=True)
+    a, b = symbols('a b', positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
     assert r1.collect(pi).cancel() == -pi*a + pi*b
 
 
 def test_W23b():
     # like W23 but limits are reversed
-    a, b = symbols('a b', real=True, positive=True)
+    a, b = symbols('a b', positive=True)
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
     assert r2.collect(pi) == pi*(-a + b)
 
@@ -2603,8 +2611,8 @@ def test_W23b():
 @XFAIL
 @slow
 def test_W24():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     # Not that slow, but does not fully evaluate so simplify is slow.
     # Maybe also require doit()
     x, y = symbols('x y', real=True)
@@ -2615,15 +2623,14 @@ def test_W24():
 @XFAIL
 @slow
 def test_W25():
-    if ON_TRAVIS:
-        skip("Too slow for travis.")
+    if ON_CI:
+        skip("Too slow for CI.")
     a, x, y = symbols('a x y', real=True)
     i1 = integrate(
         sin(a)*sin(y)/sqrt(1 - sin(a)**2*sin(x)**2*sin(y)**2),
         (x, 0, pi/2))
     i2 = integrate(i1, (y, 0, pi/2))
     assert (i2 - pi*a/2).simplify() == 0
-
 
 
 def test_W26():
@@ -2898,7 +2905,7 @@ def test_X22():
 
 
 def test_Y1():
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
     F, _, _ = laplace_transform(cos((w - 1)*t), t, s)
@@ -2906,29 +2913,28 @@ def test_Y1():
 
 
 def test_Y2():
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*w - t)
+    f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t, simplify=True)
+    assert f == cos(t*(w - 1))
 
 
 def test_Y3():
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     w = symbols('w', real=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s)
+    F, _, _ = laplace_transform(sinh(w*t)*cosh(w*t), t, s, simplify=True)
     assert F == w/(s**2 - 4*w**2)
 
 
 def test_Y4():
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     s = symbols('s')
-    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s)
-    assert F == (1 - exp(-6*sqrt(s)))/s
+    F, _, _ = laplace_transform(erf(3/sqrt(t)), t, s, simplify=True)
+    assert F == 1/s - exp(-6*sqrt(s))/s
 
 
-@XFAIL
 def test_Y5_Y6():
 # Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
@@ -2937,21 +2943,29 @@ def test_Y5_Y6():
 # Company, 1983, p. 211.  First, take the Laplace transform of the ODE
 # => s^2 Y(s) - s + Y(s) = 4/s [e^(-s) - e^(-2 s)]
 # where Y(s) is the Laplace transform of y(t)
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', real=True)
     s = symbols('s')
     y = Function('y')
-    F, _, _ = laplace_transform(diff(y(t), t, 2)
-                                + y(t)
-                                - 4*(Heaviside(t - 1)
-                                - Heaviside(t - 2)), t, s)
-    # Laplace transform for diff() not calculated
-    # https://github.com/sympy/sympy/issues/7176
-    assert (F == s**2*LaplaceTransform(y(t), t, s) - s
-            + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
-# TODO implement second part of test case
+    Y = Function('Y')
+    F = laplace_correspondence(laplace_transform(diff(y(t), t, 2) + y(t)
+                                - 4*(Heaviside(t - 1) - Heaviside(t - 2)),
+                                t, s, noconds=True), {y: Y})
+    D = (
+        -F + s**2*Y(s) - s*y(0) + Y(s) - Subs(Derivative(y(t), t), t, 0) -
+        4*exp(-s)/s + 4*exp(-2*s)/s)
+    assert D == 0
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
 #   => y(t) = cos t + 4 {[1 - cos(t - 1)] H(t - 1) - [1 - cos(t - 2)] H(t - 2)}
+    Yf = solve(F, Y(s))[0]
+    Yf = laplace_initial_conds(Yf, t, {y: [1, 0]})
+    assert Yf == (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1))
+    yf = inverse_laplace_transform(Yf, s, t)
+    yf = yf.collect(Heaviside(t-1)).collect(Heaviside(t-2))
+    assert yf == (
+        (4 - 4*cos(t - 1))*Heaviside(t - 1) +
+        (4*cos(t - 2) - 4)*Heaviside(t - 2) +
+        cos(t)*Heaviside(t))
 
 
 @XFAIL
@@ -2959,7 +2973,7 @@ def test_Y7():
     # What is the Laplace transform of an infinite square wave?
     # => 1/s + 2 sum( (-1)^n e^(- s n a)/s, n = 1..infinity )
     #    [Sanchez, Allen and Kyner, p. 213]
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     a = symbols('a', real=True)
     s = symbols('s')
     F, _, _ = laplace_transform(1 + 2*Sum((-1)**n*Heaviside(t - n*a),
@@ -3085,7 +3099,7 @@ not supported')
 def test_Z6():
     # Second order ODE with initial conditions---solve  using Laplace
     # transform: f(t) = sin(2 t)/8 - t cos(2 t)/4
-    t = symbols('t', real=True, positive=True)
+    t = symbols('t', positive=True)
     s = symbols('s')
     eq = Derivative(f(t), t, 2) + 4*f(t) - sin(2*t)
     F, _, _ = laplace_transform(eq, t, s)

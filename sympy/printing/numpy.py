@@ -1,5 +1,7 @@
 from sympy.core import S
-from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits
+from sympy.core.function import Lambda
+from sympy.core.power import Pow
+from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits, ArrayPrinter
 from .codeprinter import CodePrinter
 
 
@@ -17,6 +19,7 @@ _known_functions_numpy = dict(_in_numpy, **{
     'sign': 'sign',
     'logaddexp': 'logaddexp',
     'logaddexp2': 'logaddexp2',
+    'isnan': 'isnan'
 })
 _known_constants_numpy = {
     'Exp1': 'e',
@@ -30,7 +33,7 @@ _known_constants_numpy = {
 _numpy_known_functions = {k: 'numpy.' + v for k, v in _known_functions_numpy.items()}
 _numpy_known_constants = {k: 'numpy.' + v for k, v in _known_constants_numpy.items()}
 
-class NumPyPrinter(PythonCodePrinter):
+class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
     """
     Numpy printer which handles vectorized piecewise functions,
     logical operators, etc.
@@ -43,7 +46,8 @@ class NumPyPrinter(PythonCodePrinter):
     def __init__(self, settings=None):
         """
         `settings` is passed to CodePrinter.__init__()
-        `module` specifies the array module to use, currently 'NumPy' or 'CuPy'
+        `module` specifies the array module to use, currently 'NumPy', 'CuPy'
+        or 'JAX'.
         """
         self.language = "Python with {}".format(self._module)
         self.printmethod = "_{}code".format(self._module)
@@ -104,7 +108,6 @@ class NumPyPrinter(PythonCodePrinter):
             self._print(expr.shape))
 
     def _print_FunctionMatrix(self, expr):
-        from sympy.core.function import Lambda
         from sympy.abc import i, j
         lamda = expr.lamda
         if not isinstance(lamda, Lambda):
@@ -149,8 +152,15 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
+        from sympy.logic.boolalg import ITE, simplify_logic
+        def print_cond(cond):
+            """ Problem having an ITE in the cond. """
+            if cond.has(ITE):
+                return self._print(simplify_logic(cond))
+            else:
+                return self._print(cond)
         exprs = '[{}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
-        conds = '[{}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
+        conds = '[{}]'.format(','.join(print_cond(arg.cond) for arg in expr.args))
         # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
@@ -199,7 +209,6 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         # XXX Workaround for negative integer power error
-        from sympy.core.power import Pow
         if expr.exp.is_integer and expr.exp.is_negative:
             expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')
@@ -218,7 +227,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Mod(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.mod'), ', '.join(
-            map(lambda arg: self._print(arg), expr.args)))
+            (self._print(arg) for arg in expr.args)))
 
     def _print_re(self, expr):
         return "%s(%s)" % (self._module_format(self._module + '.real'), self._print(expr.args[0]))
@@ -243,63 +252,19 @@ class NumPyPrinter(PythonCodePrinter):
         return '{}({})'.format(self._module_format(self._module + '.block'),
                                  self._print(expr.args[0].tolist()))
 
-    def _print_ArrayTensorProduct(self, expr):
-        array_list = [j for i, arg in enumerate(expr.args) for j in
-                (self._print(arg), "[%i, %i]" % (2*i, 2*i+1))]
-        return "%s(%s)" % (self._module_format(self._module + '.einsum'), ", ".join(array_list))
+    def _print_NDimArray(self, expr):
+        if len(expr.shape) == 1:
+            return self._module + '.array(' + self._print(expr.args[0]) + ')'
+        if len(expr.shape) == 2:
+            return self._print(expr.tomatrix())
+        # Should be possible to extend to more dimensions
+        return CodePrinter._print_not_supported(self, expr)
 
-    def _print_ArrayContraction(self, expr):
-        from ..tensor.array.expressions.array_expressions import ArrayTensorProduct
-        base = expr.expr
-        contraction_indices = expr.contraction_indices
-        if not contraction_indices:
-            return self._print(base)
-        if isinstance(base, ArrayTensorProduct):
-            counter = 0
-            d = {j: min(i) for i in contraction_indices for j in i}
-            indices = []
-            for rank_arg in base.subranks:
-                lindices = []
-                for i in range(rank_arg):
-                    if counter in d:
-                        lindices.append(d[counter])
-                    else:
-                        lindices.append(counter)
-                    counter += 1
-                indices.append(lindices)
-            elems = ["%s, %s" % (self._print(arg), ind) for arg, ind in zip(base.args, indices)]
-            return "%s(%s)" % (
-                self._module_format(self._module + '.einsum'),
-                ", ".join(elems)
-            )
-        raise NotImplementedError()
-
-    def _print_ArrayDiagonal(self, expr):
-        diagonal_indices = list(expr.diagonal_indices)
-        if len(diagonal_indices) > 1:
-            # TODO: this should be handled in sympy.codegen.array_utils,
-            # possibly by creating the possibility of unfolding the
-            # ArrayDiagonal object into nested ones. Same reasoning for
-            # the array contraction.
-            raise NotImplementedError
-        if len(diagonal_indices[0]) != 2:
-            raise NotImplementedError
-        return "%s(%s, 0, axis1=%s, axis2=%s)" % (
-            self._module_format("numpy.diagonal"),
-            self._print(expr.expr),
-            diagonal_indices[0][0],
-            diagonal_indices[0][1],
-        )
-
-    def _print_PermuteDims(self, expr):
-        return "%s(%s, %s)" % (
-            self._module_format("numpy.transpose"),
-            self._print(expr.expr),
-            self._print(expr.permutation.array_form),
-        )
-
-    def _print_ArrayAdd(self, expr):
-        return self._expand_fold_binary_op(self._module + '.add', expr.args)
+    _add = "add"
+    _einsum = "einsum"
+    _transpose = "transpose"
+    _ones = "ones"
+    _zeros = "zeros"
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported
@@ -314,6 +279,7 @@ for const in _numpy_known_constants:
 
 
 _known_functions_scipy_special = {
+    'Ei': 'expi',
     'erf': 'erf',
     'erfc': 'erfc',
     'besselj': 'jv',
@@ -321,10 +287,12 @@ _known_functions_scipy_special = {
     'besseli': 'iv',
     'besselk': 'kv',
     'cosm1': 'cosm1',
+    'powm1': 'powm1',
     'factorial': 'factorial',
     'gamma': 'gamma',
     'loggamma': 'gammaln',
     'digamma': 'psi',
+    'polygamma': 'polygamma',
     'RisingFactorial': 'poch',
     'jacobi': 'eval_jacobi',
     'gegenbauer': 'eval_gegenbauer',
@@ -435,6 +403,13 @@ class SciPyPrinter(NumPyPrinter):
                 self._module_format("scipy.special.airy"),
                 self._print(expr.args[0]))
 
+    def _print_bernoulli(self, expr):
+        # scipy's bernoulli is inconsistent with SymPy's so rewrite
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
+    def _print_harmonic(self, expr):
+        return self._print(expr._eval_rewrite_as_zeta(*expr.args))
+
     def _print_Integral(self, e):
         integration_vars, limits = _unpack_integral_limits(e)
 
@@ -453,6 +428,15 @@ class SciPyPrinter(NumPyPrinter):
                 self._print(e.args[0]),
                 limit_str)
 
+    def _print_Si(self, expr):
+        return "{}({})[0]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
+
+    def _print_Ci(self, expr):
+        return "{}({})[1]".format(
+                self._module_format("scipy.special.sici"),
+                self._print(expr.args[0]))
 
 for func in _scipy_known_functions:
     setattr(SciPyPrinter, f'_print_{func}', _print_known_func)
@@ -482,3 +466,44 @@ for func in _cupy_known_functions:
 
 for const in _cupy_known_constants:
     setattr(CuPyPrinter, f'_print_{const}', _print_known_const)
+
+
+_jax_known_functions = {k: 'jax.numpy.' + v for k, v in _known_functions_numpy.items()}
+_jax_known_constants = {k: 'jax.numpy.' + v for k, v in _known_constants_numpy.items()}
+
+class JaxPrinter(NumPyPrinter):
+    """
+    JAX printer which handles vectorized piecewise functions,
+    logical operators, etc.
+    """
+    _module = "jax.numpy"
+
+    _kf = _jax_known_functions
+    _kc = _jax_known_constants
+
+    def __init__(self, settings=None):
+        super().__init__(settings=settings)
+        self.printmethod = '_jaxcode'
+
+    # These need specific override to allow for the lack of "jax.numpy.reduce"
+    def _print_And(self, expr):
+        "Logical And printer"
+        return "{}({}.asarray([{}]), axis=0)".format(
+            self._module_format(self._module + ".all"),
+            self._module_format(self._module),
+            ",".join(self._print(i) for i in expr.args),
+        )
+
+    def _print_Or(self, expr):
+        "Logical Or printer"
+        return "{}({}.asarray([{}]), axis=0)".format(
+            self._module_format(self._module + ".any"),
+            self._module_format(self._module),
+            ",".join(self._print(i) for i in expr.args),
+        )
+
+for func in _jax_known_functions:
+    setattr(JaxPrinter, f'_print_{func}', _print_known_func)
+
+for const in _jax_known_constants:
+    setattr(JaxPrinter, f'_print_{const}', _print_known_const)

@@ -1,6 +1,8 @@
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.containers import TupleKind
 from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -10,17 +12,19 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
+from sympy.matrices.common import MatrixKind
 from sympy.matrices.dense import Matrix
 from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range)
-from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset, SetKind)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
 from sympy.core.relational import Eq, Ne, Le, Lt, LessThan
 from sympy.logic import And, Or, Xor
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.utilities.iterables import cartes
 
 from sympy.abc import x, y, z, m, n
 
@@ -104,6 +108,9 @@ def test_deprecated_is_EmptySet():
     with warns_deprecated_sympy():
         S.EmptySet.is_EmptySet
 
+    with warns_deprecated_sympy():
+        FiniteSet(1).is_EmptySet
+
 
 def test_interval_arguments():
     assert Interval(0, oo) == Interval(0, oo, False, True)
@@ -131,7 +138,7 @@ def test_interval_arguments():
 
 
     assert isinstance(Interval(0, Symbol('a')), Interval)
-    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
+    assert Interval(Symbol('a', positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
     raises(ValueError, lambda: Interval(x, x + S.ImaginaryUnit))
@@ -316,14 +323,14 @@ def test_Complement():
                       Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
-    assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert 3 not in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
-    assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
+    assert 1 not in Complement(S.Reals, S.Naturals, evaluate=False)
 
     assert Complement(S.Integers, S.UniversalSet) == EmptySet
     assert S.UniversalSet.complement(S.Integers) == EmptySet
 
-    assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
+    assert (0 not in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
     assert S.EmptySet - S.Integers == S.EmptySet
 
@@ -494,6 +501,40 @@ def test_intersect1():
     assert Union(Interval(0, 1), Interval(2, 3)).intersection(Interval(1, 2)) == \
         Union(Interval(1, 1), Interval(2, 2))
 
+    # canonical boundary selected
+    a = sqrt(2*sqrt(6) + 5)
+    b = sqrt(2) + sqrt(3)
+    assert Interval(a, 4).intersection(Interval(b, 5)) == Interval(b, 4)
+    assert Interval(1, a).intersection(Interval(0, b)) == Interval(1, b)
+
+
+def test_intersection_interval_float():
+    # intersection of Intervals with mixed Rational/Float boundaries should
+    # lead to Float boundaries in all cases regardless of which Interval is
+    # open or closed.
+    typs = [
+        (Interval, Interval, Interval),
+        (Interval, Interval.open, Interval.open),
+        (Interval, Interval.Lopen, Interval.Lopen),
+        (Interval, Interval.Ropen, Interval.Ropen),
+        (Interval.open, Interval.open, Interval.open),
+        (Interval.open, Interval.Lopen, Interval.open),
+        (Interval.open, Interval.Ropen, Interval.open),
+        (Interval.Lopen, Interval.Lopen, Interval.Lopen),
+        (Interval.Lopen, Interval.Ropen, Interval.open),
+        (Interval.Ropen, Interval.Ropen, Interval.Ropen),
+    ]
+
+    as_float = lambda a1, a2: a2 if isinstance(a2, float) else a1
+
+    for t1, t2, t3 in typs:
+        for t1i, t2i in [(t1, t2), (t2, t1)]:
+            for a1, a2, b1, b2 in cartes([2, 2.0], [2, 2.0], [3, 3.0], [3, 3.0]):
+                I1 = t1(a1, b1)
+                I2 = t2(a2, b2)
+                I3 = t3(as_float(a1, a2), as_float(b1, b2))
+                assert I1.intersect(I2) == I3
+
 
 def test_intersection():
     # iterable
@@ -626,7 +667,7 @@ def test_ProductSet():
     assert Z2.contains(x) == Contains(x, Z2, evaluate=False)
     assert Z2.contains(x).subs(x, 1) is S.false
     assert Z2.contains((x, 1)).subs(x, 2) is S.true
-    assert Z2.contains((x, y)) == Contains((x, y), Z2, evaluate=False)
+    assert Z2.contains((x, y)) == Contains(x, S.Integers) & Contains(y, S.Integers)
     assert unchanged(Contains, (x, y), Z2)
     assert Contains((1, 2), Z2) is S.true
 
@@ -797,17 +838,17 @@ def test_contains():
     assert FiniteSet(1, 2, 3).contains(2) is S.true
     assert FiniteSet(1, 2, Symbol('x')).contains(Symbol('x')) is S.true
 
-    assert FiniteSet(y)._contains(x) is None
+    assert FiniteSet(y)._contains(x) == Eq(y, x, evaluate=False)
     raises(TypeError, lambda: x in FiniteSet(y))
-    assert FiniteSet({x, y})._contains({x}) is None
-    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is True
-    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is False
+    assert FiniteSet({x, y})._contains({x}) == Eq({x, y}, {x}, evaluate=False)
+    assert FiniteSet({x, y}).subs(y, x)._contains({x}) is S.true
+    assert FiniteSet({x, y}).subs(y, x+1)._contains({x}) is S.false
 
     # issue 8197
     from sympy.abc import a, b
-    assert isinstance(FiniteSet(b).contains(-a), Contains)
-    assert isinstance(FiniteSet(b).contains(a), Contains)
-    assert isinstance(FiniteSet(a).contains(1), Contains)
+    assert FiniteSet(b).contains(-a) == Eq(b, -a)
+    assert FiniteSet(b).contains(a) == Eq(b, a)
+    assert FiniteSet(a).contains(1) == Eq(a, 1)
     raises(TypeError, lambda: 1 in FiniteSet(a))
 
     # issue 8209
@@ -934,7 +975,7 @@ def test_Union_as_relational():
     assert Or(x < 0, x > 0).as_set().as_relational(x) == \
         And((x > -oo), (x < oo), Ne(x, 0))
     assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
-        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
+        ).as_relational(x) == And(Ne(x,3),(x>=1),(x<=5))
 
 
 def test_Intersection_as_relational():
@@ -994,7 +1035,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), A, -5, x, 'eggs', x**2)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -1005,8 +1046,6 @@ def test_finite_basic():
     assert A >= A and A <= A
     assert A >= AandB and B >= AandB
     assert A > AandB and B > AandB
-
-    assert FiniteSet(1.0) == FiniteSet(1)
 
 
 def test_product_basic():
@@ -1049,7 +1088,7 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
@@ -1599,10 +1638,58 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
 
+def test_SetKind_ProductSet():
+    p = ProductSet(FiniteSet(Matrix([1, 2])), FiniteSet(Matrix([1, 2])))
+    mk = MatrixKind(NumberKind)
+    k = SetKind(TupleKind(mk, mk))
+    assert p.kind is k
+    assert ProductSet(Interval(1, 2), FiniteSet(Matrix([1, 2]))).kind is SetKind(TupleKind(NumberKind, mk))
+
+def test_SetKind_Interval():
+    assert Interval(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_EmptySet_UniversalSet():
+    assert S.UniversalSet.kind is SetKind(UndefinedKind)
+    assert EmptySet.kind is SetKind()
+
+def test_SetKind_FiniteSet():
+    assert FiniteSet(1, Matrix([1, 2])).kind is SetKind(UndefinedKind)
+    assert FiniteSet(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_Unions():
+    assert Union(FiniteSet(Matrix([1, 2])), Interval(1, 2)).kind is SetKind(UndefinedKind)
+    assert Union(Interval(1, 2), Interval(1, 7)).kind is SetKind(NumberKind)
+
+def test_SetKind_DisjointUnion():
+    A = FiniteSet(1, 2, 3)
+    B = Interval(0, 5)
+    assert DisjointUnion(A, B).kind is SetKind(NumberKind)
+
+def test_SetKind_evaluate_False():
+    U = lambda *args: Union(*args, evaluate=False)
+    assert U({1}, EmptySet).kind is SetKind(NumberKind)
+    assert U(Interval(1, 2), EmptySet).kind is SetKind(NumberKind)
+    assert U({1}, S.UniversalSet).kind is SetKind(UndefinedKind)
+    assert U(Interval(1, 2), Interval(4, 5),
+            FiniteSet(1)).kind is SetKind(NumberKind)
+    I = lambda *args: Intersection(*args, evaluate=False)
+    assert I({1}, S.UniversalSet).kind is SetKind(NumberKind)
+    assert I({1}, EmptySet).kind is SetKind()
+    C = lambda *args: Complement(*args, evaluate=False)
+    assert C(S.UniversalSet, {1, 2, 4, 5}).kind is SetKind(UndefinedKind)
+    assert C({1, 2, 3, 4, 5}, EmptySet).kind is SetKind(NumberKind)
+    assert C(EmptySet, {1, 2, 3, 4, 5}).kind is SetKind()
+
+def test_SetKind_ImageSet_Special():
+    f = ImageSet(Lambda(n, n ** 2), Interval(1, 4))
+    assert (f - FiniteSet(3)).kind is SetKind(NumberKind)
+    assert (f + Interval(16, 17)).kind is SetKind(NumberKind)
+    assert (f + FiniteSet(17)).kind is SetKind(NumberKind)
+
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
-    assert not 1 in B
-    assert not 1.0 in B
+    assert 1 not in B
+    assert 1.0 not in B
     assert not Eq(1, FiniteSet(1, 2))
     assert FiniteSet(1) in B
     A = FiniteSet(1, 2)

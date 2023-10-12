@@ -9,7 +9,8 @@ from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -59,6 +60,85 @@ class RepMatrix(MatrixBase):
 
         return self._rep.unify_eq(other._rep)
 
+    def to_DM(self, domain=None, **kwargs):
+        """Convert to a :class:`~.DomainMatrix`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [3, 4]])
+        >>> M.to_DM()
+        DomainMatrix({0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}}, (2, 2), ZZ)
+
+        The :meth:`DomainMatrix.to_Matrix` method can be used to convert back:
+
+        >>> M.to_DM().to_Matrix() == M
+        True
+
+        The domain can be given explicitly or otherwise it will be chosen by
+        :func:`construct_domain`. Any keyword arguments (besides ``domain``)
+        are passed to :func:`construct_domain`:
+
+        >>> from sympy import QQ, symbols
+        >>> x = symbols('x')
+        >>> M = Matrix([[x, 1], [1, x]])
+        >>> M
+        Matrix([
+        [x, 1],
+        [1, x]])
+        >>> M.to_DM().domain
+        ZZ[x]
+        >>> M.to_DM(field=True).domain
+        ZZ(x)
+        >>> M.to_DM(domain=QQ[x]).domain
+        QQ[x]
+
+        See Also
+        ========
+
+        DomainMatrix
+        DomainMatrix.to_Matrix
+        DomainMatrix.convert_to
+        DomainMatrix.choose_domain
+        construct_domain
+        """
+        if domain is not None:
+            if kwargs:
+                raise TypeError("Options cannot be used with domain parameter")
+            return self._rep.convert_to(domain)
+
+        rep = self._rep
+        dom = rep.domain
+
+        # If the internal DomainMatrix is already ZZ or QQ then we can maybe
+        # bypass calling construct_domain or performing any conversions. Some
+        # kwargs might affect this though e.g. field=True (not sure if there
+        # are others).
+        if not kwargs:
+            if dom.is_ZZ:
+                return rep.copy()
+            elif dom.is_QQ:
+                # All elements might be integers
+                try:
+                    return rep.convert_to(ZZ)
+                except CoercionFailed:
+                    pass
+                return rep.copy()
+
+        # Let construct_domain choose a domain
+        rep_dom = rep.choose_domain(**kwargs)
+
+        # XXX: There should be an option to construct_domain to choose EXRAW
+        # instead of EX. At least converting to EX does not initially trigger
+        # EX.simplify which is what we want here but should probably be
+        # considered a bug in EX. Perhaps also this could be handled in
+        # DomainMatrix.choose_domain rather than here...
+        if rep_dom.domain.is_EX:
+            rep_dom = rep_dom.convert_to(EXRAW)
+
+        return rep_dom
+
     @classmethod
     def _unify_element_sympy(cls, rep, element):
         domain = rep.domain
@@ -84,12 +164,17 @@ class RepMatrix(MatrixBase):
                 element = new_domain.from_sympy(element)
 
         if domain == EXRAW and not isinstance(element, Expr):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                non-Expr objects in a Matrix is deprecated. Matrix represents
+                a mathematical matrix. To represent a container of non-numeric
+                entities, Use a list of lists, TableForm, NumPy array, or some
+                other data structure instead.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-non-expr-in-matrix",
+                stacklevel=4,
+            )
 
         return rep, element
 
@@ -97,12 +182,17 @@ class RepMatrix(MatrixBase):
     def _dod_to_DomainMatrix(cls, rows, cols, dod, types):
 
         if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                non-Expr objects in a Matrix is deprecated. Matrix represents
+                a mathematical matrix. To represent a container of non-numeric
+                entities, Use a list of lists, TableForm, NumPy array, or some
+                other data structure instead.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-non-expr-in-matrix",
+                stacklevel=6,
+            )
 
         rep = DomainMatrix(dod, (rows, cols), EXRAW)
 
@@ -163,7 +253,7 @@ class RepMatrix(MatrixBase):
         if domain in (ZZ, QQ):
             element_kind = NumberKind
         elif domain == EXRAW:
-            kinds = set(e.kind for e in self.values())
+            kinds = {e.kind for e in self.values()}
             if len(kinds) == 1:
                 [element_kind] = kinds
             else:
@@ -197,7 +287,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -273,7 +363,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
@@ -416,7 +506,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
         Matrix([
@@ -438,7 +528,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
         >>> M
         Matrix([
@@ -466,7 +556,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
         Matrix([
@@ -484,13 +574,50 @@ class MutableRepMatrix(RepMatrix):
         for j in range(self.cols):
             self[i, j] = f(self[i, j], j)
 
+    #The next three methods give direct support for the most common row operations inplace.
+    def row_mult(self,i,factor):
+        """Multiply the given row by the given factor in-place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_mult(1,7); M
+        Matrix([
+        [1, 0, 0],
+        [0, 7, 0],
+        [0, 0, 1]])
+
+        """
+        for j in range(self.cols):
+            self[i,j] *= factor
+
+    def row_add(self,s,t,k):
+        """Add k times row s (source) to row t (target) in place.
+
+        Examples
+        ========
+
+        >>> from sympy import eye
+        >>> M = eye(3)
+        >>> M.row_add(0, 2,3); M
+        Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [3, 0, 1]])
+        """
+
+        for j in range(self.cols):
+            self[t,j] += k*self[s,j]
+
     def row_swap(self, i, j):
         """Swap the two given rows of the matrix in-place.
 
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
         >>> M
         Matrix([
@@ -518,7 +645,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
         Matrix([
@@ -550,7 +677,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> I = eye(3)
         >>> I[:2, 0] = [1, 2] # col
         >>> I
@@ -588,7 +715,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
         >>> I = eye(3)
         >>> I[:3, :2] = M
@@ -634,7 +761,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> M = SparseMatrix.zeros(3); M
         Matrix([
         [0, 0, 0],
@@ -673,7 +800,7 @@ def _getitem_RepMatrix(self, key):
     ... [1, 2 + I],
     ... [3, 4    ]])
 
-    If the key is a tuple that doesn't involve a slice then that element
+    If the key is a tuple that does not involve a slice then that element
     is returned:
 
     >>> m[1, 0]

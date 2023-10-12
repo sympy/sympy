@@ -166,7 +166,7 @@ class Tr(Expr):
         expr_kind = expr.kind
         return expr_kind.element_kind
 
-    def doit(self, **kwargs):
+    def doit(self, **hints):
         """ Perform the trace operation.
 
         #TODO: Current version ignores the indices set for partial trace.

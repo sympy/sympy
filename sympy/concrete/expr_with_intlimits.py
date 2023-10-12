@@ -21,6 +21,8 @@ class ExprWithIntLimits(ExprWithLimits):
     sympy.concrete.products.Product
     sympy.concrete.summations.Sum
     """
+    __slots__ = ()
+
     def change_index(self, var, trafo, newvar=None):
         r"""
         Change index of a Sum or Product.

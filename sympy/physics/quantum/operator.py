@@ -8,12 +8,14 @@ TODO:
 * Doctests and documentation of special methods for InnerProduct, Commutator,
   AntiCommutator, represent, apply_operators.
 """
+from typing import Optional
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, expand)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, oo)
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -99,7 +101,8 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-
+    is_hermitian: Optional[bool] = None
+    is_unitary: Optional[bool] = None
     @classmethod
     def default_args(self):
         return ("O",)
@@ -167,6 +170,9 @@ class Operator(QExpr):
     def _apply_operator(self, ket, **options):
         return dispatch_method(self, '_apply_operator', ket, **options)
 
+    def _apply_from_right_to(self, bra, **options):
+        return None
+
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
 
@@ -215,14 +221,14 @@ class HermitianOperator(Operator):
 
     def _eval_power(self, exp):
         if isinstance(self, UnitaryOperator):
-            if exp == -1:
-                return Operator._eval_power(self, exp)
-            elif abs(exp) % 2 == 0:
-                return self*(Operator._eval_inverse(self))
-            else:
+            # so all eigenvalues of self are 1 or -1
+            if exp.is_even:
+                from sympy.core.singleton import S
+                return S.One # is identity, see Issue 24153.
+            elif exp.is_odd:
                 return self
-        else:
-            return Operator._eval_power(self, exp)
+        # No simplification in all other cases
+        return Operator._eval_power(self, exp)
 
 
 class UnitaryOperator(Operator):
@@ -243,7 +249,7 @@ class UnitaryOperator(Operator):
     >>> U*Dagger(U)
     1
     """
-
+    is_unitary = True
     def _eval_adjoint(self):
         return self._eval_inverse()
 
@@ -266,6 +272,8 @@ class IdentityOperator(Operator):
     >>> IdentityOperator()
     I
     """
+    is_hermitian = True
+    is_unitary = True
     @property
     def dimension(self):
         return self.N
@@ -281,7 +289,7 @@ class IdentityOperator(Operator):
         self.N = args[0] if (len(args) == 1 and args[0]) else oo
 
     def _eval_commutator(self, other, **hints):
-        return Integer(0)
+        return S.Zero
 
     def _eval_anticommutator(self, other, **hints):
         return 2 * other
@@ -294,6 +302,9 @@ class IdentityOperator(Operator):
 
     def _apply_operator(self, ket, **options):
         return ket
+
+    def _apply_from_right_to(self, bra, **options):
+        return bra
 
     def _eval_power(self, exp):
         return self
@@ -611,7 +622,7 @@ class DifferentialOperator(Operator):
 
         return self.expr.free_symbols
 
-    def _apply_operator_Wavefunction(self, func):
+    def _apply_operator_Wavefunction(self, func, **options):
         from sympy.physics.quantum.state import Wavefunction
         var = self.variables
         wf_vars = func.args[1:]

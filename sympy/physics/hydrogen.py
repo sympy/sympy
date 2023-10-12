@@ -125,7 +125,7 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
 
     >>> from sympy.physics.hydrogen import Psi_nlm
     >>> from sympy import Symbol
-    >>> r=Symbol("r", real=True, positive=True)
+    >>> r=Symbol("r", positive=True)
     >>> phi=Symbol("phi", real=True)
     >>> theta=Symbol("theta", real=True)
     >>> Z=Symbol("Z", positive=True, integer=True, nonzero=True)
@@ -164,7 +164,7 @@ def E_nl(n, Z=1):
     """
     Returns the energy of the state (n, l) in Hartree atomic units.
 
-    The energy doesn't depend on "l".
+    The energy does not depend on "l".
 
     Parameters
     ==========
@@ -221,7 +221,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         Atomic number (1 for Hydrogen, 2 for Helium, ...)
     c :
         Speed of light in atomic units. Default value is 137.035999037,
-        taken from http://arxiv.org/abs/1012.3627
+        taken from https://arxiv.org/abs/1012.3627
 
     Examples
     ========

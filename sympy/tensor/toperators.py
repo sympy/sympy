@@ -1,10 +1,9 @@
+from sympy import permutedims
 from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul,
-                                 TensorIndex)
+from sympy.tensor.tensor import Tensor, TensExpr, TensAdd, TensMul
 
 
 class PartialDerivative(TensExpr):
@@ -19,7 +18,8 @@ class PartialDerivative(TensExpr):
     >>> from sympy import symbols
     >>> L = TensorIndexType("L")
     >>> A = TensorHead("A", [L])
-    >>> i, j = symbols("i j")
+    >>> B = TensorHead("B", [L])
+    >>> i, j, k = symbols("i j k")
 
     >>> expr = PartialDerivative(A(i), A(j))
     >>> expr
@@ -30,6 +30,10 @@ class PartialDerivative(TensExpr):
     >>> expr.get_indices()
     [i, -j]
 
+    Notice that the deriving variables have opposite valence than the
+    printed one: ``A(j)`` is printed as covariant, but the index of the
+    derivative is actually contravariant, i.e. ``-j``.
+
     Indices can be contracted:
 
     >>> expr = PartialDerivative(A(i), A(i))
@@ -37,6 +41,56 @@ class PartialDerivative(TensExpr):
     PartialDerivative(A(L_0), A(L_0))
     >>> expr.get_indices()
     [L_0, -L_0]
+
+    The method ``.get_indices()`` always returns all indices (even the
+    contracted ones). If only uncontracted indices are needed, call
+    ``.get_free_indices()``:
+
+    >>> expr.get_free_indices()
+    []
+
+    Nested partial derivatives are flattened:
+
+    >>> expr = PartialDerivative(PartialDerivative(A(i), A(j)), A(k))
+    >>> expr
+    PartialDerivative(A(i), A(j), A(k))
+    >>> expr.get_indices()
+    [i, -j, -k]
+
+    Replace a derivative with array values:
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import sin, log
+    >>> compA = [sin(x), log(x)*y**3]
+    >>> compB = [x, y]
+    >>> expr = PartialDerivative(A(i), B(j))
+    >>> expr.replace_with_arrays({A(i): compA, B(i): compB})
+    [[cos(x), 0], [y**3/x, 3*y**2*log(x)]]
+
+    The returned array is indexed by `(i, -j)`.
+
+    Be careful that other SymPy modules put the indices of the deriving
+    variables before the indices of the derivand in the derivative result.
+    For example:
+
+    >>> expr.get_free_indices()
+    [i, -j]
+
+    >>> from sympy import Matrix, Array
+    >>> Matrix(compA).diff(Matrix(compB)).reshape(2, 2)
+    [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
+    >>> Array(compA).diff(Array(compB))
+    [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
+
+    These are the transpose of the result of ``PartialDerivative``,
+    as the matrix and the array modules put the index `-j` before `i` in the
+    derivative result. An array read with index order `(-j, i)` is indeed the
+    transpose of the same array read with index order `(i, -j)`. By specifying
+    the index order to ``.replace_with_arrays`` one can get a compatible
+    expression:
+
+    >>> expr.replace_with_arrays({A(i): compA, B(i): compB}, [-j, i])
+    [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
     """
 
     def __new__(cls, expr, *variables):
@@ -87,7 +141,7 @@ class PartialDerivative(TensExpr):
 
         return args, indices, free, dum
 
-    def doit(self):
+    def doit(self, **hints):
         args, indices, free, dum = self._contract_indices_for_derivative(self.expr, self.variables)
 
         obj = self.func(*args)
@@ -181,9 +235,13 @@ class PartialDerivative(TensExpr):
             var_indices, var_array = variable._extract_data(replacement_dict)
             var_indices = [-i for i in var_indices]
             coeff_array, var_array = zip(*[i.as_coeff_Mul() for i in var_array])
+            dim_before = len(array.shape)
             array = derive_by_array(array, var_array)
-            array = array.as_mutable()  # type: MutableDenseNDimArray
-            varindex = var_indices[0]  # type: TensorIndex
+            dim_after = len(array.shape)
+            dim_increase = dim_after - dim_before
+            array = permutedims(array, [i + dim_increase for i in range(dim_before)] + list(range(dim_increase)))
+            array = array.as_mutable()
+            varindex = var_indices[0]
             # Remove coefficients of base vector:
             coeff_index = [0] + [slice(None) for i in range(len(indices))]
             for i, coeff in enumerate(coeff_array):

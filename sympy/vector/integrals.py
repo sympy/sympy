@@ -1,14 +1,14 @@
-from sympy.core.singleton import S
-from sympy.simplify.simplify import simplify
 from sympy.core import Basic, diff
+from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.matrices import Matrix
+from sympy.integrals import Integral, integrate
+from sympy.geometry.entity import GeometryEntity
+from sympy.simplify.simplify import simplify
+from sympy.utilities.iterables import topological_sort
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
                         parametric_region_list, ImplicitRegion)
-from sympy.vector.operators import _get_coord_sys_from_expr
-from sympy.integrals import Integral, integrate
-from sympy.utilities.iterables import topological_sort
-from sympy.geometry.entity import GeometryEntity
+from sympy.vector.operators import _get_coord_systems
 
 
 class ParametricIntegral(Basic):
@@ -42,7 +42,7 @@ class ParametricIntegral(Basic):
 
     def __new__(cls, field, parametricregion):
 
-        coord_set = _get_coord_sys_from_expr(field)
+        coord_set = _get_coord_systems(field)
 
         if len(coord_set) == 0:
             coord_sys = CoordSys3D('C')
@@ -116,7 +116,7 @@ class ParametricIntegral(Basic):
     def _bounds_case(cls, parameters, limits):
 
         V = list(limits.keys())
-        E = list()
+        E = []
 
         for p in V:
             lower_p = limits[p][0]
@@ -124,11 +124,8 @@ class ParametricIntegral(Basic):
 
             lower_p = lower_p.atoms()
             upper_p = upper_p.atoms()
-            for q in V:
-                if p == q:
-                    continue
-                if lower_p.issuperset({q}) or upper_p.issuperset({q}):
-                    E.append((p, q))
+            E.extend((p, q) for q in V if p != q and
+                     (lower_p.issuperset({q}) or upper_p.issuperset({q})))
 
         if not E:
             return parameters

@@ -57,6 +57,7 @@ import string
 
 from .core import Symbol, symbols
 from .core.alphabets import greeks
+from sympy.parsing.sympy_parser import null
 
 ##### Symbol definitions #####
 
@@ -98,13 +99,13 @@ _clash2: tDict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:
-        _clash2[_k] = None
+        _clash2[_k] = null
         _greek.remove(_k)
     elif _k in _latin:
-        _clash1[_k] = None
+        _clash1[_k] = null
         _latin.remove(_k)
 _clash = {}
 _clash.update(_clash1)
 _clash.update(_clash2)
 
-del _latin, _greek, Symbol, _k
+del _latin, _greek, Symbol, _k, null

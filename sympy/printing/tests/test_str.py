@@ -1,6 +1,7 @@
+from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.partitions import Partition
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add
@@ -42,7 +43,7 @@ from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
@@ -86,6 +87,9 @@ def test_Add():
     assert str(x - z*y**2*z*w) == "-w*y**2*z**2 + x"
     assert str(x - 1*y*x*y) == "-x*y**2 + x"
     assert str(sin(x).series(x, 0, 15)) == "x - x**3/6 + x**5/120 - x**7/5040 + x**9/362880 - x**11/39916800 + x**13/6227020800 + O(x**15)"
+    assert str(Add(Add(-w, x, evaluate=False), Add(-y, z,  evaluate=False),  evaluate=False)) == "(-w + x) + (-y + z)"
+    assert str(Add(Add(-x, -y, evaluate=False), -z, evaluate=False)) == "-z + (-x - y)"
+    assert str(Add(Add(Add(-x, -y, evaluate=False), -z, evaluate=False), -t, evaluate=False)) == "-t + (-z + (-x - y))"
 
 
 def test_Catalan():
@@ -231,8 +235,8 @@ def test_Lambda():
 
 
 def test_Limit():
-    assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y)"
-    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0)"
+    assert str(Limit(sin(x)/x, x, y)) == "Limit(sin(x)/x, x, y, dir='+')"
+    assert str(Limit(1/x, x, 0)) == "Limit(1/x, x, 0, dir='+')"
     assert str(
         Limit(sin(x)/x, x, y, dir="-")) == "Limit(sin(x)/x, x, y, dir='-')"
 
@@ -285,6 +289,10 @@ def test_Mul():
     # issue 21537
     assert str(Mul(x, Pow(1/y, -1, evaluate=False), evaluate=False)) == 'x/(1/y)'
 
+    # Issue 24108
+    from sympy.core.parameters import evaluate
+    with evaluate(False):
+        assert str(Mul(Pow(Integer(2), Integer(-1)), Add(Integer(-1), Mul(Integer(-1), Integer(1))))) == "(-1 - 1*1)/2"
 
     class CustomClass1(Expr):
         is_commutative = True
@@ -378,6 +386,12 @@ def test_Permutation_Cycle():
     ]:
         assert sstr(p) == s
 
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert sstr(Permutation([1, 0, 2])) == 'Permutation([1, 0, 2])'
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_Pi():
     assert str(pi) == "pi"
@@ -590,7 +604,7 @@ def test_Rational():
     assert sstr(x**Rational(2, 3), sympy_integers=True) == "x**(S(2)/3)"
     assert sstr(Eq(x, Rational(2, 3)), sympy_integers=True) == "Eq(x, S(2)/3)"
     assert sstr(Limit(x, x, Rational(7, 2)), sympy_integers=True) == \
-        "Limit(x, x, S(7)/2)"
+        "Limit(x, x, S(7)/2, dir='+')"
 
 
 def test_Float():
@@ -982,6 +996,8 @@ def test_MatMul_MatAdd():
     assert str(-I*X) == "-I*X"
     assert str((1 + I)*X) == '(1 + I)*X'
     assert str(-(1 + I)*X) == '(-1 - I)*X'
+    assert str(MatAdd(MatAdd(X, Y), MatAdd(X, Y))) == '(X + Y) + (X + Y)'
+
 
 def test_MatrixSlice():
     n = Symbol('n', integer=True)
@@ -1101,6 +1117,10 @@ def test_issue_14567():
 def test_issue_21823():
     assert str(Partition([1, 2])) == 'Partition({1, 2})'
     assert str(Partition({1, 2})) == 'Partition({1, 2})'
+
+
+def test_issue_22689():
+    assert str(Mul(Pow(x,-2, evaluate=False), Pow(3,-1,evaluate=False), evaluate=False)) == "1/(x**2*3)"
 
 
 def test_issue_21119_21460():

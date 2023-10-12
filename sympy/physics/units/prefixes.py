@@ -6,7 +6,7 @@ BIN_PREFIXES.
 """
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-
+from sympy.core.singleton import S
 
 class Prefix(Expr):
     """
@@ -30,7 +30,7 @@ class Prefix(Expr):
     _op_priority = 13.0
     is_commutative = True
 
-    def __new__(cls, name, abbrev, exponent, base=sympify(10)):
+    def __new__(cls, name, abbrev, exponent, base=sympify(10), latex_repr=None):
 
         name = sympify(name)
         abbrev = sympify(abbrev)
@@ -43,6 +43,7 @@ class Prefix(Expr):
         obj._scale_factor = base**exponent
         obj._exponent = exponent
         obj._base = base
+        obj._latex_repr = latex_repr
         return obj
 
     @property
@@ -57,20 +58,25 @@ class Prefix(Expr):
     def scale_factor(self):
         return self._scale_factor
 
+    def _latex(self, printer):
+        if self._latex_repr is None:
+            return r'\text{%s}' % self._abbrev
+        return self._latex_repr
+
     @property
     def base(self):
         return self._base
 
     def __str__(self):
-        # TODO: add proper printers and tests:
+        return str(self._abbrev)
+
+    def __repr__(self):
         if self.base == 10:
             return "Prefix(%r, %r, %r)" % (
                 str(self.name), str(self.abbrev), self._exponent)
         else:
             return "Prefix(%r, %r, %r, %r)" % (
                 str(self.name), str(self.abbrev), self._exponent, self.base)
-
-    __repr__ = __str__
 
     def __mul__(self, other):
         from sympy.physics.units import Quantity
@@ -79,9 +85,9 @@ class Prefix(Expr):
 
         fact = self.scale_factor * other.scale_factor
 
-        if fact == 1:
-            return 1
-        elif isinstance(other, Prefix):
+        if isinstance(other, Prefix):
+            if fact == 1:
+                return S.One
             # simplify prefix
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -97,7 +103,7 @@ class Prefix(Expr):
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
-            return 1
+            return S.One
         elif isinstance(other, Prefix):
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == fact:
@@ -119,7 +125,7 @@ def prefix_unit(unit, prefixes):
     Return a list of all units formed by unit and the given prefixes.
 
     You can use the predefined PREFIXES or BIN_PREFIXES, but you can also
-    pass as argument a subdict of them if you don't want all prefixed units.
+    pass as argument a subdict of them if you do not want all prefixed units.
 
         >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
@@ -137,7 +143,8 @@ def prefix_unit(unit, prefixes):
     for prefix_abbr, prefix in prefixes.items():
         quantity = Quantity(
                 "%s%s" % (prefix.name, unit.name),
-                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev)),
+                is_prefixed=True,
            )
         UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
         UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)
@@ -159,7 +166,7 @@ deca = Prefix('deca', 'da', 1)
 deci = Prefix('deci', 'd', -1)
 centi = Prefix('centi', 'c', -2)
 milli = Prefix('milli', 'm', -3)
-micro = Prefix('micro', 'mu', -6)
+micro = Prefix('micro', 'mu', -6, latex_repr=r"\mu")
 nano = Prefix('nano', 'n', -9)
 pico = Prefix('pico', 'p', -12)
 femto = Prefix('femto', 'f', -15)
@@ -168,7 +175,7 @@ zepto = Prefix('zepto', 'z', -21)
 yocto = Prefix('yocto', 'y', -24)
 
 
-# http://physics.nist.gov/cuu/Units/prefixes.html
+# https://physics.nist.gov/cuu/Units/prefixes.html
 PREFIXES = {
     'Y': yotta,
     'Z': zetta,
@@ -201,7 +208,7 @@ pebi = Prefix('pebi', 'Y', 50, 2)
 exbi = Prefix('exbi', 'Y', 60, 2)
 
 
-# http://physics.nist.gov/cuu/Units/binary.html
+# https://physics.nist.gov/cuu/Units/binary.html
 BIN_PREFIXES = {
     'Ki': kibi,
     'Mi': mebi,

@@ -128,7 +128,7 @@ class Pauli(Symbol):
     __slots__ = ("i", "label")
 
     def __new__(cls, i, label="sigma"):
-        if not i in [1, 2, 3]:
+        if i not in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
         obj = Symbol.__new__(cls, "%s%d" %(label,i), commutative=False, hermitian=True)
         obj.i = i

@@ -24,7 +24,7 @@ from sympy.tensor.indexed import Indexed
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, SympifyError
 from sympy.matrices import MutableMatrix, ImmutableMatrix
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.solveset import solveset
@@ -131,6 +131,8 @@ def test_diff_symbols():
     raises(TypeError, lambda: cos(x).diff((x, y)).variables)
     assert cos(x).diff((x, y))._wrt_variables == [x]
 
+    # issue 23222
+    assert sympify("a*x+b").diff("x") == sympify("a")
 
 def test_Function():
     class myfunc(Function):
@@ -623,8 +625,7 @@ def test_issue_5399():
 
 
 def test_derivative_numerically():
-    from random import random
-    z0 = random() + I*random()
+    z0 = x._random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
 
 
@@ -776,6 +777,14 @@ def test_diff_wrt_not_allowed():
         raises(ValueError, lambda: diff(f(x), wrt))
     # if we don't differentiate wrt then don't raise error
     assert diff(exp(x*y), x*y, 0) == exp(x*y)
+
+
+def test_diff_wrt_intlike():
+    class Two:
+        def __int__(self):
+            return 2
+
+    assert cos(x).diff(x, Two()) == -cos(x)
 
 
 def test_klein_gordon_lagrangian():
@@ -968,6 +977,10 @@ def test_nfloat():
         [[Float('1.0', precision=53), Float('2.0', precision=53)],
         [Float('3.0', precision=53), Float('4.0', precision=53)]])
     assert _aresame(nfloat(A), B)
+
+    # issue 22524
+    f = Function('f')
+    assert not nfloat(f(2)).atoms(Float)
 
 
 def test_issue_7068():
@@ -1245,12 +1258,7 @@ def test_undef_fcn_float_issue_6938():
 
 def test_undefined_function_eval():
     # Issue 15170. Make sure UndefinedFunction with eval defined works
-    # properly. The issue there was that the hash was determined before _nargs
-    # was set, which is included in the hash, hence changing the hash. The
-    # class is added to sympy.core.core.all_classes before the hash is
-    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
-    # to give a new class. We will eventually remove all_classes, but make
-    # sure this continues to work.
+    # properly.
 
     fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
     eval = classmethod(lambda cls, t: None)
@@ -1415,3 +1423,33 @@ def test_issue_17382():
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
     assert NS(expr) == expected
+
+def test_eval_sympified():
+    # Check both arguments and return types from eval are sympified
+
+    class F(Function):
+        @classmethod
+        def eval(cls, x):
+            assert x is S.One
+            return 1
+
+    assert F(1) is S.One
+
+    # String arguments are not allowed
+    class F2(Function):
+        @classmethod
+        def eval(cls, x):
+            if x == 0:
+                return '1'
+
+    raises(SympifyError, lambda: F2(0))
+    F2(1) # Doesn't raise
+
+    # TODO: Disable string inputs (https://github.com/sympy/sympy/issues/11003)
+    # raises(SympifyError, lambda: F2('2'))
+
+def test_eval_classmethod_check():
+    with raises(TypeError):
+        class F(Function):
+            def eval(self, x):
+                pass

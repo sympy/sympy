@@ -1,3 +1,4 @@
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
@@ -94,7 +95,7 @@ class PlotInterval:
             v_steps = Integer(v_steps)
         elif not isinstance(v_steps, Integer):
             raise ValueError("v_steps must be an int or SymPy Integer.")
-        if v_steps <= Integer(0):
+        if v_steps <= S.Zero:
             raise ValueError("v_steps must be positive.")
         self._v_steps = v_steps
 
@@ -169,7 +170,7 @@ class PlotInterval:
         (v_min, v_min + step) to (v_max - step, v_max).
         """
         d = (self.v_max - self.v_min) / self.v_steps
-        a = self.v_min + (d * Integer(0))
+        a = self.v_min + (d * S.Zero)
         for i in range(self.v_steps):
             b = self.v_min + (d * Integer(i + 1))
             yield a, b

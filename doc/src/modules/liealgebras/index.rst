@@ -1,3 +1,5 @@
+.. _lie-algebras:
+
 ===========
 Lie Algebra
 ===========

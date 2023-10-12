@@ -163,9 +163,12 @@ def test_prde_cancel_liouvillian():
     # Not taken from 'the' book
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     p0 = Poly(0, t, field=True)
+    p1 = Poly((x - 1)*t, t, domain='ZZ(x)')
+    p2 = Poly(x - 1, t, domain='ZZ(x)')
+    p3 = Poly(-x**2 + x, t, domain='ZZ(x)')
     h, A = prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE)
     V = A.nullspace()
-    h == [p0, p0, Poly((x - 1)*t, t), p0, p0, p0, p0, p0, p0, p0, Poly(x - 1, t), Poly(-x**2 + x, t), p0, p0, p0, p0]
+    assert h == [p0, p0, p1, p0, p0, p0, p0, p0, p0, p0, p2, p3, p0, p0, p0, p0]
     assert A.rank() == 16
     assert (Matrix([h])*V[0][:16, :]) == Matrix([[Poly(0, t, domain='QQ(x)')]])
 

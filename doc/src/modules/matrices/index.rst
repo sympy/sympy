@@ -9,7 +9,7 @@ Matrices
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :titlesonly:
 
    matrices.rst
    common.rst
@@ -18,3 +18,4 @@ Contents:
    sparsetools.rst
    immutablematrices.rst
    expressions.rst
+   normalforms.rst

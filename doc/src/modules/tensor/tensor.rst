@@ -14,6 +14,8 @@ Tensor
 .. autoclass:: TensorHead
    :members:
 
+.. autofunction:: tensor_heads
+
 .. autoclass:: TensExpr
    :members:
 

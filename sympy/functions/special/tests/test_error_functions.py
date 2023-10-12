@@ -355,7 +355,7 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.testing.randtest import verify_numerically, random_complex_number
+    from sympy.core.random import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
@@ -365,7 +365,7 @@ def mytn(expr1, expr2, expr3, x, d=0):
 
 
 def mytd(expr1, expr2, x):
-    from sympy.testing.randtest import test_derivative_numerically, \
+    from sympy.core.random import test_derivative_numerically, \
         random_complex_number
     subs = {}
     for a in expr1.free_symbols:
@@ -375,7 +375,7 @@ def mytd(expr1, expr2, x):
 
 
 def tn_branch(func, s=None):
-    from random import uniform
+    from sympy.core.random import uniform
 
     def fn(x):
         if s is None:
@@ -508,7 +508,7 @@ def test__eis():
 
 def tn_arg(func):
     def test(arg, e1, e2):
-        from random import uniform
+        from sympy.core.random import uniform
         v = uniform(1, 5)
         v1 = func(arg*x).subs(x, v).n()
         v2 = func(e1*v + e2*1e-15).n()
@@ -627,7 +627,8 @@ def test_si():
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
 
-    assert limit(Shi(x), x, S.NegativeInfinity) == -I*pi/2
+    assert limit(Shi(x), x, S.Infinity) == S.Infinity
+    assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
 
 
 def test_ci():
@@ -776,7 +777,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(1, 4),),
         (Rational(3, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(1, 4)*(z**2)**Rational(1, 4))
 
-    from sympy.testing.randtest import verify_numerically
+    from sympy.core.random import verify_numerically
 
     verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
     verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)

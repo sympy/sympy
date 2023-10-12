@@ -62,10 +62,12 @@ def test_is_strictly_increasing():
 
     assert is_strictly_increasing(4*x**3 - 6*x**2 - 72*x + 30, Interval.open(-2, 3)) is False
 
+
 def test_is_decreasing():
     """Test whether is_decreasing returns correct value."""
     b = Symbol('b', positive=True)
 
+    assert is_decreasing(1/(x**2 - 3*x), Interval.open(Rational(3,2), 3))
     assert is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
     assert is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert not is_decreasing(1/(x**2 - 3*x), Interval.Ropen(-oo, Rational(3, 2)))
@@ -80,14 +82,22 @@ def test_is_strictly_decreasing():
         1/(x**2 - 3*x), Interval.Ropen(-oo, Rational(3, 2)))
     assert not is_strictly_decreasing(-x**2, Interval(-oo, 0))
     assert not is_strictly_decreasing(1)
+    assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(Rational(3,2), 3))
     assert is_strictly_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
 
 
 def test_is_monotonic():
     """Test whether is_monotonic returns correct value."""
+    assert is_monotonic(1/(x**2 - 3*x), Interval.open(Rational(3,2), 3))
     assert is_monotonic(1/(x**2 - 3*x), Interval.open(1.5, 3))
     assert is_monotonic(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     assert is_monotonic(x**3 - 3*x**2 + 4*x, S.Reals)
     assert not is_monotonic(-x**2, S.Reals)
     assert is_monotonic(x**2 + y + 1, Interval(1, 2), x)
     raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))
+
+
+def test_issue_23401():
+    x = Symbol('x')
+    expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
+    assert is_increasing(expr, Interval(1,2), x)

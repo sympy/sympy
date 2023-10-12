@@ -4,11 +4,12 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.sets import EmptySet
 from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
-    Point2D, Line2D)
+    Point2D, Line2D, Plane)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
@@ -63,8 +64,12 @@ def test_angle_between():
     assert feq(Line.angle_between(Line(Point(0, 0), Point(1, 1)),
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
-    assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    z = Point3D(0, 0, 0)
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(z, Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    # direction of points is used to determine angle
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
 
 
 def test_closing_angle():
@@ -324,10 +329,10 @@ def test_contains():
     assert r3.contains(Point3D(0, 0, 0)) is True
     assert Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0)).contains([]) is False
     assert Line3D((0, 0, 0), (x, y, z)).contains((2 * x, 2 * y, 2 * z))
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Line3D(p1, Point3D(0, 1, 0)).contains(Point(1.0, 1.0)) is False
 
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert r3.contains(Point(1.0, 1.0)) is False
 
 
@@ -368,7 +373,7 @@ def test_distance_2d():
 
 
 def test_dimension_normalization():
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
 
 
@@ -401,6 +406,15 @@ def test_distance_3d():
     assert Line3D((0, 0, 0), (0, 1, 0)).distance(p2) == sqrt(2)
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p1) == 0
     assert Line3D((0, 0, 0), (1, 0, 0)).distance(p2) == sqrt(2)
+    # Line to line
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (0, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 0, 0), (1, 0, 0))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((10, 0, 0), (10, 1, 2))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Line3D((0, 1, 0), (0, 1, 1))) == 1
+    # Line to plane
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((2, 0, 0), (0, 0, 1))) == 0
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((0, 1, 0), (0, 1, 0))) == 1
+    assert Line3D((0, 0, 0), (1, 0, 0)).distance(Plane((1, 1, 3), (1, 0, 0))) == 0
     # Ray to point
     assert r.distance(Point3D(-1, -1, -1)) == sqrt(3)
     assert r.distance(Point3D(1, 1, 1)) == 0
@@ -697,10 +711,14 @@ def test_projection():
 
     r1 = Ray(Point(1, 1), Point(2, 2))
 
+    s1 = Segment(Point2D(0, 0), Point2D(0, 1))
+    s2 = Segment(Point2D(1, 0), Point2D(2, 1/2))
+
     assert Line(Point(x1, x1), Point(y1, y1)).projection(Point(y1, y1)) == Point(y1, y1)
     assert Line(Point(x1, x1), Point(x1, 1 + x1)).projection(Point(1, 1)) == Point(x1, 1)
     assert Segment(Point(-2, 2), Point(0, 4)).projection(r1) == Segment(Point(-1, 3), Point(0, 4))
     assert Segment(Point(0, 4), Point(-2, 2)).projection(r1) == Segment(Point(0, 4), Point(-1, 3))
+    assert s2.projection(s1) == EmptySet
     assert l1.projection(p3) == p1
     assert l1.projection(Ray(p1, Point(-1, 5))) == Ray(Point(0, 0), Point(2, 2))
     assert l1.projection(Ray(p1, Point(-1, 1))) == p1
@@ -715,6 +733,22 @@ def test_projection():
     assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(Rational(1, 3), Rational(1, 3), Rational(1, 3)))
     assert l2.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
+
+
+def test_perpendicular_line():
+    # 3d - requires a particular orthogonal to be selected
+    p1, p2, p3 = Point(0, 0, 0), Point(2, 3, 4), Point(-2, 2, 0)
+    l = Line(p1, p2)
+    p = l.perpendicular_line(p3)
+    assert p.p1 == p3
+    assert p.p2 in l
+    # 2d - does not require special selection
+    p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
+    l = Line(p1, p2)
+    p = l.perpendicular_line(p3)
+    assert p.p1 == p3
+    # p is directed from l to p3
+    assert p.direction.unit == (p3 - l.projection(p3)).unit
 
 
 def test_perpendicular_bisector():
@@ -766,11 +800,11 @@ def test_ray_generation():
     assert Ray3D((1, 1, 1), direction_ratio=[1, 1, 1]) == Ray3D(Point3D(1, 1, 1), Point3D(2, 2, 2))
 
 
-def test_symbolic_intersect():
-    # Issue 7814.
+def test_issue_7814():
     circle = Circle(Point(x, 0), y)
     line = Line(Point(k, z), slope=0)
-    assert line.intersection(circle) == [Point(x + sqrt((y - z) * (y + z)), z), Point(x - sqrt((y - z) * (y + z)), z)]
+    _s = sqrt((y - z)*(y + z))
+    assert line.intersection(circle) == [Point2D(x + _s, z), Point2D(x - _s, z)]
 
 
 def test_issue_2941():
@@ -814,3 +848,14 @@ def test_issue_8615():
     a = Line3D(Point3D(6, 5, 0), Point3D(6, -6, 0))
     b = Line3D(Point3D(6, -1, 19/10), Point3D(6, -1, 0))
     assert a.intersection(b) == [Point3D(6, -1, 0)]
+
+
+def test_issue_12598():
+    r1 = Ray(Point(0, 1), Point(0.98, 0.79).n(2))
+    r2 = Ray(Point(0, 0), Point(0.71, 0.71).n(2))
+    assert str(r1.intersection(r2)[0]) == 'Point2D(0.82, 0.82)'
+    l1 = Line((0, 0), (1, 1))
+    l2 = Segment((-1, 1), (0, -1)).n(2)
+    assert str(l1.intersection(l2)[0]) == 'Point2D(-0.33, -0.33)'
+    l2 = Segment((-1, 1), (-1/2, 1/2)).n(2)
+    assert not l1.intersection(l2)

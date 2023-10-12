@@ -1480,8 +1480,8 @@ def modified_subresultants_pg(p, q, x):
 
     # apply Pell-Gordon formula (7) in second reference
     num = 1                                     # numerator of fraction
-    for k in range(len(u_list)):
-        num *= (-1)**u_list[k]
+    for u in u_list:
+        num *= (-1)**u
     num = num * (-1)**v
 
     # denominator depends on complete / incomplete seq
@@ -1539,8 +1539,8 @@ def modified_subresultants_pg(p, q, x):
 
         # apply Pell-Gordon formula (7) in second reference
         num = 1                              # numerator
-        for k in range(len(u_list)):
-            num *= (-1)**u_list[k]
+        for u in u_list:
+            num *= (-1)**u
         num = num * (-1)**v
 
         # denominator depends on complete / incomplete seq
@@ -1798,7 +1798,7 @@ def rem_z(p, q, x):
     Obtained in Finding the Greatest Common Divisor of Two Polynomials.''
     Serdica Journal of Computing, 9(2) (2015), 123-138.
 
-    2. http://planetMath.org/sturmstheorem
+    2. https://planetMath.org/sturmstheorem
 
     3. Akritas, A. G., G.I. Malaschonok and P.S. Vigklas: ``A Basic Result on
     the Theory of Subresultants.'' Serdica Journal of Computing 10 (2016), No.1, 31-48.
@@ -2198,7 +2198,7 @@ def rotate_r(L, k):
     for i in range(k):
         el = ll.pop(len(ll) - 1)
         ll.insert(0, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def rotate_l(L, k):
     '''
@@ -2211,7 +2211,7 @@ def rotate_l(L, k):
     for i in range(k):
         el = ll.pop(0)
         ll.insert(len(ll) - 1, el)
-    return ll if type(L) is list else Matrix([ll])
+    return ll if isinstance(L, list) else Matrix([ll])
 
 def row2poly(row, deg, x):
     '''

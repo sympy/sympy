@@ -57,6 +57,11 @@ def test_homomorphism():
     assert T.codomain == D
     assert T(a*b) == p
 
+    D3 = DihedralGroup(3)
+    T = homomorphism(D3, D3, D3.generators, D3.generators)
+    assert T.is_isomorphism()
+
+
 def test_isomorphisms():
 
     F, a, b = free_group("a, b")
@@ -73,7 +78,7 @@ def test_isomorphisms():
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
     check, T =  group_isomorphism(G, H)
     assert check
-    T(c**3*d**2) == a**3*b**2
+    assert T(c**3*d**2) == a**3*b**2
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.

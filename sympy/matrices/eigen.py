@@ -13,13 +13,12 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.simplify import nsimplify, simplify as _simplify
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.polys.polytools import gcd
 
 from .common import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
-from .utilities import _iszero
+from .utilities import _iszero, _simplify
 
 
 def _eigenvals_eigenvects_mpmath(M):
@@ -124,7 +123,7 @@ def _eigenvals(
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvals()
     {-1: 1, 0: 1, 2: 1}
@@ -163,6 +162,7 @@ def _eigenvals(
             return _eigenvals_mpmath(M, multiple=multiple)
 
     if rational:
+        from sympy.simplify import nsimplify
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
@@ -210,11 +210,8 @@ def _eigenvals_list(
         eigs = roots(charpoly, multiple=True, **flags)
 
         if len(eigs) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                eigs = charpoly.all_roots(multiple=True)
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -254,11 +251,8 @@ def _eigenvals_dict(
         eigs = roots(charpoly, multiple=False, **flags)
 
         if sum(eigs.values()) != block.rows:
-            degree = int(charpoly.degree())
-            f = charpoly.as_expr()
-            x = charpoly.gen
             try:
-                eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                eigs = dict(charpoly.all_roots(multiple=False))
             except NotImplementedError:
                 if error_when_incomplete:
                     raise MatrixError(eigenvals_error_message)
@@ -382,7 +376,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([
@@ -414,6 +408,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     if has_floats:
         if all(x.is_number for x in M):
             return _eigenvects_mpmath(M)
+        from sympy.simplify import nsimplify
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
     ret = _eigenvects_DOM(M)
@@ -424,7 +419,6 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
@@ -497,24 +491,9 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.common.MatrixCommon.is_diagonal
     diagonalize
     """
-
-    if 'clear_cache' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_cache',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
-
-    if 'clear_subproducts' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_subproducts',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
-
     if not M.is_square:
         return False
 
@@ -671,7 +650,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     >>> M
     Matrix([
@@ -698,7 +677,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     See Also
     ========
 
-    is_diagonal
+    sympy.matrices.common.MatrixCommon.is_diagonal
     is_diagonalizable
     """
 
@@ -1025,7 +1004,7 @@ _doc_positive_definite = \
 
     .. [1] https://en.wikipedia.org/wiki/Definiteness_of_a_matrix#Eigenvalues
 
-    .. [2] http://mathworld.wolfram.com/PositiveDefiniteMatrix.html
+    .. [2] https://mathworld.wolfram.com/PositiveDefiniteMatrix.html
 
     .. [3] Johnson, C. R. "Positive Definite Matrices." Amer.
         Math. Monthly 77, 259-264 1970.
@@ -1057,7 +1036,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[ 6,  5, -2, -3], [-3, -1,  3,  3], [ 2,  1, -2, -3], [-1,  1,  5,  5]])
     >>> P, J = M.jordan_form()
     >>> J
@@ -1183,6 +1162,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
 
     # roots doesn't like Floats, so replace them with Rationals
     if has_floats:
+        from sympy.simplify import nsimplify
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
     # first calculate the jordan block structure
@@ -1199,7 +1179,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     # and so are diagonalizable.  In this case, don't
     # do extra work!
     if len(eigs.keys()) == mat.cols:
-        blocks     = list(sorted(eigs.keys(), key=default_sort_key))
+        blocks     = sorted(eigs.keys(), key=default_sort_key)
         jordan_mat = mat.diag(*blocks)
 
         if not calc_transform:
@@ -1293,7 +1273,7 @@ def _left_eigenvects(M, **flags):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([

@@ -13,9 +13,7 @@ from sympy.testing.runtests import setup_pprint, _get_doctest_blacklist
 durations_path = os.path.join(os.path.dirname(__file__), '.ci', 'durations.json')
 blacklist_path = os.path.join(os.path.dirname(__file__), '.ci', 'blacklisted.json')
 
-# Collecting tests from rubi_tests under pytest leads to errors even if the
-# tests will be skipped.
-collect_ignore = ["sympy/integrals/rubi"] + _get_doctest_blacklist()
+collect_ignore = _get_doctest_blacklist()
 
 # Set up printing for doctests
 setup_pprint()
@@ -35,7 +33,8 @@ else:
     veryslow_group, slow_group = [], []
 
 if os.path.exists(blacklist_path):
-    blacklist_group = _mk_group(json.loads(open(blacklist_path, 'rt').read()))
+    with open(blacklist_path, 'rt') as stream:
+        blacklist_group = _mk_group(json.load(stream))
 else:
     warnings.warn("conftest.py:28: Could not find %s, no tests will be skipped due to blacklisting\n" % blacklist_path)
     blacklist_group = []

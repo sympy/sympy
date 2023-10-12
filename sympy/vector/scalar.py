@@ -10,8 +10,6 @@ class BaseScalar(AtomicExpr):
 
     Ideally, users should not instantiate this class.
 
-    Unicode pretty forms in Python 2 should use the `u` prefix.
-
     """
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):

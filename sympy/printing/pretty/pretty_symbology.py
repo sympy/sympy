@@ -22,7 +22,7 @@ def U(name):
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # prefix conventions when constructing tables
 # L   - LATIN     i
@@ -32,7 +32,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 __all__ = ['greek_unicode', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol',
-           'annotated']
+           'annotated', 'center_pad', 'center']
 
 
 _use_unicode = False
@@ -87,10 +87,14 @@ def pretty_try_use_unicode():
 
 
 def xstr(*args):
-    SymPyDeprecationWarning(
-        feature="``xstr`` function",
-        useinstead="``str``",
-        deprecated_since_version="1.7").warn()
+    sympy_deprecation_warning(
+        """
+        The sympy.printing.pretty.pretty_symbology.xstr() function is
+        deprecated. Use str() instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-pretty-printing-functions"
+    )
     return str(*args)
 
 # GREEK
@@ -634,6 +638,57 @@ def center_accent(string, accent):
 
 def line_width(line):
     """Unicode combining symbols (modifiers) are not ever displayed as
-    separate symbols and thus shouldn't be counted
+    separate symbols and thus should not be counted
     """
     return len(line.translate(_remove_combining))
+
+
+def is_subscriptable_in_unicode(subscript):
+    """
+    Checks whether a string is subscriptable in unicode or not.
+
+    Parameters
+    ==========
+
+    subscript: the string which needs to be checked
+
+    Examples
+    ========
+
+    >>> from sympy.printing.pretty.pretty_symbology import is_subscriptable_in_unicode
+    >>> is_subscriptable_in_unicode('abc')
+    False
+    >>> is_subscriptable_in_unicode('123')
+    True
+
+    """
+    return all(character in sub for character in subscript)
+
+
+def center_pad(wstring, wtarget, fillchar=' '):
+    """
+    Return the padding strings necessary to center a string of
+    wstring characters wide in a wtarget wide space.
+
+    The line_width wstring should always be less or equal to wtarget
+    or else a ValueError will be raised.
+    """
+    if wstring > wtarget:
+        raise ValueError('not enough space for string')
+    wdelta = wtarget - wstring
+
+    wleft = wdelta // 2  # favor left '1 '
+    wright = wdelta - wleft
+
+    left = fillchar * wleft
+    right = fillchar * wright
+
+    return left, right
+
+
+def center(string, width, fillchar=' '):
+    """Return a centered string of length determined by `line_width`
+    that uses `fillchar` for padding.
+    """
+    left, right = center_pad(line_width(string), width, fillchar)
+    return ''.join([left, string, right])

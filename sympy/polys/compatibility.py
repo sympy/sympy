@@ -61,6 +61,8 @@ from sympy.polys.densearith import dup_max_norm
 from sympy.polys.densearith import dmp_max_norm
 from sympy.polys.densearith import dup_l1_norm
 from sympy.polys.densearith import dmp_l1_norm
+from sympy.polys.densearith import dup_l2_norm_squared
+from sympy.polys.densearith import dmp_l2_norm_squared
 from sympy.polys.densearith import dup_expand
 from sympy.polys.densearith import dmp_expand
 from sympy.polys.densebasic import dup_LC
@@ -410,6 +412,11 @@ class IPolys:
         return dup_l1_norm(self.to_dense(f), self.domain)
     def dmp_l1_norm(self, f):
         return dmp_l1_norm(self.to_dense(f), self.ngens-1, self.domain)
+
+    def dup_l2_norm_squared(self, f):
+        return dup_l2_norm_squared(self.to_dense(f), self.domain)
+    def dmp_l2_norm_squared(self, f):
+        return dmp_l2_norm_squared(self.to_dense(f), self.ngens-1, self.domain)
 
     def dup_expand(self, polys):
         return self.from_dense(dup_expand(list(map(self.to_dense, polys)), self.domain))

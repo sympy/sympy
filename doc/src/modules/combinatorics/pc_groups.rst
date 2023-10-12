@@ -57,9 +57,9 @@ Attributes of PolycyclicGroup
 >>> len(PcGroup.pcgs)
 4
 >>> pc_series = PcGroup.pc_series
->>> pc_series[0]==G
+>>> pc_series[0].equals(G)  # use equals, not literal `==`
 True
->>> gen = pc_series[len(pc_series)-1].generators[0]
+>>> gen = pc_series[len(pc_series) - 1].generators[0]
 >>> gen.is_identity
 True
 >>> PcGroup.relative_order
@@ -168,7 +168,12 @@ represents the respective relative order.
 ...     sym = w[0]
 ...     perm = free_to_perm[sym]
 ...     G2 = PermutationGroup([perm] + G2.generators)
+
+The two are not identical but they are equivalent:
+
 >>> G1 == G2
+False
+>>> G1.equals(G2)
 True
 
 
@@ -304,4 +309,4 @@ Bibliography
 .. [Ho05] Derek F. Holt,
     Handbook of Computational Group Theory.
     In the series 'Discrete Mathematics and its Applications',
-    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.crcpress.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.
+    `Chapman & Hall/CRC 2005, xvi + 514 p <https://www.routledge.com/Handbook-of-Computational-Group-Theory/Holt-Eick-OBrien/p/book/9781584883722>`_.

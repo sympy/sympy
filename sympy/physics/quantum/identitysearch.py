@@ -1,11 +1,12 @@
 from collections import deque
-from random import randint
+from sympy.core.random import randint
 
 from sympy.external import import_module
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, Number)
+from sympy.core.numbers import Number, equal_valued
 from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 
@@ -154,7 +155,7 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only, eps=None):
                                  if not identity_only
                                  else matrix_trace)
 
-        is_identity = matrix[0] == 1.0 if identity_only else True
+        is_identity = equal_valued(matrix[0], 1) if identity_only else True
 
         has_correct_trace = adjusted_matrix_trace == pow(2, nqubits)
 
@@ -464,7 +465,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     if isinstance(gate_seq, Number):
         if return_as_muls:
-            return {(Integer(1), Integer(1))}
+            return {(S.One, S.One)}
         else:
             return {((), ())}
 
@@ -579,7 +580,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """
 
     if isinstance(gate_seq, Number):
-        return {Integer(1)}
+        return {S.One}
     elif isinstance(gate_seq, Mul):
         gate_seq = gate_seq.args
 

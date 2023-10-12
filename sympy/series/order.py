@@ -3,6 +3,7 @@ from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, PoleError, expand_power_base, expand_log
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq, is_sequence
 
@@ -19,10 +20,10 @@ class Order(Expr):
     big O notation [1]_.
 
     The formal definition for the order of a function `g(x)` about a point `a`
-    is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
-    `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
-    `|x-a| < \delta`.  This is equivalent to `\lim_{x \rightarrow a}
-    \sup |g(x)/f(x)| < \infty`.
+    is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if there
+    exists a `\delta > 0` and an `M > 0` such that `|g(x)| \leq M|f(x)|` for
+    `|x-a| < \delta`.  This is equivalent to `\limsup_{x \rightarrow a}
+    |g(x)/f(x)| < \infty`.
 
     Let's illustrate it on the following example by taking the expansion of
     `\sin(x)` about 0:
@@ -31,7 +32,7 @@ class Order(Expr):
         \sin(x) = x - x^3/3! + O(x^5)
 
     where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
-    of `O`, for any `\delta > 0` there is an `M` such that:
+    of `O`, there is a `\delta > 0` and an `M` such that:
 
     .. math ::
         |x^5/5! - x^7/7! + ....| <= M|x^5| \text{ for } |x| < \delta
@@ -182,11 +183,11 @@ class Order(Expr):
             if any(p != point[0] for p in point):
                 raise NotImplementedError(
                     "Multivariable orders at different points are not supported.")
-            if point[0] is S.Infinity:
+            if point[0] in (S.Infinity, S.Infinity*S.ImaginaryUnit):
                 s = {k: 1/Dummy() for k in variables}
                 rs = {1/v: 1/k for k, v in s.items()}
                 ps = [S.Zero for p in point]
-            elif point[0] is S.NegativeInfinity:
+            elif point[0] in (S.NegativeInfinity, S.NegativeInfinity*S.ImaginaryUnit):
                 s = {k: -1/Dummy() for k in variables}
                 rs = {-1/v: -1/k for k, v in s.items()}
                 ps = [S.Zero for p in point]
@@ -255,8 +256,17 @@ class Order(Expr):
                             elif expr.is_Mul:
                                 expr = Mul(*[a.expr for a in orders])
                             elif expr.is_Pow:
-                                expr = orders[0].expr**orders[1].expr
-                    expr = expr.as_independent(*args, as_Add=False)[1]
+                                e = expr.exp
+                                b = expr.base
+                                expr = exp(e * log(b))
+
+                    # It would probably be better to handle this somewhere
+                    # else. This is needed for a testcase in which there is a
+                    # symbol with the assumptions zero=True.
+                    if expr.is_zero:
+                        expr = S.Zero
+                    else:
+                        expr = expr.as_independent(*args, as_Add=False)[1]
 
                     expr = expand_power_base(expr)
                     expr = expand_log(expr)
@@ -369,7 +379,6 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy.simplify.powsimp import powsimp
         expr = sympify(expr)
         if expr.is_zero:
             return True
@@ -410,6 +419,7 @@ class Order(Expr):
                             if rv is not None:
                                 return rv
 
+            from sympy.simplify.powsimp import powsimp
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')

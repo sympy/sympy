@@ -3,19 +3,19 @@ Boolean algebra module for SymPy
 """
 
 from collections import defaultdict
-from itertools import chain, combinations, product
+from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
-from sympy.core.kind import NumberKind
+from sympy.core.kind import BooleanKind, NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
-from sympy.core.sympify import converter, _sympify, sympify
-from sympy.core.kind import BooleanKind
+from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -48,14 +48,14 @@ def as_Boolean(e):
     """
     from sympy.core.symbol import Symbol
     if e == True:
-        return S.true
+        return true
     if e == False:
-        return S.false
+        return false
     if isinstance(e, Symbol):
         z = e.is_zero
         if z is None:
             return e
-        return S.false if z else S.true
+        return false if z else true
     if isinstance(e, Boolean):
         return e
     raise TypeError('expecting bool or Boolean, not `%s`.' % e)
@@ -111,7 +111,7 @@ class Boolean(Basic):
         ========
 
         >>> from sympy.abc import A, B, C
-        >>> from sympy.logic.boolalg import And, Or, Not
+        >>> from sympy import And, Or, Not
         >>> (A >> B).equals(~B >> ~A)
         True
         >>> Not(And(A, B, C)).equals(And(Not(A), Not(B), Not(C)))
@@ -246,6 +246,9 @@ class BooleanAtom(Boolean):
     __ge__ = __lt__
     # \\\
 
+    def _eval_simplify(self, **kwargs):
+        return self
+
 
 class BooleanTrue(BooleanAtom, metaclass=Singleton):
     """
@@ -296,7 +299,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     case.  Finally, for boolean flags, it's better to just use ``if x``
     instead of ``if x is True``. To quote PEP 8:
 
-    Don't compare boolean values to ``True`` or ``False``
+    Do not compare boolean values to ``True`` or ``False``
     using ``==``.
 
     * Yes:   ``if greeting:``
@@ -345,9 +348,16 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(True)
 
+    def __eq__(self, other):
+        if other is True:
+            return True
+        if other is False:
+            return False
+        return super().__eq__(other)
+
     @property
     def negated(self):
-        return S.false
+        return false
 
     def as_set(self):
         """
@@ -413,9 +423,16 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(False)
 
+    def __eq__(self, other):
+        if other is True:
+            return False
+        if other is False:
+            return True
+        return super().__eq__(other)
+
     @property
     def negated(self):
-        return S.true
+        return true
 
     def as_set(self):
         """
@@ -440,7 +457,7 @@ false = BooleanFalse()
 S.true = true
 S.false = false
 
-converter[bool] = lambda x: S.true if x else S.false
+_sympy_converter[bool] = lambda x: true if x else false
 
 
 class BooleanFunction(Application, Boolean):
@@ -473,25 +490,7 @@ class BooleanFunction(Application, Boolean):
 
     @classmethod
     def binary_check_and_simplify(self, *args):
-        from sympy.core.relational import Relational, Eq, Ne
-        args = [as_Boolean(i) for i in args]
-        bin_syms = set().union(*[i.binary_symbols for i in args])
-        rel = set().union(*[i.atoms(Relational) for i in args])
-        reps = {}
-        for x in bin_syms:
-            for r in rel:
-                if x in bin_syms and x in r.free_symbols:
-                    if isinstance(r, (Eq, Ne)):
-                        if not (
-                                S.true in r.args or
-                                S.false in r.args):
-                            reps[r] = S.false
-                    else:
-                        raise TypeError(filldedent('''
-                            Incompatible use of binary symbol `%s` as a
-                            real variable in `%s`
-                            ''' % (x, r)))
-        return [i.subs(reps) for i in args]
+        return [as_Boolean(i) for i in args]
 
     def to_nnf(self, simplify=True):
         return self._to_nnf(*self.args, simplify=simplify)
@@ -551,123 +550,6 @@ class BooleanFunction(Application, Boolean):
         else:
             return S.Zero
 
-    def _apply_patternbased_simplification(self, rv, patterns, measure,
-                                           dominatingvalue,
-                                           replacementvalue=None):
-        """
-        Replace patterns of Relational
-
-        Parameters
-        ==========
-
-        rv : Expr
-            Boolean expression
-
-        patterns : tuple
-            Tuple of tuples, with (pattern to simplify, simplified pattern).
-
-        measure : function
-            Simplification measure.
-
-        dominatingvalue : Boolean or ``None``
-            The dominating value for the function of consideration.
-            For example, for :py:class:`~.And` ``S.false`` is dominating.
-            As soon as one expression is ``S.false`` in :py:class:`~.And`,
-            the whole expression is ``S.false``.
-
-        replacementvalue : Boolean or ``None``, optional
-            The resulting value for the whole expression if one argument
-            evaluates to ``dominatingvalue``.
-            For example, for :py:class:`~.Nand` ``S.false`` is dominating, but
-            in this case the resulting value is ``S.true``. Default is ``None``.
-            If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
-            ``None``, ``replacementvalue = dominatingvalue``.
-
-        """
-        from sympy.core.relational import Relational, _canonical
-        from sympy.functions.elementary.miscellaneous import Min, Max
-
-        if replacementvalue is None and dominatingvalue is not None:
-            replacementvalue = dominatingvalue
-        # Use replacement patterns for Relationals
-        changed = True
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
-                           binary=True)
-        if len(Rel) <= 1:
-            return rv
-        Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
-                                                      for s in i.free_symbols),
-                               binary=True)
-        Rel = [i.canonical for i in Rel]
-        while changed and len(Rel) >= 2:
-            changed = False
-            # Sort based on ordered
-            Rel = list(ordered(Rel))
-            # Create a list of possible replacements
-            results = []
-            # Try all combinations
-            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for pattern, simp in patterns:
-                    res = []
-                    # use SymPy matching
-                    oldexpr = rv.func(pi, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better
-                    # canonical
-                    oldexpr = rv.func(pi.reversed, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = rv.func(pi, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = rv.func(pi.reversed, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == dominatingvalue:
-                                # if dominatingvalue, the whole expression
-                                # will be replacementvalue
-                                return replacementvalue
-                            # add replacement
-                            if not isinstance(np, ITE) and not np.has(Min, Max):
-                                # We only want to use ITE and Min/Max
-                                # replacements if they simplify away
-                                costsaving = measure(oldexpr) - measure(np)
-                                if costsaving > 0:
-                                    results.append((costsaving, (i, j, np)))
-            if results:
-                # Sort results based on complexity
-                results = list(reversed(sorted(results,
-                                               key=lambda pair: pair[0])))
-                # Replace the one providing most simplification
-                replacement = results[0][1]
-                i, j, newrel = replacement
-                # Remove the old relationals
-                del Rel[j]
-                del Rel[i]
-                if dominatingvalue is None or newrel != ~dominatingvalue:
-                    # Insert the new one (no need to insert a value that will
-                    # not affect the result)
-                    Rel.append(newrel)
-                # We did change something so try again
-                changed = True
-
-        rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
-                     + nonRel + nonRealRel))
-        return rv
-
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -680,7 +562,7 @@ class And(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import And
+    >>> from sympy import And
     >>> x & y
     x & y
 
@@ -689,7 +571,7 @@ class And(LatticeOp, BooleanFunction):
 
     The ``&`` operator is provided as a convenience, but note that its use
     here is different from its normal use in Python, which is bitwise
-    and. Hence, ``And(a, b)`` and ``a & b`` will return different things if
+    and. Hence, ``And(a, b)`` and ``a & b`` will produce different results if
     ``a`` and ``b`` are integers.
 
     >>> And(x, y).subs(x, 1)
@@ -713,7 +595,7 @@ class And(LatticeOp, BooleanFunction):
                 if c in rel:
                     continue
                 elif c.negated.canonical in rel:
-                    return [S.false]
+                    return [false]
                 else:
                     rel.add(c)
             newargs.append(x)
@@ -731,7 +613,7 @@ class And(LatticeOp, BooleanFunction):
                     bad = i
                 continue
             if i == False:
-                return S.false
+                return false
             elif i != True:
                 args.append(i)
         if bad is not None:
@@ -780,7 +662,7 @@ class And(LatticeOp, BooleanFunction):
                     if (e.lhs != x or x in e.rhs.free_symbols) and x not in reps:
                         try:
                             m, b = linear_coeffs(
-                                e.rewrite(Add, evaluate=False), x)
+                                Add(e.lhs, -e.rhs, evaluate=False), x)
                             enew = e.func(x, -b/m)
                             if measure(enew) <= ratio*measure(e):
                                 e = enew
@@ -809,9 +691,11 @@ class And(LatticeOp, BooleanFunction):
             nonlineqs = [ei.subs(reps) for ei in nonlineqs]
             other = [ei.subs(reps) for ei in other]
             rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
-        patterns = simplify_patterns_and()
-        return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, False)
+        patterns = _simplify_patterns_and()
+        threeterm_patterns = _simplify_patterns_and3()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  measure, false,
+                                                  threeterm_patterns=threeterm_patterns)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -838,7 +722,7 @@ class Or(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import Or
+    >>> from sympy import Or
     >>> x | y
     x | y
 
@@ -869,7 +753,7 @@ class Or(LatticeOp, BooleanFunction):
                     continue
                 nc = c.negated.canonical
                 if any(r == nc for r in rel):
-                    return [S.true]
+                    return [true]
                 rel.append(c)
             newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
@@ -886,7 +770,7 @@ class Or(LatticeOp, BooleanFunction):
                     bad = i
                 continue
             if i == True:
-                return S.true
+                return true
             elif i != False:
                 args.append(i)
         if bad is not None:
@@ -920,16 +804,16 @@ class Or(LatticeOp, BooleanFunction):
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
-        patterns = simplify_patterns_or()
-        return self._apply_patternbased_simplification(rv, patterns,
-            kwargs['measure'], S.true)
+        patterns = _simplify_patterns_or()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  kwargs['measure'], true)
 
     def to_anf(self, deep=True):
         args = range(1, len(self.args) + 1)
         args = (combinations(self.args, j) for j in args)
         args = chain.from_iterable(args)  # powerset
         args = (And(*arg) for arg in args)
-        args = map(lambda x: to_anf(x, deep=deep) if deep else x, args)
+        args = (to_anf(x, deep=deep) if deep else x for x in args)
         return Xor(*list(args), remove_true=False)
 
 
@@ -944,7 +828,7 @@ class Not(BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.logic.boolalg import Not, And, Or
+    >>> from sympy import Not, And, Or
     >>> from sympy.abc import x, A, B
     >>> Not(True)
     False
@@ -1015,30 +899,30 @@ class Not(BooleanFunction):
         func, args = expr.func, expr.args
 
         if func == And:
-            return Or._to_nnf(*[~arg for arg in args], simplify=simplify)
+            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
 
         if func == Or:
-            return And._to_nnf(*[~arg for arg in args], simplify=simplify)
+            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
 
         if func == Implies:
             a, b = args
-            return And._to_nnf(a, ~b, simplify=simplify)
+            return And._to_nnf(a, Not(b), simplify=simplify)
 
         if func == Equivalent:
-            return And._to_nnf(Or(*args), Or(*[~arg for arg in args]),
+            return And._to_nnf(Or(*args), Or(*[Not(arg) for arg in args]),
                                simplify=simplify)
 
         if func == Xor:
             result = []
             for i in range(1, len(args)+1, 2):
                 for neg in combinations(args, i):
-                    clause = [~s if s in neg else s for s in args]
+                    clause = [Not(s) if s in neg else s for s in args]
                     result.append(Or(*clause))
             return And._to_nnf(*result, simplify=simplify)
 
         if func == ITE:
             a, b, c = args
-            return And._to_nnf(Or(a, ~c), Or(~a, ~b), simplify=simplify)
+            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify)
 
         raise ValueError("Illegal operator %s in expression" % func)
 
@@ -1110,7 +994,7 @@ class Xor(BooleanFunction):
             for j in range(i + 1, len(rel)):
                 rj, cj = rel[j][:2]
                 if cj == nc:
-                    odd = ~odd
+                    odd = not odd
                     break
                 elif cj == c:
                     break
@@ -1145,7 +1029,7 @@ class Xor(BooleanFunction):
         args = []
         for i in range(0, len(self.args)+1, 2):
             for neg in combinations(self.args, i):
-                clause = [~s if s in neg else s for s in self.args]
+                clause = [Not(s) if s in neg else s for s in self.args]
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
@@ -1166,9 +1050,9 @@ class Xor(BooleanFunction):
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
-        patterns = simplify_patterns_xor()
-        return self._apply_patternbased_simplification(rv, patterns,
-            kwargs['measure'], None)
+        patterns = _simplify_patterns_xor()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  kwargs['measure'], None)
 
     def _eval_subs(self, old, new):
         # If old is Xor, replace the parts of the arguments with new if all
@@ -1341,10 +1225,10 @@ class Implies(BooleanFunction):
         if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
-            return S.true
+            return true
         elif A.is_Relational and B.is_Relational:
             if A.canonical == B.canonical:
-                return S.true
+                return true
             if A.negated.canonical == B.canonical:
                 return B
         else:
@@ -1352,7 +1236,7 @@ class Implies(BooleanFunction):
 
     def to_nnf(self, simplify=True):
         a, b = self.args
-        return Or._to_nnf(~a, b, simplify=simplify)
+        return Or._to_nnf(Not(a), b, simplify=simplify)
 
     def to_anf(self, deep=True):
         a, b = self.args
@@ -1416,7 +1300,7 @@ class Equivalent(BooleanFunction):
             return And(*argset)
         if False in argset:
             argset.discard(False)
-            return And(*[~arg for arg in argset])
+            return And(*[Not(arg) for arg in argset])
         _args = frozenset(argset)
         obj = super().__new__(cls, _args)
         obj._argset = _args
@@ -1432,8 +1316,8 @@ class Equivalent(BooleanFunction):
     def to_nnf(self, simplify=True):
         args = []
         for a, b in zip(self.args, self.args[1:]):
-            args.append(Or(~a, b))
-        args.append(Or(~self.args[-1], self.args[0]))
+            args.append(Or(Not(a), b))
+        args.append(Or(Not(self.args[-1]), self.args[0]))
         return And._to_nnf(*args, simplify=simplify)
 
     def to_anf(self, deep=True):
@@ -1449,6 +1333,9 @@ class ITE(BooleanFunction):
 
     ``ITE(A, B, C)`` evaluates and returns the result of B if A is true
     else it returns the result of C. All args must be Booleans.
+
+    From a logic gate perspective, ITE corresponds to a 2-to-1 multiplexer,
+    where A is the select signal.
 
     Examples
     ========
@@ -1491,19 +1378,19 @@ class ITE(BooleanFunction):
             if len(set(a.args) - bin_syms) == 1:
                 # one arg is a binary_symbols
                 _a = a
-                if a.lhs is S.true:
+                if a.lhs is true:
                     a = a.rhs
-                elif a.rhs is S.true:
+                elif a.rhs is true:
                     a = a.lhs
-                elif a.lhs is S.false:
-                    a = ~a.rhs
-                elif a.rhs is S.false:
-                    a = ~a.lhs
+                elif a.lhs is false:
+                    a = Not(a.rhs)
+                elif a.rhs is false:
+                    a = Not(a.lhs)
                 else:
                     # binary can only equal True or False
-                    a = S.false
+                    a = false
                 if isinstance(_a, Ne):
-                    a = ~a
+                    a = Not(a)
         else:
             a, b, c = BooleanFunction.binary_check_and_simplify(
                 a, b, c)
@@ -1521,39 +1408,39 @@ class ITE(BooleanFunction):
         a, b, c = args
         if isinstance(a, (Ne, Eq)):
             _a = a
-            if S.true in a.args:
-                a = a.lhs if a.rhs is S.true else a.rhs
-            elif S.false in a.args:
-                a = ~a.lhs if a.rhs is S.false else ~a.rhs
+            if true in a.args:
+                a = a.lhs if a.rhs is true else a.rhs
+            elif false in a.args:
+                a = Not(a.lhs) if a.rhs is false else Not(a.rhs)
             else:
                 _a = None
             if _a is not None and isinstance(_a, Ne):
-                a = ~a
-        if a is S.true:
+                a = Not(a)
+        if a is true:
             return b
-        if a is S.false:
+        if a is false:
             return c
         if b == c:
             return b
         else:
             # or maybe the results allow the answer to be expressed
             # in terms of the condition
-            if b is S.true and c is S.false:
+            if b is true and c is false:
                 return a
-            if b is S.false and c is S.true:
+            if b is false and c is true:
                 return Not(a)
         if [a, b, c] != args:
             return cls(a, b, c, evaluate=False)
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
-        return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify)
 
     def _eval_as_set(self):
         return self.to_nnf().as_set()
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        from sympy.functions import Piecewise
+        from sympy.functions.elementary.piecewise import Piecewise
         return Piecewise((args[1], args[0]), (args[2], True))
 
 
@@ -1750,7 +1637,8 @@ def to_nnf(expr, simplify=True):
     Converts ``expr`` to Negation Normal Form (NNF).
 
     A logical expression is in NNF if it
-    contains only And, Or and Not, and Not is applied only to literals.
+    contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
+    and :py:class:`~.Not` is applied only to literals.
     If ``simplify`` is ``True``, the result contains no redundant clauses.
 
     Examples
@@ -1775,8 +1663,8 @@ def to_cnf(expr, simplify=False, force=False):
     form: ``((A | ~B | ...) & (B | C | ...) & ...)``.
     If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest CNF
     form using the Quine-McCluskey algorithm; this may take a long
-    time if there are more than 8 variables and requires that the
-    ``force`` flag be set to ``True`` (default is ``False``).
+    time. If there are more than 8 variables the ``force`` flag must be set
+    to ``True`` to simplify (default is ``False``).
 
     Examples
     ========
@@ -1817,8 +1705,8 @@ def to_dnf(expr, simplify=False, force=False):
     form: ``((A & ~B & ...) | (B & C & ...) | ...)``.
     If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest DNF form using
     the Quine-McCluskey algorithm; this may take a long
-    time if there are more than 8 variables and requires that the
-    ``force`` flag be set to ``True`` (default is ``False``).
+    time. If there are more than 8 variables, the ``force`` flag must be set to
+    ``True`` to simplify (default is ``False``).
 
     Examples
     ========
@@ -1866,6 +1754,7 @@ def is_anf(expr):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import And, Not, Xor, true, is_anf
     >>> from sympy.abc import A, B, C
     >>> is_anf(true)
@@ -1911,7 +1800,8 @@ def is_nnf(expr, simplified=True):
     Checks if ``expr`` is in Negation Normal Form (NNF).
 
     A logical expression is in NNF if it
-    contains only And, Or and Not, and Not is applied only to literals.
+    contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
+    and :py:class:`~.Not` is applied only to literals.
     If ``simplified`` is ``True``, checks if result contains no redundant clauses.
 
     Examples
@@ -2018,7 +1908,8 @@ def _is_form(expr, function1, function2):
 
 def eliminate_implications(expr):
     """
-    Change ``Implies`` and ``Equivalent`` into ``And``, ``Or``, and ``Not``.
+    Change :py:class:`~.Implies` and :py:class:`~.Equivalent` into
+    :py:class:`~.And`, :py:class:`~.Or`, and :py:class:`~.Not`.
     That is, return an expression that is equivalent to ``expr``, but has only
     ``&``, ``|``, and ``~`` as logical
     operators.
@@ -2089,7 +1980,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict(list(zip(symbols, list(range(1, len(symbols) + 1)))))
+    symbols = dict(zip(symbols, range(1, len(symbols) + 1)))
 
     def append_symbol(arg, symbols):
         if isinstance(arg, Not):
@@ -2103,7 +1994,7 @@ def to_int_repr(clauses, symbols):
 
 def term_to_integer(term):
     """
-    Return an integer corresponding to the base-2 digits given by ``term``.
+    Return an integer corresponding to the base-2 digits given by *term*.
 
     Parameters
     ==========
@@ -2187,11 +2078,10 @@ def truth_table(expr, variables, input=True):
 
     table = product((0, 1), repeat=len(variables))
     for term in table:
-        term = list(term)
         value = expr.xreplace(dict(zip(variables, term)))
 
         if input:
-            yield term, value
+            yield list(term), value
         else:
             yield value
 
@@ -2235,13 +2125,13 @@ def _convert_to_varsPOS(maxterm, variables):
 
 def _convert_to_varsANF(term, variables):
     """
-    Converts a term in the expansion of a function from binary to it's
+    Converts a term in the expansion of a function from binary to its
     variable form (for ANF).
 
     Parameters
     ==========
 
-    term : list of 1's and 0's (complementation patter)
+    term : list of 1's and 0's (complementation pattern)
     variables : list of variables
 
     """
@@ -2361,7 +2251,7 @@ def _rem_redundancy(l1, terms):
                                     dommatrix[row2i][primei] = 0
                                     colcount[primei] -= 1
 
-        colcache = dict()
+        colcache = {}
 
         for coli in range(nl1):
             # Still non-dominated?
@@ -2444,12 +2334,12 @@ def SOPform(variables, minterms, dontcares=None):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
-    generate '1' (the minterms) into the smallest Sum of Products form.
+    generate '1' (the minterms) into the smallest sum-of-products form.
 
     The variables must be given as the first argument.
 
-    Return a logical Or function (i.e., the "sum of products" or "SOP"
-    form) that gives the desired outcome. If there are inputs that can
+    Return a logical :py:class:`~.Or` function (i.e., the "sum of products" or
+    "SOP" form) that gives the desired outcome. If there are inputs that can
     be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
@@ -2488,13 +2378,19 @@ def SOPform(variables, minterms, dontcares=None):
     >>> SOPform([w, x, y, z], minterms, dontcares)
     (w & y & z) | (~w & ~y) | (x & z & ~w)
 
+    See also
+    ========
+
+    POSform
+
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if minterms == []:
+    if not minterms:
         return false
 
     variables = tuple(map(sympify, variables))
@@ -2506,6 +2402,10 @@ def SOPform(variables, minterms, dontcares=None):
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
 
+    return _sop_form(variables, minterms, dontcares)
+
+
+def _sop_form(variables, minterms, dontcares):
     new = _simplified_pairs(minterms + dontcares)
     essential = _rem_redundancy(new, minterms)
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
@@ -2515,12 +2415,12 @@ def POSform(variables, minterms, dontcares=None):
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
-    that generate '1' (the minterms) into the smallest Product of Sums form.
+    that generate '1' (the minterms) into the smallest product-of-sums form.
 
     The variables must be given as the first argument.
 
-    Return a logical And function (i.e., the "product of sums" or "POS"
-    form) that gives the desired outcome. If there are inputs that can
+    Return a logical :py:class:`~.And` function (i.e., the "product of sums"
+    or "POS" form) that gives the desired outcome. If there are inputs that can
     be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
@@ -2559,14 +2459,19 @@ def POSform(variables, minterms, dontcares=None):
     >>> POSform([w, x, y, z], minterms, dontcares)
     (w | x) & (y | ~w) & (z | ~y)
 
+    See also
+    ========
+
+    SOPform
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
+    .. [2] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
-    if minterms == []:
+    if not minterms:
         return false
 
     variables = tuple(map(sympify, variables))
@@ -2594,11 +2499,11 @@ def ANFform(variables, truthvalues):
 
     The variables must be given as the first argument.
 
-    Return True, False, logical And funciton (i.e., the
-    "Zhegalkin monomial") or logical Xor function (i.e.,
+    Return True, False, logical :py:class:`~.And` function (i.e., the
+    "Zhegalkin monomial") or logical :py:class:`~.Xor` function (i.e.,
     the "Zhegalkin polynomial"). When True and False
     are represented by 1 and 0, respectively, then
-    And is multiplication and Xor is addition.
+    :py:class:`~.And` is multiplication and :py:class:`~.Xor` is addition.
 
     Formally a "Zhegalkin monomial" is the product (logical
     And) of a finite set of distinct variables, including
@@ -2715,7 +2620,7 @@ def bool_minterm(k, variables):
     Parameters
     ==========
 
-    k : int or list of 1's and 0's (complementation patter)
+    k : int or list of 1's and 0's (complementation pattern)
     variables : list of variables
 
     Examples
@@ -2787,7 +2692,7 @@ def bool_monomial(k, variables):
     Each boolean function can be uniquely represented by a
     Zhegalkin Polynomial (Algebraic Normal Form). The Zhegalkin
     Polynomial of the boolean function with `n` variables can contain
-    up to `2^n` monomials. We can enumarate all the monomials.
+    up to `2^n` monomials. We can enumerate all the monomials.
     Each monomial is fully specified by the presence or absence
     of each variable.
 
@@ -2829,15 +2734,16 @@ def _find_predicates(expr):
     return set().union(*(map(_find_predicates, expr.args)))
 
 
-def simplify_logic(expr, form=None, deep=True, force=False):
+def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     """
     This function simplifies a boolean function to its simplified version
-    in SOP or POS form. The return type is an Or or And object in SymPy.
+    in SOP or POS form. The return type is an :py:class:`~.Or` or
+    :py:class:`~.And` object in SymPy.
 
     Parameters
     ==========
 
-    expr : Boolean expression
+    expr : Boolean
 
     form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
         If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
@@ -2856,20 +2762,29 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
 
+    dontcare : Boolean
+        Optimize expression under the assumption that inputs where this
+        expression is true are don't care. This is useful in e.g. Piecewise
+        conditions, where later conditions do not need to consider inputs that
+        are converted by previous conditions. For example, if a previous
+        condition is ``And(A, B)``, the simplification of expr can be made
+        with don't cares for ``And(A, B)``.
+
     Examples
     ========
 
     >>> from sympy.logic import simplify_logic
     >>> from sympy.abc import x, y, z
-    >>> from sympy import S
     >>> b = (~x & ~y & ~z) | ( ~x & ~y & z)
     >>> simplify_logic(b)
     ~x & ~y
+    >>> simplify_logic(x | y, dontcare=y)
+    x
 
-    >>> S(b)
-    (z & ~x & ~y) | (~x & ~y & ~z)
-    >>> simplify_logic(_)
-    ~x & ~y
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Don%27t-care_term
 
     """
 
@@ -2888,31 +2803,84 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         if form_ok and all(is_literal(a)
                 for a in expr.args):
             return expr
+    from sympy.core.relational import Relational
     if deep:
-        variables = _find_predicates(expr)
+        variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
     if not isinstance(expr, BooleanFunction):
         return expr
-    # get variables in case not deep or after doing
-    # deep simplification since they may have changed
+    # Replace Relationals with Dummys to possibly
+    # reduce the number of variables
+    repl = {}
+    undo = {}
+    from sympy.core.symbol import Dummy
+    variables = expr.atoms(Relational)
+    if dontcare is not None:
+        dontcare = sympify(dontcare)
+        variables.update(dontcare.atoms(Relational))
+    while variables:
+        var = variables.pop()
+        if var.is_Relational:
+            d = Dummy()
+            undo[d] = var
+            repl[var] = d
+            nvar = var.negated
+            if nvar in variables:
+                repl[nvar] = Not(d)
+                variables.remove(nvar)
+
+    expr = expr.xreplace(repl)
+
+    if dontcare is not None:
+        dontcare = dontcare.xreplace(repl)
+
+    # Get new variables after replacing
     variables = _find_predicates(expr)
     if not force and len(variables) > 8:
-        return expr
+        return expr.xreplace(undo)
+    if dontcare is not None:
+        # Add variables from dontcare
+        dcvariables = _find_predicates(dontcare)
+        variables.update(dcvariables)
+        # if too many restore to variables only
+        if not force and len(variables) > 8:
+            variables = _find_predicates(expr)
+            dontcare = None
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
-    truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
-    for t in product((0, 1), repeat=len(v)):
-        if expr.xreplace(dict(zip(v, t))) == True:
-            truthtable.append(c + list(t))
+    truthtable = _get_truthtable(v, expr, c)
+    if dontcare is not None:
+        dctruthtable = _get_truthtable(v, dontcare, c)
+        truthtable = [t for t in truthtable if t not in dctruthtable]
+    else:
+        dctruthtable = []
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
-        return SOPform(variables, truthtable)
-    return POSform(variables, truthtable)
+        return _sop_form(variables, truthtable, dctruthtable).xreplace(undo)
+    return POSform(variables, truthtable, dctruthtable).xreplace(undo)
+
+
+def _get_truthtable(variables, expr, const):
+    """ Return a list of all combinations leading to a True result for ``expr``.
+    """
+    _variables = variables.copy()
+    def _get_tt(inputs):
+        if _variables:
+            v = _variables.pop()
+            tab = [[i[0].xreplace({v: false}), [0] + i[1]] for i in inputs if i[0] is not false]
+            tab.extend([[i[0].xreplace({v: true}), [1] + i[1]] for i in inputs if i[0] is not false])
+            return _get_tt(tab)
+        return inputs
+    res = [const + k[1] for k in _get_tt([[expr, []]]) if k[0]]
+    if res == [[]]:
+        return []
+    else:
+        return res
 
 
 def _finger(eq):
@@ -3071,107 +3039,395 @@ def bool_map(bool1, bool2):
     return m
 
 
-def simplify_patterns_and():
+def _apply_patternbased_simplification(rv, patterns, measure,
+                                       dominatingvalue,
+                                       replacementvalue=None,
+                                       threeterm_patterns=None):
+    """
+    Replace patterns of Relational
+
+    Parameters
+    ==========
+
+    rv : Expr
+        Boolean expression
+
+    patterns : tuple
+        Tuple of tuples, with (pattern to simplify, simplified pattern) with
+        two terms.
+
+    measure : function
+        Simplification measure.
+
+    dominatingvalue : Boolean or ``None``
+        The dominating value for the function of consideration.
+        For example, for :py:class:`~.And` ``S.false`` is dominating.
+        As soon as one expression is ``S.false`` in :py:class:`~.And`,
+        the whole expression is ``S.false``.
+
+    replacementvalue : Boolean or ``None``, optional
+        The resulting value for the whole expression if one argument
+        evaluates to ``dominatingvalue``.
+        For example, for :py:class:`~.Nand` ``S.false`` is dominating, but
+        in this case the resulting value is ``S.true``. Default is ``None``.
+        If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
+        ``None``, ``replacementvalue = dominatingvalue``.
+
+    threeterm_patterns : tuple, optional
+        Tuple of tuples, with (pattern to simplify, simplified pattern) with
+        three terms.
+
+    """
+    from sympy.core.relational import Relational, _canonical
+
+    if replacementvalue is None and dominatingvalue is not None:
+        replacementvalue = dominatingvalue
+    # Use replacement patterns for Relationals
+    Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
+                       binary=True)
+    if len(Rel) <= 1:
+        return rv
+    Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
+                                                  for s in i.free_symbols),
+                           binary=True)
+    Rel = [i.canonical for i in Rel]
+
+    if threeterm_patterns and len(Rel) >= 3:
+        Rel = _apply_patternbased_threeterm_simplification(Rel,
+                            threeterm_patterns, rv.func, dominatingvalue,
+                            replacementvalue, measure)
+
+    Rel = _apply_patternbased_twoterm_simplification(Rel, patterns,
+                    rv.func, dominatingvalue, replacementvalue, measure)
+
+    rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
+                 + nonRel + nonRealRel))
+    return rv
+
+
+def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
+                                               dominatingvalue,
+                                               replacementvalue,
+                                               measure):
+    """ Apply pattern-based two-term simplification."""
     from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core.relational import Ge, Gt, _Inequality
+    changed = True
+    while changed and len(Rel) >= 2:
+        changed = False
+        # Use only < or <=
+        Rel = [r.reversed if isinstance(r, (Ge, Gt)) else r for r in Rel]
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Eq and Ne must be tested reversed as well
+        rtmp = [(r, ) if isinstance(r, _Inequality) else (r, r.reversed) for r in Rel]
+        # Create a list of possible replacements
+        results = []
+        # Try all combinations of possibly reversed relational
+        for ((i, pi), (j, pj)) in combinations(enumerate(rtmp), 2):
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2 in product(pi, pj):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.xreplace(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j], np)))
+        if results:
+            # Sort results based on complexity
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != Not(dominatingvalue):
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+
+def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
+                                                 dominatingvalue,
+                                                 replacementvalue,
+                                                 measure):
+    """ Apply pattern-based three-term simplification."""
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core.relational import Le, Lt, _Inequality
+    changed = True
+    while changed and len(Rel) >= 3:
+        changed = False
+        # Use only > or >=
+        Rel = [r.reversed if isinstance(r, (Le, Lt)) else r for r in Rel]
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Create a list of possible replacements
+        results = []
+        # Eq and Ne must be tested reversed as well
+        rtmp = [(r, ) if isinstance(r, _Inequality) else (r, r.reversed) for r in Rel]
+        # Try all combinations of possibly reversed relational
+        for ((i, pi), (j, pj), (k, pk)) in permutations(enumerate(rtmp), 3):
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2, p3 in product(pi, pj, pk):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2, p3)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.xreplace(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j, k], np)))
+        if results:
+            # Sort results based on complexity
+            results = sorted(results,
+                                           key=lambda pair: pair[0], reverse=True)
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != Not(dominatingvalue):
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+
+@cacheit
+def _simplify_patterns_and():
+    """ Two-term patterns for And."""
+
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    # With a better canonical fewer results are required
-    _matchers_and = ((And(Eq(a, b), Ge(a, b)), Eq(a, b)),
-                     (And(Eq(a, b), Gt(a, b)), S.false),
-                     (And(Eq(a, b), Le(a, b)), Eq(a, b)),
-                     (And(Eq(a, b), Lt(a, b)), S.false),
-                     (And(Ge(a, b), Gt(a, b)), Gt(a, b)),
-                     (And(Ge(a, b), Le(a, b)), Eq(a, b)),
-                     (And(Ge(a, b), Lt(a, b)), S.false),
-                     (And(Ge(a, b), Ne(a, b)), Gt(a, b)),
-                     (And(Gt(a, b), Le(a, b)), S.false),
-                     (And(Gt(a, b), Lt(a, b)), S.false),
-                     (And(Gt(a, b), Ne(a, b)), Gt(a, b)),
-                     (And(Le(a, b), Lt(a, b)), Lt(a, b)),
-                     (And(Le(a, b), Ne(a, b)), Lt(a, b)),
-                     (And(Lt(a, b), Ne(a, b)), Lt(a, b)),
-                     # Min/max
-                     (And(Ge(a, b), Ge(a, c)), Ge(a, Max(b, c))),
-                     (And(Ge(a, b), Gt(a, c)), ITE(b > c, Ge(a, b), Gt(a, c))),
-                     (And(Gt(a, b), Gt(a, c)), Gt(a, Max(b, c))),
-                     (And(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
-                     (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
-                     (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_and = ((Tuple(Eq(a, b), Lt(a, b)), false),
+                     #(Tuple(Eq(a, b), Lt(b, a)), S.false),
+                     #(Tuple(Le(b, a), Lt(a, b)), S.false),
+                     #(Tuple(Lt(b, a), Le(a, b)), S.false),
+                     (Tuple(Lt(b, a), Lt(a, b)), false),
+                     (Tuple(Eq(a, b), Le(b, a)), Eq(a, b)),
+                     #(Tuple(Eq(a, b), Le(a, b)), Eq(a, b)),
+                     #(Tuple(Le(b, a), Lt(b, a)), Gt(a, b)),
+                     (Tuple(Le(b, a), Le(a, b)), Eq(a, b)),
+                     #(Tuple(Le(b, a), Ne(a, b)), Gt(a, b)),
+                     #(Tuple(Lt(b, a), Ne(a, b)), Gt(a, b)),
+                     (Tuple(Le(a, b), Lt(a, b)), Lt(a, b)),
+                     (Tuple(Le(a, b), Ne(a, b)), Lt(a, b)),
+                     (Tuple(Lt(a, b), Ne(a, b)), Lt(a, b)),
                      # Sign
-                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
+                     (Tuple(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
+                     # Min/Max/ITE
+                     (Tuple(Le(b, a), Le(c, a)), Ge(a, Max(b, c))),
+                     (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Ge(a, b), Gt(a, c))),
+                     (Tuple(Lt(b, a), Lt(c, a)), Gt(a, Max(b, c))),
+                     (Tuple(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
+                     (Tuple(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
+                     (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+                     (Tuple(Le(a, b), Le(c, a)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Le(c, a), Le(a, b)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Lt(a, b), Lt(c, a)), ITE(b < c, false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Lt(c, a), Lt(a, b)), ITE(b < c, false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Le(a, b), Lt(c, a)), ITE(b <= c, false, And(Le(a, b), Gt(a, c)))),
+                     (Tuple(Le(c, a), Lt(a, b)), ITE(b <= c, false, And(Lt(a, b), Ge(a, c)))),
+                     (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), false)),
+                     (Tuple(Lt(a, b), Lt(-b, a)), ITE(b > 0, Lt(Abs(a), b), false)),
+                     (Tuple(Le(a, b), Le(-b, a)), ITE(b >= 0, Le(Abs(a), b), false)),
                      )
     return _matchers_and
 
 
-def simplify_patterns_or():
-    from sympy.functions.elementary.miscellaneous import Min, Max
+@cacheit
+def _simplify_patterns_and3():
+    """ Three-term patterns for And."""
+
     from sympy.core import Wild
-    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.core.relational import Eq, Ge, Gt
+
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    _matchers_or = ((Or(Eq(a, b), Ge(a, b)), Ge(a, b)),
-                    (Or(Eq(a, b), Gt(a, b)), Ge(a, b)),
-                    (Or(Eq(a, b), Le(a, b)), Le(a, b)),
-                    (Or(Eq(a, b), Lt(a, b)), Le(a, b)),
-                    (Or(Ge(a, b), Gt(a, b)), Ge(a, b)),
-                    (Or(Ge(a, b), Le(a, b)), S.true),
-                    (Or(Ge(a, b), Lt(a, b)), S.true),
-                    (Or(Ge(a, b), Ne(a, b)), S.true),
-                    (Or(Gt(a, b), Le(a, b)), S.true),
-                    (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                    (Or(Gt(a, b), Ne(a, b)), Ne(a, b)),
-                    (Or(Le(a, b), Lt(a, b)), Le(a, b)),
-                    (Or(Le(a, b), Ne(a, b)), S.true),
-                    (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
-                    # Min/max
-                    (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
-                    (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
-                    (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
-                    (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
-                    (Or(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
-                    (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, pattern3, simplified)
+    # Do not use Le, Lt
+    _matchers_and = ((Tuple(Ge(a, b), Ge(b, c), Gt(c, a)), false),
+                     (Tuple(Ge(a, b), Gt(b, c), Gt(c, a)), false),
+                     (Tuple(Gt(a, b), Gt(b, c), Gt(c, a)), false),
+                     # (Tuple(Ge(c, a), Gt(a, b), Gt(b, c)), S.false),
+                     # Lower bound relations
+                     # Commented out combinations that does not simplify
+                     (Tuple(Ge(a, b), Ge(a, c), Ge(b, c)), And(Ge(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, b), Ge(a, c), Gt(b, c)), And(Ge(a, b), Gt(b, c))),
+                     # (Tuple(Ge(a, b), Gt(a, c), Ge(b, c)), And(Ge(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, b), Gt(a, c), Gt(b, c)), And(Ge(a, b), Gt(b, c))),
+                     # (Tuple(Gt(a, b), Ge(a, c), Ge(b, c)), And(Gt(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, c), Gt(a, b), Gt(b, c)), And(Gt(a, b), Gt(b, c))),
+                     (Tuple(Ge(b, c), Gt(a, b), Gt(a, c)), And(Gt(a, b), Ge(b, c))),
+                     (Tuple(Gt(a, b), Gt(a, c), Gt(b, c)), And(Gt(a, b), Gt(b, c))),
+                     # Upper bound relations
+                     # Commented out combinations that does not simplify
+                     (Tuple(Ge(b, a), Ge(c, a), Ge(b, c)), And(Ge(c, a), Ge(b, c))),
+                     (Tuple(Ge(b, a), Ge(c, a), Gt(b, c)), And(Ge(c, a), Gt(b, c))),
+                     # (Tuple(Ge(b, a), Gt(c, a), Ge(b, c)), And(Gt(c, a), Ge(b, c))),
+                     (Tuple(Ge(b, a), Gt(c, a), Gt(b, c)), And(Gt(c, a), Gt(b, c))),
+                     # (Tuple(Gt(b, a), Ge(c, a), Ge(b, c)), And(Ge(c, a), Ge(b, c))),
+                     (Tuple(Ge(c, a), Gt(b, a), Gt(b, c)), And(Ge(c, a), Gt(b, c))),
+                     (Tuple(Ge(b, c), Gt(b, a), Gt(c, a)), And(Gt(c, a), Ge(b, c))),
+                     (Tuple(Gt(b, a), Gt(c, a), Gt(b, c)), And(Gt(c, a), Gt(b, c))),
+                     # Circular relation
+                     (Tuple(Ge(a, b), Ge(b, c), Ge(c, a)), And(Eq(a, b), Eq(b, c))),
+                     )
+    return _matchers_and
+
+
+@cacheit
+def _simplify_patterns_or():
+    """ Two-term patterns for Or."""
+
+    from sympy.core import Wild
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_or = ((Tuple(Le(b, a), Le(a, b)), true),
+                    #(Tuple(Le(b, a), Lt(a, b)), true),
+                    (Tuple(Le(b, a), Ne(a, b)), true),
+                    #(Tuple(Le(a, b), Lt(b, a)), true),
+                    #(Tuple(Le(a, b), Ne(a, b)), true),
+                    #(Tuple(Eq(a, b), Le(b, a)), Ge(a, b)),
+                    #(Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
+                    (Tuple(Eq(a, b), Le(a, b)), Le(a, b)),
+                    (Tuple(Eq(a, b), Lt(a, b)), Le(a, b)),
+                    #(Tuple(Le(b, a), Lt(b, a)), Ge(a, b)),
+                    (Tuple(Lt(b, a), Lt(a, b)), Ne(a, b)),
+                    (Tuple(Lt(b, a), Ne(a, b)), Ne(a, b)),
+                    (Tuple(Le(a, b), Lt(a, b)), Le(a, b)),
+                    #(Tuple(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                    (Tuple(Eq(a, b), Ne(a, c)), ITE(Eq(b, c), true, Ne(a, c))),
+                    (Tuple(Ne(a, b), Ne(a, c)), ITE(Eq(b, c), Ne(a, b), true)),
+                    # Min/Max/ITE
+                    (Tuple(Le(b, a), Le(c, a)), Ge(a, Min(b, c))),
+                    #(Tuple(Ge(b, a), Ge(c, a)), Ge(Min(b, c), a)),
+                    (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Lt(c, a), Le(b, a))),
+                    (Tuple(Lt(b, a), Lt(c, a)), Gt(a, Min(b, c))),
+                    #(Tuple(Gt(b, a), Gt(c, a)), Gt(Min(b, c), a)),
+                    (Tuple(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
+                    #(Tuple(Le(b, a), Le(c, a)), Le(Max(b, c), a)),
+                    (Tuple(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
+                    (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+                    #(Tuple(Lt(b, a), Lt(c, a)), Lt(Max(b, c), a)),
+                    (Tuple(Le(a, b), Le(c, a)), ITE(b >= c, true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Le(c, a), Le(a, b)), ITE(b >= c, true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Lt(a, b), Lt(c, a)), ITE(b > c, true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Lt(c, a), Lt(a, b)), ITE(b > c, true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Le(a, b), Lt(c, a)), ITE(b >= c, true, Or(Le(a, b), Gt(a, c)))),
+                    (Tuple(Le(c, a), Lt(a, b)), ITE(b >= c, true, Or(Lt(a, b), Ge(a, c)))),
+                    (Tuple(Lt(b, a), Lt(a, -b)), ITE(b >= 0, Gt(Abs(a), b), true)),
+                    (Tuple(Le(b, a), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), true)),
                     )
     return _matchers_or
 
-def simplify_patterns_xor():
+
+@cacheit
+def _simplify_patterns_xor():
+    """ Two-term patterns for Xor."""
+
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    _matchers_xor = ((Xor(Eq(a, b), Ge(a, b)), Gt(a, b)),
-                     (Xor(Eq(a, b), Gt(a, b)), Ge(a, b)),
-                     (Xor(Eq(a, b), Le(a, b)), Lt(a, b)),
-                     (Xor(Eq(a, b), Lt(a, b)), Le(a, b)),
-                     (Xor(Ge(a, b), Gt(a, b)), Eq(a, b)),
-                     (Xor(Ge(a, b), Le(a, b)), Ne(a, b)),
-                     (Xor(Ge(a, b), Lt(a, b)), S.true),
-                     (Xor(Ge(a, b), Ne(a, b)), Le(a, b)),
-                     (Xor(Gt(a, b), Le(a, b)), S.true),
-                     (Xor(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                     (Xor(Gt(a, b), Ne(a, b)), Lt(a, b)),
-                     (Xor(Le(a, b), Lt(a, b)), Eq(a, b)),
-                     (Xor(Le(a, b), Ne(a, b)), Ge(a, b)),
-                     (Xor(Lt(a, b), Ne(a, b)), Gt(a, b)),
-                     # Min/max
-                     (Xor(Ge(a, b), Ge(a, c)),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_xor = (#(Tuple(Le(b, a), Lt(a, b)), true),
+                     #(Tuple(Lt(b, a), Le(a, b)), true),
+                     #(Tuple(Eq(a, b), Le(b, a)), Gt(a, b)),
+                     #(Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
+                     (Tuple(Eq(a, b), Le(a, b)), Lt(a, b)),
+                     (Tuple(Eq(a, b), Lt(a, b)), Le(a, b)),
+                     (Tuple(Le(a, b), Lt(a, b)), Eq(a, b)),
+                     (Tuple(Le(a, b), Le(b, a)), Ne(a, b)),
+                     (Tuple(Le(b, a), Ne(a, b)), Le(a, b)),
+                     # (Tuple(Lt(b, a), Lt(a, b)), Ne(a, b)),
+                     (Tuple(Lt(b, a), Ne(a, b)), Lt(a, b)),
+                     # (Tuple(Le(a, b), Lt(a, b)), Eq(a, b)),
+                     # (Tuple(Le(a, b), Ne(a, b)), Ge(a, b)),
+                     # (Tuple(Lt(a, b), Ne(a, b)), Gt(a, b)),
+                     # Min/Max/ITE
+                     (Tuple(Le(b, a), Le(c, a)),
                       And(Ge(a, Min(b, c)), Lt(a, Max(b, c)))),
-                     (Xor(Ge(a, b), Gt(a, c)),
+                     (Tuple(Le(b, a), Lt(c, a)),
                       ITE(b > c, And(Gt(a, c), Lt(a, b)),
                           And(Ge(a, b), Le(a, c)))),
-                     (Xor(Gt(a, b), Gt(a, c)),
+                     (Tuple(Lt(b, a), Lt(c, a)),
                       And(Gt(a, Min(b, c)), Le(a, Max(b, c)))),
-                     (Xor(Le(a, b), Le(a, c)),
+                     (Tuple(Le(a, b), Le(a, c)),
                       And(Le(a, Max(b, c)), Gt(a, Min(b, c)))),
-                     (Xor(Le(a, b), Lt(a, c)),
+                     (Tuple(Le(a, b), Lt(a, c)),
                       ITE(b < c, And(Lt(a, c), Gt(a, b)),
                           And(Le(a, b), Ge(a, c)))),
-                     (Xor(Lt(a, b), Lt(a, c)),
+                     (Tuple(Lt(a, b), Lt(a, c)),
                       And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor
@@ -3195,12 +3451,12 @@ def simplify_univariate(expr):
     if not ok:
         return c
     if not i:
-        return S.false
+        return false
     args = []
     for a, b, _, _ in i:
         if a is S.NegativeInfinity:
             if b is S.Infinity:
-                c = S.true
+                c = true
             else:
                 if c.subs(x, b) == True:
                     c = (x <= b)
@@ -3225,3 +3481,67 @@ def simplify_univariate(expr):
                 c = And(a < x, x < b)
         args.append(c)
     return Or(*args)
+
+
+# Classes corresponding to logic gates
+# Used in gateinputcount method
+BooleanGates = (And, Or, Xor, Nand, Nor, Not, Xnor, ITE)
+
+def gateinputcount(expr):
+    """
+    Return the total number of inputs for the logic gates realizing the
+    Boolean expression.
+
+    Returns
+    =======
+
+    int
+        Number of gate inputs
+
+    Note
+    ====
+
+    Not all Boolean functions count as gate here, only those that are
+    considered to be standard gates. These are: :py:class:`~.And`,
+    :py:class:`~.Or`, :py:class:`~.Xor`, :py:class:`~.Not`, and
+    :py:class:`~.ITE` (multiplexer). :py:class:`~.Nand`, :py:class:`~.Nor`,
+    and :py:class:`~.Xnor` will be evaluated to ``Not(And())`` etc.
+
+    Examples
+    ========
+
+    >>> from sympy.logic import And, Or, Nand, Not, gateinputcount
+    >>> from sympy.abc import x, y, z
+    >>> expr = And(x, y)
+    >>> gateinputcount(expr)
+    2
+    >>> gateinputcount(Or(expr, z))
+    4
+
+    Note that ``Nand`` is automatically evaluated to ``Not(And())`` so
+
+    >>> gateinputcount(Nand(x, y, z))
+    4
+    >>> gateinputcount(Not(And(x, y, z)))
+    4
+
+    Although this can be avoided by using ``evaluate=False``
+
+    >>> gateinputcount(Nand(x, y, z, evaluate=False))
+    3
+
+    Also note that a comparison will count as a Boolean variable:
+
+    >>> gateinputcount(And(x > z, y >= 2))
+    2
+
+    As will a symbol:
+    >>> gateinputcount(x)
+    0
+
+    """
+    if not isinstance(expr, Boolean):
+        raise TypeError("Expression must be Boolean")
+    if isinstance(expr, BooleanGates):
+        return len(expr.args) + sum(gateinputcount(x) for x in expr.args)
+    return 0

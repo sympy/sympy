@@ -1,9 +1,12 @@
-from .expr import Expr
-from sympy.utilities.decorator import deprecated
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-@deprecated(useinstead="sympy.physics.quantum.trace.Tr",
-    deprecated_since_version="1.10", issue=22330)
-class Tr(Expr):
-    def __new__(cls, *args):
-        from sympy.physics.quantum.trace import Tr
-        return Tr(*args)
+sympy_deprecation_warning(
+    """
+    sympy.core.trace is deprecated. Use sympy.physics.quantum.trace
+    instead.
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="sympy-core-trace-deprecated",
+)
+
+from sympy.physics.quantum.trace import Tr # noqa:F401

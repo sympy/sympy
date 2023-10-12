@@ -1,3 +1,4 @@
+from sympy.core import expand
 from sympy.core.numbers import (Rational, oo, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -30,9 +31,8 @@ def test_ellipse_equation_using_slope():
 
 
 def test_object_from_equation():
-    from sympy.abc import x, y, a, b
-    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2),
-                                                                                      sqrt(57) / 2)
+    from sympy.abc import x, y, a, b, c, d, e
+    assert Circle(x**2 + y**2 + 3*x + 4*y - 8) == Circle(Point2D(S(-3) / 2, -2), sqrt(57) / 2)
     assert Circle(x**2 + y**2 + 6*x + 8*y + 25) == Circle(Point2D(-3, -4), 0)
     assert Circle(a**2 + b**2 + 6*a + 8*b + 25, x='a', y='b') == Circle(Point2D(-3, -4), 0)
     assert Circle(x**2 + y**2 - 25) == Circle(Point2D(0, 0), 5)
@@ -40,7 +40,8 @@ def test_object_from_equation():
     assert Circle(a**2 + b**2, x='a', y='b') == Circle(Point2D(0, 0), 0)
     assert Circle(x**2 + y**2 + 6*x + 8) == Circle(Point2D(-3, 0), 1)
     assert Circle(x**2 + y**2 + 6*y + 8) == Circle(Point2D(0, -3), 1)
-    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(37)/6)
+    assert Circle((x - 1)**2 + y**2 - 9) == Circle(Point2D(1, 0), 3)
+    assert Circle(6*(x**2) + 6*(y**2) + 6*x + 8*y - 25) == Circle(Point2D(Rational(-1, 2), Rational(-2, 3)), 5*sqrt(7)/6)
     assert Circle(Eq(a**2 + b**2, 25), x='a', y=b) == Circle(Point2D(0, 0), 5)
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 3*x + 4*y + 26))
     raises(GeometryError, lambda: Circle(x**2 + y**2 + 25))
@@ -48,6 +49,10 @@ def test_object_from_equation():
     raises(GeometryError, lambda: Circle(x**2 + 6*y + 8))
     raises(GeometryError, lambda: Circle(6*(x ** 2) + 4*(y**2) + 6*x + 8*y + 25))
     raises(ValueError, lambda: Circle(a**2 + b**2 + 3*a + 4*b - 8))
+    # .equation() adds 'real=True' assumption; '==' would fail if assumptions differed
+    x, y = symbols('x y', real=True)
+    eq = a*x**2 + a*y**2 + c*x + d*y + e
+    assert expand(Circle(eq).equation()*a) == eq
 
 
 @slow
@@ -150,7 +155,7 @@ def test_ellipse_geom():
     assert c1.is_tangent(e1) is True
     assert c1.is_tangent(Ellipse(Point(2, 0), 1, 1)) is True
     assert c1.is_tangent(
-        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is True
+        Polygon(Point(1, 1), Point(1, -1), Point(2, 0))) is False
     assert c1.is_tangent(
         Polygon(Point(1, 1), Point(1, 0), Point(2, 0))) is False
     assert Circle(Point(5, 5), 3).is_tangent(Circle(Point(0, 5), 1)) is False
@@ -249,7 +254,8 @@ def test_ellipse_geom():
     assert intersection(Ellipse(Point(0, 0), 2, 1), Ellipse(Point(3, 0), 1, 2)) == [Point(2, 0)]
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(3, 0), 1)) == [Point(2, 0)]
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
-    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)
+        ) == [Point(5.0, 0, evaluate=False)]
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
     assert Circle((0, 0), S.Half).intersection(
         Triangle((-1, 0), (1, 0), (0, 1))) == [
@@ -465,7 +471,16 @@ def test_is_tangent():
     assert e1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is True
     assert c1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is False
     assert e1.is_tangent(Polygon((0, 0), (3, 0), (7, 7), (0, 5))) is False
-    assert e1.is_tangent(Polygon((3, 12), (3, -12), (6, 5))) is True
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (6, 5))) is False
+    assert e1.is_tangent(Polygon((3, 12), (3, -12), (0, -5), (0, 5))) is False
+    assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
+    assert c1.is_tangent(Segment((0, 0), (-5, -2))) is False
+    assert e1.is_tangent(Segment((-3, 0), (3, 0))) is False
+    assert e1.is_tangent(Segment((-3, 5), (3, 5))) is True
+    assert e1.is_tangent(Polygon((0, 0), (5, 5), (5, -5))) is False
+    assert e1.is_tangent(Polygon((-100, -50), (-40, -334), (-70, -52))) is False
+    assert e1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is True
+    assert c1.is_tangent(Polygon((-3, -5), (-3, 5), (3, 5), (3, -5))) is False
     assert e1.is_tangent(Polygon((3, 12), (3, -12), (0, -5), (0, 5))) is False
     assert e1.is_tangent(Polygon((3, 0), (5, 7), (6, -5))) is False
     raises(TypeError, lambda: e1.is_tangent(Point(0, 0, 0)))

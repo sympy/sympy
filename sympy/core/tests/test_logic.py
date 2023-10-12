@@ -2,23 +2,24 @@ from sympy.core.logic import (fuzzy_not, Logic, And, Or, Not, fuzzy_and,
     fuzzy_or, _fuzzy_group, _torf, fuzzy_nand, fuzzy_xor)
 from sympy.testing.pytest import raises
 
+from itertools import product
+
 T = True
 F = False
 U = None
 
 
+
 def test_torf():
-    from sympy.utilities.iterables import cartes
     v = [T, F, U]
-    for i in cartes(*[v]*3):
+    for i in product(*[v]*3):
         assert _torf(i) is (True if all(j for j in i) else
                             (False if all(j is False for j in i) else None))
 
 
 def test_fuzzy_group():
-    from sympy.utilities.iterables import cartes
     v = [T, F, U]
-    for i in cartes(*[v]*3):
+    for i in product(*[v]*3):
         assert _fuzzy_group(i) is (None if None in i else
                                    (True if all(j for j in i) else False))
         assert _fuzzy_group(i, quick_exit=True) is \

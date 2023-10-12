@@ -16,13 +16,14 @@ from sympy.crypto.crypto import (cycle_list,
       bg_private_key, bg_public_key, encipher_rot13, decipher_rot13,
       encipher_atbash, decipher_atbash, NonInvertibleCipherWarning,
       encipher_railfence, decipher_railfence)
+from sympy.external.gmpy import gcd
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 
 from sympy.testing.pytest import raises, warns
 
-from random import randrange
+from sympy.core.random import randrange
 
 def test_encipher_railfence():
     assert encipher_railfence("hello world",2) == "hlowrdel ol"
@@ -348,7 +349,6 @@ def test_rsa_multiprime_exhanstive():
 
 
 def test_rsa_multipower_exhanstive():
-    from sympy.core.numbers import igcd
     primes = [5, 5, 7]
     e = 7
     args = primes + [e]
@@ -357,7 +357,7 @@ def test_rsa_multipower_exhanstive():
     n = puk[0]
 
     for msg in range(n):
-        if igcd(msg, n) != 1:
+        if gcd(msg, n) != 1:
             continue
 
         encrypted = encipher_rsa(msg, puk)

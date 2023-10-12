@@ -5,6 +5,62 @@ from sympy.utilities.iterables import iterable
 
 
 
+def iterargs(expr):
+    """Yield the args of a Basic object in a breadth-first traversal.
+    Depth-traversal stops if `arg.args` is either empty or is not
+    an iterable.
+
+    Examples
+    ========
+
+    >>> from sympy import Integral, Function
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> from sympy.core.traversal import iterargs
+    >>> list(iterargs(Integral(f(x), (f(x), 1))))
+    [Integral(f(x), (f(x), 1)), f(x), (f(x), 1), x, f(x), 1, x]
+
+    See Also
+    ========
+    iterfreeargs, preorder_traversal
+    """
+    args = [expr]
+    for i in args:
+        yield i
+        args.extend(i.args)
+
+
+def iterfreeargs(expr, _first=True):
+    """Yield the args of a Basic object in a breadth-first traversal.
+    Depth-traversal stops if `arg.args` is either empty or is not
+    an iterable. The bound objects of an expression will be returned
+    as canonical variables.
+
+    Examples
+    ========
+
+    >>> from sympy import Integral, Function
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> from sympy.core.traversal import iterfreeargs
+    >>> list(iterfreeargs(Integral(f(x), (f(x), 1))))
+    [Integral(f(x), (f(x), 1)), 1]
+
+    See Also
+    ========
+    iterargs, preorder_traversal
+    """
+    args = [expr]
+    for i in args:
+        yield i
+        if _first and hasattr(i, 'bound_symbols'):
+            void = i.canonical_variables.values()
+            for i in iterfreeargs(i.as_dummy(), _first=False):
+                if not i.has(*void):
+                    yield i
+        args.extend(i.args)
+
+
 class preorder_traversal:
     """
     Do a pre-order traversal of a tree.
@@ -86,10 +142,10 @@ class preorder_traversal:
 
         >>> from sympy import preorder_traversal, symbols
         >>> x, y, z = symbols('x y z')
-        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> pt = preorder_traversal((x + y*z)*z)
         >>> for i in pt:
         ...     print(i)
-        ...     if i == x+y*z:
+        ...     if i == x + y*z:
         ...             pt.skip()
         z*(x + y*z)
         z
@@ -130,11 +186,7 @@ def use(expr, func, level=0, args=(), kwargs={}):
                 return expr
             else:
                 level -= 1
-                _args = []
-
-                for arg in expr.args:
-                    _args.append(_use(arg, level))
-
+                _args = [_use(arg, level) for arg in expr.args]
                 return expr.__class__(*_args)
 
     return _use(sympify(expr), level)

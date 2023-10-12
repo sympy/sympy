@@ -9,9 +9,10 @@ from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, Line, Ray2D)
 from sympy.testing.pytest import raises, slow, warns
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.geometry.polygon import rad, deg
 from sympy.integrals.integrals import integrate
+from sympy.utilities.iterables import rotate_left
 
 
 def feq(a, b):
@@ -79,6 +80,11 @@ def test_polygon():
         Point(0, 0), Point(2, 0))
     p11 = Polygon(Point(0, 0), 1, n=3)
     p12 = Polygon(Point(0, 0), 1, 0, n=3)
+    p13 = Polygon(
+        Point(0, 0),Point(8, 8),
+        Point(23, 20),Point(0, 20))
+    p14 = Polygon(*rotate_left(p13.args, 1))
+
 
     r = Ray(Point(-9, 6.6), Point(-9, 5.5))
     #
@@ -104,7 +110,7 @@ def test_polygon():
     assert p5.encloses_point(Point(4, 0)) is False
     assert p1.encloses(Circle(Point(2.5, 2.5), 5)) is False
     assert p1.encloses(Ellipse(Point(2.5, 2), 5, 6)) is False
-    p5.plot_interval('x') == [x, 0, 1]
+    assert p5.plot_interval('x') == [x, 0, 1]
     assert p5.distance(
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
@@ -200,6 +206,12 @@ def test_polygon():
     assert feq(angles[Point(4, 4)].evalf(), Float("1.2490457723982544"))
     assert feq(angles[Point(5, 2)].evalf(), Float("1.8925468811915388"))
     assert feq(angles[Point(3, 0)].evalf(), Float("2.3561944901923449"))
+
+    # https://github.com/sympy/sympy/issues/24885
+    interior_angles_sum = sum(p13.angles.values())
+    assert feq(interior_angles_sum, (len(p13.angles) - 2)*pi )
+    interior_angles_sum = sum(p14.angles.values())
+    assert feq(interior_angles_sum, (len(p14.angles) - 2)*pi )
 
     #
     # Triangle
@@ -570,7 +582,7 @@ def test_first_moment():
     assert p2.first_moment_of_area((a/8, b/6)) == (-25*a*b**2/648, -5*a**2*b/768)
 
     p2 = Polygon((0, 0), (12, 0), (12, 30))
-    p2.first_moment_of_area() == (1600/3, -640/3)
+    assert p2.first_moment_of_area() == (S(1600)/3, -S(640)/3)
 
 
 def test_section_modulus_and_polar_second_moment_of_area():
@@ -654,11 +666,11 @@ def test_do_poly_distance():
     # Polygons which sides intersect
     square2 = Polygon(Point(1, 0), Point(2, 0), Point(2, 1), Point(1, 1))
     with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
+               match="Polygons may intersect producing erroneous output", test_stacklevel=False):
         assert square1._do_poly_distance(square2) == 0
 
     # Polygons which bodies intersect
     triangle2 = Polygon(Point(0, -1), Point(2, -1), Point(S.Half, S.Half))
     with warns(UserWarning, \
-               match="Polygons may intersect producing erroneous output"):
+               match="Polygons may intersect producing erroneous output", test_stacklevel=False):
         assert triangle2._do_poly_distance(square1) == 0

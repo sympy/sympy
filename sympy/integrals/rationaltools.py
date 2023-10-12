@@ -9,8 +9,8 @@ from sympy.functions.elementary.trigonometric import atan
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
-
 from sympy.polys import Poly, resultant, ZZ
+
 
 def ratint(f, x, **flags):
     """

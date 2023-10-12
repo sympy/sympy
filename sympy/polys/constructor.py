@@ -1,5 +1,5 @@
 """Tools for constructing domains for expressions. """
-
+from math import prod
 
 from sympy.core import sympify
 from sympy.core.evalf import pure_complex
@@ -105,7 +105,7 @@ def _construct_algebraic(coeffs, opt):
     g, span, H = primitive_element(exts, ex=True, polys=True)
     root = sum([ s*ext for s, ext in zip(span, exts) ])
 
-    domain, g = QQ.algebraic_field((g, root)), g.rep.rep
+    domain, g = QQ.algebraic_field((g, root)), g.rep.to_list()
 
     exts_dom = [domain.dtype.from_list(h, g, QQ) for h in H]
     exts_map = dict(zip(exts, exts_dom))
@@ -117,11 +117,7 @@ def _construct_algebraic(coeffs, opt):
         elif op == '+':
             return sum((convert_tree(a) for a in args), domain.zero)
         elif op == '*':
-            # return prod(convert(a) for a in args)
-            t = convert_tree(args[0])
-            for a in args[1:]:
-                t *= convert_tree(a)
-            return t
+            return prod(convert_tree(a) for a in args)
         elif op == 'e':
             return exts_map[args]
         else:

@@ -5,8 +5,9 @@ from .mul import Mul, _keep_coeff
 from .power import Pow
 from .basic import Basic
 from .expr import Expr
+from .function import expand_power_exp
 from .sympify import sympify
-from .numbers import Rational, Integer, Number, I
+from .numbers import Rational, Integer, Number, I, equal_valued
 from .singleton import S
 from .sorting import default_sort_key, ordered
 from .symbol import Dummy
@@ -18,6 +19,7 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
+from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -212,32 +214,23 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr):
+def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
-
-    Explanation
-    ===========
-
-    This is strictly only valid if the exponent from which
-    the integer is extracted is itself an integer or the
-    base is positive. These conditions are assumed and not
-    checked here.
 
     Examples
     ========
 
     >>> from sympy.core.exprtools import decompose_power
     >>> from sympy.abc import x, y
+    >>> from sympy import exp
 
     >>> decompose_power(x)
     (x, 1)
     >>> decompose_power(x**2)
     (x, 2)
-    >>> decompose_power(x**(2*y))
-    (x**y, 2)
-    >>> decompose_power(x**(2*y/3))
-    (x**(y/3), 2)
+    >>> decompose_power(exp(2*y/3))
+    (exp(y/3), 2)
 
     """
     base, exp = expr.as_base_exp()
@@ -245,47 +238,47 @@ def decompose_power(expr):
     if exp.is_Number:
         if exp.is_Rational:
             if not exp.is_Integer:
-                base = Pow(base, Rational(1, exp.q))
-
-            exp = exp.p
+                base = Pow(base, Rational(1, exp.q))  # type: ignore
+            e = exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
     else:
         exp, tail = exp.as_coeff_Mul(rational=True)
 
         if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
+            base, e = Pow(base, tail), -1
         elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
+            # todo: after dropping python 3.7 support, use overload and Literal
+            #  in as_coeff_Mul to make exp Rational, and remove these 2 ignores
+            tail = _keep_coeff(Rational(1, exp.q), tail)  # type: ignore
+            base, e = Pow(base, tail), exp.p  # type: ignore
         else:
-            base, exp = expr, 1
+            base, e = expr, 1
 
-    return base, exp
+    return base, e
 
 
-def decompose_power_rat(expr):
+def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     """
-    Decompose power into symbolic base and rational exponent.
+    Decompose power into symbolic base and rational exponent;
+    if the exponent is not a Rational, then separate only the
+    integer coefficient.
+
+    Examples
+    ========
+
+    >>> from sympy.core.exprtools import decompose_power_rat
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, exp
+
+    >>> decompose_power_rat(sqrt(x))
+    (x, 1/2)
+    >>> decompose_power_rat(exp(-3*x/2))
+    (exp(x/2), -3)
 
     """
-    base, exp = expr.as_base_exp()
-
-    if exp.is_Number:
-        if not exp.is_Rational:
-            base, exp = expr, 1
-    else:
-        exp, tail = exp.as_coeff_Mul(rational=True)
-
-        if exp is S.NegativeOne:
-            base, exp = Pow(base, tail), -1
-        elif exp is not S.One:
-            tail = _keep_coeff(Rational(1, exp.q), tail)
-            base, exp = Pow(base, tail), exp.p
-        else:
-            base, exp = expr, 1
-
-    return base, exp
+    _ = base, exp = expr.as_base_exp()
+    return _ if exp.is_Rational else decompose_power(expr)
 
 
 class Factors:
@@ -374,10 +367,7 @@ class Factors:
 
             # tidy up -/+1 and I exponents if Rational
 
-            handle = []
-            for k in factors:
-                if k is I or k in (-1, 1):
-                    handle.append(k)
+            handle = [k for k in factors if k is I or k in (-1, 1)]
             if handle:
                 i1 = S.One
                 for k in handle:
@@ -392,9 +382,9 @@ class Factors:
                             factors[I] = S.One
                         elif a.is_Pow:
                             factors[a.base] = factors.get(a.base, S.Zero) + a.exp
-                        elif a == 1:
+                        elif equal_valued(a, 1):
                             factors[a] = S.One
-                        elif a == -1:
+                        elif equal_valued(a, -1):
                             factors[-a] = S.One
                             factors[S.NegativeOne] = S.One
                         else:
@@ -931,7 +921,7 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
     isprimitive : boolean, optional
         If ``isprimitive`` is True then the call to primitive
         for an Add will be skipped. This is useful when the
-        content has already been extrated.
+        content has already been extracted.
 
     fraction : boolean, optional
         If ``fraction`` is True then the expression will appear over a common
@@ -1422,9 +1412,11 @@ def factor_nc(expr):
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
+    expr = expr.func(*[expand_power_exp(i) for i in expr.args])
 
     from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
+
     if rep:
         return factor(expr).subs(rep)
     else:
@@ -1447,7 +1439,10 @@ def factor_nc(expr):
                     cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
                     args[i][0] = cc
             for i, (cc, _) in enumerate(args):
-                cc[0] = cc[0]/c
+                if cc:
+                    cc[0] = cc[0]/c
+                else:
+                    cc = [1/c]
                 args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):

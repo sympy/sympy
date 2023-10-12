@@ -12,7 +12,7 @@ from sympy.simplify.fu import (
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
     TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.abc import a, b, c, x, y, z
 
 
@@ -309,7 +309,7 @@ def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
     # and that key2 works when key1 is False
     do = lambda x: Add(*[i**(i%2) for i in x.args])
-    process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
+    assert process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
         key2=lambda x: x%2, key1=False) == 1**1 + 3**1 + 2**0 + 4**0
 
 
@@ -466,3 +466,15 @@ def test_as_f_sign_1():
     assert as_f_sign_1(2*x + 2) == (2, x, 1)
     assert as_f_sign_1(x*y - y) == (y, x, -1)
     assert as_f_sign_1(-x*y + y) == (-y, x, -1)
+
+
+def test_issue_25590():
+    A = Symbol('A', commutative=False)
+    B = Symbol('B', commutative=False)
+
+    assert TR8(2*cos(x)*sin(x)*B*A) == sin(2*x)*B*A
+    assert TR13(tan(2)*tan(3)*B*A) == (-tan(2)/tan(5) - tan(3)/tan(5) + 1)*B*A
+
+    # XXX The result may not be optimal than
+    # sin(2*x)*B*A + cos(x)**2 and may change in the future
+    assert (2*cos(x)*sin(x)*B*A + cos(x)**2).simplify() == sin(2*x)*B*A + cos(2*x)/2 + S.One/2

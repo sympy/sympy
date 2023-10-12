@@ -51,8 +51,10 @@ def test_best_origin():
     l6 = Segment2D(Point(2, 0), Point(1, 1))
 
     assert best_origin((2, 1), 3, l1, expr1) == (0, 3)
-    assert best_origin((2, 0), 3, l2, x ** 7) == (S(3) / 2, 0)
-    assert best_origin((0, 2), 3, l3, x ** 7) == (0, S(3) / 2)
+    # XXX: Should these return exact Rational output? Maybe best_origin should
+    #      sympify its arguments...
+    assert best_origin((2, 0), 3, l2, x ** 7) == (1.5, 0)
+    assert best_origin((0, 2), 3, l3, x ** 7) == (0, 1.5)
     assert best_origin((1, 1), 2, l4, x ** 7 * y ** 3) == (0, 2)
     assert best_origin((1, 1), 2, l4, x ** 3 * y ** 7) == (2, 0)
     assert best_origin((1, 1), 2, l5, x ** 2 * y ** 9) == (0, 2)
@@ -151,6 +153,14 @@ def test_polytope_integrate():
     assert result_dict[expr1] == Rational(615780107, 594)
     assert result_dict[expr2] == Rational(13062161, 27)
     assert result_dict[expr3] == Rational(1946257153, 924)
+
+    tri = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
+    expr1 = x**7*y**1 + 2*x**2*y**6
+    expr2 = x**6*y**4 + x**5*y**5 + 2*y**10
+    expr3 = x**10 + x**9*y + x**8*y**2 + x**5*y**5
+    polys.extend((expr1, expr2, expr3))
+    assert polytope_integrate(tri, polys, max_degree=9) == \
+        {x**7*y + 2*x**2*y**6: Rational(489262, 9)}
 
     #  Tests when all integral of all monomials up to a max_degree is to be
     #  calculated.
@@ -526,6 +536,10 @@ def test_max_degree():
     polys = [1, x, y, x*y, x**2*y, x*y**2]
     assert polytope_integrate(polygon, polys, max_degree=3) == \
         {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y: Rational(1, 6), x*y**2: Rational(1, 6)}
+    assert polytope_integrate(polygon, polys, max_degree=2) == \
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4)}
+    assert polytope_integrate(polygon, polys, max_degree=1) == \
+        {1: 1, x: S.Half, y: S.Half}
 
 
 def test_main_integrate3d():
@@ -601,3 +615,13 @@ def test_is_vertex():
     assert is_vertex(Point(2, 3)) is True
     assert is_vertex((2, 3, 4)) is True
     assert is_vertex((2, 3, 4, 5)) is False
+
+
+def test_issue_19234():
+    polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+    polys =  [ 1, x, y, x*y, x**2*y, x*y**2]
+    assert polytope_integrate(polygon, polys) == \
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y: Rational(1, 6), x*y**2: Rational(1, 6)}
+    polys =  [ 1, x, y, x*y, 3 + x**2*y, x + x*y**2]
+    assert polytope_integrate(polygon, polys) == \
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y + 3: Rational(19, 6), x*y**2 + x: Rational(2, 3)}

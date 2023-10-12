@@ -1,7 +1,7 @@
-from sympy.core import Basic
+from sympy.core import Atom, Basic
 
 
-class CartanType_generator(Basic):
+class CartanType_generator():
     """
     Constructor for actually creating things
     """
@@ -49,13 +49,13 @@ class CartanType_generator(Basic):
 CartanType = CartanType_generator()
 
 
-class Standard_Cartan(Basic):
+class Standard_Cartan(Atom):
     """
     Concrete base class for Cartan types such as A4, etc
     """
 
     def __new__(cls, series, n):
-        obj = Basic.__new__(cls, series, n)
+        obj = Basic.__new__(cls)
         obj.n = n
         obj.series = series
         return obj

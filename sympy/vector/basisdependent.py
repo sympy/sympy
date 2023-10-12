@@ -1,6 +1,7 @@
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
-from sympy.simplify import simplify as simp, trigsimp as tsimp
+from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
 from sympy.core.function import diff as df
@@ -8,6 +9,9 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+
+if TYPE_CHECKING:
+    from sympy.vector.vector import BaseVector
 
 
 class BasisDependent(Expr):
@@ -17,6 +21,8 @@ class BasisDependent(Expr):
     Named so because the representation of these quantities in
     sympy.vector is dependent on the basis they are expressed in.
     """
+
+    zero: BasisDependentZero
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
@@ -143,11 +149,11 @@ class BasisDependent(Expr):
     factor.__doc__ += fctr.__doc__  # type: ignore
 
     def as_coeff_Mul(self, rational=False):
-        """Efficiently extract the coefficient of a product. """
+        """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
     def as_coeff_add(self, *deps):
-        """Efficiently extract the coefficient of a summation. """
+        """Efficiently extract the coefficient of a summation."""
         l = [x * self.components[x] for x in self.components]
         return 0, tuple(l)
 
@@ -299,15 +305,14 @@ class BasisDependentZero(BasisDependent):
     """
     Class to denote a zero basis dependent instance.
     """
-    # XXX: Can't type the keys as BaseVector because of cyclic import
-    # problems.
-    components = {}  # type: tDict[Any, Expr]
+    components: dict['BaseVector', Expr] = {}
+    _latex_form: str
 
     def __new__(cls):
         obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
-        obj._hash = tuple([S.Zero, cls]).__hash__()
+        obj._hash = (S.Zero, cls).__hash__()
         return obj
 
     def __hash__(self):

@@ -192,7 +192,7 @@ class lambdify:
             warnings.warn(
                 'The evaluation of the expression is problematic. '
                 'We are trying a failback method that may still work. '
-                'Please report this as a bug.')
+                'Please report this as a bug.', stacklevel=2)
             return self.__call__(args)
 
 
@@ -265,7 +265,7 @@ class Lambdifier:
             print(newexpr)
         eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         self.eval_str = eval_str
-        exec("from __future__ import division; MYNEWLAMBDA = %s" % eval_str, namespace)
+        exec("MYNEWLAMBDA = %s" % eval_str, namespace)
         self.lambda_func = namespace['MYNEWLAMBDA']
 
     def __call__(self, *args, **kwargs):
@@ -298,7 +298,7 @@ class Lambdifier:
     # Functions that are the same in numpy
     numpy_functions_same = [
         'sin', 'cos', 'tan', 'sinh', 'cosh', 'tanh', 'exp', 'log',
-        'sqrt', 'floor', 'conjugate',
+        'sqrt', 'floor', 'conjugate', 'sign',
     ]
 
     # Functions with different names in numpy
@@ -622,9 +622,7 @@ class Lambdifier:
             # XXX debug: print funcname
             args_dict = {}
             for a in expr.args:
-                if (isinstance(a, Symbol) or
-                    isinstance(a, NumberSymbol) or
-                        a in [I, zoo, oo]):
+                if (isinstance(a, (Symbol, NumberSymbol)) or a in [I, zoo, oo]):
                     continue
                 else:
                     args_dict.update(cls.sympy_expression_namespace(a))

@@ -81,19 +81,19 @@ def styleof(expr, styles=default_styles):
     Examples
     ========
 
-    >>> from sympy import Symbol, Basic, Expr
+    >>> from sympy import Symbol, Basic, Expr, S
     >>> from sympy.printing.dot import styleof
     >>> styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
     ...           (Expr,  {'color': 'black'})]
 
-    >>> styleof(Basic(1), styles)
+    >>> styleof(Basic(S(1)), styles)
     {'color': 'blue', 'shape': 'ellipse'}
 
     >>> x = Symbol('x')
     >>> styleof(x + 1, styles)  # this is an Expr
     {'color': 'black', 'shape': 'ellipse'}
     """
-    style = dict()
+    style = {}
     for typ, sty in styles:
         if isinstance(expr, typ):
             style.update(sty)
@@ -247,7 +247,7 @@ def dotprint(expr,
     Examples
     ========
 
-    >>> from sympy.printing.dot import dotprint
+    >>> from sympy import dotprint
     >>> from sympy.abc import x
     >>> print(dotprint(x+2)) # doctest: +NORMALIZE_WHITESPACE
     digraph{

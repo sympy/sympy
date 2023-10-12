@@ -531,26 +531,9 @@ def test_multidim_c_argument_cse():
         '#include "test.h"\n'
         "#include <math.h>\n"
         "void c(double *A, double *b, double *out) {\n"
-        "   double x0[9];\n"
-        "   x0[0] = A[0];\n"
-        "   x0[1] = A[1];\n"
-        "   x0[2] = A[2];\n"
-        "   x0[3] = A[3];\n"
-        "   x0[4] = A[4];\n"
-        "   x0[5] = A[5];\n"
-        "   x0[6] = A[6];\n"
-        "   x0[7] = A[7];\n"
-        "   x0[8] = A[8];\n"
-        "   double x1[3];\n"
-        "   x1[0] = b[0];\n"
-        "   x1[1] = b[1];\n"
-        "   x1[2] = b[2];\n"
-        "   const double x2 = x1[0];\n"
-        "   const double x3 = x1[1];\n"
-        "   const double x4 = x1[2];\n"
-        "   out[0] = x2*x0[0] + x3*x0[1] + x4*x0[2];\n"
-        "   out[1] = x2*x0[3] + x3*x0[4] + x4*x0[5];\n"
-        "   out[2] = x2*x0[6] + x3*x0[7] + x4*x0[8];\n"
+        "   out[0] = A[0]*b[0] + A[1]*b[1] + A[2]*b[2];\n"
+        "   out[1] = A[3]*b[0] + A[4]*b[1] + A[5]*b[2];\n"
+        "   out[2] = A[6]*b[0] + A[7]*b[1] + A[8]*b[2];\n"
         "}\n"
     )
     assert code == expected
@@ -646,6 +629,25 @@ def test_ccode_unused_array_arg():
         '   double test_result;\n'
         '   test_result = 1.0;\n'
         '   return test_result;\n'
+        '}\n'
+    )
+    assert source == expected
+
+def test_ccode_unused_array_arg_func():
+    # issue 16689
+    X = MatrixSymbol('X',3,1)
+    Y = MatrixSymbol('Y',3,1)
+    z = symbols('z',integer = True)
+    name_expr = ('testBug', X[0] + X[1])
+    result = codegen(name_expr, language='C', header=False, empty=False, argument_sequence=(X, Y, z))
+    source = result[0][1]
+    expected = (
+        '#include "testBug.h"\n'
+        '#include <math.h>\n'
+        'double testBug(double *X, double *Y, int z) {\n'
+        '   double testBug_result;\n'
+        '   testBug_result = X[0] + X[1];\n'
+        '   return testBug_result;\n'
         '}\n'
     )
     assert source == expected
@@ -1571,7 +1573,7 @@ def test_custom_codegen():
     assert source == expected
 
 def test_c_with_printer():
-    #issue 13586
+    # issue 13586
     from sympy.printing.c import C99CodePrinter
     class CustomPrinter(C99CodePrinter):
         def _print_Pow(self, expr):

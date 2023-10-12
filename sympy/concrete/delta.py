@@ -4,14 +4,18 @@ This module implements sums and products containing the Kronecker Delta function
 References
 ==========
 
-.. [1] http://mathworld.wolfram.com/KroneckerDelta.html
+.. [1] https://mathworld.wolfram.com/KroneckerDelta.html
 
 """
+from .products import product
+from .summations import Sum, summation
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.sorting import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
-from sympy.sets import Interval
+from sympy.polys.polytools import factor
+from sympy.sets.sets import Interval
+from sympy.solvers.solvers import solve
 
 
 @cacheit
@@ -120,7 +124,6 @@ def _remove_multiple_delta(expr):
     """
     Evaluate products of KroneckerDelta's.
     """
-    from sympy.solvers import solve
     if expr.is_Add:
         return expr.func(*list(map(_remove_multiple_delta, expr.args)))
     if not expr.is_Mul:
@@ -151,7 +154,6 @@ def _simplify_delta(expr):
     """
     Rewrite a KroneckerDelta's indices in its simplest form.
     """
-    from sympy.solvers import solve
     if isinstance(expr, KroneckerDelta):
         try:
             slns = solve(expr.args[0] - expr.args[1], dict=True)
@@ -175,8 +177,6 @@ def deltaproduct(f, limit):
     sympy.functions.special.tensor_functions.KroneckerDelta
     sympy.concrete.products.product
     """
-    from sympy.concrete.products import product
-
     if ((limit[2] - limit[1]) < 0) == True:
         return S.One
 
@@ -215,7 +215,6 @@ def deltaproduct(f, limit):
     if not delta:
         g = _expand_delta(f, limit[0])
         if f != g:
-            from sympy.polys.polytools import factor
             try:
                 return factor(deltaproduct(g, limit))
             except AssertionError:
@@ -243,7 +242,7 @@ def deltasummation(f, limit, no_piecewise=False):
       We already know we can sum a simplified expression, because only
       simple KroneckerDelta expressions are involved.
 
-      If we couldn't simplify it, there are two cases:
+      If we could not simplify it, there are two cases:
 
       1) The expression is a simple expression: we return the summation,
          taking care if we are dealing with a Derivative or with a proper
@@ -263,7 +262,7 @@ def deltasummation(f, limit, no_piecewise=False):
 
       1) We have a simple KroneckerDelta term, so we return the summation.
 
-      2) We didn't have a simple term, but we do have an expression with
+      2) We did not have a simple term, but we do have an expression with
          simplified KroneckerDelta terms, so we sum this expression.
 
     Examples
@@ -294,9 +293,6 @@ def deltasummation(f, limit, no_piecewise=False):
     sympy.functions.special.tensor_functions.KroneckerDelta
     sympy.concrete.sums.summation
     """
-    from sympy.concrete.summations import summation
-    from sympy.solvers import solve
-
     if ((limit[2] - limit[1]) < 0) == True:
         return S.Zero
 
@@ -325,7 +321,6 @@ def deltasummation(f, limit, no_piecewise=False):
     if len(solns) == 0:
         return S.Zero
     elif len(solns) != 1:
-        from sympy.concrete.summations import Sum
         return Sum(f, limit)
     value = solns[0]
     if no_piecewise:

@@ -11,32 +11,30 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
-from sympy.core.sympify import sympify
-from sympy.core.sympify import _sympify
-from sympy.functions import factorial
+from sympy.core.sympify import sympify, _sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
-from sympy.simplify import simplify as _simplify
-from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, NotIterable, is_sequence
+from sympy.printing.str import StrPrinter
+from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
-    ShapeError, MatrixKind)
+    ShapeError, MatrixKind, a2idx)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
     _adjugate, _charpoly, _cofactor, _cofactor_matrix, _per,
-    _det, _det_bareiss, _det_berkowitz, _det_LU, _minor, _minor_submatrix)
+    _det, _det_bareiss, _det_berkowitz, _det_bird, _det_laplace, _det_LU,
+    _minor, _minor_submatrix)
 
 from .reductions import _is_echelon, _echelon_form, _rank, _rref
 from .subspaces import _columnspace, _nullspace, _rowspace, _orthogonalize
@@ -61,7 +59,7 @@ from .graph import (
 from .solvers import (
     _diagonal_solve, _lower_triangular_solve, _upper_triangular_solve,
     _cholesky_solve, _LDLsolve, _LUsolve, _QRsolve, _gauss_jordan_solve,
-    _pinv_solve, _solve, _solve_least_squares)
+    _pinv_solve, _cramer_solve, _solve, _solve_least_squares)
 
 from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
@@ -69,7 +67,7 @@ from .inverse import (
 
 
 class DeferredVector(Symbol, NotIterable):
-    """A vector whose components are deferred (e.g. for use with lambdify)
+    """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples
     ========
@@ -112,6 +110,12 @@ class MatrixDeterminant(MatrixCommon):
     def _eval_det_lu(self, iszerofunc=_iszero, simpfunc=None):
         return _det_LU(self, iszerofunc=iszerofunc, simpfunc=simpfunc)
 
+    def _eval_det_bird(self):
+        return _det_bird(self)
+
+    def _eval_det_laplace(self):
+        return _det_laplace(self)
+
     def _eval_determinant(self): # for expressions.determinant.Determinant
         return _det(self)
 
@@ -143,6 +147,8 @@ class MatrixDeterminant(MatrixCommon):
     _find_reasonable_pivot_naive.__doc__ = _find_reasonable_pivot_naive.__doc__
     _eval_det_bareiss.__doc__            = _det_bareiss.__doc__
     _eval_det_berkowitz.__doc__          = _det_berkowitz.__doc__
+    _eval_det_bird.__doc__            = _det_bird.__doc__
+    _eval_det_laplace.__doc__            = _det_laplace.__doc__
     _eval_det_lu.__doc__                 = _det_LU.__doc__
     _eval_determinant.__doc__            = _det.__doc__
     adjugate.__doc__                     = _adjugate.__doc__
@@ -169,6 +175,26 @@ class MatrixReductions(MatrixDeterminant):
 
     def rank(self, iszerofunc=_iszero, simplify=False):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
+
+    def rref_rhs(self, rhs):
+        """Return reduced row-echelon form of matrix, matrix showing
+        rhs after reduction steps. ``rhs`` must have the same number
+        of rows as ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> r1, r2 = symbols('r1 r2')
+        >>> Matrix([[1, 1], [2, 1]]).rref_rhs(Matrix([r1, r2]))
+        (Matrix([
+        [1, 0],
+        [0, 1]]), Matrix([
+        [ -r1 + r2],
+        [2*r1 - r2]]))
+        """
+        r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))
+        return r[:, :self.cols], r[:, -rhs.cols:]
 
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True):
@@ -197,10 +223,10 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
 
         elif op == "n<->m":
-            # we need two cols to swap. It doesn't matter
+            # we need two cols to swap. It does not matter
             # how they were specified, so gather them together and
             # remove `None`
             cols = {col, k, col1, col2}.difference([None])
@@ -212,9 +238,9 @@ class MatrixReductions(MatrixDeterminant):
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
             if not 0 <= col1 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col1))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         elif op == "n->n+km":
             col = col1 if col is None else col
@@ -226,9 +252,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         else:
             raise ValueError('invalid operation %s' % repr(op))
@@ -443,14 +469,13 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args, evaluate=True, **kwargs):
         """Calculate the derivative of each element in the matrix.
-        ``args`` will be passed to the ``integrate`` function.
 
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
@@ -466,12 +491,11 @@ class MatrixCalculus(MatrixCommon):
         """
         # XXX this should be handled here rather than in Derivative
         from sympy.tensor.array.array_derivatives import ArrayDerivative
-        kwargs.setdefault('evaluate', True)
-        deriv = ArrayDerivative(self, *args, evaluate=True)
-        if not isinstance(self, Basic):
+        deriv = ArrayDerivative(self, *args, evaluate=evaluate)
+        # XXX This can rather changed to always return immutable matrix
+        if not isinstance(self, Basic) and evaluate:
             return deriv.as_mutable()
-        else:
-            return deriv
+        return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
@@ -483,7 +507,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x, ))
@@ -567,7 +591,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
@@ -587,39 +611,6 @@ class MatrixCalculus(MatrixCommon):
 # https://github.com/sympy/sympy/pull/12854
 class MatrixDeprecated(MatrixCommon):
     """A class to house deprecated matrix methods."""
-    def _legacy_array_dot(self, b):
-        """Compatibility function for deprecated behavior of ``matrix.dot(vector)``
-        """
-        from .dense import Matrix
-
-        if not isinstance(b, MatrixBase):
-            if is_sequence(b):
-                if len(b) != self.cols and len(b) != self.rows:
-                    raise ShapeError(
-                        "Dimensions incorrect for dot product: %s, %s" % (
-                            self.shape, len(b)))
-                return self.dot(Matrix(b))
-            else:
-                raise TypeError(
-                    "`b` must be an ordered iterable or Matrix, not %s." %
-                    type(b))
-
-        mat = self
-        if mat.cols == b.rows:
-            if b.cols != 1:
-                mat = mat.T
-                b = b.T
-            prod = flatten((mat * b).tolist())
-            return prod
-        if mat.cols == b.cols:
-            return mat.dot(b.T)
-        elif mat.rows == b.rows:
-            return mat.T.dot(b)
-        else:
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (
-                self.shape, b.shape))
-
-
     def berkowitz_charpoly(self, x=Dummy('lambda'), simplify=_simplify):
         return self.charpoly(x=x)
 
@@ -707,7 +698,7 @@ class MatrixDeprecated(MatrixCommon):
         return _det_bareiss(self)
 
     def det_LU_decomposition(self):
-        """Compute matrix determinant using LU decomposition
+        """Compute matrix determinant using LU decomposition.
 
 
         Note that this method fails if the LU decomposition itself
@@ -759,7 +750,7 @@ def num_mat_mul(k1, k2):
     # Deal with Mul._kind_dispatcher's commutativity
     # XXX: this function is called with either k1 or k2 as MatrixKind because
     # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
-    # swap the args here because NumberKind doesn't have an element_kind
+    # swap the args here because NumberKind does not have an element_kind
     # attribute.
     if not isinstance(k2, MatrixKind):
         k1, k2 = k2, k1
@@ -793,7 +784,7 @@ class MatrixBase(MatrixDeprecated,
 
     @property
     def kind(self) -> MatrixKind:
-        elem_kinds = set(e.kind for e in self.flat())
+        elem_kinds = {e.kind for e in self.flat()}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -816,7 +807,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -855,7 +845,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _format_str(self, printer=None):
         if not printer:
-            from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if S.Zero in self.shape:
@@ -972,7 +961,6 @@ class MatrixBase(MatrixDeprecated,
         from sympy.matrices import SparseMatrix
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
-        from sympy.utilities.iterables import reshape
 
         flat_list = None
 
@@ -1003,9 +991,7 @@ class MatrixBase(MatrixDeprecated,
                     and not isinstance(args[0], DeferredVector):
                 dat = list(args[0])
                 ismat = lambda i: isinstance(i, MatrixBase) and (
-                    evaluate or
-                    isinstance(i, BlockMatrix) or
-                    isinstance(i, MatrixSymbol))
+                    evaluate or isinstance(i, (BlockMatrix, MatrixSymbol)))
                 raw = lambda i: is_sequence(i) and not ismat(i)
                 evaluate = kwargs.get('evaluate', True)
 
@@ -1221,7 +1207,7 @@ class MatrixBase(MatrixDeprecated,
             return
 
     def add(self, b):
-        """Return self + b """
+        """Return self + b."""
         return self + b
 
     def condition_number(self):
@@ -1281,12 +1267,14 @@ class MatrixBase(MatrixDeprecated,
         ========
 
         dot
+        hat
+        vee
         multiply
         multiply_elementwise
         """
         from sympy.matrices.expressions.matexpr import MatrixExpr
 
-        if not isinstance(b, MatrixBase) and not isinstance(b, MatrixExpr):
+        if not isinstance(b, (MatrixBase, MatrixExpr)):
             raise TypeError(
                 "{} must be a Matrix, not {}.".format(b, type(b)))
 
@@ -1298,6 +1286,140 @@ class MatrixBase(MatrixDeprecated,
                 (self[1] * b[2] - self[2] * b[1]),
                 (self[2] * b[0] - self[0] * b[2]),
                 (self[0] * b[1] - self[1] * b[0])))
+
+    def hat(self):
+        r"""
+        Return the skew-symmetric matrix representing the cross product,
+        so that ``self.hat() * b`` is equivalent to  ``self.cross(b)``.
+
+        Examples
+        ========
+
+        Calling ``hat`` creates a skew-symmetric 3x3 Matrix from a 3x1 Matrix:
+
+        >>> from sympy import Matrix
+        >>> a = Matrix([1, 2, 3])
+        >>> a.hat()
+        Matrix([
+        [ 0, -3,  2],
+        [ 3,  0, -1],
+        [-2,  1,  0]])
+
+        Multiplying it with another 3x1 Matrix calculates the cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> a.hat() * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        Which is equivalent to calling the ``cross`` method:
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        vee
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 1):
+            raise ShapeError("Dimensions incorrect, expected (3, 1), got " +
+                             str(self.shape))
+        else:
+            x, y, z = self
+            return self._new(3, 3, (
+                 0, -z,  y,
+                 z,  0, -x,
+                -y,  x,  0))
+
+    def vee(self):
+        r"""
+        Return a 3x1 vector from a skew-symmetric matrix representing the cross product,
+        so that ``self * b`` is equivalent to  ``self.vee().cross(b)``.
+
+        Examples
+        ========
+
+        Calling ``vee`` creates a vector from a skew-symmetric Matrix:
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, -3, 2], [3, 0, -1], [-2, 1, 0]])
+        >>> a = A.vee()
+        >>> a
+        Matrix([
+        [1],
+        [2],
+        [3]])
+
+        Calculating the matrix product of the original matrix with a vector
+        is equivalent to a cross product:
+
+        >>> b = Matrix([3, 2, 1])
+        >>> A * b
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        >>> a.cross(b)
+        Matrix([
+        [-4],
+        [ 8],
+        [-4]])
+
+        ``vee`` can also be used to retrieve angular velocity expressions.
+        Defining a rotation matrix:
+
+        >>> from sympy import rot_ccw_axis3, trigsimp
+        >>> from sympy.physics.mechanics import dynamicsymbols
+        >>> theta = dynamicsymbols('theta')
+        >>> R = rot_ccw_axis3(theta)
+        >>> R
+        Matrix([
+        [cos(theta(t)), -sin(theta(t)), 0],
+        [sin(theta(t)),  cos(theta(t)), 0],
+        [            0,              0, 1]])
+
+        We can retrive the angular velocity:
+
+        >>> Omega = R.T * R.diff()
+        >>> Omega = trigsimp(Omega)
+        >>> Omega.vee()
+        Matrix([
+        [                      0],
+        [                      0],
+        [Derivative(theta(t), t)]])
+
+        See Also
+        ========
+
+        dot
+        cross
+        hat
+        multiply
+        multiply_elementwise
+        """
+
+        if self.shape != (3, 3):
+            raise ShapeError("Dimensions incorrect, expected (3, 3), got " +
+                             str(self.shape))
+        elif not self.is_anti_symmetric():
+            raise ValueError("Matrix is not skew-symmetric")
+        else:
+            return self._new(3, 1, (
+                 self[2, 1],
+                 self[0, 2],
+                 self[1, 0]))
 
     @property
     def D(self):
@@ -1408,16 +1530,13 @@ class MatrixBase(MatrixDeprecated,
                     "`b` must be an ordered iterable or Matrix, not %s." %
                     type(b))
 
+        if (1 not in self.shape) or (1 not in b.shape):
+            raise ShapeError
+        if len(self) != len(b):
+            raise ShapeError(
+                "Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
+
         mat = self
-        if (1 not in mat.shape) or (1 not in b.shape) :
-            SymPyDeprecationWarning(
-                feature="Dot product of non row/column vectors",
-                issue=13815,
-                deprecated_since_version="1.2",
-                useinstead="* to take matrix products").warn()
-            return mat._legacy_array_dot(b)
-        if len(mat) != len(b):
-            raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
         n = len(mat)
         if mat.shape != (1, n):
             mat = mat.reshape(1, n)
@@ -1448,7 +1567,9 @@ class MatrixBase(MatrixDeprecated,
         return (mat * b)[0]
 
     def dual(self):
-        """Returns the dual of a matrix, which is:
+        """Returns the dual of a matrix.
+
+        A dual of a matrix is:
 
         ``(1/2)*levicivita(i, j, k, l)*M(k, l)`` summed over indices `k` and `l`
 
@@ -1459,7 +1580,6 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
@@ -1622,8 +1742,7 @@ class MatrixBase(MatrixDeprecated,
 
 
     def exp(self):
-
-        """Return the exponential of a square matrix
+        """Return the exponential of a square matrix.
 
         Examples
         ========
@@ -1697,7 +1816,7 @@ class MatrixBase(MatrixDeprecated,
         return self.__class__(banded(size, bands))
 
     def log(self, simplify=cancel):
-        """Return the logarithm of a square matrix
+        """Return the logarithm of a square matrix.
 
         Parameters
         ==========
@@ -1817,8 +1936,6 @@ class MatrixBase(MatrixDeprecated,
 
         key2ij
         """
-        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
-
         islice, jslice = [isinstance(k, slice) for k in keys]
         if islice:
             if not self.rows:
@@ -1826,7 +1943,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 rlo, rhi = keys[0].indices(self.rows)[:2]
         else:
-            rlo = a2idx_(keys[0], self.rows)
+            rlo = a2idx(keys[0], self.rows)
             rhi = rlo + 1
         if jslice:
             if not self.cols:
@@ -1834,7 +1951,7 @@ class MatrixBase(MatrixDeprecated,
             else:
                 clo, chi = keys[1].indices(self.cols)[:2]
         else:
-            clo = a2idx_(keys[1], self.cols)
+            clo = a2idx(keys[1], self.cols)
             chi = clo + 1
         return rlo, rhi, clo, chi
 
@@ -1848,17 +1965,15 @@ class MatrixBase(MatrixDeprecated,
 
         key2bounds
         """
-        from sympy.matrices.common import a2idx as a2idx_ # Remove this line after deprecation of a2idx from matrices.py
-
         if is_sequence(key):
             if not len(key) == 2:
                 raise TypeError('key must be a sequence of length 2')
-            return [a2idx_(i, n) if not isinstance(i, slice) else i
+            return [a2idx(i, n) if not isinstance(i, slice) else i
                     for i, n in zip(key, self.shape)]
         elif isinstance(key, slice):
             return key.indices(len(self))[:2]
         else:
-            return divmod(a2idx_(key, len(self)), self.cols)
+            return divmod(a2idx(key, len(self)), self.cols)
 
     def normalized(self, iszerofunc=_iszero):
         """Return the normalized version of ``self``.
@@ -1901,6 +2016,7 @@ class MatrixBase(MatrixDeprecated,
 
     def norm(self, ord=None):
         """Return the Norm of a Matrix or Vector.
+
         In the simplest case this is the geometric size of the vector
         Other norms can be specified by the ord parameter
 
@@ -2005,7 +2121,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         Matrix([
@@ -2074,8 +2190,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import Matrix, StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
         >>> printer = StrPrinter()
         >>> M.table(printer)
@@ -2186,6 +2301,9 @@ class MatrixBase(MatrixDeprecated,
     def pinv_solve(self, B, arbitrary_matrix=None):
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
+    def cramer_solve(self, rhs, det_method="laplace"):
+        return _cramer_solve(self, rhs, det_method=det_method)
+
     def solve(self, rhs, method='GJ'):
         return _solve(self, rhs, method=method)
 
@@ -2256,6 +2374,7 @@ class MatrixBase(MatrixDeprecated,
     QRsolve.__doc__                = _QRsolve.__doc__
     gauss_jordan_solve.__doc__     = _gauss_jordan_solve.__doc__
     pinv_solve.__doc__             = _pinv_solve.__doc__
+    cramer_solve.__doc__           = _cramer_solve.__doc__
     solve.__doc__                  = _solve.__doc__
     solve_least_squares.__doc__    = _solve_least_squares.__doc__
 
@@ -2277,20 +2396,3 @@ class MatrixBase(MatrixDeprecated,
         _strongly_connected_components.__doc__
     strongly_connected_components_decomposition.__doc__ = \
         _strongly_connected_components_decomposition.__doc__
-
-
-@deprecated(
-    issue=15109,
-    useinstead="from sympy.matrices.common import classof",
-    deprecated_since_version="1.3")
-def classof(A, B):
-    from sympy.matrices.common import classof as classof_
-    return classof_(A, B)
-
-@deprecated(
-    issue=15109,
-    deprecated_since_version="1.3",
-    useinstead="from sympy.matrices.common import a2idx")
-def a2idx(j, n=None):
-    from sympy.matrices.common import a2idx as a2idx_
-    return a2idx_(j, n)

@@ -1,5 +1,6 @@
 from sympy.core.containers import Tuple
 from sympy.core.numbers import (Integer, Rational)
+from sympy.core.singleton import S
 import sympy.polys
 
 from math import gcd
@@ -99,7 +100,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     .. [1] https://en.wikipedia.org/wiki/Egyptian_fraction
     .. [2] https://en.wikipedia.org/wiki/Greedy_algorithm_for_Egyptian_fractions
     .. [3] https://www.ics.uci.edu/~eppstein/numth/egypt/conflict.html
-    .. [4] http://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
+    .. [4] https://web.archive.org/web/20180413004012/https://ami.ektf.hu/uploads/papers/finalpdf/AMI_42_from129to134.pdf
 
     """
 
@@ -116,7 +117,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     if y == 1 and x == 2:
         return [Integer(i) for i in [1, 2, 3, 6]]
     if x == y + 1:
-        return [Integer(1), y]
+        return [S.One, y]
 
     prefix, rem = egypt_harmonic(r)
     if rem == 0:
@@ -213,8 +214,8 @@ def egypt_golomb(x, y):
 def egypt_harmonic(r):
     # assumes r is Rational
     rv = []
-    d = Integer(1)
-    acc = Integer(0)
+    d = S.One
+    acc = S.Zero
     while acc + 1/d <= r:
         acc += 1/d
         rv.append(d)

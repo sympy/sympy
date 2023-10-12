@@ -2,10 +2,12 @@
 
 
 import sys
+import builtins
+import types
 
 from sympy.assumptions import Q
-from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
-from sympy.functions import exp, factorial, factorial2, sin
+from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
+from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And
 from sympy.series import Limit
 from sympy.testing.pytest import raises, skip
@@ -13,8 +15,10 @@ from sympy.testing.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
-    convert_xor, function_exponentiation,
-    implicit_multiplication_application,
+    convert_xor, function_exponentiation, lambda_notation, auto_symbol,
+    repeated_decimals, implicit_multiplication_application,
+    auto_number, factorial_notation, implicit_application,
+    _transformation, T
     )
 
 
@@ -43,7 +47,7 @@ def test_sympy_parser():
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
         'Symbol("x").free_symbols': x.free_symbols,
-        "S('S(3).n(n=3)')": 3.00,
+        "S('S(3).n(n=3)')": Float(3, 3),
         'factorint(12, visual=True)': Mul(
             Pow(2, 2, evaluate=False),
             Pow(3, 1, evaluate=False),
@@ -144,6 +148,27 @@ def test_global_dict():
     }
     for text, result in inputs.items():
         assert parse_expr(text, global_dict=global_dict) == result
+
+
+def test_no_globals():
+
+    # Replicate creating the default global_dict:
+    default_globals = {}
+    exec('from sympy import *', default_globals)
+    builtins_dict = vars(builtins)
+    for name, obj in builtins_dict.items():
+        if isinstance(obj, types.BuiltinFunctionType):
+            default_globals[name] = obj
+    default_globals['max'] = Max
+    default_globals['min'] = Min
+
+    # Need to include Symbol or parse_expr will not work:
+    default_globals.pop('Symbol')
+    global_dict = {'Symbol':Symbol}
+
+    for name in default_globals:
+        obj = parse_expr(name, global_dict=global_dict)
+        assert obj == Symbol(name)
 
 
 def test_issue_2515():
@@ -254,6 +279,17 @@ def test_parse_function_issue_3539():
     f = Function('f')
     assert parse_expr('f(x)') == f(x)
 
+def test_issue_24288():
+    inputs = {
+        "1 < 2": Lt(1, 2, evaluate=False),
+        "1 <= 2": Le(1, 2, evaluate=False),
+        "1 > 2": Gt(1, 2, evaluate=False),
+        "1 >= 2": Ge(1, 2, evaluate=False),
+        "1 != 2": Ne(1, 2, evaluate=False),
+        "1 == 2": Eq(1, 2, evaluate=False)
+    }
+    for text, result in inputs.items():
+        assert parse_expr(text, evaluate=False) == result
 
 def test_split_symbols_numeric():
     transformations = (
@@ -275,8 +311,8 @@ def test_unicode_names():
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 7):
-        skip("test_python3_features requires Python 3.7 or newer")
+    if sys.version_info < (3, 8):
+        skip("test_python3_features requires Python 3.8 or newer")
 
 
     assert parse_expr("123_456") == 123456
@@ -293,3 +329,44 @@ def test_issue_19501():
         standard_transformations +
         (implicit_multiplication_application,)))
     assert eq.free_symbols == {x}
+
+
+def test_parsing_definitions():
+    from sympy.abc import x
+    assert len(_transformation) == 12  # if this changes, extend below
+    assert _transformation[0] == lambda_notation
+    assert _transformation[1] == auto_symbol
+    assert _transformation[2] == repeated_decimals
+    assert _transformation[3] == auto_number
+    assert _transformation[4] == factorial_notation
+    assert _transformation[5] == implicit_multiplication_application
+    assert _transformation[6] == convert_xor
+    assert _transformation[7] == implicit_application
+    assert _transformation[8] == implicit_multiplication
+    assert _transformation[9] == convert_equals_signs
+    assert _transformation[10] == function_exponentiation
+    assert _transformation[11] == rationalize
+    assert T[:5] == T[0,1,2,3,4] == standard_transformations
+    t = _transformation
+    assert T[-1, 0] == (t[len(t) - 1], t[0])
+    assert T[:5, 8] == standard_transformations + (t[8],)
+    assert parse_expr('0.3x^2', transformations='all') == 3*x**2/10
+    assert parse_expr('sin 3x', transformations='implicit') == sin(3*x)
+
+
+def test_builtins():
+    cases = [
+        ('abs(x)', 'Abs(x)'),
+        ('max(x, y)', 'Max(x, y)'),
+        ('min(x, y)', 'Min(x, y)'),
+        ('pow(x, y)', 'Pow(x, y)'),
+    ]
+    for built_in_func_call, sympy_func_call in cases:
+        assert parse_expr(built_in_func_call) == parse_expr(sympy_func_call)
+    assert str(parse_expr('pow(38, -1, 97)')) == '23'
+
+
+def test_issue_22822():
+    raises(ValueError, lambda: parse_expr('x', {'': 1}))
+    data = {'some_parameter': None}
+    assert parse_expr('some_parameter is None', data) is True

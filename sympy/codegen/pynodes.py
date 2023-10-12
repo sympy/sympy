@@ -1,10 +1,11 @@
-from sympy.core import Tuple
+from .abstract_nodes import List as AbstractList
+from .ast import Token
 
 
-class List(Tuple):
-    """Represents a (frozen) (Python) list (for code printing purposes)."""
-    def __eq__(self, other):
-        if isinstance(other, list):
-            return self == List(*other)
-        else:
-            return self.args == other
+class List(AbstractList):
+    pass
+
+
+class NumExprEvaluate(Token):
+    """represents a call to :class:`numexpr`s :func:`evaluate`"""
+    __slots__ = _fields = ('expr',)

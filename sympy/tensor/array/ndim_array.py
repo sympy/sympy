@@ -75,7 +75,7 @@ class ArrayKind(Kind):
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
-        elem_kinds = set(e.kind for e in kinds)
+        elem_kinds = {e.kind for e in kinds}
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
         else:
@@ -84,7 +84,7 @@ class ArrayKind(Kind):
 
 
 class NDimArray(Printable):
-    """
+    """N-dimensional array.
 
     Examples
     ========
@@ -143,12 +143,17 @@ class NDimArray(Printable):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
+    def __getitem__(self, index):
+        raise NotImplementedError("A subclass of NDimArray should implement __getitem__")
+
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
-            raise ValueError("Only a tuple index is accepted")
+            if index >= self._loop_size:
+                raise ValueError("Only a tuple index is accepted")
+            return index
 
         if self._loop_size == 0:
-            raise ValueError("Index not valide with an empty array")
+            raise ValueError("Index not valid with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')
@@ -193,6 +198,9 @@ class NDimArray(Printable):
         def f(pointer):
             if not isinstance(pointer, Iterable):
                 return [pointer], ()
+
+            if len(pointer) == 0:
+                return [], (0,)
 
             result = []
             elems, shapes = zip(*[f(i) for i in pointer])
@@ -567,11 +575,11 @@ class NDimArray(Printable):
 
     def _check_index_for_getitem(self, index):
         if isinstance(index, (SYMPY_INTS, Integer, slice)):
-            index = (index, )
+            index = (index,)
 
         if len(index) < self.rank():
-            index = tuple([i for i in index] + \
-                          [slice(None) for i in range(len(index), self.rank())])
+            index = tuple(index) + \
+                          tuple(slice(None) for i in range(len(index), self.rank()))
 
         if len(index) > self.rank():
             raise ValueError('Dimension of index greater than rank of array')

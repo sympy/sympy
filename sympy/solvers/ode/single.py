@@ -2,13 +2,12 @@
 # This is the module for ODE solver classes for single ODEs.
 #
 
-import typing
-if typing.TYPE_CHECKING:
-    from typing import ClassVar
-from typing import Dict as tDict, Type, Iterator, List, Optional
+from __future__ import annotations
+from typing import ClassVar, Iterator
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
+from sympy.core.cache import cached_property
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
@@ -38,18 +37,6 @@ from .lie_group import _ode_lie_group
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
     pass
-
-
-def cached_property(func):
-    '''Decorator to cache property method'''
-    attrname = '_' + func.__name__
-    def propfunc(self):
-        val = getattr(self, attrname, None)
-        if val is None:
-            val = func(self)
-            setattr(self, attrname, val)
-        return val
-    return property(propfunc)
 
 
 class SingleODEProblem:
@@ -140,7 +127,7 @@ class SingleODEProblem:
             process_eq = self.eq
         return process_eq
 
-    def get_numbered_constants(self, num=1, start=1, prefix='C') -> List[Symbol]:
+    def get_numbered_constants(self, num=1, start=1, prefix='C') -> list[Symbol]:
         """
         Returns a list of constants that do not occur
         in eq already.
@@ -261,21 +248,21 @@ class SingleODESolver:
 
     # Subclasses should store the hint name (the argument to dsolve) in this
     # attribute
-    hint = None  # type: ClassVar[str]
+    hint: ClassVar[str]
 
     # Subclasses should define this to indicate if they support an _Integral
     # hint.
-    has_integral = None  # type: ClassVar[bool]
+    has_integral: ClassVar[bool]
 
     # The ODE to be solved
     ode_problem = None  # type: SingleODEProblem
 
     # Cache whether or not the equation has matched the method
-    _matched = None  # type: Optional[bool]
+    _matched: bool | None = None
 
     # Subclasses should store in this attribute the list of order(s) of ODE
     # that subclass can solve or leave it to None if not specific to any order
-    order = None  # type: Optional[list]
+    order: list | None = None
 
     def __init__(self, ode_problem):
         self.ode_problem = ode_problem
@@ -289,7 +276,7 @@ class SingleODESolver:
             self._matched = self._matches()
         return self._matched
 
-    def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
+    def get_general_solution(self, *, simplify: bool = True) -> list[Equality]:
         if not self.matches():
             msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
@@ -299,7 +286,7 @@ class SingleODESolver:
         msg = "Subclasses of SingleODESolver should implement matches."
         raise NotImplementedError(msg)
 
-    def _get_general_solution(self, *, simplify_flag: bool = True) -> List[Equality]:
+    def _get_general_solution(self, *, simplify_flag: bool = True) -> list[Equality]:
         msg = "Subclasses of SingleODESolver should implement get_general_solution."
         raise NotImplementedError(msg)
 
@@ -433,7 +420,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: tDict[Symbol, Type[Function]]
+    _diffx_stored: dict[Symbol, type[Function]] = {}
 
     @staticmethod
     def _get_diffx(var):
@@ -626,7 +613,7 @@ class FirstLinear(SinglePatternODESolver):
     References
     ==========
 
-    - https://en.wikipedia.org/wiki/Linear_differential_equation#First_order_equation
+    - https://en.wikipedia.org/wiki/Linear_differential_equation#First-order_equation_with_variable_coefficients
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 92
 
@@ -677,8 +664,7 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -937,8 +923,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     zero.
 
     >>> from sympy.abc import x, a, b, c, d
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy import dsolve, checkodesol, pprint, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
@@ -958,9 +943,9 @@ class RiccatiSpecial(SinglePatternODESolver):
     References
     ==========
 
-    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-      http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    - https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+      https://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
     hint = "Riccati_special_minus2"
     has_integral = False
@@ -1090,7 +1075,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     References
     ==========
 
-    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
@@ -1171,7 +1156,7 @@ class Liouville(SinglePatternODESolver):
 
     - Goldstein and Braun, "Advanced Methods for the Solution of Differential
       Equations", pp. 98
-    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
+    - https://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Liouville
 
     # indirect doctest
 
@@ -1352,8 +1337,7 @@ class SeparableReduced(Separable):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -1637,8 +1621,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
     ... simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1723,8 +1707,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1794,8 +1778,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -1875,10 +1858,9 @@ class LinearCoefficients(HomogeneousCoeffBest):
         Examples
         ========
 
-        >>> from sympy import Function
+        >>> from sympy import Function, sin
         >>> from sympy.abc import x
         >>> from sympy.solvers.ode.single import LinearCoefficients
-        >>> from sympy.functions.elementary.trigonometric import sin
         >>> f = Function('f')
         >>> eq = (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)
         >>> obj = LinearCoefficients(eq)
@@ -2242,7 +2224,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with
@@ -2271,7 +2253,7 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
     ==========
 
     - https://en.wikipedia.org/wiki/Variation_of_parameters
-    - http://planetmath.org/VariationOfParameters
+    - https://planetmath.org/VariationOfParameters
     - M. Tenenbaum & H. Pollard, "Ordinary Differential Equations",
       Dover 1963, pp. 233
 
@@ -2530,7 +2512,7 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
     ``nth_linear_constant_coeff_variation_of_parameters_Integral`` hint and
     simplifying the integrals manually.  Also, prefer using
     ``nth_linear_constant_coeff_undetermined_coefficients`` when it
-    applies, because it doesn't use integration, making it faster and more
+    applies, because it does not use integration, making it faster and more
     reliable.
 
     Warning, using simplify=False with
@@ -2702,8 +2684,7 @@ class SecondLinearBessel(SingleODESolver):
     >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve
-    >>> from sympy import Function
+    >>> from sympy import dsolve, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y
@@ -2713,7 +2694,7 @@ class SecondLinearBessel(SingleODESolver):
     References
     ==========
 
-    https://www.math24.net/bessel-differential-equation/
+    https://math24.net/bessel-differential-equation.html
 
     """
     hint = "2nd_linear_bessel"

@@ -22,7 +22,7 @@ The equations of motion are formed in the physics/mechanics/examples_. In that
 spot the variables q1 and q2 are used in place of x and y and the reference
 frame is rotated 90 degrees.
 
-.. _examples: ../examples/lin_pend_nonmin_example.html
+.. _examples: ../mechanics/examples/lin_pend_nonmin_example.html
 
 ::
 
@@ -141,10 +141,10 @@ equations of motion formats. ::
     ...                                    coord_idxs=coord_idxs,
     ...                                    speed_idxs=speed_idxs)
 
- Like coordinates and speeds, the bodies and loads attributes can only be
- accessed if they are specified during initialization of the `SymbolicSystem`
- class. Lastly here are some attributes accessible from the `SymbolicSystem`
- class. ::
+Like coordinates and speeds, the bodies and loads attributes can only be
+accessed if they are specified during initialization of the `SymbolicSystem`
+class. Lastly here are some attributes accessible from the `SymbolicSystem`
+class. ::
 
     >>> symsystem1.states
     Matrix([

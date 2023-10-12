@@ -117,7 +117,7 @@ function for every hint, except for ``_Integral`` hints
 (:py:meth:`~sympy.solvers.ode.dsolve` takes care of those automatically).
 Hint names should be all lowercase, unless a word is commonly capitalized
 (such as Integral or Bernoulli).  If you have a hint that you do not want to
-run with ``all_Integral`` that doesn't have an ``_Integral`` counterpart (such
+run with ``all_Integral`` that does not have an ``_Integral`` counterpart (such
 as a best hint that would defeat the purpose of ``all_Integral``), you will
 need to remove it manually in the :py:meth:`~sympy.solvers.ode.dsolve` code.
 See also the :py:meth:`~sympy.solvers.ode.classify_ode` docstring for
@@ -208,7 +208,7 @@ tested.  Add a test for each method in ``test_ode.py``.  Follow the
 conventions there, i.e., test the solver using ``dsolve(eq, f(x),
 hint=your_hint)``, and also test the solution using
 :py:meth:`~sympy.solvers.ode.checkodesol` (you can put these in a separate
-tests and skip/XFAIL if it runs too slow/doesn't work).  Be sure to call your
+tests and skip/XFAIL if it runs too slow/does not work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
 will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
@@ -378,7 +378,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         ``f(x)`` is a function of one variable whose derivatives in that
             variable make up the ordinary differential equation ``eq``.  In
             many cases it is not necessary to provide this; it will be
-            autodetected (and an error raised if it couldn't be detected).
+            autodetected (and an error raised if it could not be detected).
 
         ``hint`` is the solving method that you want dsolve to use.  Use
             ``classify_ode(eq, f(x))`` to get all of the possible hints for an
@@ -500,7 +500,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     For system of ordinary differential equations
     =============================================
 
-   **Usage**
+    **Usage**
         ``dsolve(eq, func)`` -> Solve a system of ordinary differential
         equations ``eq`` for ``func`` being list of functions including
         `x(t)`, `y(t)`, `z(t)` where number of functions in the list depends
@@ -515,7 +515,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         ``func`` holds ``x(t)`` and ``y(t)`` being functions of one variable which
         together with some of their derivatives make up the system of ordinary
         differential equation ``eq``. It is not necessary to provide this; it
-        will be autodetected (and an error raised if it couldn't be detected).
+        will be autodetected (and an error raised if it could not be detected).
 
     **Hints**
 
@@ -690,7 +690,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
-    if ics and not 'power_series' in hint:
+    if ics and 'power_series' not in hint:
         if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
@@ -770,10 +770,9 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            if variables not in diff_variables:
-                for sol in sols:
-                    if sol.has(deriv.expr.func):
-                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            for sol in sols:
+                if sol.has(deriv.expr.func):
+                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
             S = diff_sols
         else:
@@ -956,7 +955,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     x = func.args[0]
     f = func.func
     y = Dummy('y')
-    terms = n
+    terms = 5 if n is None else n
 
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -996,22 +995,22 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
                     AppliedUndef) and deriv.args[0].func == f and
                     len(deriv.args[0].args) == 1 and old == x and not
                     new.has(x) and all(i == deriv.variables[0] for i in
-                    deriv.variables) and not ics[funcarg].has(f)):
+                    deriv.variables) and x not in ics[funcarg].free_symbols):
 
                     dorder = ode_order(deriv, x)
                     temp = 'f' + str(dorder)
                     boundary.update({temp: new, temp + 'val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Derivatives")
+                    raise ValueError("Invalid boundary conditions for Derivatives")
 
 
             # Separating functions
             elif isinstance(funcarg, AppliedUndef):
                 if (funcarg.func == f and len(funcarg.args) == 1 and
-                    not funcarg.args[0].has(x) and not ics[funcarg].has(f)):
+                    not funcarg.args[0].has(x) and x not in ics[funcarg].free_symbols):
                     boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
                 else:
-                    raise ValueError("Enter valid boundary conditions for Function")
+                    raise ValueError("Invalid boundary conditions for Function")
 
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
@@ -1172,7 +1171,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
     'is_constant' (boolean), which tells if the system of ODEs is constant coefficient
     or not. This key is temporary addition for now and is in the match dict only when
     the system of ODEs is linear first order constant coefficient homogeneous. So, this
-    key's value is True for now if it is available else it doesn't exist.
+    key's value is True for now if it is available else it does not exist.
 
     'is_homogeneous' (boolean), which tells if the system of ODEs is homogeneous. Like the
     key 'is_constant', this key is a temporary addition and it is True since this key value
@@ -1180,7 +1179,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode-toc1.htm
     -A. D. Polyanin and A. V. Manzhirov, Handbook of Mathematics for Engineers and Scientists
 
     Examples
@@ -1224,7 +1223,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
         "For scalar ODEs, classify_ode should be used")
 
     # find all the functions if not given
-    order = dict()
+    order = {}
     if funcs==[None]:
         funcs = _extract_funcs(eq)
 
@@ -1234,7 +1233,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
 
     # This logic of list of lists in funcs to
     # be replaced later.
-    func_dict = dict()
+    func_dict = {}
     for func in funcs:
         if not order.get(func, False):
             max_order = 0
@@ -1318,7 +1317,7 @@ def classify_sysode(eq, funcs=None, **kwargs):
                     type_of_equation = check_linear_2eq_order1(eq, funcs, func_coef)
                 else:
                     type_of_equation = None
-            # If the equation doesn't match up with any of the
+            # If the equation does not match up with any of the
             # general case solvers in systems.py and the number
             # of equations is greater than 2, then NotImplementedError
             # should be raised.
@@ -1351,7 +1350,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     y = func[1].func
     fc = func_coef
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
-    r = dict()
+    r = {}
     # for equations Eq(a1*diff(x(t),t), b1*x(t) + c1*y(t) + d1)
     # and Eq(a2*diff(y(t),t), b2*x(t) + c2*y(t) + d2)
     r['a1'] = fc[0,x(t),1] ; r['a2'] = fc[1,y(t),1]
@@ -2160,7 +2159,7 @@ def constant_renumber(expr, variables=None, newconstants=None):
     constants_found = [c for c in constants_found if c not in variables]
 
     # Renumbering happens here
-    subs_dict = {var: cons for var, cons in zip(constants_found, iter_constants)}
+    subs_dict = dict(zip(constants_found, iter_constants))
     expr = expr.subs(subs_dict, simultaneous=True)
 
     return expr
@@ -2282,7 +2281,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
@@ -2307,7 +2306,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     References
     ==========
-    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - https://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
     - George E. Simmons, "Differential Equations with Applications and
       Historical Notes", p.p 176 - 184
 
@@ -2318,8 +2317,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match[match['a3']]
     q = match[match['b3']]
     r = match[match['c3']]
@@ -2427,7 +2426,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     equation with polynomial coefficients at a regular point. A second order
     homogeneous differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     A point is said to regular singular at `x0` if `x - x0\frac{Q(x)}{P(x)}`
     and `(x - x0)^{2}\frac{R(x)}{P(x)}` are analytic at `x0`. For simplicity
@@ -2461,10 +2460,10 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
-                                  /    6    4    2    \
-                                  |   x    x    x     |
-              /  4    2    \   C1*|- --- + -- - -- + 1|
-              | x    x     |      \  720   24   2     /    / 6\
+                                  /   6     4    2    \
+                                  |  x     x    x     |
+              / 4     2    \   C1*|- --- + -- - -- + 1|
+              |x     x     |      \  720   24   2     /    / 6\
     f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
               \120   6     /              x
 
@@ -2479,8 +2478,8 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     m = Dummy("m")  # for solving the indicial equation
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match['p']
     q = match['q']
 
@@ -2648,7 +2647,7 @@ def _is_special_case_of(soln1, soln2, eq, order, var):
     # each solution n times to get n+1 equations.
     #
     # We then try to solve those n+1 equations for the integrations constants
-    # in sol2. If we can find a solution that doesn't depend on x then it
+    # in sol2. If we can find a solution that does not depend on x then it
     # means that some value of the constants in sol1 is a special case of
     # sol2 corresponding to a particular choice of the integration constants.
 
@@ -2736,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
@@ -2759,9 +2757,9 @@ def ode_1st_power_series(eq, func, order, match):
     y = match['y']
     f = func.func
     h = -match[match['d']]/match[match['e']]
-    point = match.get('f0')
-    value = match.get('f0val')
-    terms = match.get('terms')
+    point = match['f0']
+    value = match['f0val']
+    terms = match['terms']
 
     # First term
     F = h
@@ -2873,13 +2871,10 @@ def sysode_linear_2eq_order1(match_):
     func = match_['func']
     fc = match_['func_coeff']
     eq = match_['eq']
-    r = dict()
+    r = {}
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     for i in range(2):
-        eqs = 0
-        for terms in Add.make_args(eq[i]):
-            eqs += terms/fc[i,func[i],1]
-        eq[i] = eqs
+        eq[i] = Add(*[terms/fc[i,func[i],1] for terms in Add.make_args(eq[i])])
 
     # for equations Eq(a1*diff(x(t),t), a*x(t) + b*y(t) + k1)
     # and Eq(a2*diff(x(t),t), c*x(t) + d*y(t) + k2)
@@ -3307,7 +3302,7 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0401.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3361,7 +3356,7 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0402.pdf
 
     """
     C1, C2 = get_numbered_constants(eq, num=2)
@@ -3418,7 +3413,7 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0404.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3478,7 +3473,7 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0405.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
@@ -3528,7 +3523,7 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
     References
     ==========
-    -http://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
+    -https://eqworld.ipmnet.ru/en/solutions/sysode/sode0406.pdf
 
     """
     C1 = get_numbered_constants(eq, num=1)
