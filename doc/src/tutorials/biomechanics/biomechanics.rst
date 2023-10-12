@@ -440,7 +440,7 @@ constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
 
 >>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
 >>> actf2.rhs()
-Matrix([[((1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
+Matrix([[((1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
 >>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Integer(10)}
 >>> actf.rhs().subs(constants)
 Matrix([[(66.6666666666667*(1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(3*a_first(t)/2 + 1/2) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
@@ -677,9 +677,9 @@ the constants recommended in [DeGroote2016]_.
 
 >>> fl_M_pas3 = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_pas3
-FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, 3/5, 4)
+FiberForceLengthPassiveDeGroote2016(l_M(t)/l_M_opt, 0.6, 4.0)
 >>> fl_M_pas3.doit()
-(exp(-20/3 + 20*l_M(t)/(3*l_M_opt)) - 1)/(-1 + exp(4))
+2.37439874427164e-5*exp(6.66666666666667*l_M(t)/l_M_opt) - 0.0186573603637741
 
 Sensible values for :math:`\tilde{l}^M` fall
 within the range :math:`[0.0, 2.0]`, which we will plot below.
@@ -726,7 +726,7 @@ FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), c0, c1)
 
 >>> fl_M_pas_inv2 = FiberForceLengthPassiveInverseDeGroote2016.with_defaults(fl_M_pas_sym)
 >>> fl_M_pas_inv2
-FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), 3/5, 4)
+FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas(t), 0.6, 4.0)
 
 Fiber Active Force-Length
 -------------------------
@@ -781,9 +781,9 @@ the constants recommended in [DeGroote2016]_.
 
 >>> fl_M_act3 = FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_act3
-FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+FiberForceLengthActiveDeGroote2016(l_M(t)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 >>> fl_M_act3.doit()
-exp(-3.98991349867535*(-1 + l_M(t)/l_M_opt)**2)/10 + 0.433*exp(-25*(-0.717 + l_M(t)/l_M_opt)**2/(2*(-0.1495 + l_M(t)/l_M_opt)**2)) + 0.814*exp(-21.4067977442463*(-1 + 0.943396226415094*l_M(t)/l_M_opt)**2/(1 + 0.390740740740741*l_M(t)/l_M_opt)**2)
+0.1*exp(-3.98991349867535*(-1 + l_M(t)/l_M_opt)**2) + 0.433*exp(-12.5*(-0.717 + l_M(t)/l_M_opt)**2/(-0.1495 + l_M(t)/l_M_opt)**2) + 0.814*exp(-21.4067977442463*(-1 + 0.943396226415094*l_M(t)/l_M_opt)**2/(1 + 0.390740740740741*l_M(t)/l_M_opt)**2)
 
 Sensible values for :math:`\tilde{l}^M` fall
 within the range :math:`[0.0, 2.0]`, which we will plot below.
@@ -997,11 +997,11 @@ sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)
 
 >>> fl_M_pas = FiberForceLengthPassiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_pas
-FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4)
+FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0)
 
 >>> fl_M_act = FiberForceLengthActiveDeGroote2016.with_defaults(l_M/l_M_opt)
 >>> fl_M_act
-FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)
+FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
 >>> fv_M = FiberForceVelocityDeGroote2016.with_defaults(v_M/v_M_max)
 >>> fv_M
@@ -1009,11 +1009,11 @@ FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_
 
 >>> F_M = a*fl_M_act*fv_M + fl_M_pas + beta*v_M/v_M_max
 >>> F_M
-beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4)
+beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0)
 
 >>> F_T = F_M_max*F_M*sm.sqrt(1 - sm.sin(alpha_opt)**2)
 >>> F_T
-F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 3/5, 4))
+F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0))
 
 SymPy offers this implementation of rigid tendon dynamics in the
 :obj:`~sympy.physics.biomechanics.MusculotendonDeGroot2016` class, a full
@@ -1216,10 +1216,13 @@ The activation model has a state variable :math:`\mathbf{x}`, input variable
    >>> muscle_activation.r
    Matrix([[e_muscle(t)]])
    >>> muscle_activation.p
-   Matrix([
-   [0.015],
-   [ 0.06],
-   [   10]])
+   Matrix(0, 1, [])
+
+Note that the return value for the constants parameters is empty. If we had
+instantiated :obj:`FirstOrderActivationDeGroote2016` normally then we would have
+had to supply three values for :math:`\tau_{a}`, :math:`\tau_{d}`, and `b`. If
+these had been :obj:`~sympy.core.symbol.Symbol` objects then these would have
+shown up in the returned :obj:`~sympy.matrix.Matrix`.
 
 These are associated with its first order differential equation :math:`\dot{a}
 = f(a, e, t)`:
@@ -1231,7 +1234,7 @@ These are associated with its first order differential equation :math:`\dot{a}
    :nofigs:
 
    >>> muscle_activation.rhs()
-   Matrix([[((1/2 - tanh(10*a_muscle(t) - 10*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10*a_muscle(t) - 10*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
+   Matrix([[((1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
 
 With the pathway and activation dynamics, the musculotendon model created using
 them both and needs some parameters to define the muscle and tendon specific
@@ -1252,7 +1255,7 @@ fiber damping coefficients.
    >>> F_M_max, l_M_opt, l_T_slack = sm.symbols('F_M_max, l_M_opt, l_T_slack', real=True)
    >>> v_M_max, alpha_opt, beta = sm.symbols('v_M_max, alpha_opt, beta', real=True)
 
-   >>> muscle = MusculotendonDeGroote2016(
+   >>> muscle = MusculotendonDeGroote2016.with_defaults(
    ...     'muscle',
    ...     muscle_pathway,
    ...     muscle_activation,
@@ -1290,12 +1293,9 @@ state and ordinary differential equation as the activation model:
    [  l_M_opt],
    [  v_M_max],
    [alpha_opt],
-   [     beta],
-   [    0.015],
-   [     0.06],
-   [       10]])
+   [     beta]])
    >>> muscle.rhs()
-   Matrix([[(-0.5625*a_muscle(t)**3*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 0.5625*a_muscle(t)**3 + 0.5625*a_muscle(t)**2*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 0.5625*a_muscle(t)**2*e_muscle(t) - 0.375*a_muscle(t)**2*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 0.375*a_muscle(t)**2 + 0.375*a_muscle(t)*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 0.375*a_muscle(t)*e_muscle(t) + 0.9375*a_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) - 1.0625*a_muscle(t) - 0.9375*e_muscle(t)*tanh(10*a_muscle(t) - 10*e_muscle(t)) + 1.0625*e_muscle(t))/(0.045*a_muscle(t) + 0.015)]])
+   Matrix([[((1/2 - tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2)/(0.0225*a_muscle(t) + 0.0075) + 16.6666666666667*(3*a_muscle(t)/2 + 1/2)*(tanh(10.0*a_muscle(t) - 10.0*e_muscle(t))/2 + 1/2))*(-a_muscle(t) + e_muscle(t))]])
 
 The musculotendon provides the extra ordinary differential equations as well as
 the muscle specific forces applied to the pathway:
@@ -1308,8 +1308,8 @@ the muscle specific forces applied to the pathway:
 
    >>> muscle_loads = muscle.to_loads()
    >>> pprint.pprint(muscle_loads)
-   [Force(point=O, force=F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 3/5, 4))*q(t)/Abs(q(t))*N.x),
-    Force(point=P, force=- F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 1/5, 1/10, 1, 0.354, 0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 3/5, 4))*q(t)/Abs(q(t))*N.x)]
+   [Force(point=O, force=F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x),
+    Force(point=P, force=- F_M_max*(beta*(-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)) + a_muscle(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + Abs(q(t)))*sign(q(t))*Derivative(q(t), t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + Abs(q(t)))**2)/l_M_opt, 0.6, 4.0))*q(t)*cos(alpha_opt)/Abs(q(t))*N.x)]
 
 These loads are made up of various functions that describe the length and
 velocity relationships to the muscle fiber force.
