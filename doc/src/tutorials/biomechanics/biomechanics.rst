@@ -4,8 +4,8 @@
 Introduction to Biomechanical Modeling
 ======================================
 
-:obj:`~sympy.physics.biomechanics` provides features to enhance models created
-with :obj:`~sympy.physics.mechanics` with force producing elements that model
+:obj:`sympy.physics.biomechanics` provides features to enhance models created
+with :obj:`sympy.physics.mechanics` with force producing elements that model
 muscles and tendons. In this tutorial, we will introduce the features of this
 package.
 
@@ -15,14 +15,14 @@ generate forces applied to the skeletal structure of an organism based on the
 contraction state of the muscle coupled with the passive stretch of tendons. In
 this tutorial, we introduce the elements that make up a musculotendon model and
 then demonstrate it in operation with a specific implementation, the
-:obj:`~sympy.physics.biomechanics.MusculotendonDeGroote2016` model.
+:obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` model.
 
 .. _Hill-type muscle models: https://en.wikipedia.org/wiki/Hill%27s_muscle_model
 
 Loads
 =====
 
-:obj:`~sympy.physics.mechanics.loads` includes two types of loads:
+:obj:`~sympy.physics.mechanics` includes two types of loads:
 :obj:`~sympy.physics.mechanics.loads.Force` and
 :obj:`~sympy.physics.mechanics.loads.Torque`. Forces represent bound vector
 quantities that act directed along a line of action and torques are unbound
@@ -226,12 +226,12 @@ Actuators
 Models of multibody systems commonly have time varying inputs in the form of
 the magnitudes of forces or torques. In many cases, these specified inputs may
 be derived from the state of the system or even from the output of another
-dynamic system. The :obj:`sympy.physics.mechanics.actuator` module includes
+dynamic system. The :obj:`~sympy.physics.mechanics.actuator` module includes
 classes to help manage the creation of such models of force and torque inputs.
 An actuator is intended to represent a real physical component. For example,
 the spring-damper force from above can be created by sub-classing
-:obj:`sympy.physics.mechanics.ActuatorBase` and developing a method that
-generates the loads associated with that spring-damper actuator.
+:obj:`~sympy.physics.mechanics.actuator.ActuatorBase` and developing a method
+that generates the loads associated with that spring-damper actuator.
 
 .. plot::
    :format: doctest
@@ -267,7 +267,7 @@ generates the loads associated with that spring-damper actuator.
    [Force(point=O, force=(c*x(t)*sign(x(t))*Derivative(x(t), t)/Abs(x(t)) + k*x(t))*N.x),
     Force(point=P, force=(-c*x(t)*sign(x(t))*Derivative(x(t), t)/Abs(x(t)) - k*x(t))*N.x)]
 
-There is also a :obj:`sympy.physics.mechanics.actuator.ForceActuator` that
+There is also a :obj:`~sympy.physics.mechanics.actuator.ForceActuator` that
 allows seamless integration with pathway objects. You only need to set the
 ``.force`` attribute in initialization in the sub-class.
 
@@ -357,7 +357,7 @@ this with :math:`e(t)` in any equation.
 e(t)
 
 SymPy provides the class
-:obj:`~sympy.physics.biomechanics.ZerothOrderActivation` in the
+:obj:`~sympy.physics.biomechanics.activation.ZerothOrderActivation` in the
 :obj:`~sympy.physics.biomechanics.activation` module. This class must be
 instantiated with a single argument, `name`, which associates a name with the
 instance. This name should be unique per instance.
@@ -376,11 +376,11 @@ e_zeroth(t)
 >>> actz.activation
 e_zeroth(t)
 
-:obj:`~sympy.physics.biomechanics.ZerothOrderActivation` subclasses
-:obj:`~sympy.physics.biomechanics.ActivationBase`, which provides a consistent
-interface for all concrete classes of activation dynamics. This includes a
-method to inspect the ordinary differential equation(s) associated with the
-model. As zeroth-order activation dynamics correspond to a zeroth-order
+:obj:`~sympy.physics.biomechanics.activation.ZerothOrderActivation` subclasses
+:obj:`~sympy.physics.biomechanics.activation.ActivationBase`, which provides a
+consistent interface for all concrete classes of activation dynamics. This
+includes a method to inspect the ordinary differential equation(s) associated
+with the model. As zeroth-order activation dynamics correspond to a zeroth-order
 ordinary differential equation, this returns an empty column matrix.
 
 >>> actz.rhs()
@@ -413,12 +413,12 @@ This first-order ordinary differential equation can then be used to propagate
 the state :math:`a(t)` under the input :math:`e(t)` in a simulation.
 
 Like before, SymPy provides the class
-:obj:`~sympy.physics.biomechanics.FirstOrderActivationDeGroote2016` in the
-:obj:`~sympy.physics.biomechanics.activation` module. This class is another
-subclass of :obj:`~sympy.physics.biomechanics.ActivationBase` and uses the
-model for first-order activation dynamics from [DeGroote2016]_ defined above.
-This class must be instantiated with four arguments: a name, and three
-sympifiable objects to represent the three constants :math:`\tau_a`,
+:obj:`~sympy.physics.biomechanics.activation.FirstOrderActivationDeGroote2016`
+in the :obj:`~sympy.physics.biomechanics.activation` module. This class is
+another subclass of :obj:`~sympy.physics.biomechanics.activation.ActivationBase`
+and uses the model for first-order activation dynamics from [DeGroote2016]_
+defined above. This class must be instantiated with four arguments: a name, and
+three sympifiable objects to represent the three constants :math:`\tau_a`,
 :math:`\tau_d`, and :math:`b`.
 
 >>> from sympy.physics.biomechanics import FirstOrderActivationDeGroote2016
@@ -518,8 +518,8 @@ c0*exp(c3*(-c1 + l_T(t)/l_T_slack)) - c2
 
 The :obj:`~sympy.physics.biomechanics` module in SymPy provides a class for
 this exact curve,
-:obj:`~sympy.physics.biomechanics.TendonForceLengthDeGroote2016`. It can be
-instantiated with five arguments. The first argument is :math:`\tilde{l}^T`,
+:obj:`~sympy.physics.biomechanics.curve.TendonForceLengthDeGroote2016`. It can
+be instantiated with five arguments. The first argument is :math:`\tilde{l}^T`,
 which need not necessarily be a symbol; it could be an expression. The further
 four arguments are all constants. It is intended that these will be constants,
 or sympifiable numerical values.
@@ -532,7 +532,8 @@ TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, c0, c1, c2, c3)
 
 This class is a subclass of :obj:`~sympy.core.function.Function` and so
 implements usual SymPy methods for substitution, evaluation, differentiation
-etc. The :obj:`~sympy.physics.biomechanics.TendonForceLengthDeGroote2016.doit`
+etc. The
+:obj:`~sympy.physics.biomechanics.curve.TendonForceLengthDeGroote2016.doit`
 method allows the equation of the curve to be accessed.
 
 >>> fl_T2.doit()
@@ -550,12 +551,13 @@ TendonForceLengthDeGroote2016(l_T(t)/l_T_slack, 0.2, 0.995, 0.25, 33.93669377311
 In the above the constants have been replaced with instances of SymPy numeric
 types like :obj:`~sympy.core.numbers.Float`.
 
-The :obj:`~sympy.physics.biomechanics.TendonForceLengthDeGroote2016` class also
-supports code generation, so seamlessly integrates with SymPy's code printers.
-To visualize this curve, we can use :obj:`~sympy.utilities.lambdify.lambdify` on
-an instance of the function, which will create a callable to evaluate it for a
-given value of :math:`\tilde{l}^T`. Sensible values for :math:`\tilde{l}^T` fall
-within the range :math:`[0.95, 1.05]`, which we will plot below.
+The :obj:`~sympy.physics.biomechanics.curve.TendonForceLengthDeGroote2016` class
+also supports code generation, so seamlessly integrates with SymPy's code
+printers. To visualize this curve, we can use
+:obj:`~sympy.utilities.lambdify.lambdify` on an instance of the function, which
+will create a callable to evaluate it for a given value of :math:`\tilde{l}^T`.
+Sensible values for :math:`\tilde{l}^T` fall within the range
+:math:`[0.95, 1.05]`, which we will plot below.
 
 .. plot::
    :format: doctest
@@ -588,11 +590,11 @@ value of :math:`fl^T\left(\tilde{l}^T\right)`.
    \tilde{l}^T = \left[fl^T\left(\tilde{l}^T\right)\right]^{-1} = \frac{\log{\frac{fl^T + c_2}{c_0}}}{c_3} + c_1
 
 There is also a class for this in :obj:`~sympy.physics.biomechanics`,
-:obj:`~sympy.physics.biomechanics.TendonForceLengthInverseDeGroote2016`, which
-behaves identically to
-:obj:`~sympy.physics.biomechanics.TendonForceLengthDeGroote2016`. It can be
-instantiated with five parameters, the first for :math:`fl^T` followed by four
-constants, or by using the alternate constructor with a single argument for
+:obj:`~sympy.physics.biomechanics.curve.TendonForceLengthInverseDeGroote2016`,
+which behaves identically to
+:obj:`~sympy.physics.biomechanics.curve.TendonForceLengthDeGroote2016`. It can
+be instantiated with five parameters, the first for :math:`fl^T` followed by
+four constants, or by using the alternate constructor with a single argument for
 :math:`fl^T`.
 
 >>> from sympy.physics.biomechanics import TendonForceLengthInverseDeGroote2016
@@ -657,11 +659,11 @@ Alternatively, we could define this in terms of :math:`l^M` and
 
 Again, the :obj:`~sympy.physics.biomechanics` module in SymPy provides a class
 for this exact curve,
-:obj:`~sympy.physics.biomechanics.FiberForceLengthPassiveDeGroote2016`. It can
-be instantiated with three arguments. The first argument is :math:`\tilde{l}^M`,
-which need not necessarily be a symbol and can be an expression. The further
-two arguments are both constants. It is intended that these will be constants,
-or sympifiable numerical values.
+:obj:`~sympy.physics.biomechanics.curve.FiberForceLengthPassiveDeGroote2016`. It
+can be instantiated with three arguments. The first argument is
+:math:`\tilde{l}^M`, which need not necessarily be a symbol and can be an
+expression. The further two arguments are both constants. It is intended that
+these will be constants, or sympifiable numerical values.
 
 >>> from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
 
@@ -712,7 +714,7 @@ from [DeGroote2016]_ is again analytically invertible.
   \tilde{l}^M = \left[fl^M_{pas}\right]^{-1} = \frac{c_0 \log{\left(\exp{c_1} - 1\right)fl^M_{pas} + 1}}{c_1} + 1
 
 There is also a class for this in :obj:`~sympy.physics.biomechanics`,
-:obj:`~sympy.physics.biomechanics.FiberForceLengthPassiveInverseDeGroote2016`.
+:obj:`~sympy.physics.biomechanics.curve.FiberForceLengthPassiveInverseDeGroote2016`.
 It can be instantiated with three parameters, the first for :math:`fl^M`
 followed by a pair of constants, or by using the alternate constructor with a
 single argument for :math:`\tilde{l}^M`.
@@ -761,8 +763,8 @@ To implement this in SymPy we need a time-varying dynamic symbol representing
 c0*exp(-(-c1 + l_M_tilde(t))**2/(2*(c2 + c3*l_M_tilde(t))**2)) + c4*exp(-(-c5 + l_M_tilde(t))**2/(2*(c6 + c7*l_M_tilde(t))**2)) + c8*exp(-(-c9 + l_M_tilde(t))**2/(2*(c10 + c11*l_M_tilde(t))**2))
 
 The SymPy-provided class for this exact curve is
-:obj:`~sympy.physics.biomechanics.FiberForceLengthActiveDeGroote2016`. It can
-be instantiated with thirteen arguments. The first argument is
+:obj:`~sympy.physics.biomechanics.curve.FiberForceLengthActiveDeGroote2016`. It
+can be instantiated with thirteen arguments. The first argument is
 :math:`\tilde{l}^M`, which need not necessarily be a symbol and can be an
 expression. The further twelve arguments are all constants. It is intended that
 these will be constants, or sympifiable numerical values.
@@ -858,7 +860,7 @@ Alternatively, we could define this in terms of :math:`v^M` and
 c0*log(c1*v_M(t)/v_M_max + c2 + sqrt((c1*v_M(t)/v_M_max + c2)**2 + 1)) + c3
 
 The SymPy-provided class for this exact curve is
-:obj:`~sympy.physics.biomechanics.FiberForceVelocityDeGroote2016`. It can
+:obj:`~sympy.physics.biomechanics.curve.FiberForceVelocityDeGroote2016`. It can
 be instantiated with five arguments. The first argument is :math:`\tilde{v}^M`,
 which need not necessarily be a symbol and can be an expression. The further
 four arguments are all constants. It is intended that these will be constants,
@@ -1016,9 +1018,9 @@ beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 +
 F_M_max*sqrt(1 - sin(alpha_opt)**2)*(beta*(-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)) + a(t)*FiberForceLengthActiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.814, 1.06, 0.162, 0.0633, 0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)*FiberForceVelocityDeGroote2016((-l_T_slack + l_MT(t))*v_MT(t)/(v_M_max*sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)), -0.318, -8.149, -0.374, 0.886) + FiberForceLengthPassiveDeGroote2016(sqrt(l_M_opt**2*sin(alpha_opt)**2 + (-l_T_slack + l_MT(t))**2)/l_M_opt, 0.6, 4.0))
 
 SymPy offers this implementation of rigid tendon dynamics in the
-:obj:`~sympy.physics.biomechanics.MusculotendonDeGroot2016` class, a full
-demonstration of which is shown below when we will construct a complete simple
-musculotendon model.
+:obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` class,
+a full demonstration of which is shown below when we will construct a complete
+simple musculotendon model.
 
 Elastic Tendon Dynamics
 -----------------------
@@ -1079,7 +1081,8 @@ to give fv^M\left(\tilde{v}^M\right):
 
    fv^M\left(\tilde{v}^M\right) = \frac{\tilde{F}^M - fl^M_{pas}\left(\tilde{l}^M\right)}{a \cdot fl^M_{act}\left(\tilde{l}^M\right)}
 
-Using the inverse fiber force-velocity curve, :math:`\left[fv^M\left(\tilde{v}^M\right)\right]^{-1}`, and differentiating
+Using the inverse fiber force-velocity curve,
+:math:`\left[fv^M\left(\tilde{v}^M\right)\right]^{-1}`, and differentiating
 :math:`\tilde{l}^M` with respect to time, we can finally write an equation for
 :math:`\frac{d \tilde{l}^M}{dt}`:
 
@@ -1096,8 +1099,8 @@ such the musculotendon dynamics must be enforced as a differential algebraic
 equation rather than an ordinary differential equation. The specifics of these
 types of formulation will not be discussed here, but the interested reader can
 refer to the docstrings of the
-:obj:`~sympy.physics.biomechanics.MusculotendonDeGroote2016` where they are
-implemented.
+:obj:`~sympy.physics.biomechanics.musculotendon.MusculotendonDeGroote2016` where
+they are implemented.
 
 A Simple Musculotendon Model
 ============================
@@ -1219,10 +1222,12 @@ The activation model has a state variable :math:`\mathbf{x}`, input variable
    Matrix(0, 1, [])
 
 Note that the return value for the constants parameters is empty. If we had
-instantiated :obj:`FirstOrderActivationDeGroote2016` normally then we would have
-had to supply three values for :math:`\tau_{a}`, :math:`\tau_{d}`, and `b`. If
-these had been :obj:`~sympy.core.symbol.Symbol` objects then these would have
-shown up in the returned :obj:`~sympy.matrix.Matrix`.
+instantiated
+:obj:`~sympy.physics.biomechanics.activation.FirstOrderActivationDeGroote2016`
+normally then we would have had to supply three values for :math:`\tau_{a}`,
+:math:`\tau_{d}`, and `b`. If these had been :obj:`~sympy.core.symbol.Symbol`
+objects then these would have shown up in the returned
+:obj:`~sympy.matrices.dense.MutableDenseMatrix`.
 
 These are associated with its first order differential equation :math:`\dot{a}
 = f(a, e, t)`:
