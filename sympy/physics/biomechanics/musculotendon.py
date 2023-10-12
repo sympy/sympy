@@ -914,7 +914,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        constants = [
+        musculotendon_constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
@@ -922,7 +922,14 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._alpha_opt,
             self._beta,
         ]
-        constants = [Matrix([c for c in constants if not c.is_number])]
+        musculotendon_constants = [
+            c for c in musculotendon_constants if not c.is_number
+        ]
+        constants = [
+            Matrix(musculotendon_constants)
+            if musculotendon_constants
+            else zeros(0, 1)
+        ]
         for child in self._child_objects:
             constants.append(child.constants)
         constants.append(self._curve_constants)
@@ -946,7 +953,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        constants = [
+        musculotendon_constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
@@ -954,7 +961,14 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._alpha_opt,
             self._beta,
         ]
-        constants = [Matrix([c for c in constants if not c.is_number])]
+        musculotendon_constants = [
+            c for c in musculotendon_constants if not c.is_number
+        ]
+        constants = [
+            Matrix(musculotendon_constants)
+            if musculotendon_constants
+            else zeros(0, 1)
+        ]
         for child in self._child_objects:
             constants.append(child.constants)
         constants.append(self._curve_constants)
