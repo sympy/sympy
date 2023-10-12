@@ -44,8 +44,8 @@ instance of :class:`~.System`. ::
    ...                   inertia=inertias[3])
    >>> system = System.from_newtonian(link1)
 
-Next, we also define the first three joints creating the open and add them to
-the system. ::
+Next, we also define the first three joints, which create the open loop pendulum, and
+add them to the system. ::
 
    >>> joint1 = PinJoint('J1', link1, link2, coordinates=q1, speeds=u1,
    ...                   parent_point=l1/2*link1.x,
