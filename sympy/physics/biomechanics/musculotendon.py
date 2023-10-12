@@ -280,9 +280,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         tendon_slack_length=None,
         peak_isometric_force=None,
         optimal_fiber_length=None,
-        v_M_max=Float('10.0'),
-        alpha_opt=Float('0.0'),
-        beta=Float('0.1'),
+        maximal_fiber_velocity=Float('10.0'),
+        optimal_pennation_angle=Float('0.0'),
+        fiber_damping_coefficient=Float('0.1'),
     ):
         r"""Recommended constructor that will use the published constants.
 
@@ -375,9 +375,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             tendon_slack_length=tendon_slack_length,
             peak_isometric_force=peak_isometric_force,
             optimal_fiber_length=optimal_fiber_length,
-            maximal_fiber_velocity=v_M_max,
-            optimal_pennation_angle=alpha_opt,
-            fiber_damping_coefficient=beta,
+            maximal_fiber_velocity=maximal_fiber_velocity,
+            optimal_pennation_angle=optimal_pennation_angle,
+            fiber_damping_coefficient=fiber_damping_coefficient,
             with_defaults=True,
         )
 
