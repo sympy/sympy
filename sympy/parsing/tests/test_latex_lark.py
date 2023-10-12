@@ -120,7 +120,7 @@ EVALUATED_FRACTION_EXPRESSION_PAIRS = [
     (r"\frac{a}{b}", a / b),
     (r"\dfrac{a}{b}", a / b),
     (r"\tfrac{a}{b}", a / b),
-    (r"\frac12", 1 / 2),
+    (r"\frac12", Rational(1, 2)),
     (r"\frac12y", y / 2),
     (r"\frac1234", 17),
     (r"\frac2{3}", Rational(2, 3)),
@@ -178,13 +178,11 @@ UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
     (r"\int^{b}_{a} x dx", Integral(_Mul(1, x), (x, a, b))),
     (r"\int_{f(a)}^{f(b)} f(z) dz", Integral(f(z), (z, f(a), f(b)))),
     (r"\int a + b + c dx", Integral(_Mul(1, _Add(_Add(a, b), c)), x)),
-    (r"\int \frac{dz}{z}", Integral(Pow(z, -1), z)),
-    (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
+    (r"\int \frac{dz}{z}", Integral(_Mul(1, _Mul(1, Pow(z, -1))), z)),
+    (r"\int \frac{3 dz}{z}", Integral(_Mul(1, _Mul(3, _Pow(z, -1))), z)),
     (r"\int \frac{1}{x} dx", Integral(_Mul(1, _Mul(1, Pow(x, -1))), x)),
     (r"\int \frac{1}{a} + \frac{1}{b} dx",
      Integral(_Mul(1, _Add(_Mul(1, _Pow(a, -1)), _Mul(1, Pow(b, -1)))), x)),
-    (r"\int \frac{3 \cdot d\theta}{\theta}",
-     Integral(3 * _Pow(theta, -1), theta)),
     (r"\int \frac{1}{x} + 1 dx", Integral(_Mul(1, _Add(_Mul(1, _Pow(x, -1)), 1)), x))
 ]
 
@@ -209,15 +207,13 @@ EVALUATED_INTEGRAL_EXPRESSION_PAIRS = [
     (r"\int \frac{3 dz}{z}", Integral(3 * Pow(z, -1), z)),
     (r"\int \frac{1}{x} dx", Integral(1 / x, x)),
     (r"\int \frac{1}{a} + \frac{1}{b} dx", Integral(1 / a + 1 / b, x)),
-    (r"\int \frac{3 \cdot d\theta}{\theta}",
-     Integral(3 * _Pow(theta, -1), theta)),
     (r"\int \frac{1}{x} + 1 dx", Integral(1 / x + 1, x))
 ]
 
 DERIVATIVE_EXPRESSION_PAIRS = [
     (r"\frac{d}{dx} x", Derivative(x, x)),
     (r"\frac{d}{dt} x", Derivative(x, t)),
-    (r"\frac{d}{dx} [ \tan x ]", Derivative(tan(x), x)),
+    (r"\frac{d}{dx} ( \tan x )", Derivative(tan(x), x)),
     (r"\frac{d f(x)}{dx}", Derivative(f(x), x)),
     (r"\frac{d\theta(x)}{dx}", Derivative(Function('theta')(x), x))
 ]
@@ -483,24 +479,31 @@ def test_power_expressions():
 
 
 def test_integral_expressions():
-    expected_failures = {14, 16, 17, 20}
+    expected_failures = {14}
     for i, (latex_str, sympy_expr) in enumerate(UNEVALUATED_INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
         with evaluate(False):
-            assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+            assert parse_latex_lark(latex_str) == sympy_expr, i
 
     for i, (latex_str, sympy_expr) in enumerate(EVALUATED_INTEGRAL_EXPRESSION_PAIRS):
         if i in expected_failures:
             continue
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
-# feature yet to be added
-@XFAIL
+
 def test_derivative_expressions():
-    for latex_str, sympy_expr in DERIVATIVE_EXPRESSION_PAIRS:
+    expected_failures = {3, 4}
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
         with evaluate(False):
             assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+    for i, (latex_str, sympy_expr) in enumerate(DERIVATIVE_EXPRESSION_PAIRS):
+        if i in expected_failures:
+            continue
+        assert parse_latex_lark(latex_str) == sympy_expr, latex_str
 
 
 def test_trigonometric_expressions():

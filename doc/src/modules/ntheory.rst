@@ -135,7 +135,11 @@ Ntheory Functions Reference
 
 .. module:: sympy.ntheory.primetest
 
+.. autofunction:: is_fermat_pseudoprime
+
 .. autofunction:: is_euler_pseudoprime
+
+.. autofunction:: is_euler_jacobi_pseudoprime
 
 .. autofunction:: is_square
 

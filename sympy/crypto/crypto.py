@@ -2384,7 +2384,7 @@ def lfsr_sequence(key, fill, n):
         s = s[1:k]
         x = sum([int(key[i]*s0[i]) for i in range(k)])
         s.append(F(x))
-    return L       # use [x.to_int() for x in L] for int version
+    return L       # use [int(x) for x in L] for int version
 
 
 def lfsr_autocorrelation(L, P, k):
@@ -2432,7 +2432,7 @@ def lfsr_autocorrelation(L, P, k):
     k = int(k)
     L0 = L[:P]     # slices makes a copy
     L1 = L0 + L0[:k]
-    L2 = [(-1)**(L1[i].to_int() + L1[i + k].to_int()) for i in range(P)]
+    L2 = [(-1)**(int(L1[i]) + int(L1[i + k])) for i in range(P)]
     tot = sum(L2)
     return Rational(tot, P)
 
@@ -2508,10 +2508,10 @@ def lfsr_connection_polynomial(s):
             r = min(L + 1, dC + 1)
             coeffsC = [C.subs(x, 0)] + [C.coeff(x**i)
                 for i in range(1, dC + 1)]
-            d = (s[N].to_int() + sum([coeffsC[i]*s[N - i].to_int()
+            d = (int(s[N]) + sum([coeffsC[i]*int(s[N - i])
                 for i in range(1, r)])) % p
         if L == 0:
-            d = s[N].to_int()*x**0
+            d = int(s[N])*x**0
         if d == 0:
             m += 1
             N += 1

@@ -36,6 +36,7 @@ z = symbols('z', nonzero=True)
 def test_piecewise1():
 
     # Test canonicalization
+    assert Piecewise((x, x < 1.)).has(1.0)  # doesn't get changed to x < 1
     assert unchanged(Piecewise, ExprCondPair(x, x < 1), ExprCondPair(0, True))
     assert Piecewise((x, x < 1), (0, True)) == Piecewise(ExprCondPair(x, x < 1),
                                                          ExprCondPair(0, True))
@@ -524,8 +525,8 @@ def test_piecewise_simplify():
 
     # coverage
     nan = Undefined
-    covered = Piecewise((1, x > 3), (2, x < 2), (3, x > 1))
-    assert covered.simplify().args  == covered.args
+    assert Piecewise((1, x > 3), (2, x < 2), (3, x > 1)).simplify(
+        )  == Piecewise((1, x > 3), (2, x < 2), (3, True))
     assert Piecewise((1, x < 2), (2, x < 1), (3, True)).simplify(
         ) == Piecewise((1, x < 2), (3, True))
     assert Piecewise((1, x > 2)).simplify() == Piecewise((1, x > 2),
@@ -544,6 +545,27 @@ def test_piecewise_simplify():
     assert Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)), (3, True)
         ).simplify() == Piecewise((1, x < 1), (2, (x >= 2) & (x <= 3)),
         (3, True))
+    # https://github.com/sympy/sympy/issues/25603
+    assert Piecewise((log(x), (x <= 5) & (x > 3)), (x, True)
+        ).simplify() == Piecewise((log(x), (x <= 5) & (x > 3)), (x, True))
+
+    assert Piecewise((1, (x >= 1) & (x < 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x < 3)), (
+        2, (x >= 3) & (x < 4)), (nan, True))
+    assert Piecewise((1, (x >= 1) & (x <= 3)), (2, (x > 2) & (x < 4))
+        ).simplify() == Piecewise((1, (x >= 1) & (x <= 3)), (
+        2, (x > 3) & (x < 4)), (nan, True))
+
+    # involves a symbolic range so cset.inf fails
+    L = Symbol('L', nonnegative=True)
+    p = Piecewise((nan, x <= 0), (0, (x >= 0) & (L > x) & (L - x <= 0)),
+        (x - L/2, (L > x) & (L - x <= 0)),
+        (L/2 - x, (x >= 0) & (L > x)),
+        (0, L > x), (nan, True))
+    assert p.simplify() == Piecewise(
+        (nan, x <= 0), (L/2 - x, L > x), (nan, True))
+    assert p.subs(L, y).simplify() == Piecewise(
+        (nan, x <= 0), (-x + y/2, x < Max(0, y)), (0, x < y), (nan, True))
 
 
 def test_piecewise_solve():

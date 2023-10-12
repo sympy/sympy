@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-from sympy.functions.elementary.complexes import im, Abs
+from sympy.functions.elementary.complexes import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
@@ -224,10 +224,12 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     """
     exact = True
     eqs = []
-    solution = S.Reals if exprs else S.EmptySet
+    solution = S.EmptySet  # add pieces for each group
     for _exprs in exprs:
+        if not _exprs:
+            continue
         _eqs = []
-
+        _sol = S.Reals
         for expr in _exprs:
             if isinstance(expr, tuple):
                 expr, rel = expr
@@ -261,10 +263,11 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             if not (domain.is_ZZ or domain.is_QQ):
                 expr = numer/denom
                 expr = Relational(expr, 0, rel)
-                solution &= solve_univariate_inequality(expr, gen, relational=False)
+                _sol &= solve_univariate_inequality(expr, gen, relational=False)
             else:
                 _eqs.append(((numer, denom), rel))
 
+        solution |= _sol
         if _eqs:
             eqs.append(_eqs)
 
@@ -592,11 +595,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             # If expr contains imaginary coefficients, only take real
             # values of x for which the imaginary part is 0
             make_real = S.Reals
-            if im(expanded_e) != S.Zero:
+            if (coeffI := expanded_e.coeff(S.ImaginaryUnit)) != S.Zero:
                 check = True
                 im_sol = FiniteSet()
                 try:
-                    a = solveset(im(expanded_e), gen, domain)
+                    a = solveset(coeffI, gen, domain)
                     if not isinstance(a, Interval):
                         for z in a:
                             if z not in singularities and valid(z) and z.is_extended_real:
@@ -665,7 +668,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             if valid(_pt(start, end)):
                 sol_sets.append(Interval.open(start, end))
 
-            if im(expanded_e) != S.Zero and check:
+            if coeffI != S.Zero and check:
                 rv = (make_real).intersect(_domain)
             else:
                 rv = Intersection(

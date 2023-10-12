@@ -396,7 +396,7 @@ def _compute_test_factor(p, gens, ZK):
     # predicts that such an element must exist, so nullspace should
     # be non-trivial.
     x = B.nullspace()[0, :].transpose()
-    beta = ZK.parent(ZK.matrix * x, denom=ZK.denom)
+    beta = ZK.parent(ZK.matrix * x.convert_to(ZZ), denom=ZK.denom)
     return beta
 
 
@@ -684,7 +684,7 @@ def _prime_decomp_split_ideal(I, p, N, G, ZK):
     U, V, g = m1.gcdex(m2)
     # Sanity check: theory says m is squarefree, so m1, m2 should be coprime:
     assert g == 1
-    E = list(reversed(Poly(U * m1, domain=ZZ).rep.rep))
+    E = list(reversed(Poly(U * m1, domain=ZZ).rep.to_list()))
     eps1 = sum(E[i]*alpha_powers[i] for i in range(len(E)))
     eps2 = 1 - eps1
     idemps = [eps1, eps2]

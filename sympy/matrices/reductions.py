@@ -294,7 +294,8 @@ def _rref_dm(dM):
 
 def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
         normalize_last=True):
-    """Return reduced row-echelon form of matrix and indices of pivot vars.
+    """Return reduced row-echelon form of matrix and indices
+    of pivot vars.
 
     Parameters
     ==========
@@ -341,7 +342,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     ``iszerofunc`` can correct rounding errors in matrices with float
     values. In the following example, calling ``rref()`` leads to
     floating point errors, incorrectly row reducing the matrix.
-    ``iszerofunc= lambda x: abs(x)<1e-9`` sets sufficiently small numbers
+    ``iszerofunc= lambda x: abs(x) < 1e-9`` sets sufficiently small numbers
     to zero, avoiding this error.
 
     >>> m = Matrix([[0.9, -0.1, -0.2, 0], [-0.8, 0.9, -0.4, 0], [-0.1, -0.8, 0.6, 0]])
@@ -362,7 +363,7 @@ def _rref(M, iszerofunc=_iszero, simplify=False, pivots=True,
     The default value of ``normalize_last=True`` can provide significant
     speedup to row reduction, especially on matrices with symbols.  However,
     if you depend on the form row reduction algorithm leaves entries
-    of the matrix, set ``noramlize_last=False``
+    of the matrix, set ``normalize_last=False``
     """
     # Try to use DomainMatrix for ZZ or QQ
     dM = _to_DM_ZZ_QQ(M)

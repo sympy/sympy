@@ -1068,11 +1068,13 @@ def dmp_rr_prs_gcd(f, g, u, K):
     h = dmp_subresultants(F, G, u, K)[-1]
     c, _, _ = dmp_rr_prs_gcd(fc, gc, u - 1, K)
 
-    if K.is_negative(dmp_ground_LC(h, u, K)):
-        h = dmp_neg(h, u, K)
-
     _, h = dmp_primitive(h, u, K)
     h = dmp_mul_term(h, c, 0, u, K)
+
+    unit = K.canonical_unit(dmp_ground_LC(h, u, K))
+
+    if unit != K.one:
+        h = dmp_mul_ground(h, unit, u, K)
 
     cff = dmp_quo(f, h, u, K)
     cfg = dmp_quo(g, h, u, K)
@@ -1197,7 +1199,7 @@ def dup_zz_heu_gcd(f, g, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dup_LC(f, K)),
-                  g_norm // abs(dup_LC(g, K))) + 2)
+                  g_norm // abs(dup_LC(g, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dup_eval(f, x, K)
@@ -1322,7 +1324,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
 
     x = max(min(B, 99*K.sqrt(B)),
             2*min(f_norm // abs(dmp_ground_LC(f, u, K)),
-                  g_norm // abs(dmp_ground_LC(g, u, K))) + 2)
+                  g_norm // abs(dmp_ground_LC(g, u, K))) + 4)
 
     for i in range(0, HEU_GCD_MAX):
         ff = dmp_eval(f, x, u, K)
@@ -1639,6 +1641,9 @@ def dup_rr_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
+    if not f or not g:
+        return dmp_zero(0)
+
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)
 
@@ -1647,7 +1652,9 @@ def dup_rr_lcm(f, g, K):
     h = dup_quo(dup_mul(f, g, K),
                 dup_gcd(f, g, K), K)
 
-    return dup_mul_ground(h, c, K)
+    u = K.canonical_unit(dup_LC(h, K))
+
+    return dup_mul_ground(h, c*u, K)
 
 
 def dup_ff_lcm(f, g, K):
