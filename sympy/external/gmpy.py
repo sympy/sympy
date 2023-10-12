@@ -16,6 +16,7 @@ from .ntheory import (
     sqrtrem as python_sqrtrem,
     gcd as python_gcd,
     lcm as python_lcm,
+    gcdext as python_gcdext,
     is_square as python_is_square,
     invert as python_invert,
     legendre as python_legendre,
@@ -60,6 +61,7 @@ __all__ = [
     'sqrtrem',
     'gcd',
     'lcm',
+    'gcdext',
     'invert',
     'legendre',
     'jacobi',
@@ -162,6 +164,7 @@ if GROUND_TYPES == 'gmpy':
     sqrtrem = gmpy.isqrt_rem
     gcd = gmpy.gcd
     lcm = gmpy.lcm
+    gcdext = gmpy.gcdext
     invert = gmpy.invert
     legendre = gmpy.legendre
     jacobi = gmpy.jacobi
@@ -208,6 +211,7 @@ elif GROUND_TYPES == 'flint':
     def lcm(*args):
         return reduce(flint.fmpz.lcm, args, flint.fmpz(1))
 
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
 
@@ -245,6 +249,7 @@ elif GROUND_TYPES == 'python':
     sqrtrem = python_sqrtrem
     gcd = python_gcd
     lcm = python_lcm
+    gcdext = python_gcdext
     invert = python_invert
     legendre = python_legendre
     jacobi = python_jacobi
