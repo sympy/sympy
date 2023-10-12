@@ -2,7 +2,7 @@ import pytest
 
 import sympy as sm
 import sympy.physics.mechanics as me
-import sympy.physics._biomechanics as bm
+import sympy.physics.biomechanics as bm
 from sympy.external import import_module
 
 
