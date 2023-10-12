@@ -43,18 +43,26 @@ def unify(K0, K1):
 
 def test_Domain_unify():
     F3 = GF(3)
+    F5 = GF(5)
 
     assert unify(F3, F3) == F3
-    assert unify(F3, ZZ) == ZZ
-    assert unify(F3, QQ) == QQ
-    assert unify(F3, ALG) == ALG
-    assert unify(F3, RR) == RR
-    assert unify(F3, CC) == CC
-    assert unify(F3, ZZ[x]) == ZZ[x]
-    assert unify(F3, ZZ.frac_field(x)) == ZZ.frac_field(x)
-    assert unify(F3, EX) == EX
+    raises(UnificationFailed, lambda: unify(F3, ZZ))
+    raises(UnificationFailed, lambda: unify(F3, QQ))
+    raises(UnificationFailed, lambda: unify(F3, ZZ_I))
+    raises(UnificationFailed, lambda: unify(F3, QQ_I))
+    raises(UnificationFailed, lambda: unify(F3, ALG))
+    raises(UnificationFailed, lambda: unify(F3, RR))
+    raises(UnificationFailed, lambda: unify(F3, CC))
+    raises(UnificationFailed, lambda: unify(F3, ZZ[x]))
+    raises(UnificationFailed, lambda: unify(F3, ZZ.frac_field(x)))
+    raises(UnificationFailed, lambda: unify(F3, EX))
 
-    assert unify(ZZ, F3) == ZZ
+    assert unify(F5, F5) == F5
+    raises(UnificationFailed, lambda: unify(F5, F3))
+    raises(UnificationFailed, lambda: unify(F5, F3[x]))
+    raises(UnificationFailed, lambda: unify(F5, F3.frac_field(x)))
+
+    raises(UnificationFailed, lambda: unify(ZZ, F3))
     assert unify(ZZ, ZZ) == ZZ
     assert unify(ZZ, QQ) == QQ
     assert unify(ZZ, ALG) == ALG
@@ -64,7 +72,7 @@ def test_Domain_unify():
     assert unify(ZZ, ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ, EX) == EX
 
-    assert unify(QQ, F3) == QQ
+    raises(UnificationFailed, lambda: unify(QQ, F3))
     assert unify(QQ, ZZ) == QQ
     assert unify(QQ, QQ) == QQ
     assert unify(QQ, ALG) == ALG
@@ -74,7 +82,7 @@ def test_Domain_unify():
     assert unify(QQ, ZZ.frac_field(x)) == QQ.frac_field(x)
     assert unify(QQ, EX) == EX
 
-    assert unify(ZZ_I, F3) == ZZ_I
+    raises(UnificationFailed, lambda: unify(ZZ_I, F3))
     assert unify(ZZ_I, ZZ) == ZZ_I
     assert unify(ZZ_I, ZZ_I) == ZZ_I
     assert unify(ZZ_I, QQ) == QQ_I
@@ -87,7 +95,7 @@ def test_Domain_unify():
     assert unify(ZZ_I, ZZ_I.frac_field(x)) == ZZ_I.frac_field(x)
     assert unify(ZZ_I, EX) == EX
 
-    assert unify(QQ_I, F3) == QQ_I
+    raises(UnificationFailed, lambda: unify(QQ_I, F3))
     assert unify(QQ_I, ZZ) == QQ_I
     assert unify(QQ_I, ZZ_I) == QQ_I
     assert unify(QQ_I, QQ) == QQ_I
@@ -104,7 +112,7 @@ def test_Domain_unify():
     assert unify(QQ_I, QQ_I.frac_field(x)) == QQ_I.frac_field(x)
     assert unify(QQ_I, EX) == EX
 
-    assert unify(RR, F3) == RR
+    raises(UnificationFailed, lambda: unify(RR, F3))
     assert unify(RR, ZZ) == RR
     assert unify(RR, QQ) == RR
     assert unify(RR, ALG) == RR
@@ -115,7 +123,7 @@ def test_Domain_unify():
     assert unify(RR, EX) == EX
     assert RR[x].unify(ZZ.frac_field(y)) == RR.frac_field(x, y)
 
-    assert unify(CC, F3) == CC
+    raises(UnificationFailed, lambda: unify(CC, F3))
     assert unify(CC, ZZ) == CC
     assert unify(CC, QQ) == CC
     assert unify(CC, ALG) == CC
@@ -125,7 +133,7 @@ def test_Domain_unify():
     assert unify(CC, ZZ.frac_field(x)) == CC.frac_field(x)
     assert unify(CC, EX) == EX
 
-    assert unify(ZZ[x], F3) == ZZ[x]
+    raises(UnificationFailed, lambda: unify(ZZ[x], F3))
     assert unify(ZZ[x], ZZ) == ZZ[x]
     assert unify(ZZ[x], QQ) == QQ[x]
     assert unify(ZZ[x], ALG) == ALG[x]
@@ -135,7 +143,7 @@ def test_Domain_unify():
     assert unify(ZZ[x], ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ[x], EX) == EX
 
-    assert unify(ZZ.frac_field(x), F3) == ZZ.frac_field(x)
+    raises(UnificationFailed, lambda: unify(ZZ.frac_field(x), F3))
     assert unify(ZZ.frac_field(x), ZZ) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), QQ) == QQ.frac_field(x)
     assert unify(ZZ.frac_field(x), ALG) == ALG.frac_field(x)
@@ -145,7 +153,7 @@ def test_Domain_unify():
     assert unify(ZZ.frac_field(x), ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(ZZ.frac_field(x), EX) == EX
 
-    assert unify(EX, F3) == EX
+    raises(UnificationFailed, lambda: unify(EX, F3))
     assert unify(EX, ZZ) == EX
     assert unify(EX, QQ) == EX
     assert unify(EX, ALG) == EX
@@ -559,6 +567,8 @@ def test_Domain_get_exact():
     assert ZZ.get_exact() == ZZ
     assert QQ.get_exact() == QQ
     assert RR.get_exact() == QQ
+    # XXX: This should also be like RR:
+    # assert CC.get_exact() == QQ_I
     assert ALG.get_exact() == ALG
     assert ZZ[x].get_exact() == ZZ[x]
     assert QQ[x].get_exact() == QQ[x]
@@ -568,6 +578,17 @@ def test_Domain_get_exact():
     assert QQ.frac_field(x).get_exact() == QQ.frac_field(x)
     assert ZZ.frac_field(x, y).get_exact() == ZZ.frac_field(x, y)
     assert QQ.frac_field(x, y).get_exact() == QQ.frac_field(x, y)
+
+
+def test_Domain_characteristic():
+    for F, c in [(FF(3), 3), (FF(5), 5), (FF(7), 7)]:
+        for R in F, F[x], F.frac_field(x), F.old_poly_ring(x), F.old_frac_field(x):
+            assert R.has_CharacteristicZero is False
+            assert R.characteristic() == c
+    for D in ZZ, QQ, ZZ_I, QQ_I, ALG:
+        for R in D, D[x], D.frac_field(x), D.old_poly_ring(x), D.old_frac_field(x):
+            assert R.has_CharacteristicZero is True
+            assert R.characteristic() == 0
 
 
 def test_Domain_is_unit():

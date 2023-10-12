@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy.core.backend import Integer, acos, pi, sqrt, sympify, tan
+from sympy import Integer, acos, pi, sqrt, sympify, tan
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel

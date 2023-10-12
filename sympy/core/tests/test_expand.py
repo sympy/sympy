@@ -4,12 +4,14 @@ from sympy.core.numbers import (I, Rational as R, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.series.order import O
 from sympy.simplify.radsimp import expand_numer
-from sympy.core.function import expand, expand_multinomial, expand_power_base
+from sympy.core.function import (expand, expand_multinomial,
+    expand_power_base, expand_log)
 
 from sympy.testing.pytest import raises
 from sympy.core.random import verify_numerically
@@ -322,6 +324,10 @@ def test_expand_log():
     t = Symbol('t', positive=True)
     # after first expansion, -2*log(2) + log(4); then 0 after second
     assert expand(log(t**2) - log(t**2/4) - 2*log(2)) == 0
+    assert expand_log(log(7*6)/log(6)) == 1 + log(7)/log(6)
+    b = factorial(10)
+    assert expand_log(log(7*b**4)/log(b)
+        ) == 4 + log(7)/log(b)
 
 
 def test_issue_23952():

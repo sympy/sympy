@@ -2460,10 +2460,10 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_regular'))
-                                  /    6    4    2    \
-                                  |   x    x    x     |
-              /  4    2    \   C1*|- --- + -- - -- + 1|
-              | x    x     |      \  720   24   2     /    / 6\
+                                  /   6     4    2    \
+                                  |  x     x    x     |
+              / 4     2    \   C1*|- --- + -- - -- + 1|
+              |x     x     |      \  720   24   2     /    / 6\
     f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
               \120   6     /              x
 

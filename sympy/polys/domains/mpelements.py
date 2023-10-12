@@ -125,6 +125,11 @@ class MPContext(PythonMPContext):
     def to_rational(ctx, s, limit=True):
         p, q = to_rational(s._mpf_)
 
+        # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
+        # to_rational() function returns a gmpy2.mpz instance and if MPQ is
+        # flint.fmpq then MPQ(p, q) will fail.
+        p = int(p)
+
         if not limit or q <= ctx.max_denom:
             return p, q
 

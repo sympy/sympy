@@ -176,6 +176,26 @@ class MatrixReductions(MatrixDeterminant):
     def rank(self, iszerofunc=_iszero, simplify=False):
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
+    def rref_rhs(self, rhs):
+        """Return reduced row-echelon form of matrix, matrix showing
+        rhs after reduction steps. ``rhs`` must have the same number
+        of rows as ``self``.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, symbols
+        >>> r1, r2 = symbols('r1 r2')
+        >>> Matrix([[1, 1], [2, 1]]).rref_rhs(Matrix([r1, r2]))
+        (Matrix([
+        [1, 0],
+        [0, 1]]), Matrix([
+        [ -r1 + r2],
+        [2*r1 - r2]]))
+        """
+        r, _ = _rref(self.hstack(self, self.eye(self.rows), rhs))
+        return r[:, :self.cols], r[:, -rhs.cols:]
+
     def rref(self, iszerofunc=_iszero, simplify=False, pivots=True,
             normalize_last=True):
         return _rref(self, iszerofunc=iszerofunc, simplify=simplify,
@@ -449,7 +469,7 @@ class MatrixEigen(MatrixSubspaces):
 class MatrixCalculus(MatrixCommon):
     """Provides calculus-related matrix operations."""
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args, evaluate=True, **kwargs):
         """Calculate the derivative of each element in the matrix.
 
         Examples
@@ -471,12 +491,11 @@ class MatrixCalculus(MatrixCommon):
         """
         # XXX this should be handled here rather than in Derivative
         from sympy.tensor.array.array_derivatives import ArrayDerivative
-        kwargs.setdefault('evaluate', True)
-        deriv = ArrayDerivative(self, *args, evaluate=True)
-        if not isinstance(self, Basic):
+        deriv = ArrayDerivative(self, *args, evaluate=evaluate)
+        # XXX This can rather changed to always return immutable matrix
+        if not isinstance(self, Basic) and evaluate:
             return deriv.as_mutable()
-        else:
-            return deriv
+        return deriv
 
     def _eval_derivative(self, arg):
         return self.applyfunc(lambda x: x.diff(arg))
