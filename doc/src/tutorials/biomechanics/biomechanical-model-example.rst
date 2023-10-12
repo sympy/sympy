@@ -258,7 +258,7 @@ matching class:
    :context: close-figs
    :nofigs:
 
-   >>> biceps = bm.MusculotendonDeGroote2016('biceps', biceps_pathway, biceps_activation)
+   >>> biceps = bm.MusculotendonDeGroote2016.with_defaults('biceps', biceps_pathway, biceps_activation)
 
 Triceps
 -------
@@ -423,7 +423,7 @@ actuator model in the same fashion as the biceps:
 
    >>> triceps_pathway = ExtensorPathway(Cm, Dm, P3, B.y, -C.z, D.z, r, q4)
    >>> triceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('triceps')
-   >>> triceps = bm.MusculotendonDeGroote2016('triceps', triceps_pathway, triceps_activation)
+   >>> triceps = bm.MusculotendonDeGroote2016.with_defaults('triceps', triceps_pathway, triceps_activation)
 
 Lastly, all of the loads can be assembled into one list:
 
@@ -488,7 +488,7 @@ They also contain new constant parameters associated with the muscle models:
    :nofigs:
 
    >>> kane.forcing.free_symbols
-   {F_M_max_biceps, F_M_max_triceps, alpha_opt_biceps, alpha_opt_triceps, beta_biceps, beta_triceps, c, g, k, lA, lC, lD, l_M_opt_biceps, l_M_opt_triceps, l_T_slack_biceps, l_T_slack_triceps, mC, mD, r, t, v_M_max_biceps, v_M_max_triceps}
+   {F_M_max_biceps, F_M_max_triceps, c, g, k, lA, lC, lD, l_M_opt_biceps, l_M_opt_triceps, l_T_slack_biceps, l_T_slack_triceps, mC, mD, r, t}
 
 Muscle Activation Differential Equations
 ========================================
@@ -504,7 +504,7 @@ accessed from the muscle actuator models:
    :nofigs:
 
    >>> biceps.rhs()
-   Matrix([[(-0.5625*a_biceps(t)**3*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.5625*a_biceps(t)**3 + 0.5625*a_biceps(t)**2*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.5625*a_biceps(t)**2*e_biceps(t) - 0.375*a_biceps(t)**2*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 0.375*a_biceps(t)**2 + 0.375*a_biceps(t)*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 0.375*a_biceps(t)*e_biceps(t) + 0.9375*a_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) - 1.0625*a_biceps(t) - 0.9375*e_biceps(t)*tanh(10*a_biceps(t) - 10*e_biceps(t)) + 1.0625*e_biceps(t))/(0.045*a_biceps(t) + 0.015)]])
+   Matrix([[((1/2 - tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2)/(0.0225*a_biceps(t) + 0.0075) + 16.6666666666667*(3*a_biceps(t)/2 + 1/2)*(tanh(10.0*a_biceps(t) - 10.0*e_biceps(t))/2 + 1/2))*(-a_biceps(t) + e_biceps(t))]])
 
 .. plot::
    :format: doctest
@@ -513,7 +513,7 @@ accessed from the muscle actuator models:
    :nofigs:
 
    >>> triceps.rhs()
-   Matrix([[(-0.5625*a_triceps(t)**3*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.5625*a_triceps(t)**3 + 0.5625*a_triceps(t)**2*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.5625*a_triceps(t)**2*e_triceps(t) - 0.375*a_triceps(t)**2*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 0.375*a_triceps(t)**2 + 0.375*a_triceps(t)*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 0.375*a_triceps(t)*e_triceps(t) + 0.9375*a_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) - 1.0625*a_triceps(t) - 0.9375*e_triceps(t)*tanh(10*a_triceps(t) - 10*e_triceps(t)) + 1.0625*e_triceps(t))/(0.045*a_triceps(t) + 0.015)]])
+   Matrix([[((1/2 - tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2)/(0.0225*a_triceps(t) + 0.0075) + 16.6666666666667*(3*a_triceps(t)/2 + 1/2)*(tanh(10.0*a_triceps(t) - 10.0*e_triceps(t))/2 + 1/2))*(-a_triceps(t) + e_triceps(t))]])
 
 Store the muscle activation differential equations together in a matrix:
 
@@ -621,15 +621,9 @@ muscles.
    ...     biceps.F_M_max,
    ...     biceps.l_M_opt,
    ...     biceps.l_T_slack,
-   ...     biceps.v_M_max,
-   ...     biceps.alpha_opt,
-   ...     biceps.beta,
    ...     triceps.F_M_max,
    ...     triceps.l_M_opt,
    ...     triceps.l_T_slack,
-   ...     triceps.v_M_max,
-   ...     triceps.alpha_opt,
-   ...     triceps.beta,
    ... ])
    ...
    >>> p
@@ -650,15 +644,9 @@ muscles.
    [   F_M_max_biceps],
    [   l_M_opt_biceps],
    [ l_T_slack_biceps],
-   [   v_M_max_biceps],
-   [ alpha_opt_biceps],
-   [      beta_biceps],
    [  F_M_max_triceps],
    [  l_M_opt_triceps],
-   [l_T_slack_triceps],
-   [  v_M_max_triceps],
-   [alpha_opt_triceps],
-   [     beta_triceps]])
+   [l_T_slack_triceps]])
 
 Now we have all the symbolic components to generate numerical functions to
 evaluate :math:`\mathbf{M}_d,\mathbf{g}_d` and :math:`\mathbf{g}_a`. With these
@@ -703,15 +691,9 @@ We need some reasonable numerical values for all the constants:
    ...     500.0,  # biceps F_M_max [?]
    ...     0.6*0.3,  # biceps l_M_opt [?]
    ...     0.55*0.3,  # biceps l_T_slack [?]
-   ...     10.0,  # biceps v_M_max [?]
-   ...     0.0,  # biceps alpha_opt [?]
-   ...     0.1,  # biceps beta [?]
    ...     500.0,  # triceps F_M_max [?]
    ...     0.6*0.3,  # triceps l_M_opt [?]
    ...     0.65*0.3,  # triceps l_T_slack [?]
-   ...     10.0,  # triceps v_M_max [?]
-   ...     0.0,  # triceps alpha_opt [?]
-   ...     0.1,  # triceps beta [?]
    ... ])
    ...
 
