@@ -921,6 +921,31 @@ Sensible values for :math:`\tilde{v}^M` fall within the range
    >>> _ = ax.set_xlabel('Normalized fiber velocity')
    >>> _ = ax.set_ylabel('Normalized fiber force-velocity')
 
+The inverse of the fiber force-velocity characteristic curve is sometimes
+required when formulating musculotendon dynamics. The equation for this curve
+from [DeGroote2016]_ is again analytically invertible.
+
+.. math::
+
+  \tilde{v}^M = \left[fv^M\right]^{-1} = \frac{\sinh{\frac{fv^M - c_3}{c_0}} - c_2}{c_1}
+
+There is also a class for this in :obj:`~sympy.physics.biomechanics`,
+:obj:`~sympy.physics.biomechanics.curve.FiberForceVelocityInverseDeGroote2016`.
+It can be instantiated with five parameters, the first for :math:`fv^M`
+followed by four constants, or by using the alternate constructor with a
+single argument for :math:`\tilde{v}^M`.
+
+>>> from sympy.physics.biomechanics import FiberForceVelocityInverseDeGroote2016
+
+>>> fv_M_sym = me.dynamicsymbols('fv_M')
+>>> fv_M_inv = FiberForceVelocityInverseDeGroote2016(fv_M_sym, c0, c1, c2, c3)
+>>> fv_M_inv
+FiberForceVelocityInverseDeGroote2016(fv_M(t), c0, c1, c2, c3)
+
+>>> fv_M_inv2 = FiberForceVelocityInverseDeGroote2016.with_defaults(fv_M_sym)
+>>> fv_M_inv2
+FiberForceVelocityInverseDeGroote2016(fv_M(t), -0.318, -8.149, -0.374, 0.886)
+
 Fiber Damping
 -------------
 
