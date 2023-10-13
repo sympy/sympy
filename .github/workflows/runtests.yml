@@ -181,7 +181,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.8']
+        python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.9']
 
     name: ${{ matrix.python-version }} Optional Dendendencies
 
@@ -364,7 +364,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
         group: [1, 2, 3, 4]
 
     name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
@@ -388,7 +388,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.8']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
     name: ${{ matrix.python-version }} Doctests
     steps:
       - uses: actions/checkout@v3
