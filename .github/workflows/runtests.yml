@@ -199,18 +199,18 @@ jobs:
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
+      - run: pip install numpy numexpr matplotlib ipython cython aesara \
                          wurlitzer autowrap lxml lark z3-solver pycosat        \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
       # Not available in pypy or cpython 3.12 (yet).
       - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.12') }}
-        run: pip install llvmlite numba
+        run: pip install llvmlite numba gmpy2 symengine pymc
 
       # These are not available for pypy
       - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc libclang
+        run: pip install jax jaxlib libclang scipy
 
       # Test external imports
       - run: bin/test_external_imports.py
