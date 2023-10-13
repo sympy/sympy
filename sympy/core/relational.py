@@ -648,11 +648,11 @@ class Equality(Relational):
         >>> from sympy import Eq, Add
         >>> from sympy.abc import b, x
         >>> eq = Eq(x + b, x - b)
-        >>> eq.rewrite(Add)
+        >>> eq.rewrite(Add)  #doctest: +SKIP
         2*b
-        >>> eq.rewrite(Add, evaluate=None).args
+        >>> eq.rewrite(Add, evaluate=None).args  #doctest: +SKIP
         (b, b, x, -x)
-        >>> eq.rewrite(Add, evaluate=False).args
+        >>> eq.rewrite(Add, evaluate=False).args  #doctest: +SKIP
         (b, x, b, -x)
         """
         sympy_deprecation_warning("""

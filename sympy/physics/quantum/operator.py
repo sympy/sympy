@@ -170,6 +170,9 @@ class Operator(QExpr):
     def _apply_operator(self, ket, **options):
         return dispatch_method(self, '_apply_operator', ket, **options)
 
+    def _apply_from_right_to(self, bra, **options):
+        return None
+
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
 

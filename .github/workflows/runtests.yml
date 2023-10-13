@@ -202,7 +202,7 @@ jobs:
 
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml lark z3-solver                       \
+                         wurlitzer autowrap lxml lark z3-solver pycosat        \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
@@ -241,12 +241,18 @@ jobs:
         env:
           SYMPY_GROUND_TYPES: flint
       - run: bin/doctest                                  \
-                    sympy/polys                           \
-                    sympy/ntheory                         \
+                    sympy/integrals                       \
+                    sympy/holonomic                       \
                     sympy/matrices                        \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/ntheory.rst           \
+                    sympy/ntheory                         \
+                    sympy/polys                           \
+                    sympy/printing                        \
+                    doc/src/modules/integrals             \
+                    doc/src/modules/holonomic             \
                     doc/src/modules/matrices              \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/printing.rst          \
                     doc/src/tutorials/intro-tutorial/     \
         env:
           SYMPY_GROUND_TYPES: flint
@@ -271,12 +277,18 @@ jobs:
         env:
           SYMPY_GROUND_TYPES: flint
       - run: bin/doctest                                  \
-                    sympy/polys                           \
-                    sympy/ntheory                         \
+                    sympy/integrals                       \
+                    sympy/holonomic                       \
                     sympy/matrices                        \
-                    doc/src/modules/polys                 \
-                    doc/src/modules/ntheory.rst           \
+                    sympy/ntheory                         \
+                    sympy/polys                           \
+                    sympy/printing                        \
+                    doc/src/modules/integrals             \
+                    doc/src/modules/holonomic             \
                     doc/src/modules/matrices              \
+                    doc/src/modules/ntheory.rst           \
+                    doc/src/modules/polys                 \
+                    doc/src/modules/printing.rst          \
                     doc/src/tutorials/intro-tutorial/     \
         env:
           SYMPY_GROUND_TYPES: flint

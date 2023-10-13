@@ -50,6 +50,34 @@ def bit_scan0(x, n=0):
     return bit_scan1(x + (1 << n), n)
 
 
+def remove(x, f):
+    if f < 2:
+        raise ValueError("factor must be > 1")
+    if x == 0:
+        return 0, 0
+    if f == 2:
+        b = bit_scan1(x)
+        return x >> b, b
+    m = 0
+    y, rem = divmod(x, f)
+    while not rem:
+        x = y
+        m += 1
+        if m > 5:
+            pow_list = [f**2]
+            while pow_list:
+                _f = pow_list[-1]
+                y, rem = divmod(x, _f)
+                if not rem:
+                    m += 1 << len(pow_list)
+                    x = y
+                    pow_list.append(_f**2)
+                else:
+                    pow_list.pop()
+        y, rem = divmod(x, f)
+    return x, m
+
+
 def factorial(x):
     """Return x!."""
     return int(mlib.ifac(int(x)))
@@ -86,6 +114,33 @@ else:
         if 0 in args:
             return 0
         return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+
+
+def _sign(n):
+    if n < 0:
+        return -1, -n
+    return 1, n
+
+
+def gcdext(a, b):
+    if not a or not b:
+        g = abs(a) or abs(b)
+        if not g:
+            return (0, 0, 0)
+        return (g, a // g, b // g)
+
+    x_sign, a = _sign(a)
+    y_sign, b = _sign(b)
+    x, r = 1, 0
+    y, s = 0, 1
+
+    while b:
+        q, c = divmod(a, b)
+        a, b = b, c
+        x, r = r, x - q*r
+        y, s = s, y - q*s
+
+    return (a, x * x_sign, y * y_sign)
 
 
 def is_square(x):

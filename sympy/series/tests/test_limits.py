@@ -1322,6 +1322,7 @@ def test_issue_25230():
     assert limit(Mod(x, c), x, n*c, '+') == c
     assert limit(Mod(x, c), x, n*c, '-') == 0
 
+
 def test_issue_25681():
     x = Symbol('x')
     expr = x/abs(sqrt(x**2 - 1))
@@ -1329,3 +1330,14 @@ def test_issue_25681():
     assert limit(expr, x, -1, '-') == -oo
     assert limit(expr, x, 1, '-') == oo
     assert limit(expr, x, -1, '+') == -oo
+
+
+def test_issue_25582():
+
+    assert limit(asin(exp(x)), x, oo, '-') == -oo*I
+    assert limit(acos(exp(x)), x, oo, '-') == oo*I
+    assert limit(atan(exp(x)), x, oo, '-') == pi/2
+    assert limit(acot(exp(x)), x, oo, '-') == 0
+    assert limit(asec(exp(x)), x, oo, '-') == pi/2
+    assert limit(acsc(exp(x)), x, oo, '-') == 0
+

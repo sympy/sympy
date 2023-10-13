@@ -1890,7 +1890,10 @@ class Poly(Basic):
         j = f._gen_to_level(gen)
 
         if hasattr(f.rep, 'degree'):
-            return f.rep.degree(j)
+            d = f.rep.degree(j)
+            if d < 0:
+                d = S.NegativeInfinity
+            return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
@@ -6092,12 +6095,12 @@ def _sorted_factors(factors, method):
     if method == 'sqf':
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
-            rep = poly.rep.rep
+            rep = poly.rep.to_list()
             return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
@@ -6589,7 +6592,7 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
             raise MultivariatePolynomialError
 
         for i, poly in enumerate(polys):
-            polys[i] = poly.rep.rep
+            polys[i] = poly.rep.to_list()
 
         if eps is not None:
             eps = opt.domain.convert(eps)
