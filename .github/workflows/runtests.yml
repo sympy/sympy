@@ -206,7 +206,7 @@ jobs:
                          #
 
       # Not available in CPython 3.12 (yet).
-      - if: ! contains(matrix.python-version, '3.12') }}
+      - if: {{ ! contains(matrix.python-version, '3.12') }}
         run: pip install llvmlite numba gmpy2 symengine pymc
 
       # Test external imports
