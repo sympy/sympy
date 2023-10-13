@@ -5,9 +5,9 @@ Introduction to Biomechanical Modeling
 ======================================
 
 :obj:`sympy.physics.biomechanics` provides features to enhance models created
-with :obj:`sympy.physics.mechanics` with force producing elements that model
+using :obj:`sympy.physics.mechanics` with force producing elements that model
 muscles and tendons. In this tutorial, we will introduce the features of this
-package.
+module.
 
 The initial primary purpose of the biomechanics package is to introduce tools
 for modeling the forces produced by `Hill-type muscle models`_. These models
@@ -22,7 +22,7 @@ then demonstrate it in operation with a specific implementation, the
 Loads
 =====
 
-:obj:`~sympy.physics.mechanics` includes two types of loads:
+:obj:`sympy.physics.mechanics` includes two types of loads:
 :obj:`~sympy.physics.mechanics.loads.Force` and
 :obj:`~sympy.physics.mechanics.loads.Torque`. Forces represent bound vector
 quantities that act directed along a line of action and torques are unbound
@@ -82,10 +82,10 @@ tutorial.
 Pathways
 ========
 
-Muscles and their associated tendons wrap around the moving skeletal system and
-other muscles and organs. This imposes the challenge of determining the lines
-of action of the forces that the muscle and tendon produce on the skeleton and
-organs it touches. We have introduced the
+Muscles and their associated tendons wrap around the moving skeletal system, as
+well as other muscles and organs. This imposes the challenge of determining the
+lines of action of the forces that the muscle and tendon produce on the
+skeleton and organs it touches. We have introduced the
 :obj:`~sympy.physics.mechanics.pathway` module to help manage the specification
 of the geometric relationships to the forces' lines of action.
 
@@ -136,7 +136,7 @@ pathway is an :obj:`~sympy.physics.mechanics.pathway.ObstacleSetPathway`. You
 can specify any number of intermediate points between the two pathway endpoints
 which the actuation path of the forces will follow along. For example, if we
 introduce two points fixed in :math:`N` then the force will act along a set of
-linear segments connecting :math:`O` to :math:`Q` to :math:`R`: then to
+linear segments connecting :math:`O` to :math:`Q` to :math:`R` then to
 :math:`P`. Each of the four points will experience resultant forces. For
 simplicity we show the effect of only the spring force.
 
@@ -230,7 +230,7 @@ dynamic system. The :obj:`~sympy.physics.mechanics.actuator` module includes
 classes to help manage the creation of such models of force and torque inputs.
 An actuator is intended to represent a real physical component. For example,
 the spring-damper force from above can be created by sub-classing
-:obj:`~sympy.physics.mechanics.actuator.ActuatorBase` and developing a method
+:obj:`~sympy.physics.mechanics.actuator.ActuatorBase` and implementing a method
 that generates the loads associated with that spring-damper actuator.
 
 .. plot::
@@ -244,6 +244,7 @@ that generates the loads associated with that spring-damper actuator.
    >>> P.set_pos(O, x*N.x)
 
    >>> class SpringDamper(me.ActuatorBase):
+   ...
    ...     # positive x spring is in tension
    ...     # negative x spring is in compression
    ...     def __init__(self, P1, P2, spring_constant, damper_constant):
@@ -251,6 +252,7 @@ that generates the loads associated with that spring-damper actuator.
    ...         self.P2 = P2
    ...         self.k = spring_constant
    ...         self.c = damper_constant
+   ...
    ...     def to_loads(self):
    ...         x = self.P2.pos_from(self.P1).magnitude()
    ...         v = x.diff(me.dynamicsymbols._t)
@@ -278,6 +280,7 @@ allows seamless integration with pathway objects. You only need to set the
    :nofigs:
 
    >>> class SpringDamper(me.ForceActuator):
+   ...
    ...     # positive x spring is in tension
    ...     # negative x spring is in compression
    ...     def __init__(self, pathway, spring_constant, damper_constant):
@@ -851,7 +854,7 @@ The equation for the fiber force-velocity curve
 
 .. math::
 
-   fv^M\left(\tilde{v}^M\right) = c_0 \log{\left(c1 \tilde{v}^M + c2\right) + \sqrt{\left(c1 \tilde{v}^M + c2\right)^2 + 1}} + c3
+   fv^M\left(\tilde{v}^M\right) = c_0 \log{\left(c_1 \tilde{v}^M + c_2\right) + \sqrt{\left(c_1 \tilde{v}^M + c_2\right)^2 + 1}} + c_3
 
 Similarly to before, to implement this in SymPy we need a time-varying dynamic
 symbol representing :math:`\tilde{v}^M` and four symbols representing the four

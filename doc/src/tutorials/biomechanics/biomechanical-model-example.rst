@@ -4,8 +4,8 @@
 Biomechanical Model Example
 ===========================
 
-:obj:`~sympy.physics.biomechanics` provides features to enhance models created
-with :obj:`~sympy.physics.mechanics` with force producing elements that model
+:obj:`sympy.physics.biomechanics` provides features to enhance models created
+with :obj:`sympy.physics.mechanics` with force producing elements that model
 muscles and tendons. In this tutorial, we will introduce the features of this
 package by adding muscles to a simple model of a human arm that moves a lever.
 
