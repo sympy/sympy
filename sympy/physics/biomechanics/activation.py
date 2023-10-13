@@ -496,7 +496,7 @@ class ZerothOrderActivation(ActivationBase):
 
 
 class FirstOrderActivationDeGroote2016(ActivationBase):
-    r"""First-order activation dynamics based on De Groote et al., 2016 [1].
+    r"""First-order activation dynamics based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========

@@ -1069,13 +1069,13 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
 
 class MusculotendonDeGroote2016(MusculotendonBase):
-    r"""Musculotendon model using the curves of De Groote et al., 2016 [1].
+    r"""Musculotendon model using the curves of De Groote et al., 2016 [1]_.
 
     Examples
     ========
 
     This class models the musculotendon actuator parametrized by the
-    characteristic curves described in De Groote et al., 2016 [1]. Like all
+    characteristic curves described in De Groote et al., 2016 [1]_. Like all
     musculotendon models in SymPy's biomechanics module, it requires a pathway
     to define its line of action. We'll begin by creating a simple
     ``LinearPathway`` between two points that our musculotendon will follow.
