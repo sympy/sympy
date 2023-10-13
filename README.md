@@ -11,7 +11,6 @@
 
 [![SymPy Banner](https://github.com/sympy/sympy/raw/master/banner.svg)](https://sympy.org/)
 
-
 See the [AUTHORS](AUTHORS) file for the list of authors.
 
 And many more people helped on the SymPy mailing list, reported bugs,
@@ -20,7 +19,7 @@ Google Highly Open Participation Contest, Google Code-In, wrote and
 blogged about SymPy...
 
 License: New BSD License (see the [LICENSE](LICENSE) file for details) covers all
-files in the sympy repository unless stated otherwise.
+files in the SymPy repository unless stated otherwise.
 
 Our mailing list is at
 <https://groups.google.com/forum/?fromgroups#!forum/sympy>.
@@ -37,7 +36,7 @@ The recommended installation method is through Anaconda,
 You can also get the latest version of SymPy from
 <https://pypi.python.org/pypi/sympy/>
 
-To get the git version do
+To get the Git version, do
 
     $ git clone https://github.com/sympy/sympy.git
 
@@ -59,8 +58,8 @@ SymPy by:
     $ cd doc
     $ make html
 
-Then the docs will be in <span class="title-ref">\_build/html</span>. If
-you don't want to read that, here is a short usage:
+Then the docs will be in `_build/html`. If you don't want to read that,
+here is a short usage:
 
 From this directory, start Python and:
 
@@ -133,35 +132,11 @@ To execute all tests, run:
 in the current directory.
 
 For the more fine-grained running of tests or doctests, use `bin/test`
-or respectively `bin/doctest`. The master branch is automatically tested
+or respectively `bin/doctest`. The `master` branch is automatically tested
 by GitHub Actions.
 
 To test pull requests, use
 [sympy-bot](https://github.com/sympy/sympy-bot).
-
-## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
-
-The parser and lexer were generated with the [ANTLR4](http://antlr4.org)
-toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
-Presently, most users should not need to regenerate these files, but
-if you plan to work on this feature, you will need the `antlr4`
-command-line tool (and you must ensure that it is in your `PATH`).
-One way to get it is:
-
-    $ conda install -c conda-forge antlr=4.11.1
-
-Alternatively, follow the instructions on the ANTLR website and download
-the `antlr-4.11.1-complete.jar`. Then export the `CLASSPATH` as instructed
-and instead of creating `antlr4` as an alias, make it an executable file
-with the following contents:
-``` bash
-#!/bin/bash
-java -jar /usr/local/lib/antlr-4.11.1-complete.jar "$@"
-```
-
-After making changes to `sympy/parsing/latex/LaTeX.g4`, run:
-
-    $ ./setup.py antlr
 
 ## Clean
 
