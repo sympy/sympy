@@ -181,7 +181,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.9']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
 
     name: ${{ matrix.python-version }} Optional Dendendencies
 
@@ -199,18 +199,15 @@ jobs:
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install numpy numexpr matplotlib ipython cython \
-                         wurlitzer autowrap lxml lark z3-solver pycosat        \
+      - run: pip install numpy numexpr matplotlib ipython cython          \
+                         wurlitzer autowrap lxml ylark z3-solver pycosat  \
+                         jax jaxlib libclang scipy aesara                 \
                          'antlr4-python3-runtime==4.11.*'
                          #
 
-      # Not available in pypy or cpython 3.12 (yet).
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.12') }}
+      # Not available in CPython 3.12 (yet).
+      - if: ! contains(matrix.python-version, '3.12') }}
         run: pip install llvmlite numba gmpy2 symengine pymc
-
-      # These are not available for pypy
-      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install jax jaxlib libclang scipy aesara
 
       # Test external imports
       - run: bin/test_external_imports.py
