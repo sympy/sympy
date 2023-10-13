@@ -455,7 +455,13 @@ modeled as an element in series with muscle fibers, which are in turn modeled as
 three elements in parallel: an elastic element, a contractile element, and a
 damper.
 
-.. TODO : make and include diagram of the four-element model.
+.. _fig-hill_type_muscle_model:
+.. figure:: hill-type-muscle-model.png
+
+   Schematic showing the four-element Hill-type muscle model. :math:`SE` is the
+   series element representing the tendon, :math:`CE` is the contractile
+   element, :math:`EE` is the parallel element representing the elasticity of
+   the muscle fibers, and :math:`DE` is the damper.
 
 Each of these components typically has a characteristic curve describing it. The
 following sub-sections will describe and implement the characteristic curves
