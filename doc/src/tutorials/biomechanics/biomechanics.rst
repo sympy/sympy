@@ -1439,7 +1439,7 @@ Set the excitation to 1.0 and test the numerical functions:
    ... ])
    ...
    >>> eval_eom(x_vals, r_vals, p_vals)
-   (0.0, 7.817106179880225, 92.30769105034034)
+   (0.0, 7.817106179880225, 92.30769105034035)
    >>> eval_force(x_vals, p_vals)
    -0.9964469100598874
 
