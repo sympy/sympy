@@ -436,14 +436,23 @@ Matrix([[((1/2 - tanh(b*(-a_first(t) + e_first(t)))/2)*(3*a_first(t)/2 + 1/2)/ta
 
 You can also instantiate the class with the suggested values for each of the
 constants. These are: :math:`\tau_a = 0.015`, :math:`\tau_d = 0.060`, and
-:math:`b = 10`.
+:math:`b = 10.0`.
 
 >>> actf2 = FirstOrderActivationDeGroote2016.with_defaults('first')
 >>> actf2.rhs()
 Matrix([[((1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(0.0225*a_first(t) + 0.0075) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
->>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Integer(10)}
+>>> constants = {tau_a: sm.Float('0.015'), tau_d: sm.Float('0.060'), b: sm.Float('10.0')}
 >>> actf.rhs().subs(constants)
-Matrix([[(66.6666666666667*(1/2 - tanh(10*a_first(t) - 10*e_first(t))/2)/(3*a_first(t)/2 + 1/2) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10*a_first(t) - 10*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
+Matrix([[(66.6666666666667*(1/2 - tanh(10.0*a_first(t) - 10.0*e_first(t))/2)/(3*a_first(t)/2 + 1/2) + 16.6666666666667*(3*a_first(t)/2 + 1/2)*(tanh(10.0*a_first(t) - 10.0*e_first(t))/2 + 1/2))*(-a_first(t) + e_first(t))]])
+
+Custom
+------
+
+To create your own custom models of activation dynamics, you can subclass
+:obj:`~sympy.physics.biomechanics.activation.ActivationBase` and override the
+abstract methods. The concrete class will then conform to the expected API and
+integrate automatically with the rest of :obj:`sympy.physics.mechanics` and
+:obj:`sympy.physics.biomechanics`.
 
 Musculotendon Curves
 ====================
