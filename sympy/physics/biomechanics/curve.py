@@ -544,7 +544,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``FiberForceLengthPassiveDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
@@ -959,9 +959,9 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
 
     The function is defined by the equation:
 
-    $fl^M_{act} = c_0 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{\left(c_2 + c_3 \tilde{l}^M\right)}\right)^2}
-        + c_4 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{\left(c_6 + c_7 \tilde{l}^M\right)}\right)^2}
-        + c_8 \exp{-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{\left(c_{10} + c_{11} \tilde{l}^M\right)}\right)^2}$
+    $f_{\text{act}}^M = c_0 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_1}{c_2 + c_3 \tilde{l}^M}\right)^2\right)
+    + c_4 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_5}{c_6 + c_7 \tilde{l}^M}\right)^2\right)
+    + c_8 \exp\left(-\frac{1}{2}\left(\frac{\tilde{l}^M - c_9}{c_{10} + c_{11} \tilde{l}^M}\right)^2\right)$
 
     with constant values of $c0 = 0.814$, $c1 = 1.06$, $c2 = 0.162$,
     $c3 = 0.0633$, $c4 = 0.433$, $c5 = 0.717$, $c6 = -0.0299$, $c7 = 0.2$,
@@ -977,7 +977,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``FiberForceLengthActiveDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
@@ -1299,8 +1299,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
     The function is defined by the equation:
 
-    $fv^M = c_0 \log{\left(c_1 v_M_tilde + c_2\right)
-        + \sqrt{\left(c_1 v_M_tilde + c_2\right)^2 + 1}} + c_3
+    $fv^M = c_0 \log{\left(c_1 \tilde{v}_m + c_2\right) + \sqrt{\left(c_1 \tilde{v}_m + c_2\right)^2 + 1}} + c_3$
 
     with constant values of $c_0 = -0.318$, $c_1 = -8.149$, $c_2 = -0.374$, and
     $c_3 = 0.886$.
