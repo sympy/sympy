@@ -125,10 +125,14 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
+    name: Tests ${{ matrix.group }}/4
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -145,11 +149,14 @@ jobs:
 
     runs-on: ubuntu-20.04
     timeout-minutes: 75
-    continue-on-error: true
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
+    name: Pyodide ${{ matrix.group }}/4
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -170,12 +177,14 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', 'pypy3.8']
-    name: ${{ matrix.python-version }} Optional Dendencies
+
+    name: ${{ matrix.python-version }} Optional Dendendencies
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -330,10 +339,12 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -349,13 +360,15 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.8']
         group: [1, 2, 3, 4]
+
     name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
