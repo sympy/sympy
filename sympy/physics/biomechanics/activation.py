@@ -496,7 +496,7 @@ class ZerothOrderActivation(ActivationBase):
 
 
 class FirstOrderActivationDeGroote2016(ActivationBase):
-    r"""First-order activation dynamics based on De Groote et al., 2016 [1].
+    r"""First-order activation dynamics based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -771,7 +771,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """
         constants = [self._tau_a, self._tau_d, self._b]
         symbolic_constants = [c for c in constants if not c.is_number]
-        return Matrix(symbolic_constants)
+        return Matrix(symbolic_constants) if symbolic_constants else zeros(0, 1)
 
     @property
     def p(self):
@@ -793,7 +793,7 @@ class FirstOrderActivationDeGroote2016(ActivationBase):
         """
         constants = [self._tau_a, self._tau_d, self._b]
         symbolic_constants = [c for c in constants if not c.is_number]
-        return Matrix(symbolic_constants)
+        return Matrix(symbolic_constants) if symbolic_constants else zeros(0, 1)
 
     @property
     def M(self):
