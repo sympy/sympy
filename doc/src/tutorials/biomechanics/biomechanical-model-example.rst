@@ -246,9 +246,6 @@ specific tuned numerical parameters from [DeGroote2016]_ like so (recommended):
 
    >>> biceps_activation = bm.FirstOrderActivationDeGroote2016.with_defaults('biceps')
 
-TODO : There does not seem to be a ``__str__`` for this object with any useful
-information.
-
 The full musculotendon actuator model is then named and constructed with a
 matching class:
 
