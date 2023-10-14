@@ -362,7 +362,7 @@ e(t)
 SymPy provides the class
 :obj:`~sympy.physics.biomechanics.activation.ZerothOrderActivation` in the
 :obj:`~sympy.physics.biomechanics.activation` module. This class must be
-instantiated with a single argument, `name`, which associates a name with the
+instantiated with a single argument, ``name``, which associates a name with the
 instance. This name should be unique per instance.
 
 >>> from sympy.physics.biomechanics import ZerothOrderActivation
@@ -1110,7 +1110,7 @@ the muscle fiber force equation:
 
    \tilde{F}^M = a \cdot fl^M_{act}\left(\tilde{l}^M\right) \cdot fv^M\left(\tilde{v}^M\right) + fl^M_{pas}\left(\tilde{l}^M\right) + \beta \cdot \tilde{v}^M
 
-to give fv^M\left(\tilde{v}^M\right):
+to give :math:`fv^M\left(\tilde{v}^M\right)`:
 
 .. math::
 
