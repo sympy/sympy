@@ -73,7 +73,7 @@ class CharacteristicCurveFunction(Function):
 
 
 class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
-    r"""Tendon force-length curve based on De Groote et al., 2016 [1].
+    r"""Tendon force-length curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -303,7 +303,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
 
 
 class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
-    r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1].
+    r"""Inverse tendon force-length curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -523,7 +523,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     r"""Passive muscle fiber force-length curve based on De Groote et al., 2016
-    [1].
+    [1]_.
 
     Explanation
     ===========
@@ -741,7 +741,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     r"""Inverse passive muscle fiber force-length curve based on De Groote et
-    al., 2016 [1].
+    al., 2016 [1]_.
 
     Explanation
     ===========
@@ -952,7 +952,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     r"""Active muscle fiber force-length curve based on De Groote et al., 2016
-    [1].
+    [1]_.
 
     Explanation
     ===========
@@ -1289,7 +1289,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
 
 
 class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
-    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1].
+    r"""Muscle fiber force-velocity curve based on De Groote et al., 2016 [1]_.
 
     Explanation
     ===========
@@ -1523,7 +1523,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
 
 class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     r"""Inverse muscle fiber force-velocity curve based on De Groote et al.,
-    2016 [1].
+    2016 [1]_.
 
     Explanation
     ===========

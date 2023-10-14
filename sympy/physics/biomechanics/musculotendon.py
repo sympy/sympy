@@ -79,6 +79,22 @@ class MusculotendonFormulation(IntEnum):
     FIBER_LENGTH_IMPLICIT = 3
     TENDON_FORCE_IMPLICIT = 4
 
+    def __str__(self):
+        """Returns a string representation of the enumeration value.
+
+        Notes
+        =====
+
+        This hard coding is required due to an incompatibility between the
+        ``IntEnum`` implementations in Python 3.10 and Python 3.11
+        (https://github.com/python/cpython/issues/84247). From Python 3.11
+        onwards, the ``__str__`` method uses ``int.__str__``, whereas prior it
+        used ``Enum.__str__``. Once Python 3.11 becomes the minimum version
+        supported by SymPy, this method override can be removed.
+
+        """
+        return str(self.value)
+
 
 _DEFAULT_MUSCULOTENDON_FORMULATION = MusculotendonFormulation.RIGID_TENDON
 
@@ -264,9 +280,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         tendon_slack_length=None,
         peak_isometric_force=None,
         optimal_fiber_length=None,
-        v_M_max=Float('10.0'),
-        alpha_opt=Float('0.0'),
-        beta=Float('0.1'),
+        maximal_fiber_velocity=Float('10.0'),
+        optimal_pennation_angle=Float('0.0'),
+        fiber_damping_coefficient=Float('0.1'),
     ):
         r"""Recommended constructor that will use the published constants.
 
@@ -359,9 +375,9 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             tendon_slack_length=tendon_slack_length,
             peak_isometric_force=peak_isometric_force,
             optimal_fiber_length=optimal_fiber_length,
-            maximal_fiber_velocity=v_M_max,
-            optimal_pennation_angle=alpha_opt,
-            fiber_damping_coefficient=beta,
+            maximal_fiber_velocity=maximal_fiber_velocity,
+            optimal_pennation_angle=optimal_pennation_angle,
+            fiber_damping_coefficient=fiber_damping_coefficient,
             with_defaults=True,
         )
 
@@ -898,7 +914,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``p`` can also be used to access the same attribute.
 
         """
-        constants = [
+        musculotendon_constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
@@ -906,7 +922,14 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._alpha_opt,
             self._beta,
         ]
-        constants = [Matrix([c for c in constants if not c.is_number])]
+        musculotendon_constants = [
+            c for c in musculotendon_constants if not c.is_number
+        ]
+        constants = [
+            Matrix(musculotendon_constants)
+            if musculotendon_constants
+            else zeros(0, 1)
+        ]
         for child in self._child_objects:
             constants.append(child.constants)
         constants.append(self._curve_constants)
@@ -930,7 +953,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         The alias ``constants`` can also be used to access the same attribute.
 
         """
-        constants = [
+        musculotendon_constants = [
             self._l_T_slack,
             self._F_M_max,
             self._l_M_opt,
@@ -938,7 +961,14 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
             self._alpha_opt,
             self._beta,
         ]
-        constants = [Matrix([c for c in constants if not c.is_number])]
+        musculotendon_constants = [
+            c for c in musculotendon_constants if not c.is_number
+        ]
+        constants = [
+            Matrix(musculotendon_constants)
+            if musculotendon_constants
+            else zeros(0, 1)
+        ]
         for child in self._child_objects:
             constants.append(child.constants)
         constants.append(self._curve_constants)
@@ -1039,13 +1069,13 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
 
 
 class MusculotendonDeGroote2016(MusculotendonBase):
-    r"""Musculotendon model using the curves of De Groote et al., 2016 [1].
+    r"""Musculotendon model using the curves of De Groote et al., 2016 [1]_.
 
     Examples
     ========
 
     This class models the musculotendon actuator parametrized by the
-    characteristic curves described in De Groote et al., 2016 [1]. Like all
+    characteristic curves described in De Groote et al., 2016 [1]_. Like all
     musculotendon models in SymPy's biomechanics module, it requires a pathway
     to define its line of action. We'll begin by creating a simple
     ``LinearPathway`` between two points that our musculotendon will follow.
