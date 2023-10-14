@@ -400,10 +400,8 @@ ordinary differential equation:
 
 .. math::
 
-   \begin{align*}
-      \frac{da}{dt} &= \left( \frac{1}{\tau_a \left(1 + 3a(t)\right)} (1 + 2f) + \frac{1 + 3a(t)}{4\tau_d} (1 - 2f) \right) \left(e(t) - a(t) \right) \\
-      f &= \frac{1}{2} \tanh{\left(b \left(e(t) -a(t)\right)\right)}
-   \end{align*}
+   \frac{da}{dt} &= \left( \frac{1}{\tau_a \left(1 + 3a(t)\right)} (1 + 2f) + \frac{1 + 3a(t)}{4\tau_d} (1 - 2f) \right) \left(e(t) - a(t) \right) \\
+   f &= \frac{1}{2} \tanh{\left(b \left(e(t) -a(t)\right)\right)}
 
 where :math:`\tau_a` is the time constant for activation, :math:`\tau_d` is the
 time constant for deactivation, and :math:`b` is a smoothing coefficient.
@@ -1084,11 +1082,9 @@ available as a know value due to it being a state variable.
 
 .. math::
 
-   \begin{align}
-      l^M &= \tilde{l}^M \cdot l^M_{opt} \\
-      l^T &= l^{MT} - \sqrt{\left(l^M\right)^2 - \left(l^M_{opt} \sin{\alpha_{opt}}\right)^2} \\
-      \tilde{l}^T &= \frac{l^T}{l^T_{slack}}
-   \end{align}
+   l^M &= \tilde{l}^M \cdot l^M_{opt} \\
+   l^T &= l^{MT} - \sqrt{\left(l^M\right)^2 - \left(l^M_{opt} \sin{\alpha_{opt}}\right)^2} \\
+   \tilde{l}^T &= \frac{l^T}{l^T_{slack}}
 
 Using :math:`\tilde{l}^T` and the tendon force-length curve
 (:math:`fl^T\left(\tilde{l}^T\right)`), we can write an equation for the
@@ -1096,20 +1092,16 @@ normalized and absolte tendon force:
 
 .. math::
 
-   \begin{align}
-      \tilde{F}^T &= fl^T\left(\tilde{l}^T\right) \\
-      F^T &= F^M_{max} \cdot \tilde{F}^T
-   \end{align}
+   \tilde{F}^T &= fl^T\left(\tilde{l}^T\right) \\
+   F^T &= F^M_{max} \cdot \tilde{F}^T
 
 To express :math:`F^M` we need to know the cosine of the pennation angle
 (:math:`\cos{\alpha}`). We can use trigonometry to write an equation for this:
 
 .. math::
 
-   \begin{align}
-      \cos{\alpha} &= \frac{l^{MT} - l^T}{l^M} \\
-      F^M &= \frac{F^T}{\cos{\alpha}}
-   \end{align}
+   \cos{\alpha} &= \frac{l^{MT} - l^T}{l^M} \\
+   F^M &= \frac{F^T}{\cos{\alpha}}
 
 If we assume that the damping coefficient :math:`\beta = 0`, we can rearrange
 the muscle fiber force equation:
