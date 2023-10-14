@@ -98,7 +98,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``TendonForceLengthDeGroote2016`` is using
-    the ``with_defaults`` constructor because this will automatically
+    the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon length. We'll create a
@@ -134,7 +134,7 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     33.93669377311689)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -329,7 +329,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``TendonForceLengthInverseDeGroote2016`` is
-    using the ``with_defaults`` constructor because this will automatically
+    using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon force-length, which is
@@ -353,7 +353,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     TendonForceLengthInverseDeGroote2016(fl_T, c0, c1, c2, c3)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -578,7 +578,7 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     FiberForceLengthPassiveDeGroote2016(l_M/l_M_opt, 0.6, 4.0)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -768,7 +768,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
 
     The preferred way to instantiate
     ``FiberForceLengthPassiveInverseDeGroote2016`` is using the
-    ``with_defaults`` constructor because this will automatically populate the
+    :meth:`~.with_defaults` constructor because this will automatically populate the
     constants within the characteristic curve equation with the floating point
     values from the original publication. This constructor takes a single
     argument corresponding to the normalized passive muscle fiber length-force
@@ -791,7 +791,7 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     FiberForceLengthPassiveInverseDeGroote2016(fl_M_pas, c0, c1)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -1015,7 +1015,7 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     0.433, 0.717, -0.0299, 0.2, 0.1, 1.0, 0.354, 0.0)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -1314,7 +1314,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``FiberForceVelocityDeGroote2016`` is using
-    the ``with_defaults`` constructor because this will automatically populate
+    the :meth:`~.with_defaults` constructor because this will automatically populate
     the constants within the characteristic curve equation with the floating
     point values from the original publication. This constructor takes a single
     argument corresponding to normalized muscle fiber extension velocity. We'll
@@ -1348,7 +1348,7 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     FiberForceVelocityDeGroote2016(v_M/v_M_max, -0.318, -8.149, -0.374, 0.886)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
@@ -1548,7 +1548,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate ``FiberForceVelocityInverseDeGroote2016``
-    is using the ``with_defaults`` constructor because this will automatically
+    is using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber force-velocity
@@ -1571,7 +1571,7 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     FiberForceVelocityInverseDeGroote2016(fv_M, c0, c1, c2, c3)
 
     To inspect the actual symbolic expression that this function represents,
-    we can call the ``doit`` method on an instance. We'll use the keyword
+    we can call the :meth:`~.doit` method on an instance. We'll use the keyword
     argument ``evaluate=False`` as this will keep the expression in its
     canonical form and won't simplify any constants.
 
