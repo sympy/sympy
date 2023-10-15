@@ -333,7 +333,7 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon force-length, which is
-    equal to the tendon force. We'll create a :class:`~.Symbol`` called ``fl_T`` to
+    equal to the tendon force. We'll create a :class:`~.Symbol` called ``fl_T`` to
     represent this.
 
     >>> from sympy import Symbol
