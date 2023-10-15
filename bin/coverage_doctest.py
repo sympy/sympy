@@ -65,7 +65,7 @@ def print_header(name, underline=None, color=None):
 
     print()
     if color:
-        print("%s%s%s" % (c_color % colors[color], name, c_normal))
+        print(f"{c_color % colors[color]}{name}{c_normal})")
     else:
         print(name)
     if underline and not color:
