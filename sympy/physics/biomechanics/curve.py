@@ -97,12 +97,12 @@ class TendonForceLengthDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``TendonForceLengthDeGroote2016`` is using
+    The preferred way to instantiate :class:`TendonForceLengthDeGroote2016` is using
     the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon length. We'll create a
-    ``Symbol`` called ``l_T_tilde`` to represent this.
+    :class:`~.Symbol` called ``l_T_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import TendonForceLengthDeGroote2016
@@ -328,12 +328,12 @@ class TendonForceLengthInverseDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``TendonForceLengthInverseDeGroote2016`` is
+    The preferred way to instantiate :class:`TendonForceLengthInverseDeGroote2016` is
     using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized tendon force-length, which is
-    equal to the tendon force. We'll create a ``Symbol`` called ``fl_T`` to
+    equal to the tendon force. We'll create a :class:`~.Symbol`` called ``fl_T`` to
     represent this.
 
     >>> from sympy import Symbol
@@ -543,12 +543,12 @@ class FiberForceLengthPassiveDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceLengthPassiveDeGroote2016`` is
+    The preferred way to instantiate :class:`FiberForceLengthPassiveDeGroote2016` is
     using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
-    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceLengthPassiveDeGroote2016
@@ -767,12 +767,12 @@ class FiberForceLengthPassiveInverseDeGroote2016(CharacteristicCurveFunction):
     ========
 
     The preferred way to instantiate
-    ``FiberForceLengthPassiveInverseDeGroote2016`` is using the
+    :class:`FiberForceLengthPassiveInverseDeGroote2016` is using the
     :meth:`~.with_defaults` constructor because this will automatically populate the
     constants within the characteristic curve equation with the floating point
     values from the original publication. This constructor takes a single
     argument corresponding to the normalized passive muscle fiber length-force
-    component of the muscle fiber force. We'll create a ``Symbol`` called
+    component of the muscle fiber force. We'll create a :class:`~.Symbol` called
     ``fl_M_pas`` to represent this.
 
     >>> from sympy import Symbol
@@ -976,12 +976,12 @@ class FiberForceLengthActiveDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceLengthActiveDeGroote2016`` is
+    The preferred way to instantiate :class:`FiberForceLengthActiveDeGroote2016` is
     using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber length. We'll
-    create a ``Symbol`` called ``l_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``l_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceLengthActiveDeGroote2016
@@ -1313,12 +1313,12 @@ class FiberForceVelocityDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceVelocityDeGroote2016`` is using
+    The preferred way to instantiate :class:`FiberForceVelocityDeGroote2016` is using
     the :meth:`~.with_defaults` constructor because this will automatically populate
     the constants within the characteristic curve equation with the floating
     point values from the original publication. This constructor takes a single
     argument corresponding to normalized muscle fiber extension velocity. We'll
-    create a ``Symbol`` called ``v_M_tilde`` to represent this.
+    create a :class:`~.Symbol` called ``v_M_tilde`` to represent this.
 
     >>> from sympy import Symbol
     >>> from sympy.physics.biomechanics import FiberForceVelocityDeGroote2016
@@ -1547,12 +1547,12 @@ class FiberForceVelocityInverseDeGroote2016(CharacteristicCurveFunction):
     Examples
     ========
 
-    The preferred way to instantiate ``FiberForceVelocityInverseDeGroote2016``
+    The preferred way to instantiate :class:`FiberForceVelocityInverseDeGroote2016`
     is using the :meth:`~.with_defaults` constructor because this will automatically
     populate the constants within the characteristic curve equation with the
     floating point values from the original publication. This constructor takes
     a single argument corresponding to normalized muscle fiber force-velocity
-    component of the muscle fiber force. We'll create a ``Symbol`` called
+    component of the muscle fiber force. We'll create a :class:`~.Symbol` called
     ``fv_M`` to represent this.
 
     >>> from sympy import Symbol
