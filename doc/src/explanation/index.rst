@@ -14,6 +14,7 @@ technical implementation details, and opinionated recommendations.
 .. toctree::
    :maxdepth: 1
 
+   best-practices.md
    gotchas.rst
    solve_output.rst
    special_topics/index.rst
