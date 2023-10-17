@@ -997,6 +997,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     ([], x)
     """
     if not list:
+        if postprocess is cse_separate:
+            return _cse_homogeneous(exprs,
+                symbols=symbols, optimizations=optimizations,
+                postprocess=postprocess, order=order, ignore=ignore)
         return CseExpr(_cse_homogeneous(exprs,
             symbols=symbols, optimizations=optimizations,
             postprocess=postprocess, order=order, ignore=ignore))
@@ -1066,7 +1070,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     if postprocess is None:
         return CseExpr((replacements, reduced_exprs))
-
+    elif postprocess is cse_separate:
+        return postprocess(replacements, reduced_exprs)
     return CseExpr(postprocess(replacements, reduced_exprs))
 
 
