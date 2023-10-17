@@ -998,6 +998,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     """
     if not list:
         if postprocess is cse_separate:
+            # ``cse_separate`` needs to be handled separately as for backwards
+            # compatibility it must return a ``list`` and not a ``tuple``.
             return _cse_homogeneous(exprs,
                 symbols=symbols, optimizations=optimizations,
                 postprocess=postprocess, order=order, ignore=ignore)
@@ -1071,6 +1073,8 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     if postprocess is None:
         return CseExpr((replacements, reduced_exprs))
     elif postprocess is cse_separate:
+        # ``cse_separate`` needs to be handled separately as for backwards
+        # compatibility it must return a ``list`` and not a ``tuple``.
         return postprocess(replacements, reduced_exprs)
     return CseExpr(postprocess(replacements, reduced_exprs))
 
