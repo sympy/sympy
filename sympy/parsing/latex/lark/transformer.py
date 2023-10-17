@@ -1,5 +1,7 @@
 import re
 
+from lark.visitors import _Leaf_T, _Return_T
+
 import sympy
 from sympy.external import import_module
 from sympy.parsing.latex.errors import LaTeXParsingError
@@ -7,7 +9,7 @@ from sympy.parsing.latex.errors import LaTeXParsingError
 lark = import_module("lark")
 
 if lark:
-    from lark import Transformer, Token  # type: ignore
+    from lark import Transformer, Token, Tree  # type: ignore
 else:
     class Transformer:  # type: ignore
         def transform(self, *args):
@@ -42,9 +44,15 @@ class TransformToSymPyExpr(Transformer):
 
         Note that the option must be set to ``True`` for the default parser to work.
     """
+    evaluate = None
 
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
+
+    def transform_tree(self, tree, evaluate):
+        TransformToSymPyExpr.evaluate = evaluate
+
+        return super().transform(tree)
 
     def CMD_INFTY(self, tokens):
         return sympy.oo
@@ -107,37 +115,70 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def eq(self, tokens):
-        return sympy.Eq(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Eq(tokens[0], tokens[2])
+        else:
+            return sympy.Eq(tokens[0], tokens[2], evaluate=False)
 
     def ne(self, tokens):
-        return sympy.Ne(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Ne(tokens[0], tokens[2])
+        else:
+            return sympy.Ne(tokens[0], tokens[2], evaluate=False)
 
     def lt(self, tokens):
-        return sympy.Lt(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Lt(tokens[0], tokens[2])
+        else:
+            return sympy.Lt(tokens[0], tokens[2], evaluate=False)
 
     def lte(self, tokens):
-        return sympy.Le(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Le(tokens[0], tokens[2])
+        else:
+            return sympy.Le(tokens[0], tokens[2], evaluate=False)
 
     def gt(self, tokens):
-        return sympy.Gt(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Gt(tokens[0], tokens[2])
+        else:
+            return sympy.Gt(tokens[0], tokens[2], evaluate=False)
 
     def gte(self, tokens):
-        return sympy.Ge(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Ge(tokens[0], tokens[2])
+        else:
+            return sympy.Ge(tokens[0], tokens[2], evaluate=False)
 
     def add(self, tokens):
-        return sympy.Add(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Add(tokens[0], tokens[2])
+        else:
+            return sympy.Add(tokens[0], tokens[2], evaluate=False)
 
     def sub(self, tokens):
         if len(tokens) == 2:
-            return -tokens[1]
+            if TransformToSymPyExpr.evaluate:
+                return -tokens[1]
+            else:
+                return sympy.Mul(-1, tokens[1], evaluate=False)
         elif len(tokens) == 3:
-            return sympy.Add(tokens[0], -tokens[2])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Add(tokens[0], -tokens[2])
+            else:
+                return sympy.Add(tokens[0], sympy.Mul(-1, tokens[2], evaluate=False), evaluate=False)
 
     def mul(self, tokens):
-        return sympy.Mul(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Mul(tokens[0], tokens[2])
+        else:
+            return sympy.Mul(tokens[0], tokens[2], evaluate=False)
 
     def div(self, tokens):
-        return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
+        else:
+            return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
 
     def adjacent_expressions(self, tokens):
         # Most of the time, if two expressions are next to each other, it means implicit multiplication,
@@ -156,7 +197,10 @@ class TransformToSymPyExpr(Transformer):
             return sympy.Mul(tokens[0], tokens[1])
 
     def superscript(self, tokens):
-        return sympy.Pow(tokens[0], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Pow(tokens[0], tokens[2])
+        else:
+            return sympy.Pow(tokens[0], tokens[2], evaluate=False)
 
     def fraction(self, tokens):
         numerator = tokens[1]
@@ -168,10 +212,17 @@ class TransformToSymPyExpr(Transformer):
             return "derivative", variable
         else:
             denominator = tokens[2]
-            return sympy.Mul(numerator, sympy.Pow(denominator, -1))
+
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Mul(numerator, sympy.Pow(denominator, -1))
+            else:
+                return sympy.Mul(numerator, sympy.Pow(denominator, -1, evaluate=False), evaluate=False)
 
     def binomial(self, tokens):
-        return sympy.binomial(tokens[1], tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.binomial(tokens[1], tokens[2])
+        else:
+            return sympy.binomial(tokens[1], tokens[2], evaluate=False)
 
     def normal_integral(self, tokens):
         underscore_index = None
@@ -235,10 +286,16 @@ class TransformToSymPyExpr(Transformer):
 
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
-            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+            else:
+                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound), evaluate=False)
         else:
             # we have an indefinite integral
-            return sympy.Integral(integrand, differential_variable)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Integral(integrand, differential_variable)
+            else:
+                return sympy.Integral(integrand, differential_variable, evaluate=False)
 
     def group_curly_parentheses_int(self, tokens):
         # return signature is a tuple consisting of the expression in the numerator, along with the variable of
@@ -253,7 +310,7 @@ class TransformToSymPyExpr(Transformer):
         numerator, variable = tokens[1]
         denominator = tokens[2]
 
-        # We pass the integrand, along with information about the variable of integration, upw
+        # We pass the integrand, along with information about the variable of integration, up
         return sympy.Mul(numerator, sympy.Pow(denominator, -1)), variable
 
     def integral_with_special_fraction(self, tokens):
@@ -290,10 +347,16 @@ class TransformToSymPyExpr(Transformer):
 
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
-            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
+            else:
+                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound), evaluate=False)
         else:
             # we have an indefinite integral
-            return sympy.Integral(integrand, differential_variable)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Integral(integrand, differential_variable)
+            else:
+                return sympy.Integral(integrand, differential_variable, evaluate=False)
 
     def group_curly_parentheses_special(self, tokens):
         underscore_index = tokens.index("_")
@@ -331,10 +394,16 @@ class TransformToSymPyExpr(Transformer):
         return index_variable, lower_limit, upper_limit
 
     def summation(self, tokens):
-        return sympy.Sum(tokens[2], tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Sum(tokens[2], tokens[1])
+        else:
+            return sympy.Sum(tokens[2], tokens[1], evaluate=False)
 
     def product(self, tokens):
-        return sympy.Product(tokens[2], tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Product(tokens[2], tokens[1])
+        else:
+            return sympy.Product(tokens[2], tokens[1], evaluate=False)
 
     def limit_dir_expr(self, tokens):
         caret_index = tokens.index("^")
@@ -371,7 +440,10 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def derivative(self, tokens):
-        return sympy.Derivative(tokens[-1], tokens[5])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Derivative(tokens[-1], tokens[5])
+        else:
+            return sympy.Derivative(tokens[-1], tokens[5], evaluate=False)
 
     def list_of_expressions(self, tokens):
         if len(tokens) == 1:
@@ -393,10 +465,16 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Function(tokens[0])(*tokens[2])
 
     def min(self, tokens):
-        return sympy.Min(*tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Min(*tokens[2])
+        else:
+            return sympy.Min(*tokens[2], evaluate=False)
 
     def max(self, tokens):
-        return sympy.Max(*tokens[2])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Max(*tokens[2])
+        else:
+            return sympy.Max(*tokens[2], evaluate=False)
 
     def bra(self, tokens):
         from sympy.physics.quantum import Bra
@@ -411,143 +489,269 @@ class TransformToSymPyExpr(Transformer):
         return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
 
     def sin(self, tokens):
-        return sympy.sin(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.sin(tokens[1])
+        else:
+            return sympy.sin(tokens[1], evaluate=False)
 
     def cos(self, tokens):
-        return sympy.cos(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.cos(tokens[1])
+        else:
+            return sympy.cos(tokens[1], evaluate=False)
 
     def tan(self, tokens):
-        return sympy.tan(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.tan(tokens[1])
+        else:
+            return sympy.tan(tokens[1], evaluate=False)
 
     def csc(self, tokens):
-        return sympy.csc(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.csc(tokens[1])
+        else:
+            return sympy.csc(tokens[1], evaluate=False)
 
     def sec(self, tokens):
-        return sympy.sec(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.sec(tokens[1])
+        else:
+            return sympy.sec(tokens[1], evaluate=False)
 
     def cot(self, tokens):
-        return sympy.cot(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.cot(tokens[1])
+        else:
+            return sympy.cot(tokens[1], evaluate=False)
 
     def sin_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.asin(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.asin(tokens[-1])
+            else:
+                return sympy.asin(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.sin(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.sin(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.sin(tokens[-1]), exponent, evaluate=False)
 
     def cos_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acos(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.acos(tokens[-1])
+            else:
+                return sympy.acos(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.cos(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.cos(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.cos(tokens[-1]), exponent, evaluate=False)
 
     def tan_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.atan(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.atan(tokens[-1])
+            else:
+                return sympy.atan(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.tan(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.tan(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.tan(tokens[-1]), exponent, evaluate=False)
 
     def csc_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acsc(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.acsc(tokens[-1])
+            else:
+                return sympy.acsc(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.csc(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.csc(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.csc(tokens[-1]), exponent, evaluate=False)
 
     def sec_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.asec(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.asec(tokens[-1])
+            else:
+                return sympy.asec(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.sec(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.sec(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.sec(tokens[-1]), exponent, evaluate=False)
 
     def cot_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            return sympy.acot(tokens[-1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.acot(tokens[-1])
+            else:
+                return sympy.acot(tokens[-1], evaluate=False)
         else:
-            return sympy.Pow(sympy.cot(tokens[-1]), exponent)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Pow(sympy.cot(tokens[-1]), exponent)
+            else:
+                return sympy.Pow(sympy.cot(tokens[-1]), exponent, evaluate=False)
 
     def arcsin(self, tokens):
-        return sympy.asin(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.asin(tokens[1])
+        else:
+            return sympy.asin(tokens[1], evaluate=False)
 
     def arccos(self, tokens):
-        return sympy.acos(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.acos(tokens[1])
+        else:
+            return sympy.acos(tokens[1], evaluate=False)
 
     def arctan(self, tokens):
-        return sympy.atan(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.atan(tokens[1])
+        else:
+            return sympy.atan(tokens[1], evaluate=False)
 
     def arccsc(self, tokens):
-        return sympy.acsc(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.acsc(tokens[1])
+        else:
+            return sympy.acsc(tokens[1], evaluate=False)
 
     def arcsec(self, tokens):
-        return sympy.asec(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.asec(tokens[1])
+        else:
+            return sympy.asec(tokens[1], evaluate=False)
 
     def arccot(self, tokens):
-        return sympy.acot(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.acot(tokens[1])
+        else:
+            return sympy.acot(tokens[1], evaluate=False)
 
     def sinh(self, tokens):
-        return sympy.sinh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.sinh(tokens[1])
+        else:
+            return sympy.sinh(tokens[1], evaluate=False)
 
     def cosh(self, tokens):
-        return sympy.cosh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.cosh(tokens[1])
+        else:
+            return sympy.cosh(tokens[1], evaluate=False)
 
     def tanh(self, tokens):
-        return sympy.tanh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.tanh(tokens[1])
+        else:
+            return sympy.tanh(tokens[1], evaluate=False)
 
     def asinh(self, tokens):
-        return sympy.asinh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.asinh(tokens[1])
+        else:
+            return sympy.asinh(tokens[1], evaluate=False)
 
     def acosh(self, tokens):
-        return sympy.acosh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.acosh(tokens[1])
+        else:
+            return sympy.acosh(tokens[1], evaluate=False)
 
     def atanh(self, tokens):
-        return sympy.atanh(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.atanh(tokens[1])
+        else:
+            return sympy.atanh(tokens[1], evaluate=False)
 
     def abs(self, tokens):
-        return sympy.Abs(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.Abs(tokens[1])
+        else:
+            return sympy.Abs(tokens[1], evaluate=False)
 
     def floor(self, tokens):
-        return sympy.floor(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.floor(tokens[1])
+        else:
+            return sympy.floor(tokens[1], evaluate=False)
 
     def ceil(self, tokens):
-        return sympy.ceiling(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.ceiling(tokens[1])
+        else:
+            return sympy.ceiling(tokens[1], evaluate=False)
 
     def factorial(self, tokens):
-        return sympy.factorial(tokens[0])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.factorial(tokens[0])
+        else:
+            return sympy.factorial(tokens[0], evaluate=False)
 
     def conjugate(self, tokens):
-        return sympy.conjugate(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.conjugate(tokens[1])
+        else:
+            return sympy.conjugate(tokens[1], evaluate=False)
 
     def square_root(self, tokens):
         if len(tokens) == 2:
             # then there was no square bracket argument
-            return sympy.sqrt(tokens[1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.sqrt(tokens[1])
+            else:
+                return sympy.sqrt(tokens[1], evaluate=False)
         elif len(tokens) == 3:
             # then there _was_ a square bracket argument
-            return sympy.root(tokens[2], tokens[1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.root(tokens[2], tokens[1])
+            else:
+                return sympy.root(tokens[2], tokens[1], evaluate=False)
 
     def exponential(self, tokens):
-        return sympy.exp(tokens[1])
+        if TransformToSymPyExpr.evaluate:
+            return sympy.exp(tokens[1])
+        else:
+            return sympy.exp(tokens[1], evaluate=False)
 
     def log(self, tokens):
         if tokens[0].type == "FUNC_LG":
             # we don't need to check if there's an underscore or not because having one
             # in this case would be meaningless
             # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
-            return sympy.log(tokens[1], 10)
+            if TransformToSymPyExpr.evaluate:
+                return sympy.log(tokens[1], 10)
+            else:
+                return sympy.log(tokens[1], 10, evaluate=False)
         elif tokens[0].type == "FUNC_LN":
-            return sympy.log(tokens[1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.log(tokens[1])
+            else:
+                return sympy.log(tokens[1], evaluate=False)
         elif tokens[0].type == "FUNC_LOG":
             # we check if a base was specified or not
             if "_" in tokens:
                 # then a base was specified
-                return sympy.log(tokens[3], tokens[2])
+                if TransformToSymPyExpr.evaluate:
+                    return sympy.log(tokens[3], tokens[2])
+                else:
+                    return sympy.log(tokens[3], tokens[2], evaluate=False)
             else:
                 # a base was not specified
-                return sympy.log(tokens[1])
+                if TransformToSymPyExpr.evaluate:
+                    return sympy.log(tokens[1])
+                else:
+                    return sympy.log(tokens[1], evaluate=False)
 
     def _extract_differential_symbol(self, s: str):
         differential_symbols = {"d", r"\text{d}", r"\mathrm{d}"}
