@@ -490,10 +490,7 @@ class PicklableWithSlots:
     def __setstate__(self, d):
         # All values that were pickled are now assigned to a fresh instance
         for name, value in d.items():
-            try:
-                setattr(self, name, value)
-            except AttributeError:    # This is needed in cases like Rational :> Half
-                pass
+            setattr(self, name, value)
 
 
 class IntegerPowerable:

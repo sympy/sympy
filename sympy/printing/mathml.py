@@ -73,57 +73,6 @@ class MathMLPrinterBase(Printer):
         res = xmlbstr.decode()
         return res
 
-    def apply_patch(self):
-        # Applying the patch of xml.dom.minidom bug
-        # Date: 2011-11-18
-        # Description: http://ronrothman.com/public/leftbraned/xml-dom-minidom\
-        #                   -toprettyxml-and-silly-whitespace/#best-solution
-        # Issue: http://bugs.python.org/issue4147
-        # Patch: http://hg.python.org/cpython/rev/7262f8f276ff/
-
-        from xml.dom.minidom import Element, Text, Node, _write_data
-
-        def writexml(self, writer, indent="", addindent="", newl=""):
-            # indent = current indentation
-            # addindent = indentation to add to higher levels
-            # newl = newline string
-            writer.write(indent + "<" + self.tagName)
-
-            attrs = self._get_attributes()
-            a_names = list(attrs.keys())
-            a_names.sort()
-
-            for a_name in a_names:
-                writer.write(" %s=\"" % a_name)
-                _write_data(writer, attrs[a_name].value)
-                writer.write("\"")
-            if self.childNodes:
-                writer.write(">")
-                if (len(self.childNodes) == 1 and
-                        self.childNodes[0].nodeType == Node.TEXT_NODE):
-                    self.childNodes[0].writexml(writer, '', '', '')
-                else:
-                    writer.write(newl)
-                    for node in self.childNodes:
-                        node.writexml(
-                            writer, indent + addindent, addindent, newl)
-                    writer.write(indent)
-                writer.write("</%s>%s" % (self.tagName, newl))
-            else:
-                writer.write("/>%s" % (newl))
-        self._Element_writexml_old = Element.writexml
-        Element.writexml = writexml
-
-        def writexml(self, writer, indent="", addindent="", newl=""):
-            _write_data(writer, "%s%s%s" % (indent, self.data, newl))
-        self._Text_writexml_old = Text.writexml
-        Text.writexml = writexml
-
-    def restore_patch(self):
-        from xml.dom.minidom import Element, Text
-        Element.writexml = self._Element_writexml_old
-        Text.writexml = self._Text_writexml_old
-
 
 class MathMLContentPrinter(MathMLPrinterBase):
     """Prints an expression to the Content MathML markup language.
@@ -331,7 +280,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_GoldenRatio(self, e):
         """We use unicode #x3c6 for Greek letter phi as defined here
-        http://www.w3.org/2003/entities/2007doc/isogrk1.html"""
+        https://www.w3.org/2003/entities/2007doc/isogrk1.html"""
         x = self.dom.createElement('cn')
         x.appendChild(self.dom.createTextNode("\N{GREEK SMALL LETTER PHI}"))
         return x
@@ -539,7 +488,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_list(self, seq):
         """MathML reference for the <list> element:
-        http://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
+        https://www.w3.org/TR/MathML2/chapter4.html#contm.list"""
         dom_element = self.dom.createElement('list')
         for item in seq:
             dom_element.appendChild(self._print(item))
@@ -572,6 +521,17 @@ class MathMLContentPrinter(MathMLPrinterBase):
         x.appendChild(self.dom.createElement('cartesianproduct'))
         for arg in e.args:
             x.appendChild(self._print(arg))
+        return x
+
+    def _print_Lambda(self, e):
+        # MathML reference for the lambda element:
+        # https://www.w3.org/TR/MathML2/chapter4.html#id.4.2.1.7
+        x = self.dom.createElement(self.mathml_tag(e))
+        for arg in e.signature:
+            x_1 = self.dom.createElement('bvar')
+            x_1.appendChild(self._print(arg))
+            x.appendChild(x_1)
+        x.appendChild(self._print(e.expr))
         return x
 
     # XXX Symmetric difference is not supported for MathML content printers.
@@ -634,6 +594,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
             'mathieuc': 'C',
             'mathieusprime': 'S&#x2032;',
             'mathieucprime': 'C&#x2032;',
+            'Lambda': 'lambda',
         }
 
         def mul_symbol_selection():
@@ -2115,9 +2076,7 @@ def print_mathml(expr, printer='content', **settings):
     else:
         s = MathMLContentPrinter(settings)
     xml = s._print(sympify(expr))
-    s.apply_patch()
     pretty_xml = xml.toprettyxml()
-    s.restore_patch()
 
     print(pretty_xml)
 

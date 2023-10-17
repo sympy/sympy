@@ -3,7 +3,7 @@ import concurrent.futures
 from collections.abc import Hashable
 
 from sympy.core.add import Add
-from sympy.core.function import (Function, diff, expand)
+from sympy.core.function import Function, diff, expand
 from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -15,6 +15,7 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.simplify import (signsimp, simplify)
@@ -27,22 +28,22 @@ from sympy.matrices import (
     SparseMatrix, casoratian, diag, eye, hessian,
     matrix_multiply_elementwise, ones, randMatrix, rot_axis1, rot_axis2,
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
-    MatrixSymbol, dotprodsimp)
+    MatrixSymbol, dotprodsimp, rot_ccw_axis1, rot_ccw_axis2, rot_ccw_axis3)
 from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.utilities.exceptions import ignore_warnings, SymPyDeprecationWarning
-from sympy.testing.pytest import (raises, XFAIL, slow, skip,
+from sympy.testing.pytest import (raises, XFAIL, slow, skip, skip_under_pyodide,
                                   warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import MatPow
-from sympy.external import import_module
+from sympy.algebras import Quaternion
 
 from sympy.abc import a, b, c, d, x, y, z, t
 
-pyodide_js = import_module('pyodide_js')
 
 # don't re-order this list
 classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
@@ -246,7 +247,7 @@ def test_power():
     assert (A**S.Half)**2 == A
 
     assert Matrix([[1, 0], [1, 1]])**S.Half == Matrix([[1, 0], [S.Half, 1]])
-    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
+    assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1, 0], [0.5, 1]])
     from sympy.abc import n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
@@ -672,14 +673,14 @@ def test_issue_18531():
         ])
     with dotprodsimp(True):
         assert M.rref() == (Matrix([
-            [1, 0, 0, 0, 0, 0, 0, 0,  1/2],
-            [0, 1, 0, 0, 0, 0, 0, 0, -1/2],
-            [0, 0, 1, 0, 0, 0, 0, 0,  1/2],
-            [0, 0, 0, 1, 0, 0, 0, 0, -1/2],
+            [1, 0, 0, 0, 0, 0, 0, 0,  S(1)/2],
+            [0, 1, 0, 0, 0, 0, 0, 0, -S(1)/2],
+            [0, 0, 1, 0, 0, 0, 0, 0,  S(1)/2],
+            [0, 0, 0, 1, 0, 0, 0, 0, -S(1)/2],
             [0, 0, 0, 0, 1, 0, 0, 0,    0],
-            [0, 0, 0, 0, 0, 1, 0, 0, -1/2],
+            [0, 0, 0, 0, 0, 1, 0, 0, -S(1)/2],
             [0, 0, 0, 0, 0, 0, 1, 0,    0],
-            [0, 0, 0, 0, 0, 0, 0, 1, -1/2]]), (0, 1, 2, 3, 4, 5, 6, 7))
+            [0, 0, 0, 0, 0, 0, 0, 1, -S(1)/2]]), (0, 1, 2, 3, 4, 5, 6, 7))
 
 
 def test_creation():
@@ -1164,6 +1165,25 @@ def test_col_row_op():
     assert M[0, 0] == x + 1
 
 
+def test_row_mult():
+    M = Matrix([[1,2,3],
+               [4,5,6]])
+    M.row_mult(1,3)
+    assert M[1,0] == 12
+    assert M[0,0] == 1
+    assert M[1,2] == 18
+
+
+def test_row_add():
+    M = Matrix([[1,2,3],
+               [4,5,6],
+               [1,1,1]])
+    M.row_add(2,0,5)
+    assert M[0,0] == 6
+    assert M[1,0] == 4
+    assert M[0,2] == 8
+
+
 def test_zip_row_op():
     for cls in classes[:2]: # XXX: immutable matrices don't support row ops
         M = cls.eye(3)
@@ -1586,13 +1606,6 @@ def test_issue_15887():
     a[1, 0] = 0
     raises(MatrixError, lambda: a.diagonalize())
 
-    # Test deprecated cache and kwargs
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_cache=True)
-
-    with warns_deprecated_sympy():
-        a.is_diagonalizable(clear_subproducts=True)
-
 
 def test_jordan_form():
 
@@ -1882,8 +1895,6 @@ def test_errors():
     raises(ShapeError, lambda: Matrix([1, 2, 3]).dot(Matrix([1, 2])))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([]))
     raises(TypeError, lambda: Matrix([1, 2]).dot('a'))
-    with warns_deprecated_sympy():
-        Matrix([[1, 2], [3, 4]]).dot(Matrix([[4, 3], [1, 2]]))
     raises(ShapeError, lambda: Matrix([1, 2]).dot([1, 2, 3]))
     raises(NonSquareMatrixError, lambda: Matrix([1, 2, 3]).exp())
     raises(ShapeError, lambda: Matrix([[1, 2], [3, 4]]).normalized())
@@ -1957,6 +1968,9 @@ def test_diff():
 
     assert diff(A_imm, x) == ImmutableDenseMatrix(((0, 0, 1), (0, 0, 0), (0, 0, 2*x)))
     assert diff(A_imm, y) == ImmutableDenseMatrix(((0, 0, 0), (1, 0, 0), (0, 0, 0)))
+
+    assert A.diff(x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
+    assert diff(A, x, evaluate=False) == ArrayDerivative(A, x, evaluate=False)
 
 
 def test_diff_by_matrix():
@@ -2304,6 +2318,19 @@ def test_rotation_matrices():
     assert rot_axis2(0) == eye(3)
     assert rot_axis3(0) == eye(3)
 
+    # Check left-hand convention
+    # see Issue #24529
+    q1 = Quaternion.from_axis_angle([1, 0, 0], pi / 2)
+    q2 = Quaternion.from_axis_angle([0, 1, 0], pi / 2)
+    q3 = Quaternion.from_axis_angle([0, 0, 1], pi / 2)
+    assert rot_axis1(- pi / 2) == q1.to_rotation_matrix()
+    assert rot_axis2(- pi / 2) == q2.to_rotation_matrix()
+    assert rot_axis3(- pi / 2) == q3.to_rotation_matrix()
+    # Check right-hand convention
+    assert rot_ccw_axis1(+ pi / 2) == q1.to_rotation_matrix()
+    assert rot_ccw_axis2(+ pi / 2) == q2.to_rotation_matrix()
+    assert rot_ccw_axis3(+ pi / 2) == q3.to_rotation_matrix()
+
 
 def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
@@ -2448,10 +2475,6 @@ def test_dot():
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
     raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
-    with warns_deprecated_sympy():
-        A = Matrix([[1, 2], [3, 4]])
-        B = Matrix([[2, 3], [1, 2]])
-        assert A.dot(B) == [11, 7, 16, 10]
 
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols(
@@ -2547,6 +2570,12 @@ def test_cross():
     raises(ShapeError, lambda:
         Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
+def test_hat_vee():
+    v1 = Matrix([x, y, z])
+    v2 = Matrix([a, b, c])
+    assert v1.hat() * v2 == v1.cross(v2)
+    assert v1.hat().is_anti_symmetric()
+    assert v1.hat().vee() == v1
 
 def test_hash():
     for cls in classes[-2:]:
@@ -2644,7 +2673,6 @@ def test_pinv():
 
 
 @slow
-@XFAIL
 def test_pinv_rank_deficient_when_diagonalization_fails():
     # Test the four properties of the pseudoinverse for matrices when
     # diagonalization of A.H*A fails.
@@ -2662,7 +2690,24 @@ def test_pinv_rank_deficient_when_diagonalization_fails():
         AAp = A * A_pinv
         ApA = A_pinv * A
         assert AAp.H == AAp
-        assert ApA.H == ApA
+
+        # Here ApA.H and ApA are equivalent expressions but they are very
+        # complicated expressions involving RootOfs. Using simplify would be
+        # too slow and so would evalf so we substitute approximate values for
+        # the RootOfs and then evalf which is less accurate but good enough to
+        # confirm that these two matrices are equivalent.
+        #
+        # assert ApA.H == ApA  # <--- would fail (structural equality)
+        # assert simplify(ApA.H - ApA).is_zero_matrix  # <--- too slow
+        # (ApA.H - ApA).evalf()  # <--- too slow
+
+        def allclose(M1, M2):
+            rootofs = M1.atoms(RootOf)
+            rootofs_approx = {r: r.evalf() for r in rootofs}
+            diff_approx = (M1 - M2).xreplace(rootofs_approx).evalf()
+            return all(abs(e) < 1e-10 for e in diff_approx)
+
+        assert allclose(ApA.H, ApA)
 
 
 def test_issue_7201():
@@ -2715,8 +2760,8 @@ def test_17522_mpmath():
         skip('mpmath must be available to test indexing matrixified mpmath matrices')
 
     m = _matrixify(matrix([[1, 2], [3, 4]]))
-    assert m[3] == 4
-    assert list(m) == [1, 2, 3, 4]
+    assert m[3] == 4.0
+    assert list(m) == [1.0, 2.0, 3.0, 4.0]
 
 def test_17522_scipy():
     from sympy.matrices.common import _matrixify
@@ -2902,9 +2947,6 @@ def test_deprecated():
     assert Jcells[1] == Matrix(1, 1, [2])
     assert Jcells[0] == Matrix(2, 2, [2, 1, 0, 2])
 
-    with warns_deprecated_sympy():
-        assert Matrix([[1,2],[3,4]]).dot(Matrix([[1,3],[4,5]])) == [10, 19, 14, 28]
-
 
 def test_issue_14489():
     from sympy.core.mod import Mod
@@ -2987,9 +3029,8 @@ def test_func():
     assert A.analytic_func(exp(x*t), x) == expand(simplify((A*t).exp()))
 
 
+@skip_under_pyodide("Cannot create threads under pyodide.")
 def test_issue_19809():
-    if pyodide_js:
-        skip("can't run on pyodide")
 
     def f():
         assert _dotprodsimp_state.state == None
@@ -3002,20 +3043,9 @@ def test_issue_19809():
             future = executor.submit(f)
             assert future.result()
 
-def test_deprecated_classof_a2idx():
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import classof
-        M = Matrix([[1, 2], [3, 4]])
-        IM = ImmutableMatrix([[1, 2], [3, 4]])
-        assert classof(M, IM) == ImmutableDenseMatrix
-
-    with warns_deprecated_sympy():
-        from sympy.matrices.matrices import a2idx
-        assert a2idx(-1, 3) == 2
-
 
 def test_issue_23276():
     M = Matrix([x, y])
     assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
-        [1/2],
-        [1/2]])
+        [S.Half],
+        [S.Half]])

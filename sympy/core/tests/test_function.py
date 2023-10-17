@@ -1258,12 +1258,7 @@ def test_undef_fcn_float_issue_6938():
 
 def test_undefined_function_eval():
     # Issue 15170. Make sure UndefinedFunction with eval defined works
-    # properly. The issue there was that the hash was determined before _nargs
-    # was set, which is included in the hash, hence changing the hash. The
-    # class is added to sympy.core.core.all_classes before the hash is
-    # changed, meaning "temp in all_classes" would fail, causing sympify(temp(t))
-    # to give a new class. We will eventually remove all_classes, but make
-    # sure this continues to work.
+    # properly.
 
     fdiff = lambda self, argindex=1: cos(self.args[argindex - 1])
     eval = classmethod(lambda cls, t: None)

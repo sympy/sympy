@@ -4,10 +4,10 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
+from functools import cmp_to_key
 
-from .assumptions import ManagedProperties
+from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
-from .core import BasicMeta
 from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -33,7 +33,97 @@ def as_Basic(expr):
             expr))
 
 
-class Basic(Printable, metaclass=ManagedProperties):
+# Key for sorting commutative args in canonical order
+# by name. This is used for canonical ordering of the
+# args for Add and Mul *if* the names of both classes
+# being compared appear here. Some things in this list
+# are not spelled the same as their name so they do not,
+# in effect, appear here. See Basic.compare.
+ordering_of_classes = [
+    # singleton numbers
+    'Zero', 'One', 'Half', 'Infinity', 'NaN', 'NegativeOne', 'NegativeInfinity',
+    # numbers
+    'Integer', 'Rational', 'Float',
+    # singleton symbols
+    'Exp1', 'Pi', 'ImaginaryUnit',
+    # symbols
+    'Symbol', 'Wild',
+    # arithmetic operations
+    'Pow', 'Mul', 'Add',
+    # function values
+    'Derivative', 'Integral',
+    # defined singleton functions
+    'Abs', 'Sign', 'Sqrt',
+    'Floor', 'Ceiling',
+    'Re', 'Im', 'Arg',
+    'Conjugate',
+    'Exp', 'Log',
+    'Sin', 'Cos', 'Tan', 'Cot', 'ASin', 'ACos', 'ATan', 'ACot',
+    'Sinh', 'Cosh', 'Tanh', 'Coth', 'ASinh', 'ACosh', 'ATanh', 'ACoth',
+    'RisingFactorial', 'FallingFactorial',
+    'factorial', 'binomial',
+    'Gamma', 'LowerGamma', 'UpperGamma', 'PolyGamma',
+    'Erf',
+    # special polynomials
+    'Chebyshev', 'Chebyshev2',
+    # undefined functions
+    'Function', 'WildFunction',
+    # anonymous functions
+    'Lambda',
+    # Landau O symbol
+    'Order',
+    # relational operations
+    'Equality', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',
+    'GreaterThan', 'LessThan',
+]
+
+def _cmp_name(x: type, y: type) -> int:
+    """return -1, 0, 1 if the name of x is before that of y.
+    A string comparison is done if either name does not appear
+    in `ordering_of_classes`. This is the helper for
+    ``Basic.compare``
+
+    Examples
+    ========
+
+    >>> from sympy import cos, tan, sin
+    >>> from sympy.core import basic
+    >>> save = basic.ordering_of_classes
+    >>> basic.ordering_of_classes = ()
+    >>> basic._cmp_name(cos, tan)
+    -1
+    >>> basic.ordering_of_classes = ["tan", "sin", "cos"]
+    >>> basic._cmp_name(cos, tan)
+    1
+    >>> basic._cmp_name(sin, cos)
+    -1
+    >>> basic.ordering_of_classes = save
+
+    """
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
+
+    n1 = x.__name__
+    n2 = y.__name__
+    if n1 == n2:
+        return 0
+
+    UNKNOWN = len(ordering_of_classes) + 1
+    try:
+        i1 = ordering_of_classes.index(n1)
+    except ValueError:
+        i1 = UNKNOWN
+    try:
+        i2 = ordering_of_classes.index(n2)
+    except ValueError:
+        i2 = UNKNOWN
+    if i1 == UNKNOWN and i2 == UNKNOWN:
+        return (n1 > n2) - (n1 < n2)
+    return (i1 > i2) - (i1 < i2)
+
+
+class Basic(Printable):
     """
     Base class for all SymPy objects.
 
@@ -84,6 +174,18 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     _args: tuple[Basic, ...]
     _mhash: int | None
+
+    @property
+    def __sympy__(self):
+        return True
+
+    def __init_subclass__(cls):
+        # Initialize the default_assumptions FactKB and also any assumptions
+        # property methods. This method will only be called for subclasses of
+        # Basic but not for Basic itself so we call
+        # _prepare_class_assumptions(Basic) below the class definition.
+        super().__init_subclass__()
+        _prepare_class_assumptions(cls)
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -204,11 +306,19 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def compare(self, other):
         """
-        Return -1, 0, 1 if the object is smaller, equal, or greater than other.
-
-        Not in the mathematical sense. If the object is of a different type
-        from the "other" then their classes are ordered according to
-        the sorted_classes list.
+        Return -1, 0, 1 if the object is less than, equal,
+        or greater than other in a canonical sense.
+        Non-Basic are always greater than Basic.
+        If both names of the classes being compared appear
+        in the `ordering_of_classes` then the ordering will
+        depend on the appearance of the names there.
+        If either does not appear in that list, then the
+        comparison is based on the class name.
+        If the names are the same then a comparison is made
+        on the length of the hashable content.
+        Items of the equal-lengthed contents are then
+        successively compared using the same rules. If there
+        is never a difference then 0 is returned.
 
         Examples
         ========
@@ -228,7 +338,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return 0
         n1 = self.__class__
         n2 = other.__class__
-        c = (n1 > n2) - (n1 < n2)
+        c = _cmp_name(n1, n2)
         if c:
             return c
         #
@@ -250,6 +360,13 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @staticmethod
     def _compare_pretty(a, b):
+        """return -1, 0, 1 if a is canonically less, equal or
+        greater than b. This is used when 'order=old' is selected
+        for printing. This puts Order last, orders Rationals
+        according to value, puts terms in order wrt the power of
+        the last power appearing in a term. Ties are broken using
+        Basic.compare.
+        """
         from sympy.series.order import Order
         if isinstance(a, Order) and not isinstance(b, Order):
             return 1
@@ -273,6 +390,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                     if c != 0:
                         return c
 
+        # break ties
         return Basic.compare(a, b)
 
     @classmethod
@@ -295,7 +413,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @classmethod
     def class_key(cls):
-        """Nice order of classes. """
+        """Nice order of classes."""
         return 5, 0, cls.__name__
 
     @cacheit
@@ -367,7 +485,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         References
         ==========
 
-        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
+        from https://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
         if self is other:
             return True
@@ -1267,7 +1385,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self._has(iterargs, *patterns)
 
     def has_xfree(self, s: set[Basic]):
-        """return True if self has any of the patterns in s as a
+        """Return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
 
@@ -1295,7 +1413,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @cacheit
     def has_free(self, *patterns):
-        """return True if self has object(s) ``x`` as a free expression
+        """Return True if self has object(s) ``x`` as a free expression
         else False.
 
         Examples
@@ -1343,7 +1461,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         type_set = set()  # only types
         p_set = set()  # hashable non-types
         for p in patterns:
-            if isinstance(p, BasicMeta):
+            if isinstance(p, type) and issubclass(p, Basic):
                 type_set.add(p)
                 continue
             if not isinstance(p, Basic):
@@ -1632,7 +1750,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
-        """Find all subexpressions matching a query. """
+        """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
 
@@ -1650,7 +1768,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return groups
 
     def count(self, query):
-        """Count the number of matching subexpressions. """
+        """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
@@ -1758,7 +1876,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return m
         from .symbol import Wild
         from .function import WildFunction
-        wild = pattern.atoms(Wild, WildFunction)
+        from ..tensor.tensor import WildTensor, WildTensorIndex, WildTensorHead
+        wild = pattern.atoms(Wild, WildFunction, WildTensor, WildTensorIndex, WildTensorHead)
         # sanity check
         if set(m) - wild:
             raise ValueError(filldedent('''
@@ -1781,7 +1900,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return m
 
     def count_ops(self, visual=None):
-        """wrapper for count_ops that returns the operation count."""
+        """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
 
@@ -1857,11 +1976,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         Parameters
         ==========
 
-        args : *rule*, or *pattern* and *rule*.
+        args : Expr
+            A *rule*, or *pattern* and *rule*.
             - *pattern* is a type or an iterable of types.
             - *rule* can be any object.
 
-        deep : bool, optional.
+        deep : bool, optional
             If ``True``, subexpressions are recursively transformed. Default is
             ``True``.
 
@@ -2014,6 +2134,85 @@ class Basic(Printable, metaclass=ManagedProperties):
     def could_extract_minus_sign(self):
         return False  # see Expr.could_extract_minus_sign
 
+    def is_same(a, b, approx=None):
+        """Return True if a and b are structurally the same, else False.
+        If `approx` is supplied, it will be used to test whether two
+        numbers are the same or not. By default, only numbers of the
+        same type will compare equal, so S.Half != Float(0.5).
+
+        Examples
+        ========
+
+        In SymPy (unlike Python) two numbers do not compare the same if they are
+        not of the same type:
+
+        >>> from sympy import S
+        >>> 2.0 == S(2)
+        False
+        >>> 0.5 == S.Half
+        False
+
+        By supplying a function with which to compare two numbers, such
+        differences can be ignored. e.g. `equal_valued` will return True
+        for decimal numbers having a denominator that is a power of 2,
+        regardless of precision.
+
+        >>> from sympy import Float
+        >>> from sympy.core.numbers import equal_valued
+        >>> (S.Half/4).is_same(Float(0.125, 1), equal_valued)
+        True
+        >>> Float(1, 2).is_same(Float(1, 10), equal_valued)
+        True
+
+        But decimals without a power of 2 denominator will compare
+        as not being the same.
+
+        >>> Float(0.1, 9).is_same(Float(0.1, 10), equal_valued)
+        False
+
+        But arbitrary differences can be ignored by supplying a function
+        to test the equivalence of two numbers:
+
+        >>> import math
+        >>> Float(0.1, 9).is_same(Float(0.1, 10), math.isclose)
+        True
+
+        Other objects might compare the same even though types are not the
+        same. This routine will only return True if two expressions are
+        identical in terms of class types.
+
+        >>> from sympy import eye, Basic
+        >>> eye(1) == S(eye(1))  # mutable vs immutable
+        True
+        >>> Basic.is_same(eye(1), S(eye(1)))
+        False
+
+        """
+        from .numbers import Number
+        from .traversal import postorder_traversal as pot
+        for t in zip_longest(pot(a), pot(b)):
+            if None in t:
+                return False
+            a, b = t
+            if isinstance(a, Number):
+                if not isinstance(b, Number):
+                    return False
+                if approx:
+                    return approx(a, b)
+            if not (a == b and a.__class__ == b.__class__):
+                return False
+        return True
+
+_aresame = Basic.is_same  # for sake of others importing this
+
+# key used by Mul and Add to make canonical args
+_args_sortkey = cmp_to_key(Basic.compare)
+
+# For all Basic subclasses _prepare_class_assumptions is called by
+# Basic.__init_subclass__ but that method is not called for Basic itself so we
+# call the function here instead.
+_prepare_class_assumptions(Basic)
+
 
 class Atom(Basic):
     """
@@ -2061,56 +2260,6 @@ class Atom(Basic):
         # to see that this property is not called for Atoms.
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
-
-
-def _aresame(a, b):
-    """Return True if a and b are structurally the same, else False.
-
-    Examples
-    ========
-
-    In SymPy (as in Python) two numbers compare the same if they
-    have the same underlying base-2 representation even though
-    they may not be the same type:
-
-    >>> from sympy import S
-    >>> 2.0 == S(2)
-    True
-    >>> 0.5 == S.Half
-    True
-
-    This routine was written to provide a query for such cases that
-    would give false when the types do not match:
-
-    >>> from sympy.core.basic import _aresame
-    >>> _aresame(S(2.0), S(2))
-    False
-
-    """
-    from .numbers import Number
-    from .function import AppliedUndef, UndefinedFunction as UndefFunc
-    if isinstance(a, Number) and isinstance(b, Number):
-        return a == b and a.__class__ == b.__class__
-    for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
-        if i != j or type(i) != type(j):
-            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
-                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
-                if i.class_key() != j.class_key():
-                    return False
-            else:
-                return False
-    return True
-
-
-def _ne(a, b):
-    # use this as a second test after `a != b` if you want to make
-    # sure that things are truly equal, e.g.
-    # a, b = 0.5, S.Half
-    # a !=b or _ne(a, b) -> True
-    from .numbers import Number
-    # 0.5 == S.Half
-    if isinstance(a, Number) and isinstance(b, Number):
-        return a.__class__ != b.__class__
 
 
 def _atomic(e, recursive=False):

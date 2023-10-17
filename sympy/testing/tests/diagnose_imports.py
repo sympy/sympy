@@ -174,9 +174,7 @@ if __name__ == "__main__":
             if fromlist != None:
                 symbol_list = fromlist
                 if '*' in symbol_list:
-                    if (importer_filename.endswith('__init__.py')
-                        or importer_filename.endswith('__init__.pyc')
-                        or importer_filename.endswith('__init__.pyo')):
+                    if (importer_filename.endswith(("__init__.py", "__init__.pyc", "__init__.pyo"))):
                         # We do not check starred imports inside __init__
                         # That's the normal "please copy over its imports to my namespace"
                         symbol_list = []

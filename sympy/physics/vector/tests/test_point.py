@@ -280,8 +280,9 @@ def test_auto_vel_cyclic_warning_msg():
     with warnings.catch_warnings(record = True) as w: #The path is cyclic at P1, thus a warning is raised
         warnings.simplefilter("always")
         P2.vel(N)
+        msg = str(w[-1].message).replace("\n", " ")
         assert issubclass(w[-1].category, UserWarning)
-        assert 'Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.' in str(w[-1].message)
+        assert 'Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.' in msg
 
 def test_auto_vel_multiple_path_warning_msg():
     N = ReferenceFrame('N')
@@ -295,9 +296,11 @@ def test_auto_vel_multiple_path_warning_msg():
     with warnings.catch_warnings(record = True) as w: #There are two possible paths in this point tree, thus a warning is raised
         warnings.simplefilter("always")
         O.vel(N)
+        msg = str(w[-1].message).replace("\n", " ")
         assert issubclass(w[-1].category, UserWarning)
-        assert 'Velocity automatically calculated based on point' in str(w[-1].message)
-        assert 'Velocities from these points are not necessarily the same. This may cause errors in your calculations.' in str(w[-1].message)
+        assert 'Velocity' in msg
+        assert 'automatically calculated based on point' in msg
+        assert 'Velocities from these points are not necessarily the same. This may cause errors in your calculations.' in msg
 
 def test_auto_vel_derivative():
     q1, q2 = dynamicsymbols('q1:3')

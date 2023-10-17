@@ -7,9 +7,9 @@ from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
+from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.sympify import SympifyError
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
@@ -121,7 +121,7 @@ class StrPrinter(Printer):
     def _print_Derivative(self, expr):
         dexpr = expr.expr
         dvars = [i[0] if i[1] == 1 else i for i in expr.variable_count]
-        return 'Derivative(%s)' % ", ".join(map(lambda arg: self._print(arg), [dexpr] + dvars))
+        return 'Derivative(%s)' % ", ".join((self._print(arg) for arg in [dexpr] + dvars))
 
     def _print_dict(self, d):
         keys = sorted(d.keys(), key=default_sort_key)
@@ -225,11 +225,8 @@ class StrPrinter(Printer):
 
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
-        if str(dir) == "+":
-            return "Limit(%s, %s, %s)" % tuple(map(self._print, (e, z, z0)))
-        else:
-            return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print,
-                                                            (e, z, z0, dir)))
+        return "Limit(%s, %s, %s, dir='%s')" % tuple(map(self._print, (e, z, z0, dir)))
+
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
@@ -253,7 +250,7 @@ class StrPrinter(Printer):
                 x[0] = ''
             if x[1] == dim:
                 x[1] = ''
-            return ':'.join(map(lambda arg: self._print(arg), x))
+            return ':'.join((self._print(arg) for arg in x))
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
                 strslice(expr.rowslice, expr.parent.rows) + ', ' +
                 strslice(expr.colslice, expr.parent.cols) + ']')
@@ -507,12 +504,12 @@ class StrPrinter(Printer):
 
     def _print_PolyRing(self, ring):
         return "Polynomial ring in %s over %s with %s order" % \
-            (", ".join(map(lambda rs: self._print(rs), ring.symbols)),
+            (", ".join((self._print(rs) for rs in ring.symbols)),
             self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
         return "Rational function field in %s over %s with %s order" % \
-            (", ".join(map(lambda fs: self._print(fs), field.symbols)),
+            (", ".join((self._print(fs) for fs in field.symbols)),
             self._print(field.domain), self._print(field.order))
 
     def _print_FreeGroupElement(self, elm):
@@ -654,7 +651,7 @@ class StrPrinter(Printer):
             if -expr.exp is S.Half and not rational:
                 # Note: Don't test "expr.exp == -S.Half" here, because that will
                 # match -0.5, which we don't want.
-                return "%s/sqrt(%s)" % tuple(map(lambda arg: self._print(arg), (S.One, expr.base)))
+                return "%s/sqrt(%s)" % tuple((self._print(arg) for arg in (S.One, expr.base)))
             if expr.exp is -S.One:
                 # Similarly to the S.Half case, don't test with "==" here.
                 return '%s/%s' % (self._print(S.One),
@@ -911,25 +908,22 @@ class StrPrinter(Printer):
     def _print_Zero(self, expr):
         if self._settings.get("sympy_integers", False):
             return "S(0)"
-        return "0"
+        return self._print_Integer(Integer(0))
 
     def _print_DMP(self, p):
-        try:
-            if p.ring is not None:
-                # TODO incorporate order
-                return self._print(p.ring.to_sympy(p))
-        except SympifyError:
-            pass
-
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        ring = self._print(p.ring)
 
-        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_DMF(self, expr):
-        return self._print_DMP(expr)
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+
+        return "%s(%s, %s, %s)" % (cls, num, den, dom)
 
     def _print_Object(self, obj):
         return 'Object("%s")' % obj.name

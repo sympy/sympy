@@ -54,10 +54,7 @@ class Literal:
         if callable(self.lit):
             lit = self.lit(expr)
         else:
-            try:
-                lit = self.lit.apply(expr)
-            except AttributeError:
-                lit = self.lit.rcall(expr)
+            lit = self.lit.apply(expr)
         return type(self)(lit, self.is_Not)
 
     def __invert__(self):
@@ -359,7 +356,7 @@ class CNF:
         return ll
 
     def rcall(self, expr):
-        clause_list = list()
+        clause_list = []
         for clause in self.clauses:
             lits = [arg.rcall(expr) for arg in clause]
             clause_list.append(OR(*lits))

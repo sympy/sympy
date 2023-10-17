@@ -94,7 +94,7 @@ class DiracDelta(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/DeltaFunction.html
+    .. [1] https://mathworld.wolfram.com/DeltaFunction.html
 
     """
 
@@ -441,8 +441,8 @@ class Heaviside(Function):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HeavisideStepFunction.html
-    .. [2] http://dlmf.nist.gov/1.16#iv
+    .. [1] https://mathworld.wolfram.com/HeavisideStepFunction.html
+    .. [2] https://dlmf.nist.gov/1.16#iv
 
     """
 

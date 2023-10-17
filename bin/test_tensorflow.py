@@ -6,16 +6,7 @@ These are separate from the other optional dependency tests because tensorflow
 pins the numpy version.
 """
 
-# Add the local sympy to sys.path (needed for CI)
-from get_sympy import path_hack
-path_hack()
-
-
-class TestsFailedError(Exception):
-    pass
-
-
-test_list = doctest_list = [
+TEST_LIST = DOCTEST_LIST = [
     'sympy/printing/tensorflow.py',
     'sympy/printing/tests/test_tensorflow.py',
     'sympy/stats/sampling',
@@ -24,9 +15,21 @@ test_list = doctest_list = [
 ]
 
 
-print('Testing optional dependencies')
+if __name__ == "__main__":
 
+    import sys
 
-import sympy
-if not (sympy.test(*test_list, verbose=True) and sympy.doctest(*doctest_list)):
-    raise TestsFailedError('Tests failed')
+    # Add the local SymPy to sys.path (needed for CI)
+    from get_sympy import path_hack
+    path_hack()
+    import sympy
+
+    # Note: The doctests are not tested here but there are many failures when
+    # running them with symengine.
+    args = TEST_LIST
+    test_exit_code = sympy.test(*args, verbose=True)
+    if test_exit_code != 0:
+        sys.exit(test_exit_code)
+    doctest_exit_code = sympy.doctest(*DOCTEST_LIST)
+    exit_code = 0 if doctest_exit_code is True else 1
+    sys.exit(exit_code)

@@ -7,9 +7,10 @@ from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
-from sympy.matrices.common import ShapeError, NonInvertibleMatrixError
+from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices.matrices import MatrixBase
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.matrices.expressions._shape import validate_matmul_integer as validate
 
 from .inverse import Inverse
 from .matexpr import MatrixExpr
@@ -56,13 +57,8 @@ class MatMul(MatrixExpr, Mul):
                 deprecated_since_version="1.11",
                 active_deprecations_target='remove-check-argument-from-matrix-operations')
 
-        if check in (True, None):
+        if check is not False:
             validate(*matrices)
-        else:
-            sympy_deprecation_warning(
-                "Passing check=False to MatMul is deprecated and the check argument will be removed in a future version.",
-                deprecated_since_version="1.11",
-                active_deprecations_target='remove-check-argument-from-matrix-operations')
 
         if not matrices:
             # Should it be
@@ -174,8 +170,6 @@ class MatMul(MatrixExpr, Mul):
         if factor != 1:
             from .trace import trace
             return factor * trace(mmul.doit())
-        else:
-            raise NotImplementedError("Can't simplify any further")
 
     def _eval_determinant(self):
         from sympy.matrices.expressions.determinant import Determinant
@@ -184,17 +178,18 @@ class MatMul(MatrixExpr, Mul):
         return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
-        try:
-            return MatMul(*[
+        if all(arg.is_square for arg in self.args if isinstance(arg, MatrixExpr)):
+            return MatMul(*(
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
-                    for arg in self.args[::-1]]).doit()
-        except ShapeError:
-            return Inverse(self)
+                    for arg in self.args[::-1]
+                )
+            ).doit()
+        return Inverse(self)
 
     def doit(self, **hints):
         deep = hints.get('deep', True)
         if deep:
-            args = [arg.doit(**hints) for arg in self.args]
+            args = tuple(arg.doit(**hints) for arg in self.args)
         else:
             args = self.args
 
@@ -241,16 +236,8 @@ class MatMul(MatrixExpr, Mul):
 
 mul.register_handlerclass((Mul, MatMul), MatMul)
 
-def validate(*matrices):
-    """ Checks for valid shapes for args of MatMul """
-    for i in range(len(matrices)-1):
-        A, B = matrices[i:i+2]
-        if A.cols != B.rows:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
 # Rules
-
-
 def newmul(*args):
     if args[0] == 1:
         args = args[1:]

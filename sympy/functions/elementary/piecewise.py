@@ -60,6 +60,7 @@ class ExprCondPair(Tuple):
     def _eval_simplify(self, **kwargs):
         return self.func(*[a.simplify(**kwargs) for a in self.args])
 
+
 class Piecewise(Function):
     """
     Represents a piecewise function.
@@ -236,6 +237,25 @@ class Piecewise(Function):
 
     def _eval_evalf(self, prec):
         return self.func(*[(e._evalf(prec), c) for e, c in self.args])
+
+    def _eval_is_meromorphic(self, x, a):
+        # Conditions often implicitly assume that the argument is real.
+        # Hence, there needs to be some check for as_set.
+        if not a.is_real:
+            return None
+
+        # Then, scan ExprCondPairs in the given order to find a piece that would contain a,
+        # possibly as a boundary point.
+        for e, c in self.args:
+            cond = c.subs(x, a)
+
+            if cond.is_Relational:
+                return None
+            if a in c.as_set().boundary:
+                return None
+            # Apply expression if a is an interior point of the domain of e.
+            if cond:
+                return e._eval_is_meromorphic(x, a)
 
     def piecewise_integrate(self, x, **kwargs):
         """Return the Piecewise with each expression being
@@ -910,7 +930,7 @@ class Piecewise(Function):
             last = ITE(c, a, last)
         return _canonical(last)
 
-    def _eval_rewrite_as_KroneckerDelta(self, *args):
+    def _eval_rewrite_as_KroneckerDelta(self, *args, **kwargs):
         from sympy.functions.special.tensor_functions import KroneckerDelta
 
         rules = {
@@ -1152,25 +1172,35 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 cset = iv - covered
                 if not cset:
                     continue
+                try:
+                    a = cset.inf
+                except NotImplementedError:
+                    pass # continue with the given `a`
+                else:
+                    incl_a = include(c, x, a)
                 if incl_a and incl_b:
                     if a.is_infinite and b.is_infinite:
                         c = S.true
                     elif b.is_infinite:
-                        c = (x >= a)
-                    elif a in covered or a.is_infinite:
+                        c = (x > a) if a in covered else (x >= a)
+                    elif a.is_infinite:
                         c = (x <= b)
+                    elif a in covered:
+                        c = And(a < x, x <= b)
                     else:
                         c = And(a <= x, x <= b)
                 elif incl_a:
-                    if a in covered or a.is_infinite:
+                    if a.is_infinite:
                         c = (x < b)
+                    elif a in covered:
+                        c = And(a < x, x < b)
                     else:
                         c = And(a <= x, x < b)
                 elif incl_b:
                     if b.is_infinite:
                         c = (x > a)
                     else:
-                        c = (x <= b)
+                        c = And(a < x, x <= b)
                 else:
                     if a in covered:
                         c = (x < b)

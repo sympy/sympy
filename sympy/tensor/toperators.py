@@ -3,9 +3,7 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
-from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul,
-                                 TensorIndex)
+from sympy.tensor.tensor import Tensor, TensExpr, TensAdd, TensMul
 
 
 class PartialDerivative(TensExpr):
@@ -242,8 +240,8 @@ class PartialDerivative(TensExpr):
             dim_after = len(array.shape)
             dim_increase = dim_after - dim_before
             array = permutedims(array, [i + dim_increase for i in range(dim_before)] + list(range(dim_increase)))
-            array: MutableDenseNDimArray = array.as_mutable()
-            varindex: TensorIndex = var_indices[0]
+            array = array.as_mutable()
+            varindex = var_indices[0]
             # Remove coefficients of base vector:
             coeff_index = [0] + [slice(None) for i in range(len(indices))]
             for i, coeff in enumerate(coeff_array):

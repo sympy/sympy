@@ -4,9 +4,8 @@ from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
-from sympy.core.numbers import igcdex, ilcm, igcd
-from sympy.core.power import integer_nthroot, isqrt
+from sympy.core.numbers import Rational, int_valued
+from sympy.core.intfunc import igcdex, ilcm, igcd, integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key, ordered
@@ -174,7 +173,7 @@ class DiophantineEquationType:
             raise ValueError('equation should have 1 or more free symbols')
 
         self.coeff = self.equation.as_coefficients_dict()
-        if not all(_is_int(c) for c in self.coeff.values()):
+        if not all(int_valued(c) for c in self.coeff.values()):
             raise TypeError("Coefficients should be Integers")
 
         self.total_degree = Poly(self.equation).total_degree()
@@ -471,7 +470,7 @@ class BinaryQuadratic(DiophantineEquationType):
     ==========
 
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
-          Available: http://www.alpertron.com.ar/METHODS.HTM
+          Available: https://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
           Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
@@ -502,7 +501,7 @@ class BinaryQuadratic(DiophantineEquationType):
         # (1) Simple-Hyperbolic case: A = C = 0, B != 0
         # In this case equation can be converted to (Bx + E)(By + D) = DE - BF
         # We consider two cases; DE - BF = 0 and DE - BF != 0
-        # More details, http://www.alpertron.com.ar/METHODS.HTM#SHyperb
+        # More details, https://www.alpertron.com.ar/METHODS.HTM#SHyperb
 
         result = DiophantineSolutionSet(var, self.parameters)
         t, u = result.parameters
@@ -532,7 +531,7 @@ class BinaryQuadratic(DiophantineEquationType):
         # (2) Parabolic case: B**2 - 4*A*C = 0
         # There are two subcases to be considered in this case.
         # sqrt(c)D - sqrt(a)E = 0 and sqrt(c)D - sqrt(a)E != 0
-        # More Details, http://www.alpertron.com.ar/METHODS.HTM#Parabol
+        # More Details, https://www.alpertron.com.ar/METHODS.HTM#Parabol
 
         elif discr == 0:
 
@@ -558,7 +557,7 @@ class BinaryQuadratic(DiophantineEquationType):
                         ans = diop_solve(sqa*x + e*sqc*y - root)
                         result.add((ans[0], ans[1]))
 
-                elif _is_int(c):
+                elif int_valued(c):
                     solve_x = lambda u: -e*sqc*g*_c*t**2 - (E + 2*e*sqc*g*u)*t \
                                         - (e*sqc*g*u**2 + E*u + e*sqc*F) // _c
 
@@ -631,7 +630,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 T = a[0][0]
                 U = a[0][1]
 
-                if all(_is_int(_) for _ in P[:4] + Q[:2]):
+                if all(int_valued(_) for _ in P[:4] + Q[:2]):
                     for r, s in solns_pell:
                         _a = (r + s*sqrt(D))*(T + U*sqrt(D))**t
                         _b = (r - s*sqrt(D))*(T - U*sqrt(D))**t
@@ -655,7 +654,7 @@ class BinaryQuadratic(DiophantineEquationType):
                     for X, Y in solns_pell:
 
                         for i in range(k):
-                            if all(_is_int(_) for _ in P*Matrix([X, Y]) + Q):
+                            if all(int_valued(_) for _ in P*Matrix([X, Y]) + Q):
                                 _a = (X + sqrt(D)*Y)*(T_k + sqrt(D)*U_k)**t
                                 _b = (X - sqrt(D)*Y)*(T_k - sqrt(D)*U_k)**t
                                 Xt = S(_a + _b) / 2
@@ -995,7 +994,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
 
     name = 'general_sum_of_squares'
@@ -1223,14 +1222,6 @@ all_diop_classes = [
 diop_known = {diop_class.name for diop_class in all_diop_classes}
 
 
-def _is_int(i):
-    try:
-        as_int(i)
-        return True
-    except ValueError:
-        pass
-
-
 def _sorted_tuple(*i):
     return tuple(sorted(i))
 
@@ -1307,6 +1298,12 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     True then permutations of the base solution and/or permutations of the
     signs of the values will be returned when applicable.
 
+    Details
+    =======
+
+    ``eq`` should be an expression which is assumed to be zero.
+    ``t`` is the parameter to be used in the solution.
+
     Examples
     ========
 
@@ -1317,15 +1314,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     {(2, 3)}
     >>> diophantine(eq, permute=True)
     {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
-
-    Details
-    =======
-
-    ``eq`` should be an expression which is assumed to be zero.
-    ``t`` is the parameter to be used in the solution.
-
-    Examples
-    ========
 
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
@@ -1339,7 +1327,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     See Also
     ========
 
-    diop_solve()
+    diop_solve
     sympy.utilities.iterables.permute_signs
     sympy.utilities.iterables.signed_permutations
     """
@@ -1412,7 +1400,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y), (x, z), (y, z)]
                     xy_coeff = True
                     x_coeff = True
-                    var1_mul_var2 = map(lambda a: a[0]*a[1], var_mul)
+                    var1_mul_var2 = (a[0]*a[1] for a in var_mul)
                     # if coeff(y*z), coeff(y*x), coeff(x*z) is not 0 then
                     # `xy_coeff` => True and do_permute_sign => False.
                     # Means no permuted solution.
@@ -1440,7 +1428,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                     # here var_mul is like [(x, y)]
                     xy_coeff = True
                     x_coeff = True
-                    var1_mul_var2 = map(lambda x: x[0]*x[1], var_mul)
+                    var1_mul_var2 = (x[0]*x[1] for x in var_mul)
                     for v1_mul_v2 in var1_mul_var2:
                         try:
                             coeff = c[v1_mul_v2]
@@ -1513,7 +1501,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         sols.add(null)
     final_soln = set()
     for sol in sols:
-        if all(_is_int(s) for s in sol):
+        if all(int_valued(s) for s in sol):
             if do_permute_signs:
                 permuted_sign = set(permute_signs(sol))
                 final_soln.update(permuted_sign)
@@ -1562,7 +1550,7 @@ def merge_solution(var, var_t, solution):
 
     for val, symb in zip(sol, var):
         if check_assumptions(val, **symb.assumptions0) is False:
-            return tuple()
+            return ()
 
     return tuple(sol)
 
@@ -1921,7 +1909,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     ==========
 
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
-          Available: http://www.alpertron.com.ar/METHODS.HTM
+          Available: https://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
           Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
@@ -3114,7 +3102,7 @@ def sqf_normal(a, b, c, steps=False):
     ==========
 
     .. [1] Legendre's Theorem, Legrange's Descent,
-           http://public.csusm.edu/aitken_html/notes/legendre.pdf
+           https://public.csusm.edu/aitken_html/notes/legendre.pdf
 
 
     See Also
@@ -3322,7 +3310,7 @@ def gaussian_reduce(w, a, b):
     ==========
 
     .. [1] Gaussian lattice Reduction [online]. Available:
-           http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
+           https://web.archive.org/web/20201021115213/http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin,
            Mathematics of Computation, Volume 00, Number 0.
     """
@@ -3501,7 +3489,7 @@ def diop_general_sum_of_squares(eq, limit=1):
 
     .. [1] Representing an integer as a sum of three squares, [online],
         Available:
-        http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
+        https://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
@@ -3620,7 +3608,7 @@ def prime_as_sum_of_two_squares(p):
     =========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -3670,7 +3658,7 @@ def sum_of_three_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of three squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========
@@ -3750,7 +3738,7 @@ def sum_of_four_squares(n):
     ==========
 
     .. [1] Representing a number as a sum of four squares, [online],
-        Available: http://schorn.ch/lagrange.html
+        Available: https://schorn.ch/lagrange.html
 
     See Also
     ========

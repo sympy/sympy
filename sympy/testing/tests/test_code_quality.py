@@ -232,7 +232,7 @@ def test_files():
                     test_set.add(line[3:].split('(')[0].strip())
                     if len(test_set) != tests:
                         assert False, message_duplicate_test % (fname, idx + 1)
-            if line.endswith(" \n") or line.endswith("\t\n"):
+            if line.endswith((" \n", "\t\n")):
                 assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
                 assert False, message_carriage % (fname, idx + 1)
@@ -267,7 +267,6 @@ def test_files():
         "isympy.py",
         "build.py",
         "setup.py",
-        "setupegg.py",
     ]]
     # Files to exclude from all tests
     exclude = {
@@ -308,7 +307,6 @@ def test_files():
         "%(sep)sutilities%(sep)srandtest.py" % sepd,
         "%(sep)sutilities%(sep)stmpfiles.py" % sepd,
         "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
-        "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
     }
     check_files(top_level_files, test)
     check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh", ".mjs"}, "*")

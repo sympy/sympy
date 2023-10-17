@@ -29,17 +29,17 @@ all_units.append(Z0)
 dimsys_MKSA = dimsys_length_weight_time.extend([
     # Dimensional dependencies for base dimensions (MKSA not in MKS)
     current,
-], new_dim_deps=dict(
+], new_dim_deps={
     # Dimensional dependencies for derived dimensions
-    voltage=dict(mass=1, length=2, current=-1, time=-3),
-    impedance=dict(mass=1, length=2, current=-2, time=-3),
-    conductance=dict(mass=-1, length=-2, current=2, time=3),
-    capacitance=dict(mass=-1, length=-2, current=2, time=4),
-    inductance=dict(mass=1, length=2, current=-2, time=-2),
-    charge=dict(current=1, time=1),
-    magnetic_density=dict(mass=1, current=-1, time=-2),
-    magnetic_flux=dict(length=2, mass=1, current=-1, time=-2),
-))
+    "voltage": {"mass": 1, "length": 2, "current": -1, "time": -3},
+    "impedance": {"mass": 1, "length": 2, "current": -2, "time": -3},
+    "conductance": {"mass": -1, "length": -2, "current": 2, "time": 3},
+    "capacitance": {"mass": -1, "length": -2, "current": 2, "time": 4},
+    "inductance": {"mass": 1, "length": 2, "current": -2, "time": -2},
+    "charge": {"current": 1, "time": 1},
+    "magnetic_density": {"mass": 1, "current": -1, "time": -2},
+    "magnetic_flux": {"length": 2, "mass": 1, "current": -1, "time": -2},
+})
 
 MKSA = MKS.extend(base=(ampere,), units=all_units, name='MKSA', dimension_system=dimsys_MKSA, derived_units={
     magnetic_flux: weber,

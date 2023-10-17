@@ -49,7 +49,6 @@ def default_sort_key(item, order=None):
     >>> default_sort_key(2)
     ((1, 0, 'Number'), (0, ()), (), 2)
 
-
     While sort_key is a method only defined for SymPy objects,
     default_sort_key will accept anything as an argument so it is
     more robust as a sorting key. For the following, using key=
@@ -69,8 +68,8 @@ def default_sort_key(item, order=None):
     >>> min(a, key=default_sort_key)
     2
 
-    Note
-    ----
+    Notes
+    =====
 
     The key returned is useful for getting items into a canonical order
     that will be the same across platforms. It is not directly useful for
@@ -201,15 +200,18 @@ def _nodes(e):
 
 
 def ordered(seq, keys=None, default=True, warn=False):
-    """Return an iterator of the seq where keys are used to break ties in
-    a conservative fashion: if, after applying a key, there are no ties
-    then no other keys will be computed.
+    """Return an iterator of the seq where keys are used to break ties
+    in a conservative fashion: if, after applying a key, there are no
+    ties then no other keys will be computed.
 
-    Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys do not resolve all ties (but only if ``default`` is True). The
-    two keys are ``_nodes`` (which places smaller expressions before large) and
-    ``default_sort_key`` which (if the ``sort_key`` for an object is defined
-    properly) should resolve any ties.
+    Two default keys will be applied if 1) keys are not provided or
+    2) the given keys do not resolve all ties (but only if ``default``
+    is True). The two keys are ``_nodes`` (which places smaller
+    expressions before large) and ``default_sort_key`` which (if the
+    ``sort_key`` for an object is defined properly) should resolve
+    any ties. This strategy is similar to sorting done by
+    ``Basic.compare``, but differs in that ``ordered`` never makes a
+    decision based on an objects name.
 
     If ``warn`` is True then an error will be raised if there were no
     keys remaining to break ties. This can be used if it was expected that

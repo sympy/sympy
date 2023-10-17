@@ -1706,7 +1706,7 @@ class LatexPrinter(Printer):
     def _print_MatrixBase(self, expr):
         out_str = self._print_matrix_contents(expr)
         if self._settings['mat_delim']:
-            left_delim: str = self._settings['mat_delim']
+            left_delim = self._settings['mat_delim']
             right_delim = self._delim_dict[left_delim]
             out_str = r'\left' + left_delim + out_str + \
                       r'\right' + right_delim
@@ -1811,7 +1811,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \circ '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_HadamardPower(self, expr):
         if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
@@ -1826,7 +1826,7 @@ class LatexPrinter(Printer):
         parens = self.parenthesize
 
         return r' \otimes '.join(
-            map(lambda arg: parens(arg, prec, strict=True), args))
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -2730,12 +2730,20 @@ class LatexPrinter(Printer):
             '{' + self._print(x) + '}' for x in m))
 
     def _print_SubModule(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for x in m.gens))
+        gens = [[self._print(m.ring.to_sympy(x)) for x in g] for g in m.gens]
+        curly = lambda o: r"{" + o + r"}"
+        square = lambda o: r"\left[ " + o + r" \right]"
+        gens_latex = ",".join(curly(square(",".join(curly(x) for x in g))) for g in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
+
+    def _print_SubQuotientModule(self, m):
+        gens_latex = ",".join(["{" + self._print(g) + "}" for g in m.gens])
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_ModuleImplementedIdeal(self, m):
-        return r"\left\langle {} \right\rangle".format(",".join(
-            '{' + self._print(x) + '}' for [x] in m._module.gens))
+        gens = [m.ring.to_sympy(x) for [x] in m._module.gens]
+        gens_latex = ",".join('{' + self._print(x) + '}' for x in gens)
+        return r"\left\langle {} \right\rangle".format(gens_latex)
 
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
@@ -2751,11 +2759,15 @@ class LatexPrinter(Printer):
                  self._print(R.base_ideal))
 
     def _print_QuotientRingElement(self, x):
-        return r"{{{}}} + {{{}}}".format(self._print(x.data),
+        x_latex = self._print(x.ring.to_sympy(x))
+        return r"{{{}}} + {{{}}}".format(x_latex,
                  self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
-        return r"{{{}}} + {{{}}}".format(self._print(m.data),
+        data = [m.module.ring.to_sympy(x) for x in m.data]
+        data_latex = r"\left[ {} \right]".format(",".join(
+            '{' + self._print(x) + '}' for x in data))
+        return r"{{{}}} + {{{}}}".format(data_latex,
                  self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
@@ -2876,6 +2888,12 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_mpq(self, expr):
+        return str(expr)
+
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
         return str(expr)
 
     def _print_Predicate(self, expr):

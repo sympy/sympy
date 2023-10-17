@@ -26,14 +26,14 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         lev = len(gens) - 1
         self.ngens = len(gens)
 
-        self.zero = self.dtype.zero(lev, dom, ring=self)
-        self.one = self.dtype.one(lev, dom, ring=self)
+        self.zero = self.dtype.zero(lev, dom)
+        self.one = self.dtype.one(lev, dom)
 
         self.domain = self.dom = dom
         self.symbols = self.gens = gens
 
     def new(self, element):
-        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+        return self.dtype(element, self.dom, len(self.gens) - 1)
 
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
@@ -45,6 +45,13 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, FractionField) and \
             self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
+
+    @property
+    def has_CharacteristicZero(self):
+        return self.dom.has_CharacteristicZero
+
+    def characteristic(self):
+        return self.dom.characteristic()
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
@@ -94,9 +101,9 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         """Convert a ``DMF`` object to ``dtype``. """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
-                return K1(a.rep)
+                return K1(a.to_list())
             else:
-                return K1(a.convert(K1.dom).rep)
+                return K1(a.convert(K1.dom).to_list())
         else:
             monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
 
@@ -122,15 +129,15 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         >>> ZZx = ZZ.old_frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
-        (x + 2)/(x + 1)
+        DMF([1, 2], [1, 1], QQ)
 
         """
         if K1.gens == K0.gens:
             if K1.dom == K0.dom:
                 return a
             else:
-                return K1((a.numer().convert(K1.dom).rep,
-                           a.denom().convert(K1.dom).rep))
+                return K1((a.numer().convert(K1.dom).to_list(),
+                           a.denom().convert(K1.dom).to_list()))
         elif set(K0.gens).issubset(K1.gens):
             nmonoms, ncoeffs = _dict_reorder(
                 a.numer().to_dict(), K0.gens, K1.gens)
