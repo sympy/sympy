@@ -270,11 +270,11 @@ def cse_separate(r, e):
     >>> from sympy import cos, exp, cse, Eq, symbols
     >>> x0, x1 = symbols('x:2')
     >>> eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
-    >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate) in (
-    ... ([(x0, y + 1), (x, z + 1), (x1, x + 1)],
-    ...  [x1 + exp(x1/x0) + cos(x0), z - 2]),
-    ... ([(x1, y + 1), (x, z + 1), (x0, x + 1)],
-    ...  [x0 + exp(x0/x1) + cos(x1), z - 2]))
+    >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate) in [
+    ... [[(x0, y + 1), (x, z + 1), (x1, x + 1)],
+    ...  [x1 + exp(x1/x0) + cos(x0), z - 2]],
+    ... [[(x1, y + 1), (x, z + 1), (x0, x + 1)],
+    ...  [x0 + exp(x0/x1) + cos(x1), z - 2]]]
     ...
     True
     """
