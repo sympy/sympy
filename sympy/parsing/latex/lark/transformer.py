@@ -158,10 +158,14 @@ class TransformToSymPyExpr(Transformer):
 
     def sub(self, tokens):
         if len(tokens) == 2:
-            if TransformToSymPyExpr.evaluate:
-                return -tokens[1]
-            else:
-                return sympy.Mul(-1, tokens[1], evaluate=False)
+            # we want to parse things like -3.14 without an unevaluated
+            # multiplication showing up in the parse tree. This is very
+            # important when parsing things like "\sin^{-1} x" because
+            # using a `evaluate=False` multiplication node will make
+            # it show up as:
+            # `sympy.sin(x, sympy.Mul(-1, 1, evaluate=False), evaluate=False)`,
+            # which is not useful to anyone.
+            return -tokens[1]
         elif len(tokens) == 3:
             if TransformToSymPyExpr.evaluate:
                 return sympy.Add(tokens[0], -tokens[2])
@@ -192,9 +196,15 @@ class TransformToSymPyExpr(Transformer):
             return tokens[0], tokens[1]
         elif isinstance(tokens[0], tuple):
             # then we have a derivative
-            return sympy.Derivative(tokens[1], tokens[0][1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Derivative(tokens[1], tokens[0][1])
+            else:
+                return sympy.Derivative(tokens[1], tokens[0][1], evaluate=False)
         else:
-            return sympy.Mul(tokens[0], tokens[1])
+            if TransformToSymPyExpr.evaluate:
+                return sympy.Mul(tokens[0], tokens[1])
+            else:
+                return sympy.Mul(tokens[0], tokens[1], evaluate=False)
 
     def superscript(self, tokens):
         if TransformToSymPyExpr.evaluate:
@@ -286,16 +296,10 @@ class TransformToSymPyExpr(Transformer):
 
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
-            if TransformToSymPyExpr.evaluate:
-                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
-            else:
-                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound), evaluate=False)
+            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
         else:
             # we have an indefinite integral
-            if TransformToSymPyExpr.evaluate:
-                return sympy.Integral(integrand, differential_variable)
-            else:
-                return sympy.Integral(integrand, differential_variable, evaluate=False)
+            return sympy.Integral(integrand, differential_variable)
 
     def group_curly_parentheses_int(self, tokens):
         # return signature is a tuple consisting of the expression in the numerator, along with the variable of
@@ -347,16 +351,10 @@ class TransformToSymPyExpr(Transformer):
 
             # we can assume that either both the lower and upper bounds are given, or
             # neither of them are
-            if TransformToSymPyExpr.evaluate:
-                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
-            else:
-                return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound), evaluate=False)
+            return sympy.Integral(integrand, (differential_variable, lower_bound, upper_bound))
         else:
             # we have an indefinite integral
-            if TransformToSymPyExpr.evaluate:
-                return sympy.Integral(integrand, differential_variable)
-            else:
-                return sympy.Integral(integrand, differential_variable, evaluate=False)
+            return sympy.Integral(integrand, differential_variable)
 
     def group_curly_parentheses_special(self, tokens):
         underscore_index = tokens.index("_")
@@ -394,16 +392,10 @@ class TransformToSymPyExpr(Transformer):
         return index_variable, lower_limit, upper_limit
 
     def summation(self, tokens):
-        if TransformToSymPyExpr.evaluate:
-            return sympy.Sum(tokens[2], tokens[1])
-        else:
-            return sympy.Sum(tokens[2], tokens[1], evaluate=False)
+        return sympy.Sum(tokens[2], tokens[1])
 
     def product(self, tokens):
-        if TransformToSymPyExpr.evaluate:
-            return sympy.Product(tokens[2], tokens[1])
-        else:
-            return sympy.Product(tokens[2], tokens[1], evaluate=False)
+        return sympy.Product(tokens[2], tokens[1])
 
     def limit_dir_expr(self, tokens):
         caret_index = tokens.index("^")
