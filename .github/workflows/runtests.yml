@@ -20,7 +20,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
 
       - run: pip install -r requirements-dev.txt
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy hypothesis
 
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -98,7 +98,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -125,44 +125,22 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
+    name: Tests ${{ matrix.group }}/4
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: bin/test --split ${{ matrix.group }}/4
-
-  # -------------------- Test Pyodide on node ---------------------- #
-
-  test-pyodide:
-    needs: code-quality
-
-    runs-on: ubuntu-20.04
-    timeout-minutes: 75
-    continue-on-error: true
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [1, 2, 3, 4]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: python -m pip install --upgrade pip
-      - run: pip install build
-      - run: wget -qO- https://github.com/pyodide/pyodide/releases/download/0.22.0/pyodide-core-0.22.0.tar.bz2 | tar xjf -
-      - run: python -m build --wheel
-      - run: node bin/test_pyodide.mjs --group=${{ matrix.group }} --splits=4 2>/dev/null  # ignore node exception
 
   # -------------------- Optional dependency tests ----------------- #
 
@@ -170,23 +148,14 @@ jobs:
     needs: code-quality
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', 'pypy3.8']
-        experimental: [false]
-        #
-        # For now we do not test optional dependencies with 3.12 because as of
-        # 3.12.a.5 it is not possible to pip install numpy. Building numpy,
-        # scipy etc from source is overkill for sympy CI. It is probably not
-        # possible to install builds of most of the other optional dependencies
-        # either (especially since many depend on numpy).
-        #
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+
+    name: ${{ matrix.python-version }} Optional Dendendencies
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -197,22 +166,19 @@ jobs:
 
       # Install the non-Python dependencies
       - run: sudo apt-get update
-      - run: sudo apt-get install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev libopenblas-dev clang
+      - run: sudo apt-get install antlr4 clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
       # dependencies to install in all Python versions:
-      - run: pip install numpy numexpr matplotlib ipython cython scipy aesara \
-                         wurlitzer autowrap lxml lark z3-solver pycosat        \
-                         'antlr4-python3-runtime==4.11.*'
+      - run: pip install numpy numexpr matplotlib ipython cython          \
+                         wurlitzer autowrap lxml lark z3-solver pycosat   \
+                         jax jaxlib libclang scipy aesara                 \
+                         'antlr4-python3-runtime==4.11.*'                 \
                          #
 
-      # Not available in pypy or cpython 3.11 (yet).
-      - if: ${{ ! contains(matrix.python-version, 'pypy') && ! contains(matrix.python-version, '3.11') }}
-        run: pip install llvmlite numba
-
-      # These are not available for pypy
-      - if: ${{ ! contains(matrix.python-version, 'pypy') }}
-        run: pip install gmpy2 jax jaxlib symengine pymc libclang
+      # Not available in CPython 3.12 (yet).
+      - if: ${{ ! contains(matrix.python-version, '3.12') }}
+        run: pip install llvmlite numba gmpy2 symengine pymc
 
       # Test external imports
       - run: bin/test_external_imports.py
@@ -232,6 +198,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+          # python-flint is not yet available for Python 3.12
+          # https://github.com/flintlib/python-flint/issues/52
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
@@ -299,12 +267,12 @@ jobs:
   tensorflow:
     needs: code-quality
 
-
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+          # tensorflow not yet available for 3.12
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
@@ -322,6 +290,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
+          # symengine not yet available for 3.12
           python-version: '3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
@@ -337,15 +306,17 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
+
     strategy:
       fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: bin/test --slow --timeout 595 --split ${{ matrix.group }}/4
@@ -356,17 +327,15 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
-        experimental: [false]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
         group: [1, 2, 3, 4]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+
+    name: ${{ matrix.python-version }} ${{ matrix.group }}/4 Tests
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -382,16 +351,14 @@ jobs:
     needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-20.04
-    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.12-dev', 'pypy-3.8']
-        experimental: [false]
-        # Maybe use this to add 3.12 when the time comes:
-        #include:
-        #  - python-version: '3.12.0-alpha - 3.12'
-        #    experimental: true
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
+
+    name: ${{ matrix.python-version }} Doctests
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -412,7 +379,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -452,7 +419,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -470,7 +437,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
