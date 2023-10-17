@@ -28,7 +28,8 @@ from functools import reduce
 
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, I, oo
+from sympy.core.intfunc import ilcm
+from sympy.core.numbers import I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -869,7 +870,7 @@ def as_poly_1t(p, t, z):
         # issue 4950
         raise NotImplementedError(e)
     # Compute the negative degree parts.
-    one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
+    one_t_part = Poly.from_list(reversed(one_t_part.rep.to_list()), *one_t_part.gens,
         domain=one_t_part.domain)
     if 0 < r < oo:
         one_t_part *= Poly(t**r, t)

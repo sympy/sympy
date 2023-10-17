@@ -173,15 +173,15 @@ angstrom.set_global_relative_scale_factor(Rational(1, 10**10), meter)
 
 ha = hectare = Quantity("hectare", abbrev="ha")
 
-l = L = liter = liters = Quantity("liter")
+l = L = liter = liters = Quantity("liter", abbrev="l")
 
-dl = dL = deciliter = deciliters = Quantity("deciliter")
+dl = dL = deciliter = deciliters = Quantity("deciliter", abbrev="dl")
 dl.set_global_relative_scale_factor(Rational(1, 10), liter)
 
-cl = cL = centiliter = centiliters = Quantity("centiliter")
+cl = cL = centiliter = centiliters = Quantity("centiliter", abbrev="cl")
 cl.set_global_relative_scale_factor(Rational(1, 100), liter)
 
-ml = mL = milliliter = milliliters = Quantity("milliliter")
+ml = mL = milliliter = milliliters = Quantity("milliliter", abbrev="ml")
 ml.set_global_relative_scale_factor(Rational(1, 1000), liter)
 
 

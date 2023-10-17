@@ -6,58 +6,158 @@ Primality testing
 from itertools import count
 
 from sympy.core.sympify import sympify
-from sympy.external.gmpy import gmpy as _gmpy, jacobi, is_square as gmpy_is_square
+from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
+                                 is_square as gmpy_is_square,
+                                 bit_scan1, is_fermat_prp, is_euler_prp)
 from sympy.utilities.misc import as_int
 
-from mpmath.libmp import bitcount as _bitlength
 
+def is_fermat_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-def _int_tuple(*i):
-    return tuple(int(_) for _ in i)
-
-
-def is_euler_pseudoprime(n, b):
-    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
-
-    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
-    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
-    arithmetic congruence relation :
-
-    a ^ (n-1)/2 = + 1(mod n) or
-    a ^ (n-1)/2 = - 1(mod n)
+    .. math ::
+        a^{n-1} \equiv 1 \pmod{n}
 
     (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Fermat pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_fermat_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_fermat_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
+    645
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Fermat_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_fermat_prp(n, a)
+
+
+def is_euler_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
+
+    .. math ::
+        a^{(n-1)/2} \equiv \pm 1 \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler pseudoprime.
 
     Examples
     ========
 
     >>> from sympy.ntheory.primetest import is_euler_pseudoprime
-    >>> is_euler_pseudoprime(2, 5)
-    True
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    341
+    561
 
     References
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
     """
-    from sympy.ntheory.factor_ import trailing
-
-    if not mr(n, [b]):
+    n, a = as_int(n), as_int(a)
+    if a < 1:
+        raise ValueError("a should be an integer greater than 0")
+    if n < 1:
+        raise ValueError("n should be an integer greater than 0")
+    if n == 1:
         return False
+    if a == 1:
+        return n == 2 or bool(n % 2)  # (prime or odd composite)
+    if n % 2 == 0:
+        return n == 2
+    if gcd(n, a) != 1:
+        raise ValueError("The two numbers should be relatively prime")
+    return pow(a, (n - 1) // 2, n) in [1, n - 1]
 
-    n = as_int(n)
-    r = n - 1
-    c = pow(b, r >> trailing(r), n)
 
-    if c == 1:
-        return True
+def is_euler_jacobi_pseudoprime(n, a):
+    r"""Returns True if ``n`` is prime or is an odd composite integer that
+    is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
-    while True:
-        if c == n - 1:
-            return True
-        c = pow(c, 2, n)
-        if c == 1:
-            return False
+    .. math ::
+        a^{(n-1)/2} \equiv \left(\frac{a}{n}\right) \pmod{n}
+
+    (where mod refers to the modulo operation).
+
+    Parameters
+    ==========
+
+    n : Integer
+        ``n`` is a positive integer.
+    a : Integer
+        ``a`` is a positive integer.
+        ``a`` and ``n`` should be relatively prime.
+
+    Returns
+    =======
+
+    bool : If ``n`` is prime, it always returns ``True``.
+           The composite number that returns ``True`` is called an Euler-Jacobi pseudoprime.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_jacobi_pseudoprime
+    >>> from sympy.ntheory.factor_ import isprime
+    >>> for n in range(1, 1000):
+    ...     if is_euler_jacobi_pseudoprime(n, 2) and not isprime(n):
+    ...         print(n)
+    561
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler%E2%80%93Jacobi_pseudoprime
+    """
+    n, a = as_int(n), as_int(a)
+    if a == 1:
+        return n == 2 or bool(n % 2)
+    return is_euler_prp(n, a)
 
 
 def is_square(n, prep=True):
@@ -81,7 +181,7 @@ def is_square(n, prep=True):
 
     See Also
     ========
-    sympy.core.power.isqrt
+    sympy.core.intfunc.isqrt
     """
     if prep:
         n = as_int(n)
@@ -102,14 +202,13 @@ def _test(n, base, s, t):
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
-    else:
-        for j in range(1, s):
-            b = pow(b, 2, n)
-            if b == n - 1:
-                return True
-            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
-            if b == 1:
-                return False
+    for _ in range(s - 1):
+        b = pow(b, 2, n)
+        if b == n - 1:
+            return True
+        # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+        if b == 1:
+            return False
     return False
 
 
@@ -136,14 +235,13 @@ def mr(n, bases):
     True
 
     """
-    from sympy.ntheory.factor_ import trailing
     from sympy.polys.domains import ZZ
 
     n = as_int(n)
     if n < 2:
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
-    s = trailing(n - 1)
+    s = bit_scan1(n - 1)
     t = n >> s
     for base in bases:
         # Bases >= n are wrapped, bases < 2 are invalid
@@ -157,15 +255,47 @@ def mr(n, bases):
 
 
 def _lucas_sequence(n, P, Q, k):
-    """Return the modular Lucas sequence (U_k, V_k, Q_k).
+    r"""Return the modular Lucas sequence (U_k, V_k, Q_k).
+
+    Explanation
+    ===========
 
     Given a Lucas sequence defined by P, Q, returns the kth values for
-    U and V, along with Q^k, all modulo n.  This is intended for use with
+    U and V, along with Q^k, all modulo n. This is intended for use with
     possibly very large values of n and k, where the combinatorial functions
     would be completely unusable.
 
+    .. math ::
+        U_k = \begin{cases}
+             0 & \text{if } k = 0\\
+             1 & \text{if } k = 1\\
+             PU_{k-1} - QU_{k-2} & \text{if } k > 1
+        \end{cases}\\
+        V_k = \begin{cases}
+             2 & \text{if } k = 0\\
+             P & \text{if } k = 1\\
+             PV_{k-1} - QV_{k-2} & \text{if } k > 1
+        \end{cases}
+
     The modular Lucas sequences are used in numerous places in number theory,
     especially in the Lucas compositeness tests and the various n + 1 proofs.
+
+    Parameters
+    ==========
+
+    n : int
+        n is an odd number greater than or equal to 3
+    P : int
+    Q : int
+        D determined by D = P**2 - 4*Q is non-zero
+    k : int
+        k is a nonnegative integer
+
+    Returns
+    =======
+
+    U, V, Qk : (int, int, int)
+        `(U_k \bmod{n}, V_k \bmod{n}, Q^k \bmod{n})`
 
     Examples
     ========
@@ -175,28 +305,24 @@ def _lucas_sequence(n, P, Q, k):
     >>> sol = U, V, Qk = _lucas_sequence(N, 3, 1, N//2); sol
     (0, 2, 1)
 
-    """
-    D = P*P - 4*Q
-    if n < 2:
-        raise ValueError("n must be >= 2")
-    if k < 0:
-        raise ValueError("k must be >= 0")
-    if D == 0:
-        raise ValueError("D must not be zero")
+    References
+    ==========
 
+    .. [1] https://en.wikipedia.org/wiki/Lucas_sequence
+
+    """
     if k == 0:
-        return _int_tuple(0, 2, Q)
+        return (0, 2, 1)
+    D = P**2 - 4*Q
     U = 1
     V = P
-    Qk = Q
-    b = _bitlength(k)
+    Qk = Q % n
     if Q == 1:
         # Optimization for extra strong tests.
-        while b > 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             V = (V*V - 2) % n
-            b -= 1
-            if (k >> (b - 1)) & 1:
+            if b == "1":
                 U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
@@ -205,30 +331,45 @@ def _lucas_sequence(n, P, Q, k):
                 U, V = U >> 1, V >> 1
     elif P == 1 and Q == -1:
         # Small optimization for 50% of Selfridge parameters.
-        while b > 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             if Qk == 1:
                 V = (V*V - 2) % n
             else:
                 V = (V*V + 2) % n
                 Qk = 1
-            b -= 1
-            if (k >> (b-1)) & 1:
-                U, V = U + V, V + U*D
+            if b == "1":
+                # new_U = (U + V) // 2
+                # new_V = (5*U + V) // 2 = 2*U + new_U
+                U, V  = U + V, U << 1
                 if U & 1:
                     U += n
-                if V & 1:
-                    V += n
-                U, V = U >> 1, V >> 1
+                U >>= 1
+                V += U
                 Qk = -1
-    else:
-        # The general case with any P and Q.
-        while b > 1:
+        Qk %= n
+    elif P == 1:
+        for b in bin(k)[3:]:
             U = (U*V) % n
             V = (V*V - 2*Qk) % n
             Qk *= Qk
-            b -= 1
-            if (k >> (b - 1)) & 1:
+            if b == "1":
+                # new_U = (U + V) // 2
+                # new_V = new_U - 2*Q*U
+                U, V  = U + V, (Q*U) << 1
+                if U & 1:
+                    U += n
+                U >>= 1
+                V = U - V
+                Qk *= Q
+            Qk %= n
+    else:
+        # The general case with any P and Q.
+        for b in bin(k)[3:]:
+            U = (U*V) % n
+            V = (V*V - 2*Qk) % n
+            Qk *= Qk
+            if b == "1":
                 U, V = U*P + V, V*P + U*D
                 if U & 1:
                     U += n
@@ -237,7 +378,7 @@ def _lucas_sequence(n, P, Q, k):
                 U, V = U >> 1, V >> 1
                 Qk *= Q
             Qk %= n
-    return _int_tuple(U % n, V % n, Qk)
+    return (U % n, V % n, Qk)
 
 
 def _lucas_selfridge_params(n):
@@ -417,7 +558,6 @@ def is_strong_lucas_prp(n):
     16109
     18971
     """
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -431,7 +571,7 @@ def is_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
+    s = bit_scan1(n + 1)
     k = (n + 1) >> s
 
     U, V, Qk = _lucas_sequence(n, P, Q, k)
@@ -491,7 +631,6 @@ def is_extra_strong_lucas_prp(n):
     #   2) The MathWorld page as of June 2013 specifies Q=-1.  The Lucas
     #      sequence must have Q=1.  See Grantham theorem 2.3, any of the
     #      references on the MathWorld page, or run it and see Q=-1 is wrong.
-    from sympy.ntheory.factor_ import trailing
     n = as_int(n)
     if n == 2:
         return True
@@ -505,7 +644,7 @@ def is_extra_strong_lucas_prp(n):
         return False
 
     # remove powers of 2 from n+1 (= k * 2**s)
-    s = trailing(n + 1)
+    s = bit_scan1(n + 1)
     k = (n + 1) >> s
 
     U, V, _ = _lucas_sequence(n, P, Q, k)
@@ -568,10 +707,10 @@ def isprime(n):
     >>> near_int == int(near_int)
     False
     >>> n = Float(near_int, 10)  # truncated by precision
-    >>> n == int(n)
+    >>> n % 1 == 0
     True
     >>> n = Float(near_int, 20)
-    >>> n == int(n)
+    >>> n % 1 == 0
     False
 
     See Also
@@ -609,8 +748,9 @@ def isprime(n):
         return False
     if n < 2809:
         return True
-    if n < 31417:
-        return pow(2, n, n) == 2 and n not in [7957, 8321, 13747, 18721, 19951, 23377]
+    if n < 65077:
+        # There are only five Euler pseudoprimes with a least prime factor greater than 47
+        return pow(2, n >> 1, n) in [1, n - 1] and n not in [8321, 31621, 42799, 49141, 49981]
 
     # bisection search on the sieve if the sieve is large enough
     from sympy.ntheory.generate import sieve as s

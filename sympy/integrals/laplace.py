@@ -1,4 +1,6 @@
 """Laplace Transforms"""
+import sys
+import sympy
 from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -7,7 +9,8 @@ from sympy.core.function import (
     AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
-from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
+from sympy.core.relational import (
+    _canonical, Ge, Gt, Lt, Unequality, Eq, Ne, Relational)
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.complexes import (
@@ -15,12 +18,14 @@ from sympy.functions.elementary.complexes import (
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, asinh
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, atan
+from sympy.functions.elementary.piecewise import (
+    Piecewise, piecewise_exclusive)
+from sympy.functions.elementary.trigonometric import cos, sin, atan, sinc
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.special.gamma_functions import digamma, gamma, lowergamma
+from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.integrals import integrate, Integral
 from sympy.integrals.transforms import (
     _simplify, IntegralTransform, IntegralTransformError)
@@ -34,7 +39,47 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
-from sympy.utilities.misc import debug, debugf
+from sympy.utilities.misc import debugf
+
+_LT_level = 0
+
+
+def DEBUG_WRAP(func):
+    def wrap(*args, **kwargs):
+        from sympy import SYMPY_DEBUG
+        global _LT_level
+
+        if not SYMPY_DEBUG:
+            return func(*args, **kwargs)
+
+        if _LT_level == 0:
+            print('\n' + '-'*78, file=sys.stderr)
+        print('-LT- %s%s%s' % ('  '*_LT_level, func.__name__, args),
+              file=sys.stderr)
+        _LT_level += 1
+        if (
+                func.__name__ == '_laplace_transform_integration' or
+                func.__name__ == '_inverse_laplace_transform_integration'):
+            sympy.SYMPY_DEBUG = False
+            print('**** %sIntegrating ...' % ('  '*_LT_level), file=sys.stderr)
+            result = func(*args, **kwargs)
+            sympy.SYMPY_DEBUG = True
+        else:
+            result = func(*args, **kwargs)
+        _LT_level -= 1
+        print('-LT- %s---> %s' % ('  '*_LT_level, result), file=sys.stderr)
+        if _LT_level == 0:
+            print('-'*78 + '\n', file=sys.stderr)
+        return result
+    return wrap
+
+
+def _debug(text):
+    from sympy import SYMPY_DEBUG
+    global _LT_level
+
+    if SYMPY_DEBUG:
+        print('-LT- %s%s' % ('  '*_LT_level, text), file=sys.stderr)
 
 
 def _simplifyconds(expr, s, a):
@@ -128,6 +173,7 @@ def _simplifyconds(expr, s, a):
     return S(expr)
 
 
+@DEBUG_WRAP
 def expand_dirac_delta(expr):
     """
     Expand an expression involving DiractDelta to get it as a linear
@@ -136,6 +182,7 @@ def expand_dirac_delta(expr):
     return _lin_eq2dict(expr, expr.atoms(DiracDelta))
 
 
+@DEBUG_WRAP
 def _laplace_transform_integration(f, t, s_, *, simplify):
     """ The backend function for doing Laplace transforms by integration.
 
@@ -143,25 +190,20 @@ def _laplace_transform_integration(f, t, s_, *, simplify):
     such that `f` is to an addition anymore.
     """
     s = Dummy('s')
-    debugf('[LT _l_t_i ] started with (%s, %s, %s)', (f, t, s))
-    debugf('[LT _l_t_i ]     and simplify=%s', (simplify, ))
 
     if f.has(DiracDelta):
         return None
 
     F = integrate(f*exp(-s*t), (t, S.Zero, S.Infinity))
-    debugf('[LT _l_t_i ]     integrated: %s', (F, ))
 
     if not F.has(Integral):
         return _simplify(F.subs(s, s_), simplify), S.NegativeInfinity, S.true
 
     if not F.is_Piecewise:
-        debug('[LT _l_t_i ]     not piecewise.')
         return None
 
     F, cond = F.args[0]
     if F.has(Integral):
-        debug('[LT _l_t_i ]     integral in unexpected form.')
         return None
 
     def process_conds(conds):
@@ -218,7 +260,6 @@ def _laplace_transform_integration(f, t, s_, *, simplify):
                     aux_ += [d]
                     continue
                 if soln.lts == t:
-                    debug('[LT _l_t_i ]     convergence not in half-plane.')
                     return None
                 else:
                     a_ = Min(soln.lts, a_)
@@ -242,7 +283,6 @@ def _laplace_transform_integration(f, t, s_, *, simplify):
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))
 
     if not conds:
-        debug('[LT _l_t_i ]     no convergence found.')
         return None
     a, aux = conds[0]  # XXX is [0] always the right one?
 
@@ -254,6 +294,7 @@ def _laplace_transform_integration(f, t, s_, *, simplify):
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
 
+@DEBUG_WRAP
 def _laplace_deep_collect(f, t):
     """
     This is an internal helper function that traverses through the epression
@@ -296,7 +337,7 @@ def _laplace_build_rules():
     tau = Wild('tau', exclude=[t])
     omega = Wild('omega', exclude=[t])
     def dco(f): return _laplace_deep_collect(f, t)
-    debug('_laplace_build_rules is building rules')
+    _debug('_laplace_build_rules is building rules')
 
     laplace_transform_rules = [
         (a, a/s,
@@ -483,6 +524,7 @@ def _laplace_build_rules():
     return laplace_transform_rules, t, s
 
 
+@DEBUG_WRAP
 def _laplace_rule_timescale(f, t, s):
     """
     This function applies the time-scaling rule of the Laplace transform in
@@ -497,15 +539,14 @@ def _laplace_rule_timescale(f, t, s):
         arg = ma1[g].args[0].collect(t)
         ma2 = arg.match(a*t)
         if ma2 and ma2[a].is_positive and ma2[a] != 1:
-            debug('_laplace_apply_prog rules match:')
-            debugf('      f:    %s _ %s, %s )', (f, ma1, ma2))
-            debug('      rule: time scaling (4.1.4)')
+            _debug('     rule: time scaling (4.1.4)')
             r, pr, cr = _laplace_transform(
                 1/ma2[a]*ma1[g].func(t), t, s/ma2[a], simplify=False)
             return (r, pr, cr)
     return None
 
 
+@DEBUG_WRAP
 def _laplace_rule_heaviside(f, t, s):
     """
     This function deals with time-shifted Heaviside step functions. If the time
@@ -527,21 +568,18 @@ def _laplace_rule_heaviside(f, t, s):
     if ma1:
         ma2 = ma1[y].match(t-a)
         if ma2 and ma2[a].is_positive:
-            debug('_laplace_apply_prog_rules match:')
-            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-            debug('      rule: time shift (4.1.4)')
+            _debug('     rule: time shift (4.1.4)')
             r, pr, cr = _laplace_transform(
                 ma1[g].subs(t, t+ma2[a]), t, s, simplify=False)
             return (exp(-ma2[a]*s)*r, pr, cr)
         if ma2 and ma2[a].is_negative:
-            debug('_laplace_apply_prog_rules match:')
-            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-            debug('      rule: Heaviside factor, negative time shift (4.1.4)')
+            _debug('     rule: Heaviside factor, negative time shift (4.1.4)')
             r, pr, cr = _laplace_transform(ma1[g], t, s, simplify=False)
             return (r, pr, cr)
     return None
 
 
+@DEBUG_WRAP
 def _laplace_rule_exp(f, t, s):
     """
     If this function finds a factor ``exp(a*t)``, it applies the
@@ -557,15 +595,14 @@ def _laplace_rule_exp(f, t, s):
     if ma1:
         ma2 = ma1[y].collect(t).match(a*t)
         if ma2:
-            debug('_laplace_apply_prog_rules match:')
-            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-            debug('      rule: multiply with exp (4.1.5)')
+            _debug('     rule: multiply with exp (4.1.5)')
             r, pr, cr = _laplace_transform(ma1[z], t, s-ma2[a],
                                            simplify=False)
             return (r, pr+re(ma2[a]), cr)
     return None
 
 
+@DEBUG_WRAP
 def _laplace_rule_delta(f, t, s):
     """
     If this function finds a factor ``DiracDelta(b*t-a)``, it applies the
@@ -584,18 +621,24 @@ def _laplace_rule_delta(f, t, s):
     if ma1 and not ma1[z].has(DiracDelta):
         ma2 = ma1[y].collect(t).match(b*t-a)
         if ma2:
-            debug('_laplace_apply_prog_rules match:')
-            debugf('      f:    %s ( %s, %s )', (f, ma1, ma2))
-            debug('      rule: multiply with DiracDelta')
+            _debug('     rule: multiply with DiracDelta')
             loc = ma2[a]/ma2[b]
             if re(loc) >= 0 and im(loc) == 0:
-                r = exp(-ma2[a]/ma2[b]*s)*ma1[z].subs(t, ma2[a]/ma2[b])/ma2[b]
-                return (r, S.NegativeInfinity, S.true)
+                fn = exp(-ma2[a]/ma2[b]*s)*ma1[z]
+                if fn.has(sin, cos):
+                    # Then it may be possible that a sinc() is present in the
+                    # term; let's try this:
+                    fn = fn.rewrite(sinc).ratsimp()
+                n, d = [x.subs(t, ma2[a]/ma2[b]) for x in fn.as_numer_denom()]
+                if d != 0:
+                    return (n/d/ma2[b], S.NegativeInfinity, S.true)
+                else:
+                    return None
             else:
                 return (0, S.NegativeInfinity, S.true)
         if ma1[y].is_polynomial(t):
             ro = roots(ma1[y], t)
-            if roots is not {} and set(ro.values()) == {1}:
+            if ro != {} and set(ro.values()) == {1}:
                 slope = diff(ma1[y], t)
                 r = Add(
                     *[exp(-x*s)*ma1[z].subs(t, s)/slope.subs(t, x)
@@ -604,6 +647,7 @@ def _laplace_rule_delta(f, t, s):
     return None
 
 
+@DEBUG_WRAP
 def _laplace_trig_split(fn):
     """
     Helper function for `_laplace_rule_trig`.  This function returns two terms
@@ -622,6 +666,7 @@ def _laplace_trig_split(fn):
     return f, g
 
 
+@DEBUG_WRAP
 def _laplace_trig_expsum(f, t):
     """
     Helper function for `_laplace_rule_trig`.  This function expects the `f`
@@ -654,6 +699,7 @@ def _laplace_trig_expsum(f, t):
     return xm, xn
 
 
+@DEBUG_WRAP
 def _laplace_trig_ltex(xm, t, s):
     """
     Helper function for `_laplace_rule_trig`.  This function takes the list of
@@ -695,7 +741,6 @@ def _laplace_trig_ltex(xm, t, s):
             *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
         d = Add(
             *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
-        debugf('        quadpole: (%s) / (%s)', (n, d))
         return n/d
 
     def _ccpole(t1, k1, s):
@@ -706,7 +751,6 @@ def _laplace_trig_ltex(xm, t, s):
             *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
         d = Add(
             *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
-        debugf('        ccpole: (%s) / (%s)', (n, d))
         return n/d
 
     def _rspole(t1, k2, s):
@@ -717,7 +761,6 @@ def _laplace_trig_ltex(xm, t, s):
             *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
         d = Add(
             *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
-        debugf('        rspole: (%s) / (%s)', (n, d))
         return n/d
 
     def _sypole(t1, k3, s):
@@ -728,14 +771,12 @@ def _laplace_trig_ltex(xm, t, s):
             *[x*s**y for x, y in zip(_simpc(nc), range(len(nc))[::-1])])
         d = Add(
             *[x*s**y for x, y in zip(dc, range(len(dc))[::-1])])
-        debugf('        sypole: (%s) / (%s)', (n, d))
         return n/d
 
     def _simplepole(t1, s):
         a, k0 = t1['a'], t1['k']
         n = k0
         d = s - a
-        debugf('        simplepole: (%s) / (%s)', (n, d))
         return n/d
 
     while len(xm) > 0:
@@ -799,6 +840,7 @@ def _laplace_trig_ltex(xm, t, s):
     return Add(*results), Max(*planes)
 
 
+@DEBUG_WRAP
 def _laplace_rule_trig(fn, t_, s):
     """
     This rule covers trigonometric factors by splitting everything into a
@@ -810,17 +852,11 @@ def _laplace_rule_trig(fn, t_, s):
     if not fn.has(sin, cos, sinh, cosh):
         return None
 
-    debugf('_laplace_rule_trig: (%s, %s, %s)', (fn, t_, s))
-
     f, g = _laplace_trig_split(fn.subs(t_, t))
-    debugf('    f = %s\n    g = %s', (f, g))
-
     xm, xn = _laplace_trig_expsum(f, t)
-    debugf('    xm = %s\n    xn = %s', (xm, xn))
 
     if len(xn) > 0:
         # TODO not implemented yet, but also not important
-        debug('    --> xn is not empty; giving up.')
         return None
 
     if not g.has(t):
@@ -837,6 +873,7 @@ def _laplace_rule_trig(fn, t_, s):
     return Add(*results).subs(t, t_), Max(*planes), G_cond
 
 
+@DEBUG_WRAP
 def _laplace_rule_diff(f, t, s):
     """
     This function looks for derivatives in the time domain and replaces it
@@ -852,9 +889,7 @@ def _laplace_rule_diff(f, t, s):
     if ma1 and ma1[n].is_integer:
         m = [z.has(t) for z in ma1[g].args]
         if sum(m) == 1:
-            debug('_laplace_apply_rules match:')
-            debugf('      f, n: %s, %s', (f, ma1[n]))
-            debug('      rule: time derivative (4.1.8)')
+            _debug('     rule: time derivative (4.1.8)')
             d = []
             for k in range(ma1[n]):
                 if k == 0:
@@ -867,6 +902,7 @@ def _laplace_rule_diff(f, t, s):
     return None
 
 
+@DEBUG_WRAP
 def _laplace_rule_sdiff(f, t, s):
     """
     This function looks for multiplications with polynoimials in `t` as they
@@ -888,9 +924,7 @@ def _laplace_rule_sdiff(f, t, s):
             pc = Poly(pex, t).all_coeffs()
             N = len(pc)
             if N > 1:
-                debug('_laplace_apply_rules match:')
-                debugf('      f, n: %s, %s', (f, pfac))
-                debug('      rule: frequency derivative (4.1.6)')
+                _debug('     rule: frequency derivative (4.1.6)')
                 oex = prod(ofac)
                 r_, p_, c_ = _laplace_transform(oex, t, s, simplify=False)
                 deri = [r_]
@@ -912,6 +946,7 @@ def _laplace_rule_sdiff(f, t, s):
     return None
 
 
+@DEBUG_WRAP
 def _laplace_expand(f, t, s):
     """
     This function tries to expand its argument with successively stronger
@@ -923,8 +958,6 @@ def _laplace_expand(f, t, s):
     expanded term.
     """
 
-    if f.is_Add:
-        return None
     r = expand(f, deep=False)
     if r.is_Add:
         return _laplace_transform(r, t, s, simplify=False)
@@ -942,6 +975,7 @@ def _laplace_expand(f, t, s):
     return None
 
 
+@DEBUG_WRAP
 def _laplace_apply_prog_rules(f, t, s):
     """
     This function applies all program rules and returns the result if one
@@ -959,6 +993,7 @@ def _laplace_apply_prog_rules(f, t, s):
     return None
 
 
+@DEBUG_WRAP
 def _laplace_apply_simple_rules(f, t, s):
     """
     This function applies all simple rules and returns the result if one
@@ -980,13 +1015,57 @@ def _laplace_apply_simple_rules(f, t, s):
                 # numbers in it. Then we give up.
                 continue
             if c == S.true:
-                debug('_laplace_apply_simple_rules match:')
-                debugf('      f:     %s', (f,))
-                debugf('      rule:  %s o---o %s', (t_dom, s_dom))
-                debugf('      match: %s', (ma, ))
                 return (s_dom.xreplace(ma).subs({s_: s}),
                         plane.xreplace(ma), S.true)
     return None
+
+
+@DEBUG_WRAP
+def _piecewise_to_heaviside(f, t):
+    """
+    This function converts a Piecewise expression to an expression written
+    with Heaviside. It is not exact, but valid in the context of the Laplace
+    transform.
+    """
+    if not t.is_real:
+        r = Dummy('r', real=True)
+        return _piecewise_to_heaviside(f.xreplace({t: r}), r).xreplace({r: t})
+    x = piecewise_exclusive(f)
+    r = []
+    for fn, cond in x.args:
+        # Here we do not need to do many checks because piecewise_exclusive
+        # has a clearly predictable output. However, if any of the conditions
+        # is not relative to t, this function just returns the input argument.
+        if isinstance(cond, Relational) and t in cond.args:
+            if isinstance(cond, (Eq, Ne)):
+                # We do not cover this case; these would be single-point
+                # exceptions that do not play a role in Laplace practice,
+                # except if they contain Dirac impulses, and then we can
+                # expect users to not try to use Piecewise for writing it.
+                return f
+            else:
+                r.append(Heaviside(cond.gts - cond.lts)*fn)
+        elif isinstance(cond, Or) and len(cond.args) == 2:
+            # Or(t<2, t>4), Or(t>4, t<=2), ... in any order with any <= >=
+            for c2 in cond.args:
+                if c2.lhs == t:
+                    r.append(Heaviside(c2.gts - c2.lts)*fn)
+                else:
+                    return f
+        elif isinstance(cond, And) and len(cond.args) == 2:
+            # And(t>2, t<4), And(t>4, t<=2), ...  in any order with any <= >=
+            c0, c1 = cond.args
+            if c0.lhs == t and c1.lhs == t:
+                if '>' in c0.rel_op:
+                    c0, c1 = c1, c0
+                r.append(
+                    (Heaviside(c1.gts - c1.lts) -
+                     Heaviside(c0.lts - c0.gts))*fn)
+            else:
+                return f
+        else:
+            return f
+    return Add(*r)
 
 
 def laplace_correspondence(f, fdict, /):
@@ -1084,45 +1163,70 @@ def laplace_initial_conds(f, t, fdict, /):
     s**3*Y(s) - 2*s**2 - 4*s - 8
     """
     for y, ic in fdict.items():
-        if len(ic) >= 0:
-            for k in range(len(ic)):
-                if k == 0:
-                    f = f.replace(y(0), ic[0])
-                elif k == 1:
-                    f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
-                else:
-                    f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
+        for k in range(len(ic)):
+            if k == 0:
+                f = f.replace(y(0), ic[0])
+            elif k == 1:
+                f = f.replace(Subs(Derivative(y(t), t), t, 0), ic[1])
+            else:
+                f = f.replace(Subs(Derivative(y(t), (t, k)), t, 0), ic[k])
     return f
 
 
+@DEBUG_WRAP
 def _laplace_transform(fn, t_, s_, *, simplify):
     """
     Front-end function of the Laplace transform. It tries to apply all known
     rules recursively, and if everything else fails, it tries to integrate.
     """
-    debugf('[LT _l_t] (%s, %s, %s)', (fn, t_, s_))
 
-    terms = Add.make_args(fn)
+    terms_t = Add.make_args(fn)
     terms_s = []
+    terms = []
     planes = []
     conditions = []
-    for ff in terms:
+
+    for ff in terms_t:
         k, ft = ff.as_independent(t_, as_Add=False)
-        if (
-                (r := _laplace_apply_simple_rules(ft, t_, s_)) is not None or
-                (r := _laplace_apply_prog_rules(ft, t_, s_)) is not None or
-                (r := _laplace_expand(ft, t_, s_)) is not None):
-            pass
-        elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
-            # If there are undefined functions f(t) then integration is
-            # unlikely to do anything useful so we skip it and given an
-            # unevaluated LaplaceTransform.
-            r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
-        elif (r := _laplace_transform_integration(
-                ft, t_, s_, simplify=simplify)) is not None:
-            pass
+        if ft.has(SingularityFunction):
+            _terms = Add.make_args(ft.rewrite(Heaviside))
+            for _term in _terms:
+                k1, f1 = _term.as_independent(t_, as_Add=False)
+                terms.append((k*k1, f1))
+        elif ft.func == Piecewise and not ft.has(DiracDelta(t_)):
+            _terms = Add.make_args(_piecewise_to_heaviside(ft, t_))
+            for _term in _terms:
+                k1, f1 = _term.as_independent(t_, as_Add=False)
+                terms.append((k*k1, f1))
         else:
+            terms.append((k, ft))
+
+    for k, ft in terms:
+        if ft.has(SingularityFunction):
             r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+        else:
+            if ft.has(Heaviside(t_)) and not ft.has(DiracDelta(t_)):
+                # For t>=0, Heaviside(t)=1 can be used, except if there is also
+                # a DiracDelta(t) present, in which case removing Heaviside(t)
+                # is unnecessary because _laplace_rule_delta can deal with it.
+                ft = ft.subs(Heaviside(t_), 1)
+            if (
+                    (r := _laplace_apply_simple_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_apply_prog_rules(ft, t_, s_))
+                    is not None or
+                    (r := _laplace_expand(ft, t_, s_)) is not None):
+                pass
+            elif any(undef.has(t_) for undef in ft.atoms(AppliedUndef)):
+                # If there are undefined functions f(t) then integration is
+                # unlikely to do anything useful so we skip it and given an
+                # unevaluated LaplaceTransform.
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
+            elif (r := _laplace_transform_integration(
+                    ft, t_, s_, simplify=simplify)) is not None:
+                pass
+            else:
+                r = (LaplaceTransform(ft, t_, s_), S.NegativeInfinity, True)
         (ri_, pi_, ci_) = r
         terms_s.append(k*ri_)
         planes.append(pi_)
@@ -1338,6 +1442,7 @@ behavior.
         return LT
 
 
+@DEBUG_WRAP
 def _inverse_laplace_transform_integration(F, s, t_, plane, *, simplify):
     """ The backend function for inverse Laplace transforms. """
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
@@ -1418,6 +1523,7 @@ def _inverse_laplace_transform_integration(F, s, t_, plane, *, simplify):
     return _simplify(f.subs(t, t_), simplify), cond
 
 
+@DEBUG_WRAP
 def _complete_the_square_in_denom(f, s):
     from sympy.simplify.radsimp import fraction
     [n, d] = fraction(f)
@@ -1442,7 +1548,7 @@ def _inverse_laplace_build_rules():
     b = Wild('b', exclude=[s])
     c = Wild('c', exclude=[s])
 
-    debug('_inverse_laplace_build_rules is building rules')
+    _debug('_inverse_laplace_build_rules is building rules')
 
     def _frac(f, s):
         try:
@@ -1454,7 +1560,9 @@ def _inverse_laplace_build_rules():
     # This list is sorted according to the prep function needed.
     _ILT_rules = [
         (a/s, a, S.true, same, 1),
-        (b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c), c > 0, same, 1),
+        (
+            b*(s+a)**(-c), t**(c-1)*exp(-a*t)/gamma(c),
+            S.true, same, 1),
         (1/(s**2+a**2)**2, (sin(a*t) - a*t*cos(a*t))/(2*a**3),
          S.true, same, 1),
         # The next two rules must be there in that order. For the second
@@ -1468,14 +1576,13 @@ def _inverse_laplace_build_rules():
     return _ILT_rules, s, t
 
 
+@DEBUG_WRAP
 def _inverse_laplace_apply_simple_rules(f, s, t):
     """
     Helper function for the class InverseLaplaceTransform.
     """
     if f == 1:
-        debug('_inverse_laplace_apply_simple_rules match:')
-        debugf('      f:    %s', (1,))
-        debugf('      rule: 1 o---o DiracDelta(%s)', (t,))
+        _debug('     rule: 1 o---o DiracDelta()')
         return DiracDelta(t), S.true
 
     _ILT_rules, s_, t_ = _inverse_laplace_build_rules()
@@ -1488,20 +1595,34 @@ def _inverse_laplace_apply_simple_rules(f, s, t):
             _prep = (prep, fac)
         ma = _F.match(s_dom)
         if ma:
-            try:
-                c = check.xreplace(ma)
-            except TypeError:
-                continue
+            c = check
+            if c is not S.true:
+                args = [x.xreplace(ma) for x in c[0]]
+                c = c[1](*args)
             if c == S.true:
-                debug('_inverse_laplace_apply_simple_rules match:')
-                debugf('      f:    %s', (f,))
-                debugf('      rule: %s o---o %s', (s_dom, t_dom))
-                debugf('      ma:   %s', (ma,))
                 return Heaviside(t)*t_dom.xreplace(ma).subs({t_: t}), S.true
 
     return None
 
 
+@DEBUG_WRAP
+def _inverse_laplace_diff(f, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    a = Wild('a', exclude=[s])
+    n = Wild('n', exclude=[s])
+    g = Wild('g')
+    ma = f.match(a*Derivative(g, (s, n)))
+    if ma and ma[n].is_integer:
+        _debug('     rule: t**n*f(t) o---o (-1)**n*diff(F(s), s, n)')
+        r, c = _inverse_laplace_transform(
+            ma[g], s, t, plane, simplify=False, dorational=False)
+        return (-t)**ma[n]*r, c
+    return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_time_shift(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1511,33 +1632,46 @@ def _inverse_laplace_time_shift(F, s, t, plane):
 
     if not F.has(s):
         return F*DiracDelta(t), S.true
+    if not F.has(exp):
+        return None
+
     ma1 = F.match(exp(a*s))
     if ma1:
         if ma1[a].is_negative:
-            debug('_inverse_laplace_time_shift match:')
-            debugf('      f:    %s', (F,))
-            debug('      rule: exp(-a*s) o---o DiracDelta(t-a)')
-            debugf('      ma:   %s', (ma1,))
+            _debug('     rule: exp(-a*s) o---o DiracDelta(t-a)')
             return DiracDelta(t+ma1[a]), S.true
         else:
-            debug('_inverse_laplace_time_shift match: negative time shift')
             return InverseLaplaceTransform(F, s, t, plane), S.true
 
     ma1 = F.match(exp(a*s)*g)
     if ma1:
         if ma1[a].is_negative:
-            debug('_inverse_laplace_time_shift match:')
-            debugf('      f:    %s', (F,))
-            debug('      rule: exp(-a*s)*F(s) o---o Heaviside(t-a)*f(t-a)')
-            debugf('      ma:   %s', (ma1,))
+            _debug('     rule: exp(-a*s)*F(s) o---o Heaviside(t-a)*f(t-a)')
             return _inverse_laplace_transform(
                 ma1[g], s, t+ma1[a], plane, simplify=False, dorational=True)
         else:
-            debug('_inverse_laplace_time_shift match: negative time shift')
             return InverseLaplaceTransform(F, s, t, plane), S.true
     return None
 
 
+@DEBUG_WRAP
+def _inverse_laplace_freq_shift(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    if not F.has(s):
+        return F*DiracDelta(t), S.true
+    if len(args := F.args) == 1:
+        a = Wild('a', exclude=[s])
+        if (ma := args[0].match(s-a)) and re(ma[a]).is_positive:
+            _debug('     rule: F(s-a) o---o exp(-a*t)*f(t)')
+            return (
+                exp(-ma[a]*t) *
+                InverseLaplaceTransform(F.func(s), s, t, plane), S.true)
+    return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_time_diff(F, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1547,10 +1681,7 @@ def _inverse_laplace_time_diff(F, s, t, plane):
 
     ma1 = F.match(s**n*g)
     if ma1 and ma1[n].is_integer and ma1[n].is_positive:
-        debug('_inverse_laplace_time_diff match:')
-        debugf('      f:    %s', (F,))
-        debug('      rule: s**n*F(s) o---o diff(f(t), t, n)')
-        debugf('      ma:   %s', (ma1,))
+        _debug('     rule: s**n*F(s) o---o diff(f(t), t, n)')
         r, c = _inverse_laplace_transform(
             ma1[g], s, t, plane, simplify=False, dorational=True)
         r = r.replace(Heaviside(t), 1)
@@ -1561,12 +1692,327 @@ def _inverse_laplace_time_diff(F, s, t, plane):
     return None
 
 
-def _inverse_laplace_apply_prog_rules(F, s, t, plane):
+@DEBUG_WRAP
+def _inverse_laplace_irrational(fn, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    prog_rules = [_inverse_laplace_time_shift,
-                  _inverse_laplace_time_diff]
+
+    a = Wild('a', exclude=[s])
+    b = Wild('b', exclude=[s])
+    m = Wild('m', exclude=[s])
+    n = Wild('n', exclude=[s])
+
+    result = None
+    condition = S.true
+
+    fa = fn.as_ordered_factors()
+
+    ma = [x.match((a*s**m+b)**n) for x in fa]
+
+    if None in ma:
+        return None
+
+    constants = S.One
+    zeros = []
+    poles = []
+    rest = []
+
+    for term in ma:
+        if term[a] == 0:
+            constants = constants*term
+        elif term[n].is_positive:
+            zeros.append(term)
+        elif term[n].is_negative:
+            poles.append(term)
+        else:
+            rest.append(term)
+
+    # The code below assumes that the poles are sorted in a specific way:
+    poles = sorted(poles, key=lambda x: (x[n], x[b] != 0, x[b]))
+    zeros = sorted(zeros, key=lambda x: (x[n], x[b] != 0, x[b]))
+
+    if len(rest) != 0:
+        return None
+
+    if len(poles) == 1 and len(zeros) == 0:
+        if poles[0][n] == -1 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0) == 1/a0 * 1/(sqrt(s)+b0/a0)
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]*constants
+            if a_.is_positive:
+                result = (
+                    k_/sqrt(pi)/sqrt(t) -
+                    k_*a_*exp(a_**2*t)*erfc(a_*sqrt(t)))
+                _debug('     rule 5.3.4')
+        elif poles[0][n] == -2 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**2 == 1/a0**2 * 1/(sqrt(s)+b0/a0)**2
+            a_sq = poles[0][b]/poles[0][a]
+            a_ = a_sq**2
+            k_ = 1/poles[0][a]**2*constants
+            if a_sq.is_positive:
+                result = (
+                    k_*(1 - 2/sqrt(pi)*sqrt(a_)*sqrt(t) +
+                        (1-2*a_*t)*exp(a_*t)*(erf(sqrt(a_)*sqrt(t))-1)))
+                _debug('     rule 5.3.10')
+        elif poles[0][n] == -3 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**3 == 1/a0**3 * 1/(sqrt(s)+b0/a0)**3
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**3*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*(a_**2*t+1)*sqrt(t) -
+                        a_*t*exp(a_**2*t)*(2*a_**2*t+3)*erfc(a_*sqrt(t))))
+                _debug('     rule 5.3.13')
+        elif poles[0][n] == -4 and poles[0][m] == S.Half:
+            # 1/(a0*sqrt(s)+b0)**4 == 1/a0**4 * 1/(sqrt(s)+b0/a0)**4
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**4*constants/3
+            if a_.is_positive:
+                result = (
+                    k_*(t*(4*a_**4*t**2+12*a_**2*t+3)*exp(a_**2*t) *
+                        erfc(a_*sqrt(t)) -
+                        2/sqrt(pi)*a_**3*t**(S(5)/2)*(2*a_**2*t+5)))
+                _debug('     rule 5.3.16')
+        elif poles[0][n] == -S.Half and poles[0][m] == 2:
+            # 1/sqrt(a0*s**2+b0) == 1/sqrt(a0) * 1/sqrt(s**2+b0/a0)
+            a_ = sqrt(poles[0][b]/poles[0][a])
+            k_ = 1/sqrt(poles[0][a])*constants
+            result = (k_*(besselj(0, a_*t)))
+            _debug('     rule 5.3.35/44')
+
+    elif len(poles) == 1 and len(zeros) == 1:
+        if (
+                poles[0][n] == -3 and poles[0][m] == S.Half and
+                zeros[0][n] == S.Half and zeros[0][b] == 0):
+            # sqrt(az*s)/(ap*sqrt(s+bp)**3)
+            # == sqrt(az)/ap * sqrt(s)/(sqrt(s+bp)**3)
+            a_ = poles[0][b]
+            k_ = sqrt(zeros[0][a])/poles[0][a]*constants
+            result = (
+                k_*(2*a_**4*t**2+5*a_**2*t+1)*exp(a_**2*t) *
+                erfc(a_*sqrt(t)) - 2/sqrt(pi)*a_*(a_**2*t+2)*sqrt(t))
+            _debug('     rule 5.3.14')
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                zeros[0][n] == S.Half and zeros[0][m] == 1):
+            # sqrt(az*s+bz)/(ap*s+bp)
+            # == sqrt(az)/ap * (sqrt(s+bz/az)/(s+bp/ap))
+            a_ = zeros[0][b]/zeros[0][a]
+            b_ = poles[0][b]/poles[0][a]
+            k_ = sqrt(zeros[0][a])/poles[0][a]*constants
+            result = (
+                k_*(exp(-a_*t)/sqrt(t)/sqrt(pi)+sqrt(a_-b_) *
+                    exp(-b_*t)*erf(sqrt(a_-b_)*sqrt(t))))
+            _debug('     rule 5.3.22')
+
+    elif len(poles) == 2 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*s+b0)*sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((s+b0/a0)*sqrt(s))
+            a_ = -poles[0][b]/poles[0][a]
+            k_ = 1/sqrt(poles[1][a])/poles[0][a]*constants
+            if a_.is_positive:
+                result = (k_/sqrt(a_)*exp(a_*t)*erf(sqrt(a_)*sqrt(t)))
+                _debug('     rule 5.3.1')
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and poles[0][b] == 0 and
+                poles[1][n] == -1 and poles[1][m] == S.Half):
+            # 1/(a0*s*(a1*sqrt(s)+b1))
+            # == 1/(a0*a1) * 1/(s*(sqrt(s)+b1/a1))
+            a_ = poles[1][b]/poles[1][a]
+            k_ = 1/poles[0][a]/poles[1][a]/a_*constants
+            if a_.is_positive:
+                result = k_*(1-exp(a_**2*t)*erfc(a_*sqrt(t)))
+                _debug('     rule 5.3.5')
+        elif (
+                poles[0][n] == -1 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)*(sqrt(a1*s))
+            # == 1/(a0*sqrt(a1)) * 1/((sqrt(s)+b0/a0)"sqrt(s))
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/(poles[0][a]*sqrt(poles[1][a]))*constants
+            if a_.is_positive:
+                result = k_*exp(a_**2*t)*erfc(a_*sqrt(t))
+                _debug('     rule 5.3.7')
+        elif (
+                poles[0][n] == -S(3)/2 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half):
+            # 1/((a0**(3/2)*s**(3/2))*(a1*sqrt(s)+b1))
+            # == 1/(a0**(3/2)*a1)  1/((s**(3/2))*(sqrt(s)+b1/a1))
+            # Note that Bateman54 5.3 (8) is incorrect; there (sqrt(p)+a)
+            # should be (sqrt(p)+a)**(-1).
+            a_ = poles[1][b]/poles[1][a]
+            k_ = 1/(poles[0][a]**(S(3)/2)*poles[1][a])/a_**2*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*a_*sqrt(t)+exp(a_**2*t)*erfc(a_*sqrt(t))-1))
+                _debug('     rule 5.3.8')
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*a1*s)
+            # == 1/a0**2/a1 * 1/(sqrt(s)+b0/a0)**2/s
+            a_sq = poles[0][b]/poles[0][a]
+            a_ = a_sq**2
+            k_ = 1/poles[0][a]**2/poles[1][a]*constants
+            if a_sq.is_positive:
+                result = (
+                    k_*(1/a_ + (2*t-1/a_)*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) -
+                        2/sqrt(pi)/sqrt(a_)*sqrt(t)))
+                _debug('     rule 5.3.11')
+        elif (
+                poles[0][n] == -2 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1/((a0*sqrt(s)+b0)**2*sqrt(a1*s))
+            # == 1/a0**2/sqrt(a1) * 1/(sqrt(s)+b0/a0)**2/sqrt(s)
+            a_ = poles[0][b]/poles[0][a]
+            k_ = 1/poles[0][a]**2/sqrt(poles[1][a])*constants
+            if a_.is_positive:
+                result = (
+                    k_*(2/sqrt(pi)*sqrt(t) -
+                        2*a_*t*exp(a_**2*t)*erfc(a_*sqrt(t))))
+                _debug('     rule 5.3.12')
+        elif (
+                poles[0][n] == -3 and poles[0][m] == S.Half and
+                poles[1][n] == -S.Half and poles[1][m] == 1 and
+                poles[1][b] == 0):
+            # 1 / (sqrt(a1*s)*(a0*sqrt(s+b0)**3))
+            # == 1/(sqrt(a1)*a0) * 1/(sqrt(s)*(sqrt(s+b0)**3))
+            a_ = poles[0][b]
+            k_ = constants/sqrt(poles[1][a])/poles[0][a]
+            result = k_*(
+                (2*a_**2*t+1)*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                2/sqrt(pi)*a_*t**(S(3)/2))
+            _debug('     rule 5.3.15')
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -S.Half and poles[1][m] == 1):
+            # 1 / ( (a0*s+b0)* sqrt(a1*s+b1) )
+            # == 1/(sqrt(a1)*a0) * 1 / ( (s+b0/a0)* sqrt(s+b1/a1) )
+            a_ = poles[0][b]/poles[0][a]
+            b_ = poles[1][b]/poles[1][a]
+            k_ = constants/sqrt(poles[1][a])/poles[0][a]
+            result = k_*(
+                1/sqrt(b_-a_)*exp(-a_*t)*erf(sqrt(b_-a_)*sqrt(t)))
+            _debug('     rule 5.3.23')
+
+    elif len(poles) == 2 and len(zeros) == 1:
+        if (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                zeros[0][n] == S.Half and zeros[0][m] == 1 and
+                zeros[0][b] == 0):
+            # sqrt(za0*s)/((a0*s+b0)*(a1*sqrt(s)+b1))
+            # == sqrt(za0)/(a0*a1) * s/((s+b0/a0)*(sqrt(s)+b1/a1))
+            a_sq = poles[1][b]/poles[1][a]
+            a_ = a_sq**2
+            b_ = -poles[0][b]/poles[0][a]
+            k_ = sqrt(zeros[0][a])/poles[0][a]/poles[1][a]/(a_-b_)*constants
+            if a_sq.is_positive and b_.is_positive:
+                result = k_*(
+                    a_*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) +
+                    sqrt(a_)*sqrt(b_)*exp(b_*t)*erfc(sqrt(b_)*sqrt(t)) -
+                    b_*exp(b_*t))
+                _debug('     rule 5.3.6')
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[0][b] == 0 and poles[1][n] == -1 and
+                poles[1][m] == S.Half and zeros[0][n] == 1 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)/(a0*s*(a1*sqrt(s)+b1))
+            # == az/a0/a1 * (sqrt(z)+bz/az)/(s*(sqrt(s)+b1/a1))
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[1][b]/poles[1][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]/poles[0][a]/poles[1][a]*constants
+                result = k_*(
+                    2*exp(a_**2*t)*erfc(a_*sqrt(t))-1)
+                _debug('     rule 5.3.17')
+        elif (
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0 and poles[0][n] == -2 and
+                poles[0][m] == S.Half and zeros[0][n] == 2 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)**2/(a1*s*(a0*sqrt(s)+b0)**2)
+            # == az**2/a1/a0**2 * (sqrt(z)+bz/az)**2/(s*(sqrt(s)+b0/a0)**2)
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[0][b]/poles[0][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]**2/poles[1][a]/poles[0][a]**2*constants
+                result = k_*(
+                    1 + 8*a_**2*t*exp(a_**2*t)*erfc(a_*sqrt(t)) -
+                    8/sqrt(pi)*a_*sqrt(t))
+                _debug('     rule 5.3.18')
+        elif (
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[1][b] == 0 and poles[0][n] == -3 and
+                poles[0][m] == S.Half and zeros[0][n] == 3 and
+                zeros[0][m] == S.Half):
+            # (az*sqrt(s)+bz)**3/(a1*s*(a0*sqrt(s)+b0)**3)
+            # == az**3/a1/a0**3 * (sqrt(z)+bz/az)**3/(s*(sqrt(s)+b0/a0)**3)
+            a_num = zeros[0][b]/zeros[0][a]
+            a_ = poles[0][b]/poles[0][a]
+            if a_+a_num == 0:
+                k_ = zeros[0][a]**3/poles[1][a]/poles[0][a]**3*constants
+                result = k_*(
+                    2*(8*a_**4*t**2+8*a_**2*t+1)*exp(a_**2*t) *
+                    erfc(a_*sqrt(t))-8/sqrt(pi)*a_*sqrt(t)*(2*a_**2*t+1)-1)
+                _debug('     rule 5.3.19')
+
+    elif len(poles) == 3 and len(zeros) == 0:
+        if (
+                poles[0][n] == -1 and poles[0][b] == 0 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == 1 and
+                poles[2][n] == -S.Half and poles[2][m] == 1):
+            # 1/((a0*s)*(a1*s+b1)*sqrt(a2*s))
+            # == 1/(a0*a1*sqrt(a2)) * 1/((s)*(s+b1/a1)*sqrt(s))
+            a_ = -poles[1][b]/poles[1][a]
+            k_ = 1/poles[0][a]/poles[1][a]/sqrt(poles[2][a])*constants
+            if a_.is_positive:
+                result = k_ * (
+                    a_**(-S(3)/2) * exp(a_*t) * erf(sqrt(a_)*sqrt(t)) -
+                    2/a_/sqrt(pi)*sqrt(t))
+                _debug('     rule 5.3.2')
+        elif (
+                poles[0][n] == -1 and poles[0][m] == 1 and
+                poles[1][n] == -1 and poles[1][m] == S.Half and
+                poles[2][n] == -S.Half and poles[2][m] == 1 and
+                poles[2][b] == 0):
+            # 1/((a0*s+b0)*(a1*sqrt(s)+b1)*(sqrt(a2)*sqrt(s)))
+            # == 1/(a0*a1*sqrt(a2)) * 1/((s+b0/a0)*(sqrt(s)+b1/a1)*sqrt(s))
+            a_sq = poles[1][b]/poles[1][a]
+            a_ = a_sq**2
+            b_ = -poles[0][b]/poles[0][a]
+            k_ = (
+                1/poles[0][a]/poles[1][a]/sqrt(poles[2][a]) /
+                (sqrt(b_)*(a_-b_)))
+            if a_sq.is_positive and b_.is_positive:
+                result = k_ * (
+                    sqrt(b_)*exp(a_*t)*erfc(sqrt(a_)*sqrt(t)) +
+                    sqrt(a_)*exp(b_*t)*erf(sqrt(b_)*sqrt(t)) -
+                    sqrt(b_)*exp(b_*t))
+                _debug('     rule 5.3.9')
+
+    if result is None:
+        return None
+    else:
+        return Heaviside(t)*result, condition
+
+
+@DEBUG_WRAP
+def _inverse_laplace_early_prog_rules(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    prog_rules = [_inverse_laplace_irrational]
 
     for p_rule in prog_rules:
         if (r := p_rule(F, s, t, plane)) is not None:
@@ -1574,6 +2020,22 @@ def _inverse_laplace_apply_prog_rules(F, s, t, plane):
     return None
 
 
+@DEBUG_WRAP
+def _inverse_laplace_apply_prog_rules(F, s, t, plane):
+    """
+    Helper function for the class InverseLaplaceTransform.
+    """
+    prog_rules = [_inverse_laplace_time_shift, _inverse_laplace_freq_shift,
+                  _inverse_laplace_time_diff, _inverse_laplace_diff,
+                  _inverse_laplace_irrational]
+
+    for p_rule in prog_rules:
+        if (r := p_rule(F, s, t, plane)) is not None:
+            return r
+    return None
+
+
+@DEBUG_WRAP
 def _inverse_laplace_expand(fn, s, t, plane):
     """
     Helper function for the class InverseLaplaceTransform.
@@ -1600,11 +2062,11 @@ def _inverse_laplace_expand(fn, s, t, plane):
     return None
 
 
+@DEBUG_WRAP
 def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
     """
     Helper function for the class InverseLaplaceTransform.
     """
-    debugf('[ILT _i_l_r] (%s, %s, %s)', (fn, s, t))
     x_ = symbols('x_')
     f = fn.apart(s)
     terms = Add.make_args(f)
@@ -1646,17 +2108,17 @@ def _inverse_laplace_rational(fn, s, t, plane, *, simplify):
             terms_t.append(Heaviside(t)*r)
         else:
             ft, cond = _inverse_laplace_transform(
-                fn, s, t, plane, simplify=simplify, dorational=False)
+                term, s, t, plane, simplify=simplify, dorational=False)
             terms_t.append(ft)
             conditions.append(cond)
 
     result = Add(*terms_t)
     if simplify:
         result = result.simplify(doit=False)
-    debugf('[ILT _i_l_r]   returns %s', (result,))
     return result, And(*conditions)
 
 
+@DEBUG_WRAP
 def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     """
     Front-end function of the inverse Laplace transform. It tries to apply all
@@ -1666,9 +2128,15 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
     terms_t = []
     conditions = []
 
-    debugf('[ILT _i_l_t] (%s, %s, %s)', (fn, s_, t_))
-
     for term in terms:
+        if term.has(exp):
+            # Simplify expressions with exp() such that time-shifted
+            # expressions have negative exponents in the numerator instead of
+            # positive exponents in the numerator and denominator; this is a
+            # (necessary) trick. It will, for example, convert
+            # (s**2*exp(2*s) + 4*exp(s) - 4)*exp(-2*s)/(s*(s**2 + 1)) into
+            # (s**2 + 4*exp(-s) - 4*exp(-2*s))/(s*(s**2 + 1))
+            term = term.subs(s_, -s_).together().subs(s_, -s_)
         k, f = term.as_independent(s_, as_Add=False)
         if (
                 dorational and term.is_rational_function(s_) and
@@ -1676,6 +2144,8 @@ def _inverse_laplace_transform(fn, s_, t_, plane, *, simplify, dorational):
                     f, s_, t_, plane, simplify=simplify))
                 is not None or
                 (r := _inverse_laplace_apply_simple_rules(f, s_, t_))
+                is not None or
+                (r := _inverse_laplace_early_prog_rules(f, s_, t_, plane))
                 is not None or
                 (r := _inverse_laplace_expand(f, s_, t_, plane))
                 is not None or

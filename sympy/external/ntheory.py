@@ -9,6 +9,75 @@ import math
 import mpmath.libmp as mlib
 
 
+_small_trailing = [0] * 256
+for j in range(1, 8):
+    _small_trailing[1 << j :: 1 << (j + 1)] = [j] * (1 << (7 - j))
+
+
+def bit_scan1(x, n=0):
+    if not x:
+        return
+    x = abs(x >> n)
+    low_byte = x & 0xFF
+    if low_byte:
+        return _small_trailing[low_byte] + n
+
+    t = 8 + n
+    x >>= 8
+    # 2**m is quick for z up through 2**30
+    z = x.bit_length() - 1
+    if x == 1 << z:
+        return z + t
+
+    if z < 300:
+        # fixed 8-byte reduction
+        while not x & 0xFF:
+            x >>= 8
+            t += 8
+    else:
+        # binary reduction important when there might be a large
+        # number of trailing 0s
+        p = z >> 1
+        while not x & 0xFF:
+            while x & ((1 << p) - 1):
+                p >>= 1
+            x >>= p
+            t += p
+    return t + _small_trailing[x & 0xFF]
+
+
+def bit_scan0(x, n=0):
+    return bit_scan1(x + (1 << n), n)
+
+
+def remove(x, f):
+    if f < 2:
+        raise ValueError("factor must be > 1")
+    if x == 0:
+        return 0, 0
+    if f == 2:
+        b = bit_scan1(x)
+        return x >> b, b
+    m = 0
+    y, rem = divmod(x, f)
+    while not rem:
+        x = y
+        m += 1
+        if m > 5:
+            pow_list = [f**2]
+            while pow_list:
+                _f = pow_list[-1]
+                y, rem = divmod(x, _f)
+                if not rem:
+                    m += 1 << len(pow_list)
+                    x = y
+                    pow_list.append(_f**2)
+                else:
+                    pow_list.pop()
+        y, rem = divmod(x, f)
+    return x, m
+
+
 def factorial(x):
     """Return x!."""
     return int(mlib.ifac(int(x)))
@@ -45,6 +114,33 @@ else:
         if 0 in args:
             return 0
         return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+
+
+def _sign(n):
+    if n < 0:
+        return -1, -n
+    return 1, n
+
+
+def gcdext(a, b):
+    if not a or not b:
+        g = abs(a) or abs(b)
+        if not g:
+            return (0, 0, 0)
+        return (g, a // g, b // g)
+
+    x_sign, a = _sign(a)
+    y_sign, b = _sign(b)
+    x, r = 1, 0
+    y, s = 0, 1
+
+    while b:
+        q, c = divmod(a, b)
+        a, b = b, c
+        x, r = r, x - q*r
+        y, s = s, y - q*s
+
+    return (a, x * x_sign, y * y_sign)
 
 
 def is_square(x):
@@ -145,11 +241,109 @@ def kronecker(x, y):
         return 1
     sign = -1 if y < 0 and x < 0 else 1
     y = abs(y)
-    # We want to calculate s = trailing(y)
-    s = 0
-    while y % 2 == 0:
-        y >>= 1
-        s += 1
+    s = bit_scan1(y)
+    y >>= s
     if s % 2 and x % 8 in [3, 5]:
         sign = -sign
     return sign * jacobi(x, y)
+
+
+def iroot(y, n):
+    if y < 0:
+        raise ValueError("y must be nonnegative")
+    if n < 1:
+        raise ValueError("n must be positive")
+    if y in (0, 1):
+        return y, True
+    if n == 1:
+        return y, True
+    if n == 2:
+        x, rem = mlib.sqrtrem(y)
+        return int(x), not rem
+    if n >= y.bit_length():
+        return 1, False
+    # Get initial estimate for Newton's method. Care must be taken to
+    # avoid overflow
+    try:
+        guess = int(y**(1./n) + 0.5)
+    except OverflowError:
+        exp = math.log2(y)/n
+        if exp > 53:
+            shift = int(exp - 53)
+            guess = int(2.0**(exp - shift) + 1) << shift
+        else:
+            guess = int(2.0**exp)
+    if guess > 2**50:
+        # Newton iteration
+        xprev, x = -1, guess
+        while 1:
+            t = x**(n - 1)
+            xprev, x = x, ((n - 1)*x + y//t)//n
+            if abs(x - xprev) < 2:
+                break
+    else:
+        x = guess
+    # Compensate
+    t = x**n
+    while t < y:
+        x += 1
+        t = x**n
+    while t > y:
+        x -= 1
+        t = x**n
+    return x, t == y
+
+
+def is_fermat_prp(n, a):
+    if a < 2:
+        raise ValueError("is_fermat_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_fermat_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_fermat_prp() requires gcd(n,a) == 1")
+    return pow(a, n - 1, n) == 1
+
+
+def is_euler_prp(n, a):
+    if a < 2:
+        raise ValueError("is_euler_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_euler_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_euler_prp() requires gcd(n,a) == 1")
+    return pow(a, n >> 1, n) == jacobi(a, n) % n
+
+
+def is_strong_prp(n, a):
+    if a < 2:
+        raise ValueError("is_strong_prp() requires 'a' greater than or equal to 2")
+    if n < 1:
+        raise ValueError("is_strong_prp() requires 'n' be greater than 0")
+    if n == 1:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    a %= n
+    if gcd(n, a) != 1:
+        raise ValueError("is_strong_prp() requires gcd(n,a) == 1")
+    s = bit_scan1(n - 1)
+    a = pow(a, n >> s, n)
+    if a == 1 or a == n - 1:
+        return True
+    for _ in range(s - 1):
+        a = pow(a, 2, n)
+        if a == n - 1:
+            return True
+        if a == 1:
+            return False
+    return False

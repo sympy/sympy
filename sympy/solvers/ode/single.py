@@ -1621,8 +1621,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
     ... simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1707,8 +1707,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
