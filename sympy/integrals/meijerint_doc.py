@@ -6,16 +6,17 @@ from typing import Any
 
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.printing.latex import latex
 
-t: dict[tuple[type, ...], list[Any]] = {}
+t: dict[tuple[type[Basic], ...], list[Any]] = {}
 _create_lookup_table(t)
 
-doc = ""
 
-for about, category in sorted(t.items()):
+doc = ""
+for about, category in t.items():
     if about == ():
         doc += 'Elementary functions:\n\n'
     else:

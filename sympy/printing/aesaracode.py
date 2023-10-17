@@ -17,6 +17,13 @@ if aesara:
     from aesara.tensor.elemwise import Elemwise
     from aesara.tensor.elemwise import DimShuffle
 
+    # `true_divide` replaced `true_div` in Aesara 2.8.11 (released 2023) to
+    # match NumPy
+    # XXX: Remove this when not needed to support older versions.
+    true_divide = getattr(aet, 'true_divide', None)
+    if true_divide is None:
+        true_divide = aet.true_div
+
     mapping = {
             sympy.Add: aet.add,
             sympy.Mul: aet.mul,
@@ -140,7 +147,7 @@ class AesaraPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
 
-        value = aet.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
         self.cache[key] = value
         return value
 
@@ -238,8 +245,8 @@ class AesaraPrinter(Printer):
         return aet.switch(p_cond, p_e, p_remaining)
 
     def _print_Rational(self, expr, **kwargs):
-        return aet.true_div(self._print(expr.p, **kwargs),
-                            self._print(expr.q, **kwargs))
+        return true_divide(self._print(expr.p, **kwargs),
+                           self._print(expr.q, **kwargs))
 
     def _print_Integer(self, expr, **kwargs):
         return expr.p
@@ -271,7 +278,8 @@ class AesaraPrinter(Printer):
         See the corresponding `documentation page`__ for more information on
         broadcasting in Aesara.
 
-        .. __: https://aesara.readthedocs.io/en/latest/tutorial/broadcasting.html
+
+        .. __: https://aesara.readthedocs.io/en/latest/reference/tensor/shapes.html#broadcasting
 
         Parameters
         ==========

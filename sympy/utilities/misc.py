@@ -249,6 +249,16 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
+def debugf(string, args):
+    """
+    Print ``string%args`` if SYMPY_DEBUG is True, else do nothing. This is
+    intended for debug messages using formatted strings.
+    """
+    from sympy import SYMPY_DEBUG
+    if SYMPY_DEBUG:
+        print(string%args, file=sys.stderr)
+
+
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
@@ -383,7 +393,7 @@ def replace(string, *reps):
     References
     ==========
 
-    .. [1] https://stackoverflow.com/questions/6116978/python-replace-multiple-strings
+    .. [1] https://stackoverflow.com/questions/6116978/how-to-replace-multiple-substrings-of-a-string
     """
     if len(reps) == 1:
         kv = reps[0]
@@ -550,6 +560,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n != result:
+        if n - result:
             raise ValueError('%s is not an integer' % (n,))
         return result

@@ -54,7 +54,7 @@ create some common Symbols, setup plotting, and run ``init_printing()``.
        >>> f, g, h = symbols('f g h', cls=Function)
        >>> init_printing() # doctest: +SKIP
 
-       Documentation can be found at http://www.sympy.org
+       Documentation can be found at https://www.sympy.org/
 
     >>>
 

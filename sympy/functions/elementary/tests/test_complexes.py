@@ -206,7 +206,7 @@ def test_im():
 
     X = ImmutableSparseMatrix(
             [[i*I + i for i in range(5)] for i in range(5)])
-    Y = SparseMatrix([[i for i in range(5)] for i in range(5)])
+    Y = SparseMatrix([list(range(5)) for i in range(5)])
     assert im(X).as_immutable() == Y
 
     X = FunctionMatrix(3, 3, Lambda((n, m), n + m*I))

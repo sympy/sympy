@@ -5,6 +5,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import polygamma
+from sympy.functions.special.error_functions import (Si, Ci)
 from sympy.matrices.expressions.blockmatrix import BlockMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
@@ -346,3 +347,5 @@ def test_scipy_print_methods():
     k = Symbol('k', integer=True, nonnegative=True)
     x = Symbol('x', real=True)
     assert prntr.doprint(polygamma(k, x)) == "scipy.special.polygamma(k, x)"
+    assert prntr.doprint(Si(x)) == "scipy.special.sici(x)[0]"
+    assert prntr.doprint(Ci(x)) == "scipy.special.sici(x)[1]"

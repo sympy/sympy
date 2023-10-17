@@ -438,6 +438,24 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     def __init__(self):  # override Domain.__init__
         """For constructing ZZ_I."""
 
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, GaussianIntegerRing):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Compute hash code of ``self``. """
+        return hash('ZZ_I')
+
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
+
     def get_ring(self):
         """Returns a ring associated with ``self``. """
         return self
@@ -608,6 +626,24 @@ class GaussianRationalField(GaussianDomain, Field):
 
     def __init__(self):  # override Domain.__init__
         """For constructing QQ_I."""
+
+    def __eq__(self, other):
+        """Returns ``True`` if two domains are equivalent. """
+        if isinstance(other, GaussianRationalField):
+            return True
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Compute hash code of ``self``. """
+        return hash('QQ_I')
+
+    @property
+    def has_CharacteristicZero(self):
+        return True
+
+    def characteristic(self):
+        return 0
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """

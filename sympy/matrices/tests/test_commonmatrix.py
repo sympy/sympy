@@ -20,7 +20,7 @@ from sympy.matrices import (Matrix, diag, eye,
     ImmutableSparseMatrix)
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
-from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
+from sympy.testing.pytest import raises, XFAIL
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
@@ -1017,29 +1017,6 @@ def test_jordan_block():
     raises(ValueError,
     lambda: SpecialOnlyMatrix.jordan_block(
         eigenvalue=2, eigenval=4))
-
-    # Deprecated feature
-    with warns_deprecated_sympy():
-        assert (SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) ==
-                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
-
-    with warns_deprecated_sympy():
-        assert (SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2) ==
-                SpecialOnlyMatrix(3, 3, (2, 1, 0, 0, 2, 1, 0, 0, 2)))
-
-    with warns_deprecated_sympy():
-        assert SpecialOnlyMatrix.jordan_block(3, 2) == \
-            SpecialOnlyMatrix.jordan_block(cols=3, eigenvalue=2) == \
-            SpecialOnlyMatrix.jordan_block(rows=3, eigenvalue=2)
-
-    with warns_deprecated_sympy():
-        assert SpecialOnlyMatrix.jordan_block(
-            rows=4, cols=3, eigenvalue=2) == \
-            Matrix([
-                [2, 1, 0],
-                [0, 2, 1],
-                [0, 0, 2],
-                [0, 0, 0]])
 
     # Using alias keyword
     assert SpecialOnlyMatrix.jordan_block(size=3, eigenvalue=2) == \

@@ -919,7 +919,7 @@ def test_issue_7971_21740():
     assert simplify(z) is S.Zero
     assert simplify(S.Zero) is S.Zero
     z = simplify(Float(0))
-    assert z is not S.Zero and z == 0
+    assert z is not S.Zero and z == 0.0
 
 
 @slow
@@ -1037,6 +1037,30 @@ def test_issue_23543():
     assert (x*(y + z/2)).simplify() == x*(2*y + z)/2
 
 
+def test_issue_11004():
+
+    def f(n):
+        return sqrt(2*pi*n) * (n/E)**n
+
+    def m(n, k):
+        return  f(n) / (f(n/k)**k)
+
+    def p(n,k):
+        return m(n, k) / (k**n)
+
+    N, k = symbols('N k')
+    half = Float('0.5', 4)
+    z = log(p(n, k) / p(n, k + 1)).expand(force=True)
+    r = simplify(z.subs(n, N).n(4))
+    assert r == (
+        half*k*log(k)
+        - half*k*log(k + 1)
+        + half*log(N)
+        - half*log(k + 1)
+        + Float(0.9189224, 4)
+    )
+
+
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
@@ -1046,3 +1070,13 @@ def test_issue_22210():
     d = Symbol('d', integer=True)
     expr = 2*Derivative(sin(x), (x, d))
     assert expr.simplify() == expr
+
+
+def test_reduce_inverses_nc_pow():
+    x, y = symbols("x y", commutative=True)
+    Z = symbols("Z", commutative=False)
+    assert simplify(2**Z * y**Z) == 2**Z * y**Z
+    assert simplify(x**Z * y**Z) == x**Z * y**Z
+    x, y = symbols("x y", positive=True)
+    assert expand((x*y)**Z) == x**Z * y**Z
+    assert simplify(x**Z * y**Z) == expand((x*y)**Z)

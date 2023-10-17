@@ -12,9 +12,13 @@ __all__ = [
 
     'RigidBody',
 
-    'inertia', 'inertia_of_point_mass', 'linear_momentum', 'angular_momentum',
-    'kinetic_energy', 'potential_energy', 'Lagrangian', 'mechanics_printing',
-    'mprint', 'msprint', 'mpprint', 'mlatex', 'msubs', 'find_dynamicsymbols',
+    'linear_momentum', 'angular_momentum', 'kinetic_energy', 'potential_energy',
+    'Lagrangian', 'mechanics_printing', 'mprint', 'msprint', 'mpprint',
+    'mlatex', 'msubs', 'find_dynamicsymbols',
+
+    'inertia', 'inertia_of_point_mass', 'Inertia',
+
+    'Force', 'Torque',
 
     'Particle',
 
@@ -29,7 +33,14 @@ __all__ = [
     'PinJoint', 'PrismaticJoint', 'CylindricalJoint', 'PlanarJoint',
     'SphericalJoint', 'WeldJoint',
 
-    'JointsMethod'
+    'JointsMethod',
+
+    'WrappingCylinder', 'WrappingGeometryBase', 'WrappingSphere',
+
+    'PathwayBase', 'LinearPathway', 'ObstacleSetPathway', 'WrappingPathway',
+
+    'ActuatorBase', 'ForceActuator', 'LinearDamper', 'LinearSpring',
+    'TorqueActuator',
 ]
 
 from sympy.physics import vector
@@ -45,10 +56,14 @@ from .kane import KanesMethod
 
 from .rigidbody import RigidBody
 
-from .functions import (inertia, inertia_of_point_mass, linear_momentum,
-        angular_momentum, kinetic_energy, potential_energy, Lagrangian,
-        mechanics_printing, mprint, msprint, mpprint, mlatex, msubs,
-        find_dynamicsymbols)
+from .functions import (linear_momentum, angular_momentum, kinetic_energy,
+                        potential_energy, Lagrangian, mechanics_printing,
+                        mprint, msprint, mpprint, mlatex, msubs,
+                        find_dynamicsymbols)
+
+from .inertia import inertia, inertia_of_point_mass, Inertia
+
+from .loads import Force, Torque
 
 from .particle import Particle
 
@@ -64,3 +79,12 @@ from .jointsmethod import JointsMethod
 
 from .joint import (PinJoint, PrismaticJoint, CylindricalJoint, PlanarJoint,
                     SphericalJoint, WeldJoint)
+
+from .wrapping_geometry import (WrappingCylinder, WrappingGeometryBase,
+                                WrappingSphere)
+
+from .pathway import (PathwayBase, LinearPathway, ObstacleSetPathway,
+                      WrappingPathway)
+
+from .actuator import (ActuatorBase, ForceActuator, LinearDamper, LinearSpring,
+                       TorqueActuator)

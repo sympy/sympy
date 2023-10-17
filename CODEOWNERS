@@ -9,6 +9,8 @@
 #
 # https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 #
+/sympy/physics/biomechanics/ @moorepants
 /sympy/physics/mechanics/ @moorepants
 /sympy/physics/vector/ @moorepants
 /sympy/solvers/ode/ @oscarbenjamin
+/sympy/*laplace* @hanspi42

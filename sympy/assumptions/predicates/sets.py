@@ -35,6 +35,18 @@ class IntegerPredicate(Predicate):
     )
 
 
+class NonIntegerPredicate(Predicate):
+    """
+    Non-integer extended real predicate.
+    """
+    name = 'noninteger'
+    handler = Dispatcher(
+        "NonIntegerHandler",
+        doc=("Handler for Q.noninteger.\n\n"
+        "Test that an expression is a non-integer extended real number.")
+    )
+
+
 class RationalPredicate(Predicate):
     """
     Rational number predicate.
@@ -220,7 +232,7 @@ class HermitianPredicate(Predicate):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HermitianOperator.html
+    .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
     # TODO: Add examples
@@ -319,7 +331,7 @@ class AntihermitianPredicate(Predicate):
     References
     ==========
 
-    .. [1] http://mathworld.wolfram.com/HermitianOperator.html
+    .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
     # TODO: Add examples

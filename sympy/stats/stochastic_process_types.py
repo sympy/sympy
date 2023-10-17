@@ -10,7 +10,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, Rational, igcd, oo, pi)
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (Integer, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
@@ -485,7 +486,7 @@ class MarkovProcess(StochasticProcess):
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
         if not isinstance(trans_probs.shape[0], Symbol):
-            state_index = FiniteSet(*[i for i in range(trans_probs.shape[0])])
+            state_index = FiniteSet(*range(trans_probs.shape[0]))
         return state_index
 
     @cacheit
@@ -687,7 +688,7 @@ class MarkovProcess(StochasticProcess):
             return S.One - self.probability(expr, given_condition, evaluate, **kwargs)
 
         if isinstance(condition, And):
-            compute_later, state2cond, conds = [], dict(), condition.args
+            compute_later, state2cond, conds = [], {}, condition.args
             for expr in conds:
                 if isinstance(expr, Relational):
                     ris = list(expr.atoms(RandomIndexedSymbol))[0]
@@ -935,7 +936,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Markov_chain#Discrete-time_Markov_chain
-    .. [2] https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
+    .. [2] https://web.archive.org/web/20201230182007/https://www.dartmouth.edu/~chance/teaching_aids/books_articles/probability_book/Chapter11.pdf
     """
     index_set = S.Naturals0
 
@@ -945,7 +946,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         state_space, trans_probs = MarkovProcess._sanity_checks(state_space, trans_probs)
 
         obj = Basic.__new__(cls, sym, state_space, trans_probs) # type: ignore
-        indices = dict()
+        indices = {}
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj._state_index):
                 indices[state] = index
@@ -1018,9 +1019,9 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         References
         ==========
 
-        .. [1] http://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
-        .. [2] http://cecas.clemson.edu/~shierd/Shier/markov.pdf
-        .. [3] https://ujcontent.uj.ac.za/vital/access/services/Download/uj:7506/CONTENT1
+        .. [1] https://web.archive.org/web/20220207032113/https://www.columbia.edu/~ww2040/4701Sum07/4701-06-Notes-MCII.pdf
+        .. [2] https://cecas.clemson.edu/~shierd/Shier/markov.pdf
+        .. [3] https://ujcontent.uj.ac.za/esploro/outputs/graduate/Markov-chains--a-graph-theoretical/999849107691#file-0
         .. [4] https://www.mathworks.com/help/econ/dtmc.classify.html
         """
         n = self.number_of_states
@@ -1228,7 +1229,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         .. [1] https://www.probabilitycourse.com/chapter11/11_2_6_stationary_and_limiting_distributions.php
-        .. [2] https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
+        .. [2] https://web.archive.org/web/20210508104430/https://galton.uchicago.edu/~yibi/teaching/stat317/2014/Lectures/Lecture4_6up.pdf
 
         See Also
         ========
@@ -1256,7 +1257,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         b[0, 0] = 1
 
         soln = list(linsolve((a, b)))[0]
-        return ImmutableMatrix([[sol for sol in soln]])
+        return ImmutableMatrix([soln])
 
     def fixed_row_vector(self):
         """
@@ -1346,7 +1347,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         ==========
 
         .. [1] https://en.wikipedia.org/wiki/Absorbing_Markov_chain
-        .. [2] http://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
+        .. [2] https://people.brandeis.edu/~igusa/Math56aS08/Math56a_S08_notes015.pdf
         """
         trans_probs = self.transition_probabilities
 
@@ -1569,7 +1570,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Markov_chain#Continuous-time_Markov_chain
-    .. [2] http://u.math.biu.ac.il/~amirgi/CTMCnotes.pdf
+    .. [2] https://u.math.biu.ac.il/~amirgi/CTMCnotes.pdf
     """
     index_set = S.Reals
 
@@ -1577,7 +1578,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         sym = _symbol_converter(sym)
         state_space, gen_mat = MarkovProcess._sanity_checks(state_space, gen_mat)
         obj = Basic.__new__(cls, sym, state_space, gen_mat)
-        indices = dict()
+        indices = {}
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj.state_space):
                 indices[state] = index
@@ -1612,7 +1613,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
         eqs = (wm*gen_mat).tolist()[0]
         eqs.append(sum(wi) - 1)
         soln = list(linsolve(eqs, wi))[0]
-        return ImmutableMatrix([[sol for sol in soln]])
+        return ImmutableMatrix([soln])
 
 
 class BernoulliProcess(DiscreteTimeStochasticProcess):

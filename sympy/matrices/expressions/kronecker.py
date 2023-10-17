@@ -77,7 +77,6 @@ def kronecker_product(*matrices):
     """
     if not matrices:
         raise TypeError("Empty Kronecker product is undefined")
-    validate(*matrices)
     if len(matrices) == 1:
         return matrices[0]
     else:
