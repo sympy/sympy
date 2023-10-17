@@ -89,7 +89,15 @@ class MatPow(MatrixExpr):
 
     def _eval_transpose(self):
         base, exp = self.args
-        return MatPow(base.T, exp)
+        return MatPow(base.transpose(), exp)
+
+    def _eval_adjoint(self):
+        base, exp = self.args
+        return MatPow(base.adjoint(), exp)
+
+    def _eval_conjugate(self):
+        base, exp = self.args
+        return MatPow(base.conjugate(), exp)
 
     def _eval_derivative(self, x):
         return Pow._eval_derivative(self, x)

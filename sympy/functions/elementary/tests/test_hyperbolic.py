@@ -504,7 +504,7 @@ def test_asinh():
     assert unchanged(asinh, x)
     assert asinh(-x) == -asinh(x)
 
-    #at specific points
+    # at specific points
     assert asinh(nan) is nan
     assert asinh( 0) == 0
     assert asinh(+1) == log(sqrt(2) + 1)
@@ -524,7 +524,7 @@ def test_asinh():
 
     assert asinh(zoo) is zoo
 
-    #properties
+    # properties
     assert asinh(I *(sqrt(3) - 1)/(2**Rational(3, 2))) == pi*I/12
     assert asinh(-I *(sqrt(3) - 1)/(2**Rational(3, 2))) == -pi*I/12
 
@@ -533,6 +533,15 @@ def test_asinh():
 
     assert asinh(I*(sqrt(5) + 1)/4) == pi*I*Rational(3, 10)
     assert asinh(-I*(sqrt(5) + 1)/4) == pi*I*Rational(-3, 10)
+
+    # reality
+    assert asinh(S(2)).is_real is True
+    assert asinh(S(2)).is_finite is True
+    assert asinh(S(-2)).is_real is True
+    assert asinh(S(oo)).is_extended_real is True
+    assert asinh(-S(oo)).is_real is False
+    assert (asinh(2) - oo) == -oo
+    assert asinh(symbols('y', real=True)).is_real is True
 
     # Symmetry
     assert asinh(Rational(-1, 2)) == -asinh(S.Half)
@@ -678,6 +687,15 @@ def test_acosh():
     assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
     assert acosh(1, evaluate=False).is_zero is True
 
+    # Reality
+    assert acosh(S(2)).is_real is True
+    assert acosh(S(2)).is_extended_real is True
+    assert acosh(oo).is_extended_real is True
+    assert acosh(S(2)).is_finite is True
+    assert acosh(S(1) / 5).is_real is False
+    assert (acosh(2) - oo) == -oo
+    assert acosh(symbols('y', real=True)).is_real is None
+
 
 def test_acosh_rewrite():
     x = Symbol('x')
@@ -783,6 +801,14 @@ def test_asech():
     assert asech(2/sqrt(3)) == acosh(sqrt(3)/2)
     assert asech(2/sqrt(2 + sqrt(2))) == acosh(sqrt(2 + sqrt(2))/2)
     assert asech(2) == acosh(S.Half)
+
+    # reality
+    assert asech(S(2)).is_real is False
+    assert asech(-S(1) / 3).is_real is False
+    assert asech(S(2) / 3).is_finite is True
+    assert asech(S(0)).is_real is False
+    assert asech(S(0)).is_extended_real is True
+    assert asech(symbols('y', real=True)).is_real is None
 
     # asech(x) == I*acos(1/x)
     # (Note: the exact formula is asech(x) == +/- I*acos(1/x))
@@ -916,6 +942,15 @@ def test_acsch():
     assert acsch(-I*sqrt(2)) == asinh(I/sqrt(2))
     assert acsch(-I*2 / sqrt(3)) == asinh(I*sqrt(3) / 2)
 
+    # reality
+    assert acsch(S(2)).is_real is True
+    assert acsch(S(2)).is_finite is True
+    assert acsch(S(-2)).is_real is True
+    assert acsch(S(oo)).is_extended_real is True
+    assert acsch(-S(oo)).is_real is True
+    assert (acsch(2) - oo) == -oo
+    assert acsch(symbols('y', extended_real=True)).is_extended_real is True
+
     # acsch(x) == -I*asin(I/x)
     assert acsch(-I*sqrt(2)) == -I*asin(-1/sqrt(2))
     assert acsch(-I*2 / sqrt(3)) == -I*asin(-sqrt(3)/2)
@@ -1005,7 +1040,7 @@ def test_acsch_fdiff():
 def test_atanh():
     x = Symbol('x')
 
-    #at specific points
+    # at specific points
     assert atanh(0) == 0
     assert atanh(I) == I*pi/4
     assert atanh(-I) == -I*pi/4
@@ -1022,9 +1057,18 @@ def test_atanh():
 
     assert atanh(zoo) == I*AccumBounds(-pi/2, pi/2)
 
-    #properties
+    # properties
     assert atanh(-x) == -atanh(x)
 
+    # reality
+    assert atanh(S(2)).is_real is False
+    assert atanh(S(-1)/5).is_real is True
+    assert atanh(symbols('y', extended_real=True)).is_real is None
+    assert atanh(S(1)).is_real is False
+    assert atanh(S(1)).is_extended_real is True
+    assert atanh(S(-1)).is_real is False
+
+    # special values
     assert atanh(I/sqrt(3)) == I*pi/6
     assert atanh(-I/sqrt(3)) == -I*pi/6
     assert atanh(I*sqrt(3)) == I*pi/3
@@ -1158,6 +1202,16 @@ def test_acoth():
     assert acoth(-I*(2 + sqrt(3))) == pi*I/12
     assert acoth(I*(2 - sqrt(3))) == pi*I*Rational(-5, 12)
     assert acoth(I*(sqrt(3) - 2)) == pi*I*Rational(5, 12)
+
+    # reality
+    assert acoth(S(2)).is_real is True
+    assert acoth(S(2)).is_finite is True
+    assert acoth(S(2)).is_extended_real is True
+    assert acoth(S(-2)).is_real is True
+    assert acoth(S(1)).is_real is False
+    assert acoth(S(1)).is_extended_real is True
+    assert acoth(S(-1)).is_real is False
+    assert acoth(symbols('y', real=True)).is_real is None
 
     # Symmetry
     assert acoth(Rational(-1, 2)) == -acoth(S.Half)

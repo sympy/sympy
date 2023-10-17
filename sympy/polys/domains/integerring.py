@@ -2,6 +2,7 @@
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
+from sympy.core.numbers import int_valued
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
     factorial,
@@ -69,7 +70,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return MPZ(a.p)
-        elif a.is_Float and int(a) == a:
+        elif int_valued(a):
             return MPZ(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
@@ -166,11 +167,11 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def from_FF(K1, a, K0):
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
-        return MPZ(a.to_int())
+        return MPZ(K0.to_int(a))
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
-        return MPZ(a.to_int())
+        return MPZ(K0.to_int(a))
 
     def from_ZZ(K1, a, K0):
         """Convert Python's ``int`` to GMPY's ``mpz``. """
@@ -192,7 +193,7 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
 
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to GMPY's ``mpz``. """
-        return a.to_int()
+        return MPZ(K0.to_int(a))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to GMPY's ``mpz``. """

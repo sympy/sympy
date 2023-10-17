@@ -13,6 +13,8 @@ from collections import Counter
 from functools import reduce
 from typing import Union as tUnion, Tuple as tTuple
 
+from sympy.utilities.decorator import doctest_depends_on
+
 from sympy.core.sympify import _sympify
 
 from ..domains import Domain
@@ -29,26 +31,30 @@ from .exceptions import (
     DMNonInvertibleMatrixError
 )
 
-from .ddm import DDM
-
-from .sdm import SDM
-
 from .domainscalar import DomainScalar
-
-from .rref import _dm_rref, _dm_rref_den
 
 from sympy.polys.domains import ZZ, EXRAW, QQ
 
 from sympy.polys.densearith import dup_mul
+from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import (
     dup_mul_ground,
     dup_quo_ground,
     dup_content,
-    dup_primitive,
     dup_clear_denoms,
+    dup_primitive,
+    dup_transform,
 )
 from sympy.polys.factortools import dup_factor_list
 from sympy.polys.polyutils import _sort_factors
+
+from .ddm import DDM
+
+from .sdm import SDM
+
+from .dfm import DFM
+
+from .rref import _dm_rref, _dm_rref_den
 
 
 def DM(rows, domain):
@@ -118,7 +124,7 @@ class DomainMatrix:
     Poly
 
     """
-    rep: tUnion[SDM, DDM]
+    rep: tUnion[SDM, DDM, DFM]
     shape: tTuple[int, int]
     domain: Domain
 
@@ -140,7 +146,7 @@ class DomainMatrix:
             If any of rows, shape and domain are not provided
 
         """
-        if isinstance(rows, (DDM, SDM)):
+        if isinstance(rows, (DDM, SDM, DFM)):
             raise TypeError("Use from_rep to initialise from SDM/DDM")
         elif isinstance(rows, list):
             rep = DDM(rows, shape, domain)
@@ -158,17 +164,22 @@ class DomainMatrix:
             else:
                 raise ValueError("fmt should be 'sparse' or 'dense'")
 
+        # Use python-flint for dense matrices if possible
+        if rep.fmt == 'dense' and DFM._supports_domain(domain):
+            rep = rep.to_dfm()
+
         return cls.from_rep(rep)
 
-    def __getnewargs__(self):
+    def __reduce__(self):
         rep = self.rep
-        if isinstance(rep, DDM):
-            arg = list(rep)
-        elif isinstance(rep, SDM):
+        if rep.fmt == 'dense':
+            arg = self.to_list()
+        elif rep.fmt == 'sparse':
             arg = dict(rep)
         else:
             raise RuntimeError # pragma: no cover
-        return arg, self.shape, self.domain
+        args = (arg, rep.shape, rep.domain)
+        return (self.__class__, args)
 
     def __getitem__(self, key):
         i, j = key
@@ -254,7 +265,7 @@ class DomainMatrix:
         as this is supposed to be an efficient internal routine.
 
         """
-        if not isinstance(rep, (DDM, SDM)):
+        if not (isinstance(rep, (DDM, SDM)) or (DFM is not None and isinstance(rep, DFM))):
             raise TypeError("rep should be of type DDM or SDM")
         self = super().__new__(cls)
         self.rep = rep
@@ -516,9 +527,21 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
-        if K is None:
+        if K == self.domain:
             return self.copy()
-        return self.from_rep(self.rep.convert_to(K))
+
+        rep = self.rep
+
+        # The DFM, DDM and SDM types do not do any implicit conversions so we
+        # manage switching between DDM and DFM here.
+        if rep.is_DFM and not DFM._supports_domain(K):
+            rep_K = rep.to_ddm().convert_to(K)
+        elif rep.is_DDM and DFM._supports_domain(K):
+            rep_K = rep.convert_to(K).to_dfm()
+        else:
+            rep_K = rep.convert_to(K)
+
+        return self.from_rep(rep_K)
 
     def to_sympy(self):
         return self.convert_to(EXRAW)
@@ -568,7 +591,7 @@ class DomainMatrix:
         if self.rep.fmt == 'sparse':
             return self
 
-        return self.from_rep(SDM.from_ddm(self.rep))
+        return self.from_rep(self.rep.to_sdm())
 
     def to_dense(self):
         """
@@ -587,10 +610,12 @@ class DomainMatrix:
         [[1, 0], [0, 2]]
 
         """
-        if self.rep.fmt == 'dense':
+        rep = self.rep
+
+        if rep.fmt == 'dense':
             return self
 
-        return self.from_rep(SDM.to_ddm(self.rep))
+        return self.from_rep(rep.to_dfm_or_ddm())
 
     def to_ddm(self):
         """
@@ -641,6 +666,68 @@ class DomainMatrix:
         sympy.polys.matrices.sdm.SDM.to_ddm
         """
         return self.rep.to_sdm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm(self):
+        """
+        Return a :class:`~.DFM` representation of *self*.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> dfm = A.to_dfm()
+        >>> dfm
+        [[1, 0], [0, 2]]
+        >>> type(dfm)
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm
+        to_dense
+        DFM
+        """
+        return self.rep.to_dfm()
+
+    @doctest_depends_on(ground_types=['flint'])
+    def to_dfm_or_ddm(self):
+        """
+        Return a :class:`~.DFM` or :class:`~.DDM` representation of *self*.
+
+        Explanation
+        ===========
+
+        The :class:`~.DFM` representation can only be used if the ground types
+        are ``flint`` and the ground domain is supported by ``python-flint``.
+        This method will return a :class:`~.DFM` representation if possible,
+        but will return a :class:`~.DDM` representation otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import QQ
+        >>> A = DomainMatrix([[1, 0],[0, 2]], (2, 2), QQ)
+        >>> dfm = A.to_dfm_or_ddm()
+        >>> dfm
+        [[1, 0], [0, 2]]
+        >>> type(dfm)  # Depends on the ground domain and ground types
+        <class 'sympy.polys.matrices._dfm.DFM'>
+
+        See Also
+        ========
+
+        to_ddm: Always return a :class:`~.DDM` representation.
+        to_dfm: Returns a :class:`~.DFM` representation or raise an error.
+        to_dense: Convert internally to a :class:`~.DFM` or :class:`~.DDM`
+        DFM: The :class:`~.DFM` dense FLINT matrix representation.
+        DDM: The Python :class:`~.DDM` dense domain matrix representation.
+        """
+        return self.rep.to_dfm_or_ddm()
 
     @classmethod
     def _unify_domain(cls, *matrices):
@@ -831,7 +918,8 @@ class DomainMatrix:
 
         to_list_flat
         """
-        return cls.from_rep(DDM.from_list_flat(elements, shape, domain))
+        ddm = DDM.from_list_flat(elements, shape, domain)
+        return cls.from_rep(ddm.to_dfm_or_ddm())
 
     def to_flat_nz(self):
         """
@@ -940,6 +1028,21 @@ class DomainMatrix:
         to_dok
         """
         return cls.from_rep(SDM.from_dok(dok, shape, domain))
+
+    def nnz(self):
+        """
+        Number of nonzero elements in the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DM
+        >>> A = DM([[1, 0], [0, 4]], ZZ)
+        >>> A.nnz()
+        2
+        """
+        return self.rep.nnz()
 
     def __repr__(self):
         return 'DomainMatrix(%s, %r, %r)' % (str(self.rep), self.shape, self.domain)
@@ -1165,6 +1268,9 @@ class DomainMatrix:
         if a.rep.fmt != b.rep.fmt:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
             raise DMFormatError(msg)
+        if type(a.rep) != type(b.rep):
+            msg = "Type mismatch: %s %s %s" % (type(a.rep), op, type(b.rep))
+            raise DMFormatError(msg)
 
     def add(A, B):
         r"""
@@ -1321,15 +1427,10 @@ class DomainMatrix:
         >>> A = DomainMatrix([
         ...    [ZZ(1), ZZ(2)],
         ...    [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-        >>> B = DomainMatrix([
-        ...    [ZZ(1), ZZ(1)],
-        ...    [ZZ(0), ZZ(1)]], (2, 2), ZZ)
+        >>> b = ZZ(2)
 
-        >>> A.mul(B)
-        DomainMatrix([[DomainMatrix([[1, 1], [0, 1]], (2, 2), ZZ),
-        DomainMatrix([[2, 2], [0, 2]], (2, 2), ZZ)],
-        [DomainMatrix([[3, 3], [0, 3]], (2, 2), ZZ),
-        DomainMatrix([[4, 4], [0, 4]], (2, 2), ZZ)]], (2, 2), ZZ)
+        >>> A.mul(b)
+        DomainMatrix([[2, 4], [6, 8]], (2, 2), ZZ)
 
         See Also
         ========
@@ -3228,8 +3329,15 @@ class DomainMatrix:
         """
         Base case for :meth:`charpoly_factor_blocks` after block decomposition.
 
-        Calls the underlying implementation of the Berkowitz algorithm
-        (:meth:`sympy.polys.matrices.dense.ddm_berk`).
+        This method is used internally by :meth:`charpoly_factor_blocks` as the
+        base case for computing the characteristic polynomial of a block. It is
+        more efficient to call :meth:`charpoly_factor_blocks`, :meth:`charpoly`
+        or :meth:`charpoly_factor_list` rather than call this method directly.
+
+        This will use either the dense or the sparse implementation depending
+        on the sparsity of the matrix and will clear denominators if possible
+        before calling :meth:`charpoly_berk` to compute the characteristic
+        polynomial using the Berkowitz algorithm.
 
         See Also
         ========
@@ -3237,7 +3345,86 @@ class DomainMatrix:
         charpoly
         charpoly_factor_list
         charpoly_factor_blocks
+        charpoly_berk
+        """
+        M = self
+        K = M.domain
+
+        # It seems that the sparse implementation is always faster for random
+        # matrices with fewer than 50% non-zero entries. This does not seem to
+        # depend on domain, size, bit count etc.
+        density = self.nnz() / self.shape[0]**2
+        if density < 0.5:
+            M = M.to_sparse()
+        else:
+            M = M.to_dense()
+
+        # Clearing denominators is always more efficient if it can be done.
+        # Doing it here after block decomposition is good because each block
+        # might have a smaller denominator. However it might be better for
+        # charpoly and charpoly_factor_list to restore the denominators only at
+        # the very end so that they can call e.g. dup_factor_list before
+        # restoring the denominators. The methods would need to be changed to
+        # return (poly, denom) pairs to make that work though.
+        clear_denoms = K.is_Field and K.has_assoc_Ring
+
+        if clear_denoms:
+            clear_denoms = True
+            d, M = M.clear_denoms(convert=True)
+            d = d.element
+            K_f = K
+            K_r = M.domain
+
+        # Berkowitz algorithm over K_r.
+        cp = M.charpoly_berk()
+
+        if clear_denoms:
+            # Restore the denominator in the charpoly over K_f.
+            #
+            # If M = N/d then p_M(x) = p_N(x*d)/d^n.
+            cp = dup_convert(cp, K_r, K_f)
+            p = [K_f.one, K_f.zero]
+            q = [K_f.one/d]
+            cp = dup_transform(cp, p, q, K_f)
+
+        return cp
+
+    def charpoly_berk(self):
+        """Compute the characteristic polynomial using the Berkowitz algorithm.
+
+        This method directly calls the underlying implementation of the
+        Berkowitz algorithm (:meth:`sympy.polys.matrices.dense.ddm_berk` or
+        :meth:`sympy.polys.matrices.sdm.sdm_berk`).
+
+        This is used by :meth:`charpoly` and other methods as the base case for
+        for computing the characteristic polynomial. However those methods will
+        apply other optimizations such as block decomposition, clearing
+        denominators and converting between dense and sparse representations
+        before calling this method. It is more efficient to call those methods
+        instead of this one but this method is provided for direct access to
+        the Berkowitz algorithm.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DM
+        >>> from sympy import QQ
+        >>> M = DM([[6, -1, 0, 0],
+        ...         [9, 12, 0, 0],
+        ...         [0,  0, 1, 2],
+        ...         [0,  0, 5, 6]], QQ)
+        >>> M.charpoly_berk()
+        [1, -25, 203, -495, -324]
+
+        See Also
+        ========
+
+        charpoly
+        charpoly_base
+        charpoly_factor_list
+        charpoly_factor_blocks
         sympy.polys.matrices.dense.ddm_berk
+        sympy.polys.matrices.sdm.sdm_berk
         """
         return self.rep.charpoly()
 
@@ -3306,7 +3493,7 @@ class DomainMatrix:
         DomainMatrix([[1, 1, 1], [1, 1, 1]], (2, 3), QQ)
 
         """
-        return cls.from_rep(DDM.ones(shape, domain))
+        return cls.from_rep(DDM.ones(shape, domain).to_dfm_or_ddm())
 
     def __eq__(A, B):
         r"""

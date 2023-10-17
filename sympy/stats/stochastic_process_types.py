@@ -10,7 +10,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, Rational, igcd, oo, pi)
+from sympy.core.intfunc import igcd
+from sympy.core.numbers import (Integer, Rational, oo, pi)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)

@@ -1,39 +1,20 @@
-"""Implementations of actuators for linked force and torque application.
-
-Notes
-=====
-
-This module is experimental and so is named with a leading underscore to
-indicate that the API is not yet stabilized and could be subject to breaking
-changes.
-
-"""
-
-from __future__ import annotations
+"""Implementations of actuators for linked force and torque application."""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
 
-from sympy.core.backend import S, USE_SYMENGINE, sympify
+from sympy import S, sympify
 from sympy.physics.mechanics import (
+    PathwayBase,
     PinJoint,
     ReferenceFrame,
     RigidBody,
     Torque,
     Vector,
 )
-from sympy.physics.mechanics._pathway import PathwayBase
-
-if USE_SYMENGINE:
-    from sympy.core.backend import Basic as ExprType
-else:
-    from sympy.core.expr import Expr as ExprType
-
-if TYPE_CHECKING:
-    from sympy.physics.mechanics.loads import LoadBase
 
 
 __all__ = [
+    'ActuatorBase',
     'ForceActuator',
     'LinearDamper',
     'LinearSpring',
@@ -52,12 +33,12 @@ class ActuatorBase(ABC):
 
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initializer for ``ActuatorBase``."""
         pass
 
     @abstractmethod
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -75,7 +56,7 @@ class ActuatorBase(ABC):
         """
         pass
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Default representation of an actuator."""
         return f'{self.__class__.__name__}()'
 
@@ -89,19 +70,28 @@ class ForceActuator(ActuatorBase):
     A ``ForceActuator`` is an actuator that produces a (expansile) force along
     its length.
 
+    A force actuator uses a pathway instance to determine the direction and
+    number of forces that it applies to a system. Consider the simplest case
+    where a ``LinearPathway`` instance is used. This pathway is made up of two
+    points that can move relative to each other, and results in a pair of equal
+    and opposite forces acting on the endpoints. If the positive time-varying
+    Euclidean distance between the two points is defined, then the "extension
+    velocity" is the time derivative of this distance. The extension velocity
+    is positive when the two points are moving away from each other and
+    negative when moving closer to each other. The direction for the force
+    acting on either point is determined by constructing a unit vector directed
+    from the other point to this point. This establishes a sign convention such
+    that a positive force magnitude tends to push the points apart, this is the
+    meaning of "expansile" in this context. The following diagram shows the
+    positive force sense and the distance between the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
-
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``ForceActuator`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import ForceActuator
-
-    This is similarly the case for imports from the ``_pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
 
     To construct an actuator, an expression (or symbol) must be supplied to
     represent the force it can produce, alongside a pathway specifying its line
@@ -110,15 +100,16 @@ class ForceActuator(ActuatorBase):
     can freely move in the frame's x direction specified by the coordinate
     ``q``.
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import (ForceActuator, LinearPathway,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> force = Symbol('F')
+    >>> force = symbols('F')
     >>> pA, pB = Point('pA'), Point('pB')
     >>> pA.set_vel(N, 0)
-    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.set_pos(pA, q*N.x)
     >>> pB.pos_from(pA)
     q(t)*N.x
     >>> linear_pathway = LinearPathway(pA, pB)
@@ -138,11 +129,7 @@ class ForceActuator(ActuatorBase):
 
     """
 
-    def __init__(
-        self,
-        force: ExprType,
-        pathway: PathwayBase,
-    ) -> None:
+    def __init__(self, force, pathway):
         """Initializer for ``ForceActuator``.
 
         Parameters
@@ -160,12 +147,12 @@ class ForceActuator(ActuatorBase):
         self.pathway = pathway
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The magnitude of the force produced by the actuator."""
         return self._force
 
     @force.setter
-    def force(self, force: ExprType) -> None:
+    def force(self, force):
         if hasattr(self, '_force'):
             msg = (
                 f'Can\'t set attribute `force` to {repr(force)} as it is '
@@ -175,12 +162,12 @@ class ForceActuator(ActuatorBase):
         self._force = sympify(force, strict=True)
 
     @property
-    def pathway(self) -> PathwayBase:
+    def pathway(self):
         """The ``Pathway`` defining the actuator's line of action."""
         return self._pathway
 
     @pathway.setter
-    def pathway(self, pathway: PathwayBase) -> None:
+    def pathway(self, pathway):
         if hasattr(self, '_pathway'):
             msg = (
                 f'Can\'t set attribute `pathway` to {repr(pathway)} as it is '
@@ -195,7 +182,7 @@ class ForceActuator(ActuatorBase):
             raise TypeError(msg)
         self._pathway = pathway
 
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -219,13 +206,13 @@ class ForceActuator(ActuatorBase):
         First, create a linear pathway between two points separated by the
         coordinate ``q`` in the ``x`` direction of the global frame ``N``.
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame
-        >>> from sympy.physics.mechanics._pathway import LinearPathway
+        >>> from sympy.physics.mechanics import (LinearPathway, Point,
+        ...     ReferenceFrame)
         >>> from sympy.physics.vector import dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> N = ReferenceFrame('N')
         >>> pA, pB = Point('pA'), Point('pB')
-        >>> pB.set_pos(pA, q * N.x)
+        >>> pB.set_pos(pA, q*N.x)
         >>> pathway = LinearPathway(pA, pB)
 
         Now create a symbol ``k`` to describe the spring's stiffness and
@@ -236,10 +223,10 @@ class ForceActuator(ActuatorBase):
         spring force needs to be calculated as the negative for the stiffness
         multiplied by the length.
 
-        >>> from sympy import Symbol
-        >>> from sympy.physics.mechanics._actuator import ForceActuator
-        >>> stiffness = Symbol('k')
-        >>> spring_force = -stiffness * pathway.length
+        >>> from sympy import symbols
+        >>> from sympy.physics.mechanics import ForceActuator
+        >>> stiffness = symbols('k')
+        >>> spring_force = -stiffness*pathway.length
         >>> spring = ForceActuator(spring_force, pathway)
 
         The forces produced by the spring can be generated in the list of loads
@@ -256,21 +243,20 @@ class ForceActuator(ActuatorBase):
         Note that the damping force is negative as it acts in the opposite
         direction to which the damper is changing in length.
 
-        >>> damping_coefficient = Symbol('c')
-        >>> damping_force = -damping_coefficient * pathway.extension_velocity
+        >>> damping_coefficient = symbols('c')
+        >>> damping_force = -damping_coefficient*pathway.extension_velocity
         >>> damper = ForceActuator(damping_force, pathway)
 
         Again, the forces produces by the damper can be generated by calling
         the ``to_loads`` method.
 
         >>> damper.to_loads()
-        [(pA, c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x),
-         (pB, - c*q(t)**2*Derivative(q(t), t)/q(t)**2*N.x)]
+        [(pA, c*Derivative(q(t), t)*N.x), (pB, - c*Derivative(q(t), t)*N.x)]
 
         """
-        return self.pathway.compute_loads(self.force)
+        return self.pathway.to_loads(self.force)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``ForceActuator``."""
         return f'{self.__class__.__name__}({self.force}, {self.pathway})'
 
@@ -289,19 +275,26 @@ class LinearSpring(ForceActuator):
     straight, pathway between its two ends, a ``LinearPathway`` instance needs
     to be passed to the ``pathway`` parameter.
 
+    A ``LinearSpring`` is a subclass of ``ForceActuator`` and so follows the
+    same sign conventions for length, extension velocity, and the direction of
+    the forces it applies to its points of attachment on bodies. The sign
+    convention for the direction of forces is such that, for the case where a
+    linear spring is instantiated with a ``LinearPathway`` instance as its
+    pathway, they act to push the two ends of the spring away from one another.
+    Because springs produces a contractile force and acts to pull the two ends
+    together towards the equilibrium length when stretched, the scalar portion
+    of the forces on the endpoint are negative in order to flip the sign of the
+    forces on the endpoints when converted into vector quantities. The
+    following diagram shows the positive force sense and the distance between
+    the points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
-
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearSpring`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import LinearSpring
-
-    This is similarly the case for imports from the ``_pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
 
     To construct a linear spring, an expression (or symbol) must be supplied to
     represent the stiffness (spring constant) of the spring, alongside a
@@ -310,15 +303,16 @@ class LinearSpring(ForceActuator):
     be positioned such that it can freely move in the frame's x direction
     specified by the coordinate ``q``.
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import (LinearPathway, LinearSpring,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> stiffness = Symbol('k')
+    >>> stiffness = symbols('k')
     >>> pA, pB = Point('pA'), Point('pB')
     >>> pA.set_vel(N, 0)
-    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.set_pos(pA, q*N.x)
     >>> pB.pos_from(pA)
     q(t)*N.x
     >>> linear_pathway = LinearPathway(pA, pB)
@@ -338,7 +332,7 @@ class LinearSpring(ForceActuator):
     construction on a ``LinearSpring`` instance. Let's create a symbol ``l``
     to denote a non-zero equilibrium length and create another linear spring.
 
-    >>> l = Symbol('l')
+    >>> l = symbols('l')
     >>> spring = LinearSpring(stiffness, linear_pathway, equilibrium_length=l)
     >>> spring
     LinearSpring(k, LinearPathway(pA, pB), equilibrium_length=l)
@@ -372,12 +366,7 @@ class LinearSpring(ForceActuator):
 
     """
 
-    def __init__(
-        self,
-        stiffness: ExprType,
-        pathway: PathwayBase,
-        equilibrium_length: ExprType = S.Zero,
-    ) -> None:
+    def __init__(self, stiffness, pathway, equilibrium_length=S.Zero):
         """Initializer for ``LinearSpring``.
 
         Parameters
@@ -399,21 +388,21 @@ class LinearSpring(ForceActuator):
         self.equilibrium_length = equilibrium_length
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The spring force produced by the linear spring."""
-        return -self.stiffness * (self.pathway.length - self.equilibrium_length)
+        return -self.stiffness*(self.pathway.length - self.equilibrium_length)
 
     @force.setter
-    def force(self, force: Any) -> None:
+    def force(self, force):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     @property
-    def stiffness(self) -> ExprType:
+    def stiffness(self):
         """The spring constant for the linear spring."""
         return self._stiffness
 
     @stiffness.setter
-    def stiffness(self, stiffness: ExprType):
+    def stiffness(self, stiffness):
         if hasattr(self, '_stiffness'):
             msg = (
                 f'Can\'t set attribute `stiffness` to {repr(stiffness)} as it '
@@ -423,12 +412,12 @@ class LinearSpring(ForceActuator):
         self._stiffness = sympify(stiffness, strict=True)
 
     @property
-    def equilibrium_length(self) -> ExprType:
+    def equilibrium_length(self):
         """The length of the spring at which it produces no force."""
         return self._equilibrium_length
 
     @equilibrium_length.setter
-    def equilibrium_length(self, equilibrium_length: ExprType) -> None:
+    def equilibrium_length(self, equilibrium_length):
         if hasattr(self, '_equilibrium_length'):
             msg = (
                 f'Can\'t set attribute `equilibrium_length` to '
@@ -437,7 +426,7 @@ class LinearSpring(ForceActuator):
             raise AttributeError(msg)
         self._equilibrium_length = sympify(equilibrium_length, strict=True)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``LinearSpring``."""
         string = f'{self.__class__.__name__}({self.stiffness}, {self.pathway}'
         if self.equilibrium_length == S.Zero:
@@ -461,19 +450,31 @@ class LinearDamper(ForceActuator):
     pathway between its two ends, a ``LinearPathway`` instance needs to be
     passed to the ``pathway`` parameter.
 
+    A ``LinearDamper`` is a subclass of ``ForceActuator`` and so follows the
+    same sign conventions for length, extension velocity, and the direction of
+    the forces it applies to its points of attachment on bodies. The sign
+    convention for the direction of forces is such that, for the case where a
+    linear damper is instantiated with a ``LinearPathway`` instance as its
+    pathway, they act to push the two ends of the damper away from one another.
+    Because dampers produce a force that opposes the direction of change in
+    length, when extension velocity is positive the scalar portions of the
+    forces applied at the two endpoints are negative in order to flip the sign
+    of the forces on the endpoints wen converted into vector quantities. When
+    extension velocity is negative (i.e. when the damper is shortening), the
+    scalar portions of the fofces applied are also negative so that the signs
+    cancel producing forces on the endpoints that are in the same direction as
+    the positive sign convention for the forces at the endpoints of the pathway
+    (i.e. they act to push the endpoints away from one another). The following
+    diagram shows the positive force sense and the distance between the
+    points::
+
+       P           Q
+       o<--- F --->o
+       |           |
+       |<--l(t)--->|
+
     Examples
     ========
-
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``LinearDamper`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import LinearDamper
-
-    This is similarly the case for imports from the ``_pathway.py`` module like
-    ``LinearPathway``.
-
-    >>> from sympy.physics.mechanics._pathway import LinearPathway
 
     To construct a linear damper, an expression (or symbol) must be supplied to
     represent the damping coefficient of the damper (we'll use the symbol
@@ -485,15 +486,16 @@ class LinearDamper(ForceActuator):
     coordinate ``u`` where ``u`` is the first time derivative of ``q``
     (i.e., ``u = Derivative(q(t), t)``).
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import Point, ReferenceFrame
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import (LinearDamper, LinearPathway,
+    ...     Point, ReferenceFrame)
     >>> from sympy.physics.vector import dynamicsymbols
     >>> N = ReferenceFrame('N')
     >>> q = dynamicsymbols('q')
-    >>> damping = Symbol('c')
+    >>> damping = symbols('c')
     >>> pA, pB = Point('pA'), Point('pB')
     >>> pA.set_vel(N, 0)
-    >>> pB.set_pos(pA, q * N.x)
+    >>> pB.set_pos(pA, q*N.x)
     >>> pB.pos_from(pA)
     q(t)*N.x
     >>> pB.vel(N)
@@ -510,7 +512,7 @@ class LinearDamper(ForceActuator):
     direction of length change.
 
     >>> damper.force
-    -c*q(t)*Derivative(q(t), t)/sqrt(q(t)**2)
+    -c*sqrt(q(t)**2)*Derivative(q(t), t)/q(t)
 
     Parameters
     ==========
@@ -529,7 +531,7 @@ class LinearDamper(ForceActuator):
 
     """
 
-    def __init__(self, damping: ExprType, pathway: PathwayBase) -> None:
+    def __init__(self, damping, pathway):
         """Initializer for ``LinearDamper``.
 
         Parameters
@@ -546,21 +548,21 @@ class LinearDamper(ForceActuator):
         self.pathway = pathway
 
     @property
-    def force(self) -> ExprType:
+    def force(self):
         """The damping force produced by the linear damper."""
-        return -self.damping * self.pathway.extension_velocity
+        return -self.damping*self.pathway.extension_velocity
 
     @force.setter
-    def force(self, force: Any) -> None:
+    def force(self, force):
         raise AttributeError('Can\'t set computed attribute `force`.')
 
     @property
-    def damping(self) -> ExprType:
+    def damping(self):
         """The damping constant for the linear damper."""
         return self._damping
 
     @damping.setter
-    def damping(self, damping: ExprType) -> None:
+    def damping(self, damping):
         if hasattr(self, '_damping'):
             msg = (
                 f'Can\'t set attribute `damping` to {repr(damping)} as it is '
@@ -569,7 +571,7 @@ class LinearDamper(ForceActuator):
             raise AttributeError(msg)
         self._damping = sympify(damping, strict=True)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``LinearDamper``."""
         return f'{self.__class__.__name__}({self.damping}, {self.pathway})'
 
@@ -586,22 +588,17 @@ class TorqueActuator(ActuatorBase):
     Examples
     ========
 
-    As the ``_actuator.py`` module is experimental, it is not yet part of the
-    ``sympy.physics.mechanics`` namespace. ``TorqueActuator`` must therefore be
-    imported directly from the ``sympy.physics.mechanics._actuator`` module.
-
-    >>> from sympy.physics.mechanics._actuator import TorqueActuator
-
     To construct a torque actuator, an expression (or symbol) must be supplied
     to represent the torque it can produce, alongside a vector specifying the
     axis about which the torque will act, and a pair of frames on which the
     torque will act.
 
-    >>> from sympy import Symbol
-    >>> from sympy.physics.mechanics import ReferenceFrame, RigidBody
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import (ReferenceFrame, RigidBody,
+    ...     TorqueActuator)
     >>> N = ReferenceFrame('N')
     >>> A = ReferenceFrame('A')
-    >>> torque = Symbol('T')
+    >>> torque = symbols('T')
     >>> axis = N.z
     >>> parent = RigidBody('parent', frame=N)
     >>> child = RigidBody('child', frame=A)
@@ -629,13 +626,7 @@ class TorqueActuator(ActuatorBase):
 
     """
 
-    def __init__(
-        self,
-        torque: ExprType,
-        axis: Vector,
-        target_frame: ReferenceFrame | RigidBody,
-        reaction_frame: ReferenceFrame | RigidBody | None = None,
-    ) -> None:
+    def __init__(self, torque, axis, target_frame, reaction_frame=None):
         """Initializer for ``TorqueActuator``.
 
         Parameters
@@ -656,15 +647,11 @@ class TorqueActuator(ActuatorBase):
         """
         self.torque = torque
         self.axis = axis
-        self.target_frame = target_frame  # type: ignore
-        self.reaction_frame = reaction_frame  # type: ignore
+        self.target_frame = target_frame
+        self.reaction_frame = reaction_frame
 
     @classmethod
-    def at_pin_joint(
-        cls,
-        torque: ExprType,
-        pin_joint: PinJoint,
-    ) -> TorqueActuator:
+    def at_pin_joint(cls, torque, pin_joint):
         """Alternate construtor to instantiate from a ``PinJoint`` instance.
 
         Examples
@@ -677,8 +664,7 @@ class TorqueActuator(ActuatorBase):
         z-axis as the joint axis.
 
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
-        ... RigidBody)
-        >>> from sympy.physics.mechanics._actuator import TorqueActuator
+        ...     RigidBody, TorqueActuator)
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> parent = RigidBody('parent', frame=N)
@@ -693,15 +679,15 @@ class TorqueActuator(ActuatorBase):
         Let's also create a symbol ``T`` that will represent the torque applied
         by the torque actuator.
 
-        >>> from sympy import Symbol
-        >>> torque = Symbol('T')
+        >>> from sympy import symbols
+        >>> torque = symbols('T')
 
         To create the torque actuator from the ``torque`` and ``pin_joint``
         variables previously instantiated, these can be passed to the alternate
         constructor class method ``at_pin_joint`` of the ``TorqueActuator``
         class. It should be noted that a positive torque will cause a positive
-        displacement of the joint coordinate or that the torque is applied on the
-        child body with a reaction torque on the parent.
+        displacement of the joint coordinate or that the torque is applied on
+        the child body with a reaction torque on the parent.
 
         >>> actuator = TorqueActuator.at_pin_joint(torque, pin_joint)
         >>> actuator
@@ -736,12 +722,12 @@ class TorqueActuator(ActuatorBase):
         )
 
     @property
-    def torque(self) -> ExprType:
+    def torque(self):
         """The magnitude of the torque produced by the actuator."""
         return self._torque
 
     @torque.setter
-    def torque(self, torque: ExprType) -> None:
+    def torque(self, torque):
         if hasattr(self, '_torque'):
             msg = (
                 f'Can\'t set attribute `torque` to {repr(torque)} as it is '
@@ -751,12 +737,12 @@ class TorqueActuator(ActuatorBase):
         self._torque = sympify(torque, strict=True)
 
     @property
-    def axis(self) -> Vector:
+    def axis(self):
         """The axis about which the torque acts."""
         return self._axis
 
     @axis.setter
-    def axis(self, axis: Vector) -> None:
+    def axis(self, axis):
         if hasattr(self, '_axis'):
             msg = (
                 f'Can\'t set attribute `axis` to {repr(axis)} as it is '
@@ -772,12 +758,12 @@ class TorqueActuator(ActuatorBase):
         self._axis = axis
 
     @property
-    def target_frame(self) -> ReferenceFrame:
+    def target_frame(self):
         """The primary reference frames on which the torque will act."""
         return self._target_frame
 
     @target_frame.setter
-    def target_frame(self, target_frame: ReferenceFrame) -> None:
+    def target_frame(self, target_frame):
         if hasattr(self, '_target_frame'):
             msg = (
                 f'Can\'t set attribute `target_frame` to {repr(target_frame)} '
@@ -795,12 +781,12 @@ class TorqueActuator(ActuatorBase):
         self._target_frame = target_frame
 
     @property
-    def reaction_frame(self) -> ReferenceFrame | None:
+    def reaction_frame(self):
         """The primary reference frames on which the torque will act."""
         return self._reaction_frame
 
     @reaction_frame.setter
-    def reaction_frame(self, reaction_frame: ReferenceFrame | None) -> None:
+    def reaction_frame(self, reaction_frame):
         if hasattr(self, '_reaction_frame'):
             msg = (
                 f'Can\'t set attribute `reaction_frame` to '
@@ -820,7 +806,7 @@ class TorqueActuator(ActuatorBase):
             raise TypeError(msg)
         self._reaction_frame = reaction_frame
 
-    def to_loads(self) -> list[LoadBase]:
+    def to_loads(self):
         """Loads required by the equations of motion method classes.
 
         Explanation
@@ -841,11 +827,10 @@ class TorqueActuator(ActuatorBase):
         The below example shows how to generate the loads produced by a torque
         actuator that acts on a pair of bodies attached by a pin joint.
 
-        >>> from sympy import Symbol
+        >>> from sympy import symbols
         >>> from sympy.physics.mechanics import (PinJoint, ReferenceFrame,
-        ... RigidBody)
-        >>> from sympy.physics.mechanics._actuator import TorqueActuator
-        >>> torque = Symbol('T')
+        ...     RigidBody, TorqueActuator)
+        >>> torque = symbols('T')
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> parent = RigidBody('parent', frame=N)
@@ -873,14 +858,14 @@ class TorqueActuator(ActuatorBase):
         [(N, T*N.z)]
 
         """
-        loads: list[LoadBase] = [
-            Torque(self.target_frame, self.torque * self.axis),
+        loads = [
+            Torque(self.target_frame, self.torque*self.axis),
         ]
         if self.reaction_frame is not None:
-            loads.append(Torque(self.reaction_frame, -self.torque * self.axis))
+            loads.append(Torque(self.reaction_frame, -self.torque*self.axis))
         return loads
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Representation of a ``TorqueActuator``."""
         string = (
             f'{self.__class__.__name__}({self.torque}, axis={self.axis}, '

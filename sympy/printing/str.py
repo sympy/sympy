@@ -10,7 +10,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
-from sympy.core.sympify import SympifyError
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
@@ -912,22 +911,19 @@ class StrPrinter(Printer):
         return self._print_Integer(Integer(0))
 
     def _print_DMP(self, p):
-        try:
-            if p.ring is not None:
-                # TODO incorporate order
-                return self._print(p.ring.to_sympy(p))
-        except SympifyError:
-            pass
-
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        ring = self._print(p.ring)
 
-        return "%s(%s, %s, %s)" % (cls, rep, dom, ring)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_DMF(self, expr):
-        return self._print_DMP(expr)
+        cls = expr.__class__.__name__
+        num = self._print(expr.num)
+        den = self._print(expr.den)
+        dom = self._print(expr.dom)
+
+        return "%s(%s, %s, %s)" % (cls, num, den, dom)
 
     def _print_Object(self, obj):
         return 'Object("%s")' % obj.name

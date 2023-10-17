@@ -7,8 +7,8 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
-from sympy.core.backend import (Matrix, Mul, Derivative, sin, cos, tan,
-                                AppliedUndef, S)
+from sympy import Matrix, Mul, Derivative, sin, cos, tan, S
+from sympy.core.function import AppliedUndef
 from sympy.physics.mechanics.inertia import (inertia as _inertia,
     inertia_of_point_mass as _inertia_of_point_mass)
 from sympy.utilities.exceptions import sympy_deprecation_warning

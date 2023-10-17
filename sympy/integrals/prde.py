@@ -17,7 +17,8 @@ each function for more information.
 import itertools
 from functools import reduce
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core.intfunc import ilcm
+from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,

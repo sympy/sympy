@@ -102,6 +102,7 @@ modules = [
     'sympy.parsing.latex._antlr',
     'sympy.parsing.latex.lark',
     'sympy.physics',
+    'sympy.physics.biomechanics',
     'sympy.physics.continuum_mechanics',
     'sympy.physics.control',
     'sympy.physics.hep',
@@ -148,6 +149,7 @@ modules = [
     'sympy.utilities',
     'sympy.utilities._compilation',
     'sympy.utilities.mathml',
+    'sympy.utilities.mathml.data',
     'sympy.vector',
 ]
 
@@ -259,6 +261,7 @@ tests = [
     'sympy.multipledispatch.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.biomechanics.tests',
     'sympy.physics.continuum_mechanics.tests',
     'sympy.physics.control.tests',
     'sympy.physics.hep.tests',
@@ -323,7 +326,7 @@ if __name__ == '__main__':
           packages=['sympy'] + modules + tests,
           ext_modules=[],
           package_data={
-              'sympy.utilities.mathml': ['data/*.xsl'],
+              'sympy.utilities.mathml.data': ['*.xsl'],
               'sympy.logic.benchmarks': ['input/*.cnf'],
               'sympy.parsing.autolev': [
                   '*.g4', 'test-examples/*.al', 'test-examples/*.py',
@@ -331,7 +334,7 @@ if __name__ == '__main__':
                   'test-examples/pydy-example-repo/*.py',
                   'test-examples/README.txt',
                   ],
-              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/*.lark'],
+              'sympy.parsing.latex': ['*.txt', '*.g4', 'lark/grammar/*.lark'],
               'sympy.plotting.tests': ['test_region_*.png'],
               'sympy': ['py.typed']
               },
@@ -360,5 +363,8 @@ if __name__ == '__main__':
           install_requires=[
             'mpmath>=%s' % min_mpmath_version,
             ],
+          extras_require={
+              "dev": ["pytest>=7.1.0", "hypothesis>=6.70.0"],
+            },
           **extra_kwargs
           )

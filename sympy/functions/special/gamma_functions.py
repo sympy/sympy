@@ -96,7 +96,7 @@ class gamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -259,7 +259,7 @@ class lowergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -444,7 +444,7 @@ class uppergamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -654,7 +654,7 @@ class polygamma(Function):
     loggamma: Log Gamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -961,7 +961,7 @@ class loggamma(Function):
     polygamma: Polygamma function.
     digamma: Digamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -1095,7 +1095,7 @@ class digamma(Function):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     trigamma: Trigamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -1189,7 +1189,7 @@ class trigamma(Function):
     polygamma: Polygamma function.
     loggamma: Log Gamma function.
     digamma: Digamma function.
-    beta: Euler Beta function.
+    sympy.functions.special.beta_functions.beta: Euler Beta function.
 
     References
     ==========
@@ -1301,7 +1301,7 @@ class multigamma(Function):
     ========
 
     gamma, lowergamma, uppergamma, polygamma, loggamma, digamma, trigamma,
-    beta
+    sympy.functions.special.beta_functions.beta
 
     References
     ==========

@@ -1,4 +1,4 @@
-from sympy.core.backend import symbols
+from sympy import symbols
 from sympy.testing.pytest import raises
 from sympy.physics.mechanics import (inertia, inertia_of_point_mass,
                                      Inertia, ReferenceFrame, Point)
