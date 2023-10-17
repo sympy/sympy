@@ -13,6 +13,13 @@ from sympy.polys.domains import QQ, ZZ
 #  we should implement. See e.g. the Kannan-Bachem algorithm:
 #  <https://www.researchgate.net/publication/220617516_Polynomial_Algorithms_for_Computing_the_Smith_and_Hermite_Normal_Forms_of_an_Integer_Matrix>
 
+def extended_gcd(a, b):
+    """Return (gcd(a, b), x, y) such that a*x + b*y = gcd(a, b)"""
+    if not b:
+        return (a, 1, 0)
+    else:
+        d, x, y = extended_gcd(b, a % b)
+        return (d, y, x - (a // b) * y)
 
 def smith_normal_form(m):
     '''
@@ -30,12 +37,35 @@ def smith_normal_form(m):
     ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
     >>> print(smith_normal_form(m).to_Matrix())
     Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
-
     '''
-    invs = invariant_factors(m)
-    smf = DomainMatrix.diag(invs, m.domain, m.shape)
-    return smf
+    '''
+    Return the Smith Normal Form of a matrix `m` along with the unimodular matrices S and T.
+    '''
+    from sympy import Matrix
 
+    M = Matrix(m)
+    S = Matrix.eye(M.rows)
+    T = Matrix.eye(M.cols)
+    J = M.copy()
+    for i in range(min(J.rows, J.cols)):
+        while J[i,i] != J[:i+1,i+1:].applyfunc(lambda x: x % J[i,i]).det():
+            non_zero_elements = [x for x in J[:,i].tolist() if x[0]]
+            g, s, t = extended_gcd(J[i,i], min(non_zero_elements))
+            s_row = [x[0] for x in J[:,i].tolist()].index(min(non_zero_elements))
+            T.row_swap(i, s_row)
+            J = J.row_swap(i, s_row)
+            J[:,i] = s*J[:,i] + t*J[:,s_row]
+        for j in range(i+1, J.rows):
+            q, r = divmod(J[j,i], J[i,i])
+            if r:
+                S.row_add(j, i, -q)
+                J.row_add(j, i, -q)
+        for j in range(i+1, J.cols):
+            q, r = divmod(J[i,j], J[i,i])
+            if r:
+                T.col_add(j, i, -q)
+                J.col_add(j, i, -q)
+    return J, S, T
 
 def add_columns(m, i, j, a, b, c, d):
     # replace m[:, i] by a*m[:, i] + b*m[:, j]
