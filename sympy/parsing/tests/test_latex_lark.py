@@ -7,7 +7,6 @@ from sympy.concrete.summations import Sum
 from sympy.core.function import Derivative, Function
 from sympy.core.numbers import E, oo, Rational
 from sympy.core.power import Pow
-from sympy.core.parameters import evaluate
 from sympy.core.relational import GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Unequality
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import binomial, factorial
