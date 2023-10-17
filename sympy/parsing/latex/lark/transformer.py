@@ -1,7 +1,5 @@
 import re
 
-from lark.visitors import _Leaf_T, _Return_T
-
 import sympy
 from sympy.external import import_module
 from sympy.parsing.latex.errors import LaTeXParsingError
