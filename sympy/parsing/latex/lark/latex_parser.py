@@ -69,7 +69,7 @@ class LarkLaTeXParser:
         else:
             self.transformer = transformer()
 
-    def doparse(self, s: str):
+    def doparse(self, s: str, evaluate: bool):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
@@ -88,7 +88,7 @@ class LarkLaTeXParser:
             # print the `parse_tree` variable
             _lark.logger.debug(parse_tree.pretty())
 
-        sympy_expression = self.transformer.transform(parse_tree)
+        sympy_expression = self.transformer.transform_tree(parse_tree, evaluate)
 
         if self.print_debug_output:
             _lark.logger.debug("SymPy expression =", sympy_expression)
@@ -100,7 +100,7 @@ if _lark is not None:
     _lark_latex_parser = LarkLaTeXParser()
 
 
-def parse_latex_lark(s: str):
+def parse_latex_lark(s: str, evaluate=False):
     """
     Experimental LaTeX parser using Lark.
 
@@ -109,7 +109,7 @@ def parse_latex_lark(s: str):
     """
     if _lark is None:
         raise ImportError("Lark is probably not installed")
-    return _lark_latex_parser.doparse(s)
+    return _lark_latex_parser.doparse(s, evaluate=evaluate)
 
 
 def _pretty_print_lark_trees(tree, indent=0, show_expr=True):
