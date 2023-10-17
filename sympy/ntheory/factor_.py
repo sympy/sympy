@@ -944,6 +944,10 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
 
     if verbose:
         print('Check for termination')
+    if n == 1:
+        if verbose:
+            print(complete_msg)
+        return True
 
     # since we've already been factoring there is no need to do
     # simultaneous factoring with the power check
@@ -959,15 +963,18 @@ def _check_termination(factors, n, limitp1, use_trial, use_rho, use_pm1,
         for b, e in facs.items():
             if verbose:
                 print(factor_msg % (b, e))
-            factors[b] = int(exp*e)  # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
-        raise StopIteration
+            # int() can be removed when https://github.com/flintlib/python-flint/issues/92 is resolved
+            factors[b] = int(exp*e)
+        if verbose:
+            print(complete_msg)
+        return True
 
     if isprime(n):
         factors[int(n)] = 1
-        raise StopIteration
-
-    if n == 1:
-        raise StopIteration
+        if verbose:
+            print(complete_msg)
+        return True
+    return False
 
 trial_int_msg = "Trial division with ints [%i ... %i] and fail_max=%i"
 trial_msg = "Trial division with primes [%i ... %i]"
@@ -1354,61 +1361,49 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if verbose:
             print(complete_msg)
         return factors
-
-    # continue with more advanced factorization methods
-
     # first check if the simplistic run didn't finish
     # because of the limit and check for a perfect
     # power before exiting
-    try:
-        if limit and next_p > limit:
-            if verbose:
-                print('Exceeded limit:', limit)
-
-            _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
-                               verbose)
-
-            if n > 1:
-                factors[int(n)] = 1
-            return factors
-        else:
-            # Before quitting (or continuing on)...
-
-            # ...do a Fermat test since it's so easy and we need the
-            # square root anyway. Finding 2 factors is easy if they are
-            # "close enough." This is the big root equivalent of dividing by
-            # 2, 3, 5.
-            sqrt_n = isqrt(n)
-            a = sqrt_n + 1
-            a2 = a**2
-            b2 = a2 - n
-            for i in range(3):
-                b, fermat = sqrtrem(b2)
-                if not fermat:
-                    break
-                b2 += 2*a + 1  # equiv to (a + 1)**2 - n
-                a += 1
-            if not fermat:
-                if verbose:
-                    print(fermat_msg)
-                if limit:
-                    limit -= 1
-                for r in [a - b, a + b]:
-                    facs = factorint(r, limit=limit, use_trial=use_trial,
-                                     use_rho=use_rho, use_pm1=use_pm1,
-                                     verbose=verbose)
-                    for k, v in facs.items():
-                        factors[k] = factors.get(k, 0) + v
-                raise StopIteration
-
-            # ...see if factorization can be terminated
-            _check_termination(factors, n, limit, use_trial, use_rho, use_pm1,
-                               verbose)
-
-    except StopIteration:
+    if limit and next_p > limit:
         if verbose:
-            print(complete_msg)
+            print('Exceeded limit:', limit)
+        if _check_termination(factors, n, limit, use_trial,
+                              use_rho, use_pm1, verbose):
+            return factors
+        if n > 1:
+            factors[int(n)] = 1
         return factors
+    if _check_termination(factors, n, limit, use_trial,
+                          use_rho, use_pm1, verbose):
+        return factors
+
+    # continue with more advanced factorization methods
+    # ...do a Fermat test since it's so easy and we need the
+    # square root anyway. Finding 2 factors is easy if they are
+    # "close enough." This is the big root equivalent of dividing by
+    # 2, 3, 5.
+    sqrt_n = isqrt(n)
+    a = sqrt_n + 1
+    a2 = a**2
+    b2 = a2 - n
+    for _ in range(3):
+        b, fermat = sqrtrem(b2)
+        if not fermat:
+            if verbose:
+                print(fermat_msg)
+            if limit:
+                limit -= 1
+            for r in [a - b, a + b]:
+                facs = factorint(r, limit=limit, use_trial=use_trial,
+                                 use_rho=use_rho, use_pm1=use_pm1,
+                                 verbose=verbose)
+                for k, v in facs.items():
+                    factors[k] = factors.get(k, 0) + v
+            if verbose:
+                print(complete_msg)
+            return factors
+        b2 += 2*a + 1  # equiv to (a + 1)**2 - n
+        a += 1
 
     # these are the limits for trial division which will
     # be attempted in parallel with pollard methods
@@ -1419,76 +1414,71 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     limit += 1
     iteration = 0
     while 1:
+        high_ = high
+        if limit < high_:
+            high_ = limit
 
-        try:
-            high_ = high
-            if limit < high_:
-                high_ = limit
+        # Trial division
+        if use_trial:
+            if verbose:
+                print(trial_msg % (low, high_))
+            ps = sieve.primerange(low, high_)
+            n, found_trial = _trial(factors, n, ps, verbose)
+            if found_trial and _check_termination(factors, n, limit, use_trial,
+                                                  use_rho, use_pm1, verbose):
+                return factors
+        else:
+            found_trial = False
 
-            # Trial division
-            if use_trial:
-                if verbose:
-                    print(trial_msg % (low, high_))
-                ps = sieve.primerange(low, high_)
-                n, found_trial = _trial(factors, n, ps, verbose)
-                if found_trial:
-                    _check_termination(factors, n, limit, use_trial, use_rho,
-                                       use_pm1, verbose)
-            else:
-                found_trial = False
-
-            if high > limit:
-                if verbose:
-                    print('Exceeded limit:', limit)
-                if n > 1:
-                    factors[int(n)] = 1
-                raise StopIteration
-
-            # Only used advanced methods when no small factors were found
-            if not found_trial:
-                if (use_pm1 or use_rho):
-                    high_root = max(int(math.log(high_**0.7)), low, 3)
-
-                    # Pollard p-1
-                    if use_pm1:
-                        if verbose:
-                            print(pm1_msg % (high_root, high_))
-                        c = pollard_pm1(n, B=high_root, seed=high_)
-                        if c:
-                            # factor it and let _trial do the update
-                            ps = factorint(c, limit=limit - 1,
-                                           use_trial=use_trial,
-                                           use_rho=use_rho,
-                                           use_pm1=use_pm1,
-                                           use_ecm=use_ecm,
-                                           verbose=verbose)
-                            n, _ = _trial(factors, n, ps, verbose=False)
-                            _check_termination(factors, n, limit, use_trial,
-                                               use_rho, use_pm1, verbose)
-
-                    # Pollard rho
-                    if use_rho:
-                        max_steps = high_root
-                        if verbose:
-                            print(rho_msg % (1, max_steps, high_))
-                        c = pollard_rho(n, retries=1, max_steps=max_steps,
-                                        seed=high_)
-                        if c:
-                            # factor it and let _trial do the update
-                            ps = factorint(c, limit=limit - 1,
-                                           use_trial=use_trial,
-                                           use_rho=use_rho,
-                                           use_pm1=use_pm1,
-                                           use_ecm=use_ecm,
-                                           verbose=verbose)
-                            n, _ = _trial(factors, n, ps, verbose=False)
-                            _check_termination(factors, n, limit, use_trial,
-                                               use_rho, use_pm1, verbose)
-
-        except StopIteration:
+        if high > limit:
+            if verbose:
+                print('Exceeded limit:', limit)
+            if n > 1:
+                factors[int(n)] = 1
             if verbose:
                 print(complete_msg)
             return factors
+
+        # Only used advanced methods when no small factors were found
+        if not found_trial and (use_pm1 or use_rho):
+            high_root = max(int(math.log(high_**0.7)), low, 3)
+
+            # Pollard p-1
+            if use_pm1:
+                if verbose:
+                    print(pm1_msg % (high_root, high_))
+                c = pollard_pm1(n, B=high_root, seed=high_)
+                if c:
+                    # factor it and let _trial do the update
+                    ps = factorint(c, limit=limit - 1,
+                                   use_trial=use_trial,
+                                   use_rho=use_rho,
+                                   use_pm1=use_pm1,
+                                   use_ecm=use_ecm,
+                                   verbose=verbose)
+                    n, _ = _trial(factors, n, ps, verbose=False)
+                    if _check_termination(factors, n, limit, use_trial,
+                                          use_rho, use_pm1, verbose):
+                        return factors
+
+            # Pollard rho
+            if use_rho:
+                max_steps = high_root
+                if verbose:
+                    print(rho_msg % (1, max_steps, high_))
+                c = pollard_rho(n, retries=1, max_steps=max_steps, seed=high_)
+                if c:
+                    # factor it and let _trial do the update
+                    ps = factorint(c, limit=limit - 1,
+                                   use_trial=use_trial,
+                                   use_rho=use_rho,
+                                   use_pm1=use_pm1,
+                                   use_ecm=use_ecm,
+                                   verbose=verbose)
+                    n, _ = _trial(factors, n, ps, verbose=False)
+                    if _check_termination(factors, n, limit, use_trial,
+                                          use_rho, use_pm1, verbose):
+                        return factors
         # Use subexponential algorithms if use_ecm
         # Use pollard algorithms for finding small factors for 3 iterations
         # if after small factors the number of digits of n >= 25 then use ecm
@@ -1496,29 +1486,24 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         if use_ecm and iteration >= 3 and num_digits(n) >= 24:
             break
         low, high = high, high*2
+
     B1 = 10000
     B2 = 100*B1
     num_curves = 50
     while(1):
         if verbose:
             print(ecm_msg % (B1, B2, num_curves))
-        while(1):
-            try:
-                factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
-                ps = factorint(factor, limit=limit - 1,
-                               use_trial=use_trial,
-                               use_rho=use_rho,
-                               use_pm1=use_pm1,
-                               use_ecm=use_ecm,
-                               verbose=verbose)
-                n, _ = _trial(factors, n, ps, verbose=False)
-                _check_termination(factors, n, limit, use_trial,
-                                       use_rho, use_pm1, verbose)
-            except ValueError:
-                break
-            except StopIteration:
-                if verbose:
-                    print(complete_msg)
+        factor = _ecm_one_factor(n, B1, B2, num_curves, seed=B1)
+        if factor:
+            ps = factorint(factor, limit=limit - 1,
+                       use_trial=use_trial,
+                       use_rho=use_rho,
+                       use_pm1=use_pm1,
+                       use_ecm=use_ecm,
+                       verbose=verbose)
+            n, _ = _trial(factors, n, ps, verbose=False)
+            if _check_termination(factors, n, limit, use_trial,
+                                  use_rho, use_pm1, verbose):
                 return factors
         B1 *= 5
         B2 = 100*B1
@@ -1584,7 +1569,6 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         args.extend([Pow(*i, evaluate=False)
                      for i in sorted(f.items())])
         return Mul(*args, evaluate=False)
-
 
 
 def primefactors(n, limit=None, verbose=False, **kwargs):
