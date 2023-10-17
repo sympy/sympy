@@ -588,7 +588,7 @@ def test_product_expressions():
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
         # Testing evaluate=True
         assert parse_latex_lark(latex_str, evaluate=True) == sympy_expr, latex_str
-        
+
 
 @XFAIL
 def test_applied_function_expressions():
