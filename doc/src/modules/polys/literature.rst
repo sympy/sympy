@@ -138,7 +138,6 @@ a theoretical foundation for implementing polynomials manipulation module.
     "Symbolic and Numerical Computation for Artificial Intelligence",
     Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
     https://donaldlab.cs.duke.edu/Books/SymbolicNumericalComputation/045-087.pdf
-     
 
 .. [Stiller96] P Stiller. "An introduction to the theory of resultants",
     Mathematics and Computer Science, T&M University, 1996, Citeseer,
