@@ -42,13 +42,14 @@ class TransformToSymPyExpr(Transformer):
 
         Note that the option must be set to ``True`` for the default parser to work.
     """
-    evaluate = None
+    def __init__(self, evaluate):
+        self.evaluate = evaluate
 
     SYMBOL = sympy.Symbol
     DIGIT = sympy.core.numbers.Integer
 
     def transform_tree(self, tree, evaluate):
-        TransformToSymPyExpr.evaluate = evaluate
+        self.evaluate = evaluate
 
         return super().transform(tree)
 
@@ -113,43 +114,43 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def eq(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Eq(tokens[0], tokens[2])
         else:
             return sympy.Eq(tokens[0], tokens[2], evaluate=False)
 
     def ne(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Ne(tokens[0], tokens[2])
         else:
             return sympy.Ne(tokens[0], tokens[2], evaluate=False)
 
     def lt(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Lt(tokens[0], tokens[2])
         else:
             return sympy.Lt(tokens[0], tokens[2], evaluate=False)
 
     def lte(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Le(tokens[0], tokens[2])
         else:
             return sympy.Le(tokens[0], tokens[2], evaluate=False)
 
     def gt(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Gt(tokens[0], tokens[2])
         else:
             return sympy.Gt(tokens[0], tokens[2], evaluate=False)
 
     def gte(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Ge(tokens[0], tokens[2])
         else:
             return sympy.Ge(tokens[0], tokens[2], evaluate=False)
 
     def add(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Add(tokens[0], tokens[2])
         else:
             return sympy.Add(tokens[0], tokens[2], evaluate=False)
@@ -165,19 +166,19 @@ class TransformToSymPyExpr(Transformer):
             # which is not useful to anyone.
             return -tokens[1]
         elif len(tokens) == 3:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Add(tokens[0], -tokens[2])
             else:
                 return sympy.Add(tokens[0], sympy.Mul(-1, tokens[2], evaluate=False), evaluate=False)
 
     def mul(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Mul(tokens[0], tokens[2])
         else:
             return sympy.Mul(tokens[0], tokens[2], evaluate=False)
 
     def div(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1))
         else:
             return sympy.Mul(tokens[0], sympy.Pow(tokens[2], -1, evaluate=False), evaluate=False)
@@ -194,18 +195,18 @@ class TransformToSymPyExpr(Transformer):
             return tokens[0], tokens[1]
         elif isinstance(tokens[0], tuple):
             # then we have a derivative
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Derivative(tokens[1], tokens[0][1])
             else:
                 return sympy.Derivative(tokens[1], tokens[0][1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Mul(tokens[0], tokens[1])
             else:
                 return sympy.Mul(tokens[0], tokens[1], evaluate=False)
 
     def superscript(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Pow(tokens[0], tokens[2])
         else:
             return sympy.Pow(tokens[0], tokens[2], evaluate=False)
@@ -221,13 +222,13 @@ class TransformToSymPyExpr(Transformer):
         else:
             denominator = tokens[2]
 
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Mul(numerator, sympy.Pow(denominator, -1))
             else:
                 return sympy.Mul(numerator, sympy.Pow(denominator, -1, evaluate=False), evaluate=False)
 
     def binomial(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.binomial(tokens[1], tokens[2])
         else:
             return sympy.binomial(tokens[1], tokens[2], evaluate=False)
@@ -430,7 +431,7 @@ class TransformToSymPyExpr(Transformer):
         return tokens[1]
 
     def derivative(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Derivative(tokens[-1], tokens[5])
         else:
             return sympy.Derivative(tokens[-1], tokens[5], evaluate=False)
@@ -455,13 +456,13 @@ class TransformToSymPyExpr(Transformer):
         return sympy.Function(tokens[0])(*tokens[2])
 
     def min(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Min(*tokens[2])
         else:
             return sympy.Min(*tokens[2], evaluate=False)
 
     def max(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Max(*tokens[2])
         else:
             return sympy.Max(*tokens[2], evaluate=False)
@@ -479,37 +480,37 @@ class TransformToSymPyExpr(Transformer):
         return InnerProduct(Bra(tokens[1]), Ket(tokens[3]))
 
     def sin(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.sin(tokens[1])
         else:
             return sympy.sin(tokens[1], evaluate=False)
 
     def cos(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.cos(tokens[1])
         else:
             return sympy.cos(tokens[1], evaluate=False)
 
     def tan(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.tan(tokens[1])
         else:
             return sympy.tan(tokens[1], evaluate=False)
 
     def csc(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.csc(tokens[1])
         else:
             return sympy.csc(tokens[1], evaluate=False)
 
     def sec(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.sec(tokens[1])
         else:
             return sympy.sec(tokens[1], evaluate=False)
 
     def cot(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.cot(tokens[1])
         else:
             return sympy.cot(tokens[1], evaluate=False)
@@ -517,12 +518,12 @@ class TransformToSymPyExpr(Transformer):
     def sin_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.asin(tokens[-1])
             else:
                 return sympy.asin(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.sin(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.sin(tokens[-1]), exponent, evaluate=False)
@@ -530,12 +531,12 @@ class TransformToSymPyExpr(Transformer):
     def cos_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.acos(tokens[-1])
             else:
                 return sympy.acos(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.cos(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.cos(tokens[-1]), exponent, evaluate=False)
@@ -543,12 +544,12 @@ class TransformToSymPyExpr(Transformer):
     def tan_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.atan(tokens[-1])
             else:
                 return sympy.atan(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.tan(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.tan(tokens[-1]), exponent, evaluate=False)
@@ -556,12 +557,12 @@ class TransformToSymPyExpr(Transformer):
     def csc_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.acsc(tokens[-1])
             else:
                 return sympy.acsc(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.csc(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.csc(tokens[-1]), exponent, evaluate=False)
@@ -569,12 +570,12 @@ class TransformToSymPyExpr(Transformer):
     def sec_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.asec(tokens[-1])
             else:
                 return sympy.asec(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.sec(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.sec(tokens[-1]), exponent, evaluate=False)
@@ -582,114 +583,114 @@ class TransformToSymPyExpr(Transformer):
     def cot_power(self, tokens):
         exponent = tokens[2]
         if exponent == -1:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.acot(tokens[-1])
             else:
                 return sympy.acot(tokens[-1], evaluate=False)
         else:
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.Pow(sympy.cot(tokens[-1]), exponent)
             else:
                 return sympy.Pow(sympy.cot(tokens[-1]), exponent, evaluate=False)
 
     def arcsin(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.asin(tokens[1])
         else:
             return sympy.asin(tokens[1], evaluate=False)
 
     def arccos(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.acos(tokens[1])
         else:
             return sympy.acos(tokens[1], evaluate=False)
 
     def arctan(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.atan(tokens[1])
         else:
             return sympy.atan(tokens[1], evaluate=False)
 
     def arccsc(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.acsc(tokens[1])
         else:
             return sympy.acsc(tokens[1], evaluate=False)
 
     def arcsec(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.asec(tokens[1])
         else:
             return sympy.asec(tokens[1], evaluate=False)
 
     def arccot(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.acot(tokens[1])
         else:
             return sympy.acot(tokens[1], evaluate=False)
 
     def sinh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.sinh(tokens[1])
         else:
             return sympy.sinh(tokens[1], evaluate=False)
 
     def cosh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.cosh(tokens[1])
         else:
             return sympy.cosh(tokens[1], evaluate=False)
 
     def tanh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.tanh(tokens[1])
         else:
             return sympy.tanh(tokens[1], evaluate=False)
 
     def asinh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.asinh(tokens[1])
         else:
             return sympy.asinh(tokens[1], evaluate=False)
 
     def acosh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.acosh(tokens[1])
         else:
             return sympy.acosh(tokens[1], evaluate=False)
 
     def atanh(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.atanh(tokens[1])
         else:
             return sympy.atanh(tokens[1], evaluate=False)
 
     def abs(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.Abs(tokens[1])
         else:
             return sympy.Abs(tokens[1], evaluate=False)
 
     def floor(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.floor(tokens[1])
         else:
             return sympy.floor(tokens[1], evaluate=False)
 
     def ceil(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.ceiling(tokens[1])
         else:
             return sympy.ceiling(tokens[1], evaluate=False)
 
     def factorial(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.factorial(tokens[0])
         else:
             return sympy.factorial(tokens[0], evaluate=False)
 
     def conjugate(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.conjugate(tokens[1])
         else:
             return sympy.conjugate(tokens[1], evaluate=False)
@@ -697,19 +698,19 @@ class TransformToSymPyExpr(Transformer):
     def square_root(self, tokens):
         if len(tokens) == 2:
             # then there was no square bracket argument
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.sqrt(tokens[1])
             else:
                 return sympy.sqrt(tokens[1], evaluate=False)
         elif len(tokens) == 3:
             # then there _was_ a square bracket argument
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.root(tokens[2], tokens[1])
             else:
                 return sympy.root(tokens[2], tokens[1], evaluate=False)
 
     def exponential(self, tokens):
-        if TransformToSymPyExpr.evaluate:
+        if self.evaluate:
             return sympy.exp(tokens[1])
         else:
             return sympy.exp(tokens[1], evaluate=False)
@@ -719,12 +720,12 @@ class TransformToSymPyExpr(Transformer):
             # we don't need to check if there's an underscore or not because having one
             # in this case would be meaningless
             # TODO: ANTLR refers to ISO 80000-2:2019. should we keep base 10 or base 2?
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.log(tokens[1], 10)
             else:
                 return sympy.log(tokens[1], 10, evaluate=False)
         elif tokens[0].type == "FUNC_LN":
-            if TransformToSymPyExpr.evaluate:
+            if self.evaluate:
                 return sympy.log(tokens[1])
             else:
                 return sympy.log(tokens[1], evaluate=False)
@@ -732,13 +733,13 @@ class TransformToSymPyExpr(Transformer):
             # we check if a base was specified or not
             if "_" in tokens:
                 # then a base was specified
-                if TransformToSymPyExpr.evaluate:
+                if self.evaluate:
                     return sympy.log(tokens[3], tokens[2])
                 else:
                     return sympy.log(tokens[3], tokens[2], evaluate=False)
             else:
                 # a base was not specified
-                if TransformToSymPyExpr.evaluate:
+                if self.evaluate:
                     return sympy.log(tokens[1])
                 else:
                     return sympy.log(tokens[1], evaluate=False)
