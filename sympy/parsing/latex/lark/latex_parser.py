@@ -69,7 +69,7 @@ class LarkLaTeXParser:
         else:
             self.transformer = transformer()
 
-    def doparse(self, s: str, evaluate: bool):
+    def doparse(self, s: str, evaluate: bool=False):
         if self.print_debug_output:
             _lark.logger.setLevel(logging.DEBUG)
 
