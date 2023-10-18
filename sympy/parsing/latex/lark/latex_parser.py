@@ -65,7 +65,7 @@ class LarkLaTeXParser:
         self.transform_expr = transform
 
         if transformer is None:
-            self.transformer = TransformToSymPyExpr()
+            self.transformer = TransformToSymPyExpr(evaluate=False)
         else:
             self.transformer = transformer()
 
