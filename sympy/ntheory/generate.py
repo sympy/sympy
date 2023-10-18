@@ -210,7 +210,6 @@ class Sieve:
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         """
-
         if b is None:
             b = _as_int_ceiling(a)
             a = 2
@@ -220,15 +219,8 @@ class Sieve:
         if a >= b:
             return
         self.extend(b)
-        i = self.search(a)[1]
-        maxi = len(self._list) + 1
-        while i < maxi:
-            p = self._list[i - 1]
-            if p < b:
-                yield p
-                i += 1
-            else:
-                return
+        yield from self._list[bisect_left(self._list, a):
+                              bisect_left(self._list, b)]
 
     def totientrange(self, a, b):
         """Generate all totient numbers for the range [a, b).
