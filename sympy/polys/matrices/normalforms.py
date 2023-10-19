@@ -7,6 +7,7 @@ from .exceptions import DMDomainError, DMShapeError
 from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
 
+from sympy import Matrix
 
 # TODO (future work):
 #  There are faster algorithms for Smith and Hermite normal forms, which
@@ -41,8 +42,6 @@ def smith_normal_form(m):
     '''
     Return the Smith Normal Form of a matrix `m` along with the unimodular matrices S and T.
     '''
-    from sympy import Matrix
-
     M = Matrix(m)
     S = Matrix.eye(M.rows)
     T = Matrix.eye(M.cols)
@@ -66,6 +65,7 @@ def smith_normal_form(m):
                 T.col_add(j, i, -q)
                 J.col_add(j, i, -q)
     return J, S, T
+
 
 def add_columns(m, i, j, a, b, c, d):
     # replace m[:, i] by a*m[:, i] + b*m[:, j]
