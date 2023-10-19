@@ -137,7 +137,7 @@ a theoretical foundation for implementing polynomials manipulation module.
 .. [Bruce97] Bruce Randall Donald, Deepak Kapur, and Joseph L. Mundy (Eds.).
     "Symbolic and Numerical Computation for Artificial Intelligence",
     Chapter 2, Academic Press, Inc., Orlando, FL, USA, 1997,
-    https://www2.cs.duke.edu/donaldlab/Books/SymbolicNumericalComputation/045-087.pdf.
+    https://donaldlab.cs.duke.edu/Books/SymbolicNumericalComputation/045-087.pdf
 
 .. [Stiller96] P Stiller. "An introduction to the theory of resultants",
     Mathematics and Computer Science, T&M University, 1996, Citeseer,
