@@ -2,12 +2,14 @@
 Physical quantities.
 """
 
+from sympy.core.relational import Eq
+from sympy.solvers import solve
 from sympy.core.expr import AtomicExpr
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
-
+from sympy.physics.units import speed_of_light, planck
 
 class Quantity(AtomicExpr):
     """
@@ -150,3 +152,41 @@ class PhysicalConstant(Quantity):
     """Represents a physical constant, eg. `speed_of_light` or `avogadro_constant`."""
 
     is_physical_constant = True
+
+class Photon(Quantity):
+
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls, *args, **kwargs)
+
+        # Assuming energy and wavelength are represented in SI units
+        instance.h = planck  # Planck's constant
+        instance.c = speed_of_light  # Speed of light
+        return instance
+
+    def convert_energy_to_wavelength(self, energy):
+        """
+        Convert photon energy to wavelength.
+
+        Parameters:
+        - energy: Energy of the photon in Joules (SI unit)
+
+        Returns:
+        - Wavelength of the photon in meters (SI unit)
+        """
+        lambda_symbol = Symbol('lambda')
+        equation = Eq(energy, self.h * self.c / lambda_symbol)
+        wavelength = solve(equation, lambda_symbol)[0]
+        return wavelength
+
+    def convert_wavelength_to_energy(self, wavelength):
+        """
+        Convert photon wavelength to energy.
+
+        Parameters:
+        - wavelength: Wavelength of the photon in meters (SI unit)
+
+        Returns:
+        - Energy of the photon in Joules (SI unit)
+        """
+        energy = self.h * self.c / wavelength
+        return energy
