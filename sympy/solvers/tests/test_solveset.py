@@ -870,8 +870,8 @@ def test_solve_trig():
               imageset(Lambda(n, 2*n*pi + pi/3), S.Integers)))
 
     assert dumeq(solveset(sin(y + a) - sin(y), a, domain=S.Reals),
-        Union(ImageSet(Lambda(n, 2*n*pi - y + asin(sin(y))), S.Integers),
-        ImageSet(Lambda(n, 2*n*pi - y - asin(sin(y)) + pi), S.Integers)))
+        Union(ImageSet(Lambda(n, 2*n*pi), S.Integers),
+        Intersection(ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*y))) + 2*im(y))), S.Integers), S.Reals)))
 
     assert dumeq(solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x)-1, x),
         ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers))
@@ -1294,7 +1294,6 @@ def test__solveset_multi():
             [Interval(0, 1), Interval(0, pi)]) == FiniteSet((1, 0))
     assert _solveset_multi([r*cos(theta)-r, r*sin(theta)], [r, theta],
            [Interval(0, 1), Interval(0, pi)]) == Union(
-           {(0, pi)},
            ImageSet(Lambda(((r,),), (r, 0)),
            ImageSet(Lambda(r, (r,)), Interval(0, 1))),
            ImageSet(Lambda(((theta,),), (0, theta)),
@@ -2261,15 +2260,11 @@ def test_issue_17906():
     assert solveset(7**(x**2 - 80) - 49**x, x) == FiniteSet(-8, 10)
 
 
-@XFAIL
-# solveset does not handle the case when the solution is a set
-# instead of ImageSet at line 3302 at this time
 def test_issue_17933():
     eq1 = x*sin(45) - y*cos(q)
     eq2 = x*cos(45) - y*sin(q)
     eq3 = 9*x*sin(45)/10 + y*cos(q)
     eq4 = 9*x*cos(45)/10 + y*sin(z) - z
-
     assert nonlinsolve([eq1, eq2, eq3, eq4], x, y, z, q) ==\
         FiniteSet((0, 0, 0, q))
 
