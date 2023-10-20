@@ -58,6 +58,7 @@ from sympy.utilities.iterables import (numbered_symbols, has_dups,
                                        is_sequence, iterable)
 from sympy.calculus.util import periodicity, continuous_domain, function_range
 
+
 from types import GeneratorType
 
 
@@ -1033,7 +1034,7 @@ def _solveset(f, symbol, domain, _check=False):
         if m not in {S.ComplexInfinity, S.Zero, S.Infinity,
                               S.NegativeInfinity}:
             f = a/m + h  # XXX condition `m != 0` should be added to soln
-        if isinstance(h, TrigonometricFunction) and domain.is_subset(S.Reals):
+        if a and a.is_number and a.is_real and isinstance(h, TrigonometricFunction) and domain.is_subset(S.Reals):
             # solve this by inversion
             linear_trig = True
 
@@ -3287,7 +3288,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             original_imageset = {}
             # if imageset, expr is used to solve for other symbol
             imgset_yes = False
-            result = _new_order_result(result, eq)
             for res in result:
                 got_symbol = set()  # symbols solved in one iteration
                 # find the imageset and use its expr.
@@ -3298,8 +3298,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                         dummy_n = v.lamda.expr.atoms(Dummy).pop()
                         (base,) = v.base_sets
                         imgset_yes = (dummy_n, base)
-                    elif isinstance(v, FiniteSet):
-                        raise NotImplementedError('unhandled type: %s' % v)
+                    assert not isinstance(v, FiniteSet)  # if so, internal error
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
                 unsolved_syms = _unsolved_syms(eq2, sort=True)
