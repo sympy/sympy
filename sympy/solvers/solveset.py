@@ -2599,11 +2599,17 @@ def linear_eq_to_matrix(equations, *symbols):
         Any such simplification needed to eliminate nonlinear terms must
         be done *before* calling this routine.
     """
+
     if not symbols:
         raise ValueError(filldedent('''
             Symbols must be given, for which coefficients
             are to be found.
             '''))
+
+    # Check if 'symbols' is a set and raise an error if it is
+    if isinstance(symbols[0], set):
+        raise TypeError(
+            "Unordered 'set' type is not supported as input for symbols.")
 
     if hasattr(symbols[0], '__iter__'):
         symbols = symbols[0]
