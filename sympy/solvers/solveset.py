@@ -375,7 +375,7 @@ def _invert_complex(f, g_ys, symbol):
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         if isinstance(g_ys, ImageSet):
-            # can solve upto `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
+            # can solve up to `(d*exp(exp(...(exp(a*x + b))...) + c)` format.
             # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
             g_ys_expr = g_ys.lamda.expr
             g_ys_vars = g_ys.lamda.variables
