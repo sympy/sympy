@@ -141,7 +141,7 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Stiller96] P Stiller. "An introduction to the theory of resultants",
     Mathematics and Computer Science, T&M University, 1996, Citeseer,
-    https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.590.2021&rep=rep1&type=pdf.
+    https://isc.tamu.edu/resources/preprints/1996/1996-02.pdf
 
 .. [Cohen93] Henri Cohen. "A Course in Computational Algebraic Number Theory",
    Springer, 1993.
