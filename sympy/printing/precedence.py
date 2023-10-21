@@ -120,8 +120,6 @@ def precedence(item):
 
     This is the precedence for StrPrinter.
     """
-    
-    
     if hasattr(item, "precedence"):
         return item.precedence
     if not isinstance(item, type):
