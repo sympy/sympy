@@ -2801,9 +2801,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
 
         >>> pprint(F_1.doit(cancel=False), use_unicode=False)
-        [           25*s*(1 - s)                          25 - 25*s              ]
-        [       --------------------                    --------------           ]
-        [       25*(1 - 6*s)*(1 - s)                    25*s*(1 - 6*s)           ]
+        [             s*(s - 1)                              s - 1               ]
+        [         -----------------                       -----------            ]
+        [         (1 - s)*(6*s - 1)                       s*(6*s - 1)            ]
         [                                                                        ]
         [s*(25*s - 25) + 5*(1 - s)*(6*s - 1)  s*(s - 1)*(6*s - 1) + s*(25*s - 25)]
         [-----------------------------------  -----------------------------------]
