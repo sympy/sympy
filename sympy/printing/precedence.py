@@ -133,7 +133,6 @@ def precedence(item):
     if isinstance(item, (int, float, complex)) and item < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
-    
 
 
 PRECEDENCE_TRADITIONAL = PRECEDENCE.copy()
