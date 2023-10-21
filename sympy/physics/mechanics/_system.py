@@ -1,4 +1,4 @@
-"""Implementation of system for book-keeping all objects defining a model.
+r"""Implementation of system for book-keeping all objects defining a model.
 
 Explanation
 ===========
@@ -22,50 +22,119 @@ Holonomic constraints
 
 .. math::
 
-   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^M
-
-Twice time differentiated holonomic constraints
-
-.. math::
-
-   \dot{\mathrm{f}}_h(\ddot{\mathrm{q}},\dot{\mathrm{q}},\mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
-
-   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_n(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
+   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0}
+   \in \mathbb{R}^M
 
 Nonholonomic constraints
 
 .. math::
 
-   \mathrm{f}_n(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
-
-   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \dot{\mathrm{q}} + \mathrm{g}_n(\mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+   \mathrm{f}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \dot{\mathrm{q}} + \mathrm{g}_n(\mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
 
 Dynamical equations of motion
 
 .. math::
 
-   \mathrm{f}_d(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
-
-   \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_d(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+   \mathrm{f}_d(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \mathrm{g}_d(\dot{\mathrm{q}}, \mathrm{q}, \ddot{\mathrm{r}},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^n
 
 Acceleration constraints
 
-The holonomic constraints are twice differentiated with respect to time and the
-nonholonomic constraints are differentiated once.
+If there are holonomic of nonholonomic constraints the dynamical differential
+equations must be augmented with the constraint forces. The holonomic
+constraints are twice differentiated with respect to time and the nonholonomic
+constraints are differentiated once.
 
 .. math::
 
-   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_n(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
+   \ddot{\mathrm{f}}_h(\ddot{\mathrm{q}},\dot{\mathrm{q}},\mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \ddot{\mathrm{g}}_h(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+   \mathrm{r}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^M
 
-   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_{nd}(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+.. math::
 
-   \mathrm{f}_c(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \begin{bmatrix}\ddot{\mathrm{f}}_h \\ \dot{\mathrm{f}}_h\end{bmatrix}
+   \dot{\mathrm{f}}_n(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \ddot{\mathrm{q}} +
+   \dot{\mathrm{g}}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+   \mathrm{r}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
+
+.. math::
+
+   \mathrm{f}_c(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \begin{bmatrix}
+     \ddot{\mathrm{f}}_h \\
+     \dot{\mathrm{f}}_n
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \\
+     \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \end{bmatrix}
+   \ddot{\mathrm{q}}
+   +
+   \begin{bmatrix}
+     \ddot{\mathrm{g}}_h(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+     \mathrm{r}, \mathrm{r}, \mathrm{p}, t) \\
+     \dot{\mathrm{g}}_n(\dot{\mathrm{q}}, \mathrm{q}, \dot{\mathrm{r}},
+     \mathrm{r}, \mathrm{r}, \mathrm{p}, t)
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{0} \\
+     \mathrm{0}
+   \end{bmatrix}
+
+.. math::
+
+   \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}} =
+   \begin{bmatrix}
+     \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \\
+     \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}}
+   \end{bmatrix}
+   \in \mathbb{R}^{(m + M) \times N}
+
+Introducing Lagrange multipliers :math:`\mathbf{\lambda}` lets us write the
+constrained euquations of motion:
+
+.. math::
+
+   \begin{bmatrix}
+     \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} &
+     \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}}^T \\
+     \mathrm{J}_{\mathrm{f}_c, \ddot{\mathrm{q}}} & \mathbf{0}
+   \end{bmatrix}
+   \begin{bmatrix}
+     \ddot{\mathbf{q}} \\
+     \mathbf{\lambda}
+   \end{bmatrix}
+   +
+   \begin{bmatrix}
+   \mathbf{g}_d \\
+   \mathbf{g}_c
+   \end{bmatrix}
+   =
+   \begin{bmatrix}
+     \mathrm{0} \\
+     \mathrm{0}
+   \end{bmatrix}
 
 Output equations
 
 .. math::
 
-   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{r}, \mathrm{\lambda}, \mathrm{p}, t) = \mathbf{0}
+   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
+   \mathrm{p}, t) = \mathbf{0}
 
 Notes
 =====
