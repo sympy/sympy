@@ -1,5 +1,72 @@
 """Implementation of system for book-keeping all objects defining a model.
 
+Explanation
+===========
+
+- :math:`t` : time
+- :math:`\mathrm{q} \in \mathbb{R}^N` : coordinates
+- :math:`\mathrm{q}_s \in \mathbb{R}^n` : independent coordinates
+- :math:`\mathrm{q}_r \in \mathbb{R}^M` : dependent coordinates
+- :math:`\mathrm{u} \in \mathbb{R}^n` : generalized speeds
+- :math:`\mathrm{u}_s \in \mathbb{R}^p` : independent generalized speeds
+- :math:`\mathrm{u}_r \in \mathbb{R}^m` : dependent generalized speeds
+- :math:`\mathrm{p}` : constants
+- :math:`\mathrm{r}` : time varying specified inputs
+- :math:`\mathrm{\lambda}` : Lagrange multipliers (constraint forces)
+- :math:`\mathrm{y}` : time varying outputs
+
+Lagrange
+========
+
+Holonomic constraints
+
+.. math::
+
+   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^M
+
+Twice time differentiated holonomic constraints
+
+.. math::
+
+   \dot{\mathrm{f}}_h(\ddot{\mathrm{q}},\dot{\mathrm{q}},\mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
+
+   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_n(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
+
+Nonholonomic constraints
+
+.. math::
+
+   \mathrm{f}_n(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+
+   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \dot{\mathrm{q}} + \mathrm{g}_n(\mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+
+Dynamical equations of motion
+
+.. math::
+
+   \mathrm{f}_d(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+
+   \mathrm{J}_{\mathrm{f}_d, \ddot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_d(\dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+
+Acceleration constraints
+
+The holonomic constraints are twice differentiated with respect to time and the
+nonholonomic constraints are differentiated once.
+
+.. math::
+
+   \mathrm{J}_{\dot{\mathrm{f}}_h, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_n(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^M
+
+   \mathrm{J}_{\mathrm{f}_n, \dot{\mathrm{q}}} \ddot{\mathrm{q}} + \mathrm{g}_{nd}(\dot{mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \mathrm{0} \in \mathbb{R}^m
+
+   \mathrm{f}_c(\ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{p}, \mathrm{r}, t) = \begin{bmatrix}\ddot{\mathrm{f}}_h \\ \dot{\mathrm{f}}_h\end{bmatrix}
+
+Output equations
+
+.. math::
+
+   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{r}, \mathrm{\lambda}, \mathrm{p}, t) = \mathbf{0}
+
 Notes
 =====
 
