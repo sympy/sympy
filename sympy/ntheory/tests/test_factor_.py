@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.numbers import Integer, Rational
-from sympy.external.gmpy import gcd, GROUND_TYPES, SYMPY_INTS
+from sympy.external.gmpy import gcd
 
 from sympy.ntheory import (totient,
     factorint, primefactors, divisors, nextprime,
