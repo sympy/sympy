@@ -1,5 +1,7 @@
 """Useful utilities for higher level polynomial classes. """
 
+from __future__ import annotations
+
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.core import (S, Add, Mul, Pow, Eq, Expr,
@@ -10,6 +12,9 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 import re
+
+
+flint_ZZ_n: tuple[type, ...]
 
 
 if GROUND_TYPES == 'flint':
