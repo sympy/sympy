@@ -10,10 +10,13 @@ Explanation
 - :math:`\mathrm{u} \in \mathbb{R}^n` : generalized speeds
 - :math:`\mathrm{u}_s \in \mathbb{R}^p` : independent generalized speeds
 - :math:`\mathrm{u}_r \in \mathbb{R}^m` : dependent generalized speeds
+- :math:`\mathrm{u}_a` : auxiliary generalized speeds
 - :math:`\mathrm{p}` : constants
-- :math:`\mathrm{r}` : time varying specified inputs
+- :math:`\mathrm{r}` : time varying specified inputs (can be kinematic
+  quantities, force quantities, or other)
 - :math:`\mathrm{\lambda}` : Lagrange multipliers (constraint forces)
 - :math:`\mathrm{y}` : time varying outputs
+- :math:`\mathrm{w}` : additional state variables
 
 Lagrange
 ========
@@ -135,6 +138,68 @@ Output equations
    \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
    \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
    \mathrm{p}, t) = \mathbf{0}
+
+Additional first order differential equations
+
+.. math::
+
+   \mathbf{f}_a(\dot{\mathbf{w}}, \mathbf{w}, \dot{\mathrm{q}}, \mathrm{q},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathbf{0}
+
+Kane
+====
+
+Holonomic constraints
+
+.. math::
+
+   \mathrm{f}_h(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0}
+   \in \mathbb{R}^M
+
+Kinematical differential equations
+
+.. math::
+
+   \mathbf{f}_k(\mathrm{u}, \dot{\mathrm{q}}, \mathrm{q}, \mathrm{r},
+   \mathrm{p}, t) = \mathbf{u} +
+   \mathbf{J}_{\mathbf{f}_k,\dot{\mathbf{q}}}\dot{\mathbf{q}} +
+   \mathbf{g}_k(\mathrm{q}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in
+   \mathbb{R}^n
+
+Nonholonomic constraints
+
+.. math::
+
+   \mathrm{f}_n(\mathrm{u}, \mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{J}_{\mathrm{f}_n, \mathrm{u}_s}
+   \mathrm{u}_s + \mathrm{J}_{\mathrm{f}_n, \mathrm{u}_r}
+   \mathrm{u}_r + \mathrm{g}_n(\mathrm{q}, \dot{\mathrm{r}}, \mathrm{r},
+   \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^m
+
+Dynamical equations of motion
+
+.. math::
+
+   \mathrm{f}_d(\dot{\mathrm{u}}, \mathrm{u}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) =
+   \mathrm{J}_{\mathrm{f}_d, \dot{\mathrm{u}}} \dot{\mathrm{u}} +
+   \mathrm{g}_d(\mathrm{u}, \mathrm{q}, \ddot{\mathrm{r}},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathrm{0} \in \mathbb{R}^p
+
+Output equations
+
+.. math::
+
+   \mathbf{f}_o(\bar{y}, \ddot{\mathrm{q}}, \dot{\mathrm{q}}, \mathrm{q},
+   \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
+   \mathrm{p}, t) = \mathbf{0}
+
+Additional first order differential equations
+
+.. math::
+
+   \mathbf{f}_a(\dot{\mathbf{w}}, \mathbf{w}, \dot{\mathrm{q}}, \mathrm{q},
+   \dot{\mathrm{r}}, \mathrm{r}, \mathrm{p}, t) = \mathbf{0}
 
 Notes
 =====
