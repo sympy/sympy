@@ -15,6 +15,11 @@ from sympy.polys.domains.groundtypes import SymPyInteger
 
 if GROUND_TYPES == 'flint':
     import flint
+    # Don't use python-flint < 0.5.0 because nmod was missing some features in
+    # previous versions of python-flint and fmpz_mod was not yet added.
+    _major, _minor, *_ = flint.__version__.split('.')
+    if (int(_major), int(_minor)) < (0, 5):
+        flint = None
 else:
     flint = None
 
@@ -29,7 +34,15 @@ def _modular_int_factory(mod, dom, symmetric, self):
             raise ValueError('modulus must be an integer, got %s' % mod)
 
         # flint's nmod is only for moduli up to 2^64-1 (on a 64-bit machine)
-        ctx = flint.fmpz_mod_ctx(mod)
+        try:
+            flint.nmod(0, mod)
+        except OverflowError:
+            # Use fmpz_mod
+            ctx = flint.fmpz_mod_ctx(mod)
+        else:
+            # Use nmod
+            ctx = lambda x: flint.nmod(x, mod)
+
         return ctx
 
     # Use the Python implementation
