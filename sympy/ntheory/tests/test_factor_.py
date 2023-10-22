@@ -301,18 +301,6 @@ def test_factorint():
     assert str(factorint(Dict(n))) == sans
 
 
-def test_factorint_flint_int_issue():
-    """
-    Because of a bug in flint, we are temporarily wrapping int in `factorint`.
-    When this fails, the int wrapper is no longer needed in factorint.
-
-    https://github.com/flintlib/python-flint/issues/92
-    https://github.com/sympy/sympy/pull/25749
-    """
-    if GROUND_TYPES == 'flint':
-        assert pow(2, 5, SYMPY_INTS[1](1000)) == 1
-
-
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
     assert divisors(0) == []
