@@ -14,17 +14,6 @@ from sympy.polys.polyoptions import build_options
 import re
 
 
-flint_ZZ_n: tuple[type, ...]
-
-
-if GROUND_TYPES == 'flint':
-    import flint
-    flint_ZZ_n = (flint.nmod, flint.fmpz_mod)
-else:
-    flint = None
-    flint_ZZ_n = ()
-
-
 _gens_order = {
     'a': 301, 'b': 302, 'c': 303, 'd': 304,
     'e': 305, 'f': 306, 'g': 307, 'h': 308,
@@ -169,19 +158,15 @@ def _analyze_gens(gens):
 def _sort_factors(factors, **args):
     """Sort low-level factors in increasing 'complexity' order. """
 
-    # XXX: python-flint's nmod type does not support comparisons so we need a
-    # key function to sort the factors if python-flint is being used. A better
-    # solution might be to add a sort key method to each domain.
-    if flint is not None:
-        def order_key(factor):
-            if isinstance(factor, flint_ZZ_n):
-                return int(factor)
-            elif isinstance(factor, list):
-                return [order_key(f) for f in factor]
-            else:
-                return factor
-    else:
-        def order_key(factor):
+    # XXX: GF(p) does not support comparisons so we need a key function to sort
+    # the factors if python-flint is being used. A better solution might be to
+    # add a sort key method to each domain.
+    def order_key(factor):
+        if isinstance(factor, _GF_types):
+            return int(factor)
+        elif isinstance(factor, list):
+            return [order_key(f) for f in factor]
+        else:
             return factor
 
     def order_if_multiple_key(factor):
@@ -196,8 +181,11 @@ def _sort_factors(factors, **args):
     else:
         return sorted(factors, key=order_no_multiple_key)
 
+
 illegal_types = [type(obj) for obj in _illegal]
 finf = [float(i) for i in _illegal[1:3]]
+
+
 def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
     if type(expr) in illegal_types or expr in finf:
@@ -580,3 +568,15 @@ class IntegerPowerable:
     def _first_power(self):
         """Return a copy of self."""
         raise NotImplementedError
+
+
+_GF_types: tuple[type, ...]
+
+
+if GROUND_TYPES == 'flint':
+    import flint
+    _GF_types = (flint.nmod, flint.fmpz_mod)
+else:
+    from sympy.polys.domains.modularinteger import ModularInteger
+    flint = None
+    _GF_types = (ModularInteger,)

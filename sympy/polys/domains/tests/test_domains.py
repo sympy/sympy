@@ -32,7 +32,7 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from itertools import product
 
@@ -955,6 +955,23 @@ def test_ModularInteger():
 
     raises(ValueError, lambda: FF(0))
     raises(ValueError, lambda: FF(2.1))
+
+    for n1 in range(5):
+        for n2 in range(5):
+            if GROUND_TYPES != 'flint':
+                with warns_deprecated_sympy():
+                    assert (F5(n1) < F5(n2)) is (n1 < n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) <= F5(n2)) is (n1 <= n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) > F5(n2)) is (n1 > n2)
+                with warns_deprecated_sympy():
+                    assert (F5(n1) >= F5(n2)) is (n1 >= n2)
+            else:
+                raises(TypeError, lambda: F5(n1) < F5(n2))
+                raises(TypeError, lambda: F5(n1) <= F5(n2))
+                raises(TypeError, lambda: F5(n1) > F5(n2))
+                raises(TypeError, lambda: F5(n1) >= F5(n2))
 
 def test_QQ_int():
     assert int(QQ(2**2000, 3**1250)) == 455431
