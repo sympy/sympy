@@ -633,7 +633,7 @@ def MultivariateEwens(syms, n, theta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
-    .. [2] https://projecteuclid.org/journalArticle/Download?urlId=10.1214%2F15-STS529 
+    .. [2] https://projecteuclid.org/journalArticle/Download?urlId=10.1214%2F15-STS529
 
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
