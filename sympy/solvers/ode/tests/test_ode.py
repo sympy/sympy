@@ -23,7 +23,7 @@ from sympy.solvers.ode.ode import (classify_sysode,
 from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
-from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import XFAIL, raises, slow, SKIP
 from sympy.utilities.misc import filldedent
 
 
@@ -1096,7 +1096,7 @@ def test_issue_23425():
         '2nd_power_series_ordinary', 'Liouville_Integral')
 
 
-@slow
+@SKIP("too slow for @slow")
 def test_issue_25820():
     x = Symbol('x')
     y = Function('y')
