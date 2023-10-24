@@ -3277,7 +3277,6 @@ def test_issue_25423():
     x, y = symbols('x y')
     equations1 = []
     equations2 = [2 * x + 3 * y - 1]
-    nonlinear_equations = [x ** 2 + y ** 2 - 1, x - y]
     raises(TypeError, lambda: linear_eq_to_matrix(equations1, {x, y}))
     raises(TypeError, lambda: linear_eq_to_matrix(equations2, {x, y}))
-    raises(NonlinearError, lambda: linear_eq_to_matrix(nonlinear_equations, x, y))
+    raises(ValueError, lambda: linear_eq_to_matrix(set(equations2), (x, y)))
