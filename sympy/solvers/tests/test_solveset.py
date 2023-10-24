@@ -1408,6 +1408,11 @@ def test_linear_eq_to_matrix():
     assert linear_eq_to_matrix(Eq(x + 2, 1), x) == (
         Matrix([[1]]), Matrix([[-1]]))
 
+    # issue 25423
+    raises(TypeError, lambda: linear_eq_to_matrix([], {x, y}))
+    raises(TypeError, lambda: linear_eq_to_matrix([x + y], {x, y}))
+    raises(ValueError, lambda: linear_eq_to_matrix({x + y}, (x, y)))
+
 
 def test_issue_16577():
     assert linear_eq_to_matrix(Eq(a*(2*x + 3*y) + 4*y, 5), x, y) == (
@@ -3271,12 +3276,3 @@ def test_issue_22628():
 
 def test_issue_25781():
     assert solve(sqrt(x/2) - x) == [0, S.Half]
-
-
-def test_issue_25423():
-    x, y = symbols('x y')
-    equations1 = []
-    equations2 = [2 * x + 3 * y - 1]
-    raises(TypeError, lambda: linear_eq_to_matrix(equations1, {x, y}))
-    raises(TypeError, lambda: linear_eq_to_matrix(equations2, {x, y}))
-    raises(ValueError, lambda: linear_eq_to_matrix(set(equations2), (x, y)))
