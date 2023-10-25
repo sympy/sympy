@@ -617,30 +617,6 @@ def is_strong_selfridge_prp(n):
     return _is_strong_selfridge_prp(n)
 
 
-def is_extra_strong_lucas_prp(n, p):
-    D = p**2 - 4
-    if D == 0:
-        raise ValueError("invalid value for p in is_extra_strong_lucas_prp()")
-    if n < 1:
-        raise ValueError("is_extra_strong_lucas_prp() requires 'n' be greater than 0")
-    if n == 1:
-        return False
-    if n % 2 == 0:
-        return n == 2
-    if gcd(n, D) not in [1, n]:
-        raise ValueError("is_extra_strong_lucas_prp() requires gcd(n,2*D) == 1")
-    j = jacobi(D, n)
-    s = bit_scan1(n - j)
-    U, V, _ = _lucas_sequence(n, p, 1, (n - j) >> s)
-    if U == 0 and (V == 2 or V == n - 2):
-        return True
-    for _ in range(1, s):
-        if V == 0:
-            return True
-        V = (V*V - 2) % n
-    return False
-
-
 def is_bpsw_prp(n):
     if n < 1:
         raise ValueError("is_bpsw_prp() requires 'n' be greater than 0")

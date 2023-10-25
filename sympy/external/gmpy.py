@@ -31,7 +31,6 @@ from .ntheory import (
     is_selfridge_prp as python_is_selfridge_prp,
     is_strong_lucas_prp as python_is_strong_lucas_prp,
     is_strong_selfridge_prp as python_is_strong_selfridge_prp,
-    is_extra_strong_lucas_prp as python_is_extra_strong_lucas_prp,
     is_bpsw_prp as python_is_bpsw_prp,
     is_strong_bpsw_prp as python_is_strong_bpsw_prp,
 )
@@ -83,7 +82,6 @@ __all__ = [
     'is_selfridge_prp',
     'is_strong_lucas_prp',
     'is_strong_selfridge_prp',
-    'is_extra_strong_lucas_prp',
     'is_bpsw_prp',
     'is_strong_bpsw_prp',
 ]
@@ -201,7 +199,6 @@ if GROUND_TYPES == 'gmpy':
     is_selfridge_prp = gmpy.is_selfridge_prp
     is_strong_lucas_prp = gmpy.is_strong_lucas_prp
     is_strong_selfridge_prp = gmpy.is_strong_selfridge_prp
-    is_extra_strong_lucas_prp = gmpy.is_extra_strong_lucas_prp
     is_bpsw_prp = gmpy.is_bpsw_prp
     is_strong_bpsw_prp = gmpy.is_strong_bpsw_prp
 
@@ -260,7 +257,6 @@ elif GROUND_TYPES == 'flint':
     is_selfridge_prp = python_is_selfridge_prp
     is_strong_lucas_prp = python_is_strong_lucas_prp
     is_strong_selfridge_prp = python_is_strong_selfridge_prp
-    is_extra_strong_lucas_prp = python_is_extra_strong_lucas_prp
     is_bpsw_prp = python_is_bpsw_prp
     is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
@@ -295,7 +291,6 @@ elif GROUND_TYPES == 'python':
     is_selfridge_prp = python_is_selfridge_prp
     is_strong_lucas_prp = python_is_strong_lucas_prp
     is_strong_selfridge_prp = python_is_strong_selfridge_prp
-    is_extra_strong_lucas_prp = python_is_extra_strong_lucas_prp
     is_bpsw_prp = python_is_bpsw_prp
     is_strong_bpsw_prp = python_is_strong_bpsw_prp
 
