@@ -1155,17 +1155,21 @@ def test_diffgeom():
     b = BaseScalarField(rect, 0)
     assert str(b) == "x"
 
+
 def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=True) == '1.00000000000000'
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
 
+
 def test_Predicate():
     assert sstr(Q.even) == 'Q.even'
 
+
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
+
 
 def test_printing_str_array_expressions():
     assert sstr(ArraySymbol("A", (2, 3, 4))) == "A"
@@ -1173,3 +1177,14 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+
+def test_issue_25026():
+    class F(Function):
+        precedence = 45
+        def _sympystr(self, printer):
+            return f"{printer._print(self.args[0])} F {printer._print(self.args[1])}"
+
+    eq = 2*F(x, y)
+    assert str(eq) == '2*(x F y)'
+    assert str(-eq) == '-2*(x F y)'
