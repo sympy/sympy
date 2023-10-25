@@ -139,7 +139,7 @@ Output equations
    \ddot{\mathrm{r}}, \dot{\mathrm{r}}, \mathrm{r}, \mathrm{\lambda},
    \mathrm{p}, t) = \mathbf{0}
 
-Additional first order differential equations
+Additional first-order differential equations
 
 .. math::
 
