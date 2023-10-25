@@ -107,7 +107,7 @@ constraints are differentiated once.
    \in \mathbb{R}^{(m + M) \times N}
 
 Introducing Lagrange multipliers :math:`\mathbf{\lambda}` lets us write the
-constrained euquations of motion:
+constrained equations of motion:
 
 .. math::
 
