@@ -49,7 +49,7 @@ Dynamical equations of motion
 
 Acceleration constraints
 
-If there are holonomic of nonholonomic constraints the dynamical differential
+If there are holonomic or nonholonomic constraints the dynamical differential
 equations must be augmented with the constraint forces. The holonomic
 constraints are twice differentiated with respect to time and the nonholonomic
 constraints are differentiated once.
