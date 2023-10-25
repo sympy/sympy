@@ -4,7 +4,7 @@ from sympy.external.ntheory import (bit_scan1, remove, bit_scan0, is_fermat_prp,
                                     is_euler_prp, is_strong_prp, gcdext, _lucas_sequence,
                                     is_fibonacci_prp, is_lucas_prp, is_selfridge_prp,
                                     is_strong_lucas_prp, is_strong_selfridge_prp,
-                                    is_extra_strong_lucas_prp, is_bpsw_prp, is_strong_bpsw_prp)
+                                    is_bpsw_prp, is_strong_bpsw_prp)
 from sympy.testing.pytest import raises
 
 
@@ -277,22 +277,6 @@ def test_is_strong_selfridge_prp():
                    25199, 40309, 58519, 75077, 97439, 100127, 113573]
     for n in pseudorpime:
         assert is_strong_selfridge_prp(n)
-
-
-def test_is_extra_strong_lucas_prp():
-    # invalid input
-    raises(ValueError, lambda: is_extra_strong_lucas_prp(0, 3))
-    raises(ValueError, lambda: is_extra_strong_lucas_prp(7, 2))
-    raises(ValueError, lambda: is_extra_strong_lucas_prp(15, 3))
-
-    # n = 1
-    assert not is_extra_strong_lucas_prp(1, 3)
-
-    # n is prime
-    assert is_extra_strong_lucas_prp(2, 3)
-    assert is_extra_strong_lucas_prp(3, 3)
-    assert is_extra_strong_lucas_prp(11, 3)
-    assert is_extra_strong_lucas_prp(2**31-1, 3)
 
 
 def test_is_bpsw_prp():

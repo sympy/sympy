@@ -10,8 +10,8 @@ from sympy.external.gmpy import (gmpy as _gmpy, gcd, jacobi,
                                  is_square as gmpy_is_square,
                                  bit_scan1, is_fermat_prp, is_euler_prp,
                                  is_selfridge_prp, is_strong_selfridge_prp,
-                                 is_extra_strong_lucas_prp as gmpy_is_extra_strong_lucas_prp,
                                  is_strong_bpsw_prp)
+from sympy.external.ntheory import _lucas_sequence
 from sympy.utilities.misc import as_int
 
 
@@ -428,10 +428,23 @@ def is_extra_strong_lucas_prp(n):
     if gmpy_is_square(n):
         return False
 
-    D, P, _ = _lucas_extrastrong_params(n)
+    D, P, Q = _lucas_extrastrong_params(n)
     if D == 0:
         return False
-    return gmpy_is_extra_strong_lucas_prp(n, P)
+
+    # remove powers of 2 from n+1 (= k * 2**s)
+    s = bit_scan1(n + 1)
+    k = (n + 1) >> s
+
+    U, V, _ = _lucas_sequence(n, P, Q, k)
+
+    if U == 0 and (V == 2 or V == n - 2):
+        return True
+    for _ in range(1, s):
+        if V == 0:
+            return True
+        V = (V*V - 2) % n
+    return False
 
 
 def isprime(n):
