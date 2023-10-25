@@ -130,7 +130,7 @@ def precedence(item):
             elif n in PRECEDENCE_VALUES:
                 return PRECEDENCE_VALUES[n]
     # Check if it's a negative number, and add parentheses
-    if isinstance(item, (int, float, complex)) and item < 0:
+    if item.is_Number and item < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
