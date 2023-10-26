@@ -15,11 +15,6 @@ from sympy.polys.domains.groundtypes import SymPyInteger
 
 if GROUND_TYPES == 'flint':
     import flint
-    # Don't use python-flint < 0.5.0 because nmod was missing some features in
-    # previous versions of python-flint and fmpz_mod was not yet added.
-    _major, _minor, *_ = flint.__version__.split('.')
-    if (int(_major), int(_minor)) < (0, 5):
-        flint = None
 else:
     flint = None
 
