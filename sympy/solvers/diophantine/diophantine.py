@@ -111,6 +111,12 @@ class DiophantineSolutionSet(set):
     def add(self, solution):
         if len(solution) != len(self.symbols):
             raise ValueError("Solution should have a length of %s, not %s" % (len(self.symbols), len(solution)))
+        # make solution canonical wrt sign (i.e. no -x unless x is also present as an arg)
+        args = set(solution)
+        for i in range(len(solution)):
+            x = solution[i]
+            if not type(x) is int and (-x).is_Symbol and -x not in args:
+                solution = [_.subs(-x, x) for _ in solution]
         super().add(Tuple(*solution))
 
     def update(self, *solutions):
@@ -1322,7 +1328,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     >>> diophantine(x*(2*x + 3*y - z))
     {(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)}
     >>> diophantine(x**2 + 3*x*y + 4*x)
-    {(0, n1), (3*t_0 - 4, -t_0)}
+    {(0, n1), (-3*t_0 - 4, t_0)}
 
     See Also
     ========
