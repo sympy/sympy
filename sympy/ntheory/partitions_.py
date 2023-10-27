@@ -186,7 +186,7 @@ def npartitions(n, verbose=False):
         big //= 2
     small = big
     big = small*2
-    while big - small:
+    while big - small > 1:
         N = (big + small)//2
         if (er := M(n, N)) < 0.5:
             big = N
